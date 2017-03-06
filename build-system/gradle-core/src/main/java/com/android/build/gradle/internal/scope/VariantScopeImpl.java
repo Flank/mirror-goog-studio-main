@@ -46,6 +46,7 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.coverage.JacocoReportTask;
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithTestedArtifact;
 import com.android.build.gradle.internal.dependency.SubtractingArtifactCollection;
+import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.pipeline.TransformManager;
@@ -1780,5 +1781,11 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     public void setShrinkResourcesTask(AndroidTask<?> shrinkResourcesTask) {
         this.shrinkResourcesTask = shrinkResourcesTask;
+    }
+
+    @NonNull
+    @Override
+    public VariantDependencies getVariantDependencies() {
+        return variantData.getVariantDependency();
     }
 }

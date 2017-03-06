@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.builder.core.ErrorReporter;
 import com.android.builder.profile.Recorder;
 import java.util.Collections;
@@ -33,12 +34,13 @@ public abstract class AndroidArtifactVariantData<T extends BaseVariantOutputData
     private Set<String> compatibleScreens = null;
 
     protected AndroidArtifactVariantData(
+            @NonNull GlobalScope globalScope,
             @NonNull AndroidConfig androidConfig,
             @NonNull TaskManager taskManager,
             @NonNull GradleVariantConfiguration config,
             @NonNull ErrorReporter errorReporter,
             @NonNull Recorder recorder) {
-        super(androidConfig, taskManager, config, errorReporter, recorder);
+        super(globalScope, androidConfig, taskManager, config, errorReporter, recorder);
     }
 
     public void setCompatibleScreens(Set<String> compatibleScreens) {

@@ -24,9 +24,8 @@ import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.api.TestVariant;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.BuildType;
+import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.MockableAndroidJarTask;
-import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.tasks.factory.AndroidJavaCompile;
 import com.android.utils.StringHelper;
 import com.google.common.collect.ImmutableList;
@@ -114,7 +113,7 @@ public abstract class AbstractAppPluginDslTest<
 
     public void testBasic() {
         plugin.createAndroidTasks(false);
-        checkDefaultVariants(plugin.getVariantManager().getVariantDataList());
+        checkDefaultVariants(plugin.getVariantManager().getVariantScopes());
 
         // we can now call this since the variants/tasks have been created
         Set<VariantT> variants = getVariants();
@@ -130,7 +129,7 @@ public abstract class AbstractAppPluginDslTest<
     /** Same as Basic but with a slightly different DSL. */
     public void testBasic2() {
         plugin.createAndroidTasks(false);
-        checkDefaultVariants(plugin.getVariantManager().getVariantDataList());
+        checkDefaultVariants(plugin.getVariantManager().getVariantScopes());
 
         // we can now call this since the variants/tasks have been created
         Set<VariantT> variants = getVariants();
@@ -152,7 +151,7 @@ public abstract class AbstractAppPluginDslTest<
                         + "'\n        }\n");
 
         plugin.createAndroidTasks(false);
-        checkDefaultVariants(plugin.getVariantManager().getVariantDataList());
+        checkDefaultVariants(plugin.getVariantManager().getVariantScopes());
 
         // we can now call this since the variants/tasks have been created
         Set<VariantT> variants = getVariants();
@@ -204,7 +203,7 @@ public abstract class AbstractAppPluginDslTest<
         map.put("appVariants", 3);
         map.put("unitTest", 3);
         map.put("androidTests", 1);
-        assertEquals(countVariants(map), plugin.getVariantManager().getVariantDataList().size());
+        assertEquals(countVariants(map), plugin.getVariantManager().getVariantScopes().size());
 
         // we can now call this since the variants/tasks have been created
 
@@ -243,7 +242,7 @@ public abstract class AbstractAppPluginDslTest<
         map.put("appVariants", 4);
         map.put("unitTest", 4);
         map.put("androidTests", 2);
-        assertEquals(countVariants(map), plugin.getVariantManager().getVariantDataList().size());
+        assertEquals(countVariants(map), plugin.getVariantManager().getVariantScopes().size());
 
         // we can now call this since the variants/tasks have been created
 
@@ -297,7 +296,7 @@ public abstract class AbstractAppPluginDslTest<
         plugin.createAndroidTasks(false);
         ImmutableMap<String, Integer> map =
                 ImmutableMap.of("appVariants", 12, "unitTests", 12, "androidTests", 6);
-        assertEquals(countVariants(map), plugin.getVariantManager().getVariantDataList().size());
+        assertEquals(countVariants(map), plugin.getVariantManager().getVariantScopes().size());
 
         // we can now call this since the variants/tasks have been created
 
@@ -366,7 +365,7 @@ public abstract class AbstractAppPluginDslTest<
                         + "}\n");
 
         plugin.createAndroidTasks(false);
-        checkDefaultVariants(plugin.getVariantManager().getVariantDataList());
+        checkDefaultVariants(plugin.getVariantManager().getVariantScopes());
 
         // we can now call this since the variants/tasks have been created
 
@@ -599,14 +598,11 @@ public abstract class AbstractAppPluginDslTest<
     }
 
     public Map<String, GradleVariantConfiguration> getVariantMap() {
-        List<BaseVariantData<? extends BaseVariantOutputData>> variantsData =
-                plugin.getVariantManager().getVariantDataList();
-        return variantsData
-                .stream()
-                .collect(
-                        Collectors.toMap(
-                                BaseVariantData::getName,
-                                BaseVariantData::getVariantConfiguration));
+        Map<String, GradleVariantConfiguration> result = new HashMap<>();
+        for (VariantScope variantScope : plugin.getVariantManager().getVariantScopes()) {
+            result.put(variantScope.getFullVariantName(), variantScope.getVariantConfiguration());
+        }
+        return result;
     }
 
     @SuppressWarnings("unchecked") // For some reason type bounds don't "just compile".

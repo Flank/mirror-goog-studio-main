@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.internal.SdkHandler;
+import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.core.AndroidBuilder;
 import com.android.testutils.TestUtils;
@@ -49,8 +50,8 @@ public abstract class BaseDslTest extends TestCase {
         return variants.values().stream().mapToInt(Integer::intValue).sum();
     }
 
-    protected static void checkDefaultVariants(List<BaseVariantData<?>> variants) {
-        assertThat(Lists.transform(variants, BaseVariantData::getName))
+    protected static void checkDefaultVariants(List<VariantScope> variants) {
+        assertThat(Lists.transform(variants, VariantScope::getFullVariantName))
                 .containsExactly(
                         "release", "debug", "debugAndroidTest", "releaseUnitTest", "debugUnitTest");
     }
@@ -89,10 +90,16 @@ public abstract class BaseDslTest extends TestCase {
      * @return the found variant
      */
     protected static <T extends BaseVariantData> T findVariantData(
-            @NonNull Collection<T> variants, @NonNull String name) {
-        Optional<T> result = variants.stream().filter(t -> t.getName().equals(name)).findAny();
-        return result.orElseThrow(
-                () -> new AssertionError("Variant data for " + name + " not found."));
+            @NonNull Collection<VariantScope> variants, @NonNull String name) {
+        Optional<?> result =
+                variants.stream()
+                        .filter(t -> t.getFullVariantName().equals(name))
+                        .map(VariantScope::getVariantData)
+                        .findAny();
+        //noinspection unchecked: too much hassle with BaseVariantData generics, not worth it for test code.
+        return (T)
+                result.orElseThrow(
+                        () -> new AssertionError("Variant data for " + name + " not found."));
     }
 
     protected File projectDirectory;

@@ -24,6 +24,7 @@ import com.android.build.gradle.TestAndroidConfig;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
+import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
 import com.google.common.collect.ImmutableMap;
@@ -34,18 +35,15 @@ import org.gradle.api.Project;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
 import org.gradle.internal.reflect.Instantiator;
 
-/**
- * Customization of ApplcationVariantFactory for test-only projects.
- */
+/** Customization of {@link ApplicationVariantFactory} for test-only projects. */
 public class TestVariantFactory extends ApplicationVariantFactory {
 
-    private TestAndroidConfig testExtension;
-
     public TestVariantFactory(
+            @NonNull GlobalScope globalScope,
             @NonNull Instantiator instantiator,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull AndroidConfig extension) {
-        super(instantiator, androidBuilder, extension);
+        super(globalScope, instantiator, androidBuilder, extension);
     }
 
     @Override
@@ -55,7 +53,7 @@ public class TestVariantFactory extends ApplicationVariantFactory {
 
     @Override
     public void preVariantWork(final Project project) {
-        testExtension = (TestAndroidConfig) extension;
+        TestAndroidConfig testExtension = (TestAndroidConfig) extension;
 
         String path = testExtension.getTargetProjectPath();
         if (path == null) {

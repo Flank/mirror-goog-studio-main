@@ -22,6 +22,7 @@ import com.android.build.gradle.external.gson.NativeBuildConfigValue;
 import com.android.build.gradle.internal.InstantRunTaskManager;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.pipeline.TransformTask;
@@ -489,4 +490,7 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     AndroidTask<?> getShrinkResourcesTask();
 
     void setShrinkResourcesTask(AndroidTask<?> shrinkResourcesTask);
+
+    @NonNull
+    VariantDependencies getVariantDependencies();
 }

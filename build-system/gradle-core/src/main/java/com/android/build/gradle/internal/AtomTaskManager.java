@@ -20,10 +20,10 @@ import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.gradle.AndroidConfig;
-import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.AndroidTask;
+import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.AtomVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -48,37 +48,32 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 public class AtomTaskManager extends TaskManager {
 
     public AtomTaskManager(
+            @NonNull GlobalScope globalScope,
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull AndroidConfig extension,
             @NonNull SdkHandler sdkHandler,
-            @NonNull NdkHandler ndkHandler,
             @NonNull DependencyManager dependencyManager,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder threadRecorder) {
         super(
+                globalScope,
                 project,
                 projectOptions,
                 androidBuilder,
                 dataBindingBuilder,
                 extension,
                 sdkHandler,
-                ndkHandler,
                 dependencyManager,
                 toolingRegistry,
                 threadRecorder);
     }
 
     @Override
-    public void createTasksForVariantData(
-            @NonNull final TaskFactory tasks,
-            @NonNull final BaseVariantData<? extends BaseVariantOutputData> variantData) {
-        assert variantData instanceof AtomVariantData;
-
-        final VariantScope variantScope = variantData.getScope();
-
+    public void createTasksForVariantScope(
+            @NonNull final TaskFactory tasks, @NonNull final VariantScope variantScope) {
         createAnchorTasks(tasks, variantScope);
         createCheckManifestTask(tasks, variantScope);
 
@@ -192,7 +187,9 @@ public class AtomTaskManager extends TaskManager {
                 () -> createShaderTask(tasks, variantScope));
 
         // Add NDK tasks
-        if (!isComponentModelPlugin) {
+        BaseVariantData<? extends BaseVariantOutputData> variantData =
+                variantScope.getVariantData();
+        if (!isComponentModelPlugin()) {
             recorder.record(
                     ExecutionType.ATOM_TASK_MANAGER_CREATE_NDK_TASK,
                     project.getPath(),
@@ -251,7 +248,7 @@ public class AtomTaskManager extends TaskManager {
 
                     // Then, build the dex with jack if enabled.
                     // TODO: This means recompiling everything twice if jack is enabled.
-                    if (variantData.getVariantConfiguration().isJackEnabled()) {
+                    if (variantScope.getVariantConfiguration().isJackEnabled()) {
                         createJackTask(tasks, variantScope);
                     } else {
                         // Prevent the use of java 1.8 without jack, which would otherwise cause an

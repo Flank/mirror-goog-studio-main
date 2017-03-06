@@ -146,7 +146,7 @@ public class JackOptionsUtils {
         /* Incremental setup - disabled for: test coverage. */
         Project project = scope.getGlobalScope().getProject();
         Configuration annotationConfig =
-                scope.getVariantData().getVariantDependency().getAnnotationProcessorConfiguration();
+                scope.getVariantDependencies().getAnnotationProcessorConfiguration();
         boolean incremental =
                 AbstractCompilesUtil.isIncremental(
                                 project, scope, compileOptions, annotationConfig, logger);

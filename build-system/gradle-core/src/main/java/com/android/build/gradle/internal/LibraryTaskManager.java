@@ -39,7 +39,6 @@ import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
-import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
 import com.android.build.gradle.internal.pipeline.TransformManager;
@@ -57,8 +56,6 @@ import com.android.build.gradle.internal.transforms.LibraryAarJarsTransform;
 import com.android.build.gradle.internal.transforms.LibraryBaseTransform;
 import com.android.build.gradle.internal.transforms.LibraryIntermediateJarsTransform;
 import com.android.build.gradle.internal.transforms.LibraryJniLibsTransform;
-import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.LibraryVariantData;
 import com.android.build.gradle.internal.variant.VariantHelper;
 import com.android.build.gradle.options.ProjectOptions;
@@ -99,38 +96,37 @@ public class LibraryTaskManager extends TaskManager {
     private Task assembleDefault;
 
     public LibraryTaskManager(
+            @NonNull GlobalScope globalScope,
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull AndroidConfig extension,
             @NonNull SdkHandler sdkHandler,
-            @NonNull NdkHandler ndkHandler,
             @NonNull DependencyManager dependencyManager,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
         super(
+                globalScope,
                 project,
                 projectOptions,
                 androidBuilder,
                 dataBindingBuilder,
                 extension,
                 sdkHandler,
-                ndkHandler,
                 dependencyManager,
                 toolingRegistry,
                 recorder);
     }
 
     @Override
-    public void createTasksForVariantData(
-            @NonNull final TaskFactory tasks,
-            @NonNull final BaseVariantData<? extends BaseVariantOutputData> variantData) {
-        final LibraryVariantData libVariantData = (LibraryVariantData) variantData;
-        final GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
+    public void createTasksForVariantScope(
+            @NonNull final TaskFactory tasks, @NonNull final VariantScope variantScope) {
+        final LibraryVariantData libVariantData =
+                (LibraryVariantData) variantScope.getVariantData();
+        final GradleVariantConfiguration variantConfig = variantScope.getVariantConfiguration();
         final CoreBuildType buildType = variantConfig.getBuildType();
 
-        final VariantScope variantScope = variantData.getScope();
         GlobalScope globalScope = variantScope.getGlobalScope();
 
         final File intermediatesDir = globalScope.getIntermediatesDir();
@@ -138,7 +134,7 @@ public class LibraryTaskManager extends TaskManager {
         final File variantBundleDir = variantScope.getBaseBundleDir();
 
         final String projectPath = project.getPath();
-        final String variantName = variantData.getName();
+        final String variantName = variantScope.getFullVariantName();
 
         createAnchorTasks(tasks, variantScope);
 
@@ -184,7 +180,6 @@ public class LibraryTaskManager extends TaskManager {
                         variantName,
                         () -> createMergeResourcesTask(
                                 tasks,
-                                variantData,
                                 variantScope,
                                 variantBundleDir));
 
@@ -276,7 +271,7 @@ public class LibraryTaskManager extends TaskManager {
         createDataBindingTasksIfNecessary(tasks, variantScope);
 
         // Add dependencies on NDK tasks if NDK plugin is applied.
-        if (!isComponentModelPlugin) {
+        if (!isComponentModelPlugin()) {
             // Add NDK tasks
             recorder.record(
                     ExecutionType.LIB_TASK_MANAGER_CREATE_NDK_TASK,
@@ -284,7 +279,7 @@ public class LibraryTaskManager extends TaskManager {
                     variantName,
                     () -> createNdkTasks(tasks, variantScope));
         }
-        variantScope.setNdkBuildable(getNdkBuildable(variantData));
+        variantScope.setNdkBuildable(getNdkBuildable(variantScope.getVariantData()));
 
         // External native build
         recorder.record(
@@ -349,11 +344,12 @@ public class LibraryTaskManager extends TaskManager {
 
         AndroidTask<ExtractAnnotations> extractAnnotationsTask;
         if (AndroidGradleOptions.isImprovedDependencyResolutionEnabled(project)
-                || variantData.getVariantDependency().isAnnotationsPresent()) {
+                || variantScope.getVariantDependencies().isAnnotationsPresent()) {
             extractAnnotationsTask =
-                    getAndroidTasks().create(
-                            tasks,
-                            new ExtractAnnotations.ConfigAction(getExtension(), variantScope));
+                    getAndroidTasks()
+                            .create(
+                                    tasks,
+                                    new ExtractAnnotations.ConfigAction(extension, variantScope));
             extractAnnotationsTask.dependsOn(tasks, libVariantData.getScope().getJavacTask());
 
             // publish intermediate annotation data
@@ -446,7 +442,7 @@ public class LibraryTaskManager extends TaskManager {
                                                 ? variantScope.getTypedefFile()
                                                 : null,
                                         packageName,
-                                        getExtension().getPackageBuildConfig());
+                                        extension.getPackageBuildConfig());
                         excludeDataBindingClassesIfNecessary(variantScope, intermediateTransform);
 
                         Optional<AndroidTask<TransformTask>> intermediateTransformTask =
@@ -523,7 +519,7 @@ public class LibraryTaskManager extends TaskManager {
                                                 ? variantScope.getTypedefFile()
                                                 : null,
                                         packageName,
-                                        getExtension().getPackageBuildConfig());
+                                        extension.getPackageBuildConfig());
                         excludeDataBindingClassesIfNecessary(variantScope, transform);
 
                         Optional<AndroidTask<TransformTask>> libraryJarTransformTask =
@@ -589,21 +585,21 @@ public class LibraryTaskManager extends TaskManager {
 
         // if the variant is the default published, then publish the aar
         // FIXME: only generate the tasks if this is the default published variant?
-        if (getExtension().getDefaultPublishConfig().equals(variantConfig.getFullName())) {
+        if (extension.getDefaultPublishConfig().equals(variantConfig.getFullName())) {
             VariantHelper.setupArchivesConfig(
-                    project,
-                    variantData.getVariantDependency().getRuntimeClasspath());
+                    project, variantScope.getVariantDependencies().getRuntimeClasspath());
 
             // add the artifact that will be published
             project.getArtifacts().add("archives", bundle);
         }
 
         // configure the variant to be testable.
-        variantConfig.setOutput(AndroidDependency.createLocalTestedAarLibrary(
-                bundle.getArchivePath(),
-                variantData.getName(),
-                project.getPath(),
-                variantBundleDir));
+        variantConfig.setOutput(
+                AndroidDependency.createLocalTestedAarLibrary(
+                        bundle.getArchivePath(),
+                        variantScope.getFullVariantName(),
+                        project.getPath(),
+                        variantBundleDir));
 
         recorder.record(
                 ExecutionType.LIB_TASK_MANAGER_CREATE_LINT_TASK,
@@ -653,7 +649,6 @@ public class LibraryTaskManager extends TaskManager {
     @NonNull
     private AndroidTask<MergeResources> createMergeResourcesTask(
             @NonNull TaskFactory tasks,
-            @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData,
             @NonNull VariantScope variantScope,
             @NonNull File variantBundleDir) {
         // Create a merge task to only merge the resources from this library and not

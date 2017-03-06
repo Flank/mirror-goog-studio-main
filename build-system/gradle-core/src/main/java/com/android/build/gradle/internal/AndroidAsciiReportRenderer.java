@@ -21,8 +21,7 @@ import static org.gradle.internal.logging.text.StyledTextOutput.Style.Identifier
 import static org.gradle.internal.logging.text.StyledTextOutput.Style.Info;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.dependency.VariantDependencies;
-import com.android.build.gradle.internal.variant.BaseVariantData;
+import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.dependency.level2.Dependency;
 import com.android.builder.dependency.level2.DependencyNode;
 import com.android.builder.dependency.level2.JavaDependency;
@@ -30,13 +29,9 @@ import com.android.utils.FileUtils;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import org.gradle.api.Action;
 import org.gradle.api.Project;
-import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.tasks.diagnostics.internal.TextReportRenderer;
 import org.gradle.internal.graph.GraphRenderer;
-import org.gradle.internal.logging.text.StyledTextOutput;
-import org.gradle.util.GUtil;
 
 /**
  * android version of the AsciiReportRenderer that outputs Android Library dependencies.
@@ -63,30 +58,21 @@ public class AndroidAsciiReportRenderer extends TextReportRenderer {
         super.completeProject(project);
     }
 
-    public void startVariant(final BaseVariantData variantData) {
+    public void startVariant(VariantScope variantScope) {
         if (hasConfigs) {
             getTextOutput().println();
         }
         hasConfigs = true;
         renderer = new GraphRenderer(getTextOutput());
-        renderer.visit(new Action<StyledTextOutput>() {
-            @Override
-            public void execute(StyledTextOutput styledTextOutput) {
-                getTextOutput().withStyle(Identifier).text(
-                        variantData.getVariantConfiguration().getFullName());
-                getTextOutput().withStyle(Description).text("");
-            }
-        }, true);
+        renderer.visit(
+                styledTextOutput -> {
+                    getTextOutput().withStyle(Identifier).text(variantScope.getFullVariantName());
+                    getTextOutput().withStyle(Description).text("");
+                },
+                true);
     }
 
-    private String getDescription(Configuration configuration) {
-        return GUtil.isTrue(
-                configuration.getDescription()) ? " - " + configuration.getDescription() : "";
-    }
-
-    public void render(BaseVariantData variantData) throws IOException {
-        VariantDependencies variantDependency = variantData.getVariantDependency();
-
+    public void render() throws IOException {
         renderNow();
     }
 
@@ -119,21 +105,24 @@ public class AndroidAsciiReportRenderer extends TextReportRenderer {
             @NonNull final DependencyNode node,
             @NonNull Map<Object, Dependency> dependencyMap,
             boolean lastChild) {
-        renderer.visit(styledTextOutput -> {
-            String name = node.getAddress().toString();
-            Dependency dependency = dependencyMap.get(name);
+        renderer.visit(
+                styledTextOutput -> {
+                    String name = node.getAddress().toString();
+                    Dependency dependency = dependencyMap.get(name);
 
-            if (dependency instanceof JavaDependency) {
-                JavaDependency javaDependency = (JavaDependency) dependency;
-                if (javaDependency.isLocal()) {
-                    String path = FileUtils.relativePath(
-                            javaDependency.getArtifactFile(), project.getProjectDir());
-                    name = path;
-                }
-            }
+                    if (dependency instanceof JavaDependency) {
+                        JavaDependency javaDependency = (JavaDependency) dependency;
+                        if (javaDependency.isLocal()) {
+                            name =
+                                    FileUtils.relativePath(
+                                            javaDependency.getArtifactFile(),
+                                            project.getProjectDir());
+                        }
+                    }
 
-            getTextOutput().text(name);
-        }, lastChild);
+                    getTextOutput().text(name);
+                },
+                lastChild);
 
         renderChildren(node.getDependencies(), dependencyMap);
     }

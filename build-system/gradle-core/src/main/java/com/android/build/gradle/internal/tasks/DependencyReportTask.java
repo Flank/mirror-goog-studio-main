@@ -18,14 +18,13 @@ package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.AndroidAsciiReportRenderer;
-import com.android.build.gradle.internal.variant.BaseVariantData;
+import com.android.build.gradle.internal.scope.VariantScope;
+import com.google.common.collect.Ordering;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.internal.logging.text.StyledTextOutputFactory;
@@ -34,53 +33,24 @@ public class DependencyReportTask extends DefaultTask {
 
     private AndroidAsciiReportRenderer renderer = new AndroidAsciiReportRenderer();
 
-    private Set<BaseVariantData> variants = new HashSet<>();
+    private Set<VariantScope> variants = new HashSet<>();
 
     @TaskAction
     public void generate() throws IOException {
         renderer.setOutput(getServices().get(StyledTextOutputFactory.class).create(getClass()));
+        List<VariantScope> sortedVariants =
+                Ordering.natural()
+                        .onResultOf(VariantScope::getFullVariantName)
+                        .sortedCopy(variants);
 
-        SortedSet<BaseVariantData> sortedConfigurations = new TreeSet<>(
-                new Comparator<BaseVariantData>() {
-                    @Override
-            public int compare(BaseVariantData conf1, BaseVariantData conf2) {
-                return conf1.getName().compareTo(conf2.getName());
-            }
-        });
-        sortedConfigurations.addAll(getVariants());
-        for (BaseVariantData variant : sortedConfigurations) {
+        for (VariantScope variant : sortedVariants) {
             renderer.startVariant(variant);
-            renderer.render(variant);
+            renderer.render();
         }
     }
 
-    /**
-     * Returns the configurations to generate the report for. Default to all configurations of
-     * this task's containing project.
-     *
-     * @return the configurations.
-     */
-    public Set<BaseVariantData> getVariants() {
-        return variants;
+    /** Sets the variants to generate the report for. */
+    public void setVariants(@NonNull Collection<VariantScope> variantScopes) {
+        this.variants.addAll(variantScopes);
     }
-
-    /**
-     * Sets the variants to generate the report for.
-     *
-     * @param variants the variants. Must not be null.
-     */
-    public void setVariants(@NonNull Collection<? extends BaseVariantData> variants) {
-        this.variants.addAll(variants);
-    }
-
-    public void setVariants(Set<BaseVariantData> variants) {
-        this.variants = variants;
-    }
-
-    public AndroidAsciiReportRenderer getRenderer() {
-        return renderer;
-    }
-
-    public void setRenderer(@NonNull AndroidAsciiReportRenderer renderer) {
-        this.renderer = renderer;
-    }}
+}

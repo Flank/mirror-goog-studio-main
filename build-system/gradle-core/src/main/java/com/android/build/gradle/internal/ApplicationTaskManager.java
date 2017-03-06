@@ -27,11 +27,11 @@ import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
 import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
-import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.DefaultGradlePackagingScope;
+import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.PackagingScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AppPreBuildTask;
@@ -63,36 +63,35 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 public class ApplicationTaskManager extends TaskManager {
 
     public ApplicationTaskManager(
+            @NonNull GlobalScope globalScope,
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull AndroidConfig extension,
             @NonNull SdkHandler sdkHandler,
-            @NonNull NdkHandler ndkHandler,
             @NonNull DependencyManager dependencyManager,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
         super(
+                globalScope,
                 project,
                 projectOptions,
                 androidBuilder,
                 dataBindingBuilder,
                 extension,
                 sdkHandler,
-                ndkHandler,
                 dependencyManager,
                 toolingRegistry,
                 recorder);
     }
 
     @Override
-    public void createTasksForVariantData(
-            @NonNull final TaskFactory tasks,
-            @NonNull final BaseVariantData<? extends BaseVariantOutputData> variantData) {
+    public void createTasksForVariantScope(
+            @NonNull final TaskFactory tasks, @NonNull final VariantScope variantScope) {
+        BaseVariantData<? extends BaseVariantOutputData> variantData =
+                variantScope.getVariantData();
         assert variantData instanceof ApplicationVariantData;
-
-        final VariantScope variantScope = variantData.getScope();
 
         createAnchorTasks(tasks, variantScope);
         createCheckManifestTask(tasks, variantScope);
@@ -170,7 +169,7 @@ public class ApplicationTaskManager extends TaskManager {
                 () -> createShaderTask(tasks, variantScope));
 
         // Add NDK tasks
-        if (!isComponentModelPlugin) {
+        if (!isComponentModelPlugin()) {
             recorder.record(
                     ExecutionType.APP_TASK_MANAGER_CREATE_NDK_TASK,
                     project.getPath(),
@@ -214,7 +213,7 @@ public class ApplicationTaskManager extends TaskManager {
                     createDataBindingMergeArtifactsTaskIfNecessary(tasks, variantScope);
                     AndroidTask<? extends JavaCompile> javacTask =
                             createJavacTask(tasks, variantScope);
-                    if (variantData.getVariantConfiguration().isJackEnabled()) {
+                    if (variantScope.getVariantConfiguration().isJackEnabled()) {
                         createJackTask(tasks, variantScope);
                     } else {
                         // Prevent the use of java 1.8 without jack, which would otherwise cause an
@@ -263,11 +262,11 @@ public class ApplicationTaskManager extends TaskManager {
 
         createStripNativeLibraryTask(tasks, variantScope);
 
-        if (variantData
+        if (variantScope
                 .getSplitScope()
                 .getSplitHandlingPolicy()
                 .equals(SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY)) {
-            if (getExtension().getBuildToolsRevision().getMajor() < 21) {
+            if (extension.getBuildToolsRevision().getMajor() < 21) {
                 throw new RuntimeException(
                         "Pure splits can only be used with buildtools 21 and later");
             }
@@ -340,7 +339,7 @@ public class ApplicationTaskManager extends TaskManager {
                             variantScope.getGlobalScope().getAndroidBuilder(),
                             packagingScope,
                             packagingScope.getSigningConfig(),
-                            AaptGeneration.fromProjectOptions(getGlobalScope().getProjectOptions()),
+                            AaptGeneration.fromProjectOptions(projectOptions),
                             packagingScope.getAaptOptions(),
                             new File(packagingScope.getInstantRunSplitApkOutputFolder(), "dep"),
                             packagingScope.getInstantRunSupportDir());
@@ -362,7 +361,7 @@ public class ApplicationTaskManager extends TaskManager {
                             variantScope.getGlobalScope().getAndroidBuilder(),
                             packagingScope,
                             packagingScope.getSigningConfig(),
-                            AaptGeneration.fromProjectOptions(getGlobalScope().getProjectOptions()),
+                            AaptGeneration.fromProjectOptions(projectOptions),
                             packagingScope.getAaptOptions(),
                             new File(packagingScope.getInstantRunSplitApkOutputFolder(), "slices"),
                             packagingScope.getInstantRunSupportDir());

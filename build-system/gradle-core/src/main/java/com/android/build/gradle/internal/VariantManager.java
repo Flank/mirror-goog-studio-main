@@ -45,6 +45,7 @@ import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.AndroidTask;
+import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
@@ -72,7 +73,6 @@ import com.google.common.collect.Maps;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
 import java.io.File;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -88,7 +88,6 @@ import org.gradle.api.attributes.AttributesSchema;
 import org.gradle.api.attributes.Usage;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.internal.artifacts.ArtifactAttributes;
-import org.gradle.internal.reflect.Instantiator;
 
 /**
  * Class to create, manage variants.
@@ -102,54 +101,44 @@ public class VariantManager implements VariantModel {
     protected static final String COM_ANDROID_SUPPORT_MULTIDEX_INSTRUMENTATION =
             "com.android.support:multidex-instrumentation:" + MULTIDEX_VERSION;
 
-    @NonNull
-    private final Project project;
-    @NonNull
-    private final AndroidBuilder androidBuilder;
-    @NonNull
-    private final AndroidConfig extension;
-    @NonNull
-    private final VariantFactory variantFactory;
-    @NonNull
-    private final TaskManager taskManager;
-    @NonNull
-    private final Instantiator instantiator;
+    @NonNull private final Project project;
+    @NonNull private final AndroidBuilder androidBuilder;
+    @NonNull private final AndroidConfig extension;
+    @NonNull private final VariantFactory variantFactory;
+    @NonNull private final TaskManager taskManager;
     @NonNull private final Recorder recorder;
-    @NonNull private ProductFlavorData<CoreProductFlavor> defaultConfigData;
-    @NonNull
-    private final Map<String, BuildTypeData> buildTypes = Maps.newHashMap();
-    @NonNull
-    private final Map<String, ProductFlavorData<CoreProductFlavor>> productFlavors = Maps.newHashMap();
-    @NonNull
-    private final Map<String, SigningConfig> signingConfigs = Maps.newHashMap();
-
-    @NonNull
-    private final ReadOnlyObjectProvider readOnlyObjectProvider = new ReadOnlyObjectProvider();
-    @NonNull
-    private final VariantFilter variantFilter = new VariantFilter(readOnlyObjectProvider);
-
-    @NonNull
-    private final List<BaseVariantData<? extends BaseVariantOutputData>> variantDataList = Lists.newArrayList();
-    @Nullable
-    private CoreSigningConfig signingOverride;
-
-    @NonNull Map<File, ManifestAttributeSupplier> manifestParserMap = new HashMap<>();
+    @NonNull private final ProductFlavorData<CoreProductFlavor> defaultConfigData;
+    @NonNull private final Map<String, BuildTypeData> buildTypes;
+    @NonNull private final VariantFilter variantFilter;
+    @NonNull private final List<VariantScope> variantScopes;
+    @NonNull private final Map<String, ProductFlavorData<CoreProductFlavor>> productFlavors;
+    @NonNull private final Map<String, SigningConfig> signingConfigs;
+    @NonNull private final Map<File, ManifestAttributeSupplier> manifestParserMap;
+    @NonNull protected final GlobalScope globalScope;
+    @Nullable private final CoreSigningConfig signingOverride;
 
     public VariantManager(
+            @NonNull GlobalScope globalScope,
             @NonNull Project project,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull AndroidConfig extension,
             @NonNull VariantFactory variantFactory,
             @NonNull TaskManager taskManager,
-            @NonNull Instantiator instantiator,
             @NonNull Recorder recorder) {
+        this.globalScope = globalScope;
         this.extension = extension;
         this.androidBuilder = androidBuilder;
         this.project = project;
         this.variantFactory = variantFactory;
         this.taskManager = taskManager;
-        this.instantiator = instantiator;
         this.recorder = recorder;
+        this.signingOverride = createSigningOverride();
+        this.variantFilter = new VariantFilter(new ReadOnlyObjectProvider());
+        this.buildTypes = Maps.newHashMap();
+        this.variantScopes = Lists.newArrayList();
+        this.productFlavors = Maps.newHashMap();
+        this.signingConfigs = Maps.newHashMap();
+        this.manifestParserMap = Maps.newHashMap();
 
         DefaultAndroidSourceSet mainSourceSet =
                 (DefaultAndroidSourceSet) extension.getSourceSets().getByName(extension.getDefaultConfig().getName());
@@ -165,10 +154,24 @@ public class VariantManager implements VariantModel {
                             .getByName(UNIT_TEST.getPrefix());
         }
 
-        defaultConfigData = new ProductFlavorData<>(
-                extension.getDefaultConfig(), mainSourceSet,
-                androidTestSourceSet, unitTestSourceSet, project);
-        signingOverride = createSigningOverride();
+        this.defaultConfigData =
+                new ProductFlavorData<>(
+                        extension.getDefaultConfig(),
+                        mainSourceSet,
+                        androidTestSourceSet,
+                        unitTestSourceSet,
+                        project);
+    }
+
+    /**
+     * Registers a new variant.
+     *
+     * <p>Unfortunately VariantData and VariantScope are tangled together and are really parts of
+     * the same, but we'll try to gradually shift all the immutable state to VariantScope and
+     * pretend that there's only an edge from scope to data.
+     */
+    public void addVariant(BaseVariantData<?> variantData) {
+        variantScopes.add(variantData.getScope());
     }
 
     @NonNull
@@ -266,12 +269,27 @@ public class VariantManager implements VariantModel {
         productFlavors.put(productFlavor.getName(), productFlavorData);
     }
 
+    /** Returns a list of all created {@link VariantScope}s. */
+    @NonNull
+    public List<VariantScope> getVariantScopes() {
+        return variantScopes;
+    }
+
     /**
-     * Return a list of all created VariantData.
+     * Returns the {@link BaseVariantData} for every {@link VariantScope} known. Don't use this, get
+     * the {@link VariantScope}s instead.
+     *
+     * @see #getVariantScopes()
+     * @deprecated Kept only not to break the Kotlin plugin.
      */
     @NonNull
-    public List<BaseVariantData<? extends BaseVariantOutputData>> getVariantDataList() {
-        return variantDataList;
+    @Deprecated
+    public List<BaseVariantData<?>> getVariantDataList() {
+        List<BaseVariantData<?>> result = Lists.newArrayListWithExpectedSize(variantScopes.size());
+        for (VariantScope variantScope : variantScopes) {
+            result.add(variantScope.getVariantData());
+        }
+        return result;
     }
 
     /**
@@ -284,7 +302,7 @@ public class VariantManager implements VariantModel {
         variantFactory.preVariantWork(project);
 
         final TaskFactory tasks = new TaskContainerAdaptor(project.getTasks());
-        if (variantDataList.isEmpty()) {
+        if (variantScopes.isEmpty()) {
             recorder.record(
                     ExecutionType.VARIANT_MANAGER_CREATE_VARIANTS,
                     project.getPath(),
@@ -299,15 +317,15 @@ public class VariantManager implements VariantModel {
                 null /*variantName*/,
                 () -> taskManager.createTopLevelTestTasks(tasks, !productFlavors.isEmpty()));
 
-        for (final BaseVariantData<? extends BaseVariantOutputData> variantData : variantDataList) {
+        for (final VariantScope variantScope : variantScopes) {
             recorder.record(
                     ExecutionType.VARIANT_MANAGER_CREATE_TASKS_FOR_VARIANT,
                     project.getPath(),
-                    variantData.getName(),
-                    () -> createTasksForVariantData(tasks, variantData));
+                    variantScope.getFullVariantName(),
+                    () -> createTasksForVariantData(tasks, variantScope));
         }
 
-        taskManager.createReportTasks(tasks, variantDataList);
+        taskManager.createReportTasks(tasks, variantScopes);
     }
 
     /**
@@ -385,15 +403,14 @@ public class VariantManager implements VariantModel {
         }
     }
 
-    /**
-     * Create tasks for the specified variantData.
-     */
+    /** Create tasks for the specified variant. */
     public void createTasksForVariantData(
-            final TaskFactory tasks,
-            final BaseVariantData<? extends BaseVariantOutputData> variantData) {
+            final TaskFactory tasks, final VariantScope variantScope) {
+        BaseVariantData<?> variantData = variantScope.getVariantData();
+        VariantType variantType = variantData.getType();
 
-        final BuildTypeData buildTypeData = buildTypes.get(
-                variantData.getVariantConfiguration().getBuildType().getName());
+        final BuildTypeData buildTypeData =
+                buildTypes.get(variantScope.getVariantConfiguration().getBuildType().getName());
         if (buildTypeData.getAssembleTask() == null) {
             buildTypeData.setAssembleTask(taskManager.createAssembleTask(tasks, buildTypeData));
         }
@@ -407,13 +424,12 @@ public class VariantManager implements VariantModel {
             }
         });
 
-        VariantType variantType = variantData.getType();
-
         createAssembleTaskForVariantData(tasks, variantData);
         if (variantType.isForTesting()) {
-            final GradleVariantConfiguration testVariantConfig = variantData.getVariantConfiguration();
-            final BaseVariantData testedVariantData = (BaseVariantData) ((TestVariantData) variantData)
-                    .getTestedVariantData();
+            final GradleVariantConfiguration testVariantConfig =
+                    variantScope.getVariantConfiguration();
+            final BaseVariantData testedVariantData =
+                    (BaseVariantData) ((TestVariantData) variantData).getTestedVariantData();
             final VariantType testedVariantType = testedVariantData.getVariantConfiguration().getType();
 
             // Add the container of dependencies, the order of the libraries is important.
@@ -483,7 +499,7 @@ public class VariantManager implements VariantModel {
                     throw new IllegalArgumentException("Unknown test type " + variantType);
             }
         } else {
-            taskManager.createTasksForVariantData(tasks, variantData);
+            taskManager.createTasksForVariantScope(tasks, variantScope);
         }
     }
 
@@ -493,8 +509,7 @@ public class VariantManager implements VariantModel {
         // register transforms.
         FileCache fileCache =
                 MoreObjects.firstNonNull(
-                        taskManager.getGlobalScope().getBuildCache(),
-                        taskManager.getGlobalScope().getProjectLevelCache());
+                        globalScope.getBuildCache(), globalScope.getProjectLevelCache());
 
         final String explodedAarType = AndroidArtifacts.ArtifactType.EXPLODED_AAR.getType();
         dependencies.registerTransform(
@@ -840,6 +855,7 @@ public class VariantManager implements VariantModel {
         // create the internal storage for this variant.
         TestVariantData testVariantData =
                 new TestVariantData(
+                        globalScope,
                         extension,
                         taskManager,
                         testVariantConfig,
@@ -922,7 +938,7 @@ public class VariantManager implements VariantModel {
                 BaseVariantData<?> variantData = createVariantData(
                         buildTypeData.getBuildType(),
                         productFlavorList);
-                variantDataList.add(variantData);
+                addVariant(variantData);
 
                 GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
                 ProcessProfileWriter.addVariant(project.getPath(), variantData.getName())
@@ -937,7 +953,7 @@ public class VariantManager implements VariantModel {
                     TestVariantData unitTestVariantData = createTestVariantData(
                             variantData,
                             UNIT_TEST);
-                    variantDataList.add(unitTestVariantData);
+                    addVariant(unitTestVariantData);
 
                     if (buildTypeData == testBuildTypeData) {
                         if (variantConfig.isMinifyEnabled() && variantConfig.isJackEnabled()) {
@@ -957,7 +973,7 @@ public class VariantManager implements VariantModel {
             TestVariantData androidTestVariantData = createTestVariantData(
                     variantForAndroidTest,
                     ANDROID_TEST);
-            variantDataList.add(androidTestVariantData);
+            addVariant(androidTestVariantData);
         }
     }
 

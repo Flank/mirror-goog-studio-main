@@ -45,7 +45,6 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.transforms.ExtractJarsTransform;
 import com.android.build.gradle.internal.transforms.InstantRunSliceSplitApkBuilder;
 import com.android.build.gradle.internal.transforms.PreDexTransform;
-import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.PackageApplication;
 import com.android.build.gradle.tasks.PreColdSwapTask;
 import com.android.builder.core.AndroidBuilder;
@@ -71,20 +70,21 @@ import org.gradle.api.logging.Logging;
  */
 class ExternalBuildTaskManager {
 
-    private final Project project;
-    @NonNull private final ProjectOptions projectOptions;
-    private final AndroidTaskRegistry androidTasks = new AndroidTaskRegistry();
-    private final TaskContainerAdaptor tasks;
-    private final Recorder recorder;
+    @NonNull private final ExternalBuildGlobalScope globalScope;
+    @NonNull private final Project project;
+    @NonNull private final AndroidTaskRegistry androidTasks;
+    @NonNull private final TaskContainerAdaptor tasks;
+    @NonNull private final Recorder recorder;
 
     ExternalBuildTaskManager(
+            @NonNull ExternalBuildGlobalScope globalScope,
             @NonNull Project project,
-            @NonNull ProjectOptions projectOptions,
             @NonNull Recorder recorder) {
+        this.globalScope = globalScope;
         this.project = project;
-        this.projectOptions = projectOptions;
         this.tasks = new TaskContainerAdaptor(project.getTasks());
         this.recorder = recorder;
+        this.androidTasks = new AndroidTaskRegistry();
     }
 
     void createTasks(@NonNull ExternalBuildExtension externalBuildExtension) throws Exception {
@@ -129,8 +129,6 @@ class ExternalBuildTaskManager {
                 .setFolder(new File(project.getBuildDir(), "temp/streams/native_libs"))
                 .build());
 
-        ExternalBuildGlobalScope globalScope =
-                new ExternalBuildGlobalScope(project, projectOptions);
         File androidManifestFile =
                 new File(externalBuildContext.getExecutionRoot(),
                         externalBuildContext

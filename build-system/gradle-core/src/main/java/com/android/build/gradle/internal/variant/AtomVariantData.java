@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.tasks.BundleAtom;
 import com.android.builder.core.ErrorReporter;
 import com.android.builder.core.VariantType;
@@ -38,12 +39,13 @@ public class AtomVariantData extends AndroidArtifactVariantData<AtomVariantOutpu
     public BundleAtom bundleAtomTask;
 
     public AtomVariantData(
+            @NonNull GlobalScope globalScope,
             @NonNull AndroidConfig androidConfig,
             @NonNull TaskManager taskManager,
             @NonNull GradleVariantConfiguration config,
             @NonNull ErrorReporter errorReporter,
             @NonNull Recorder recorder) {
-        super(androidConfig, taskManager, config, errorReporter, recorder);
+        super(globalScope, androidConfig, taskManager, config, errorReporter, recorder);
         testVariants = Maps.newEnumMap(VariantType.class);
 
         // create default output

@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.ndk.NdkHandler;
+import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.variant.LibraryVariantFactory;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.options.ProjectOptions;
@@ -87,10 +88,11 @@ public class LibraryPlugin extends BasePlugin implements Plugin<Project> {
     @NonNull
     @Override
     protected VariantFactory createVariantFactory(
+            @NonNull GlobalScope globalScope,
             @NonNull Instantiator instantiator,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull AndroidConfig androidConfig) {
-        return new LibraryVariantFactory(instantiator, androidBuilder, androidConfig);
+        return new LibraryVariantFactory(globalScope, androidBuilder, instantiator, androidConfig);
     }
 
     @Override
@@ -101,6 +103,7 @@ public class LibraryPlugin extends BasePlugin implements Plugin<Project> {
     @NonNull
     @Override
     protected TaskManager createTaskManager(
+            @NonNull GlobalScope globalScope,
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
             @NonNull AndroidBuilder androidBuilder,
@@ -112,13 +115,13 @@ public class LibraryPlugin extends BasePlugin implements Plugin<Project> {
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
         return new LibraryTaskManager(
+                globalScope,
                 project,
                 projectOptions,
                 androidBuilder,
                 dataBindingBuilder,
                 androidConfig,
                 sdkHandler,
-                ndkHandler,
                 dependencyManager,
                 toolingRegistry,
                 recorder);

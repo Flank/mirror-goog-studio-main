@@ -20,13 +20,10 @@ import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.gradle.AndroidConfig;
-import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.AndroidTask;
+import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.BaseVariantOutputData;
-import com.android.build.gradle.internal.variant.InstantAppVariantData;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.AtomConfig;
 import com.android.build.gradle.tasks.BundleInstantApp;
@@ -47,39 +44,34 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 public class InstantAppTaskManager extends TaskManager {
 
     public InstantAppTaskManager(
+            @NonNull GlobalScope globalScope,
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull AndroidConfig extension,
             @NonNull SdkHandler sdkHandler,
-            @NonNull NdkHandler ndkHandler,
             @NonNull DependencyManager dependencyManager,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder threadRecorder) {
         super(
+                globalScope,
                 project,
                 projectOptions,
                 androidBuilder,
                 dataBindingBuilder,
                 extension,
                 sdkHandler,
-                ndkHandler,
                 dependencyManager,
                 toolingRegistry,
                 threadRecorder);
     }
 
     @Override
-    public void createTasksForVariantData(
-            @NonNull final TaskFactory tasks,
-            @NonNull final BaseVariantData<? extends BaseVariantOutputData> variantData) {
-        assert variantData instanceof InstantAppVariantData;
-
+    public void createTasksForVariantScope(
+            @NonNull final TaskFactory tasks, @NonNull final VariantScope variantScope) {
         final String projectPath = project.getPath();
-        final String variantName = variantData.getName();
-
-        final VariantScope variantScope = variantData.getScope();
+        final String variantName = variantScope.getFullVariantName();
 
         // TODO: Re-enable later.
         /*ProcessProfileWriter.getProject(projectPath)

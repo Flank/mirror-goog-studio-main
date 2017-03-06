@@ -32,6 +32,7 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
+import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.SplitFactory;
 import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.builder.core.AndroidBuilder;
@@ -49,24 +50,16 @@ import org.gradle.internal.reflect.Instantiator;
 /**
  * An implementation of VariantFactory for a project that generates APKs.
  *
- * This can be an app project, or a test-only project, though the default
- * behavior is app.
+ * <p>This can be an app project, or a test-only project, though the default behavior is app.
  */
-public class ApplicationVariantFactory implements VariantFactory {
-
-    Instantiator instantiator;
-    @NonNull
-    protected final AndroidConfig extension;
-    @NonNull
-    private final AndroidBuilder androidBuilder;
+public class ApplicationVariantFactory extends BaseVariantFactory implements VariantFactory {
 
     public ApplicationVariantFactory(
+            @NonNull GlobalScope globalScope,
             @NonNull Instantiator instantiator,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull AndroidConfig extension) {
-        this.instantiator = instantiator;
-        this.androidBuilder = androidBuilder;
-        this.extension = extension;
+        super(globalScope, androidBuilder, instantiator, extension);
     }
 
     @Override
@@ -77,6 +70,7 @@ public class ApplicationVariantFactory implements VariantFactory {
             @NonNull Recorder recorder) {
         ApplicationVariantData variant =
                 new ApplicationVariantData(
+                        globalScope,
                         extension,
                         variantConfiguration,
                         taskManager,

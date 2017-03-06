@@ -17,6 +17,7 @@
 package com.android.build.gradle;
 
 import com.android.build.gradle.internal.BadPluginException;
+import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.DefaultBuildType;
@@ -53,7 +54,7 @@ public class AppPluginInternalTest extends BaseDslTest {
                 plugin.getVariantManager().getBuildTypes().get(BuilderConstants.RELEASE));
         TestCase.assertEquals(0, plugin.getVariantManager().getProductFlavors().size());
 
-        List<BaseVariantData<?>> variants = plugin.getVariantManager().getVariantDataList();
+        List<VariantScope> variants = plugin.getVariantManager().getVariantScopes();
         checkDefaultVariants(variants);
 
         BaseDslTest.findVariantData(variants, "debug");
@@ -131,7 +132,7 @@ public class AppPluginInternalTest extends BaseDslTest {
 
         TestCase.assertEquals(3, plugin.getVariantManager().getBuildTypes().size());
 
-        List<BaseVariantData<?>> variants = plugin.getVariantManager().getVariantDataList();
+        List<VariantScope> variants = plugin.getVariantManager().getVariantScopes();
         LinkedHashMap<String, Integer> map = new LinkedHashMap<>(3);
         map.put("appVariants", 3);
         map.put("unitTests", 3);
@@ -171,7 +172,7 @@ public class AppPluginInternalTest extends BaseDslTest {
 
         TestCase.assertEquals(2, plugin.getVariantManager().getProductFlavors().size());
 
-        List<BaseVariantData<?>> variants = plugin.getVariantManager().getVariantDataList();
+        List<VariantScope> variants = plugin.getVariantManager().getVariantScopes();
         LinkedHashMap<String, Integer> map = new LinkedHashMap<>(3);
         map.put("appVariants", 4);
         map.put("unitTests", 4);
@@ -227,7 +228,7 @@ public class AppPluginInternalTest extends BaseDslTest {
 
         TestCase.assertEquals(5, plugin.getVariantManager().getProductFlavors().size());
 
-        List<BaseVariantData<?>> variants = plugin.getVariantManager().getVariantDataList();
+        List<VariantScope> variants = plugin.getVariantManager().getVariantScopes();
         LinkedHashMap<String, Integer> map = new LinkedHashMap<>(3);
         map.put("appVariants", 12);
         map.put("unitTests", 12);
@@ -320,7 +321,7 @@ public class AppPluginInternalTest extends BaseDslTest {
         AppPlugin plugin = project.getPlugins().getPlugin(AppPlugin.class);
         plugin.createAndroidTasks(true);
 
-        List<BaseVariantData<?>> variants = plugin.getVariantManager().getVariantDataList();
+        List<VariantScope> variants = plugin.getVariantManager().getVariantScopes();
         LinkedHashMap<String, Integer> map = new LinkedHashMap<>(3);
         map.put("appVariants", 6);
         map.put("unitTests", 6);

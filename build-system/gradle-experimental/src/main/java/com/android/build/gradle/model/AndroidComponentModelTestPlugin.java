@@ -54,10 +54,9 @@ public class AndroidComponentModelTestPlugin extends RuleSource {
             TestVariantData unitTestVariantData = variantManager.createTestVariantData(
                     testedVariantData,
                     UNIT_TEST);
-            variantManager.getVariantDataList().add(unitTestVariantData);
+            variantManager.addVariant(unitTestVariantData);
             variantManager.createTasksForVariantData(
-                    new TaskModelMapAdaptor(tasks),
-                    unitTestVariantData);
+                    new TaskModelMapAdaptor(tasks), unitTestVariantData.getScope());
 
             // TODO: compare against testBuildType instead of BuilderConstants.DEBUG.
             if (!binary.getBuildType().getName().equals(BuilderConstants.DEBUG)) {
@@ -69,10 +68,9 @@ public class AndroidComponentModelTestPlugin extends RuleSource {
 
             TestVariantData testVariantData =
                     variantManager.createTestVariantData(testedVariantData, ANDROID_TEST);
-            variantManager.getVariantDataList().add(testVariantData);
+            variantManager.addVariant(testVariantData);
             variantManager.createTasksForVariantData(
-                    new TaskModelMapAdaptor(tasks),
-                    testVariantData);
+                    new TaskModelMapAdaptor(tasks), testVariantData.getScope());
         }
     }
 }

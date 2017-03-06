@@ -174,6 +174,7 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> implement
     public VariantOutputFactory variantOutputFactory;
 
     public BaseVariantData(
+            @NonNull GlobalScope globalScope,
             @NonNull AndroidConfig androidConfig,
             @NonNull TaskManager taskManager,
             @NonNull GradleVariantConfiguration variantConfiguration,
@@ -199,7 +200,6 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> implement
                             variantConfiguration.getMinSdkVersion().getApiLevel()));
         }
 
-        final GlobalScope globalScope = taskManager.getGlobalScope();
         scope = new VariantScopeImpl(
                         globalScope,
                         new TransformManager(

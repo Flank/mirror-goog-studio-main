@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
+import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.ErrorReporter;
 import com.android.builder.core.VariantType;
@@ -41,22 +42,14 @@ import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.internal.reflect.Instantiator;
 
-public class AtomVariantFactory implements VariantFactory {
-
-    @NonNull
-    private Instantiator instantiator;
-    @NonNull
-    private final AndroidConfig extension;
-    @NonNull
-    private final AndroidBuilder androidBuilder;
+public class AtomVariantFactory extends BaseVariantFactory {
 
     public AtomVariantFactory(
-            @NonNull Instantiator instantiator,
+            @NonNull GlobalScope globalScope,
             @NonNull AndroidBuilder androidBuilder,
+            @NonNull Instantiator instantiator,
             @NonNull AndroidConfig extension) {
-        this.instantiator = instantiator;
-        this.androidBuilder = androidBuilder;
-        this.extension = extension;
+        super(globalScope, androidBuilder, instantiator, extension);
     }
 
     @Override
@@ -66,6 +59,7 @@ public class AtomVariantFactory implements VariantFactory {
             @NonNull TaskManager taskManager,
             @NonNull Recorder recorder) {
         return new AtomVariantData(
+                globalScope,
                 extension,
                 taskManager,
                 variantConfiguration,
