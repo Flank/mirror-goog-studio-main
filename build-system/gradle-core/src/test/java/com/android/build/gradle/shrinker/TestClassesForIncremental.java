@@ -601,4 +601,37 @@ public class TestClassesForIncremental implements Opcodes {
 
         return cw.toByteArray();
     }
+
+    static byte[] classWithCasts(String className, String... targets) throws Exception {
+
+        ClassWriter cw = new ClassWriter(0);
+        MethodVisitor mv;
+
+        cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, "test/" + className, null, "java/lang/Object", null);
+
+        {
+            mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
+            mv.visitCode();
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
+            mv.visitInsn(RETURN);
+            mv.visitMaxs(1, 1);
+            mv.visitEnd();
+        }
+        {
+            mv = cw.visitMethod(ACC_PUBLIC, "cast", "(Ljava/lang/Object;)V", null, null);
+            mv.visitCode();
+            for (String klass : targets) {
+                mv.visitVarInsn(ALOAD, 0);
+                mv.visitTypeInsn(INSTANCEOF, klass);
+                mv.visitInsn(POP);
+            }
+            mv.visitInsn(RETURN);
+            mv.visitMaxs(0, 1);
+            mv.visitEnd();
+        }
+        cw.visitEnd();
+
+        return cw.toByteArray();
+    }
 }

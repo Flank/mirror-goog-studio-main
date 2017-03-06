@@ -1736,6 +1736,28 @@ class TestClasses implements Opcodes {
                 mv.visitMaxs(2, 1);
                 mv.visitEnd();
             }
+            {
+                mv =
+                        cw.visitMethod(
+                                ACC_PUBLIC + ACC_STATIC, "useNamed", "(Ltest/Named;)V", null, null);
+                mv.visitCode();
+                mv.visitInsn(RETURN);
+                mv.visitMaxs(0, 1);
+                mv.visitEnd();
+            }
+            {
+                mv =
+                        cw.visitMethod(
+                                ACC_PUBLIC + ACC_STATIC,
+                                "useHasAge",
+                                "(Ltest/HasAge;)V",
+                                null,
+                                null);
+                mv.visitCode();
+                mv.visitInsn(RETURN);
+                mv.visitMaxs(0, 1);
+                mv.visitEnd();
+            }
             cw.visitEnd();
 
             return cw.toByteArray();

@@ -66,6 +66,8 @@ public class JavaSerializationShrinkerGraph implements ShrinkerGraph<String> {
 
     private final SetMultimap<String, String> mMembers;
 
+    private final SetMultimap<String, String> mTypesFromSignatures;
+
     private final ConcurrentMap<String, Integer> mModifiers;
 
     private final Counters mMultidexCounters;
@@ -80,6 +82,8 @@ public class JavaSerializationShrinkerGraph implements ShrinkerGraph<String> {
         mMultidexCounters = new Counters(Maps.newConcurrentMap(), ImmutableMap.of());
         mMembers = Multimaps.synchronizedSetMultimap(HashMultimap.<String, String>create());
         mAnnotations = Multimaps.synchronizedSetMultimap(HashMultimap.<String, String>create());
+        mTypesFromSignatures =
+                Multimaps.synchronizedSetMultimap(HashMultimap.<String, String>create());
         mClasses = Maps.newConcurrentMap();
         mModifiers = Maps.newConcurrentMap();
         mDependencies =
@@ -97,7 +101,8 @@ public class JavaSerializationShrinkerGraph implements ShrinkerGraph<String> {
             ConcurrentMap<String, DependencyType> multidexRoots,
             Map<String, Counter> multidexCounters,
             ConcurrentMap<String, DependencyType> shrinkRoots,
-            Map<String, Counter> shrinkCounters) {
+            Map<String, Counter> shrinkCounters,
+            SetMultimap<String, String> typesFromSignatures) {
         mStateDir = stateDir;
         mAnnotations = annotations;
         mClasses = classes;
@@ -106,6 +111,7 @@ public class JavaSerializationShrinkerGraph implements ShrinkerGraph<String> {
         mModifiers = modifiers;
         mMultidexCounters = new Counters(multidexRoots, multidexCounters);
         mShrinkCounters = new Counters(shrinkRoots, shrinkCounters);
+        mTypesFromSignatures = typesFromSignatures;
     }
 
     public static JavaSerializationShrinkerGraph empty(File stateDir) {
@@ -143,7 +149,8 @@ public class JavaSerializationShrinkerGraph implements ShrinkerGraph<String> {
                     (ConcurrentMap) stream.readObject(),
                     (Map) stream.readObject(),
                     (ConcurrentMap) stream.readObject(),
-                    (Map) stream.readObject());
+                    (Map) stream.readObject(),
+                    (SetMultimap) stream.readObject());
         } catch (ClassNotFoundException | InvalidClassException e) {
             throw new IncrementalRunImpossibleException(e);
         }
@@ -222,6 +229,7 @@ public class JavaSerializationShrinkerGraph implements ShrinkerGraph<String> {
             stream.writeObject(ImmutableMap.copyOf(mMultidexCounters.mReferenceCounters.asMap()));
             stream.writeObject(mShrinkCounters.mRoots);
             stream.writeObject(ImmutableMap.copyOf(mShrinkCounters.mReferenceCounters.asMap()));
+            stream.writeObject(mTypesFromSignatures);
         }
     }
 
@@ -328,6 +336,17 @@ public class JavaSerializationShrinkerGraph implements ShrinkerGraph<String> {
         for (Map.Entry<String, Dependency<String>> entry : invalidDeps.entrySet()) {
             mDependencies.remove(entry.getKey(), entry.getValue());
         }
+    }
+
+    @Override
+    public void addTypeFromGenericSignature(@NonNull String klass, @NonNull String type) {
+        mTypesFromSignatures.put(klass, type);
+    }
+
+    @NonNull
+    @Override
+    public Set<String> getTypesFromGenericSignatures(@NonNull String klass) {
+        return mTypesFromSignatures.get(klass);
     }
 
     @NonNull

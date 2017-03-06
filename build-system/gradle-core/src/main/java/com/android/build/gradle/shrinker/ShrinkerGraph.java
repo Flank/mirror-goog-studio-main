@@ -281,4 +281,11 @@ public interface ShrinkerGraph<T> {
      * these edges are removed from the graph.
      */
     void checkDependencies(ShrinkerLogger shrinkerLogger);
+
+    /** Records a type referenced in the generic signatures by the given class. */
+    void addTypeFromGenericSignature(@NonNull T klass, @NonNull T type);
+
+    /** Gets all types referenced from generic signatures of a given class. */
+    @NonNull
+    Set<T> getTypesFromGenericSignatures(@NonNull T klass);
 }

@@ -34,6 +34,8 @@ import java.util.Collections;
 import java.util.Set;
 import org.junit.Test;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.MethodNode;
 
 /** Tests for {@link FullRunShrinker}. */
 @SuppressWarnings("SpellCheckingInspection") // Lots of type descriptors below.
@@ -1042,8 +1044,12 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
         assertMembersLeft("Main", "<init>:()V", "main:()V");
     }
 
+    /**
+     * Tests that being referenced by a generic class signature is not enough to keep a class. In
+     * this case we rewrite the signature instead.
+     */
     @Test
-    public void signatures_classSignature() throws Exception {
+    public void signatures_classSignature_onlyUsage() throws Exception {
         // Given:
         Files.write(TestClasses.Signatures.main(), new File(mTestPackageDir, "Main.class"));
         Files.write(TestClasses.Signatures.named(), new File(mTestPackageDir, "Named.class"));
@@ -1058,14 +1064,44 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
         assertMembersLeft("NamedMap", "<init>:()V");
         assertClassSkipped("HasAge");
 
-        // Named is kept, because it's mentioned in the signature. For now we don't support rewriting
-        // signatures, so we have to kepp it, otherwise we would create invalid class files that make
-        // reflection crash.
-        assertMembersLeft("Named");
+        // Named is skipped, because it's mentioned only in the signature.
+        assertClassSkipped("Named");
+
+        ClassNode namedMap = getClassNode(getOutputClassFile("NamedMap"));
+        assertThat(namedMap.signature)
+                .isEqualTo("<T::Ljava/io/Serializable;:Ljava/lang/Object;>Ljava/lang/Object;");
     }
 
+    /** Tests that class signatures are left alone if the target class is kept. */
     @Test
-    public void signatures_methodSignature() throws Exception {
+    public void signatures_classSignature_otherUsages() throws Exception {
+        // Given:
+        Files.write(TestClasses.Signatures.main(), new File(mTestPackageDir, "Main.class"));
+        Files.write(TestClasses.Signatures.named(), new File(mTestPackageDir, "Named.class"));
+        Files.write(TestClasses.Signatures.namedMap(), new File(mTestPackageDir, "NamedMap.class"));
+        Files.write(TestClasses.Signatures.hasAge(), new File(mTestPackageDir, "HasAge.class"));
+
+        // When:
+        fullRun("Main", "main:(Ltest/NamedMap;)V", "useNamed:(Ltest/Named;)V");
+
+        // Then:
+        assertMembersLeft(
+                "Main", "<init>:()V", "main:(Ltest/NamedMap;)V", "useNamed:(Ltest/Named;)V");
+        assertMembersLeft("NamedMap", "<init>:()V");
+        assertMembersLeft("Named");
+        assertClassSkipped("HasAge");
+
+        ClassNode namedMap = getClassNode(getOutputClassFile("NamedMap"));
+        assertThat(namedMap.signature)
+                .isEqualTo("<T::Ljava/io/Serializable;:Ltest/Named;>Ljava/lang/Object;");
+    }
+
+    /**
+     * Tests that being referenced by a generic class signature is not enough to keep a class. In
+     * this case we rewrite the signature instead.
+     */
+    @Test
+    public void signatures_methodSignature_onlyUsage() throws Exception {
         // Given:
         Files.write(TestClasses.Signatures.main(), new File(mTestPackageDir, "Main.class"));
         Files.write(TestClasses.Signatures.named(), new File(mTestPackageDir, "Named.class"));
@@ -1078,8 +1114,40 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
         // Then:
         assertMembersLeft("Main", "<init>:()V", "callMethod:(Ltest/NamedMap;)V");
         assertMembersLeft("NamedMap", "<init>:()V", "method:(Ljava/util/Collection;)V");
-        assertMembersLeft("Named");
+        assertClassSkipped("Named");
+        assertClassSkipped("HasAge");
+
+        ClassNode namedMap = getClassNode(getOutputClassFile("NamedMap"));
+        MethodNode method = (MethodNode) namedMap.methods.get(1);
+        assertThat(method.signature)
+                .isEqualTo("<I::Ljava/lang/Object;>(Ljava/util/Collection<TI;>;)V");
+    }
+
+    /** Tests that method signatures are left alone if the target class is kept. */
+    @Test
+    public void signatures_methodSignature_otherUsages() throws Exception {
+        // Given:
+        Files.write(TestClasses.Signatures.main(), new File(mTestPackageDir, "Main.class"));
+        Files.write(TestClasses.Signatures.named(), new File(mTestPackageDir, "Named.class"));
+        Files.write(TestClasses.Signatures.namedMap(), new File(mTestPackageDir, "NamedMap.class"));
+        Files.write(TestClasses.Signatures.hasAge(), new File(mTestPackageDir, "HasAge.class"));
+
+        // When:
+        fullRun("Main", "callMethod:(Ltest/NamedMap;)V", "useHasAge:(Ltest/HasAge;)V");
+
+        // Then:
+        assertMembersLeft(
+                "Main",
+                "<init>:()V",
+                "callMethod:(Ltest/NamedMap;)V",
+                "useHasAge:(Ltest/HasAge;)V");
+        assertMembersLeft("NamedMap", "<init>:()V", "method:(Ljava/util/Collection;)V");
+        assertClassSkipped("Named");
         assertMembersLeft("HasAge");
+
+        ClassNode namedMap = getClassNode(getOutputClassFile("NamedMap"));
+        MethodNode method = (MethodNode) namedMap.methods.get(1);
+        assertThat(method.signature).isEqualTo("<I::Ltest/HasAge;>(Ljava/util/Collection<TI;>;)V");
     }
 
     @Test
