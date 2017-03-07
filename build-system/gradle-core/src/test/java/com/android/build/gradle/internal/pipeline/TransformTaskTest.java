@@ -2398,7 +2398,7 @@ public class TransformTaskTest extends TaskTestUtils {
         exception.expect(RuntimeException.class);
         exception.expectMessage(
                 String.format(
-                        "Unexpected scopes found in folder '%s'. Required: PROJECT. Found: PROJECT, EXTERNAL_LIBRARIES",
+                        "Unexpected scopes found in folder '%s'. Required: PROJECT. Found: EXTERNAL_LIBRARIES, PROJECT",
                         rootFolder));
         transformTask.transform(inputBuilder().build());
     }

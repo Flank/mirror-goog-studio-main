@@ -443,12 +443,21 @@ public class IntermediateFolderUtils {
                     }
 
                     if (foundMatch && foundUnwanted) {
+                        // Sort the names, so the error message is stable.
+                        List<String> foundScopes =
+                                subStream
+                                        .getScopes()
+                                        .stream()
+                                        .map(Object::toString)
+                                        .sorted()
+                                        .collect(Collectors.toList());
+
                         throw new RuntimeException(
                                 String.format(
                                         "Unexpected scopes found in folder '%s'. Required: %s. Found: %s",
                                         rootFolder,
                                         Joiner.on(", ").join(scopes),
-                                        Joiner.on(", ").join(subStream.getScopes())));
+                                        Joiner.on(", ").join(foundScopes)));
                     } else if (foundMatch) {
                         // if the types are an exact match, then just get the substream
                         if (limitedTypes.size() == subStream.getTypes().size()) {
