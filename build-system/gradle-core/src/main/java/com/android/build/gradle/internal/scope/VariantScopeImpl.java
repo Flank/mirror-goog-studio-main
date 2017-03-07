@@ -1697,8 +1697,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
                     if (testedFC != null) {
                         result = plusFunction.apply(collection, testedFC);
-                    } else {
-                        System.err.println("Can't find tested artifact for: " + artifactType);
                     }
                 }
 
