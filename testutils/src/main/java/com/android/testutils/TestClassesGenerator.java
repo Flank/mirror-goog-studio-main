@@ -16,6 +16,7 @@
 
 package com.android.testutils;
 
+import static org.objectweb.asm.Opcodes.ACC_PRIVATE;
 import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
 import static org.objectweb.asm.Opcodes.ACC_SUPER;
 import static org.objectweb.asm.Opcodes.ALOAD;
@@ -24,7 +25,9 @@ import static org.objectweb.asm.Opcodes.RETURN;
 import static org.objectweb.asm.Opcodes.V1_6;
 
 import com.android.annotations.NonNull;
+import java.util.List;
 import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
 
 /** A class generator used to create classes that can be used in tests. */
@@ -76,6 +79,50 @@ public final class TestClassesGenerator {
             mv.visitEnd();
         }
         for (String namesAndDescriptor : namesAndDescriptors) {
+            int colon = namesAndDescriptor.indexOf(':');
+            String methodName = namesAndDescriptor.substring(0, colon);
+            String descriptor =
+                    namesAndDescriptor.substring(colon + 1, namesAndDescriptor.length());
+            {
+                mv = cw.visitMethod(ACC_PUBLIC, methodName, descriptor, null, null);
+                mv.visitCode();
+                // This bytecode is only valid for some signatures (void methods). This class is used
+                // for testing the parser, we don't ever load these classes to a running VM anyway.
+                mv.visitInsn(RETURN);
+                mv.visitMaxs(0, 1);
+                mv.visitEnd();
+            }
+        }
+        cw.visitEnd();
+
+        return cw.toByteArray();
+    }
+
+    /** Generates a class containing specified fields and methods. */
+    public static byte[] classWithFieldsAndMethods(
+            @NonNull String className, @NonNull List<String> fields, @NonNull List<String> methods)
+            throws Exception {
+
+        ClassWriter cw = new ClassWriter(0);
+        MethodVisitor mv;
+        FieldVisitor fv;
+
+        cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, className, null, "java/lang/Object", null);
+
+        {
+            mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
+            mv.visitCode();
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
+            mv.visitInsn(RETURN);
+            mv.visitMaxs(1, 1);
+            mv.visitEnd();
+        }
+        for (String fieldName : fields) {
+            fv = cw.visitField(ACC_PRIVATE, fieldName, "Ljava/lang/String;", null, null);
+            fv.visitEnd();
+        }
+        for (String namesAndDescriptor : methods) {
             int colon = namesAndDescriptor.indexOf(':');
             String methodName = namesAndDescriptor.substring(0, colon);
             String descriptor =
