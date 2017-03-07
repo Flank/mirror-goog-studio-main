@@ -95,7 +95,7 @@ public class BasicTest2 {
 
     @BeforeClass
     public static void getModel() throws Exception {
-        project.execute("clean", "assembleDebug", "assembleAndroidTest");
+        project.execute("clean", "assemble", "assembleAndroidTest");
         // basic project overwrites buildConfigField which emits a sync warning
         modelContainer = project.model().ignoreSyncIssues().getSingle();
         modelContainer
