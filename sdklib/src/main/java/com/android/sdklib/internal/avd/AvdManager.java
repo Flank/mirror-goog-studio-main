@@ -138,6 +138,11 @@ public class AvdManager {
     public static final String AVD_INI_AVD_ID = "AvdId";
 
     /**
+     * AVD/config.ini key name representing the name of the AVD
+     */
+    public static final String AVD_INI_PLAYSTORE_ENABLED = "PlayStore.enabled";
+
+    /**
      * AVD/config.ini key name representing the CPU architecture of the specific avd
      */
     public static final String AVD_INI_CPU_ARCH = "hw.cpu.arch"; //$NON-NLS-1$
@@ -774,6 +779,7 @@ public class AvdManager {
             @Nullable String sdcard,
             @Nullable Map<String,String> hardwareConfig,
             @Nullable Map<String,String> bootProps,
+            boolean deviceHasPlayStore,
             boolean createSnapshot,
             boolean removePrevious,
             boolean editExisting,
@@ -820,6 +826,7 @@ public class AvdManager {
             configValues.put(AVD_INI_TAG_ID, tag.getId());
             configValues.put(AVD_INI_TAG_DISPLAY, tag.getDisplay());
             configValues.put(AVD_INI_ABI_TYPE, systemImage.getAbiType());
+            configValues.put(AVD_INI_PLAYSTORE_ENABLED, Boolean.toString(deviceHasPlayStore && systemImage.hasPlayStore()));
 
             writeCpuArch(systemImage, configValues, log);
 
