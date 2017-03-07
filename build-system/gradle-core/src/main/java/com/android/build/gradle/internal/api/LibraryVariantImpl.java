@@ -18,12 +18,14 @@ package com.android.build.gradle.internal.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.LibraryVariant;
 import com.android.build.gradle.api.TestVariant;
 import com.android.build.gradle.api.UnitTestVariant;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.LibraryVariantData;
 import com.android.builder.core.AndroidBuilder;
+import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.tasks.bundling.Zip;
 
 /**
@@ -45,8 +47,9 @@ public class LibraryVariantImpl extends BaseVariantImpl implements LibraryVarian
     public LibraryVariantImpl(
             @NonNull LibraryVariantData variantData,
             @NonNull AndroidBuilder androidBuilder,
-            @NonNull ReadOnlyObjectProvider readOnlyObjectProvider) {
-        super(androidBuilder, readOnlyObjectProvider);
+            @NonNull ReadOnlyObjectProvider readOnlyObjectProvider,
+            @NonNull NamedDomainObjectContainer<BaseVariantOutput> outputs) {
+        super(androidBuilder, readOnlyObjectProvider, outputs);
         this.variantData = variantData;
     }
 

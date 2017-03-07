@@ -320,7 +320,6 @@ public class AtomTaskManager extends TaskManager {
         AndroidTask<BundleAtom> bundleAtom =
                 getAndroidTasks().create(tasks,
                         new BundleAtom.ConfigAction(variantScope));
-        variantData.bundleAtomTask = bundleAtom.get(tasks);
 
         bundleAtom.dependsOn(tasks, variantScope.getMergeAssetsTask());
         bundleAtom.dependsOn(tasks, variantScope.getProcessResourcesTask());

@@ -17,18 +17,21 @@
 package com.android.build.gradle.internal.variant;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.api.BaseVariant;
+import com.android.build.VariantOutput;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantModel;
+import com.android.build.gradle.internal.api.BaseVariantImpl;
 import com.android.build.gradle.internal.api.ReadOnlyObjectProvider;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
+import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.profile.Recorder;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
+import org.gradle.internal.reflect.Instantiator;
 
 /**
  * Interface for Variant Factory.
@@ -44,10 +47,26 @@ public interface VariantFactory {
             @NonNull TaskManager taskManager,
             @NonNull Recorder recorder);
 
+    Class<? extends BaseVariantImpl> getVariantImplementationClass();
+
     @NonNull
-    BaseVariant createVariantApi(
+    default BaseVariantImpl createVariantApi(
+            @NonNull Instantiator instantiator,
+            @NonNull AndroidBuilder androidBuilder,
             @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData,
-            @NonNull ReadOnlyObjectProvider readOnlyObjectProvider);
+            @NonNull ReadOnlyObjectProvider readOnlyObjectProvider) {
+
+        return instantiator.newInstance(
+                getVariantImplementationClass(),
+                variantData,
+                androidBuilder,
+                readOnlyObjectProvider,
+                variantData
+                        .getScope()
+                        .getGlobalScope()
+                        .getProject()
+                        .container(VariantOutput.class));
+    }
 
     @NonNull
     VariantType getVariantConfigurationType();

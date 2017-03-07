@@ -38,15 +38,6 @@ public class AtomVariantOutputData extends BaseVariantOutputData {
 
     @NonNull
     @Override
-    public File getOutputFile() {
-        AtomVariantData atomVariantData = (AtomVariantData) variantData;
-        return atomVariantData.bundleAtomTask == null
-                ? getScope().getVariantScope().getOutputBundleFile()
-                : atomVariantData.bundleAtomTask.getBundleFile();
-    }
-
-    @NonNull
-    @Override
     public ImmutableList<ApkOutputFile> getOutputs() {
         return ImmutableList.of();
     }

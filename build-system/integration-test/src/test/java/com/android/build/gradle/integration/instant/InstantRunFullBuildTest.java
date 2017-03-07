@@ -75,8 +75,8 @@ public class InstantRunFullBuildTest {
         TestFileUtils.appendToFile(
                 mProject.getBuildFile(),
                 "android.applicationVariants.all { variant ->\n"
-                        + " variant.registerSplitCustomizer { split ->\n"
-                        + "    split.versionCode = 42\n"
+                        + " variant.outputs.all { output ->\n"
+                        + "    output.versionCodeOverride = 42\n"
                         + "  }\n"
                         + "}");
         doTest(24);

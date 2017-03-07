@@ -20,16 +20,14 @@ import static com.android.SdkConstants.FN_SPLIT_LIST;
 import android.databinding.tool.LayoutXmlProcessor;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.FilterData;
 import com.android.build.OutputFile;
-import com.android.build.VariantOutput;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.api.AndroidSourceSet;
-import com.android.build.gradle.api.CustomizableSplit;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.Splits;
+import com.android.build.gradle.internal.dsl.VariantOutputFactory;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.GlobalScope;
@@ -56,6 +54,7 @@ import com.android.build.gradle.tasks.NdkCompile;
 import com.android.build.gradle.tasks.PackageAndroidArtifact;
 import com.android.build.gradle.tasks.PackageSplitAbi;
 import com.android.build.gradle.tasks.PackageSplitRes;
+import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.build.gradle.tasks.RenderscriptCompile;
 import com.android.build.gradle.tasks.ShaderCompile;
 import com.android.builder.core.ErrorReporter;
@@ -64,7 +63,6 @@ import com.android.builder.model.SourceProvider;
 import com.android.builder.profile.Recorder;
 import com.android.ide.common.blame.MergingLog;
 import com.android.ide.common.blame.SourceFile;
-import com.android.ide.common.build.ApkData;
 import com.android.utils.StringHelper;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
@@ -78,7 +76,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.ConfigurableFileCollection;
@@ -90,10 +87,8 @@ import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.bundling.Jar;
 import org.gradle.api.tasks.compile.JavaCompile;
 
-/**
- * Base data about a variant.
- */
-public abstract class BaseVariantData<T extends BaseVariantOutputData> {
+/** Base data about a variant. */
+public abstract class BaseVariantData<T extends BaseVariantOutputData> implements TaskContainer {
 
     @NonNull
     protected final TaskManager taskManager;
@@ -117,6 +112,10 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
     public AndroidTask<PackageSplitAbi> packageSplitAbiTask;
     public AndroidTask<? extends ManifestProcessorTask> manifestProcessorTask;
     public AndroidTask<? extends PackageAndroidArtifact> packageAndroidArtifactTask;
+
+    // FIX ME : move all AndroidTask<> above to Scope and use these here.
+    public PackageAndroidArtifact packageAndroidArtifact;
+    public ProcessAndroidResources processAndroidResources;
 
     public RenderscriptCompile renderscriptCompileTask;
     public AidlCompile aidlCompileTask;
@@ -180,6 +179,7 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
     @NonNull private final SplitList splitList;
 
     @NonNull private final SplitFactory splitFactory;
+    public VariantOutputFactory variantOutputFactory;
 
     public BaseVariantData(
             @NonNull AndroidConfig androidConfig,
@@ -285,6 +285,27 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
             Preconditions.checkState(!outputs.isEmpty());
             return outputs.get(0);
         }
+    }
+
+    @Nullable
+    @Override
+    public Task getTaskByName(TaskName name) {
+        if (TaskName.ASSEMBLE.equals(name)) {
+            return assembleVariantTask;
+        }
+        return null;
+    }
+
+    @Nullable
+    @Override
+    public <U extends Task> U getTaskByType(Class<U> taskType) {
+        if (taskType.equals(PackageAndroidArtifact.class)) {
+            return taskType.cast(packageAndroidArtifact);
+        }
+        if (taskType.equals(ProcessAndroidResources.class)) {
+            return taskType.cast(processAndroidResources);
+        }
+        return null;
     }
 
     @NonNull
@@ -474,77 +495,6 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
                 DiscoverableFilterType.LANGUAGE.folderPrefix,
                 DiscoverableFilterType.DENSITY.folderPrefix));
         return resFoldersOnDisk;
-    }
-
-    List<Action<CustomizableSplit>> splitCustomizers = new ArrayList<>();
-
-    public void registerSplitCustomizer(Action<CustomizableSplit> customizer) {
-        splitCustomizers.add(customizer);
-    }
-
-    private void customizeApk(CustomizableSplit split) {
-        splitCustomizers.forEach(customizer -> customizer.execute(split));
-    }
-
-    public void customizeSplit(ApkData apkData) {
-        GradleVariantConfiguration variantConfiguration = getVariantConfiguration();
-        apkData.setVersionCode(variantConfiguration.getVersionCode());
-        apkData.setVersionName(variantConfiguration.getVersionName());
-        customizeApk(getCustomizableSplit(this, apkData));
-    }
-
-    private static CustomizableSplit getCustomizableSplit(
-            BaseVariantData variantData, ApkData apkData) {
-        return new CustomizableSplit() {
-            @NonNull
-            @Override
-            public String getName() {
-                return variantData.getName();
-            }
-
-            @NonNull
-            @Override
-            public OutputFile.OutputType getType() {
-                return apkData.getType();
-            }
-
-            @Override
-            public void setVersionCode(int version) {
-                apkData.setVersionCode(version);
-            }
-
-            @Override
-            public void setVersionName(String versionName) {
-                apkData.setVersionName(versionName);
-            }
-
-            @Override
-            public void setOutputFileName(String outputFileName) {
-                apkData.setOutputFileName(outputFileName);
-            }
-
-            @NonNull
-            @Override
-            public List<FilterData> getFilters() {
-                return ImmutableList.copyOf(apkData.getFilters());
-            }
-
-            @Override
-            @Nullable
-            public String getFilter(String filterType) {
-                return apkData.getFilter(VariantOutput.FilterType.valueOf(filterType));
-            }
-
-            @Override
-            public String toString() {
-                return MoreObjects.toStringHelper(this)
-                        .add("split", apkData)
-                        .add("versionCode", apkData.getVersionCode())
-                        .add("versionName", apkData.getVersionName())
-                        .add("filters", getFilters())
-                        .toString();
-            }
-        };
     }
 
     @NonNull

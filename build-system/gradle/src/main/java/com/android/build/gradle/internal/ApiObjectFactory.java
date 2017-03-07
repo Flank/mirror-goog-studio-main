@@ -20,9 +20,10 @@ import static com.android.builder.core.VariantType.ANDROID_TEST;
 import static com.android.builder.core.VariantType.UNIT_TEST;
 
 import com.android.annotations.NonNull;
+import com.android.build.VariantOutput;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.TestedAndroidConfig;
-import com.android.build.gradle.api.BaseVariant;
+import com.android.build.gradle.internal.api.BaseVariantImpl;
 import com.android.build.gradle.internal.api.ReadOnlyObjectProvider;
 import com.android.build.gradle.internal.api.TestVariantImpl;
 import com.android.build.gradle.internal.api.TestedVariant;
@@ -61,26 +62,33 @@ public class ApiObjectFactory {
         this.instantiator = instantiator;
     }
 
-    public void create(BaseVariantData<?> variantData) {
+    public BaseVariantImpl create(BaseVariantData<?> variantData) {
         if (variantData.getType().isForTesting()) {
             // Testing variants are handled together with their "owners".
-            return;
+            return null;
         }
 
-        BaseVariant variantApi =
-                variantFactory.createVariantApi(variantData, readOnlyObjectProvider);
+        BaseVariantImpl variantApi =
+                variantFactory.createVariantApi(
+                        instantiator, androidBuilder, variantData, readOnlyObjectProvider);
 
         if (variantFactory.hasTestScope()) {
             TestVariantData androidTestVariantData =
                     ((TestedVariantData) variantData).getTestVariantData(ANDROID_TEST);
 
             if (androidTestVariantData != null) {
-                TestVariantImpl androidTestVariant = instantiator.newInstance(
-                        TestVariantImpl.class,
-                        androidTestVariantData,
-                        variantApi,
-                        androidBuilder,
-                        readOnlyObjectProvider);
+                TestVariantImpl androidTestVariant =
+                        instantiator.newInstance(
+                                TestVariantImpl.class,
+                                androidTestVariantData,
+                                variantApi,
+                                androidBuilder,
+                                readOnlyObjectProvider,
+                                variantData
+                                        .getScope()
+                                        .getGlobalScope()
+                                        .getProject()
+                                        .container(VariantOutput.class));
 
                 // add the test output.
                 ApplicationVariantFactory.createApkOutputApiObjects(
@@ -95,12 +103,18 @@ public class ApiObjectFactory {
             TestVariantData unitTestVariantData =
                     ((TestedVariantData) variantData).getTestVariantData(UNIT_TEST);
             if (unitTestVariantData != null) {
-                UnitTestVariantImpl unitTestVariant = instantiator.newInstance(
-                        UnitTestVariantImpl.class,
-                        unitTestVariantData,
-                        variantApi,
-                        androidBuilder,
-                        readOnlyObjectProvider);
+                UnitTestVariantImpl unitTestVariant =
+                        instantiator.newInstance(
+                                UnitTestVariantImpl.class,
+                                unitTestVariantData,
+                                variantApi,
+                                androidBuilder,
+                                readOnlyObjectProvider,
+                                variantData
+                                        .getScope()
+                                        .getGlobalScope()
+                                        .getProject()
+                                        .container(VariantOutput.class));
 
                 ((TestedAndroidConfig) extension).getUnitTestVariants().add(unitTestVariant);
                 ((TestedVariant) variantApi).setUnitTestVariant(unitTestVariant);
@@ -110,5 +124,6 @@ public class ApiObjectFactory {
         // Only add the variant API object to the domain object set once it's been fully
         // initialized.
         extension.addVariant(variantApi);
+        return variantApi;
     }
 }

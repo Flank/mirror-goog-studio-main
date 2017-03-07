@@ -19,13 +19,14 @@ package com.android.build.gradle.internal.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.api.AtomVariant;
+import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.TestVariant;
 import com.android.build.gradle.api.UnitTestVariant;
 import com.android.build.gradle.internal.variant.AndroidArtifactVariantData;
 import com.android.build.gradle.internal.variant.AtomVariantData;
-import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.tasks.BundleAtom;
 import com.android.builder.core.AndroidBuilder;
+import org.gradle.api.NamedDomainObjectContainer;
 
 /**
  * implementation of the {@link AtomVariant} interface around a
@@ -46,20 +47,15 @@ public class AtomVariantImpl extends AndroidArtifactVariantImpl implements AtomV
     public AtomVariantImpl(
             @NonNull AtomVariantData variantData,
             @NonNull AndroidBuilder androidBuilder,
-            @NonNull ReadOnlyObjectProvider readOnlyObjectProvider) {
-        super(androidBuilder, readOnlyObjectProvider);
+            @NonNull ReadOnlyObjectProvider readOnlyObjectProvider,
+            @NonNull NamedDomainObjectContainer<BaseVariantOutput> outputs) {
+        super(androidBuilder, readOnlyObjectProvider, outputs);
         this.variantData = variantData;
     }
 
     @Override
     @NonNull
-    protected BaseVariantData<?> getVariantData() {
-        return variantData;
-    }
-
-    @Override
-    @NonNull
-    protected AndroidArtifactVariantData<?> getAndroidArtifactVariantData() {
+    protected AndroidArtifactVariantData<?> getVariantData() {
         return variantData;
     }
 

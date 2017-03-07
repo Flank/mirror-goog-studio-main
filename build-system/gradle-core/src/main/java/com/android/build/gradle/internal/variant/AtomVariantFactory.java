@@ -21,15 +21,12 @@ import static com.android.builder.core.BuilderConstants.RELEASE;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.AndroidConfig;
-import com.android.build.gradle.api.AtomVariant;
-import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.BuildTypeData;
 import com.android.build.gradle.internal.ProductFlavorData;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantModel;
 import com.android.build.gradle.internal.api.AtomVariantImpl;
-import com.android.build.gradle.internal.api.AtomVariantOutputImpl;
-import com.android.build.gradle.internal.api.ReadOnlyObjectProvider;
+import com.android.build.gradle.internal.api.BaseVariantImpl;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
@@ -40,8 +37,6 @@ import com.android.builder.core.VariantType;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.profile.Recorder;
-import com.google.common.collect.Lists;
-import java.util.List;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.internal.reflect.Instantiator;
@@ -79,30 +74,8 @@ public class AtomVariantFactory implements VariantFactory {
     }
 
     @Override
-    @NonNull
-    public AtomVariant createVariantApi(
-            @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData,
-            @NonNull ReadOnlyObjectProvider readOnlyObjectProvider) {
-        // create the base variant object.
-        AtomVariantImpl variant = instantiator.newInstance(
-                AtomVariantImpl.class, variantData, androidBuilder, readOnlyObjectProvider);
-
-        // now create the output objects
-        List<? extends BaseVariantOutputData> outputList = variantData.getOutputs();
-        List<BaseVariantOutput> apiOutputList = Lists.newArrayListWithCapacity(outputList.size());
-
-        for (BaseVariantOutputData variantOutputData : outputList) {
-            AtomVariantOutputData atomOutput = (AtomVariantOutputData) variantOutputData;
-
-            AtomVariantOutputImpl output = instantiator.newInstance(
-                    AtomVariantOutputImpl.class, atomOutput);
-
-            apiOutputList.add(output);
-        }
-
-        variant.addOutputs(apiOutputList);
-
-        return variant;
+    public Class<? extends BaseVariantImpl> getVariantImplementationClass() {
+        return AtomVariantImpl.class;
     }
 
     @NonNull

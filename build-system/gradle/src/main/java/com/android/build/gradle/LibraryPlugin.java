@@ -17,6 +17,7 @@ package com.android.build.gradle;
 
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
+import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.DependencyManager;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.LibraryTaskManager;
@@ -60,6 +61,7 @@ public class LibraryPlugin extends BasePlugin implements Plugin<Project> {
             @NonNull NamedDomainObjectContainer<BuildType> buildTypeContainer,
             @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavorContainer,
             @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigContainer,
+            @NonNull NamedDomainObjectContainer<BaseVariantOutput> buildOutputs,
             @NonNull ExtraModelInfo extraModelInfo) {
         return project.getExtensions()
                 .create(
@@ -72,6 +74,7 @@ public class LibraryPlugin extends BasePlugin implements Plugin<Project> {
                         buildTypeContainer,
                         productFlavorContainer,
                         signingConfigContainer,
+                        buildOutputs,
                         extraModelInfo);
     }
 

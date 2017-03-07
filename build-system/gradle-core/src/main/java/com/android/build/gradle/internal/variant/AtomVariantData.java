@@ -27,6 +27,7 @@ import com.android.builder.core.VariantType;
 import com.android.builder.profile.Recorder;
 import com.google.common.collect.Maps;
 import java.util.Map;
+import org.gradle.api.Task;
 
 /**
  * Data about a variant that produce a Atom bundle.
@@ -47,6 +48,15 @@ public class AtomVariantData extends AndroidArtifactVariantData<AtomVariantOutpu
 
         // create default output
         getSplitFactory().addMainApk();
+    }
+
+    @Nullable
+    @Override
+    public <U extends Task> U getTaskByType(Class<U> taskType) {
+        if (taskType.equals(BundleAtom.class)) {
+            return taskType.cast(bundleAtomTask);
+        }
+        return super.getTaskByType(taskType);
     }
 
     @Override

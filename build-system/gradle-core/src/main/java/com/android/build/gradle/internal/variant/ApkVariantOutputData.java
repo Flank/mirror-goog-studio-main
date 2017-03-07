@@ -23,7 +23,6 @@ import com.android.build.gradle.api.ApkOutputFile;
 import com.android.build.gradle.internal.ide.FilterDataImpl;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.google.common.collect.ImmutableList;
-import java.io.File;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
@@ -67,13 +66,6 @@ public class ApkVariantOutputData extends BaseVariantOutputData {
                                                 splitOutput::getOutputFile,
                                                 splitOutput.getApkInfo().getVersionCode()))
                         .collect(Collectors.toList()));
-    }
-
-    @NonNull
-    @Override
-    public File getOutputFile() {
-        // FIX ME !
-        return getOutputs().get(0).getOutputFile();
     }
 
     @Override

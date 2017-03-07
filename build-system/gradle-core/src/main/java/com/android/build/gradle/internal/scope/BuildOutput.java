@@ -17,8 +17,10 @@
 package com.android.build.gradle.internal.scope;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
+import com.android.ide.common.build.ApkData;
 import com.android.ide.common.build.ApkInfo;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
@@ -120,6 +122,11 @@ public final class BuildOutput implements OutputFile, Serializable {
     @Override
     public Collection<FilterData> getFilters() {
         return apkInfo.getFilters();
+    }
+
+    @Nullable
+    public String getFilter(String filterType) {
+        return ApkData.getFilter(apkInfo.getFilters(), FilterType.valueOf(filterType));
     }
 
     /**

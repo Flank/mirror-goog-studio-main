@@ -18,17 +18,19 @@ package com.android.build.gradle.internal.api;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.api.InstantAppVariantOutput;
-import com.android.build.gradle.internal.variant.BaseVariantOutputData;
-import com.android.build.gradle.internal.variant.InstantAppVariantOutputData;
+import com.android.build.gradle.internal.variant.TaskContainer;
+import com.android.ide.common.build.ApkData;
 
 /**
  * Implementation of variant output for iapk-generating variants.
  */
 public class InstantAppVariantOutputImpl extends BaseVariantOutputImpl implements
         InstantAppVariantOutput {
-    private final InstantAppVariantOutputData variantOutputData;
+    private final ApkData variantOutputData;
 
-    public InstantAppVariantOutputImpl(@NonNull InstantAppVariantOutputData variantOutputData) {
+    public InstantAppVariantOutputImpl(
+            @NonNull TaskContainer taskContainer, @NonNull ApkData variantOutputData) {
+        super(taskContainer);
         this.variantOutputData = variantOutputData;
     }
 
@@ -37,9 +39,9 @@ public class InstantAppVariantOutputImpl extends BaseVariantOutputImpl implement
         return variantOutputData.getVersionCode();
     }
 
-    @NonNull
     @Override
-    protected BaseVariantOutputData getVariantOutputData() {
+    @NonNull
+    protected ApkData getApkData() {
         return variantOutputData;
     }
 }

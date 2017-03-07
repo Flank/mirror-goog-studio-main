@@ -27,7 +27,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.FilterData;
-import com.android.build.OutputFile;
+import com.android.build.VariantOutput;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidArtifactOutput;
 import com.android.builder.model.AndroidProject;
@@ -108,24 +108,10 @@ public class ModelHelper {
                 "variantName '" + variantName + "' single output null-check",
                 output);
 
-        // we only support single outputFile in this helper method.
-        // we're not going to use this, this is a state check only.
-        Collection<? extends OutputFile> outputFiles = output.getOutputs();
-        assertNotNull(
-                "variantName '" + variantName + "' outputFiles null-check",
-                outputFiles);
-        assertEquals(
-                "variantName '" + variantName + "' outputFiles size check",
-                1,
-                outputFiles.size());
+        File outputFile = output.getOutputFile();
+        assertNotNull("variantName '" + variantName + "' mainOutputFile null-check", outputFile);
 
-        // get the main output file
-        OutputFile mainOutputFile = output.getMainOutputFile();
-        assertNotNull(
-                "variantName '" + variantName + "' mainOutputFile null-check",
-                mainOutputFile);
-
-        return mainOutputFile.getOutputFile();
+        return outputFile;
     }
 
     public static void testDefaultSourceSets(
@@ -186,8 +172,8 @@ public class ModelHelper {
         Collection<AndroidArtifactOutput> relMainOutputs = relMainInfo.getOutputs();
         assertNotNull("Rel Main output null-check", relMainOutputs);
 
-        File debugFile = debugMainOutputs.iterator().next().getMainOutputFile().getOutputFile();
-        File releaseFile = relMainOutputs.iterator().next().getMainOutputFile().getOutputFile();
+        File debugFile = debugMainOutputs.iterator().next().getOutputFile();
+        File releaseFile = relMainOutputs.iterator().next().getOutputFile();
 
         assertFalse("debug: " + debugFile + " / release: " + releaseFile,
                 debugFile.equals(releaseFile));
@@ -248,8 +234,9 @@ public class ModelHelper {
     }
 
     @Nullable
-    public static String getFilter(@NonNull OutputFile outputFile, @NonNull String filterType) {
-        for (FilterData filterData : outputFile.getFilters()) {
+    public static String getFilter(
+            @NonNull VariantOutput variantOutput, @NonNull String filterType) {
+        for (FilterData filterData : variantOutput.getFilters()) {
             if (filterData.getFilterType().equals(filterType)) {
                 return filterData.getIdentifier();
             }

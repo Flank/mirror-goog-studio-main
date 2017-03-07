@@ -329,10 +329,20 @@ public class ProcessAndroidResources extends IncrementalTask {
                                     ApkData configurationApkData =
                                             splitFactory.addConfigurationSplit(
                                                     filterType, filterValue);
+                                    configurationApkData.setVersionCode(
+                                            variantScope
+                                                    .getVariantConfiguration()
+                                                    .getVersionCode());
+                                    configurationApkData.setVersionName(
+                                            variantScope
+                                                    .getVariantConfiguration()
+                                                    .getVersionName());
 
+                                    // call user's script for the newly discovered ABI pure split.
                                     variantScope
                                             .getVariantData()
-                                            .customizeSplit(configurationApkData);
+                                            .variantOutputFactory
+                                            .create(configurationApkData);
 
                                     // in case we generated pure splits, we may have more than one
                                     // resource AP_ in the output directory. reconcile with the

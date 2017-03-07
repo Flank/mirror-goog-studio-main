@@ -35,15 +35,14 @@ android {
 ext.versionCodes = [all:1, mdpi:2, hdpi:3, xhdpi:4, xxhdpi:5]
 
 android.applicationVariants.all { variant ->
-  // assign different version code for each output
-  variant.registerSplitCustomizer { split ->
-    print("Customizing " + split)
-    def key = split.getFilter(OutputFile.DENSITY) == null ? "all" : split.getFilter(OutputFile.DENSITY)
+  variant.outputs.all { output ->
+    println("Customizing " + output)
+    def key = output.getFilter(OutputFile.DENSITY) == null ? "all" : output.getFilter(OutputFile.DENSITY)
     def code = project.ext.versionCodes.get(key) * 100 + android.defaultConfig.versionCode
-    print "Setting " + split + " version to " + code
-    split.setVersionCode(code)
-    split.setVersionName("version ${code}")
-    print("Done with " + split)
+    println "Setting " + output + " version to " + code
+    output.setVersionCodeOverride(code)
+    output.setVersionNameOverride("version ${code}")
+    println("Done with " + output)
   }
 }
 

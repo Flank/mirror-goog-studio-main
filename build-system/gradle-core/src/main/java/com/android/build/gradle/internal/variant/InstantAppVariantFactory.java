@@ -21,13 +21,10 @@ import static com.android.builder.core.BuilderConstants.RELEASE;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.AndroidConfig;
-import com.android.build.gradle.api.BaseVariantOutput;
-import com.android.build.gradle.api.InstantAppVariant;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantModel;
+import com.android.build.gradle.internal.api.BaseVariantImpl;
 import com.android.build.gradle.internal.api.InstantAppVariantImpl;
-import com.android.build.gradle.internal.api.InstantAppVariantOutputImpl;
-import com.android.build.gradle.internal.api.ReadOnlyObjectProvider;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
@@ -35,8 +32,6 @@ import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.profile.Recorder;
-import com.google.common.collect.Lists;
-import java.util.List;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.internal.reflect.Instantiator;
@@ -81,30 +76,9 @@ public class InstantAppVariantFactory implements VariantFactory {
         return variant;
     }
 
-    @NonNull
     @Override
-    public InstantAppVariant createVariantApi(
-            @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData,
-            @NonNull ReadOnlyObjectProvider readOnlyObjectProvider) {
-        InstantAppVariantImpl variant = instantiator.newInstance(
-                InstantAppVariantImpl.class, variantData, androidBuilder, readOnlyObjectProvider);
-
-        // now create the output objects
-        List<? extends BaseVariantOutputData> outputList = variantData.getOutputs();
-        List<BaseVariantOutput> apiOutputList = Lists.newArrayListWithCapacity(outputList.size());
-
-        for (BaseVariantOutputData variantOutputData : outputList) {
-            InstantAppVariantOutputData instantAppOutput = (InstantAppVariantOutputData) variantOutputData;
-
-            InstantAppVariantOutputImpl output = instantiator.newInstance(
-                    InstantAppVariantOutputImpl.class, instantAppOutput);
-
-            apiOutputList.add(output);
-        }
-
-        variant.addOutputs(apiOutputList);
-
-        return variant;
+    public Class<? extends BaseVariantImpl> getVariantImplementationClass() {
+        return InstantAppVariantImpl.class;
     }
 
     @NonNull

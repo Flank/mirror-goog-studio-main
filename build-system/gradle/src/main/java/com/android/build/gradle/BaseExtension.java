@@ -21,6 +21,7 @@ import com.android.build.api.transform.Transform;
 import com.android.build.api.variant.VariantFilter;
 import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.api.BaseVariant;
+import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.CompileOptions;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.LoggingUtil;
@@ -127,6 +128,8 @@ public abstract class BaseExtension implements AndroidConfig {
 
     private final NamedDomainObjectContainer<SigningConfig> signingConfigs;
 
+    private final NamedDomainObjectContainer<BaseVariantOutput> buildOutputs;
+
     private final List<DeviceProvider> deviceProviderList = Lists.newArrayList();
 
     private final List<TestServer> testServerList = Lists.newArrayList();
@@ -168,6 +171,7 @@ public abstract class BaseExtension implements AndroidConfig {
             @NonNull NamedDomainObjectContainer<BuildType> buildTypes,
             @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavors,
             @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigs,
+            @NonNull NamedDomainObjectContainer<BaseVariantOutput> buildOutputs,
             @NonNull ExtraModelInfo extraModelInfo,
             final boolean publishPackage) {
         this.androidBuilder = androidBuilder;
@@ -177,6 +181,7 @@ public abstract class BaseExtension implements AndroidConfig {
         this.productFlavors = productFlavors;
         this.signingConfigs = signingConfigs;
         this.extraModelInfo = extraModelInfo;
+        this.buildOutputs = buildOutputs;
         this.project = project;
 
         logger = Logging.getLogger(this.getClass());
@@ -508,8 +513,16 @@ public abstract class BaseExtension implements AndroidConfig {
     }
 
     /**
-     * The default configuration, inherited by all product flavors (if any are defined).
+     * All build outputs for all variants, can be used by users to customize a build output.
+     *
+     * @return a container for build outputs.
      */
+    @Override
+    public NamedDomainObjectContainer<BaseVariantOutput> getBuildOutputs() {
+        return buildOutputs;
+    }
+
+    /** The default configuration, inherited by all product flavors (if any are defined). */
     public void defaultConfig(Action<ProductFlavor> action) {
         checkWritability();
         action.execute(defaultConfig);

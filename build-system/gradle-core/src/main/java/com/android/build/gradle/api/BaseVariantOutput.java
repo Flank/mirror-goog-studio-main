@@ -18,17 +18,17 @@ package com.android.build.gradle.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.VariantOutput;
-import com.android.build.gradle.tasks.ManifestProcessorTask;
+import com.android.build.OutputFile;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
-import java.io.File;
 import org.gradle.api.Task;
+import org.gradle.model.Managed;
 
 /**
  * A Build variant output and all its public data. This is the base class for items common to apps,
  * test apps, and libraries
  */
-public interface BaseVariantOutput extends VariantOutput {
+@Managed
+public interface BaseVariantOutput extends OutputFile {
 
     /**
      * Returns the Android Resources processing task.

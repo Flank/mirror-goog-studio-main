@@ -21,7 +21,6 @@ import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.gradle.api.ApkOutputFile;
 import com.google.common.collect.ImmutableList;
-import java.io.File;
 import java.util.Collection;
 
 /**
@@ -40,13 +39,6 @@ public class LibVariantOutputData extends BaseVariantOutputData {
     @Override
     public ImmutableList<ApkOutputFile> getOutputs() {
         return ImmutableList.of();
-    }
-
-    @NonNull
-    @Override
-    public File getOutputFile() {
-        throw new RuntimeException(
-                "Call to VariantOutput.getOutputFile is deprecated for Libraries");
     }
 
     @Override

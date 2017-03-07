@@ -18,8 +18,8 @@ package com.android.build.gradle.internal.api;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.api.AtomVariantOutput;
-import com.android.build.gradle.internal.variant.AtomVariantOutputData;
-import com.android.build.gradle.internal.variant.BaseVariantOutputData;
+import com.android.build.gradle.internal.variant.TaskContainer;
+import com.android.ide.common.build.ApkData;
 
 /**
  * Implementation of variant output for atom variants.
@@ -29,15 +29,17 @@ import com.android.build.gradle.internal.variant.BaseVariantOutputData;
  */
 public class AtomVariantOutputImpl extends BaseVariantOutputImpl implements AtomVariantOutput {
 
-    private final AtomVariantOutputData variantOutputData;
+    private final ApkData variantOutputData;
 
-    public AtomVariantOutputImpl(@NonNull AtomVariantOutputData variantOutputData) {
+    public AtomVariantOutputImpl(
+            @NonNull TaskContainer taskContainer, @NonNull ApkData variantOutputData) {
+        super(taskContainer);
         this.variantOutputData = variantOutputData;
     }
 
-    @NonNull
     @Override
-    protected BaseVariantOutputData getVariantOutputData() {
+    @NonNull
+    protected ApkData getApkData() {
         return variantOutputData;
     }
 

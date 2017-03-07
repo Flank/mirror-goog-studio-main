@@ -18,12 +18,13 @@ package com.android.build.gradle.internal.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.InstantAppVariant;
-import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.InstallableVariantData;
 import com.android.build.gradle.internal.variant.InstantAppVariantData;
 import com.android.build.gradle.tasks.BundleInstantApp;
 import com.android.builder.core.AndroidBuilder;
+import org.gradle.api.NamedDomainObjectContainer;
 
 
 /**
@@ -38,15 +39,10 @@ public class InstantAppVariantImpl extends InstallableVariantImpl implements Ins
     public InstantAppVariantImpl(
             @NonNull InstantAppVariantData variantData,
             @NonNull AndroidBuilder androidBuilder,
-            @NonNull ReadOnlyObjectProvider readOnlyObjectProvider) {
-        super(androidBuilder, readOnlyObjectProvider);
+            @NonNull ReadOnlyObjectProvider readOnlyObjectProvider,
+            @NonNull NamedDomainObjectContainer<BaseVariantOutput> outputs) {
+        super(androidBuilder, readOnlyObjectProvider, outputs);
         this.variantData = variantData;
-    }
-
-    @NonNull
-    @Override
-    protected InstallableVariantData getInstallableVariantData() {
-        return variantData;
     }
 
     @Nullable
@@ -62,7 +58,7 @@ public class InstantAppVariantImpl extends InstallableVariantImpl implements Ins
 
     @NonNull
     @Override
-    protected BaseVariantData<?> getVariantData() {
+    public InstallableVariantData getVariantData() {
         return variantData;
     }
 
