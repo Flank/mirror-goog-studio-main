@@ -39,17 +39,20 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.ClassField;
 import com.android.builder.model.ProductFlavor;
+import com.android.builder.model.SyncIssue;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.Library;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
+import com.google.common.truth.Truth;
 import java.io.File;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -92,7 +95,19 @@ public class BasicTest2 {
 
     @BeforeClass
     public static void getModel() throws Exception {
-        modelContainer = project.executeAndReturnModel("clean", "assemble", "assembleAndroidTest");
+        project.execute("clean", "assembleDebug", "assembleAndroidTest");
+        // basic project overwrites buildConfigField which emits a sync warning
+        modelContainer = project.model().ignoreSyncIssues().getSingle();
+        modelContainer
+                .getOnlyModel()
+                .getSyncIssues()
+                .forEach(
+                        issue -> {
+                            Truth.assertThat(issue.getSeverity())
+                                    .isEqualTo(SyncIssue.SEVERITY_WARNING);
+                            Truth.assertThat(issue.getMessage())
+                                    .containsMatch(Pattern.compile(".*value is being replaced.*"));
+                        });
     }
 
     @AfterClass

@@ -33,7 +33,9 @@ import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.JavaCompileOptions;
 import com.android.builder.model.OptionalCompilationStep;
+import com.android.builder.model.SyncIssue;
 import com.android.builder.model.Variant;
+import java.util.regex.Pattern;
 import org.gradle.api.JavaVersion;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -60,7 +62,16 @@ public class BasicTest {
 
     @BeforeClass
     public static void getModel() throws Exception {
-        model = project.executeAndReturnModel("clean", "assemble").getOnlyModel();
+        project.execute("clean", "assembleDebug");
+        // basic project overwrites buildConfigField which emits a sync warning
+        model = project.model().ignoreSyncIssues().getSingle().getOnlyModel();
+        model.getSyncIssues()
+                .forEach(
+                        issue -> {
+                            assertThat(issue.getSeverity()).isEqualTo(SyncIssue.SEVERITY_WARNING);
+                            assertThat(issue.getMessage())
+                                    .containsMatch(Pattern.compile(".*value is being replaced.*"));
+                        });
     }
 
     @AfterClass

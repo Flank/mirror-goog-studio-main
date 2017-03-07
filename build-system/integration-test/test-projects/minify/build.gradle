@@ -8,7 +8,7 @@ android {
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
 
-    testBuildType rootProject.useJack ? "debug" : "minified"
+    testBuildType "minified"
 
     defaultConfig {
         versionCode 12
@@ -29,10 +29,6 @@ android {
 
     dexOptions {
         incremental false
-    }
-
-    lintOptions {
-        abortOnError !rootProject.useJack
     }
 
     // Included in both hamcrest-core and hamcrest-library.

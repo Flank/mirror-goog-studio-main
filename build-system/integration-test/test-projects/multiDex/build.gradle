@@ -38,10 +38,6 @@ android {
             useProguard false
         }
     }
-
-    lintOptions {
-        abortOnError !rootProject.useJack
-    }
 }
 
 dependencies {

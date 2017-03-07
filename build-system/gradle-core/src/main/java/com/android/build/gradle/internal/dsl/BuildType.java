@@ -19,17 +19,17 @@ package com.android.build.gradle.internal.dsl;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
-import com.android.build.gradle.internal.LoggingUtil;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.DefaultBuildType;
+import com.android.builder.core.ErrorReporter;
 import com.android.builder.internal.ClassFieldImpl;
 import com.android.builder.model.BaseConfig;
 import com.android.builder.model.ClassField;
+import com.android.builder.model.SyncIssue;
 import com.google.common.collect.Iterables;
 import java.io.Serializable;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
-import org.gradle.api.logging.Logger;
 import org.gradle.internal.reflect.Instantiator;
 
 /**
@@ -42,9 +42,6 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
 
     @NonNull
     private final Project project;
-
-    @NonNull
-    private final Logger logger;
 
     @NonNull
     private final NdkOptions ndkConfig;
@@ -61,20 +58,23 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
     @NonNull
     private final ShaderOptions shaderOptions;
 
+    @NonNull private final ErrorReporter errorReporter;
+
     /** Opt-in for now until we've validated it in the field. */
     private boolean shrinkResources = false;
 
     /** Opt-in for now until we've validated the new shrinker in the field. */
     private boolean useProguard = true;
 
-    public BuildType(@NonNull String name,
-                     @NonNull Project project,
-                     @NonNull Instantiator instantiator,
-                     @NonNull Logger logger) {
+    public BuildType(
+            @NonNull String name,
+            @NonNull Project project,
+            @NonNull Instantiator instantiator,
+            @NonNull ErrorReporter errorReporter) {
         super(name);
         this.project = project;
-        this.logger = logger;
-        jackOptions = instantiator.newInstance(JackOptions.class);
+        this.errorReporter = errorReporter;
+        jackOptions = instantiator.newInstance(JackOptions.class, errorReporter);
         javaCompileOptions = instantiator.newInstance(JavaCompileOptions.class, instantiator);
         shaderOptions = instantiator.newInstance(ShaderOptions.class);
         ndkConfig = instantiator.newInstance(NdkOptions.class);
@@ -83,13 +83,12 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
     }
 
     @VisibleForTesting
-    BuildType(@NonNull String name,
-              @NonNull Project project,
-              @NonNull Logger logger) {
+    BuildType(
+            @NonNull String name, @NonNull Project project, @NonNull ErrorReporter errorReporter) {
         super(name);
         this.project = project;
-        this.logger = logger;
-        jackOptions = new JackOptions();
+        this.errorReporter = errorReporter;
+        jackOptions = new JackOptions(errorReporter);
         javaCompileOptions = new JavaCompileOptions();
         shaderOptions = new ShaderOptions();
         ndkConfig = new NdkOptions();
@@ -206,8 +205,11 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
             @NonNull String value) {
         ClassField alreadyPresent = getBuildConfigFields().get(name);
         if (alreadyPresent != null) {
-            logger.info("BuildType({}): buildConfigField '{}' value is being replaced: {} -> {}",
-                    getName(), name, alreadyPresent.getValue(), value);
+            String message =
+                    String.format(
+                            "BuildType(%s): buildConfigField '%s' value is being replaced: %s -> %s",
+                            getName(), name, alreadyPresent.getValue(), value);
+            errorReporter.handleSyncWarning(null, SyncIssue.TYPE_GENERIC, message);
         }
         addBuildConfigField(new ClassFieldImpl(type, name, value));
     }
@@ -229,8 +231,11 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
             @NonNull String value) {
         ClassField alreadyPresent = getResValues().get(name);
         if (alreadyPresent != null) {
-            logger.info("BuildType({}): resValue '{}' value is being replaced: {} -> {}",
-                    getName(), name, alreadyPresent.getValue(), value);
+            String message =
+                    String.format(
+                            "BuildType(%s): resValue '%s' value is being replaced: %s -> %s",
+                            getName(), name, alreadyPresent.getValue(), value);
+            errorReporter.handleSyncWarning(null, SyncIssue.TYPE_GENERIC, message);
         }
         addResValue(new ClassFieldImpl(type, name, value));
     }
@@ -407,9 +412,9 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
     @Deprecated
     @Nullable
     public Boolean getUseJack() {
-        LoggingUtil.displayDeprecationWarning(
-                logger, project, "useJack is deprecated.  Use jackOptions.enabled instead.");
-        return jackOptions.isEnabled();
+        errorReporter.handleSyncWarning(
+                null, SyncIssue.TYPE_GENERIC, JackOptions.DEPRECATION_WARNING);
+        return null;
     }
 
     /**
@@ -419,9 +424,8 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
      */
     @Deprecated
     public void setUseJack(@Nullable Boolean useJack) {
-        LoggingUtil.displayDeprecationWarning(
-                logger, project, "useJack is deprecated.  Use jackOptions.enabled instead.");
-        jackOptions.setEnabled(useJack);
+        errorReporter.handleSyncWarning(
+                null, SyncIssue.TYPE_GENERIC, JackOptions.DEPRECATION_WARNING);
     }
 
     /**

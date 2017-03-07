@@ -21,9 +21,15 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.gradle.AppExtension;
 import com.android.build.gradle.AppPlugin;
+import com.android.build.gradle.internal.ide.SyncIssueImpl;
 import com.android.builder.core.BuilderConstants;
+import com.android.builder.core.ErrorReporter;
+import com.android.builder.model.SyncIssue;
+import com.android.ide.common.blame.Message;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.testutils.internal.CopyOfTester;
 import com.google.common.collect.ImmutableMap;
@@ -37,9 +43,23 @@ public class BuildTypeTest {
 
     private Project project;
 
+    private ErrorReporter errorReporter;
+
     @Before
     public void setUp() throws Exception {
         project = ProjectBuilder.builder().build();
+        errorReporter =
+                new ErrorReporter(ErrorReporter.EvaluationMode.IDE) {
+                    @NonNull
+                    @Override
+                    public SyncIssue handleIssue(
+                            @Nullable String data, int type, int severity, @NonNull String msg) {
+                        return new SyncIssueImpl(type, severity, data, msg);
+                    }
+
+                    @Override
+                    public void receiveMessage(@NonNull Message message) {}
+                };
     }
 
     @Test
@@ -68,10 +88,9 @@ public class BuildTypeTest {
     public void testInitWith() {
         CopyOfTester.assertAllGettersCalled(
                 BuildType.class,
-                new BuildType("original", project, project.getLogger()),
+                new BuildType("original", project, errorReporter),
                 original -> {
-                    BuildType copy =
-                            new BuildType(original.getName(), project, project.getLogger());
+                    BuildType copy = new BuildType(original.getName(), project, errorReporter);
                     copy.initWith(original);
 
                     // Manually call getters that don't need to be copied.
@@ -81,7 +100,7 @@ public class BuildTypeTest {
 
     @Test
     public void testInitWith_equals() {
-        BuildType original = new BuildType("foo", project, project.getLogger());
+        BuildType original = new BuildType("foo", project, errorReporter);
 
         // change every value from their default.
         original.setDebuggable(true);
@@ -97,7 +116,7 @@ public class BuildTypeTest {
         original.getJackOptions().setEnabled(Boolean.FALSE);
         original.ndk(ndk -> ndk.abiFilters("x86"));
 
-        BuildType copy = new BuildType(original.getName(), project, project.getLogger());
+        BuildType copy = new BuildType(original.getName(), project, errorReporter);
         copy.initWith(original);
 
         assertEquals(original, copy);

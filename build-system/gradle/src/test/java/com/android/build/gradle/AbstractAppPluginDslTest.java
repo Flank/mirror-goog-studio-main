@@ -556,7 +556,6 @@ public abstract class AbstractAppPluginDslTest<
                         + "        debug {\n"
                         + "            useProguard false\n"
                         + "            shrinkResources true\n"
-                        + "            useJack true\n"
                         + "        }\n"
                         + "    }\n"
                         + "}\n"
@@ -565,7 +564,7 @@ public abstract class AbstractAppPluginDslTest<
         assertThat(debug.isUseProguard()).isFalse();
         assertThat(debug.isShrinkResources()).isTrue();
         //noinspection deprecation
-        assertThat(debug.getUseJack()).isTrue();
+        assertThat(debug.getUseJack()).isNull();
     }
 
     @SuppressWarnings("deprecation")
