@@ -35,29 +35,25 @@ import android.databinding.tool.DataBindingBuilder;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
-import com.android.builder.utils.FileCache;
 import com.android.utils.FileUtils;
 import com.google.common.collect.Lists;
 import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import org.gradle.api.Project;
+import org.gradle.api.artifacts.transform.ArtifactTransform;
 
-/**
- */
-public class AarTransform extends ExtractTransform {
-    private final String targetType;
+/** Transform that returns the content of an extracted AAR folder. */
+public class AarTransform extends ArtifactTransform {
+    @NonNull private final ArtifactType targetType;
 
-    public AarTransform(String targetType, Project project, FileCache fileCache) {
-        super(project, fileCache);
-        this.targetType = targetType;
+    public AarTransform(@NonNull String targetType) {
+        this.targetType = ArtifactType.byType(targetType);
     }
 
+    @NonNull
     public static String[] getTransformTargets() {
         return new String[] {
-            ArtifactType.EXPLODED_AAR.getType(),
             ArtifactType.CLASSES.getType(),
             ArtifactType.JAVA_RES.getType(),
             ArtifactType.JAR.getType(),
@@ -78,23 +74,10 @@ public class AarTransform extends ExtractTransform {
 
     @Override
     public List<File> transform(File input) {
-        //System.out.println("TRANSFORMING(" + target.getAttribute(ARTIFACT_FORMAT) +  "): " + input);
-        if (!input.isFile()) {
-            //System.out.println("Non existing file: " + input);
-            return Collections.emptyList();
-        }
-
-        File explodedAar;
-        try {
-            explodedAar = extractAar(input);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
         // single file case return
         File file;
 
-        switch (ArtifactType.byType(targetType)) {
+        switch (targetType) {
             // because both APK_CLASSES and CLASSES resolve to JavaPlugin.CLASS_DIRECTORY, we check for both
             // depending on what the map will contain
             case APK_CLASSES:
@@ -103,47 +86,44 @@ public class AarTransform extends ExtractTransform {
             case ATOM_CLASSES:
             case JAR:
                 // even though resources are supposed to only be in the main jar of the AAR, this
-                // is not necessairy enforced by all build systems generating AAR so it's safer to
+                // is not necessarily enforced by all build systems generating AAR so it's safer to
                 // read all jars from the manifest.
-                return getJars(explodedAar);
-            case EXPLODED_AAR:
-                file = explodedAar;
-                break;
+                return getJars(input);
             case LINT:
-                file = FileUtils.join(explodedAar, FD_JARS, FN_LINT_JAR);
+                file = FileUtils.join(input, FD_JARS, FN_LINT_JAR);
                 break;
             case MANIFEST:
-                file = new File(explodedAar, FN_ANDROID_MANIFEST_XML);
+                file = new File(input, FN_ANDROID_MANIFEST_XML);
                 break;
             case ANDROID_RES:
-                file = new File(explodedAar, FD_RES);
+                file = new File(input, FD_RES);
                 break;
             case ASSETS:
-                file = new File(explodedAar, FD_ASSETS);
+                file = new File(input, FD_ASSETS);
                 break;
             case JNI:
-                file = new File(explodedAar, FD_JNI);
+                file = new File(input, FD_JNI);
                 break;
             case AIDL:
-                file = new File(explodedAar, FD_AIDL);
+                file = new File(input, FD_AIDL);
                 break;
             case RENDERSCRIPT:
-                file = new File(explodedAar, FD_RENDERSCRIPT);
+                file = new File(input, FD_RENDERSCRIPT);
                 break;
             case PROGUARD_RULES:
-                file = new File(explodedAar, FN_PROGUARD_TXT);
+                file = new File(input, FN_PROGUARD_TXT);
                 break;
             case ANNOTATIONS:
-                file = new File(explodedAar, FN_ANNOTATIONS_ZIP);
+                file = new File(input, FN_ANNOTATIONS_ZIP);
                 break;
             case PUBLIC_RES:
-                file = new File(explodedAar, FN_PUBLIC_TXT);
+                file = new File(input, FN_PUBLIC_TXT);
                 break;
             case SYMBOL_LIST:
-                file = new File(explodedAar, FN_RESOURCE_TEXT);
+                file = new File(input, FN_RESOURCE_TEXT);
                 break;
             case DATA_BINDING:
-                file = new File(explodedAar, DataBindingBuilder.DATA_BINDING_ROOT_FOLDER_IN_AAR);
+                file = new File(input, DataBindingBuilder.DATA_BINDING_ROOT_FOLDER_IN_AAR);
                 break;
             default:
                 throw new RuntimeException("Unsupported type in AarTransform: " + targetType);
