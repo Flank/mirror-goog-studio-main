@@ -19,15 +19,16 @@ package com.android.build.gradle.internal.dependency;
 import static com.android.SdkConstants.FD_JARS;
 import static com.android.SdkConstants.FN_CLASSES_JAR;
 
-import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.LibraryCache;
 import com.android.build.gradle.internal.tasks.PrepareLibraryTask;
 import com.android.builder.utils.FileCache;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import java.util.jar.JarOutputStream;
@@ -35,41 +36,42 @@ import java.util.jar.Manifest;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.transform.ArtifactTransform;
 
-/**
- */
-public abstract class ExtractTransform extends ArtifactTransform {
+/** Transform that extracts an AAR file into a folder. */
+public class ExtractAarTransform extends ArtifactTransform {
 
     private final Project project;
     private final FileCache fileCache;
 
-    public ExtractTransform(Project project, FileCache fileCache) {
+    public ExtractAarTransform(Project project, FileCache fileCache) {
         this.project = project;
         this.fileCache = fileCache;
     }
 
-    protected File extractAar(@NonNull File aarFile) throws IOException {
-        Consumer<File> unzipAarAction = (File explodedDir) -> {
-            LibraryCache.unzipAar(aarFile, explodedDir, project);
-            // verify that we have a classes.jar, if we don't just create an empty one.
-            File classesJar = new File(new File(explodedDir, FD_JARS), FN_CLASSES_JAR);
-            if (classesJar.exists()) {
-                return;
-            }
-            try {
-                Files.createParentDirs(classesJar);
-                JarOutputStream jarOutputStream =
-                        new JarOutputStream(
-                                new BufferedOutputStream(new FileOutputStream(classesJar)),
-                                new Manifest());
-                jarOutputStream.close();
-            } catch (IOException e) {
-                throw new RuntimeException("Cannot create missing classes.jar", e);
-            }
-        };
+    @Override
+    public List<File> transform(File input) {
+        Consumer<File> unzipAarAction =
+                (File explodedDir) -> {
+                    LibraryCache.unzipAar(input, explodedDir, project);
+                    // verify that we have a classes.jar, if we don't just create an empty one.
+                    File classesJar = new File(new File(explodedDir, FD_JARS), FN_CLASSES_JAR);
+                    if (classesJar.exists()) {
+                        return;
+                    }
+                    try {
+                        Files.createParentDirs(classesJar);
+                        JarOutputStream jarOutputStream =
+                                new JarOutputStream(
+                                        new BufferedOutputStream(new FileOutputStream(classesJar)),
+                                        new Manifest());
+                        jarOutputStream.close();
+                    } catch (IOException e) {
+                        throw new RuntimeException("Cannot create missing classes.jar", e);
+                    }
+                };
 
         // If the build cache is enabled, we create and cache the exploded aar using the cache's
         // API; otherwise, we explode the aar without using the cache.
-        FileCache.Inputs buildCacheInputs = PrepareLibraryTask.getCacheInputs(aarFile);
+        FileCache.Inputs buildCacheInputs = PrepareLibraryTask.getCacheInputs(input);
         File explodedLocation = fileCache.getFileInCache(buildCacheInputs);
         try {
             fileCache.createFileInCacheIfAbsent(
@@ -79,8 +81,7 @@ public abstract class ExtractTransform extends ArtifactTransform {
             throw new RuntimeException(
                     String.format(
                             "Unable to unzip '%1$s' to '%2$s'",
-                            aarFile.getAbsolutePath(),
-                            explodedLocation.getAbsolutePath()),
+                            input.getAbsolutePath(), explodedLocation.getAbsolutePath()),
                     exception);
         } catch (Exception exception) {
             throw new RuntimeException(
@@ -92,12 +93,12 @@ public abstract class ExtractTransform extends ArtifactTransform {
                                     + "To suppress this warning, disable the build cache by"
                                     + " setting android.enableBuildCache=false in the"
                                     + " gradle.properties file.",
-                            aarFile.getAbsolutePath(),
+                            input.getAbsolutePath(),
                             explodedLocation.getAbsolutePath(),
                             fileCache.getCacheDirectory().getAbsolutePath()),
                     exception);
         }
 
-        return explodedLocation;
+        return ImmutableList.of(explodedLocation);
     }
 }

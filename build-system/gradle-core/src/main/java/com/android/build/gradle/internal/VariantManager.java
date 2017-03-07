@@ -35,6 +35,7 @@ import com.android.build.gradle.internal.api.VariantFilter;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dependency.AarTransform;
 import com.android.build.gradle.internal.dependency.BuildTypeAttr;
+import com.android.build.gradle.internal.dependency.ExtractAarTransform;
 import com.android.build.gradle.internal.dependency.JarTransform;
 import com.android.build.gradle.internal.dependency.ProductFlavorAttr;
 import com.android.build.gradle.internal.dependency.VariantAttr;
@@ -42,6 +43,7 @@ import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
+import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -491,16 +493,23 @@ public class VariantManager implements VariantModel {
                         taskManager.getGlobalScope().getBuildCache(),
                         taskManager.getGlobalScope().getProjectLevelCache());
 
+        final String explodedAarType = AndroidArtifacts.ArtifactType.EXPLODED_AAR.getType();
+        dependencies.registerTransform(
+                reg -> {
+                    reg.getFrom().attribute(ARTIFACT_FORMAT, AndroidArtifacts.TYPE_AAR);
+                    reg.getTo().attribute(ARTIFACT_FORMAT, explodedAarType);
+                    reg.artifactTransform(
+                            ExtractAarTransform.class, config -> config.params(project, fileCache));
+                });
+
+
         for (String transformTarget : AarTransform.getTransformTargets()) {
             dependencies.registerTransform(
                     reg -> {
-                        reg.getFrom().attribute(ARTIFACT_FORMAT, "aar");
+                        reg.getFrom().attribute(ARTIFACT_FORMAT, explodedAarType);
                         reg.getTo().attribute(ARTIFACT_FORMAT, transformTarget);
                         reg.artifactTransform(
-                                AarTransform.class,
-                                config -> {
-                                    config.params(transformTarget, project, fileCache);
-                                });
+                                AarTransform.class, config -> config.params(transformTarget));
                     });
         }
 
