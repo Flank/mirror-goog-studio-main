@@ -25,6 +25,10 @@ import static org.objectweb.asm.Opcodes.RETURN;
 import static org.objectweb.asm.Opcodes.V1_6;
 
 import com.android.annotations.NonNull;
+import com.google.common.io.ByteStreams;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.util.List;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.FieldVisitor;
@@ -140,5 +144,15 @@ public final class TestClassesGenerator {
         cw.visitEnd();
 
         return cw.toByteArray();
+    }
+
+    /** Rewrites the version of the class file. */
+    @NonNull
+    public static byte[] rewriteToVersion(int newVersion, @NonNull InputStream current)
+            throws IOException {
+        byte[] bytes = ByteStreams.toByteArray(current);
+        // magic-minor-major:  0x CA FE BA BE 00 00 <new_version>
+        ByteBuffer.wrap(bytes).putShort(6, (short) newVersion);
+        return bytes;
     }
 }
