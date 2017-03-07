@@ -22,6 +22,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.dependency.ArtifactCollectionWithTestedArtifact;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.scope.BuildOutput;
@@ -264,8 +265,10 @@ public class MergeManifests extends ManifestProcessorTask {
             // this is the case for local jars.
             // FIXME: use a non internal class.
             return id.getDisplayName();
+        } else if (id instanceof ArtifactCollectionWithTestedArtifact.TestedComponentIdentifier) {
+            return id.getDisplayName();
         } else {
-            throw new RuntimeException("Unsupported type of CompoenentIdentifier");
+            throw new RuntimeException("Unsupported type of ComponentIdentifier");
         }
     }
 

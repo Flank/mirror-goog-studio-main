@@ -44,6 +44,8 @@ import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.coverage.JacocoReportTask;
+import com.android.build.gradle.internal.dependency.ArtifactCollectionWithTestedArtifact;
+import com.android.build.gradle.internal.dependency.SubtractingArtifactCollection;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.pipeline.TransformManager;
@@ -99,7 +101,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
+import java.util.function.BiFunction;
 import java.util.function.Supplier;
 import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
@@ -114,7 +116,6 @@ import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.ProjectDependency;
 import org.gradle.api.artifacts.SelfResolvingDependency;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
-import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.attributes.AttributeContainer;
 import org.gradle.api.file.ConfigurableFileCollection;
@@ -492,9 +493,23 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @Override
     @NonNull
-    public FileCollection getJavaClasspath() {
-        // TODO cache?
-        return getArtifactFileCollection(COMPILE_CLASSPATH, ALL, CLASSES);
+    public FileCollection getJavaClasspath(@NonNull ArtifactType classesType) {
+        FileCollection mainCollection =
+                getArtifactFileCollection(COMPILE_CLASSPATH, ALL, classesType);
+
+        final BaseVariantData testedVariantData = getTestedVariantData();
+        if (testedVariantData != null) {
+            ConfigurableFileCollection classpath =
+                    globalScope.getProject().files().from(mainCollection);
+
+            // include the output of the tested scope javac task.
+            classpath.from(
+                    testedVariantData.getScope().getOutputs(TaskOutputHolder.TaskOutputType.JAVAC));
+
+            return classpath;
+        }
+
+        return mainCollection;
     }
 
     @Override
@@ -554,6 +569,44 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             @NonNull ConsumedConfigType configType,
             @NonNull ArtifactScope scope,
             @NonNull ArtifactType artifactType) {
+        ArtifactView artifactView = getArtifactView(configType, scope, artifactType);
+
+        return handleTestedComponent(
+                artifactView.getFiles(),
+                configType,
+                scope,
+                artifactType,
+                FileCollection::plus,
+                (collection, artifactView1) -> collection.minus(artifactView1.getFiles()));
+    }
+
+    @Override
+    @NonNull
+    public ArtifactCollection getArtifactCollection(
+            @NonNull ConsumedConfigType configType,
+            @NonNull ArtifactScope scope,
+            @NonNull ArtifactType artifactType) {
+        ArtifactView artifactView = getArtifactView(configType, scope, artifactType);
+
+        return handleTestedComponent(
+                artifactView.getArtifacts(),
+                configType,
+                scope,
+                artifactType,
+                (artifactResults, collection) ->
+                        new ArtifactCollectionWithTestedArtifact(
+                                artifactResults, collection, getProject().getPath()),
+                (artifactResults, artifactView1) ->
+                        new SubtractingArtifactCollection(
+                                artifactResults, artifactView1.getArtifacts()));
+    }
+
+    @Override
+    @NonNull
+    public ArtifactView getArtifactView(
+            @NonNull ConsumedConfigType configType,
+            @NonNull ArtifactScope scope,
+            @NonNull ArtifactType artifactType) {
         checkConfigType(artifactType, configType);
 
         Configuration configuration;
@@ -577,54 +630,26 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 container -> container.attribute(ARTIFACT_TYPE, artifactType.getType());
 
         Spec<ComponentIdentifier> filter = null;
-        FileCollection minus = null;
         switch (scope) {
             case ALL:
                 break;
             case EXTERNAL:
-                filter = id -> id instanceof ModuleComponentIdentifier;
-                // FIXME once Spec based filtering supports file based dependency
-                if (artifactType == ArtifactType.JAVA_RES
-                        || artifactType == CLASSES) {
-
-                    // only remove the local jars to this project, not all file-based jars.
-                    Callable<Collection<File>> callable = getLocalJarLambda(configuration)::get;
-                    minus = globalScope.getProject().files(callable);
-                }
+                // since we want both Module dependencies and file based dependencies in this case
+                // the best thing to do is search for non ProjectComponentIdentifier.
+                filter = id -> !(id instanceof ProjectComponentIdentifier);
                 break;
             case MODULE:
                 filter = id -> id instanceof ProjectComponentIdentifier;
-                // FIXME once Spec based filtering supports file based dependency
-                if (artifactType == ArtifactType.JAVA_RES
-                        || artifactType == CLASSES) {
-                    // remove all file-based local jar in this case.
-                    minus = getAllFileBasedJars(attributes, configuration);
-                }
-
                 break;
             default:
                 throw new RuntimeException("unknown ArtifactScope value");
         }
 
-        FileCollection fileCollection;
-
         ArtifactView artifactView = configuration.getIncoming().artifactView().attributes(attributes);
-        if (filter == null) {
-            fileCollection = artifactView.getFiles();
-        } else {
-            fileCollection = artifactView.componentFilter(filter).getFiles();
+        if (filter != null) {
+            artifactView = artifactView.componentFilter(filter);
         }
-
-        fileCollection = handleTestedComponent(fileCollection,
-                configType,
-                scope,
-                artifactType);
-
-        if (minus != null) {
-            fileCollection = fileCollection.minus(minus);
-        }
-
-        return fileCollection;
+        return artifactView;
     }
 
     private static void checkConfigType(
@@ -646,50 +671,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         }
     }
 
-    @Override
-    @NonNull
-    public ArtifactCollection getArtifactCollection(
-            @NonNull ConsumedConfigType configType,
-            @NonNull ArtifactScope scope,
-            @NonNull ArtifactType artifactType) {
-        checkConfigType(artifactType, configType);
-
-        Configuration configuration;
-        switch (configType) {
-            case COMPILE_CLASSPATH:
-                configuration = getVariantData().getVariantDependency().getCompileClasspath();
-                break;
-            case RUNTIME_CLASSPATH:
-                configuration = getVariantData().getVariantDependency().getRuntimeClasspath();
-                break;
-            default:
-                throw new RuntimeException("unknown ConfigType value");
-        }
-
-        Spec<ComponentIdentifier> filter = null;
-        switch (scope) {
-            case ALL:
-                break;
-            case EXTERNAL:
-                filter = id -> id instanceof ModuleComponentIdentifier;
-                break;
-            case MODULE:
-                filter = id -> id instanceof ProjectComponentIdentifier;
-                break;
-            default:
-                throw new RuntimeException("unknown ArtifactScope value");
-        }
-
-        ArtifactView artifactView = configuration.getIncoming().artifactView()
-                .attributes(container -> container.attribute(ARTIFACT_TYPE, artifactType.getType()));
-
-        if (filter == null) {
-            return artifactView.getArtifacts();
-        } else {
-            return artifactView.componentFilter(filter).getArtifacts();
-        }
-    }
-
     /**
      * Returns the packaged local Jars
      *
@@ -700,9 +681,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     public Supplier<Collection<File>> getLocalPackagedJars() {
 
         return TaskInputHelper.bypassFileSupplier(
-                getLocalJarLambda(
-                        getVariantData().getVariantDependency()
-                        .getRuntimeClasspath()));
+                getLocalJarLambda(getVariantData().getVariantDependency().getRuntimeClasspath()));
     }
 
     @NonNull
@@ -1530,6 +1509,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @NonNull private InstantRunBuildContext instantRunBuildContext = new InstantRunBuildContext();
 
+    @Override
     @NonNull
     public InstantRunBuildContext getInstantRunBuildContext() {
         return instantRunBuildContext;
@@ -1676,23 +1656,31 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     }
 
     /**
-     * adds the tested artifact if the tested artifact is an AAR.
+     * adds or removes the tested artifact and dependencies to ensure the test build is correct.
      *
-     * @param fileCollection the file collection to add the new artifact to
-     * @param artifactType the type of the artifact to add
-     * @return a new file collection containing the result
+     * @param collection the collection to add or remove the artifact and dependencies.
+     * @param configType the configuration from which to look at dependencies
+     * @param artifactType the type of the artifact to add or remove
+     * @param plusFunction a function that adds the tested artifact to the collection
+     * @param minusFunction a function that removes the tested dependencies from the collection
+     * @param <T> the type of the collection
+     * @return a new collection containing the result
      */
     @NonNull
-    private FileCollection handleTestedComponent(
-            @NonNull FileCollection fileCollection,
-            @NonNull ConsumedConfigType configType,
-            @NonNull ArtifactScope artifactScope,
-            @NonNull ArtifactType artifactType) {
+    private <T> T handleTestedComponent(
+            @NonNull final T collection,
+            @NonNull final ConsumedConfigType configType,
+            @NonNull final ArtifactScope artifactScope,
+            @NonNull final ArtifactType artifactType,
+            @NonNull final BiFunction<T, FileCollection, T> plusFunction,
+            @NonNull final BiFunction<T, ArtifactView, T> minusFunction) {
         // this only handles Android Test, not unit tests.
         VariantType variantType = getVariantConfiguration().getType();
         if (!variantType.isForTesting() || variantType != VariantType.ANDROID_TEST) {
-            return fileCollection;
+            return collection;
         }
+
+        T result = collection;
 
         // get the matching file collection for the tested variant, if any.
         if (variantData instanceof TestVariantData) {
@@ -1708,7 +1696,9 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                             .getInternalArtifact(artifactType);
 
                     if (testedFC != null) {
-                        fileCollection = testedFC.plus(fileCollection);
+                        result = plusFunction.apply(collection, testedFC);
+                    } else {
+                        System.err.println("Can't find tested artifact for: " + artifactType);
                     }
                 }
 
@@ -1724,30 +1714,24 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                             .getInternalArtifact(CLASSES);
 
                     if (testedFC != null) {
-                        fileCollection = testedFC.plus(fileCollection);
+                        result = plusFunction.apply(collection, testedFC);
                     }
                 } else if (configType == RUNTIME_CLASSPATH) {
                     // however we also always remove the transitive dependencies coming from the
                     // tested app to avoid having the same artifact on each app and tested app.
                     // This applies only to the package scope since we do want these in the compile
                     // scope in order to compile
-                    fileCollection = fileCollection.minus(testedVariantData.getScope()
-                            .getArtifactFileCollection(configType, ALL,
-                                    artifactType));
+                    result =
+                            minusFunction.apply(
+                                    collection,
+                                    testedVariantData
+                                            .getScope()
+                                            .getArtifactView(configType, ALL, artifactType));
                 }
             }
         }
 
-        return fileCollection;
-    }
-
-    @NonNull
-    private static FileCollection getAllFileBasedJars(
-            @NonNull Action<AttributeContainer> attributes,
-            @NonNull Configuration configuration) {
-        return configuration.getIncoming().artifactView()
-                .attributes(attributes)
-                .componentFilter(id -> false).getFiles();
+        return result;
     }
 
     @NonNull
@@ -1756,8 +1740,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         return () -> {
             List<File> files = new ArrayList<>();
             for (Dependency dependency : configuration.getAllDependencies()) {
-                if (dependency instanceof SelfResolvingDependency &&
-                        !(dependency instanceof ProjectDependency)) {
+                if (dependency instanceof SelfResolvingDependency
+                        && !(dependency instanceof ProjectDependency)) {
                     files.addAll(((SelfResolvingDependency) dependency).resolve());
                 }
             }

@@ -86,8 +86,6 @@ public class ProcessTestManifest extends ManifestProcessorTask {
     private Map<String, Object> placeholdersValues;
 
     private ArtifactCollection manifests;
-    // FIXME find a better way to inject the tested library's content into the main ArtifactCollection
-    private FileCollection testedManifest;
 
     @Nullable
     private String testLabel;
@@ -267,27 +265,13 @@ public class ProcessTestManifest extends ManifestProcessorTask {
         final Set<ResolvedArtifactResult> artifacts = manifests.getArtifacts();
         List<ManifestProvider> providers = Lists.newArrayListWithCapacity(artifacts.size());
 
-        // tested manifest is the most important one. put it first.
-        if (testedManifest != null) {
-            providers.add(new MergeManifests.ConfigAction.ManifestProviderImpl(
-                    testedManifest.getSingleFile(),
-                    "__tested_library__"));
-        }
-
         for (ResolvedArtifactResult artifact : artifacts) {
             providers.add(new MergeManifests.ConfigAction.ManifestProviderImpl(
                     artifact.getFile(),
                     MergeManifests.getArtifactName(artifact)));
         }
 
-
         return providers;
-    }
-
-    @InputFiles
-    @Optional
-    public FileCollection getTestedManifest() {
-        return testedManifest;
     }
 
     @InputFiles
@@ -341,11 +325,6 @@ public class ProcessTestManifest extends ManifestProcessorTask {
             processTestManifestTask.setVariantName(config.getFullName());
             // will only be used if testTargetMetadata is null.
             processTestManifestTask.setTestApplicationId(config.getTestApplicationId());
-
-            // only add the resources for tested libraries.
-            processTestManifestTask.testedManifest = scope.getTestedArtifact(
-                    MANIFEST, VariantType.LIBRARY);
-
 
             ConventionMappingHelper.map(processTestManifestTask, "minSdkVersion", () -> {
                         if (scope.getGlobalScope().getAndroidBuilder().isPreviewTarget()) {

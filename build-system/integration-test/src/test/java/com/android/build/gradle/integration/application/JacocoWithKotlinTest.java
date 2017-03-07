@@ -16,12 +16,13 @@
 
 package com.android.build.gradle.integration.application;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.KotlinHelloWorldApp;
+import com.android.build.gradle.integration.common.fixture.app.TransformOutputContent;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.internal.pipeline.SubStream;
 import com.android.utils.FileUtils;
+import com.google.common.truth.Truth;
 import java.io.File;
 import java.io.IOException;
 import org.junit.AfterClass;
@@ -59,22 +60,15 @@ public class JacocoWithKotlinTest {
     public void build() throws IOException, InterruptedException {
         project.execute("transformClassesWithJacocoForDebug");
 
-        File javaFile =
-                FileUtils.join(
-                        project.getTestDir(),
-                        "build",
-                        "intermediates",
-                        "transforms",
-                        "jacoco",
-                        "debug",
-                        "folders",
-                        "1",
-                        "1",
-                        "main",
-                        "com",
-                        "example",
-                        "helloworld",
-                        "HelloWorld.class");
-        assertThat(javaFile).exists();
+        File outputDir =
+                FileUtils.join(project.getIntermediatesDir(), "transforms", "jacoco", "debug");
+        TransformOutputContent content = new TransformOutputContent(outputDir);
+
+        SubStream stream = content.getSingleStream();
+        Truth.assertThat(
+                        FileUtils.getAllFiles(content.getLocation(stream))
+                                .transform(File::getName)
+                                .toList())
+                .contains("HelloWorld.class");
     }
 }

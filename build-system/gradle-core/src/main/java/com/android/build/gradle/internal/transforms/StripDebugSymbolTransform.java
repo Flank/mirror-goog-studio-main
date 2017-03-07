@@ -25,6 +25,7 @@ import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.Format;
 import com.android.build.api.transform.JarInput;
 import com.android.build.api.transform.QualifiedContent;
+import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.SecondaryFile;
 import com.android.build.api.transform.Status;
 import com.android.build.api.transform.Transform;
@@ -104,9 +105,9 @@ public class StripDebugSymbolTransform extends Transform {
 
     @NonNull
     @Override
-    public Set<QualifiedContent.Scope> getScopes() {
+    public Set<? super Scope> getScopes() {
         if (isLibrary) {
-            return TransformManager.SCOPE_FULL_LIBRARY;
+            return TransformManager.PROJECT_ONLY;
         }
         return TransformManager.SCOPE_FULL_PROJECT;
     }

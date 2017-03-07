@@ -49,16 +49,15 @@ public abstract class TransformStream {
     private final Set<ContentType> contentTypes;
     @NonNull
     private final Set<? super Scope> scopes;
-    @NonNull
-    private final FileCollection files;
+    @NonNull private final FileCollection fileCollection;
 
     protected TransformStream(
             @NonNull Set<ContentType> contentTypes,
             @NonNull Set<? super Scope> scopes,
-            @NonNull FileCollection files) {
+            @NonNull FileCollection fileCollection) {
         this.contentTypes = contentTypes;
         this.scopes = scopes;
-        this.files = files;
+        this.fileCollection = fileCollection;
     }
 
     /**
@@ -83,12 +82,10 @@ public abstract class TransformStream {
         return scopes;
     }
 
-    /**
-     * Returns the stream content as a FileCollection.
-     */
+    /** Returns the stream content as a FileCollection. */
     @NonNull
-    public FileCollection getFiles() {
-        return files;
+    public FileCollection getFileCollection() {
+        return fileCollection;
     }
 
     /**
@@ -127,6 +124,6 @@ public abstract class TransformStream {
     FileCollection getOutputFileCollection(
             @NonNull Project project,
             @NonNull StreamFilter streamFilter) {
-        return getFiles();
+        return fileCollection;
     }
 }

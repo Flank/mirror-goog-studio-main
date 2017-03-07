@@ -555,33 +555,34 @@ public abstract class TaskManager {
 
         TransformManager transformManager = variantScope.getTransformManager();
 
-        transformManager.addStream(OriginalStream.builder(project)
-                .addContentTypes(TransformManager.CONTENT_FULL_JAR)
-                .addScope(Scope.PROJECT_LOCAL_DEPS)
-                .setJars(variantScope.getLocalPackagedJars())
-                .build());
+        transformManager.addStream(
+                OriginalStream.builder(project)
+                        .addContentTypes(TransformManager.CONTENT_CLASS)
+                        .addScope(Scope.EXTERNAL_LIBRARIES)
+                        .setArtifactCollection(
+                                variantScope.getArtifactCollection(
+                                        RUNTIME_CLASSPATH, EXTERNAL, CLASSES))
+                        .build());
 
-        transformManager.addStream(OriginalStream.builder(project)
-                .addContentTypes(TransformManager.CONTENT_CLASS)
-                .addScope(Scope.EXTERNAL_LIBRARIES)
-                .setFileCollection(variantScope.getArtifactFileCollection(
-                        RUNTIME_CLASSPATH, EXTERNAL, CLASSES))
-                .build());
-
-        transformManager.addStream(OriginalStream.builder(project)
-                .addContentTypes(DefaultContentType.RESOURCES, ExtendedContentType.NATIVE_LIBS)
-                .addScope(Scope.EXTERNAL_LIBRARIES)
-                .setFileCollection(variantScope.getArtifactFileCollection(
-                        RUNTIME_CLASSPATH, EXTERNAL, JAVA_RES))
-                .build());
+        transformManager.addStream(
+                OriginalStream.builder(project)
+                        .addContentTypes(
+                                DefaultContentType.RESOURCES, ExtendedContentType.NATIVE_LIBS)
+                        .addScope(Scope.EXTERNAL_LIBRARIES)
+                        .setArtifactCollection(
+                                variantScope.getArtifactCollection(
+                                        RUNTIME_CLASSPATH, EXTERNAL, JAVA_RES))
+                        .build());
 
         // and the android AAR also have a specific jni folder
-        transformManager.addStream(OriginalStream.builder(project)
-                .addContentTypes(TransformManager.CONTENT_NATIVE_LIBS)
-                .addScope(Scope.EXTERNAL_LIBRARIES)
-                .setFileCollection(variantScope.getArtifactFileCollection(
-                        RUNTIME_CLASSPATH, EXTERNAL, JNI))
-                .build());
+        transformManager.addStream(
+                OriginalStream.builder(project)
+                        .addContentTypes(TransformManager.CONTENT_NATIVE_LIBS)
+                        .addScope(Scope.EXTERNAL_LIBRARIES)
+                        .setArtifactCollection(
+                                variantScope.getArtifactCollection(
+                                        RUNTIME_CLASSPATH, EXTERNAL, JNI))
+                        .build());
 
         if (variantScope.isJackEnabled()) {
             // add project sources for the Jack pipeline
@@ -621,45 +622,53 @@ public abstract class TaskManager {
 
         // data binding related artifacts for external libs
         if (extension.getDataBinding().isEnabled()) {
-            transformManager.addStream(OriginalStream.builder(project)
-                    .addContentTypes(TransformManager.DATA_BINDING_ARTIFACT)
-                    .addScope(Scope.SUB_PROJECTS)
-                    .setFileCollection(variantScope.getArtifactFileCollection(
-                            COMPILE_CLASSPATH, MODULE, DATA_BINDING))
-                    .build()
-            );
-            transformManager.addStream(OriginalStream.builder(project)
-                    .addContentTypes(TransformManager.DATA_BINDING_ARTIFACT)
-                    .addScope(Scope.EXTERNAL_LIBRARIES)
-                    .setFileCollection(variantScope.getArtifactFileCollection(
-                            COMPILE_CLASSPATH, EXTERNAL, DATA_BINDING))
-                    .build()
-            );
+            transformManager.addStream(
+                    OriginalStream.builder(project)
+                            .addContentTypes(TransformManager.DATA_BINDING_ARTIFACT)
+                            .addScope(Scope.SUB_PROJECTS)
+                            .setArtifactCollection(
+                                    variantScope.getArtifactCollection(
+                                            COMPILE_CLASSPATH, MODULE, DATA_BINDING))
+                            .build());
+            transformManager.addStream(
+                    OriginalStream.builder(project)
+                            .addContentTypes(TransformManager.DATA_BINDING_ARTIFACT)
+                            .addScope(Scope.EXTERNAL_LIBRARIES)
+                            .setArtifactCollection(
+                                    variantScope.getArtifactCollection(
+                                            COMPILE_CLASSPATH, EXTERNAL, DATA_BINDING))
+                            .build());
         }
 
         // for the sub modules, new intermediary classes artifact has its own stream
-        transformManager.addStream(OriginalStream.builder(project)
-                .addContentTypes(TransformManager.CONTENT_CLASS)
-                .addScope(Scope.SUB_PROJECTS)
-                .setFileCollection(variantScope.getArtifactFileCollection(
-                        RUNTIME_CLASSPATH, MODULE, CLASSES))
-                .build());
+        transformManager.addStream(
+                OriginalStream.builder(project)
+                        .addContentTypes(TransformManager.CONTENT_CLASS)
+                        .addScope(Scope.SUB_PROJECTS)
+                        .setArtifactCollection(
+                                variantScope.getArtifactCollection(
+                                        RUNTIME_CLASSPATH, MODULE, CLASSES))
+                        .build());
 
         // same for the resources which can be java-res or jni
-        transformManager.addStream(OriginalStream.builder(project)
-                .addContentTypes(DefaultContentType.RESOURCES, ExtendedContentType.NATIVE_LIBS)
-                .addScope(Scope.SUB_PROJECTS)
-                .setFileCollection(variantScope.getArtifactFileCollection(
-                        RUNTIME_CLASSPATH, MODULE, JAVA_RES))
-                .build());
+        transformManager.addStream(
+                OriginalStream.builder(project)
+                        .addContentTypes(
+                                DefaultContentType.RESOURCES, ExtendedContentType.NATIVE_LIBS)
+                        .addScope(Scope.SUB_PROJECTS)
+                        .setArtifactCollection(
+                                variantScope.getArtifactCollection(
+                                        RUNTIME_CLASSPATH, MODULE, JAVA_RES))
+                        .build());
 
         // and the android library sub-modules also have a specific jni folder
-        transformManager.addStream(OriginalStream.builder(project)
-                .addContentTypes(TransformManager.CONTENT_NATIVE_LIBS)
-                .addScope(Scope.SUB_PROJECTS)
-                .setFileCollection(variantScope.getArtifactFileCollection(
-                        RUNTIME_CLASSPATH, MODULE, JNI))
-                .build());
+        transformManager.addStream(
+                OriginalStream.builder(project)
+                        .addContentTypes(TransformManager.CONTENT_NATIVE_LIBS)
+                        .addScope(Scope.SUB_PROJECTS)
+                        .setArtifactCollection(
+                                variantScope.getArtifactCollection(RUNTIME_CLASSPATH, MODULE, JNI))
+                        .build());
 
         // provided only scopes.
         transformManager.addStream(OriginalStream.builder(project)
@@ -696,8 +705,9 @@ public abstract class TaskManager {
                     OriginalStream.builder(project)
                             .addContentTypes(DefaultContentType.CLASSES)
                             .addScope(Scope.TESTED_CODE)
-                            .setFileCollection(testedVariantScope.getArtifactFileCollection(
-                                    RUNTIME_CLASSPATH, ALL, CLASSES))
+                            .setArtifactCollection(
+                                    testedVariantScope.getArtifactCollection(
+                                            RUNTIME_CLASSPATH, ALL, CLASSES))
                             .build());
         }
 
@@ -1074,7 +1084,7 @@ public abstract class TaskManager {
         }
 
         // compute the scopes that need to be merged.
-        Set<Scope> mergeScopes = getResMergingScopes(variantScope);
+        Set<? super Scope> mergeScopes = getResMergingScopes(variantScope);
         // Create the merge transform
         MergeJavaResourcesTransform mergeTransform = new MergeJavaResourcesTransform(
                 variantScope.getGlobalScope().getExtension().getPackagingOptions(),
@@ -1293,11 +1303,12 @@ public abstract class TaskManager {
 
     /**
      * Returns the scopes for which the java resources should be merged.
+     *
      * @param variantScope the scope of the variant being processed.
      * @return the list of scopes for which to merge the java resources.
      */
     @NonNull
-    protected abstract Set<Scope> getResMergingScopes(@NonNull VariantScope variantScope);
+    protected abstract Set<? super Scope> getResMergingScopes(@NonNull VariantScope variantScope);
 
     /**
      * Creates the java resources processing tasks.
@@ -1365,7 +1376,7 @@ public abstract class TaskManager {
         TransformManager transformManager = variantScope.getTransformManager();
 
         // Compute the scopes that need to be merged.
-        Set<Scope> mergeScopes = getResMergingScopes(variantScope);
+        Set<? super Scope> mergeScopes = getResMergingScopes(variantScope);
 
         // Create the merge transform.
         MergeJavaResourcesTransform mergeTransform =

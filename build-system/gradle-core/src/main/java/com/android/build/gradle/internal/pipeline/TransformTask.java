@@ -204,6 +204,10 @@ public class TransformTask extends StreamBasedTask implements Context {
                                                         : null)
                                         .setIncrementalMode(isIncremental.getValue())
                                         .build());
+
+                        if (outputStream != null) {
+                            outputStream.save();
+                        }
                         return null;
                     }
                 });

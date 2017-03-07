@@ -104,8 +104,6 @@ public class MergeResources extends IncrementalTask {
     private Supplier<List<ResourceSet>> sourceFolderInputs;
 
     private ArtifactCollection libraries;
-    // FIXME find a better way to inject the tested library's content into the main ArtifactCollection
-    private FileCollection testedLibrary;
 
     private FileCollection renderscriptResOutputDir;
     private FileCollection generatedResOutputDir;
@@ -362,12 +360,6 @@ public class MergeResources extends IncrementalTask {
 
     @InputFiles
     @Optional
-    public FileCollection getTestedLibrary() {
-        return testedLibrary;
-    }
-
-    @InputFiles
-    @Optional
     public FileCollection getLibraries() {
         if (libraries != null) {
             return libraries.getArtifactFiles();
@@ -525,17 +517,6 @@ public class MergeResources extends IncrementalTask {
             }
         }
 
-        if (testedLibrary != null) {
-            ResourceSet resourceSet = new ResourceSet(
-                    "__tested_library__",
-                    validateEnabled);
-            resourceSet.addSource(testedLibrary.getSingleFile());
-
-            // add at the beginning since the libraries are less important than the folder based
-            // resource sets.
-            resourceSetList.add(resourceSet);
-        }
-
         // add the folder based next
         resourceSetList.addAll(sourceFolderSets);
 
@@ -662,9 +643,6 @@ public class MergeResources extends IncrementalTask {
             if (includeDependencies) {
                 mergeResourcesTask.libraries = scope.getArtifactCollection(
                         RUNTIME_CLASSPATH, ALL, ANDROID_RES);
-                // only add the resources for tested libraries.
-                mergeResourcesTask.testedLibrary = scope.getTestedArtifact(
-                        ANDROID_RES, VariantType.LIBRARY);
             }
 
             mergeResourcesTask.sourceFolderInputs = TaskInputHelper.memoize(

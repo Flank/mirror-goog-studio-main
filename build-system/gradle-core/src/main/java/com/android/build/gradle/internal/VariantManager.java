@@ -20,6 +20,7 @@ import static com.android.builder.core.BuilderConstants.LINT;
 import static com.android.builder.core.VariantType.ANDROID_TEST;
 import static com.android.builder.core.VariantType.LIBRARY;
 import static com.android.builder.core.VariantType.UNIT_TEST;
+import static org.gradle.api.internal.artifacts.ArtifactAttributes.ARTIFACT_FORMAT;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -58,6 +59,7 @@ import com.android.builder.model.SigningConfig;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.Recorder;
+import com.android.builder.utils.FileCache;
 import com.android.utils.StringHelper;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
@@ -82,6 +84,7 @@ import org.gradle.api.attributes.Attribute;
 import org.gradle.api.attributes.AttributesSchema;
 import org.gradle.api.attributes.Usage;
 import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.internal.artifacts.ArtifactAttributes;
 import org.gradle.internal.reflect.Instantiator;
 
 /**
@@ -483,17 +486,32 @@ public class VariantManager implements VariantModel {
         final DependencyHandler dependencies = project.getDependencies();
 
         // register transforms.
-        dependencies.registerTransform(
-                AarTransform.class,
-                transform -> {
-                    final AarTransform aarTransform = (AarTransform) transform;
-                    aarTransform.setProject(project);
-                    aarTransform.setFileCache(
-                            MoreObjects.firstNonNull(
-                                    taskManager.getGlobalScope().getBuildCache(),
-                                    taskManager.getGlobalScope().getProjectLevelCache()));
-                });
-        dependencies.registerTransform(JarTransform.class, transform -> {});
+        FileCache fileCache =
+                MoreObjects.firstNonNull(
+                        taskManager.getGlobalScope().getBuildCache(),
+                        taskManager.getGlobalScope().getProjectLevelCache());
+
+        for (String transformTarget : AarTransform.getTransformTargets()) {
+            dependencies.registerTransform(
+                    reg -> {
+                        reg.getFrom().attribute(ARTIFACT_FORMAT, "aar");
+                        reg.getTo().attribute(ARTIFACT_FORMAT, transformTarget);
+                        reg.artifactTransform(
+                                AarTransform.class,
+                                config -> {
+                                    config.params(transformTarget, project, fileCache);
+                                });
+                    });
+        }
+
+        for (String transformTarget : JarTransform.getTransformTargets()) {
+            dependencies.registerTransform(
+                    reg -> {
+                        reg.getFrom().attribute(ARTIFACT_FORMAT, "jar");
+                        reg.getTo().attribute(ARTIFACT_FORMAT, transformTarget);
+                        reg.artifactTransform(JarTransform.class);
+                    });
+        }
 
         // default is created by the java base plugin, so mark it as not consumable here.
         // TODO we need to disable this because the apt plugin fails otherwise (for now at least).
@@ -508,6 +526,17 @@ public class VariantManager implements VariantModel {
         schema.attribute(VariantAttr.ATTRIBUTE)
                 .getCompatibilityRules()
                 .assumeCompatibleWhenMissing();
+
+        // FIXME remove in next Gradle nightly.
+        schema.getMatchingStrategy(ArtifactAttributes.ARTIFACT_FORMAT)
+                .getCompatibilityRules()
+                .add(
+                        details -> {
+                            if (details.getConsumerValue().equals("jar")
+                                    && details.getProducerValue().equals("org.gradle.java.jar")) {
+                                details.compatible();
+                            }
+                        });
 
         // same for flavors, both for user-declared flavors and for attributes created from
         // absent flavor matching

@@ -96,15 +96,23 @@ public class JacocoTransform extends Transform {
 
         checkNotNull(invocation.getOutputProvider(),
                 "Missing output object for transform " + getName());
-        File outputDir = invocation.getOutputProvider().getContentLocation(
-                "main", getOutputTypes(), getScopes(), Format.DIRECTORY);
-        FileUtils.mkdirs(outputDir);
 
         TransformInput input = Iterables.getOnlyElement(invocation.getInputs());
+
         // we don't want jar inputs.
         Preconditions.checkState(input.getJarInputs().isEmpty());
         DirectoryInput directoryInput = Iterables.getOnlyElement(input.getDirectoryInputs());
         File inputDir = directoryInput.getFile();
+
+        File outputDir =
+                invocation
+                        .getOutputProvider()
+                        .getContentLocation(
+                                directoryInput.getName(),
+                                getOutputTypes(),
+                                getScopes(),
+                                Format.DIRECTORY);
+        FileUtils.mkdirs(outputDir);
 
         Instrumenter instrumenter = new Instrumenter(new OfflineInstrumentationAccessGenerator());
         if (invocation.isIncremental()) {

@@ -53,9 +53,9 @@ public abstract class ProguardConfigurable extends Transform {
 
     @NonNull
     @Override
-    public Set<Scope> getScopes() {
+    public Set<? super Scope> getScopes() {
         if (variantType == VariantType.LIBRARY) {
-            return Sets.immutableEnumSet(Scope.PROJECT, Scope.PROJECT_LOCAL_DEPS);
+            return TransformManager.SCOPE_FULL_LIBRARY_WITH_LOCAL_JARS;
         }
 
         return TransformManager.SCOPE_FULL_PROJECT;
@@ -67,7 +67,6 @@ public abstract class ProguardConfigurable extends Transform {
         Set<Scope> set = Sets.newHashSetWithExpectedSize(5);
         if (variantType == VariantType.LIBRARY) {
             set.add(Scope.SUB_PROJECTS);
-            set.add(Scope.SUB_PROJECTS_LOCAL_DEPS);
             set.add(Scope.EXTERNAL_LIBRARIES);
         }
 

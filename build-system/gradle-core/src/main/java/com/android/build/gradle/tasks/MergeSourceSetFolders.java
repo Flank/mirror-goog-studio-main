@@ -79,8 +79,6 @@ public class MergeSourceSetFolders extends IncrementalTask {
 
     // for the dependencies
     private ArtifactCollection libraries = null;
-    // FIXME find a better way to inject the tested library's content into the main ArtifactCollection
-    private FileCollection testedLibrary;
 
     private FileCollection shadersOutputDir = null;
     private FileCollection copyApk = null;
@@ -195,12 +193,6 @@ public class MergeSourceSetFolders extends IncrementalTask {
 
     @InputFiles
     @Optional
-    public FileCollection getTestedLibrary() {
-        return testedLibrary;
-    }
-
-    @InputFiles
-    @Optional
     public FileCollection getLibraries() {
         if (libraries != null) {
             return libraries.getArtifactFiles();
@@ -301,15 +293,6 @@ public class MergeSourceSetFolders extends IncrementalTask {
                 }
             }
 
-            if (testedLibrary != null) {
-                AssetSet assetSet = new AssetSet("__tested_library__");
-                assetSet.addSource(testedLibrary.getSingleFile());
-
-                // add at the beginning since the libraries are less important than the folder based
-                // resource sets.
-                assetSetList.add(assetSet);
-            }
-
             // add the generated folders to the first set of the folder-based sets.
             List<File> generatedAssetFolders = Lists.newArrayList();
 
@@ -403,10 +386,6 @@ public class MergeSourceSetFolders extends IncrementalTask {
             if (!variantConfig.getType().equals(VariantType.LIBRARY)) {
                 mergeAssetsTask.libraries = scope.getArtifactCollection(
                         RUNTIME_CLASSPATH, ALL, ASSETS);
-
-                // only add the assets for tested libraries.
-                mergeAssetsTask.testedLibrary =
-                        scope.getTestedArtifact(ASSETS, VariantType.LIBRARY);
             }
 
             mergeAssetsTask.setOutputDir(outputDir);

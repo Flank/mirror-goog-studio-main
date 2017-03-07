@@ -22,6 +22,7 @@ import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.JarInput;
 import com.android.build.api.transform.QualifiedContent.ContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
+import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.api.transform.Transform;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
@@ -58,16 +59,13 @@ public class LibraryJniLibsTransform extends Transform {
     private final String name;
     @NonNull
     private final File jniLibsFolder;
-    @NonNull
-    private final Set<Scope> scopes;
+    @NonNull private final Set<ScopeType> scopes;
 
     private final Pattern pattern = Pattern.compile("lib/[^/]+/[^/]+\\.so");
 
 
     public LibraryJniLibsTransform(
-            @NonNull String name,
-            @NonNull File jniLibsFolder,
-            @NonNull Set<Scope> scopes) {
+            @NonNull String name, @NonNull File jniLibsFolder, @NonNull Set<ScopeType> scopes) {
         this.name = name;
         this.jniLibsFolder = jniLibsFolder;
         this.scopes = scopes;
@@ -93,7 +91,7 @@ public class LibraryJniLibsTransform extends Transform {
 
     @NonNull
     @Override
-    public Set<Scope> getReferencedScopes() {
+    public Set<? super Scope> getReferencedScopes() {
         return scopes;
     }
 

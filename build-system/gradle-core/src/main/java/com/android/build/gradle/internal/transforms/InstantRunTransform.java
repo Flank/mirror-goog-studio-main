@@ -122,8 +122,6 @@ public class InstantRunTransform extends Transform {
     @Override
     public Set<Scope> getReferencedScopes() {
         return Sets.immutableEnumSet(Scope.EXTERNAL_LIBRARIES,
-                Scope.PROJECT_LOCAL_DEPS,
-                Scope.SUB_PROJECTS_LOCAL_DEPS,
                 Scope.PROVIDED_ONLY);
     }
 
@@ -194,12 +192,16 @@ public class InstantRunTransform extends Transform {
             throw new IllegalStateException("InstantRunTransform called with null output");
         }
 
-        File classesTwoOutput = outputProvider.getContentLocation("main",
-                TransformManager.CONTENT_CLASS, getScopes(), Format.DIRECTORY);
+        File classesTwoOutput =
+                outputProvider.getContentLocation(
+                        "classes", TransformManager.CONTENT_CLASS, getScopes(), Format.DIRECTORY);
 
-        File classesThreeOutput = outputProvider.getContentLocation("enhanced",
-                ImmutableSet.of(ExtendedContentType.CLASSES_ENHANCED),
-                getScopes(), Format.DIRECTORY);
+        File classesThreeOutput =
+                outputProvider.getContentLocation(
+                        "enhanced_classes",
+                        ImmutableSet.of(ExtendedContentType.CLASSES_ENHANCED),
+                        getScopes(),
+                        Format.DIRECTORY);
 
         List<WorkItem> workItems = new ArrayList<>();
         for (TransformInput input : invocation.getInputs()) {

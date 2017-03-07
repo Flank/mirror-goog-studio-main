@@ -24,6 +24,7 @@ import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
+import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.tasks.annotations.TypedefRemover;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
@@ -33,6 +34,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
@@ -61,6 +63,12 @@ public class LibraryAarJarsTransform extends LibraryBaseTransform {
     @Override
     public String getName() {
         return "syncLibJars";
+    }
+
+    @NonNull
+    @Override
+    public Set<? super Scope> getReferencedScopes() {
+        return TransformManager.SCOPE_FULL_LIBRARY_WITH_LOCAL_JARS;
     }
 
     @Override

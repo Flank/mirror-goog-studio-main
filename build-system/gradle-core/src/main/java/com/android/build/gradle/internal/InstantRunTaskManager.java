@@ -105,7 +105,7 @@ public class InstantRunTaskManager {
             @NonNull Supplier<DexByteCodeConverter> dexByteCodeConverter,
             @Nullable AndroidTask<?> preTask,
             AndroidTask<?> anchorTask,
-            Set<QualifiedContent.Scope> resMergingScopes,
+            Set<? super QualifiedContent.Scope> resMergingScopes,
             FileCollection instantRunMergedManifests,
             FileCollection processedResources,
             boolean addDependencyChangeChecker) {
@@ -173,10 +173,7 @@ public class InstantRunTaskManager {
                             "dependencyChecker",
                             variantScope.getInstantRunBuildContext(),
                             ImmutableSet.of(QualifiedContent.DefaultContentType.CLASSES),
-                            Sets.immutableEnumSet(
-                                    QualifiedContent.Scope.PROJECT_LOCAL_DEPS,
-                                    QualifiedContent.Scope.SUB_PROJECTS_LOCAL_DEPS,
-                                    QualifiedContent.Scope.EXTERNAL_LIBRARIES),
+                            Sets.immutableEnumSet(QualifiedContent.Scope.EXTERNAL_LIBRARIES),
                             InstantRunVerifierStatus.DEPENDENCY_CHANGED);
             Optional<AndroidTask<TransformTask>> dependenciesVerifierTask =
                     transformManager.addTransform(

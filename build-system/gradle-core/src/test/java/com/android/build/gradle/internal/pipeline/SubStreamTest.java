@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,18 +14,15 @@
  * limitations under the License.
  */
 
-package com.android.build.api.transform;
+package com.android.build.gradle.internal.pipeline;
 
-/**
- * An exception during the execution of a Transform.
- */
-public class TransformException extends Exception {
+import nl.jqno.equalsverifier.EqualsVerifier;
+import org.junit.Test;
 
-    public TransformException(Throwable throwable) {
-        super(throwable);
-    }
+public class SubStreamTest {
 
-    public TransformException(String s) {
-        super(s);
+    @Test
+    public void equals() throws Exception {
+        EqualsVerifier.forClass(SubStream.class).withIgnoredFields("filename").verify();
     }
 }

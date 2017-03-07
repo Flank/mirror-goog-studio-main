@@ -21,6 +21,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.transform.JarInput;
 import com.android.build.api.transform.QualifiedContent;
+import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.SecondaryFile;
 import com.android.build.api.transform.Transform;
 import com.android.build.gradle.internal.pipeline.TransformManager;
@@ -108,14 +109,14 @@ public abstract class LibraryBaseTransform extends Transform {
 
     @NonNull
     @Override
-    public Set<QualifiedContent.Scope> getScopes() {
+    public Set<Scope> getScopes() {
         return TransformManager.EMPTY_SCOPES;
     }
 
     @NonNull
     @Override
-    public Set<QualifiedContent.Scope> getReferencedScopes() {
-        return TransformManager.SCOPE_FULL_LIBRARY;
+    public Set<? super Scope> getReferencedScopes() {
+        return TransformManager.PROJECT_ONLY;
     }
 
     @NonNull

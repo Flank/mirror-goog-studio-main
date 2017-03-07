@@ -30,13 +30,12 @@ import static com.android.SdkConstants.FN_PROGUARD_TXT;
 import static com.android.SdkConstants.FN_PUBLIC_TXT;
 import static com.android.SdkConstants.FN_RESOURCE_TEXT;
 import static com.android.SdkConstants.LIBS_FOLDER;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.TYPE_AAR;
-import static org.gradle.api.internal.artifacts.ArtifactAttributes.ARTIFACT_FORMAT;
 
 import android.databinding.tool.DataBindingBuilder;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
+import com.android.builder.utils.FileCache;
 import com.android.utils.FileUtils;
 import com.google.common.collect.Lists;
 import java.io.File;
@@ -44,37 +43,41 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import org.gradle.api.artifacts.transform.ArtifactTransformTargets;
-import org.gradle.api.attributes.AttributeContainer;
+import org.gradle.api.Project;
 
 /**
  */
 public class AarTransform extends ExtractTransform {
+    private final String targetType;
 
-    @Override
-    public void configure(AttributeContainer from, ArtifactTransformTargets targets) {
-        from.attribute(ARTIFACT_FORMAT, TYPE_AAR);
+    public AarTransform(String targetType, Project project, FileCache fileCache) {
+        super(project, fileCache);
+        this.targetType = targetType;
+    }
 
-        targets.newTarget().attribute(ARTIFACT_FORMAT, ArtifactType.EXPLODED_AAR.getType());
-        targets.newTarget().attribute(ARTIFACT_FORMAT, ArtifactType.CLASSES.getType());
-        targets.newTarget().attribute(ARTIFACT_FORMAT, ArtifactType.JAVA_RES.getType());
-        targets.newTarget().attribute(ARTIFACT_FORMAT, ArtifactType.JAR.getType());
-        targets.newTarget().attribute(ARTIFACT_FORMAT, ArtifactType.MANIFEST.getType());
-        targets.newTarget().attribute(ARTIFACT_FORMAT, ArtifactType.ANDROID_RES.getType());
-        targets.newTarget().attribute(ARTIFACT_FORMAT, ArtifactType.ASSETS.getType());
-        targets.newTarget().attribute(ARTIFACT_FORMAT, ArtifactType.JNI.getType());
-        targets.newTarget().attribute(ARTIFACT_FORMAT, ArtifactType.AIDL.getType());
-        targets.newTarget().attribute(ARTIFACT_FORMAT, ArtifactType.RENDERSCRIPT.getType());
-        targets.newTarget().attribute(ARTIFACT_FORMAT, ArtifactType.PROGUARD_RULES.getType());
-        targets.newTarget().attribute(ARTIFACT_FORMAT, ArtifactType.LINT.getType());
-        targets.newTarget().attribute(ARTIFACT_FORMAT, ArtifactType.ANNOTATIONS.getType());
-        targets.newTarget().attribute(ARTIFACT_FORMAT, ArtifactType.PUBLIC_RES.getType());
-        targets.newTarget().attribute(ARTIFACT_FORMAT, ArtifactType.SYMBOL_LIST.getType());
-        targets.newTarget().attribute(ARTIFACT_FORMAT, ArtifactType.DATA_BINDING.getType());
+    public static String[] getTransformTargets() {
+        return new String[] {
+            ArtifactType.EXPLODED_AAR.getType(),
+            ArtifactType.CLASSES.getType(),
+            ArtifactType.JAVA_RES.getType(),
+            ArtifactType.JAR.getType(),
+            ArtifactType.MANIFEST.getType(),
+            ArtifactType.ANDROID_RES.getType(),
+            ArtifactType.ASSETS.getType(),
+            ArtifactType.JNI.getType(),
+            ArtifactType.AIDL.getType(),
+            ArtifactType.RENDERSCRIPT.getType(),
+            ArtifactType.PROGUARD_RULES.getType(),
+            ArtifactType.LINT.getType(),
+            ArtifactType.ANNOTATIONS.getType(),
+            ArtifactType.PUBLIC_RES.getType(),
+            ArtifactType.SYMBOL_LIST.getType(),
+            ArtifactType.DATA_BINDING.getType(),
+        };
     }
 
     @Override
-    public List<File> transform(File input, AttributeContainer target) {
+    public List<File> transform(File input) {
         //System.out.println("TRANSFORMING(" + target.getAttribute(ARTIFACT_FORMAT) +  "): " + input);
         if (!input.isFile()) {
             //System.out.println("Non existing file: " + input);
@@ -91,7 +94,7 @@ public class AarTransform extends ExtractTransform {
         // single file case return
         File file;
 
-        switch (ArtifactType.byType(target.getAttribute(ARTIFACT_FORMAT))) {
+        switch (ArtifactType.byType(targetType)) {
             // because both APK_CLASSES and CLASSES resolve to JavaPlugin.CLASS_DIRECTORY, we check for both
             // depending on what the map will contain
             case APK_CLASSES:
@@ -143,8 +146,7 @@ public class AarTransform extends ExtractTransform {
                 file = new File(explodedAar, DataBindingBuilder.DATA_BINDING_ROOT_FOLDER_IN_AAR);
                 break;
             default:
-                throw new RuntimeException("Unsupported type in AarTransform: "
-                        + target.getAttribute(ARTIFACT_FORMAT));
+                throw new RuntimeException("Unsupported type in AarTransform: " + targetType);
         }
 
         if (file.exists()) {

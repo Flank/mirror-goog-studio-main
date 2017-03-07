@@ -27,13 +27,11 @@ import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 import org.gradle.api.Project;
@@ -116,12 +114,14 @@ class IntermediateStream extends TransformStream {
         super(contentTypes, scopes, fileCollection);
     }
 
+    private IntermediateFolderUtils folderUtils = null;
+
     /**
      * Returns the files that make up the streams. The callable allows for resolving this lazily.
      */
     @NonNull
     File getRootLocation() {
-        return getFiles().getSingleFile();
+        return getFileCollection().getSingleFile();
     }
 
     /**
@@ -129,25 +129,26 @@ class IntermediateStream extends TransformStream {
      */
     @NonNull
     TransformOutputProvider asOutput() {
-        return new TransformOutputProviderImpl(getRootLocation());
+        init();
+        return new TransformOutputProviderImpl(folderUtils);
+    }
+
+    void save() throws IOException {
+        folderUtils.save();
     }
 
     @NonNull
     @Override
     TransformInput asNonIncrementalInput() {
-        return IntermediateFolderUtils.computeNonIncrementalInputFromFolder(
-                getRootLocation(),
-                getContentTypes(),
-                getScopes());
+        init();
+        return folderUtils.computeNonIncrementalInputFromFolder();
     }
 
     @NonNull
     @Override
     IncrementalTransformInput asIncrementalInput() {
-        return IntermediateFolderUtils.computeIncrementalInputFromFolder(
-                getRootLocation(),
-                getContentTypes(),
-                getScopes());
+        init();
+        return folderUtils.computeIncrementalInputFromFolder();
     }
 
     @NonNull
@@ -155,10 +156,7 @@ class IntermediateStream extends TransformStream {
     TransformStream makeRestrictedCopy(
             @NonNull Set<ContentType> types,
             @NonNull Set<? super Scope> scopes) {
-        return new IntermediateStream(
-                types,
-                scopes,
-                getFiles());
+        return new IntermediateStream(types, scopes, getFileCollection());
     }
 
     @Override
@@ -173,25 +171,21 @@ class IntermediateStream extends TransformStream {
         // inputs.
         // However the content of the intermediate root folder isn't known at configuration
         // time so we need to pass a callable that will compute the files dynamically.
-        Supplier<Collection<File>> supplier = () -> {
-            List<File> files = Lists.newArrayList();
-
-            // get the inputs
-            TransformInput input = asNonIncrementalInput();
-
-            // collect the files and dependency info for the collection
-            for (QualifiedContent content : Iterables.concat(
-                    input.getJarInputs(), input.getDirectoryInputs())) {
-                if (streamFilter.accept(content.getContentTypes(), content.getScopes())) {
-                    files.add(content.getFile());
-                }
-            }
-
-            return files;
-        };
+        Supplier<Collection<File>> supplier =
+                () -> {
+                    init();
+                    return folderUtils.getFiles(streamFilter);
+                };
 
         return project.files(TaskInputHelper.bypassFileCallable(supplier))
-                .builtBy(getFiles().getBuildDependencies());
+                .builtBy(getFileCollection().getBuildDependencies());
+    }
+
+    private void init() {
+        if (folderUtils == null) {
+            folderUtils =
+                    new IntermediateFolderUtils(getRootLocation(), getContentTypes(), getScopes());
+        }
     }
 
     @Override
@@ -199,7 +193,7 @@ class IntermediateStream extends TransformStream {
         return MoreObjects.toStringHelper(this)
                 .add("scopes", getScopes())
                 .add("contentTypes", getContentTypes())
-                .add("fileCollection", getFiles())
+                .add("fileCollection", getFileCollection())
                 .toString();
     }
 }

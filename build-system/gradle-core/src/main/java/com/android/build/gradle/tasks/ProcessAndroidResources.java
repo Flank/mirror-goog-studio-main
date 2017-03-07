@@ -137,11 +137,6 @@ public class ProcessAndroidResources extends IncrementalTask {
     private ArtifactCollection manifests;
     @Nullable
     private ArtifactCollection symbolFiles;
-    // FIXME find a better way to inject the tested library's content into the main ArtifactCollection
-    @Nullable
-    private FileCollection testedManifest;
-    @Nullable
-    private FileCollection testedSymbolFile;
 
     private Supplier<String> packageForR;
 
@@ -621,15 +616,6 @@ public class ProcessAndroidResources extends IncrementalTask {
                             symbolMap.get(artifactResult.getId().getComponentIdentifier())));
                 }
 
-                // add the tested library if present
-                if (testedManifest != null) {
-                    File symbolFile = testedSymbolFile != null
-                            ? testedSymbolFile.getSingleFile()
-                            : null;
-                    computedLibraryInfo.add(new LibraryInfo(
-                            testedManifest.getSingleFile(),
-                            symbolFile));
-                }
                 computedLibraryInfo = ImmutableList.copyOf(computedLibraryInfo);
             } else {
                 computedLibraryInfo = ImmutableList.of();
@@ -716,11 +702,6 @@ public class ProcessAndroidResources extends IncrementalTask {
 
                 processResources.symbolFiles = variantScope.getArtifactCollection(
                         RUNTIME_CLASSPATH, ALL, SYMBOL_LIST);
-
-                processResources.testedManifest = variantScope.getTestedArtifact(
-                        MANIFEST, VariantType.LIBRARY);
-                processResources.testedSymbolFile = variantScope.getTestedArtifact(
-                        SYMBOL_LIST, VariantType.LIBRARY);
 
                 processResources.packageForR =
                         TaskInputHelper.memoize(
@@ -895,20 +876,6 @@ public class ProcessAndroidResources extends IncrementalTask {
     @Input
     public String getBuildToolsVersion() {
         return getBuildTools().getRevision().toString();
-    }
-
-    @Nullable
-    @InputFiles
-    @Optional
-    public FileCollection getTestedManifest() {
-        return testedManifest;
-    }
-
-    @Nullable
-    @InputFiles
-    @Optional
-    public FileCollection getTestedSymbolFile() {
-        return testedSymbolFile;
     }
 
     @InputFiles
