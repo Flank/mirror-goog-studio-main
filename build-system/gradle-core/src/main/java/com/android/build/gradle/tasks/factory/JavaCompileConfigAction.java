@@ -53,7 +53,6 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
         scope.getVariantData().javacTask = javacTask;
         final GlobalScope globalScope = scope.getGlobalScope();
         final Project project = globalScope.getProject();
-
         javacTask.compileSdkVersion = globalScope.getExtension().getCompileSdkVersion();
         javacTask.mInstantRunBuildContext = scope.getInstantRunBuildContext();
 
@@ -106,7 +105,6 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
 
         Configuration annotationProcessorConfiguration =
                 scope.getVariantData().getVariantDependency().getAnnotationProcessorConfiguration();
-
 
         Boolean includeCompileClasspath =
                 scope.getVariantConfiguration()

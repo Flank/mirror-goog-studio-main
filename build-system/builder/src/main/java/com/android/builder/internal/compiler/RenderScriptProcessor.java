@@ -34,6 +34,7 @@ import com.android.utils.ILogger;
 import com.google.common.collect.Maps;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -83,11 +84,9 @@ public class RenderScriptProcessor {
 
     public static final String RS_DEPS = "rsDeps";
 
-    @NonNull
-    private final List<File> mSourceFolders;
+    @NonNull private final Collection<File> mSourceFolders;
 
-    @NonNull
-    private final List<File> mImportFolders;
+    @NonNull private final Collection<File> mImportFolders;
 
     @NonNull
     private final File mSourceOutputDir;
@@ -122,8 +121,8 @@ public class RenderScriptProcessor {
     private final Map<String, File> mLibClCore = Maps.newHashMap();
 
     public RenderScriptProcessor(
-            @NonNull List<File> sourceFolders,
-            @NonNull List<File> importFolders,
+            @NonNull Collection<File> sourceFolders,
+            @NonNull Collection<File> importFolders,
             @NonNull File sourceOutputDir,
             @NonNull File resOutputDir,
             @NonNull File objOutputDir,

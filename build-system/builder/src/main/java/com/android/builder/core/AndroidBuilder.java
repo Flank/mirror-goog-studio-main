@@ -86,7 +86,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
@@ -1131,7 +1130,7 @@ public class AndroidBuilder {
      * @throws InterruptedException failed
      */
     public void compileAllRenderscriptFiles(
-            @NonNull List<File> sourceFolders,
+            @NonNull Collection<File> sourceFolders,
             @NonNull List<File> importFolders,
             @NonNull File sourceOutputDir,
             @NonNull File resOutputDir,
