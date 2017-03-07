@@ -35,6 +35,7 @@ import java.util.Arrays;
 import java.util.zip.GZIPOutputStream;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -309,6 +310,7 @@ public class AssetPackagingTest {
     }
 
     @Test
+    @Ignore("http://b.android.com/238185")
     public void testAppProjectWithAddedAndRemovedAsset() throws Exception {
         execute("clean", "app:assembleDebug");
 
