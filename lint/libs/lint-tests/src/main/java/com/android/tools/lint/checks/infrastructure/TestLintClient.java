@@ -84,7 +84,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
-import com.intellij.psi.JavaRecursiveElementVisitor;
 import com.intellij.psi.PsiErrorElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import java.io.File;
@@ -868,6 +867,20 @@ public class TestLintClient extends LintCliClient {
             }
 
             return super.getBuildSdk();
+        }
+
+        @Nullable
+        @Override
+        public String getBuildTargetHash() {
+            if (mocker != null) {
+                String compileTarget = mocker.getProject().getCompileTarget();
+                //noinspection ConstantConditions
+                if (compileTarget != null && !compileTarget.isEmpty()) {
+                    return compileTarget;
+                }
+            }
+
+            return super.getBuildTargetHash();
         }
 
         @Override
