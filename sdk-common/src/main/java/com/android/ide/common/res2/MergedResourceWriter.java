@@ -44,12 +44,6 @@ import com.google.common.io.Files;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
-
-import java.util.concurrent.ConcurrentLinkedQueue;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -60,11 +54,14 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
 /**
  * A {@link MergeWriter} for assets, using {@link ResourceItem}.
@@ -476,11 +473,11 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
                     rootNode.appendChild(document.createTextNode("\n"));
 
                     final String content;
+                    Map<SourcePosition, SourceFilePosition> blame =
+                            mMergingLog == null ? null : Maps.newLinkedHashMap();
 
-                    if (mMergingLog != null) {
-                        Map<SourcePosition, SourceFilePosition> blame = Maps.newLinkedHashMap();
+                    if (blame != null) {
                         content = XmlUtils.toXml(document, blame);
-                        mMergingLog.logSource(new SourceFile(outFile), blame);
                     } else {
                         content = XmlUtils.toXml(document);
                     }
@@ -491,15 +488,19 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
                      * Now, compile the file using aapt.
                      */
                     Future<File> f = mResourceCompiler.compile(outFile, getRootFolder());
-                    File result = f.get();
-                    if (result == null) {
+                    File copyOutput = f.get();
+                    if (copyOutput == null) {
                         /*
                          * aapt cannot compile this file, copy it.
                          */
                         File copyFolder = new File(getRootFolder(), folderName);
                         FileUtils.mkdirs(copyFolder);
-                        File copyOutput = new File(copyFolder, outFile.getName());
+                        copyOutput = new File(copyFolder, outFile.getName());
                         Files.copy(outFile, copyOutput);
+                    }
+
+                    if (blame != null) {
+                        mMergingLog.logSource(new SourceFile(copyOutput), blame);
                     }
 
                     if (publicNodes != null && mPublicFile != null) {
