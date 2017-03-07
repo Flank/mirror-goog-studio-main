@@ -54,6 +54,7 @@ public class IntermediateFolderUtils {
     // list of outputs that were found in the list, but that are already marked as removed.
     private List<SubStream> removedSubStreams;
     private List<SubStream> outOfScopeStreams;
+    private int nextIndex = 0;
 
     public IntermediateFolderUtils(
             @NonNull File rootFolder,
@@ -99,8 +100,7 @@ public class IntermediateFolderUtils {
         checkState(!types.isEmpty());
         checkState(!scopes.isEmpty());
 
-        // get available name from list.
-        int index = 0;
+        // search for an existing matching substream.
         for (SubStream subStream : subStreams) {
             // look for an existing match. This means same name, types, scopes, and format.
             if (name.equals(subStream.getName())
@@ -109,15 +109,10 @@ public class IntermediateFolderUtils {
                     && format == subStream.getFormat()) {
                 return new File(rootFolder, subStream.getFilename());
             }
-
-            // else make sure the index is higher.
-            if (subStream.getIndex() >= index) {
-                index = subStream.getIndex() + 1;
-            }
         }
 
         // didn't find a matching output. create the new output
-        SubStream newSubStream = new SubStream(name, index, scopes, types, format, true);
+        SubStream newSubStream = new SubStream(name, nextIndex++, scopes, types, format, true);
 
         subStreams.add(newSubStream);
 
@@ -419,6 +414,10 @@ public class IntermediateFolderUtils {
         outOfScopeStreams = Lists.newArrayList();
 
         for (SubStream subStream : streams) {
+            if (subStream.getIndex() >= nextIndex) {
+                nextIndex = subStream.getIndex() + 1;
+            }
+
             if (subStream.isPresent()) {
                 // check these are types we care about and only pass down types we care about.
                 // In this case we can safely return the content with a limited type,
