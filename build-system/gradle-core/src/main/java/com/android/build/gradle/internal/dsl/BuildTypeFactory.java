@@ -17,9 +17,9 @@
 package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
+import com.android.builder.core.ErrorReporter;
 import org.gradle.api.NamedDomainObjectFactory;
 import org.gradle.api.Project;
-import org.gradle.api.logging.Logger;
 import org.gradle.internal.reflect.Instantiator;
 
 /**
@@ -27,24 +27,22 @@ import org.gradle.internal.reflect.Instantiator;
  */
 public class BuildTypeFactory implements NamedDomainObjectFactory<BuildType> {
 
-    @NonNull
-    private final Instantiator instantiator;
-    @NonNull
-    private final Project project;
+    @NonNull private final Instantiator instantiator;
+    @NonNull private final Project project;
+    @NonNull private final ErrorReporter errorReporter;
 
-    @NonNull
-    private final Logger logger;
-
-    public BuildTypeFactory(@NonNull Instantiator instantiator,
-                            @NonNull Project project,
-                            @NonNull Logger logger) {
+    public BuildTypeFactory(
+            @NonNull Instantiator instantiator,
+            @NonNull Project project,
+            @NonNull ErrorReporter errorReporter) {
         this.instantiator = instantiator;
         this.project = project;
-        this.logger = logger;
+        this.errorReporter = errorReporter;
     }
 
     @Override
     public BuildType create(String name) {
-        return instantiator.newInstance(BuildType.class, name, project, instantiator, logger);
+        return instantiator.newInstance(
+                BuildType.class, name, project, instantiator, errorReporter);
     }
 }

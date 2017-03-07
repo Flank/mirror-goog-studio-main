@@ -134,22 +134,6 @@ public class HotSwapTest {
     }
 
     @Test
-    public void testModel() throws Exception {
-        InstantRun instantRunModel = InstantRunTestUtils.getInstantRunModel(
-                project.model().getSingle().getOnlyModel());
-
-        assertTrue(instantRunModel.isSupportedByArtifact());
-
-        TestFileUtils.appendToFile(
-                project.getBuildFile(), "\nandroid.buildTypes.debug.useJack = true");
-
-        instantRunModel = InstantRunTestUtils.getInstantRunModel(
-                project.model().getSingle().getOnlyModel());
-
-        assertFalse(instantRunModel.isSupportedByArtifact());
-    }
-
-    @Test
     @Category(DeviceTests.class)
     public void artHotSwapChangeTest() throws Exception {
         doHotSwapChangeTest(adb.getDevice(AndroidVersionMatcher.thatUsesArt()));

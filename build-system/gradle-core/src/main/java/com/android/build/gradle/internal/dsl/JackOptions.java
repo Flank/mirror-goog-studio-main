@@ -18,6 +18,8 @@ package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.builder.core.ErrorReporter;
+import com.android.builder.model.SyncIssue;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
@@ -33,6 +35,12 @@ import java.util.Map;
  */
 @SuppressWarnings("UnnecessaryInheritDoc")
 public class JackOptions implements CoreJackOptions {
+
+    static final String DEPRECATION_WARNING =
+            "Jack toolchain has been deprecated, and will not run. "
+                    + "Please delete the 'jackOptions { ... }' block from your build file, as "
+                    + "it will be incompatible with next version of the Android plugin for Gradle.";
+
     @Nullable
     private Boolean isEnabledFlag;
     @Nullable
@@ -41,6 +49,12 @@ public class JackOptions implements CoreJackOptions {
     private Map<String, String> additionalParameters = Maps.newHashMap();
     @NonNull
     private List<String> pluginNames = Lists.newArrayList();
+
+    @NonNull private final ErrorReporter errorReporter;
+
+    public JackOptions(@NonNull ErrorReporter errorReporter) {
+        this.errorReporter = errorReporter;
+    }
 
     void _initWith(CoreJackOptions that) {
         isEnabledFlag = that.isEnabled();
@@ -52,12 +66,15 @@ public class JackOptions implements CoreJackOptions {
     /** {@inheritDoc} */
     @Override
     @Nullable
+    @Deprecated
     public Boolean isEnabled() {
-        return isEnabledFlag;
+        // Jack toolchain has been deprecated
+        return null;
     }
 
+    @Deprecated
     public void setEnabled(@Nullable Boolean enabled) {
-        isEnabledFlag = enabled;
+        errorReporter.handleSyncWarning(null, SyncIssue.TYPE_GENERIC, DEPRECATION_WARNING);
     }
 
     /** {@inheritDoc} */

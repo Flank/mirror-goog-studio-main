@@ -36,7 +36,7 @@ public class JarJarTest {
 
     @Parameterized.Parameters(name = "{0}")
     public static Iterable<String> projects() {
-        return ImmutableList.of("jarjarWithJack", "jarjarIntegration");
+        return ImmutableList.of("jarjarIntegration");
     }
 
     @Rule public GradleTestProject project;
