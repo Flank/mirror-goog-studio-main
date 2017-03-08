@@ -86,7 +86,6 @@ jar.manifest.attributes("Builder-Version": version)
 configurations {
     provided
     sourcesProvided
-    resourcesProvided
 }
 
 dependencies {
@@ -113,10 +112,6 @@ dependencies {
     sourcesProvided(project(path:':base:aaptjlib', configuration:'sourcesOnly')) {
         transitive = false
     }
-
-    resourcesProvided(project(path: ':external:desugar', configuration: 'fatJar')) {
-        transitive = false
-    }
 }
 
 sourceSets.main.compileClasspath += configurations.provided
@@ -128,9 +123,6 @@ tasks.sourcesJar.dependsOn(configurations.sourcesProvided)
 tasks.jar {
     from {
         configurations.provided.collect({zipTree(it)})
-    }
-    from {
-        configurations.resourcesProvided.collect{ it }
     }
 }
 

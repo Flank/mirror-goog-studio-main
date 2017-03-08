@@ -14,11 +14,9 @@ fileset(
         "//tools/base/aaptjlib:src/main/resources/win64/libaapt2_jni.dll",
         "//tools/base/aaptjlib:src/main/resources/win64/libwinpthread-1.dll",
         "//tools/buildSrc/base:version.properties",
-        "//tools/external/desugar:desugar_deploy.jar",
     ],
     mappings = {
         "//tools/buildSrc/base:": "com/android/builder/",
-        "//tools/external/desugar:": "",
         "//tools/base/aaptjlib:src/main/resources/": "",
         "src/main/resources/": "",
     },
