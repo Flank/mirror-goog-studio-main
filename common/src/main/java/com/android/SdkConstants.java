@@ -1476,6 +1476,7 @@ public final class SdkConstants {
     // Values: Layouts
     public static final String VALUE_FILL_PARENT = "fill_parent"; //$NON-NLS-1$
     public static final String VALUE_MATCH_PARENT = "match_parent"; //$NON-NLS-1$
+    public static final String VALUE_MATCH_CONSTRAINT = "0dp"; //$NON-NLS-1$
     public static final String VALUE_VERTICAL = "vertical"; //$NON-NLS-1$
     public static final String VALUE_TRUE = "true"; //$NON-NLS-1$
     public static final String VALUE_EDITABLE = "editable"; //$NON-NLS-1$
