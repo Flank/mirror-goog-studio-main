@@ -18,6 +18,7 @@ package com.android.tools.device.internal;
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
+import com.google.common.base.Stopwatch;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,6 +31,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class OsProcessRunner implements ProcessRunner {
     private final ExecutorService executor;
@@ -98,7 +102,25 @@ public class OsProcessRunner implements ProcessRunner {
 
     @Override
     public boolean waitFor(long timeout, @NonNull TimeUnit unit) throws InterruptedException {
-        return process.waitFor(timeout, unit);
+        Stopwatch stopwatch = Stopwatch.createStarted();
+        boolean processExited = process.waitFor(timeout, unit);
+
+        if (processExited) {
+            // if the process has quit, then wait to make sure that the readers are done
+            try {
+                stdoutReader.get(timeout - stopwatch.elapsed(unit), unit);
+                stderrReader.get(timeout - stopwatch.elapsed(unit), unit);
+            } catch (ExecutionException e) {
+                // this would be a programming error that can be ignored here
+                String msg =
+                        "Unexpected error while waiting for stdout/stderr stream readers to finish";
+                Logger.getLogger(OsProcessRunner.class.getName())
+                        .log(Level.WARNING, msg, e.getCause());
+            } catch (TimeoutException ignored) {
+            }
+        }
+
+        return processExited;
     }
 
     @NonNull
