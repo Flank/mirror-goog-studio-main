@@ -99,7 +99,9 @@ public final class GradleTestProjectBuilder {
     /** Create GradleTestProject from an existing test project. */
     public GradleTestProjectBuilder fromTestProject(@NonNull String project) {
         AndroidTestApp app = new EmptyTestApp();
-        name = project;
+        if (name == null) {
+            name = project;
+        }
         File projectDir = new File(GradleTestProject.TEST_PROJECT_DIR, project);
         addAllFiles(app, projectDir);
         return fromTestApp(app);

@@ -36,12 +36,14 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.hash.Hashing;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.function.Supplier;
@@ -275,13 +277,15 @@ public class OriginalStream extends TransformStream {
             jarInputs = Lists.newArrayList();
             directoryInputs = Lists.newArrayList();
 
-            for (ResolvedArtifactResult result : artifactCollection.getArtifacts()) {
+            final Set<ResolvedArtifactResult> artifacts = artifactCollection.getArtifacts();
+            Map<ComponentIdentifier, Integer> duplicates = computeDuplicateList(artifacts);
+            for (ResolvedArtifactResult result : artifacts) {
                 File artifactFile = result.getFile();
 
                 if (artifactFile.isFile()) {
                     jarInputs.add(
                             new ImmutableJarInput(
-                                    getArtifactName(result),
+                                    getArtifactName(result, duplicates),
                                     artifactFile,
                                     Status.NOTCHANGED,
                                     contentTypes,
@@ -289,7 +293,10 @@ public class OriginalStream extends TransformStream {
                 } else {
                     directoryInputs.add(
                             new ImmutableDirectoryInput(
-                                    getArtifactName(result), artifactFile, contentTypes, scopes));
+                                    getArtifactName(result, duplicates),
+                                    artifactFile,
+                                    contentTypes,
+                                    scopes));
                 }
             }
         } else {
@@ -333,17 +340,25 @@ public class OriginalStream extends TransformStream {
         Set<? super Scope> scopes = getScopes();
 
         if (artifactCollection != null) {
-            for (ResolvedArtifactResult result : artifactCollection.getArtifacts()) {
+            final Set<ResolvedArtifactResult> artifacts = artifactCollection.getArtifacts();
+            Map<ComponentIdentifier, Integer> duplicates = computeDuplicateList(artifacts);
+            for (ResolvedArtifactResult result : artifacts) {
                 File artifactFile = result.getFile();
 
                 if (artifactFile.isDirectory()) {
                     input.addFolderInput(
                             new MutableDirectoryInput(
-                                    getArtifactName(result), artifactFile, contentTypes, scopes));
+                                    getArtifactName(result, duplicates),
+                                    artifactFile,
+                                    contentTypes,
+                                    scopes));
                 } else if (artifactFile.isFile()) {
                     input.addJarInput(
                             new QualifiedContentImpl(
-                                    getArtifactName(result), artifactFile, contentTypes, scopes));
+                                    getArtifactName(result, duplicates),
+                                    artifactFile,
+                                    contentTypes,
+                                    scopes));
                 }
             }
 
@@ -373,21 +388,71 @@ public class OriginalStream extends TransformStream {
         return input;
     }
 
-    @NonNull
-    private static String getArtifactName(@NonNull ResolvedArtifactResult artifactResult) {
-        ComponentIdentifier id = artifactResult.getId().getComponentIdentifier();
-
-        if (id instanceof ProjectComponentIdentifier || id instanceof ModuleComponentIdentifier) {
-            return id.getDisplayName();
+    private static Map<ComponentIdentifier, Integer> computeDuplicateList(
+            @NonNull Collection<ResolvedArtifactResult> artifacts) {
+        Set<ComponentIdentifier> found = Sets.newHashSetWithExpectedSize(artifacts.size());
+        Set<ComponentIdentifier> duplicates = Sets.newHashSet();
+        for (ResolvedArtifactResult artifact : artifacts) {
+            ComponentIdentifier id = artifact.getId().getComponentIdentifier();
+            if (found.contains(id)) {
+                duplicates.add(id);
+            } else {
+                found.add(id);
+            }
         }
 
-        // this is a local jar
-        File artifactFile = artifactResult.getFile();
+        Map<ComponentIdentifier, Integer> result =
+                Maps.newHashMapWithExpectedSize(duplicates.size());
+        Integer zero = 0;
+        for (ComponentIdentifier duplicate : duplicates) {
+            result.put(duplicate, zero);
+        }
 
-        return LOCAL_JAR_GROUPID
-                + artifactFile.getName()
-                + ":"
-                + Hashing.sha1().hashString(artifactFile.getPath(), Charsets.UTF_16LE).toString();
+        return result;
+    }
+
+    @NonNull
+    private static String getArtifactName(
+            @NonNull ResolvedArtifactResult artifactResult,
+            @NonNull Map<ComponentIdentifier, Integer> deduplicationMap) {
+        ComponentIdentifier id = artifactResult.getId().getComponentIdentifier();
+
+        String baseName;
+
+        if (id instanceof ProjectComponentIdentifier) {
+            baseName = ((ProjectComponentIdentifier) id).getProjectPath();
+        } else if (id instanceof ModuleComponentIdentifier) {
+            baseName = id.getDisplayName();
+        } else {
+            // this is a local jar
+            File artifactFile = artifactResult.getFile();
+
+            baseName =
+                    LOCAL_JAR_GROUPID
+                            + artifactFile.getName()
+                            + ":"
+                            + Hashing.sha1()
+                                    .hashString(artifactFile.getPath(), Charsets.UTF_16LE)
+                                    .toString();
+        }
+
+        // loop for duplicates. This can happen for instance in case of an AAR with local Jars,
+        // since all the jars will have the same coordinates.
+        Integer i =
+                deduplicationMap.compute(
+                        id,
+                        (componentIdentifier, value) -> {
+                            if (value == null) {
+                                return null;
+                            }
+
+                            return value + 1;
+                        });
+        if (i != null) {
+            return baseName + "::" + i;
+        }
+
+        return baseName;
     }
 
     @NonNull

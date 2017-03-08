@@ -740,6 +740,15 @@ public final class GradleTestProject implements TestRule {
                 public boolean isSigned() {
                     return isSigned;
                 }
+
+                @Override
+                public String toString() {
+                    return MoreObjects.toStringHelper(this)
+                            .add("getBuildType", getBuildType())
+                            .add("getTestName", getTestName())
+                            .add("isSigned", isSigned())
+                            .toString();
+                }
             };
         }
 
@@ -762,8 +771,19 @@ public final class GradleTestProject implements TestRule {
                 public boolean isSigned() {
                     return isSigned;
                 }
+
+                @Override
+                public String toString() {
+                    return MoreObjects.toStringHelper(this)
+                            .add("getBuildType", getBuildType())
+                            .add("getTestName", getTestName())
+                            .add("isSigned", isSigned())
+                            .toString();
+                }
             };
         }
+
+
 
     }
 
