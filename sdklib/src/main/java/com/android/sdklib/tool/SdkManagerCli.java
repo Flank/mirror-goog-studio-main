@@ -227,8 +227,8 @@ public class SdkManagerCli {
             mOut.println("--------------------------------------");
             for (UpdatablePackage update : updates) {
                 mOut.println(update.getPath());
-                mOut.println("    Local Version:  " + update.getLocal().getVersion());
-                mOut.println("    Remote Version: " + update.getRemote().getVersion());
+                mOut.println("    Installed Version: " + update.getLocal().getVersion());
+                mOut.println("    Available Version: " + update.getRemote().getVersion());
                 if (update.getRemote().obsolete()) {
                     mOut.println("    (Obsolete)");
                 }
@@ -573,6 +573,8 @@ public class SdkManagerCli {
         out.println("    --proxy_host=<IP or DNS address>: IP or DNS address of the proxy to use.");
         out.println();
         out.println("    --proxy_port=<port #>: Proxy port to connect to.");
+        out.println();
+        out.println("    --verbose: Enable verbose output.");
         out.println();
         out.println("* If the env var REPO_OS_OVERRIDE is set to \"windows\",\n"
                 + "  \"macosx\", or \"linux\", packages will be downloaded for that OS.");
