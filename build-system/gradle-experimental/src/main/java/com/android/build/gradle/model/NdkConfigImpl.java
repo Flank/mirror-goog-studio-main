@@ -37,6 +37,8 @@ public class NdkConfigImpl implements NdkConfig {
 
     String toolchainVersion;
 
+    Boolean useUnifiedHeaders;
+
     Set<String> abiFilters = Sets.newHashSet();
 
     List<String> cFlags = Lists.newArrayList();
@@ -93,6 +95,16 @@ public class NdkConfigImpl implements NdkConfig {
     @Override
     public void setToolchainVersion(@NonNull String toolchainVersion) {
         this.toolchainVersion = toolchainVersion;
+    }
+
+    @Override
+    public Boolean getUseUnifiedHeaders() {
+        return useUnifiedHeaders;
+    }
+
+    @Override
+    public void setUseUnifiedHeaders(@NonNull Boolean useUnifiedHeaders) {
+        this.useUnifiedHeaders = useUnifiedHeaders;
     }
 
     @Override

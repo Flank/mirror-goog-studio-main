@@ -426,11 +426,13 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
                         buildOutputs,
                         extraModelInfo);
 
-        ndkHandler = new NdkHandler(
-                project.getRootDir(),
-                null, /* compileSkdVersion, this will be set in afterEvaluate */
-                "gcc",
-                "" /*toolchainVersion*/);
+        ndkHandler =
+                new NdkHandler(
+                        project.getRootDir(),
+                        null, /* compileSkdVersion, this will be set in afterEvaluate */
+                        "gcc",
+                        "" /*toolchainVersion*/,
+                        false /* useUnifiedHeaders */);
 
         taskManager =
                 createTaskManager(

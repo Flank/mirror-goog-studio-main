@@ -176,7 +176,7 @@ public class NdkConfiguration {
             final NdkConfig ndkConfig,
             final NdkHandler ndkHandler) {
         Abi abi = Abi.getByName(binary.getTargetPlatform().getName());
-        String sysroot = ndkHandler.getSysroot(abi);
+        String sysroot = ndkHandler.getCompilerSysroot(abi, null);
 
         if (ndkConfig.getRenderscriptNdkMode()) {
             binary.getcCompiler().args("-I" + sysroot + "/usr/include/rs");

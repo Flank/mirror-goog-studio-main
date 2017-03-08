@@ -60,7 +60,7 @@ public class NativeLibraryFactoryImpl implements NativeLibraryFactory {
 
         CoreNdkOptions ndkConfig = variantData.getVariantConfiguration().getNdkConfig();
 
-        String sysrootFlag = "--sysroot=" + ndkHandler.getSysroot(abi);
+        String sysrootFlag = "--sysroot=" + ndkHandler.getCompilerSysroot(abi, null);
         List<String> cFlags = ndkConfig.getcFlags() == null
                 ? ImmutableList.of(sysrootFlag)
                 : ImmutableList.of(sysrootFlag, ndkConfig.getcFlags());
