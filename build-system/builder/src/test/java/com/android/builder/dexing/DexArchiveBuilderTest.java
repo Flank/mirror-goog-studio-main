@@ -17,18 +17,22 @@
 package com.android.builder.dexing;
 
 import static com.android.builder.dexing.DexArchiveTestUtil.PACKAGE;
+import static com.android.testutils.TestClassesGenerator.rewriteToVersion;
 import static com.android.testutils.truth.MoreTruth.assertThat;
 import static org.junit.Assert.fail;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.apkzlib.zip.ZFile;
 import com.android.testutils.apk.Dex;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import com.google.common.truth.Truth;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -36,6 +40,7 @@ import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -241,6 +246,53 @@ public class DexArchiveBuilderTest {
         Path output = fs.getPath("tmp\\output");
         Files.createDirectories(output);
         DexArchiveTestUtil.convertClassesToDexArchive(input, output);
+    }
+
+    @Test
+    public void checkDebugInfoExists() throws Exception {
+        Assume.assumeTrue(inputFormat == ClassesInputFormat.DIR);
+        Assume.assumeTrue(outputFormat == DexArchiveFormat.DIR);
+        class DebugInfoClass {
+
+            private void noBody() {}
+
+            private void debugInfoMethod() {
+                int x = 10;
+            }
+
+            private void anotherMethod() {
+                int y = 10;
+                int x = 1000;
+                debugInfoMethod();
+            }
+        }
+        Path classesDir = temporaryFolder.getRoot().toPath().resolve("classes");
+        String path = DebugInfoClass.class.getName().replace('.', '/') + SdkConstants.DOT_CLASS;
+        Path outClassFile = classesDir.resolve(path);
+        try (InputStream in = getClass().getClassLoader().getResourceAsStream(path)) {
+            Files.createDirectories(outClassFile.getParent());
+            Files.write(outClassFile, rewriteToVersion(51, in));
+        }
+
+        Path output = createOutput();
+        DexArchiveTestUtil.convertClassesToDexArchive(classesDir, output);
+
+        Path dexFile =
+                Iterators.getOnlyElement(
+                        Files.walk(output).filter(Files::isRegularFile).iterator());
+        String dexClassName = "L" + path.replaceAll("\\.class$", ";");
+        Dex dex = new Dex(dexFile);
+        assertThat(dex).containsClass(dexClassName).that().hasMethodWithLineInfoCount("noBody", 1);
+
+        assertThat(dex)
+                .containsClass(dexClassName)
+                .that()
+                .hasMethodWithLineInfoCount("debugInfoMethod", 2);
+
+        assertThat(dex)
+                .containsClass(dexClassName)
+                .that()
+                .hasMethodWithLineInfoCount("anotherMethod", 4);
     }
 
     @NonNull

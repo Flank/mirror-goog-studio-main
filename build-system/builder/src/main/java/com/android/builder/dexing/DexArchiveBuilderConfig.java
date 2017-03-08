@@ -57,6 +57,8 @@ public class DexArchiveBuilderConfig {
 
         this.cfOptions = new CfOptions();
         this.cfOptions.optimize = optimized;
+        // default value used by dx
+        this.cfOptions.localInfo = true;
     }
 
     @NonNull

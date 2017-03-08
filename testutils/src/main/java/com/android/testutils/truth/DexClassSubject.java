@@ -21,9 +21,11 @@ import com.android.annotations.Nullable;
 import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.Subject;
 import com.google.common.truth.SubjectFactory;
+import org.jf.dexlib2.DebugItemType;
 import org.jf.dexlib2.dexbacked.DexBackedClassDef;
 import org.jf.dexlib2.dexbacked.DexBackedField;
 import org.jf.dexlib2.dexbacked.DexBackedMethod;
+import org.jf.dexlib2.iface.debug.DebugItem;
 
 @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
 public class DexClassSubject extends Subject<DexClassSubject, DexBackedClassDef> {
@@ -56,6 +58,34 @@ public class DexClassSubject extends Subject<DexClassSubject, DexBackedClassDef>
                 hasMethod(name);
             }
         }
+    }
+
+    public void hasMethodWithLineInfoCount(@NonNull String name, int lineInfoCount) {
+        assertSubjectIsNonNull();
+        for (DexBackedMethod method : getSubject().getMethods()) {
+            if (method.getName().equals(name)) {
+                if (method.getImplementation() == null) {
+                    fail("contain method implementation for method " + name);
+                    return;
+                }
+                int actualLineCnt = 0;
+                for (DebugItem debugItem : method.getImplementation().getDebugItems()) {
+                    if (debugItem.getDebugItemType() == DebugItemType.LINE_NUMBER) {
+                        actualLineCnt++;
+                    }
+                }
+                if (actualLineCnt != lineInfoCount) {
+                    fail(
+                            "method has "
+                                    + lineInfoCount
+                                    + " debug items, "
+                                    + actualLineCnt
+                                    + " are found.");
+                }
+                return;
+            }
+        }
+        fail("contains method", name);
     }
 
     public void hasField(@NonNull String name) {
