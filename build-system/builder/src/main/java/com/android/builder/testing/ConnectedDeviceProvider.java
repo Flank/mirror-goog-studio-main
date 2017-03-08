@@ -17,12 +17,14 @@
 package com.android.builder.testing;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.builder.testing.api.DeviceConnector;
 import com.android.builder.testing.api.DeviceException;
 import com.android.builder.testing.api.DeviceProvider;
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.DdmPreferences;
 import com.android.ddmlib.IDevice;
+import com.android.ddmlib.Log;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
@@ -55,6 +57,8 @@ public class ConnectedDeviceProvider extends DeviceProvider {
     @NonNull
     private final List<ConnectedDevice> localDevices = Lists.newArrayList();
 
+    @Nullable private LogAdapter logAdapter;
+
     /**
      * @param timeOutInMs The time out for each adb command, where 0 means wait forever.
      */
@@ -80,8 +84,14 @@ public class ConnectedDeviceProvider extends DeviceProvider {
 
     @Override
     public void init() throws DeviceException {
-        // TODO: make all timeouts explicit in IDevice
-        DdmPreferences.setTimeOut((int) timeOutUnit.toMillis(timeOut));
+        // TODO: switch to devicelib
+        if (timeOut > 0) {
+            DdmPreferences.setTimeOut((int) timeOutUnit.toMillis(timeOut));
+        } else {
+            DdmPreferences.setTimeOut(Integer.MAX_VALUE);
+        }
+        logAdapter = new LogAdapter(iLogger);
+        Log.addLogger(logAdapter);
         AndroidDebugBridge.initIfNeeded(false /*clientSupport*/);
 
         AndroidDebugBridge bridge = AndroidDebugBridge.createBridge(
@@ -195,7 +205,10 @@ public class ConnectedDeviceProvider extends DeviceProvider {
 
     @Override
     public void terminate() throws DeviceException {
-        // nothing to be done here.
+        if (logAdapter != null) {
+            Log.removeLogger(logAdapter);
+            logAdapter = null;
+        }
     }
 
     @Override
@@ -206,5 +219,44 @@ public class ConnectedDeviceProvider extends DeviceProvider {
     @Override
     public boolean isConfigured() {
         return true;
+    }
+
+    private static final class LogAdapter implements Log.ILogOutput {
+
+        @NonNull private final ILogger logger;
+
+        private LogAdapter(@NonNull ILogger logger) {
+            this.logger = logger;
+        }
+
+        @Override
+        public void printLog(Log.LogLevel logLevel, String tag, String message) {
+            switch (logLevel) {
+                case VERBOSE:
+                    break;
+                case DEBUG:
+                    break;
+                case INFO:
+                    // ILogger verbose is printed at info level in gradle currently.
+                    logger.verbose("[%1$s]: %2$s", tag, message);
+                    break;
+                case WARN:
+                    logger.warning("[%1$s]: %2$s", tag, message);
+                    break;
+                case ERROR:
+                    logger.error(null, "[%1$s]: %2$s", tag, message);
+                    break;
+                case ASSERT:
+                    logger.error(null, "[%1$s]: %2$s", tag, message);
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unknown log level " + logLevel);
+            }
+        }
+
+        @Override
+        public void printAndPromptLog(Log.LogLevel logLevel, String tag, String message) {
+            printLog(logLevel, tag, message);
+        }
     }
 }
