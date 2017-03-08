@@ -983,6 +983,7 @@ public class GradleModelMocker {
         List<File> javaDirectories = Lists.newArrayListWithCapacity(2);
         resDirectories.add(new File(root, "src/" + name + "/res"));
         javaDirectories.add(new File(root, "src/" + name + "/java"));
+        javaDirectories.add(new File(root, "src/" + name + "/kotlin"));
         when(provider.getResDirectories()).thenReturn(resDirectories);
         when(provider.getJavaDirectories()).thenReturn(javaDirectories);
 
