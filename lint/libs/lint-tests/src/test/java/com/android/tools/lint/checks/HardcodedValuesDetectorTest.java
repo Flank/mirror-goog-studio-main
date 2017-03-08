@@ -339,21 +339,23 @@ public class HardcodedValuesDetectorTest extends AbstractCheckTest {
         // Regression test for
         // https://code.google.com/p/android/issues/detail?id=206106
         // Ensure that the toggle button text label attributes are internationalized
-        assertEquals(""
+        String expected = ""
                 + "res/layout/test.xml:5: Warning: [I18N] Hardcoded string \"Hi tools!\", should use @string resource [HardcodedText]\n"
                 + "     android:textOn=\"Hi tools!\"\n"
                 + "     ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "res/layout/test.xml:6: Warning: [I18N] Hardcoded string \"Bye tools!\", should use @string resource [HardcodedText]\n"
                 + "     android:textOff=\"Bye tools!\" />\n"
                 + "     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "0 errors, 2 warnings\n",
-                lintProject(
-                        xml("res/layout/test.xml", ""
-                                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                + "<ToggleButton xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                + "     android:layout_width=\"wrap_content\"\n"
-                                + "     android:layout_height=\"wrap_content\"\n"
-                                + "     android:textOn=\"Hi tools!\"\n"
-                                + "     android:textOff=\"Bye tools!\" />")));
+                + "0 errors, 2 warnings\n";
+        lint().files(
+                xml("res/layout/test.xml", ""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<ToggleButton xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "     android:layout_width=\"wrap_content\"\n"
+                        + "     android:layout_height=\"wrap_content\"\n"
+                        + "     android:textOn=\"Hi tools!\"\n"
+                        + "     android:textOff=\"Bye tools!\" />"))
+                .run()
+                .expect(expected);
     }
 }

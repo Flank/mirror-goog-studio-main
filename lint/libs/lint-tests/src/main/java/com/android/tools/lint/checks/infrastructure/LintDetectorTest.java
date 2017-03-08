@@ -20,6 +20,7 @@ import static com.android.SdkConstants.ANDROID_MANIFEST_XML;
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_ID;
 import static com.android.SdkConstants.NEW_ID_PREFIX;
+import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -171,6 +172,23 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
     }
 
     /**
+     * Returns whether the test task should allow the SDK to be missing. Normally false.
+     */
+    @SuppressWarnings("MethodMayBeStatic")
+    protected boolean allowMissingSdk() {
+        return false;
+    }
+
+    /**
+     * Returns whether the test requires that the compileSdkVersion (specified
+     * in the project description) must be installed.
+     */
+    @SuppressWarnings("MethodMayBeStatic")
+    protected boolean requireCompileSdk() {
+        return false;
+    }
+
+    /**
      * If false (the default), lint will run your detectors <b>twice</b>, first on the
      * plain source code, and then a second time where it has inserted whitespace
      * and parentheses pretty much everywhere, to help catch bugs where your detector
@@ -258,6 +276,11 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
             fail("Don't run the lint tests with $ANDROID_BUILD_TOP set; that enables lint's "
                     + "special support for detecting AOSP projects (looking for .class "
                     + "files in $ANDROID_HOST_OUT etc), and this confuses lint.");
+        }
+
+        if (!allowMissingSdk()) {
+            com.android.tools.lint.checks.infrastructure.TestLintClient.ensureSdkExists(
+                    lintClient);
         }
 
         mOutput = new StringBuilder();
@@ -1122,6 +1145,16 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         public IAndroidTarget getCompileTarget(@NonNull Project project) {
             IAndroidTarget compileTarget = super.getCompileTarget(project);
             if (compileTarget == null) {
+                if (requireCompileSdk() && project.getBuildTargetHash() != null) {
+                    fail("Could not find SDK to compile with (" + project.getBuildTargetHash() + "). "
+                            + "Either allow the test to use any installed SDK (it defaults to the "
+                            + "highest version) via TestLintTask#requireCompileSdk(false), or make "
+                            + "sure the SDK being used is the right  one via "
+                            + "TestLintTask#sdkHome(File) or $ANDROID_HOME and that the actual SDK "
+                            + "platform (platforms/" + project.getBuildTargetHash() + " is installed "
+                            + "there");
+                }
+
                 IAndroidTarget[] targets = getTargets();
                 for (int i = targets.length - 1; i >= 0; i--) {
                     IAndroidTarget target = targets[i];

@@ -44,6 +44,7 @@ import static com.android.SdkConstants.TOOLS_URI;
 import static com.android.SdkConstants.VALUE_FALSE;
 import static com.android.ide.common.repository.GradleCoordinate.COMPARE_PLUS_HIGHER;
 import static com.android.tools.lint.checks.GradleDetector.GMS_GROUP_ID;
+import static com.android.utils.XmlUtils.getFirstSubTagTagByName;
 import static com.android.xml.AndroidManifest.NODE_ACTION;
 import static com.android.xml.AndroidManifest.NODE_DATA;
 import static com.android.xml.AndroidManifest.NODE_METADATA;
@@ -83,10 +84,10 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -444,17 +445,6 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
     /** Permission basenames */
     private Map<String, String> mPermissionNames;
 
-    /** Handle to the {@code <application>} tag */
-    private Location.Handle mApplicationTagHandle;
-
-    /** Whether we've seen an application icon definition in any of the manifest files (or
-     * if a manifest tag warning for this has been explicitly disabled) */
-    private boolean mSeenAppIcon;
-
-    /** Whether we've seen an allow backup definition in any of the manifest files (or
-     * if a manifest tag warning for this has been explicitly disabled) */
-    private boolean mSeenAllowBackup;
-
     @Override
     public void beforeCheckFile(@NonNull Context context) {
         mSeenApplication = false;
@@ -482,38 +472,91 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
         }
     }
 
-    @Override
-    public void afterCheckProject(@NonNull Context context) {
-        if (!mSeenAllowBackup && context.isEnabled(ALLOW_BACKUP)
-                && !context.getProject().isLibrary()
-                && context.getMainProject().getMinSdk() >= 4) {
-            Location location = getMainApplicationTagLocation(context);
-            context.report(ALLOW_BACKUP, location,
-                    "Should explicitly set `android:allowBackup` to `true` or " +
-                            "`false` (it's `true` by default, and that can have some security " +
-                            "implications for the application's data)");
+    /**
+     * Checks that the main {@code <application>} tag specifies both an icon and allowBackup,
+     * possibly merged from some upstream dependency
+     */
+    private static void checkMergedApplication(@NonNull XmlContext context,
+            Element sourceApplicationElement) {
+        if (context.getProject().isLibrary()) {
+            return;
         }
 
-        if (!context.getMainProject().isLibrary()
-                && !mSeenAppIcon && context.isEnabled(APPLICATION_ICON)) {
-            Location location = getMainApplicationTagLocation(context);
-            context.report(APPLICATION_ICON, location,
+        Project mainProject = context.getMainProject();
+        Document mergedManifest = mainProject.getMergedManifest();
+        if (mergedManifest == null) {
+            return;
+        }
+        Element root = mergedManifest.getDocumentElement();
+        if (root == null) {
+            return;
+        }
+        Element application = getFirstSubTagTagByName(root, TAG_APPLICATION);
+        if (application == null) {
+            return;
+        }
+
+        if (context.isEnabled(ALLOW_BACKUP)) {
+            String allowBackup = application.getAttributeNS(ANDROID_URI, ATTR_ALLOW_BACKUP);
+            Attr fullBackupNode = application.getAttributeNodeNS(ANDROID_URI,
+                    ATTR_FULL_BACKUP_CONTENT);
+            if (fullBackupNode != null
+                    && fullBackupNode.getValue().startsWith(PREFIX_RESOURCE_REF)
+                    && context.getClient().supportsProjectResources()) {
+                AbstractResourceRepository resources = context.getClient()
+                        .getResourceRepository(mainProject, true, false);
+                ResourceUrl url = ResourceUrl.parse(fullBackupNode.getValue());
+                if (url != null && !url.framework
+                        && resources != null
+                        && !resources.hasResourceItem(url.type, url.name)) {
+                    Attr sourceFullBackupNode = sourceApplicationElement.getAttributeNodeNS(
+                            ANDROID_URI, ATTR_FULL_BACKUP_CONTENT);
+                    if (sourceFullBackupNode != null) {
+                        // defined in this file, not merged from other file. Prefer it, since
+                        // we have better source offsets than from manifest merges.
+                        fullBackupNode = sourceFullBackupNode;
+                    }
+                    Location location = context.getValueLocation(fullBackupNode);
+                    context.report(ALLOW_BACKUP, fullBackupNode, location,
+                            MISSING_FULL_BACKUP_CONTENT_RESOURCE);
+                }
+            } else if (fullBackupNode == null && !VALUE_FALSE.equals(allowBackup)
+                    && mainProject.getTargetSdk() >= 23) {
+                if (hasGcmReceiver(application)) {
+                    Location location = context.getLocation(sourceApplicationElement);
+                    context.report(ALLOW_BACKUP, application, location, ""
+                            + "On SDK version 23 and up, your app data will be automatically "
+                            + "backed up, and restored on app install. Your GCM regid will not "
+                            + "work across restores, so you must ensure that it is excluded "
+                            + "from the back-up set. Use the attribute "
+                            + "`android:fullBackupContent` to specify an `@xml` resource which "
+                            + "configures which files to backup. More info: "
+                            + BACKUP_DOCUMENTATION_URL);
+                } else {
+                    Location location = context.getLocation(sourceApplicationElement);
+                    context.report(ALLOW_BACKUP, application, location, ""
+                            + "On SDK version 23 and up, your app data will be automatically "
+                            + "backed up and restored on app install. Consider adding the "
+                            + "attribute `android:fullBackupContent` to specify an `@xml` "
+                            + "resource which configures which files to backup. More info: "
+                            + BACKUP_DOCUMENTATION_URL);
+                }
+            }
+
+            if ((allowBackup == null || allowBackup.isEmpty()
+                    && mainProject.getMinSdk() >= 4)) {
+                context.report(ALLOW_BACKUP, context.getLocation(sourceApplicationElement),
+                        "Should explicitly set `android:allowBackup` to `true` or "
+                                + "`false` (it's `true` by default, and that can have some security "
+                                + "implications for the application's data)");
+            }
+        }
+
+        if (!application.hasAttributeNS(ANDROID_URI, ATTR_ICON)
+                && context.isEnabled(APPLICATION_ICON)) {
+            context.report(APPLICATION_ICON, context.getLocation(sourceApplicationElement),
                     "Should explicitly set `android:icon`, there is no default");
         }
-    }
-
-    @NonNull
-    private Location getMainApplicationTagLocation(@NonNull Context context) {
-        if (mApplicationTagHandle != null) {
-            return mApplicationTagHandle.resolve();
-        }
-
-        List<File> manifestFiles = context.getMainProject().getManifestFiles();
-        if (!manifestFiles.isEmpty()) {
-            return Location.create(manifestFiles.get(0));
-        }
-
-        return Location.NONE;
     }
 
     private static void checkDocumentElement(XmlContext context, Element element) {
@@ -888,61 +931,11 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
 
         if (tag.equals(TAG_APPLICATION)) {
             mSeenApplication = true;
-            boolean recordLocation = false;
-            String allowBackup = element.getAttributeNS(ANDROID_URI, ATTR_ALLOW_BACKUP);
-            if (allowBackup != null && !allowBackup.isEmpty()
-                    || context.getDriver().isSuppressed(context, ALLOW_BACKUP, element)) {
-                mSeenAllowBackup = true;
-            } else {
-                recordLocation = true;
-            }
-            if (element.hasAttributeNS(ANDROID_URI, ATTR_ICON)
-                    || context.getDriver().isSuppressed(context, APPLICATION_ICON, element)) {
+
+            checkMergedApplication(context, element);
+
+            if (element.hasAttributeNS(ANDROID_URI, ATTR_ICON)) {
                 checkMipmapIcon(context, element);
-                mSeenAppIcon = true;
-            } else {
-                recordLocation = true;
-            }
-            if (recordLocation && !context.getProject().isLibrary() &&
-                    (mApplicationTagHandle == null || isMainManifest(context, context.file))) {
-                mApplicationTagHandle = context.createLocationHandle(element);
-            }
-            Attr fullBackupNode = element.getAttributeNodeNS(ANDROID_URI, ATTR_FULL_BACKUP_CONTENT);
-            if (fullBackupNode != null &&
-                    fullBackupNode.getValue().startsWith(PREFIX_RESOURCE_REF) &&
-                    context.getClient().supportsProjectResources()) {
-                AbstractResourceRepository resources = context.getClient()
-                        .getResourceRepository(context.getProject(), true, false);
-                ResourceUrl url = ResourceUrl.parse(fullBackupNode.getValue());
-                if (url != null && !url.framework
-                        && resources != null
-                        && !resources.hasResourceItem(url.type, url.name)) {
-                    Location location = context.getValueLocation(fullBackupNode);
-                    context.report(ALLOW_BACKUP, fullBackupNode, location,
-                            MISSING_FULL_BACKUP_CONTENT_RESOURCE);
-                }
-            } else if (fullBackupNode == null && !VALUE_FALSE.equals(allowBackup)
-                    && !context.getProject().isLibrary()
-                    && context.getMainProject().getTargetSdk() >= 23) {
-                if (hasGcmReceiver(element)) {
-                    Location location = context.getLocation(element);
-                    context.report(ALLOW_BACKUP, element, location, ""
-                            + "On SDK version 23 and up, your app data will be automatically "
-                            + "backed up, and restored on app install. Your GCM regid will not "
-                            + "work across restores, so you must ensure that it is excluded "
-                            + "from the back-up set. Use the attribute "
-                            + "`android:fullBackupContent` to specify an `@xml` resource which "
-                            + "configures which files to backup. More info: "
-                            + BACKUP_DOCUMENTATION_URL);
-                } else {
-                    Location location = context.getLocation(element);
-                    context.report(ALLOW_BACKUP, element, location, ""
-                            + "On SDK version 23 and up, your app data will be automatically "
-                            + "backed up and restored on app install. Consider adding the "
-                            + "attribute `android:fullBackupContent` to specify an `@xml` "
-                            + "resource which configures which files to backup. More info: "
-                            + BACKUP_DOCUMENTATION_URL);
-                }
             }
         } else if (mSeenApplication) {
             if (context.isEnabled(ORDER)) {
@@ -976,6 +969,8 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
     // matches the specific criteria i.e >= MIN_WEARABLE_GMS_VERSION
     private static boolean hasWearableGmsDependency(AndroidLibrary library) {
         MavenCoordinates mc = library.getResolvedCoordinates();
+        // Annotated as non-null, but observed to be null after failed Gradle syncs
+        //noinspection ConstantConditions
         if (mc != null
                 && mc.getGroupId().equals(GMS_GROUP_ID)
                 && mc.getArtifactId().equals("play-services-wearable")) {
@@ -1057,9 +1052,9 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
             return null;
         }
 
-        Element child = XmlUtils.getFirstSubTagTagByName(activity, TAG_INTENT_FILTER);
+        Element child = getFirstSubTagTagByName(activity, TAG_INTENT_FILTER);
         while (child != null) {
-            Element innerChild = XmlUtils.getFirstSubTagTagByName(child, TAG_CATEGORY);
+            Element innerChild = getFirstSubTagTagByName(child, TAG_CATEGORY);
             while (innerChild != null) {
                 Attr attribute = innerChild.getAttributeNodeNS(ANDROID_URI, ATTR_NAME);
                 if (attribute != null &&
@@ -1072,18 +1067,6 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
         }
 
         return null;
-    }
-
-    /** Returns true iff the given manifest file is the main manifest file */
-    private static boolean isMainManifest(XmlContext context, File manifestFile) {
-        if (!context.getProject().isGradleProject()) {
-            // In non-gradle projects, just one manifest per project
-            return true;
-        }
-
-        AndroidProject model = context.getProject().getGradleProjectModel();
-        return model == null || manifestFile
-                .equals(model.getDefaultConfig().getSourceProvider().getManifestFile());
     }
 
     /**

@@ -37,6 +37,7 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 import java.io.File;
+import org.intellij.lang.annotations.Language;
 
 @SuppressWarnings({"javadoc", "ClassNameDiffersFromFileName"})
 public class ApiDetectorTest extends AbstractCheckTest {
@@ -2835,7 +2836,8 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 + "res/values-v9/styles2.xml:5: Error: android:actionBarStyle requires API level 11 (current min is 10) [NewApi]\n"
                 + "        <item name=\"android:actionBarStyle\">...</item>\n"
                 + "              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "1 errors, 0 warnings\n",
+                + "res/values-v9: Warning: This folder configuration (v9) is unnecessary; minSdkVersion is 10. Merge all the resources in this folder into values. [ObsoleteSdkInt]\n"
+                + "1 errors, 1 warnings\n",
 
                 lintProject(
                         classpath(),
@@ -5194,6 +5196,32 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         + "}\n"));
     }
 
+    public void testObsoleteFolder()  {
+        // Regression test for https://code.google.com/p/android/issues/detail?id=236018
+        @Language("XML")
+        String stringsXml = ""
+                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                + "<resources>\n"
+                + "    <string name=\"home_title\">Home Sample</string>\n"
+                + "</resources>\n";
+        String expected = ""
+                + "res/layout-v5: Warning: This folder configuration (v5) is unnecessary; minSdkVersion is 12. Merge all the resources in this folder into layout. [ObsoleteSdkInt]\n"
+                + "res/values-land-v5: Warning: This folder configuration (v5) is unnecessary; minSdkVersion is 12. Merge all the resources in this folder into values-land. [ObsoleteSdkInt]\n"
+                + "res/values-v5: Warning: This folder configuration (v5) is unnecessary; minSdkVersion is 12. Merge all the resources in this folder into values. [ObsoleteSdkInt]\n"
+                + "0 errors, 3 warnings\n";
+        lint().files(
+                manifest().minSdk(12),
+                xml("res/values/strings.xml", stringsXml),
+                xml("res/values-v5/strings.xml", stringsXml),
+                xml("res/values-land-v5/strings.xml", stringsXml),
+                xml("res/values-v21/strings.xml", stringsXml),
+                xml("res/values-land/strings.xml", stringsXml),
+                xml("res/layout/my_activity.xml", "<merge/>"),
+                xml("res/layout-v5/my_activity.xml", "<merge/>"))
+                .run()
+                .expect(expected);
+    }
+
     public void testVectorDrawableCompat() throws Exception {
         // Regression test for https://code.google.com/p/android/issues/detail?id=222654
         //noinspection all // Sample code
@@ -5388,8 +5416,6 @@ public class ApiDetectorTest extends AbstractCheckTest {
             int requiredVersion = ApiDetector.getRequiredVersion(issue, message, TEXT);
             assertTrue("Could not extract message tokens from \"" + message + "\"",
                     requiredVersion >= 1 && requiredVersion <= SdkVersionInfo.HIGHEST_KNOWN_API);
-        } else if (issue == OBSOLETE_SDK) {
-            assertNotNull(ApiDetector.getVersionCheckConstant(message, TEXT));
         }
     }
 

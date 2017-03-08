@@ -75,7 +75,6 @@ import org.w3c.dom.Node;
 
 /**
  * Checks to ensure that classes referenced in the manifest actually exist and are included
- *
  */
 public class MissingClassDetector extends LayoutDetector implements ClassScanner {
     /** Manifest-referenced classes missing from the project or libraries */
@@ -414,9 +413,9 @@ public class MissingClassDetector extends LayoutDetector implements ClassScanner
             boolean isCustomView = mCustomViews.contains(curr);
             removeReferences(curr);
 
-            // Ensure that the class is public, non static and has a null constructor!
+            // Ensure that the class is non static and has a null constructor!
 
-            if ((classNode.access & Opcodes.ACC_PUBLIC) == 0) {
+            if ((classNode.access & Opcodes.ACC_PRIVATE) != 0) {
                 context.report(INSTANTIATABLE, context.getLocation(classNode), String.format(
                         "This class should be public (%1$s)",
                             ClassContext.createSignature(classNode.name, null, null)));

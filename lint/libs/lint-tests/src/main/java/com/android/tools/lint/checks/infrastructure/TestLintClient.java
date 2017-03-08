@@ -129,9 +129,35 @@ public class TestLintClient extends LintCliClient {
         if (task != null && task.optionSetter != null) {
             task.optionSetter.set(flags);
         }
+
         // Client should not be used outside of the check process
         //noinspection ConstantConditions
         this.task = task;
+
+        //noinspection VariableNotUsedInsideIf
+        if (task != null && !task.allowMissingSdk) {
+            ensureSdkExists(this);
+        }
+    }
+
+    static void ensureSdkExists(@NonNull LintClient client) {
+        File sdkHome = client.getSdkHome();
+        String message;
+        if (sdkHome == null) {
+            message = "No SDK configured. ";
+        } else if (!sdkHome.isDirectory()) {
+            message = sdkHome + " is not a directory. ";
+        } else {
+            return;
+        }
+
+        message = "This test requires an Android SDK: " + message + "\n"
+                    + "If this test does not really need an SDK, set "
+                    + "TestLintTask#allowMissingSdk(). Otherwise, make sure an SDK is "
+                    + "available either by specifically pointing to one via "
+                    + "TestLintTask#sdkHome(File), or configure $ANDROID_HOME in the "
+                    + "environment";
+        fail(message);
     }
 
     /**
@@ -545,7 +571,7 @@ public class TestLintClient extends LintCliClient {
         Warning prev = null;
         for (Warning warning : warnings) {
             assertNotSame(warning, prev);
-            assert prev == null || !warning.equals(prev) : warning;
+            assert prev == null || !warning.equals(prev) : "Warning (message, location) reported more than once: " + warning;
             prev = warning;
         }
     }
@@ -790,6 +816,16 @@ public class TestLintClient extends LintCliClient {
     public IAndroidTarget getCompileTarget(@NonNull Project project) {
         IAndroidTarget compileTarget = super.getCompileTarget(project);
         if (compileTarget == null) {
+            if (task.requireCompileSdk && project.getBuildTargetHash() != null) {
+                fail("Could not find SDK to compile with (" + project.getBuildTargetHash() + "). "
+                        + "Either allow the test to use any installed SDK (it defaults to the "
+                        + "highest version) via TestLintTask#requireCompileSdk(false), or make "
+                        + "sure the SDK being used is the right  one via "
+                        + "TestLintTask#sdkHome(File) or $ANDROID_HOME and that the actual SDK "
+                        + "platform (platforms/" + project.getBuildTargetHash() + " is installed "
+                        + "there");
+            }
+
             IAndroidTarget[] targets = getTargets();
             for (int i = targets.length - 1; i >= 0; i--) {
                 IAndroidTarget target = targets[i];
