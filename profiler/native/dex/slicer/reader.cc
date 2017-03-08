@@ -87,8 +87,8 @@ void Reader::CreateFullIr() {
 }
 
 void Reader::CreateClassIr(dex::u4 index) {
-  auto irClass = GetClass(index);
-  CHECK(irClass != nullptr);
+  auto ir_class = GetClass(index);
+  CHECK(ir_class != nullptr);
 }
 
 // Returns the index of the class with the specified
@@ -214,21 +214,21 @@ ir::String* Reader::GetString(dex::u4 index) {
 
 ir::Class* Reader::ParseClass(dex::u4 index) {
   auto& dexClassDef = ClassDefs()[index];
-  auto irClass = dex_ir_->Alloc<ir::Class>();
+  auto ir_class = dex_ir_->Alloc<ir::Class>();
 
-  irClass->type = GetType(dexClassDef.class_idx);
-  assert(irClass->type->class_def == nullptr);
-  irClass->type->class_def = irClass;
+  ir_class->type = GetType(dexClassDef.class_idx);
+  assert(ir_class->type->class_def == nullptr);
+  ir_class->type->class_def = ir_class;
 
-  irClass->access_flags = dexClassDef.access_flags;
-  irClass->interfaces = ExtractTypeList(dexClassDef.interfaces_off);
+  ir_class->access_flags = dexClassDef.access_flags;
+  ir_class->interfaces = ExtractTypeList(dexClassDef.interfaces_off);
 
   if (dexClassDef.superclass_idx != dex::kNoIndex) {
-    irClass->super_class = GetType(dexClassDef.superclass_idx);
+    ir_class->super_class = GetType(dexClassDef.superclass_idx);
   }
 
   if (dexClassDef.source_file_idx != dex::kNoIndex) {
-    irClass->source_file = GetString(dexClassDef.source_file_idx);
+    ir_class->source_file = GetString(dexClassDef.source_file_idx);
   }
 
   if (dexClassDef.class_data_off != 0) {
@@ -241,35 +241,36 @@ ir::Class* Reader::ParseClass(dex::u4 index) {
 
     dex::u4 baseIndex = dex::kNoIndex;
     for (dex::u4 i = 0; i < staticFieldsCount; ++i) {
-      irClass->static_fields.push_back(
+      ir_class->static_fields.push_back(
           ParseEncodedField(&class_data, &baseIndex));
     }
 
     baseIndex = dex::kNoIndex;
     for (dex::u4 i = 0; i < instanceFieldsCount; ++i) {
-      irClass->instance_fields.push_back(
+      ir_class->instance_fields.push_back(
           ParseEncodedField(&class_data, &baseIndex));
     }
 
     baseIndex = dex::kNoIndex;
     for (dex::u4 i = 0; i < directMethodsCount; ++i) {
       auto method = ParseEncodedMethod(&class_data, &baseIndex);
-      method->parent_class = irClass;
-      irClass->direct_methods.push_back(method);
+      method->parent_class = ir_class;
+      ir_class->direct_methods.push_back(method);
     }
 
     baseIndex = dex::kNoIndex;
     for (dex::u4 i = 0; i < virtualMethodsCount; ++i) {
       auto method = ParseEncodedMethod(&class_data, &baseIndex);
-      method->parent_class = irClass;
-      irClass->virtual_methods.push_back(method);
+      method->parent_class = ir_class;
+      ir_class->virtual_methods.push_back(method);
     }
   }
 
-  irClass->static_init = ExtractEncodedArray(dexClassDef.static_values_off);
-  irClass->annotations = ExtractAnnotations(dexClassDef.annotations_off);
+  ir_class->static_init = ExtractEncodedArray(dexClassDef.static_values_off);
+  ir_class->annotations = ExtractAnnotations(dexClassDef.annotations_off);
+  ir_class->orig_index = index;
 
-  return irClass;
+  return ir_class;
 }
 
 ir::AnnotationsDirectory* Reader::ExtractAnnotations(dex::u4 offset) {
@@ -787,6 +788,7 @@ ir::Type* Reader::ParseType(dex::u4 index) {
   auto ir_type = dex_ir_->Alloc<ir::Type>();
 
   ir_type->descriptor = GetString(dexType.descriptor_idx);
+  ir_type->orig_index = index;
 
   return ir_type;
 }
@@ -798,6 +800,7 @@ ir::FieldDecl* Reader::ParseFieldDecl(dex::u4 index) {
   ir_field->name = GetString(dexField.name_idx);
   ir_field->type = GetType(dexField.type_idx);
   ir_field->parent = GetType(dexField.class_idx);
+  ir_field->orig_index = index;
 
   return ir_field;
 }
@@ -809,6 +812,7 @@ ir::MethodDecl* Reader::ParseMethodDecl(dex::u4 index) {
   ir_method->name = GetString(dexMethod.name_idx);
   ir_method->prototype = GetProto(dexMethod.proto_idx);
   ir_method->parent = GetType(dexMethod.class_idx);
+  ir_method->orig_index = index;
 
   return ir_method;
 }
@@ -836,13 +840,14 @@ ir::TypeList* Reader::ExtractTypeList(dex::u4 offset) {
 
 ir::Proto* Reader::ParseProto(dex::u4 index) {
   auto& dexProto = ProtoIds()[index];
-  auto irProto = dex_ir_->Alloc<ir::Proto>();
+  auto ir_proto = dex_ir_->Alloc<ir::Proto>();
 
-  irProto->shorty = GetString(dexProto.shorty_idx);
-  irProto->return_type = GetType(dexProto.return_type_idx);
-  irProto->param_types = ExtractTypeList(dexProto.parameters_off);
+  ir_proto->shorty = GetString(dexProto.shorty_idx);
+  ir_proto->return_type = GetType(dexProto.return_type_idx);
+  ir_proto->param_types = ExtractTypeList(dexProto.parameters_off);
+  ir_proto->orig_index = index;
 
-  return irProto;
+  return ir_proto;
 }
 
 ir::String* Reader::ParseString(dex::u4 index) {
@@ -855,6 +860,7 @@ ir::String* Reader::ParseString(dex::u4 index) {
       (cstr - data) + ::strlen(reinterpret_cast<const char*>(cstr)) + 1;
 
   ir_string->data = slicer::MemView(data, size);
+  ir_string->orig_index = index;
 
   return ir_string;
 }
@@ -862,27 +868,27 @@ ir::String* Reader::ParseString(dex::u4 index) {
 void Reader::ParseInstructions(slicer::ArrayView<const dex::u2> code) {
   const dex::u2* ptr = code.begin();
   while (ptr < code.end()) {
-    auto dexInstr = dex::DecodeInstruction(ptr);
+    auto dex_instr = dex::DecodeInstruction(ptr);
 
     dex::u4 index = dex::kNoIndex;
-    switch (dex::GetFormatFromOpcode(dexInstr.opcode)) {
+    switch (dex::GetFormatFromOpcode(dex_instr.opcode)) {
       case dex::kFmt20bc:
       case dex::kFmt21c:
       case dex::kFmt31c:
       case dex::kFmt35c:
       case dex::kFmt3rc:
-        index = dexInstr.vB;
+        index = dex_instr.vB;
         break;
 
       case dex::kFmt22c:
-        index = dexInstr.vC;
+        index = dex_instr.vC;
         break;
 
       default:
         break;
     }
 
-    switch (GetIndexTypeFromOpcode(dexInstr.opcode)) {
+    switch (GetIndexTypeFromOpcode(dex_instr.opcode)) {
       case dex::kIndexStringRef:
         GetString(index);
         break;
