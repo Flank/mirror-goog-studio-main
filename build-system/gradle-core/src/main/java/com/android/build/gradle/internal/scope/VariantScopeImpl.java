@@ -1118,6 +1118,15 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @NonNull
     @Override
+    public File getShrunkProcessedResourcesOutputDirectory() {
+        return FileUtils.join(
+                globalScope.getIntermediatesDir(),
+                "res_stripped",
+                getVariantConfiguration().getDirName());
+    }
+
+    @NonNull
+    @Override
     public File getManifestReportFile() {
         // If you change this, please also update Lint#getManifestReportFile
         return FileUtils.join(getGlobalScope().getOutputsDir(),

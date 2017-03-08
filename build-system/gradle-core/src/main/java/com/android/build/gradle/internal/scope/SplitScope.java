@@ -175,6 +175,22 @@ public class SplitScope implements Serializable {
             VariantScope.OutputType inputType,
             VariantScope.OutputType outputType,
             SplitOutputAction action) {
+
+        parallelForEachOutput(
+                inputs,
+                inputType,
+                outputType,
+                (ParameterizedSplitOutputAction<Void>)
+                        (apkData, output, param) -> action.processSplit(apkData, output),
+                null);
+    }
+
+    public <T> void parallelForEachOutput(
+            Collection<BuildOutput> inputs,
+            VariantScope.OutputType inputType,
+            VariantScope.OutputType outputType,
+            ParameterizedSplitOutputAction<T> action,
+            T parameter) {
         WaitableExecutor<Void> executor = WaitableExecutor.useGlobalSharedThreadPool();
         apkDatas.forEach(
                 split -> {
@@ -185,7 +201,8 @@ public class SplitScope implements Serializable {
                                     addOutputForSplit(
                                             outputType,
                                             split,
-                                            action.processSplit(split, buildOutput.getOutputFile()),
+                                            action.processSplit(
+                                                    split, buildOutput.getOutputFile(), parameter),
                                             buildOutput.getProperties());
                                 }
                                 return null;
@@ -209,6 +226,12 @@ public class SplitScope implements Serializable {
     public interface SplitAction {
         @Nullable
         File processSplit(ApkData apkData) throws IOException;
+    }
+
+    public interface ParameterizedSplitOutputAction<T> {
+        @Nullable
+        File processSplit(@NonNull ApkData apkData, @Nullable File output, T param)
+                throws IOException;
     }
 
     public interface SplitOutputAction {

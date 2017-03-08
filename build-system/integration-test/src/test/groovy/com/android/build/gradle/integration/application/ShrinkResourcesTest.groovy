@@ -54,7 +54,6 @@ import static org.junit.Assert.assertTrue
  */
 @CompileStatic
 @RunWith(Parameterized)
-@Ignore("http://b.android.com/234871")
 class ShrinkResourcesTest {
 
     @Rule
@@ -100,25 +99,25 @@ class ShrinkResourcesTest {
         Apk apkProguardOnly = project.getApk(ApkType.of("minifyDontShrink", false))
 
         assertTrue(apkDebug.toString() + " is not a file", Files.isRegularFile(apkDebug.getFile()))
-        assertTrue(apkRelease.toString() + " is not a file", Files.isRegularFile(apkDebug.getFile()))
-        assertTrue(apkProguardOnly.toString() + " is not a file", Files.isRegularFile(apkDebug.getFile()))
+        assertTrue(apkRelease.toString() + " is not a file", Files.isRegularFile(apkRelease.getFile()))
+        assertTrue(apkProguardOnly.toString() + " is not a file", Files.isRegularFile(apkProguardOnly.getFile()))
 
         File compressed = new File(intermediates,
-                "res" + separator + "resources-release-stripped.ap_")
+                "res_stripped/release" + separator + "resources-release-stripped.ap_")
         File uncompressed =
-                new File(intermediates, "res" + separator + "resources-release.ap_")
+                new File(intermediates, "res/release" + separator + "resources-release.ap_")
         assertTrue(compressed.toString() + " is not a file", compressed.isFile())
         assertTrue(uncompressed.toString() + " is not a file", uncompressed.isFile())
 
         // Check that there is no shrinking in the other two targets:
         assertTrue(new File(intermediates,
-                "res" + separator + "resources-debug.ap_").exists())
+                "res/debug" + separator + "resources-debug.ap_").exists())
         assertFalse(new File(intermediates,
-                "res" + separator + "resources-debug-stripped.ap_").exists())
+                "res_stripped/debug" + separator + "resources-debug-stripped.ap_").exists())
         assertTrue(new File(intermediates,
-                "res" + separator + "resources-minifyDontShrink.ap_").exists())
+                "res/minifyDontShrink" + separator + "resources-minifyDontShrink.ap_").exists())
         assertFalse(new File(intermediates,
-                "res" + separator + "resources-minifyDontShrink-stripped.ap_").exists())
+                "res_stripped/minifyDontShrink" + separator + "resources-minifyDontShrink-stripped.ap_").exists())
 
         String expectedUnstrippedApk = """\
 AndroidManifest.xml
@@ -283,11 +282,11 @@ res/layout/used21.xml"""
         // Check splits -- just sample one of them
         //noinspection SpellCheckingInspection
         compressed = project.file(
-                "abisplits/build/intermediates/res/resources-arm64-v8a-release-stripped.ap_")
+                "abisplits/build/intermediates/res_stripped/release/resources-arm64-v8a-release-stripped.ap_")
         //noinspection SpellCheckingInspection
         uncompressed =
                 project.file(
-                        "abisplits/build/intermediates/res/resources-arm64-v8a-release.ap_")
+                        "abisplits/build/intermediates/res/release/resources-arm64-v8a-release.ap_")
         assertTrue(compressed.toString() + " is not a file", compressed.isFile())
         assertTrue(uncompressed.toString() + " is not a file", uncompressed.isFile())
         //noinspection SpellCheckingInspection
@@ -308,9 +307,9 @@ res/layout/used21.xml"""
         // Check WebView string handling (android_res strings etc)
 
         //noinspection SpellCheckingInspection
-        uncompressed = project.file("webview/build/intermediates/res/resources-release.ap_")
+        uncompressed = project.file("webview/build/intermediates/res/release/resources-release.ap_")
         //noinspection SpellCheckingInspection
-        compressed = project.file("webview/build/intermediates/res/resources-release-stripped.ap_")
+        compressed = project.file("webview/build/intermediates/res_stripped/release/resources-release-stripped.ap_")
         assertTrue(uncompressed.toString() + " is not a file", uncompressed.isFile())
         assertTrue(compressed.toString() + " is not a file", compressed.isFile())
 
@@ -451,10 +450,10 @@ res/layout/used21.xml"""
         zis2.close()
 
         //noinspection SpellCheckingInspection
-        uncompressed = project.file("keep/build/intermediates/res/resources-release.ap_")
+        uncompressed = project.file("keep/build/intermediates/res/release/resources-release.ap_")
         //noinspection SpellCheckingInspection
         compressed =
-                project.file("keep/build/intermediates/res/resources-release-stripped.ap_")
+                project.file("keep/build/intermediates/res_stripped/release/resources-release-stripped.ap_")
         assertTrue(uncompressed.toString() + " is not a file", uncompressed.isFile())
         assertTrue(compressed.toString() + " is not a file", compressed.isFile())
 

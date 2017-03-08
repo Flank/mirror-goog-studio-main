@@ -29,14 +29,18 @@ import com.android.build.api.transform.TransformInvocation;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.aapt.AaptGradleFactory;
 import com.android.build.gradle.internal.pipeline.TransformManager;
+import com.android.build.gradle.internal.scope.BuildOutput;
+import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.build.gradle.internal.scope.SplitList;
+import com.android.build.gradle.internal.scope.SplitScope;
+import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.build.gradle.tasks.ResourceUsageAnalyzer;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptPackageConfig;
+import com.android.ide.common.build.ApkData;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -52,6 +56,7 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.OutputDirectory;
 
 /**
  * Implementation of Resource Shrinking as a transform.
@@ -72,15 +77,14 @@ public class ShrinkResourcesTransform extends Transform {
     private static boolean ourWarned = true; // Logging disabled until shrinking is on by default.
 
     /**
-     * Associated variant data that the strip task will be run against. Used to locate
-     * not only locations the task needs (e.g. for resources and generated R classes)
-     * but also to obtain the resource merging task, since we will run it a second time
-     * here to generate a new .ap_ file with fewer resources
+     * Associated variant data that the strip task will be run against. Used to locate not only
+     * locations the task needs (e.g. for resources and generated R classes) but also to obtain the
+     * resource merging task, since we will run it a second time here to generate a new .ap_ file
+     * with fewer resources
      */
-    @NonNull
-    private final BaseVariantOutputData variantOutputData;
-    @NonNull
-    private final File uncompressedResources;
+    @NonNull private final BaseVariantData<?> variantData;
+
+    @NonNull private final FileCollection uncompressedResources;
     @NonNull
     private final File compressedResources;
 
@@ -96,48 +100,40 @@ public class ShrinkResourcesTransform extends Transform {
     private final File sourceDir;
     @NonNull
     private final File resourceDir;
-    @NonNull
-    private final File mergedManifest;
+    @NonNull private final FileCollection mergedManifests;
     @Nullable
     private final File mappingFile;
     @NonNull private final SplitList splitList;
     @NonNull private final AaptGeneration aaptGeneration;
 
     public ShrinkResourcesTransform(
-            @NonNull BaseVariantOutputData variantOutputData,
-            @NonNull File uncompressedResources,
+            @NonNull BaseVariantData variantData,
+            @NonNull FileCollection uncompressedResources,
             @NonNull File compressedResources,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull AaptGeneration aaptGeneration,
             @NonNull Logger logger) {
-        this.variantOutputData = variantOutputData;
+        this.variantData = variantData;
         this.uncompressedResources = uncompressedResources;
         this.compressedResources = compressedResources;
         this.androidBuilder = androidBuilder;
         this.aaptGeneration = aaptGeneration;
         this.logger = logger;
-        this.splitList =
-                variantOutputData.getScope().getVariantScope().getVariantData().getSplitList();
+        this.splitList = variantData.getSplitList();
 
-        BaseVariantData<?> variantData = variantOutputData.variantData;
         sourceDir = variantData.getScope().getRClassSourceOutputDir();
         resourceDir = variantData.getScope().getFinalResourcesDir();
-        mergedManifest = variantOutputData.getScope().getManifestOutputFile();
+        mergedManifests =
+                variantData.getScope().getOutputs(TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS);
         mappingFile = variantData.getMappingFile();
 
         if (mappingFile != null) {
             secondaryInputs = ImmutableList.of(
-                    uncompressedResources,
                     sourceDir,
                     resourceDir,
-                    mergedManifest,
                     mappingFile);
         } else {
-            secondaryInputs = ImmutableList.of(
-                    uncompressedResources,
-                    sourceDir,
-                    resourceDir,
-                    mergedManifest);
+            secondaryInputs = ImmutableList.of(sourceDir, resourceDir);
         }
     }
 
@@ -178,9 +174,20 @@ public class ShrinkResourcesTransform extends Transform {
     }
 
     @NonNull
-    @Override
-    public Collection<File> getSecondaryFileOutputs() {
-        return ImmutableList.of(compressedResources);
+    @InputFiles
+    public FileCollection getMergedManifests() {
+        return mergedManifests;
+    }
+
+    @NonNull
+    @InputFiles
+    public FileCollection getUncompressedResources() {
+        return uncompressedResources;
+    }
+
+    @OutputDirectory
+    public File getCompressedResources() {
+        return compressedResources;
     }
 
     @NonNull
@@ -203,6 +210,27 @@ public class ShrinkResourcesTransform extends Transform {
     public void transform(@NonNull TransformInvocation invocation)
             throws IOException, TransformException, InterruptedException {
 
+        Collection<BuildOutput> uncompressedBuildOutputs = BuildOutputs.load(uncompressedResources);
+        SplitScope splitScope = variantData.getScope().getSplitScope();
+        splitScope.parallelForEachOutput(
+                uncompressedBuildOutputs,
+                TaskOutputHolder.TaskOutputType.PROCESSED_RES,
+                TaskOutputHolder.TaskOutputType.SHRUNK_PROCESSED_RES,
+                this::splitAction,
+                invocation);
+        splitScope.save(TaskOutputHolder.TaskOutputType.SHRUNK_PROCESSED_RES, compressedResources);
+    }
+
+    @Nullable
+    public File splitAction(
+            @NonNull ApkData apkData,
+            @Nullable File uncompressedResourceFile,
+            TransformInvocation invocation) {
+
+        if (uncompressedResourceFile == null) {
+            return null;
+        }
+
         Collection<TransformInput> referencedInputs = invocation.getReferencedInputs();
         List<File> classes = new ArrayList<>();
         for (TransformInput transformInput : referencedInputs) {
@@ -214,11 +242,6 @@ public class ShrinkResourcesTransform extends Transform {
             }
         }
 
-        BaseVariantData<?> variantData = variantOutputData.variantData;
-        // FIX ME !
-        ProcessAndroidResources processResourcesTask =
-                variantData.getScope().getProcessResourcesTask().get(null);
-
         File reportFile = null;
         if (mappingFile != null) {
             File logDir = mappingFile.getParentFile();
@@ -227,10 +250,34 @@ public class ShrinkResourcesTransform extends Transform {
             }
         }
 
+        File compressedResourceFile =
+                new File(
+                        compressedResources,
+                        "resources-" + apkData.getBaseName() + "-stripped.ap_");
+        FileUtils.mkdirs(compressedResourceFile.getParentFile());
+
+        Collection<BuildOutput> mergedManifests = BuildOutputs.load(this.mergedManifests);
+        BuildOutput mergedManifest =
+                SplitScope.getOutput(
+                        mergedManifests, TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS, apkData);
+        if (mergedManifest == null) {
+            try {
+                FileUtils.copyFile(uncompressedResourceFile, compressedResourceFile);
+            } catch (IOException e) {
+                logger.error("Failed to copy uncompressed resource file :", e);
+            }
+            return compressedResourceFile;
+        }
+
         // Analyze resources and usages and strip out unused
         ResourceUsageAnalyzer analyzer =
                 new ResourceUsageAnalyzer(
-                        sourceDir, classes, mergedManifest, mappingFile, resourceDir, reportFile);
+                        sourceDir,
+                        classes,
+                        mergedManifest.getOutputFile(),
+                        mappingFile,
+                        resourceDir,
+                        reportFile);
         try {
             analyzer.setVerbose(logger.isEnabled(LogLevel.INFO));
             analyzer.setDebug(logger.isEnabled(LogLevel.DEBUG));
@@ -258,14 +305,18 @@ public class ShrinkResourcesTransform extends Transform {
                         AaptGradleFactory.make(
                                 aaptGeneration,
                                 androidBuilder,
-                                variantOutputData.getScope().getVariantScope(),
+                                variantData.getScope(),
                                 FileUtils.mkdirs(
                                         new File(
                                                 invocation.getContext().getTemporaryDir(),
                                                 "temp-aapt")));
+                // FIX ME !
+                ProcessAndroidResources processResourcesTask =
+                        variantData.getScope().getProcessResourcesTask().get(null);
+
                 AaptPackageConfig.Builder aaptPackageConfig =
                         new AaptPackageConfig.Builder()
-                                .setManifestFile(mergedManifest)
+                                .setManifestFile(mergedManifest.getOutputFile())
                                 .setOptions(processResourcesTask.getAaptOptions())
                                 .setResourceOutputApk(destination)
                                 .setLibraries(processResourcesTask.getLibraryInfoList())
@@ -284,7 +335,7 @@ public class ShrinkResourcesTransform extends Transform {
                         processResourcesTask.getEnforceUniquePackageName());
             } else {
                 // Just rewrite the .ap_ file to strip out the res/ files for unused resources
-                analyzer.rewriteResourceZip(uncompressedResources, compressedResources);
+                analyzer.rewriteResourceZip(uncompressedResourceFile, compressedResourceFile);
             }
 
             // Dump some stats
@@ -297,8 +348,8 @@ public class ShrinkResourcesTransform extends Transform {
                 //int total = analyzer.getTotalResourceCount()
                 //sb.append("(" + unused + "/" + total + ")")
 
-                long before = uncompressedResources.length();
-                long after = compressedResources.length();
+                long before = uncompressedResourceFile.length();
+                long after = compressedResourceFile.length();
                 long percent = (int) ((before - after) * 100 / before);
                 sb.append(": Binary resource data reduced from ").
                         append(toKbString(before)).
@@ -330,6 +381,7 @@ public class ShrinkResourcesTransform extends Transform {
         } finally {
             analyzer.dispose();
         }
+        return compressedResourceFile;
     }
 
     private static String toKbString(long size) {

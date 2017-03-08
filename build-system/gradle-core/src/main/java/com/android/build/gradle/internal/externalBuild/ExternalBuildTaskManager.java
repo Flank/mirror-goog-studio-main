@@ -253,6 +253,7 @@ class ExternalBuildTaskManager {
                                 packagingScope,
                                 project.getBuildDir(),
                                 variantScope.getInstantRunBuildContext().getPatchingPolicy(),
+                                VariantScope.TaskOutputType.MERGED_RES,
                                 project.files(processedAndroidResourcesFile),
                                 project.files(androidManifestFile),
                                 VariantScope.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS,

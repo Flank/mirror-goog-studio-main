@@ -327,6 +327,9 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     File getInstantRunManifestOutputDirectory();
 
     @NonNull
+    File getShrunkProcessedResourcesOutputDirectory();
+
+    @NonNull
     File  getManifestReportFile();
 
     @NonNull

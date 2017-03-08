@@ -54,6 +54,7 @@ import com.android.build.api.transform.Transform;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.ProguardFiles;
+import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.coverage.JacocoPlugin;
@@ -2854,6 +2855,11 @@ public abstract class TaskManager {
 
         FileUtils.mkdirs(outputDirectory);
         ConfigurableFileCollection apks = project.files(outputDirectory);
+        VariantScope.TaskOutputType resourceFilesInputType =
+                variantScope.useResourceShrinker()
+                        ? VariantScope.TaskOutputType.SHRUNK_PROCESSED_RES
+                        : VariantScope.TaskOutputType.PROCESSED_RES;
+
         AndroidTask<PackageApplication> packageApp =
                 androidTasks.create(
                         tasks,
@@ -2861,7 +2867,8 @@ public abstract class TaskManager {
                                 packagingScope,
                                 outputDirectory,
                                 patchingPolicy,
-                                variantScope.getOutputs(VariantScope.TaskOutputType.PROCESSED_RES),
+                                resourceFilesInputType,
+                                variantScope.getOutputs(resourceFilesInputType),
                                 manifests,
                                 manifestType,
                                 variantScope.getSplitScope(),
@@ -2881,8 +2888,8 @@ public abstract class TaskManager {
                                     variantScope.getInstantRunResourcesFile(),
                                     packagingScope,
                                     patchingPolicy,
-                                    variantScope.getOutputs(
-                                            VariantScope.TaskOutputType.PROCESSED_RES),
+                                    resourceFilesInputType,
+                                    variantScope.getOutputs(resourceFilesInputType),
                                     manifests,
                                     VariantScope.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS,
                                     variantScope.getSplitScope()));
@@ -3222,29 +3229,35 @@ public abstract class TaskManager {
 
             return;
         }
-        // FIX ME : change this transform into a variant based one base on FileCollection.
-        /*
+
         // if resources are shrink, insert a no-op transform per variant output
         // to transform the res package into a stripped res package
-        for (final BaseVariantOutputData variantOutputData : scope.getVariantData().getOutputs()) {
-            VariantOutputScope variantOutputScope = variantOutputData.getScope();
 
-            ShrinkResourcesTransform shrinkResTransform =
-                    new ShrinkResourcesTransform(
-                            variantOutputData,
-                            variantOutputScope.getProcessResourcePackageOutputFile(),
-                            variantOutputScope.getShrinkedResourcesFile(),
-                            androidBuilder,
-                            logger);
-            AndroidTask<TransformTask> shrinkTask =
-                    scope.getTransformManager()
-                            .addTransform(taskFactory, variantOutputScope, shrinkResTransform)
-                            .orElse(null);
-            // need to record this task since the package task will not depend
-            // on it through the transform manager.
-            variantOutputScope.setShrinkResourcesTask(shrinkTask);
+        ShrinkResourcesTransform shrinkResTransform =
+                new ShrinkResourcesTransform(
+                        scope.getVariantData(),
+                        scope.getOutputs(TaskOutputHolder.TaskOutputType.PROCESSED_RES),
+                        scope.getShrunkProcessedResourcesOutputDirectory(),
+                        androidBuilder,
+                        AaptGeneration.fromProjectOptions(getGlobalScope().getProjectOptions()),
+                        logger);
+
+        Optional<AndroidTask<TransformTask>> shrinkTask =
+                scope.getTransformManager().addTransform(taskFactory, scope, shrinkResTransform);
+
+        if (shrinkTask.isPresent()) {
+            scope.addTaskOutput(
+                    TaskOutputHolder.TaskOutputType.SHRUNK_PROCESSED_RES,
+                    scope.getShrunkProcessedResourcesOutputDirectory(),
+                    shrinkTask.get().getName());
+        } else {
+            androidBuilder
+                    .getErrorReporter()
+                    .handleSyncError(
+                            null,
+                            SyncIssue.TYPE_GENERIC,
+                            "Internal error, could not add the ShrinkResourcesTransform");
         }
-        */
     }
 
     private void applyProguardConfig(

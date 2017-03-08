@@ -732,7 +732,6 @@ public class ProcessAndroidResources extends IncrementalTask {
                         .setSourceOutputDir(variantScope.getRClassSourceOutputDir());
                 processResources.setTextSymbolOutputDir(symbolLocation);
 
-            Project project = variantScope.getGlobalScope().getProject();
             if (config.getBuildType().isMinifyEnabled()) {
                 if (config.getBuildType().isShrinkResources() && config.isJackEnabled()) {
                     LoggingUtil.displayWarning(

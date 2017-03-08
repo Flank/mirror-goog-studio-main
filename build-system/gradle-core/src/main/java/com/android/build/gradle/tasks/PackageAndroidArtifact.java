@@ -37,7 +37,6 @@ import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.build.gradle.internal.scope.PackagingScope;
 import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
-import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.build.gradle.internal.tasks.KnownFilesSaveData;
@@ -285,19 +284,22 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
     public OutputFileProvider outputFileProvider;
 
+    VariantScope.TaskOutputType taskInputType;
+
+    @Input
+    public VariantScope.TaskOutputType getTaskInputType() {
+        return taskInputType;
+    }
+
     protected abstract VariantScope.TaskOutputType getTaskOutputType();
 
     @Override
     protected void doFullTaskAction() throws IOException {
 
         Collection<BuildOutput> mergedResources =
-                BuildOutputs.load(VariantScope.TaskOutputType.PROCESSED_RES, resourceFiles);
-        BuildOutputs.load(manifestType, manifests);
+                BuildOutputs.load(getTaskInputType(), resourceFiles);
         splitScope.parallelForEachOutput(
-                mergedResources,
-                VariantScope.TaskOutputType.PROCESSED_RES,
-                getTaskOutputType(),
-                this::splitFullAction);
+                mergedResources, getTaskInputType(), getTaskOutputType(), this::splitFullAction);
         splitScope.save(getTaskOutputType(), outputDirectory);
     }
 
@@ -561,8 +563,8 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
     protected void doIncrementalTaskAction(Map<File, FileStatus> changedInputs) throws IOException {
         checkNotNull(changedInputs, "changedInputs == null");
         splitScope.parallelForEachOutput(
-                BuildOutputs.load(TaskOutputHolder.TaskOutputType.PROCESSED_RES, resourceFiles),
-                VariantScope.TaskOutputType.PROCESSED_RES,
+                BuildOutputs.load(getTaskInputType(), resourceFiles),
+                getTaskInputType(),
                 getTaskOutputType(),
                 (split, output) -> splitIncrementalAction(split, output, changedInputs));
         splitScope.save(getTaskOutputType(), outputDirectory);
@@ -694,6 +696,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         protected final PackagingScope packagingScope;
         @Nullable protected final DexPackagingPolicy dexPackagingPolicy;
         @NonNull protected final FileCollection manifests;
+        @NonNull protected final VariantScope.TaskOutputType inputResourceFilesType;
         @NonNull protected final FileCollection resourceFiles;
         @NonNull protected final File outputDirectory;
         @NonNull protected final SplitScope splitScope;
@@ -703,12 +706,14 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                 @NonNull PackagingScope packagingScope,
                 @NonNull File outputDirectory,
                 @Nullable InstantRunPatchingPolicy patchingPolicy,
+                @NonNull VariantScope.TaskOutputType inputResourceFilesType,
                 @NonNull FileCollection resourceFiles,
                 @NonNull FileCollection manifests,
                 @NonNull VariantScope.TaskOutputType manifestType,
                 @NonNull SplitScope splitScope) {
             this.project = packagingScope.getProject();
             this.packagingScope = checkNotNull(packagingScope);
+            this.inputResourceFilesType = inputResourceFilesType;
             dexPackagingPolicy = patchingPolicy == null
                     ? DexPackagingPolicy.STANDARD
                     : patchingPolicy.getDexPatchingPolicy();
@@ -722,6 +727,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         @Override
         public void execute(@NonNull final T packageAndroidArtifact) {
             packageAndroidArtifact.instantRunFileType = FileType.MAIN;
+            packageAndroidArtifact.taskInputType = inputResourceFilesType;
             packageAndroidArtifact.setAndroidBuilder(packagingScope.getAndroidBuilder());
             packageAndroidArtifact.setVariantName(packagingScope.getFullVariantName());
             packageAndroidArtifact.setMinSdkVersion(packagingScope.getMinSdkVersion());
