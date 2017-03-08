@@ -176,8 +176,9 @@ public class SdkManagerCliTest {
      */
     @Test
     public void basicList() throws Exception {
-        SdkManagerCli.Settings settings = SdkManagerCli.Settings
-                .createSettings(ImmutableList.of("--list", "--sdk_root=/sdk"), mFileOp.getFileSystem());
+        SdkManagerCli.Settings settings =
+                SdkManagerCli.Settings.createSettings(
+                        ImmutableList.of("--list", "--sdk_root=/sdk"), mFileOp.getFileSystem());
         assertNotNull("Arguments should be valid", settings);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         SdkManagerCli downloader = new SdkManagerCli(settings,
@@ -223,47 +224,48 @@ public class SdkManagerCliTest {
                 mDownloader,
                 mSdkHandler);
         downloader.run();
-        String expected = "Installed packages:\n"
-                + "--------------------------------------\n"
-                + "test;p1\n"
-                + "    Description:        package 1\n"
-                + "    Version:            1\n"
-                + "    Installed Location: /sdk/test/p1\n"
-                + "\n"
-                + "upgrade\n"
-                + "    Description:        upgrade v1\n"
-                + "    Version:            1\n"
-                + "    Installed Location: /sdk/upgrade\n"
-                + "\n"
-                + "Available Packages:\n"
-                + "--------------------------------------\n"
-                + "depended_on\n"
-                + "    Description:        fake package\n"
-                + "    Version:            1\n"
-                + "\n"
-                + "depends_on\n"
-                + "    Description:        fake package\n"
-                + "    Version:            1\n"
-                + "    Dependencies:\n"
-                + "        depended_on\n"
-                + "\n"
-                + "test;remote1\n"
-                + "    Description:        fake package\n"
-                + "    Version:            1\n"
-                + "\n"
-                + "upgrade\n"
-                + "    Description:        upgrade v2\n"
-                + "    Version:            2\n"
-                + "\n"
-                + "Available Updates:\n"
-                + "--------------------------------------\n"
-                + "obsolete\n"
-                + "    Local Version:  1\n"
-                + "    Remote Version: 2\n"
-                + "    (Obsolete)\n"
-                + "upgrade\n"
-                + "    Local Version:  1\n"
-                + "    Remote Version: 2\n";
+        String expected =
+                "Installed packages:\n"
+                        + "--------------------------------------\n"
+                        + "test;p1\n"
+                        + "    Description:        package 1\n"
+                        + "    Version:            1\n"
+                        + "    Installed Location: /sdk/test/p1\n"
+                        + "\n"
+                        + "upgrade\n"
+                        + "    Description:        upgrade v1\n"
+                        + "    Version:            1\n"
+                        + "    Installed Location: /sdk/upgrade\n"
+                        + "\n"
+                        + "Available Packages:\n"
+                        + "--------------------------------------\n"
+                        + "depended_on\n"
+                        + "    Description:        fake package\n"
+                        + "    Version:            1\n"
+                        + "\n"
+                        + "depends_on\n"
+                        + "    Description:        fake package\n"
+                        + "    Version:            1\n"
+                        + "    Dependencies:\n"
+                        + "        depended_on\n"
+                        + "\n"
+                        + "test;remote1\n"
+                        + "    Description:        fake package\n"
+                        + "    Version:            1\n"
+                        + "\n"
+                        + "upgrade\n"
+                        + "    Description:        upgrade v2\n"
+                        + "    Version:            2\n"
+                        + "\n"
+                        + "Available Updates:\n"
+                        + "--------------------------------------\n"
+                        + "obsolete\n"
+                        + "    Installed Version: 1\n"
+                        + "    Available Version: 2\n"
+                        + "    (Obsolete)\n"
+                        + "upgrade\n"
+                        + "    Installed Version: 1\n"
+                        + "    Available Version: 2\n";
         assertEquals(expected, out.toString());
     }
 
@@ -436,7 +438,8 @@ public class SdkManagerCliTest {
         try {
             downloader.run();
             fail("expected downloader to fail");
-        } catch (SdkManagerCli.CommandFailedException ignored) {}
+        } catch (SdkManagerCli.CommandFailedException ignored) {
+        }
         mSdkHandler.getSdkManager(progress).reloadLocalIfNeeded(progress);
         assertNull(mSdkHandler.getLocalPackage("test;remote1", progress));
     }
@@ -561,7 +564,9 @@ public class SdkManagerCliTest {
     }
 
 
-    /** Verify the behavior of --licenses */
+    /**
+     * Verify the behavior of --licenses
+     */
     @Test
     public void licenses() throws Exception {
         SdkManagerCli.Settings settings =
@@ -570,11 +575,11 @@ public class SdkManagerCliTest {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         assertNotNull("Arguments should be valid", settings);
         new SdkManagerCli(
-                        settings,
-                        new PrintStream(out),
-                        new ByteArrayInputStream("n\n".getBytes()),
-                        mDownloader,
-                        mSdkHandler)
+                settings,
+                new PrintStream(out),
+                new ByteArrayInputStream("n\n".getBytes()),
+                mDownloader,
+                mSdkHandler)
                 .run();
 
         assertEquals(
@@ -582,7 +587,9 @@ public class SdkManagerCliTest {
                         + "Review licenses that have not been accepted (y/N)? ", out.toString());
     }
 
-    /** Verify the behavior of --licenses with --verbose */
+    /**
+     * Verify the behavior of --licenses with --verbose
+     */
     @Test
     public void licensesVerbose() throws Exception {
         SdkManagerCli.Settings settings =
@@ -616,7 +623,9 @@ public class SdkManagerCliTest {
                         + "Review licenses that have not been accepted (y/N)? ", out.toString());
     }
 
-    /** Verify can accept licenses via --licences */
+    /**
+     * Verify can accept licenses via --licences
+     */
     @Test
     public void acceptLicenses() throws Exception {
         SdkManagerCli.Settings settings =
@@ -625,11 +634,11 @@ public class SdkManagerCliTest {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         assertNotNull("Arguments should be valid", settings);
         new SdkManagerCli(
-                        settings,
-                        new PrintStream(out),
-                        new ByteArrayInputStream("y\ny\ny\n".getBytes()),
-                        mDownloader,
-                        mSdkHandler)
+                settings,
+                new PrintStream(out),
+                new ByteArrayInputStream("y\ny\ny\n".getBytes()),
+                mDownloader,
+                mSdkHandler)
                 .run();
 
         assertEquals(
@@ -649,16 +658,18 @@ public class SdkManagerCliTest {
         out.reset();
         // Subsequent call should pass without accepting again.
         new SdkManagerCli(
-                        settings,
-                        new PrintStream(out),
-                        new ByteArrayInputStream("".getBytes()),
-                        mDownloader,
-                        mSdkHandler)
+                settings,
+                new PrintStream(out),
+                new ByteArrayInputStream("".getBytes()),
+                mDownloader,
+                mSdkHandler)
                 .run();
         assertEquals("All SDK package licenses accepted.\n", out.toString());
     }
 
-    /** Verify accepting some licences with --licences */
+    /**
+     * Verify accepting some licences with --licences
+     */
     @Test
     public void acceptSomeLicenses() throws Exception {
         SdkManagerCli.Settings settings =
@@ -668,11 +679,11 @@ public class SdkManagerCliTest {
         assertNotNull("Arguments should be valid", settings);
         // Accept one of the licences
         new SdkManagerCli(
-                        settings,
-                        new PrintStream(out),
-                        new ByteArrayInputStream("y\ny\nn\n".getBytes()),
-                        mDownloader,
-                        mSdkHandler)
+                settings,
+                new PrintStream(out),
+                new ByteArrayInputStream("y\ny\nn\n".getBytes()),
+                mDownloader,
+                mSdkHandler)
                 .run();
         assertEquals(
                 "2 of 2 SDK package licenses not accepted.\n"
