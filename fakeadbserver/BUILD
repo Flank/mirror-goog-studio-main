@@ -11,7 +11,6 @@ iml_module(
     deps = [
         "//tools/base/common:studio.common[module]",
         "//tools/idea/.idea/libraries:JUnit4[test]",
-        "//tools/base/ddmlib:studio.ddmlib[module, test]",
         "//tools/base/testutils:studio.testutils[module, test]",
         "//tools/idea/.idea/libraries:Guava[test]",
     ],
@@ -44,9 +43,8 @@ java_test(
     deps = [
         ":tools.fakeadbserver",
         "//tools/base/annotations",
-        "//tools/base/third_party:junit_junit",
-        "//tools/base/ddmlib:tools.ddmlib",
         "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:com.google.guava_guava",
+        "//tools/base/third_party:junit_junit",
     ],
 )
