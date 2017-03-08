@@ -67,7 +67,10 @@ public class IntegrationTest {
         return TestUtils.getSdk().toPath().resolve("platform-tools").resolve(SdkConstants.FN_ADB);
     }
 
+    // ignored because we shouldn't be relying on a hard coded port (5037): fakeadbserver should
+    // be changed to use any available port, and that selected port should be passed on to ddmlib
     @Test
+    @Ignore
     public void testListDevices() throws IOException {
         // Build the server and configure it to use the default ADB command handlers.
         FakeAdbServer.Builder builder = new FakeAdbServer.Builder();
