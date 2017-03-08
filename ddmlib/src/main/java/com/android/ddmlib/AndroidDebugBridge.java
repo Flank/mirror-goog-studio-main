@@ -18,6 +18,7 @@ package com.android.ddmlib;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.VisibleForTesting;
 import com.android.annotations.concurrency.GuardedBy;
 import com.android.ddmlib.Log.LogLevel;
 import com.google.common.base.Charsets;
@@ -27,7 +28,6 @@ import com.google.common.collect.Sets;
 import com.google.common.io.Closeables;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -51,7 +51,6 @@ import java.util.concurrent.TimeUnit;
  * <p><b>{@link #init(boolean)} must be called before anything is done.</b>
  */
 public final class AndroidDebugBridge {
-
     /*
      * Minimum and maximum version of adb supported. This correspond to
      * ADB_SERVER_VERSION found in //device/tools/adb/adb.h
@@ -65,6 +64,10 @@ public final class AndroidDebugBridge {
     // Where to find the ADB bridge.
     static final String DEFAULT_ADB_HOST = "127.0.0.1"; //$NON-NLS-1$
     static final int DEFAULT_ADB_PORT = 5037;
+
+    // Only set when in unit testing mode. This is a hack until we move to devicelib.
+    // http://b.android.com/221925
+    private static boolean sUnitTestMode;
 
     /** Port where adb server will be started **/
     private static int sAdbServerPort = 0;
@@ -227,6 +230,11 @@ public final class AndroidDebugBridge {
         HandleProfiling.register(monitorThread);
         HandleNativeHeap.register(monitorThread);
         HandleViewDebug.register(monitorThread);
+    }
+
+    @VisibleForTesting
+    public static void enableFakeAdbServerMode() {
+        sUnitTestMode = true;
     }
 
     /**
@@ -832,6 +840,11 @@ public final class AndroidDebugBridge {
      * @return true if success
      */
     synchronized boolean startAdb() {
+        if (sUnitTestMode) {
+            // in this case, we assume the FakeAdbServer was already setup by the test code
+            return true;
+        }
+
         if (mAdbOsLocation == null) {
             Log.e(ADB,
                 "Cannot start adb when AndroidDebugBridge is created without the location of adb."); //$NON-NLS-1$

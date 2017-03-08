@@ -22,6 +22,7 @@ iml_module(
         "//tools/idea/.idea/libraries:JUnit4[test]",
         "//tools/base/testutils:studio.testutils[module, test]",
         "//tools/idea/.idea/libraries:truth[test]",
+        "//tools/base/fakeadbserver:studio.fakeadbserver[module, test]",
     ],
 )
 
@@ -54,6 +55,8 @@ java_test(
     deps = [
         ":tools.ddmlib",
         "//tools/base/annotations",
+        "//tools/base/common:tools.common",
+        "//tools/base/fakeadbserver:tools.fakeadbserver",
         "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:com.google.truth_truth",
