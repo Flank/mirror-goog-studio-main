@@ -33,11 +33,14 @@ public interface NdkInfo {
     @NonNull
     File getRootDirectory();
 
-    /**
-     * Returns the sysroot directory for the toolchain.
-     */
+    /** Returns the sysroot path for compilation. */
     @NonNull
-    String getSysrootPath(@NonNull Abi abi, @NonNull String platformVersion);
+    String getCompilerSysrootPath(
+            @NonNull Abi abi, @NonNull String platformVersion, boolean useUnifiedHeaders);
+
+    /** Returns the sysroot path for linking. */
+    @NonNull
+    String getLinkerSysrootPath(@NonNull Abi abi, @NonNull String platformVersion);
 
     /**
      * Retrieve the newest supported version if it is not the specified version is not supported.

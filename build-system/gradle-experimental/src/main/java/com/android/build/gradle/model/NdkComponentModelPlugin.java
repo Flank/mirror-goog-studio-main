@@ -231,7 +231,8 @@ public class NdkComponentModelPlugin implements Plugin<Project> {
                             projectId.getProjectDir(),
                             ndkConfig.getPlatformVersion(),
                             ndkConfig.getToolchain(),
-                            ndkConfig.getToolchainVersion());
+                            ndkConfig.getToolchainVersion(),
+                            ndkConfig.getUseUnifiedHeaders());
             ndkHandler.setCompileSdkVersion(compileSdkVersion);
             return ndkHandler;
         }
@@ -520,9 +521,9 @@ public class NdkComponentModelPlugin implements Plugin<Project> {
 
             NdkAbiOptions abiConfig = abiConfigs.get(abi.getName());
 
-            String sysroot = (abiConfig == null || abiConfig.getPlatformVersion() == null)
-                    ? ndkHandler.getSysroot(abi)
-                    : ndkHandler.getSysroot(abi, abiConfig.getPlatformVersion());
+            String sysroot =
+                    ndkHandler.getCompilerSysroot(
+                            abi, abiConfig == null ? null : abiConfig.getPlatformVersion());
             cFlags.add("--sysroot=" + sysroot);
             cppFlags.add("--sysroot=" + sysroot);
 

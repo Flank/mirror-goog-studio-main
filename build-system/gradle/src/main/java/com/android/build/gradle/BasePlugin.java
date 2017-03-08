@@ -421,11 +421,13 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
         project.getConfigurations().create("default" + VariantDependencies.CONFIGURATION_METADATA)
                 .setDescription("Metadata for the produced APKs.");
 
-        ndkHandler = new NdkHandler(
-                project.getRootDir(),
-                null, /* compileSkdVersion, this will be set in afterEvaluate */
-                "gcc",
-                "" /*toolchainVersion*/);
+        ndkHandler =
+                new NdkHandler(
+                        project.getRootDir(),
+                        null, /* compileSkdVersion, this will be set in afterEvaluate */
+                        "gcc",
+                        "" /*toolchainVersion*/,
+                        false /* useUnifiedHeaders */);
 
         taskManager =
                 createTaskManager(

@@ -20,7 +20,10 @@ import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.Toolchain;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.managed.NdkAbiOptions;
+import com.android.utils.FileUtils;
 import java.util.Collections;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.gradle.internal.os.OperatingSystem;
 import org.gradle.model.ModelMap;
 import org.gradle.nativeplatform.platform.NativePlatform;
@@ -64,64 +67,157 @@ public class ToolchainConfiguration {
                 toolchain -> {
                     // Configure each platform.
                     for (final Abi abi : ndkHandler.getSupportedAbis()) {
-                        toolchain.target(abi.getName(), targetPlatform -> {
-                            // In NDK r12 or below, disable usage of response file as clang do not
-                            // handle file with \r\n properly.
-                            if ((ndkHandler.getRevision() == null
-                                    || ndkHandler.getRevision().getMajor() <= 12)
-                                    && OperatingSystem.current().isWindows()
-                                    && toolchainName.equals("clang")) {
-                                ((DefaultGccPlatformToolChain) targetPlatform)
-                                        .setCanUseCommandFile(false);
-                            }
+                        toolchain.target(
+                                abi.getName(),
+                                targetPlatform -> {
+                                    // In NDK r12 or below, disable usage of response file as clang do not
+                                    // handle file with \r\n properly.
+                                    if ((ndkHandler.getRevision() == null
+                                                    || ndkHandler.getRevision().getMajor() <= 12)
+                                            && OperatingSystem.current().isWindows()
+                                            && toolchainName.equals("clang")) {
+                                        ((DefaultGccPlatformToolChain) targetPlatform)
+                                                .setCanUseCommandFile(false);
+                                    }
 
-                            if (Toolchain.GCC == ndkToolchain) {
-                                targetPlatform.getcCompiler().setExecutable(
-                                        ndkHandler.getCCompiler(abi).getName());
-                                targetPlatform.getCppCompiler().setExecutable(
-                                        ndkHandler.getCppCompiler(abi).getName());
-                                targetPlatform.getLinker().setExecutable(
-                                        ndkHandler.getLinker(abi).getName());
-                                targetPlatform.getAssembler().setExecutable(
-                                        ndkHandler.getAssembler(abi).getName());
-                            }
-                            // For clang, we use the ar from the GCC toolchain.
-                            targetPlatform.getStaticLibArchiver().setExecutable(
-                                    ndkHandler.getAr(abi).getName());
+                                    if (Toolchain.GCC == ndkToolchain) {
+                                        targetPlatform
+                                                .getcCompiler()
+                                                .setExecutable(
+                                                        ndkHandler.getCCompiler(abi).getName());
+                                        targetPlatform
+                                                .getCppCompiler()
+                                                .setExecutable(
+                                                        ndkHandler.getCppCompiler(abi).getName());
+                                        targetPlatform
+                                                .getLinker()
+                                                .setExecutable(ndkHandler.getLinker(abi).getName());
+                                        targetPlatform
+                                                .getAssembler()
+                                                .setExecutable(
+                                                        ndkHandler.getAssembler(abi).getName());
+                                    }
+                                    // For clang, we use the ar from the GCC toolchain.
+                                    targetPlatform
+                                            .getStaticLibArchiver()
+                                            .setExecutable(ndkHandler.getAr(abi).getName());
 
-                            // By default, gradle will use -Xlinker to pass arguments to the linker.
-                            // Removing it as it prevents -sysroot from being properly set.
-                            targetPlatform.getLinker().withArguments(
-                                    args -> args.removeAll(Collections.singleton("-Xlinker")));
+                                    // By default, gradle will use -Xlinker to pass arguments to the linker.
+                                    // Removing it as it prevents -sysroot from being properly set.
+                                    targetPlatform
+                                            .getLinker()
+                                            .withArguments(
+                                                    args ->
+                                                            args.removeAll(
+                                                                    Collections.singleton(
+                                                                            "-Xlinker")));
 
-                            final NdkAbiOptions config = abiConfigs.get(abi.getName());
-                            String sysroot = (config == null || config.getPlatformVersion() == null)
-                                    ? ndkHandler.getSysroot(abi)
-                                    : ndkHandler.getSysroot(abi, config.getPlatformVersion());
+                                    final NdkAbiOptions config = abiConfigs.get(abi.getName());
+                                    String platformVersion =
+                                            (config != null && config.getPlatformVersion() != null)
+                                                    ? config.getPlatformVersion()
+                                                    : ndkHandler.getPlatformVersion();
 
-                            targetPlatform.getcCompiler().withArguments(
-                                    args -> args.add("--sysroot=" + sysroot));
-                            targetPlatform.getCppCompiler().withArguments(
-                                    args -> args.add("--sysroot=" + sysroot));
-                            targetPlatform.getLinker().withArguments(
-                                    args -> args.add("--sysroot=" + sysroot));
+                                    String compilerSysroot;
 
-                            if (config != null) {
-                                // Specify ABI specific flags.
-                                targetPlatform.getcCompiler().withArguments(
-                                        args -> args.addAll(config.getCFlags()));
-                                targetPlatform.getCppCompiler().withArguments(
-                                        args -> args.addAll(config.getCppFlags()));
-                                targetPlatform.getLinker().withArguments(
-                                        args -> {
-                                            args.addAll(config.getLdFlags());
+                                    compilerSysroot =
+                                            ndkHandler.getCompilerSysroot(abi, platformVersion);
+                                    if (ndkHandler.isUseUnifiedHeaders()
+                                            && platformVersion != null) {
+                                        Pattern pattern = Pattern.compile("android-(\\d+)");
+                                        Matcher matcher = pattern.matcher(platformVersion);
+                                        if (matcher.matches()) {
+                                            String api = matcher.group(1);
+                                            targetPlatform
+                                                    .getcCompiler()
+                                                    .withArguments(
+                                                            args ->
+                                                                    args.add(
+                                                                            "-D__ANDROID_API__="
+                                                                                    + api));
+                                            targetPlatform
+                                                    .getCppCompiler()
+                                                    .withArguments(
+                                                            args ->
+                                                                    args.add(
+                                                                            "-D__ANDROID_API__="
+                                                                                    + api));
+                                        }
+                                        targetPlatform
+                                                .getcCompiler()
+                                                .withArguments(
+                                                        args -> {
+                                                            args.add("-isystem");
+                                                            args.add(
+                                                                    FileUtils.join(
+                                                                            compilerSysroot,
+                                                                            "usr",
+                                                                            "include",
+                                                                            abi
+                                                                                    .getGccExecutablePrefix()));
+                                                        });
+                                        targetPlatform
+                                                .getCppCompiler()
+                                                .withArguments(
+                                                        args -> {
+                                                            args.add("-isystem");
+                                                            args.add(
+                                                                    FileUtils.join(
+                                                                            compilerSysroot,
+                                                                            "usr",
+                                                                            "include",
+                                                                            abi
+                                                                                    .getGccExecutablePrefix()));
+                                                        });
+                                    }
 
-                                            for (String lib : config.getLdLibs()) {
-                                                args.add("-l" + lib);
-                                            }
-                                        });
-                            }
-                        });
+                                    targetPlatform
+                                            .getcCompiler()
+                                            .withArguments(
+                                                    args ->
+                                                            args.add(
+                                                                    "--sysroot="
+                                                                            + compilerSysroot));
+                                    targetPlatform
+                                            .getCppCompiler()
+                                            .withArguments(
+                                                    args ->
+                                                            args.add(
+                                                                    "--sysroot="
+                                                                            + compilerSysroot));
+                                    targetPlatform
+                                            .getLinker()
+                                            .withArguments(
+                                                    args ->
+                                                            args.add(
+                                                                    "--sysroot="
+                                                                            + ndkHandler
+                                                                                    .getLinkerSysroot(
+                                                                                            abi,
+                                                                                            platformVersion)));
+
+                                    if (config != null) {
+                                        // Specify ABI specific flags.
+                                        targetPlatform
+                                                .getcCompiler()
+                                                .withArguments(
+                                                        args -> args.addAll(config.getCFlags()));
+                                        targetPlatform
+                                                .getCppCompiler()
+                                                .withArguments(
+                                                        args -> args.addAll(config.getCppFlags()));
+                                        targetPlatform
+                                                .getLinker()
+                                                .withArguments(
+                                                        args -> {
+                                                            args.addAll(config.getLdFlags());
+
+                                                            for (String lib : config.getLdLibs()) {
+                                                                args.add("-l" + lib);
+                                                            }
+                                                        });
+                                    }
+                                });
                         toolchain.path(
                                 ndkHandler.getCCompiler(abi).getParentFile(),
                                 ndkHandler.getAr(abi).getParentFile());
