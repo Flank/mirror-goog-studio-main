@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.dsl;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.core.ErrorReporter;
-import com.android.builder.model.SyncIssue;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
@@ -66,15 +65,12 @@ public class JackOptions implements CoreJackOptions {
     /** {@inheritDoc} */
     @Override
     @Nullable
-    @Deprecated
     public Boolean isEnabled() {
-        // Jack toolchain has been deprecated
-        return null;
+        return isEnabledFlag;
     }
 
-    @Deprecated
     public void setEnabled(@Nullable Boolean enabled) {
-        errorReporter.handleSyncWarning(null, SyncIssue.TYPE_GENERIC, DEPRECATION_WARNING);
+        isEnabledFlag = enabled;
     }
 
     /** {@inheritDoc} */
