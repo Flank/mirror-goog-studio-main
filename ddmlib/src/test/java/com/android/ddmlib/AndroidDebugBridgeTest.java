@@ -20,14 +20,14 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
 
+import com.android.fakeadbserver.FakeAdbServer;
 import com.android.testutils.TestUtils;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
 
 public class AndroidDebugBridgeTest {
     private File mAdbPath;
@@ -35,13 +35,14 @@ public class AndroidDebugBridgeTest {
     @Before
     public void setUp() throws Exception {
         mAdbPath = new File(TestUtils.getSdk(), "platform-tools/adb");
-        AndroidDebugBridge.initIfNeeded(false);
     }
 
     // https://code.google.com/p/android/issues/detail?id=63170
     @Test
     @Ignore  // Flaky: Disabled in CI
     public void recreateAdb() throws IOException {
+        AndroidDebugBridge.initIfNeeded(false);
+
         AndroidDebugBridge adb = AndroidDebugBridge.createBridge(mAdbPath.getCanonicalPath(), true);
         assertNotNull(adb);
         AndroidDebugBridge.terminate();
@@ -59,16 +60,28 @@ public class AndroidDebugBridgeTest {
     @Test
     @Ignore
     public void emptyAdbPath() throws Exception {
+        AndroidDebugBridge.initIfNeeded(false);
         AdbVersion version = AndroidDebugBridge.getAdbVersion(
                 new File("adb")).get(5, TimeUnit.SECONDS);
         assertTrue(version.compareTo(AdbVersion.parseFrom("1.0.20")) > 0);
+        AndroidDebugBridge.terminate();
     }
 
     @Test
     public void adbVersion() throws Exception {
-        AdbVersion version = AndroidDebugBridge
-                .getAdbVersion(mAdbPath).get(5, TimeUnit.SECONDS);
-        assertNotSame(version, AdbVersion.UNKNOWN);
-        assertTrue(version.compareTo(AdbVersion.parseFrom("1.0.20")) > 0);
+        FakeAdbServer.Builder builder = new FakeAdbServer.Builder();
+        try (FakeAdbServer server = builder.build()) {
+            server.start();
+            AndroidDebugBridge.enableFakeAdbServerMode(server.getPort());
+            AndroidDebugBridge.initIfNeeded(false);
+
+            AdbVersion version =
+                    AndroidDebugBridge.getAdbVersion(mAdbPath).get(5, TimeUnit.SECONDS);
+            assertNotSame(version, AdbVersion.UNKNOWN);
+            assertTrue(version.compareTo(AdbVersion.parseFrom("1.0.20")) > 0);
+            AndroidDebugBridge.terminate();
+        } finally {
+            AndroidDebugBridge.terminate();
+        }
     }
 }

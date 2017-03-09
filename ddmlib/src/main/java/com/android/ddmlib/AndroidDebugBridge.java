@@ -233,8 +233,9 @@ public final class AndroidDebugBridge {
     }
 
     @VisibleForTesting
-    public static void enableFakeAdbServerMode() {
+    public static void enableFakeAdbServerMode(int port) {
         sUnitTestMode = true;
+        sAdbServerPort = port;
     }
 
     /**
@@ -320,13 +321,16 @@ public final class AndroidDebugBridge {
     public static AndroidDebugBridge createBridge(@NonNull String osLocation,
                                                   boolean forceNewBridge) {
         synchronized (sLock) {
-            if (sThis != null) {
-                if (sThis.mAdbOsLocation != null && sThis.mAdbOsLocation.equals(osLocation) &&
-                        !forceNewBridge) {
-                    return sThis;
-                } else {
-                    // stop the current server
-                    sThis.stop();
+            if (!sUnitTestMode) {
+                if (sThis != null) {
+                    if (sThis.mAdbOsLocation != null
+                            && sThis.mAdbOsLocation.equals(osLocation)
+                            && !forceNewBridge) {
+                        return sThis;
+                    } else {
+                        // stop the current server
+                        sThis.stop();
+                    }
                 }
             }
 
@@ -1052,7 +1056,10 @@ public final class AndroidDebugBridge {
      */
     private static void initAdbSocketAddr() {
         try {
-            sAdbServerPort = getAdbServerPort();
+            // If we're in unit test mode, we already manually set sAdbServerPort.
+            if (!sUnitTestMode) {
+                sAdbServerPort = getAdbServerPort();
+            }
             sHostAddr = InetAddress.getByName(DEFAULT_ADB_HOST);
             sSocketAddr = new InetSocketAddress(sHostAddr, sAdbServerPort);
         } catch (UnknownHostException e) {

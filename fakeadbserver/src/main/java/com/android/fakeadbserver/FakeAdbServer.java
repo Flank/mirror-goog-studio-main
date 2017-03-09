@@ -30,7 +30,7 @@ import com.android.fakeadbserver.statechangehubs.DeviceStateChangeHub;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.io.IOException;
-import java.net.Inet4Address;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -46,10 +46,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
-/**
- * See {@link FakeAdbServerTest#testInteractiveServer()} for example usage.
- */
-public final class FakeAdbServer {
+/** See {@link FakeAdbServerTest#testInteractiveServer()} for example usage. */
+public final class FakeAdbServer implements AutoCloseable {
 
     private final ServerSocket mServerSocket;
 
@@ -84,8 +82,6 @@ public final class FakeAdbServer {
                             .setNameFormat("fake-adb-server-connection-pool-%d")
                             .build());
 
-    private int mPort = 5444;
-
     private Future<?> mConnectionHandlerTask = null;
 
     // All "external" server controls are synchronized through a central executor, much like the EDT
@@ -101,7 +97,7 @@ public final class FakeAdbServer {
     public void start() throws IOException {
         assert mConnectionHandlerTask == null; // Do not reuse the server.
 
-        mServerSocket.bind(new InetSocketAddress(Inet4Address.getLoopbackAddress(), mPort));
+        mServerSocket.bind(new InetSocketAddress(InetAddress.getLoopbackAddress(), 0));
         mServerSocket.setReuseAddress(true);
         mServerKeepAccepting = true;
 
@@ -113,7 +109,7 @@ public final class FakeAdbServer {
                                     Socket socket = mServerSocket.accept();
                                     mThreadPoolExecutor.submit(
                                             new ConnectionHandler(
-                                                    FakeAdbServer.this,
+                                                    this,
                                                     socket,
                                                     mHostCommandHandlers,
                                                     mDeviceCommandHandlers,
@@ -124,6 +120,10 @@ public final class FakeAdbServer {
                                 }
                             }
                         });
+    }
+
+    public int getPort() {
+        return mServerSocket.getLocalPort();
     }
 
     /**
@@ -158,6 +158,15 @@ public final class FakeAdbServer {
                     mThreadPoolExecutor.shutdown();
                     mMainServerThreadExecutor.shutdown();
                 });
+    }
+
+    @Override
+    public void close() throws Exception {
+        try {
+            stop().get();
+        } catch (InterruptedException ignored) {
+            // Catch InterruptedException as specified by JavaDoc.
+        }
     }
 
     /**
@@ -245,15 +254,6 @@ public final class FakeAdbServer {
 
         public Builder() throws IOException {
             mServer = new FakeAdbServer();
-        }
-
-        /**
-         * Sets the port the ADB server listens to client connections on.
-         */
-        @NonNull
-        public Builder setPort(int port) {
-            mServer.mPort = port;
-            return this;
         }
 
         /**
