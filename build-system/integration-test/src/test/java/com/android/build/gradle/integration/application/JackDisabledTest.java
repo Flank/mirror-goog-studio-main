@@ -26,8 +26,8 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
 import java.io.IOException;
 import java.util.Locale;
+import org.junit.Ignore;
 import org.junit.Rule;
-import org.junit.Test;
 
 /**
  * Test to verify we emit sync warning when Jack is enabled, and that we ignore that setting. Remove
@@ -41,7 +41,7 @@ public class JackDisabledTest {
                     .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
                     .create();
 
-    @Test
+    @Ignore("http://b.android.com/241060")
     public void checkWarningEmitted() throws IOException, InterruptedException {
         TestFileUtils.appendToFile(
                 project.getBuildFile(), "android.defaultConfig.jackOptions.enabled true");
