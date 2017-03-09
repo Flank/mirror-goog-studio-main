@@ -277,9 +277,8 @@ public class OriginalStream extends TransformStream {
             jarInputs = Lists.newArrayList();
             directoryInputs = Lists.newArrayList();
 
-            final Set<ResolvedArtifactResult> artifacts = artifactCollection.getArtifacts();
-            Map<ComponentIdentifier, Integer> duplicates = computeDuplicateList(artifacts);
-            for (ResolvedArtifactResult result : artifacts) {
+            Map<ComponentIdentifier, Integer> duplicates = Maps.newHashMap();
+            for (ResolvedArtifactResult result : artifactCollection.getArtifacts()) {
                 File artifactFile = result.getFile();
 
                 if (artifactFile.isFile()) {
@@ -340,9 +339,8 @@ public class OriginalStream extends TransformStream {
         Set<? super Scope> scopes = getScopes();
 
         if (artifactCollection != null) {
-            final Set<ResolvedArtifactResult> artifacts = artifactCollection.getArtifacts();
-            Map<ComponentIdentifier, Integer> duplicates = computeDuplicateList(artifacts);
-            for (ResolvedArtifactResult result : artifacts) {
+            Map<ComponentIdentifier, Integer> duplicates = Maps.newHashMap();
+            for (ResolvedArtifactResult result : artifactCollection.getArtifacts()) {
                 File artifactFile = result.getFile();
 
                 if (artifactFile.isDirectory()) {
@@ -388,29 +386,6 @@ public class OriginalStream extends TransformStream {
         return input;
     }
 
-    private static Map<ComponentIdentifier, Integer> computeDuplicateList(
-            @NonNull Collection<ResolvedArtifactResult> artifacts) {
-        Set<ComponentIdentifier> found = Sets.newHashSetWithExpectedSize(artifacts.size());
-        Set<ComponentIdentifier> duplicates = Sets.newHashSet();
-        for (ResolvedArtifactResult artifact : artifacts) {
-            ComponentIdentifier id = artifact.getId().getComponentIdentifier();
-            if (found.contains(id)) {
-                duplicates.add(id);
-            } else {
-                found.add(id);
-            }
-        }
-
-        Map<ComponentIdentifier, Integer> result =
-                Maps.newHashMapWithExpectedSize(duplicates.size());
-        Integer zero = 0;
-        for (ComponentIdentifier duplicate : duplicates) {
-            result.put(duplicate, zero);
-        }
-
-        return result;
-    }
-
     @NonNull
     private static String getArtifactName(
             @NonNull ResolvedArtifactResult artifactResult,
@@ -436,19 +411,21 @@ public class OriginalStream extends TransformStream {
                                     .toString();
         }
 
-        // loop for duplicates. This can happen for instance in case of an AAR with local Jars,
-        // since all the jars will have the same coordinates.
+        // check if a previous artifact use the same name. This can happen for instance in case
+        // of an AAR with local Jars.
+        // In that case happen an index to the name.
+        final Integer zero = 0;
         Integer i =
                 deduplicationMap.compute(
                         id,
                         (componentIdentifier, value) -> {
                             if (value == null) {
-                                return null;
+                                return zero;
                             }
 
                             return value + 1;
                         });
-        if (i != null) {
+        if (!zero.equals(i)) {
             return baseName + "::" + i;
         }
 
