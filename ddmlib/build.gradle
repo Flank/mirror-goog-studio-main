@@ -10,6 +10,7 @@ dependencies {
     compile project(':base:common')
     compile libs.kxml
 
+    testCompile project(':base:fakeadbserver')
     testCompile project(':base:testutils')
     testCompile libs.easymock
     testCompile libs.junit
