@@ -27,7 +27,7 @@ def _fileset_impl(ctx):
       dest = remap[f.short_path]
       fd = ctx.new_file(dest)
       cmd += "mkdir -p " + fd.dirname + "\n"
-      cmd += "cp -f " + f.path + " " + fd.path + "\n"
+      cmd += "cp -f '" + f.path + "' '" + fd.path + "'\n"
 
   script = ctx.new_file(ctx.label.name + ".cmd.sh")
   ctx.file_action(output = script, content = cmd)
