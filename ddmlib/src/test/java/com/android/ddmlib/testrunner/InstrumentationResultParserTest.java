@@ -100,6 +100,55 @@ public class InstrumentationResultParserTest extends TestCase {
         injectAndVerifyTestString(output.toString());
     }
 
+    /**
+     * Tests parsing output for a missing time stamp, meaning an invalid output from the runner. In
+     * some case a stack or exception will be available in 'stream=' we recover it in this case to
+     * have a more meaningful message.
+     */
+    public void testParse_missingTimeStamp_withStack() {
+        // we enforce the time stamp
+        mParser.setEnforceTimeStamp(true);
+        StringBuilder output = new StringBuilder();
+        addLine(
+                output,
+                "INSTRUMENTATION_RESULT: stream="
+                        + InstrumentationResultParser.FATAL_EXCEPTION_MSG);
+        addLine(
+                output,
+                "java.lang.IllegalArgumentException: Ambiguous arguments: cannot provide both test"
+                        + " package and test class(es) to run");
+        addLine(
+                output,
+                "at android.support.test.internal.runner.TestRequestBuilder.validate(TestRequestBu"
+                        + "ilder.java:791)");
+        addLine(
+                output,
+                "at android.support.test.internal.runner.TestRequestBuilder.build(TestRequestBuild"
+                        + "er.java:760)");
+        addLine(
+                output,
+                "at android.support.test.runner.AndroidJUnitRunner.buildRequest(AndroidJUnitRunner"
+                        + ".java:399)");
+        addLine(
+                output,
+                "at android.support.test.runner.AndroidJUnitRunner.onStart(AndroidJUnitRunner.java"
+                        + ":298)");
+        addLine(
+                output,
+                "at android.app.Instrumentation$InstrumentationThread.run(Instrumentation.java:)");
+        addLine(output, "INSTRUMENTATION_CODE: -1");
+
+        Capture<String> capture = new Capture<>();
+        mMockListener.testRunStarted(RUN_NAME, 0);
+        mMockListener.testRunFailed(EasyMock.capture(capture));
+        mMockListener.testRunEnded(0, Collections.EMPTY_MAP);
+
+        injectAndVerifyTestString(output.toString());
+        String failure = capture.getValue();
+        assertTrue(failure.startsWith(InstrumentationResultParser.INVALID_OUTPUT_ERR_MSG));
+        assertTrue(failure.contains(InstrumentationResultParser.FATAL_EXCEPTION_MSG));
+    }
+
     /** Tests parsing output for a missing time stamp but without enforcing the format. */
     public void testParse_missingTimeStamp_notEnforced() {
         mParser.setEnforceTimeStamp(false);
