@@ -1,10 +1,17 @@
-def singlejar(name, srcs):
+def singlejar(name, jars, **kwargs):
+  jar_name = "lib" + name + ".jar"
   native.genrule(
-    name = name,
-    srcs = srcs,
-    outs = ["lib" + name + ".jar"],
+    name = name + ".genrule",
+    srcs = jars,
+    outs = [jar_name],
     tools = ["//tools/base/bazel:singlejar"],
     cmd = "$(location //tools/base/bazel:singlejar) --jvm_flag=-Xmx1g $@ $(SRCS)",
+  )
+
+  native.java_import(
+    name = name,
+    jars = [jar_name],
+    **kwargs
   )
 
 def _fileset_impl(ctx):
