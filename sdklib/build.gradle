@@ -237,6 +237,9 @@ task initSdkForPerformanceTests(type: JavaExec) {
     ]
 }
 
+def offline_repo_files = ["extras;m2repository;com;android;support;constraint;constraint-layout;1.0.2",
+                          "extras;m2repository;com;android;support;constraint;constraint-layout-solver;1.0.2"]
+
 def offline_sdk_targets = [["macosx", "64", "darwin-x86_64"],
                            ["macosx", "32", "darwin-x86"],
                            ["windows", "64", "windows-x86_64"],
@@ -245,7 +248,7 @@ def offline_sdk_targets = [["macosx", "64", "darwin-x86_64"],
                            ["linux", "32", "linux-x86"]]
 
 // Parent task to update the packages in prebuilts/tools/*/offline-sdk
-// based on the value of offline_sdk_targets above.
+// based on the values of offline_repo_files and offline_sdk_targets above.
 task updateOfflineRepo {}
 
 offline_sdk_targets.each { config ->
@@ -255,7 +258,7 @@ offline_sdk_targets.each { config ->
     task "updateOfflineRepo$os$arch"(type: JavaExec) {
         classpath = sourceSets.main.runtimeClasspath
         main = "com.android.sdklib.tool.OfflineRepoCreator"
-        args = ["--dest", dest]
+        args = ["--dest", dest] + offline_repo_files
         environment("REPO_OS_OVERRIDE", os)
         systemProperties(ImmutableMap.of("os.arch", arch))
     }
