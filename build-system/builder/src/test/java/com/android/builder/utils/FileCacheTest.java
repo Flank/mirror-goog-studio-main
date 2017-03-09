@@ -34,8 +34,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.InvalidPathException;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import org.junit.Before;
@@ -567,7 +565,7 @@ public class FileCacheTest {
 
     @Test
     public void testCreateFile_OutputFileNotLocked() throws Exception {
-        FileCache fileCache = FileCache.getInstanceWithInterProcessLocking(cacheDir);
+        FileCache fileCache = FileCache.getInstanceWithMultiProcessLocking(cacheDir);
         FileCache.Inputs inputs =
                 new FileCache.Inputs.Builder(FileCache.Command.TEST)
                         .putFilePath("file", new File("input"))
@@ -834,25 +832,25 @@ public class FileCacheTest {
     }
 
     @Test
-    public void testCreateFile_MultiThreads_InterProcessLocking_SameInputDifferentOutputs()
+    public void testCreateFile_MultiThreads_MultiProcessLocking_SameInputDifferentOutputs()
             throws IOException {
         testCreateFile_MultiThreads_SameCacheSameInputDifferentOutputs(
-                FileCache.getInstanceWithInterProcessLocking(temporaryFolder.newFolder()));
+                FileCache.getInstanceWithMultiProcessLocking(temporaryFolder.newFolder()));
     }
 
     @Test
-    public void testCreateFile_MultiThreads_InterProcessLocking_DifferentInputsDifferentOutputs()
+    public void testCreateFile_MultiThreads_MultiProcessLocking_DifferentInputsDifferentOutputs()
             throws IOException {
         testCreateFile_MultiThreads_SameCacheDifferentInputsDifferentOutputs(
-                FileCache.getInstanceWithInterProcessLocking(temporaryFolder.newFolder()));
+                FileCache.getInstanceWithMultiProcessLocking(temporaryFolder.newFolder()));
     }
 
     @Test
-    public void testCreateFile_MultiThreads_InterProcessLocking_DifferentCaches()
+    public void testCreateFile_MultiThreads_MultiProcessLocking_DifferentCaches()
             throws IOException {
         testCreateFile_MultiThreads_DifferentCaches(
-                FileCache.getInstanceWithInterProcessLocking(temporaryFolder.newFolder()),
-                FileCache.getInstanceWithInterProcessLocking(temporaryFolder.newFolder()));
+                FileCache.getInstanceWithMultiProcessLocking(temporaryFolder.newFolder()),
+                FileCache.getInstanceWithMultiProcessLocking(temporaryFolder.newFolder()));
     }
 
     private void testCreateFile_MultiThreads_SameCacheSameInputDifferentOutputs(
@@ -998,25 +996,25 @@ public class FileCacheTest {
     }
 
     @Test
-    public void testCreateFileInCacheIfAbsent_MultiThreads_InterProcessLocking_SameInput()
+    public void testCreateFileInCacheIfAbsent_MultiThreads_MultiProcessLocking_SameInput()
             throws IOException {
         testCreateFileInCacheIfAbsent_MultiThreads_SameCacheSameInput(
-                FileCache.getInstanceWithInterProcessLocking(temporaryFolder.newFolder()));
+                FileCache.getInstanceWithMultiProcessLocking(temporaryFolder.newFolder()));
     }
 
     @Test
-    public void testCreateFileInCacheIfAbsent_MultiThreads_InterProcessLocking_DifferentInputs()
+    public void testCreateFileInCacheIfAbsent_MultiThreads_MultiProcessLocking_DifferentInputs()
             throws IOException {
         testCreateFileInCacheIfAbsent_MultiThreads_SameCacheDifferentInputs(
-                FileCache.getInstanceWithInterProcessLocking(temporaryFolder.newFolder()));
+                FileCache.getInstanceWithMultiProcessLocking(temporaryFolder.newFolder()));
     }
 
     @Test
-    public void testCreateFileInCacheIfAbsent_MultiThreads_InterProcessLocking_DifferentCaches()
+    public void testCreateFileInCacheIfAbsent_MultiThreads_MultiProcessLocking_DifferentCaches()
             throws IOException {
         testCreateFileInCacheIfAbsent_MultiThreads_DifferentCaches(
-                FileCache.getInstanceWithInterProcessLocking(temporaryFolder.newFolder()),
-                FileCache.getInstanceWithInterProcessLocking(temporaryFolder.newFolder()));
+                FileCache.getInstanceWithMultiProcessLocking(temporaryFolder.newFolder()),
+                FileCache.getInstanceWithMultiProcessLocking(temporaryFolder.newFolder()));
     }
 
     private static void testCreateFileInCacheIfAbsent_MultiThreads_SameCacheSameInput(
@@ -1140,181 +1138,6 @@ public class FileCacheTest {
                                             .createFileInCacheIfAbsent(
                                                     inputs, anActionUnderTest::apply)
                                             .getCachedFile();
-                        } catch (ExecutionException | IOException exception) {
-                            throw new RuntimeException(exception);
-                        }
-                    },
-                    actionUnderTest);
-        }
-    }
-
-    @Test
-    public void testDoLockedReturnValue() throws Exception {
-        FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheDir);
-        File accessedFile = new File(cacheDir, "foo");
-
-        assertThat(fileCache.doLocked(accessedFile, FileCache.LockingType.SHARED, () -> true))
-                .isTrue();
-        assertThat(fileCache.doLocked(accessedFile, FileCache.LockingType.SHARED, () -> false))
-                .isFalse();
-    }
-
-    @Test
-    public void testDoLockedException() throws Exception {
-        FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheDir);
-        File accessedFile = new File(cacheDir, "foo");
-
-        try {
-            fileCache.doLocked(accessedFile, FileCache.LockingType.SHARED, () -> {
-                throw new IOException("Some I/O exception");
-            });
-            fail("expected ExecutionException");
-        } catch (ExecutionException exception) {
-            assertThat(exception.getCause()).isInstanceOf(IOException.class);
-            assertThat(exception.getCause()).hasMessage("Some I/O exception");
-        }
-
-        try {
-            fileCache.doLocked(accessedFile, FileCache.LockingType.SHARED, () -> {
-                throw new RuntimeException("Some runtime exception");
-            });
-            fail("expected ExecutionException");
-        } catch (ExecutionException exception) {
-            assertThat(exception.getCause()).isInstanceOf(RuntimeException.class);
-            assertThat(exception.getCause()).hasMessage("Some runtime exception");
-        }
-
-        try {
-            // Use an invalid character in the file name
-            accessedFile = new File("\0");
-            fileCache.doLocked(accessedFile, FileCache.LockingType.SHARED, () -> true);
-            fail("expected InvalidPathException");
-        } catch (InvalidPathException e) {
-            assertThat(e.getMessage()).contains("Nul character not allowed");
-        }
-    }
-
-    @Test
-    public void testDoLocked_MultiThreads_SingleProcessLocking_SameLockFileMixedLocks()
-            throws IOException {
-        testDoLocked_MultiThreads_SameLockFileMixedLocks(
-                FileCache.getInstanceWithSingleProcessLocking(temporaryFolder.newFolder()));
-    }
-
-    @Test
-    public void testDoLocked_MultiThreads_SingleProcessLocking_SameLockFileSharedLocks()
-            throws IOException {
-        testDoLocked_MultiThreads_SameLockFileSharedLocks(
-                FileCache.getInstanceWithSingleProcessLocking(temporaryFolder.newFolder()));
-    }
-
-    @Test
-    public void testDoLocked_MultiThreads_SingleProcessLocking_DifferentLockFiles()
-            throws IOException {
-        testDoLocked_MultiThreads_DifferentLockFiles(
-                FileCache.getInstanceWithSingleProcessLocking(temporaryFolder.newFolder()));
-    }
-
-    @Test
-    public void testDoLocked_MultiThreads_InterProcessLocking_SameLockFileMixedLocks()
-            throws IOException {
-        testDoLocked_MultiThreads_SameLockFileMixedLocks(
-                FileCache.getInstanceWithInterProcessLocking(temporaryFolder.newFolder()));
-    }
-
-    @Test
-    public void testDoLocked_MultiThreads_InterProcessLocking_SameLockFileSharedLocks()
-            throws IOException {
-        testDoLocked_MultiThreads_SameLockFileSharedLocks(
-                FileCache.getInstanceWithInterProcessLocking(temporaryFolder.newFolder()));
-    }
-
-    @Test
-    public void testDoLocked_MultiThreads_InterProcessLocking_DifferentLockFiles()
-            throws IOException {
-        testDoLocked_MultiThreads_DifferentLockFiles(
-                FileCache.getInstanceWithInterProcessLocking(temporaryFolder.newFolder()));
-    }
-
-    private static void testDoLocked_MultiThreads_SameLockFileMixedLocks(
-            @NonNull FileCache fileCache) {
-        ConcurrencyTester<Void, Void> tester = new ConcurrencyTester<>();
-        prepareConcurrencyTestForDoLocked(
-                tester,
-                fileCache,
-                new String[] {"foo", "foo", "foobar".substring(0, 3)},
-                new FileCache.LockingType[] {
-                    FileCache.LockingType.SHARED,
-                    FileCache.LockingType.EXCLUSIVE,
-                    FileCache.LockingType.EXCLUSIVE
-                });
-
-        // Since we use mixed locks on the same lock file, the actions are not allowed to run
-        // concurrently
-        tester.assertThatActionsCannotRunConcurrently();
-    }
-
-    private static void testDoLocked_MultiThreads_SameLockFileSharedLocks(
-            @NonNull FileCache fileCache) {
-        ConcurrencyTester<Void, Void> tester = new ConcurrencyTester<>();
-        prepareConcurrencyTestForDoLocked(
-                tester,
-                fileCache,
-                new String[] {"foo", "foo", "foobar".substring(0, 3)},
-                new FileCache.LockingType[] {
-                    FileCache.LockingType.SHARED,
-                    FileCache.LockingType.SHARED,
-                    FileCache.LockingType.SHARED
-                });
-
-        // Since we use shared locks on the same lock file, the actions are allowed to run
-        // concurrently
-        tester.assertThatActionsCanRunConcurrently();
-    }
-
-    private static void testDoLocked_MultiThreads_DifferentLockFiles(@NonNull FileCache fileCache) {
-        // Use mixed locks on different lock files
-        ConcurrencyTester<Void, Void> tester = new ConcurrencyTester<>();
-        prepareConcurrencyTestForDoLocked(
-                tester,
-                fileCache,
-                new String[] {"foo1", "foo2", "foo3"},
-                new FileCache.LockingType[] {
-                    FileCache.LockingType.SHARED,
-                    FileCache.LockingType.EXCLUSIVE,
-                    FileCache.LockingType.EXCLUSIVE
-                });
-
-        // Since we use different lock files, even though we use mixed locks, the actions are
-        // allowed to run concurrently
-        tester.assertThatActionsCanRunConcurrently();
-    }
-
-    /**
-     * Performs a few steps common to the concurrency tests for {@link FileCache#doLocked(File,
-     * FileCache.LockingType, Callable)}.
-     */
-    private static void prepareConcurrencyTestForDoLocked(
-            @NonNull ConcurrencyTester<Void, Void> tester,
-            @NonNull FileCache fileCache,
-            @NonNull String[] dirsToLock,
-            @NonNull FileCache.LockingType[] lockingTypes) {
-        Function<Void, Void> actionUnderTest = (Void arg) -> {
-            // Do some artificial work here
-            assertThat(1).isEqualTo(1);
-            return null;
-        };
-        for (int i = 0; i < dirsToLock.length; i++) {
-            String dirToLock = dirsToLock[i];
-            FileCache.LockingType lockingType = lockingTypes[i];
-
-            tester.addMethodInvocationFromNewThread(
-                    (Function<Void, Void> anActionUnderTest) -> {
-                        try {
-                            fileCache.doLocked(
-                                    new File(fileCache.getCacheDirectory(), dirToLock),
-                                    lockingType,
-                                    () -> anActionUnderTest.apply(null));
                         } catch (ExecutionException | IOException exception) {
                             throw new RuntimeException(exception);
                         }

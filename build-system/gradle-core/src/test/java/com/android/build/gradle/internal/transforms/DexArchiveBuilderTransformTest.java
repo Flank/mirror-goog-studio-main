@@ -93,7 +93,7 @@ public class DexArchiveBuilderTransformTest {
     @Test
     public void testCacheUsedForExternalLibOnly() throws Exception {
         File cacheDir = FileUtils.join(tmpDir.getRoot(), "cache");
-        FileCache userCache = FileCache.getInstanceWithInterProcessLocking(cacheDir);
+        FileCache userCache = FileCache.getInstanceWithMultiProcessLocking(cacheDir);
 
         TransformInput input =
                 getInput(

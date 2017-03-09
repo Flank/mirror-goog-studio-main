@@ -77,6 +77,24 @@ public class FileUtilsTest {
     }
 
     @Test
+    public void testParentDirExists() throws IOException {
+        // Test absolute paths
+        File rootDir = mTemporaryFolder.newFolder();
+        File fooFile = new File(rootDir, "foo");
+        assertThat(FileUtils.parentDirExists(fooFile)).isTrue();
+
+        File barFile = FileUtils.join(rootDir, "foo", "bar");
+        assertThat(FileUtils.parentDirExists(barFile)).isFalse();
+
+        // Test relative paths
+        fooFile = new File("foo");
+        assertThat(FileUtils.parentDirExists(fooFile)).isTrue();
+
+        barFile = new File(FileUtils.join("foo", "bar"));
+        assertThat(FileUtils.parentDirExists(barFile)).isFalse();
+    }
+
+    @Test
     public void testIsFileInDirectory() {
         assertTrue(
                 FileUtils.isFileInDirectory(
@@ -133,23 +151,6 @@ public class FileUtilsTest {
         File fooSymbolicLinkFile = new File(mTemporaryFolder.getRoot(), "fooSymbolicLink");
         java.nio.file.Files.createSymbolicLink(fooSymbolicLinkFile.toPath(), fooFile.toPath());
         assertThat(FileUtils.isSameFile(fooSymbolicLinkFile, fooFile)).isTrue();
-    }
-
-    @Test
-    public void testGetCaseSensitivityAwareCanonicalPath() throws IOException {
-        assertThat(FileUtils.getCaseSensitivityAwareCanonicalPath(new File("foo/bar/..")))
-                .isEqualTo(FileUtils.getCaseSensitivityAwareCanonicalPath(new File("foo")));
-        assertThat(FileUtils.getCaseSensitivityAwareCanonicalPath(new File("foo")))
-                .isNotEqualTo(FileUtils.getCaseSensitivityAwareCanonicalPath(new File("bar")));
-
-        boolean isFileSystemCaseSensitive = !new File("a").equals(new File("A"));
-        if (isFileSystemCaseSensitive) {
-            assertThat(FileUtils.getCaseSensitivityAwareCanonicalPath(new File("foo")))
-                    .isNotEqualTo(FileUtils.getCaseSensitivityAwareCanonicalPath(new File("Foo")));
-        } else {
-            assertThat(FileUtils.getCaseSensitivityAwareCanonicalPath(new File("foo")))
-                    .isEqualTo(FileUtils.getCaseSensitivityAwareCanonicalPath(new File("Foo")));
-        }
     }
 
     @Test

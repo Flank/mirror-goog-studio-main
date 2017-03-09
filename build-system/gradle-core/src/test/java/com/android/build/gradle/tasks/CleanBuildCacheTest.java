@@ -51,7 +51,7 @@ public class CleanBuildCacheTest {
             assertEquals("buildCache must not be null", exception.getMessage());
         }
 
-        task.setBuildCache(FileCache.getInstanceWithInterProcessLocking(buildCacheDir));
+        task.setBuildCache(FileCache.getInstanceWithMultiProcessLocking(buildCacheDir));
         task.clean();
         assertThat(buildCacheDir).doesNotExist();
 

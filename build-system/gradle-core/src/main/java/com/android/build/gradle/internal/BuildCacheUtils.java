@@ -72,7 +72,7 @@ public final class BuildCacheUtils {
             @NonNull Supplier<File> defaultBuildCacheDirSupplier) {
         if (projectOptions.get(BooleanOption.ENABLE_BUILD_CACHE)) {
             String buildCacheDirOverride = projectOptions.get(StringOption.BUILD_CACHE_DIR);
-            return FileCache.getInstanceWithInterProcessLocking(
+            return FileCache.getInstanceWithMultiProcessLocking(
                     buildCacheDirOverride != null
                             ? rootProjectFile.apply(buildCacheDirOverride)
                             : defaultBuildCacheDirSupplier.get());
