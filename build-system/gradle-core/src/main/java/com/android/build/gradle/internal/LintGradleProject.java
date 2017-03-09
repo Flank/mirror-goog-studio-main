@@ -574,6 +574,12 @@ public class LintGradleProject extends Project {
 
         @Nullable
         @Override
+        public String getBuildTargetHash() {
+            return mProject.getCompileTarget();
+        }
+
+        @Nullable
+        @Override
         public Boolean dependsOn(@NonNull String artifact) {
             if (SUPPORT_LIB_ARTIFACT.equals(artifact)) {
                 if (supportLib == null) {

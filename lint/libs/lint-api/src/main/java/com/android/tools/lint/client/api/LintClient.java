@@ -41,10 +41,13 @@ import com.android.manifmerger.Actions;
 import com.android.prefs.AndroidLocation;
 import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.ProgressIndicatorAdapter;
+import com.android.sdklib.AndroidTargetHash;
+import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.sdklib.repository.AndroidSdkHandler;
+import com.android.sdklib.repository.targets.AndroidTargetManager;
 import com.android.tools.lint.detector.api.CharSequences;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
@@ -925,6 +928,20 @@ public abstract class LintClient {
      */
     @Nullable
     public IAndroidTarget getCompileTarget(@NonNull Project project) {
+        String compileSdkVersion = project.getBuildTargetHash();
+        if (compileSdkVersion != null) {
+            ProgressIndicator logger = getRepositoryLogger();
+            AndroidSdkHandler handler = getSdk();
+            if (handler != null) {
+                AndroidTargetManager manager = handler.getAndroidTargetManager(logger);
+                IAndroidTarget target = manager.getTargetFromHashString(compileSdkVersion,
+                                logger);
+                if (target != null) {
+                    return target;
+                }
+            }
+        }
+
         int buildSdk = project.getBuildSdk();
         IAndroidTarget[] targets = getTargets();
         for (int i = targets.length - 1; i >= 0; i--) {
