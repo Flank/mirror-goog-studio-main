@@ -256,22 +256,45 @@ public class ValueXmlHelper {
     }
 
     /**
-     * <p>Escapes a string resource value in compliance with the
-     * <a href="http://developer.android.com/guide/topics/resources/string-resource.html">rules</a>
-     * and
-     * <a href="https://androidcookbook.com/Recipe.seam?recipeId=2219">this Android Cookbook recipe</a>.
+     * Unescapes a string resource value in compliance with the <a
+     * href="https://developer.android.com/guide/topics/resources/string-resource.html">rules</a>
+     * and <a href="https://androidcookbook.com/Recipe.seam?recipeId=2219">this Android Cookbook
+     * recipe</a>.
+     *
+     * <p>The argument is expected to be valid XML. Character data outside of CDATA sections is
+     * unescaped as follows:
+     *
+     * <ol>
+     *   <li>If the string starts with {@code "\\?"} or {@code "\\@"}, that substring is unescaped
+     *   <li>Unescaped quotation marks are stripped
+     *   <li>{@code "\\ "}, {@code "\\\""}, {@code "\\'"}, and {@code "\\\\"} are unescaped
+     *   <li>{@code "\\n"} and {@code "\\t"} are unescaped to {@code "\n"} and {@code "\t"}
+     * </ol>
+     *
+     * @throws IllegalArgumentException If the XML is not valid
+     */
+    @NonNull
+    public static String unescapeResourceStringAsXml(@NonNull String xml) {
+        return StringResourceUnescaper.unescapeCharacterData(xml);
+    }
+
+    /**
+     * Escapes a string resource value in compliance with the <a
+     * href="http://developer.android.com/guide/topics/resources/string-resource.html">rules</a> and
+     * <a href="https://androidcookbook.com/Recipe.seam?recipeId=2219">this Android Cookbook
+     * recipe</a>.
      *
      * <p>The entire string is escaped as follows:
      *
      * <ol>
-     * <li>{@code '"'} and {@code '\\'} are escaped with backslashes
-     * <li>{@code '\n'} and {@code '\t'} are escaped with {@code "\\n"} and {@code "\\t"}
-     * <li>If the string starts or ends with a space, the string is quoted with {@code '"'}
-     * <li>If the string does not start or end with a space, {@code '\''} is escaped with a
-     * backslash
-     * <li>If the string starts with a {@code '?'} or {@code '@'}, that character is escaped with a
-     * backslash
-     * <li>{@code '&'} and {@code '<'} are escaped with {@code "&amp;"} and {@code "&lt;"}
+     *   <li>{@code '"'} and {@code '\\'} are escaped with backslashes
+     *   <li>{@code '\n'} and {@code '\t'} are escaped with {@code "\\n"} and {@code "\\t"}
+     *   <li>If the string starts or ends with a space, the string is quoted with {@code '"'}
+     *   <li>If the string does not start or end with a space, {@code '\''} is escaped with a
+     *       backslash
+     *   <li>If the string starts with a {@code '?'} or {@code '@'}, that character is escaped with
+     *       a backslash
+     *   <li>{@code '&'} and {@code '<'} are escaped with {@code "&amp;"} and {@code "&lt;"}
      * </ol>
      *
      * <p>If the string contains markup it will lose its semantics and become plain character data.
