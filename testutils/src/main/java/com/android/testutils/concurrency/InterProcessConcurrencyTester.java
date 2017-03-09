@@ -62,18 +62,25 @@ import org.junit.Assert;
  * }</pre>
  *
  * <p>In the class under test's main() method, before calling the action under test, it needs to
- * notify {@code InterProcessConcurrencyTester} that the process has started and the action is
- * running, as follows:
+ * notify {@code InterProcessConcurrencyTester} when the process has started and when the action is
+ * running as follows (so that the tester can perform necessary concurrency checks on these events):
  *
  * <pre>{@code
- *     // The server socket port is added to the list of arguments by InterProcessConcurrencyTester
- *     // for the client process to communicate with the main process
- *     int serverSocketPort = Integer.valueOf(args[args.length - 1]);
- *     InterProcessConcurrencyTester.MainProcessNotifier notifier =
- *         new InterProcessConcurrencyTester.MainProcessNotifier(serverSocketPort);
- *     notifier.processStarted();
- *     notifier.actionStarted();
- *     ... // Do some action that needs concurrency test
+ * // The server socket port is added to the list of arguments by InterProcessConcurrencyTester for
+ * // the client process to communicate with the main process
+ * int serverSocketPort = Integer.valueOf(args[args.length - 1]);
+ * InterProcessConcurrencyTester.MainProcessNotifier notifier =
+ *     new InterProcessConcurrencyTester.MainProcessNotifier(serverSocketPort);
+ *
+ * notifier.processStarted(); // Notify the main process that it has started execution
+ *
+ * ... // Start of the synchronized region (e.g., lock.lock())
+ *
+ * notifier.actionStarted(); // Notify that it starts executing the action under test
+ *
+ * ... // The action under test (which has a concurrency requirement)
+ *
+ * ... // End of the synchronized region (e.g., lock.unlock())
  * }</pre>
  *
  * <p>Then, if the actions are allowed to run concurrently, we can make the following assertion:
@@ -220,7 +227,7 @@ public final class InterProcessConcurrencyTester {
         while (startedProcesses.size() < runnables.size()) {
             startedProcesses.add(serverSocket.accept());
         }
-        while (startedProcesses.size() > 0) {
+        while (!startedProcesses.isEmpty()) {
             closeSocket(startedProcesses.removeFirst());
         }
 
@@ -268,14 +275,14 @@ public final class InterProcessConcurrencyTester {
                 // actions are blocking the new actions, or the new actions are taking too long to
                 // start. Since we cannot distinguish these two cases, we let all the running
                 // actions finish and repeat the loop.
-                while (runningActions.size() > 0) {
+                while (!runningActions.isEmpty()) {
                     closeSocket(runningActions.removeFirst());
                 }
             }
         }
 
         // Let all the running actions finish
-        while (runningActions.size() > 0) {
+        while (!runningActions.isEmpty()) {
             closeSocket(runningActions.removeFirst());
         }
 
@@ -309,7 +316,7 @@ public final class InterProcessConcurrencyTester {
      * @throws RuntimeException if any (checked or runtime) exception occurs or the process returns
      *     an exit value other than 0
      */
-    private void launchProcess(
+    private static void launchProcess(
             @NonNull Class classUnderTest, String[] args, int serverSocketPort) {
         List<String> commandAndArgs = Lists.newLinkedList();
         commandAndArgs.add(FileUtils.join(System.getProperty("java.home"), "bin", "java"));
@@ -344,15 +351,15 @@ public final class InterProcessConcurrencyTester {
      * Executes the runnables in separate threads and returns immediately after all the threads have
      * started execution (this method does not wait until all the threads have terminated).
      *
-     * This methods returns a map from the threads to any exceptions thrown during the execution of
-     * the threads. Note that the map's values (if any) are not available immediately but only after
-     * the threads have terminated.
+     * <p>This methods returns a map from the threads to any exceptions thrown during the execution
+     * of the threads. Note that the map's values (if any) are not available immediately but only
+     * after the threads have terminated.
      *
      * @param runnables the runnables to be executed
      * @return a map from the threads to any exceptions thrown during the execution of the threads
      */
     @NonNull
-    private Map<Thread, Optional<Throwable>> executeRunnablesInThreads(
+    private static Map<Thread, Optional<Throwable>> executeRunnablesInThreads(
             @NonNull List<Runnable> runnables) {
         ConcurrentMap<Thread, Optional<Throwable>> threads = new ConcurrentHashMap<>();
         CountDownLatch allThreadsStartedLatch = new CountDownLatch(runnables.size());
@@ -381,10 +388,8 @@ public final class InterProcessConcurrencyTester {
         return threads;
     }
 
-    /**
-     * Waits for all the threads to finish.
-     */
-    private void waitForThreadsToFinish(@NonNull Map<Thread, Optional<Throwable>> threads) {
+    /** Waits for all the threads to finish. */
+    private static void waitForThreadsToFinish(@NonNull Map<Thread, Optional<Throwable>> threads) {
         // Wait for the threads to finish
         for (Thread thread : threads.keySet()) {
             try {
@@ -395,6 +400,7 @@ public final class InterProcessConcurrencyTester {
         }
 
         // Throw any exceptions that occurred during the execution of the threads
+        //noinspection OptionalUsedAsFieldOrParameterType
         for (Optional<Throwable> throwable : threads.values()) {
             if (throwable.isPresent()) {
                 throw new RuntimeException(throwable.get());
