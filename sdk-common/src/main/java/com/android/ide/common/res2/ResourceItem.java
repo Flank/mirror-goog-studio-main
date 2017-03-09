@@ -54,15 +54,13 @@ import com.android.resources.Density;
 import com.android.resources.ResourceType;
 import com.android.utils.XmlUtils;
 import com.google.common.base.Splitter;
-
+import java.nio.file.Paths;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-
-import java.nio.file.Paths;
 
 /**
  * A resource.
@@ -649,16 +647,18 @@ public class ResourceItem extends DataItem<ResourceFile>
         value.setValue(ValueXmlHelper.unescapeResourceString(text, false, true));
 
         int length = children.getLength();
-        if (length > 1) {
-            boolean haveElementChildren = false;
+
+        if (length >= 1) {
+            boolean haveElementChildrenOrCdata = false;
             for (int i = 0; i < length; i++) {
-                if (children.item(i).getNodeType() == Node.ELEMENT_NODE) {
-                    haveElementChildren = true;
+                if (children.item(i).getNodeType() == Node.ELEMENT_NODE
+                        || children.item(i).getNodeType() == Node.CDATA_SECTION_NODE) {
+                    haveElementChildrenOrCdata = true;
                     break;
                 }
             }
 
-            if (haveElementChildren) {
+            if (haveElementChildrenOrCdata) {
                 String markupText = getMarkupText(children);
                 value.setRawXmlValue(markupText);
             }
@@ -713,7 +713,9 @@ public class ResourceItem extends DataItem<ResourceFile>
                     sb.append(child.getNodeValue());
                     break;
                 case Node.CDATA_SECTION_NODE:
+                    sb.append("<![CDATA[");
                     sb.append(child.getNodeValue());
+                    sb.append("]]>");
                     break;
             }
         }
