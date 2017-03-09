@@ -34,6 +34,7 @@ import com.android.build.gradle.internal.api.ReadOnlyObjectProvider;
 import com.android.build.gradle.internal.api.VariantFilter;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dependency.AarTransform;
+import com.android.build.gradle.internal.dependency.AndroidTypeAttr;
 import com.android.build.gradle.internal.dependency.BuildTypeAttr;
 import com.android.build.gradle.internal.dependency.ExtractAarTransform;
 import com.android.build.gradle.internal.dependency.JarTransform;
@@ -50,6 +51,7 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.build.gradle.internal.variant.TestVariantData;
+import com.android.build.gradle.internal.variant.TestVariantFactory;
 import com.android.build.gradle.internal.variant.TestedVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.builder.core.AndroidBuilder;
@@ -455,13 +457,12 @@ public class VariantManager implements VariantModel {
             VariantDependencies.Builder builder =
                     VariantDependencies.builder(
                                     project, androidBuilder.getErrorReporter(), testVariantConfig)
-                            .setPublishVariant(false)
+                            .setConsumeType(
+                                    getConsumeType(
+                                            testedVariantData.getVariantConfiguration().getType()))
                             .setTestedVariantType(testedVariantType)
                             .addSourceSets(testVariantSourceSets)
-                            .setFlavorSelection(extension.getFlavorSelection())
-                            .addTestedVariant(
-                                    testedVariantData.getVariantConfiguration(),
-                                    testedVariantData.getVariantDependency());
+                            .setFlavorSelection(extension.getFlavorSelection());
 
             final VariantDependencies variantDep = builder.build();
             variantData.setVariantDependency(variantDep);
@@ -497,6 +498,53 @@ public class VariantManager implements VariantModel {
         } else {
             taskManager.createTasksForVariantScope(tasks, variantScope);
         }
+    }
+
+    @NonNull
+    private AndroidTypeAttr getConsumeType(@NonNull VariantType type) {
+        switch (type) {
+            case DEFAULT:
+                if (variantFactory instanceof TestVariantFactory) {
+                    return AndroidTypeAttr.TYPE_APK;
+                }
+                return AndroidTypeAttr.TYPE_AAR;
+            case LIBRARY:
+                return AndroidTypeAttr.TYPE_AAR;
+            case FEATURE:
+                // FIXME this should disappear...
+            case ATOM:
+                // FIXME this should disappear...
+            case INSTANTAPP:
+                return AndroidTypeAttr.TYPE_FEATURE;
+            case ANDROID_TEST:
+            case UNIT_TEST:
+                throw new IllegalStateException(
+                        "Variant type '" + type + "' should not be publishing anything");
+        }
+        throw new IllegalStateException(
+                "Unsupported VariantType requested in getConsumeType(): " + type);
+    }
+
+    @NonNull
+    private static AndroidTypeAttr getPublishingType(@NonNull VariantType type) {
+        switch (type) {
+            case DEFAULT:
+                return AndroidTypeAttr.TYPE_APK;
+            case LIBRARY:
+                return AndroidTypeAttr.TYPE_AAR;
+            case FEATURE:
+                // FIXME this should disappear...
+            case ATOM:
+                // FIXME this should disappear...
+            case INSTANTAPP:
+                return AndroidTypeAttr.TYPE_FEATURE;
+            case ANDROID_TEST:
+            case UNIT_TEST:
+                throw new IllegalStateException(
+                        "Variant type '" + type + "' should not be publishing anything");
+        }
+        throw new IllegalStateException(
+                "Unsupported VariantType requested in getPublishingType(): " + type);
     }
 
     public void configureDependencies() {
@@ -546,6 +594,39 @@ public class VariantManager implements VariantModel {
         schema.attribute(BuildTypeAttr.ATTRIBUTE).getCompatibilityRules().assumeCompatibleWhenMissing();
         // and for the Usage attribute
         schema.attribute(Usage.USAGE_ATTRIBUTE).getCompatibilityRules().assumeCompatibleWhenMissing();
+        // type for aar vs split.
+        schema.attribute(AndroidTypeAttr.ATTRIBUTE)
+                .getCompatibilityRules()
+                .assumeCompatibleWhenMissing();
+        schema.attribute(AndroidTypeAttr.ATTRIBUTE)
+                .getCompatibilityRules()
+                .add(
+                        details -> {
+                            final AndroidTypeAttr producerValue = details.getProducerValue();
+                            final AndroidTypeAttr consumerValue = details.getConsumerValue();
+                            if (producerValue.equals(consumerValue)) {
+                                details.compatible();
+                            } else {
+                                if (AndroidTypeAttr.TYPE_AAR.equals(producerValue)
+                                        && AndroidTypeAttr.TYPE_FEATURE.equals(consumerValue)) {
+                                    details.compatible();
+                                }
+                            }
+                        });
+        schema.attribute(AndroidTypeAttr.ATTRIBUTE)
+                .getDisambiguationRules()
+                .add(
+                        details -> {
+                            // we should only get here, with both split and aar.
+                            Set<AndroidTypeAttr> values = details.getCandidateValues();
+                            if (values.size() == 2
+                                    && values.contains(AndroidTypeAttr.TYPE_AAR)
+                                    && values.contains(AndroidTypeAttr.TYPE_FEATURE)) {
+                                details.closestMatch(AndroidTypeAttr.TYPE_FEATURE);
+                            }
+                        });
+
+        // variant name as an attribute, this is to get the variant name on the consumption side.
         schema.attribute(VariantAttr.ATTRIBUTE)
                 .getCompatibilityRules()
                 .assumeCompatibleWhenMissing();
@@ -716,7 +797,10 @@ public class VariantManager implements VariantModel {
         VariantDependencies.Builder builder =
                 VariantDependencies.builder(
                                 project, androidBuilder.getErrorReporter(), variantConfig)
-                        .setPublishVariant(true)
+                        .setConsumeType(
+                                getConsumeType(variantData.getVariantConfiguration().getType()))
+                        .setPublishType(
+                                getPublishingType(variantData.getVariantConfiguration().getType()))
                         .setFlavorSelection(extension.getFlavorSelection())
                         .addSourceSets(variantSourceSets);
 

@@ -31,7 +31,7 @@ public enum VariantType {
     LIBRARY(true, GradleBuildVariant.VariantType.LIBRARY),
     ATOM(true, GradleBuildVariant.VariantType.ATOM),
     // FIXME: Re-enable when the protos changes have been submitted.
-    //FEATURE(true, GradleBuildVariant.VariantType.FEATURE),
+    FEATURE(true, GradleBuildVariant.VariantType.LIBRARY),
     ANDROID_TEST(
             "androidTest",
             "AndroidTest",

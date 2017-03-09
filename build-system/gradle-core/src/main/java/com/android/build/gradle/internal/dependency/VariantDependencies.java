@@ -23,10 +23,11 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.builder.core.ErrorReporter;
 import com.android.builder.core.VariantType;
-import com.android.builder.dependency.level2.AndroidDependency;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.util.Collection;
@@ -40,6 +41,7 @@ import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationContainer;
 import org.gradle.api.artifacts.ResolutionStrategy;
 import org.gradle.api.attributes.Attribute;
+import org.gradle.api.attributes.AttributeContainer;
 import org.gradle.api.attributes.Usage;
 
 /**
@@ -75,28 +77,50 @@ public class VariantDependencies {
     public static final String CONFIG_NAME_S_IMPLEMENTATION = "%sImplementation";
     public static final String CONFIG_NAME_RUNTIME_ONLY = "runtimeOnly";
     public static final String CONFIG_NAME_S_RUNTIME_ONLY = "%sRuntimeOnly";
+    public static final String CONFIG_NAME_FEATURE_SPLIT = "featureSplit";
+    public static final String CONFIG_NAME_PACKAGE_ID = "packageId";
 
-    @NonNull
-    private final String variantName;
+    public static final class PublishedConfigurations {
+        @NonNull private final Configuration apiElements;
+        @NonNull private final Configuration runtimeElements;
+        @NonNull private final AndroidTypeAttr type;
 
-    @NonNull
-    private final Configuration compileClasspath;
-    @NonNull
-    private final Configuration runtimeClasspath;
-    @Nullable
-    private final Configuration apiElements;
-    @Nullable
-    private final Configuration runtimeElements;
-    @NonNull
-    private final Configuration annotationProcessorConfiguration;
-    @NonNull
-    private final Configuration jackPluginConfiguration;
-    @NonNull
-    private final Configuration wearAppConfiguration;
+        PublishedConfigurations(
+                @NonNull Configuration apiElements,
+                @NonNull Configuration runtimeElements,
+                @NonNull AndroidTypeAttr type) {
+            this.apiElements = apiElements;
+            this.runtimeElements = runtimeElements;
+            this.type = type;
+        }
 
-    private final VariantDependencies testedVariantDependencies;
-    @Nullable
-    private final AndroidDependency testedVariantOutput;
+        @NonNull
+        public Configuration getApiElements() {
+            return apiElements;
+        }
+
+        @NonNull
+        public Configuration getRuntimeElements() {
+            return runtimeElements;
+        }
+
+        @NonNull
+        public AndroidTypeAttr getType() {
+            return type;
+        }
+    }
+
+    @NonNull private final String variantName;
+
+    @NonNull private final Configuration compileClasspath;
+    @NonNull private final Configuration runtimeClasspath;
+    @NonNull private final Configuration annotationProcessorConfiguration;
+    @NonNull private final Map<AndroidTypeAttr, PublishedConfigurations> publishedConfigurations;
+    @NonNull private final Configuration jackPluginConfiguration;
+    @Nullable private final Configuration wearAppConfiguration;
+    @Nullable private final Configuration featureSplitConfiguration;
+    @Nullable private final Configuration packageIdConfiguation;
+    @Nullable private final Configuration manifestSplitConfiguration;
 
     /**
      *  Whether we have a direct dependency on com.android.support:support-annotations; this
@@ -108,17 +132,14 @@ public class VariantDependencies {
     private DependencyChecker checker;
 
     public static final class Builder {
-        @NonNull
-        private final Project project;
-        @NonNull
-        private final ErrorReporter errorReporter;
-        @NonNull
-        private final GradleVariantConfiguration variantConfiguration;
-        private boolean publishVariant = false;
+        @NonNull private final Project project;
+        @NonNull private final ErrorReporter errorReporter;
+        @NonNull private final GradleVariantConfiguration variantConfiguration;
         private VariantType testedVariantType = null;
-        private VariantDependencies testedVariantDependencies = null;
-        private AndroidDependency testedVariantOutput = null;
         private Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> flavorSelection;
+
+        private AndroidTypeAttr consumeType;
+        private AndroidTypeAttr[] publishTypes;
 
         // default size should be enough. It's going to be rare for a variant to include
         // more than a few configurations (main, build-type, flavors...)
@@ -142,8 +163,13 @@ public class VariantDependencies {
             this.variantConfiguration = variantConfiguration;
         }
 
-        public Builder setPublishVariant(boolean publishVariant) {
-            this.publishVariant = publishVariant;
+        public Builder setPublishType(AndroidTypeAttr... publishTypes) {
+            this.publishTypes = publishTypes;
+            return this;
+        }
+
+        public Builder setConsumeType(AndroidTypeAttr consumeType) {
+            this.consumeType = consumeType;
             return this;
         }
 
@@ -197,42 +223,13 @@ public class VariantDependencies {
             return this;
         }
 
-
-        /**
-         * Add a tested provider.
-         *
-         * In the case for tests of a library modules where the test must include the full
-         * graph of the test + the library since there is a single apk that packages both.
-         *
-         * For app tests, we don't want to include the dependencies directly as there is two
-         * apks and we need to make sure their graph are identical. Therefore we resolve them
-         * independently and compare after.
-         *
-         * @param testedConfig the tested variant configuration
-         * @param testedVariant the tested variant
-         */
-        public Builder addTestedVariant(
-                @NonNull GradleVariantConfiguration testedConfig,
-                @NonNull VariantDependencies testedVariant) {
-            Preconditions.checkNotNull(testedVariantType,
-                    "cannot call addTestedVariant before setTestedVariantType");
-
-            if (testedVariantType == VariantType.LIBRARY) {
-                // also record this so that we can resolve local jar conflict during flattening
-                testedVariantOutput = testedConfig.getOutput();
-            }
-
-            // record this no matter what.
-            testedVariantDependencies = testedVariant;
-
-            return this;
-        }
-
         public VariantDependencies build() {
+            Preconditions.checkNotNull(consumeType);
+
             String variantName = variantConfiguration.getFullName();
             VariantType variantType = variantConfiguration.getType();
             String buildType = variantConfiguration.getBuildType().getName();
-            Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> flavorMap =
+            Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> consumptionFlavorMap =
                     getFlavorAttributes(flavorSelection);
 
             final ConfigurationContainer configurations = project.getConfigurations();
@@ -243,10 +240,12 @@ public class VariantDependencies {
             compileClasspath.setDescription("Resolved configuration for compilation for variant: " + variantName);
             compileClasspath.setExtendsFrom(compileClasspaths);
             compileClasspath.setCanBeConsumed(false);
-            filterOutBadArtifacts(compileClasspath);
-            applyVariantAttributes(compileClasspath, buildType, flavorMap);
-            compileClasspath.getAttributes().attribute(Usage.USAGE_ATTRIBUTE, Usage.FOR_COMPILE);
             compileClasspath.getResolutionStrategy().sortArtifacts(ResolutionStrategy.SortOrder.CONSUMER_FIRST);
+            filterOutBadArtifacts(compileClasspath);
+            final AttributeContainer compileAttributes = compileClasspath.getAttributes();
+            applyVariantAttributes(compileAttributes, buildType, consumptionFlavorMap);
+            compileAttributes.attribute(Usage.USAGE_ATTRIBUTE, Usage.FOR_COMPILE);
+            compileAttributes.attribute(AndroidTypeAttr.ATTRIBUTE, consumeType);
 
             Configuration annotationProcessor =
                     configurations.maybeCreate("_" + variantName + "AnnotationProcessor");
@@ -256,8 +255,9 @@ public class VariantDependencies {
             annotationProcessor.setCanBeConsumed(false);
             // the annotation processor is using its dependencies for running the processor, so we need
             // all the runtime graph.
-            annotationProcessor.getAttributes().attribute(Usage.USAGE_ATTRIBUTE, Usage.FOR_RUNTIME);
-            applyVariantAttributes(annotationProcessor, buildType, flavorMap);
+            final AttributeContainer annotationAttributes = annotationProcessor.getAttributes();
+            annotationAttributes.attribute(Usage.USAGE_ATTRIBUTE, Usage.FOR_RUNTIME);
+            applyVariantAttributes(annotationAttributes, buildType, consumptionFlavorMap);
 
             Configuration jackPlugin = configurations.maybeCreate("_" + variantName + "JackPlugin");
             jackPlugin.setVisible(false);
@@ -274,51 +274,132 @@ public class VariantDependencies {
             runtimeClasspath.setDescription("Resolved configuration for runtime for variant: " + variantName);
             runtimeClasspath.setExtendsFrom(runtimeClasspaths);
             runtimeClasspath.setCanBeConsumed(false);
-            filterOutBadArtifacts(compileClasspath);
-            applyVariantAttributes(runtimeClasspath, buildType, flavorMap);
-            runtimeClasspath.getAttributes().attribute(Usage.USAGE_ATTRIBUTE, Usage.FOR_RUNTIME);
             runtimeClasspath.getResolutionStrategy().sortArtifacts(ResolutionStrategy.SortOrder.CONSUMER_FIRST);
+            filterOutBadArtifacts(compileClasspath);
+            final AttributeContainer runtimeAttributes = runtimeClasspath.getAttributes();
+            applyVariantAttributes(runtimeAttributes, buildType, consumptionFlavorMap);
+            runtimeAttributes.attribute(Usage.USAGE_ATTRIBUTE, Usage.FOR_RUNTIME);
+            runtimeAttributes.attribute(AndroidTypeAttr.ATTRIBUTE, consumeType);
 
-            Configuration wearApp = configurations.maybeCreate(variantName + "WearBundling");
-            wearApp.setDescription("Resolved Configuration for wear app bundling for variant: " + variantName);
-            wearApp.setExtendsFrom(wearAppConfigs);
-            wearApp.setCanBeConsumed(false);
-            applyVariantAttributes(wearApp, buildType, flavorMap);
-            // because the APK is published to Runtime, then we need to make sure this one consumes RUNTIME as well.
-            wearApp.getAttributes().attribute(Usage.USAGE_ATTRIBUTE, Usage.FOR_RUNTIME);
+            Configuration wearApp = null;
+            if (publishTypes != null
+                    && publishTypes.length == 1
+                    && publishTypes[0] == AndroidTypeAttr.TYPE_APK) {
+                wearApp = configurations.maybeCreate(variantName + "WearBundling");
+                wearApp.setDescription(
+                        "Resolved Configuration for wear app bundling for variant: " + variantName);
+                wearApp.setExtendsFrom(wearAppConfigs);
+                wearApp.setCanBeConsumed(false);
+                final AttributeContainer wearAttributes = wearApp.getAttributes();
+                applyVariantAttributes(wearAttributes, buildType, consumptionFlavorMap);
+                // because the APK is published to Runtime, then we need to make sure this one consumes RUNTIME as well.
+                wearAttributes.attribute(Usage.USAGE_ATTRIBUTE, Usage.FOR_RUNTIME);
+                wearAttributes.attribute(AndroidTypeAttr.ATTRIBUTE, AndroidTypeAttr.TYPE_APK);
+            }
 
-            Configuration apiElements = null;
-            Configuration runtimeElements = null;
+            Map<AndroidTypeAttr, PublishedConfigurations> publishedConfigurations =
+                    Maps.newHashMap();
+            Configuration featureSplit = null;
+            Configuration packageId = null;
+            Configuration manifestSplitElements = null;
 
-            if (publishVariant) {
-                // this is the configuration that contains the artifacts for inter-module
-                // dependencies.
-                runtimeElements = configurations.maybeCreate(variantName + "RuntimeElements");
-                runtimeElements.setDescription("Runtime elements for " + variantName);
-                runtimeElements.setCanBeResolved(false);
-
-                Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> flavorMap2 =
+            if (publishTypes != null) {
+                Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> publicationFlavorMap =
                         getFlavorAttributes(null);
-                applyVariantAttributes(runtimeElements, buildType, flavorMap2);
-                VariantAttr variantNameAttr = VariantAttr.of(variantName);
-                runtimeElements.getAttributes().attribute(VariantAttr.ATTRIBUTE, variantNameAttr);
-                runtimeElements.getAttributes().attribute(Usage.USAGE_ATTRIBUTE, Usage.FOR_RUNTIME);
 
-                // if the variant is not a library, then the publishing configuration should
-                // not extend from anything. It's mostly there to access the artifacts from
-                // another project but it shouldn't bring any dependencies with it.
-                if (variantType == VariantType.LIBRARY) {
-                    runtimeElements.setExtendsFrom(runtimeClasspaths);
+                for (AndroidTypeAttr publishType : publishTypes) {
+                    String configNamePrefix = variantName;
+                    if (publishTypes.length > 1) {
+                        configNamePrefix = configNamePrefix + publishType.getName();
+                    }
+
+                    // this is the configuration that contains the artifacts for inter-module
+                    // dependencies.
+                    Configuration runtimeElements =
+                            configurations.maybeCreate(configNamePrefix + "RuntimeElements");
+                    runtimeElements.setDescription("Runtime elements for " + variantName);
+                    runtimeElements.setCanBeResolved(false);
+
+                    final AttributeContainer runtimeElementsAttributes =
+                            runtimeElements.getAttributes();
+                    applyVariantAttributes(
+                            runtimeElementsAttributes, buildType, publicationFlavorMap);
+                    VariantAttr variantNameAttr = VariantAttr.of(variantName);
+                    runtimeElementsAttributes.attribute(VariantAttr.ATTRIBUTE, variantNameAttr);
+                    runtimeElementsAttributes.attribute(Usage.USAGE_ATTRIBUTE, Usage.FOR_RUNTIME);
+                    runtimeElementsAttributes.attribute(AndroidTypeAttr.ATTRIBUTE, publishType);
+
+                    // if the variant is not a library, then the publishing configuration should
+                    // not extend from anything. It's mostly there to access the artifacts from
+                    // another project but it shouldn't bring any dependencies with it.
+                    if (variantType == VariantType.LIBRARY) {
+                        runtimeElements.setExtendsFrom(runtimeClasspaths);
+                    }
+
+                    Configuration apiElements =
+                            configurations.maybeCreate(configNamePrefix + "ApiElements");
+                    apiElements.setDescription("API elements for " + variantName);
+                    apiElements.setCanBeResolved(false);
+                    final AttributeContainer apiElementsAttributes = apiElements.getAttributes();
+                    applyVariantAttributes(apiElementsAttributes, buildType, publicationFlavorMap);
+                    apiElementsAttributes.attribute(VariantAttr.ATTRIBUTE, variantNameAttr);
+                    apiElementsAttributes.attribute(Usage.USAGE_ATTRIBUTE, Usage.FOR_COMPILE);
+                    apiElementsAttributes.attribute(AndroidTypeAttr.ATTRIBUTE, publishType);
+                    // apiElements only extends the api classpaths.
+                    apiElements.setExtendsFrom(apiClasspaths);
+
+                    publishedConfigurations.put(
+                            publishType,
+                            new PublishedConfigurations(apiElements, runtimeElements, publishType));
+
+                    // if publish type is FEATURE then include the featureSplit config to consume
+                    // the list of featureSplit.
+                    if (publishType == AndroidTypeAttr.TYPE_FEATURE) {
+                        if (isBaseSplit()) {
+                            // first the variant-specific configuration that will contain the
+                            // the splits. It's per-variant to contain the right attribute.
+                            // It'll be used to consume the manifest.
+                            featureSplit =
+                                    configurations.maybeCreate(variantName + "FeatureSplits");
+                            featureSplit.extendsFrom(
+                                    configurations.getByName(CONFIG_NAME_FEATURE_SPLIT));
+                            featureSplit.setDescription(
+                                    "Feature Split dependencies for the base Split");
+                            featureSplit.setCanBeConsumed(false);
+                            final AttributeContainer featureSplitAttributes =
+                                    featureSplit.getAttributes();
+                            featureSplitAttributes.attribute(
+                                    AndroidTypeAttr.ATTRIBUTE,
+                                    AndroidTypeAttr.TYPE_FEATURE_MANIFEST);
+                            applyVariantAttributes(
+                                    featureSplitAttributes, buildType, consumptionFlavorMap);
+
+                            // then the configuration to publish the packageId package
+                            // this is not per-variant so detect if we already created it first
+                            packageId = configurations.findByName(CONFIG_NAME_PACKAGE_ID);
+                            if (packageId == null) {
+                                packageId = configurations.create(CONFIG_NAME_PACKAGE_ID);
+                                packageId.setDescription("Package Ids for the base Split");
+                                packageId.setCanBeResolved(false);
+                            }
+                        } else {
+                            // the configuration that allows non-base split to publish their manifest
+                            manifestSplitElements =
+                                    configurations.maybeCreate(
+                                            variantName + "ManifestFeatureElements");
+                            manifestSplitElements.setDescription(
+                                    "Manifest elements for Split " + variantName);
+                            manifestSplitElements.setCanBeResolved(false);
+                            final AttributeContainer manifestSplitAttributes =
+                                    manifestSplitElements.getAttributes();
+                            manifestSplitAttributes.attribute(
+                                    AndroidTypeAttr.ATTRIBUTE,
+                                    AndroidTypeAttr.TYPE_FEATURE_MANIFEST);
+                            applyVariantAttributes(
+                                    manifestSplitAttributes, buildType, publicationFlavorMap);
+                        }
+                    }
                 }
-
-                apiElements = configurations.maybeCreate(variantName + "ApiElements");
-                apiElements.setDescription("API elements for " + variantName);
-                apiElements.setCanBeResolved(false);
-                applyVariantAttributes(apiElements, buildType, flavorMap2);
-                apiElements.getAttributes().attribute(VariantAttr.ATTRIBUTE, variantNameAttr);
-                apiElements.getAttributes().attribute(Usage.USAGE_ATTRIBUTE, Usage.FOR_COMPILE);
-                // apiElements only extends the api classpaths.
-                apiElements.setExtendsFrom(apiClasspaths);
             }
 
             // TODO remove after a while?
@@ -340,13 +421,13 @@ public class VariantDependencies {
                     checker,
                     compileClasspath,
                     runtimeClasspath,
-                    apiElements,
-                    runtimeElements,
+                    publishedConfigurations,
                     annotationProcessor,
                     jackPlugin,
                     wearApp,
-                    testedVariantDependencies,
-                    testedVariantOutput);
+                    featureSplit,
+                    packageId,
+                    manifestSplitElements);
         }
 
         private static void checkOldConfigurations(
@@ -359,6 +440,16 @@ public class VariantDependencies {
                                 "Configuration with old name %s found. Use new name %s instead.",
                                 oldConfigName, newConfigName));
             }
+        }
+
+        private boolean isBaseSplit() {
+            Configuration config =
+                    project.getConfigurations().findByName(CONFIG_NAME_FEATURE_SPLIT);
+            if (config == null) {
+                return false;
+            }
+
+            return !config.getAllDependencies().isEmpty();
         }
 
         /**
@@ -389,12 +480,12 @@ public class VariantDependencies {
         }
 
         private static void applyVariantAttributes(
-                @NonNull Configuration configuration,
+                @NonNull AttributeContainer attributeContainer,
                 @NonNull String buildType,
                 @NonNull Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> flavorMap) {
-            configuration.getAttributes().attribute(BuildTypeAttr.ATTRIBUTE, BuildTypeAttr.of(buildType));
+            attributeContainer.attribute(BuildTypeAttr.ATTRIBUTE, BuildTypeAttr.of(buildType));
             for (Map.Entry<Attribute<ProductFlavorAttr>, ProductFlavorAttr> entry : flavorMap.entrySet()) {
-                configuration.getAttributes().attribute(entry.getKey(), entry.getValue());
+                attributeContainer.attribute(entry.getKey(), entry.getValue());
             }
         }
 
@@ -447,24 +538,24 @@ public class VariantDependencies {
             @NonNull DependencyChecker dependencyChecker,
             @NonNull Configuration compileClasspath,
             @NonNull Configuration runtimeClasspath,
-            @Nullable Configuration apiElements,
-            @Nullable Configuration runtimeElements,
+            @NonNull Map<AndroidTypeAttr, PublishedConfigurations> publishedConfigurations,
             @NonNull Configuration annotationProcessorConfiguration,
             @NonNull Configuration jackPluginConfiguration,
-            @NonNull Configuration wearAppConfiguration,
-            @Nullable VariantDependencies testedVariantDependencies,
-            @Nullable AndroidDependency testedVariantOutput) {
+            @Nullable Configuration wearAppConfiguration,
+            @Nullable Configuration featureSplitConfiguration,
+            @Nullable Configuration packageIdConfiguation,
+            @Nullable Configuration manifestSplitConfiguration) {
         this.variantName = variantName;
         this.checker = dependencyChecker;
         this.compileClasspath = compileClasspath;
         this.runtimeClasspath = runtimeClasspath;
-        this.apiElements = apiElements;
-        this.runtimeElements = runtimeElements;
+        this.publishedConfigurations = ImmutableMap.copyOf(publishedConfigurations);
         this.annotationProcessorConfiguration = annotationProcessorConfiguration;
         this.jackPluginConfiguration = jackPluginConfiguration;
         this.wearAppConfiguration = wearAppConfiguration;
-        this.testedVariantDependencies = testedVariantDependencies;
-        this.testedVariantOutput = testedVariantOutput;
+        this.featureSplitConfiguration = featureSplitConfiguration;
+        this.packageIdConfiguation = packageIdConfiguation;
+        this.manifestSplitConfiguration = manifestSplitConfiguration;
     }
 
     public String getName() {
@@ -481,14 +572,23 @@ public class VariantDependencies {
         return runtimeClasspath;
     }
 
-    @Nullable
-    public Configuration getApiElements() {
-        return apiElements;
+    @NonNull
+    public Map<AndroidTypeAttr, PublishedConfigurations> getPublishedConfigurations() {
+        return publishedConfigurations;
     }
 
-    @Nullable
-    public Configuration getRuntimeElements() {
-        return runtimeElements;
+    @NonNull
+    public PublishedConfigurations getPublishedConfiguration(@NonNull AndroidTypeAttr type) {
+        PublishedConfigurations configs = publishedConfigurations.get(type);
+        if (configs == null) {
+            throw new IllegalStateException("Could not find published configs for type: " + type);
+        }
+        return configs;
+    }
+
+    @NonNull
+    public PublishedConfigurations getSinglePublishConfiguration() {
+        return Iterables.getOnlyElement(publishedConfigurations.values());
     }
 
     @NonNull
@@ -501,9 +601,24 @@ public class VariantDependencies {
         return jackPluginConfiguration;
     }
 
-    @NonNull
+    @Nullable
     public Configuration getWearAppConfiguration() {
         return wearAppConfiguration;
+    }
+
+    @Nullable
+    public Configuration getFeatureSplitConfiguration() {
+        return featureSplitConfiguration;
+    }
+
+    @Nullable
+    public Configuration getPackageIdConfiguation() {
+        return packageIdConfiguation;
+    }
+
+    @Nullable
+    public Configuration getManifestSplitConfiguration() {
+        return manifestSplitConfiguration;
     }
 
     @NonNull
@@ -511,6 +626,7 @@ public class VariantDependencies {
         return checker;
     }
 
+    //FIXME remove this.
     public void setAnnotationsPresent(boolean annotationsPresent) {
         this.annotationsPresent = annotationsPresent;
     }

@@ -239,21 +239,19 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         Collection<PublishedConfigType> configTypes = artifactType.getPublishingConfigurations();
         Preconditions.checkState(!configTypes.isEmpty());
 
+        // FIXME this needs to be parameterized based on the variant's publishing type.
+        final VariantDependencies.PublishedConfigurations publishConfiguration =
+                getVariantData().getVariantDependency().getSinglePublishConfiguration();
+
         // FIXME: figure out strategy for each ArtifactType
         if (configTypes.contains(API_ELEMENTS)) {
             publishArtifactToConfiguration(
-                    getVariantData().getVariantDependency().getApiElements(),
-                    file,
-                    builtBy,
-                    artifactType);
+                    publishConfiguration.getApiElements(), file, builtBy, artifactType);
         }
 
         if (configTypes.contains(RUNTIME_ELEMENTS)) {
             publishArtifactToConfiguration(
-                    getVariantData().getVariantDependency().getRuntimeElements(),
-                    file,
-                    builtBy,
-                    artifactType);
+                    publishConfiguration.getRuntimeElements(), file, builtBy, artifactType);
         }
 
         artifactMap.put(artifactType, createCollection(file, builtBy));
