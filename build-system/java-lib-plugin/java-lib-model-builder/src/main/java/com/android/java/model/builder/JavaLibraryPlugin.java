@@ -22,6 +22,7 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
+/** Custom plugin for Java Library. */
 public class JavaLibraryPlugin implements Plugin<Project> {
 
     private final ToolingModelBuilderRegistry registry;
