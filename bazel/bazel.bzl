@@ -47,9 +47,6 @@ _form_jar = rule(
 
 def _iml_resources(name, resources, srcs):
   res_exclude = ["**/*.java", "**/*.kt", "**/*.groovy", "**/.DS_Store"]
-  # Temporarily remove file names not supported by bazel
-  # https://github.com/bazelbuild/bazel/issues/167
-  res_exclude += ["**/* *", "**/*$*"]
 
   iml_resource_dirs = resources + srcs
   iml_resources = native.glob(
