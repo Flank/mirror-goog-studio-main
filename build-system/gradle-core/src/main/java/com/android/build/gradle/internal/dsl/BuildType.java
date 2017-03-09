@@ -413,8 +413,10 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
     @Nullable
     public Boolean getUseJack() {
         errorReporter.handleSyncWarning(
-                null, SyncIssue.TYPE_GENERIC, JackOptions.DEPRECATION_WARNING);
-        return null;
+                null,
+                SyncIssue.TYPE_GENERIC,
+                "useJack is deprecated.  Use jackOptions.enabled instead.");
+        return jackOptions.isEnabled();
     }
 
     /**
@@ -425,7 +427,10 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
     @Deprecated
     public void setUseJack(@Nullable Boolean useJack) {
         errorReporter.handleSyncWarning(
-                null, SyncIssue.TYPE_GENERIC, JackOptions.DEPRECATION_WARNING);
+                null,
+                SyncIssue.TYPE_GENERIC,
+                "useJack is deprecated.  Use jackOptions.enabled instead.");
+        jackOptions.setEnabled(useJack);
     }
 
     /**

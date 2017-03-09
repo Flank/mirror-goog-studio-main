@@ -531,8 +531,10 @@ public class ProductFlavor extends DefaultProductFlavor implements CoreProductFl
     @Nullable
     public Boolean getUseJack() {
         errorReporter.handleSyncWarning(
-                null, SyncIssue.TYPE_GENERIC, JackOptions.DEPRECATION_WARNING);
-        return null;
+                null,
+                SyncIssue.TYPE_GENERIC,
+                "useJack is deprecated.  Use jackOptions.enabled instead.");
+        return jackOptions.isEnabled();
     }
 
     /**
@@ -545,7 +547,10 @@ public class ProductFlavor extends DefaultProductFlavor implements CoreProductFl
     @Deprecated
     public void setUseJack(Boolean useJack) {
         errorReporter.handleSyncWarning(
-                null, SyncIssue.TYPE_GENERIC, JackOptions.DEPRECATION_WARNING);
+                null,
+                SyncIssue.TYPE_GENERIC,
+                "useJack is deprecated.  Use jackOptions.enabled instead.");
+        jackOptions.setEnabled(useJack);
     }
 
     /**
@@ -558,7 +563,10 @@ public class ProductFlavor extends DefaultProductFlavor implements CoreProductFl
     @Deprecated
     public void useJack(Boolean useJack) {
         errorReporter.handleSyncWarning(
-                null, SyncIssue.TYPE_GENERIC, JackOptions.DEPRECATION_WARNING);
+                null,
+                SyncIssue.TYPE_GENERIC,
+                "useJack is deprecated.  Use jackOptions.enabled instead.");
+        jackOptions.setEnabled(useJack);
     }
 
     /**
