@@ -17,7 +17,6 @@
 package com.android.sdklib.tool;
 
 import com.android.annotations.NonNull;
-
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -53,13 +52,15 @@ public class TableFormatter<T> {
     public void print(@NonNull Collection<T> values, @NonNull PrintStream out) {
         assert !mColumns.isEmpty();
 
-        Map<Column<T>, Integer> maxLengths = mColumns.stream().collect(Collectors.toMap(
-                Function.identity(),
-                column -> Math.max(values.stream()
-                                .mapToInt(value -> column.getValue(value).length())
-                                .map(length -> Math.min(length, column.getMaxLength()))
-                                .max().orElse(0),
-                        column.getTitle().length())));
+        String separator = "-------";
+        Map<Column<T>, Integer> maxLengths =
+                mColumns.stream().collect(Collectors.toMap(
+                        Function.identity(),
+                        column -> Math.max(values.stream()
+                                        .mapToInt(value -> column.getValue(value).length())
+                                        .map(length -> Math.min(length, column.getMaxLength()))
+                                        .max().orElse(0),
+                                Math.max(separator.length(), column.getTitle().length()))));
 
         String pattern = "  " +
                 String.join(" | ", mColumns.stream()
@@ -68,7 +69,6 @@ public class TableFormatter<T> {
                         .collect(Collectors.toList())) +
                 "\n";
 
-        String separator = "-------";
         out.printf(pattern, mColumns.stream().map(Column::getTitle).toArray());
         out.printf(pattern, mColumns.stream().map(column -> separator).toArray());
         values.forEach(value -> out.printf(pattern,
