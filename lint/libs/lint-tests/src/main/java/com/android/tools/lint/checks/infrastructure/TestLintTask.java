@@ -297,9 +297,22 @@ public class TestLintTask {
                 projects[0].files != null &&
                 projects[0].files.length == 1) {
             this.incrementalFileName = projects[0].files[0].getTargetPath();
+        } else if (projects == null || projects.length == 0) {
+            assert false : "Can't use incremental mode without any projects!";
         } else {
+            StringBuilder sb = new StringBuilder();
+            for (ProjectDescription project : projects) {
+                for (TestFile file : project.files) {
+                    sb.append("\n");
+                    if (project.name != null) {
+                        sb.append(project.name).append("/");
+                    }
+                    sb.append(file.getTargetPath());
+                }
+            }
             assert false : "Can only use implicit incremental mode when there is a single "
-                    + "source file; use incremental(relativePath) instead";
+                    + "source file; use incremental(relativePath) instead. Perhaps you "
+                    + "meant one of the following: " + sb.toString();
         }
         return this;
     }
@@ -579,7 +592,7 @@ public class TestLintTask {
 
         List<File> projectDirs = createProjects(rootDir);
         try {
-            Pair<String,List<Warning>> result = checkLint(projectDirs);
+            Pair<String,List<Warning>> result = checkLint(rootDir, projectDirs);
             String output = result.getFirst();
             List<Warning> warnings = result.getSecond();
             return new TestLintResult(this, output, null, warnings);
@@ -629,8 +642,10 @@ public class TestLintTask {
     }
 
     @NonNull
-    private Pair<String,List<Warning>> checkLint(@NonNull List<File> files) throws Exception {
+    private Pair<String,List<Warning>> checkLint(@NonNull File rootDir,
+            @NonNull List<File> files) throws Exception {
         TestLintClient lintClient = createClient();
+        lintClient.addCleanupDir(rootDir);
         lintClient.setLintTask(this);
         try {
             if (optionSetter != null) {
