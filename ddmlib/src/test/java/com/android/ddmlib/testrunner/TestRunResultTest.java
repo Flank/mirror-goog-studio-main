@@ -15,17 +15,16 @@
  */
 package com.android.ddmlib.testrunner;
 
+import static org.junit.Assert.*;
+
 import com.android.ddmlib.testrunner.TestResult.TestStatus;
-
-import junit.framework.TestCase;
-
 import java.util.Collections;
+import org.junit.Test;
 
-/**
- * Unit tests for {@link TestRunResult}
- */
-public class TestRunResultTest extends TestCase {
+/** Unit tests for {@link TestRunResult} */
+public class TestRunResultTest {
 
+    @Test
     public void testGetNumTestsInState() {
         TestIdentifier test = new TestIdentifier("FooTest", "testBar");
         TestRunResult result = new TestRunResult();
@@ -36,5 +35,16 @@ public class TestRunResultTest extends TestCase {
         result.testEnded(test, Collections.EMPTY_MAP);
         assertEquals(1, result.getNumTestsInState(TestStatus.PASSED));
         assertEquals(0, result.getNumTestsInState(TestStatus.INCOMPLETE));
+    }
+
+    /** Test that we are able to specify directly the start and end time of a test. */
+    @Test
+    public void testSpecifyElapsedTime() {
+        TestIdentifier test = new TestIdentifier("FooTest", "testBar");
+        TestRunResult result = new TestRunResult();
+        result.testStarted(test, 5l);
+        assertEquals(5l, result.getTestResults().get(test).getStartTime());
+        result.testEnded(test, 25l, Collections.EMPTY_MAP);
+        assertEquals(25l, result.getTestResults().get(test).getEndTime());
     }
 }

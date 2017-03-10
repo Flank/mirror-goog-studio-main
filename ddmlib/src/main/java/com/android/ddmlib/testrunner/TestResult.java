@@ -15,8 +15,6 @@
  */
 package com.android.ddmlib.testrunner;
 
-import com.android.ddmlib.testrunner.TestResult.TestStatus;
-
 import java.util.Arrays;
 import java.util.Map;
 
@@ -88,8 +86,16 @@ public class TestResult {
     }
 
     /**
-     * Return the {@link System#currentTimeMillis()} time that the
-     * {@link ITestRunListener#testEnded(TestIdentifier, Map)} event was received.
+     * Allows to set the time when the test was started, to be used with {@link
+     * ITestRunListener#testStarted(TestIdentifier, long)}.
+     */
+    public void setStartTime(long startTime) {
+        mStartTime = startTime;
+    }
+
+    /**
+     * Return the {@link System#currentTimeMillis()} time that the {@link
+     * ITestRunListener#testEnded(TestIdentifier, Map)} event was received.
      */
     public long getEndTime() {
         return mEndTime;
