@@ -48,14 +48,14 @@ public class ClassFileInputTest {
             temporaryFolder.newFile(s);
         }
 
-        validateDirectoryEntries(
+        validateEntries(
                 temporaryFolder.getRoot(), ImmutableList.of("A.class", "B.class", "dir/C.class"));
     }
 
     @Test
     public void testEmptyDirectory() throws IOException {
         temporaryFolder.newFolder("dir");
-        validateDirectoryEntries(temporaryFolder.getRoot(), ImmutableList.of());
+        validateEntries(temporaryFolder.getRoot(), ImmutableList.of());
     }
 
     @Test
@@ -65,7 +65,7 @@ public class ClassFileInputTest {
         temporaryFolder.newFile("a/ignore.txt");
         temporaryFolder.newFile("a/ignore_2.txt");
 
-        validateDirectoryEntries(temporaryFolder.getRoot(), ImmutableList.of());
+        validateEntries(temporaryFolder.getRoot(), ImmutableList.of());
     }
 
     @Test
@@ -76,7 +76,7 @@ public class ClassFileInputTest {
             temporaryFolder.newFile(s);
         }
 
-        validateDirectoryEntries(temporaryFolder.getRoot(), filesNames);
+        validateEntries(temporaryFolder.getRoot(), filesNames);
     }
 
     @Test
@@ -89,7 +89,7 @@ public class ClassFileInputTest {
             zFile.add("dir/D.class", dummyContent());
         }
 
-        validateJarEntries(jarFile, ImmutableList.of("A.class", "C.class", "dir/D.class"));
+        validateEntries(jarFile, ImmutableList.of("A.class", "C.class", "dir/D.class"));
     }
 
     @Test
@@ -99,7 +99,7 @@ public class ClassFileInputTest {
             // empty block, we want an empty archive
         }
 
-        validateJarEntries(jarFile, ImmutableList.of());
+        validateEntries(jarFile, ImmutableList.of());
     }
 
     @Test
@@ -111,7 +111,7 @@ public class ClassFileInputTest {
             zFile.add("dir/ignored.txt", dummyContent());
         }
 
-        validateJarEntries(jarFile, ImmutableList.of());
+        validateEntries(jarFile, ImmutableList.of());
     }
 
     @Test
@@ -123,7 +123,7 @@ public class ClassFileInputTest {
             zFile.add("dir/dir/C.class", dummyContent());
         }
 
-        validateJarEntries(jarFile, ImmutableList.of("A.class", "dir/B.class", "dir/dir/C.class"));
+        validateEntries(jarFile, ImmutableList.of("A.class", "dir/B.class", "dir/dir/C.class"));
     }
 
     @Test
@@ -133,7 +133,7 @@ public class ClassFileInputTest {
             zFile.add("aA.class", dummyContent());
         }
 
-        validateJarEntries(jarFile, ImmutableList.of("aA.class"));
+        validateEntries(jarFile, ImmutableList.of("aA.class"));
     }
 
     @Test
@@ -143,7 +143,7 @@ public class ClassFileInputTest {
             zFile.add("A$InnerClass.class", dummyContent());
         }
 
-        validateJarEntries(jarFile, ImmutableList.of("A$InnerClass.class"));
+        validateEntries(jarFile, ImmutableList.of("A$InnerClass.class"));
     }
 
     @Test
@@ -170,19 +170,15 @@ public class ClassFileInputTest {
         }
     }
 
-    private void validateDirectoryEntries(@NonNull File rootPath, @NonNull List<String> fileNames)
+    private void validateEntries(@NonNull File rootPath, @NonNull List<String> fileNames)
             throws IOException {
         List<String> filesRead = Lists.newArrayList();
         ClassFileInputs.fromPath(rootPath.toPath(), e -> true)
-                .forEach(entry -> filesRead.add(entry.relativePath.toString()));
-        assertThat(filesRead).containsExactlyElementsIn(fileNames);
-    }
-
-    private void validateJarEntries(@NonNull File rootPath, @NonNull List<String> fileNames)
-            throws IOException {
-        List<String> filesRead = Lists.newArrayList();
-        ClassFileInputs.fromPath(rootPath.toPath(), e -> true)
-                .forEach(entry -> filesRead.add(entry.relativePath.toString()));
+                .forEach(
+                        entry -> {
+                            String path = FileUtils.toSystemIndependentPath(entry.relativePath);
+                            filesRead.add(path);
+                        });
         assertThat(filesRead).containsExactlyElementsIn(fileNames);
     }
 
