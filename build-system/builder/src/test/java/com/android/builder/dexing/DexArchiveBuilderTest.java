@@ -31,6 +31,7 @@ import com.google.common.collect.Lists;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import com.google.common.truth.Truth;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.FileSystem;
@@ -39,6 +40,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.junit.Assume;
 import org.junit.Rule;
@@ -349,6 +351,7 @@ public class DexArchiveBuilderTest {
     }
 
     private static String getClassNameWithoutPackage(@NonNull String dexEntryPath) {
-        return dexEntryPath.replaceAll(".*" + PACKAGE + "/(.*)\\.dex", "$1");
+        return dexEntryPath.replaceAll(
+                ".*" + PACKAGE + Pattern.quote(File.separator) + "(.*)\\.dex", "$1");
     }
 }
