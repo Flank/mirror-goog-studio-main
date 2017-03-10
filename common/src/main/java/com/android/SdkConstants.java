@@ -1306,10 +1306,39 @@ public final class SdkConstants {
             "layout_constraintBottom_toBottomOf"; //$NON-NLS-1$
     public static final String ATTR_LAYOUT_BASELINE_TO_BASELINE_OF =
             "layout_constraintBaseline_toBaselineOf"; //$NON-NLS-1$
+
+    public static final String ATTR_LAYOUT_START_TO_END_OF =
+            "layout_constraintStart_toEndOf"; //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_START_TO_START_OF =
+            "layout_constraintStart_toStartOf"; //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_END_TO_START_OF =
+            "layout_constraintEnd_toStartOf"; //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_END_TO_END_OF =
+            "layout_constraintEnd_toEndOf"; //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_GONE_MARGIN_LEFT = "layout_goneMarginLeft"; //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_GONE_MARGIN_TOP = "layout_goneMarginTop"; //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_GONE_MARGIN_RIGHT =
+            "layout_goneMarginRight"; //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_GONE_MARGIN_BOTTOM =
+            "layout_goneMarginBottom"; //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_GONE_MARGIN_START =
+            "layout_goneMarginStart"; //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_GONE_MARGIN_END = "layout_goneMarginEnd"; //$NON-NLS-1$
+
     public static final String ATTR_LAYOUT_HORIZONTAL_BIAS =
             "layout_constraintHorizontal_bias"; //$NON-NLS-1$
     public static final String ATTR_LAYOUT_VERTICAL_BIAS =
             "layout_constraintVertical_bias"; //$NON-NLS-1$
+
+    public static final String ATTR_LAYOUT_WIDTH_DEFAULT =
+            "layout_constraintWidth_default"; //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_HEIGHT_DEFAULT =
+            "layout_constraintHeight_default"; //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_WIDTH_MIN = "layout_constraintWidth_min"; //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_WIDTH_MAX = "layout_constraintWidth_max"; //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_HEIGHT_MIN = "layout_constraintHeight_min"; //$NON-NLS-1$
+    public static final String ATTR_LAYOUT_HEIGHT_MAX = "layout_constraintHeight_max"; //$NON-NLS-1$
+
     public static final String ATTR_LAYOUT_DIMENSION_RATIO =
             "layout_constraintDimensionRatio"; //$NON-NLS-1$
     public static final String ATTR_LAYOUT_VERTICAL_CHAIN_STYLE =
