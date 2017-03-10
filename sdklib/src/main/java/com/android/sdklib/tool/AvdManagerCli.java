@@ -150,7 +150,7 @@ class AvdManagerCli extends CommandLineParser {
     /**
      * Logger object. Use this to print normal output, warnings or errors.
      */
-    private ILogger mSdkLog;
+    private final ILogger mSdkLog;
 
     /**
      * The SDK manager parses the SDK folder and gives access to the content.
@@ -1025,7 +1025,7 @@ class AvdManagerCli extends CommandLineParser {
     /**
      * Reads a line from the input stream.
      */
-    private String readLine(byte[] buffer) throws IOException {
+    private static String readLine(byte[] buffer) throws IOException {
         int count = System.in.read(buffer);
 
         // is the input longer than the buffer?
@@ -1052,7 +1052,7 @@ class AvdManagerCli extends CommandLineParser {
      * Reads a line from the input stream, masking it as much as possible.
      */
     @SuppressWarnings("unused")
-    private String promptPassword(String prompt) throws IOException {
+    private static String promptPassword(String prompt) throws IOException {
 
         // Setup a thread that tries to overwrite any input by
         // masking the last character with a space. This is quite
@@ -1091,7 +1091,7 @@ class AvdManagerCli extends CommandLineParser {
      *
      * @throws IOException If the value is not a boolean string.
      */
-    private boolean getBooleanReply(String reply) throws IOException {
+    private static boolean getBooleanReply(String reply) throws IOException {
 
         for (String valid : BOOLEAN_YES_REPLIES) {
             if (valid.equalsIgnoreCase(reply)) {
