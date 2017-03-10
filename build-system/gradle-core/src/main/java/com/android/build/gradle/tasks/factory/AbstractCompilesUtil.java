@@ -17,6 +17,7 @@
 package com.android.build.gradle.tasks.factory;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.CompileOptions;
@@ -101,15 +102,23 @@ public class AbstractCompilesUtil {
         return javaVersionToUse;
     }
 
-    public static boolean isIncremental(Project project, VariantScope variantScope,
-            CompileOptions compileOptions, Configuration processorConfiguration, ILogger log) {
+    /** Determine if java compilation can be incremental. */
+    public static boolean isIncremental(
+            @NonNull Project project,
+            @NonNull VariantScope variantScope,
+            @NonNull CompileOptions compileOptions,
+            @Nullable Configuration processorConfiguration,
+            @NonNull ILogger log) {
         boolean incremental = true;
         if (compileOptions.getIncremental() != null) {
             incremental = compileOptions.getIncremental();
             log.verbose("Incremental flag set to %1$b in DSL", incremental);
         } else {
+            boolean hasAnnotationProcessor =
+                    processorConfiguration != null
+                            && !processorConfiguration.getAllDependencies().isEmpty();
             if (variantScope.getGlobalScope().getExtension().getDataBinding().isEnabled()
-                    || !processorConfiguration.getAllDependencies().isEmpty()
+                    || hasAnnotationProcessor
                     || project.getPlugins().hasPlugin("com.neenbedankt.android-apt")
                     || project.getPlugins().hasPlugin("me.tatarka.retrolambda")) {
                 incremental = false;
