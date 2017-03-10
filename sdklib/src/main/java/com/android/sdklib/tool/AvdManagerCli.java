@@ -59,6 +59,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static com.google.common.base.Verify.verifyNotNull;
 
 /**
  * Specific command-line flags for the AVD Manager CLI
@@ -252,7 +253,7 @@ class AvdManagerCli extends CommandLineParser {
              * {@inheritDoc}
              */
             @Override
-            public int readLine(byte[] inputBuffer) throws IOException {
+            public int readLine(@NonNull byte[] inputBuffer) throws IOException {
                 return System.in.read(inputBuffer);
             }
         };
@@ -337,7 +338,7 @@ class AvdManagerCli extends CommandLineParser {
     @NonNull
     private AvdManager getAvdManager() throws AndroidLocation.AndroidLocationException {
         if (mAvdManager == null) {
-            mAvdManager = AvdManager.getInstance(mSdkHandler, mSdkLog);
+            mAvdManager = verifyNotNull(AvdManager.getInstance(mSdkHandler, mSdkLog));
         }
         return mAvdManager;
     }
