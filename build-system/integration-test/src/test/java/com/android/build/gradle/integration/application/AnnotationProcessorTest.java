@@ -204,7 +204,18 @@ public class AnnotationProcessorTest {
         TestFileUtils.appendToFile(
                 project.getSubproject(":app").getBuildFile(),
                 new BuildScriptGenerator(
-                                "dependencies {\n"
+                                "${model_start}\n"
+                                        + "    android {\n"
+                                        + "        defaultConfig {\n"
+                                        + "            javaCompileOptions {\n"
+                                        + "                annotationProcessorOptions {\n"
+                                        + "                    includeCompileClasspath = true\n"
+                                        + "                }\n"
+                                        + "            }\n"
+                                        + "        }\n"
+                                        + "    }\n"
+                                        + "${model_end}\n"
+                                        + "dependencies {\n"
                                         + "    compile project(':lib-compiler')\n"
                                         + "    annotationProcessor files('empty.jar')\n"
                                         + "}\n")

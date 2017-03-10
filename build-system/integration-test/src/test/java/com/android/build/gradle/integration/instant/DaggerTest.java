@@ -65,7 +65,7 @@ public class DaggerTest {
     @Parameterized.Parameters(name = "{0},useAndroidApt={1}")
     public static Collection<Object[]> data() {
         return Arrays.asList(
-                new Object[][] {{"daggerOne", true}, {"daggerTwo", true}, {"daggerTwo", false}});
+                new Object[][] {{"daggerOne", false}, {"daggerTwo", true}, {"daggerTwo", false}});
     }
 
     @Rule public GradleTestProject project;

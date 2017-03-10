@@ -126,7 +126,6 @@ public class JackOptionsUtils {
         /* Annotation processor setup */
         CoreAnnotationProcessorOptions annotationProcessorOptions =
                 config.getJavaCompileOptions().getAnnotationProcessorOptions();
-        checkNotNull(annotationProcessorOptions.getIncludeCompileClasspath());
         builder.setAnnotationProcessorNames(annotationProcessorOptions.getClassNames())
                 .setAnnotationProcessorOptions(annotationProcessorOptions.getArguments())
                 .setAnnotationProcessorOutputDirectory(scope.getAnnotationProcessorOutputDir())

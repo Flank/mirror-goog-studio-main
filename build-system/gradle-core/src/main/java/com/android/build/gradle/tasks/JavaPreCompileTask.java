@@ -16,27 +16,95 @@
 
 package com.android.build.gradle.tasks;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.dsl.CoreAnnotationProcessorOptions;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.BaseTask;
 import com.android.utils.FileUtils;
+import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.util.Collection;
+import java.util.List;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.ResolvedConfiguration;
 import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.TaskAction;
+
 
 /**
  * Tasks to perform necessary action before a JavaCompile.
  */
 public class JavaPreCompileTask extends BaseTask {
 
+    private static final String PROCESSOR_SERVICES =
+            "META-INF/services/javax.annotation.processing.Processor";
+
     @Input
     private File annotationProcessorOutputFolder;
+
+    @InputFiles private Configuration annotationProcessorConfiguration;
+
+    private Supplier<Collection<File>> compileClasspaths;
+
+    private CoreAnnotationProcessorOptions annotationProcessorOptions;
 
     @TaskAction
     public void preCompile() {
         // Create directory for output of annotation processor.
         FileUtils.mkdirs(annotationProcessorOutputFolder);
+
+        // Resolve configuration.
+        ResolvedConfiguration resolvedConfiguration =
+                annotationProcessorConfiguration.getResolvedConfiguration();
+        if (resolvedConfiguration.hasError()) {
+            resolvedConfiguration.rethrowFailure();
+        }
+        Collection<File> processorPath =
+                annotationProcessorConfiguration
+                        .getFiles()
+                        .stream()
+                        .filter(file -> !file.getPath().endsWith(SdkConstants.DOT_AAR))
+                        .collect(Collectors.toSet());
+
+        if (annotationProcessorOptions.getIncludeCompileClasspath() == null
+                && !getProject().getPlugins().hasPlugin("com.neenbedankt.android-apt")) {
+            List<String> processors = Lists.newArrayList();
+            for (File file : compileClasspaths.get()) {
+                try (FileSystem fs = FileSystems.newFileSystem(file.toPath(), null)) {
+                    if (Files.exists(fs.getPath(PROCESSOR_SERVICES))
+                            && !processorPath.contains(file)) {
+                        processors.add(file.getName());
+                    }
+                } catch (IOException ignore) {
+                }
+                if (!processors.isEmpty()) {
+                    throw new RuntimeException(
+                            "Annotation processors must be explicitly declared now.  The following "
+                                    + "dependencies on the compile classpath are found to contain "
+                                    + "annotation processor.  Please add them to the "
+                                    + "annotationProcessor configuration.\n  - "
+                                    + Joiner.on("\n  - ").join(processors)
+                                    + "\nAlternatively, set "
+                                    + "android.defaultConfig.javaCompileOptions.annotationProcessorOptions.includeCompileClasspath = true "
+                                    + "to continue with previous behavior.  Note that this option "
+                                    + "is deprecated and will be removed in the future.\n"
+                                    + "See "
+                                    + "https://developer.android.com/r/tools/annotation-processor-error-message.html "
+                                    + "for more details.");
+                }
+            }
+        }
+
     }
 
     public static class ConfigAction implements TaskConfigAction<JavaPreCompileTask> {
@@ -63,6 +131,16 @@ public class JavaPreCompileTask extends BaseTask {
         public void execute(@NonNull JavaPreCompileTask task) {
             task.setVariantName(scope.getFullVariantName());
             task.annotationProcessorOutputFolder = scope.getAnnotationProcessorOutputDir();
+            task.annotationProcessorOptions =
+                    scope.getVariantConfiguration()
+                            .getJavaCompileOptions()
+                            .getAnnotationProcessorOptions();
+            task.annotationProcessorConfiguration =
+                    scope.getVariantData()
+                            .getVariantDependency()
+                            .getAnnotationProcessorConfiguration();
+            task.compileClasspaths =
+                    InputFilesSupplier.from(() -> scope.getJavaClasspath().getFiles());
         }
     }
 }

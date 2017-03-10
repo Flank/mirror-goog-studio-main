@@ -140,15 +140,17 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
                         .getAnnotationProcessorOptions()
                         .getIncludeCompileClasspath();
 
-        FileCollection processorPath =
-                Boolean.TRUE.equals(includeCompileClasspath)
-                        ? project.files((Callable) javacTask::getClasspath)
-                        : project.files();
-
         Configuration annotationProcessorConfiguration =
                 scope.getVariantData().getVariantDependency().getAnnotationProcessorConfiguration();
-        processorPath = processorPath.plus(annotationProcessorConfiguration);
-        javacTask.getOptions().setAnnotationProcessorPath(processorPath);
+
+        if (!project.getPlugins().hasPlugin(AbstractCompilesUtil.ANDROID_APT_PLUGIN_NAME)) {
+            FileCollection processorPath =
+                    Boolean.TRUE.equals(includeCompileClasspath)
+                            ? project.files((Callable) javacTask::getClasspath)
+                            : project.files();
+            processorPath = processorPath.plus(annotationProcessorConfiguration);
+            javacTask.getOptions().setAnnotationProcessorPath(processorPath);
+        }
 
         boolean incremental =
                 AbstractCompilesUtil.isIncremental(

@@ -38,7 +38,6 @@ public class MergedJavaCompileOptions implements CoreJavaCompileOptions {
     public void reset() {
         annotationProcessorOptions.getClassNames().clear();
         annotationProcessorOptions.getArguments().clear();
-        annotationProcessorOptions.setIncludeCompileClasspath(true);
     }
 
     public void append(@NonNull CoreJavaCompileOptions javaCompileOptions) {
