@@ -1,0 +1,21 @@
+apply plugin: 'java'
+
+dependencies {
+    compile project(':base:annotations')
+    compile libs.guava
+
+    testCompile project(':base:testutils')
+    testCompile libs.junit
+    testCompile libs.truth
+}
+
+group = 'com.android.tools'
+archivesBaseName = 'devicelib'
+version = rootProject.ext.baseVersion
+
+project.ext.pomName = 'Android Tools devicelib library'
+project.ext.pomDesc = 'Library to access Android devices.'
+
+apply from: "$rootDir/buildSrc/base/publish.gradle"
+apply from: "$rootDir/buildSrc/base/bintray.gradle"
+apply from: "$rootDir/buildSrc/base/javadoc.gradle"
