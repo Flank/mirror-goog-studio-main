@@ -1239,6 +1239,9 @@ public final class SdkConstants {
     public static final String ATTR_SCROLLX = "scrollX"; //$NON-NLS-1$
     public static final String ATTR_SCROLLY = "scrollY"; //$NON-NLS-1$
 
+    // Tools attribute for using a different view at design time
+    public static final String ATTR_USE_HANDLER = "useHandler";
+
     // AbsoluteLayout layout params
     public static final String ATTR_LAYOUT_Y = "layout_y"; //$NON-NLS-1$
     public static final String ATTR_LAYOUT_X = "layout_x"; //$NON-NLS-1$
