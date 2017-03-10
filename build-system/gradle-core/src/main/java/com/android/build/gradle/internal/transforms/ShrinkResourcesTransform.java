@@ -265,6 +265,7 @@ public class ShrinkResourcesTransform extends Transform {
                 FileUtils.copyFile(uncompressedResourceFile, compressedResourceFile);
             } catch (IOException e) {
                 logger.error("Failed to copy uncompressed resource file :", e);
+                throw new RuntimeException("Failed to copy uncompressed resource file", e);
             }
             return compressedResourceFile;
         }
@@ -376,7 +377,6 @@ public class ShrinkResourcesTransform extends Transform {
                 System.out.println(sb.toString());
             }
         } catch (Exception e) {
-            System.out.println("Failed to shrink resources: " + e.toString() + "; ignoring");
             logger.quiet("Failed to shrink resources: ignoring", e);
         } finally {
             analyzer.dispose();
