@@ -29,9 +29,12 @@ public interface ProcessRunner {
     Process start(@NonNull ProcessBuilder pb) throws IOException;
 
     /**
-     * This method simply redirects to {@link Process#waitFor(long, TimeUnit)} on the process that
-     * was started. If the process is still alive after the timeout and you want to kill, use {@link
-     * #destroyForcibly()}.
+     * Causes the current thread to wait until either the process exits, or the timeout occurs. If
+     * the process exits before the timeout, then this method waits for stdout and stderr reader
+     * threads to quit, but only until the given timeout elapses.
+     *
+     * @return true if the process exited, false if it timed out waiting for the process to exit.
+     *     The completion of reader threads has no impact on the return value.
      */
     boolean waitFor(long timeout, @NonNull TimeUnit unit) throws InterruptedException;
 
