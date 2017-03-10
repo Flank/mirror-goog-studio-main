@@ -16,17 +16,9 @@
 
 package com.android.utils;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.android.ide.common.blame.SourcePosition;
-
-import junit.framework.TestCase;
-
-import org.w3c.dom.Attr;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.w3c.dom.Text;
-
 import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -35,6 +27,13 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import junit.framework.TestCase;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.w3c.dom.Text;
 
 @SuppressWarnings({"javadoc", "IOResourceOpenedButNotSafelyClosed"})
 public class PositionXmlParserTest extends TestCase {
@@ -518,5 +517,59 @@ public class PositionXmlParserTest extends TestCase {
                 XML.substring(position.getStartOffset(), position.getEndOffset()));
         assertEquals("Button", subTag.getAttributeNS(NAMESPACE_URL, "text"));
         assertEquals(NAMESPACE_URL, subTag.getNamespaceURI());
+    }
+
+    public void testCdata() throws Exception {
+        String xml =
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<resources>\n"
+                        + "    <string name=\"cdata_string\"><![CDATA[<html>not<br>\nxml]]></string>\n"
+                        + "</resources>";
+        File file = File.createTempFile("parsertest", ".xml");
+        file.deleteOnExit();
+        try (Writer fw = new BufferedWriter(new FileWriter(file))) {
+            fw.write(xml);
+        }
+        Document document = PositionXmlParser.parse(new FileInputStream(file));
+        assertNotNull(document);
+        Element e = document.getDocumentElement();
+        assertNotNull(e);
+        Node cdata = e.getChildNodes().item(1).getChildNodes().item(0);
+
+        assertThat(cdata.getTextContent()).isEqualTo("<html>not<br>\nxml");
+        assertThat(cdata.getNodeType()).isEqualTo(Node.CDATA_SECTION_NODE);
+    }
+
+    public void testCdataMixed() throws Exception {
+        String xml =
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<resources>\n"
+                        + "    <string name=\"cdata_string\">XXX<![CDATA[<html>not<br>\nxml]]>YYY<![CDATA[<a href=\"url://web.site\">link</a>]]>ZZZ</string>\n"
+                        + "</resources>";
+        File file = File.createTempFile("parsertest", ".xml");
+        file.deleteOnExit();
+        try (Writer fw = new BufferedWriter(new FileWriter(file))) {
+            fw.write(xml);
+        }
+        Document document = PositionXmlParser.parse(new FileInputStream(file));
+        assertNotNull(document);
+        Element e = document.getDocumentElement();
+        assertNotNull(e);
+        NodeList data = e.getChildNodes().item(1).getChildNodes();
+
+        assertThat(data.item(0).getTextContent()).isEqualTo("XXX");
+        assertThat(data.item(0).getNodeType()).isEqualTo(Node.TEXT_NODE);
+
+        assertThat(data.item(1).getTextContent()).isEqualTo("<html>not<br>\nxml");
+        assertThat(data.item(1).getNodeType()).isEqualTo(Node.CDATA_SECTION_NODE);
+
+        assertThat(data.item(2).getTextContent()).isEqualTo("YYY");
+        assertThat(data.item(2).getNodeType()).isEqualTo(Node.TEXT_NODE);
+
+        assertThat(data.item(3).getTextContent()).isEqualTo("<a href=\"url://web.site\">link</a>");
+        assertThat(data.item(3).getNodeType()).isEqualTo(Node.CDATA_SECTION_NODE);
+
+        assertThat(data.item(4).getTextContent()).isEqualTo("ZZZ");
+        assertThat(data.item(4).getNodeType()).isEqualTo(Node.TEXT_NODE);
     }
 }

@@ -31,9 +31,6 @@ import com.android.resources.ResourceType;
 import com.android.testutils.TestResources;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
-
-import org.junit.Test;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -42,6 +39,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import org.junit.Test;
 
 public class ResourceRepositoryTest extends BaseTestCase {
 
@@ -55,7 +53,7 @@ public class ResourceRepositoryTest extends BaseTestCase {
         assertEquals(1, items.get(ResourceType.RAW).size());
         assertEquals(4, items.get(ResourceType.LAYOUT).size());
         assertEquals(1, items.get(ResourceType.COLOR).size());
-        assertEquals(6, items.get(ResourceType.STRING).size());
+        assertEquals(7, items.get(ResourceType.STRING).size());
         assertEquals(1, items.get(ResourceType.STYLE).size());
         assertEquals(3, items.get(ResourceType.ARRAY).size());
         assertEquals(7, items.get(ResourceType.ATTR).size());
@@ -122,6 +120,22 @@ public class ResourceRepositoryTest extends BaseTestCase {
         assertNotNull(value);
 
         assertEquals("overlay_string", value.getValue());
+    }
+
+    @Test
+    public void testCdataStringValue() throws Exception {
+        ResourceRepository repo = getResourceRepository();
+
+        List<ResourceItem> itemList = repo.getResourceItem(ResourceType.STRING, "cdata_string");
+        assertNotNull(itemList);
+        assertEquals(1, itemList.size());
+
+        ResourceValue value = itemList.get(0).getResourceValue(false);
+        assertNotNull(value);
+
+        assertEquals(
+                "XXX<![CDATA[<html>not<br>\nxml]]>YYY<![CDATA[<a href=\"url://web.site\">link</a>]]>ZZZ",
+                value.getRawXmlValue());
     }
 
     @Test
