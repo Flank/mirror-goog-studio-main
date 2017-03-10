@@ -12,4 +12,3 @@ build --javacopt="-g:source,lines,vars"
 build --javacopt=-Xep:FallThrough:OFF  # enforcing Google style, essentially
 build --javacopt=-Xep:GuardedByChecker:WARN  # pending cleanup
 build --javacopt=-Xep:MissingCasesInEnumSwitch:WARN  # pending cleanup
-build --javacopt=-Xep:TruthSelfEquals:WARN  # pending cleanup
