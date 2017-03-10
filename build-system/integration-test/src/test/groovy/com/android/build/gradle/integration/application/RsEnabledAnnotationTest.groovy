@@ -21,6 +21,7 @@ import groovy.transform.CompileStatic
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.junit.ClassRule
+import org.junit.Ignore
 import org.junit.Test
 
 import static com.android.testutils.truth.MoreTruth.assertThat
@@ -46,6 +47,7 @@ class RsEnabledAnnotationTest {
 
 
     @Test
+    @Ignore("http://b.android.com/241407")
     void "check extract annotation"() {
         // check the resulting .aar file to ensure annotations.zip inclusion.
         assertThat(project.getAar("debug")).contains("annotations.zip")

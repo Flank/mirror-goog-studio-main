@@ -31,6 +31,7 @@ import groovy.transform.CompileStatic
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.junit.ClassRule
+import org.junit.Ignore
 import org.junit.Test
 
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA
@@ -62,6 +63,7 @@ class RsSupportModeTest {
     }
 
     @Test
+    @Ignore("http://b.android.com/241407")
     void testRsSupportMode() throws Exception {
         LibraryGraphHelper helper = new LibraryGraphHelper(model);
 
