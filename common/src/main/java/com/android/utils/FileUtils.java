@@ -31,6 +31,7 @@ import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
@@ -468,18 +469,44 @@ public final class FileUtils {
      * Returns {@code true} if a file/directory is in a given directory or in a subdirectory of the
      * given directory, and {@code false} otherwise.
      */
-    public static boolean isFileInDirectory(File file, File directory) throws IOException {
-        File canonicalFile = file.getCanonicalFile();
-        File canonicalDirectory = directory.getCanonicalFile();
-
-        canonicalFile = canonicalFile.getParentFile();
-        while (canonicalFile != null) {
-            if (canonicalFile.equals(canonicalDirectory)) {
+    public static boolean isFileInDirectory(@NonNull File file, @NonNull File directory) {
+        File parentFile = file.getParentFile();
+        while (parentFile != null) {
+            if (isSameFile(parentFile, directory)) {
                 return true;
             }
-            canonicalFile = canonicalFile.getParentFile();
+            parentFile = parentFile.getParentFile();
         }
         return false;
+    }
+
+    /**
+     * Returns {@code true} if the two files refer to the same physical file, and {@code false}
+     * otherwise. This is the correct way to compare physical files, instead of comparing using
+     * {@link File#equals(Object)} directly.
+     *
+     * <p>Unlike {@link java.nio.file.Files#isSameFile(Path, Path)}, this method does not require
+     * the files to exist.
+     *
+     * <p>Internally, this method delegates to {@link java.nio.file.Files#isSameFile(Path, Path)} if
+     * the files exist.
+     *
+     * <p>If either of the files does not exist, this method instead compares the canonical files of
+     * the two files, since {@link java.nio.file.Files#isSameFile(Path, Path)} in some cases require
+     * that the files exist and therefore cannot be used. The downside of using {@link
+     * File#getCanonicalFile()} is that it may not handle hard links and symbolic links correctly as
+     * with {@link java.nio.file.Files#isSameFile(Path, Path)}.
+     */
+    public static boolean isSameFile(@NonNull File file1, @NonNull File file2) {
+        try {
+            if (file1.exists() && file2.exists()) {
+                return java.nio.file.Files.isSameFile(file1.toPath(), file2.toPath());
+            } else {
+                return file1.getCanonicalFile().equals(file2.getCanonicalFile());
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
     /**
