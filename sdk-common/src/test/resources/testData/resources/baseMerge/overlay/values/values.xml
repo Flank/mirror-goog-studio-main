@@ -3,4 +3,6 @@
     <color name="color">#FFFFFFFF</color>
     <string name="basic_string">overlay_string</string>
     <item type="layout" name="file_replaced_by_alias">@layout/ref</item>
+    <string name="cdata_string">XXX<![CDATA[<html>not<br>
+xml]]>YYY<![CDATA[<a href="url://web.site">link</a>]]>ZZZ</string>
 </resources>
