@@ -40,7 +40,6 @@ public final class ProfilerTransform implements BiConsumer<InputStream, OutputSt
         ClassVisitor visitor = writer;
         visitor = new InitializerAdapter(visitor);
         visitor = new NetworkingAdapter(visitor);
-        visitor = new EventAdapter(visitor);
 
         try {
             ClassReader cr = new ClassReader(in);
