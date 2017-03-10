@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Google Inc.
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.tools.perflib.heap;
+package com.android.tools.proguard;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -23,12 +23,11 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.text.ParseException;
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
 
 // Class used to deobfuscate classes, fields, and stack frames.
 public class ProguardMap {
-
     private static final String ARRAY_SYMBOL = "[]";
 
     private static class FrameData {

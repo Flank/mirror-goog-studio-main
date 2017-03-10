@@ -18,14 +18,13 @@ package com.android.tools.perflib.heap;
 
 import com.android.annotations.NonNull;
 import com.android.tools.perflib.captures.DataBuffer;
+import com.android.tools.proguard.ProguardMap;
 import com.google.common.primitives.UnsignedBytes;
 import com.google.common.primitives.UnsignedInts;
-
-import java.io.EOFException;
-import java.io.IOException;
-
 import gnu.trove.TIntObjectHashMap;
 import gnu.trove.TLongObjectHashMap;
+import java.io.EOFException;
+import java.io.IOException;
 
 class HprofParser {
 

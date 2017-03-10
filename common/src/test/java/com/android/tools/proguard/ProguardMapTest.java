@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,23 +14,12 @@
  * limitations under the License.
  */
 
-package com.android.tools.perflib.heap;
+package com.android.tools.proguard;
 
-import com.android.tools.perflib.heap.io.InMemoryBuffer;
-import com.android.tools.perflib.heap.hprof.*;
-
-import com.google.common.io.ByteArrayDataOutput;
-import com.google.common.io.ByteStreams;
-
-import junit.framework.TestCase;
-
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.StringReader;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import junit.framework.TestCase;
 
 public class ProguardMapTest extends TestCase {
     private static final String TEST_MAP =
@@ -175,66 +164,5 @@ public class ProguardMapTest extends TestCase {
         assertEquals("()V", frame.signature);
         assertEquals("Superclass.java", frame.filename);
         assertEquals(120, frame.line);
-    }
-
-    public void testHprofParser() throws IOException, ParseException {
-        // Set up a heap dump with a single stack frame, stack trace, class,
-        // and instance to test deobfuscation.
-        HprofStringBuilder strings = new HprofStringBuilder(0);
-        List<HprofRecord> records = new ArrayList<HprofRecord>();
-        List<HprofDumpRecord> dump = new ArrayList<HprofDumpRecord>();
-
-        final int classSerialNumber = 1;
-        final int classObjectId = 2;
-        records.add(new HprofLoadClass(0, classSerialNumber, classObjectId, 0, strings.get("d")));
-        dump.add(new HprofClassDump(classObjectId, 0, 0, 0, 0, 0, 0, 0, 4,
-                    new HprofConstant[0], new HprofStaticField[0],
-                    new HprofInstanceField[]{
-                      new HprofInstanceField(strings.get("a"), HprofType.TYPE_INT)}));
-
-        records.add(new HprofStackFrame(0, 1, strings.get("m"),
-                    strings.get("()V"), strings.get("SourceFile.java"),
-                    classSerialNumber, 43));
-        records.add(new HprofStackTrace(0, 0x52, 1, new long[]{1}));
-
-        dump.add(new HprofHeapDumpInfo(0xA, strings.get("heapA")));
-
-        ByteArrayDataOutput values = ByteStreams.newDataOutput();
-        values.writeInt(42);
-        dump.add(new HprofInstanceDump(0xA1, 0x52, classObjectId, values.toByteArray()));
-        records.add(new HprofHeapDump(0, dump.toArray(new HprofDumpRecord[0])));
-
-        // TODO: When perflib can handle the case where strings are referred to
-        // before they are defined, just add the string records to the records
-        // list.
-        List<HprofRecord> actualRecords = new ArrayList<HprofRecord>();
-        actualRecords.addAll(strings.getStringRecords());
-        actualRecords.addAll(records);
-
-        Hprof hprof = new Hprof("JAVA PROFILE 1.0.3", 2, new Date(), actualRecords);
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
-        hprof.write(os);
-        InMemoryBuffer buffer = new InMemoryBuffer(os.toByteArray());
-
-        ProguardMap map = new ProguardMap();
-        map.readFromReader(new StringReader(TEST_MAP));
-
-        Snapshot snapshot = Snapshot.createSnapshot(buffer, map);
-
-        ClassInstance inst = (ClassInstance)snapshot.findInstance(0xA1);
-        ClassObj cls = inst.getClassObj();
-        assertEquals("class.with.Methods", cls.getClassName());
-
-        Field[] fields = cls.getFields();
-        assertEquals(1, fields.length);
-        assertEquals("some_field", fields[0].getName());
-
-        StackTrace stack = inst.getStack();
-        StackFrame[] frames = stack.getFrames();
-        assertEquals(1, frames.length);
-        assertEquals("boringMethod", frames[0].getMethodName());
-        assertEquals("()V", frames[0].getSignature());
-        assertEquals("Methods.java", frames[0].getFilename());
-        assertEquals(43, frames[0].getLineNumber());
     }
 }

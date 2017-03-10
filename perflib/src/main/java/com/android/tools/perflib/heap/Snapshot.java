@@ -26,16 +26,15 @@ import com.android.tools.perflib.heap.analysis.DominatorsBase;
 import com.android.tools.perflib.heap.analysis.LinkEvalDominators;
 import com.android.tools.perflib.heap.analysis.ShortestDistanceVisitor;
 import com.android.tools.perflib.heap.analysis.TopologicalSort;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-
+import com.android.tools.proguard.ProguardMap;
 import gnu.trove.THashSet;
 import gnu.trove.TIntObjectHashMap;
 import gnu.trove.TLongObjectHashMap;
 import gnu.trove.TObjectProcedure;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 
 /*
  * A snapshot of all of the heaps, and related meta-data, for the runtime at a given instant.
