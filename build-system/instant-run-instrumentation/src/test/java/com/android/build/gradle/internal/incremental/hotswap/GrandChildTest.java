@@ -30,6 +30,7 @@ public class GrandChildTest {
     @ClassRule
     public static ClassEnhancement harness = new ClassEnhancement();
 
+    @SuppressWarnings("SelfEquals")  // Code below tests an Object.equals contract violation.
     @Test
     public void changeGrandChildImpl() throws Exception {
 
@@ -46,7 +47,8 @@ public class GrandChildTest {
                 "public_method:24.0from grand child12_child"
                         +"public_method:12.0from grand child24_child");
 
-        assertWithMessage("base: grandChild:equals()").that(grandChild).isEqualTo(grandChild);
+        assertWithMessage("base: grandChild:equals()")
+                .that(grandChild.equals(grandChild)).isTrue();
 
         // change the super class of the parentInvocation instance and check that parent's methods
         // are the new implementations.
@@ -62,6 +64,7 @@ public class GrandChildTest {
                 "public_method:26.0from grand child12_child"
                         +"public_method:12.0from grand child26_child");
 
-        assertWithMessage("changeSub: grandChild:equals()").that(grandChild).isEqualTo(grandChild);
+        assertWithMessage("changeSub: grandChild:equals()")
+                .that(grandChild.equals(grandChild)).isFalse();
     }
 }
