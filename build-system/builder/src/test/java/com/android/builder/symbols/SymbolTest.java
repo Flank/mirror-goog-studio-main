@@ -156,12 +156,6 @@ public class SymbolTest {
     }
 
     @Test
-    public void equalItself() {
-        Symbol sa = new Symbol("attr", "b", "c", "d");
-        assertThat(sa).isEqualTo(sa);
-    }
-
-    @Test
     public void useEqualsVerifier() {
         EqualsVerifier.forClass(Symbol.class)
                 .suppress(Warning.STRICT_INHERITANCE)
