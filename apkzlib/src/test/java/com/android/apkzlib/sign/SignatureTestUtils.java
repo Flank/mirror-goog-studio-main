@@ -80,7 +80,6 @@ public class SignatureTestUtils {
      * @return the pair with the private key and certificate
      * @throws Exception failed to generate the signature data
      */
-    @SuppressWarnings("InsecureCryptoUsage")  // just test code anyway
     @Nonnull
     public static ApkZLibPair<PrivateKey, X509Certificate> generateSignature(
             @Nonnull String sign,
