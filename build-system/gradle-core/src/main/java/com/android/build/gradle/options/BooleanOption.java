@@ -36,7 +36,9 @@ public enum BooleanOption implements Option<Boolean> {
     ENABLE_DEPRECATED_NDK("android.useDeprecatedNdk"),
     ENABLE_IMPROVED_DEPENDENCY_RESOLUTION("android.enableImprovedDependenciesResolution", true),
     DISABLE_RESOURCE_VALIDATION("android.disableResourceValidation"),
-    BUILD_ONLY_TARGET_ABI("android.buildOnlyTargetAbi"),
+
+    /** Set to true to build native .so libraries only for the device it will be run on. */
+    BUILD_ONLY_TARGET_ABI("android.buildOnlyTargetAbi", true),
     KEEP_TIMESTAMPS_IN_APK("android.keepTimestampsInApk"),
 
     IDE_INVOKED_FROM_IDE(AndroidProject.PROPERTY_INVOKED_FROM_IDE),
@@ -46,7 +48,6 @@ public enum BooleanOption implements Option<Boolean> {
             AndroidProject.PROPERTY_BUILD_MODEL_FEATURE_FULL_DEPENDENCIES),
     IDE_REFRESH_EXTERNAL_NATIVE_MODEL(AndroidProject.PROPERTY_REFRESH_EXTERNAL_NATIVE_MODEL),
     IDE_GENERATE_SOURCES_ONLY(AndroidProject.PROPERTY_GENERATE_SOURCES_ONLY),
-    IDE_TEST_ONLY(AndroidProject.PROPERTY_TEST_ONLY),
     ;
 
     @NonNull private final String propertyName;

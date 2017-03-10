@@ -70,10 +70,6 @@ public class AndroidGradleOptions {
 
     public static final String ANDROID_SDK_CHANNEL = "android.sdk.channel";
 
-    /**
-     * Set to true to build native .so libraries only for the device it will be run on.
-     */
-    public static final String PROPERTY_BUILD_ONLY_TARGET_ABI = "android.buildOnlyTargetAbi";
 
     public static final String PROPERTY_SHARD_TESTS_BETWEEN_DEVICES =
             "android.androidTest.shardBetweenDevices";
@@ -230,10 +226,6 @@ public class AndroidGradleOptions {
     @Nullable
     public static String getBuildTargetDensity(@NonNull Project project) {
         return getString(project, AndroidProject.PROPERTY_BUILD_DENSITY);
-    }
-
-    public static boolean isBuildOnlyTargetAbiEnabled(@NonNull Project project) {
-        return getBoolean(project, PROPERTY_BUILD_ONLY_TARGET_ABI);
     }
 
     @Nullable

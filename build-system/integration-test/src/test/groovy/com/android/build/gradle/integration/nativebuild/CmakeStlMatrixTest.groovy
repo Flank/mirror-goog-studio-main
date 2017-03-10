@@ -150,7 +150,6 @@ android {
     @Test
     void "check apk content with injected ABI"() {
         project.executor()
-                .withProperty(AndroidGradleOptions.PROPERTY_BUILD_ONLY_TARGET_ABI, "true")
                 .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "x86")
                 .run("clean", "assembleDebug")
         Apk apk = project.getApk("debug");

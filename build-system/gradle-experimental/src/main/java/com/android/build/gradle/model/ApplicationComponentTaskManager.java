@@ -40,6 +40,7 @@ public class ApplicationComponentTaskManager extends ApplicationTaskManager {
 
     public ApplicationComponentTaskManager(
             @NonNull Project project,
+            @NonNull ProjectOptions projectOptions,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull AndroidConfig extension,
@@ -50,7 +51,7 @@ public class ApplicationComponentTaskManager extends ApplicationTaskManager {
             @NonNull Recorder recorder) {
         super(
                 project,
-                new ProjectOptions(project),
+                projectOptions,
                 androidBuilder,
                 dataBindingBuilder,
                 extension,
