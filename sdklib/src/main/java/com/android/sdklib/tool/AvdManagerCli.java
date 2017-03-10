@@ -26,6 +26,7 @@ import com.android.repository.api.LocalPackage;
 import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.ProgressIndicatorAdapter;
 import com.android.repository.io.FileOpUtils;
+import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISystemImage;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.sdklib.devices.Device;
@@ -40,6 +41,7 @@ import com.android.sdklib.repository.targets.SystemImage;
 import com.android.sdklib.util.CommandLineParser;
 import com.android.utils.ILogger;
 import com.android.utils.IReaderLogger;
+import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -353,15 +355,15 @@ class AvdManagerCli extends CommandLineParser {
             // list action.
             if (AvdManagerCli.OBJECT_AVD.equals(directObject)) {
                 displayAvdList();
-
             } else if (AvdManagerCli.OBJECT_DEVICE.equals(directObject)) {
                 displayDeviceList();
-
+            } else if (AvdManagerCli.OBJECT_TARGET.equals(directObject)) {
+                displayTargetList();
             } else {
                 displayAvdList();
                 displayDeviceList();
+                displayTargetList();
             }
-
         } else if (AvdManagerCli.VERB_CREATE.equals(verb)) {
             if (AvdManagerCli.OBJECT_AVD.equals(directObject)) {
                 createAvd();
@@ -369,11 +371,9 @@ class AvdManagerCli extends CommandLineParser {
         } else if (AvdManagerCli.VERB_DELETE.equals(verb) &&
                 AvdManagerCli.OBJECT_AVD.equals(directObject)) {
             deleteAvd();
-
         } else if (AvdManagerCli.VERB_MOVE.equals(verb) &&
                 AvdManagerCli.OBJECT_AVD.equals(directObject)) {
             moveAvd();
-
         } else {
             printHelpAndExit(null);
         }
@@ -382,7 +382,7 @@ class AvdManagerCli extends CommandLineParser {
     /**
      * Displays the tags & ABIs valid for the given images.
      */
-    private void displayTagAbiList(Collection<SystemImage> systemImages, String message) {
+    private void displayTagAbiList(@NonNull Collection<? extends ISystemImage> systemImages, @NonNull String message) {
         mSdkLog.info(message);
         if (!systemImages.isEmpty()) {
             boolean first = true;
@@ -520,6 +520,68 @@ class AvdManagerCli extends CommandLineParser {
         }
     }
 
+    /**
+     * Displays the list of available Targets (Platforms and Add-ons)
+     */
+    void displayTargetList() {
+        ProgressIndicator progress = new ConsoleProgressIndicator() {
+            @Override
+            public void logVerbose(@NonNull String s) {
+                // don't log verbose messages
+            }
+        };
+
+        Collection<IAndroidTarget> targets = mSdkHandler.getAndroidTargetManager(progress)
+                .getTargets(progress);
+
+        // Compact output, suitable for scripts.
+        if (getFlagCompact()) {
+            char eol = getFlagEolNull() ? '\0' : '\n';
+            for (IAndroidTarget target : targets) {
+                mSdkLog.info("%1$s%2$c", target.hashString(), eol);
+            }
+            return;
+        }
+        mSdkLog.info("Available Android targets:\n");
+        int index = 1;
+        for (IAndroidTarget target : targets) {
+            mSdkLog.info("----------\n");
+            mSdkLog.info("id: %1$d or \"%2$s\"\n", index, target.hashString());
+            mSdkLog.info("     Name: %s\n", target.getName());
+            if (target.isPlatform()) {
+                mSdkLog.info("     Type: Platform\n");
+                mSdkLog.info("     API level: %s\n", target.getVersion().getApiString());
+                mSdkLog.info("     Revision: %d\n", target.getRevision());
+            } else {
+                mSdkLog.info("     Type: Add-On\n");
+                mSdkLog.info("     Vendor: %s\n", target.getVendor());
+                mSdkLog.info("     Revision: %d\n", target.getRevision());
+                if (target.getDescription() != null) {
+                    mSdkLog.info("     Description: %s\n", target.getDescription());
+                }
+                mSdkLog.info("     Based on Android %s (API level %s)\n",
+                        target.getVersionName(), target.getVersion().getApiString());
+                // display the optional libraries.
+                List<IAndroidTarget.OptionalLibrary> libraries = target.getAdditionalLibraries();
+                if (!libraries.isEmpty()) {
+                    mSdkLog.info("     Libraries:\n");
+                    for (IAndroidTarget.OptionalLibrary library : libraries) {
+                        mSdkLog.info("      * %1$s (%2$s)\n",
+                                library.getName(), library.getJar().getName());
+                        mSdkLog.info("          %1$s\n", library.getDescription());
+                    }
+                }
+            }
+            // get the target tags & ABIs
+            File targetLocation = new File(target.getLocation());
+            ISystemImage image =
+                    mSdkHandler.getSystemImageManager(progress).getImageAt(targetLocation);
+            if (image != null) {
+                displayTagAbiList(ImmutableList.of(image), " Tag/ABIs : ");
+            }
+            index++;
+        }
+    }
     /**
      * Displays the list of available devices.
      */
