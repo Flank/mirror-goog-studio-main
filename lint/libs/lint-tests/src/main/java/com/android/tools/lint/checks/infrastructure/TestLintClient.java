@@ -90,6 +90,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -171,17 +172,57 @@ public class TestLintClient extends LintCliClient {
         return true;
     }
 
+    @Nullable
+    private static File findIncrementalProject(@NonNull List<File> files,
+            @Nullable String incrementalFileName) {
+        // Multiple projects: assume the project names were included in the incremental
+        // task names
+        if (incrementalFileName == null) {
+            if (files.size() == 1) {
+                assert false : "Need to specify incremental file name if more than one project";
+            } else {
+                return files.get(0);
+            }
+        }
+        if (files.size() > 1) {
+            for (File dir : files) {
+                File root = dir.getParentFile(); // Allow the project name to be part of the name
+                File current = new File(root,
+                        incrementalFileName.replace('/', File.separatorChar));
+                if (current.exists()) {
+                    return dir;
+                }
+            }
+        }
+
+        for (File dir : files) {
+            File current = new File(dir,
+                    incrementalFileName.replace('/', File.separatorChar));
+            if (current.exists()) {
+                return dir;
+            }
+        }
+
+        return null;
+    }
+
     protected Pair<String,List<Warning>> checkLint(List<File> files, List<Issue> issues)
             throws Exception {
         if (task.incrementalFileName != null) {
             boolean found = false;
-            for (File dir : files) {
+
+            File dir = findIncrementalProject(files, task.incrementalFileName);
+            if (dir != null) {
                 File current = new File(dir,
                         task.incrementalFileName.replace('/', File.separatorChar));
+                if (!current.exists()) {
+                    // Specified the project name as part of the name to disambiguate
+                    current = new File(dir.getParentFile(),
+                            task.incrementalFileName.replace('/', File.separatorChar));
+                }
                 if (current.exists()) {
                     setIncremental(current);
                     found = true;
-                    break;
                 }
             }
             if (!found) {
@@ -359,8 +400,8 @@ public class TestLintClient extends LintCliClient {
 
         LintRequest request = new LintRequest(this, files);
         if (incrementalCheck != null) {
-            assertEquals(1, files.size());
-            File projectDir = files.get(0);
+            File projectDir = findIncrementalProject(files, task.incrementalFileName);
+            assert projectDir != null;
             assertTrue(isProjectDirectory(projectDir));
             Project project = createProject(projectDir, projectDir);
             project.addFile(incrementalCheck);
@@ -427,7 +468,38 @@ public class TestLintClient extends LintCliClient {
         return result;
     }
 
-    protected static String cleanup(String result) {
+    protected void addCleanupDir(@NonNull File dir) {
+        cleanupDirs.add(dir);
+        try {
+            cleanupDirs.add(dir.getCanonicalFile());
+        } catch (IOException e) {
+            fail(e.getLocalizedMessage());
+        }
+        cleanupDirs.add(dir.getAbsoluteFile());
+    }
+
+    protected final Set<File> cleanupDirs = Sets.newHashSet();
+
+    protected String cleanup(String result) {
+        List<File> sorted = new ArrayList<>(cleanupDirs);
+        // Process dirs in order such that we match longest substrings first
+        sorted.sort((file1, file2) -> {
+            String path1 = file1.getPath();
+            String path2 = file2.getPath();
+            int delta = path2.length() - path1.length();
+            if (delta != 0) {
+                return delta;
+            } else {
+                return path1.compareTo(path2);
+            }
+        });
+
+        for (File dir : sorted) {
+            if (result.contains(dir.getPath())) {
+                result = result.replace(dir.getPath(), "/TESTROOT");
+            }
+        }
+
         // The output typically contains a few directory/filenames.
         // On Windows we need to change the separators to the unix-style
         // forward slash to make the test as OS-agnostic as possible.
@@ -864,6 +936,14 @@ public class TestLintClient extends LintCliClient {
             super(client, dir, referenceDir);
             this.projectDescription = projectDescription;
             this.mocker = mocker;
+            // In the old days merging was opt in, but we're almost exclusively using/supporting
+            // Gradle projects now, so make this the default behavior for test projects too, even
+            // if they don't explicitly opt into Gradle features like mocking during the test.
+            // E.g. a simple project like
+            //     ManifestDetectorTest#testUniquePermissionsPrunedViaManifestRemove
+            // which simply registers library and app manifests (no build files) should exhibit
+            // manifest merging.
+            this.mergeManifests = true;
         }
 
         @Override
