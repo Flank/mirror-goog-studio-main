@@ -3191,7 +3191,7 @@ public abstract class TaskManager {
                         scope.getOutputs(TaskOutputHolder.TaskOutputType.PROCESSED_RES),
                         scope.getShrunkProcessedResourcesOutputDirectory(),
                         androidBuilder,
-                        AaptGeneration.fromProjectOptions(getGlobalScope().getProjectOptions()),
+                        AaptGeneration.fromProjectOptions(projectOptions),
                         logger);
 
         Optional<AndroidTask<TransformTask>> shrinkTask =
