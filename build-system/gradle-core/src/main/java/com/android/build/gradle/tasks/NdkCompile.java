@@ -31,7 +31,6 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NdkTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessInfoBuilder;
@@ -439,8 +438,7 @@ public class NdkCompile extends NdkTask {
 
         @Override
         public void execute(@NonNull NdkCompile ndkCompile) {
-            final BaseVariantData<? extends BaseVariantOutputData> variantData =
-                    variantScope.getVariantData();
+            final BaseVariantData variantData = variantScope.getVariantData();
 
             ndkCompile.setAndroidBuilder(variantScope.getGlobalScope().getAndroidBuilder());
             ndkCompile.setVariantName(variantData.getName());

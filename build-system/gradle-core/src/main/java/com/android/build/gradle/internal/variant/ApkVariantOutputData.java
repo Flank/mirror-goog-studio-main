@@ -43,7 +43,8 @@ public class ApkVariantOutputData extends BaseVariantOutputData {
     @Override
     public ImmutableList<ApkOutputFile> getOutputs() {
         return ImmutableList.copyOf(
-                getScope()
+                variantData
+                        .getScope()
                         .getSplitScope()
                         .getOutputs(VariantScope.TaskOutputType.APK)
                         .stream()

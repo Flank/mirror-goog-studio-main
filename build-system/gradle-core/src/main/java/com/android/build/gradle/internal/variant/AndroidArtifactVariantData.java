@@ -26,11 +26,9 @@ import com.android.builder.profile.Recorder;
 import java.util.Collections;
 import java.util.Set;
 
-/**
- * Data about a variant that produces an android artifact.
- */
+/** Data about a variant that produces an android artifact. */
 public abstract class AndroidArtifactVariantData<T extends BaseVariantOutputData>
-        extends BaseVariantData<T> {
+        extends BaseVariantData {
     private Set<String> compatibleScreens = null;
 
     protected AndroidArtifactVariantData(

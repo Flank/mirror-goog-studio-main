@@ -55,7 +55,7 @@ public interface VariantFactory {
     default BaseVariantImpl createVariantApi(
             @NonNull Instantiator instantiator,
             @NonNull AndroidBuilder androidBuilder,
-            @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData,
+            @NonNull BaseVariantData variantData,
             @NonNull ReadOnlyObjectProvider readOnlyObjectProvider) {
 
         return instantiator.newInstance(

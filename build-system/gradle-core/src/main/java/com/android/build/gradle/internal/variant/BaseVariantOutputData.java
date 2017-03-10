@@ -22,7 +22,6 @@ import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
 import com.android.build.gradle.api.ApkOutputFile;
-import com.android.build.gradle.internal.scope.VariantOutputScope;
 import com.android.build.gradle.tasks.PackageAndroidArtifact;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.ide.common.build.ApkData;
@@ -41,8 +40,7 @@ public abstract class BaseVariantOutputData implements VariantOutput {
 
     private static final String UNIVERSAL = "universal";
 
-    @NonNull
-    public final BaseVariantData<?> variantData;
+    @NonNull public final BaseVariantData variantData;
 
     @NonNull
     private final ApkOutputFile mainApkOutputFile;
@@ -55,13 +53,10 @@ public abstract class BaseVariantOutputData implements VariantOutput {
 
     public Task assembleTask;
 
-    @NonNull
-    private final VariantOutputScope scope;
-
     public BaseVariantOutputData(
             @NonNull OutputFile.OutputType outputType,
             @NonNull Collection<FilterData> filters,
-            @NonNull BaseVariantData<?> variantData) {
+            @NonNull BaseVariantData variantData) {
         this.variantData = variantData;
         ApkData mainApkData = variantData.getSplitScope().getMainSplit();
         this.mainApkOutputFile =
@@ -70,8 +65,6 @@ public abstract class BaseVariantOutputData implements VariantOutput {
                         filters,
                         this::getFile,
                         mainApkData != null ? mainApkData.getVersionCode() : -1);
-
-        scope = new VariantOutputScope(variantData.getScope(), this);
     }
 
     @NonNull
@@ -164,8 +157,4 @@ public abstract class BaseVariantOutputData implements VariantOutput {
         return sb.toString();
     }
 
-    @NonNull
-    public VariantOutputScope getScope() {
-        return scope;
-    }
 }

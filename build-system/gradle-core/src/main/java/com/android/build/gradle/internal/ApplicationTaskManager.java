@@ -40,7 +40,6 @@ import com.android.build.gradle.internal.transforms.InstantRunDependenciesApkBui
 import com.android.build.gradle.internal.transforms.InstantRunSliceSplitApkBuilder;
 import com.android.build.gradle.internal.variant.ApplicationVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.AndroidJarTask;
@@ -89,8 +88,7 @@ public class ApplicationTaskManager extends TaskManager {
     @Override
     public void createTasksForVariantScope(
             @NonNull final TaskFactory tasks, @NonNull final VariantScope variantScope) {
-        BaseVariantData<? extends BaseVariantOutputData> variantData =
-                variantScope.getVariantData();
+        BaseVariantData variantData = variantScope.getVariantData();
         assert variantData instanceof ApplicationVariantData;
 
         createAnchorTasks(tasks, variantScope);
@@ -407,7 +405,7 @@ public class ApplicationTaskManager extends TaskManager {
     private void handleMicroApp(
             @NonNull TaskFactory tasks,
             @NonNull VariantScope scope) {
-        BaseVariantData<? extends BaseVariantOutputData> variantData = scope.getVariantData();
+        BaseVariantData variantData = scope.getVariantData();
         GradleVariantConfiguration variantConfiguration = variantData.getVariantConfiguration();
         Boolean unbundledWearApp = variantConfiguration.getMergedFlavor().getWearAppUnbundled();
 

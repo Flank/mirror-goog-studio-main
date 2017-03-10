@@ -27,7 +27,6 @@ import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.AtomVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.AndroidJarTask;
 import com.android.build.gradle.tasks.BundleAtom;
@@ -187,8 +186,7 @@ public class AtomTaskManager extends TaskManager {
                 () -> createShaderTask(tasks, variantScope));
 
         // Add NDK tasks
-        BaseVariantData<? extends BaseVariantOutputData> variantData =
-                variantScope.getVariantData();
+        BaseVariantData variantData = variantScope.getVariantData();
         if (!isComponentModelPlugin()) {
             recorder.record(
                     ExecutionType.ATOM_TASK_MANAGER_CREATE_NDK_TASK,

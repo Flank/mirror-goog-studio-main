@@ -48,7 +48,6 @@ import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.TestedVariantData;
@@ -170,7 +169,7 @@ public class VariantManager implements VariantModel {
      * the same, but we'll try to gradually shift all the immutable state to VariantScope and
      * pretend that there's only an edge from scope to data.
      */
-    public void addVariant(BaseVariantData<?> variantData) {
+    public void addVariant(BaseVariantData variantData) {
         variantScopes.add(variantData.getScope());
     }
 
@@ -284,8 +283,8 @@ public class VariantManager implements VariantModel {
      */
     @NonNull
     @Deprecated
-    public List<BaseVariantData<?>> getVariantDataList() {
-        List<BaseVariantData<?>> result = Lists.newArrayListWithExpectedSize(variantScopes.size());
+    public List<BaseVariantData> getVariantDataList() {
+        List<BaseVariantData> result = Lists.newArrayListWithExpectedSize(variantScopes.size());
         for (VariantScope variantScope : variantScopes) {
             result.add(variantScope.getVariantData());
         }
@@ -328,12 +327,9 @@ public class VariantManager implements VariantModel {
         taskManager.createReportTasks(tasks, variantScopes);
     }
 
-    /**
-     * Create assemble task for VariantData.
-     */
+    /** Create assemble task for VariantData. */
     private void createAssembleTaskForVariantData(
-            TaskFactory tasks,
-            final BaseVariantData<?> variantData) {
+            TaskFactory tasks, final BaseVariantData variantData) {
         final VariantScope variantScope = variantData.getScope();
         if (variantData.getType().isForTesting()) {
             variantScope.setAssembleTask(taskManager.createAssembleTask(tasks, variantData));
@@ -406,7 +402,7 @@ public class VariantManager implements VariantModel {
     /** Create tasks for the specified variant. */
     public void createTasksForVariantData(
             final TaskFactory tasks, final VariantScope variantScope) {
-        BaseVariantData<?> variantData = variantScope.getVariantData();
+        BaseVariantData variantData = variantScope.getVariantData();
         VariantType variantType = variantData.getType();
 
         final BuildTypeData buildTypeData =
@@ -635,10 +631,8 @@ public class VariantManager implements VariantModel {
         }
     }
 
-    /**
-     * Create a VariantData for a specific combination of BuildType and ProductFlavor list.
-     */
-    public BaseVariantData<? extends BaseVariantOutputData> createVariantData(
+    /** Create a VariantData for a specific combination of BuildType and ProductFlavor list. */
+    public BaseVariantData createVariantData(
             @NonNull com.android.builder.model.BuildType buildType,
             @NonNull List<? extends ProductFlavor> productFlavorList) {
         BuildTypeData buildTypeData = buildTypes.get(buildType.getName());
@@ -716,7 +710,7 @@ public class VariantManager implements VariantModel {
         variantSourceSets.add(defaultConfigData.getSourceSet());
 
         // Done. Create the variant and get its internal storage object.
-        BaseVariantData<?> variantData =
+        BaseVariantData variantData =
                 variantFactory.createVariantData(variantConfig, taskManager, recorder);
 
         VariantDependencies.Builder builder =
@@ -935,9 +929,8 @@ public class VariantManager implements VariantModel {
             }
 
             if (!ignore) {
-                BaseVariantData<?> variantData = createVariantData(
-                        buildTypeData.getBuildType(),
-                        productFlavorList);
+                BaseVariantData variantData =
+                        createVariantData(buildTypeData.getBuildType(), productFlavorList);
                 addVariant(variantData);
 
                 GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();

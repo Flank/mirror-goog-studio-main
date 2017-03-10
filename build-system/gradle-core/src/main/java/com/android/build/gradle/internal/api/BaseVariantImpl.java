@@ -69,7 +69,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     }
 
     @NonNull
-    protected abstract BaseVariantData<?> getVariantData();
+    protected abstract BaseVariantData getVariantData();
 
     public void addOutputs(@NonNull List<BaseVariantOutput> outputs) {
        this.outputs.addAll(outputs);

@@ -38,7 +38,6 @@ import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.build.gradle.internal.tasks.KnownFilesSaveData;
 import com.android.build.gradle.internal.tasks.KnownFilesSaveData.InputSet;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.builder.files.FileCacheByPath;
 import com.android.builder.files.IncrementalRelativeFileSets;
 import com.android.builder.files.RelativeFile;
@@ -525,8 +524,7 @@ public class PackageAtom extends IncrementalTask {
         @Override
         public void execute(@NonNull PackageAtom packageAtom) {
             GlobalScope globalScope = scope.getGlobalScope();
-            final BaseVariantData<? extends BaseVariantOutputData> variantData =
-                    scope.getVariantData();
+            final BaseVariantData variantData = scope.getVariantData();
             final GradleVariantConfiguration config = variantData.getVariantConfiguration();
 
             packageAtom.setAndroidBuilder(globalScope.getAndroidBuilder());

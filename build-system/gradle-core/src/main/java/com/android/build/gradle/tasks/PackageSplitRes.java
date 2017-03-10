@@ -25,7 +25,6 @@ import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.BaseTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.files.IncrementalRelativeFileSets;
 import com.android.builder.internal.packaging.IncrementalPackager;
@@ -145,7 +144,7 @@ public class PackageSplitRes extends BaseTask {
 
         @Override
         public void execute(@NonNull PackageSplitRes packageSplitResourcesTask) {
-            BaseVariantData<? extends BaseVariantOutputData> variantData = scope.getVariantData();
+            BaseVariantData variantData = scope.getVariantData();
             final VariantConfiguration config = variantData.getVariantConfiguration();
 
             packageSplitResourcesTask.splitScope = scope.getSplitScope();

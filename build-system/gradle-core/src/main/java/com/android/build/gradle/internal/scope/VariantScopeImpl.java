@@ -62,7 +62,6 @@ import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingProcessLayoutsTask;
 import com.android.build.gradle.internal.variant.ApplicationVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.LibraryVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.TestedVariantData;
@@ -134,8 +133,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @NonNull
     private GlobalScope globalScope;
-    @NonNull
-    private BaseVariantData<? extends BaseVariantOutputData> variantData;
+    @NonNull private BaseVariantData variantData;
     @NonNull
     private TransformManager transformManager;
     @Nullable
@@ -216,7 +214,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     public VariantScopeImpl(
             @NonNull GlobalScope globalScope,
             @NonNull TransformManager transformManager,
-            @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData) {
+            @NonNull BaseVariantData variantData) {
         this.globalScope = globalScope;
         this.transformManager = transformManager;
         this.variantData = variantData;
@@ -306,7 +304,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @Override
     @NonNull
-    public BaseVariantData<? extends BaseVariantOutputData> getVariantData() {
+    public BaseVariantData getVariantData() {
         return variantData;
     }
 

@@ -32,10 +32,8 @@ import java.util.Map;
 import org.gradle.api.Task;
 import org.gradle.api.tasks.bundling.Zip;
 
-/**
- * Data about a variant that produce a Library bundle (.aar)
- */
-public class LibraryVariantData extends BaseVariantData<LibVariantOutputData> implements TestedVariantData {
+/** Data about a variant that produce a Library bundle (.aar) */
+public class LibraryVariantData extends BaseVariantData implements TestedVariantData {
 
     private final Map<VariantType, TestVariantData> testVariants;
 

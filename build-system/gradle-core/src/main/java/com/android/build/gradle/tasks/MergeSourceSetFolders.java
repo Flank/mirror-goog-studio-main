@@ -28,7 +28,6 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.core.VariantType;
@@ -340,7 +339,7 @@ public class MergeSourceSetFolders extends IncrementalTask {
 
         @Override
         public void execute(@NonNull MergeSourceSetFolders mergeAssetsTask) {
-            BaseVariantData<? extends BaseVariantOutputData> variantData = scope.getVariantData();
+            BaseVariantData variantData = scope.getVariantData();
             VariantConfiguration variantConfig = variantData.getVariantConfiguration();
 
             mergeAssetsTask.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
@@ -364,8 +363,7 @@ public class MergeSourceSetFolders extends IncrementalTask {
         @Override
         public void execute(@NonNull MergeSourceSetFolders mergeAssetsTask) {
             super.execute(mergeAssetsTask);
-            final BaseVariantData<? extends BaseVariantOutputData> variantData =
-                    scope.getVariantData();
+            final BaseVariantData variantData = scope.getVariantData();
             final GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
             final Project project = scope.getGlobalScope().getProject();
 
@@ -407,7 +405,7 @@ public class MergeSourceSetFolders extends IncrementalTask {
         @Override
         public void execute(@NonNull MergeSourceSetFolders mergeAssetsTask) {
             super.execute(mergeAssetsTask);
-            BaseVariantData<? extends BaseVariantOutputData> variantData = scope.getVariantData();
+            BaseVariantData variantData = scope.getVariantData();
             final GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
 
             mergeAssetsTask.assetSetSupplier = TaskInputHelper.memoize(variantConfig::getJniLibsSets);
@@ -430,7 +428,7 @@ public class MergeSourceSetFolders extends IncrementalTask {
         @Override
         public void execute(@NonNull MergeSourceSetFolders mergeAssetsTask) {
             super.execute(mergeAssetsTask);
-            BaseVariantData<? extends BaseVariantOutputData> variantData = scope.getVariantData();
+            BaseVariantData variantData = scope.getVariantData();
             final GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
 
             mergeAssetsTask.assetSetSupplier = TaskInputHelper.memoize(variantConfig::getShaderSets);

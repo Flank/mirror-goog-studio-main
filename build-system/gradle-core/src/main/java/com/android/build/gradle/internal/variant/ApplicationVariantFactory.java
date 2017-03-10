@@ -44,7 +44,6 @@ import com.google.common.collect.Lists;
 import java.util.List;
 import java.util.Set;
 import org.gradle.api.NamedDomainObjectContainer;
-import org.gradle.api.Project;
 import org.gradle.internal.reflect.Instantiator;
 
 /**
@@ -142,7 +141,7 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
 
     public static void createApkOutputApiObjects(
             @NonNull Instantiator instantiator,
-            @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData,
+            @NonNull BaseVariantData variantData,
             @NonNull ApkVariantImpl variant) {
         List<? extends BaseVariantOutputData> outputList = variantData.getOutputs();
         List<BaseVariantOutput> apiOutputList = Lists.newArrayListWithCapacity(outputList.size());
