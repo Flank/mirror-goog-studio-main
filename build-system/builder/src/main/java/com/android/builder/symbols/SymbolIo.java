@@ -18,6 +18,7 @@ package com.android.builder.symbols;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.resources.ResourceType;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -30,6 +31,7 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -46,10 +48,10 @@ public final class SymbolIo {
      *
      * @param file the symbol file
      * @return the table read
-     * @throws UncheckedIOException failed to read the table
+     * @throws IOException failed to read the table
      */
     @NonNull
-    public static SymbolTable read(@NonNull File file) {
+    public static SymbolTable read(@NonNull File file) throws IOException {
         List<String> lines;
         try {
             lines = Files.readAllLines(file.toPath(), Charsets.UTF_8);
@@ -69,24 +71,25 @@ public final class SymbolIo {
                 // format is "<type> <class> <name> <value>"
                 // don't want to split on space as value could contain spaces.
                 int pos = line.indexOf(' ');
-                String type = line.substring(0, pos);
+                String typeName = line.substring(0, pos);
+                SymbolJavaType type = SymbolJavaType.getEnum(typeName);
                 int pos2 = line.indexOf(' ', pos + 1);
                 String className = line.substring(pos + 1, pos2);
+                ResourceType resourceType = ResourceType.getEnum(className);
+                if (resourceType == null) {
+                    throw new IOException("Invalid resource type " + className);
+                }
                 int pos3 = line.indexOf(' ', pos2 + 1);
                 String name = line.substring(pos2 + 1, pos3);
                 String value = line.substring(pos3 + 1);
-
-                table.add(new Symbol(className, name, type, value));
+                table.add(Symbol.createSymbol(resourceType, name, type, value));
             }
-        } catch (IndexOutOfBoundsException e) {
-            throw new UncheckedIOException(
-                    new IOException(
-                            String.format(
-                                    "File format error reading %s line %d: '%s'",
-                                    file.getAbsolutePath(),
-                                    lineIndex,
-                                    line),
-                            e));
+        } catch (IndexOutOfBoundsException | IOException e) {
+            throw new IOException(
+                    String.format(
+                            "File format error reading %s line %d: '%s'",
+                            file.getAbsolutePath(), lineIndex, line),
+                    e);
         }
 
         return table.build();
@@ -104,9 +107,9 @@ public final class SymbolIo {
 
         for (Symbol s : table.allSymbols()) {
             lines.add(
-                    s.getJavaType()
+                    s.getJavaType().getTypeName()
                             + " "
-                            + s.getResourceType()
+                            + s.getResourceType().getName()
                             + " "
                             + s.getName()
                             + " "
@@ -155,11 +158,10 @@ public final class SymbolIo {
         file = new File(file, SymbolTable.R_CLASS_NAME + SdkConstants.DOT_JAVA);
 
         /*
-         * Identify all resource types. We use a sorted set because we want to have resource types
-         * output in alphabetical order to make testing easier.
+         * Identify all resource types.
          */
 
-        SortedSet<String> resourceTypes = new TreeSet<>();
+        EnumSet<ResourceType> resourceTypes = EnumSet.noneOf(ResourceType.class);
         table.allSymbols().forEach(s -> resourceTypes.add(s.getResourceType()));
 
         /*
@@ -185,7 +187,7 @@ public final class SymbolIo {
             pw.println();
             pw.println("public final class " + SymbolTable.R_CLASS_NAME + " {");
 
-            for (String rt : resourceTypes) {
+            for (ResourceType rt : resourceTypes) {
                 pw.println("    public static final class " + rt + " {");
 
                 // Sort the symbols by name to make output preditable and, therefore, testing
@@ -202,7 +204,7 @@ public final class SymbolIo {
                             "        "
                                     + idModifiers
                                     + " "
-                                    + s.getJavaType()
+                                    + s.getJavaType().getTypeName()
                                     + " "
                                     + s.getName()
                                     + " = "

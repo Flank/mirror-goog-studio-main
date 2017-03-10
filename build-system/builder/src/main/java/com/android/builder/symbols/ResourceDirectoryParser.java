@@ -177,8 +177,9 @@ public class ResourceDirectoryParser {
                 // We do not need to validate the filenames of files inside the {@code values}
                 // directory as they do not get parsed into Symbols; but we need to validate the
                 // filenames of files inside non-values directories.
+                ResourceType resourceType;
                 try {
-                    ResourceType resourceType =
+                    resourceType =
                             FolderTypeRelationship.getNonIdRelatedResourceType(folderResourceType);
                     FileResourceNameValidator.validate(maybeResourceFile, resourceType);
                 } catch (MergingException e) {
@@ -192,10 +193,10 @@ public class ResourceDirectoryParser {
 
                 addIfNotExisting(
                         builder,
-                        new Symbol(
-                                folderResourceType.getName(),
+                        Symbol.createSymbol(
+                                resourceType,
                                 symbolName,
-                                "int",
+                                SymbolJavaType.INT,
                                 Integer.toString(idProvider.next())));
 
                 if (FolderTypeRelationship.isIdGeneratingFolderType(folderResourceType)

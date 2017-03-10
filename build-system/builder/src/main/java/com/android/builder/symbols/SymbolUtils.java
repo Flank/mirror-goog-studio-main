@@ -19,7 +19,6 @@ package com.android.builder.symbols;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.dependency.level2.AndroidDependency;
 import com.android.builder.internal.aapt.AaptPackageConfig.LibraryInfo;
 import com.android.ide.common.xml.AndroidManifestParser;
 import com.android.ide.common.xml.ManifestData;
@@ -109,7 +108,8 @@ public class SymbolUtils {
     public static Set<SymbolTable> loadDependenciesSymbolTables(
             @NonNull List<LibraryInfo> libraries,
             boolean enforceUniquePackageName,
-            @NonNull String mainPackageName) {
+            @NonNull String mainPackageName)
+            throws IOException {
 
         // For each dependency, load its symbol file.
         Set<SymbolTable> depSymbolTables = new HashSet<>();

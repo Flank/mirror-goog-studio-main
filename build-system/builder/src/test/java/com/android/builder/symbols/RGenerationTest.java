@@ -16,16 +16,14 @@
 
 package com.android.builder.symbols;
 
+import static com.android.builder.symbols.SymbolTestUtils.createSymbol;
+import static com.android.testutils.truth.MoreTruth.assertThat;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
-import com.android.annotations.NonNull;
 import com.android.utils.FileUtils;
 import java.io.File;
-import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -35,54 +33,34 @@ public class RGenerationTest {
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
-    /**
-     * Checks that a given file has a line with the given contents.
-     *
-     * @param file the file to check
-     * @param contents the contents expected in one of the lines
-     * @return does the file contain a line with the given contents?
-     * @throws Exception failed to read the file
-     */
-    private boolean fileContains(@NonNull File file, @NonNull String contents)
-            throws Exception {
-        List<String> lines = Files.readAllLines(file.toPath());
-        for (String line : lines) {
-            if (line.contains(contents)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     @Test
     public void librariesGetValuesFromMainSymbols() throws Exception {
         SymbolTable main =
                 SymbolTable.builder()
                         .tablePackage("a.b")
-                        .add(new Symbol("attr", "b", "c", "d"))
-                        .add(new Symbol("string", "f", "g", "h"))
+                        .add(createSymbol("attr", "b", "int", "d"))
+                        .add(createSymbol("string", "f", "int", "h"))
                         .build();
 
         SymbolTable l0 =
                 SymbolTable.builder()
                         .tablePackage("c.d")
-                        .add(new Symbol("attr", "b", "cc", "dd"))
+                        .add(createSymbol("attr", "b", "int[]", "dd"))
                         .build();
 
         SymbolTable l1 =
                 SymbolTable.builder()
                         .tablePackage("e.f")
-                        .add(new Symbol("string", "f", "gg", "hh"))
+                        .add(createSymbol("string", "f", "int[]", "hh"))
                         .build();
 
         File out = temporaryFolder.newFolder();
         RGeneration.generateRForLibraries(main, Arrays.asList(l0, l1), out, false);
 
-        assertTrue(fileContains(FileUtils.join(out, "c", "d", "R.java"), "static c b = d"));
-        assertFalse(fileContains(FileUtils.join(out, "c", "d", "R.java"), "static g f = h"));
-        assertFalse(fileContains(FileUtils.join(out, "e", "f", "R.java"), "static c b = d"));
-        assertTrue(fileContains(FileUtils.join(out, "e", "f", "R.java"), "static g f = h"));
+        assertThat(FileUtils.join(out, "c", "d", "R.java")).contains("static int b = d");
+        assertThat(FileUtils.join(out, "c", "d", "R.java")).doesNotContain("static int f = h");
+        assertThat(FileUtils.join(out, "e", "f", "R.java")).doesNotContain("static int b = d");
+        assertThat(FileUtils.join(out, "e", "f", "R.java")).contains("static int f = h");
     }
 
     @Test
@@ -90,14 +68,14 @@ public class RGenerationTest {
         SymbolTable main =
                 SymbolTable.builder()
                         .tablePackage("a.b")
-                        .add(new Symbol("attr", "b", "c", "d"))
+                        .add(createSymbol("attr", "b", "int", "d"))
                         .build();
 
         SymbolTable l0 =
                 SymbolTable.builder()
                         .tablePackage("c.d")
-                        .add(new Symbol("attr", "b", "c", "d"))
-                        .add(new Symbol("string", "ffff", "g", "h"))
+                        .add(createSymbol("attr", "b", "int", "d"))
+                        .add(createSymbol("string", "ffff", "int", "h"))
                         .build();
 
         File out = temporaryFolder.newFolder();
@@ -110,13 +88,13 @@ public class RGenerationTest {
         SymbolTable main =
                 SymbolTable.builder()
                         .tablePackage("a.b")
-                        .add(new Symbol("attr", "b", "c", "d"))
+                        .add(createSymbol("attr", "b", "int", "d"))
                         .build();
 
         SymbolTable l0 =
                 SymbolTable.builder()
                         .tablePackage("a.b")
-                        .add(new Symbol("attr", "b", "c", "d"))
+                        .add(createSymbol("attr", "b", "int", "d"))
                         .build();
 
         File out = temporaryFolder.newFolder();
@@ -130,55 +108,53 @@ public class RGenerationTest {
         SymbolTable main =
                 SymbolTable.builder()
                         .tablePackage("a.b")
-                        .add(new Symbol("attr", "b", "c", "d"))
-                        .add(new Symbol("string", "f", "g", "h"))
-                        .add(new Symbol("integer", "j", "k", "l"))
-                        .add(new Symbol("menu", "n", "o", "p"))
+                        .add(createSymbol("attr", "b", "int", "d"))
+                        .add(createSymbol("string", "f", "int[]", "h"))
+                        .add(createSymbol("integer", "j", "int", "l"))
+                        .add(createSymbol("menu", "n", "int[]", "p"))
                         .build();
 
         SymbolTable l0 =
                 SymbolTable.builder()
                         .tablePackage("a.c")
-                        .add(new Symbol("attr", "b", "c", "d"))
+                        .add(createSymbol("attr", "b", "int", "d"))
                         .build();
 
         SymbolTable l1 =
                 SymbolTable.builder()
                         .tablePackage("a.c")
-                        .add(new Symbol("string", "f", "g", "h"))
+                        .add(createSymbol("string", "f", "int", "h"))
                         .build();
 
         SymbolTable l2 =
                 SymbolTable.builder()
                         .tablePackage("a.d")
-                        .add(new Symbol("integer", "j", "k", "l"))
+                        .add(createSymbol("integer", "j", "int", "l"))
                         .build();
 
         SymbolTable l3 =
                 SymbolTable.builder()
                         .tablePackage("a.b.c")
-                        .add(new Symbol("menu", "n", "o", "p"))
+                        .add(createSymbol("menu", "n", "int", "p"))
                         .build();
 
         File out = temporaryFolder.newFolder();
 
         RGeneration.generateRForLibraries(main, Arrays.asList(l0, l1, l2, l3), out, false);
 
-        assertTrue(fileContains(FileUtils.join(out, "a", "c", "R.java"), "static c b = d"));
-        assertTrue(fileContains(FileUtils.join(out, "a", "c", "R.java"), "static g f = h"));
-        assertFalse(fileContains(FileUtils.join(out, "a", "c", "R.java"), "static k j = l"));
-        assertFalse(fileContains(FileUtils.join(out, "a", "c", "R.java"), "static o n = p"));
-        assertFalse(fileContains(FileUtils.join(out, "a", "d", "R.java"), "static c b = d"));
-        assertFalse(fileContains(FileUtils.join(out, "a", "d", "R.java"), "static g f = h"));
-        assertTrue(fileContains(FileUtils.join(out, "a", "d", "R.java"), "static k j = l"));
-        assertFalse(fileContains(FileUtils.join(out, "a", "d", "R.java"), "static o n = p"));
-        assertFalse(
-                fileContains(FileUtils.join(out, "a", "b", "c", "R.java"), "static c b = d"));
-        assertFalse(
-                fileContains(FileUtils.join(out, "a", "b", "c", "R.java"), "static g f = h"));
-        assertFalse(
-                fileContains(FileUtils.join(out, "a", "b", "c", "R.java"), "static k j = l"));
-        assertTrue(fileContains(FileUtils.join(out, "a", "b", "c", "R.java"), "static o n = p"));
+        assertThat(FileUtils.join(out, "a", "c", "R.java")).contains("static int b = d");
+        assertThat(FileUtils.join(out, "a", "c", "R.java")).contains("static int[] f = h");
+        assertThat(FileUtils.join(out, "a", "c", "R.java")).doesNotContain("static int j = l");
+        assertThat(FileUtils.join(out, "a", "c", "R.java")).doesNotContain("static int[] n = p");
+        assertThat(FileUtils.join(out, "a", "d", "R.java")).doesNotContain("static int b = d");
+        assertThat(FileUtils.join(out, "a", "d", "R.java")).doesNotContain("static int f = h");
+        assertThat(FileUtils.join(out, "a", "d", "R.java")).contains("static int j = l");
+        assertThat(FileUtils.join(out, "a", "d", "R.java")).doesNotContain("static int n = p");
+        assertThat(FileUtils.join(out, "a", "b", "c", "R.java")).doesNotContain("static int b = d");
+        assertThat(FileUtils.join(out, "a", "b", "c", "R.java"))
+                .doesNotContain("static int[] f = h");
+        assertThat(FileUtils.join(out, "a", "b", "c", "R.java")).doesNotContain("static int j = l");
+        assertThat(FileUtils.join(out, "a", "b", "c", "R.java")).contains("static int[] n = p");
     }
 
     @Test
@@ -186,26 +162,24 @@ public class RGenerationTest {
         SymbolTable main =
                 SymbolTable.builder()
                         .tablePackage("a.b")
-                        .add(new Symbol("attr", "b", "c", "d"))
+                        .add(createSymbol("attr", "b", "int", "d"))
                         .build();
 
         SymbolTable l0 =
                 SymbolTable.builder()
                         .tablePackage("c.d")
-                        .add(new Symbol("attr", "b", "c", "d"))
+                        .add(createSymbol("attr", "b", "int[]", "d"))
                         .build();
 
         File out = temporaryFolder.newFolder();
         RGeneration.generateRForLibraries(main, Collections.singleton(l0), out, false);
 
-        assertTrue(
-                fileContains(FileUtils.join(out, "c", "d", "R.java"), "public static c b = d"));
+        assertThat(FileUtils.join(out, "c", "d", "R.java")).contains("public static int b = d");
 
         out = temporaryFolder.newFolder();
         RGeneration.generateRForLibraries(main, Collections.singleton(l0), out, true);
 
-        assertTrue(
-                fileContains(
-                        FileUtils.join(out, "c", "d", "R.java"), "public static final c b = d"));
+        assertThat(FileUtils.join(out, "c", "d", "R.java"))
+                .contains("public static final int b = d");
     }
 }
