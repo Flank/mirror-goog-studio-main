@@ -108,8 +108,11 @@ public class CheckAll {
                     "instant-unit-tests", // Specific to testing instant run, not a "real" project.
                     "projectWithLocalDeps", // Doesn't have a build.gradle, not much to check anyway.
                     "simpleManifestMergingTask", // Not an Android project.
-                    "externalBuildPlugin" // Not an Android Project.
-                    );
+                    "externalBuildPlugin", // Not an Android Project.
+
+                    // Ignore for now:
+                    "extractRsEnabledAnnotations", // http://b.android.com/241407
+                    "rsSupportMode"); // http://b.android.com/241407
 
     private static final ImmutableSet<String> COMPONENT_MODEL_PROJECTS =
             ImmutableSet.of("componentModel", "ndkSanAngeles2", "ndkVariants");
