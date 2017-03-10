@@ -71,6 +71,7 @@ import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -1246,7 +1247,8 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             checkLocalMavenVersions(context, dependency, cookie, groupId, artifactId,
                     repository);
 
-            if (!mCheckedSupportLibs) {
+            if (!mCheckedSupportLibs && !artifactId.startsWith("multidex") &&
+                    !artifactId.equals("support-annotations")) {
                 mCheckedSupportLibs = true;
                 if (!context.getScope().contains(Scope.ALL_RESOURCE_FILES)) {
                     // Incremental editing: try flagging them in this file!
@@ -1429,7 +1431,8 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
 
         Project project = context.getMainProject();
         Multimap<String, MavenCoordinates> versionToCoordinate = ArrayListMultimap.create();
-        for (AndroidLibrary library : getAndroidLibraries(project)) {
+        Collection<AndroidLibrary> androidLibraries = getAndroidLibraries(project);
+        for (AndroidLibrary library : androidLibraries) {
             MavenCoordinates coordinates = library.getResolvedCoordinates();
             // Claims to be non-null but may not be after a failed gradle sync
             //noinspection ConstantConditions
@@ -1468,6 +1471,39 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                     + "Found versions " + Joiner.on(", ").join(sortedVersions) + ". "
                     + "Examples include `" + example1 + "` and `" + example2 + "`";
 
+            // Create an improved error message for a confusing scenario where you use
+            // data binding and end up with conflicting versions:
+            // https://code.google.com/p/android/issues/detail?id=229664
+            for (AndroidLibrary library : androidLibraries) {
+                MavenCoordinates coordinates = library.getResolvedCoordinates();
+                // Claims to be non-null but may not be after a failed gradle sync
+                //noinspection ConstantConditions
+                if (coordinates != null
+                        && coordinates.getGroupId().equals("com.android.databinding")
+                        && coordinates.getArtifactId().equals("library")) {
+                    for (AndroidLibrary dep : library.getLibraryDependencies()) {
+                        MavenCoordinates c = dep.getResolvedCoordinates();
+                        // Claims to be non-null but may not be after a failed gradle sync
+                        //noinspection ConstantConditions
+                        if (c != null
+                                && c.getGroupId().equals("com.android.support")
+                                && c.getArtifactId().equals("support-v4") &&
+                                !sortedVersions.get(0).equals(c.getVersion())) {
+                            message += ". Note that this project is using data binding "
+                                    + "(com.android.databinding:library:"
+                                    + coordinates.getVersion()
+                                    + ") which pulls in com.android.support:support-v4:"
+                                    + c.getVersion() + ". You can try to work around this "
+                                    + "by adding an explicit dependency on "
+                                    + "com.android.support:support-v4:" + sortedVersions.get(0);
+                            break;
+                        }
+
+                    }
+                    break;
+                }
+            }
+
             if (cookie != null) {
                 report(context, cookie, COMPATIBILITY, message);
             } else {
@@ -1477,7 +1513,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
     }
 
     private static MavenCoordinates findFirst(@NonNull Collection<MavenCoordinates> coordinates) {
-        return Collections.min(coordinates, (o1, o2) -> o1.toString().compareTo(o2.toString()));
+        return Collections.min(coordinates, Comparator.comparing(Object::toString));
     }
 
     @NonNull

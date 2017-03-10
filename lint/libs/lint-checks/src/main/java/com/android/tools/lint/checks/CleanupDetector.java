@@ -391,7 +391,7 @@ public class CleanupDetector extends Detector implements Detector.UastScanner {
             @NonNull UCallExpression node, @NonNull PsiMethod calledMethod) {
         if (isBeginTransaction(context, calledMethod)) {
             PsiVariable boundVariable = getVariableElement(node, true, true);
-            if (boundVariable == null && isCommittedInChainedCalls(context, node)) {
+            if (isCommittedInChainedCalls(context, node)) {
                 return;
             }
 

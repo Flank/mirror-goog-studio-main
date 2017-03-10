@@ -16,6 +16,8 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.checks.infrastructure.ProjectDescription.Type.LIBRARY;
+
 import com.android.tools.lint.checks.infrastructure.ProjectDescription;
 import com.android.tools.lint.detector.api.Detector;
 
@@ -152,7 +154,7 @@ public class RegistrationDetectorTest extends AbstractCheckTest {
                         + "import android.app.Activity;\n"
                         + "public class TestActivity extends Activity {\n"
                         + "}\n")
-        ).name("LibraryProject");
+        ).type(LIBRARY).name("LibraryProject");
 
         //noinspection all // Sample code
         ProjectDescription main = project(

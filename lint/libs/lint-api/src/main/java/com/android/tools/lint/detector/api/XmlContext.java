@@ -21,8 +21,10 @@ import com.android.annotations.Nullable;
 import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.XmlParser;
+import com.android.utils.Pair;
 import com.google.common.annotations.Beta;
 import java.io.File;
+import java.util.Map;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -122,12 +124,12 @@ public class XmlContext extends ResourceContext {
      * Reports an issue applicable to a given DOM node. The DOM node is used as the
      * scope to check for suppress lint annotations.
      *
-     * @param issue the issue to report
-     * @param scope the DOM node scope the error applies to. The lint infrastructure
-     *    will check whether there are suppress directives on this node (or its enclosing
-     *    nodes) and if so suppress the warning without involving the client.
+     * @param issue    the issue to report
+     * @param scope    the DOM node scope the error applies to. The lint infrastructure will check
+     *                 whether there are suppress directives on this node (or its enclosing nodes)
+     *                 and if so suppress the warning without involving the client.
      * @param location the location of the issue, or null if not known
-     * @param message the message for this warning
+     * @param message  the message for this warning
      */
     public void report(
             @NonNull Issue issue,
@@ -138,20 +140,30 @@ public class XmlContext extends ResourceContext {
     }
 
     /**
-     * Report an error.
-     * Like {@link #report(Issue, org.w3c.dom.Node, Location, String)} but with
-     * a now-unused data parameter at the end.
+     * Reports an issue applicable to a given DOM node. The DOM node is used as the
+     * scope to check for suppress lint annotations.
+     *
+     * @param issue        the issue to report
+     * @param scope        the DOM node scope the error applies to. The lint infrastructure will
+     *                     check whether there are suppress directives on this node (or its
+     *                     enclosing nodes) and if so suppress the warning without involving the
+     *                     client.
+     * @param location     the location of the issue, or null if not known
+     * @param message      the message for this warning
+     * @param quickfixData optional data to pass to the IDE for use by a quickfix.  If you're
+     *                     passing in multiple parameters, consider using {@link QuickfixData}
+     *                     instead of using for example {@link Pair} or {@link Map}
      */
     public void report(
             @NonNull Issue issue,
             @Nullable Node scope,
             @NonNull Location location,
             @NonNull String message,
-            @Nullable Object data) {
+            @Nullable Object quickfixData) {
         if (scope != null && driver.isSuppressed(this, issue, scope)) {
             return;
         }
-        super.doReport(issue, location, message, data);
+        super.doReport(issue, location, message, quickfixData);
     }
 
     @Override
@@ -195,5 +207,11 @@ public class XmlContext extends ResourceContext {
     @NonNull
     public Location.Handle createLocationHandle(@NonNull Node node) {
         return parser.createLocationHandle(this, node);
+    }
+
+    @Override
+    @Nullable
+    protected File getResourceFolder() {
+        return getResourceFolderType() != null ? file.getParentFile() : null;
     }
 }

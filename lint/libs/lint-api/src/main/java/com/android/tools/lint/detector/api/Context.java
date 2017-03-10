@@ -267,7 +267,9 @@ public class Context {
      * @param issue        the issue to report
      * @param location     the location of the issue
      * @param message      the message for this warning
-     * @param quickfixData parameterized data for IDE quickfixes
+     * @param quickfixData parameterized data for IDE quickfixes. If you're passing in
+     *                     multiple parameters, consider using {@link QuickfixData} instead
+     *                     of using for example {@link com.android.utils.Pair} or {@link Map}
      */
     public void report(
             @NonNull Issue issue,

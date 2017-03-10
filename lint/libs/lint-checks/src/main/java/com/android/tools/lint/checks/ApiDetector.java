@@ -70,6 +70,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.repository.GradleVersion;
+import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.repository.Revision;
 import com.android.repository.api.LocalPackage;
 import com.android.resources.ResourceFolderType;
@@ -88,6 +89,7 @@ import com.android.tools.lint.detector.api.ConstantEvaluator;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.DefaultPosition;
 import com.android.tools.lint.detector.api.Detector.ClassScanner;
+import com.android.tools.lint.detector.api.Detector.ResourceFolderScanner;
 import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
@@ -96,6 +98,8 @@ import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Location.SearchHints;
 import com.android.tools.lint.detector.api.Position;
+import com.android.tools.lint.detector.api.QuickfixData;
+import com.android.tools.lint.detector.api.ResourceContext;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -191,7 +195,7 @@ import org.w3c.dom.NodeList;
  * by this application (according to its minimum API requirement in the manifest).
  */
 public class ApiDetector extends ResourceXmlDetector
-        implements ClassScanner, UastScanner {
+        implements ClassScanner, UastScanner, ResourceFolderScanner {
 
     /**
      * Whether we flag variable, field, parameter and return type declarations of a type
@@ -331,7 +335,9 @@ public class ApiDetector extends ResourceXmlDetector
             Severity.WARNING,
             new Implementation(
                     ApiDetector.class,
-                    Scope.RESOURCE_FILE_SCOPE));
+                    EnumSet.of(Scope.RESOURCE_FILE, Scope.RESOURCE_FOLDER),
+                    Scope.RESOURCE_FILE_SCOPE,
+                    Scope.RESOURCE_FOLDER_SCOPE));
 
     /** Obsolete SDK_INT version check */
     public static final Issue OBSOLETE_SDK = Issue.create(
@@ -340,7 +346,11 @@ public class ApiDetector extends ResourceXmlDetector
 
             "This check flags version checks that are not necessary, because the " +
             "`minSdkVersion` (or surrounding known API level) is already at least " +
-            "as high as the version checked for.",
+            "as high as the version checked for.\n" +
+            "\n" +
+            "Similarly, it also looks for resources in `-vNN` folders, such as " +
+            "`values-v14` where the version qualifier is less than or equal to the " +
+            "`minSdkVersion`, where the contents should be merged into the best folder.",
 
             Category.PERFORMANCE,
             6,
@@ -2974,34 +2984,30 @@ public class ApiDetector extends ResourceXmlDetector
             int minSdk = getMinSdk(context);
             Boolean isConditional = isVersionCheckConditional(minSdk, binary);
             if (isConditional != null) {
-                String message = isConditional ? "Unnecessary; SDK_INT is always >= " + minSdk :
-                        "Unnecessary; SDK_INT is never < " + minSdk;
+                String message = (isConditional ? "Unnecessary; SDK_INT is always >= " : "Unnecessary; SDK_INT is never < ") + minSdk;
                 context.report(OBSOLETE_SDK, binary, context.getLocation(binary),
-                        message);
+                        message, isConditional);
             }
         }
     }
 
-    /**
-     * Given an error message produced by this lint detector for the {@link #OBSOLETE_SDK} issue,
-     * returns the constant value (true, false or unknown) equivalent to the version check.
-     * <p>
-     * Intended for IDE quickfix implementations.
-     *
-     * @param errorMessage the error message associated with the error
-     * @param format the format of the error message
-     * @return the corresponding constant value, or null if not recognized
-     */
-    @Nullable
-    public static Boolean getVersionCheckConstant(@NonNull String errorMessage,
-            @NonNull TextFormat format) {
-        errorMessage = format.toText(errorMessage);
-        if (errorMessage.contains("always")) {
-            return true;
-        } else if (errorMessage.contains("never")) {
-            return false;
-        } else {
-            return null;
+    @Override
+    public void checkFolder(@NonNull ResourceContext context, @NonNull String folderName) {
+        int folderVersion = context.getFolderVersion();
+        AndroidVersion minSdkVersion = context.getMainProject().getMinSdkVersion();
+        if (folderVersion > 1 && folderVersion <= minSdkVersion.getFeatureLevel()) {
+            FolderConfiguration folderConfig = FolderConfiguration.getConfigForFolder(folderName);
+            assert folderConfig != null : context.file;
+            folderConfig.setVersionQualifier(null);
+            ResourceFolderType resourceFolderType = context.getResourceFolderType();
+            assert resourceFolderType != null : context.file;
+            String newFolderName = folderConfig.getFolderName(resourceFolderType);
+            context.report(OBSOLETE_SDK, Location.create(context.file),
+                    String.format("This folder configuration (`v%1$d`) is unnecessary; "
+                            + "`minSdkVersion` is %2$s. Merge all the resources in this folder "
+                            + "into `%3$s`.",
+                            folderVersion, minSdkVersion.getApiString(), newFolderName),
+                    QuickfixData.create(context.file, newFolderName, minSdkVersion));
         }
     }
 

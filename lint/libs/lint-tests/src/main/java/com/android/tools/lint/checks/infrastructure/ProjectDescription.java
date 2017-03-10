@@ -27,6 +27,7 @@ public class ProjectDescription {
     TestFile[] files;
     final List<ProjectDescription> dependsOn = Lists.newArrayList();
     String name;
+    String dependencyGraph;
     Type type = Type.APP;
     boolean report = true;
 
@@ -74,6 +75,19 @@ public class ProjectDescription {
      */
     public ProjectDescription dependsOn(@NonNull ProjectDescription library) {
         dependsOn.add(library);
+        assert library.type != Type.APP : "Depended upon project should not have APP";
+        return this;
+    }
+
+    /**
+     * Adds the given dependency graph (the output of the Gradle dependency task)
+     * to be constructed when mocking a Gradle model for this project
+     *
+     * @param dependencyGraph the graph description
+     * @return this for constructor chaining
+     */
+    public ProjectDescription withDependencyGraph(@NonNull String dependencyGraph) {
+        this.dependencyGraph = dependencyGraph;
         return this;
     }
 

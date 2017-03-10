@@ -965,15 +965,58 @@ public class GradleDetectorTest extends AbstractCheckTest {
         lint().files(
                 gradle(""
                         + "apply plugin: 'android'\n"
-                        + "\n"
                         + "dependencies {\n"
+                        + "    compile \"com.android.support:multidex:1.0.1\"\n"
                         + "    compile \"com.android.support:appcompat-v7:24.2\"\n"
                         + "    compile \"com.android.support:support-v13:24.1\"\n"
                         + "    compile \"com.android.support:preference-v7:25.0-SNAPSHOT\"\n"
                         + "    compile \"com.android.support:cardview-v7:24.2\"\n"
-                        + "    compile \"com.android.support:multidex:1.0.1\"\n"
                         + "    compile \"com.android.support:support-annotations:25.0.0\"\n"
                         + "}\n"))
+                .issues(COMPATIBILITY)
+                .incremental()
+                .run()
+                .expect(expected);
+    }
+
+    public void testSupportLibraryConsistencyWithDataBinding() throws Exception {
+        String expected = ""
+                + "build.gradle:3: Error: All com.android.support libraries must use the exact "
+                + "same version specification (mixing versions can lead to runtime crashes). "
+                + "Found versions 25.0.0, 21.0.3. Examples include "
+                + "com.android.support:recyclerview-v7:25.0.0 and "
+                + "com.android.support:support-v4:21.0.3. "
+                + "Note that this project is using data binding "
+                + "(com.android.databinding:library:1.3.1) which pulls in "
+                + "com.android.support:support-v4:21.0.3. "
+                + "You can try to work around this by adding an explicit dependency on"
+                + " com.android.support:support-v4:25.0.0 [GradleCompatible]\n"
+                + "    compile \"com.android.support:recyclerview-v7:25.0.0\"\n"
+                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "1 errors, 0 warnings\n";
+        lint().projects(project(
+                gradle(""
+                        + "apply plugin: 'android'\n"
+                        + "dependencies {\n"
+                        + "    compile \"com.android.support:recyclerview-v7:25.0.0\"\n"
+                        + "    compile \"com.android.databinding:library:1.3.1\"\n"
+                        + "    compile \"com.android.databinding:baseLibrary:2.3.0-alpha2\"\n"
+                        + "}\n"))
+                .withDependencyGraph(""
+                        + "+--- com.android.support:recyclerview-v7:25.0.0\n"
+                        + "|    +--- com.android.support:support-annotations:25.0.0\n"
+                        + "|    +--- com.android.support:support-compat:25.0.0\n"
+                        + "|    |    \\--- com.android.support:support-annotations:25.0.0\n"
+                        + "|    \\--- com.android.support:support-core-ui:25.0.0\n"
+                        + "|         \\--- com.android.support:support-compat:25.0.0 (*)\n"
+                        + "+--- com.android.databinding:library:1.3.1\n"
+                        + "|    +--- com.android.support:support-v4:21.0.3\n"
+                        + "|    |    \\--- com.android.support:support-annotations:21.0.3 -> 25.0.0\n"
+                        + "|    \\--- com.android.databinding:baseLibrary:2.3.0-dev -> 2.3.0-alpha2\n"
+                        + "+--- com.android.databinding:baseLibrary:2.3.0-alpha2\n"
+                        + "\\--- com.android.databinding:adapters:1.3.1\n"
+                        + "     +--- com.android.databinding:library:1.3 -> 1.3.1 (*)\n"
+                        + "     \\--- com.android.databinding:baseLibrary:2.3.0-dev -> 2.3.0-alpha2"))
                 .issues(COMPATIBILITY)
                 .incremental()
                 .run()

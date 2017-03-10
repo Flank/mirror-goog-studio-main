@@ -18,9 +18,12 @@ package com.android.tools.lint.detector.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.resources.configuration.FolderConfiguration;
+import com.android.ide.common.resources.configuration.VersionQualifier;
 import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.client.api.LintDriver;
 import com.google.common.annotations.Beta;
+
 import java.io.File;
 
 /**
@@ -34,9 +37,10 @@ import java.io.File;
 @Beta
 public class ResourceContext extends Context {
     private final ResourceFolderType folderType;
+    private FolderConfiguration folderConfiguration;
 
     /**
-     * Construct a new {@link com.android.tools.lint.detector.api.ResourceContext}
+     * Construct a new {@link ResourceContext}
      *
      * @param driver the driver running through the checks
      * @param project the project containing the file being checked
@@ -74,6 +78,39 @@ public class ResourceContext extends Context {
      * @return the folder version, or -1 if no specific version was specified
      */
     public int getFolderVersion() {
-        return driver.getResourceFolderVersion(file);
+        if (getFolderConfiguration() != null) {
+            VersionQualifier versionQualifier = getFolderConfiguration().getVersionQualifier();
+            if (versionQualifier != null) {
+                return versionQualifier.getVersion();
+            }
+        }
+
+        return -1;
+    }
+
+    /**
+     * Returns the {@link FolderConfiguration} that this resource context belongs to
+     *
+     * @return the folder configuration, or null for non-resource XML files such as manifest files
+     */
+    @Nullable
+    public FolderConfiguration getFolderConfiguration() {
+        if (folderConfiguration == null && folderType != null) {
+            File folder = getResourceFolder();
+            if (folder != null) {
+                folderConfiguration = FolderConfiguration.getConfigForFolder(folder.getName());
+            }
+        }
+        return folderConfiguration;
+    }
+
+    /**
+     * Returns the resource folder that this resource context corresponds to, if applicable
+     *
+     * @return the resource folder if this resource context corresponds to a resource file
+     */
+    @Nullable
+    protected File getResourceFolder() {
+        return folderType != null ? file : null;
     }
 }

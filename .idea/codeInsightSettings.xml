@@ -6,6 +6,8 @@
       <name>java.awt.List</name>
       <name>junit.framework</name>
       <name>org.gradle.jarjar</name>
+      <name>org.jetbrains.annotations.NotNull</name>
+      <name>org.jetbrains.annotations.Nullable</name>
       <name>org.mockito.MockitoAnnotations.Mock</name>
       <name>org.testng</name>
     </excluded-names>

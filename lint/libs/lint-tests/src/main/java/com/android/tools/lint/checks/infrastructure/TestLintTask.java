@@ -59,6 +59,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
+@SuppressWarnings("SameParameterValue")
 public class TestLintTask {
     /** Map from project directory to corresponding Gradle model mocker */
     final Map<File, GradleModelMocker> projectMocks = Maps.newHashMap();
@@ -92,6 +93,8 @@ public class TestLintTask {
     File[] customRules;
     boolean ignoreUnknownGradleConstructs;
     Boolean supportResourceRepository;
+    boolean allowMissingSdk;
+    boolean requireCompileSdk;
 
     /** Creates a new lint test task */
     public TestLintTask() {
@@ -151,6 +154,52 @@ public class TestLintTask {
     public TestLintTask allowCompilationErrors(boolean allow) {
         ensurePreRun();
         this.allowCompilationErrors = allow;
+        return this;
+    }
+
+    /**
+     * Configures the test task to allow the SDK to be missing.
+     * To set a specific SDK home, use {@link #sdkHome(File)}.
+     *
+     * @return this, for constructor chaining
+     */
+    public TestLintTask allowMissingSdk() {
+        return allowMissingSdk(true);
+    }
+
+    /**
+     * Sets whether the test task should allow the SDK to be missing. Normally false.
+     * To set a specific SDK home, use {@link #sdkHome(File)}.
+     *
+     * @param allowMissingSdk whether the SDK should be allowed to be missing
+     * @return this, for constructor chaining
+     */
+    public TestLintTask allowMissingSdk(boolean allowMissingSdk) {
+        ensurePreRun();
+        this.allowMissingSdk = allowMissingSdk;
+        return this;
+    }
+
+    /**
+     * Configures the test task to require that the compileSdkVersion (specified
+     * in the project description) must be installed.
+     *
+     * @return this, for constructor chaining
+     */
+    public TestLintTask requireCompileSdk() {
+        return requireCompileSdk(true);
+    }
+
+    /**
+     * Sets whether the test requires that the compileSdkVersion (specified
+     * in the project description) must be installed.
+     *
+     * @param requireCompileSdk true to require the compileSdkVersion SDK to be installed
+     * @return this, for constructor chaining
+     */
+    public TestLintTask requireCompileSdk(boolean requireCompileSdk) {
+        ensurePreRun();
+        this.requireCompileSdk = requireCompileSdk;
         return this;
     }
 
@@ -640,6 +689,9 @@ public class TestLintTask {
                 GradleModelMocker mocker = ((GradleTestFile) fp).getMocker(projectDir);
                 if (ignoreUnknownGradleConstructs) {
                     mocker = mocker.withLogger(new NullLogger());
+                }
+                if (project.dependencyGraph != null) {
+                    mocker = mocker.withDependencyGraph(project.dependencyGraph);
                 }
                 projectMocks.put(projectDir, mocker);
 
