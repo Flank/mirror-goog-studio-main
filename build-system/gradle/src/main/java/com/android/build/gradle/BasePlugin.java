@@ -29,6 +29,7 @@ import com.android.build.api.transform.Transform;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.ApiObjectFactory;
 import com.android.build.gradle.internal.BadPluginException;
+import com.android.build.gradle.internal.BuildCacheUtils;
 import com.android.build.gradle.internal.DependencyManager;
 import com.android.build.gradle.internal.ExecutionConfigurationUtil;
 import com.android.build.gradle.internal.ExtraModelInfo;
@@ -58,6 +59,8 @@ import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.process.GradleJavaProcessExecutor;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.profile.ProfilerInitializer;
+import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.transforms.DexTransform;
 import com.android.build.gradle.internal.transforms.JackPreDexTransform;
@@ -77,6 +80,7 @@ import com.android.builder.profile.Recorder;
 import com.android.builder.profile.ThreadRecorder;
 import com.android.builder.sdk.SdkLibData;
 import com.android.builder.sdk.TargetInfo;
+import com.android.builder.utils.FileCache;
 import com.android.dx.command.dexer.Main;
 import com.android.ide.common.internal.ExecutorSingleton;
 import com.android.ide.common.repository.GradleVersion;
@@ -101,6 +105,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
+import java.util.function.Supplier;
 import org.gradle.BuildListener;
 import org.gradle.BuildResult;
 import org.gradle.api.Action;
@@ -190,12 +195,14 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
 
     @NonNull
     protected abstract VariantFactory createVariantFactory(
+            @NonNull GlobalScope globalScope,
             @NonNull Instantiator instantiator,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull AndroidConfig androidConfig);
 
     @NonNull
     protected abstract TaskManager createTaskManager(
+            @NonNull GlobalScope globalScope,
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
             @NonNull AndroidBuilder androidBuilder,
@@ -434,8 +441,31 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
                         "" /*toolchainVersion*/,
                         false /* useUnifiedHeaders */);
 
+
+        @Nullable
+        FileCache buildCache = BuildCacheUtils.createBuildCacheIfEnabled(project, projectOptions);
+
+        // This needs to be lazy, because rootProject.buildDir may be changed after the plugin is applied.
+        Supplier<FileCache> projectLevelCache =
+                () -> BuildCacheUtils.createProjectLevelCache(project);
+
+        GlobalScope globalScope =
+                new GlobalScope(
+                        project,
+                        projectOptions,
+                        androidBuilder,
+                        extension,
+                        sdkHandler,
+                        ndkHandler,
+                        registry,
+                        buildCache,
+                        projectLevelCache);
+
+        variantFactory = createVariantFactory(globalScope, instantiator, androidBuilder, extension);
+
         taskManager =
                 createTaskManager(
+                        globalScope,
                         project,
                         projectOptions,
                         androidBuilder,
@@ -447,29 +477,29 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
                         registry,
                         threadRecorder);
 
-        variantFactory = createVariantFactory(instantiator, androidBuilder, extension);
-
         variantManager =
                 new VariantManager(
+                        globalScope,
                         project,
                         androidBuilder,
                         extension,
                         variantFactory,
                         taskManager,
-                        instantiator,
                         threadRecorder);
 
         // Register a builder for the custom tooling model
-        ModelBuilder modelBuilder = new ModelBuilder(
-                androidBuilder,
-                variantManager,
-                taskManager,
-                extension,
-                extraModelInfo,
-                ndkHandler,
-                new NativeLibraryFactoryImpl(ndkHandler),
-                getProjectType(),
-                AndroidProject.GENERATION_ORIGINAL);
+        ModelBuilder modelBuilder =
+                new ModelBuilder(
+                        globalScope,
+                        androidBuilder,
+                        variantManager,
+                        taskManager,
+                        extension,
+                        extraModelInfo,
+                        ndkHandler,
+                        new NativeLibraryFactoryImpl(ndkHandler),
+                        getProjectType(),
+                        AndroidProject.GENERATION_ORIGINAL);
         registry.register(modelBuilder);
 
         // Register a builder for the native tooling model
@@ -610,7 +640,8 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
                     ApiObjectFactory apiObjectFactory =
                             new ApiObjectFactory(
                                     androidBuilder, extension, variantFactory, instantiator);
-                    for (BaseVariantData variantData : variantManager.getVariantDataList()) {
+                    for (VariantScope variantScope : variantManager.getVariantScopes()) {
+                        BaseVariantData<?> variantData = variantScope.getVariantData();
                         BaseVariantImpl variantPublicApi = apiObjectFactory.create(variantData);
                         variantData.variantOutputFactory =
                                 new VariantOutputFactory(
@@ -667,19 +698,17 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
                     project.getPath(),
                     null,
                     () -> {
-                        for (BaseVariantData variantData : variantManager.getVariantDataList()) {
+                        for (VariantScope variantScope : variantManager.getVariantScopes()) {
                             ExternalNativeJsonGenerator generator =
-                                    variantData.getScope().getExternalNativeJsonGenerator();
+                                    variantScope.getExternalNativeJsonGenerator();
                             if (generator != null) {
                                 // This will generate any out-of-date or non-existent JSONs.
                                 // When refreshExternalNativeModel() is true it will also
                                 // force update all JSONs.
                                 generator.build(forceRegeneration);
 
-                                variantData
-                                        .getScope()
-                                        .addExternalNativeBuildConfigValues(
-                                                generator.readExistingNativeBuildConfigurations());
+                                variantScope.addExternalNativeBuildConfigValues(
+                                        generator.readExistingNativeBuildConfigurations());
                             }
                         }
                     });

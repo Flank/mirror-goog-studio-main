@@ -16,9 +16,11 @@
 
 package com.android.build.gradle.internal.externalBuild;
 
+import com.android.build.gradle.internal.BuildCacheUtils;
 import com.android.build.gradle.internal.profile.ProfilerInitializer;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.profile.ThreadRecorder;
+import com.android.builder.utils.FileCache;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 
@@ -41,8 +43,13 @@ public class ExternalBuildPlugin implements Plugin<Project> {
 
         ProfilerInitializer.init(project, projectOptions);
 
+        FileCache buildCache = BuildCacheUtils.createBuildCacheIfEnabled(project, projectOptions);
+
+        ExternalBuildGlobalScope globalScope =
+                new ExternalBuildGlobalScope(project, projectOptions, buildCache);
+
         ExternalBuildTaskManager taskManager =
-                new ExternalBuildTaskManager(project, projectOptions, ThreadRecorder.get());
+                new ExternalBuildTaskManager(globalScope, project, ThreadRecorder.get());
 
         project.afterEvaluate(project1 -> {
             try {

@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.ndk.NdkHandler;
+import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.variant.ApplicationVariantFactory;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
@@ -91,6 +92,7 @@ public class AppPlugin extends BasePlugin implements Plugin<Project> {
     @NonNull
     @Override
     protected TaskManager createTaskManager(
+            @NonNull GlobalScope globalScope,
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
             @NonNull AndroidBuilder androidBuilder,
@@ -102,13 +104,13 @@ public class AppPlugin extends BasePlugin implements Plugin<Project> {
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
         return new ApplicationTaskManager(
+                globalScope,
                 project,
                 projectOptions,
                 androidBuilder,
                 dataBindingBuilder,
                 androidConfig,
                 sdkHandler,
-                ndkHandler,
                 dependencyManager,
                 toolingRegistry,
                 recorder);
@@ -122,9 +124,11 @@ public class AppPlugin extends BasePlugin implements Plugin<Project> {
     @NonNull
     @Override
     protected ApplicationVariantFactory createVariantFactory(
+            @NonNull GlobalScope globalScope,
             @NonNull Instantiator instantiator,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull AndroidConfig androidConfig) {
-        return new ApplicationVariantFactory(instantiator, androidBuilder, androidConfig);
+        return new ApplicationVariantFactory(
+                globalScope, instantiator, androidBuilder, androidConfig);
     }
 }

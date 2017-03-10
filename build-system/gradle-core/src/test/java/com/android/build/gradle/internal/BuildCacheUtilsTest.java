@@ -30,9 +30,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-/**
- * Unit tests for {@link BuildCacheUtils}.
- */
+/** Unit tests for {@link BuildCacheUtils}. */
 public class BuildCacheUtilsTest {
 
     @Rule public TemporaryFolder testDir = new TemporaryFolder();

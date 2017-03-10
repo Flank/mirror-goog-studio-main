@@ -19,6 +19,7 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
 import com.android.builder.core.ErrorReporter;
 import com.android.builder.profile.Recorder;
@@ -36,13 +37,14 @@ public class TestVariantData extends ApkVariantData {
     private final TestedVariantData testedVariantData;
 
     public TestVariantData(
+            @NonNull GlobalScope globalScope,
             @NonNull AndroidConfig androidConfig,
             @NonNull TaskManager taskManager,
             @NonNull GradleVariantConfiguration config,
             @NonNull TestedVariantData testedVariantData,
             @NonNull ErrorReporter errorReporter,
             @NonNull Recorder recorder) {
-        super(androidConfig, taskManager, config, errorReporter, recorder);
+        super(globalScope, androidConfig, taskManager, config, errorReporter, recorder);
         this.testedVariantData = testedVariantData;
 
         // create default output
@@ -75,10 +77,5 @@ public class TestVariantData extends ApkVariantData {
             return String.format("%s for the %s build", prefix,
                     getCapitalizedBuildTypeName());
         }
-    }
-
-    @Override
-    public boolean getZipAlignEnabled() {
-        return false;
     }
 }

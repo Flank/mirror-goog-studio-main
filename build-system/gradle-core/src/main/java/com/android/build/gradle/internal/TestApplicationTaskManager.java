@@ -25,8 +25,8 @@ import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidConfig;
-import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.scope.AndroidTask;
+import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
@@ -61,42 +61,40 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
     private FileCollection mTargetManifestConfiguration = null;
 
     public TestApplicationTaskManager(
+            @NonNull GlobalScope globalScope,
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull AndroidConfig extension,
             @NonNull SdkHandler sdkHandler,
-            @NonNull NdkHandler ndkHandler,
             @NonNull DependencyManager dependencyManager,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
         super(
+                globalScope,
                 project,
                 projectOptions,
                 androidBuilder,
                 dataBindingBuilder,
                 extension,
                 sdkHandler,
-                ndkHandler,
                 dependencyManager,
                 toolingRegistry,
                 recorder);
     }
 
     @Override
-    public void createTasksForVariantData(
-            @NonNull TaskFactory tasks,
-            @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData) {
+    public void createTasksForVariantScope(
+            @NonNull TaskFactory tasks, @NonNull VariantScope variantScope) {
 
-        super.createTasksForVariantData(tasks, variantData);
+        super.createTasksForVariantScope(tasks, variantScope);
 
         final Configuration runtimeClasspath =
-                variantData.getVariantDependency().getCompileClasspath();
+                variantScope.getVariantDependencies().getCompileClasspath();
         final ResolvableDependencies incomingRuntimeClasspath = runtimeClasspath.getIncoming();
 
-        FileCollection testingApk =
-                variantData.getScope().getOutputs(VariantScope.TaskOutputType.APK);
+        FileCollection testingApk = variantScope.getOutputs(VariantScope.TaskOutputType.APK);
 
         // create a FileCollection that will contain the APKs to be tested.
         // FULL_APK is published only to the runtime configuration
@@ -107,13 +105,15 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
                         .getFiles();
 
         // same for the manifests.
-        FileCollection testedManifestMetadata = getTestedManifestMetadata(variantData);
+        FileCollection testedManifestMetadata =
+                getTestedManifestMetadata(variantScope.getVariantData());
 
-        TestApplicationTestData testData = new TestApplicationTestData(
-                variantData.getVariantConfiguration(),
-                variantData.getApplicationId(),
-                testingApk,
-                testedApks);
+        TestApplicationTestData testData =
+                new TestApplicationTestData(
+                        variantScope.getVariantConfiguration(),
+                        variantScope.getVariantData().getApplicationId(),
+                        testingApk,
+                        testedApks);
 
         configureTestData(testData);
 
@@ -123,13 +123,10 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
                         .create(
                                 tasks,
                                 new DeviceProviderInstrumentTestTask.ConfigAction(
-                                        variantData.getScope(),
+                                        variantScope,
                                         new ConnectedDeviceProvider(
                                                 sdkHandler.getSdkInfo().getAdb(),
-                                                getGlobalScope()
-                                                        .getExtension()
-                                                        .getAdbOptions()
-                                                        .getTimeOutInMs(),
+                                                extension.getAdbOptions().getTimeOutInMs(),
                                                 new LoggerWrapper(getLogger())),
                                         testData,
                                         testedManifestMetadata) {
@@ -167,10 +164,17 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
     @Nullable
     private FileCollection getTestTargetMapping(@NonNull VariantScope variantScope){
         if (mTestTargetMapping == null){
-            mTestTargetMapping = variantScope.getVariantData().getVariantDependency()
-                    .getCompileClasspath().getIncoming().artifactView()
-                    .attributes(container -> container.attribute(
-                            ARTIFACT_TYPE, APK_MAPPING.getType())).getFiles();
+            mTestTargetMapping =
+                    variantScope
+                            .getVariantDependencies()
+                            .getCompileClasspath()
+                            .getIncoming()
+                            .artifactView()
+                            .attributes(
+                                    container ->
+                                            container.attribute(
+                                                    ARTIFACT_TYPE, APK_MAPPING.getType()))
+                            .getFiles();
         }
 
         if (mTestTargetMapping.getFiles().isEmpty()) {

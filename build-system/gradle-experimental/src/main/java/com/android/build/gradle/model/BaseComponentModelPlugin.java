@@ -33,6 +33,7 @@ import com.android.build.api.transform.Transform;
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.external.gson.NativeBuildConfigValue;
 import com.android.build.gradle.internal.AndroidConfigHelper;
+import com.android.build.gradle.internal.BuildCacheUtils;
 import com.android.build.gradle.internal.ExecutionConfigurationUtil;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.JniLibsLanguageTransform;
@@ -55,13 +56,12 @@ import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.process.GradleJavaProcessExecutor;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
+import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.DependencyReportTask;
 import com.android.build.gradle.internal.tasks.SigningReportTask;
 import com.android.build.gradle.internal.transforms.DexTransform;
 import com.android.build.gradle.internal.transforms.JackPreDexTransform;
-import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.managed.AndroidConfig;
 import com.android.build.gradle.managed.BuildType;
@@ -81,6 +81,7 @@ import com.android.build.gradle.model.internal.AndroidBinaryInternal;
 import com.android.build.gradle.model.internal.AndroidComponentSpecInternal;
 import com.android.build.gradle.model.internal.DefaultAndroidLanguageSourceSet;
 import com.android.build.gradle.model.internal.DefaultJniLibsSourceSet;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.ExternalNativeBuildTaskUtils;
 import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
 import com.android.builder.core.AndroidBuilder;
@@ -90,6 +91,7 @@ import com.android.builder.model.InstantRun;
 import com.android.builder.profile.ThreadRecorder;
 import com.android.builder.sdk.TargetInfo;
 import com.android.builder.signing.DefaultSigningConfig;
+import com.android.builder.utils.FileCache;
 import com.android.ide.common.internal.ExecutorSingleton;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.signing.KeystoreHelper;
@@ -108,6 +110,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import org.gradle.api.Action;
@@ -343,6 +346,36 @@ public class BaseComponentModelPlugin implements Plugin<Project>, ToolingRegistr
             dataBindingOptions.setEnabledForTests(false);
         }
 
+        @Model
+        public static ProjectOptions createProjectOptions(Project project) {
+            return new ProjectOptions(project);
+        }
+
+        @Model(ModelConstants.GLOBAL_SCOPE)
+        public static GlobalScope createGlobalScope(
+                Project project,
+                ProjectOptions projectOptions,
+                AndroidBuilder androidBuilder,
+                com.android.build.gradle.AndroidConfig androidConfig,
+                SdkHandler sdkHandler,
+                NdkHandler ndkHandler,
+                ToolingModelBuilderRegistry toolingModelBuilderRegistry) {
+            // This needs to be lazy, because rootProject.buildDir may be changed after the plugin is applied.
+            Supplier<FileCache> projectLevelCache =
+                    () -> BuildCacheUtils.createProjectLevelCache(project);
+
+            return new GlobalScope(
+                    project,
+                    projectOptions,
+                    androidBuilder,
+                    androidConfig,
+                    sdkHandler,
+                    ndkHandler,
+                    toolingModelBuilderRegistry,
+                    BuildCacheUtils.createBuildCacheIfEnabled(project, projectOptions),
+                    projectLevelCache);
+        }
+
         // TODO: Remove code duplicated from BasePlugin.
         @Model(EXTRA_MODEL_INFO)
         public static ExtraModelInfo createExtraModelInfo(Project project) {
@@ -489,7 +522,9 @@ public class BaseComponentModelPlugin implements Plugin<Project>, ToolingRegistr
         @Mutate
         public static void createAndroidComponents(
                 ModelMap<AndroidComponentSpec> androidSpecs,
-                ServiceRegistry serviceRegistry, AndroidConfig androidExtension,
+                GlobalScope globalScope,
+                ServiceRegistry serviceRegistry,
+                AndroidConfig androidExtension,
                 com.android.build.gradle.AndroidConfig adaptedModel,
                 @Path("android.buildTypes") ModelMap<BuildType> buildTypes,
                 @Path("android.productFlavors") ModelMap<ProductFlavor> productFlavors,
@@ -501,8 +536,6 @@ public class BaseComponentModelPlugin implements Plugin<Project>, ToolingRegistr
                 SdkHandler sdkHandler,
                 ExtraModelInfo extraModelInfo,
                 @Path("isApplication") Boolean isApplication) {
-            Instantiator instantiator = serviceRegistry.get(Instantiator.class);
-
             // check if the target has been set.
             TargetInfo targetInfo = androidBuilder.getTargetInfo();
             if (targetInfo == null) {
@@ -514,12 +547,12 @@ public class BaseComponentModelPlugin implements Plugin<Project>, ToolingRegistr
 
             VariantManager variantManager =
                     new VariantManager(
+                            globalScope,
                             project,
                             androidBuilder,
                             adaptedModel,
                             variantFactory,
                             taskManager,
-                            instantiator,
                             ThreadRecorder.get());
 
             variantFactory.validateModel(variantManager);
@@ -546,20 +579,23 @@ public class BaseComponentModelPlugin implements Plugin<Project>, ToolingRegistr
                 TaskManager taskManager) {
             final VariantManager variantManager =
                     ((AndroidComponentSpecInternal) specs.get(COMPONENT_NAME)).getVariantManager();
-            binaries.afterEach(binary -> {
-                List<ProductFlavorAdaptor> adaptedFlavors = binary.getProductFlavors().stream()
-                        .map(ProductFlavorAdaptor::new)
-                        .collect(Collectors.toList());
-                binary.setVariantData(
-                        variantManager.createVariantData(
-                                new BuildTypeAdaptor(binary.getBuildType()),
-                                adaptedFlavors));
-                binary.getVariantData()
-                        .getVariantConfiguration()
-                        .setInstantRunSupportStatusOverride(
-                                InstantRun.STATUS_NOT_SUPPORTED_FOR_EXPERIMENTAL_PLUGIN);
-                variantManager.getVariantDataList().add(binary.getVariantData());
-            });
+            binaries.afterEach(
+                    binary -> {
+                        List<ProductFlavorAdaptor> adaptedFlavors =
+                                binary.getProductFlavors()
+                                        .stream()
+                                        .map(ProductFlavorAdaptor::new)
+                                        .collect(Collectors.toList());
+                        binary.setVariantData(
+                                variantManager.createVariantData(
+                                        new BuildTypeAdaptor(binary.getBuildType()),
+                                        adaptedFlavors));
+                        binary.getVariantData()
+                                .getVariantConfiguration()
+                                .setInstantRunSupportStatusOverride(
+                                        InstantRun.STATUS_NOT_SUPPORTED_FOR_EXPERIMENTAL_PLUGIN);
+                        variantManager.addVariant(binary.getVariantData());
+                    });
         }
 
         @Mutate
@@ -599,8 +635,7 @@ public class BaseComponentModelPlugin implements Plugin<Project>, ToolingRegistr
             variantManager.configureDependencies();
             for (AndroidBinaryInternal binary : binaries) {
                 variantManager.createTasksForVariantData(
-                        new TaskModelMapAdaptor(tasks),
-                        binary.getVariantData());
+                        new TaskModelMapAdaptor(tasks), binary.getVariantData().getScope());
             }
         }
 
@@ -649,20 +684,18 @@ public class BaseComponentModelPlugin implements Plugin<Project>, ToolingRegistr
                     ((AndroidComponentSpecInternal) specs.get(COMPONENT_NAME)).getVariantManager();
             List<NativeBuildConfigValue> configValues = Lists.newArrayList();
 
-            for (BaseVariantData<? extends BaseVariantOutputData> variantData
-                    : variantManager.getVariantDataList()) {
-                if (variantData.getType().isForTesting()) {
+            for (VariantScope variantScope : variantManager.getVariantScopes()) {
+                if (variantScope.getVariantData().getType().isForTesting()) {
                     continue;
                 }
-                VariantScope scope = variantData.getScope();
-                ExternalNativeJsonGenerator generator = ExternalNativeJsonGenerator.create(
-                        project.getProjectDir(),
-                        pathResolution.buildSystem,
-                        pathResolution.makeFile,
-                        androidBuilder,
-                        sdkHandler,
-                        scope
-                );
+                ExternalNativeJsonGenerator generator =
+                        ExternalNativeJsonGenerator.create(
+                                project.getProjectDir(),
+                                pathResolution.buildSystem,
+                                pathResolution.makeFile,
+                                androidBuilder,
+                                sdkHandler,
+                                variantScope);
 
                 if (generator == null) {
                     continue;
@@ -730,19 +763,23 @@ public class BaseComponentModelPlugin implements Plugin<Project>, ToolingRegistr
                 ModelMap<AndroidComponentSpecInternal> specs) {
             final VariantManager variantManager = specs.get(COMPONENT_NAME).getVariantManager();
 
-            tasks.create("androidDependencies", DependencyReportTask.class,
+            tasks.create(
+                    "androidDependencies",
+                    DependencyReportTask.class,
                     dependencyReportTask -> {
                         dependencyReportTask.setDescription(
                                 "Displays the Android dependencies of the project");
-                        dependencyReportTask.setVariants(variantManager.getVariantDataList());
+                        dependencyReportTask.setVariants(variantManager.getVariantScopes());
                         dependencyReportTask.setGroup("Android");
                     });
 
-            tasks.create("signingReport", SigningReportTask.class,
+            tasks.create(
+                    "signingReport",
+                    SigningReportTask.class,
                     signingReportTask -> {
-                        signingReportTask
-                                .setDescription("Displays the signing info for each variant");
-                        signingReportTask.setVariants(variantManager.getVariantDataList());
+                        signingReportTask.setDescription(
+                                "Displays the signing info for each variant");
+                        signingReportTask.setVariants(variantManager.getVariantScopes());
                         signingReportTask.setGroup("Android");
                     });
         }

@@ -40,6 +40,7 @@ import com.android.build.gradle.internal.model.NativeLibraryFactory;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.BuildOutput;
+import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
@@ -110,27 +111,22 @@ public class ModelBuilder implements ToolingModelBuilder {
 
     @NonNull static final DependencyGraphs EMPTY_DEPENDENCY_GRAPH = new EmptyDependencyGraphs();
 
+    @NonNull private final GlobalScope globalScope;
     @NonNull private final AndroidBuilder androidBuilder;
-    @NonNull
-    private final AndroidConfig config;
-    @NonNull
-    private final ExtraModelInfo extraModelInfo;
-    @NonNull
-    private final VariantManager variantManager;
-    @NonNull
-    private final TaskManager taskManager;
-    @NonNull
-    private final NdkHandler ndkHandler;
-    @NonNull
-    private Map<Abi, NativeToolchain> toolchains;
-    @NonNull
-    private NativeLibraryFactory nativeLibFactory;
+    @NonNull private final AndroidConfig config;
+    @NonNull private final ExtraModelInfo extraModelInfo;
+    @NonNull private final VariantManager variantManager;
+    @NonNull private final TaskManager taskManager;
+    @NonNull private final NdkHandler ndkHandler;
+    @NonNull private Map<Abi, NativeToolchain> toolchains;
+    @NonNull private NativeLibraryFactory nativeLibFactory;
     private final int projectType;
     private final int generation;
     private int modelLevel = AndroidProject.MODEL_LEVEL_0_ORIGINAL;
     private boolean modelWithFullDependency = false;
 
     public ModelBuilder(
+            @NonNull GlobalScope globalScope,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull VariantManager variantManager,
             @NonNull TaskManager taskManager,
@@ -140,6 +136,7 @@ public class ModelBuilder implements ToolingModelBuilder {
             @NonNull NativeLibraryFactory nativeLibraryFactory,
             int projectType,
             int generation) {
+        this.globalScope = globalScope;
         this.androidBuilder = androidBuilder;
         this.config = config;
         this.extraModelInfo = extraModelInfo;
@@ -232,9 +229,9 @@ public class ModelBuilder implements ToolingModelBuilder {
                     extraModelInfo.getExtraFlavorSourceProviders(pfData.getProductFlavor().getName())));
         }
 
-        for (BaseVariantData<? extends BaseVariantOutputData> variantData : variantManager.getVariantDataList()) {
-            if (!variantData.getType().isForTesting()) {
-                variants.add(createVariant(variantData));
+        for (VariantScope variantScope : variantManager.getVariantScopes()) {
+            if (!variantScope.getVariantData().getType().isForTesting()) {
+                variants.add(createVariant(variantScope.getVariantData()));
             }
         }
 
@@ -425,7 +422,7 @@ public class ModelBuilder implements ToolingModelBuilder {
                         ? variantData.javacTask.getDestinationDir()
                         : variantData.getScope().getJavaOutputDir(),
                 variantData.getJavaResourcesForUnitTesting(),
-                taskManager.getGlobalScope().getMockableAndroidJarFile(),
+                globalScope.getMockableAndroidJarFile(),
                 dependencies,
                 dependencyGraphs,
                 sourceProviders.variantSourceProvider,

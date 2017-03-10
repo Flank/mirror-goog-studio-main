@@ -29,6 +29,7 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
+import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.profile.Recorder;
@@ -36,28 +37,16 @@ import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.internal.reflect.Instantiator;
 
-/**
- * An implementation of VariantFactory for a project that generates IAPKs.
- */
-
-public class InstantAppVariantFactory implements VariantFactory {
-
-    @NonNull
-    private Instantiator instantiator;
-    @NonNull
-    private final AndroidConfig extension;
-    @NonNull
-    private final AndroidBuilder androidBuilder;
+/** An implementation of VariantFactory for a project that generates IAPKs. */
+public class InstantAppVariantFactory extends BaseVariantFactory {
 
     public InstantAppVariantFactory(
+            @NonNull GlobalScope globalScope,
             @NonNull Instantiator instantiator,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull AndroidConfig extension) {
-        this.instantiator = instantiator;
-        this.androidBuilder = androidBuilder;
-        this.extension = extension;
+        super(globalScope, androidBuilder, instantiator, extension);
     }
-
 
     @NonNull
     @Override
@@ -67,6 +56,7 @@ public class InstantAppVariantFactory implements VariantFactory {
             @NonNull Recorder recorder) {
         InstantAppVariantData variant =
                 new InstantAppVariantData(
+                        globalScope,
                         extension,
                         taskManager,
                         variantConfiguration,

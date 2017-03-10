@@ -225,7 +225,6 @@ import org.gradle.api.attributes.AttributeContainer;
 import org.gradle.api.execution.TaskExecutionGraph;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.plugins.BasePlugin;
@@ -243,85 +242,58 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 public abstract class TaskManager {
 
     public static final String DEFAULT_PROGUARD_CONFIG_FILE = "proguard-android.txt";
-
     public static final String DIR_BUNDLES = "bundles";
-
     public static final String DIR_ATOMBUNDLES = "atombundles";
-
     public static final String INSTALL_GROUP = "Install";
-
     public static final String BUILD_GROUP = BasePlugin.BUILD_GROUP;
-
     public static final String ANDROID_GROUP = "Android";
-
-    protected Project project;
-
-    protected AndroidBuilder androidBuilder;
-
-    protected DataBindingBuilder dataBindingBuilder;
-
-    private DependencyManager dependencyManager;
-
-    protected SdkHandler sdkHandler;
-
-    protected AndroidConfig extension;
-
-    protected ToolingModelBuilderRegistry toolingRegistry;
-
-    private final GlobalScope globalScope;
-
-    private final AndroidTaskRegistry androidTasks = new AndroidTaskRegistry();
-
-    private Logger logger;
-
-    protected final Recorder recorder;
-
-    protected boolean isComponentModelPlugin = false;
-
-    // Task names
-    // These cannot be AndroidTasks as in the component model world there is nothing to force
-    // generateTasksBeforeEvaluate to happen before the variant tasks are created.
-    private static final String MAIN_PREBUILD = "preBuild";
-
-    private static final String UNINSTALL_ALL = "uninstallAll";
-
-    private static final String DEVICE_CHECK = "deviceCheck";
-
-    private static final String DEVICE_ANDROID_TEST = DEVICE + ANDROID_TEST.getSuffix();
-
-    protected static final String CONNECTED_CHECK = "connectedCheck";
-
-    private static final String CONNECTED_ANDROID_TEST = CONNECTED + ANDROID_TEST.getSuffix();
-
-    private static final String ASSEMBLE_ANDROID_TEST = "assembleAndroidTest";
-
-    private static final String SOURCE_SETS = "sourceSets";
-
-    public static final String LINT = "lint";
-
-    protected static final String LINT_COMPILE = "compileLint";
-
-    private static final String EXTRACT_PROGUARD_FILES = "extractProguardFiles";
-
     public static final String ATOM_SUFFIX = "Atom";
 
-    // Tasks
-    private AndroidTask<Copy> jacocoAgentTask;
+    // Task names. These cannot be AndroidTasks as in the component model world there is nothing to
+    // force generateTasksBeforeEvaluate to happen before the variant tasks are created.
+    public static final String MAIN_PREBUILD = "preBuild";
+    public static final String UNINSTALL_ALL = "uninstallAll";
+    public static final String DEVICE_CHECK = "deviceCheck";
+    public static final String DEVICE_ANDROID_TEST = DEVICE + ANDROID_TEST.getSuffix();
+    public static final String CONNECTED_CHECK = "connectedCheck";
+    public static final String CONNECTED_ANDROID_TEST = CONNECTED + ANDROID_TEST.getSuffix();
+    public static final String ASSEMBLE_ANDROID_TEST = "assembleAndroidTest";
+    public static final String LINT = "lint";
+    public static final String LINT_COMPILE = "compileLint";
+    public static final String EXTRACT_PROGUARD_FILES = "extractProguardFiles";
 
+    @NonNull protected final Project project;
+    @NonNull protected final ProjectOptions projectOptions;
+    @NonNull protected final AndroidBuilder androidBuilder;
+    @NonNull protected final DataBindingBuilder dataBindingBuilder;
+    @NonNull protected final SdkHandler sdkHandler;
+    @NonNull protected final AndroidConfig extension;
+    @NonNull protected final ToolingModelBuilderRegistry toolingRegistry;
+    @NonNull protected final GlobalScope globalScope;
+    @NonNull protected final Recorder recorder;
+    @NonNull private final AndroidTaskRegistry androidTasks;
+    @NonNull private final DependencyManager dependencyManager;
+    @NonNull private final Logger logger;
+    @Nullable private final FileCache buildCache;
+
+    // Tasks. TODO: remove the mutable state from here.
+    private AndroidTask<Copy> jacocoAgentTask;
     public AndroidTask<MockableAndroidJarTask> createMockableJar;
 
     public TaskManager(
+            @NonNull GlobalScope globalScope,
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull AndroidConfig extension,
             @NonNull SdkHandler sdkHandler,
-            @NonNull NdkHandler ndkHandler,
             @NonNull DependencyManager dependencyManager,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
+        this.globalScope = globalScope;
         this.project = project;
+        this.projectOptions = projectOptions;
         this.androidBuilder = androidBuilder;
         this.dataBindingBuilder = dataBindingBuilder;
         this.sdkHandler = sdkHandler;
@@ -329,25 +301,16 @@ public abstract class TaskManager {
         this.toolingRegistry = toolingRegistry;
         this.dependencyManager = dependencyManager;
         this.recorder = recorder;
-        logger = Logging.getLogger(this.getClass());
+        this.logger = Logging.getLogger(this.getClass());
+        this.androidTasks = new AndroidTaskRegistry();
 
-        globalScope =
-                new GlobalScope(
-                        project,
-                        projectOptions,
-                        androidBuilder,
-                        extension,
-                        sdkHandler,
-                        ndkHandler,
-                        toolingRegistry);
+        // It's too early to materialize the project-level cache, we'll need to get it from
+        // globalScope later on.
+        this.buildCache = globalScope.getBuildCache();
     }
 
-    private boolean isDebugLog() {
-        return project.getLogger().isEnabled(LogLevel.DEBUG);
-    }
-
-    private boolean isInfoLog() {
-        return project.getLogger().isEnabled(LogLevel.INFO);
+    public boolean isComponentModelPlugin() {
+        return false;
     }
 
     public DataBindingBuilder getDataBindingBuilder() {
@@ -358,16 +321,9 @@ public abstract class TaskManager {
         return dependencyManager;
     }
 
-    /**
-     * Creates the tasks for a given BaseVariantData.
-     */
-    public abstract void createTasksForVariantData(
-            @NonNull TaskFactory tasks,
-            @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData);
-
-    public GlobalScope getGlobalScope() {
-        return globalScope;
-    }
+    /** Creates the tasks for a given BaseVariantData. */
+    public abstract void createTasksForVariantScope(
+            @NonNull TaskFactory tasks, @NonNull VariantScope variantData);
 
     /**
      * Returns a collection of buildables that creates native object.
@@ -400,10 +356,6 @@ public abstract class TaskManager {
 
     }
 
-    protected AndroidConfig getExtension() {
-        return extension;
-    }
-
     public void resolveDependencies(
             @NonNull VariantDependencies variantDeps,
             @Nullable String testedProjectPath) {
@@ -411,9 +363,9 @@ public abstract class TaskManager {
                 dependencyManager.resolveDependencies(
                         variantDeps,
                         testedProjectPath,
-                        getGlobalScope().getBuildCache(),
-                        getGlobalScope().getProjectLevelCache());
-        dependencyManager.processLibraries(libsToExplode, getGlobalScope().getBuildCache());
+                        buildCache,
+                        globalScope.getProjectLevelCache());
+        dependencyManager.processLibraries(libsToExplode, buildCache);
     }
 
     /**
@@ -464,7 +416,7 @@ public abstract class TaskManager {
 
         androidTasks.create(tasks, new LintCompile.ConfigAction(globalScope));
 
-        if (getGlobalScope().getBuildCache() != null) {
+        if (buildCache != null) {
             androidTasks.create(tasks, new CleanBuildCache.ConfigAction(globalScope));
         }
 
@@ -1237,8 +1189,7 @@ public abstract class TaskManager {
                         .equals(SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY),
                 "split ABI tasks are only compatible with pure splits.");
 
-        Set<String> filters = AbiSplitOptions.getAbiFilters(
-                getExtension().getSplits().getAbiFilters());
+        Set<String> filters = AbiSplitOptions.getAbiFilters(extension.getSplits().getAbiFilters());
         if (filters.isEmpty()) {
             return null;
         }
@@ -1652,7 +1603,7 @@ public abstract class TaskManager {
         createMergeJavaResTransform(tasks, variantScope);
         createCompileAnchorTask(tasks, variantScope);
 
-        if (getExtension().getTestOptions().getUnitTests().isIncludeAndroidResources()) {
+        if (extension.getTestOptions().getUnitTests().isIncludeAndroidResources()) {
             AndroidTask<GenerateTestConfig> generateTestConfig =
                     androidTasks.create(tasks, new GenerateTestConfig.ConfigAction(variantScope));
 
@@ -1666,7 +1617,7 @@ public abstract class TaskManager {
                 tasks,
                 variantScope.getProcessJavaResourcesTask(),
                 testedVariantScope.getProcessJavaResourcesTask());
-        if (getExtension().getTestOptions().getUnitTests().isIncludeAndroidResources()) {
+        if (extension.getTestOptions().getUnitTests().isIncludeAndroidResources()) {
             compileTask.dependsOn(tasks, testedVariantScope.getMergeResourcesTask());
             compileTask.dependsOn(tasks, testedVariantScope.getMergeAssetsTask());
             compileTask.dependsOn(tasks, testedVariantScope.getManifestProcessorTask());
@@ -1732,7 +1683,7 @@ public abstract class TaskManager {
         createShaderTask(tasks, variantScope);
 
         // Add NDK tasks
-        if (!isComponentModelPlugin) {
+        if (!isComponentModelPlugin()) {
             createNdkTasks(tasks, variantScope);
         }
         variantScope.setNdkBuildable(getNdkBuildable(variantData));
@@ -1837,7 +1788,7 @@ public abstract class TaskManager {
         // TODO: re-enable with Jack when possible
         if (variantData.getVariantConfiguration().getBuildType().isDebuggable()
                 || variantData.getVariantConfiguration().isJackEnabled()
-                || !getExtension().getLintOptions().isCheckReleaseBuilds()) {
+                || !extension.getLintOptions().isCheckReleaseBuilds()) {
             return;
         }
 
@@ -1874,7 +1825,7 @@ public abstract class TaskManager {
 
         final List<String> reportTasks = Lists.newArrayListWithExpectedSize(2);
 
-        List<DeviceProvider> providers = getExtension().getDeviceProviders();
+        List<DeviceProvider> providers = extension.getDeviceProviders();
 
         // If more than one flavor, create a report aggregator task and make this the parent
         // task for all new connected tasks.  Otherwise, create a top level connectedAndroidTest
@@ -1980,14 +1931,17 @@ public abstract class TaskManager {
                         variantScope.getAssembleTask(),
                         testVariantData.getTestedVariantData().getScope().getAssembleTask());
 
-        final AndroidTask<DeviceProviderInstrumentTestTask> connectedTask = androidTasks.create(
-                tasks,
-                new DeviceProviderInstrumentTestTask.ConfigAction(
-                        testVariantData.getScope(),
-                        new ConnectedDeviceProvider(sdkHandler.getSdkInfo().getAdb(),
-                                globalScope.getExtension().getAdbOptions().getTimeOutInMs(),
-                                new LoggerWrapper(logger)), testData,
-                        project.files() /* testTargetMetadata */));
+        AndroidTask<DeviceProviderInstrumentTestTask> connectedTask =
+                androidTasks.create(
+                        tasks,
+                        new DeviceProviderInstrumentTestTask.ConfigAction(
+                                testVariantData.getScope(),
+                                new ConnectedDeviceProvider(
+                                        sdkHandler.getSdkInfo().getAdb(),
+                                        extension.getAdbOptions().getTimeOutInMs(),
+                                        new LoggerWrapper(logger)),
+                                testData,
+                                project.files() /* testTargetMetadata */));
 
         connectedTask.dependsOn(tasks, artifactsTasks.toArray());
 
@@ -2015,7 +1969,7 @@ public abstract class TaskManager {
                     connectedAndroidTest -> connectedAndroidTest.dependsOn(reportTask.getName()));
         }
 
-        List<DeviceProvider> providers = getExtension().getDeviceProviders();
+        List<DeviceProvider> providers = extension.getDeviceProviders();
 
         // now the providers.
         for (DeviceProvider deviceProvider : providers) {
@@ -2031,7 +1985,7 @@ public abstract class TaskManager {
         }
 
         // now the test servers
-        List<TestServer> servers = getExtension().getTestServers();
+        List<TestServer> servers = extension.getTestServers();
         for (final TestServer testServer : servers) {
             final AndroidTask<TestServerTask> serverTask = androidTasks.create(
                     tasks,
@@ -2158,8 +2112,7 @@ public abstract class TaskManager {
             // If ProGuard will be used, we'll end up with a "fat" jar anyway. If we're using the
             // new dexing pipeline, we'll use the new MainDexListTransform below, so there's no need
             // for merging all classes into a single jar.
-            if (!proguardInPipeline
-                    && !globalScope.getProjectOptions().get(BooleanOption.ENABLE_DEX_ARCHIVE)) {
+            if (!proguardInPipeline && !projectOptions.get(BooleanOption.ENABLE_DEX_ARCHIVE)) {
                 // Create a transform to jar the inputs into a single jar. Merge the classes only,
                 // no need to package the resources since they are not used during the computation.
                 JarMergingTransform jarMergingTransform =
@@ -2173,7 +2126,7 @@ public abstract class TaskManager {
             // create the transform that's going to take the code and the proguard keep list
             // from above and compute the main class list.
             Transform multiDexTransform;
-            if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_DEX_ARCHIVE)) {
+            if (projectOptions.get(BooleanOption.ENABLE_DEX_ARCHIVE)) {
                 multiDexTransform = new MainDexListTransform(
                         variantScope,
                         extension.getDexOptions());
@@ -2189,7 +2142,7 @@ public abstract class TaskManager {
 
         DexingMode dexingMode = getDexingMode(variantScope, isMultiDexEnabled);
 
-        if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_DEX_ARCHIVE)
+        if (projectOptions.get(BooleanOption.ENABLE_DEX_ARCHIVE)
                 && variantScope.getVariantConfiguration().getBuildType().isDebuggable()) {
             createNewDexTasks(tasks, variantScope, multiDexClassListTask.orElse(null), dexingMode);
         } else {
@@ -2276,8 +2229,8 @@ public abstract class TaskManager {
     private FileCache getUserLevelCache(boolean isMinifiedEnabled, boolean preDexLibraries) {
         if (preDexLibraries
                 && !isMinifiedEnabled
-                && globalScope.getProjectOptions().get(BooleanOption.ENABLE_PREDEX_CACHE)) {
-            return globalScope.getBuildCache();
+                && projectOptions.get(BooleanOption.ENABLE_PREDEX_CACHE)) {
+            return buildCache;
         } else {
             return null;
         }
@@ -2319,9 +2272,8 @@ public abstract class TaskManager {
                 variantScope.getInstantRunBuildContext().isInInstantRunMode() || cachePreDex;
         if (preDexEnabled) {
             FileCache buildCache;
-            if (cachePreDex
-                    && globalScope.getProjectOptions().get(BooleanOption.ENABLE_PREDEX_CACHE)) {
-                buildCache = globalScope.getBuildCache();
+            if (cachePreDex && projectOptions.get(BooleanOption.ENABLE_PREDEX_CACHE)) {
+                buildCache = this.buildCache;
             } else {
                 buildCache = null;
             }
@@ -2505,7 +2457,7 @@ public abstract class TaskManager {
 
     private void processRuntimeLibsWithJack(
             @NonNull TaskFactory tasks, @NonNull VariantScope scope) {
-        VariantDependencies variantDependency = scope.getVariantData().getVariantDependency();
+        VariantDependencies variantDependency = scope.getVariantDependencies();
         JackPreDexTransform preDexRuntimeTransform =
                 new JackPreDexTransform(
                         JackOptionsUtils.forPreDexing(scope),
@@ -2525,7 +2477,7 @@ public abstract class TaskManager {
 
     private void processPackagedLibsWithJack(
             @NonNull TaskFactory tasks, @NonNull VariantScope scope) {
-        VariantDependencies variantDependency = scope.getVariantData().getVariantDependency();
+        VariantDependencies variantDependency = scope.getVariantDependencies();
         JackPreDexTransform preDexPackagedTransform =
                 new JackPreDexTransform(
                         JackOptionsUtils.forPreDexing(scope),
@@ -2544,7 +2496,7 @@ public abstract class TaskManager {
 
     /** Creates the transform that will compile the sources with Jack. */
     private JackCompileTransform createSourcesJackTransform(@NonNull VariantScope scope) {
-        VariantDependencies variantDependency = scope.getVariantData().getVariantDependency();
+        VariantDependencies variantDependency = scope.getVariantDependencies();
         Boolean includeCompileClasspaths = scope.getVariantConfiguration()
                 .getJavaCompileOptions()
                 .getAnnotationProcessorOptions()
@@ -2617,7 +2569,7 @@ public abstract class TaskManager {
         checkNotNull(
                 scope.getVariantConfiguration().getJackOptions().isJackInProcess(),
                 "JackInProcess has a default value.");
-        VariantDependencies variantDependency = scope.getVariantData().getVariantDependency();
+        VariantDependencies variantDependency = scope.getVariantDependencies();
         JackGenerateDexTransform jackGenerateDexTransform =
                 new JackGenerateDexTransform(
                         JackOptionsUtils.forDexGeneration(scope),
@@ -2840,7 +2792,7 @@ public abstract class TaskManager {
         FileCollection manifests = variantScope.getOutputs(manifestType);
         // this is where the final APKs will be located.
         File finalApkLocation =
-                new File(getGlobalScope().getApkLocation(), variantConfiguration.getDirName());
+                new File(globalScope.getApkLocation(), variantConfiguration.getDirName());
         // if we are not dealing with possible splits, we can generate in the final folder
         // directly.
         File outputDirectory =
@@ -3302,23 +3254,26 @@ public abstract class TaskManager {
         }
     }
 
-    public void createReportTasks(
-            TaskFactory tasks,
-            final List<BaseVariantData<? extends BaseVariantOutputData>> variantDataList) {
-        AndroidTask<DependencyReportTask> dependencyReportTask = androidTasks.create(
-                tasks,
-                "androidDependencies",
-                DependencyReportTask.class,
-                task -> {
-                    task.setDescription("Displays the Android dependencies of the project.");
-                    task.setVariants(variantDataList);
-                    task.setGroup(ANDROID_GROUP);
-                });
+    public void createReportTasks(TaskFactory tasks, final List<VariantScope> variantScopes) {
+        AndroidTask<DependencyReportTask> dependencyReportTask =
+                androidTasks.create(
+                        tasks,
+                        "androidDependencies",
+                        DependencyReportTask.class,
+                        task -> {
+                            task.setDescription(
+                                    "Displays the Android dependencies of the project.");
+                            task.setVariants(variantScopes);
+                            task.setGroup(ANDROID_GROUP);
+                        });
 
-        androidTasks.create(tasks, "signingReport", SigningReportTask.class,
+        androidTasks.create(
+                tasks,
+                "signingReport",
+                SigningReportTask.class,
                 task -> {
                     task.setDescription("Displays the signing info for each variant.");
-                    task.setVariants(variantDataList);
+                    task.setVariants(variantScopes);
                     task.setGroup(ANDROID_GROUP);
                 });
     }
@@ -3472,7 +3427,6 @@ public abstract class TaskManager {
     }
 
     protected void configureTestData(AbstractTestDataImpl testData) {
-        testData.setAnimationsDisabled(
-                getGlobalScope().getExtension().getTestOptions().getAnimationsDisabled());
+        testData.setAnimationsDisabled(extension.getTestOptions().getAnimationsDisabled());
     }
 }

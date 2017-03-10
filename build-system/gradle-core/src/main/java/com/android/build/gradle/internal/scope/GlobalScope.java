@@ -20,15 +20,14 @@ import static com.android.builder.core.BuilderConstants.FD_REPORTS;
 import static com.android.builder.model.AndroidProject.FD_GENERATED;
 import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.AndroidGradleOptions;
-import com.android.build.gradle.internal.BuildCacheUtils;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.ndk.NdkHandler;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.AndroidProject;
@@ -37,9 +36,10 @@ import com.android.builder.utils.FileCache;
 import com.android.utils.FileUtils;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Suppliers;
 import java.io.File;
 import java.util.Set;
-import org.gradle.api.InvalidUserDataException;
+import java.util.function.Supplier;
 import org.gradle.api.Project;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
@@ -49,35 +49,19 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 public class GlobalScope extends TaskOutputHolderImpl
         implements TransformGlobalScope, TaskOutputHolder {
 
-    @NonNull
-    private Project project;
-
-    @NonNull
-    private AndroidBuilder androidBuilder;
-
-    @NonNull
-    private AndroidConfig extension;
-
-    @NonNull
-    private SdkHandler sdkHandler;
-
-    @NonNull
-    private NdkHandler ndkHandler;
-
-    @NonNull
-    private ToolingModelBuilderRegistry toolingRegistry;
-
-    @Nullable
-    private File mockableAndroidJarFile;
-
+    @NonNull private final Project project;
+    @NonNull private final AndroidBuilder androidBuilder;
+    @NonNull private final AndroidConfig extension;
+    @NonNull private final SdkHandler sdkHandler;
+    @NonNull private final NdkHandler ndkHandler;
+    @NonNull private final ToolingModelBuilderRegistry toolingRegistry;
     @NonNull private final Set<OptionalCompilationStep> optionalCompilationSteps;
-
     @NonNull private final ProjectOptions projectOptions;
+    @NonNull private final Supplier<FileCache> projectLevelCache;
+    @Nullable private final FileCache buildCache;
 
-    @Nullable
-    private final FileCache buildCache;
-
-    @Nullable private FileCache projectLevelCache = null;
+    // TODO: Remove mutable state from this class.
+    @Nullable private File mockableAndroidJarFile;
 
     public GlobalScope(
             @NonNull Project project,
@@ -86,20 +70,24 @@ public class GlobalScope extends TaskOutputHolderImpl
             @NonNull AndroidConfig extension,
             @NonNull SdkHandler sdkHandler,
             @NonNull NdkHandler ndkHandler,
-            @NonNull ToolingModelBuilderRegistry toolingRegistry) {
+            @NonNull ToolingModelBuilderRegistry toolingRegistry,
+            @Nullable FileCache buildCache,
+            @NonNull Supplier<FileCache> projectLevelCache) {
         // Attention: remember that this code runs early in the build lifecycle, project may not
         // have been fully configured yet (e.g. buildDir can still change).
-        this.project = project;
-        this.androidBuilder = androidBuilder;
-        this.extension = extension;
-        this.sdkHandler = sdkHandler;
-        this.ndkHandler = ndkHandler;
-        this.toolingRegistry = toolingRegistry;
-        this.optionalCompilationSteps = projectOptions.getOptionalCompilationSteps();
-        this.projectOptions = projectOptions;
-        this.buildCache =
-                BuildCacheUtils.createBuildCacheIfEnabled(
-                        project.getRootProject()::file, projectOptions);
+        this.project = checkNotNull(project);
+        this.androidBuilder = checkNotNull(androidBuilder);
+        this.extension = checkNotNull(extension);
+        this.sdkHandler = checkNotNull(sdkHandler);
+        this.ndkHandler = checkNotNull(ndkHandler);
+        this.toolingRegistry = checkNotNull(toolingRegistry);
+        this.optionalCompilationSteps = checkNotNull(projectOptions.getOptionalCompilationSteps());
+        this.projectOptions = checkNotNull(projectOptions);
+        this.buildCache = buildCache;
+
+        // Guava provides thread-safe memoization, but we need to wrap it in java.util.Supplier.
+        // This needs to be lazy, because rootProject.buildDir may be changed after the plugin is applied.
+        this.projectLevelCache = Suppliers.memoize(projectLevelCache::get)::get;
     }
 
     @NonNull
@@ -260,21 +248,7 @@ public class GlobalScope extends TaskOutputHolderImpl
     }
 
     @NonNull
-    public synchronized FileCache getProjectLevelCache() {
-        if (projectLevelCache == null) {
-            projectLevelCache =
-                    FileCache.getInstanceWithSingleProcessLocking(
-                            FileUtils.join(
-                                    project.getRootProject().getBuildDir(),
-                                    FD_INTERMEDIATES,
-                                    "project-cache"));
-        }
-
-        return projectLevelCache;
-    }
-
-    /** Validate flag options. */
-    public static void validateAndroidGradleOptions(
-            @NonNull ProjectOptions projectOptions, @Nullable FileCache buildCache) {
+    public FileCache getProjectLevelCache() {
+        return projectLevelCache.get();
     }
 }

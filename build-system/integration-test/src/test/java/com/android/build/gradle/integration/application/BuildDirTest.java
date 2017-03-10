@@ -71,8 +71,8 @@ public class BuildDirTest {
 
         project.executor().withUseDexArchive(true).run("assembleDebug");
 
-        assertThat(buildDir.toPath().resolve("intermediates/project-cache")).isDirectory();
         assertThat(project.file("build")).doesNotExist();
+        assertThat(buildDir.toPath().resolve("intermediates/project-cache")).isDirectory();
     }
 
     @NonNull

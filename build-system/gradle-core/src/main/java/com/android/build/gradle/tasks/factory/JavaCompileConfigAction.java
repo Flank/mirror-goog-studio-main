@@ -104,7 +104,7 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
         javacTask.getOptions().setEncoding(compileOptions.getEncoding());
 
         Configuration annotationProcessorConfiguration =
-                scope.getVariantData().getVariantDependency().getAnnotationProcessorConfiguration();
+                scope.getVariantDependencies().getAnnotationProcessorConfiguration();
 
         Boolean includeCompileClasspath =
                 scope.getVariantConfiguration()
