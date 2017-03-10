@@ -225,7 +225,6 @@ public final class KeystoreHelper {
      * @return a pair with the private key and the corresponding certificate
      * @throws KeytoolException failed to generate the pair
      */
-    @SuppressWarnings("InsecureCryptoUsage")  // the algorithm depends on the min SDK
     private static Pair<PrivateKey, X509Certificate> generateKeyAndCertificate(
             @NonNull String asymmetric, @NonNull String sign, int validityYears,
             @NonNull String dn) throws KeytoolException {
