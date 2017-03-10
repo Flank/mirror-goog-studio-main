@@ -1110,11 +1110,7 @@ class AvdManagerCli extends CommandLineParser {
 
     private void errorAndExit(String format, Object... args) {
         mSdkLog.error(null, format, args);
-        exit(1);
-    }
-
-    private void exit(int code) {
-        System.exit(code);
+        System.exit(1);
     }
 
     private AvdManagerCli(ILogger logger) {
