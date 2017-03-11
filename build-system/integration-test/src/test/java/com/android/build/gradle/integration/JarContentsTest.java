@@ -90,7 +90,8 @@ public class JarContentsTest {
                 "META-INF/gradle-plugins/com.android.test.properties",
                 "META-INF/gradle-plugins/com.android.external.build.properties",
                 "META-INF/gradle-plugins/com.android.instantapp.properties",
-                "META-INF/gradle-plugins/com.android.atom.properties");
+                "META-INF/gradle-plugins/com.android.atom.properties",
+                "META-INF/gradle-plugins/com.android.feature.properties");
         expected.putAll(
                 "com/android/tools/build/gradle-core/",
                 "com/android/build/gradle/internal/test/report/base-style.css",
