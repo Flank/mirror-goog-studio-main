@@ -21,9 +21,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import org.junit.Test;
-
 import java.util.List;
+import org.junit.Test;
 
 public class GradleVersionTest {
 
@@ -335,6 +334,7 @@ public class GradleVersionTest {
         assertTrue(GradleVersion.parse("1.0.0").compareTo("1.1.1") < 0);
 
         assertTrue(GradleVersion.parse("1.0.0").compareTo("1.0.0-alpha1") > 0);
+        assertTrue(GradleVersion.parse("1.0.0").compareTo("1.0.1-alpha1") < 0);
         assertTrue(GradleVersion.parse("1.0.0").compareTo("1.0.0-SNAPSHOT") > 0);
         assertTrue(GradleVersion.parse("1.0.0-alpha2").compareTo("1.0.0-alpha1") > 0);
         assertTrue(GradleVersion.parse("1.0.0-beta1").compareTo("1.0.0-alpha2") > 0);

@@ -56,7 +56,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Range;
-
 import java.io.File;
 import java.net.URISyntaxException;
 import java.util.Collection;
@@ -75,6 +74,7 @@ import java.util.function.Function;
  * (pending as adoption continues).
  */
 public final class AndroidSdkHandler {
+
     /**
      * Schema module containing the package type information to be used in addon repos.
      */
@@ -239,8 +239,8 @@ public final class AndroidSdkHandler {
     }
 
     /**
-     * Force removal of a cached {@code AndroidSdkHandler} instance.
-     * This will force a reparsing of the SDK next time a component is looked up.
+     * Force removal of a cached {@code AndroidSdkHandler} instance. This will force a reparsing of
+     * the SDK next time a component is looked up.
      *
      * @param localPath The path to the local SDK.
      */
@@ -263,8 +263,9 @@ public final class AndroidSdkHandler {
     }
 
     /**
-     * Don't use this either, unless you're in a unit test and need to specify a custom
-     * {@link RepoManager}.
+     * Don't use this either, unless you're in a unit test and need to specify a custom {@link
+     * RepoManager}.
+     *
      * @see #AndroidSdkHandler(File, File, FileOp)
      */
     @VisibleForTesting
@@ -355,21 +356,20 @@ public final class AndroidSdkHandler {
     }
 
     /**
-     * @param packages a {@link Collection} of packages which share a common {@code prefix},
-     *                 from which we wish to extract the "Latest" package,
-     *                 as sorted with {@code mapper} and {@code comparator} on the suffixes.
+     * @param packages a {@link Collection} of packages which share a common {@code prefix}, from
+     *     which we wish to extract the "Latest" package, as sorted with {@code mapper} and {@code
+     *     comparator} on the suffixes.
      * @param allowPreview whether we allow returning a preview package.
-     * @param mapper maps from path suffix to a {@link Comparable},
-     *               so that we can sort the packages by suffix.
+     * @param mapper maps from path suffix to a {@link Comparable}, so that we can sort the packages
+     *     by suffix.
      * @param comparator how to sort suffixes after mapping them.
      * @param <P> {@link LocalPackage} or {@link RemotePackage}
      * @param <T> {@link Comparable} that we map the suffix to.
-     * @return the "Latest" package from the {@link Collection},
-     *         as sorted with {@code mapper} and {@code comparator} on the last path component.
+     * @return the "Latest" package from the {@link Collection}, as sorted with {@code mapper} and
+     *     {@code comparator} on the last path component.
      */
     @Nullable
-    @VisibleForTesting
-    static <P extends RepoPackage, T> P getLatestPackageFromPrefixCollection(
+    public static <P extends RepoPackage, T> P getLatestPackageFromPrefixCollection(
             @NonNull Collection<P> packages,
             boolean allowPreview,
             @NonNull Function<String, T> mapper,
@@ -383,22 +383,21 @@ public final class AndroidSdkHandler {
     }
 
     /**
-     * Suppose that {@code prefix} is {@code p}, and we have these local packages:
-     * {@code p;1.1}, {@code p;1.2}, {@code p;2.1}
-     * What this should return is the package {@code p;2.1}.
-     * We operate on the path suffix since we have no guarantee that the package revision is the
-     * same as used in the path. We also have no guarantee that the format of the path even matches,
-     * so we ignore the packages that don't fit the format.
+     * Suppose that {@code prefix} is {@code p}, and we have these local packages: {@code p;1.1},
+     * {@code p;1.2}, {@code p;2.1} What this should return is the package {@code p;2.1}. We operate
+     * on the path suffix since we have no guarantee that the package revision is the same as used
+     * in the path. We also have no guarantee that the format of the path even matches, so we ignore
+     * the packages that don't fit the format.
      *
      * @see #getLatestLocalPackageForPrefix(String, boolean, Function, ProgressIndicator) , where
-     * {@link Function} is just converting path suffix to {@link Revision}. Suffixes that are not
-     * valid {@link Revision}s are assumed to be {@link Revision#NOT_SPECIFIED},
-     * and would be the lowest.
+     *     {@link Function} is just converting path suffix to {@link Revision}. Suffixes that are
+     *     not valid {@link Revision}s are assumed to be {@link Revision#NOT_SPECIFIED}, and would
+     *     be the lowest.
      * @see Revision#safeParseRevision(String) for how the conversion is done.
      */
     @Nullable
-    public LocalPackage getLatestLocalPackageForPrefix(@NonNull String prefix, boolean allowPreview,
-            @NonNull ProgressIndicator progress) {
+    public LocalPackage getLatestLocalPackageForPrefix(
+            @NonNull String prefix, boolean allowPreview, @NonNull ProgressIndicator progress) {
         return getLatestLocalPackageForPrefix(prefix, allowPreview, Revision::safeParseRevision,
                 progress);
     }
@@ -434,23 +433,24 @@ public final class AndroidSdkHandler {
     }
 
     /**
-     * @see #getLatestLocalPackageForPrefix(String, boolean, ProgressIndicator) ,
-     * but for {@link RemotePackage}s instead.
+     * @see #getLatestLocalPackageForPrefix(String, boolean, ProgressIndicator) , but for {@link
+     *     RemotePackage}s instead.
      */
     @Nullable
-    public RemotePackage getLatestRemotePackageForPrefix(@NonNull String prefix,
-            boolean allowPreview, @NonNull ProgressIndicator progress) {
+    public RemotePackage getLatestRemotePackageForPrefix(
+            @NonNull String prefix, boolean allowPreview, @NonNull ProgressIndicator progress) {
         return getLatestRemotePackageForPrefix(prefix, allowPreview, Revision::safeParseRevision,
                 progress);
     }
 
     /**
-     * @see #getLatestLocalPackageForPrefix(String, boolean, Function, ProgressIndicator) ,
-     * but for {@link RemotePackage}s instead.
+     * @see #getLatestLocalPackageForPrefix(String, boolean, Function, ProgressIndicator) , but for
+     *     {@link RemotePackage}s instead.
      */
     @Nullable
     public RemotePackage getLatestRemotePackageForPrefix(
-            @NonNull String prefix, boolean allowPreview,
+            @NonNull String prefix,
+            boolean allowPreview,
             @NonNull Function<String, ? extends Comparable> mapper,
             @NonNull ProgressIndicator progress) {
         return getLatestRemotePackageForPrefix(prefix, allowPreview, mapper,
@@ -610,11 +610,16 @@ public final class AndroidSdkHandler {
             try {
                 // Specify what modules are allowed to be used by what sites.
                 Map<Class<? extends RepositorySource>, Collection<SchemaModule<?>>> siteTypes =
-                        ImmutableMap.<Class<? extends RepositorySource>,
-                                Collection<SchemaModule<?>>>builder()
-                                .put(RemoteSiteType.AddonSiteType.class, ImmutableSet.of(ADDON_MODULE))
-                                .put(RemoteSiteType.SysImgSiteType.class,
-                                        ImmutableSet.of(SYS_IMG_MODULE)).build();
+                        ImmutableMap
+                                .<Class<? extends RepositorySource>, Collection<SchemaModule<?>>>
+                                        builder()
+                                .put(
+                                        RemoteSiteType.AddonSiteType.class,
+                                        ImmutableSet.of(ADDON_MODULE))
+                                .put(
+                                        RemoteSiteType.SysImgSiteType.class,
+                                        ImmutableSet.of(SYS_IMG_MODULE))
+                                .build();
                 mAddonsListSourceProvider = RemoteListSourceProvider
                         .create(getAddonListUrl(progress), addonListModule, siteTypes);
             } catch (URISyntaxException e) {
@@ -748,16 +753,16 @@ public final class AndroidSdkHandler {
     }
 
     /**
-     * Gets a {@link BuildToolInfo} corresponding to the newest installed build tool
-     * {@link RepoPackage}, or {@code null} if none are installed (or if the {@code allowPreview}
-     * parameter is false and there was non-preview version available)
+     * Gets a {@link BuildToolInfo} corresponding to the newest installed build tool {@link
+     * RepoPackage}, or {@code null} if none are installed (or if the {@code allowPreview} parameter
+     * is false and there was non-preview version available)
      *
-     * @param progress     a progress indicator
+     * @param progress a progress indicator
      * @param allowPreview ignore preview build tools version unless this parameter is true
      */
     @Nullable
-    public BuildToolInfo getLatestBuildTool(@NonNull ProgressIndicator progress,
-            boolean allowPreview) {
+    public BuildToolInfo getLatestBuildTool(
+            @NonNull ProgressIndicator progress, boolean allowPreview) {
         if (!allowPreview && mLatestBuildTool != null) {
             return mLatestBuildTool;
         }
@@ -785,11 +790,11 @@ public final class AndroidSdkHandler {
      * @param revision The build tools revision requested
      * @param progress {@link ProgressIndicator} for logging.
      * @return The {@link BuildToolInfo} corresponding to the specified build tools package, or
-     * {@code} null if that revision is not installed.
+     *     {@code} null if that revision is not installed.
      */
     @Nullable
-    public BuildToolInfo getBuildToolInfo(@NonNull Revision revision,
-            @NonNull ProgressIndicator progress) {
+    public BuildToolInfo getBuildToolInfo(
+            @NonNull Revision revision, @NonNull ProgressIndicator progress) {
         RepositoryPackages packages = getSdkManager(progress).getPackages();
         LocalPackage p = packages.getLocalPackages()
                 .get(DetailsTypes.getBuildToolsPath(revision));
