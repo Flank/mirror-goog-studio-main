@@ -52,6 +52,8 @@ public class TestVariantFactory extends ApplicationVariantFactory {
 
     @Override
     public void preVariantWork(final Project project) {
+        super.preVariantWork(project);
+
         final TestAndroidConfig testExtension = (TestAndroidConfig) extension;
 
         String path = testExtension.getTargetProjectPath();
