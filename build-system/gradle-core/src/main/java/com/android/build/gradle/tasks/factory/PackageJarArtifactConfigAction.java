@@ -22,6 +22,12 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import java.io.File;
 import org.gradle.api.tasks.bundling.Jar;
 
+/**
+ * Configures the jar task that takes the output of the javac compiler and creates a jar.
+ *
+ * <p>This is meant to be used when publishing an app's code so that external Test module can get
+ * access to the tested app module.
+ */
 public class PackageJarArtifactConfigAction implements TaskConfigAction<Jar> {
 
     private final VariantScope scope;
@@ -46,8 +52,13 @@ public class PackageJarArtifactConfigAction implements TaskConfigAction<Jar> {
     public void execute(@NonNull Jar jar) {
         scope.getVariantData().classesJarTask = jar;
 
-        // add the class files (whether they are instrumented or not.
+        // add the class files directly from the javac output as we do not want the manipulated
+        // versions. For instance we would not want the obfuscated version.
+        // (test module also receives the obfuscated mapping to obfuscate the test code the same
+        // way.)s
         jar.from(scope.getJavaOutputDir());
+        // Also had bytecode generated through other compilers.
+        jar.from(scope.getVariantData().getGeneratedBytecodeCollection());
 
         jar.setDestinationDir(new File(
                 scope.getGlobalScope().getIntermediatesDir(),

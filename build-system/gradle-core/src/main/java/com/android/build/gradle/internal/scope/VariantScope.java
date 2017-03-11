@@ -116,6 +116,11 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     @NonNull
     FileCollection getJavaClasspath();
 
+    boolean keepDefaultBootstrap();
+
+    @NonNull
+    FileCollection getPreJavacClasspath();
+
     @NonNull
     File getJavaOutputDir();
 

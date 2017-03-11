@@ -1,8 +1,5 @@
 package com.android.build.gradle.tasks.factory;
 
-import static com.android.builder.core.VariantType.LIBRARY;
-import static com.android.builder.core.VariantType.UNIT_TEST;
-
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.CompileOptions;
 import com.android.build.gradle.internal.LoggerWrapper;
@@ -11,14 +8,12 @@ import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.builder.dependency.level2.AndroidDependency;
 import com.android.builder.model.SyncIssue;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
 import java.io.File;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import org.gradle.api.JavaVersion;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.ConfigurableFileTree;
@@ -62,8 +57,7 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
             javacTask.source(fileTree);
         }
 
-
-        final boolean keepDefaultBootstrap = keepBootclasspath();
+        final boolean keepDefaultBootstrap = scope.keepDefaultBootstrap();
 
         if (!keepDefaultBootstrap) {
             // Set boot classpath if we don't need to keep the default.  Otherwise, this is added as
@@ -77,48 +71,9 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
         ConventionMappingHelper.map(
                 javacTask,
                 "classpath",
-                () -> {
-                    FileCollection classpath = scope.getJavaClasspath();
-                    Project project = scope.getGlobalScope().getProject();
-                    if (keepDefaultBootstrap) {
-                        classpath =
-                                classpath.plus(
-                                        project.files(
-                                                scope.getGlobalScope()
-                                                        .getAndroidBuilder()
-                                                        .getBootClasspath(false)));
-                    }
-
-                    if (testedVariantData != null) {
-                        // For libraries, the classpath from androidBuilder includes the library
-                        // output (bundle/classes.jar) as a normal dependency. In unit tests we
-                        // don't want to package the jar at every run, so we use the *.class
-                        // files instead.
-                        if (!testedVariantData.getType().equals(LIBRARY)
-                                || scope.getVariantData().getType().equals(UNIT_TEST)) {
-                            classpath =
-                                    classpath.plus(
-                                            project.files(
-                                                    testedVariantData.getScope().getJavaClasspath(),
-                                                    testedVariantData
-                                                            .getScope()
-                                                            .getJavaOutputDir()));
-                        }
-
-                        if (scope.getVariantData().getType().equals(UNIT_TEST)
-                                && testedVariantData.getType().equals(LIBRARY)) {
-                            // The bundled classes.jar may exist, but it's probably old. Don't
-                            // use it, we already have the *.class files in the classpath.
-                            AndroidDependency testedLibrary =
-                                    testedVariantData.getVariantConfiguration().getOutput();
-                            if (testedLibrary != null) {
-                                File jarFile = testedLibrary.getJarFile();
-                                classpath = classpath.minus(project.files(jarFile));
-                            }
-                        }
-                    }
-                    return classpath;
-                });
+                () ->
+                        scope.getPreJavacClasspath()
+                                .plus(scope.getVariantData().getGeneratedBytecodeCollection()));
 
         javacTask.setDestinationDir(scope.getJavaOutputDir());
 
@@ -208,27 +163,5 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
         javacTask.getOptions().getCompilerArgs().add(
                 scope.getAnnotationProcessorOutputDir().getAbsolutePath());
 
-    }
-
-
-    private boolean keepBootclasspath() {
-        // javac 1.8 may generate code that uses class not available in android.jar.  This is fine
-        // if jack or desugar are used to compile code for the app or compile task is created only
-        // for unit test. In those cases, we want to keep the default bootstrap classpath.
-        if (!JavaVersion.current().isJava8Compatible()) {
-            return false;
-        }
-
-        VariantScope.Java8LangSupport java8LangSupport = scope.getJava8LangSupportType();
-        if (java8LangSupport == VariantScope.Java8LangSupport.JACK) {
-            return true;
-        }
-
-        // only if target and source is explicitly specified to 1.8 (and above), we keep the
-        // default bootclasspath with Desugar. Otherwise, we use android.jar.
-        CompileOptions compileOptions = scope.getGlobalScope().getExtension().getCompileOptions();
-        return java8LangSupport == VariantScope.Java8LangSupport.DESUGAR
-                && compileOptions.getTargetCompatibility().isJava8Compatible()
-                && compileOptions.getSourceCompatibility().isJava8Compatible();
     }
 }

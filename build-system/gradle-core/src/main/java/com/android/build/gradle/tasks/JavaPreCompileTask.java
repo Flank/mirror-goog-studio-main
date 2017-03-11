@@ -30,12 +30,13 @@ import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
+import java.nio.file.ProviderNotFoundException;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ResolvedConfiguration;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.TaskAction;
@@ -53,7 +54,7 @@ public class JavaPreCompileTask extends BaseTask {
 
     private Configuration annotationProcessorConfiguration;
 
-    private Supplier<Collection<File>> compileClasspaths;
+    private InputSupplier<FileCollection> compileClasspaths;
 
     private CoreAnnotationProcessorOptions annotationProcessorOptions;
 
@@ -65,6 +66,11 @@ public class JavaPreCompileTask extends BaseTask {
     @InputFiles
     public Configuration getAnnotationProcessorConfiguration() {
         return annotationProcessorConfiguration;
+    }
+
+    @InputFiles
+    public FileCollection getCompileClasspaths() {
+        return compileClasspaths.get();
     }
 
     @TaskAction
@@ -88,13 +94,13 @@ public class JavaPreCompileTask extends BaseTask {
         if (annotationProcessorOptions.getIncludeCompileClasspath() == null
                 && !getProject().getPlugins().hasPlugin("com.neenbedankt.android-apt")) {
             List<String> processors = Lists.newArrayList();
-            for (File file : compileClasspaths.get()) {
+            for (File file : compileClasspaths.getLastValue()) {
                 try (FileSystem fs = FileSystems.newFileSystem(file.toPath(), null)) {
                     if (Files.exists(fs.getPath(PROCESSOR_SERVICES))
                             && !processorPath.contains(file)) {
                         processors.add(file.getName());
                     }
-                } catch (IOException ignore) {
+                } catch (ProviderNotFoundException | IOException e) {
                 }
                 if (!processors.isEmpty()) {
                     throw new RuntimeException(
@@ -149,7 +155,12 @@ public class JavaPreCompileTask extends BaseTask {
                             .getVariantDependency()
                             .getAnnotationProcessorConfiguration();
             task.compileClasspaths =
-                    InputFilesSupplier.from(() -> scope.getJavaClasspath().getFiles());
+                    InputSupplier.from(
+                            () ->
+                                    scope.getPreJavacClasspath()
+                                            .plus(
+                                                    scope.getVariantData()
+                                                            .getGeneratedBytecodeCollection()));
         }
     }
 }
