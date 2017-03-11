@@ -31,6 +31,7 @@ public interface AnnotationProcessorOptions {
     ModelMap<KeyValuePair> getArguments();
 
     @NonNull
-    Boolean getIncludeClasspath();
-    void setIncludeClasspath(Boolean includeClasspath);
+    Boolean getIncludeCompileClasspath();
+
+    void setIncludeCompileClasspath(Boolean includeClasspath);
 }

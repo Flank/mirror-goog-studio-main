@@ -17,6 +17,7 @@ import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
 import java.io.File;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import org.gradle.api.JavaVersion;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
@@ -137,11 +138,21 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
 
         Project project = scope.getGlobalScope().getProject();
 
+        Boolean includeCompileClasspath =
+                scope.getVariantConfiguration()
+                        .getJavaCompileOptions()
+                        .getAnnotationProcessorOptions()
+                        .getIncludeCompileClasspath();
+
+        FileCollection processorPath =
+                Boolean.TRUE.equals(includeCompileClasspath)
+                        ? project.files((Callable) javacTask::getClasspath)
+                        : project.files();
+
         Configuration annotationProcessorConfiguration =
                 scope.getVariantData().getVariantDependency().getAnnotationProcessorConfiguration();
-        if (!annotationProcessorConfiguration.getAllDependencies().isEmpty()) {
-            javacTask.getOptions().setAnnotationProcessorPath(annotationProcessorConfiguration);
-        }
+        processorPath = processorPath.plus(annotationProcessorConfiguration);
+        javacTask.getOptions().setAnnotationProcessorPath(processorPath);
 
         boolean incremental =
                 AbstractCompilesUtil.isIncremental(
