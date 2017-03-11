@@ -23,6 +23,7 @@ import static com.android.build.gradle.internal.TaskManager.DIR_BUNDLES;
 import static com.android.build.gradle.internal.dsl.BuildType.PostprocessingConfiguration.OLD_DSL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.APK_CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
@@ -39,6 +40,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.external.gson.NativeBuildConfigValue;
+import com.android.build.gradle.internal.CompileOptions;
 import com.android.build.gradle.internal.InstantRunTaskManager;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.SdkHandler;
@@ -118,6 +120,7 @@ import java.util.function.BiFunction;
 import java.util.function.Supplier;
 import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
+import org.gradle.api.JavaVersion;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
@@ -681,23 +684,52 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @Override
     @NonNull
-    public FileCollection getJavaClasspath(@NonNull ArtifactType classesType) {
+    public FileCollection getJavaCompileClasspath(
+            @NonNull ArtifactType classesType, boolean includeGeneratedBytecode) {
         FileCollection mainCollection =
                 getArtifactFileCollection(COMPILE_CLASSPATH, ALL, classesType);
 
-        final BaseVariantData testedVariantData = getTestedVariantData();
-        if (testedVariantData != null) {
-            ConfigurableFileCollection classpath =
-                    globalScope.getProject().files().from(mainCollection);
-
-            // include the output of the tested scope javac task.
-            classpath.from(
-                    testedVariantData.getScope().getOutputs(TaskOutputHolder.TaskOutputType.JAVAC));
-
-            return classpath;
+        if (includeGeneratedBytecode) {
+            mainCollection = mainCollection.plus(getVariantData().getGeneratedBytecodeCollection());
         }
 
         return mainCollection;
+    }
+
+    @Override
+    @NonNull
+    public FileCollection getJavaRuntimeClasspath(
+            @NonNull ArtifactType classesType, boolean includeGeneratedBytecode) {
+        FileCollection mainCollection =
+                getArtifactFileCollection(RUNTIME_CLASSPATH, ALL, classesType);
+
+        if (includeGeneratedBytecode) {
+            mainCollection = mainCollection.plus(getVariantData().getGeneratedBytecodeCollection());
+        }
+
+        return mainCollection;
+    }
+
+    @Override
+    public boolean keepDefaultBootstrap() {
+        // javac 1.8 may generate code that uses class not available in android.jar.  This is fine
+        // if jack or desugar are used to compile code for the app or compile task is created only
+        // for unit test. In those cases, we want to keep the default bootstrap classpath.
+        if (!JavaVersion.current().isJava8Compatible()) {
+            return false;
+        }
+
+        VariantScope.Java8LangSupport java8LangSupport = getJava8LangSupportType();
+        if (java8LangSupport == VariantScope.Java8LangSupport.JACK) {
+            return true;
+        }
+
+        // only if target and source is explicitly specified to 1.8 (and above), we keep the
+        // default bootclasspath with Desugar. Otherwise, we use android.jar.
+        CompileOptions compileOptions = getGlobalScope().getExtension().getCompileOptions();
+        return java8LangSupport == VariantScope.Java8LangSupport.DESUGAR
+                && compileOptions.getTargetCompatibility().isJava8Compatible()
+                && compileOptions.getSourceCompatibility().isJava8Compatible();
     }
 
     @Override
@@ -1839,7 +1871,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             @NonNull final BiFunction<T, ArtifactView, T> minusFunction) {
         // this only handles Android Test, not unit tests.
         VariantType variantType = getVariantConfiguration().getType();
-        if (!variantType.isForTesting() || variantType != VariantType.ANDROID_TEST) {
+        if (!variantType.isForTesting()) {
             return collection;
         }
 
@@ -1855,8 +1887,20 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                     // for the library, always add the tested scope no matter the
                     // configuration type (package or compile)
                     final LibraryVariantData testedVariantData = (LibraryVariantData) tested;
-                    ConfigurableFileCollection testedFC = testedVariantData.getScope()
-                            .getInternalArtifact(artifactType);
+                    FileCollection testedFC;
+                    // FIXME we really need to unify ArtifactType and TaskOutputType and remove getInternalArtifact, and generally clean this up...
+                    if (variantType == VariantType.UNIT_TEST && artifactType == CLASSES) {
+                        // in this case we want JAVAC instead of the internal artifact, because
+                        // otherwise we are missing the R class.
+                        // But this means we also need to manually include the generated byte
+                        // code from the tested variant manually.
+                        ConfigurableFileCollection fc = getProject().files();
+                        fc.from(testedVariantData.getScope().getOutputs(TaskOutputType.JAVAC));
+                        fc.from(testedVariantData.getGeneratedBytecodeCollection());
+                        testedFC = fc;
+                    } else {
+                        testedFC = testedVariantData.getScope().getInternalArtifact(artifactType);
+                    }
 
                     if (testedFC != null) {
                         result = plusFunction.apply(collection, testedFC);
@@ -1866,25 +1910,28 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             } else if (tested instanceof ApplicationVariantData) {
                 final ApplicationVariantData testedVariantData = (ApplicationVariantData) tested;
 
-                // for tested application, first we add the tested component as provided (so
-                // only for the compile version), and only for the java compilation
-                if (configType == COMPILE_CLASSPATH &&
-                        (artifactScope == ArtifactScope.MODULE || artifactScope == ALL) &&
-                        artifactType == CLASSES) {
-                    ConfigurableFileCollection testedFC = testedVariantData.getScope()
-                            .getInternalArtifact(CLASSES);
+                // We need to add the tested code in most case when it's COMPILE_CLASSPATH,
+                // but also if it's RUNTIME and UNIT_TEST.
+                if ((configType == COMPILE_CLASSPATH || variantType == VariantType.UNIT_TEST)
+                        && (artifactScope == ArtifactScope.MODULE || artifactScope == ALL)
+                        && artifactType == CLASSES) {
+                    final VariantScope testedScope = testedVariantData.getScope();
+                    ConfigurableFileCollection testedFC =
+                            testedScope.getInternalArtifact(APK_CLASSES);
 
                     if (testedFC != null) {
                         result = plusFunction.apply(collection, testedFC);
                     }
-                } else if (configType == RUNTIME_CLASSPATH) {
-                    // however we also always remove the transitive dependencies coming from the
-                    // tested app to avoid having the same artifact on each app and tested app.
-                    // This applies only to the package scope since we do want these in the compile
-                    // scope in order to compile
+                }
+
+                if (variantType == VariantType.ANDROID_TEST && configType == RUNTIME_CLASSPATH) {
+                    // However for RUNTIME/AndroidTest, we also always remove the transitive
+                    // dependencies coming from the tested app to avoid having the same artifact
+                    // on each app and tested app. This applies only to the package scope since
+                    // we do want these in the compile scope in order to compile
                     result =
                             minusFunction.apply(
-                                    collection,
+                                    result,
                                     testedVariantData
                                             .getScope()
                                             .getArtifactView(configType, ALL, artifactType));

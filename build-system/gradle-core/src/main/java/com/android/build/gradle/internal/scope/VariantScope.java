@@ -136,7 +136,14 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     File getInstantRunSplitApkOutputFolder();
 
     @NonNull
-    FileCollection getJavaClasspath(@NonNull ArtifactType classesType);
+    FileCollection getJavaCompileClasspath(
+            @NonNull ArtifactType classesType, boolean includeGeneratedBytecode);
+
+    @NonNull
+    FileCollection getJavaRuntimeClasspath(
+            @NonNull ArtifactType classesType, boolean includeGeneratedBytecode);
+
+    boolean keepDefaultBootstrap();
 
     @NonNull
     File getJavaOutputDir();

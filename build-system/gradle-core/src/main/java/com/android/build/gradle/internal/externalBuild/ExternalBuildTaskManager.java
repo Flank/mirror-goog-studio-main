@@ -109,29 +109,32 @@ class ExternalBuildTaskManager {
         TransformManager transformManager = new TransformManager(
                 project, androidTasks, modelInfo, recorder);
 
-        transformManager.addStream(OriginalStream.builder(project)
-                .addContentType(QualifiedContent.DefaultContentType.CLASSES)
-                .addScope(QualifiedContent.Scope.PROJECT)
-                .setJars(externalBuildContext::getInputJarFiles)
-                .build());
+        transformManager.addStream(
+                OriginalStream.builder(project, "project-classes")
+                        .addContentType(QualifiedContent.DefaultContentType.CLASSES)
+                        .addScope(QualifiedContent.Scope.PROJECT)
+                        .setJars(externalBuildContext::getInputJarFiles)
+                        .build());
 
         // add an empty java resources directory for now.
         // the folder itself doesn't actually matter, but it has to be consistent
         // for gradle's up-to-date check
-        transformManager.addStream(OriginalStream.builder(project)
-                .addContentType(QualifiedContent.DefaultContentType.RESOURCES)
-                .addScope(QualifiedContent.Scope.PROJECT)
-                .setFolder(new File(project.getBuildDir(), "temp/streams/resources"))
-                .build());
+        transformManager.addStream(
+                OriginalStream.builder(project, "project-res")
+                        .addContentType(QualifiedContent.DefaultContentType.RESOURCES)
+                        .addScope(QualifiedContent.Scope.PROJECT)
+                        .setFolder(new File(project.getBuildDir(), "temp/streams/resources"))
+                        .build());
 
         // add an empty native libraries resources directory for now.
         // the folder itself doesn't actually matter, but it has to be consistent
         // for gradle's up-to-date check
-        transformManager.addStream(OriginalStream.builder(project)
-                .addContentType(ExtendedContentType.NATIVE_LIBS)
-                .addScope(QualifiedContent.Scope.PROJECT)
-                .setFolder(new File(project.getBuildDir(), "temp/streams/native_libs"))
-                .build());
+        transformManager.addStream(
+                OriginalStream.builder(project, "project-jni–libs")
+                        .addContentType(ExtendedContentType.NATIVE_LIBS)
+                        .addScope(QualifiedContent.Scope.PROJECT)
+                        .setFolder(new File(project.getBuildDir(), "temp/streams/native_libs"))
+                        .build());
 
         File androidManifestFile =
                 new File(externalBuildContext.getExecutionRoot(),

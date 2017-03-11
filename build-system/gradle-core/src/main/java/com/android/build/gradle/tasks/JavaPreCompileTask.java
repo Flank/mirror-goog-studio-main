@@ -17,6 +17,7 @@
 package com.android.build.gradle.tasks;
 
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JAR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.ANNOTATION_PROCESSOR;
 
@@ -163,7 +164,7 @@ public class JavaPreCompileTask extends BaseTask {
                             .getAnnotationProcessorOptions();
             task.annotationProcessorConfiguration =
                     scope.getArtifactFileCollection(ANNOTATION_PROCESSOR, ALL, JAR);
-            task.compileClasspaths = scope.getJavaClasspath(JAR);
+            task.compileClasspaths = scope.getJavaCompileClasspath(CLASSES, true);
         }
     }
 }

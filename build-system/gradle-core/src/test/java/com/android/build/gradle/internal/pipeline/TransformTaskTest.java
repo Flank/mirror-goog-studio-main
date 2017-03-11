@@ -69,12 +69,13 @@ public class TransformTaskTest extends TaskTestUtils {
     public void nonIncWithJarInputInOriginalStream()
             throws IOException, TransformException, InterruptedException {
         // create a stream and add it to the pipeline
-        OriginalStream projectClass = OriginalStream.builder(project)
-                .addContentType(QualifiedContent.DefaultContentType.CLASSES)
-                .addScope(Scope.PROJECT)
-                .setJar(temporaryFolder.newFile("input file"))
-                .setDependency("my dependency")
-                .build();
+        OriginalStream projectClass =
+                OriginalStream.builder(project, "")
+                        .addContentType(QualifiedContent.DefaultContentType.CLASSES)
+                        .addScope(Scope.PROJECT)
+                        .setJar(temporaryFolder.newFile("input file"))
+                        .setDependency("my dependency")
+                        .build();
         transformManager.addStream(projectClass);
 
         // create the transform
@@ -129,12 +130,13 @@ public class TransformTaskTest extends TaskTestUtils {
         // create a stream and add it to the pipeline
         File rootFolder = temporaryFolder.newFolder();
 
-        IntermediateStream projectClass = IntermediateStream.builder(project)
-                .addContentTypes(QualifiedContent.DefaultContentType.CLASSES)
-                .addScopes(Scope.PROJECT)
-                .setRootLocation(rootFolder)
-                .setTaskName("my dependency")
-                .build();
+        IntermediateStream projectClass =
+                IntermediateStream.builder(project, "")
+                        .addContentTypes(QualifiedContent.DefaultContentType.CLASSES)
+                        .addScopes(Scope.PROJECT)
+                        .setRootLocation(rootFolder)
+                        .setTaskName("my dependency")
+                        .build();
         transformManager.addStream(projectClass);
 
         // use the output version of this stream to create some content.
@@ -197,12 +199,13 @@ public class TransformTaskTest extends TaskTestUtils {
     public void nonIncWithReferencedJarInputInOriginalStream()
             throws IOException, TransformException, InterruptedException {
         // create a stream and add it to the pipeline
-        OriginalStream projectClass = OriginalStream.builder(project)
-                .addContentType(QualifiedContent.DefaultContentType.CLASSES)
-                .addScope(Scope.PROJECT)
-                .setJar(temporaryFolder.newFile("input file"))
-                .setDependency("my dependency")
-                .build();
+        OriginalStream projectClass =
+                OriginalStream.builder(project, "")
+                        .addContentType(QualifiedContent.DefaultContentType.CLASSES)
+                        .addScope(Scope.PROJECT)
+                        .setJar(temporaryFolder.newFile("input file"))
+                        .setDependency("my dependency")
+                        .build();
         transformManager.addStream(projectClass);
 
         // create the transform
@@ -257,12 +260,13 @@ public class TransformTaskTest extends TaskTestUtils {
         // create a stream and add it to the pipeline
         File rootFolder = temporaryFolder.newFolder();
 
-        IntermediateStream projectClass = IntermediateStream.builder(project)
-                .addContentTypes(QualifiedContent.DefaultContentType.CLASSES)
-                .addScopes(Scope.PROJECT)
-                .setRootLocation(rootFolder)
-                .setTaskName("my dependency")
-                .build();
+        IntermediateStream projectClass =
+                IntermediateStream.builder(project, "")
+                        .addContentTypes(QualifiedContent.DefaultContentType.CLASSES)
+                        .addScopes(Scope.PROJECT)
+                        .setRootLocation(rootFolder)
+                        .setTaskName("my dependency")
+                        .build();
         transformManager.addStream(projectClass);
 
         // use the output version of this stream to create some content.
@@ -325,12 +329,13 @@ public class TransformTaskTest extends TaskTestUtils {
     public void nonIncWithFolderInputInOriginalStream()
             throws IOException, TransformException, InterruptedException {
         // create a stream and add it to the pipeline
-        OriginalStream projectClass = OriginalStream.builder(project)
-                .addContentType(DefaultContentType.CLASSES)
-                .addScope(Scope.PROJECT)
-                .setFolder(temporaryFolder.newFolder("input folder"))
-                .setDependency("my dependency")
-                .build();
+        OriginalStream projectClass =
+                OriginalStream.builder(project, "")
+                        .addContentType(DefaultContentType.CLASSES)
+                        .addScope(Scope.PROJECT)
+                        .setFolder(temporaryFolder.newFolder("input folder"))
+                        .setDependency("my dependency")
+                        .build();
         transformManager.addStream(projectClass);
 
         // create the transform
@@ -385,12 +390,13 @@ public class TransformTaskTest extends TaskTestUtils {
         // create a stream and add it to the pipeline
         File rootFolder = temporaryFolder.newFolder();
 
-        IntermediateStream projectClass = IntermediateStream.builder(project)
-                .addContentTypes(DefaultContentType.CLASSES)
-                .addScopes(Scope.PROJECT)
-                .setRootLocation(rootFolder)
-                .setTaskName("my dependency")
-                .build();
+        IntermediateStream projectClass =
+                IntermediateStream.builder(project, "")
+                        .addContentTypes(DefaultContentType.CLASSES)
+                        .addScopes(Scope.PROJECT)
+                        .setRootLocation(rootFolder)
+                        .setTaskName("my dependency")
+                        .build();
         transformManager.addStream(projectClass);
 
         // use the output version of this stream to create some content.
@@ -452,12 +458,13 @@ public class TransformTaskTest extends TaskTestUtils {
     public void nonIncWithReferencedFolderInputInOriginalStream()
             throws IOException, TransformException, InterruptedException {
         // create a stream and add it to the pipeline
-        OriginalStream projectClass = OriginalStream.builder(project)
-                .addContentType(DefaultContentType.CLASSES)
-                .addScope(Scope.PROJECT)
-                .setFolder(temporaryFolder.newFolder("input folder"))
-                .setDependency("my dependency")
-                .build();
+        OriginalStream projectClass =
+                OriginalStream.builder(project, "")
+                        .addContentType(DefaultContentType.CLASSES)
+                        .addScope(Scope.PROJECT)
+                        .setFolder(temporaryFolder.newFolder("input folder"))
+                        .setDependency("my dependency")
+                        .build();
         transformManager.addStream(projectClass);
 
         // create the transform
@@ -512,12 +519,13 @@ public class TransformTaskTest extends TaskTestUtils {
         // create a stream and add it to the pipeline
         File rootFolder = temporaryFolder.newFolder();
 
-        IntermediateStream projectClass = IntermediateStream.builder(project)
-                .addContentTypes(DefaultContentType.CLASSES)
-                .addScopes(Scope.PROJECT)
-                .setRootLocation(rootFolder)
-                .setTaskName("my dependency")
-                .build();
+        IntermediateStream projectClass =
+                IntermediateStream.builder(project, "")
+                        .addContentTypes(DefaultContentType.CLASSES)
+                        .addScopes(Scope.PROJECT)
+                        .setRootLocation(rootFolder)
+                        .setTaskName("my dependency")
+                        .build();
         transformManager.addStream(projectClass);
 
         // use the output version of this stream to create some content.
@@ -580,12 +588,13 @@ public class TransformTaskTest extends TaskTestUtils {
             throws TransformException, InterruptedException, IOException {
         // create a stream and add it to the pipeline
         File jarFile = temporaryFolder.newFile("input file");
-        OriginalStream projectClass = OriginalStream.builder(project)
-                .addContentType(DefaultContentType.CLASSES)
-                .addScope(Scope.PROJECT)
-                .setJar(jarFile)
-                .setDependency("my dependency")
-                .build();
+        OriginalStream projectClass =
+                OriginalStream.builder(project, "")
+                        .addContentType(DefaultContentType.CLASSES)
+                        .addScope(Scope.PROJECT)
+                        .setJar(jarFile)
+                        .setDependency("my dependency")
+                        .build();
         transformManager.addStream(projectClass);
 
         // create the transform
@@ -637,12 +646,13 @@ public class TransformTaskTest extends TaskTestUtils {
         // create a stream and add it to the pipeline
         File rootFolder = temporaryFolder.newFolder();
 
-        IntermediateStream projectClass = IntermediateStream.builder(project)
-                .addContentTypes(DefaultContentType.CLASSES)
-                .addScopes(Scope.PROJECT)
-                .setRootLocation(rootFolder)
-                .setTaskName("my dependency")
-                .build();
+        IntermediateStream projectClass =
+                IntermediateStream.builder(project, "")
+                        .addContentTypes(DefaultContentType.CLASSES)
+                        .addScopes(Scope.PROJECT)
+                        .setRootLocation(rootFolder)
+                        .setTaskName("my dependency")
+                        .build();
         transformManager.addStream(projectClass);
 
         // use the output version of this stream to create some content.
@@ -704,12 +714,13 @@ public class TransformTaskTest extends TaskTestUtils {
             throws TransformException, InterruptedException, IOException {
         // create a stream and add it to the pipeline
         File rootFolder = temporaryFolder.newFolder("root folder");
-        OriginalStream projectClass = OriginalStream.builder(project)
-                .addContentType(DefaultContentType.CLASSES)
-                .addScope(Scope.PROJECT)
-                .setFolder(rootFolder)
-                .setDependency("my dependency")
-                .build();
+        OriginalStream projectClass =
+                OriginalStream.builder(project, "")
+                        .addContentType(DefaultContentType.CLASSES)
+                        .addScope(Scope.PROJECT)
+                        .setFolder(rootFolder)
+                        .setDependency("my dependency")
+                        .build();
         transformManager.addStream(projectClass);
 
         // create the transform
@@ -764,12 +775,13 @@ public class TransformTaskTest extends TaskTestUtils {
         // create a stream and add it to the pipeline
         File rootFolder = temporaryFolder.newFolder();
 
-        IntermediateStream projectClass = IntermediateStream.builder(project)
-                .addContentTypes(DefaultContentType.CLASSES)
-                .addScopes(Scope.PROJECT)
-                .setRootLocation(rootFolder)
-                .setTaskName("my dependency")
-                .build();
+        IntermediateStream projectClass =
+                IntermediateStream.builder(project, "")
+                        .addContentTypes(DefaultContentType.CLASSES)
+                        .addScopes(Scope.PROJECT)
+                        .setRootLocation(rootFolder)
+                        .setTaskName("my dependency")
+                        .build();
         transformManager.addStream(projectClass);
 
         // use the output version of this stream to create some content.
@@ -837,15 +849,17 @@ public class TransformTaskTest extends TaskTestUtils {
         final ImmutableMap<File, Status> jarMap = ImmutableMap.of(
                 addedFile, Status.ADDED,
                 changedFile, Status.CHANGED);
-        OriginalStream projectClass = OriginalStream.builder(project)
-                .addContentType(DefaultContentType.CLASSES)
-                .addScope(Scope.PROJECT)
-                .setJars(() -> {
-                    // this should not contain the removed jar files.
-                    return ImmutableList.of(addedFile, changedFile);
-                })
-                .setDependency("my dependency")
-                .build();
+        OriginalStream projectClass =
+                OriginalStream.builder(project, "")
+                        .addContentType(DefaultContentType.CLASSES)
+                        .addScope(Scope.PROJECT)
+                        .setJars(
+                                () -> {
+                                    // this should not contain the removed jar files.
+                                    return ImmutableList.of(addedFile, changedFile);
+                                })
+                        .setDependency("my dependency")
+                        .build();
         transformManager.addStream(projectClass);
 
         // create the transform
@@ -900,12 +914,13 @@ public class TransformTaskTest extends TaskTestUtils {
         // create a stream and add it to the pipeline
         File rootFolder = temporaryFolder.newFolder();
 
-        IntermediateStream projectClass = IntermediateStream.builder(project)
-                .addContentTypes(DefaultContentType.CLASSES)
-                .addScopes(Scope.PROJECT)
-                .setRootLocation(rootFolder)
-                .setTaskName("my dependency")
-                .build();
+        IntermediateStream projectClass =
+                IntermediateStream.builder(project, "")
+                        .addContentTypes(DefaultContentType.CLASSES)
+                        .addScopes(Scope.PROJECT)
+                        .setRootLocation(rootFolder)
+                        .setTaskName("my dependency")
+                        .build();
         transformManager.addStream(projectClass);
 
         // use the output version of this stream to create some content.
@@ -979,13 +994,14 @@ public class TransformTaskTest extends TaskTestUtils {
         // create a stream and add it to the pipeline
         File rootFolder = temporaryFolder.newFolder();
 
-        IntermediateStream projectClass = IntermediateStream.builder(project)
-                .addContentTypes(DefaultContentType.CLASSES)
-                .addContentTypes(ExtendedContentType.CLASSES_ENHANCED)
-                .addScopes(Scope.PROJECT)
-                .setRootLocation(rootFolder)
-                .setTaskName("my dependency")
-                .build();
+        IntermediateStream projectClass =
+                IntermediateStream.builder(project, "")
+                        .addContentTypes(DefaultContentType.CLASSES)
+                        .addContentTypes(ExtendedContentType.CLASSES_ENHANCED)
+                        .addScopes(Scope.PROJECT)
+                        .setRootLocation(rootFolder)
+                        .setTaskName("my dependency")
+                        .build();
         transformManager.addStream(projectClass);
 
         // use the output version of this stream to create some content.
@@ -1091,12 +1107,13 @@ public class TransformTaskTest extends TaskTestUtils {
         // create a stream and add it to the pipeline
         File rootFolder = temporaryFolder.newFolder();
 
-        IntermediateStream projectClass = IntermediateStream.builder(project)
-                .addContentTypes(DefaultContentType.CLASSES)
-                .addScopes(Scope.PROJECT, Scope.SUB_PROJECTS)
-                .setRootLocation(rootFolder)
-                .setTaskName("my dependency")
-                .build();
+        IntermediateStream projectClass =
+                IntermediateStream.builder(project, "")
+                        .addContentTypes(DefaultContentType.CLASSES)
+                        .addScopes(Scope.PROJECT, Scope.SUB_PROJECTS)
+                        .setRootLocation(rootFolder)
+                        .setTaskName("my dependency")
+                        .build();
         transformManager.addStream(projectClass);
 
         // use the output version of this stream to create some content.
@@ -1201,12 +1218,13 @@ public class TransformTaskTest extends TaskTestUtils {
             throws TransformException, InterruptedException, IOException {
         // create a stream and add it to the pipeline
         File rootFolder = temporaryFolder.newFolder();
-        OriginalStream projectClass = OriginalStream.builder(project)
-                .addContentType(DefaultContentType.CLASSES)
-                .addScope(Scope.PROJECT)
-                .setFolder(rootFolder)
-                .setDependency("my dependency")
-                .build();
+        OriginalStream projectClass =
+                OriginalStream.builder(project, "")
+                        .addContentType(DefaultContentType.CLASSES)
+                        .addScope(Scope.PROJECT)
+                        .setFolder(rootFolder)
+                        .setDependency("my dependency")
+                        .build();
         transformManager.addStream(projectClass);
 
         // create the transform
@@ -1268,12 +1286,13 @@ public class TransformTaskTest extends TaskTestUtils {
         // create a stream and add it to the pipeline
         File rootFolder = temporaryFolder.newFolder();
 
-        IntermediateStream projectClass = IntermediateStream.builder(project)
-                .addContentTypes(DefaultContentType.CLASSES)
-                .addScopes(Scope.PROJECT)
-                .setRootLocation(rootFolder)
-                .setTaskName("my dependency")
-                .build();
+        IntermediateStream projectClass =
+                IntermediateStream.builder(project, "")
+                        .addContentTypes(DefaultContentType.CLASSES)
+                        .addScopes(Scope.PROJECT)
+                        .setRootLocation(rootFolder)
+                        .setTaskName("my dependency")
+                        .build();
         transformManager.addStream(projectClass);
 
         // use the output version of this stream to create some content.
@@ -1346,12 +1365,14 @@ public class TransformTaskTest extends TaskTestUtils {
         File rootFolder = temporaryFolder.newFolder();
 
         // this represents the output of the "previous" transform.
-        IntermediateStream projectClass = IntermediateStream.builder(project)
-                .addContentTypes(DefaultContentType.CLASSES, ExtendedContentType.CLASSES_ENHANCED)
-                .addScopes(Scope.PROJECT)
-                .setRootLocation(rootFolder)
-                .setTaskName("my dependency")
-                .build();
+        IntermediateStream projectClass =
+                IntermediateStream.builder(project, "")
+                        .addContentTypes(
+                                DefaultContentType.CLASSES, ExtendedContentType.CLASSES_ENHANCED)
+                        .addScopes(Scope.PROJECT)
+                        .setRootLocation(rootFolder)
+                        .setTaskName("my dependency")
+                        .build();
         transformManager.addStream(projectClass);
 
         // use the output version of this stream to create some content.
@@ -1443,13 +1464,14 @@ public class TransformTaskTest extends TaskTestUtils {
         File rootFolder = temporaryFolder.newFolder();
 
         // this represents the output of the "previous" transform.
-        IntermediateStream projectClass = IntermediateStream.builder(project)
-                .addContentTypes(DefaultContentType.CLASSES)
-                .addScopes(Scope.PROJECT)
-                .addScopes(Scope.SUB_PROJECTS)
-                .setRootLocation(rootFolder)
-                .setTaskName("my dependency")
-                .build();
+        IntermediateStream projectClass =
+                IntermediateStream.builder(project, "")
+                        .addContentTypes(DefaultContentType.CLASSES)
+                        .addScopes(Scope.PROJECT)
+                        .addScopes(Scope.SUB_PROJECTS)
+                        .setRootLocation(rootFolder)
+                        .setTaskName("my dependency")
+                        .build();
         transformManager.addStream(projectClass);
 
         // use the output version of this stream to create some content.
@@ -1536,12 +1558,13 @@ public class TransformTaskTest extends TaskTestUtils {
             throws TransformException, InterruptedException, IOException {
         // create a stream and add it to the pipeline
         File jarFile = temporaryFolder.newFile("jar file");
-        OriginalStream projectClass = OriginalStream.builder(project)
-                .addContentType(DefaultContentType.CLASSES)
-                .addScope(Scope.PROJECT)
-                .setJar(jarFile)
-                .setDependency("my dependency")
-                .build();
+        OriginalStream projectClass =
+                OriginalStream.builder(project, "")
+                        .addContentType(DefaultContentType.CLASSES)
+                        .addScope(Scope.PROJECT)
+                        .setJar(jarFile)
+                        .setDependency("my dependency")
+                        .build();
         transformManager.addStream(projectClass);
 
         // create the transform
@@ -1596,12 +1619,13 @@ public class TransformTaskTest extends TaskTestUtils {
         // create a stream and add it to the pipeline
         File rootFolder = temporaryFolder.newFolder();
 
-        IntermediateStream projectClass = IntermediateStream.builder(project)
-                .addContentTypes(DefaultContentType.CLASSES)
-                .addScopes(Scope.PROJECT)
-                .setRootLocation(rootFolder)
-                .setTaskName("my dependency")
-                .build();
+        IntermediateStream projectClass =
+                IntermediateStream.builder(project, "")
+                        .addContentTypes(DefaultContentType.CLASSES)
+                        .addScopes(Scope.PROJECT)
+                        .setRootLocation(rootFolder)
+                        .setTaskName("my dependency")
+                        .build();
         transformManager.addStream(projectClass);
 
         // use the output version of this stream to create some content.
@@ -1676,12 +1700,13 @@ public class TransformTaskTest extends TaskTestUtils {
             throws TransformException, InterruptedException, IOException {
         // create a stream and add it to the pipeline
         File rootFolder = temporaryFolder.newFolder();
-        OriginalStream projectClass = OriginalStream.builder(project)
-                .addContentType(DefaultContentType.CLASSES)
-                .addScope(Scope.PROJECT)
-                .setFolder(rootFolder)
-                .setDependency("my dependency")
-                .build();
+        OriginalStream projectClass =
+                OriginalStream.builder(project, "")
+                        .addContentType(DefaultContentType.CLASSES)
+                        .addScope(Scope.PROJECT)
+                        .setFolder(rootFolder)
+                        .setDependency("my dependency")
+                        .build();
         transformManager.addStream(projectClass);
 
         // create the transform
@@ -1734,12 +1759,13 @@ public class TransformTaskTest extends TaskTestUtils {
             throws TransformException, InterruptedException, IOException {
         // create a stream and add it to the pipeline
         File rootFolder = temporaryFolder.newFolder();
-        IntermediateStream projectClass = IntermediateStream.builder(project)
-                .addContentTypes(DefaultContentType.CLASSES)
-                .addScopes(Scope.PROJECT)
-                .setRootLocation(rootFolder)
-                .setTaskName("my dependency")
-                .build();
+        IntermediateStream projectClass =
+                IntermediateStream.builder(project, "")
+                        .addContentTypes(DefaultContentType.CLASSES)
+                        .addScopes(Scope.PROJECT)
+                        .setRootLocation(rootFolder)
+                        .setTaskName("my dependency")
+                        .build();
         transformManager.addStream(projectClass);
 
         // use the output version of this stream to create some content.
@@ -1823,21 +1849,23 @@ public class TransformTaskTest extends TaskTestUtils {
         File scope1RootFolder = temporaryFolder.newFolder("folder file1");
         File scope3RootFolder = temporaryFolder.newFolder("folder file2");
 
-        OriginalStream scope1 = OriginalStream.builder(project)
-                .addContentType(DefaultContentType.CLASSES)
-                .addScope(Scope.PROJECT)
-                .setJar(scope1Jar)
-                .setFolder(scope1RootFolder)
-                .setDependency("my dependency")
-                .build();
+        OriginalStream scope1 =
+                OriginalStream.builder(project, "")
+                        .addContentType(DefaultContentType.CLASSES)
+                        .addScope(Scope.PROJECT)
+                        .setJar(scope1Jar)
+                        .setFolder(scope1RootFolder)
+                        .setDependency("my dependency")
+                        .build();
 
         File scope2Root = temporaryFolder.newFolder();
-        IntermediateStream scope2 = IntermediateStream.builder(project)
-                .addContentTypes(DefaultContentType.CLASSES)
-                .addScopes(Scope.PROJECT_LOCAL_DEPS)
-                .setRootLocation(scope2Root)
-                .setTaskName("my dependency")
-                .build();
+        IntermediateStream scope2 =
+                IntermediateStream.builder(project, "")
+                        .addContentTypes(DefaultContentType.CLASSES)
+                        .addScopes(Scope.PROJECT_LOCAL_DEPS)
+                        .setRootLocation(scope2Root)
+                        .setTaskName("my dependency")
+                        .build();
 
         // use the output version of this stream to create some content.
         // only these jars could be detected as deleted.
@@ -1854,21 +1882,23 @@ public class TransformTaskTest extends TaskTestUtils {
         // is correct
         scope2.save();
 
-        OriginalStream scope3 = OriginalStream.builder(project)
-                .addContentType(DefaultContentType.CLASSES)
-                .addScope(Scope.SUB_PROJECTS)
-                .setJar(scope3Jar)
-                .setFolder(scope3RootFolder)
-                .setDependency("my dependency")
-                .build();
+        OriginalStream scope3 =
+                OriginalStream.builder(project, "")
+                        .addContentType(DefaultContentType.CLASSES)
+                        .addScope(Scope.SUB_PROJECTS)
+                        .setJar(scope3Jar)
+                        .setFolder(scope3RootFolder)
+                        .setDependency("my dependency")
+                        .build();
 
         File scope4Root = temporaryFolder.newFolder();
-        IntermediateStream scope4 = IntermediateStream.builder(project)
-                .addContentTypes(DefaultContentType.CLASSES)
-                .addScopes(Scope.EXTERNAL_LIBRARIES)
-                .setRootLocation(scope4Root)
-                .setTaskName("my dependency")
-                .build();
+        IntermediateStream scope4 =
+                IntermediateStream.builder(project, "")
+                        .addContentTypes(DefaultContentType.CLASSES)
+                        .addScopes(Scope.EXTERNAL_LIBRARIES)
+                        .setRootLocation(scope4Root)
+                        .setTaskName("my dependency")
+                        .build();
 
         // use the output version of this stream to create some content.
         // only these jars could be detected as deleted.
@@ -2014,10 +2044,11 @@ public class TransformTaskTest extends TaskTestUtils {
     @Test
     public void testSecondaryInputs() {
         // create a stream and add it to the pipeline
-        OriginalStream projectClass = OriginalStream.builder(project)
-                .addContentType(QualifiedContent.DefaultContentType.CLASSES)
-                .addScope(Scope.PROJECT)
-                .build();
+        OriginalStream projectClass =
+                OriginalStream.builder(project, "")
+                        .addContentType(QualifiedContent.DefaultContentType.CLASSES)
+                        .addScope(Scope.PROJECT)
+                        .build();
         transformManager.addStream(projectClass);
 
         File file1 = new File("file1");
@@ -2057,12 +2088,13 @@ public class TransformTaskTest extends TaskTestUtils {
             throws TransformException, InterruptedException, IOException {
         // create a stream and add it to the pipeline
         File jarFile = temporaryFolder.newFile();
-        TransformStream projectClass = OriginalStream.builder(project)
-                .addContentType(DefaultContentType.CLASSES)
-                .addScope(Scope.PROJECT)
-                .setJar(jarFile)
-                .setDependency("my dependency")
-                .build();
+        TransformStream projectClass =
+                OriginalStream.builder(project, "")
+                        .addContentType(DefaultContentType.CLASSES)
+                        .addScope(Scope.PROJECT)
+                        .setJar(jarFile)
+                        .setDependency("my dependency")
+                        .build();
         transformManager.addStream(projectClass);
 
         // create the transform, with a 2ndary file.
@@ -2117,12 +2149,13 @@ public class TransformTaskTest extends TaskTestUtils {
             throws TransformException, InterruptedException, IOException {
         // create a stream and add it to the pipeline
         File rootFolder = temporaryFolder.newFolder();
-        TransformStream projectClass = OriginalStream.builder(project)
-                .addContentType(DefaultContentType.CLASSES)
-                .addScope(Scope.PROJECT)
-                .setFolder(rootFolder)
-                .setDependency("my dependency")
-                .build();
+        TransformStream projectClass =
+                OriginalStream.builder(project, "")
+                        .addContentType(DefaultContentType.CLASSES)
+                        .addScope(Scope.PROJECT)
+                        .setFolder(rootFolder)
+                        .setDependency("my dependency")
+                        .build();
         transformManager.addStream(projectClass);
 
         // create the transform, with a 2ndary file.
@@ -2179,12 +2212,13 @@ public class TransformTaskTest extends TaskTestUtils {
             throws TransformException, InterruptedException, IOException {
         // create a stream and add it to the pipeline
         File jarFile = new File("jar file");
-        TransformStream projectClass = OriginalStream.builder(project)
-                .addContentType(DefaultContentType.CLASSES)
-                .addScope(Scope.PROJECT)
-                .setJar(jarFile)
-                .setDependency("my dependency")
-                .build();
+        TransformStream projectClass =
+                OriginalStream.builder(project, "")
+                        .addContentType(DefaultContentType.CLASSES)
+                        .addScope(Scope.PROJECT)
+                        .setJar(jarFile)
+                        .setDependency("my dependency")
+                        .build();
         transformManager.addStream(projectClass);
 
         // create the transform, with a 2ndary file.
@@ -2229,12 +2263,13 @@ public class TransformTaskTest extends TaskTestUtils {
             throws TransformException, InterruptedException, IOException {
         // create a stream and add it to the pipeline
         File jarFile = new File("jar file");
-        TransformStream projectClass = OriginalStream.builder(project)
-                .addContentType(DefaultContentType.CLASSES)
-                .addScope(Scope.PROJECT)
-                .setJar(jarFile)
-                .setDependency("my dependency")
-                .build();
+        TransformStream projectClass =
+                OriginalStream.builder(project, "")
+                        .addContentType(DefaultContentType.CLASSES)
+                        .addScope(Scope.PROJECT)
+                        .setJar(jarFile)
+                        .setDependency("my dependency")
+                        .build();
         transformManager.addStream(projectClass);
 
         // create the transform, with a 2ndary file.
@@ -2306,12 +2341,13 @@ public class TransformTaskTest extends TaskTestUtils {
             throws TransformException, InterruptedException, IOException {
         // create a stream and add it to the pipeline
         File jarFile = new File("jar file");
-        TransformStream projectClass = OriginalStream.builder(project)
-                .addContentType(DefaultContentType.CLASSES)
-                .addScope(Scope.PROJECT)
-                .setJar(jarFile)
-                .setDependency("my dependency")
-                .build();
+        TransformStream projectClass =
+                OriginalStream.builder(project, "")
+                        .addContentType(DefaultContentType.CLASSES)
+                        .addScope(Scope.PROJECT)
+                        .setJar(jarFile)
+                        .setDependency("my dependency")
+                        .build();
         transformManager.addStream(projectClass);
 
         // create the transform, with a 2ndary file.
@@ -2357,12 +2393,13 @@ public class TransformTaskTest extends TaskTestUtils {
         // create a stream and add it to the pipeline
         File rootFolder = temporaryFolder.newFolder();
 
-        IntermediateStream stream = IntermediateStream.builder(project)
-                .addContentTypes(DefaultContentType.CLASSES)
-                .addScopes(Scope.PROJECT, Scope.EXTERNAL_LIBRARIES)
-                .setRootLocation(rootFolder)
-                .setTaskName("my dependency")
-                .build();
+        IntermediateStream stream =
+                IntermediateStream.builder(project, "")
+                        .addContentTypes(DefaultContentType.CLASSES)
+                        .addScopes(Scope.PROJECT, Scope.EXTERNAL_LIBRARIES)
+                        .setRootLocation(rootFolder)
+                        .setTaskName("my dependency")
+                        .build();
         transformManager.addStream(stream);
 
         // use the output version of this stream to create some content.

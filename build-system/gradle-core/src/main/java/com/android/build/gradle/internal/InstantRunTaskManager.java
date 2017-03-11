@@ -190,12 +190,13 @@ public class InstantRunTaskManager {
         extractorTask.dependsOn(tasks, buildInfoLoaderTask);
 
         // also add a new stream for the extractor task output.
-        transformManager.addStream(OriginalStream.builder(project)
-                .addContentTypes(TransformManager.CONTENT_CLASS)
-                .addScope(InternalScope.MAIN_SPLIT)
-                .setJar(variantScope.getIncrementalRuntimeSupportJar())
-                .setDependency(extractorTask.get(tasks))
-                .build());
+        transformManager.addStream(
+                OriginalStream.builder(project, "main-split-from-extractor")
+                        .addContentTypes(TransformManager.CONTENT_CLASS)
+                        .addScope(InternalScope.MAIN_SPLIT)
+                        .setJar(variantScope.getIncrementalRuntimeSupportJar())
+                        .setDependency(extractorTask.get(tasks))
+                        .build());
 
         AndroidTask<GenerateInstantRunAppInfoTask> generateAppInfoAndroidTask =
                 androidTasks.create(
@@ -209,12 +210,13 @@ public class InstantRunTaskManager {
                 generateAppInfoAndroidTask.get(tasks);
 
         // also add a new stream for the injector task output.
-        transformManager.addStream(OriginalStream.builder(project)
-                .addContentTypes(TransformManager.CONTENT_CLASS)
-                .addScope(InternalScope.MAIN_SPLIT)
-                .setJar(generateInstantRunAppInfoTask.getOutputFile())
-                .setDependency(generateInstantRunAppInfoTask)
-                .build());
+        transformManager.addStream(
+                OriginalStream.builder(project, "main-split-from-injector")
+                        .addContentTypes(TransformManager.CONTENT_CLASS)
+                        .addScope(InternalScope.MAIN_SPLIT)
+                        .setJar(generateInstantRunAppInfoTask.getOutputFile())
+                        .setDependency(generateInstantRunAppInfoTask)
+                        .build());
 
         anchorTask.optionalDependsOn(tasks, instantRunTask.orElse(null));
 

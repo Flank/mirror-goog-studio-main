@@ -38,6 +38,7 @@ import static com.android.builder.core.BuilderConstants.CONNECTED;
 import static com.android.builder.core.BuilderConstants.DEVICE;
 import static com.android.builder.core.VariantType.ANDROID_TEST;
 import static com.android.builder.core.VariantType.LIBRARY;
+import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Verify.verifyNotNull;
@@ -240,6 +241,7 @@ import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.tasks.Copy;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.bundling.Jar;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
@@ -522,7 +524,7 @@ public abstract class TaskManager {
         TransformManager transformManager = variantScope.getTransformManager();
 
         transformManager.addStream(
-                OriginalStream.builder(project)
+                OriginalStream.builder(project, "ext-libs-classes")
                         .addContentTypes(TransformManager.CONTENT_CLASS)
                         .addScope(Scope.EXTERNAL_LIBRARIES)
                         .setArtifactCollection(
@@ -531,7 +533,7 @@ public abstract class TaskManager {
                         .build());
 
         transformManager.addStream(
-                OriginalStream.builder(project)
+                OriginalStream.builder(project, "ext-libs-res-plus-native")
                         .addContentTypes(
                                 DefaultContentType.RESOURCES, ExtendedContentType.NATIVE_LIBS)
                         .addScope(Scope.EXTERNAL_LIBRARIES)
@@ -542,7 +544,7 @@ public abstract class TaskManager {
 
         // and the android AAR also have a specific jni folder
         transformManager.addStream(
-                OriginalStream.builder(project)
+                OriginalStream.builder(project, "ext-libs-native")
                         .addContentTypes(TransformManager.CONTENT_NATIVE_LIBS)
                         .addScope(Scope.EXTERNAL_LIBRARIES)
                         .setArtifactCollection(
@@ -579,7 +581,7 @@ public abstract class TaskManager {
                     variantData.getVariantDependency().getCompileClasspath());
 
             transformManager.addStream(
-                    OriginalStream.builder(project)
+                    OriginalStream.builder(project, "project-java-sources")
                             .addContentTypes(ExtendedContentType.JAVA_SOURCES)
                             .addScope(Scope.PROJECT)
                             .setFileCollection(sourcesCollection)
@@ -589,7 +591,7 @@ public abstract class TaskManager {
         // data binding related artifacts for external libs
         if (extension.getDataBinding().isEnabled()) {
             transformManager.addStream(
-                    OriginalStream.builder(project)
+                    OriginalStream.builder(project, "ext-libs-data-binding")
                             .addContentTypes(TransformManager.DATA_BINDING_ARTIFACT)
                             .addScope(Scope.SUB_PROJECTS)
                             .setArtifactCollection(
@@ -597,7 +599,7 @@ public abstract class TaskManager {
                                             COMPILE_CLASSPATH, MODULE, DATA_BINDING))
                             .build());
             transformManager.addStream(
-                    OriginalStream.builder(project)
+                    OriginalStream.builder(project, "ext-libs-databinding")
                             .addContentTypes(TransformManager.DATA_BINDING_ARTIFACT)
                             .addScope(Scope.EXTERNAL_LIBRARIES)
                             .setArtifactCollection(
@@ -608,7 +610,7 @@ public abstract class TaskManager {
 
         // for the sub modules, new intermediary classes artifact has its own stream
         transformManager.addStream(
-                OriginalStream.builder(project)
+                OriginalStream.builder(project, "sub-projects-classes")
                         .addContentTypes(TransformManager.CONTENT_CLASS)
                         .addScope(Scope.SUB_PROJECTS)
                         .setArtifactCollection(
@@ -618,7 +620,7 @@ public abstract class TaskManager {
 
         // same for the resources which can be java-res or jni
         transformManager.addStream(
-                OriginalStream.builder(project)
+                OriginalStream.builder(project, "sub-projects-res-plus-native")
                         .addContentTypes(
                                 DefaultContentType.RESOURCES, ExtendedContentType.NATIVE_LIBS)
                         .addScope(Scope.SUB_PROJECTS)
@@ -629,7 +631,7 @@ public abstract class TaskManager {
 
         // and the android library sub-modules also have a specific jni folder
         transformManager.addStream(
-                OriginalStream.builder(project)
+                OriginalStream.builder(project, "sub-projects-native")
                         .addContentTypes(TransformManager.CONTENT_NATIVE_LIBS)
                         .addScope(Scope.SUB_PROJECTS)
                         .setArtifactCollection(
@@ -637,11 +639,12 @@ public abstract class TaskManager {
                         .build());
 
         // provided only scopes.
-        transformManager.addStream(OriginalStream.builder(project)
-                .addContentTypes(TransformManager.CONTENT_CLASS)
-                .addScope(Scope.PROVIDED_ONLY)
-                .setFileCollection(variantScope.getProvidedOnlyClasspath())
-                .build());
+        transformManager.addStream(
+                OriginalStream.builder(project, "provided-classes")
+                        .addContentTypes(TransformManager.CONTENT_CLASS)
+                        .addScope(Scope.PROVIDED_ONLY)
+                        .setFileCollection(variantScope.getProvidedOnlyClasspath())
+                        .build());
 
         if (variantScope.getTestedVariantData() != null) {
             final BaseVariantData testedVariantData = variantScope.getTestedVariantData();
@@ -650,17 +653,21 @@ public abstract class TaskManager {
 
             if (!variantScope.isJackEnabled()) {
                 // create two streams of different types.
-                transformManager.addStream(OriginalStream.builder(project)
-                        .addContentTypes(DefaultContentType.CLASSES)
-                        .addScope(Scope.TESTED_CODE)
-                        .setFolders(() -> ImmutableList.of(testedVariantScope.getJavaOutputDir()))
-                        .setDependency(testedVariantScope.getJavacTask().getName())
-                        .build());
+                transformManager.addStream(
+                        OriginalStream.builder(project, "tested-code-javac-out")
+                                .addContentTypes(DefaultContentType.CLASSES)
+                                .addScope(Scope.TESTED_CODE)
+                                .setFolders(
+                                        () ->
+                                                ImmutableList.of(
+                                                        testedVariantScope.getJavaOutputDir()))
+                                .setDependency(testedVariantScope.getJavacTask().getName())
+                                .build());
             } else {
                 FileCollection testedAppJack = testedVariantData.getJackCompilationOutput();
                 checkNotNull(testedAppJack, "Tested variant has no jack output specified.");
                 transformManager.addStream(
-                        OriginalStream.builder(project)
+                        OriginalStream.builder(project, "tested-code-jack-out")
                                 .addContentType(ExtendedContentType.JACK)
                                 .addScope(Scope.TESTED_CODE)
                                 .setFileCollection(testedAppJack)
@@ -668,7 +675,7 @@ public abstract class TaskManager {
             }
 
             transformManager.addStream(
-                    OriginalStream.builder(project)
+                    OriginalStream.builder(project, "tested-code-deps")
                             .addContentTypes(DefaultContentType.CLASSES)
                             .addScope(Scope.TESTED_CODE)
                             .setArtifactCollection(
@@ -940,66 +947,94 @@ public abstract class TaskManager {
         variantScope.setMergeJniLibFoldersTask(mergeJniLibFoldersTask);
 
         // create the stream generated from this task
-        variantScope.getTransformManager().addStream(OriginalStream.builder(project)
-                .addContentType(ExtendedContentType.NATIVE_LIBS)
-                .addScope(Scope.PROJECT)
-                .setFolder(variantScope.getMergeNativeLibsOutputDir())
-                .setDependency(mergeJniLibFoldersTask.getName())
-                .build());
+        variantScope
+                .getTransformManager()
+                .addStream(
+                        OriginalStream.builder(project, "mergedJniFolder")
+                                .addContentType(ExtendedContentType.NATIVE_LIBS)
+                                .addScope(Scope.PROJECT)
+                                .setFolder(variantScope.getMergeNativeLibsOutputDir())
+                                .setDependency(mergeJniLibFoldersTask.getName())
+                                .build());
 
         // create a stream that contains the content of the local NDK build
-        variantScope.getTransformManager().addStream(OriginalStream.builder(project)
-                .addContentType(ExtendedContentType.NATIVE_LIBS)
-                .addScope(Scope.PROJECT)
-                .setFolders(variantScope::getNdkSoFolder)
-                .setDependency(getNdkBuildable(variantScope.getVariantData()))
-                .build());
+        variantScope
+                .getTransformManager()
+                .addStream(
+                        OriginalStream.builder(project, "local-ndk-build")
+                                .addContentType(ExtendedContentType.NATIVE_LIBS)
+                                .addScope(Scope.PROJECT)
+                                .setFolders(variantScope::getNdkSoFolder)
+                                .setDependency(getNdkBuildable(variantScope.getVariantData()))
+                                .build());
 
         // create a stream that contains the content of the local external native build
         if (variantScope.getExternalNativeJsonGenerator() != null) {
-            variantScope.getTransformManager().addStream(OriginalStream.builder(project)
-                    .addContentType(ExtendedContentType.NATIVE_LIBS)
-                    .addScope(Scope.PROJECT)
-                    .setFolder(variantScope.getExternalNativeJsonGenerator().getObjFolder())
-                    .setDependency(variantScope.getExternalNativeBuildTask().getName())
-                    .build());
+            variantScope
+                    .getTransformManager()
+                    .addStream(
+                            OriginalStream.builder(project, "external-native-build")
+                                    .addContentType(ExtendedContentType.NATIVE_LIBS)
+                                    .addScope(Scope.PROJECT)
+                                    .setFolder(
+                                            variantScope
+                                                    .getExternalNativeJsonGenerator()
+                                                    .getObjFolder())
+                                    .setDependency(
+                                            variantScope.getExternalNativeBuildTask().getName())
+                                    .build());
         }
 
         // create a stream containing the content of the renderscript compilation output
         // if support mode is enabled.
         if (variantScope.getVariantConfiguration().getRenderscriptSupportModeEnabled()) {
-            variantScope.getTransformManager().addStream(OriginalStream.builder(project)
-                    .addContentType(ExtendedContentType.NATIVE_LIBS)
-                    .addScope(Scope.PROJECT)
-                    .setFolders(() -> {
+            final Supplier<Collection<File>> supplier =
+                    () -> {
                         ImmutableList.Builder<File> builder = ImmutableList.builder();
 
                         if (variantScope.getRenderscriptLibOutputDir().isDirectory()) {
                             builder.add(variantScope.getRenderscriptLibOutputDir());
                         }
 
-                        File rsLibs = variantScope.getGlobalScope().getAndroidBuilder()
-                                .getSupportNativeLibFolder();
+                        File rsLibs =
+                                variantScope
+                                        .getGlobalScope()
+                                        .getAndroidBuilder()
+                                        .getSupportNativeLibFolder();
                         if (rsLibs != null && rsLibs.isDirectory()) {
                             builder.add(rsLibs);
                         }
-                        if (variantScope.getVariantConfiguration()
+                        if (variantScope
+                                .getVariantConfiguration()
                                 .getRenderscriptSupportModeBlasEnabled()) {
-                            File rsBlasLib = variantScope.getGlobalScope().getAndroidBuilder()
-                                    .getSupportBlasLibFolder();
+                            File rsBlasLib =
+                                    variantScope
+                                            .getGlobalScope()
+                                            .getAndroidBuilder()
+                                            .getSupportBlasLibFolder();
 
                             if (rsBlasLib == null || !rsBlasLib.isDirectory()) {
                                 throw new GradleException(
                                         "Renderscript BLAS support mode is not supported "
-                                                + "in BuildTools" + rsBlasLib);
+                                                + "in BuildTools"
+                                                + rsBlasLib);
                             } else {
                                 builder.add(rsBlasLib);
                             }
                         }
                         return builder.build();
-                    })
-                    .setDependency(variantScope.getRenderscriptCompileTask().getName())
-                    .build());
+                    };
+
+            variantScope
+                    .getTransformManager()
+                    .addStream(
+                            OriginalStream.builder(project, "rs-support-mode-output")
+                                    .addContentType(ExtendedContentType.NATIVE_LIBS)
+                                    .addScope(Scope.PROJECT)
+                                    .setFolders(supplier)
+                                    .setDependency(
+                                            variantScope.getRenderscriptCompileTask().getName())
+                                    .build());
         }
 
         // compute the scopes that need to be merged.
@@ -1288,12 +1323,15 @@ public abstract class TaskManager {
                 processJavaResourcesTask.getName());
 
         // create the stream generated from this task
-        variantScope.getTransformManager().addStream(OriginalStream.builder(project)
-                .addContentType(DefaultContentType.RESOURCES)
-                .addScope(Scope.PROJECT)
-                .setFolder(destinationDir)
-                .setDependency(processJavaResourcesTask.getName())
-                .build());
+        variantScope
+                .getTransformManager()
+                .addStream(
+                        OriginalStream.builder(project, "processed-java-res")
+                                .addContentType(DefaultContentType.RESOURCES)
+                                .addScope(Scope.PROJECT)
+                                .setFolder(destinationDir)
+                                .setDependency(processJavaResourcesTask.getName())
+                                .build());
     }
 
     /**
@@ -1375,14 +1413,47 @@ public abstract class TaskManager {
 
         setupCompileTaskDependencies(tasks, scope, javacTask);
 
-        scope.addTaskOutput(JAVAC, scope.getJavaOutputDir(), javacTask.getName());
+        ConfigurableFileCollection fileCollection =
+                scope.addTaskOutput(JAVAC, scope.getJavaOutputDir(), javacTask.getName());
 
         // Create the classes artifact for uses by external test modules.
         if (variantData.getVariantConfiguration().getType() == VariantType.DEFAULT) {
+            File dest =
+                    new File(
+                            globalScope.getBuildDir(),
+                            FileUtils.join(
+                                    FD_INTERMEDIATES,
+                                    "classes-jar",
+                                    scope.getVariantConfiguration().getDirName()));
+
+            AndroidTask<Jar> task =
+                    androidTasks.create(
+                            tasks,
+                            new TaskConfigAction<Jar>() {
+                                @NonNull
+                                @Override
+                                public String getName() {
+                                    return scope.getTaskName("bundleAppClasses");
+                                }
+
+                                @NonNull
+                                @Override
+                                public Class<Jar> getType() {
+                                    return Jar.class;
+                                }
+
+                                @Override
+                                public void execute(@NonNull Jar task) {
+                                    task.from(fileCollection);
+                                    task.from(
+                                            scope.getVariantData()
+                                                    .getGeneratedBytecodeCollection());
+                                    task.setDestinationDir(dest);
+                                    task.setArchiveName("classes.jar");
+                                }
+                            });
             scope.publishIntermediateArtifact(
-                    scope.getJavaOutputDir(),
-                    javacTask.getName(),
-                    APK_CLASSES);
+                    new File(dest, "classes.jar"), task.getName(), APK_CLASSES);
         }
 
         return javacTask;
@@ -1396,12 +1467,23 @@ public abstract class TaskManager {
     public void addJavacClassesStream(VariantScope scope) {
         checkNotNull(scope.getJavacTask());
         // create the output stream from this task
-        scope.getTransformManager().addStream(OriginalStream.builder(project)
-                .addContentType(DefaultContentType.CLASSES)
-                .addScope(Scope.PROJECT)
-                .setFolder(scope.getJavaOutputDir())
-                .setDependency(scope.getJavacTask().getName())
-                .build());
+        scope.getTransformManager()
+                .addStream(
+                        OriginalStream.builder(project, "javac-output")
+                                .addContentType(DefaultContentType.CLASSES)
+                                .addScope(Scope.PROJECT)
+                                .setFolder(scope.getJavaOutputDir())
+                                .setDependency(scope.getJavacTask().getName())
+                                .build());
+
+        scope.getTransformManager()
+                .addStream(
+                        OriginalStream.builder(project, "generated-bytecode")
+                                .addContentType(DefaultContentType.CLASSES)
+                                .addScope(Scope.PROJECT)
+                                .setFileCollection(
+                                        scope.getVariantData().getGeneratedBytecodeCollection())
+                                .build());
     }
 
     private static void setupCompileTaskDependencies(
@@ -2391,12 +2473,15 @@ public abstract class TaskManager {
             AndroidTask<Copy> agentTask = getJacocoAgentTask(tasks);
 
             // also add a new stream for the jacoco agent Jar
-            variantScope.getTransformManager().addStream(OriginalStream.builder(project)
-                    .addContentTypes(TransformManager.CONTENT_JARS)
-                    .addScope(Scope.EXTERNAL_LIBRARIES)
-                    .setJar(globalScope.getJacocoAgent())
-                    .setDependency(agentTask.getName())
-                    .build());
+            variantScope
+                    .getTransformManager()
+                    .addStream(
+                            OriginalStream.builder(project, "jacoco-agent")
+                                    .addContentTypes(TransformManager.CONTENT_JARS)
+                                    .addScope(Scope.EXTERNAL_LIBRARIES)
+                                    .setJar(globalScope.getJacocoAgent())
+                                    .setDependency(agentTask.getName())
+                                    .build());
         }
     }
 

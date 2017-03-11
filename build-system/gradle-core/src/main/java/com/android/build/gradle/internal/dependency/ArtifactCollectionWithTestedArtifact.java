@@ -17,10 +17,12 @@
 package com.android.build.gradle.internal.dependency;
 
 import com.android.annotations.NonNull;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.Spliterator;
@@ -68,7 +70,7 @@ public class ArtifactCollectionWithTestedArtifact implements ArtifactCollection 
         if (artifactResults == null) {
             artifactResults = Sets.newLinkedHashSet();
 
-            artifactResults.add(computedTestedArtifact());
+            artifactResults.addAll(computedTestedArtifact());
             artifactResults.addAll(testArtifacts.getArtifacts());
         }
 
@@ -103,10 +105,18 @@ public class ArtifactCollectionWithTestedArtifact implements ArtifactCollection 
     }
 
     @NonNull
-    private ResolvedArtifactResult computedTestedArtifact() {
-        return new TestedResolvedArtifactResult(
-                testedArtifact.getSingleFile(),
-                new TestedComponentArtifactIdentifier(new TestedComponentIdentifier(projectPath)));
+    private List<ResolvedArtifactResult> computedTestedArtifact() {
+        Set<File> testedFiles = testedArtifact.getFiles();
+        List<ResolvedArtifactResult> list = Lists.newArrayListWithCapacity(testedFiles.size());
+        for (File file : testedFiles) {
+            list.add(
+                    new TestedResolvedArtifactResult(
+                            file,
+                            new TestedComponentArtifactIdentifier(
+                                    new TestedComponentIdentifier(projectPath))));
+        }
+
+        return list;
     }
 
     private static final class TestedResolvedArtifactResult implements ResolvedArtifactResult {

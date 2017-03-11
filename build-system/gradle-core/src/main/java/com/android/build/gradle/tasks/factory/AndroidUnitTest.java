@@ -169,9 +169,12 @@ public class AndroidUnitTest extends Test {
             final VariantScope testedScope = testedVariantData.getScope();
 
             // the test classpath is made up of:
-            // - the test and tested compilation output
+            // - the java runtime classpath for this scope (which includes the tested code)
+            // - the test compilation output
             collection.from(scope.getOutputs(JAVAC));
+            collection.from(scope.getVariantData().getGeneratedBytecodeCollection());
             collection.from(testedScope.getOutputs(JAVAC));
+            collection.from(testedVariantData.getGeneratedBytecodeCollection());
 
             // - the test and tested java resources
             collection.from(scope.getOutputs(TaskOutputType.JAVA_RES));

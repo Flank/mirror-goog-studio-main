@@ -1,0 +1,10 @@
+apply plugin: 'java'
+apply plugin: 'idea'
+
+apply from: "../../commonVersions.gradle", to: project.ext
+apply from: "../../commonLocalRepo.gradle"
+
+dependencies {
+    compile "com.android.tools.build:gradle:$rootProject.buildVersion"
+    compile gradleApi()
+}

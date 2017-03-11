@@ -17,7 +17,6 @@ import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
 import java.io.File;
 import java.util.Map;
-import org.gradle.api.JavaVersion;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.ConfigurableFileTree;
@@ -62,8 +61,7 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
             javacTask.source(fileTree);
         }
 
-
-        final boolean keepDefaultBootstrap = keepBootclasspath();
+        final boolean keepDefaultBootstrap = scope.keepDefaultBootstrap();
 
         if (!keepDefaultBootstrap) {
             // Set boot classpath if we don't need to keep the default.  Otherwise, this is added as
@@ -78,7 +76,7 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
                                                     .getBootClasspathAsStrings(false)));
         }
 
-        FileCollection classpath = scope.getJavaClasspath(CLASSES);
+        FileCollection classpath = scope.getJavaCompileClasspath(CLASSES, true);
         if (keepDefaultBootstrap) {
             classpath =
                     classpath.plus(
@@ -111,7 +109,7 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
                 scope.getArtifactFileCollection(ANNOTATION_PROCESSOR, ALL, JAR);
         if (Boolean.TRUE.equals(includeCompileClasspath)) {
             // We need the jar files because annotation processors require the resources.
-            processorPath = processorPath.plus(scope.getJavaClasspath(JAR));
+            processorPath = processorPath.plus(scope.getJavaCompileClasspath(JAR, true));
         }
 
         javacTask.getOptions().setAnnotationProcessorPath(processorPath);
@@ -166,27 +164,5 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
         javacTask.getOptions().getCompilerArgs().add(
                 scope.getAnnotationProcessorOutputDir().getAbsolutePath());
 
-    }
-
-
-    private boolean keepBootclasspath() {
-        // javac 1.8 may generate code that uses class not available in android.jar.  This is fine
-        // if jack or desugar are used to compile code for the app or compile task is created only
-        // for unit test. In those cases, we want to keep the default bootstrap classpath.
-        if (!JavaVersion.current().isJava8Compatible()) {
-            return false;
-        }
-
-        VariantScope.Java8LangSupport java8LangSupport = scope.getJava8LangSupportType();
-        if (java8LangSupport == VariantScope.Java8LangSupport.JACK) {
-            return true;
-        }
-
-        // only if target and source is explicitly specified to 1.8 (and above), we keep the
-        // default bootclasspath with Desugar. Otherwise, we use android.jar.
-        CompileOptions compileOptions = scope.getGlobalScope().getExtension().getCompileOptions();
-        return java8LangSupport == VariantScope.Java8LangSupport.DESUGAR
-                && compileOptions.getTargetCompatibility().isJava8Compatible()
-                && compileOptions.getSourceCompatibility().isJava8Compatible();
     }
 }

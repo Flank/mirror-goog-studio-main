@@ -146,6 +146,7 @@ public abstract class BaseVariantData implements TaskContainer {
 
     private List<File> extraGeneratedSourceFolders;
     private final ConfigurableFileCollection extraGeneratedResFolders;
+    private final ConfigurableFileCollection generatedBytecodeCollection;
 
     private Set<String> densityFilters;
     private Set<String> languageFilters;
@@ -219,6 +220,7 @@ public abstract class BaseVariantData implements TaskContainer {
         // this must be created immediately since the variant API happens after the task that
         // depends on this are created.
         extraGeneratedResFolders = scope.getGlobalScope().getProject().files();
+        generatedBytecodeCollection = scope.getGlobalScope().getProject().files();
     }
 
     @NonNull
@@ -330,6 +332,11 @@ public abstract class BaseVariantData implements TaskContainer {
         return extraGeneratedResFolders;
     }
 
+    @NonNull
+    public ConfigurableFileCollection getGeneratedBytecodeCollection() {
+        return generatedBytecodeCollection;
+    }
+
     public void addJavaSourceFoldersToModel(@NonNull File... generatedSourceFolders) {
         if (extraGeneratedSourceFolders == null) {
             extraGeneratedSourceFolders = Lists.newArrayList();
@@ -395,6 +402,10 @@ public abstract class BaseVariantData implements TaskContainer {
 
         final Project project = scope.getGlobalScope().getProject();
         registerGeneratedResFolders(project.files(generatedResFolders).builtBy(task));
+    }
+
+    public void registerGeneratedBytecode(@NonNull FileCollection fileCollection) {
+        generatedBytecodeCollection.from(fileCollection);
     }
 
     /**
