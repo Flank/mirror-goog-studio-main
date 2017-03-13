@@ -22,6 +22,7 @@ import static com.android.SdkConstants.CONSTRUCTOR_NAME;
 import static com.android.SdkConstants.DOT_CLASS;
 import static com.android.SdkConstants.DOT_JAR;
 import static com.android.SdkConstants.DOT_JAVA;
+import static com.android.SdkConstants.DOT_KT;
 import static com.android.SdkConstants.FD_GRADLE_WRAPPER;
 import static com.android.SdkConstants.FN_GRADLE_WRAPPER_PROPERTIES;
 import static com.android.SdkConstants.FN_LOCAL_PROPERTIES;
@@ -30,6 +31,7 @@ import static com.android.SdkConstants.RES_FOLDER;
 import static com.android.SdkConstants.SUPPRESS_ALL;
 import static com.android.SdkConstants.SUPPRESS_LINT;
 import static com.android.SdkConstants.TOOLS_URI;
+import static com.android.SdkConstants.VALUE_TRUE;
 import static com.android.ide.common.resources.configuration.FolderConfiguration.QUALIFIER_SPLITTER;
 import static com.android.tools.lint.detector.api.LintUtils.isAnonymousClass;
 import static java.io.File.separator;
@@ -246,6 +248,10 @@ public class LintDriver {
         Throwable throwable = null; // NOT e: this makes for very noisy logs
         //noinspection ConstantConditions
         context.log(throwable, sb.toString());
+
+        if (VALUE_TRUE.equals(System.getenv("LINT_PRINT_STACKTRACE"))) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -1896,8 +1902,11 @@ public class LintDriver {
 
         List<JavaContext> contexts = Lists.newArrayListWithExpectedSize(files.size());
         for (File file : files) {
-            if (file.isFile() && file.getPath().endsWith(DOT_JAVA)) {
-                contexts.add(new JavaContext(this, project, main, file));
+            if (file.isFile()) {
+                String path = file.getPath();
+                if (path.endsWith(DOT_JAVA) || path.endsWith(DOT_KT)) {
+                    contexts.add(new JavaContext(this, project, main, file));
+                }
             }
         }
 
@@ -1916,8 +1925,11 @@ public class LintDriver {
         File[] files = dir.listFiles();
         if (files != null) {
             for (File file : files) {
-                if (file.isFile() && file.getName().endsWith(DOT_JAVA)) {
-                    result.add(file);
+                if (file.isFile()) {
+                    String path = file.getPath();
+                    if (path.endsWith(DOT_JAVA) || path.endsWith(DOT_KT)) {
+                        result.add(file);
+                    }
                 } else if (file.isDirectory()) {
                     gatherJavaFiles(file, result);
                 }

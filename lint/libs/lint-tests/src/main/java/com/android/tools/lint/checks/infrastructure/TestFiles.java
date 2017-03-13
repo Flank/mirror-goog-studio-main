@@ -67,6 +67,28 @@ public class TestFiles {
     }
 
     @NonNull
+    public static LintDetectorTest.TestFile kt(@NonNull @Language("kotlin") String source) {
+        return kotlin(source);
+    }
+
+    @NonNull
+    public static LintDetectorTest.TestFile kt(@NonNull String to,
+            @NonNull @Language("kotlin") String source) {
+        return kotlin(to, source);
+    }
+
+    @NonNull
+    public static LintDetectorTest.TestFile kotlin(@NonNull @Language("kotlin") String source) {
+        return TestFile.KotlinTestFile.create(source);
+    }
+
+    @NonNull
+    public static LintDetectorTest.TestFile kotlin(@NonNull String to,
+            @NonNull @Language("kotlin") String source) {
+        return TestFile.KotlinTestFile.create(source);
+    }
+
+    @NonNull
     public static LintDetectorTest.TestFile xml(@NonNull String to,
             @NonNull @Language("XML") String source) {
         if (!to.endsWith(DOT_XML)) {

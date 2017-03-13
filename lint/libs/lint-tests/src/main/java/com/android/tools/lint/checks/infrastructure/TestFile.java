@@ -21,6 +21,7 @@ import static com.android.SdkConstants.DOT_GRADLE;
 import static com.android.SdkConstants.DOT_JAVA;
 import static com.android.SdkConstants.DOT_JPEG;
 import static com.android.SdkConstants.DOT_JPG;
+import static com.android.SdkConstants.DOT_KT;
 import static com.android.SdkConstants.DOT_PNG;
 import static com.android.SdkConstants.DOT_XML;
 import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML;
@@ -213,6 +214,45 @@ public class TestFile {
                 throw new IllegalArgumentException("Expected .java suffix for Java test file");
             }
             return new JavaTestFile().to(to).withSource(source);
+        }
+    }
+
+    public static class KotlinTestFile extends LintDetectorTest.TestFile {
+        private static final Pattern PACKAGE_PATTERN = Pattern.compile("package\\s+(.*)\\s*;");
+        private static final Pattern CLASS_PATTERN = Pattern
+                .compile("(class|interface|enum)\\s*(\\S+)\\s*(extends.*)?\\s*(implements.*)?\\{",
+                        Pattern.MULTILINE);
+
+        public KotlinTestFile() {
+        }
+
+        @NonNull
+        public static LintDetectorTest.TestFile create(@NonNull @Language("kotlin") String source) {
+            // Figure out the "to" path: the package plus class name + kt in the src/ folder
+            Matcher matcher = PACKAGE_PATTERN.matcher(source);
+            boolean foundPackage = matcher.find();
+            assert foundPackage : "Couldn't find package declaration in source";
+            String pkg = matcher.group(1).trim();
+            matcher = CLASS_PATTERN.matcher(source);
+            boolean foundClass = matcher.find();
+            assert foundClass : "Couldn't find class declaration in source";
+            String cls = matcher.group(2).trim();
+            if (cls.contains("<")) {
+                // Remove type variables
+                cls = cls.substring(0, cls.indexOf('<'));
+            }
+            String to = pkg.replace('.', '/') + '/' + cls + DOT_KT;
+
+            return new KotlinTestFile().to(to).within("src").withSource(source);
+        }
+
+        @NonNull
+        public static LintDetectorTest.TestFile create(@NonNull String to,
+                @NonNull @Language("kotlin") String source) {
+            if (!to.endsWith(DOT_KT)) {
+                throw new IllegalArgumentException("Expected .kt suffix for Kotlin test file");
+            }
+            return new KotlinTestFile().to(to).withSource(source);
         }
     }
 

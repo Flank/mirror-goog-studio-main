@@ -16,7 +16,23 @@
 
 package com.android.tools.lint.checks;
 
+import static com.google.common.truth.Truth.assertThat;
+
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+import com.android.tools.lint.client.api.UastParser;
 import com.android.tools.lint.detector.api.Detector;
+import com.android.tools.lint.detector.api.JavaContext;
+import com.android.tools.lint.detector.api.Project;
+import com.android.tools.lint.helpers.DefaultUastParser;
+import com.google.common.truth.Truth;
+import com.intellij.lang.java.JavaLanguage;
+import com.intellij.psi.JavaPsiFacade;
+import com.intellij.psi.PsiClass;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiFileFactory;
+import org.jetbrains.uast.UFile;
+import org.jetbrains.uast.UastContext;
 
 @SuppressWarnings({"javadoc", "ClassNameDiffersFromFileName"})
 public class SdCardDetectorTest extends AbstractCheckTest {
@@ -199,6 +215,7 @@ public class SdCardDetectorTest extends AbstractCheckTest {
         //noinspection all // Sample code
         lint().files(
                 java(""
+                        // THIS ERROR IS INTENTIONAL
                         + "\ufeffpackage test.pkg;\n"
                         + "\n"
                         + "public class Utf8BomTest {\n"
@@ -250,5 +267,59 @@ public class SdCardDetectorTest extends AbstractCheckTest {
                         + "}\n"))
                 .run()
                 .expectClean();
+    }
+
+    public void testKotlin() throws Exception {
+        //noinspection all // Sample code
+        lint().files(
+                kotlin(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "class MyTest {\n"
+                        + "    val s: String = \"/sdcard/mydir\"\n"
+                        + "}\n"),
+                gradle(""))
+                .client(new com.android.tools.lint.checks.infrastructure.TestLintClient() {
+                    @Nullable
+                    @Override
+                    public UastParser getUastParser(@Nullable Project project) {
+                        // We don't yet have a Kotlin UAST plugin as part of the
+                        // lint distribution (the plan is for the Kotlin UAST plugin
+                        // to be supplied by the IDE Kotlin plugin and the Gradle Kotlin
+                        // plugin). We may end up packaging it with the lint tests to
+                        // help with lint testing but for now, just hack around this
+                        // to test the basic Kotlin lint driver plumbing by supplying
+                        // a UAST tree that is created from the equivalent Java instead:
+                        com.intellij.openapi.project.Project ideaProject = getIdeaProject();
+                        assertThat(ideaProject).isNotNull();
+                        return new DefaultUastParser(project, ideaProject) {
+                            @Nullable
+                            @Override
+                            public UFile parse(@NonNull JavaContext context) {
+                                // Present equivalent UAST (based on Java not Kotlin)
+                                assert context.file.getName().startsWith("MyTest.");
+                                String source = ""
+                                        + "package test.pkg;\n"
+                                        + "\n"
+                                        + "public class MyTest {\n"
+                                        + "   String s = \"/sdcard/mydir\";\n"
+                                        + "}\n";
+                                PsiFile file = PsiFileFactory.getInstance(getIdeaProject())
+                                        .createFileFromText(JavaLanguage.INSTANCE, source);
+                                assertThat(file).isNotNull();
+                                UastContext uastContext = getUastContext();
+                                assertThat(uastContext).isNotNull();
+                                return (UFile) uastContext.convertElementWithParent(file,
+                                        UFile.class);
+                            }
+                        };
+                    }
+                })
+                .run()
+                .expect(""
+                        + "src/main/kotlin/test/pkg/MyTest.kt:4: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n"
+                        + "    val s: String = \"/sdcard/mydir\"\n"
+                        + "                     ^\n"
+                        + "0 errors, 1 warnings\n");
     }
 }
