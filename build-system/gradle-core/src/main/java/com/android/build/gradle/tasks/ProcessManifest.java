@@ -204,9 +204,6 @@ public class ProcessManifest extends ManifestProcessorTask {
             final ProductFlavor mergedFlavor = config.getMergedFlavor();
 
             ConventionMappingHelper.map(processManifest, "minSdkVersion", () -> {
-                if (androidBuilder.isPreviewTarget()) {
-                    return androidBuilder.getTargetCodename();
-                }
                 ApiVersion minSdkVersion1 = mergedFlavor.getMinSdkVersion();
                 if (minSdkVersion1 == null) {
                     return null;
@@ -215,9 +212,6 @@ public class ProcessManifest extends ManifestProcessorTask {
             });
 
             ConventionMappingHelper.map(processManifest, "targetSdkVersion", () -> {
-                        if (androidBuilder.isPreviewTarget()) {
-                            return androidBuilder.getTargetCodename();
-                        }
                         ApiVersion targetSdkVersion = mergedFlavor.getTargetSdkVersion();
                         if (targetSdkVersion == null) {
                             return null;

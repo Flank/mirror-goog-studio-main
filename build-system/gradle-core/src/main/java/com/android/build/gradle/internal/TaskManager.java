@@ -672,7 +672,7 @@ public abstract class TaskManager {
                     variantScope.getVariantConfiguration()) != IncrementalMode.NONE) {
                 optionalFeatures.add(ManifestMerger2.Invoker.Feature.INSTANT_RUN_REPLACEMENT);
             }
-            if (globalScope.isTestOnly()) {
+            if (variantScope.isTestOnly()) {
                 optionalFeatures.add(ManifestMerger2.Invoker.Feature.TEST_ONLY);
             }
             if (AndroidGradleOptions.getAdvancedProfilingTransforms(project).length > 0

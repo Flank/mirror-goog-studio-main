@@ -73,6 +73,8 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     boolean isJackEnabled();
 
+    boolean isTestOnly();
+
     @NonNull
     ApiVersion getMinSdkVersion();
 
