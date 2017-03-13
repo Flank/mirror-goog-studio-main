@@ -28,6 +28,7 @@ import com.android.tools.lint.client.api.JavaParser.ResolvedClass;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.UastParser;
 import com.android.tools.lint.detector.api.Detector.JavaPsiScanner;
+import com.android.utils.Pair;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiAnonymousClass;
@@ -49,6 +50,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import java.io.File;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.Map;
 import lombok.ast.AnnotationElement;
 import lombok.ast.AnnotationMethodDeclaration;
 import lombok.ast.ClassDeclaration;
@@ -516,7 +518,9 @@ public class JavaContext extends Context {
      *                     client.
      * @param location     the location of the issue, or null if not known
      * @param message      the message for this warning
-     * @param quickfixData optional data to pass to the IDE for use by a quickfix
+     * @param quickfixData optional data to pass to the IDE for use by a quickfix.  If you're
+     *                     passing in multiple parameters, consider using {@link QuickfixData}
+     *                     instead of using for example {@link Pair} or {@link Map}
      */
     public void report(
             @NonNull Issue issue,
@@ -530,15 +534,51 @@ public class JavaContext extends Context {
         super.doReport(issue, location, message, quickfixData);
     }
 
+    /**
+     * Reports an issue applicable to a given AST node. The AST node is used as the
+     * scope to check for suppress lint annotations.
+     *
+     * @param issue        the issue to report
+     * @param scope        the AST node scope the error applies to. The lint infrastructure will
+     *                     check whether there are suppress annotations on this node (or its
+     *                     enclosing nodes) and if so suppress the warning without involving the
+     *                     client.
+     * @param location     the location of the issue, or null if not known
+     * @param message      the message for this warning
+     */
     public void report(
             @NonNull Issue issue,
             @Nullable UElement scope,
             @NonNull Location location,
             @NonNull String message) {
+        report(issue, scope, location, message, null);
+    }
+
+    /**
+     * Reports an issue applicable to a given AST node. The AST node is used as the
+     * scope to check for suppress lint annotations.
+     *
+     * @param issue        the issue to report
+     * @param scope        the AST node scope the error applies to. The lint infrastructure will
+     *                     check whether there are suppress annotations on this node (or its
+     *                     enclosing nodes) and if so suppress the warning without involving the
+     *                     client.
+     * @param location     the location of the issue, or null if not known
+     * @param message      the message for this warning
+     * @param quickfixData optional data to pass to the IDE for use by a quickfix.  If you're
+     *                     passing in multiple parameters, consider using {@link QuickfixData}
+     *                     instead of using for example {@link Pair} or {@link Map}
+     */
+    public void report(
+            @NonNull Issue issue,
+            @Nullable UElement scope,
+            @NonNull Location location,
+            @NonNull String message,
+            @Nullable Object quickfixData) {
         if (scope != null && driver.isSuppressed(this, issue, scope)) {
             return;
         }
-        super.report(issue, location, message);
+        super.report(issue, location, message, quickfixData);
     }
 
     /**

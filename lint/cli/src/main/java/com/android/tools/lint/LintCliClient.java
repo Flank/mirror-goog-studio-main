@@ -72,12 +72,14 @@ import com.intellij.codeInsight.ExternalAnnotationsManager;
 import com.intellij.openapi.vfs.StandardFileSystems;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileSystem;
+import com.intellij.util.lang.UrlClassLoader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -1010,6 +1012,11 @@ public class LintCliClient extends LintClient {
         dirToProject = null;
     }
 
+    @Override
+    public ClassLoader createUrlClassLoader(@NonNull URL[] urls, @NonNull ClassLoader parent) {
+        return UrlClassLoader.build().parent(parent).urls(urls).get();
+    }
+
     @Nullable
     @Override
     public Document getMergedManifest(@NonNull Project project) {
@@ -1027,13 +1034,13 @@ public class LintCliClient extends LintClient {
             if (targetSdkVersion != null || minSdkVersion != null) {
                 injectedXml.append(""
                         + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
-                        + "    <uses-sdk ");
+                        + "    <uses-sdk");
                 if (minSdkVersion != null) {
-                    injectedXml.append("android:minSdkVersion=\"")
+                    injectedXml.append(" android:minSdkVersion=\"")
                             .append(minSdkVersion.getApiString()).append("\"");
                 }
                 if (targetSdkVersion != null) {
-                    injectedXml.append("android:targetSdkVersion=\"")
+                    injectedXml.append(" android:targetSdkVersion=\"")
                             .append(targetSdkVersion.getApiString()).append("\"");
                 }
                 injectedXml.append(" />\n"

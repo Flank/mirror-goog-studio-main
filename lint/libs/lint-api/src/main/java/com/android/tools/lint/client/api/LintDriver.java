@@ -2054,7 +2054,8 @@ public class LintDriver {
                     visitor.visitFile(context, file);
                 } else if (binaryChecks != null && (LintUtils.isBitmapFile(file) ||
                             type == ResourceFolderType.RAW)) {
-                    ResourceContext context = new ResourceContext(this, project, main, file, type);
+                    ResourceContext context = new ResourceContext(this, project, main, file,
+                            type);
                     fireEvent(EventType.SCANNING_FILE, context);
                     visitor.visitBinaryResource(context);
                 }
@@ -2108,8 +2109,8 @@ public class LintDriver {
                 if (type != null) {
                     ResourceVisitor visitor = getVisitor(type, xmlDetectors, binaryChecks);
                     if (visitor != null) {
-                        ResourceContext context = new ResourceContext(this, project, main, file,
-                                type);
+                        ResourceContext context = new ResourceContext(this, project, main,
+                                file, type);
                         fireEvent(EventType.SCANNING_FILE, context);
                         visitor.visitBinaryResource(context);
                         if (canceled) {

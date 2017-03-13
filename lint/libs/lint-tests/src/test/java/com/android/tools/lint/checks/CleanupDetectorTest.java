@@ -1442,6 +1442,28 @@ public class CleanupDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testCommitVariable() {
+        // Regression test for https://code.google.com/p/android/issues/detail?id=237776
+        //noinspection all // Sample code
+        lint().files(
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "import android.app.Activity;\n"
+                        + "import android.app.Fragment;\n"
+                        + "\n"
+                        + "public class CommitTest extends Activity {\n"
+                        + "    public void test() {\n"
+                        + "        final int id = getFragmentManager().beginTransaction()\n"
+                        + "                .add(new Fragment(), null)\n"
+                        + "                .addToBackStack(null)\n"
+                        + "                .commit();\n"
+                        + "    }\n"
+                        + "}\n"))
+                .run()
+                .expectClean();
+    }
+
     @SuppressWarnings("all") // Sample code
     private TestFile mDialogFragment = java(""
             + "package android.support.v4.app;\n"

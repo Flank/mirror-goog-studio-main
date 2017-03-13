@@ -192,7 +192,8 @@ public class LocaleFolderDetector extends Detector implements Detector.ResourceF
 
     @Override
     public void checkFolder(@NonNull ResourceContext context, @NonNull String folderName) {
-        LocaleQualifier locale = LintUtils.getLocale(folderName);
+        LocaleQualifier locale = context.getFolderConfiguration() != null ?
+                context.getFolderConfiguration().getLocaleQualifier() : null;
         if (locale != null && locale.hasLanguage()) {
             final String language = locale.getLanguage();
             String replace = null;

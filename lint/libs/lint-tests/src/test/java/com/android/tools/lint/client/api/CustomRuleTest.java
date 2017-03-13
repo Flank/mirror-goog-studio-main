@@ -23,6 +23,7 @@ import static com.android.tools.lint.checks.infrastructure.TestFiles.toBase64gzi
 import static org.junit.Assert.assertTrue;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.tools.lint.checks.infrastructure.TestFile;
 import com.android.tools.lint.checks.infrastructure.TestFiles;
 import com.android.tools.lint.checks.infrastructure.TestLintTask;
@@ -97,6 +98,7 @@ public class CustomRuleTest {
                     }
                 })
                 .customRules(lintJar)
+                .allowMissingSdk()
                 .run()
                 .expect(expected);
     }
@@ -142,6 +144,7 @@ public class CustomRuleTest {
                     }
                 })
                 .customRules(lintJar)
+                .allowMissingSdk()
                 .run()
                 .expect(expected);
     }
@@ -180,6 +183,7 @@ public class CustomRuleTest {
                     }
                 })
                 .issueIds("MyId")
+                .allowMissingSdk()
                 .allowCompilationErrors()
                 .run()
                 .expect(expected);
@@ -220,6 +224,7 @@ public class CustomRuleTest {
                 })
                 .issueIds("MainActivityDetector")
                 .allowCompilationErrors()
+                .allowMissingSdk()
                 .run()
                 .expect(expected);
     }
