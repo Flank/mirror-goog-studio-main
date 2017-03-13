@@ -82,15 +82,9 @@ def kotlin_java_library(name, java_dir, kotlin_dir, resources_dir, deps, pom=Non
       deps = [":lib" + kotlin_name + ".jar"] + deps,
   )
 
-  single_name = name + ".single"
   singlejar(
-      name = single_name,
-      srcs = [":lib" + target + ".jar" for target in (java_name, kotlin_name)]
-  )
-
-  native.java_import(
       name = name,
-      jars = [":" + single_name],
+      jars = [":lib" + target + ".jar" for target in (java_name, kotlin_name)],
       visibility = visibility,
   )
 
