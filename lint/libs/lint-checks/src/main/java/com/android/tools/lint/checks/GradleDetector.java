@@ -960,7 +960,8 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                   && "play-services-appindexing".equals(dependency.getArtifactId())) {
                 String message = "Deprecated: Replace '" + GMS_GROUP_ID
                         + ":play-services-appindexing:" + dependency.getRevision()
-                        + "' with 'com.google.firebase:firebase-appindexing:10.0.0' or above.";
+                        + "' with 'com.google.firebase:firebase-appindexing:10.0.0' or above. "
+                        + "More info: http://firebase.google.com/docs/app-indexing/android/migrate";
                 report(context, cookie, DEPRECATED, message);
             }
 
