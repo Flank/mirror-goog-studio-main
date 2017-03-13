@@ -586,65 +586,123 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                         mStrings));
     }
 
-    public void testDuplicatePermissionsMultiProject() throws Exception {
-        mEnabled = Collections.singleton(ManifestDetector.UNIQUE_PERMISSION);
+    public void testDuplicatePermissionsMultiProject() {
 
-        File master = getProjectDir("MasterProject",
-                // Master project
-                xml("AndroidManifest.xml", ""
-                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                            + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                            + "    package=\"foo.bar2\"\n"
-                            + "    android:versionCode=\"1\"\n"
-                            + "    android:versionName=\"1.0\" >\n"
-                            + "\n"
-                            + "    <uses-sdk android:minSdkVersion=\"14\" />\n"
-                            + "\n"
-                            + "    <permission android:name=\"foo.permission.SEND_SMS\"\n"
-                            + "        android:label=\"@string/foo\"\n"
-                            + "        android:description=\"@string/foo\" />\n"
-                            + "\n"
-                            + "    <application\n"
-                            + "        android:icon=\"@drawable/ic_launcher\"\n"
-                            + "        android:label=\"@string/app_name\" >\n"
-                            + "    </application>\n"
-                            + "\n"
-                            + "</manifest>\n"),
-                projectProperties().property("android.library.reference.1", "../LibraryProject").property("manifestmerger.enabled", "true"),
-                mMainCode
-        );
-        File library = getProjectDir("LibraryProject",
-                // Library project
-                xml("AndroidManifest.xml", ""
-                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                            + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                            + "    package=\"foo.bar2\"\n"
-                            + "    android:versionCode=\"1\"\n"
-                            + "    android:versionName=\"1.0\" >\n"
-                            + "\n"
-                            + "    <uses-sdk android:minSdkVersion=\"14\" />\n"
-                            + "\n"
-                            + "    <permission android:name=\"bar.permission.SEND_SMS\"\n"
-                            + "        android:label=\"@string/foo\"\n"
-                            + "        android:description=\"@string/foo\" />\n"
-                            + "\n"
-                            + "    <application\n"
-                            + "        android:icon=\"@drawable/ic_launcher\"\n"
-                            + "        android:label=\"@string/app_name\" >\n"
-                            + "    </application>\n"
-                            + "\n"
-                            + "</manifest>\n"),
-                projectProperties().library(true).compileSdk(14),
-                mLibraryCode,
-                mLibraryStrings
-        );
-        assertEquals(""
-                + "LibraryProject/AndroidManifest.xml:9: Error: Permission name SEND_SMS is not unique (appears in both foo.permission.SEND_SMS and bar.permission.SEND_SMS) [UniquePermission]\n"
-                + "    <permission android:name=\"bar.permission.SEND_SMS\"\n"
-                + "                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "1 errors, 0 warnings\n",
+        //noinspection all // Sample code
+        ProjectDescription library = project(
+                manifest(""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    package=\"foo.bar2\"\n"
+                        + "    android:versionCode=\"1\"\n"
+                        + "    android:versionName=\"1.0\" >\n"
+                        + "\n"
+                        + "    <uses-sdk android:minSdkVersion=\"14\" />\n"
+                        + "\n"
+                        + "    <permission android:name=\"bar.permission.SEND_SMS\"\n"
+                        + "        android:label=\"@string/foo\"\n"
+                        + "        android:description=\"@string/foo\" />\n"
+                        + "\n"
+                        + "    <application\n"
+                        + "        android:icon=\"@drawable/ic_launcher\"\n"
+                        + "        android:label=\"@string/app_name\" >\n"
+                        + "    </application>\n"
+                        + "\n"
+                        + "</manifest>\n")
+        ).type(LIBRARY).name("Library");
 
-           checkLint(Arrays.asList(master, library)));
+        //noinspection all // Sample code
+        ProjectDescription main = project(
+                manifest(""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    package=\"foo.bar2\"\n"
+                        + "    android:versionCode=\"1\"\n"
+                        + "    android:versionName=\"1.0\" >\n"
+                        + "\n"
+                        + "    <uses-sdk android:minSdkVersion=\"14\" />\n"
+                        + "\n"
+                        + "    <permission android:name=\"foo.permission.SEND_SMS\"\n"
+                        + "        android:label=\"@string/foo\"\n"
+                        + "        android:description=\"@string/foo\" />\n"
+                        + "\n"
+                        + "    <application\n"
+                        + "        android:icon=\"@drawable/ic_launcher\"\n"
+                        + "        android:label=\"@string/app_name\" >\n"
+                        + "    </application>\n"
+                        + "\n"
+                        + "</manifest>\n")
+        ).name("App").dependsOn(library);
+
+        lint()
+                .projects(main, library)
+                .incremental("App/AndroidManifest.xml").
+                issues(ManifestDetector.UNIQUE_PERMISSION)
+                .run()
+                .expect(""
+                        + "/TESTROOT/Library/AndroidManifest.xml:9: Error: Permission name SEND_SMS is not unique (appears in both foo.permission.SEND_SMS and bar.permission.SEND_SMS) [UniquePermission]\n"
+                        + "    <permission android:name=\"bar.permission.SEND_SMS\"\n"
+                        + "                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "    AndroidManifest.xml:9: Previous permission here\n"
+                        + "1 errors, 0 warnings\n");
+    }
+
+    public void testUniquePermissionsPrunedViaManifestRemove() {
+        // Actually checks 4 separate things:
+        // (1) The unique permission check looks across multiple projects via the
+        //     manifest merge (in an incremental way)
+        // (2) It allows duplicate permission names if the whole package, not just
+        //     the base name is the same
+        // (3) It flags permissions that vary by package name, not base name, across
+        //     manifests
+        // (4) It ignores permissions that have been removed via manifest merger
+        //     directives. This is a regression test for
+        //     https://code.google.com/p/android/issues/detail?id=227683
+        // (5) Using manifest placeholders
+
+        //noinspection all // Sample code
+        ProjectDescription library = project(
+                manifest(""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    package=\"test.pkg.library\" >\n"
+                        + "    <permission\n"
+                        + "        android:name=\"a.b.c.SHARED_ACCESS\"\n"
+                        + "        android:label=\"Shared Access\"\n"
+                        + "        android:protectionLevel=\"signature\"/>\n"
+                        + "    <permission android:name=\"pkg1.PERMISSION_NAME_1\"/>\n"
+                        + "    <permission android:name=\"${applicationId}.permission.PERMISSION_NAME_2\"/>\n"
+                        + "    <permission android:name=\"${unknownPlaceHolder1}.permission.PERMISSION_NAME_3\"/>\n"
+                        + "</manifest>\n")
+        ).type(LIBRARY).name("Library");
+
+        //noinspection all // Sample code
+        ProjectDescription main = project(
+                manifest(""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                        + "    package=\"test.pkg.app\" >\n"
+                        + "    <permission\n"
+                        + "        android:name=\"a.b.c.SHARED_ACCESS\"\n"
+                        + "        tools:node=\"remove\"/>\n"
+                        + "    <permission android:name=\"pkg2.PERMISSION_NAME_1\"/>\n"
+                        + "    <permission android:name=\"test.pkg.app.permission.PERMISSION_NAME_2\"/>\n"
+                        + "    <permission android:name=\"${unknownPlaceHolder2}.permission.PERMISSION_NAME_3\"/>\n"
+                        + "</manifest>\n")
+        ).name("App").dependsOn(library);
+
+        lint()
+                .projects(main, library)
+                .incremental("App/AndroidManifest.xml").
+                issues(ManifestDetector.UNIQUE_PERMISSION)
+                .run()
+                .expect(""
+                        + "/TESTROOT/Library/AndroidManifest.xml:8: Error: Permission name PERMISSION_NAME_1 is not unique (appears in both pkg2.PERMISSION_NAME_1 and pkg1.PERMISSION_NAME_1) [UniquePermission]\n"
+                        + "    <permission android:name=\"pkg1.PERMISSION_NAME_1\"/>\n"
+                        + "                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "    AndroidManifest.xml:5: Previous permission here\n"
+                        + "1 errors, 0 warnings\n");
     }
 
     public void testMissingVersion() throws Exception {
@@ -1465,7 +1523,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                 manifest(""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                         + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "    package=\"com.example.helloworld\" >\n"
+                        + "    package=\"test.pkg.library\" >\n"
                         + "    <uses-sdk android:targetSdkVersion=\"23\" />"
                         + "\n"
                         + "    <application\n"
@@ -1488,7 +1546,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                 manifest(""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                         + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "    package=\"com.example.helloworld\" >\n"
+                        + "    package=\"test.pkg.app\" >\n"
                         + "    <uses-sdk android:targetSdkVersion=\"23\" />"
                         + "\n"
                         + "    <application\n"

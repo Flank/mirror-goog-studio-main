@@ -45,6 +45,7 @@ import static com.android.SdkConstants.VALUE_FALSE;
 import static com.android.ide.common.repository.GradleCoordinate.COMPARE_PLUS_HIGHER;
 import static com.android.tools.lint.checks.GradleDetector.GMS_GROUP_ID;
 import static com.android.utils.XmlUtils.getFirstSubTagTagByName;
+import static com.android.utils.XmlUtils.getNextTagByName;
 import static com.android.xml.AndroidManifest.NODE_ACTION;
 import static com.android.xml.AndroidManifest.NODE_DATA;
 import static com.android.xml.AndroidManifest.NODE_METADATA;
@@ -441,9 +442,6 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
 
     /** Features we've encountered */
     private Set<String> mUsesFeatures;
-
-    /** Permission basenames */
-    private Map<String, String> mPermissionNames;
 
     @Override
     public void beforeCheckFile(@NonNull Context context) {
@@ -876,44 +874,9 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
                                 + "a literal integer (or string if a preview codename)");
             }
         }
+
         if (tag.equals(TAG_PERMISSION)) {
-            Attr nameNode = element.getAttributeNodeNS(ANDROID_URI, ATTR_NAME);
-            if (nameNode != null) {
-                String name = nameNode.getValue();
-                String base = name.substring(name.lastIndexOf('.') + 1);
-                if (mPermissionNames == null) {
-                    mPermissionNames = Maps.newHashMap();
-                } else if (mPermissionNames.containsKey(base)) {
-                    String prevName = mPermissionNames.get(base);
-                    Location location = context.getLocation(nameNode);
-                    NodeList siblings = element.getParentNode().getChildNodes();
-                    for (int i = 0, n = siblings.getLength(); i < n; i++) {
-                        Node node = siblings.item(i);
-                        if (node == element) {
-                            break;
-                        } else if (node.getNodeType() == Node.ELEMENT_NODE) {
-                            Element sibling = (Element) node;
-                            String suffix = '.' + base;
-                            if (sibling.getTagName().equals(TAG_PERMISSION)) {
-                                String b = element.getAttributeNS(ANDROID_URI, ATTR_NAME);
-                                if (b.endsWith(suffix)) {
-                                    Location prevLocation = context.getLocation(node);
-                                    prevLocation.setMessage("Previous permission here");
-                                    location.setSecondary(prevLocation);
-                                    break;
-                                }
-
-                            }
-                        }
-                    }
-
-                    String message = String.format("Permission name `%1$s` is not unique " +
-                            "(appears in both `%2$s` and `%3$s`)", base, prevName, name);
-                    context.report(UNIQUE_PERMISSION, element, location, message);
-                }
-
-                mPermissionNames.put(base, name);
-            }
+            ensureUniquePermission(context, element);
         }
 
         if (tag.equals(TAG_USES_PERMISSION)) {
@@ -963,6 +926,104 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
                 }
             }
         }
+    }
+
+    private boolean checkedUniquePermissions;
+
+    private void ensureUniquePermission(@NonNull XmlContext context,
+            @NonNull Element sourceElement) {
+        // Only check this for the first encountered manifest permission tag; it will consult
+        // the merged manifest to perform a global check and report errors it finds, so we don't
+        // need to repeat that for each sibling permission element
+        if (checkedUniquePermissions) {
+            return;
+        }
+        checkedUniquePermissions = true;
+
+        Project mainProject = context.getMainProject();
+        Document merge = mainProject.getMergedManifest();
+        if (merge == null) {
+            // This only happens when there is a parse errors, for example if user
+            // is editing the manifest in the IDE and it's currently invalid
+            return;
+        }
+
+        Map<String,String> nameToFull = null;
+        for (Element element = getFirstSubTagTagByName(merge.getDocumentElement(), TAG_PERMISSION);
+                element != null;
+                element = getNextTagByName(element, TAG_PERMISSION)) {
+
+            Attr nameNode = element.getAttributeNodeNS(ANDROID_URI, ATTR_NAME);
+            if (nameNode == null) {
+                continue;
+            }
+
+            if (manifestMergerSkips(element)) {
+                continue;
+            }
+
+            String name = nameNode.getValue();
+            String base = name.substring(name.lastIndexOf('.') + 1);
+
+            if (name.contains("${applicationId}") && !mainProject.isLibrary() &&
+                    mainProject.getPackage() != null) {
+                name = name.replace("${applicationId}",  mainProject.getPackage());
+            }
+
+            if (name.contains("${")) {
+                // Unknown manifest placeholder: don't try to enforce uniqueness; we don't
+                // know whether the values turn out to be identical
+                continue;
+            }
+
+            if (nameToFull == null) {
+                nameToFull = Maps.newHashMap();
+            } else if (nameToFull.containsKey(base) && !name.equals(nameToFull.get(base))) {
+                String prevName = nameToFull.get(base);
+                Location location = context.getLocation(nameNode);
+                NodeList siblings = element.getParentNode().getChildNodes();
+                for (int i = 0, n = siblings.getLength(); i < n; i++) {
+                    Node node = siblings.item(i);
+                    if (node == element) {
+                        break;
+                    } else if (node.getNodeType() == Node.ELEMENT_NODE) {
+                        Element sibling = (Element) node;
+                        String suffix = '.' + base;
+                        if (sibling.getTagName().equals(TAG_PERMISSION)) {
+                            String b = element.getAttributeNS(ANDROID_URI, ATTR_NAME);
+                            if (b.endsWith(suffix)) {
+                                Location prevLocation = context.getLocation(node);
+                                prevLocation.setMessage("Previous permission here");
+                                location.setSecondary(prevLocation);
+                                break;
+                            }
+
+                        }
+                    }
+                }
+
+                String message = String.format("Permission name `%1$s` is not unique " +
+                        "(appears in both `%2$s` and `%3$s`)", base, prevName, name);
+                context.report(UNIQUE_PERMISSION, element, location, message);
+            }
+
+            nameToFull.put(base, name);
+        }
+    }
+
+    /**
+     * Returns true if the manifest merger will skip this element due to
+     * a tools:node action attribute
+     */
+    private static boolean manifestMergerSkips(@NonNull Element element) {
+        Attr operation = element.getAttributeNodeNS(TOOLS_URI, "node");
+        if (operation != null) {
+            String action = operation.getValue();
+            if (action.startsWith("remove") || action.equals("replace")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     // Method to check if the app has a gms wearable dependency that
@@ -1061,9 +1122,9 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
                         attribute.getValue().equals("android.intent.category.LAUNCHER")) {
                     return attribute;
                 }
-                innerChild = XmlUtils.getNextTagByName(innerChild, TAG_CATEGORY);
+                innerChild = getNextTagByName(innerChild, TAG_CATEGORY);
             }
-            child = XmlUtils.getNextTagByName(child, TAG_INTENT_FILTER);
+            child = getNextTagByName(child, TAG_INTENT_FILTER);
         }
 
         return null;

@@ -61,8 +61,8 @@ public class TestLintResult {
     private final List<Warning> warnings;
     private int maxLineLength;
 
-    TestLintResult(@NonNull TestLintTask task, @Nullable String output, @Nullable Exception e,
-            List<Warning> warnings) {
+    TestLintResult(@NonNull TestLintTask task, @Nullable String output,
+            @Nullable Exception e, List<Warning> warnings) {
         this.task = task;
         this.output = output;
         this.exception = e;
