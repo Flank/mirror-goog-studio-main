@@ -32,6 +32,7 @@ import com.google.common.io.Files;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.InvalidPathException;
 import java.util.concurrent.Callable;
@@ -389,7 +390,7 @@ public class FileCacheTest {
     }
 
     @Test
-    public void testInvalidCacheDirectory() throws ExecutionException {
+    public void testInvalidCacheDirectory() throws Exception {
         // Use an invalid cache directory, expect that an exception is thrown not when the cache is
         // created but when it is used
         File invalidCacheDirectory = new File("\0");
@@ -404,9 +405,9 @@ public class FileCacheTest {
                     outputFile,
                     inputs,
                     () -> Files.write("Some text", outputFile, StandardCharsets.UTF_8));
-            fail("Expected IOException");
-        } catch (IOException e) {
-            assertThat(e).hasMessage("Invalid file path");
+            fail("Expected UncheckedIOException");
+        } catch (UncheckedIOException e) {
+            assertThat(Throwables.getRootCause(e)).hasMessage("Invalid file path");
         }
     }
 
@@ -634,9 +635,9 @@ public class FileCacheTest {
         File outputFile = new File("\0");
         try {
             fileCache.createFile(outputFile, inputs, () -> {});
-            fail("expected IOException");
-        } catch (IOException exception) {
-            // Expected
+            fail("expected UncheckedIOException");
+        } catch (UncheckedIOException e) {
+            assertThat(Throwables.getRootCause(e)).hasMessage("Invalid file path");
         }
         assertThat(fileCache.getCacheDirectory().list()).isEmpty();
     }
@@ -1188,8 +1189,8 @@ public class FileCacheTest {
             accessedFile = new File("\0");
             fileCache.doLocked(accessedFile, FileCache.LockingType.SHARED, () -> true);
             fail("expected InvalidPathException");
-        } catch (InvalidPathException exception) {
-            // Expected
+        } catch (InvalidPathException e) {
+            assertThat(e.getMessage()).contains("Nul character not allowed");
         }
     }
 

@@ -75,7 +75,7 @@ public class FileUtilsTest {
     }
 
     @Test
-    public void testIsFileInDirectory() throws IOException {
+    public void testIsFileInDirectory() {
         assertTrue(
                 FileUtils.isFileInDirectory(
                         new File(FileUtils.join("foo", "bar", "baz")), new File("foo")));
@@ -87,6 +87,50 @@ public class FileUtilsTest {
         assertFalse(
                 FileUtils.isFileInDirectory(
                         new File("foo"), new File(FileUtils.join("foo", "bar"))));
+    }
+
+    @Test
+    public void testIsSameFile() throws IOException {
+        // Test basic case
+        assertThat(FileUtils.isSameFile(new File("foo"), new File("foo"))).isTrue();
+        assertThat(FileUtils.isSameFile(new File("foo"), new File("bar"))).isFalse();
+
+        // Test absolute and relative paths
+        assertThat(FileUtils.isSameFile(new File("foo").getAbsoluteFile(), new File("foo")))
+                .isTrue();
+        assertThat(FileUtils.isSameFile(new File("foo").getAbsoluteFile(), new File("bar")))
+                .isFalse();
+
+        // Test upper-case and lower-case paths
+        boolean isFileSystemCaseSensitive = !new File("a").equals(new File("A"));
+        if (isFileSystemCaseSensitive) {
+            assertThat(FileUtils.isSameFile(new File("foo").getAbsoluteFile(), new File("FOO")))
+                    .isFalse();
+        } else {
+            assertThat(FileUtils.isSameFile(new File("foo").getAbsoluteFile(), new File("FOO")))
+                    .isTrue();
+        }
+
+        // Test ".." in paths
+        assertThat(
+                        FileUtils.isSameFile(
+                                new File(FileUtils.join("foo", "bar", "..")), new File("foo")))
+                .isTrue();
+        assertThat(
+                        FileUtils.isSameFile(
+                                new File(FileUtils.join("foo", "bar", "..")), new File("bar")))
+                .isFalse();
+
+        // Test hard links
+        File fooFile = mTemporaryFolder.newFile("foo");
+        File fooHardLinkFile = new File(mTemporaryFolder.getRoot(), "fooHardLink");
+        java.nio.file.Files.createLink(fooHardLinkFile.toPath(), fooFile.toPath());
+        assertThat(FileUtils.isSameFile(fooHardLinkFile, fooFile)).isTrue();
+
+        // Test symbolic links
+        File fooSymbolicLinkFile = new File(mTemporaryFolder.getRoot(), "fooSymbolicLink");
+        java.nio.file.Files.createSymbolicLink(fooSymbolicLinkFile.toPath(), fooFile.toPath());
+        assertThat(FileUtils.isSameFile(fooSymbolicLinkFile, fooFile)).isTrue();
     }
 
     @Test

@@ -140,6 +140,9 @@ public final class SynchronizedFile {
      * @param fileToSynchronize the file whose access will be synchronized; it may not yet exist,
      *     but its parent directory must exist
      * @see #getInstanceWithWithinProcessLocking(File)
+     * @throws IllegalArgumentException if the parent directory of file being synchronized does not
+     *     exist, or a regular file with the same path as the lock file accidentally exists next to
+     *     the file being synchronized
      */
     @NonNull
     public static SynchronizedFile getInstanceWithInterProcessLocking(
@@ -151,7 +154,7 @@ public final class SynchronizedFile {
             throw new UncheckedIOException(e);
         }
 
-        Preconditions.checkState(
+        Preconditions.checkArgument(
                 fileToSynchronize.getParentFile().exists(),
                 fileToSynchronize.getParentFile().getAbsolutePath() + " must exist but does not");
 
@@ -159,7 +162,7 @@ public final class SynchronizedFile {
                 new File(
                         fileToSynchronize.getParent(),
                         fileToSynchronize.getName() + LOCK_FILE_EXTENSION);
-        Preconditions.checkState(
+        Preconditions.checkArgument(
                 !lockFile.exists() || lockFile.length() == 0,
                 "Unexpected lock file found: "
                         + lockFile.getAbsolutePath()

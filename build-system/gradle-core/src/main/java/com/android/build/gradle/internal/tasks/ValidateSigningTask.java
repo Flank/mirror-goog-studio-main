@@ -24,10 +24,12 @@ import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.scope.PackagingScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.builder.model.SigningConfig;
+import com.android.builder.utils.SynchronizedFile;
 import com.android.ide.common.signing.KeystoreHelper;
-import com.android.ide.common.signing.KeytoolException;
 import com.android.prefs.AndroidLocation;
+import com.android.utils.FileUtils;
 import java.io.File;
+import java.util.concurrent.ExecutionException;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.ParallelizableTask;
@@ -72,41 +74,52 @@ public class ValidateSigningTask extends BaseTask {
     }
 
     @TaskAction
-    public void validate() throws AndroidLocation.AndroidLocationException, KeytoolException {
+    public void validate() throws ExecutionException, AndroidLocation.AndroidLocationException {
         File storeFile = signingConfig.getStoreFile();
         if (storeFile == null) {
             throw new IllegalArgumentException(
                     "Keystore file not set for signing config " + signingConfig.getName());
         }
-        if (!storeFile.exists()) {
-            if (KeystoreHelper.defaultDebugKeystoreLocation().equals(storeFile.getAbsolutePath())) {
-                checkState(signingConfig.isSigningReady(), "Debug signing config not ready.");
-                File storeDirectory = storeFile.getParentFile();
 
-                if (!storeDirectory.canWrite()) {
-                    String message = "Unable to create debug keystore in \""
-                            + storeDirectory.getAbsolutePath() + "\" because it is not writable.";
+        if (FileUtils.isSameFile(
+                new File(KeystoreHelper.defaultDebugKeystoreLocation()), storeFile)) {
+            SynchronizedFile synchronizedStoreFile =
+                    SynchronizedFile.getInstanceWithInterProcessLocking(storeFile);
+            synchronizedStoreFile.createIfAbsent(
+                    sameStoreFile -> {
+                        checkState(
+                                signingConfig.isSigningReady(), "Debug signing config not ready.");
+                        File storeDirectory = storeFile.getParentFile();
 
-                    throw new BuildException(message, null);
-                }
+                        if (!storeDirectory.canWrite()) {
+                            String message =
+                                    "Unable to create debug keystore in \""
+                                            + storeDirectory.getAbsolutePath()
+                                            + "\" because it is not writable.";
 
-                getLogger().info(
-                        "Creating default debug keystore at {}",
-                        storeFile.getAbsolutePath());
+                            throw new BuildException(message, null);
+                        }
 
-                //noinspection ConstantConditions - isSigningReady() called above
-                if (!KeystoreHelper.createDebugStore(
-                        signingConfig.getStoreType(), signingConfig.getStoreFile(),
-                        signingConfig.getStorePassword(), signingConfig.getKeyPassword(),
-                        signingConfig.getKeyAlias(), getILogger())) {
-                    throw new BuildException("Unable to recreate missing debug keystore.", null);
-                }
-            } else {
+                        getLogger()
+                                .info(
+                                        "Creating default debug keystore at {}",
+                                        storeFile.getAbsolutePath());
+
+                        //noinspection ConstantConditions - isSigningReady() called above
+                        if (!KeystoreHelper.createDebugStore(
+                                signingConfig.getStoreType(), signingConfig.getStoreFile(),
+                                signingConfig.getStorePassword(), signingConfig.getKeyPassword(),
+                                signingConfig.getKeyAlias(), getILogger())) {
+                            throw new BuildException(
+                                    "Unable to recreate missing debug keystore.", null);
+                        }
+                    });
+        } else {
+            if (!storeFile.exists()) {
                 throw new IllegalArgumentException(
                         String.format(
                                 "Keystore file %s not found for signing config '%s'.",
-                                storeFile.getAbsolutePath(),
-                                signingConfig.getName()));
+                                storeFile.getAbsolutePath(), signingConfig.getName()));
             }
         }
     }
