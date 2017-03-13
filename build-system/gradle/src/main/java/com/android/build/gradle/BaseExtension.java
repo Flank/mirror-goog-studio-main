@@ -357,8 +357,19 @@ public abstract class BaseExtension implements AndroidConfig {
     /**
      * Version of the build tools to use.
      *
-     * <p>Value assigned to this property is parsed and stored in a normalized form, so reading it
-     * back may give a slightly different string.
+     * <p>Each released plugin has a fixed default, so builds are reproducible.
+     *
+     * <table>
+     *     <tr><th>Gradle plugin</th><th>Minimum build tools</th><th>Default build tools</th></tr>
+     *     <tr><td>2.0.x</td><td>21.1.1</td><td>-</td></tr>
+     *     <tr><td>2.1.x</td><td>23.0.2</td><td>-</td></tr>
+     *     <tr><td>2.2.x</td><td>23.0.2</td><td>-</td></tr>
+     *     <tr><td>2.3.x</td><td>23.0.2</td><td>-</td></tr>
+     *     <tr><td>2.4.x</td><td>25.0.0</td><td>25.0.1</td></tr>
+     * </table>
+     *
+     * <p>The value assigned to this property is parsed and stored in a normalized form, so reading
+     * it back may give a slightly different string.
      */
     @Override
     public String getBuildToolsVersion() {

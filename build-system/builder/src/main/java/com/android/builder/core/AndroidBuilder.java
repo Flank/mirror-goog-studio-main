@@ -133,7 +133,11 @@ public class AndroidBuilder {
      */
     public static final Revision MIN_BUILD_TOOLS_REV = new Revision(25, 0, 0);
 
-    /** Default version of build tools that will be used if the user does not specify. */
+    /**
+     * Default version of build tools that will be used if the user does not specify.
+     *
+     * <p><strong>Update the DSL documentation on BaseExtension when changing this value.</strong>
+     */
     public static final Revision DEFAULT_BUILD_TOOLS_REVISION = new Revision(25, 0, 1);
 
     /** API level for split APKs. */
