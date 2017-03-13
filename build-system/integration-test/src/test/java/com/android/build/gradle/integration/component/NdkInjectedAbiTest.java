@@ -59,7 +59,6 @@ public class NdkInjectedAbiTest {
     @Test
     public void checkSingleBuildAbi() throws Exception {
         sProject.executor()
-                .with(BooleanOption.BUILD_ONLY_TARGET_ABI, true)
                 .with(StringOption.IDE_BUILD_TARGET_ABI, "armeabi")
                 .run("clean", "assembleDebug");
         Apk debug = sProject.getApk("debug");
@@ -71,7 +70,6 @@ public class NdkInjectedAbiTest {
     @Test
     public void checkOnlyTheFirstAbiIsPackaged() throws Exception {
         sProject.executor()
-                .with(BooleanOption.BUILD_ONLY_TARGET_ABI, true)
                 .with(StringOption.IDE_BUILD_TARGET_ABI, "armeabi,x86")
                 .run("clean", "assembleDebug");
         Apk debug = sProject.getApk("debug");
@@ -83,7 +81,6 @@ public class NdkInjectedAbiTest {
     @Test
     public void checkEmptyListDoNotFilter() throws Exception {
         sProject.executor()
-                .with(BooleanOption.BUILD_ONLY_TARGET_ABI, true)
                 .with(StringOption.IDE_BUILD_TARGET_ABI, "")
                 .run("clean", "assembleDebug");
         Apk debug = sProject.getApk("debug");
@@ -93,8 +90,9 @@ public class NdkInjectedAbiTest {
     }
 
     @Test
-    public void checkTargetAbiNeedsToBeEnabled() throws Exception {
+    public void checkBuildOnlyTargetAbiCanBeDisabled() throws Exception {
         sProject.executor()
+                .with(BooleanOption.BUILD_ONLY_TARGET_ABI, false)
                 .with(StringOption.IDE_BUILD_TARGET_ABI, "armeabi")
                 .run("clean", "assembleDebug");
         Apk debug = sProject.getApk("debug");

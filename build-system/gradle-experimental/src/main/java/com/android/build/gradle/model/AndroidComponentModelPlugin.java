@@ -19,6 +19,7 @@ package com.android.build.gradle.model;
 import static com.android.builder.core.VariantType.ANDROID_TEST;
 import static com.android.builder.core.VariantType.UNIT_TEST;
 
+import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.ProductFlavorCombo;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.managed.AndroidConfig;
@@ -36,6 +37,7 @@ import com.google.common.primitives.Ints;
 import java.io.File;
 import java.util.List;
 import java.util.stream.Collectors;
+import javax.inject.Inject;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.file.SourceDirectorySet;
@@ -49,6 +51,9 @@ import org.gradle.model.ModelMap;
 import org.gradle.model.Mutate;
 import org.gradle.model.Path;
 import org.gradle.model.RuleSource;
+import org.gradle.model.internal.core.ModelReference;
+import org.gradle.model.internal.core.ModelRegistrations;
+import org.gradle.model.internal.registry.ModelRegistry;
 import org.gradle.platform.base.BinarySpec;
 import org.gradle.platform.base.ComponentBinaries;
 import org.gradle.platform.base.ComponentType;
@@ -71,6 +76,13 @@ public class AndroidComponentModelPlugin implements Plugin<Project> {
     private static final String GRADLE_VERSION_CHECK_OVERRIDE_PROPERTY =
             "com.android.build.gradle.overrideVersionCheck";
 
+    @NonNull private final ModelRegistry modelRegistry;
+
+    @Inject
+    private AndroidComponentModelPlugin(@NonNull ModelRegistry modelRegistry) {
+        this.modelRegistry = modelRegistry;
+    }
+
     @Override
     public void apply(Project project) {
         checkPluginVersion();
@@ -81,6 +93,14 @@ public class AndroidComponentModelPlugin implements Plugin<Project> {
 
         project.getGradle().getTaskGraph().addTaskExecutionGraphListener(
                 taskGraph -> TaskInputHelper.disableBypass());
+
+        // Remove this when our models no longer depends on Project.
+        modelRegistry.register(
+                ModelRegistrations.bridgedInstance(
+                                ModelReference.of("projectModel", Project.class), project)
+                        .descriptor("Model of project.")
+                        .build());
+
     }
 
     /**

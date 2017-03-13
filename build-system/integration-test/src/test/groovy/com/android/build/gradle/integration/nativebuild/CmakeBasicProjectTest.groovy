@@ -135,7 +135,6 @@ android {
     @Test
     void "check apk content with injected ABI"() {
         project.executor()
-                .with(BooleanOption.BUILD_ONLY_TARGET_ABI, true)
                 .with(StringOption.IDE_BUILD_TARGET_ABI, "x86")
                 .run("clean", "assembleDebug")
         Apk apk = project.getApk("debug");

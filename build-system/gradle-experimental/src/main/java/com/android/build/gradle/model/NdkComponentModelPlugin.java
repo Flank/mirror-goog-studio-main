@@ -22,7 +22,6 @@ import static com.android.build.gradle.model.ModelConstants.NATIVE_BUILD_SYSTEMS
 import static com.android.build.gradle.model.ModelConstants.NATIVE_DEPENDENCIES;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.NativeDependencyLinkage;
 import com.android.build.gradle.internal.ProductFlavorCombo;
 import com.android.build.gradle.internal.core.Abi;
@@ -45,6 +44,9 @@ import com.android.build.gradle.ndk.internal.NdkConfiguration;
 import com.android.build.gradle.ndk.internal.NdkExtensionConvention;
 import com.android.build.gradle.ndk.internal.NdkNamingScheme;
 import com.android.build.gradle.ndk.internal.ToolchainConfiguration;
+import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.ProjectOptions;
+import com.android.build.gradle.options.StringOption;
 import com.android.build.gradle.tasks.NativeBuildSystem;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.VariantConfiguration;
@@ -92,8 +94,6 @@ import org.gradle.model.Path;
 import org.gradle.model.RuleSource;
 import org.gradle.model.Validate;
 import org.gradle.model.internal.core.ModelPath;
-import org.gradle.model.internal.core.ModelReference;
-import org.gradle.model.internal.core.ModelRegistrations;
 import org.gradle.model.internal.registry.ModelRegistry;
 import org.gradle.model.internal.type.ModelType;
 import org.gradle.model.internal.type.ModelTypes;
@@ -138,11 +138,6 @@ public class NdkComponentModelPlugin implements Plugin<Project> {
         project.getPluginManager().apply(AndroidComponentModelPlugin.class);
         project.getPluginManager().apply(CPlugin.class);
         project.getPluginManager().apply(CppPlugin.class);
-
-        // Remove this when our models no longer depends on Project.
-        modelRegistry.register(ModelRegistrations
-                .bridgedInstance(ModelReference.of("projectModel", Project.class), project)
-                .descriptor("Model of project.").build());
 
         toolingRegistry.register(new NativeComponentModelBuilder(modelRegistry));
     }
@@ -570,9 +565,9 @@ public class NdkComponentModelPlugin implements Plugin<Project> {
         }
 
         @Model("androidInjectedBuildAbi")
-        public static String getBuildAbi(Project project) {
-            return AndroidGradleOptions.isBuildOnlyTargetAbiEnabled(project)
-                    ? Strings.nullToEmpty(AndroidGradleOptions.getBuildTargetAbi(project))
+        public static String getBuildAbi(Project project, ProjectOptions projectOptions) {
+            return projectOptions.get(BooleanOption.BUILD_ONLY_TARGET_ABI)
+                    ? Strings.nullToEmpty(projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI))
                     : "";
         }
 

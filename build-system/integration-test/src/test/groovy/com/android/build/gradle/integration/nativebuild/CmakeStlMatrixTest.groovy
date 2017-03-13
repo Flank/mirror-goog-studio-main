@@ -23,6 +23,7 @@ import com.android.build.gradle.integration.common.utils.ZipHelper
 import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.tasks.NativeBuildSystem
+import com.android.builder.model.AndroidProject
 import com.android.builder.model.NativeAndroidProject
 import com.android.builder.model.NativeArtifact
 import com.android.testutils.apk.Apk
@@ -150,7 +151,6 @@ android {
     @Test
     void "check apk content with injected ABI"() {
         project.executor()
-                .with(BooleanOption.BUILD_ONLY_TARGET_ABI, true)
                 .with(StringOption.IDE_BUILD_TARGET_ABI, "x86")
                 .run("clean", "assembleDebug")
         Apk apk = project.getApk("debug");
