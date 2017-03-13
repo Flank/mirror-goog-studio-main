@@ -273,6 +273,7 @@ public enum TextFormat {
     }
 
     private static final String HTTP_PREFIX = "http://";
+    private static final String HTTPS_PREFIX = "https://";
 
     /** Converts to this output format from the given raw-format text */
     @NonNull
@@ -342,10 +343,10 @@ public enum TextFormat {
                         if (html) {
                             String tag = bold ? "b" : c == '*' ? "i" : "code";
                             sb.append('<').append(tag).append('>');
-                            appendEscapedText(sb, text, html, i + 1, end, escapeUnicode);
+                            appendEscapedText(sb, text, true, i + 1, end, escapeUnicode);
                             sb.append('<').append('/').append(tag).append('>');
                         } else {
-                            appendEscapedText(sb, text, html, i + 1, end, escapeUnicode);
+                            appendEscapedText(sb, text, false, i + 1, end, escapeUnicode);
                         }
                         flushIndex = end + 1;
                         if (bold) {
@@ -354,10 +355,14 @@ public enum TextFormat {
                         i = flushIndex - 1; // -1: account for the i++ in the loop
                     }
                 }
-            } else if (html && c == 'h' && i < n - 1 && text.charAt(i + 1) == 't'
-                    && text.startsWith(HTTP_PREFIX, i) && !Character.isLetterOrDigit(prev)) {
+            } else if (html
+                    && c == 'h' && i < n - 1 && text.charAt(i + 1) == 't'
+                    && (text.startsWith(HTTP_PREFIX, i) || text.startsWith(HTTPS_PREFIX, i))
+                    && !Character.isLetterOrDigit(prev)) {
                 // Find url end
-                int end = i + HTTP_PREFIX.length();
+                int length = text.startsWith(HTTP_PREFIX, i) ?
+                        HTTP_PREFIX.length() : HTTPS_PREFIX.length();
+                int end = i + length;
                 while (end < n) {
                     char d = text.charAt(end);
                     if (Character.isWhitespace(d)) {
@@ -369,9 +374,9 @@ public enum TextFormat {
                 if (last == '.' || last == ')' || last == '!') {
                     end--;
                 }
-                if (end > i + HTTP_PREFIX.length()) {
+                if (end > i + length) {
                     if (i > flushIndex) {
-                        appendEscapedText(sb, text, html, flushIndex, i, escapeUnicode);
+                        appendEscapedText(sb, text, true, flushIndex, i, escapeUnicode);
                     }
 
                     String url = text.substring(i, end);

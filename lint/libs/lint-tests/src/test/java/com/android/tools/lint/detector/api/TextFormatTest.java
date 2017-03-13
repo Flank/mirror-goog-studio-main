@@ -337,16 +337,16 @@ public class TextFormatTest extends TestCase {
         assertEquals("foo bar *", convertMarkup("foo bar *", HTML));
     }
 
-    private static void check(String raw) {
-        if (raw.contains("\\") && !raw.contains("\\\\")) {
-            System.out.println("here");
-        }
+    public void testHttps() throws Exception {
+        assertEquals("Visit <a href=\"https://google.com\">https://google.com</a>.",
+                convertMarkup("Visit https://google.com.", HTML));
     }
 
-    public void test() {
+    public void testConvertAll() {
         for (Issue issue : new BuiltinIssueRegistry().getIssues()) {
-            check(issue.getExplanation(TextFormat.RAW));
-            check(issue.getBriefDescription(TextFormat.RAW));
+            // Make sure there are no exceptions during conversion for any of the builtin strings
+            issue.getExplanation(TextFormat.RAW);
+            issue.getBriefDescription(TextFormat.RAW);
         }
     }
 }
