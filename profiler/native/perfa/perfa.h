@@ -33,9 +33,8 @@ namespace profiler {
 
 class Perfa {
  public:
-  static void Initialize();
   // Grab the singleton instance of Perfa. This will initialize the class if
-  // necessary, but consider calling |Initialize| on your own first.
+  // necessary.
   static Perfa& Instance();
 
   const proto::InternalEventService::Stub& event_stub() { return *event_stub_; }
@@ -53,7 +52,7 @@ class Perfa {
  private:
   static constexpr int64_t kHeartBeatIntervalNs = Clock::ms_to_ns(250);
 
-  // Use Perfa::Initialize to initialize
+  // Use Perfa::Instance() to initialize.
   explicit Perfa(const char* address);
   ~Perfa() = delete;  // TODO: Support destroying perfa.
 
