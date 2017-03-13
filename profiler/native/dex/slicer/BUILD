@@ -1,6 +1,7 @@
 cc_library(
     name = "slicer",
     srcs = [
+        "code_ir.cc",
         "common.cc",
         "dex_bytecode.cc",
         "dex_format.cc",
@@ -13,12 +14,14 @@ cc_library(
         "arrayview.h",
         "buffer.h",
         "chronometer.h",
+        "code_ir.h",
         "common.h",
         "dex_bytecode.h",
         "dex_format.h",
         "dex_ir.h",
         "dex_leb128.h",
         "dex_utf8.h",
+        "intrusive_list.h",
         "memview.h",
         "reader.h",
         "scopeguard.h",

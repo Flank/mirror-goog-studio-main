@@ -15,6 +15,7 @@
  */
 
 #include "dexter.h"
+#include "dissasembler.h"
 #include "slicer/common.h"
 #include "slicer/scopeguard.h"
 #include "slicer/reader.h"
@@ -47,6 +48,7 @@ void Dexter::PrintHelp() {
   printf(" -l : list the classes defined in the dex file\n");
   printf(" -v : verbose output\n");
   printf(" -o : output a new .dex file\n");
+  printf(" -d : dissasemble method bodies\n");
   printf(" -m : print .dex layout map\n");
   printf("\n");
 }
@@ -54,7 +56,7 @@ void Dexter::PrintHelp() {
 int Dexter::Run() {
   bool show_help = false;
   int opt = 0;
-  while ((opt = ::getopt(argc_, argv_, "hlsvmo:e:")) != -1) {
+  while ((opt = ::getopt(argc_, argv_, "hlsvdmo:e:")) != -1) {
     switch (opt) {
       case 's':
         stats_ = true;
@@ -67,6 +69,9 @@ int Dexter::Run() {
         break;
       case 'e':
         extract_class_ = ::optarg;
+        break;
+      case 'd':
+        dissasemble_ = true;
         break;
       case 'm':
         print_map_ = true;
@@ -339,6 +344,12 @@ int Dexter::ProcessDex() {
   }
 
   auto dex_ir = reader.GetIr();
+
+  // dissasemble method bodies?
+  if (dissasemble_) {
+    DexDissasembler disasm(dex_ir);
+    disasm.DumpAllMethods();
+  }
 
   if(!CreateNewImage(dex_ir)) {
     return 1;

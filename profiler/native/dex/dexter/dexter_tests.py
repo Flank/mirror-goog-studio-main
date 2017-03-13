@@ -19,6 +19,7 @@ data_root = 'tools/base/profiler/native/testdata/dex'
 test_cases = {
   'map'             : { 'args' : '-m', 'input' : '*.dex' },
   'stats'           : { 'args' : '-s', 'input' : '*.dex' },
+  'asm'             : { 'args' : '-d', 'input' : '*.dex' },
   'hello_stats'     : { 'args' : '-s -e Hello', 'input' : 'hello.dex' },
   'am_stats'        : { 'args' : '-s -e android.app.ActivityManager', 'input' : 'large.dex' },
 }

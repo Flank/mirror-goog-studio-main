@@ -26,14 +26,19 @@ class Chronometer {
 
  public:
   // elapsed time is in milliseconds
-  Chronometer(double& elapsed) : elapsed_(elapsed) {
+  Chronometer(double& elapsed, bool cumulative = false) :
+              elapsed_(elapsed), cumulative_(cumulative) {
     start_time_ = Clock::now();
   }
 
   ~Chronometer() {
     Clock::time_point end_time = Clock::now();
     std::chrono::duration<double, std::milli> ms = end_time - start_time_;
-    elapsed_ = ms.count();
+    if (cumulative_) {
+      elapsed_ += ms.count();
+    } else {
+      elapsed_ = ms.count();
+    }
   }
 
   Chronometer(const Chronometer&) = delete;
@@ -42,6 +47,7 @@ class Chronometer {
  private:
   double& elapsed_;
   Clock::time_point start_time_;
+  bool cumulative_;
 };
 
 } // namespace slicer
