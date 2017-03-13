@@ -2,11 +2,14 @@ apply plugin: 'java'
 
 dependencies {
     compile project(':base:annotations')
+    compile project(':base:common')
     compile libs.guava
 
     testCompile project(':base:testutils')
     testCompile libs.junit
     testCompile libs.truth
+    testCompile libs.mockito_core
+    testCompile libs.equalsverifier
 }
 
 group = 'com.android.tools'
