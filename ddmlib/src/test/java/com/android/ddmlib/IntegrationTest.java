@@ -35,13 +35,10 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.google.common.util.concurrent.Uninterruptibles;
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class IntegrationTest {
@@ -59,8 +56,6 @@ public class IntegrationTest {
 
     private static final String ADDITIONAL_TEST_MESSAGE = "nope! fooled you!";
 
-    private static final int DEFAULT_ADB_SERVER_PORT = 5037;
-
     /** Returns the path to the adb present in the SDK used for tests. */
     @NonNull
     public static Path getPathToAdb() {
@@ -70,42 +65,46 @@ public class IntegrationTest {
     // ignored because we shouldn't be relying on a hard coded port (5037): fakeadbserver should
     // be changed to use any available port, and that selected port should be passed on to ddmlib
     @Test
-    @Ignore
-    public void testListDevices() throws IOException {
+    public void testListDevices() throws Exception {
         // Build the server and configure it to use the default ADB command handlers.
         FakeAdbServer.Builder builder = new FakeAdbServer.Builder();
-        builder.setPort(DEFAULT_ADB_SERVER_PORT);
         builder.installDefaultCommandHandlers();
-        FakeAdbServer server = builder.build();
 
-        // Connect a test device to simulate device connection before server bring-up.
-        server.connectDevice(
-                "007", "Google", "MI", "rel1", "2017", DeviceState.HostConnectionType.USB);
+        try (FakeAdbServer server = builder.build()) {
+            // Connect a test device to simulate device connection before server bring-up.
+            server.connectDevice(
+                            "007",
+                            "Google",
+                            "MI",
+                            "rel1",
+                            "2017",
+                            DeviceState.HostConnectionType.USB)
+                    .get();
 
-        // Start server execution.
-        server.start();
+            // Start server execution.
+            server.start();
 
-        // Test that we obtain 1 device via the ddmlib APIs
-        AndroidDebugBridge.initIfNeeded(false);
-        AndroidDebugBridge.enableFakeAdbServerMode();
-        AndroidDebugBridge bridge =
-                AndroidDebugBridge.createBridge(getPathToAdb().toString(), false);
+            // Test that we obtain 1 device via the ddmlib APIs
+            AndroidDebugBridge.enableFakeAdbServerMode(server.getPort());
+            AndroidDebugBridge.initIfNeeded(false);
+            AndroidDebugBridge bridge =
+                    AndroidDebugBridge.createBridge(getPathToAdb().toString(), false);
+            assertNotNull("Debug bridge", bridge);
 
-        assertThat(bridge).isNotNull();
+            long startTime = System.currentTimeMillis();
+            while (!bridge.isConnected()
+                    && (System.currentTimeMillis() - startTime) < TimeUnit.SECONDS.toMillis(10)) {
+                Uninterruptibles.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
+            }
 
-        long startTime = System.currentTimeMillis();
-        while (!bridge.isConnected() && (System.currentTimeMillis() - startTime) < 10_000) {
-            Uninterruptibles.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
+            assertThat(bridge.isConnected()).isTrue();
+
+            IDevice[] devices = bridge.getDevices();
+            assertThat(devices.length).isEqualTo(1);
+            assertThat(devices[0].getName()).isEqualTo("007");
+        } finally {
+            AndroidDebugBridge.terminate();
         }
-
-        assertThat(bridge.isConnected()).isTrue();
-
-        IDevice[] devices = bridge.getDevices();
-        assertThat(devices.length).isEqualTo(1);
-        assertThat(devices[0].getName()).isEqualTo("007");
-
-        AndroidDebugBridge.terminate();
-        server.stop();
     }
 
     /**
@@ -116,40 +115,37 @@ public class IntegrationTest {
      * "@Ignore".
      */
     @Test
-    @Ignore
-    public void testLogcatPipeline() throws IOException, ExecutionException, InterruptedException {
+    public void testLogcatPipeline() throws Exception {
         // Setup the server to default configuration.
         FakeAdbServer.Builder builder = new FakeAdbServer.Builder();
-        builder.setPort(DEFAULT_ADB_SERVER_PORT);
         builder.installDefaultCommandHandlers();
-        FakeAdbServer server = builder.build();
 
-        // Pre-connect a device before server startup.
-        DeviceState device =
-                server.connectDevice(
-                                SERIAL,
-                                MANUFACTURER,
-                                MODEL,
-                                RELEASE,
-                                SDK,
-                                DeviceState.HostConnectionType.USB)
-                        .get();
-        device.setDeviceStatus(DeviceState.DeviceStatus.ONLINE);
+        try (FakeAdbServer server = builder.build()) {
+            // Pre-connect a device before server startup.
+            DeviceState device =
+                    server.connectDevice(
+                                    SERIAL,
+                                    MANUFACTURER,
+                                    MODEL,
+                                    RELEASE,
+                                    SDK,
+                                    DeviceState.HostConnectionType.USB)
+                            .get();
+            device.setDeviceStatus(DeviceState.DeviceStatus.ONLINE);
 
-        // Load a sample test logcat output and simulate a device with existing buffered logcat
-        // output prior to starting the server.
-        File f = TestResources.getFile(getClass(), "/logcat.txt");
-        assertTrue(f.exists());
-        device.addLogcatMessage(Files.toString(f, Charsets.UTF_8));
+            // Load a sample test logcat output and simulate a device with existing buffered logcat
+            // output prior to starting the server.
+            File f = TestResources.getFile(getClass(), "/logcat.txt");
+            assertTrue(f.exists());
+            device.addLogcatMessage(Files.toString(f, Charsets.UTF_8));
 
-        try {
             server.start();
 
             // Start up ADB.
-            File adbPath = new File(TestUtils.getSdk(), "platform-tools/adb");
+            AndroidDebugBridge.enableFakeAdbServerMode(server.getPort());
             AndroidDebugBridge.initIfNeeded(false);
             AndroidDebugBridge bridge =
-                    AndroidDebugBridge.createBridge(adbPath.getCanonicalPath(), false);
+                    AndroidDebugBridge.createBridge(getPathToAdb().toString(), false);
             assertNotNull("Debug bridge", bridge);
 
             // Wait for the device to get recognized by ddmlib.
@@ -187,7 +183,7 @@ public class IntegrationTest {
 
             logCatReceiverTask.stop();
         } finally {
-            server.stop();
+            AndroidDebugBridge.terminate();
         }
     }
 

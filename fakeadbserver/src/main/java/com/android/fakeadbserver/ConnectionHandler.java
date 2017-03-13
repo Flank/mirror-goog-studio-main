@@ -306,8 +306,7 @@ final class ConnectionHandler implements Runnable {
         return new Request(splitPayload[0], splitPayload[1]);
     }
 
-    private void readFully(@NonNull byte[] buffer)
-            throws IOException {
+    private void readFully(@NonNull byte[] buffer) throws IOException {
         int bytesRead = 0;
         while (bytesRead < buffer.length) {
             bytesRead += mSocket.getInputStream()
