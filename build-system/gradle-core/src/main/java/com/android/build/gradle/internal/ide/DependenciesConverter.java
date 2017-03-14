@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.ide;
 
+import static com.android.SdkConstants.DOT_JAR;
+import static com.android.SdkConstants.FD_JARS;
 import static java.util.stream.Collectors.toList;
 
 import com.android.annotations.NonNull;
@@ -37,21 +39,24 @@ import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaLibrary;
 import com.android.ide.common.caching.CreatingCache;
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 /**
  * Serializable implementation of Dependencies for use in the model.
@@ -356,19 +361,9 @@ final class DependenciesConverter  {
             }
         }
 
-        Collection<File> localJarOverride;
-        if (androidDependency.isSubModule()) {
-            localJarOverride = ImmutableSet.of();
-        } else {
-            // for an external library, the bundle should have been exploded
-            Preconditions.checkState(
-                    androidDependency.getExtractedFolder().isDirectory(),
-                    String.format(
-                            "Dependency %1$s should have been exploded into directory %2$s"
-                                    + " but has not",
-                            androidDependency, androidDependency.getExtractedFolder()));
-            localJarOverride = androidDependency.getLocalJars();
-        }
+        // compute local jar even if the bundle isn't exploded (not all AARs are exploded during
+        // sync)
+        Collection<File> localJarOverride = findLocalJar(androidDependency);
 
         return new AndroidLibraryImpl(
                 androidDependency,
@@ -391,6 +386,61 @@ final class DependenciesConverter  {
                 javaDependency.getCoordinates(),
                 dependencyItem.isSkipped(),
                 dependencyItem.isProvided());
+    }
+
+    /**
+     * Finds the local jar for an aar.
+     *
+     * <p>Since the model can be queried before the aar are exploded, we attempt to get them from
+     * inside the aar.
+     *
+     * @param dependency the library.
+     * @return its local jars.
+     */
+    @NonNull
+    static Collection<File> findLocalJar(@NonNull AndroidDependency dependency) {
+        // if the library is exploded, just use the normal method.
+        File explodedFolder = dependency.getExtractedFolder();
+        if (explodedFolder.isDirectory()) {
+            return dependency.getLocalJars();
+        }
+
+        // if the aar file is present, search inside it for jar files under libs/
+        File aarFile = dependency.getArtifactFile();
+        if (aarFile.isFile()) {
+            List<File> jarList = Lists.newArrayList();
+
+            File jarsFolder = new File(explodedFolder, FD_JARS);
+
+            ZipFile zipFile = null;
+            try {
+                //noinspection IOResourceOpenedButNotSafelyClosed
+                zipFile = new ZipFile(aarFile);
+
+                for (Enumeration<? extends ZipEntry> e = zipFile.entries(); e.hasMoreElements(); ) {
+                    ZipEntry zipEntry = e.nextElement();
+                    String name = zipEntry.getName();
+                    if (name.startsWith("libs/") && name.endsWith(DOT_JAR)) {
+                        jarList.add(new File(jarsFolder, name.replace('/', File.separatorChar)));
+                    }
+                }
+
+                return jarList;
+            } catch (FileNotFoundException ignored) {
+                // should not happen since we check ahead of time
+            } catch (IOException e) {
+                // we'll return an empty list below
+            } finally {
+                if (zipFile != null) {
+                    try {
+                        zipFile.close();
+                    } catch (IOException ignored) {
+                    }
+                }
+            }
+        }
+
+        return Collections.emptyList();
     }
 
     static final class DependenciesImpl implements Dependencies, Serializable {

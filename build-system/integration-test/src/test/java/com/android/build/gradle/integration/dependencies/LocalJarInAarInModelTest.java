@@ -29,11 +29,13 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.Library;
 import java.io.File;
+import java.io.IOException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -100,5 +102,35 @@ public class LocalJarInAarInModelTest {
         for (String localJar : androidLibrary.getLocalJars()) {
             assertThat(new File(rootFolder, localJar)).isFile();
         }
+    }
+
+    @Test
+    public void checkAarsNotExplodedAfterSyncIfBuildCacheAndImprovedDependencyResolutionDisabled()
+            throws IOException {
+        // clean the project and get the model with both the build cache and dependency resolution
+        // at execution disabled. The aar should NOT be exploded during this sync event.
+        ModelContainer<AndroidProject> model =
+                project.model()
+                        .withProperty(BooleanOption.ENABLE_BUILD_CACHE.getPropertyName(), "false")
+                        .withProperty(
+                                BooleanOption.ENABLE_IMPROVED_DEPENDENCY_RESOLUTION
+                                        .getPropertyName(),
+                                "false")
+                        .getSingle();
+        LibraryGraphHelper helper = new LibraryGraphHelper(model);
+
+        Variant variant = ModelHelper.getVariant(model.getOnlyModel().getVariants(), "debug");
+
+        DependencyGraphs graph = variant.getMainArtifact().getDependencyGraphs();
+        LibraryGraphHelper.Items androidItems = helper.on(graph).withType(ANDROID);
+        assertThat(androidItems.mapTo(COORDINATES))
+                .containsExactly("com.android.support:support-v4:" + SUPPORT_LIB_VERSION + "@aar");
+
+        // check that the aar was NOT exploded
+        Library androidLibrary =
+                model.getGlobalLibraryMap()
+                        .getLibraries()
+                        .get(androidItems.asSingleGraphItem().getArtifactAddress());
+        assertThat(androidLibrary.getFolder()).doesNotExist();
     }
 }
