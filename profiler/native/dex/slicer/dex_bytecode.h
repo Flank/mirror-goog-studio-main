@@ -330,6 +330,17 @@ enum InstructionFormat : u1 {
   kFmt3rmi,     // [opt] inline invoke/range
 };
 
+using OpcodeFlags = u1;
+
+enum : OpcodeFlags {
+  kInstrCanBranch     = 1 << 0,   // conditional or unconditional branch
+  kInstrCanContinue   = 1 << 1,   // flow can continue to next statement
+  kInstrCanSwitch     = 1 << 2,   // switch statement
+  kInstrCanThrow      = 1 << 3,   // could cause an exception to be thrown
+  kInstrCanReturn     = 1 << 4,   // returns, no additional statements
+  kInstrInvoke        = 1 << 5,   // a flavor of invoke
+};
+
 // Types of indexed reference that are associated with opcodes whose
 // formats include such an indexed reference (e.g., 21c and 35c).
 enum InstructionIndexType : u1 {
@@ -389,6 +400,9 @@ InstructionIndexType GetIndexTypeFromOpcode(Opcode opcode);
 
 // Returns the format associated with the specified opcode
 InstructionFormat GetFormatFromOpcode(Opcode opcode);
+
+// Returns the flags for the specified opcode
+OpcodeFlags GetFlagsFromOpcode(Opcode opcode);
 
 // Returns the instruction width for the specified opcode
 size_t GetWidthFromOpcode(Opcode opcode);

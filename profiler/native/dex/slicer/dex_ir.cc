@@ -174,7 +174,7 @@ void DexFile::Normalize() {
   // implemented interfaces appear in the list earlier than the referring
   // class
   //
-  // CONSIDER: for a strict BCI scenario we can avoid this
+  // CONSIDER: for the BCI-only scenario we can avoid this
   //
   SortClassIndexes();
 

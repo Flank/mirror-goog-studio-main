@@ -734,7 +734,7 @@ ir::Code* Reader::ExtractCode(dex::u4 offset) {
     auto ptr = handlers_list;
 
     dex::u4 handlers_count = dex::ReadULeb128(&ptr);
-    CHECK(handlers_count <= dex_code->tries_size);
+    WEAK_CHECK(handlers_count <= dex_code->tries_size);
 
     for (dex::u4 handler_index = 0; handler_index < handlers_count; ++handler_index) {
       int catch_count = dex::ReadSLeb128(&ptr);
@@ -826,7 +826,7 @@ ir::TypeList* Reader::ExtractTypeList(dex::u4 offset) {
     ir_type_list = dex_ir_->Alloc<ir::TypeList>();
 
     auto dex_type_list = dataPtr<dex::TypeList>(offset);
-    CHECK(dex_type_list->size > 0);
+    WEAK_CHECK(dex_type_list->size > 0);
 
     for (dex::u4 i = 0; i < dex_type_list->size; ++i) {
       ir_type_list->types.push_back(GetType(dex_type_list->list[i].type_idx));
@@ -936,7 +936,12 @@ void Reader::ValidateHeader() {
   CHECK(header_->link_off == 0);
   CHECK(header_->data_off % 4 == 0);
   CHECK(header_->map_off % 4 == 0);
-  CHECK(header_->data_off + header_->data_size == size_);
+
+  // we seem to have .dex files with extra bytes at the end ...
+  WEAK_CHECK(header_->data_off + header_->data_size == size_);
+
+  // but we should still have the whole data section
+  CHECK(header_->data_off + header_->data_size <= size_);
 
   // validate the map
   // (map section size = sizeof(MapList::size) + sizeof(MapList::list[size])
