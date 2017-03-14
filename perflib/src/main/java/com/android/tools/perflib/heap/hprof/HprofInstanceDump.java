@@ -34,6 +34,7 @@ public class HprofInstanceDump implements HprofDumpRecord {
         this.values = values;
     }
 
+    @Override
     public void write(HprofOutputStream hprof) throws IOException {
         hprof.writeU1(SUBTAG);
         hprof.writeId(objectId);
@@ -43,6 +44,7 @@ public class HprofInstanceDump implements HprofDumpRecord {
         hprof.write(values);
     }
 
+    @Override
     public int getLength(int idSize) {
         return 1 + idSize + 4 + idSize + 4 + values.length;
     }

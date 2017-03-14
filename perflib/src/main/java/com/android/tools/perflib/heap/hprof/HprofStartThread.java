@@ -41,6 +41,7 @@ public class HprofStartThread implements HprofRecord {
         this.threadParentGroupNameId = threadParentGroupNameId;
     }
 
+    @Override
     public void write(HprofOutputStream hprof) throws IOException {
         int id = hprof.getIdSize();
         hprof.writeRecordHeader(TAG, time, 4 + id + 4 + id + id + id);

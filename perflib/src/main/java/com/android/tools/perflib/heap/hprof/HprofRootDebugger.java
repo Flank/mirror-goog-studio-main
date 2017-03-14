@@ -30,11 +30,13 @@ public class HprofRootDebugger implements HprofDumpRecord {
         this.objectId = objectId;
     }
 
+    @Override
     public void write(HprofOutputStream hprof) throws IOException {
         hprof.writeU1(SUBTAG);
         hprof.writeId(objectId);
     }
 
+    @Override
     public int getLength(int idSize) {
         return 1 + idSize;
     }

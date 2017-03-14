@@ -31,6 +31,7 @@ public class HprofString implements HprofRecord {
         this.string = string;
     }
 
+    @Override
     public void write(HprofOutputStream hprof) throws IOException {
         byte[] bytes = string.getBytes(Charsets.UTF_8);
         hprof.writeRecordHeader(TAG, time, hprof.getIdSize() + bytes.length);

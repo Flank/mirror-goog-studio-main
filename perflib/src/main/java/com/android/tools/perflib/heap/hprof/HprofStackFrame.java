@@ -47,6 +47,7 @@ public class HprofStackFrame implements HprofRecord {
         this.lineNumber = lineNumber;
     }
 
+    @Override
     public void write(HprofOutputStream hprof) throws IOException {
         int id = hprof.getIdSize();
         int u4 = 4;

@@ -32,6 +32,7 @@ public class HprofRootJniLocal implements HprofDumpRecord {
         this.frameNumberInStackTrace = frameNumberInStackTrace;
     }
 
+    @Override
     public void write(HprofOutputStream hprof) throws IOException {
         hprof.writeU1(SUBTAG);
         hprof.writeId(objectId);
@@ -39,6 +40,7 @@ public class HprofRootJniLocal implements HprofDumpRecord {
         hprof.writeU4(frameNumberInStackTrace);
     }
 
+    @Override
     public int getLength(int idSize) {
         return 1 + idSize + 4 + 4;
     }

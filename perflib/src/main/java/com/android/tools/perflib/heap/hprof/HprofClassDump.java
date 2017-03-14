@@ -54,6 +54,7 @@ public class HprofClassDump implements HprofDumpRecord {
         this.instanceFields = instanceFields;
     }
 
+    @Override
     public void write(HprofOutputStream hprof) throws IOException {
         hprof.writeU1(SUBTAG);
         hprof.writeId(classObjectId);
@@ -79,6 +80,7 @@ public class HprofClassDump implements HprofDumpRecord {
         }
     }
 
+    @Override
     public int getLength(int idSize) {
         int length = 1 + 7*idSize + 2 * 4 + 3*2;
         for (HprofConstant constant : constantPool) {

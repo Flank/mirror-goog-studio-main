@@ -29,12 +29,14 @@ public class HprofRootNativeStack implements HprofDumpRecord {
         this.threadSerialNumber = threadSerialNumber;
     }
 
+    @Override
     public void write(HprofOutputStream hprof) throws IOException {
         hprof.writeU1(SUBTAG);
         hprof.writeId(objectId);
         hprof.writeU4(threadSerialNumber);
     }
 
+    @Override
     public int getLength(int idSize) {
         return 1 + idSize + 4;
     }

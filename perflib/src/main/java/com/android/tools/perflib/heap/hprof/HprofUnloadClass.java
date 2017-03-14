@@ -28,6 +28,7 @@ public class HprofUnloadClass implements HprofRecord {
         this.classSerialNumber = classSerialNumber;
     }
 
+    @Override
     public void write(HprofOutputStream hprof) throws IOException {
         hprof.writeRecordHeader(TAG, time, 4);
         hprof.writeU4(classSerialNumber);

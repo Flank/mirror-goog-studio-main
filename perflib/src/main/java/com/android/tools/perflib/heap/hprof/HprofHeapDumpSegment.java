@@ -29,6 +29,7 @@ public class HprofHeapDumpSegment implements HprofRecord {
         this.records = records;
     }
 
+    @Override
     public void write(HprofOutputStream hprof) throws IOException {
         int idSize = hprof.getIdSize();
         int len = 0;
