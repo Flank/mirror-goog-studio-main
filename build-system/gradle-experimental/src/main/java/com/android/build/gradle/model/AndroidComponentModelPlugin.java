@@ -29,6 +29,7 @@ import com.android.build.gradle.model.internal.AndroidBinaryInternal;
 import com.android.build.gradle.model.internal.AndroidComponentSpecInternal;
 import com.android.build.gradle.model.internal.DefaultAndroidBinary;
 import com.android.build.gradle.model.internal.DefaultAndroidComponentSpec;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.Version;
 import com.android.builder.core.BuilderConstants;
 import com.android.repository.Revision;
@@ -173,6 +174,11 @@ public class AndroidComponentModelPlugin implements Plugin<Project> {
                 androidModel.setCompileSdkVersion("android-" + androidModel.getCompileSdkVersion());
             }
 
+        }
+
+        @Model
+        public static ProjectOptions createProjectOptions(Project project) {
+            return new ProjectOptions(project);
         }
 
         @Defaults
