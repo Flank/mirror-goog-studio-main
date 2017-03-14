@@ -51,6 +51,23 @@ service ProfilerService {
   // Query for whether perfa is alive.
   rpc GetAgentStatus(AgentStatusRequest) returns (AgentStatusResponse) {
   }
+
+  rpc AttachAgent(AgentAttachRequest) returns (AgentAttachResponse) {
+  }
+}
+
+message AgentAttachRequest {
+  int32 process_id = 1;
+  Session session = 2;
+}
+
+message AgentAttachResponse {
+  enum Status {
+    UNSPECIFICED = 0;
+    SUCCESS = 1;
+    FAILURE_UNKNOWN = 2;
+  }
+  Status status = 1;
 }
 
 message TimeRequest {

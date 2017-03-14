@@ -29,6 +29,9 @@ set(NANOPB_ROOT_DIR    ${EXTERNAL_ROOT_DIR}/nanopb-c)
 set(PROTOBUF_ROOT_DIR  ${EXTERNAL_ROOT_DIR}/protobuf)
 set(ZLIB_ROOT_DIR      ${EXTERNAL_ROOT_DIR}/zlib/src)
 
+set(VENDOR_ROOT_DIR   ${CMAKE_CURRENT_SOURCE_DIR}/../../../vendor)
+set(JVMTI_INCLUDE_DIR ${VENDOR_ROOT_DIR}/google/android-ndk/include)
+
 set(protobuf_BUILD_TESTS OFF CACHE BOOL "Build tests")
 set(protobuf_WITH_ZLIB OFF CACHE BOOL "Build with zlib support") # Tell protobuf to not try to find zlib
 set(HAVE_ZLIB 1) # But still tell it to use it.
@@ -54,7 +57,8 @@ add_subdirectory(${GRPC_ROOT_DIR} ./grpc EXCLUDE_FROM_ALL)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}
                     ${CMAKE_CURRENT_BINARY_DIR}
                     ${PROTOBUF_INCLUDE_DIR}
-                    ${GRPC_INCLUDE_DIR})
+                    ${GRPC_INCLUDE_DIR}
+                    ${JVMTI_INCLUDE_DIR})
 
 set(WARNING_FLAGS "-Wall -Werror -Wno-missing-braces")
 set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
@@ -63,6 +67,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WARNING_FLAGS} -std=c++11 -DOSATOMIC_U
 
 # Add profiler components
 add_subdirectory(dex)
+add_subdirectory(jvmti)
 add_subdirectory(perfa)
 add_subdirectory(perfd)
 add_subdirectory(proto)

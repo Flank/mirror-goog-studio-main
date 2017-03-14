@@ -39,6 +39,12 @@ endif()
 add_library(profiler_utils
             ${UTILS_SOURCES})
 
+# Ensures symbols related to <android/log.h> are linked
+if(ANDROID)
+  target_link_libraries(profiler_utils
+                        log)
+endif()
+
 if (TRACE_OUTPUT)
     target_compile_definitions(profiler_utils PRIVATE TRACE_OUTPUT=1)
 endif()
