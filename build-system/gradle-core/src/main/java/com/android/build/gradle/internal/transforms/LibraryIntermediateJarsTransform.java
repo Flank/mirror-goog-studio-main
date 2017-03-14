@@ -162,9 +162,8 @@ public class LibraryIntermediateJarsTransform extends LibraryBaseTransform {
 
         final ZipEntryFilter filter = archivePath -> CLASS_PATTERN.matcher(archivePath).matches() &&
                 checkEntry(excludePatterns, archivePath);
-        TypedefRemover typedefRemover = typedefRecipe != null && typedefRecipe.isFile()
-                ? new TypedefRemover().setTypedefFile(typedefRecipe)
-                : null;
+        TypedefRemover typedefRemover =
+                typedefRecipe != null ? new TypedefRemover().setTypedefFile(typedefRecipe) : null;
 
         handleJarOutput(mainClassInputs, mainClassLocation, filter, typedefRemover);
     }
