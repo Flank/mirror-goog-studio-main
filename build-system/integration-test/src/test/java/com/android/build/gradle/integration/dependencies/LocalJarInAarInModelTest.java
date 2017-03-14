@@ -22,18 +22,22 @@ import static com.android.build.gradle.integration.common.fixture.GradleTestProj
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.ANDROID;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
+import static org.junit.Assert.fail;
 
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.Library;
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
+import org.gradle.tooling.BuildException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -86,7 +90,7 @@ public class LocalJarInAarInModelTest {
         DependencyGraphs graph = variant.getMainArtifact().getDependencyGraphs();
         LibraryGraphHelper.Items androidItems = helper.on(graph).withType(ANDROID);
 
-        // check the model validity: making sure the folders are exacted and the local
+        // check the model validity: making sure the folders are extracted and the local
         // jars are present.
         List<Library> libraries = androidItems.asLibraries();
         assertThat(libraries).hasSize(6);
@@ -97,6 +101,19 @@ public class LocalJarInAarInModelTest {
             for (String localJar : androidLibrary.getLocalJars()) {
                 assertThat(new File(rootFolder, localJar)).isFile();
             }
+        }
+    }
+
+    @Test
+    public void checkSyncFailsIfImprovedDependencyResolutionDisabled() throws IOException {
+        // disable dependency resolution at execution, expect that syncing fails
+        try {
+            project.model()
+                    .with(BooleanOption.ENABLE_IMPROVED_DEPENDENCY_RESOLUTION, false)
+                    .getSingle();
+            fail("Expected BuildException");
+        } catch (BuildException exception) {
+            // Expected
         }
     }
 }

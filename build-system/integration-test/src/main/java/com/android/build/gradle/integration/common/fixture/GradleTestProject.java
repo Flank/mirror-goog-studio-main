@@ -636,6 +636,12 @@ public final class GradleTestProject implements TestRule {
         return new File(getTestDir(), "settings.gradle");
     }
 
+    /** Return the gradle.properties file of the test project. */
+    @NonNull
+    public File getGradlePropertiesFile() {
+        return new File(getTestDir(), "gradle.properties");
+    }
+
     /** Return the build.gradle of the test project. */
     public File getBuildFile() {
         return buildFile;
@@ -1127,8 +1133,10 @@ public final class GradleTestProject implements TestRule {
         if (gradleProperties.isEmpty()) {
             return;
         }
-        File propertyFile = file("gradle.properties");
-        Files.write(Joiner.on('\n').join(gradleProperties), propertyFile, Charset.defaultCharset());
+        Files.write(
+                Joiner.on('\n').join(gradleProperties),
+                getGradlePropertiesFile(),
+                Charset.defaultCharset());
     }
 
     @Nullable
