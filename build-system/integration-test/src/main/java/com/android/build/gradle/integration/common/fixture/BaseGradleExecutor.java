@@ -63,9 +63,10 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
     @NonNull final Path projectDirectory;
     @Nullable private final String heapSize;
     @Nullable Logging.BenchmarkMode benchmarkMode;
-    private boolean enableInfoLogging;
+    @NonNull private LoggingLevel loggingLevel = LoggingLevel.INFO;
     private boolean offline = true;
     private boolean localAndroidSdkHome = false;
+
 
     BaseGradleExecutor(
             @NonNull ProjectConnection projectConnection,
@@ -78,7 +79,9 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         this.lastBuildResultConsumer = lastBuildResultConsumer;
         this.projectDirectory = projectDirectory;
         this.benchmarkRecorder = benchmarkRecorder;
-        this.enableInfoLogging = benchmarkRecorder == null;
+        if (benchmarkRecorder != null) {
+            this.loggingLevel = LoggingLevel.LIFECYCLE;
+        }
         this.projectConnection = projectConnection;
         if (!buildDotGradleFile.getFileName().toString().equals("build.gradle")) {
             arguments.add("--build-file=" + buildDotGradleFile.toString());
@@ -142,9 +145,11 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         return (T) this;
     }
 
-    /** Whether --info is passed or not. Default is true. */
-    public final T withEnableInfoLogging(boolean enableInfoLogging) {
-        this.enableInfoLogging = enableInfoLogging;
+    public T withEnableInfoLogging(boolean enableInfoLogging) {
+        return withLoggingLevel(enableInfoLogging ? LoggingLevel.INFO : LoggingLevel.LIFECYCLE);
+    }
+
+    public T withLoggingLevel(@NonNull LoggingLevel loggingLevel) {
         return (T) this;
     }
 
@@ -163,6 +168,10 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         arguments.addAll(this.arguments);
         arguments.addAll(options.getArguments());
 
+        if (loggingLevel.getArgument() != null) {
+            arguments.add(loggingLevel.getArgument());
+        }
+
         arguments.add("-Dfile.encoding=" + System.getProperty("file.encoding"));
         arguments.add("-Dsun.jnu.encoding=" + System.getProperty("sun.jnu.encoding"));
 
@@ -171,10 +180,6 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
 
         if (offline) {
             arguments.add("--offline");
-        }
-
-        if (enableInfoLogging) {
-            arguments.add("--info");
         }
 
         Path androidSdkHome;

@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.application;
 
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.LoggingLevel;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.PerformanceTestProjects;
 import com.android.build.gradle.options.BooleanOption;
@@ -42,19 +43,20 @@ public class WordPressAppSmokeTest {
     @Test
     public void build() throws Exception {
         GetAndroidModelAction.ModelContainer<AndroidProject> modelContainer =
-                project.model().getMulti();
+                project.model().withLoggingLevel(LoggingLevel.DEBUG).getMulti();
         Map<String, AndroidProject> models = modelContainer.getModelMap();
 
-        project.executor().run("clean");
+        project.executor().withLoggingLevel(LoggingLevel.DEBUG).run("clean");
 
         project.executor()
                 .with(BooleanOption.IDE_GENERATE_SOURCES_ONLY, true)
+                .withLoggingLevel(LoggingLevel.DEBUG)
                 .run(
                         ModelHelper.getGenerateSourcesCommands(
                                 models,
                                 project ->
                                         project.equals(":WordPress") ? "vanillaDebug" : "debug"));
 
-        project.executor().run("assembleVanillaDebug");
+        project.executor().withLoggingLevel(LoggingLevel.DEBUG).run("assembleVanillaDebug");
     }
 }
