@@ -20,7 +20,6 @@ import static com.android.SdkConstants.ANDROID_MANIFEST_XML;
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_ID;
 import static com.android.SdkConstants.NEW_ID_PREFIX;
-import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -52,6 +51,7 @@ import com.android.tools.lint.checks.infrastructure.TestFile.GradleTestFile;
 import com.android.tools.lint.checks.infrastructure.TestFile.ImageTestFile;
 import com.android.tools.lint.checks.infrastructure.TestFile.JarTestFile;
 import com.android.tools.lint.checks.infrastructure.TestFile.JavaTestFile;
+import com.android.tools.lint.checks.infrastructure.TestFile.KotlinTestFile;
 import com.android.tools.lint.checks.infrastructure.TestFile.ManifestTestFile;
 import com.android.tools.lint.client.api.CircularDependencyException;
 import com.android.tools.lint.client.api.Configuration;
@@ -441,6 +441,16 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
     }
 
     @NonNull
+    public static TestFile kotlin(@NonNull String to, @NonNull @Language("kotlin") String source) {
+        return TestFiles.kotlin(to, source);
+    }
+
+    @NonNull
+    public static TestFile kotlin(@NonNull @Language("kotlin") String source) {
+        return TestFiles.kotlin(source);
+    }
+
+    @NonNull
     public static TestFile xml(@NonNull String to, @NonNull @Language("XML") String source) {
         return TestFiles.xml(to, source);
     }
@@ -624,6 +634,10 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                         && fp.targetRootFolder != null
                         && fp.targetRootFolder.equals("src")) {
                     fp.within("src/main/java");
+                } else if (fp instanceof KotlinTestFile
+                        && fp.targetRootFolder != null
+                        && fp.targetRootFolder.equals("src")) {
+                    fp.within("src/main/kotlin");
                 }
             }
 

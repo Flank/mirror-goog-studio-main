@@ -17,6 +17,7 @@
 package com.android.tools.lint;
 
 import static com.android.SdkConstants.DOT_JAVA;
+import static com.android.SdkConstants.DOT_KT;
 import static com.android.SdkConstants.INT_DEF_ANNOTATION;
 import static com.android.SdkConstants.STRING_DEF_ANNOTATION;
 import static com.android.SdkConstants.UTF_8;
@@ -335,7 +336,9 @@ public class EcjParser extends JavaParser {
         sourceUnits = Maps.newHashMapWithExpectedSize(sources.size());
         for (JavaContext context : contexts) {
             CharSequence contents = context.getContents();
-            if (contents == null) {
+            // We place Kotlin files into the source list handled by UAST, but the old
+            // ECJ compatibility bridge doesn't handle this
+            if (contents == null || context.file.getPath().endsWith(DOT_KT)) {
                 continue;
             }
             File file = context.file;

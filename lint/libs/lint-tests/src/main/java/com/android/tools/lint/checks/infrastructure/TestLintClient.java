@@ -18,12 +18,14 @@ package com.android.tools.lint.checks.infrastructure;
 
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_ID;
+import static com.android.SdkConstants.DOT_KT;
 import static com.android.SdkConstants.NEW_ID_PREFIX;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -530,6 +532,15 @@ public class TestLintClient extends LintCliClient {
             @Nullable
             @Override
             public UFile parse(@NonNull JavaContext context) {
+                if (context.file.getPath().endsWith(DOT_KT)) {
+                    // We don't yet have command line invocation of Kotlin working;
+                    // for now do simple (VERY simple) mocking
+                    context.report(IssueRegistry.LINT_ERROR, Location.create(context.file),
+                            "Kotlin not supported in the test file infrastructure yet; "
+                                    + "for now test manually in the IDE");
+                    return mock(UFile.class);
+                }
+
                 UFile file = super.parse(context);
 
                 if (!task.allowCompilationErrors) {
@@ -542,7 +553,8 @@ public class TestLintClient extends LintCliClient {
                             // error messages, source offsets, etc?
                         }
                     } else {
-                        fail("Failure processing source " + context.file);
+                        fail("Failure processing source " + context.file +
+                                ": No UAST AST created");
                     }
                 }
 
@@ -605,8 +617,16 @@ public class TestLintClient extends LintCliClient {
             @Nullable Object quickfixData) {
         assertNotNull(location);
 
-        if (task.allowSystemErrors && issue == IssueRegistry.LINT_ERROR) {
-            return;
+        if (issue == IssueRegistry.LINT_ERROR) {
+            if (!task.allowSystemErrors) {
+                return;
+            }
+
+            // We don't care about this error message from lint tests; we don't compile
+            // test project files
+            if (message.startsWith("No `.class` files were found in project")) {
+                return;
+            }
         }
 
         if (task.messageChecker != null) {

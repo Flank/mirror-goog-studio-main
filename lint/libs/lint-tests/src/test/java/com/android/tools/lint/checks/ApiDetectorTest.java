@@ -3573,7 +3573,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         + "1 errors, 0 warnings\n",
                 null,
                 false,
-                false,
+                true,
                 new com.android.tools.lint.checks.infrastructure.TestLintClient() {
                     @Override
                     public File findResource(@NonNull String relativePath) {

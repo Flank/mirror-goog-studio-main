@@ -17,6 +17,7 @@
 package com.android.tools.lint.checks.infrastructure;
 
 import static com.android.SdkConstants.ANDROID_MANIFEST_XML;
+import static com.android.SdkConstants.DOT_GRADLE;
 import static com.android.SdkConstants.DOT_JAR;
 import static org.junit.Assert.assertTrue;
 
@@ -680,7 +681,7 @@ public class TestLintTask {
 
         boolean haveGradle = false;
         for (TestFile fp : testFiles) {
-            if (fp instanceof GradleTestFile) {
+            if (fp instanceof GradleTestFile || fp.targetRelativePath.endsWith(DOT_GRADLE)) {
                 haveGradle = true;
             }
         }
@@ -694,6 +695,9 @@ public class TestLintTask {
                 } else if (fp instanceof JavaTestFile && fp.targetRootFolder != null
                         && fp.targetRootFolder.equals("src")) {
                     fp.within("src/main/java");
+                } else if (fp instanceof TestFile.KotlinTestFile && fp.targetRootFolder != null
+                        && fp.targetRootFolder.equals("src")) {
+                    fp.within("src/main/kotlin");
                 }
             }
 

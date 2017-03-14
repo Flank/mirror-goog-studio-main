@@ -25,6 +25,7 @@ import static com.android.tools.lint.client.api.IssueRegistry.LINT_ERROR;
 import static com.android.tools.lint.client.api.IssueRegistry.PARSER_ERROR;
 import static com.android.tools.lint.detector.api.CharSequences.indexOf;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
@@ -1146,8 +1147,18 @@ public class LintCliClient extends LintClient {
 
         @Override
         public boolean prepare(@NonNull final List<JavaContext> contexts) {
+            // If we're using Kotlin, ensure we initialize the bridge
+            for (JavaContext context : contexts) {
+                if (context.file.getPath().endsWith(SdkConstants.DOT_KT)) {
+                    LintCoreApplicationEnvironment.registerKotlinUastPlugin();
+                    break;
+                }
+            }
+
+            boolean ok = super.prepare(contexts);
+
             if (project == null || contexts.isEmpty()) {
-                return true;
+                return ok;
             }
 
             // Now that we have a project context, ensure that the annotations manager
@@ -1159,7 +1170,7 @@ public class LintCliClient extends LintClient {
                 annotationsManager.updateAnnotationRoots(LintCliClient.this);
             }
 
-            return true;
+            return ok;
         }
     }
 }
