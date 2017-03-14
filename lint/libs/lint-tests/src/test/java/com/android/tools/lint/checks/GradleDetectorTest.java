@@ -1235,7 +1235,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
 
     public void testDeprecatedAppIndexingDependency() throws Exception {
         String expected = ""
-                + "build.gradle:9: Warning: Deprecated: Replace 'com.google.android.gms:play-services-appindexing:9.8.0' with 'com.google.firebase:firebase-appindexing:10.0.0' or above. [GradleDeprecated]\n"
+                + "build.gradle:9: Warning: Deprecated: Replace 'com.google.android.gms:play-services-appindexing:9.8.0' with 'com.google.firebase:firebase-appindexing:10.0.0' or above. More info: http://firebase.google.com/docs/app-indexing/android/migrate [GradleDeprecated]\n"
                 + "compile 'com.google.android.gms:play-services-appindexing:9.8.0'\n"
                 + "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "0 errors, 1 warnings\n";
