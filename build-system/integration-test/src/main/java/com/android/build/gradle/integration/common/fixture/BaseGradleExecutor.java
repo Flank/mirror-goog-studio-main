@@ -60,11 +60,12 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
     @NonNull final Path projectDirectory;
     @Nullable private final String heapSize;
     @Nullable Logging.BenchmarkMode benchmarkMode;
-    boolean enableInfoLogging;
+    @NonNull private LoggingLevel loggingLevel = LoggingLevel.INFO;
     private boolean offline = true;
     private boolean localAndroidSdkHome = false;
     private boolean enablePreDexBuildCache = true;
     private boolean enableAaptV2 = true;
+
 
     BaseGradleExecutor(
             @NonNull ProjectConnection projectConnection,
@@ -78,7 +79,9 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         this.lastBuildResultConsumer = lastBuildResultConsumer;
         this.projectDirectory = projectDirectory;
         this.benchmarkRecorder = benchmarkRecorder;
-        this.enableInfoLogging = benchmarkRecorder == null;
+        if (benchmarkRecorder != null) {
+            this.loggingLevel = LoggingLevel.LIFECYCLE;
+        }
         this.projectConnection = projectConnection;
         if (!buildDotGradleFile.getFileName().toString().equals("build.gradle")) {
             arguments.add("--build-file=" + buildDotGradleFile.toString());
@@ -153,11 +156,12 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         return (T) this;
     }
 
-    /**
-     * Whether --info is passed or not. Default is true.
-     */
     public T withEnableInfoLogging(boolean enableInfoLogging) {
-        this.enableInfoLogging = enableInfoLogging;
+        return withLoggingLevel(enableInfoLogging ? LoggingLevel.INFO : LoggingLevel.LIFECYCLE);
+    }
+
+    public T withLoggingLevel(@NonNull LoggingLevel loggingLevel) {
+        this.loggingLevel = loggingLevel;
         return (T) this;
     }
 
@@ -174,6 +178,10 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
 
     protected List<String> getCommonArguments() throws IOException {
         List<String> arguments = new ArrayList<>();
+
+        if (loggingLevel.getArgument() != null) {
+            arguments.add(loggingLevel.getArgument());
+        }
 
         arguments.add("-Dfile.encoding=" + System.getProperty("file.encoding"));
         arguments.add("-Dsun.jnu.encoding=" + System.getProperty("sun.jnu.encoding"));
