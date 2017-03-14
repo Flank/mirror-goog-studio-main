@@ -24,7 +24,7 @@
 // Encapsulates the state (command line switches, stats, ...) and
 // the interface of the command line .dex manipulation tool.
 class Dexter {
-  static constexpr const char* VERSION = "v1.0";
+  static constexpr const char* VERSION = "v1.1";
 
  public:
   Dexter(int argc, char* argv[]) : argc_(argc), argv_(argv) {}
@@ -52,6 +52,7 @@ class Dexter {
   bool list_classes_ = false;
   const char* out_dex_filename_ = nullptr;
   const char* dex_filename_ = nullptr;
+  bool dissasemble_ = false;
   bool print_map_ = false;
 
   // basic timing stats

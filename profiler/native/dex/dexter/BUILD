@@ -3,6 +3,8 @@ cc_binary(
     srcs = [
         "dexter.cc",
         "dexter.h",
+        "dissasembler.cc",
+        "dissasembler.h",
         "main.cc",
     ],
     copts = [

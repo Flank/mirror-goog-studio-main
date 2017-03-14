@@ -1,5 +1,6 @@
 
 add_library(slicer
+            code_ir.cc
             common.cc
             dex_bytecode.cc
             dex_format.cc

@@ -113,7 +113,13 @@ struct Node {
 struct IndexedNode : public Node {
   IR_TYPE;
 
+  // this is the index in the generated image
+  // (not the original index)
   dex::u4 index;
+
+  // original indexe
+  // (from the source .dex image or allocated post reader)
+  dex::u4 orig_index;
 };
 
 struct EncodedValue : public Node {
@@ -316,14 +322,16 @@ struct Class : public IndexedNode {
 
 // The main container/root for a .dex IR
 struct DexFile {
+  // indexed structures
   std::vector<own<String>> strings;
   std::vector<own<Type>> types;
   std::vector<own<Proto>> protos;
   std::vector<own<FieldDecl>> fields;
-  std::vector<own<EncodedField>> encoded_fields;
   std::vector<own<MethodDecl>> methods;
   std::vector<own<Class>> classes;
 
+  // data segment structures
+  std::vector<own<EncodedField>> encoded_fields;
   std::vector<own<EncodedMethod>> encoded_methods;
   std::vector<own<TypeList>> type_lists;
   std::vector<own<Code>> code;
@@ -374,7 +382,6 @@ struct DexFile {
   void TopSortClassIndex(Class* irClass, dex::u4* nextIndex);
   void SortClassIndexes();
 
- private:
   template <class T>
   void PushOwn(std::vector<own<T>>& v, T* p) {
     v.push_back(own<T>(p));
