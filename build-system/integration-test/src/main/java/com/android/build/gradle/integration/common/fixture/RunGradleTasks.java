@@ -141,9 +141,6 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
         List<String> args = Lists.newArrayList();
         args.addAll(getCommonArguments());
 
-        if (enableInfoLogging) {
-            args.add("-i"); // -i, --info Set log level to info.
-        }
         args.add("-u"); // -u, --no-search-upward  Don't search in parent folders for a
         // settings.gradle file.
         args.add("-P" + AndroidGradleOptions.PROPERTY_BUILD_CACHE_DIR + "=" + getBuildCacheDir());
