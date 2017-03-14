@@ -35,8 +35,8 @@ import android.view.accessibility.AccessibilityEvent;
 public final class WindowProfilerCallback implements Window.Callback {
 
     private static final String BACK_UNICODE = "\u25c0";
-    private static final String VOLUME_DOWN_UNICODE = "\u21e9";
-    private static final String VOLUME_UP_UNICODE = "\u21e7";
+    private static final String VOLUME_DOWN_UNICODE = "\u2b07";
+    private static final String VOLUME_UP_UNICODE = "\u2b06";
     private final Window.Callback myRedirectCallback;
 
     public WindowProfilerCallback(Window.Callback redirectCallback) {
