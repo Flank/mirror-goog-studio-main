@@ -213,61 +213,61 @@ ir::String* Reader::GetString(dex::u4 index) {
 }
 
 ir::Class* Reader::ParseClass(dex::u4 index) {
-  auto& dexClassDef = ClassDefs()[index];
+  auto& dex_class_def = ClassDefs()[index];
   auto ir_class = dex_ir_->Alloc<ir::Class>();
 
-  ir_class->type = GetType(dexClassDef.class_idx);
+  ir_class->type = GetType(dex_class_def.class_idx);
   assert(ir_class->type->class_def == nullptr);
   ir_class->type->class_def = ir_class;
 
-  ir_class->access_flags = dexClassDef.access_flags;
-  ir_class->interfaces = ExtractTypeList(dexClassDef.interfaces_off);
+  ir_class->access_flags = dex_class_def.access_flags;
+  ir_class->interfaces = ExtractTypeList(dex_class_def.interfaces_off);
 
-  if (dexClassDef.superclass_idx != dex::kNoIndex) {
-    ir_class->super_class = GetType(dexClassDef.superclass_idx);
+  if (dex_class_def.superclass_idx != dex::kNoIndex) {
+    ir_class->super_class = GetType(dex_class_def.superclass_idx);
   }
 
-  if (dexClassDef.source_file_idx != dex::kNoIndex) {
-    ir_class->source_file = GetString(dexClassDef.source_file_idx);
+  if (dex_class_def.source_file_idx != dex::kNoIndex) {
+    ir_class->source_file = GetString(dex_class_def.source_file_idx);
   }
 
-  if (dexClassDef.class_data_off != 0) {
-    const dex::u1* class_data = dataPtr<dex::u1>(dexClassDef.class_data_off);
+  if (dex_class_def.class_data_off != 0) {
+    const dex::u1* class_data = dataPtr<dex::u1>(dex_class_def.class_data_off);
 
-    dex::u4 staticFieldsCount = dex::ReadULeb128(&class_data);
-    dex::u4 instanceFieldsCount = dex::ReadULeb128(&class_data);
-    dex::u4 directMethodsCount = dex::ReadULeb128(&class_data);
-    dex::u4 virtualMethodsCount = dex::ReadULeb128(&class_data);
+    dex::u4 static_fields_count = dex::ReadULeb128(&class_data);
+    dex::u4 instance_fields_count = dex::ReadULeb128(&class_data);
+    dex::u4 direct_methods_count = dex::ReadULeb128(&class_data);
+    dex::u4 virtual_methods_count = dex::ReadULeb128(&class_data);
 
-    dex::u4 baseIndex = dex::kNoIndex;
-    for (dex::u4 i = 0; i < staticFieldsCount; ++i) {
+    dex::u4 base_index = dex::kNoIndex;
+    for (dex::u4 i = 0; i < static_fields_count; ++i) {
       ir_class->static_fields.push_back(
-          ParseEncodedField(&class_data, &baseIndex));
+          ParseEncodedField(&class_data, &base_index));
     }
 
-    baseIndex = dex::kNoIndex;
-    for (dex::u4 i = 0; i < instanceFieldsCount; ++i) {
+    base_index = dex::kNoIndex;
+    for (dex::u4 i = 0; i < instance_fields_count; ++i) {
       ir_class->instance_fields.push_back(
-          ParseEncodedField(&class_data, &baseIndex));
+          ParseEncodedField(&class_data, &base_index));
     }
 
-    baseIndex = dex::kNoIndex;
-    for (dex::u4 i = 0; i < directMethodsCount; ++i) {
-      auto method = ParseEncodedMethod(&class_data, &baseIndex);
+    base_index = dex::kNoIndex;
+    for (dex::u4 i = 0; i < direct_methods_count; ++i) {
+      auto method = ParseEncodedMethod(&class_data, &base_index);
       method->parent_class = ir_class;
       ir_class->direct_methods.push_back(method);
     }
 
-    baseIndex = dex::kNoIndex;
-    for (dex::u4 i = 0; i < virtualMethodsCount; ++i) {
-      auto method = ParseEncodedMethod(&class_data, &baseIndex);
+    base_index = dex::kNoIndex;
+    for (dex::u4 i = 0; i < virtual_methods_count; ++i) {
+      auto method = ParseEncodedMethod(&class_data, &base_index);
       method->parent_class = ir_class;
       ir_class->virtual_methods.push_back(method);
     }
   }
 
-  ir_class->static_init = ExtractEncodedArray(dexClassDef.static_values_off);
-  ir_class->annotations = ExtractAnnotations(dexClassDef.annotations_off);
+  ir_class->static_init = ExtractEncodedArray(dex_class_def.static_values_off);
+  ir_class->annotations = ExtractAnnotations(dex_class_def.annotations_off);
   ir_class->orig_index = index;
 
   return ir_class;
@@ -281,44 +281,44 @@ ir::AnnotationsDirectory* Reader::ExtractAnnotations(dex::u4 offset) {
   CHECK(offset % 4 == 0);
 
   // first check if we already extracted the same "annotations_directory_item"
-  auto& irAnnotations = annotations_directories_[offset];
-  if (irAnnotations == nullptr) {
-    irAnnotations = dex_ir_->Alloc<ir::AnnotationsDirectory>();
+  auto& ir_annotations = annotations_directories_[offset];
+  if (ir_annotations == nullptr) {
+    ir_annotations = dex_ir_->Alloc<ir::AnnotationsDirectory>();
 
-    auto dexAnnotations = dataPtr<dex::AnnotationsDirectoryItem>(offset);
+    auto dex_annotations = dataPtr<dex::AnnotationsDirectoryItem>(offset);
 
-    irAnnotations->class_annotation =
-        ExtractAnnotationSet(dexAnnotations->class_annotations_off);
+    ir_annotations->class_annotation =
+        ExtractAnnotationSet(dex_annotations->class_annotations_off);
 
-    const dex::u1* ptr = reinterpret_cast<const dex::u1*>(dexAnnotations + 1);
+    const dex::u1* ptr = reinterpret_cast<const dex::u1*>(dex_annotations + 1);
 
-    for (dex::u4 i = 0; i < dexAnnotations->fields_size; ++i) {
-      irAnnotations->field_annotations.push_back(ParseFieldAnnotation(&ptr));
+    for (dex::u4 i = 0; i < dex_annotations->fields_size; ++i) {
+      ir_annotations->field_annotations.push_back(ParseFieldAnnotation(&ptr));
     }
 
-    for (dex::u4 i = 0; i < dexAnnotations->methods_size; ++i) {
-      irAnnotations->method_annotations.push_back(ParseMethodAnnotation(&ptr));
+    for (dex::u4 i = 0; i < dex_annotations->methods_size; ++i) {
+      ir_annotations->method_annotations.push_back(ParseMethodAnnotation(&ptr));
     }
 
-    for (dex::u4 i = 0; i < dexAnnotations->parameters_size; ++i) {
-      irAnnotations->param_annotations.push_back(ParseParamAnnotation(&ptr));
+    for (dex::u4 i = 0; i < dex_annotations->parameters_size; ++i) {
+      ir_annotations->param_annotations.push_back(ParseParamAnnotation(&ptr));
     }
   }
-  return irAnnotations;
+  return ir_annotations;
 }
 
 ir::Annotation* Reader::ExtractAnnotationItem(dex::u4 offset) {
   CHECK(offset != 0);
 
   // first check if we already extracted the same "annotation_item"
-  auto& irAnnotation = annotations_[offset];
-  if (irAnnotation == nullptr) {
+  auto& ir_annotation = annotations_[offset];
+  if (ir_annotation == nullptr) {
     auto dexAnnotationItem = dataPtr<dex::AnnotationItem>(offset);
     const dex::u1* ptr = dexAnnotationItem->annotation;
-    irAnnotation = ParseAnnotation(&ptr);
-    irAnnotation->visibility = dexAnnotationItem->visibility;
+    ir_annotation = ParseAnnotation(&ptr);
+    ir_annotation->visibility = dexAnnotationItem->visibility;
   }
-  return irAnnotation;
+  return ir_annotation;
 }
 
 ir::AnnotationSet* Reader::ExtractAnnotationSet(dex::u4 offset) {
@@ -329,97 +329,97 @@ ir::AnnotationSet* Reader::ExtractAnnotationSet(dex::u4 offset) {
   CHECK(offset % 4 == 0);
 
   // first check if we already extracted the same "annotation_set_item"
-  auto& irAnnotationSet = annotation_sets_[offset];
-  if (irAnnotationSet == nullptr) {
-    irAnnotationSet = dex_ir_->Alloc<ir::AnnotationSet>();
+  auto& ir_annotation_set = annotation_sets_[offset];
+  if (ir_annotation_set == nullptr) {
+    ir_annotation_set = dex_ir_->Alloc<ir::AnnotationSet>();
 
-    auto dexAnnotationSet = dataPtr<dex::AnnotationSetItem>(offset);
-    for (dex::u4 i = 0; i < dexAnnotationSet->size; ++i) {
-      auto irAnnotation = ExtractAnnotationItem(dexAnnotationSet->entries[i]);
-      assert(irAnnotation != nullptr);
-      irAnnotationSet->annotations.push_back(irAnnotation);
+    auto dex_annotation_set = dataPtr<dex::AnnotationSetItem>(offset);
+    for (dex::u4 i = 0; i < dex_annotation_set->size; ++i) {
+      auto ir_annotation = ExtractAnnotationItem(dex_annotation_set->entries[i]);
+      assert(ir_annotation != nullptr);
+      ir_annotation_set->annotations.push_back(ir_annotation);
     }
   }
-  return irAnnotationSet;
+  return ir_annotation_set;
 }
 
 ir::AnnotationSetRefList* Reader::ExtractAnnotationSetRefList(dex::u4 offset) {
   CHECK(offset % 4 == 0);
 
-  auto dexAnnotationSetRefList = dataPtr<dex::AnnotationSetRefList>(offset);
-  auto irAnnotationSetRefList = dex_ir_->Alloc<ir::AnnotationSetRefList>();
+  auto dex_annotation_set_ref_list = dataPtr<dex::AnnotationSetRefList>(offset);
+  auto ir_annotation_set_ref_list = dex_ir_->Alloc<ir::AnnotationSetRefList>();
 
-  for (dex::u4 i = 0; i < dexAnnotationSetRefList->size; ++i) {
-    dex::u4 entryOffset = dexAnnotationSetRefList->list[i].annotations_off;
-    if (entryOffset != 0) {
-      auto irAnnotationSet = ExtractAnnotationSet(entryOffset);
-      CHECK(irAnnotationSet != nullptr);
-      irAnnotationSetRefList->annotations.push_back(irAnnotationSet);
+  for (dex::u4 i = 0; i < dex_annotation_set_ref_list->size; ++i) {
+    dex::u4 entry_offset = dex_annotation_set_ref_list->list[i].annotations_off;
+    if (entry_offset != 0) {
+      auto ir_annotation_set = ExtractAnnotationSet(entry_offset);
+      CHECK(ir_annotation_set != nullptr);
+      ir_annotation_set_ref_list->annotations.push_back(ir_annotation_set);
     }
   }
 
-  return irAnnotationSetRefList;
+  return ir_annotation_set_ref_list;
 }
 
 ir::FieldAnnotation* Reader::ParseFieldAnnotation(const dex::u1** pptr) {
-  auto dexFieldAnnotation = reinterpret_cast<const dex::FieldAnnotationsItem*>(*pptr);
-  auto irFieldAnnotation = dex_ir_->Alloc<ir::FieldAnnotation>();
+  auto dex_field_annotation = reinterpret_cast<const dex::FieldAnnotationsItem*>(*pptr);
+  auto ir_field_annotation = dex_ir_->Alloc<ir::FieldAnnotation>();
 
-  irFieldAnnotation->field = GetFieldDecl(dexFieldAnnotation->field_idx);
+  ir_field_annotation->field = GetFieldDecl(dex_field_annotation->field_idx);
 
-  irFieldAnnotation->annotations =
-      ExtractAnnotationSet(dexFieldAnnotation->annotations_off);
-  CHECK(irFieldAnnotation->annotations != nullptr);
+  ir_field_annotation->annotations =
+      ExtractAnnotationSet(dex_field_annotation->annotations_off);
+  CHECK(ir_field_annotation->annotations != nullptr);
 
   *pptr += sizeof(dex::FieldAnnotationsItem);
-  return irFieldAnnotation;
+  return ir_field_annotation;
 }
 
 ir::MethodAnnotation* Reader::ParseMethodAnnotation(const dex::u1** pptr) {
-  auto dexMethodAnnotation =
+  auto dex_method_annotation =
       reinterpret_cast<const dex::MethodAnnotationsItem*>(*pptr);
-  auto irMethodAnnotation = dex_ir_->Alloc<ir::MethodAnnotation>();
+  auto ir_method_annotation = dex_ir_->Alloc<ir::MethodAnnotation>();
 
-  irMethodAnnotation->method = GetMethodDecl(dexMethodAnnotation->method_idx);
+  ir_method_annotation->method = GetMethodDecl(dex_method_annotation->method_idx);
 
-  irMethodAnnotation->annotations =
-      ExtractAnnotationSet(dexMethodAnnotation->annotations_off);
-  CHECK(irMethodAnnotation->annotations != nullptr);
+  ir_method_annotation->annotations =
+      ExtractAnnotationSet(dex_method_annotation->annotations_off);
+  CHECK(ir_method_annotation->annotations != nullptr);
 
   *pptr += sizeof(dex::MethodAnnotationsItem);
-  return irMethodAnnotation;
+  return ir_method_annotation;
 }
 
 ir::ParamAnnotation* Reader::ParseParamAnnotation(const dex::u1** pptr) {
-  auto dexParamAnnotation =
+  auto dex_param_annotation =
       reinterpret_cast<const dex::ParameterAnnotationsItem*>(*pptr);
-  auto irParamAnnotation = dex_ir_->Alloc<ir::ParamAnnotation>();
+  auto ir_param_annotation = dex_ir_->Alloc<ir::ParamAnnotation>();
 
-  irParamAnnotation->method = GetMethodDecl(dexParamAnnotation->method_idx);
+  ir_param_annotation->method = GetMethodDecl(dex_param_annotation->method_idx);
 
-  irParamAnnotation->annotations =
-      ExtractAnnotationSetRefList(dexParamAnnotation->annotations_off);
-  CHECK(irParamAnnotation->annotations != nullptr);
+  ir_param_annotation->annotations =
+      ExtractAnnotationSetRefList(dex_param_annotation->annotations_off);
+  CHECK(ir_param_annotation->annotations != nullptr);
 
   *pptr += sizeof(dex::ParameterAnnotationsItem);
-  return irParamAnnotation;
+  return ir_param_annotation;
 }
 
-ir::EncodedField* Reader::ParseEncodedField(const dex::u1** pptr, dex::u4* baseIndex) {
-  auto irEncodedField = dex_ir_->Alloc<ir::EncodedField>();
+ir::EncodedField* Reader::ParseEncodedField(const dex::u1** pptr, dex::u4* base_index) {
+  auto ir_encoded_field = dex_ir_->Alloc<ir::EncodedField>();
 
-  auto fieldIndex = dex::ReadULeb128(pptr);
-  CHECK(fieldIndex != dex::kNoIndex);
-  if (*baseIndex != dex::kNoIndex) {
-    CHECK(fieldIndex != 0);
-    fieldIndex += *baseIndex;
+  auto field_index = dex::ReadULeb128(pptr);
+  CHECK(field_index != dex::kNoIndex);
+  if (*base_index != dex::kNoIndex) {
+    CHECK(field_index != 0);
+    field_index += *base_index;
   }
-  *baseIndex = fieldIndex;
+  *base_index = field_index;
 
-  irEncodedField->field = GetFieldDecl(fieldIndex);
-  irEncodedField->access_flags = dex::ReadULeb128(pptr);
+  ir_encoded_field->field = GetFieldDecl(field_index);
+  ir_encoded_field->access_flags = dex::ReadULeb128(pptr);
 
-  return irEncodedField;
+  return ir_encoded_field;
 }
 
 // Parse an encoded variable-length integer value
@@ -453,8 +453,8 @@ static T ParseFloatValue(const dex::u1** pptr, size_t size) {
   CHECK(size <= sizeof(T));
 
   T value = 0;
-  int startByte = sizeof(T) - size;
-  for (dex::u1* p = reinterpret_cast<dex::u1*>(&value) + startByte; size > 0;
+  int start_byte = sizeof(T) - size;
+  for (dex::u1* p = reinterpret_cast<dex::u1*>(&value) + start_byte; size > 0;
        --size) {
     *p++ = *(*pptr)++;
   }
@@ -462,78 +462,78 @@ static T ParseFloatValue(const dex::u1** pptr, size_t size) {
 }
 
 ir::EncodedValue* Reader::ParseEncodedValue(const dex::u1** pptr) {
-  auto irEncodedValue = dex_ir_->Alloc<ir::EncodedValue>();
+  auto ir_encoded_value = dex_ir_->Alloc<ir::EncodedValue>();
 
-  EXTRA(auto basePtr = *pptr);
+  EXTRA(auto base_ptr = *pptr);
 
   dex::u1 header = *(*pptr)++;
   dex::u1 type = header & dex::kEncodedValueTypeMask;
   dex::u1 arg = header >> dex::kEncodedValueArgShift;
 
-  irEncodedValue->type = type;
+  ir_encoded_value->type = type;
 
   switch (type) {
     case dex::kEncodedByte:
-      irEncodedValue->u.byte_value = ParseIntValue<int8_t>(pptr, arg + 1);
+      ir_encoded_value->u.byte_value = ParseIntValue<int8_t>(pptr, arg + 1);
       break;
 
     case dex::kEncodedShort:
-      irEncodedValue->u.short_value = ParseIntValue<int16_t>(pptr, arg + 1);
+      ir_encoded_value->u.short_value = ParseIntValue<int16_t>(pptr, arg + 1);
       break;
 
     case dex::kEncodedChar:
-      irEncodedValue->u.char_value = ParseIntValue<uint16_t>(pptr, arg + 1);
+      ir_encoded_value->u.char_value = ParseIntValue<uint16_t>(pptr, arg + 1);
       break;
 
     case dex::kEncodedInt:
-      irEncodedValue->u.int_value = ParseIntValue<int32_t>(pptr, arg + 1);
+      ir_encoded_value->u.int_value = ParseIntValue<int32_t>(pptr, arg + 1);
       break;
 
     case dex::kEncodedLong:
-      irEncodedValue->u.long_value = ParseIntValue<int64_t>(pptr, arg + 1);
+      ir_encoded_value->u.long_value = ParseIntValue<int64_t>(pptr, arg + 1);
       break;
 
     case dex::kEncodedFloat:
-      irEncodedValue->u.float_value = ParseFloatValue<float>(pptr, arg + 1);
+      ir_encoded_value->u.float_value = ParseFloatValue<float>(pptr, arg + 1);
       break;
 
     case dex::kEncodedDouble:
-      irEncodedValue->u.double_value = ParseFloatValue<double>(pptr, arg + 1);
+      ir_encoded_value->u.double_value = ParseFloatValue<double>(pptr, arg + 1);
       break;
 
     case dex::kEncodedString: {
       dex::u4 index = ParseIntValue<dex::u4>(pptr, arg + 1);
-      irEncodedValue->u.string_value = GetString(index);
+      ir_encoded_value->u.string_value = GetString(index);
     } break;
 
     case dex::kEncodedType: {
       dex::u4 index = ParseIntValue<dex::u4>(pptr, arg + 1);
-      irEncodedValue->u.type_value = GetType(index);
+      ir_encoded_value->u.type_value = GetType(index);
     } break;
 
     case dex::kEncodedField: {
       dex::u4 index = ParseIntValue<dex::u4>(pptr, arg + 1);
-      irEncodedValue->u.field_value = GetFieldDecl(index);
+      ir_encoded_value->u.field_value = GetFieldDecl(index);
     } break;
 
     case dex::kEncodedMethod: {
       dex::u4 index = ParseIntValue<dex::u4>(pptr, arg + 1);
-      irEncodedValue->u.method_value = GetMethodDecl(index);
+      ir_encoded_value->u.method_value = GetMethodDecl(index);
     } break;
 
     case dex::kEncodedEnum: {
       dex::u4 index = ParseIntValue<dex::u4>(pptr, arg + 1);
-      irEncodedValue->u.enum_value = GetFieldDecl(index);
+      ir_encoded_value->u.enum_value = GetFieldDecl(index);
     } break;
 
     case dex::kEncodedArray:
       CHECK(arg == 0);
-      irEncodedValue->u.array_value = ParseEncodedArray(pptr);
+      ir_encoded_value->u.array_value = ParseEncodedArray(pptr);
       break;
 
     case dex::kEncodedAnnotation:
       CHECK(arg == 0);
-      irEncodedValue->u.annotation_value = ParseAnnotation(pptr);
+      ir_encoded_value->u.annotation_value = ParseAnnotation(pptr);
       break;
 
     case dex::kEncodedNull:
@@ -542,48 +542,48 @@ ir::EncodedValue* Reader::ParseEncodedValue(const dex::u1** pptr) {
 
     case dex::kEncodedBoolean:
       CHECK(arg < 2);
-      irEncodedValue->u.bool_value = (arg == 1);
+      ir_encoded_value->u.bool_value = (arg == 1);
       break;
 
     default:
       CHECK(!"unexpected value type");
   }
 
-  EXTRA(irEncodedValue->original = slicer::MemView(basePtr, *pptr - basePtr));
+  EXTRA(ir_encoded_value->original = slicer::MemView(base_ptr, *pptr - base_ptr));
 
-  return irEncodedValue;
+  return ir_encoded_value;
 }
 
 ir::Annotation* Reader::ParseAnnotation(const dex::u1** pptr) {
-  auto irAnnotation = dex_ir_->Alloc<ir::Annotation>();
+  auto ir_annotation = dex_ir_->Alloc<ir::Annotation>();
 
-  dex::u4 typeIndex = dex::ReadULeb128(pptr);
-  dex::u4 elementsCount = dex::ReadULeb128(pptr);
+  dex::u4 type_index = dex::ReadULeb128(pptr);
+  dex::u4 elements_count = dex::ReadULeb128(pptr);
 
-  irAnnotation->type = GetType(typeIndex);
-  irAnnotation->visibility = dex::kVisibilityEncoded;
+  ir_annotation->type = GetType(type_index);
+  ir_annotation->visibility = dex::kVisibilityEncoded;
 
-  for (dex::u4 i = 0; i < elementsCount; ++i) {
-    auto irElement = dex_ir_->Alloc<ir::AnnotationElement>();
+  for (dex::u4 i = 0; i < elements_count; ++i) {
+    auto ir_element = dex_ir_->Alloc<ir::AnnotationElement>();
 
-    irElement->name = GetString(dex::ReadULeb128(pptr));
-    irElement->value = ParseEncodedValue(pptr);
+    ir_element->name = GetString(dex::ReadULeb128(pptr));
+    ir_element->value = ParseEncodedValue(pptr);
 
-    irAnnotation->elements.push_back(irElement);
+    ir_annotation->elements.push_back(ir_element);
   }
 
-  return irAnnotation;
+  return ir_annotation;
 }
 
 ir::EncodedArray* Reader::ParseEncodedArray(const dex::u1** pptr) {
-  auto irEncodedArray = dex_ir_->Alloc<ir::EncodedArray>();
+  auto ir_encoded_array = dex_ir_->Alloc<ir::EncodedArray>();
 
   dex::u4 count = dex::ReadULeb128(pptr);
   for (dex::u4 i = 0; i < count; ++i) {
-    irEncodedArray->values.push_back(ParseEncodedValue(pptr));
+    ir_encoded_array->values.push_back(ParseEncodedValue(pptr));
   }
 
-  return irEncodedArray;
+  return ir_encoded_array;
 }
 
 ir::EncodedArray* Reader::ExtractEncodedArray(dex::u4 offset) {
@@ -592,12 +592,12 @@ ir::EncodedArray* Reader::ExtractEncodedArray(dex::u4 offset) {
   }
 
   // first check if we already extracted the same "annotation_item"
-  auto& irEncodedArray = encoded_arrays_[offset];
-  if (irEncodedArray == nullptr) {
+  auto& ir_encoded_array = encoded_arrays_[offset];
+  if (ir_encoded_array == nullptr) {
     auto ptr = dataPtr<dex::u1>(offset);
-    irEncodedArray = ParseEncodedArray(&ptr);
+    ir_encoded_array = ParseEncodedArray(&ptr);
   }
-  return irEncodedArray;
+  return ir_encoded_array;
 }
 
 ir::DebugInfo* Reader::ExtractDebugInfo(dex::u4 offset) {
@@ -605,18 +605,18 @@ ir::DebugInfo* Reader::ExtractDebugInfo(dex::u4 offset) {
     return nullptr;
   }
 
-  auto irDebugInfo = dex_ir_->Alloc<ir::DebugInfo>();
+  auto ir_debug_info = dex_ir_->Alloc<ir::DebugInfo>();
   const dex::u1* ptr = dataPtr<dex::u1>(offset);
 
-  irDebugInfo->line_start = dex::ReadULeb128(&ptr);
+  ir_debug_info->line_start = dex::ReadULeb128(&ptr);
 
   // TODO: implicit this param for non-static methods?
-  dex::u4 paramCount = dex::ReadULeb128(&ptr);
-  for (dex::u4 i = 0; i < paramCount; ++i) {
-    dex::u4 nameIndex = dex::ReadULeb128(&ptr) - 1;
+  dex::u4 param_count = dex::ReadULeb128(&ptr);
+  for (dex::u4 i = 0; i < param_count; ++i) {
+    dex::u4 name_index = dex::ReadULeb128(&ptr) - 1;
     auto ir_string =
-        (nameIndex == dex::kNoIndex) ? nullptr : GetString(nameIndex);
-    irDebugInfo->param_names.push_back(ir_string);
+        (name_index == dex::kNoIndex) ? nullptr : GetString(name_index);
+    ir_debug_info->param_names.push_back(ir_string);
   }
 
   // parse the debug info opcodes and note the
@@ -625,7 +625,7 @@ ir::DebugInfo* Reader::ExtractDebugInfo(dex::u4 offset) {
   //
   // TODO: design a generic debug info iterator?
   //
-  auto basePtr = ptr;
+  auto base_ptr = ptr;
   dex::u1 opcode = 0;
   while ((opcode = *ptr++) != dex::DBG_END_SEQUENCE) {
     switch (opcode) {
@@ -643,14 +643,14 @@ ir::DebugInfo* Reader::ExtractDebugInfo(dex::u4 offset) {
         // register_num
         dex::ReadULeb128(&ptr);
 
-        dex::u4 nameIndex = dex::ReadULeb128(&ptr) - 1;
-        if (nameIndex != dex::kNoIndex) {
-          GetString(nameIndex);
+        dex::u4 name_index = dex::ReadULeb128(&ptr) - 1;
+        if (name_index != dex::kNoIndex) {
+          GetString(name_index);
         }
 
-        dex::u4 typeIndex = dex::ReadULeb128(&ptr) - 1;
-        if (typeIndex != dex::kNoIndex) {
-          GetType(typeIndex);
+        dex::u4 type_index = dex::ReadULeb128(&ptr) - 1;
+        if (type_index != dex::kNoIndex) {
+          GetType(type_index);
         }
       } break;
 
@@ -658,19 +658,19 @@ ir::DebugInfo* Reader::ExtractDebugInfo(dex::u4 offset) {
         // register_num
         dex::ReadULeb128(&ptr);
 
-        dex::u4 nameIndex = dex::ReadULeb128(&ptr) - 1;
-        if (nameIndex != dex::kNoIndex) {
-          GetString(nameIndex);
+        dex::u4 name_index = dex::ReadULeb128(&ptr) - 1;
+        if (name_index != dex::kNoIndex) {
+          GetString(name_index);
         }
 
-        dex::u4 typeIndex = dex::ReadULeb128(&ptr) - 1;
-        if (typeIndex != dex::kNoIndex) {
-          GetType(typeIndex);
+        dex::u4 type_index = dex::ReadULeb128(&ptr) - 1;
+        if (type_index != dex::kNoIndex) {
+          GetType(type_index);
         }
 
-        dex::u4 sigIndex = dex::ReadULeb128(&ptr) - 1;
-        if (sigIndex != dex::kNoIndex) {
-          GetString(sigIndex);
+        dex::u4 sig_index = dex::ReadULeb128(&ptr) - 1;
+        if (sig_index != dex::kNoIndex) {
+          GetString(sig_index);
         }
       } break;
 
@@ -681,17 +681,17 @@ ir::DebugInfo* Reader::ExtractDebugInfo(dex::u4 offset) {
         break;
 
       case dex::DBG_SET_FILE: {
-        dex::u4 nameIndex = dex::ReadULeb128(&ptr) - 1;
-        if (nameIndex != dex::kNoIndex) {
-          GetString(nameIndex);
+        dex::u4 name_index = dex::ReadULeb128(&ptr) - 1;
+        if (name_index != dex::kNoIndex) {
+          GetString(name_index);
         }
       } break;
     }
   }
 
-  irDebugInfo->data = slicer::MemView(basePtr, ptr - basePtr);
+  ir_debug_info->data = slicer::MemView(base_ptr, ptr - base_ptr);
 
-  return irDebugInfo;
+  return ir_debug_info;
 }
 
 ir::Code* Reader::ExtractCode(dex::u4 offset) {
@@ -701,117 +701,115 @@ ir::Code* Reader::ExtractCode(dex::u4 offset) {
 
   CHECK(offset % 4 == 0);
 
-  auto dexCode = dataPtr<dex::Code>(offset);
-  auto irCode = dex_ir_->Alloc<ir::Code>();
+  auto dex_code = dataPtr<dex::Code>(offset);
+  auto ir_code = dex_ir_->Alloc<ir::Code>();
 
-  irCode->registers = dexCode->registers_size;
-  irCode->ins_count = dexCode->ins_size;
-  irCode->outs_count = dexCode->outs_size;
+  ir_code->registers = dex_code->registers_size;
+  ir_code->ins_count = dex_code->ins_size;
+  ir_code->outs_count = dex_code->outs_size;
 
   // instructions array
-  irCode->instructions =
-      slicer::ArrayView<const dex::u2>(dexCode->insns, dexCode->insns_size);
+  ir_code->instructions =
+      slicer::ArrayView<const dex::u2>(dex_code->insns, dex_code->insns_size);
 
   // parse the instructions to discover references to other
   // IR nodes (see debug info stream parsing too)
-  ParseInstructions(irCode->instructions);
+  ParseInstructions(ir_code->instructions);
 
   // try blocks & handlers
   //
   // TODO: a generic try/catch blocks iterator?
   //
-  if (dexCode->tries_size != 0) {
-    dex::u4 alignedCount = (dexCode->insns_size + 1) / 2 * 2;
+  if (dex_code->tries_size != 0) {
+    dex::u4 aligned_count = (dex_code->insns_size + 1) / 2 * 2;
     auto tries =
-        reinterpret_cast<const dex::TryBlock*>(dexCode->insns + alignedCount);
-    auto handlersList =
-        reinterpret_cast<const dex::u1*>(tries + dexCode->tries_size);
+        reinterpret_cast<const dex::TryBlock*>(dex_code->insns + aligned_count);
+    auto handlers_list =
+        reinterpret_cast<const dex::u1*>(tries + dex_code->tries_size);
 
-    irCode->try_blocks =
-        slicer::ArrayView<const dex::TryBlock>(tries, dexCode->tries_size);
+    ir_code->try_blocks =
+        slicer::ArrayView<const dex::TryBlock>(tries, dex_code->tries_size);
 
     // parse the handlers list (and discover embedded references)
-    auto ptr = handlersList;
+    auto ptr = handlers_list;
 
-    dex::u4 handlersCount = dex::ReadULeb128(&ptr);
-    CHECK(handlersCount <= dexCode->tries_size);
+    dex::u4 handlers_count = dex::ReadULeb128(&ptr);
+    CHECK(handlers_count <= dex_code->tries_size);
 
-    for (dex::u4 handlerIndex = 0; handlerIndex < handlersCount;
-         ++handlerIndex) {
-      int catchCount = dex::ReadSLeb128(&ptr);
+    for (dex::u4 handler_index = 0; handler_index < handlers_count; ++handler_index) {
+      int catch_count = dex::ReadSLeb128(&ptr);
 
-      for (int catchIndex = 0; catchIndex < std::abs(catchCount);
-           ++catchIndex) {
-        dex::u4 typeIndex = dex::ReadULeb128(&ptr);
-        GetType(typeIndex);
+      for (int catch_index = 0; catch_index < std::abs(catch_count); ++catch_index) {
+        dex::u4 type_index = dex::ReadULeb128(&ptr);
+        GetType(type_index);
 
         // address
         dex::ReadULeb128(&ptr);
       }
 
-      if (catchCount < 1) {
+      if (catch_count < 1) {
         // catch_all_addr
         dex::ReadULeb128(&ptr);
       }
     }
 
-    irCode->catch_handlers = slicer::MemView(handlersList, ptr - handlersList);
+    ir_code->catch_handlers = slicer::MemView(handlers_list, ptr - handlers_list);
   }
 
-  irCode->debug_info = ExtractDebugInfo(dexCode->debug_info_off);
+  ir_code->debug_info = ExtractDebugInfo(dex_code->debug_info_off);
 
-  return irCode;
+  return ir_code;
 }
 
-ir::EncodedMethod* Reader::ParseEncodedMethod(const dex::u1** pptr, dex::u4* baseIndex) {
-  auto irEncodedMethod = dex_ir_->Alloc<ir::EncodedMethod>();
+ir::EncodedMethod* Reader::ParseEncodedMethod(const dex::u1** pptr, dex::u4* base_index) {
+  auto ir_encoded_method = dex_ir_->Alloc<ir::EncodedMethod>();
 
-  auto methodIndex = dex::ReadULeb128(pptr);
-  CHECK(methodIndex != dex::kNoIndex);
-  if (*baseIndex != dex::kNoIndex) {
-    CHECK(methodIndex != 0);
-    methodIndex += *baseIndex;
+  auto method_index = dex::ReadULeb128(pptr);
+  CHECK(method_index != dex::kNoIndex);
+  if (*base_index != dex::kNoIndex) {
+    CHECK(method_index != 0);
+    method_index += *base_index;
   }
-  *baseIndex = methodIndex;
+  *base_index = method_index;
 
-  irEncodedMethod->method = GetMethodDecl(methodIndex);
-  irEncodedMethod->access_flags = dex::ReadULeb128(pptr);
+  ir_encoded_method->method = GetMethodDecl(method_index);
+  ir_encoded_method->access_flags = dex::ReadULeb128(pptr);
 
-  dex::u4 codeOffset = dex::ReadULeb128(pptr);
-  irEncodedMethod->code = ExtractCode(codeOffset);
+  dex::u4 code_offset = dex::ReadULeb128(pptr);
+  ir_encoded_method->code = ExtractCode(code_offset);
 
-  return irEncodedMethod;
+  return ir_encoded_method;
 }
 
 ir::Type* Reader::ParseType(dex::u4 index) {
-  auto& dexType = TypeIds()[index];
+  auto& dex_type = TypeIds()[index];
   auto ir_type = dex_ir_->Alloc<ir::Type>();
 
-  ir_type->descriptor = GetString(dexType.descriptor_idx);
+  ir_type->descriptor = GetString(dex_type.descriptor_idx);
   ir_type->orig_index = index;
 
   return ir_type;
 }
 
 ir::FieldDecl* Reader::ParseFieldDecl(dex::u4 index) {
-  auto& dexField = FieldIds()[index];
+  auto& dex_field = FieldIds()[index];
   auto ir_field = dex_ir_->Alloc<ir::FieldDecl>();
 
-  ir_field->name = GetString(dexField.name_idx);
-  ir_field->type = GetType(dexField.type_idx);
-  ir_field->parent = GetType(dexField.class_idx);
+  ir_field->name = GetString(dex_field.name_idx);
+  ir_field->type = GetType(dex_field.type_idx);
+  ir_field->parent = GetType(dex_field.class_idx);
   ir_field->orig_index = index;
 
   return ir_field;
 }
 
 ir::MethodDecl* Reader::ParseMethodDecl(dex::u4 index) {
-  auto& dexMethod = MethodIds()[index];
+  auto& dex_method = MethodIds()[index];
   auto ir_method = dex_ir_->Alloc<ir::MethodDecl>();
 
-  ir_method->name = GetString(dexMethod.name_idx);
-  ir_method->prototype = GetProto(dexMethod.proto_idx);
-  ir_method->parent = GetType(dexMethod.class_idx);
+  ir_method->name = GetString(dex_method.name_idx);
+  ir_method->prototype = GetProto(dex_method.proto_idx);
+  ir_method->parent = GetType(dex_method.class_idx);
   ir_method->orig_index = index;
 
   return ir_method;
@@ -823,28 +821,28 @@ ir::TypeList* Reader::ExtractTypeList(dex::u4 offset) {
   }
 
   // first check to see if we already extracted the same "type_list"
-  auto& irTypeList = type_lists_[offset];
-  if (irTypeList == nullptr) {
-    irTypeList = dex_ir_->Alloc<ir::TypeList>();
+  auto& ir_type_list = type_lists_[offset];
+  if (ir_type_list == nullptr) {
+    ir_type_list = dex_ir_->Alloc<ir::TypeList>();
 
-    auto dexTypeList = dataPtr<dex::TypeList>(offset);
-    CHECK(dexTypeList->size > 0);
+    auto dex_type_list = dataPtr<dex::TypeList>(offset);
+    CHECK(dex_type_list->size > 0);
 
-    for (dex::u4 i = 0; i < dexTypeList->size; ++i) {
-      irTypeList->types.push_back(GetType(dexTypeList->list[i].type_idx));
+    for (dex::u4 i = 0; i < dex_type_list->size; ++i) {
+      ir_type_list->types.push_back(GetType(dex_type_list->list[i].type_idx));
     }
   }
 
-  return irTypeList;
+  return ir_type_list;
 }
 
 ir::Proto* Reader::ParseProto(dex::u4 index) {
-  auto& dexProto = ProtoIds()[index];
+  auto& dex_proto = ProtoIds()[index];
   auto ir_proto = dex_ir_->Alloc<ir::Proto>();
 
-  ir_proto->shorty = GetString(dexProto.shorty_idx);
-  ir_proto->return_type = GetType(dexProto.return_type_idx);
-  ir_proto->param_types = ExtractTypeList(dexProto.parameters_off);
+  ir_proto->shorty = GetString(dex_proto.shorty_idx);
+  ir_proto->return_type = GetType(dex_proto.return_type_idx);
+  ir_proto->param_types = ExtractTypeList(dex_proto.parameters_off);
   ir_proto->orig_index = index;
 
   return ir_proto;
