@@ -25,19 +25,22 @@ test_cases = {
 }
 
 # run a shell command and returns the stdout content
-def Run(cmd):
+def Run(cmd, stdin_content=None):
   return subprocess.Popen(
     args = cmd,
     shell = True,
+    stdin = subprocess.PIPE,
     stdout = subprocess.PIPE,
-    stderr = subprocess.STDOUT).communicate()[0]
+    stderr = subprocess.STDOUT).communicate(input = stdin_content)[0]
+
+failures = 0
 
 # for each test_case, run dexter over the specified input (ex. *.dex)
 #
 # the expected ('golden') output has the same base name as the input .dex,
 # for example (test_name = 'map') :
 #
-#    'hello.dex' -> 'hello.map.expected'
+#    'hello.dex' -> 'expected/hello.map'
 #
 for test_name, test_config in sorted(test_cases.iteritems()):
   input_files = glob.glob(os.path.join(data_root, test_config['input']))
@@ -48,10 +51,18 @@ for test_name, test_config in sorted(test_cases.iteritems()):
     actual_output = Run(cmd)
 
     # build the expected filename
-    expected_filename = re.sub(r'\.dex', ('.%s.expected' % test_name), input)
+    expected_filename = re.sub(r'\.dex', ('.%s' % test_name), os.path.basename(input))
+    expected_filename = os.path.join(data_root, 'expected', expected_filename)
 
     # compare the actual output with the expected output
-    with open(expected_filename) as f:
-      if actual_output != f.read():
-        print('expected output mismatch (%s)' % os.path.basename(expected_filename))
-        exit(1)
+    cmp_output = Run('diff "%s" -' % expected_filename, actual_output)
+    if cmp_output:
+      print('\nFAILED: expected output mismatch (%s)' % os.path.basename(expected_filename))
+      print(cmp_output)
+      failures = failures + 1
+    else:
+      print('ok: output matching (%s)' % os.path.basename(expected_filename))
+
+if failures != 0:
+  print('\nSUMMARY: %d failure(s)\n' % failures)
+  exit(1)
