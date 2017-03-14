@@ -37,6 +37,8 @@ import org.gradle.api.tasks.compile.AbstractCompile;
  */
 public class AbstractCompilesUtil {
 
+    public static final String ANDROID_APT_PLUGIN_NAME = "com.neenbedankt.android-apt";
+
     /**
      * Determines the java language level to use and sets it on the given task and
      * {@link CompileOptions}. The latter is to propagate the information to Studio.
@@ -121,7 +123,7 @@ public class AbstractCompilesUtil {
                             && !processorConfiguration.getAllDependencies().isEmpty();
             if (variantScope.getGlobalScope().getExtension().getDataBinding().isEnabled()
                     || hasAnnotationProcessor
-                    || project.getPlugins().hasPlugin("com.neenbedankt.android-apt")
+                    || project.getPlugins().hasPlugin(ANDROID_APT_PLUGIN_NAME)
                     || project.getPlugins().hasPlugin("me.tatarka.retrolambda")) {
                 incremental = false;
                 log.verbose("Incremental Java compilation disabled in variant %1$s "

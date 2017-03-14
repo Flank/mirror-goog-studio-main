@@ -149,8 +149,8 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
                     Joiner.on(',').join(annotationProcessorOptions.getClassNames()));
         }
         if ((!annotationProcessorConfiguration.getAllDependencies().isEmpty()
-                || !annotationProcessorOptions.getClassNames().isEmpty())
-                && project.getPlugins().hasPlugin("com.neenbedankt.android-apt")) {
+                        || !annotationProcessorOptions.getClassNames().isEmpty())
+                && project.getPlugins().hasPlugin(AbstractCompilesUtil.ANDROID_APT_PLUGIN_NAME)) {
             // warn user if using android-apt plugin, as it overwrites the annotation processor opts
             globalScope
                     .getAndroidBuilder()

@@ -157,11 +157,6 @@ public class AtomVariantFactory extends BaseVariantFactory {
     }
 
     @Override
-    public void preVariantWork(Project project) {
-        // nothing to be done here.
-    }
-
-    @Override
     public void createDefaultComponents(
             @NonNull NamedDomainObjectContainer<BuildType> buildTypes,
             @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavors,
