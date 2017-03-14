@@ -139,41 +139,51 @@ public class AnnotationProcessorTest {
 
     @Before
     public void setUp() throws Exception {
-        String buildScript = new BuildScriptGenerator(
-                "\n"
-                        + "apply from: \"../../commonHeader.gradle\"\n"
-                        + "buildscript { apply from: \"../../commonBuildScript.gradle\" }\n"
-                        + "apply from: \"../../commonLocalRepo.gradle\"\n"
-                        + "\n"
-                        + "apply plugin: '${application_plugin}'\n"
-                        + "\n"
-                        + "${model_start}"
-                        + "android {\n"
-                        + "    compileSdkVersion " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n"
-                        + "    buildToolsVersion '" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "'\n"
-                        + "    defaultConfig {\n"
-                        + "        javaCompileOptions {\n"
-                        + "            annotationProcessorOptions {\n"
-                        + "                ${argument}\n"
-                        + "            }\n"
-                        + "        }\n"
-                        + "    }\n"
-                        + "}\n"
-                        + "${model_end}\n"
-                        + "dependencies {\n"
-                        + "    annotationProcessor project(':lib-compiler')\n"
-                        + "    compile project(':lib')\n"
-                        + "}\n")
-                .addPattern(
-                        "argument",
-                        "argument \"value\", \"Hello\"",
-                        "arguments { create(\"value\") { value \"Hello\" }\n }")
-                .build(forComponentPlugin);
+        String buildScript =
+                new BuildScriptGenerator(
+                                "\n"
+                                        + "apply from: \"../../commonHeader.gradle\"\n"
+                                        + "buildscript { apply from: \"../../commonBuildScript.gradle\" }\n"
+                                        + "apply from: \"../../commonLocalRepo.gradle\"\n"
+                                        + "\n"
+                                        + "apply plugin: '${application_plugin}'\n"
+                                        + "\n"
+                                        + "${model_start}"
+                                        + "android {\n"
+                                        + "    compileSdkVersion "
+                                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                                        + "\n"
+                                        + "    buildToolsVersion '"
+                                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
+                                        + "'\n"
+                                        + "    defaultConfig {\n"
+                                        + "        javaCompileOptions {\n"
+                                        + "            annotationProcessorOptions {\n"
+                                        + "                ${argument}\n"
+                                        + "            }\n"
+                                        + "        }\n"
+                                        + "    }\n"
+                                        + "}\n"
+                                        + "${model_end}\n")
+                        .addPattern(
+                                "argument",
+                                "argument \"value\", \"Hello\"",
+                                "arguments { create(\"value\") { value \"Hello\" }\n }")
+                        .build(forComponentPlugin);
         Files.write(buildScript, project.getSubproject(":app").file("build.gradle"), Charsets.UTF_8);
     }
 
     @Test
     public void normalBuild() throws Exception {
+        Files.append(
+                "\n"
+                        + "dependencies {\n"
+                        + "    annotationProcessor project(':lib-compiler')\n"
+                        + "    compile project(':lib')\n"
+                        + "}\n",
+                project.getSubproject(":app").getBuildFile(),
+                Charsets.UTF_8);
+
         project.execute("assembleDebug");
         File aptOutputFolder = project.getSubproject(":app").file("build/generated/source/apt/debug");
         assertThat(new File(aptOutputFolder, "HelloWorldStringValue.java")).exists();
@@ -190,6 +200,15 @@ public class AnnotationProcessorTest {
     public void compileClasspathIncludedInProcessor() throws Exception {
         File emptyJar = project.getSubproject("app").file("empty.jar");
         assertThat(emptyJar.createNewFile()).isTrue();
+
+        TestFileUtils.appendToFile(
+                project.getSubproject(":app").getBuildFile(),
+                new BuildScriptGenerator(
+                                "dependencies {\n"
+                                        + "    compile project(':lib-compiler')\n"
+                                        + "    annotationProcessor files('empty.jar')\n"
+                                        + "}\n")
+                        .build(forComponentPlugin));
 
         project.execute("assembleDebug");
     }

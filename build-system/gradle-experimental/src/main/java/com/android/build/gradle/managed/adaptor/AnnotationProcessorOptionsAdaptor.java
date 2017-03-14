@@ -44,9 +44,10 @@ public class AnnotationProcessorOptionsAdaptor implements CoreAnnotationProcesso
         return annotationProcessorOptions.getClassNames();
     }
 
+    @Override
     @Nullable
     public Boolean getIncludeCompileClasspath() {
-        return annotationProcessorOptions.getIncludeClasspath();
+        return annotationProcessorOptions.getIncludeCompileClasspath();
     }
 
     @Override
