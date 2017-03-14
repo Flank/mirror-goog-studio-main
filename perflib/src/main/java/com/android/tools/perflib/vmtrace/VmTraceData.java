@@ -21,7 +21,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -50,6 +49,7 @@ public class VmTraceData {
     private final String mVm;
     private final Map<String, String> mTraceProperties;
     private final long mStartTimeUs;
+    private final long mElapsedTimeUs;
 
     /** Map from method id to method info. */
     private final Map<Long,MethodInfo> mMethods;
@@ -65,6 +65,7 @@ public class VmTraceData {
         mTraceProperties = b.mProperties;
         mMethods = b.mMethods;
         mStartTimeUs = b.mStartTimeUs;
+        mElapsedTimeUs = b.mElapsedTimeUs;
 
         mThreadInfo = Maps.newHashMapWithExpectedSize(b.mThreads.size());
         for (int i = 0; i < b.mThreads.size(); i++) {
@@ -138,6 +139,10 @@ public class VmTraceData {
         return mStartTimeUs;
     }
 
+    public long getElapsedTimeUs() {
+        return mElapsedTimeUs;
+    }
+
     /** Returns the duration of this call as a percentage of the duration of the top level call. */
     public double getDurationPercentage(Call call, ThreadInfo thread, ClockType clockType,
             boolean inclusiveTime) {
@@ -209,6 +214,7 @@ public class VmTraceData {
 
         private int mVersion;
         private long mStartTimeUs;
+        private long mElapsedTimeUs;
         private boolean mDataFileOverflow;
         private VmClockType mVmClockType = VmClockType.THREAD_CPU;
         private String mVm = "";
@@ -314,6 +320,10 @@ public class VmTraceData {
 
         public void setStartTimeUs(long startTimeUs) {
             mStartTimeUs =  startTimeUs;
+        }
+
+        public void setElapsedTimeUs(long elapsedTimeUs) {
+            mElapsedTimeUs = elapsedTimeUs;
         }
     }
 }
