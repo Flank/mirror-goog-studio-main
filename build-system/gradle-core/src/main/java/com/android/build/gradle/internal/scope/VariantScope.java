@@ -97,6 +97,8 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     @NonNull
     InstantRunBuildContext getInstantRunBuildContext();
 
+    boolean isTestOnly();
+
     @NonNull
     ApiVersion getMinSdkVersion();
 

@@ -732,7 +732,7 @@ public abstract class TaskManager {
         ImmutableList.Builder<ManifestMerger2.Invoker.Feature> optionalFeatures =
                 ImmutableList.builder();
 
-        if (globalScope.isTestOnly()) {
+        if (variantScope.isTestOnly()) {
             optionalFeatures.add(ManifestMerger2.Invoker.Feature.TEST_ONLY);
         }
 

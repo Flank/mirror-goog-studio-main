@@ -232,9 +232,6 @@ public class ProcessManifest extends ManifestProcessorTask {
             processManifest.minSdkVersion =
                     TaskInputHelper.memoize(
                             () -> {
-                                if (androidBuilder.isPreviewTarget()) {
-                                    return androidBuilder.getTargetCodename();
-                                }
                                 ApiVersion minSdkVersion1 = mergedFlavor.getMinSdkVersion();
                                 if (minSdkVersion1 == null) {
                                     return null;
@@ -245,9 +242,6 @@ public class ProcessManifest extends ManifestProcessorTask {
             processManifest.targetSdkVersion =
                     TaskInputHelper.memoize(
                             () -> {
-                                if (androidBuilder.isPreviewTarget()) {
-                                    return androidBuilder.getTargetCodename();
-                                }
                                 ApiVersion targetSdkVersion = mergedFlavor.getTargetSdkVersion();
                                 if (targetSdkVersion == null) {
                                     return null;

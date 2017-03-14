@@ -21,7 +21,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidConfig;
-import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.TestAndroidConfig;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions;
@@ -30,11 +29,13 @@ import com.android.build.gradle.internal.dsl.CoreJavaCompileOptions;
 import com.android.build.gradle.internal.dsl.CoreNdkOptions;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
+import com.android.build.gradle.options.IntegerOption;
+import com.android.build.gradle.options.ProjectOptions;
+import com.android.build.gradle.options.StringOption;
 import com.android.builder.core.DefaultApiVersion;
 import com.android.builder.core.ManifestAttributeSupplier;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.core.VariantType;
-import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.SourceProvider;
@@ -50,7 +51,6 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import org.gradle.api.Project;
 
 /**
  * Version of {@link com.android.builder.core.VariantConfiguration} that uses the specific
@@ -61,8 +61,7 @@ import org.gradle.api.Project;
 public class GradleVariantConfiguration
         extends VariantConfiguration<CoreBuildType, CoreProductFlavor, CoreProductFlavor> {
 
-    @NonNull
-    private final Project project;
+    @NonNull private final ProjectOptions projectOptions;
     @NonNull
     private OptionalInt instantRunSupportStatusOverride = OptionalInt.empty();
     @NonNull
@@ -77,7 +76,7 @@ public class GradleVariantConfiguration
             new MergedJavaCompileOptions();
 
     private GradleVariantConfiguration(
-            @NonNull Project project,
+            @NonNull ProjectOptions projectOptions,
             @Nullable
                     VariantConfiguration<CoreBuildType, CoreProductFlavor, CoreProductFlavor>
                             testedConfig,
@@ -98,7 +97,7 @@ public class GradleVariantConfiguration
                 testedConfig,
                 signingConfigOverride);
         mergeOptions();
-        this.project = project;
+        this.projectOptions = projectOptions;
     }
 
     /**
@@ -110,7 +109,7 @@ public class GradleVariantConfiguration
             @Nullable SourceProvider buildTypeSourceProvider,
             @NonNull VariantType type) {
         return new GradleVariantConfiguration(
-                this.project,
+                this.projectOptions,
                 this,
                 getDefaultConfig(),
                 defaultSourceProvider,
@@ -127,11 +126,21 @@ public class GradleVariantConfiguration
      *
      * @see VariantConfiguration#getMinSdkVersion()
      */
-    @NonNull
     @Override
+    @NonNull
     public ApiVersion getMinSdkVersion() {
-        // The changed behavior comes from overriding getApiVersionsNonTestVariant().
-        return super.getMinSdkVersion();
+        Integer targetApiLevel = projectOptions.get(IntegerOption.IDE_TARGET_FEATURE_LEVEL);
+        if (targetApiLevel != null && getBuildType().isDebuggable()) {
+            // Consider runtime API passed from the IDE only if the app is debuggable.
+            int minVersion =
+                    getTargetSdkVersion().getApiLevel() > 0
+                            ? Integer.min(getTargetSdkVersion().getApiLevel(), targetApiLevel)
+                            : targetApiLevel;
+
+            return new DefaultApiVersion(minVersion);
+        } else {
+            return super.getMinSdkVersion();
+        }
     }
 
     /**
@@ -145,7 +154,7 @@ public class GradleVariantConfiguration
     public ApiVersion getResourcesMinSdkVersion() {
         VariantConfiguration testedConfig = getTestedConfig();
         if (testedConfig == null) {
-            return super.getApiVersionsNonTestVariant().minSdkVersion;
+            return super.getMinSdkVersion();
         } else if (testedConfig instanceof GradleVariantConfiguration) {
             return ((GradleVariantConfiguration) testedConfig).getResourcesMinSdkVersion();
         } else {
@@ -158,7 +167,7 @@ public class GradleVariantConfiguration
         /** Creates a variant configuration */
         @NonNull
         GradleVariantConfiguration create(
-                @NonNull Project project,
+                @NonNull ProjectOptions projectOptions,
                 @NonNull CoreProductFlavor defaultConfig,
                 @NonNull SourceProvider defaultSourceProvider,
                 @Nullable ManifestAttributeSupplier mainManifestAttributeSupplier,
@@ -173,7 +182,7 @@ public class GradleVariantConfiguration
         @Override
         @NonNull
         public GradleVariantConfiguration create(
-                @NonNull Project project,
+                @NonNull ProjectOptions projectOptions,
                 @NonNull CoreProductFlavor defaultConfig,
                 @NonNull SourceProvider defaultSourceProvider,
                 @Nullable ManifestAttributeSupplier mainManifestAttributeSupplier,
@@ -182,7 +191,7 @@ public class GradleVariantConfiguration
                 @NonNull VariantType type,
                 @Nullable CoreSigningConfig signingConfigOverride) {
             return new GradleVariantConfiguration(
-                    project,
+                    projectOptions,
                     null /*testedConfig*/,
                     defaultConfig,
                     defaultSourceProvider,
@@ -207,7 +216,7 @@ public class GradleVariantConfiguration
         @NonNull
         @Override
         public GradleVariantConfiguration create(
-                @NonNull Project project,
+                @NonNull ProjectOptions projectOptions,
                 @NonNull CoreProductFlavor defaultConfig,
                 @NonNull SourceProvider defaultSourceProvider,
                 @Nullable ManifestAttributeSupplier mainManifestAttributeSupplier,
@@ -216,7 +225,7 @@ public class GradleVariantConfiguration
                 @NonNull VariantType type,
                 @Nullable CoreSigningConfig signingConfigOverride) {
             return new GradleVariantConfiguration(
-                    project,
+                    projectOptions,
                     null /*testedConfig*/,
                     defaultConfig,
                     defaultSourceProvider,
@@ -320,28 +329,6 @@ public class GradleVariantConfiguration
     @NonNull
     public CoreNdkOptions getNdkConfig() {
         return mergedNdkConfig;
-    }
-
-    @Override
-    public ApiVersions getApiVersionsNonTestVariant() {
-        ApiVersions apiVersions = super.getApiVersionsNonTestVariant();
-        if (project.hasProperty(AndroidProject.PROPERTY_BUILD_API)
-                && getBuildType().isDebuggable()) {
-            // Consider runtime API passed from the IDE only if the app is debuggable.
-            Integer targetAPILevel =
-                    Integer.parseInt(
-                            project.property(AndroidProject.PROPERTY_BUILD_API).toString());
-
-            int minVersion =
-                    apiVersions.targetSdkVersion.getApiLevel() > 0
-                            ? Integer.min(
-                                    apiVersions.targetSdkVersion.getApiLevel(), targetAPILevel)
-                            : targetAPILevel;
-
-            return new ApiVersions(new DefaultApiVersion(minVersion), apiVersions.targetSdkVersion);
-        } else {
-            return apiVersions;
-        }
     }
 
     @NonNull
@@ -575,7 +562,7 @@ public class GradleVariantConfiguration
     @Nullable
     @Override
     public String getVersionName() {
-        String override = AndroidGradleOptions.getVersionNameOverride(project);
+        String override = projectOptions.get(StringOption.IDE_VERSION_NAME_OVERRIDE);
         if (override != null) {
             return override;
         } else {
@@ -585,7 +572,7 @@ public class GradleVariantConfiguration
 
     @Override
     public int getVersionCode() {
-        Integer override = AndroidGradleOptions.getVersionCodeOverride(project);
+        Integer override = projectOptions.get(IntegerOption.IDE_VERSION_CODE_OVERRIDE);
         if (override != null) {
             return override;
         } else {

@@ -403,10 +403,6 @@ public class MergeManifests extends ManifestProcessorTask {
             processManifestTask.minSdkVersion =
                     TaskInputHelper.memoize(
                             () -> {
-                                if (androidBuilder.isPreviewTarget()) {
-                                    return androidBuilder.getTargetCodename();
-                                }
-
                                 ApiVersion minSdk = config.getMergedFlavor().getMinSdkVersion();
                                 return minSdk == null ? null : minSdk.getApiString();
                             });
@@ -414,9 +410,6 @@ public class MergeManifests extends ManifestProcessorTask {
             processManifestTask.targetSdkVersion =
                     TaskInputHelper.memoize(
                             () -> {
-                                if (androidBuilder.isPreviewTarget()) {
-                                    return androidBuilder.getTargetCodename();
-                                }
                                 ApiVersion targetSdk =
                                         config.getMergedFlavor().getTargetSdkVersion();
                                 return targetSdk == null ? null : targetSdk.getApiString();

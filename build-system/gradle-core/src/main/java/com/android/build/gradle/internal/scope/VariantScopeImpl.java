@@ -66,6 +66,10 @@ import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.LibraryVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.TestedVariantData;
+import com.android.build.gradle.options.IntegerOption;
+import com.android.build.gradle.options.OptionalBooleanOption;
+import com.android.build.gradle.options.ProjectOptions;
+import com.android.build.gradle.options.StringOption;
 import com.android.build.gradle.tasks.AidlCompile;
 import com.android.build.gradle.tasks.ExternalNativeBuildTask;
 import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
@@ -94,6 +98,7 @@ import com.android.utils.ILogger;
 import com.android.utils.StringHelper;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -342,6 +347,37 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     public boolean isJackEnabled() {
         return getVariantConfiguration().isJackEnabled();
     }
+
+    /**
+     * Determine if the final output should be marked as testOnly to prevent uploading to Play
+     * store.
+     *
+     * <p>Uploading to Play store is disallowed if:
+     *
+     * <ul>
+     *   <li>An injected option is set (usually by the IDE for testing purposes).
+     *   <li>compileSdkVersion, minSdkVersion or targetSdkVersion is a preview
+     * </ul>
+     *
+     * <p>This value can be overridden by the OptionalBooleanOption.IDE_TEST_ONLY property.
+     */
+    @Override
+    public boolean isTestOnly() {
+        ProjectOptions projectOptions = globalScope.getProjectOptions();
+        Boolean isTestOnlyOverride = projectOptions.get(OptionalBooleanOption.IDE_TEST_ONLY);
+
+        if (isTestOnlyOverride != null) {
+            return isTestOnlyOverride;
+        }
+
+        return !Strings.isNullOrEmpty(projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI))
+                || !Strings.isNullOrEmpty(projectOptions.get(StringOption.IDE_BUILD_TARGET_DENISTY))
+                || projectOptions.get(IntegerOption.IDE_TARGET_FEATURE_LEVEL) != null
+                || globalScope.getAndroidBuilder().isPreviewTarget()
+                || getMinSdkVersion().getCodename() != null
+                || getVariantConfiguration().getTargetSdkVersion().getCodename() != null;
+    }
+
 
     @NonNull
     @Override

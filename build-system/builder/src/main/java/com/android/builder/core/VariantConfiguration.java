@@ -39,14 +39,12 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -994,9 +992,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      * Return the minSdkVersion for this variant.
      *
      * <p>This uses both the value from the manifest (if present), and the override coming from the
-     * flavor(s) (if present). The value of the minSdkVersion will be combined with the value of the
-     * targetSdkVersion. For the details of the overlaying logic check {@link
-     * #getCalculatedApiVersions(ApiVersion, ApiVersion)} method.
+     * flavor(s) (if present).
      *
      * @return the minSdkVersion
      */
@@ -1006,16 +1002,21 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
             return mTestedConfig.getMinSdkVersion();
         }
 
-        return getApiVersionsNonTestVariant().minSdkVersion;
+        ApiVersion minSdkVersion = mMergedFlavor.getMinSdkVersion();
+        if (minSdkVersion == null) {
+            // read it from the main manifest
+            minSdkVersion =
+                    DefaultApiVersion.create(getManifestAttributeSupplier().getMinSdkVersion());
+        }
+
+        return minSdkVersion;
     }
 
     /**
      * Return the targetSdkVersion for this variant.
      *
-     * This uses both the value from the manifest (if present), and the override coming
-     * from the flavor(s) (if present). The value of the targetSdkVersion will be combined with
-     * the value of the minSdkVersion. For the details of the overlaying logic check
-     * {@link #getCalculatedApiVersions(ApiVersion, ApiVersion)} method.
+     * <p>This uses both the value from the manifest (if present), and the override coming from the
+     * flavor(s) (if present).
      *
      * @return the targetSdkVersion
      */
@@ -1024,19 +1025,6 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         if (mTestedConfig != null) {
             return mTestedConfig.getTargetSdkVersion();
         }
-
-        return getApiVersionsNonTestVariant().targetSdkVersion;
-    }
-
-    /** Gets api versions for this variant that might be correlated, such as min and target sdk */
-    protected ApiVersions getApiVersionsNonTestVariant() {
-        ApiVersion minSdkVersion = mMergedFlavor.getMinSdkVersion();
-        if (minSdkVersion == null) {
-            // read it from the main manifest
-            minSdkVersion = DefaultApiVersion.create(
-                    getManifestAttributeSupplier().getMinSdkVersion());
-        }
-
         ApiVersion targetSdkVersion = mMergedFlavor.getTargetSdkVersion();
         if (targetSdkVersion == null) {
             // read it from the main manifest
@@ -1044,56 +1032,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
                     getManifestAttributeSupplier().getTargetSdkVersion());
         }
 
-        return getCalculatedApiVersions(minSdkVersion, targetSdkVersion);
-    }
-
-    /**
-     * Api versions for this variant.
-     */
-    public static class ApiVersions {
-        public final ApiVersion minSdkVersion;
-        public final ApiVersion targetSdkVersion;
-
-        public ApiVersions(ApiVersion minSdkVersion, ApiVersion targetSdkVersion) {
-            this.minSdkVersion = minSdkVersion;
-            this.targetSdkVersion = targetSdkVersion;
-        }
-    }
-
-    /**
-     * Calculates the minimum sdk and target sdk versions using the following rules:
-     * <ul>
-     *     <li>If none of the versions is a preview version, it keeps the values as-is.
-     *     <li>If one of the values is a preview version, it will pick the smallest one
-     *     using string comparison.
-     * </ul>
-     *
-     * @param minSdkVersion min sdk version for the variant
-     * @param targetSdkVersion target sdk version for the variant
-     * @return selected api version according to the rules outlined above
-     */
-    @NonNull
-    public static ApiVersions getCalculatedApiVersions(
-            @Nullable ApiVersion minSdkVersion, @Nullable ApiVersion targetSdkVersion) {
-        List<ApiVersion> versions = Lists.newArrayList();
-        if (minSdkVersion != null) {
-            versions.add(minSdkVersion);
-        }
-        if (targetSdkVersion != null) {
-            versions.add(targetSdkVersion);
-        }
-
-        Optional<ApiVersion> previewMinVersion =
-                versions
-                        .stream()
-                        .filter(v -> v.getCodename() != null)
-                        .sorted(Ordering.natural().onResultOf(ApiVersion::getCodename))
-                        .findFirst();
-        if (previewMinVersion.isPresent()) {
-            return new ApiVersions(previewMinVersion.get(), previewMinVersion.get());
-        } else {
-            return new ApiVersions(minSdkVersion, targetSdkVersion);
-        }
+        return targetSdkVersion;
     }
 
     @Nullable

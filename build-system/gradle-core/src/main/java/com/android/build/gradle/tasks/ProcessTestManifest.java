@@ -305,27 +305,10 @@ public class ProcessTestManifest extends ManifestProcessorTask {
             processTestManifestTask.setTestApplicationId(config.getTestApplicationId());
 
             processTestManifestTask.minSdkVersion =
-                    TaskInputHelper.memoize(
-                            () -> {
-                                if (scope.getGlobalScope().getAndroidBuilder().isPreviewTarget()) {
-                                    return scope.getGlobalScope()
-                                            .getAndroidBuilder()
-                                            .getTargetCodename();
-                                }
-                                return config.getMinSdkVersion().getApiString();
-                            });
+                    TaskInputHelper.memoize(config.getMinSdkVersion()::getApiString);
 
             processTestManifestTask.targetSdkVersion =
-                    TaskInputHelper.memoize(
-                            () -> {
-                                if (scope.getGlobalScope().getAndroidBuilder().isPreviewTarget()) {
-                                    return scope.getGlobalScope()
-                                            .getAndroidBuilder()
-                                            .getTargetCodename();
-                                }
-
-                                return config.getTargetSdkVersion().getApiString();
-                            });
+                    TaskInputHelper.memoize(config.getTargetSdkVersion()::getApiString);
 
             processTestManifestTask.testTargetMetadata = testTargetMetadata;
 

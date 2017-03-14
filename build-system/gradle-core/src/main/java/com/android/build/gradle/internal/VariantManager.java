@@ -647,7 +647,7 @@ public class VariantManager implements VariantModel {
         GradleVariantConfiguration variantConfig =
                 GradleVariantConfiguration.getBuilderForExtension(extension)
                         .create(
-                                project,
+                                globalScope.getProjectOptions(),
                                 defaultConfigData.getProductFlavor(),
                                 sourceSet,
                                 getParser(sourceSet.getManifestFile()),
