@@ -58,8 +58,6 @@ public class ProfilerService {
     }
 
     public ProfilerService() {
-        nativeInitialize();
-
         mComponents = new ArrayList<ProfilerComponent>();
         mComponents.add(new EventProfiler());
         mComponents.add(new NetworkProfiler());
@@ -67,6 +65,4 @@ public class ProfilerService {
 
         // TODO handle shutdown properly
     }
-
-    public native void nativeInitialize();
 }

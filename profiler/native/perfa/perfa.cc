@@ -24,18 +24,14 @@
 #include "utils/thread_name.h"
 
 namespace {
-using profiler::Perfa;
-using std::mutex;
-
-Perfa* perfa_ = nullptr;
-mutex perfa_mutex_;
 
 // If perfa is disconnected from perfd, grpc requests will begin backing up.
 // Given that downloading a 1MB image would send 1000 1K chunk messages (plus
 // general network event messages), it seems reasonable to limit our queue to
 // something one or two magnitudes above that, to be safe.
 const int32_t kMaxBackgroundTasks = 100000;  // Worst case: ~100MB in memory
-}
+
+}  // namespace
 
 namespace profiler {
 
@@ -47,14 +43,9 @@ using proto::PerfaService;
 using proto::CommonData;
 using std::lock_guard;
 
-void Perfa::Initialize() {
-  lock_guard<mutex> guard(perfa_mutex_);
-  if (perfa_ == nullptr) perfa_ = new Perfa(kServerAddress);
-}
-
 Perfa& Perfa::Instance() {
-  Initialize();
-  return *perfa_;
+  static Perfa* instance = new Perfa(kServerAddress);
+  return *instance;
 }
 
 Perfa::Perfa(const char* address)
