@@ -46,6 +46,7 @@ public class PartialFileResourceNameValidatorTest {
                     {"foo.8.xml", ResourceType.DRAWABLE, "'.'" + IS_NOT_A_VALID_ETC},
                     {"foo", ResourceType.DRAWABLE, null},
                     {"foo.txt", ResourceType.RAW, null},
+                    {"foo.ttf", ResourceType.FONT, null},
                     {"foo", ResourceType.RAW, null},
                     {"foo", ResourceType.RAW, null},
                     {"foo.txt", ResourceType.DRAWABLE, THE_FILE_NAME_MUST_END_WITH_XML_OR_PNG},
