@@ -117,17 +117,12 @@ def _iml_library(name, srcs=[], package_prefixes=[], res_zips=[], exclude=[], de
     )
   jars += ["lib" + name + ".javas.jar"]
 
-  singlejar_name = name + ".single"
   singlejar(
-      name = singlejar_name,
-      srcs = jars + res_zips,
-  )
-
-  native.java_library(
-    name = name,
-    runtime_deps = deps + [":" + singlejar_name],
-    exports = exports + [":" + singlejar_name],
-    visibility = visibility,
+      name = name,
+      jars = jars + res_zips,
+      runtime_deps = deps,
+      exports = exports,
+      visibility = visibility,
   )
 
 
@@ -256,7 +251,7 @@ def iml_module(name,
       timeout = test_timeout,
       shard_count = test_shard_count,
       data = test_data,
-      jvm_flags = ["-Dtest.suite.jar=lib" + name + "_testlib.single.jar"],
+      jvm_flags = ["-Dtest.suite.jar=lib" + name + "_testlib.jar"],
       tags = test_tags,
       test_class = test_class,
       visibility = ["//visibility:public"],

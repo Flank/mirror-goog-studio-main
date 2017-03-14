@@ -72,9 +72,14 @@ def groovy_stubs(name, srcs=[]):
   )
 
   native.genrule(
-    name = name,
+    name = name + ".genrule",
     srcs = srcs + [":" + name + "_srcs"],
     outs = [name + ".jar"],
     cmd = "./$(location //tools/base/bazel:groovy_stub_gen) -o $(@D)/" + name + ".jar @$(location :" + name + "_srcs)",
     tools = ["//tools/base/bazel:groovy_stub_gen"],
+  )
+
+  native.java_import(
+    name = name,
+    jars = [name + ".jar"],
   )
