@@ -17,7 +17,6 @@ package com.android.ddmlib.testrunner;
 
 import com.android.ddmlib.Log;
 import com.android.ddmlib.testrunner.TestResult.TestStatus;
-
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -68,10 +67,7 @@ public class TestRunResult implements ITestRunListener {
         return mTestRunName;
     }
 
-    /**
-     * Gets a map of the test results.
-     * @return
-     */
+    /** Returns a map of the test results. */
     public Map<TestIdentifier, TestResult> getTestResults() {
         return mTestResults;
     }
@@ -160,9 +156,7 @@ public class TestRunResult implements ITestRunListener {
         return getNumTestsInState(TestStatus.FAILURE);
     }
 
-    /**
-     * @return
-     */
+    /** Returns the current run elapsed time. */
     public long getElapsedTime() {
         return mElapsedTime;
     }
@@ -184,7 +178,14 @@ public class TestRunResult implements ITestRunListener {
 
     @Override
     public void testStarted(TestIdentifier test) {
-        addTestResult(test, new TestResult());
+        testStarted(test, System.currentTimeMillis());
+    }
+
+    @Override
+    public void testStarted(TestIdentifier test, long startTime) {
+        TestResult res = new TestResult();
+        res.setStartTime(startTime);
+        addTestResult(test, res);
     }
 
     private void addTestResult(TestIdentifier test, TestResult testResult) {
@@ -220,6 +221,11 @@ public class TestRunResult implements ITestRunListener {
 
     @Override
     public void testEnded(TestIdentifier test, Map<String, String> testMetrics) {
+        testEnded(test, System.currentTimeMillis(), testMetrics);
+    }
+
+    @Override
+    public void testEnded(TestIdentifier test, long endTime, Map<String, String> testMetrics) {
         TestResult result = mTestResults.get(test);
         if (result == null) {
             result = new TestResult();
@@ -227,7 +233,7 @@ public class TestRunResult implements ITestRunListener {
         if (result.getStatus().equals(TestStatus.INCOMPLETE)) {
             result.setStatus(TestStatus.PASSED);
         }
-        result.setEndTime(System.currentTimeMillis());
+        result.setEndTime(endTime);
         result.setMetrics(testMetrics);
         addTestResult(test, result);
     }
@@ -262,8 +268,8 @@ public class TestRunResult implements ITestRunListener {
      * Combine old and new metrics value
      *
      * @param existingValue
-     * @param value
-     * @return
+     * @param newValue
+     * @return the combination of the two string as Long or Double value.
      */
     private String combineValues(String existingValue, String newValue) {
         if (existingValue != null) {
@@ -286,11 +292,7 @@ public class TestRunResult implements ITestRunListener {
         return newValue;
     }
 
-    /**
-     * Return a user friendly string describing results.
-     *
-     * @return
-     */
+    /** Returns a user friendly string describing results. */
     public String getTextSummary() {
         StringBuilder builder = new StringBuilder();
         builder.append(String.format("Total tests %d, ", getNumTests()));
