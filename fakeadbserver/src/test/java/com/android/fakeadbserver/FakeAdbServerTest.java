@@ -15,7 +15,6 @@
  */
 package com.android.fakeadbserver;
 
-import java.io.IOException;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -31,37 +30,24 @@ public class FakeAdbServerTest {
 
     private static final String SDK = "26";
 
-    private static final int DEFAULT_ADB_SERVER_PORT =
-            5037; // TODO replace this with constant from lib
-
-    /**
-     * Very basic test example. Remove {@code @Ignore} if you wish to run an interactive server.
-     *
-     * <p>TODO refactor ddmlib to accept a pre-constructed adb server connection and remove
-     * "@Ignore".
-     */
+    /** Very basic test example. Remove {@code @Ignore} if you wish to run an interactive server. */
     @Test
     @Ignore
-    public void testInteractiveServer() throws IOException {
+    public void testInteractiveServer() throws Exception {
         // Build the server and configure it to use the default ADB command handlers.
         FakeAdbServer.Builder builder = new FakeAdbServer.Builder();
-        builder.setPort(DEFAULT_ADB_SERVER_PORT);
         builder.installDefaultCommandHandlers();
-        FakeAdbServer server = builder.build();
+        try (FakeAdbServer server = builder.build()) {
+            // Connect a test device to simulate device connection before server bring-up.
+            server.connectDevice(
+                    SERIAL, MANUFACTURER, MODEL, RELEASE, SDK, DeviceState.HostConnectionType.USB);
 
-        // Connect a test device to simulate device connection before server bring-up.
-        server.connectDevice(SERIAL, MANUFACTURER, MODEL, RELEASE, SDK,
-                DeviceState.HostConnectionType.USB);
+            // Start server execution.
+            server.start();
 
-        // Start server execution.
-        server.start();
-
-        // Optional: Since the server lives on a separate thread, we can pause the test to poke at
-        // the server.
-        try {
+            // Optional: Since the server lives on a separate thread, we can pause the test to poke at
+            // the server.
             server.awaitServerTermination();
-        } catch (InterruptedException ignored) {
-            // Exiting, just ignore interruptions.
         }
     }
 }
