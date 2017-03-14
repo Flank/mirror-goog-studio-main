@@ -54,9 +54,20 @@ public interface ITestRunListener {
     void testStarted(TestIdentifier test);
 
     /**
+     * Alternative to {@link #testStarted(TestIdentifier)} where we also specify when the test was
+     * started, combined with {@link #testEnded(TestIdentifier, long, Map)} for accurate measure.
+     *
+     * @param test identifies the test
+     * @param startTime the time the test started, measured via {@link System#currentTimeMillis()}
+     */
+    default void testStarted(TestIdentifier test, long startTime) {
+        testStarted(test);
+    }
+
+    /**
      * Reports the failure of a individual test case.
-     * <p>
-     * Will be called between testStarted and testEnded.
+     *
+     * <p>Will be called between testStarted and testEnded.
      *
      * @param test identifies the test
      * @param trace stack trace of failure
@@ -90,6 +101,18 @@ public interface ITestRunListener {
      * @param testMetrics a {@link Map} of the metrics emitted
      */
     void testEnded(TestIdentifier test, Map<String, String> testMetrics);
+
+    /**
+     * Alternative to {@link #testEnded(TestIdentifier, Map)} where we can specify the end time
+     * directly. Combine with {@link #testStarted(TestIdentifier, long)} for accurate measure.
+     *
+     * @param test identifies the test
+     * @param endTime the time the test ended, measured via {@link System#currentTimeMillis()}
+     * @param testMetrics a {@link Map} of the metrics emitted
+     */
+    default void testEnded(TestIdentifier test, long endTime, Map<String, String> testMetrics) {
+        testEnded(test, testMetrics);
+    }
 
     /**
      * Reports test run failed to complete due to a fatal error.
