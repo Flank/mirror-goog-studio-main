@@ -18,6 +18,7 @@
 
 #include <stdio.h>
 #include <cinttypes>
+#include <cmath>
 
 bool PrintCodeIrVisitor::Visit(lir::Bytecode* bytecode) {
   printf("\t%5u| %s", bytecode->offset, dex::GetOpcodeName(bytecode->opcode));
@@ -63,14 +64,22 @@ bool PrintCodeIrVisitor::Visit(lir::CodeLocation* target) {
 }
 
 bool PrintCodeIrVisitor::Visit(lir::Const32* const32) {
-  printf("#%+d (0x%08x | %f)", const32->u.s4_value, const32->u.u4_value,
-         const32->u.float_value);
+  printf("#%+d (0x%08x | ", const32->u.s4_value, const32->u.u4_value);
+  if (std::isnan(const32->u.float_value)) {
+    printf("NaN)");
+  } else {
+    printf("%f)", const32->u.float_value);
+  }
   return true;
 }
 
 bool PrintCodeIrVisitor::Visit(lir::Const64* const64) {
-  printf("#%+" PRId64 " (0x%016" PRIx64 " | %f)", const64->u.s8_value,
-         const64->u.u8_value, const64->u.double_value);
+  printf("#%+" PRId64 " (0x%016" PRIx64 " | ", const64->u.s8_value, const64->u.u8_value);
+  if (std::isnan(const64->u.double_value)) {
+    printf("NaN)");
+  } else {
+    printf("%f)", const64->u.double_value);
+  }
   return true;
 }
 
