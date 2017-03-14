@@ -346,11 +346,6 @@ public class BaseComponentModelPlugin implements Plugin<Project>, ToolingRegistr
             dataBindingOptions.setEnabledForTests(false);
         }
 
-        @Model
-        public static ProjectOptions createProjectOptions(Project project) {
-            return new ProjectOptions(project);
-        }
-
         @Model(ModelConstants.GLOBAL_SCOPE)
         public static GlobalScope createGlobalScope(
                 Project project,
