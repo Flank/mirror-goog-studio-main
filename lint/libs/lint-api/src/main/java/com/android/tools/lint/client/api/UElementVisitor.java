@@ -29,8 +29,11 @@ import com.google.common.collect.Sets;
 import com.intellij.openapi.progress.ProcessCanceledException;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.psi.PsiClass;
+import com.intellij.psi.PsiClassType;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiLambdaExpression;
 import com.intellij.psi.PsiMethod;
+import com.intellij.psi.PsiType;
 import com.intellij.psi.PsiTypeParameter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -342,20 +345,40 @@ public class UElementVisitor {
     }
 
     private class SuperclassPsiVisitor extends AbstractUastVisitor {
-        private final JavaContext mContext;
+        private final JavaContext context;
 
         public SuperclassPsiVisitor(@NonNull JavaContext context) {
-            mContext = context;
+            this.context = context;
+        }
+
+        @Override
+        public boolean visitLambdaExpression(ULambdaExpression node) {
+            // Have to go to PSI here; not available on ULambdaExpression yet
+            // https://github.com/JetBrains/uast/issues/16
+            PsiElement psi = node.getPsi();
+            if (psi instanceof PsiLambdaExpression) {
+                PsiType type = ((PsiLambdaExpression) psi).getFunctionalInterfaceType();
+                if (type instanceof PsiClassType) {
+                    PsiClass resolved = ((PsiClassType) type).resolve();
+                    if (resolved != null) {
+                        checkClass(node, null, resolved);
+                    }
+                }
+            }
+
+            return super.visitLambdaExpression(node);
         }
 
         @Override
         public boolean visitClass(UClass node) {
             boolean result = super.visitClass(node);
-            checkClass(node);
+            checkClass(null, node, node);
             return result;
         }
 
-        private void checkClass(@NonNull UClass node) {
+        private void checkClass(@Nullable ULambdaExpression lambda,
+                @Nullable UClass uClass,
+                @NonNull PsiClass node) {
             ProgressManager.checkCanceled();
 
             if (node instanceof PsiTypeParameter) {
@@ -363,7 +386,7 @@ public class UElementVisitor {
                 return;
             }
 
-            UClass cls = node;
+            PsiClass cls = node;
             int depth = 0;
             while (cls != null) {
                 List<VisitingDetector> list = superClassDetectors.get(cls.getQualifiedName());
@@ -371,7 +394,12 @@ public class UElementVisitor {
                     for (VisitingDetector v : list) {
                         UastScanner uastScanner = v.getUastScanner();
                         if (uastScanner != null) {
-                            uastScanner.visitClass(mContext, node);
+                            if (uClass != null) {
+                                uastScanner.visitClass(context, uClass);
+                            } else {
+                                assert lambda != null;
+                                uastScanner.visitClass(context, lambda);
+                            }
                         }
                     }
                 }
@@ -383,9 +411,14 @@ public class UElementVisitor {
                         list = superClassDetectors.get(name);
                         if (list != null) {
                             for (VisitingDetector v : list) {
-                                UastScanner javaPsiScanner = v.getUastScanner();
-                                if (javaPsiScanner != null) {
-                                    javaPsiScanner.visitClass(mContext, node);
+                                UastScanner uastScanner = v.getUastScanner();
+                                if (uastScanner != null) {
+                                    if (uClass != null) {
+                                        uastScanner.visitClass(context, uClass);
+                                    } else {
+                                        assert lambda != null;
+                                        uastScanner.visitClass(context, lambda);
+                                    }
                                 }
                             }
                         }
