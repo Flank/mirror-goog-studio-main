@@ -17,6 +17,9 @@
 package com.android.ide.common.res2;
 
 import static com.android.SdkConstants.DOT_9PNG;
+import static com.android.SdkConstants.DOT_OTF;
+import static com.android.SdkConstants.DOT_TTC;
+import static com.android.SdkConstants.DOT_TTF;
 import static com.android.SdkConstants.DOT_XML;
 import static com.android.SdkConstants.DOT_XSD;
 
@@ -132,6 +135,27 @@ public final class FileResourceNameValidator {
                     if (!SdkUtils.startsWithIgnoreCase(DOT_XML, ext) &&
                             !SdkUtils.startsWithIgnoreCase(DOT_XSD, ext)) {
                         return "The file name must end with .xml";
+                    }
+                }
+            }
+        } else if (resourceType == ResourceType.FONT) {
+            // Also allow xsd as they are xml files.
+            if (SdkUtils.endsWithIgnoreCase(fileNameWithExt, DOT_XML) ||
+                    SdkUtils.endsWithIgnoreCase(fileNameWithExt, DOT_TTF) ||
+                    SdkUtils.endsWithIgnoreCase(fileNameWithExt, DOT_OTF) ||
+                    SdkUtils.endsWithIgnoreCase(fileNameWithExt, DOT_TTC)) {
+                fileName = removeSingleExtension(fileNameWithExt);
+            } else {
+                if (!allowPartialOrMissingExtension) {
+                    return "The file name must end with .xml, .ttf, .ttc or .otf";
+                } else {
+                    fileName = removeSingleExtension(fileNameWithExt);
+                    String ext = fileNameWithExt.substring(fileName.length());
+                    if (!SdkUtils.startsWithIgnoreCase(DOT_XML, ext) &&
+                            !SdkUtils.startsWithIgnoreCase(DOT_TTF, ext) &&
+                            !SdkUtils.startsWithIgnoreCase(DOT_OTF, ext) &&
+                            !SdkUtils.startsWithIgnoreCase(DOT_TTC, ext)) {
+                        return "The file name must end with .xml, .ttf, .ttc or .otf";
                     }
                 }
             }
