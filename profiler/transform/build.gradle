@@ -14,6 +14,7 @@ buildscript {
 configurations {
     repackage
     support
+    supportslim
 }
 
 jarjar.repackage('asm') {
@@ -26,14 +27,29 @@ dependencies {
     repackage('org.ow2.asm:asm:5.0.4') { transitive = false }
 
     support project(":supportlib")
+    supportslim project(path: ":supportlib", configuration: "slim")
 
     compile files(asm.outputs)
 }
-
 
 jar {
     from asm.outputs.files.collect { zipTree(it) }
     from(configurations.support) {
         into 'dependencies'
     }
+}
+
+// Creates a jar that does not include the agentlib for post-O scenario.
+// TODO this can be removed once post-O no longer requires supportlib
+task(slimJar, dependsOn: 'classes', type: Jar) {
+    appendix 'slim'
+    from sourceSets.main.output
+    from asm.outputs.files.collect { zipTree(it) }
+    from(configurations.supportslim) {
+        into 'dependencies'
+    }
+}
+
+artifacts {
+   archives slimJar
 }

@@ -115,7 +115,9 @@ final class HttpTracker {
         }
 
         private native void onClose(long id);
+
         private native void onReadBegin(long id);
+
         private native void reportBytes(long id, byte[] bytes);
     }
 
@@ -168,6 +170,7 @@ final class HttpTracker {
         }
 
         private native void onClose(long id);
+
         private native void onWriteBegin(long id);
     }
 
@@ -247,12 +250,19 @@ final class HttpTracker {
         }
 
         private native long nextId();
+
         private native void onPreConnect(long id, String url, String stack);
+
         private native void onRequestBody(long id);
+
         private native void onRequest(long id, String method, String fields);
+
         private native void onResponse(long id, String response, String fields);
+
         private native void onResponseBody(long id);
+
         private native void onDisconnect(long id);
+
         private native void onError(long id, String status);
     }
 
