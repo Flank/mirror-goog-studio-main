@@ -671,7 +671,7 @@ public abstract class TaskManager {
     // FIX ME : this is too much duplicated code with the normal path, OO to the rescue !
     public void createMergeAtomManifestsTask(
             @NonNull TaskFactory tasks, @NonNull VariantScope variantScope) {
-        AndroidArtifactVariantData<?> androidArtifactVariantData =
+        AndroidArtifactVariantData androidArtifactVariantData =
                 (AndroidArtifactVariantData) variantScope.getVariantData();
         Set<String> screenSizes = androidArtifactVariantData.getCompatibleScreens();
 
@@ -715,7 +715,7 @@ public abstract class TaskManager {
     public void createMergeAppManifestsTask(
             @NonNull TaskFactory tasks,
             @NonNull VariantScope variantScope) {
-        AndroidArtifactVariantData<?> androidArtifactVariantData =
+        AndroidArtifactVariantData androidArtifactVariantData =
                 (AndroidArtifactVariantData) variantScope.getVariantData();
         Set<String> screenSizes = androidArtifactVariantData.getCompatibleScreens();
 

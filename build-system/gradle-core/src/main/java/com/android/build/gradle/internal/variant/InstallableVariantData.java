@@ -25,11 +25,8 @@ import com.android.builder.core.ErrorReporter;
 import com.android.builder.profile.Recorder;
 import org.gradle.api.DefaultTask;
 
-/**
- * Base data about a variant that is installable.
- */
-public abstract class InstallableVariantData<T extends BaseVariantOutputData> extends
-        AndroidArtifactVariantData<T> {
+/** Base data about a variant that is installable. */
+public abstract class InstallableVariantData extends AndroidArtifactVariantData {
 
     public DefaultTask installTask;
     public DefaultTask uninstallTask;

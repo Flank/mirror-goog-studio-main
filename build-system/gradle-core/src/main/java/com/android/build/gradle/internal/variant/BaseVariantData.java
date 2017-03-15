@@ -147,8 +147,6 @@ public abstract class BaseVariantData implements TaskContainer {
     private List<File> extraGeneratedSourceFolders;
     private final ConfigurableFileCollection extraGeneratedResFolders;
 
-    private final List<BaseVariantOutputData> outputs = Lists.newArrayListWithExpectedSize(4);
-
     private Set<String> densityFilters;
     private Set<String> languageFilters;
     private Set<String> abiFilters;
@@ -250,11 +248,6 @@ public abstract class BaseVariantData implements TaskContainer {
     @NonNull
     public SplitFactory getSplitFactory() {
         return splitFactory;
-    }
-
-    @NonNull
-    public List<BaseVariantOutputData> getOutputs() {
-        return outputs;
     }
 
     @Override

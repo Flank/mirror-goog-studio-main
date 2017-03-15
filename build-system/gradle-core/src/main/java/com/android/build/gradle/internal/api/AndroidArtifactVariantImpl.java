@@ -41,7 +41,7 @@ public abstract class AndroidArtifactVariantImpl extends BaseVariantImpl impleme
 
     @NonNull
     @Override
-    protected abstract AndroidArtifactVariantData<?> getVariantData();
+    protected abstract AndroidArtifactVariantData getVariantData();
 
     @Override
     public SigningConfig getSigningConfig() {
