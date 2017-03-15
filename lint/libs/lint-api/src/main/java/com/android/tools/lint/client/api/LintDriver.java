@@ -51,6 +51,8 @@ import com.android.tools.lint.client.api.LintListener.EventType;
 import com.android.tools.lint.detector.api.ClassContext;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
+import com.android.tools.lint.detector.api.Detector.JavaPsiScanner;
+import com.android.tools.lint.detector.api.Detector.JavaScanner;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.LintUtils;
@@ -640,6 +642,21 @@ public class LintDriver {
         }
     }
 
+    /**
+     * Sets whether the lint driver should look for compatibility checks for Lombok and
+     * PSI (the older {@link JavaScanner} and {@link JavaPsiScanner} APIs.)
+     * <p>
+     * Lint normally figures this out on its own by inspecting JAR file registries
+     * etc. This is intended for test infrastructure usage.
+     *
+     * @param lombok whether to run Lombok compat checks
+     * @param psi    whether to run PSI compat checks
+     */
+    public void setRunCompatChecks(boolean lombok, boolean psi) {
+        runLombokCompatChecks = lombok;
+        runPsiCompatChecks = psi;
+    }
+
     private void runExtraPhases(@NonNull Project project, @NonNull Project main) {
         // Did any detectors request another phase?
         if (repeatingDetectors != null) {
@@ -804,17 +821,17 @@ public class LintDriver {
             List<Detector> javaCodeDetectors = scopeDetectors.get(Scope.ALL_JAVA_FILES);
             if (javaCodeDetectors != null) {
                 for (Detector detector : javaCodeDetectors) {
-                    assert detector instanceof Detector.JavaScanner ||
+                    assert detector instanceof JavaScanner ||
                             detector instanceof Detector.UastScanner ||
-                            detector instanceof Detector.JavaPsiScanner : detector;
+                            detector instanceof JavaPsiScanner : detector;
                 }
             }
             List<Detector> javaFileDetectors = scopeDetectors.get(Scope.JAVA_FILE);
             if (javaFileDetectors != null) {
                 for (Detector detector : javaFileDetectors) {
-                    assert detector instanceof Detector.JavaScanner ||
+                    assert detector instanceof JavaScanner ||
                             detector instanceof Detector.UastScanner ||
-                            detector instanceof Detector.JavaPsiScanner : detector;
+                            detector instanceof JavaPsiScanner : detector;
                 }
             }
 
@@ -1677,7 +1694,7 @@ public class LintDriver {
         List<Detector> scanners = Lists.newArrayListWithCapacity(checks.size());
         List<Detector> uastScanners = Lists.newArrayListWithCapacity(checks.size());
         for (Detector detector : checks) {
-            if (detector instanceof Detector.JavaPsiScanner) {
+            if (detector instanceof JavaPsiScanner) {
                 scanners.add(detector);
             } else if (detector instanceof Detector.UastScanner) {
                 uastScanners.add(detector);
@@ -1807,8 +1824,8 @@ public class LintDriver {
                 // Filter the checks to only those that implement JavaScanner
                 List<Detector> filtered = Lists.newArrayListWithCapacity(checks.size());
                 for (Detector detector : checks) {
-                    if (detector instanceof Detector.JavaScanner) {
-                        assert !(detector instanceof Detector.JavaPsiScanner); // Shouldn't be both
+                    if (detector instanceof JavaScanner) {
+                        assert !(detector instanceof JavaPsiScanner); // Shouldn't be both
                         filtered.add(detector);
                     }
                 }

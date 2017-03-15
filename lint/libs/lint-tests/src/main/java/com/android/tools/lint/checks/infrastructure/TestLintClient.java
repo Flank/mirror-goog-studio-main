@@ -470,6 +470,15 @@ public class TestLintClient extends LintCliClient {
         return result;
     }
 
+    @NonNull
+    @Override
+    protected LintDriver createDriver(@NonNull IssueRegistry registry) {
+        LintDriver driver = super.createDriver(registry);
+        // 3rd party lint unit tests may need this for a while
+        driver.setRunCompatChecks(task.runCompatChecks, task.runCompatChecks);
+        return driver;
+    }
+
     protected void addCleanupDir(@NonNull File dir) {
         cleanupDirs.add(dir);
         try {
