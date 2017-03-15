@@ -987,6 +987,10 @@ public final class SdkConstants {
     public static final String TAG_SELECTOR = "selector"; //$NON-NLS-1$
     public static final String TAG_PUBLIC = "public"; //$NON-NLS-1$
 
+    // Tags: Adaptive icon
+    public static final String TAG_ADAPTIVE_ICON = "adaptive-icon";
+    public static final String TAG_MASKABLE_ICON = "maskable-icon";
+
     // Tags: XML
     public static final String TAG_HEADER = "header"; //$NON-NLS-1$
     public static final String TAG_APPWIDGET_PROVIDER = "appwidget-provider"; //$NON-NLS-1$
