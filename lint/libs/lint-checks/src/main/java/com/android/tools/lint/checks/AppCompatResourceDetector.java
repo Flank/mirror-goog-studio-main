@@ -18,19 +18,21 @@ package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_SHOW_AS_ACTION;
+import static com.android.SdkConstants.AUTO_URI;
 
 import com.android.annotations.NonNull;
 import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import org.w3c.dom.Attr;
 
 /**
@@ -58,6 +60,9 @@ public class AppCompatResourceDetector extends ResourceXmlDetector {
                     AppCompatResourceDetector.class,
                     Scope.RESOURCE_FILE_SCOPE));
 
+    private static final String ATTR_ACTION_VIEW_CLASS = "actionViewClass";
+    private static final String ATTR_ACTION_PROVIDER_CLASS = "actionProviderClass";
+
     /** Constructs a new {@link AppCompatResourceDetector} */
     public AppCompatResourceDetector() {
     }
@@ -69,30 +74,45 @@ public class AppCompatResourceDetector extends ResourceXmlDetector {
 
     @Override
     public Collection<String> getApplicableAttributes() {
-        return Collections.singletonList(ATTR_SHOW_AS_ACTION);
+        return Arrays.asList(
+                ATTR_SHOW_AS_ACTION, ATTR_ACTION_PROVIDER_CLASS, ATTR_ACTION_VIEW_CLASS);
     }
 
     @Override
     public void visitAttribute(@NonNull XmlContext context, @NonNull Attr attribute) {
         Project mainProject = context.getMainProject();
-        if (mainProject.isGradleProject()) {
-            Boolean appCompat = mainProject.dependsOn("com.android.support:appcompat-v7");
-            if (ANDROID_URI.equals(attribute.getNamespaceURI())) {
-                if (context.getFolderVersion() >= 14) {
-                    return;
-                }
-                if (appCompat == Boolean.TRUE) {
-                    context.report(ISSUE, attribute,
-                        context.getLocation(attribute),
-                        "Should use `app:showAsAction` with the appcompat library with "
-                                + "`xmlns:app=\"http://schemas.android.com/apk/res-auto\"`");
-                }
-            } else {
-                if (appCompat == Boolean.FALSE) {
-                    context.report(ISSUE, attribute,
-                        context.getLocation(attribute),
-                        "Should use `android:showAsAction` when not using the appcompat library");
-                }
+        Boolean appCompat = mainProject.dependsOn("com.android.support:appcompat-v7");
+        String localName = attribute.getLocalName();
+        if (ANDROID_URI.equals(attribute.getNamespaceURI())) {
+            if (context.getFolderVersion() >= 14) {
+                return;
+            }
+            if (appCompat == Boolean.TRUE) {
+
+                LintFix fix = fix().name("Update to app:" + localName).composite(
+                        fix().set(AUTO_URI, localName, attribute.getValue()).build(),
+                        fix().unset(ANDROID_URI, localName).build()
+                );
+
+                String message = String.format(
+                        "Should use `app:%1$s` with the appcompat library with "
+                                + "`xmlns:app=\"http://schemas.android.com/apk/res-auto\"`",
+                        localName);
+                context.report(ISSUE, attribute, context.getLocation(attribute), message, fix);
+            }
+        } else {
+            if (appCompat == Boolean.FALSE) {
+
+                LintFix fix = fix().name("Update to android:" + localName).composite(
+                        fix().set(ANDROID_URI, localName, attribute.getValue()).build(),
+                        fix().unset(AUTO_URI, localName).build()
+                );
+
+                String message = String.format(
+                        "Should use `android:%1$s` when not using the appcompat library",
+                        localName);
+
+                context.report(ISSUE, attribute, context.getLocation(attribute), message, fix);
             }
         }
     }
