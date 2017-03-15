@@ -39,6 +39,8 @@ public class FileResourceNameValidatorTest {
                         + "must contain only lowercase a-z, 0-9, or underscore";
         final String THE_FILE_NAME_MUST_END_WITH_XML_OR_PNG =
                 "The file name must end with .xml or .png";
+        final String THE_FILE_NAME_MUST_END_WITH_XML_OR_TTF =
+                "The file name must end with .xml, .ttf, .ttc or .otf";
         return Arrays.asList(
                 new Object[][] {
                     //{ resourceName, resourceType, sourceFile, expectedException }
@@ -56,6 +58,11 @@ public class FileResourceNameValidatorTest {
                     {"foo.other.png", ResourceType.DRAWABLE, "'.'" + IS_NOT_A_VALID_ETC},
                     {"foo.xml", ResourceType.XML, null},
                     {"foo.xsd", ResourceType.XML, null},
+                    {"foo.xml", ResourceType.FONT, null},
+                    {"foo.ttf", ResourceType.FONT, null},
+                    {"foo.ttc", ResourceType.FONT, null},
+                    {"foo.otf", ResourceType.FONT, null},
+                    {"foo.png", ResourceType.FONT, THE_FILE_NAME_MUST_END_WITH_XML_OR_TTF},
                     {"_foo.png", ResourceType.DRAWABLE, null},
                     {"foo.png", ResourceType.XML, "The file name must end with .xml"},
                     {"foo.8.xml", ResourceType.DRAWABLE, "'.'" + IS_NOT_A_VALID_ETC},
