@@ -19,9 +19,9 @@
 #include <sys/time.h>
 
 #include "utils/android_studio_version.h"
+#include "utils/file_reader.h"
 #include "utils/log.h"
 #include "utils/trace.h"
-#include "utils/file_reader.h"
 
 using grpc::ServerContext;
 using grpc::ServerWriter;
@@ -90,6 +90,14 @@ Status ProfilerServiceImpl::GetDevices(
   FileReader::Read("/proc/sys/kernel/random/boot_id", &device_id);
   device->set_boot_id(device_id);
   return Status::OK;
+}
+
+Status ProfilerServiceImpl::AttachAgent(
+    grpc::ServerContext* context,
+    const profiler::proto::AgentAttachRequest* request,
+    profiler::proto::AgentAttachResponse* response) {
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED,
+                        "Not implemented on device");
 }
 
 }  // namespace profiler
