@@ -15,18 +15,17 @@
  */
 package com.android.ide.common.res2;
 
-import com.google.common.escape.Escaper;
-
+import com.android.annotations.NonNull;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.ext.DefaultHandler2;
 
-final class StringResourceEscaperContentHandler extends DefaultHandler2 {
+final class StringResourceContentHandler extends DefaultHandler2 {
 
     @SuppressWarnings("StringBufferField")
     private final StringBuilder mBuilder;
 
-    private final Escaper mEscaper;
+    private final CharacterHandler mCharacterHandler;
 
     private boolean mHandlingEntity;
 
@@ -37,9 +36,10 @@ final class StringResourceEscaperContentHandler extends DefaultHandler2 {
      */
     private int mStartElementBuilderLength;
 
-    StringResourceEscaperContentHandler(StringBuilder builder, Escaper escaper) {
+    StringResourceContentHandler(
+            @NonNull StringBuilder builder, @NonNull CharacterHandler characterHandler) {
         mBuilder = builder;
-        mEscaper = escaper;
+        mCharacterHandler = characterHandler;
     }
 
     @Override
@@ -54,14 +54,14 @@ final class StringResourceEscaperContentHandler extends DefaultHandler2 {
         if (mHandlingCdata) {
             mBuilder.append(chars, offset, length);
         } else {
-            mBuilder.append(mEscaper.escape(new String(chars, offset, length)));
+            mCharacterHandler.handle(mBuilder, chars, offset, length);
         }
     }
 
     @Override
     public void startElement(String uri, String localName, String qualifiedName,
             Attributes attributes) throws SAXException {
-        if (qualifiedName.equals(StringResourceEscaper.STRING_ELEMENT_NAME)) {
+        if (qualifiedName.equals(StringResourceEscapeUtils.STRING_ELEMENT_NAME)) {
             return;
         }
 
@@ -84,7 +84,7 @@ final class StringResourceEscaperContentHandler extends DefaultHandler2 {
 
     @Override
     public void endElement(String uri, String localName, String qualifiedName) throws SAXException {
-        if (qualifiedName.equals(StringResourceEscaper.STRING_ELEMENT_NAME)) {
+        if (qualifiedName.equals(StringResourceEscapeUtils.STRING_ELEMENT_NAME)) {
             return;
         }
 
