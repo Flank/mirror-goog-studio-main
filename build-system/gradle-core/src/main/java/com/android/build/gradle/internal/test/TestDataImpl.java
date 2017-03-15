@@ -87,7 +87,7 @@ public class TestDataImpl extends AbstractTestDataImpl {
     @Override
     public boolean isLibrary() {
         TestedVariantData testedVariantData = testVariantData.getTestedVariantData();
-        BaseVariantData<?> testedVariantData2 = (BaseVariantData) testedVariantData;
+        BaseVariantData testedVariantData2 = (BaseVariantData) testedVariantData;
         return testedVariantData2.getVariantConfiguration().getType() == VariantType.LIBRARY;
     }
 
@@ -98,7 +98,7 @@ public class TestDataImpl extends AbstractTestDataImpl {
             @Nullable File splitSelectExe,
             @NonNull DeviceConfigProvider deviceConfigProvider,
             @NonNull ILogger logger) throws ProcessException {
-        BaseVariantData<?> testedVariantData =
+        BaseVariantData testedVariantData =
                 (BaseVariantData) testVariantData.getTestedVariantData();
 
         ImmutableList.Builder<File> apks = ImmutableList.builder();

@@ -34,7 +34,6 @@ import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.DefaultManifestParser;
 import com.android.builder.core.VariantType;
@@ -283,8 +282,7 @@ public class ProcessAtomsResources extends IncrementalTask {
 
         @Override
         public void execute(@NonNull ProcessAtomsResources processAtomsResources) {
-            final BaseVariantData<? extends BaseVariantOutputData> variantData =
-                    scope.getVariantData();
+            final BaseVariantData variantData = scope.getVariantData();
             final GradleVariantConfiguration config = variantData.getVariantConfiguration();
             final GlobalScope globalScope = scope.getGlobalScope();
 

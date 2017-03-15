@@ -62,7 +62,7 @@ public class ApiObjectFactory {
         this.instantiator = instantiator;
     }
 
-    public BaseVariantImpl create(BaseVariantData<?> variantData) {
+    public BaseVariantImpl create(BaseVariantData variantData) {
         if (variantData.getType().isForTesting()) {
             // Testing variants are handled together with their "owners".
             return null;

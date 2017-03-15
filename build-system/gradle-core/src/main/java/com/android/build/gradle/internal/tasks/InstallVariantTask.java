@@ -76,7 +76,7 @@ public class InstallVariantTask extends BaseTask {
 
     private Collection<String> installOptions;
 
-    private BaseVariantData<?> variantData;
+    private BaseVariantData variantData;
 
     public InstallVariantTask() {
         this.getOutputs().upToDateWhen(task -> {
@@ -92,7 +92,7 @@ public class InstallVariantTask extends BaseTask {
                 getTimeOutInMs(),
                 iLogger);
         deviceProvider.init();
-        BaseVariantData<?> variantData = getVariantData();
+        BaseVariantData variantData = getVariantData();
         GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
 
         List<OutputFile> outputs =
@@ -232,11 +232,11 @@ public class InstallVariantTask extends BaseTask {
         this.installOptions = installOptions;
     }
 
-    public BaseVariantData<?> getVariantData() {
+    public BaseVariantData getVariantData() {
         return variantData;
     }
 
-    public void setVariantData(BaseVariantData<?> variantData) {
+    public void setVariantData(BaseVariantData variantData) {
         this.variantData = variantData;
     }
 

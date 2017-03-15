@@ -43,7 +43,6 @@ import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.TestedVariantData;
@@ -285,8 +284,7 @@ public class ModelBuilder implements ToolingModelBuilder {
     }
 
     @NonNull
-    private VariantImpl createVariant(
-            @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData) {
+    private VariantImpl createVariant(@NonNull BaseVariantData variantData) {
         AndroidArtifact mainArtifact = createAndroidArtifact(ARTIFACT_MAIN, variantData);
 
         GradleVariantConfiguration variantConfiguration = variantData.getVariantConfiguration();
@@ -363,8 +361,7 @@ public class ModelBuilder implements ToolingModelBuilder {
     }
 
     @NonNull
-    private Collection<TestedTargetVariant> getTestTargetVariants(
-            BaseVariantData<? extends BaseVariantOutputData> variantData) {
+    private Collection<TestedTargetVariant> getTestTargetVariants(BaseVariantData variantData) {
         if (config instanceof TestAndroidConfig) {
             TestAndroidConfig testConfig = (TestAndroidConfig) config;
 
@@ -389,8 +386,7 @@ public class ModelBuilder implements ToolingModelBuilder {
     }
 
     private JavaArtifactImpl createUnitTestsJavaArtifact(
-            @NonNull VariantType variantType,
-            @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData) {
+            @NonNull VariantType variantType, @NonNull BaseVariantData variantData) {
         SourceProviders sourceProviders = determineSourceProviders(variantData);
 
         List<File> extraGeneratedSourceFolders = variantData.getExtraGeneratedSourceFolders();
@@ -450,8 +446,7 @@ public class ModelBuilder implements ToolingModelBuilder {
     }
 
     private AndroidArtifact createAndroidArtifact(
-            @NonNull String name,
-            @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData) {
+            @NonNull String name, @NonNull BaseVariantData variantData) {
         VariantScope scope = variantData.getScope();
         GradleVariantConfiguration variantConfiguration = variantData.getVariantConfiguration();
 
@@ -644,8 +639,7 @@ public class ModelBuilder implements ToolingModelBuilder {
         return builder.build();
     }
 
-    private static SourceProviders determineSourceProviders(
-            @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData) {
+    private static SourceProviders determineSourceProviders(@NonNull BaseVariantData variantData) {
         SourceProvider variantSourceProvider =
                 variantData.getVariantConfiguration().getVariantSourceProvider();
         SourceProvider multiFlavorSourceProvider =
@@ -661,16 +655,14 @@ public class ModelBuilder implements ToolingModelBuilder {
     }
 
     @NonNull
-    private static List<String> getProductFlavorNames(
-            @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData) {
+    private static List<String> getProductFlavorNames(@NonNull BaseVariantData variantData) {
         return variantData.getVariantConfiguration().getProductFlavors().stream()
                 .map((Function<ProductFlavor, String>) ProductFlavor::getName)
                 .collect(Collectors.toList());
     }
 
     @NonNull
-    private static List<File> getGeneratedSourceFolders(
-            @Nullable BaseVariantData<? extends BaseVariantOutputData> variantData) {
+    private static List<File> getGeneratedSourceFolders(@Nullable BaseVariantData variantData) {
         if (variantData == null) {
             return Collections.emptyList();
         }
@@ -702,8 +694,7 @@ public class ModelBuilder implements ToolingModelBuilder {
     }
 
     @NonNull
-    private static List<File> getGeneratedResourceFolders(
-            @Nullable BaseVariantData<? extends BaseVariantOutputData> variantData) {
+    private static List<File> getGeneratedResourceFolders(@Nullable BaseVariantData variantData) {
         if (variantData == null) {
             return Collections.emptyList();
         }

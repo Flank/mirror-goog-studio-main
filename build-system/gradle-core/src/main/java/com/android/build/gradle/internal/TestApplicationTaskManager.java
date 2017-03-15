@@ -32,7 +32,6 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
 import com.android.build.gradle.internal.test.TestApplicationTestData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.ProcessTestManifest;
@@ -187,8 +186,7 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
 
     /** Returns the manifest configuration of the tested application */
     @NonNull
-    private FileCollection getTestedManifestMetadata(
-            @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData) {
+    private FileCollection getTestedManifestMetadata(@NonNull BaseVariantData variantData) {
         if (mTargetManifestConfiguration == null){
             mTargetManifestConfiguration =
                     variantData

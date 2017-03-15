@@ -23,7 +23,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import java.io.File;
 import java.util.Collection;
 import java.util.function.Supplier;
@@ -141,8 +140,7 @@ public class DataBindingExportBuildInfoTask extends DefaultTask {
 
         @Override
         public void execute(@NonNull DataBindingExportBuildInfoTask task) {
-            final BaseVariantData<? extends BaseVariantOutputData> variantData = variantScope
-                    .getVariantData();
+            final BaseVariantData variantData = variantScope.getVariantData();
             task.setXmlProcessor(variantData.getLayoutXmlProcessor());
             task.setSdkDir(variantScope.getGlobalScope().getSdkHandler().getSdkFolder());
             task.setXmlOutFolder(variantScope.getLayoutInfoOutputForDataBinding());

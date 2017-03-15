@@ -32,7 +32,6 @@ import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingProcessLayoutsTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.tasks.AidlCompile;
 import com.android.build.gradle.tasks.ExternalNativeBuildTask;
 import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
@@ -85,7 +84,7 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     GradleVariantConfiguration getVariantConfiguration();
 
     @NonNull
-    BaseVariantData<? extends BaseVariantOutputData> getVariantData();
+    BaseVariantData getVariantData();
 
     boolean isMinifyEnabled();
 

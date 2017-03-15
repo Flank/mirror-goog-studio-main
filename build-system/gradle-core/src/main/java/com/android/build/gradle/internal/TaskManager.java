@@ -133,7 +133,6 @@ import com.android.build.gradle.internal.variant.AndroidArtifactVariantData;
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.internal.variant.ApplicationVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
 import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.build.gradle.internal.variant.TestVariantData;
@@ -506,7 +505,7 @@ public abstract class TaskManager {
     protected void createDependencyStreams(
             @NonNull TaskFactory tasks,
             @NonNull final VariantScope variantScope) {
-        BaseVariantData<? extends BaseVariantOutputData> variantData = variantScope.getVariantData();
+        BaseVariantData variantData = variantScope.getVariantData();
 
         TransformManager transformManager = variantScope.getTransformManager();
 
@@ -1098,7 +1097,7 @@ public abstract class TaskManager {
             @NonNull File resPackageOutputFolder,
             @NonNull MergeType mergeType,
             @NonNull String baseName) {
-        BaseVariantData<? extends BaseVariantOutputData> variantData = scope.getVariantData();
+        BaseVariantData variantData = scope.getVariantData();
 
         variantData.calculateFilters(scope.getGlobalScope().getExtension().getSplits());
         boolean useAaptToGenerateLegacyMultidexMainDexProguardRules =
@@ -1150,7 +1149,7 @@ public abstract class TaskManager {
             @NonNull TaskFactory tasks,
             @NonNull VariantScope scope,
             @NonNull PackagingScope packagingScope) {
-        BaseVariantData<? extends BaseVariantOutputData> variantData = scope.getVariantData();
+        BaseVariantData variantData = scope.getVariantData();
 
         checkState(
                 variantData
@@ -1377,7 +1376,7 @@ public abstract class TaskManager {
     public AndroidTask<? extends JavaCompile> createJavacTask(
             @NonNull final TaskFactory tasks,
             @NonNull final VariantScope scope) {
-        final BaseVariantData<? extends BaseVariantOutputData> variantData = scope.getVariantData();
+        final BaseVariantData variantData = scope.getVariantData();
 
         AndroidTask<IncrementalSafeguard> javacIncrementalSafeguard = androidTasks.create(tasks,
                 new IncrementalSafeguard.ConfigAction(scope));
@@ -1651,8 +1650,8 @@ public abstract class TaskManager {
             @NonNull TestVariantData variantData) {
         VariantScope variantScope = variantData.getScope();
 
-        final BaseVariantData<BaseVariantOutputData> testedVariantData =
-                (BaseVariantData<BaseVariantOutputData>) variantData.getTestedVariantData();
+        final BaseVariantData testedVariantData =
+                (BaseVariantData) variantData.getTestedVariantData();
 
         createAnchorTasks(tasks, variantScope);
 
@@ -1761,11 +1760,8 @@ public abstract class TaskManager {
         return true;
     }
 
-    /**
-     * Is the given variant relevant for lint?
-     */
-    private static boolean isLintVariant(
-            @NonNull BaseVariantData<? extends BaseVariantOutputData> baseVariantData) {
+    /** Is the given variant relevant for lint? */
+    private static boolean isLintVariant(@NonNull BaseVariantData baseVariantData) {
         // Only create lint targets for variants like debug and release, not debugTest
         VariantConfiguration config = baseVariantData.getVariantConfiguration();
         return !config.getType().isForTesting();
@@ -1776,8 +1772,7 @@ public abstract class TaskManager {
      * lint task earlier which runs on all variants.
      */
     public void createLintTasks(TaskFactory tasks, final VariantScope scope) {
-        final BaseVariantData<? extends BaseVariantOutputData> baseVariantData =
-                scope.getVariantData();
+        final BaseVariantData baseVariantData = scope.getVariantData();
         if (!isLintVariant(baseVariantData)) {
             return;
         }
@@ -1921,8 +1916,7 @@ public abstract class TaskManager {
     protected void createConnectedTestForVariant(
             @NonNull TaskFactory tasks,
             @NonNull final VariantScope variantScope) {
-        final BaseVariantData<? extends BaseVariantOutputData> baseVariantData =
-                variantScope.getTestedVariantData();
+        final BaseVariantData baseVariantData = variantScope.getTestedVariantData();
         final TestVariantData testVariantData = (TestVariantData) variantScope.getVariantData();
 
         TestDataImpl testData = new TestDataImpl(testVariantData);
@@ -2022,8 +2016,7 @@ public abstract class TaskManager {
                         getIncrementalMode(variantScope.getVariantConfiguration())
                                 != IncrementalMode.NONE);
 
-        final BaseVariantData<? extends BaseVariantOutputData> variantData =
-                variantScope.getVariantData();
+        final BaseVariantData variantData = variantScope.getVariantData();
         final GradleVariantConfiguration config = variantData.getVariantConfiguration();
 
         TransformManager transformManager = variantScope.getTransformManager();
@@ -2165,7 +2158,7 @@ public abstract class TaskManager {
 
     @NonNull
     private DexingMode getDexingMode(@NonNull VariantScope scope, boolean isMultiDexEnabled) {
-        BaseVariantData<? extends BaseVariantOutputData> variantData = scope.getVariantData();
+        BaseVariantData variantData = scope.getVariantData();
         if (variantData.getType().isForTesting()
                 && scope.getTestedVariantData() != null
                 && scope.getTestedVariantData().getType() != VariantType.LIBRARY) {
@@ -2621,8 +2614,7 @@ public abstract class TaskManager {
         if (!extension.getDataBinding().isEnabled()) {
             return;
         }
-        final BaseVariantData<? extends BaseVariantOutputData> variantData = variantScope
-                .getVariantData();
+        final BaseVariantData variantData = variantScope.getVariantData();
         VariantType type = variantData.getType();
         boolean isTest = type == VariantType.ANDROID_TEST || type == VariantType.UNIT_TEST;
         if (isTest && !extension.getDataBinding().isEnabledForTests()) {
@@ -2696,7 +2688,7 @@ public abstract class TaskManager {
     }
 
     private void setDataBindingAnnotationProcessorParams(@NonNull VariantScope scope) {
-        BaseVariantData<? extends BaseVariantOutputData> variantData = scope.getVariantData();
+        BaseVariantData variantData = scope.getVariantData();
         GradleVariantConfiguration variantConfiguration = variantData.getVariantConfiguration();
         CoreJavaCompileOptions javaCompileOptions = variantConfiguration
                 .getJavaCompileOptions();
@@ -2973,8 +2965,7 @@ public abstract class TaskManager {
     }
 
     public AndroidTask<DefaultTask> createAssembleTask(
-            @NonNull TaskFactory tasks,
-            @NonNull final BaseVariantData<? extends BaseVariantOutputData> variantData) {
+            @NonNull TaskFactory tasks, @NonNull final BaseVariantData variantData) {
         return androidTasks.create(
                 tasks,
                 variantData.getScope().getTaskName("assemble"),
@@ -3067,8 +3058,7 @@ public abstract class TaskManager {
             return;
         }
 
-        final BaseVariantData<? extends BaseVariantOutputData> variantData = variantScope
-                .getVariantData();
+        final BaseVariantData variantData = variantScope.getVariantData();
         final GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
         final BaseVariantData testedVariantData = variantScope.getTestedVariantData();
 
@@ -3222,7 +3212,7 @@ public abstract class TaskManager {
     private void applyProguardConfig(
             ProguardConfigurable transform,
             VariantScope scope) {
-        final BaseVariantData<? extends BaseVariantOutputData> variantData = scope.getVariantData();
+        final BaseVariantData variantData = scope.getVariantData();
         final GradleVariantConfiguration variantConfig = scope.getVariantConfiguration();
         transform.setConfigurationFiles(
                 project.files(
@@ -3289,7 +3279,7 @@ public abstract class TaskManager {
         createPreBuildTasks(tasks, scope);
 
         // also create sourceGenTask
-        final BaseVariantData<? extends BaseVariantOutputData> variantData = scope.getVariantData();
+        final BaseVariantData variantData = scope.getVariantData();
         scope.setSourceGenTask(androidTasks.create(tasks,
                 scope.getTaskName("generate", "Sources"),
                 Task.class,
@@ -3357,7 +3347,7 @@ public abstract class TaskManager {
 
     private void createCompileAnchorTask(
             @NonNull TaskFactory tasks, @NonNull final VariantScope scope) {
-        final BaseVariantData<? extends BaseVariantOutputData> variantData = scope.getVariantData();
+        final BaseVariantData variantData = scope.getVariantData();
         scope.setCompileTask(androidTasks.create(tasks, new TaskConfigAction<Task>() {
             @NonNull
             @Override

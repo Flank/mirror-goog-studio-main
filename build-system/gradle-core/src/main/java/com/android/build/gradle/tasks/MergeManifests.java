@@ -32,9 +32,7 @@ import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
-import com.android.build.gradle.internal.variant.ApkVariantOutputData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.model.ApiVersion;
@@ -82,7 +80,6 @@ public class MergeManifests extends ManifestProcessorTask {
     private File reportFile;
     private VariantConfiguration<CoreBuildType, CoreProductFlavor, CoreProductFlavor>
             variantConfiguration;
-    private ApkVariantOutputData variantOutputData;
     private ArtifactCollection manifests;
     private FileCollection microApkManifest;
     private FileCollection compatibleScreensManifest;
@@ -182,20 +179,22 @@ public class MergeManifests extends ManifestProcessorTask {
     }
 
     @Input
-    public int getVersionCode() {
-        if (variantOutputData != null) {
-            return variantOutputData.getVersionCode();
-        }
-        return variantConfiguration.getVersionCode();
+    public List<Integer> getVersionCodes() {
+        return splitScope
+                .getApkDatas()
+                .stream()
+                .map(ApkData::getVersionCode)
+                .collect(Collectors.toList());
     }
 
     @Input
     @Optional
-    public String getVersionName() {
-        if (variantOutputData != null) {
-            return variantOutputData.getVersionName();
-        }
-        return variantConfiguration.getVersionName();
+    public List<String> getVersionNames() {
+        return splitScope
+                .getApkDatas()
+                .stream()
+                .map(ApkData::getVersionName)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -320,14 +319,6 @@ public class MergeManifests extends ManifestProcessorTask {
         this.variantConfiguration = variantConfiguration;
     }
 
-    public ApkVariantOutputData getVariantOutputData() {
-        return variantOutputData;
-    }
-
-    public void setVariantOutputData(ApkVariantOutputData variantOutputData) {
-        this.variantOutputData = variantOutputData;
-    }
-
     @SuppressWarnings("unused")
     @InputFiles
     public FileCollection getManifests() {
@@ -372,8 +363,7 @@ public class MergeManifests extends ManifestProcessorTask {
 
         @Override
         public void execute(@NonNull MergeManifests processManifestTask) {
-            final BaseVariantData<? extends BaseVariantOutputData> variantData =
-                    variantScope.getVariantData();
+            final BaseVariantData variantData = variantScope.getVariantData();
             final VariantConfiguration<CoreBuildType, CoreProductFlavor, CoreProductFlavor> config =
                     variantData.getVariantConfiguration();
             GlobalScope globalScope = variantScope.getGlobalScope();

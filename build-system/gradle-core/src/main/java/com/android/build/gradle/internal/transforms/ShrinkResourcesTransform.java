@@ -82,7 +82,7 @@ public class ShrinkResourcesTransform extends Transform {
      * resource merging task, since we will run it a second time here to generate a new .ap_ file
      * with fewer resources
      */
-    @NonNull private final BaseVariantData<?> variantData;
+    @NonNull private final BaseVariantData variantData;
 
     @NonNull private final FileCollection uncompressedResources;
     @NonNull

@@ -22,7 +22,6 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.BaseTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.builder.compiling.BuildConfigGenerator;
 import com.android.builder.model.ClassField;
 import com.android.utils.FileUtils;
@@ -212,7 +211,7 @@ public class GenerateBuildConfig extends BaseTask {
 
         @Override
         public void execute(@NonNull GenerateBuildConfig generateBuildConfigTask) {
-            BaseVariantData<? extends BaseVariantOutputData> variantData = scope.getVariantData();
+            BaseVariantData variantData = scope.getVariantData();
 
             variantData.generateBuildConfigTask = generateBuildConfigTask;
 

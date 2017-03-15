@@ -27,7 +27,6 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NdkTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.ide.common.process.ProcessException;
@@ -237,7 +236,7 @@ public class RenderscriptCompile extends NdkTask {
 
         @Override
         public void execute(@NonNull RenderscriptCompile renderscriptTask) {
-            BaseVariantData<? extends BaseVariantOutputData> variantData = scope.getVariantData();
+            BaseVariantData variantData = scope.getVariantData();
             final GradleVariantConfiguration config = variantData.getVariantConfiguration();
 
             variantData.renderscriptCompileTask = renderscriptTask;

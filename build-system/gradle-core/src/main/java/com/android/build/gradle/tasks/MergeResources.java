@@ -30,9 +30,7 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.builder.core.BuilderConstants;
-import com.android.builder.core.VariantType;
 import com.android.builder.model.VectorDrawablesOptions;
 import com.android.builder.png.VectorDrawableRenderer;
 import com.android.ide.common.res2.FileStatus;
@@ -595,8 +593,7 @@ public class MergeResources extends IncrementalTask {
 
         @Override
         public void execute(@NonNull MergeResources mergeResourcesTask) {
-            final BaseVariantData<? extends BaseVariantOutputData> variantData =
-                    scope.getVariantData();
+            final BaseVariantData variantData = scope.getVariantData();
             final AndroidConfig extension = scope.getGlobalScope().getExtension();
             final Project project = scope.getGlobalScope().getProject();
 

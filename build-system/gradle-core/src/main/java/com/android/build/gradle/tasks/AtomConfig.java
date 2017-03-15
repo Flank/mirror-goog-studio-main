@@ -49,7 +49,6 @@ import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.BaseTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
 import com.google.common.base.MoreObjects;
@@ -562,8 +561,7 @@ public class AtomConfig extends BaseTask {
         @Override
         public void execute(@NonNull AtomConfig atomConfig) {
             final GlobalScope globalScope = scope.getGlobalScope();
-            final BaseVariantData<? extends BaseVariantOutputData> variantData =
-                    scope.getVariantData();
+            final BaseVariantData variantData = scope.getVariantData();
             final GradleVariantConfiguration config = variantData.getVariantConfiguration();
 
             variantData.atomConfigTask = atomConfig;

@@ -48,7 +48,7 @@ public class UnitTestVariantImpl extends BaseVariantImpl implements UnitTestVari
 
     @NonNull
     @Override
-    protected BaseVariantData<?> getVariantData() {
+    protected BaseVariantData getVariantData() {
         return variantData;
     }
 
