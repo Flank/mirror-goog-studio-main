@@ -220,7 +220,8 @@ public class CustomClassTransform extends Transform {
                                 break;
                             case ADDED:
                             case CHANGED:
-                                if (!inputFile.isDirectory()) {
+                                if (!inputFile.isDirectory()
+                                        && inputFile.getName().endsWith(SdkConstants.DOT_CLASS)) {
                                     File out = toOutputFile(outputDir, inputDir, inputFile);
                                     transformFile(function, inputFile, out);
                                 }
@@ -233,8 +234,10 @@ public class CustomClassTransform extends Transform {
                     }
                 } else {
                     for (File in : FileUtils.getAllFiles(inputDir)) {
-                        File out = toOutputFile(outputDir, inputDir, in);
-                        transformFile(function, in, out);
+                        if (in.getName().endsWith(SdkConstants.DOT_CLASS)) {
+                            File out = toOutputFile(outputDir, inputDir, in);
+                            transformFile(function, in, out);
+                        }
                     }
                 }
             }
