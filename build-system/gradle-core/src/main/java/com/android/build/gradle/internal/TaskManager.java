@@ -87,6 +87,7 @@ import com.android.build.gradle.internal.scope.PackagingScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.scope.VariantScope.Java8LangSupport;
 import com.android.build.gradle.internal.tasks.AndroidReportTask;
 import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.DependencyReportTask;
@@ -110,6 +111,7 @@ import com.android.build.gradle.internal.tasks.databinding.DataBindingProcessLay
 import com.android.build.gradle.internal.test.AbstractTestDataImpl;
 import com.android.build.gradle.internal.test.TestDataImpl;
 import com.android.build.gradle.internal.transforms.CustomClassTransform;
+import com.android.build.gradle.internal.transforms.DesugarTransform;
 import com.android.build.gradle.internal.transforms.DexArchiveBuilderTransform;
 import com.android.build.gradle.internal.transforms.DexMergerTransform;
 import com.android.build.gradle.internal.transforms.DexTransform;
@@ -176,11 +178,13 @@ import com.android.build.gradle.tasks.factory.JavaCompileConfigAction;
 import com.android.build.gradle.tasks.factory.ProcessJavaResConfigAction;
 import com.android.build.gradle.tasks.factory.TestServerTaskConfigAction;
 import com.android.builder.core.AndroidBuilder;
+import com.android.builder.core.DefaultApiVersion;
 import com.android.builder.core.DefaultDexOptions;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.core.VariantType;
 import com.android.builder.dependency.level2.AndroidDependency;
 import com.android.builder.dexing.DexingMode;
+import com.android.builder.model.ApiVersion;
 import com.android.builder.model.DataBindingOptions;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.builder.model.SyncIssue;
@@ -192,6 +196,7 @@ import com.android.builder.utils.FileCache;
 import com.android.ide.common.build.ApkData;
 import com.android.manifmerger.ManifestMerger2;
 import com.android.sdklib.AndroidVersion;
+import com.android.sdklib.SdkVersionInfo;
 import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
 import com.google.common.base.Joiner;
@@ -225,6 +230,7 @@ import org.gradle.api.attributes.AttributeContainer;
 import org.gradle.api.execution.TaskExecutionGraph;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.plugins.BasePlugin;
@@ -2029,6 +2035,8 @@ public abstract class TaskManager {
             createJacocoTransform(tasks, variantScope);
         }
 
+        maybeCreateDesugarTask(tasks, variantScope, config.getMinSdkVersion(), transformManager);
+
         boolean isMinifyEnabled = isMinifyEnabled(variantScope);
         boolean isMultiDexEnabled = config.isMultiDexEnabled();
         // Switch to native multidex if possible when using instant run.
@@ -2156,6 +2164,44 @@ public abstract class TaskManager {
         }
     }
 
+    private void maybeCreateDesugarTask(
+            @NonNull TaskFactory tasks,
+            @NonNull VariantScope variantScope,
+            @NonNull ApiVersion minSdk,
+            @NonNull TransformManager transformManager) {
+        if (globalScope
+                        .getExtension()
+                        .getCompileOptions()
+                        .getTargetCompatibility()
+                        .isJava8Compatible()
+                && variantScope.getJava8LangSupportType() == Java8LangSupport.DESUGAR) {
+            FileCache userCache =
+                    globalScope
+                                    .getProjectOptions()
+                                    .get(BooleanOption.ENABLE_INTERMEDIATE_ARTIFACTS_CACHE)
+                            ? globalScope.getBuildCache()
+                            : null;
+
+            int minSdkVersion;
+            if (DefaultApiVersion.isPreview(minSdk)) {
+                //noinspection ConstantConditions - preview always has a codename
+                minSdkVersion = SdkVersionInfo.getApiByPreviewName(minSdk.getCodename(), true);
+            } else {
+                minSdkVersion = minSdk.getApiLevel();
+            }
+            DesugarTransform desugarTransform =
+                    new DesugarTransform(
+                            () -> androidBuilder.getBootClasspath(true),
+                            System.getProperty("sun.boot.class.path"),
+                            userCache,
+                            globalScope.getProjectLevelCache(),
+                            minSdkVersion,
+                            androidBuilder.getJavaProcessExecutor(),
+                            project.getLogger().isEnabled(LogLevel.INFO));
+            transformManager.addTransform(tasks, variantScope, desugarTransform);
+        }
+    }
+
     @NonNull
     private DexingMode getDexingMode(@NonNull VariantScope scope, boolean isMultiDexEnabled) {
         BaseVariantData variantData = scope.getVariantData();
@@ -2229,7 +2275,7 @@ public abstract class TaskManager {
     private FileCache getUserLevelCache(boolean isMinifiedEnabled, boolean preDexLibraries) {
         if (preDexLibraries
                 && !isMinifiedEnabled
-                && projectOptions.get(BooleanOption.ENABLE_PREDEX_CACHE)) {
+                && projectOptions.get(BooleanOption.ENABLE_INTERMEDIATE_ARTIFACTS_CACHE)) {
             return buildCache;
         } else {
             return null;
@@ -2272,7 +2318,8 @@ public abstract class TaskManager {
                 variantScope.getInstantRunBuildContext().isInInstantRunMode() || cachePreDex;
         if (preDexEnabled) {
             FileCache buildCache;
-            if (cachePreDex && projectOptions.get(BooleanOption.ENABLE_PREDEX_CACHE)) {
+            if (cachePreDex
+                    && projectOptions.get(BooleanOption.ENABLE_INTERMEDIATE_ARTIFACTS_CACHE)) {
                 buildCache = this.buildCache;
             } else {
                 buildCache = null;

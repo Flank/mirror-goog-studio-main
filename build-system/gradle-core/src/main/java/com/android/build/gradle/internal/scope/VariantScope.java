@@ -497,4 +497,14 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     @NonNull
     VariantDependencies getVariantDependencies();
+
+    enum Java8LangSupport {
+        NONE,
+        DESUGAR,
+        JACK,
+        EXTERNAL_PLUGIN
+    }
+
+    @NonNull
+    Java8LangSupport getJava8LangSupportType();
 }

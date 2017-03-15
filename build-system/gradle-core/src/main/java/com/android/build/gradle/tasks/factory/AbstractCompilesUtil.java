@@ -40,15 +40,15 @@ public class AbstractCompilesUtil {
     public static final String ANDROID_APT_PLUGIN_NAME = "com.neenbedankt.android-apt";
 
     /**
-     * Determines the java language level to use and sets it on the given task and
-     * {@link CompileOptions}. The latter is to propagate the information to Studio.
+     * Determines the java language level to use and sets it on the given task and {@link
+     * CompileOptions}. The latter is to propagate the information to Studio.
      */
     public static void configureLanguageLevel(
             AbstractCompile compileTask,
             final CompileOptions compileOptions,
             String compileSdkVersion,
-            boolean jackEnabled) {
-        setDefaultJavaVersion(compileOptions, compileSdkVersion, jackEnabled);
+            VariantScope.Java8LangSupport java8LangSupport) {
+        setDefaultJavaVersion(compileOptions, compileSdkVersion, java8LangSupport);
         compileTask.setSourceCompatibility(compileOptions.getSourceCompatibility().toString());
         compileTask.setTargetCompatibility(compileOptions.getTargetCompatibility().toString());
     }
@@ -56,12 +56,12 @@ public class AbstractCompilesUtil {
     public static void setDefaultJavaVersion(
             final CompileOptions compileOptions,
             String compileSdkVersion,
-            boolean jackEnabled) {
+            VariantScope.Java8LangSupport java8LangSupport) {
         compileOptions.setDefaultJavaVersion(
                 chooseDefaultJavaVersion(
                         compileSdkVersion,
                         System.getProperty("java.specification.version"),
-                        jackEnabled));
+                        java8LangSupport));
     }
 
     @NonNull
@@ -69,7 +69,7 @@ public class AbstractCompilesUtil {
     static JavaVersion chooseDefaultJavaVersion(
             @NonNull String compileSdkVersion,
             @NonNull String currentJdkVersion,
-            boolean jackEnabled) {
+            VariantScope.Java8LangSupport java8LangSupport) {
         final AndroidVersion hash = AndroidTargetHash.getVersionFromHash(compileSdkVersion);
         Integer compileSdkLevel = (hash == null ? null : hash.getFeatureLevel());
 
@@ -82,7 +82,7 @@ public class AbstractCompilesUtil {
             } else if (21 <= compileSdkLevel && compileSdkLevel < 24) {
                 javaVersionToUse = JavaVersion.VERSION_1_7;
             } else {
-                if (jackEnabled) {
+                if (java8LangSupport == VariantScope.Java8LangSupport.JACK) {
                     javaVersionToUse = JavaVersion.VERSION_1_8;
                 } else {
                     javaVersionToUse = JavaVersion.VERSION_1_7;

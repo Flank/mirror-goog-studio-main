@@ -205,55 +205,7 @@ public class ApplicationTaskManager extends TaskManager {
                 ExecutionType.APP_TASK_MANAGER_CREATE_COMPILE_TASK,
                 project.getPath(),
                 variantScope.getFullVariantName(),
-                () -> {
-                    // create data binding merge task before the javac task so that it can
-                    // parse jars before any consumer
-                    createDataBindingMergeArtifactsTaskIfNecessary(tasks, variantScope);
-                    AndroidTask<? extends JavaCompile> javacTask =
-                            createJavacTask(tasks, variantScope);
-                    if (variantScope.getVariantConfiguration().isJackEnabled()) {
-                        createJackTask(tasks, variantScope);
-                    } else {
-                        // Prevent the use of java 1.8 without jack, which would otherwise cause an
-                        // internal javac error.
-                        if (variantScope
-                                .getGlobalScope()
-                                .getExtension()
-                                .getCompileOptions()
-                                .getTargetCompatibility()
-                                .isJava8Compatible()) {
-                            // Only warn for users of retrolambda and dexguard
-                            if (project.getPlugins().hasPlugin("me.tatarka.retrolambda")
-                                    || project.getPlugins().hasPlugin("dexguard")) {
-                                getLogger()
-                                        .warn(
-                                                "Jack is disabled, but one of the plugins you "
-                                                        + "are using supports Java 8 language "
-                                                        + "features.");
-                            } else {
-                                androidBuilder
-                                        .getErrorReporter()
-                                        .handleSyncError(
-                                                variantScope
-                                                        .getVariantConfiguration()
-                                                        .getFullName(),
-                                                SyncIssue
-                                                        .TYPE_JACK_REQUIRED_FOR_JAVA_8_LANGUAGE_FEATURES,
-                                                "Jack is required to support java 8 language "
-                                                        + "features. Either enable Jack or remove "
-                                                        + "sourceCompatibility "
-                                                        + "JavaVersion.VERSION_1_8.");
-                            }
-                        }
-                        addJavacClassesStream(variantScope);
-                        setJavaCompilerTask(javacTask, tasks, variantScope);
-                        getAndroidTasks()
-                                .create(
-                                        tasks,
-                                        new AndroidJarTask.JarClassesConfigAction(variantScope));
-                        createPostCompilationTasks(tasks, variantScope);
-                    }
-                });
+                () -> addCompileTask(tasks, variantScope));
 
         // Add data binding tasks if enabled
         createDataBindingTasksIfNecessary(tasks, variantScope);
@@ -303,6 +255,53 @@ public class ApplicationTaskManager extends TaskManager {
             @NonNull TaskFactory tasks, VariantScope scope) {
         return getAndroidTasks().create(tasks,
                         new BuildInfoWriterTask.ConfigAction(scope, getLogger()));
+    }
+
+    private void addCompileTask(@NonNull TaskFactory tasks, @NonNull VariantScope variantScope) {
+        // create data binding merge task before the javac task so that it can
+        // parse jars before any consumer
+        createDataBindingMergeArtifactsTaskIfNecessary(tasks, variantScope);
+        AndroidTask<? extends JavaCompile> javacTask = createJavacTask(tasks, variantScope);
+        VariantScope.Java8LangSupport java8LangSupport = variantScope.getJava8LangSupportType();
+        if (java8LangSupport == VariantScope.Java8LangSupport.JACK) {
+            createJackTask(tasks, variantScope);
+        } else {
+            // Allow java 1.8 only for some configurations, which would otherwise cause an
+            // internal javac error.
+            if (variantScope
+                    .getGlobalScope()
+                    .getExtension()
+                    .getCompileOptions()
+                    .getTargetCompatibility()
+                    .isJava8Compatible()) {
+
+                if (java8LangSupport != VariantScope.Java8LangSupport.DESUGAR) {
+                    // Only warn for users of retrolambda and dexguard
+                    if (java8LangSupport == VariantScope.Java8LangSupport.EXTERNAL_PLUGIN) {
+                        getLogger()
+                                .warn(
+                                        "Jack is disabled, but one of the plugins you "
+                                                + "are using supports Java 8 language "
+                                                + "features.");
+                    } else {
+                        androidBuilder
+                                .getErrorReporter()
+                                .handleSyncError(
+                                        variantScope.getVariantConfiguration().getFullName(),
+                                        SyncIssue.TYPE_JACK_REQUIRED_FOR_JAVA_8_LANGUAGE_FEATURES,
+                                        "Jack is required to support java 8 language "
+                                                + "features. Either enable Jack or remove "
+                                                + "sourceCompatibility "
+                                                + "JavaVersion.VERSION_1_8.");
+                    }
+                }
+            }
+            addJavacClassesStream(variantScope);
+            setJavaCompilerTask(javacTask, tasks, variantScope);
+            getAndroidTasks()
+                    .create(tasks, new AndroidJarTask.JarClassesConfigAction(variantScope));
+            createPostCompilationTasks(tasks, variantScope);
+        }
     }
 
     /**
