@@ -16,7 +16,14 @@
 
 package com.android.build.gradle.integration.feature;
 
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclaration;
+import java.io.File;
+import java.io.FileReader;
+import org.gradle.internal.impldep.com.google.gson.Gson;
+import org.gradle.internal.impldep.com.google.gson.GsonBuilder;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -43,5 +50,15 @@ public class FeatureTest {
     public void build() throws Exception {
         // just run test for now.
         sProject.execute("assemble");
+        GradleTestProject featureProject = sProject.getSubproject(":feature");
+        File featureSplit =
+                featureProject.getIntermediateFile(
+                        "feature-split/declaration/release/feature-split.json");
+        assertThat(featureSplit.exists());
+        Gson gson = new GsonBuilder().create();
+        FeatureSplitDeclaration featureSplitDeclaration =
+                gson.fromJson(new FileReader(featureSplit), FeatureSplitDeclaration.class);
+        assertThat(featureSplitDeclaration).isNotNull();
+        assertThat(featureSplitDeclaration.getUniqueIdentifier()).isEqualTo(":feature");
     }
 }

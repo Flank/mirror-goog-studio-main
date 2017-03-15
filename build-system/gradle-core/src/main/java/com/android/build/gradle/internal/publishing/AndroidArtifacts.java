@@ -17,6 +17,8 @@
 package com.android.build.gradle.internal.publishing;
 
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.API_ELEMENTS;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.BASE_ELEMENTS;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.FEATURE_ELEMENTS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS;
 
 import com.android.annotations.NonNull;
@@ -83,6 +85,9 @@ public class AndroidArtifacts {
     private static final String TYPE_MAPPING = "android-mapping";
     private static final String TYPE_METADATA = "android-metadata";
 
+    // types for feature-split content.
+    private static final String TYPE_FEATURE_SPLIT_DECLARATION = "feature-split-decl";
+
     public enum ConsumedConfigType {
         COMPILE_CLASSPATH(API_ELEMENTS),
         RUNTIME_CLASSPATH(RUNTIME_ELEMENTS),
@@ -101,7 +106,10 @@ public class AndroidArtifacts {
     }
 
     public enum PublishedConfigType {
-        API_ELEMENTS, RUNTIME_ELEMENTS
+        API_ELEMENTS,
+        RUNTIME_ELEMENTS,
+        FEATURE_ELEMENTS,
+        BASE_ELEMENTS
     }
 
     public enum ArtifactScope {
@@ -114,6 +122,10 @@ public class AndroidArtifacts {
             = ImmutableList.of(RUNTIME_ELEMENTS);
     private static final List<PublishedConfigType> API_AND_RUNTIME_ELEMENTS
             = ImmutableList.of(API_ELEMENTS, RUNTIME_ELEMENTS);
+    private static final List<PublishedConfigType> FEATURE_ELEMENTS_ONLY =
+            ImmutableList.of(FEATURE_ELEMENTS);
+    private static final List<PublishedConfigType> BASE_ELEMENTS_ONLY =
+            ImmutableList.of(BASE_ELEMENTS);
 
     public enum ArtifactType {
         CLASSES(JavaPlugin.CLASS_DIRECTORY, API_AND_RUNTIME_ELEMENTS),
@@ -164,7 +176,10 @@ public class AndroidArtifacts {
         // FIXME once we only support level 2 sync, then this can be not publishable
         EXPLODED_AAR(TYPE_EXPLODED_AAR, API_AND_RUNTIME_ELEMENTS),
         // Jar file for annotation processor as both classes and resources are needed, and for building model
-        JAR(TYPE_JAR, API_AND_RUNTIME_ELEMENTS);
+        JAR(TYPE_JAR, API_AND_RUNTIME_ELEMENTS),
+
+        // Feature split related artifacts.
+        FEATURE_SPLIT_DECLARATION(TYPE_FEATURE_SPLIT_DECLARATION, FEATURE_ELEMENTS_ONLY);
 
         @NonNull
         private final String type;
