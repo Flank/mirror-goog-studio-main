@@ -21,7 +21,6 @@ import com.android.build.gradle.integration.common.fixture.Adb
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.integration.common.utils.DeviceHelper
-import com.android.build.gradle.options.StringOption
 import com.android.builder.core.BuilderConstants
 import com.android.testutils.apk.Apk
 import groovy.transform.CompileStatic
@@ -33,6 +32,7 @@ import org.junit.Test
 import org.junit.experimental.categories.Category
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
+
 /**
  * Integration test of the native plugin with multiple variants.
  */
@@ -165,25 +165,5 @@ model {
         } else {
             project.execute(GradleTestProject.DEVICE_PROVIDER_NAME + "X86DebugAndroidTest")
         }
-    }
-
-    /**
-     * http://b.android.com/233421
-     *
-     * AndroidProject.PROPERTY_BUILD_ABI should have no effect when
-     * BooleanOption.BUILD_ONLY_TARGET_ABI is not enabled.
-     */
-    @Test
-    void testBuildWithSpecificAbi() {
-        project.executor()
-                .with(StringOption.IDE_BUILD_TARGET_ABI, "x86")
-                .run("assembleDebug")
-
-        Apk apk = project.getApk(null,  GradleTestProject.ApkType.DEBUG, "x86")
-        assertThat(apk).contains("lib/x86/libhello-jni.so")
-        apk = project.getApk(null,  GradleTestProject.ApkType.DEBUG, "arm")
-        assertThat(apk).contains("lib/armeabi/libhello-jni.so")
-        apk = project.getApk(null,  GradleTestProject.ApkType.DEBUG, "mips")
-        assertThat(apk).contains("lib/mips/libhello-jni.so")
     }
 }
