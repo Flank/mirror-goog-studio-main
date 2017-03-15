@@ -362,16 +362,6 @@ public final class FileUtils {
         return path;
     }
 
-    /** See {@link #toSystemIndependentPath(String)}. */
-    @NonNull
-    public static String toSystemIndependentPath(@NonNull Path path) {
-        String filePath = path.toString();
-        if (!path.getFileSystem().getSeparator().equals("/")) {
-            return filePath.replace(path.getFileSystem().getSeparator(), "/");
-        }
-        return filePath;
-    }
-
     /**
      * Returns an absolute path that can be open by system APIs for all platforms.
      *

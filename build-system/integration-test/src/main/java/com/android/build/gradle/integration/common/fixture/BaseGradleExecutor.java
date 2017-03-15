@@ -203,7 +203,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
 
         if (!enablePreDexBuildCache) {
             arguments.add(
-                    propertyArg(AndroidGradleOptions.PROPERTY_ENABLE_PREDEX_BUILD_CACHE, "false"));
+                    propertyArg(AndroidGradleOptions.ENABLE_INTERMEDIATE_ARTIFACTS_CACHE, "false"));
         }
 
         Files.createDirectories(androidSdkHome);

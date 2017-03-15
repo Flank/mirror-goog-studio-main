@@ -19,7 +19,7 @@ package com.android.builder.dexing;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.ide.common.internal.WaitableExecutor;
-import com.android.utils.FileUtils;
+import com.android.utils.PathUtils;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteStreams;
 import java.io.IOException;
@@ -93,7 +93,7 @@ public class RuntimeAnnotatedClassCollector {
                         if (!keepClassPredicate.test(Files.readAllBytes(file))) {
                             return FileVisitResult.CONTINUE;
                         }
-                        classes.add(FileUtils.toSystemIndependentPath(inputDir.relativize(file)));
+                        classes.add(PathUtils.toSystemIndependentPath(inputDir.relativize(file)));
                         return FileVisitResult.CONTINUE;
                     }
                 });
