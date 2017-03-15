@@ -17,13 +17,11 @@
 #include <jni.h>
 #include <unistd.h>
 
-#include "event_manager.h"
 #include "perfa/perfa.h"
 #include "perfa/support/jni_wrappers.h"
 #include "utils/clock.h"
 
 using grpc::ClientContext;
-using profiler::EventManager;
 using profiler::SteadyClock;
 using profiler::Perfa;
 using profiler::proto::ActivityData;
@@ -57,13 +55,12 @@ void SendSystemEvent(SystemData* event, int32_t pid, int64_t timestamp,
 void SendKeyboardEvent(JStringWrapper& text, int64_t event_down_time) {
   int64_t timestamp = GetClock().GetCurrentTime();
   int32_t pid = getpid();
-  Perfa::Instance().background_queue()->EnqueueTask(
-      [pid, text, timestamp, event_down_time]() {
-        SystemData event;
-        event.set_type(SystemData::KEY);
-        event.set_event_data(text.get());
-        SendSystemEvent(&event, pid, timestamp, event_down_time);
-      });
+  Perfa::Instance().background_queue()->EnqueueTask([pid, text, timestamp, event_down_time]() {
+    SystemData event;
+    event.set_type(SystemData::KEY);
+    event.set_event_data(text.get());
+    SendSystemEvent(&event, pid, timestamp, event_down_time);
+  });
 }
 
 // TODO: Combine activity and fragment protos, fragments are a subset of
@@ -74,14 +71,21 @@ void EnqueueActivityEvent(JNIEnv* env, const jstring& name,
   JStringWrapper activity_name(env, name);
   int64_t timestamp = GetClock().GetCurrentTime();
   int32_t pid = getpid();
-  ActivityData activity;
-  activity.set_name(activity_name.get());
-  activity.set_process_id(pid);
-  activity.set_hash(hash ^ pid);
-  ActivityStateData* state_data = activity.add_state_changes();
-  state_data->set_state(state);
-  state_data->set_timestamp(timestamp);
-  EventManager::Instance().CacheAndEnqueueActivityEvent(activity);
+  Perfa::Instance().background_queue()->EnqueueTask(
+      [activity_name, hash, pid, state, timestamp]() {
+        ActivityData activity;
+        activity.set_name(activity_name.get());
+        activity.set_process_id(pid);
+        activity.set_hash(hash ^ pid);
+        ActivityStateData* state_data = activity.add_state_changes();
+        state_data->set_state(state);
+        state_data->set_timestamp(timestamp);
+
+        auto event_stub = Perfa::Instance().event_stub();
+        ClientContext context;
+        EmptyEventResponse response;
+        event_stub.SendActivity(&context, activity, &response);
+      });
 }
 
 void EnqueueFragmentEvent(JNIEnv* env, const jstring& name,
