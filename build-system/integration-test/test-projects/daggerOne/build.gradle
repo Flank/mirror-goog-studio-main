@@ -29,5 +29,6 @@ android {
 dependencies {
     compile "com.squareup.dagger:dagger:1.2.2"
     compile "com.google.guava:guava:19.0" // Bump up used guava version.
-    provided "com.squareup.dagger:dagger-compiler:1.2.2"
+    annotationProcessor "com.squareup.dagger:dagger-compiler:1.2.2"
+    annotationProcessor "com.google.guava:guava:19.0" // Bump up used guava version.
 }
