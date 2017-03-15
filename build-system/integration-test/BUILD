@@ -84,6 +84,7 @@ TEST_DATA = [
     "//prebuilts/studio/sdk:add-ons/addon-google_apis-google-latest",
     "//prebuilts/studio/sdk:build-tools/24.0.3",
     "//prebuilts/studio/sdk:build-tools/minimum",
+    "//prebuilts/studio/sdk:build-tools/latest",
     "//prebuilts/studio/sdk:cmake",
     "//prebuilts/studio/sdk:constraint-layout_latest",
     "//prebuilts/studio/sdk:databinding_latest",

@@ -48,7 +48,6 @@ apply plugin: "com.android.model.application"
 model {
     android {
         compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-        buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
         defaultConfig {
             minSdkVersion.apiLevel $GradleTestProject.SUPPORT_LIB_MIN_SDK
         }

@@ -32,9 +32,11 @@ import com.android.build.gradle.internal.dsl.PackagingOptions;
 import com.android.build.gradle.internal.dsl.Splits;
 import com.android.build.gradle.internal.dsl.TestOptions;
 import com.android.build.gradle.managed.AndroidConfig;
+import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import java.util.ArrayList;
+import java.util.HashMap;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
@@ -62,8 +64,9 @@ public class AndroidConfigHelper {
         model.setJacoco(instantiator.newInstance(JacocoOptions.class));
         model.setAdbOptions(instantiator.newInstance(AdbOptions.class));
         model.setSplits(instantiator.newInstance(Splits.class, instantiator));
-        model.setLibraryRequests(Lists.newArrayList());
-        model.setFlavorSelection(Maps.newHashMap());
+        model.setLibraryRequests(new ArrayList<>());
+        model.setFlavorSelection(new HashMap<>());
+        model.setBuildToolsRevision(AndroidBuilder.DEFAULT_BUILD_TOOLS_REVISION);
     }
 
 
