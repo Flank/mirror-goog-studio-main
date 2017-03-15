@@ -18,6 +18,7 @@ package com.android.build.gradle.tasks.factory;
 
 import static com.android.build.gradle.tasks.factory.AbstractCompilesUtil.chooseDefaultJavaVersion;
 
+import com.android.build.gradle.internal.scope.VariantScope;
 import org.gradle.api.JavaVersion;
 import org.junit.Assert;
 import org.junit.Test;
@@ -31,24 +32,43 @@ public class AbstractCompilesUtilTest {
     public void testChooseDefaultJavaVersion_jdk8() throws Exception {
         Assert.assertEquals(
                 JavaVersion.VERSION_1_6,
-                chooseDefaultJavaVersion("android-15", CURRENT_JDK_VERSION, false));
+                chooseDefaultJavaVersion(
+                        "android-15", CURRENT_JDK_VERSION, VariantScope.Java8LangSupport.NONE));
         Assert.assertEquals(
                 JavaVersion.VERSION_1_6,
-                chooseDefaultJavaVersion("android-15", CURRENT_JDK_VERSION, true));
+                chooseDefaultJavaVersion(
+                        "android-15", CURRENT_JDK_VERSION, VariantScope.Java8LangSupport.JACK));
         Assert.assertEquals(
                 JavaVersion.VERSION_1_7,
-                chooseDefaultJavaVersion("android-21", CURRENT_JDK_VERSION, false));
+                chooseDefaultJavaVersion(
+                        "android-21", CURRENT_JDK_VERSION, VariantScope.Java8LangSupport.NONE));
         Assert.assertEquals(
                 JavaVersion.VERSION_1_7,
-                chooseDefaultJavaVersion("android-21", CURRENT_JDK_VERSION, true));
+                chooseDefaultJavaVersion(
+                        "android-21", CURRENT_JDK_VERSION, VariantScope.Java8LangSupport.JACK));
         Assert.assertEquals(
                 JavaVersion.VERSION_1_7,
-                chooseDefaultJavaVersion("Google Inc.:Google APIs:22", CURRENT_JDK_VERSION, false));
+                chooseDefaultJavaVersion(
+                        "Google Inc.:Google APIs:22",
+                        CURRENT_JDK_VERSION,
+                        VariantScope.Java8LangSupport.NONE));
         Assert.assertEquals(
                 JavaVersion.VERSION_1_7,
-                chooseDefaultJavaVersion("android-24", CURRENT_JDK_VERSION, false));
+                chooseDefaultJavaVersion(
+                        "android-24", CURRENT_JDK_VERSION, VariantScope.Java8LangSupport.NONE));
+        Assert.assertEquals(
+                JavaVersion.VERSION_1_7,
+                chooseDefaultJavaVersion(
+                        "android-24", CURRENT_JDK_VERSION, VariantScope.Java8LangSupport.DESUGAR));
+        Assert.assertEquals(
+                JavaVersion.VERSION_1_7,
+                chooseDefaultJavaVersion(
+                        "android-24",
+                        CURRENT_JDK_VERSION,
+                        VariantScope.Java8LangSupport.EXTERNAL_PLUGIN));
         Assert.assertEquals(
                 JavaVersion.VERSION_1_8,
-                chooseDefaultJavaVersion("android-24", CURRENT_JDK_VERSION, true));
+                chooseDefaultJavaVersion(
+                        "android-24", CURRENT_JDK_VERSION, VariantScope.Java8LangSupport.JACK));
     }
 }

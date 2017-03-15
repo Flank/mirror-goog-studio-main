@@ -66,6 +66,7 @@ import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.internal.variant.LibraryVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.TestedVariantData;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
@@ -1832,5 +1833,25 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     public VariantDependencies getVariantDependencies() {
         return variantData.getVariantDependency();
+    }
+
+    @NonNull
+    @Override
+    public Java8LangSupport getJava8LangSupportType() {
+        // in order of precedence
+        if (isJackEnabled()) {
+            return Java8LangSupport.JACK;
+        }
+
+        if (globalScope.getProject().getPlugins().hasPlugin("me.tatarka.retrolambda")
+                || globalScope.getProject().getPlugins().hasPlugin("dexguard")) {
+            return Java8LangSupport.EXTERNAL_PLUGIN;
+        }
+
+        if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_DESUGAR)) {
+            return Java8LangSupport.DESUGAR;
+        }
+
+        return Java8LangSupport.NONE;
     }
 }

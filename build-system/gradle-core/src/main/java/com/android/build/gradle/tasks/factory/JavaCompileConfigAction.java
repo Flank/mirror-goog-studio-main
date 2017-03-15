@@ -63,12 +63,8 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
             javacTask.source(fileTree);
         }
 
-        // javac 1.8 may generate code that uses class not available in android.jar.  This is fine
-        // if jack is used to compile code for the app and this compile task is created only for
-        // unit test.  In which case, we want to keep the default bootstrap classpath.
-        final boolean keepDefaultBootstrap =
-                scope.getVariantConfiguration().isJackEnabled()
-                        && JavaVersion.current().isJava8Compatible();
+
+        final boolean keepDefaultBootstrap = keepBootclasspath();
 
         if (!keepDefaultBootstrap) {
             // Set boot classpath if we don't need to keep the default.  Otherwise, this is added as
@@ -99,7 +95,7 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
                 javacTask,
                 compileOptions,
                 globalScope.getExtension().getCompileSdkVersion(),
-                scope.getVariantConfiguration().isJackEnabled());
+                scope.getJava8LangSupportType());
 
         javacTask.getOptions().setEncoding(compileOptions.getEncoding());
 
@@ -173,5 +169,27 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
         javacTask.getOptions().getCompilerArgs().add(
                 scope.getAnnotationProcessorOutputDir().getAbsolutePath());
 
+    }
+
+
+    private boolean keepBootclasspath() {
+        // javac 1.8 may generate code that uses class not available in android.jar.  This is fine
+        // if jack or desugar are used to compile code for the app or compile task is created only
+        // for unit test. In those cases, we want to keep the default bootstrap classpath.
+        if (!JavaVersion.current().isJava8Compatible()) {
+            return false;
+        }
+
+        VariantScope.Java8LangSupport java8LangSupport = scope.getJava8LangSupportType();
+        if (java8LangSupport == VariantScope.Java8LangSupport.JACK) {
+            return true;
+        }
+
+        // only if target and source is explicitly specified to 1.8 (and above), we keep the
+        // default bootclasspath with Desugar. Otherwise, we use android.jar.
+        CompileOptions compileOptions = scope.getGlobalScope().getExtension().getCompileOptions();
+        return java8LangSupport == VariantScope.Java8LangSupport.DESUGAR
+                && compileOptions.getTargetCompatibility().isJava8Compatible()
+                && compileOptions.getSourceCompatibility().isJava8Compatible();
     }
 }

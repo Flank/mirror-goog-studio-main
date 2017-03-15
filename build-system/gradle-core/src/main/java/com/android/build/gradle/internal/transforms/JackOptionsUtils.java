@@ -139,7 +139,9 @@ public class JackOptionsUtils {
         AndroidConfig androidConfig = scope.getGlobalScope().getExtension();
         CompileOptions compileOptions = androidConfig.getCompileOptions();
         AbstractCompilesUtil.setDefaultJavaVersion(
-                compileOptions, androidConfig.getCompileSdkVersion(), true /*jackEnabled*/);
+                compileOptions,
+                androidConfig.getCompileSdkVersion(),
+                VariantScope.Java8LangSupport.JACK);
         builder.setSourceCompatibility(compileOptions.getSourceCompatibility().toString())
                 .setEncoding(compileOptions.getEncoding());
 

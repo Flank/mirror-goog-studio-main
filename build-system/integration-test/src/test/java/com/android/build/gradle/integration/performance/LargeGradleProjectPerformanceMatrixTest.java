@@ -110,7 +110,7 @@ public class LargeGradleProjectPerformanceMatrixTest {
         return project.executor()
                 .withEnableInfoLogging(false)
                 .withUseDexArchive(projectScenario.useDexArchive())
-                .with(BooleanOption.ENABLE_PREDEX_CACHE, false)
+                .with(BooleanOption.ENABLE_INTERMEDIATE_ARTIFACTS_CACHE, false)
                 .with(BooleanOption.ENABLE_AAPT2, false)
                 .withoutOfflineFlag();
     }

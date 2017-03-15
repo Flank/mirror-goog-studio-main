@@ -213,7 +213,7 @@ public class MediumGradleProjectPerformanceMatrixTest {
     private RunGradleTasks executor() {
         return project.executor()
                 .withEnableInfoLogging(false)
-                .with(BooleanOption.ENABLE_PREDEX_CACHE, false)
+                .with(BooleanOption.ENABLE_INTERMEDIATE_ARTIFACTS_CACHE, false)
                 .with(BooleanOption.ENABLE_AAPT2, false)
                 .withUseDexArchive(projectScenario.useDexArchive());
     }
