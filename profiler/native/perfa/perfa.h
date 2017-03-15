@@ -17,7 +17,6 @@
 #define PERFA_PERFA_H_
 
 #include <memory>
-#include <mutex>
 #include <thread>
 
 #include <grpc++/grpc++.h>
@@ -31,11 +30,6 @@
 #include "utils/clock.h"
 
 namespace profiler {
-
-// Function call back that returns the true/false status if perfa is connected
-// to perfd. Each time the status changes this callback gets called with the new
-// (current) state of the connection.
-using PerfdStatusChanged = std::function<void(bool)>;
 
 class Perfa {
  public:
@@ -53,8 +47,6 @@ class Perfa {
     return *network_stub_;
   }
 
-  void AddPerfdStatusChangedCallback(PerfdStatusChanged callback);
-
   BackgroundQueue* background_queue() { return &background_queue_; }
 
  private:
@@ -68,9 +60,6 @@ class Perfa {
   std::unique_ptr<proto::InternalEventService::Stub> event_stub_;
   std::unique_ptr<proto::InternalMemoryService::Stub> memory_stub_;
   std::unique_ptr<proto::InternalNetworkService::Stub> network_stub_;
-
-  std::mutex callback_mutex_;
-  std::list<PerfdStatusChanged> perfd_status_changed_callbacks_;
 
   std::thread heartbeat_thread_;
 
