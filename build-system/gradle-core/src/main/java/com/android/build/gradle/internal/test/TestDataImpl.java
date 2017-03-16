@@ -20,6 +20,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.OutputFile;
+import com.android.build.VariantOutput;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
@@ -61,7 +62,11 @@ public class TestDataImpl extends AbstractTestDataImpl {
         super(testVariantData.getVariantConfiguration());
         this.testVariantData = testVariantData;
         this.testVariantConfig = testVariantData.getVariantConfiguration();
-        if (testVariantData.getOutputs().size() > 1) {
+        if (testVariantData
+                        .getSplitScope()
+                        .getSplitsByType(VariantOutput.OutputType.FULL_SPLIT)
+                        .size()
+                > 1) {
             throw new RuntimeException("Multi-output in test variant not yet supported");
         }
     }

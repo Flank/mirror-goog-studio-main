@@ -90,12 +90,6 @@ public class ApiObjectFactory {
                                         .getProject()
                                         .container(VariantOutput.class));
 
-                // add the test output.
-                ApplicationVariantFactory.createApkOutputApiObjects(
-                        instantiator,
-                        androidTestVariantData,
-                        androidTestVariant);
-
                 ((TestedAndroidConfig) extension).getTestVariants().add(androidTestVariant);
                 ((TestedVariant) variantApi).setTestVariant(androidTestVariant);
             }

@@ -30,10 +30,8 @@ import com.google.common.collect.Maps;
 import java.util.Map;
 import org.gradle.api.Task;
 
-/**
- * Data about a variant that produce a Atom bundle.
- */
-public class AtomVariantData extends AndroidArtifactVariantData<AtomVariantOutputData> implements TestedVariantData {
+/** Data about a variant that produce a Atom bundle. */
+public class AtomVariantData extends AndroidArtifactVariantData implements TestedVariantData {
 
     private final Map<VariantType, TestVariantData> testVariants;
     public BundleAtom bundleAtomTask;

@@ -337,7 +337,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                                                     .getVariantConfiguration()
                                                     .getVersionName());
 
-                                    // call user's script for the newly discovered ABI pure split.
+                                    // call user's script for the newly discovered resources split.
                                     variantScope
                                             .getVariantData()
                                             .variantOutputFactory

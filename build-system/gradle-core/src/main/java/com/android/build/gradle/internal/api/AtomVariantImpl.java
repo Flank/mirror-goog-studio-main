@@ -55,7 +55,7 @@ public class AtomVariantImpl extends AndroidArtifactVariantImpl implements AtomV
 
     @Override
     @NonNull
-    protected AndroidArtifactVariantData<?> getVariantData() {
+    protected AndroidArtifactVariantData getVariantData() {
         return variantData;
     }
 

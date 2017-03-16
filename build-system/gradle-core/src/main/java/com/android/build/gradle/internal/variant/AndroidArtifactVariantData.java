@@ -27,8 +27,7 @@ import java.util.Collections;
 import java.util.Set;
 
 /** Data about a variant that produces an android artifact. */
-public abstract class AndroidArtifactVariantData<T extends BaseVariantOutputData>
-        extends BaseVariantData {
+public abstract class AndroidArtifactVariantData extends BaseVariantData {
     private Set<String> compatibleScreens = null;
 
     protected AndroidArtifactVariantData(

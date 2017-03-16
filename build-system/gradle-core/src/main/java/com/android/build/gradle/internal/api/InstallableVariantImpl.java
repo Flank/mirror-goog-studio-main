@@ -38,7 +38,7 @@ public abstract class InstallableVariantImpl extends AndroidArtifactVariantImpl 
 
     @NonNull
     @Override
-    public abstract InstallableVariantData<?> getVariantData();
+    public abstract InstallableVariantData getVariantData();
 
     @Override
     public DefaultTask getInstall() {

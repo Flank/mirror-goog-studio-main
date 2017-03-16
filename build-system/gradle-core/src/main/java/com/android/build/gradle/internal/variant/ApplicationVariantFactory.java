@@ -139,25 +139,6 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
         return ApplicationVariantImpl.class;
     }
 
-    public static void createApkOutputApiObjects(
-            @NonNull Instantiator instantiator,
-            @NonNull BaseVariantData variantData,
-            @NonNull ApkVariantImpl variant) {
-        List<? extends BaseVariantOutputData> outputList = variantData.getOutputs();
-        List<BaseVariantOutput> apiOutputList = Lists.newArrayListWithCapacity(outputList.size());
-
-        for (BaseVariantOutputData variantOutputData : outputList) {
-            ApkVariantOutputData apkOutput = (ApkVariantOutputData) variantOutputData;
-
-            ApkVariantOutputImpl output = instantiator.newInstance(
-                    ApkVariantOutputImpl.class, apkOutput);
-
-            apiOutputList.add(output);
-        }
-
-        variant.addOutputs(apiOutputList);
-    }
-
     @NonNull
     @Override
     public VariantType getVariantConfigurationType() {

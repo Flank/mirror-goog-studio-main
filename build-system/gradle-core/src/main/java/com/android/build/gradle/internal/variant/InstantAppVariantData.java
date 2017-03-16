@@ -26,7 +26,7 @@ import com.android.builder.core.ErrorReporter;
 import com.android.builder.profile.Recorder;
 
 /** Data about a variant that produces an instantApp bundle. */
-public class InstantAppVariantData extends InstallableVariantData<InstantAppVariantOutputData> {
+public class InstantAppVariantData extends InstallableVariantData {
 
     public BundleInstantApp bundleInstantAppTask;
 

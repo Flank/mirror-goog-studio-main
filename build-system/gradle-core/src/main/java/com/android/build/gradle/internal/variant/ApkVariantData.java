@@ -23,10 +23,8 @@ import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.builder.core.ErrorReporter;
 import com.android.builder.profile.Recorder;
 
-/**
- * Base data about a variant that generates an APK file.
- */
-public abstract class ApkVariantData extends InstallableVariantData<ApkVariantOutputData> {
+/** Base data about a variant that generates an APK file. */
+public abstract class ApkVariantData extends InstallableVariantData {
 
     protected ApkVariantData(
             @NonNull GlobalScope globalScope,
