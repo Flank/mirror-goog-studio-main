@@ -25,6 +25,7 @@ import static com.android.SdkConstants.NEW_ID_PREFIX;
 import static com.android.SdkConstants.VIEW_INCLUDE;
 import static com.android.ide.common.resources.configuration.FolderConfiguration.QUALIFIER_SPLITTER;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.resources.FolderTypeRelationship;
 import com.android.resources.ResourceFolderType;
@@ -248,6 +249,21 @@ public class DuplicateIdDetector extends LayoutDetector {
         assert attribute.getName().equals(ATTR_ID) || ATTR_ID.equals(attribute.getLocalName());
         String id = attribute.getValue();
         if (context.getPhase() == 1) {
+            if (attribute.getOwnerElement() != null) {
+                String ownerName = attribute.getOwnerElement().getTagName();
+                if (ownerName != null && ownerName.equals(SdkConstants.TAG)) {
+                    Node parentNode = attribute.getOwnerElement().getParentNode();
+                    if (parentNode != null) {
+                        String parentName = parentNode.getNodeName();
+                        if (parentName != null
+                                && (parentName.equals(SdkConstants.CLASS_CONSTRAINT_LAYOUT_BARRIER)
+                                        || parentName.equals(
+                                                SdkConstants.CLASS_CONSTRAINT_LAYOUT_CHAIN))) {
+                            return;
+                        }
+                    }
+                }
+            }
             if (mIds.contains(id)) {
                 Location location = context.getLocation(attribute);
 
