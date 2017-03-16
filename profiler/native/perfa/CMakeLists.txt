@@ -1,5 +1,6 @@
 add_library(perfa SHARED
             support/event_passthrough.cc
+            support/event_manager.cc
             support/http_tracker.cc
             support/vm_stats_sampler.cc
             perfa.cc)

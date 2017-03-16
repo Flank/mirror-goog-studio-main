@@ -4,6 +4,8 @@ cc_binary(
         "agent_component.h",
         "perfa.cc",
         "perfa.h",
+        "support/event_manager.cc",
+        "support/event_manager.h",
         "support/event_passthrough.cc",
         "support/http_tracker.cc",
         "support/jni_wrappers.h",
