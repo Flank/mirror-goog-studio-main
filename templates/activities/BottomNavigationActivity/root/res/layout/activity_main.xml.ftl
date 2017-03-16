@@ -14,8 +14,9 @@
         android:id="@+id/message"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginStart="@dimen/activity_horizontal_margin"
+        android:layout_marginLeft="@dimen/activity_horizontal_margin"
+        android:layout_marginTop="@dimen/activity_vertical_margin"
         android:text="@string/title_home"
         <#-- TODO: Switch Instant Apps back to ConstraintLayout once library dependency bugs are resolved -->
         <#if !isInstantApp>app:layout_constraintLeft_toLeftOf="parent"
