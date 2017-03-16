@@ -25,11 +25,10 @@ import com.android.ide.common.resources.configuration.ResourceQualifier;
 import com.android.io.IAbstractFile;
 import com.android.resources.FolderTypeRelationship;
 import com.android.resources.ResourceType;
+import com.android.resources.ResourceUrl;
 import com.android.utils.SdkUtils;
-
 import java.util.Collection;
 import java.util.List;
-
 import javax.xml.parsers.SAXParserFactory;
 
 /**
@@ -64,15 +63,16 @@ public class SingleResourceFile extends ResourceFile {
         DensityQualifier qualifier = folder.getConfiguration().getDensityQualifier();
 
         if (!ResourceQualifier.isValid(qualifier)) {
-            mValue = new ResourceValue(mType, getResourceName(mType),
-                    file.getOsLocation(), isFramework());
+            mValue =
+                    new ResourceValue(
+                            ResourceUrl.create(mType, getResourceName(mType), isFramework()),
+                            file.getOsLocation());
         } else {
-            mValue = new DensityBasedResourceValue(
-                    mType,
-                    getResourceName(mType),
-                    file.getOsLocation(),
-                    qualifier.getValue(),
-                    isFramework());
+            mValue =
+                    new DensityBasedResourceValue(
+                            ResourceUrl.create(mType, getResourceName(mType), isFramework()),
+                            file.getOsLocation(),
+                            qualifier.getValue());
         }
     }
 

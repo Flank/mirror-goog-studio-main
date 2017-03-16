@@ -18,7 +18,7 @@ package com.android.ide.common.rendering.api;
 
 import com.android.ide.common.rendering.api.ItemResourceValue.Attribute;
 import com.android.resources.ResourceType;
-
+import com.android.resources.ResourceUrl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -31,24 +31,11 @@ import java.util.Map;
 public final class StyleResourceValue extends ResourceValue {
 
     private String mParentStyle = null;
-    private final Map<Attribute, ItemResourceValue> mItems
-            = new HashMap<>();
+    private final Map<Attribute, ItemResourceValue> mItems = new HashMap<>();
 
-    public StyleResourceValue(ResourceType type, String name, boolean isFramework) {
-        this(type, name, isFramework, null);
-    }
-
-    public StyleResourceValue(ResourceType type, String name, boolean isFramework, String libraryName) {
-        super(type, name, isFramework, libraryName);
-    }
-
-    public StyleResourceValue(ResourceType type, String name, String parentStyle, boolean isFramework) {
-        this(type, name, parentStyle, isFramework, null);
-    }
-
-    public StyleResourceValue(ResourceType type, String name, String parentStyle,
-            boolean isFramework, String libraryName) {
-        super(type, name, isFramework, libraryName);
+    public StyleResourceValue(ResourceUrl url, String parentStyle, String libraryName) {
+        super(url, null, libraryName);
+        assert url.type == ResourceType.STYLE;
         mParentStyle = parentStyle;
     }
 
@@ -88,14 +75,6 @@ public final class StyleResourceValue extends ResourceValue {
      */
     public ItemResourceValue getItem(String name, boolean isFrameworkAttr) {
         return mItems.get(new Attribute(name, isFrameworkAttr));
-    }
-
-    /**
-     * @deprecated use {@link #addItem(ItemResourceValue)}
-     */
-    @Deprecated
-    public void addValue(ResourceValue value, boolean isFrameworkAttr, String libraryName) {
-        addItem(ItemResourceValue.fromResourceValue(value, isFrameworkAttr, libraryName));
     }
 
     public void addItem(ItemResourceValue value) {

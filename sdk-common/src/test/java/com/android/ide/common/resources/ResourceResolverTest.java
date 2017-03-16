@@ -1,5 +1,6 @@
 package com.android.ide.common.resources;
 
+import com.android.SdkConstants;
 import com.android.ide.common.rendering.api.ArrayResourceValue;
 import com.android.ide.common.rendering.api.DensityBasedResourceValue;
 import com.android.ide.common.rendering.api.LayoutLog;
@@ -8,14 +9,13 @@ import com.android.ide.common.rendering.api.StyleResourceValue;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.resources.Density;
 import com.android.resources.ResourceType;
+import com.android.resources.ResourceUrl;
 import com.google.common.collect.Lists;
-
-import junit.framework.TestCase;
-
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import junit.framework.TestCase;
 
 public class ResourceResolverTest extends TestCase {
     public void test() throws Exception {
@@ -241,8 +241,8 @@ public class ResourceResolverTest extends TestCase {
                 resolver.findItemInTheme("colorForeground", true).getValue());
         assertEquals("@color/bright_foreground_light",
                 resolver.findResValue("?colorForeground", true).getValue());
-        ResourceValue target = new ResourceValue(ResourceType.STRING, "dummy", false);
-        target.setValue("?foo");
+        ResourceValue target =
+                new ResourceValue(ResourceUrl.create(null, ResourceType.STRING, "dummy"), "?foo");
         assertEquals("#ff000000", resolver.resolveResValue(target).getValue());
 
         // getFrameworkResource
@@ -264,18 +264,33 @@ public class ResourceResolverTest extends TestCase {
         assertEquals("#ffffffff", resolver.resolveResValue(
                 resolver.findResValue("@android:color/bright_foreground_dark", false)).getValue());
 
-        // resolveValue
-        assertEquals("#ffffffff",
-                resolver.resolveValue(ResourceType.STRING, "bright_foreground_dark",
-                        "@android:color/background_light", true).getValue());
-        assertFalse(resolver.resolveValue(null, "id", "@+id/some_framework_id", false)
-                .isFramework());
+        assertEquals(
+                "#ffffffff",
+                resolver.resolveResValue(
+                                new ResourceValue(
+                                        ResourceUrl.create(
+                                                SdkConstants.ANDROID_NS_NAME,
+                                                ResourceType.STRING,
+                                                "bright_foreground_dark"),
+                                        "@android:color/background_light"))
+                        .getValue());
+
+        assertFalse(
+                resolver.resolveResValue(
+                                new ResourceValue(
+                                        ResourceUrl.create(null, ResourceType.ID, "my_id"),
+                                        "@+id/some_new_id"))
+                        .isFramework());
         // error expected.
         boolean failed = false;
         ResourceValue val = null;
         try {
-            val = resolver.resolveValue(ResourceType.STRING, "bright_foreground_dark",
-                    "@color/background_light", false);
+            val =
+                    resolver.resolveResValue(
+                            new ResourceValue(
+                                    ResourceUrl.create(
+                                            null, ResourceType.STRING, "bright_foreground_dark"),
+                                    "@color/background_light"));
         } catch (AssertionError expected) {
             failed = true;
         }

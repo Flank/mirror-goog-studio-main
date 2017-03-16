@@ -33,15 +33,13 @@ import com.android.testutils.TestUtils;
 import com.android.utils.ILogger;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-
-import junit.framework.TestCase;
-
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
+import junit.framework.TestCase;
 
 @SuppressWarnings("javadoc")
 public class ResourceRepositoryTest2 extends TestCase {
@@ -129,7 +127,7 @@ public class ResourceRepositoryTest2 extends TestCase {
         }
 
         mResourceMerger = new ResourceMerger(0);
-        ResourceSet resourceSet = new ResourceSet("main", null);
+        ResourceSet resourceSet = new ResourceSet("main", null, null, true);
         resourceSet.addSource(mRes);
         resourceSet.loadFromFiles(mLogger = new RecordingLogger());
         mResourceMerger.addDataSet(resourceSet);

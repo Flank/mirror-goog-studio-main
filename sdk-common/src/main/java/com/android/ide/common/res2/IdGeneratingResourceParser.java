@@ -25,6 +25,7 @@ import static com.android.SdkConstants.TAG_ITEM;
 import static com.android.SdkConstants.TAG_LAYOUT;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.resources.ResourceType;
 import com.android.utils.XmlUtils;
 import com.google.common.collect.Lists;
@@ -51,8 +52,9 @@ import org.xml.sax.SAXException;
 @Deprecated
 class IdGeneratingResourceParser {
 
-    private ResourceItem mFileResourceItem;
-    private List<ResourceItem> mIdResourceItems;
+    private final ResourceItem mFileResourceItem;
+    private final List<ResourceItem> mIdResourceItems;
+    private final String mNamespace;
 
     /**
      * Parse the file for new IDs, given the source document's name and type. After this completes,
@@ -62,16 +64,21 @@ class IdGeneratingResourceParser {
      * @param file the file to parse
      * @param sourceName the name of the file-based resource (derived from xml filename)
      * @param sourceType the type of the file-based resource (e.g., menu).
+     * @param namespace the namespace of generated {@link ResourceItem} objects.
      * @throws MergingException if given a data-binding file, or fails to parse.
      */
     IdGeneratingResourceParser(
-            @NonNull File file, @NonNull String sourceName, @NonNull ResourceType sourceType)
+            @NonNull File file,
+            @NonNull String sourceName,
+            @NonNull ResourceType sourceType,
+            @Nullable String namespace)
             throws MergingException {
         Document mDocument = readDocument(file);
         if (hasDataBindings(mDocument)) {
             throw MergingException.withMessage("Does not handle data-binding files").build();
         }
-        mFileResourceItem = new IdResourceItem(sourceName, sourceType);
+        mNamespace = namespace;
+        mFileResourceItem = new IdResourceItem(sourceName, mNamespace, sourceType);
         mIdResourceItems = Lists.newArrayList();
         final Set<String> pendingResourceIds = Sets.newHashSet();
         NodeList nodes = mDocument.getChildNodes();
@@ -80,7 +87,7 @@ class IdGeneratingResourceParser {
             parseIds(mIdResourceItems, child, pendingResourceIds);
         }
         for (String id : pendingResourceIds) {
-            ResourceItem resourceItem = new IdResourceItem(id, ResourceType.ID);
+            ResourceItem resourceItem = new IdResourceItem(id, mNamespace, ResourceType.ID);
             mIdResourceItems.add(resourceItem);
         }
     }
@@ -119,8 +126,10 @@ class IdGeneratingResourceParser {
         return mIdResourceItems;
     }
 
-    private static void parseIds(@NonNull List<ResourceItem> items, @NonNull Node node,
-                                 @NonNull Set<String> pendingResourceIds) {
+    private void parseIds(
+            @NonNull List<ResourceItem> items,
+            @NonNull Node node,
+            @NonNull Set<String> pendingResourceIds) {
         NamedNodeMap attributes = node.getAttributes();
         if (attributes != null) {
             // For all attributes in the android namespace, check if something has a value of the form "@+id/"
@@ -159,7 +168,7 @@ class IdGeneratingResourceParser {
                             continue;
                         }
                         pendingResourceIds.remove(id);
-                        ResourceItem item = new IdResourceItem(id, ResourceType.ID);
+                        ResourceItem item = new IdResourceItem(id, mNamespace, ResourceType.ID);
                         items.add(item);
                     }
                 }
@@ -178,18 +187,19 @@ class IdGeneratingResourceParser {
      */
     private static class IdResourceItem extends ResourceItem {
         /**
-         * Constructs the resource with a given name and type.
-         * Note that the object is not fully usable as-is. It must be added to a ResourceFile first.
+         * Constructs the resource with a given name and type. Note that the object is not fully
+         * usable as-is. It must be added to a ResourceFile first.
          *
          * @param name the name of the resource
          * @param type the type of the resource (ID, layout, menu).
          */
-        public IdResourceItem(@NonNull String name, @NonNull ResourceType type) {
+        public IdResourceItem(
+                @NonNull String name, @Nullable String namespace, @NonNull ResourceType type) {
             // Use a null value, since the source XML is something like:
             //     <LinearLayout ... id="@+id/xxx">...</LinearLayout>
             // which is large and inefficient for encoding the resource item, and inefficient to hold on to.
             // Instead synthesize <item name=x type={id/layout/menu} /> as needed.
-            super(name, type, null /* value */, null /* libraryName */);
+            super(name, namespace, type, null /* value */, null /* libraryName */);
         }
 
         @Override

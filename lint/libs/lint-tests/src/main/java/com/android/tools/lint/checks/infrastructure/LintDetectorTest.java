@@ -1046,14 +1046,15 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
             ILogger logger = new StdLogger(StdLogger.Level.INFO);
             ResourceMerger merger = new ResourceMerger(0);
 
-            ResourceSet resourceSet = new ResourceSet(project.getName(),
-                    getProjectResourceLibraryName()) {
-                @Override
-                protected void checkItems() throws DuplicateDataException {
-                    // No checking in ProjectResources; duplicates can happen, but
-                    // the project resources shouldn't abort initialization
-                }
-            };
+            ResourceSet resourceSet =
+                    new ResourceSet(
+                            project.getName(), null, getProjectResourceLibraryName(), true) {
+                        @Override
+                        protected void checkItems() throws DuplicateDataException {
+                            // No checking in ProjectResources; duplicates can happen, but
+                            // the project resources shouldn't abort initialization
+                        }
+                    };
             // Only support 1 resource folder in test setup right now
             int size = project.getResourceFolders().size();
             assertTrue("Found " + size + " test resources folders", size <= 1);
@@ -1125,8 +1126,8 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                                     items.put(ResourceType.ID, idMap);
                                 }
                                 for (String id : ids) {
-                                    ResourceItem idItem = new ResourceItem(id, ResourceType.ID,
-                                            null, null);
+                                    ResourceItem idItem =
+                                            new ResourceItem(id, null, ResourceType.ID, null, null);
                                     String qualifiers = file.getParentFile().getName();
                                     if (qualifiers.startsWith("layout-")) {
                                         qualifiers = qualifiers.substring("layout-".length());

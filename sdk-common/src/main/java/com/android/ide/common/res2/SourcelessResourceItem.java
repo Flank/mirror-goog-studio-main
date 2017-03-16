@@ -26,11 +26,13 @@ import org.w3c.dom.Node;
  */
 public abstract class SourcelessResourceItem extends ResourceItem {
 
-    public SourcelessResourceItem(@NonNull String name,
-                                  @NonNull ResourceType type,
-                                  @Nullable Node value,
-                                  @Nullable String libraryName) {
-        super(name, type, value, libraryName);
+    public SourcelessResourceItem(
+            @NonNull String name,
+            @Nullable String namespace,
+            @NonNull ResourceType type,
+            @Nullable Node value,
+            @Nullable String libraryName) {
+        super(name, namespace, type, value, libraryName);
     }
 
     /**

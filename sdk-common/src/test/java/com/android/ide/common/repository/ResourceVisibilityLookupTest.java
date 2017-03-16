@@ -30,22 +30,19 @@ import com.android.builder.model.Dependencies;
 import com.android.builder.model.MavenCoordinates;
 import com.android.builder.model.Variant;
 import com.android.ide.common.repository.ResourceVisibilityLookup.SymbolProvider;
-import com.android.ide.common.resources.ResourceUrl;
 import com.android.resources.ResourceType;
+import com.android.resources.ResourceUrl;
 import com.android.testutils.TestUtils;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Multimap;
 import com.google.common.io.Files;
-
-import junit.framework.TestCase;
-
-import org.mockito.stubbing.OngoingStubbing;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import junit.framework.TestCase;
+import org.mockito.stubbing.OngoingStubbing;
 
 public class ResourceVisibilityLookupTest extends TestCase {
     public void test() throws IOException {

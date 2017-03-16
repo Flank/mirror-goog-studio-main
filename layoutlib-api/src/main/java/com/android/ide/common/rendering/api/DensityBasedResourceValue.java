@@ -16,23 +16,30 @@
 
 package com.android.ide.common.rendering.api;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.resources.Density;
-import com.android.resources.ResourceType;
+import com.android.resources.ResourceUrl;
 
 public class DensityBasedResourceValue extends ResourceValue {
 
-    private Density mDensity;
+    private final Density mDensity;
 
-    public DensityBasedResourceValue(ResourceType type, String name, String value,
-            Density density, boolean isFramework) {
-        this(type, name, value, density, isFramework, null);
+    public DensityBasedResourceValue(
+            @NonNull ResourceUrl url, @Nullable String value, @NonNull Density mDensity) {
+        super(url, value);
+        this.mDensity = mDensity;
     }
 
-    public DensityBasedResourceValue(ResourceType type, String name, String value,
-            Density density, boolean isFramework, String libraryName) {
-        super(type, name, value, isFramework, libraryName);
-        mDensity = density;
+    public DensityBasedResourceValue(
+            @NonNull ResourceUrl url,
+            @Nullable String value,
+            @NonNull Density mDensity,
+            @Nullable String libraryName) {
+        super(url, value, libraryName);
+        this.mDensity = mDensity;
     }
+
 
     /**
      * Returns the density for which this resource is configured.

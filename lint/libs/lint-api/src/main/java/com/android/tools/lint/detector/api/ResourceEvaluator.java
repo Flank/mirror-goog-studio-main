@@ -27,10 +27,10 @@ import static com.android.SdkConstants.SUPPORT_ANNOTATIONS_PREFIX;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.common.resources.ResourceUrl;
 import com.android.resources.ResourceType;
-import com.android.tools.lint.client.api.ResourceReference;
+import com.android.resources.ResourceUrl;
 import com.android.tools.lint.client.api.JavaEvaluator;
+import com.android.tools.lint.client.api.ResourceReference;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiConditionalExpression;
@@ -656,7 +656,7 @@ public class ResourceEvaluator {
                                             .equals(((PsiReferenceExpression) reference.
                                                     getQualifier()).getReferenceName());
 
-                            return ResourceUrl.create(type, name, isFramework, false);
+                            return ResourceUrl.create(type, name, isFramework);
                         }
                     }
                 }
@@ -673,7 +673,7 @@ public class ResourceEvaluator {
                         String qualifiedName = rClass.getQualifiedName();
                         boolean isFramework = qualifiedName != null
                                 && qualifiedName.startsWith(ANDROID_PKG_PREFIX);
-                        return ResourceUrl.create(type, name, isFramework, false);
+                        return ResourceUrl.create(type, name, isFramework);
                     }
                 }
             }
@@ -693,7 +693,7 @@ public class ResourceEvaluator {
         ResourceType type = reference.getType();
         boolean isFramework = reference.getPackage().equals("android");
 
-        return ResourceUrl.create(type, name, isFramework, false);
+        return ResourceUrl.create(type, name, isFramework);
     }
 
     private static EnumSet<ResourceType> getAnyRes() {

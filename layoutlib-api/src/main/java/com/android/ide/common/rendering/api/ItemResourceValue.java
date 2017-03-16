@@ -15,57 +15,49 @@
  */
 package com.android.ide.common.rendering.api;
 
+import com.android.resources.ResourceType;
+import com.android.resources.ResourceUrl;
+
 /**
  * Represents each item in the android style resource.
  */
 public class ItemResourceValue extends ResourceValue {
 
     private final boolean mIsFrameworkAttr;
-
-    /**
-     * @see #ItemResourceValue(String, boolean, String, boolean, String)
-     */
-    public ItemResourceValue(String name, boolean isFrameworkAttr, boolean isFrameworkStyle) {
-        this(name, isFrameworkAttr, null, isFrameworkStyle, null);
-    }
-
-    /**
-     * @see #ItemResourceValue(String, boolean, String, boolean, String)
-     */
-    public ItemResourceValue(String name, boolean isFrameworkAttr, boolean isFrameworkStyle, String libraryName) {
-        this(name, isFrameworkAttr, null, isFrameworkStyle, libraryName);
-    }
-
-    /**
-     * @see #ItemResourceValue(String, boolean, String, boolean, String)
-     */
-    public ItemResourceValue(String attributeName, boolean isFrameworkAttr, String value,
-            boolean isFrameworkStyle) {
-        this(attributeName, isFrameworkAttr, value, isFrameworkStyle, null);
-    }
-
     /**
      * If the value is a reference to a framework resource or not is NOT represented with a boolean!
      * but can be deduced with:
-     * <pre> {@code
-     *        boolean isFrameworkValue = item.isFramework() ||
-     *            item.getValue().startsWith(SdkConstants.ANDROID_PREFIX) ||
-     *            item.getValue().startsWith(SdkConstants.ANDROID_THEME_PREFIX);
-     * } </pre>
+     *
+     * <pre>{@code
+     * boolean isFrameworkValue = item.isFramework() ||
+     *     item.getValue().startsWith(SdkConstants.ANDROID_PREFIX) ||
+     *     item.getValue().startsWith(SdkConstants.ANDROID_THEME_PREFIX);
+     * }</pre>
+     *
      * For {@code <item name="foo">bar</item>}, item in a style resource, the values of the
      * parameters will be as follows:
      *
-     * @param attributeName   foo
+     * @param attributeName foo
      * @param isFrameworkAttr is foo in framework namespace.
-     * @param value           bar (in case of a reference, the value may include the namespace.
-     *                        if the namespace is absent, default namespace is assumed based on
-     *                        isFrameworkStyle (android namespace when isFrameworkStyle=true and app
-     *                        namespace when isFrameworkStyle=false))
+     * @param value bar (in case of a reference, the value may include the namespace. if the
+     *     namespace is absent, default namespace is assumed based on isFrameworkStyle (android
+     *     namespace when isFrameworkStyle=true and app namespace when isFrameworkStyle=false))
      * @param isFrameworkStyle if the style is a framework file or project file.
      */
-    public ItemResourceValue(String attributeName, boolean isFrameworkAttr, String value,
-            boolean isFrameworkStyle, String libraryName) {
-        super(null, attributeName, value, isFrameworkStyle, libraryName);
+    public ItemResourceValue(
+            String attributeName,
+            boolean isFrameworkAttr,
+            String value,
+            boolean isFrameworkStyle,
+            String libraryName) {
+        // Style items don't have a name of their own, but reference things that do. We abuse the
+        // abstraction a little to store all the necessary pieces of information. This will have to
+        // be reworked, as currently the namespace doesn't match isFramework(). It seems that this
+        // should not be represented as a ResourceValue at all.
+        super(
+                ResourceUrl.create(ResourceType.STYLE_ITEM, attributeName, isFrameworkStyle),
+                value,
+                libraryName);
         mIsFrameworkAttr = isFrameworkAttr;
     }
 
@@ -80,12 +72,6 @@ public class ItemResourceValue extends ResourceValue {
 
     Attribute getAttribute() {
         return new Attribute(getName(), mIsFrameworkAttr);
-    }
-
-    static ItemResourceValue fromResourceValue(ResourceValue res, boolean isFrameworkAttr, String libraryName) {
-        assert res.getResourceType() == null : res.getResourceType() + " is not null";
-        return new ItemResourceValue(res.getName(), isFrameworkAttr, res.getValue(),
-                res.isFramework(), libraryName);
     }
 
     static final class Attribute {

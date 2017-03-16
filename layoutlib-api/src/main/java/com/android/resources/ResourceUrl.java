@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,26 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.ide.common.resources;
+package com.android.resources;
 
-import static com.android.SdkConstants.ANDROID_NS_NAME;
-import static com.android.SdkConstants.ATTR_REF_PREFIX;
-import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
-import static com.android.SdkConstants.PREFIX_THEME_REF;
-import static com.android.SdkConstants.RESOURCE_CLZ_ATTR;
 import static com.android.ide.common.rendering.api.RenderResources.REFERENCE_EMPTY;
 import static com.android.ide.common.rendering.api.RenderResources.REFERENCE_NULL;
 import static com.android.ide.common.rendering.api.RenderResources.REFERENCE_UNDEFINED;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.common.rendering.api.ResourceValue;
-import com.android.resources.ResourceType;
+import com.android.annotations.concurrency.Immutable;
 
 /**
- * A {@linkplain ResourceUrl} represents a parsed resource url such as {@code @string/foo} or
- * {@code ?android:attr/bar}
+ * A {@linkplain ResourceUrl} represents a parsed resource url such as {@code @string/foo} or {@code
+ * ?android:attr/bar}
  */
+@Immutable
 public class ResourceUrl {
     /** Type of resource */
     @NonNull public final ResourceType type;
@@ -52,9 +48,26 @@ public class ResourceUrl {
     /** Whether this is a theme resource reference */
     public final boolean theme;
 
-    private ResourceUrl(@NonNull ResourceType type, @NonNull String name,
-                        @Nullable String namespace, boolean framework,
-                        boolean create, boolean theme) {
+    private ResourceUrl(
+            @NonNull ResourceType type,
+            @NonNull String name,
+            @Nullable String namespace,
+            boolean framework,
+            boolean create,
+            boolean theme) {
+        if (name.isEmpty()) {
+            throw new IllegalArgumentException("Resource name cannot be empty.");
+        }
+
+        if (namespace != null && namespace.isEmpty()) {
+            throw new IllegalArgumentException("Namespace provided but it's an empty string.");
+        }
+
+        if (create && theme) {
+            throw new IllegalArgumentException(
+                    "Both `create` and `theme` cannot be used at the same time.");
+        }
+
         this.type = type;
         this.name = name;
         this.framework = framework;
@@ -64,20 +77,44 @@ public class ResourceUrl {
     }
 
     /**
-     * Creates a new resource URL. Normally constructed via {@link #parse(String)}.
+     * Creates a new resource URL, representing "@type/name" or "@android:type/name".
      *
+     * @see #parse(String)
      * @param type the resource type
      * @param name the name
      * @param framework whether it's a framework resource
-     * @param create if it's an id resource, whether it's of the form {@code @+id}
+     * @deprecated This factory method is used where we have no way of knowing the namespace. We
+     *     need to migrate every call site to the other factory method that takes a namespace.
      */
-    public static ResourceUrl create(@NonNull ResourceType type, @NonNull String name,
-            boolean framework, boolean create) {
-        return new ResourceUrl(type, name, framework ? ANDROID_NS_NAME : null, framework, create, false);
+    @Deprecated
+    public static ResourceUrl create(
+            @NonNull ResourceType type, @NonNull String name, boolean framework) {
+        return new ResourceUrl(
+                type,
+                name,
+                framework ? SdkConstants.ANDROID_NS_NAME : null,
+                framework,
+                false,
+                false);
     }
 
-    public static ResourceUrl create(@NonNull ResourceValue value) {
-        return create(value.getResourceType(), value.getName(), value.isFramework(), false);
+    /**
+     * Creates a new resource URL, representing "@namespace:type/name".
+     *
+     * @see #parse(String)
+     * @param namespace the resource namespace
+     * @param type the resource type
+     * @param name the name
+     */
+    public static ResourceUrl create(
+            @Nullable String namespace, @NonNull ResourceType type, @NonNull String name) {
+        return new ResourceUrl(
+                type,
+                name,
+                namespace,
+                SdkConstants.ANDROID_NS_NAME.equals(namespace),
+                false,
+                false);
     }
 
     /**
@@ -102,30 +139,39 @@ public class ResourceUrl {
     public static ResourceUrl parse(@NonNull String url, boolean forceFramework) {
         boolean isTheme = false;
         // Handle theme references
-        if (url.startsWith(PREFIX_THEME_REF)) {
+        if (url.startsWith(SdkConstants.PREFIX_THEME_REF)) {
             isTheme = true;
-            String remainder = url.substring(PREFIX_THEME_REF.length());
-            if (url.startsWith(ATTR_REF_PREFIX)) {
-                url = PREFIX_RESOURCE_REF + url.substring(PREFIX_THEME_REF.length());
+            String remainder = url.substring(SdkConstants.PREFIX_THEME_REF.length());
+            if (url.startsWith(SdkConstants.ATTR_REF_PREFIX)) {
+                url =
+                        SdkConstants.PREFIX_RESOURCE_REF
+                                + url.substring(SdkConstants.PREFIX_THEME_REF.length());
             } else {
                 int colon = url.indexOf(':');
                 if (colon != -1) {
                     // Convert from ?android:progressBarStyleBig to ?android:attr/progressBarStyleBig
                     if (remainder.indexOf('/', colon) == -1) {
-                        remainder = remainder.substring(0, colon) + RESOURCE_CLZ_ATTR + '/'
-                                + remainder.substring(colon);
+                        remainder =
+                                remainder.substring(0, colon)
+                                        + SdkConstants.RESOURCE_CLZ_ATTR
+                                        + '/'
+                                        + remainder.substring(colon);
                     }
-                    url = PREFIX_RESOURCE_REF + remainder;
+                    url = SdkConstants.PREFIX_RESOURCE_REF + remainder;
                 } else {
                     int slash = url.indexOf('/');
                     if (slash == -1) {
-                        url = PREFIX_RESOURCE_REF + RESOURCE_CLZ_ATTR + '/' + remainder;
+                        url =
+                                SdkConstants.PREFIX_RESOURCE_REF
+                                        + SdkConstants.RESOURCE_CLZ_ATTR
+                                        + '/'
+                                        + remainder;
                     }
                 }
             }
         }
 
-        if (!url.startsWith(PREFIX_RESOURCE_REF) || isNullOrEmpty(url)) {
+        if (!url.startsWith(SdkConstants.PREFIX_RESOURCE_REF) || isNullOrEmpty(url)) {
             return null;
         }
 
@@ -141,11 +187,11 @@ public class ResourceUrl {
 
         int colon = url.lastIndexOf(':', typeEnd);
         boolean framework = forceFramework;
-        String namespace = forceFramework ? ANDROID_NS_NAME : null;
+        String namespace = forceFramework ? SdkConstants.ANDROID_NS_NAME : null;
         if (colon != -1) {
-            if (url.startsWith(ANDROID_NS_NAME, typeBegin)) {
+            if (url.startsWith(SdkConstants.ANDROID_NS_NAME, typeBegin)) {
                 framework = true;
-                namespace = ANDROID_NS_NAME;
+                namespace = SdkConstants.ANDROID_NS_NAME;
             } else {
                 namespace = url.substring(typeBegin, colon);
             }
@@ -193,15 +239,24 @@ public class ResourceUrl {
         return true;
     }
 
+    /**
+     * Creates a copy of this {@link ResourceUrl} with the {@code framework} field set to the given
+     * value.
+     */
+    @NonNull
+    public ResourceUrl withFramework(boolean isFramework) {
+        return new ResourceUrl(type, name, namespace, isFramework, create, theme);
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append(theme ? PREFIX_THEME_REF : PREFIX_RESOURCE_REF);
+        sb.append(theme ? SdkConstants.PREFIX_THEME_REF : SdkConstants.PREFIX_RESOURCE_REF);
         if (create) {
             sb.append('+');
         }
         if (framework) {
-            sb.append(ANDROID_NS_NAME);
+            sb.append(SdkConstants.ANDROID_NS_NAME);
             sb.append(':');
         }
         sb.append(type.getName());

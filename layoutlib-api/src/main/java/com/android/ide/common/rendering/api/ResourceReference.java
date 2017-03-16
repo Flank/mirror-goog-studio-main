@@ -16,12 +16,15 @@
 
 package com.android.ide.common.rendering.api;
 
+import com.android.annotations.concurrency.Immutable;
+
 /**
  * A resource reference. This contains the String ID of the resource and whether this is a framework
  * reference.
- * This is an immutable class.
  *
+ * <p>This is an immutable class.
  */
+@Immutable
 public class ResourceReference {
     private final String mName;
     private final boolean mIsFramework;

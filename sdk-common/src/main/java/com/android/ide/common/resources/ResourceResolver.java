@@ -16,6 +16,11 @@
 
 package com.android.ide.common.resources;
 
+import static com.android.SdkConstants.ANDROID_STYLE_RESOURCE_PREFIX;
+import static com.android.SdkConstants.PREFIX_ANDROID;
+import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
+import static com.android.SdkConstants.REFERENCE_STYLE;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.ArrayResourceValue;
@@ -25,9 +30,9 @@ import com.android.ide.common.rendering.api.RenderResources;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.rendering.api.StyleResourceValue;
 import com.android.resources.ResourceType;
+import com.android.resources.ResourceUrl;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
-
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -37,8 +42,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static com.android.SdkConstants.*;
 
 public class ResourceResolver extends RenderResources {
     public static final String THEME_NAME = "Theme";
@@ -174,8 +177,9 @@ public class ResourceResolver extends RenderResources {
             StyleResourceValue to = (StyleResourceValue)map.get(parentName);
 
             if (from != null && to != null) {
-                StyleResourceValue newStyle = new StyleResourceValue(ResourceType.STYLE,
-                        from.getName(), parentName, from.isFramework(), from.getLibraryName());
+                StyleResourceValue newStyle =
+                        new StyleResourceValue(
+                                from.getResourceUrl(), parentName, from.getLibraryName());
                 newStyle.replaceWith(from);
                 mStyleInheritanceMap.put(newStyle, to);
             }
@@ -400,27 +404,6 @@ public class ResourceResolver extends RenderResources {
     }
 
     @Override
-    public ResourceValue resolveValue(ResourceType type, String name, String value,
-            boolean isFrameworkValue) {
-        if (value == null) {
-            return null;
-        }
-
-        // get the ResourceValue referenced by this value
-        ResourceValue resValue = findResValue(value, isFrameworkValue);
-
-        // if resValue is null, but value is not null, this means it was not a reference.
-        // we return the name/value wrapper in a ResourceValue. the isFramework flag doesn't
-        // matter.
-        if (resValue == null) {
-            return new ResourceValue(type, name, value, isFrameworkValue);
-        }
-
-        // we resolved a first reference, but we need to make sure this isn't a reference also.
-        return resolveResValue(resValue);
-    }
-
-    @Override
     public ResourceValue resolveResValue(ResourceValue resValue) {
         return resolveResValue(resValue, 0);
     }
@@ -462,21 +445,22 @@ public class ResourceResolver extends RenderResources {
 
     /**
      * Searches for, and returns a {@link ResourceValue} by its parsed reference.
-     * @param resource the parsed resource
-     * @param forceFramework if <code>true</code>, the method does not search in the
-     * project resources
+     *
+     * @param url the parsed resource
+     * @param forceFramework if <code>true</code>, the method does not search in the project
+     *     resources
      */
-    private ResourceValue findResValue(ResourceUrl resource, boolean forceFramework) {
-        if (resource.type == ResourceType.AAPT) {
+    private ResourceValue findResValue(ResourceUrl url, boolean forceFramework) {
+        if (url.type == ResourceType.AAPT) {
             // Aapt resources are synthetic references that do not need to be resolved.
             return null;
         }
 
         // map of ResourceValue for the given type
         ResourceValueMap typeMap;
-        ResourceType resType = resource.type;
-        String resName = resource.name;
-        boolean isFramework = forceFramework || resource.framework;
+        ResourceType resType = url.type;
+        String resName = url.name;
+        boolean isFramework = forceFramework || url.framework;
 
         if (!isFramework) {
             typeMap = mProjectResources.get(resType);
@@ -498,17 +482,21 @@ public class ResourceResolver extends RenderResources {
             // Look for it in the R map.
             if (mFrameworkProvider != null && resType == ResourceType.ID) {
                 if (mFrameworkProvider.getId(resType, resName) != null) {
-                    return new ResourceValue(resType, resName, true);
+                    return new ResourceValue(url.withFramework(true), null);
                 }
             }
         }
 
-      // didn't find the resource anywhere.
-        if (!resource.create && mLogger != null) {
-            mLogger.warning(LayoutLog.TAG_RESOURCES_RESOLVE,
-                    "Couldn't resolve resource @" +
-                    (isFramework ? "android:" : "") + resType + "/" + resName,
-                    new ResourceValue(resType, resName, isFramework));
+        // didn't find the resource anywhere.
+        if (!url.create && mLogger != null) {
+            mLogger.warning(
+                    LayoutLog.TAG_RESOURCES_RESOLVE,
+                    "Couldn't resolve resource @"
+                            + (isFramework ? "android:" : "")
+                            + resType
+                            + "/"
+                            + resName,
+                    url.withFramework(isFramework));
         }
         return null;
     }
@@ -853,8 +841,8 @@ public class ResourceResolver extends RenderResources {
             if (!mLookupChain.isEmpty() && reference != null && reference.startsWith(PREFIX_RESOURCE_REF)) {
                 ResourceValue prev = mLookupChain.get(mLookupChain.size() - 1);
                 if (!reference.equals(prev.getValue())) {
-                    ResourceValue next = new ResourceValue(prev.getResourceType(), prev.getName(),
-                            prev.isFramework(), prev.getLibraryName());
+                    ResourceValue next =
+                            new ResourceValue(prev.getResourceUrl(), null, prev.getLibraryName());
                     next.setValue(reference);
                     mLookupChain.add(next);
                 }
@@ -886,16 +874,6 @@ public class ResourceResolver extends RenderResources {
                 mLookupChain.add(value);
             }
             return value;
-        }
-
-        @Override
-        public ResourceValue resolveValue(ResourceType type, String name, String value,
-                boolean isFrameworkValue) {
-            ResourceValue resourceValue = super.resolveValue(type, name, value, isFrameworkValue);
-            if (resourceValue != null) {
-                mLookupChain.add(resourceValue);
-            }
-            return resourceValue;
         }
     }
 }

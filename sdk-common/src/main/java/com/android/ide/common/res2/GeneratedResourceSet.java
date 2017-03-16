@@ -19,11 +19,9 @@ package com.android.ide.common.res2;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.utils.ILogger;
-
+import java.io.File;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
-
-import java.io.File;
 
 /**
  * A {@link ResourceSet} that contains only generated files (e.g. PNGs generated from a vector
@@ -35,14 +33,18 @@ public class GeneratedResourceSet extends ResourceSet {
     public static final String ATTR_GENERATED = "generated";
 
     public GeneratedResourceSet(ResourceSet originalSet) {
-        super(originalSet.getConfigName() + "$Generated", originalSet.getLibraryName(), originalSet.getValidateEnabled());
+        super(
+                originalSet.getConfigName() + "$Generated",
+                null,
+                originalSet.getLibraryName(),
+                originalSet.getValidateEnabled());
         for (File source : originalSet.getSourceFiles()) {
             addSource(source);
         }
     }
 
     public GeneratedResourceSet(String name, String libraryName) {
-        super(name, libraryName);
+        super(name, null, libraryName, true);
     }
 
     @Override
