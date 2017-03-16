@@ -69,6 +69,7 @@ public class SdkVersionInfoTest extends TestCase {
         assertEquals("KitKat", getCodeName(19));
         assertEquals("Lollipop", getCodeName(21));
         assertEquals("Nougat", getCodeName(24));
+        assertEquals("O", getCodeName(26));
     }
 
     public void testCamelCaseToUnderlines() {
