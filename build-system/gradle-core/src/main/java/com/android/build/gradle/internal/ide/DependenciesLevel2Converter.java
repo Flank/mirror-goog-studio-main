@@ -41,9 +41,7 @@ import com.android.builder.model.level2.GraphItem;
 import com.android.builder.model.level2.Library;
 import com.android.ide.common.caching.CreatingCache;
 import com.android.utils.Pair;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.io.File;
@@ -172,20 +170,10 @@ public class DependenciesLevel2Converter {
 
         } else if (dependency instanceof AndroidDependency) {
             AndroidDependency androidDependency = (AndroidDependency) dependency;
-            Collection<File> localJars;
-            if (androidDependency.isSubModule()) {
-                localJars = ImmutableSet.of();
-            } else {
-                // for an external library, the bundle should have been exploded
-                Preconditions.checkState(
-                        androidDependency.getExtractedFolder().isDirectory(),
-                        String.format(
-                                "Dependency %1$s should have been exploded into directory %2$s"
-                                        + " but has not",
-                                androidDependency, androidDependency.getExtractedFolder()));
-                localJars = androidDependency.getLocalJars();
-            }
-            library = new AndroidLibraryImpl(androidDependency, localJars);
+            library =
+                    new AndroidLibraryImpl(
+                            androidDependency,
+                            DependenciesConverter.findLocalJar(androidDependency));
         } else if (dependency instanceof JavaDependency) {
             library = new JavaLibraryImpl((JavaDependency) dependency);
 

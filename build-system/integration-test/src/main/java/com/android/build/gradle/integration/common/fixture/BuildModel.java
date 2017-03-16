@@ -239,6 +239,8 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
             arguments.add("-P" + feature + "=true");
         }
 
+        arguments.addAll(super.arguments);
+
         setJvmArguments(executor);
 
         ByteArrayOutputStream stdout = new ByteArrayOutputStream();

@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.TestAndroidConfig;
 import com.android.build.gradle.internal.DependencyManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
@@ -87,17 +88,47 @@ public class ResolveDependenciesTask extends BaseTask {
             }
             File input = androidDependency.getArtifactFile();
             File output = androidDependency.getExtractedFolder();
-            // For snapshots, we use a project local file cache.
-            boolean useBuildCache =
-                    PrepareLibraryTask.shouldUseBuildCache(
-                            buildCache != null, androidDependency.getCoordinates());
-            PrepareLibraryTask.prepareLibrary(
-                    input,
-                    output,
-                    useBuildCache ? buildCache : projectLevelCache,
-                    createAction(project, executor, input),
-                    project.getLogger(),
-                    false /* includeTroubleshootingMessage */);
+
+            // Determine whether the exploded directory is in the user cache, the project cache, or
+            // the project's intermediates directory, and use the corresponding cache to explode it.
+            // This logic must be the same as the code that computes exploded directories in
+            // DependencyManager.
+            //
+            // NOTE: During a regular build, here the exploded directory would never be in the
+            // intermediates directory since the ResolveDependenciesTask is used when improved
+            // dependency resolution is enabled, meaning the exploded directory must be either in
+            // the user cache or the project cache. However, during a sync, since ModelBuilder uses
+            // this method, it is possible that the exploded directory is in the intermediates
+            // directory. In that case, we WILL NOT explode the AAR during sync to avoid interfering
+            // with the UP-TO-DATE check of the PrepareLibraryTask if that task is executed at a
+            // later time (e.g., PrepareLibraryTask might later try to explode an AAR to the same
+            // location under the intermediates directory which has already been exploded into
+            // earlier, and Gradle may mistakenly assume that the output of the PrepareLibraryTask
+            // is empty).
+            boolean useBuildCache;
+            boolean useProjectCache;
+            if (PrepareLibraryTask.shouldUseBuildCache(
+                    buildCache != null, androidDependency.getCoordinates())) {
+                useBuildCache = true;
+                useProjectCache = false;
+            } else if (AndroidGradleOptions.isImprovedDependencyResolutionEnabled(project)) {
+                useBuildCache = false;
+                useProjectCache = true;
+            } else {
+                useBuildCache = false;
+                useProjectCache = false;
+            }
+
+            // We explode AARs only when a cache is used (as explained above)
+            if (useBuildCache || useProjectCache) {
+                PrepareLibraryTask.prepareLibrary(
+                        input,
+                        output,
+                        useBuildCache ? buildCache : projectLevelCache,
+                        createAction(project, executor, input),
+                        project.getLogger(),
+                        false /* includeTroubleshootingMessage */);
+            }
         }
         executor.waitForTasksWithQuickFail(false);
     }
