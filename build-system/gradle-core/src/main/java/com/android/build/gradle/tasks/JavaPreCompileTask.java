@@ -49,14 +49,23 @@ public class JavaPreCompileTask extends BaseTask {
     private static final String PROCESSOR_SERVICES =
             "META-INF/services/javax.annotation.processing.Processor";
 
-    @Input
     private File annotationProcessorOutputFolder;
 
-    @InputFiles private Configuration annotationProcessorConfiguration;
+    private Configuration annotationProcessorConfiguration;
 
     private Supplier<Collection<File>> compileClasspaths;
 
     private CoreAnnotationProcessorOptions annotationProcessorOptions;
+
+    @Input
+    public File getAnnotationProcessorOutputFolder() {
+        return annotationProcessorOutputFolder;
+    }
+
+    @InputFiles
+    public Configuration getAnnotationProcessorConfiguration() {
+        return annotationProcessorConfiguration;
+    }
 
     @TaskAction
     public void preCompile() {
