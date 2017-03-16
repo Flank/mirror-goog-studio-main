@@ -107,8 +107,8 @@ public class TaskStateList {
     }
 
 
-    private static final Pattern INPUT_CHANGED_PATTERN = Pattern.compile(
-            "Value of input property '.*' has changed for task ':(\\S+)'");
+    private static final Pattern INPUT_CHANGED_PATTERN =
+            Pattern.compile("Value of input property '.*' has changed for task '(\\S+)'");
 
     public static final Pattern EXECUTED_PATTERN
             = Pattern.compile("Tasks to be executed: \\[(.*)\\]");
