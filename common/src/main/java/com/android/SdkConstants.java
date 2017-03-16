@@ -770,6 +770,7 @@ public final class SdkConstants {
             "android.support.constraint.TableConstraintLayout"; //$NON-NLS-1$
     public static final String CLASS_CONSTRAINT_LAYOUT_GUIDELINE =
             "android.support.constraint.Guideline"; //$NON-NLS-1$
+
     public static final String CONSTRAINT_LAYOUT_LIB_GROUP_ID = "com.android.support.constraint";
     public static final String CONSTRAINT_LAYOUT_LIB_ARTIFACT_ID = "constraint-layout";
     public static final String CONSTRAINT_LAYOUT_LIB_ARTIFACT =
@@ -1086,6 +1087,7 @@ public final class SdkConstants {
     public static final String CONSTRAINT_LAYOUT = CLASS_CONSTRAINT_LAYOUT;
     public static final String TABLE_CONSTRAINT_LAYOUT = CLASS_TABLE_CONSTRAINT_LAYOUT;
     public static final String CONSTRAINT_LAYOUT_GUIDELINE = CLASS_CONSTRAINT_LAYOUT_GUIDELINE;
+    public static final String CONSTRAINT_LAYOUT_BARRIER = CLASS_CONSTRAINT_LAYOUT_BARRIER;
 
     // Tags: Drawables
     public static final String TAG_BITMAP = "bitmap"; //$NON-NLS-1$
@@ -1175,6 +1177,7 @@ public final class SdkConstants {
     public static final String ATTR_FOREGROUND = "foreground"; //$NON-NLS-1$
     public static final String ATTR_BACKGROUND = "background"; //$NON-NLS-1$
     public static final String ATTR_ORIENTATION = "orientation"; //$NON-NLS-1$
+    public static final String ATTR_BARRIER_DIRECTION = "barrierDirection"; //$NON-NLS-1$
     public static final String ATTR_LAYOUT = "layout"; //$NON-NLS-1$
     public static final String ATTR_ROW_COUNT = "rowCount"; //$NON-NLS-1$
     public static final String ATTR_COLUMN_COUNT = "columnCount"; //$NON-NLS-1$
