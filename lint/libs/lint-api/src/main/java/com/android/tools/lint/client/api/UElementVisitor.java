@@ -30,7 +30,6 @@ import com.intellij.openapi.progress.ProcessCanceledException;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiJavaFile;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiTypeParameter;
 import java.util.ArrayList;
@@ -213,9 +212,7 @@ public class UElementVisitor {
 
             LintClient client = context.getClient();
             try {
-                if (uFile.getPsi() instanceof PsiJavaFile) {
-                    context.setJavaFile((PsiJavaFile)uFile.getPsi()); // needed for getLocation
-                }
+                context.setJavaFile(uFile.getPsi()); // needed for getLocation
                 context.setUastFile(uFile);
 
                 client.runReadAction(() -> {

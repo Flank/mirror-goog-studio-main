@@ -28,6 +28,7 @@ import com.android.tools.lint.client.api.JavaParser.ResolvedClass;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.UastParser;
 import com.android.tools.lint.detector.api.Detector.JavaPsiScanner;
+import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.utils.Pair;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiAnnotation;
@@ -37,6 +38,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiEnumConstant;
 import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiField;
+import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiJavaCodeReferenceElement;
 import com.intellij.psi.PsiJavaFile;
 import com.intellij.psi.PsiLabeledStatement;
@@ -88,13 +90,13 @@ public class JavaContext extends Context {
     /**
      * The parse tree
      *
-     * @deprecated Use {@link #javaFile} instead (see {@link JavaPsiScanner})
+     * @deprecated Use {@link #uastFile} instead (see {@link UastScanner})
      */
     @Deprecated
     private Node compilationUnit;
 
     /** The parse tree, when using PSI */
-    private PsiJavaFile javaFile;
+    private PsiFile psiFile;
 
     /** The parse tree, when using UAST */
     private UFile uastFile;
@@ -411,8 +413,8 @@ public class JavaContext extends Context {
      * @return the parsed Java source file
      */
     @Nullable
-    public PsiJavaFile getJavaFile() {
-        return javaFile;
+    public PsiFile getJavaFile() {
+        return psiFile;
     }
 
     /**
@@ -421,8 +423,8 @@ public class JavaContext extends Context {
      *
      * @param javaFile the parse tree
      */
-    public void setJavaFile(@Nullable PsiJavaFile javaFile) {
-        this.javaFile = javaFile;
+    public void setJavaFile(@Nullable PsiFile javaFile) {
+        this.psiFile = javaFile;
     }
 
     /** Sets the UAST parser to use */
@@ -458,7 +460,7 @@ public class JavaContext extends Context {
     @Override
     public void report(@NonNull Issue issue, @NonNull Location location,
             @NonNull String message) {
-        if (driver.isSuppressed(this, issue, javaFile)) {
+        if (driver.isSuppressed(this, issue, psiFile)) {
             return;
         }
         super.report(issue, location, message);
