@@ -14,6 +14,34 @@
     <formfactor value="Mobile"/>
 
     <parameter
+            id="instantAppActivityHost"
+            name="Instant App URL Host"
+            type="string"
+            default="instantapp.example.com"
+            visibility="isInstantApp!false"
+            help="The domain to use in the Instant App route for this activity"/>
+
+    <parameter
+            id="instantAppActivityRouteType"
+            name="Instant App URL Route Type"
+            type="enum"
+            default="path"
+            visibility="isInstantApp!false"
+            help="The type of route to use in the Instant App route for this activity" >
+            <option id="path">Path</option>
+            <option id="pathPrefix">Path Prefix</option>
+            <option id="pathPattern">Path Pattern</option>
+    </parameter>
+
+    <parameter
+            id="instantAppActivityRoute"
+            name="Instant App URL Route"
+            type="string"
+            default="/"
+            visibility="isInstantApp!false"
+            help="The route to use in the Instant App route for this activity"/>
+
+    <parameter
             id="activityClass"
             name="Activity Name"
             type="string"

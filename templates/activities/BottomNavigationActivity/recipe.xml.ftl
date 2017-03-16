@@ -1,7 +1,10 @@
 <?xml version="1.0"?>
 <recipe>
     <dependency mavenUrl="com.android.support:design:${buildApi}.+" />
+<#-- TODO: Switch Instant Apps back to ConstraintLayout once library dependency bugs are resolved -->
+<#if !isInstantApp>
     <dependency mavenUrl="com.android.support.constraint:constraint-layout:+" />
+</#if>
 
 <#if minApiLevel lt 21>
     <dependency mavenUrl="com.android.support:support-vector-drawable:${buildApi}.+" />
