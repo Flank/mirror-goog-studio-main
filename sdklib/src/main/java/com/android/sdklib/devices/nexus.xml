@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <d:devices
-    xmlns:d="http://schemas.android.com/sdk/devices/2">
+    xmlns:d="http://schemas.android.com/sdk/devices/3">
 
     <d:device>
         <d:name>Nexus One</d:name>
@@ -704,6 +704,7 @@
     <d:name>Nexus 5</d:name>
     <d:id>Nexus 5</d:id>
     <d:manufacturer>Google</d:manufacturer>
+    <d:playstore-enabled>true</d:playstore-enabled>
     <d:hardware>
       <d:screen>
         <d:screen-size>normal</d:screen-size>
@@ -1074,6 +1075,7 @@
         <d:name>Nexus 5X</d:name>
         <d:id>Nexus 5X</d:id>
         <d:manufacturer>Google</d:manufacturer>
+        <d:playstore-enabled>true</d:playstore-enabled>
         <d:hardware>
             <d:screen>
                 <d:screen-size>normal</d:screen-size>

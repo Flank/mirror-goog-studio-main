@@ -79,6 +79,7 @@ public class AvdManagerTest extends TestCase {
                 false,
                 false,
                 false,
+                false,
                 log);
 
         assertTrue("Expected config.ini in " + mAvdFolder,
@@ -107,6 +108,7 @@ public class AvdManagerTest extends TestCase {
                 null,
                 null,
                 null,
+                false,
                 true,
                 false,
                 false,
@@ -139,6 +141,7 @@ public class AvdManagerTest extends TestCase {
                 false,
                 false,
                 false,
+                false,
                 log);
 
         assertTrue(mFileOp.exists(new File(mAvdFolder, "boot.prop")));
@@ -147,6 +150,11 @@ public class AvdManagerTest extends TestCase {
 
         // use a tree map to make sure test order is consistent
         assertEquals(expected.toString(), new TreeMap<>(properties).toString());
+
+        // Verify that this AVD is not Play Store enabled
+        Properties baseProperties = new Properties();
+        baseProperties.load(mFileOp.newFileInputStream(new File(mAvdFolder, "config.ini")));
+        assertEquals("false", baseProperties.get("PlayStore.enabled"));
     }
 
     public void testRenameAvd() throws Exception {
@@ -162,6 +170,7 @@ public class AvdManagerTest extends TestCase {
                 null,
                 null,
                 null,
+                false,
                 false,
                 false,
                 false,
@@ -190,6 +199,7 @@ public class AvdManagerTest extends TestCase {
                 null,
                 null,
                 null,
+                false,
                 false,
                 false,
                 true, // Yes, edit the existing AVD
@@ -230,6 +240,7 @@ public class AvdManagerTest extends TestCase {
           false,
           false,
           false,
+          false,
           log);
 
         assertNotNull("Could not create AVD", origAvd);
@@ -247,6 +258,7 @@ public class AvdManagerTest extends TestCase {
           null,
           null,
           null,
+          false,
           false,
           false,
           false, // Do not remove the original

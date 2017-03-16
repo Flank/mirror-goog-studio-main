@@ -30,6 +30,33 @@ import com.android.resources.ScreenSize;
  */
 public class HardwareConfig {
 
+    /** Manufacturer names correspond to the 'hw.device.manufacturer'
+     *  field in an AVD's config.ini
+     */
+    /** Manufacturer used by the generic devices in the device list */
+    public static final String MANUFACTURER_GENERIC = "Generic";
+    /** Manufacturer used by the Nexus devices in the device list */
+    public static final String MANUFACTURER_GOOGLE = "Google";
+
+    /** Device names
+     *  These correspond to the 'hw.device.name' field in an AVD's config.ini
+     */
+    public static final String DEVICE_GALAXY_NEXUS = "Galaxy Nexus";
+    public static final String DEVICE_NEXUS_10 = "Nexus 10";
+    public static final String DEVICE_NEXUS_4 = "Nexus 4";
+    public static final String DEVICE_NEXUS_5 = "Nexus 5";
+    public static final String DEVICE_NEXUS_5X = "Nexus 5X";
+    public static final String DEVICE_NEXUS_6 = "Nexus 6";
+    public static final String DEVICE_NEXUS_6P = "Nexus 6P";
+    public static final String DEVICE_NEXUS_7 = "Nexus 7";
+    public static final String DEVICE_NEXUS_7_2013 = "Nexus 7 2013";
+    public static final String DEVICE_NEXUS_9 = "Nexus 9";
+    public static final String DEVICE_NEXUS_ONE = "Nexus One";
+    public static final String DEVICE_NEXUS_S = "Nexus S";
+    public static final String DEVICE_PIXEL = "pixel";
+    public static final String DEVICE_PIXEL_C = "pixel_c";
+    public static final String DEVICE_PIXEL_XL = "pixel_xl";
+
     private final int mScreenWidth;
     private final int mScreenHeight;
     private final Density mDensity;

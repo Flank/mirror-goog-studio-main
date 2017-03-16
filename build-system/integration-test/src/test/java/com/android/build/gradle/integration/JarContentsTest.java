@@ -112,7 +112,8 @@ public class JarContentsTest {
         expected.putAll(
                 "com/android/tools/dvlib/",
                 "com/android/dvlib/devices-1.xsd",
-                "com/android/dvlib/devices-2.xsd");
+                "com/android/dvlib/devices-2.xsd",
+                "com/android/dvlib/devices-3.xsd");
         expected.putAll(
                 "com/android/tools/sdklib/",
                 "com/android/sdklib/internal/build/BuildConfig.template",

@@ -106,4 +106,9 @@ public interface ISystemImage extends Comparable<ISystemImage> {
      * Returns true if this system image is obsolete.
      */
     boolean obsolete();
+
+    /**
+     * Returns true if this system image supports Google Play Store.
+     */
+    boolean hasPlayStore();
 }
