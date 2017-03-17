@@ -39,7 +39,9 @@ public class AvdManagerTest extends TestCase {
     private AndroidSdkHandler mAndroidSdkHandler;
     private AvdManager mAvdManager;
     private File mAvdFolder;
-    private SystemImage mSystemImage;
+    private SystemImage mSystemImageAosp;
+    private SystemImage mSystemImageGoogle;
+    private SystemImage mSystemImagePlay;
     private MockFileOp mFileOp = new MockFileOp();
 
     @Override
@@ -48,6 +50,7 @@ public class AvdManagerTest extends TestCase {
 
         mFileOp.recordExistingFile("/sdk/tools/lib/emulator/snapshots.img");
         recordGoogleApisSysImg23(mFileOp);
+        recordPlayStoreSysImg24(mFileOp);
         recordSysImg23(mFileOp);
         mAndroidSdkHandler =
                 new AndroidSdkHandler(new File("/sdk"), ANDROID_HOME,  mFileOp);
@@ -59,9 +62,22 @@ public class AvdManagerTest extends TestCase {
                         mFileOp);
         mAvdFolder =
                 AvdInfo.getDefaultAvdFolder(mAvdManager, getName(), mFileOp, false);
-        mSystemImage = mAndroidSdkHandler.getSystemImageManager(
-                new FakeProgressIndicator()).getImages().iterator().next();
 
+        for (SystemImage si : mAndroidSdkHandler.getSystemImageManager(new FakeProgressIndicator()).getImages()) {
+            final String tagId = si.getTag().getId();
+            if ("default".equals(tagId)) {
+                mSystemImageAosp = si;
+            } else if ("google_apis".equals(tagId)) {
+                mSystemImageGoogle = si;
+            } else if ("google_apis_playstore".equals(tagId)) {
+                mSystemImagePlay = si;
+            } else {
+                assertTrue("Created unexpected system image: " + tagId, false);
+            }
+        }
+        assertNotNull(mSystemImageAosp);
+        assertNotNull(mSystemImageGoogle);
+        assertNotNull(mSystemImagePlay);
     }
 
     public void testCreateAvdWithoutSnapshot() throws Exception {
@@ -70,7 +86,7 @@ public class AvdManagerTest extends TestCase {
         mAvdManager.createAvd(
                 mAvdFolder,
                 this.getName(),
-                mSystemImage,
+                mSystemImageAosp,
                 null,
                 null,
                 null,
@@ -102,7 +118,7 @@ public class AvdManagerTest extends TestCase {
         mAvdManager.createAvd(
                 mAvdFolder,
                 this.getName(),
-                mSystemImage,
+                mSystemImageGoogle,
                 null,
                 null,
                 null,
@@ -132,7 +148,7 @@ public class AvdManagerTest extends TestCase {
         mAvdManager.createAvd(
                 mAvdFolder,
                 this.getName(),
-                mSystemImage,
+                mSystemImagePlay,
                 null,
                 null,
                 null,
@@ -150,11 +166,6 @@ public class AvdManagerTest extends TestCase {
 
         // use a tree map to make sure test order is consistent
         assertEquals(expected.toString(), new TreeMap<>(properties).toString());
-
-        // Verify that this AVD is not Play Store enabled
-        Properties baseProperties = new Properties();
-        baseProperties.load(mFileOp.newFileInputStream(new File(mAvdFolder, "config.ini")));
-        assertEquals("false", baseProperties.get("PlayStore.enabled"));
     }
 
     public void testRenameAvd() throws Exception {
@@ -164,7 +175,7 @@ public class AvdManagerTest extends TestCase {
         AvdInfo origAvd = mAvdManager.createAvd(
                 mAvdFolder,
                 this.getName(),
-                mSystemImage,
+                mSystemImageAosp,
                 null,
                 null,
                 null,
@@ -193,7 +204,7 @@ public class AvdManagerTest extends TestCase {
         AvdInfo renamedAvd = mAvdManager.createAvd(
                 mAvdFolder,
                 newName,
-                mSystemImage,
+                mSystemImageAosp,
                 null,
                 null,
                 null,
@@ -231,7 +242,7 @@ public class AvdManagerTest extends TestCase {
         AvdInfo origAvd = mAvdManager.createAvd(
           mAvdFolder,
           this.getName(),
-          mSystemImage,
+          mSystemImagePlay,
           null,
           null,
           null,
@@ -252,7 +263,7 @@ public class AvdManagerTest extends TestCase {
         AvdInfo duplicatedAvd = mAvdManager.createAvd(
           mAvdFolder,
           newName,
-          mSystemImage,
+          mSystemImagePlay,
           null,
           null,
           null,
@@ -279,7 +290,7 @@ public class AvdManagerTest extends TestCase {
         assertFalse(mFileOp.exists(new File(newFolder, "boot.prop")));
         Properties configProperties = new Properties();
         configProperties.load(mFileOp.newFileInputStream(new File(newFolder, "config.ini")));
-        assertEquals("system-images/android-23/default/x86/", configProperties.get("image.sysdir.1"));
+        assertEquals("system-images/android-24/google_apis_playstore/x86_64/", configProperties.get("image.sysdir.1"));
         assertEquals(newName, configProperties.get("AvdId"));
         assertEquals(newName, configProperties.get("avd.ini.displayname"));
         assertTrue("Expected " + AvdManager.USERDATA_IMG + " in " + newFolder,
@@ -292,6 +303,71 @@ public class AvdManagerTest extends TestCase {
         Properties baseConfigProperties = new Properties();
         baseConfigProperties.load(mFileOp.newFileInputStream(new File(mAvdFolder, "config.ini")));
         assertThat(baseConfigProperties.get("AvdId")).isNotEqualTo(newName); // Different or null
+    }
+
+    public void testPlayStoreProperty() throws Exception {
+        MockLog log = new MockLog();
+        Map<String, String> expected = Maps.newTreeMap();
+        expected.put("ro.build.display.id", "sdk-eng 4.3 JB_MR2 774058 test-keys");
+        expected.put("ro.board.platform",   "");
+        expected.put("ro.build.tags",       "test-keys");
+
+        // Play Store image with Play Store device
+        mAvdManager.createAvd(
+          mAvdFolder,
+          this.getName(),
+          mSystemImagePlay,
+          null,
+          null,
+          null,
+          null,
+          expected,
+          true, // deviceHasPlayStore
+          false,
+          false,
+          false,
+          log);
+        Properties baseProperties = new Properties();
+        baseProperties.load(mFileOp.newFileInputStream(new File(mAvdFolder, "config.ini")));
+        assertEquals("true", baseProperties.get("PlayStore.enabled"));
+
+        // Play Store image with non-Play Store device
+        mAvdManager.createAvd(
+          mAvdFolder,
+          this.getName(),
+          mSystemImagePlay,
+          null,
+          null,
+          null,
+          null,
+          expected,
+          false, // deviceHasPlayStore
+          false,
+          true,
+          false,
+          log);
+        baseProperties = new Properties();
+        baseProperties.load(mFileOp.newFileInputStream(new File(mAvdFolder, "config.ini")));
+        assertEquals("false", baseProperties.get("PlayStore.enabled"));
+
+        // Non-Play Store image with Play Store device
+        mAvdManager.createAvd(
+          mAvdFolder,
+          this.getName(),
+          mSystemImageGoogle,
+          null,
+          null,
+          null,
+          null,
+          expected,
+          true, // deviceHasPlayStore
+          false,
+          true,
+          false,
+          log);
+        baseProperties = new Properties();
+        baseProperties.load(mFileOp.newFileInputStream(new File(mAvdFolder, "config.ini")));
+        assertEquals("false", baseProperties.get("PlayStore.enabled"));
     }
 
 
@@ -346,6 +422,32 @@ public class AvdManagerTest extends TestCase {
                         + "<display-name>Google APIs Intel x86 Atom_64 System Image</display-name>"
                         + "<uses-license ref=\"license-9A5C00D5\"/></localPackage>"
                         + "</ns3:sdk-sys-img>\n");
+    }
+
+    private static void recordPlayStoreSysImg24(MockFileOp fop) {
+        fop.recordExistingFile("/sdk/system-images/android-24/google_apis_playstore/x86_64/system.img");
+        fop.recordExistingFile("/sdk/system-images/android-24/google_apis_playstore/x86_64/"
+                               + AvdManager.USERDATA_IMG);
+
+        fop.recordExistingFile("/sdk/system-images/android-24/google_apis_playstore/x86_64/package.xml",
+                               "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
+                               + "<ns3:sdk-sys-img "
+                               + "xmlns:ns2=\"http://schemas.android.com/sdk/android/repo/repository2/01\" "
+                               + "xmlns:ns3=\"http://schemas.android.com/sdk/android/repo/sys-img2/01\" "
+                               + "xmlns:ns4=\"http://schemas.android.com/repository/android/common/01\" "
+                               + "xmlns:ns5=\"http://schemas.android.com/sdk/android/repo/addon2/01\">"
+                               + "<license id=\"license-9A5C00D5\" type=\"text\">Terms and Conditions\n"
+                               + "</license><localPackage "
+                               + "path=\"system-images;android-24;google_apis_playstore;x86_64\" "
+                               + "obsolete=\"false\"><type-details "
+                               + "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
+                               + "xsi:type=\"ns3:sysImgDetailsType\"><api-level>24</api-level>"
+                               + "<tag><id>google_apis_playstore</id><display>Google Play</display></tag>"
+                               + "<vendor><id>google</id><display>Google Inc.</display></vendor>"
+                               + "<abi>x86_64</abi></type-details><revision><major>9</major></revision>"
+                               + "<display-name>Google APIs with Playstore Intel x86 Atom System Image</display-name>"
+                               + "<uses-license ref=\"license-9A5C00D5\"/></localPackage>"
+                               + "</ns3:sdk-sys-img>\n");
     }
 
 }
