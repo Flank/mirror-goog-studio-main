@@ -38,8 +38,9 @@ import com.android.builder.core.VariantType;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.profile.Recorder;
+import com.google.common.collect.ImmutableList;
+import java.util.Collection;
 import org.gradle.api.NamedDomainObjectContainer;
-import org.gradle.api.Project;
 import org.gradle.internal.reflect.Instantiator;
 
 public class AtomVariantFactory extends BaseVariantFactory {
@@ -68,14 +69,16 @@ public class AtomVariantFactory extends BaseVariantFactory {
     }
 
     @Override
-    public Class<? extends BaseVariantImpl> getVariantImplementationClass() {
+    @NonNull
+    public Class<? extends BaseVariantImpl> getVariantImplementationClass(
+            @NonNull BaseVariantData variantData) {
         return AtomVariantImpl.class;
     }
 
     @NonNull
     @Override
-    public VariantType getVariantConfigurationType() {
-        return VariantType.ATOM;
+    public Collection<VariantType> getVariantConfigurationTypes() {
+        return ImmutableList.of(VariantType.ATOM);
     }
 
     @Override

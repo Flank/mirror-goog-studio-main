@@ -42,6 +42,6 @@ public class FeatureTest {
     @Test
     public void build() throws Exception {
         // just run test for now.
-        sProject.execute("help");
+        sProject.execute("assemble");
     }
 }

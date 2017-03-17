@@ -20,7 +20,6 @@ import static com.android.SdkConstants.DOT_ZIP;
 import static com.android.SdkConstants.FD_MERGED;
 import static com.android.SdkConstants.FD_RES;
 import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML;
-import static com.android.build.gradle.internal.TaskManager.ATOM_SUFFIX;
 import static com.android.build.gradle.internal.TaskManager.DIR_ATOMBUNDLES;
 import static com.android.build.gradle.internal.TaskManager.DIR_BUNDLES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE;
@@ -409,9 +408,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     @NonNull
     public String getTaskName(@NonNull String prefix, @NonNull String suffix) {
-        if (getVariantData().getType() == VariantType.ATOM)
-            suffix = ATOM_SUFFIX + suffix;
-        return prefix + StringHelper.capitalize(getVariantConfiguration().getFullName()) + suffix;
+        return variantData.getTaskName(prefix, suffix);
     }
 
     @Override

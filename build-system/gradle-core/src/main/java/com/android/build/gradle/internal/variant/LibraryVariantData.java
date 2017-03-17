@@ -76,8 +76,7 @@ public class LibraryVariantData extends BaseVariantData implements TestedVariant
 
     @Override
     public void setTestVariantData(
-            @NonNull TestVariantData testVariantData,
-            VariantType type) {
+            @NonNull TestVariantData testVariantData, @NonNull VariantType type) {
         testVariants.put(type, testVariantData);
     }
 

@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.profile.Recorder;
+import java.util.Collection;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.internal.reflect.Instantiator;
@@ -49,7 +50,9 @@ public interface VariantFactory {
             @NonNull TaskManager taskManager,
             @NonNull Recorder recorder);
 
-    Class<? extends BaseVariantImpl> getVariantImplementationClass();
+    @NonNull
+    Class<? extends BaseVariantImpl> getVariantImplementationClass(
+            @NonNull BaseVariantData variantData);
 
     @NonNull
     default BaseVariantImpl createVariantApi(
@@ -57,9 +60,8 @@ public interface VariantFactory {
             @NonNull AndroidBuilder androidBuilder,
             @NonNull BaseVariantData variantData,
             @NonNull ReadOnlyObjectProvider readOnlyObjectProvider) {
-
         return instantiator.newInstance(
-                getVariantImplementationClass(),
+                getVariantImplementationClass(variantData),
                 variantData,
                 androidBuilder,
                 readOnlyObjectProvider,
@@ -71,7 +73,7 @@ public interface VariantFactory {
     }
 
     @NonNull
-    VariantType getVariantConfigurationType();
+    Collection<VariantType> getVariantConfigurationTypes();
 
     boolean hasTestScope();
 

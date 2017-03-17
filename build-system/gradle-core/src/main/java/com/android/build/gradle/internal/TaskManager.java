@@ -254,6 +254,7 @@ public abstract class TaskManager {
     public static final String BUILD_GROUP = BasePlugin.BUILD_GROUP;
     public static final String ANDROID_GROUP = "Android";
     public static final String ATOM_SUFFIX = "Atom";
+    public static final String FEATURE_SUFFIX = "Feature";
 
     // Task names. These cannot be AndroidTasks as in the component model world there is nothing to
     // force generateTasksBeforeEvaluate to happen before the variant tasks are created.
@@ -329,7 +330,7 @@ public abstract class TaskManager {
 
     /** Creates the tasks for a given BaseVariantData. */
     public abstract void createTasksForVariantScope(
-            @NonNull TaskFactory tasks, @NonNull VariantScope variantData);
+            @NonNull TaskFactory tasks, @NonNull VariantScope variantScope);
 
     /**
      * Returns a collection of buildables that creates native object.

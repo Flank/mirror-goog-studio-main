@@ -17,7 +17,10 @@
 package com.android.build.gradle;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
+import com.android.build.gradle.api.FeatureVariant;
+import com.android.build.gradle.api.LibraryVariant;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.dsl.BuildType;
@@ -26,10 +29,14 @@ import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.builder.core.AndroidBuilder;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
+import org.gradle.api.internal.DefaultDomainObjectSet;
 import org.gradle.internal.reflect.Instantiator;
 
 /** Extension for Feature plugin */
 public class FeatureExtension extends LibraryExtension {
+
+    private final DefaultDomainObjectSet<FeatureVariant> featureVariantList =
+            new DefaultDomainObjectSet<FeatureVariant>(FeatureVariant.class);
 
     public FeatureExtension(
             @NonNull Project project,
@@ -51,5 +58,23 @@ public class FeatureExtension extends LibraryExtension {
                 signingConfigs,
                 buildOutputs,
                 extraModelInfo);
+    }
+
+    /**
+     * Returns the list of feature variants. Since the collections is built after evaluation, it
+     * should be used with Gradle's <code>all</code> iterator to process future items.
+     */
+    public DefaultDomainObjectSet<FeatureVariant> getFeatureVariants() {
+        return featureVariantList;
+    }
+
+    @Override
+    public void addVariant(BaseVariant variant) {
+        // FIXME: We should fine a cleaner way of handling this.
+        if (variant instanceof LibraryVariant) {
+            super.addVariant(variant);
+        } else {
+            featureVariantList.add((FeatureVariant) variant);
+        }
     }
 }

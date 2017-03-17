@@ -83,4 +83,10 @@ public class AtomVariantData extends AndroidArtifactVariantData implements Teste
         testVariants.put(type, testVariantData);
     }
 
+    @NonNull
+    @Override
+    public String getTaskName(@NonNull String prefix, @NonNull String suffix) {
+        return super.getTaskName(prefix, TaskManager.ATOM_SUFFIX + suffix);
+    }
+
 }

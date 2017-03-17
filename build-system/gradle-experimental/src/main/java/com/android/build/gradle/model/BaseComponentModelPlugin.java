@@ -62,6 +62,7 @@ import com.android.build.gradle.internal.tasks.DependencyReportTask;
 import com.android.build.gradle.internal.tasks.SigningReportTask;
 import com.android.build.gradle.internal.transforms.DexTransform;
 import com.android.build.gradle.internal.transforms.JackPreDexTransform;
+import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.managed.AndroidConfig;
 import com.android.build.gradle.managed.BuildType;
@@ -585,11 +586,14 @@ public class BaseComponentModelPlugin implements Plugin<Project>, ToolingRegistr
                                 variantManager.createVariantData(
                                         new BuildTypeAdaptor(binary.getBuildType()),
                                         adaptedFlavors));
-                        binary.getVariantData()
-                                .getVariantConfiguration()
-                                .setInstantRunSupportStatusOverride(
-                                        InstantRun.STATUS_NOT_SUPPORTED_FOR_EXPERIMENTAL_PLUGIN);
-                        variantManager.addVariant(binary.getVariantData());
+                        for (BaseVariantData variantData : binary.getVariantData()) {
+                            variantData
+                                    .getVariantConfiguration()
+                                    .setInstantRunSupportStatusOverride(
+                                            InstantRun
+                                                    .STATUS_NOT_SUPPORTED_FOR_EXPERIMENTAL_PLUGIN);
+                            variantManager.addVariant(variantData);
+                        }
                     });
         }
 
@@ -629,8 +633,10 @@ public class BaseComponentModelPlugin implements Plugin<Project>, ToolingRegistr
                     ((AndroidComponentSpecInternal) specs.get(COMPONENT_NAME)).getVariantManager();
             variantManager.configureDependencies();
             for (AndroidBinaryInternal binary : binaries) {
-                variantManager.createTasksForVariantData(
-                        new TaskModelMapAdaptor(tasks), binary.getVariantData().getScope());
+                for (BaseVariantData variantData : binary.getVariantData()) {
+                    variantManager.createTasksForVariantData(
+                            new TaskModelMapAdaptor(tasks), variantData.getScope());
+                }
             }
         }
 

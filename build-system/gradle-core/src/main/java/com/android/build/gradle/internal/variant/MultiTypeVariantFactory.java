@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,6 @@ import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantModel;
 import com.android.build.gradle.internal.api.BaseVariantImpl;
-import com.android.build.gradle.internal.api.InstantAppVariantImpl;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
@@ -34,19 +33,29 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.profile.Recorder;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.util.Collection;
+import java.util.Map;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.internal.reflect.Instantiator;
 
-/** An implementation of VariantFactory for a project that generates IAPKs. */
-public class InstantAppVariantFactory extends BaseVariantFactory {
+public class MultiTypeVariantFactory extends BaseVariantFactory {
+    @NonNull private final Map<VariantType, BaseVariantFactory> delegates;
 
-    public InstantAppVariantFactory(
+    public MultiTypeVariantFactory(
             @NonNull GlobalScope globalScope,
-            @NonNull Instantiator instantiator,
             @NonNull AndroidBuilder androidBuilder,
+            @NonNull Instantiator instantiator,
             @NonNull AndroidConfig extension) {
         super(globalScope, androidBuilder, instantiator, extension);
+        delegates =
+                ImmutableMap.of(
+                        VariantType.FEATURE,
+                        new FeatureVariantFactory(
+                                globalScope, androidBuilder, instantiator, extension),
+                        VariantType.LIBRARY,
+                        new LibraryVariantFactory(
+                                globalScope, androidBuilder, instantiator, extension));
     }
 
     @NonNull
@@ -55,43 +64,39 @@ public class InstantAppVariantFactory extends BaseVariantFactory {
             @NonNull GradleVariantConfiguration variantConfiguration,
             @NonNull TaskManager taskManager,
             @NonNull Recorder recorder) {
-        InstantAppVariantData variant =
-                new InstantAppVariantData(
-                        globalScope,
-                        extension,
-                        taskManager,
-                        variantConfiguration,
-                        androidBuilder.getErrorReporter(),
-                        recorder);
-        variant.getSplitFactory().addMainApk();
-        return variant;
+        return delegates
+                .get(variantConfiguration.getType())
+                .createVariantData(variantConfiguration, taskManager, recorder);
     }
 
-    @Override
     @NonNull
+    @Override
     public Class<? extends BaseVariantImpl> getVariantImplementationClass(
             @NonNull BaseVariantData variantData) {
-        return InstantAppVariantImpl.class;
+        return delegates.get(variantData.getType()).getVariantImplementationClass(variantData);
     }
 
     @NonNull
     @Override
     public Collection<VariantType> getVariantConfigurationTypes() {
-        return ImmutableList.of(VariantType.INSTANTAPP);
+        return ImmutableList.of(VariantType.FEATURE, VariantType.LIBRARY);
     }
 
     @Override
     public boolean hasTestScope() {
-        return false;
+        return true;
     }
 
     @Override
     public void validateModel(@NonNull VariantModel model) {
-        // No additional checks for InstantAppVariantFactory, so just return.
+        for (BaseVariantFactory variantFactory : delegates.values()) {
+            variantFactory.validateModel(model);
+        }
     }
 
     @Override
-    public void createDefaultComponents(@NonNull NamedDomainObjectContainer<BuildType> buildTypes,
+    public void createDefaultComponents(
+            @NonNull NamedDomainObjectContainer<BuildType> buildTypes,
             @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavors,
             @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigs) {
         // must create signing config first so that build type 'debug' can be initialized
