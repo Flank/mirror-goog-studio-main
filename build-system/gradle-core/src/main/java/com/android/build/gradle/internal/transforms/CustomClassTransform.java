@@ -168,81 +168,83 @@ public class CustomClassTransform extends Transform {
         }
 
         URL url = new File(path).toURI().toURL();
-        URLClassLoader loader = new URLClassLoader(new URL[] {url});
-        BiConsumer<InputStream, OutputStream> function = loadTransformFunction(loader);
+        try (URLClassLoader loader = new URLClassLoader(new URL[] {url})) {
+            BiConsumer<InputStream, OutputStream> function = loadTransformFunction(loader);
 
-        for (TransformInput ti : invocation.getInputs()) {
-            for (JarInput jarInput : ti.getJarInputs()) {
-                File inputJar = jarInput.getFile();
-                String name = getOutputName(inputJar);
-                File outputJar =
-                        invocation
-                                .getOutputProvider()
-                                .getContentLocation(
-                                        name,
-                                        jarInput.getContentTypes(),
-                                        jarInput.getScopes(),
-                                        Format.JAR);
+            for (TransformInput ti : invocation.getInputs()) {
+                for (JarInput jarInput : ti.getJarInputs()) {
+                    File inputJar = jarInput.getFile();
+                    String name = getOutputName(inputJar);
+                    File outputJar =
+                            invocation
+                                    .getOutputProvider()
+                                    .getContentLocation(
+                                            name,
+                                            jarInput.getContentTypes(),
+                                            jarInput.getScopes(),
+                                            Format.JAR);
 
-                if (invocation.isIncremental()) {
-                    switch (jarInput.getStatus()) {
-                        case NOTCHANGED:
-                            break;
-                        case ADDED:
-                        case CHANGED:
-                            transformJar(function, inputJar, outputJar);
-                            break;
-                        case REMOVED:
-                            FileUtils.delete(outputJar);
-                            break;
-                    }
-                } else {
-                    transformJar(function, inputJar, outputJar);
-                }
-            }
-            for (DirectoryInput di : ti.getDirectoryInputs()) {
-                File inputDir = di.getFile();
-                String name = getOutputName(inputDir);
-                File outputDir =
-                        invocation
-                                .getOutputProvider()
-                                .getContentLocation(
-                                        name,
-                                        di.getContentTypes(),
-                                        di.getScopes(),
-                                        Format.DIRECTORY);
-
-                if (invocation.isIncremental()) {
-                    for (Map.Entry<File, Status> entry : di.getChangedFiles().entrySet()) {
-                        File inputFile = entry.getKey();
-                        switch (entry.getValue()) {
+                    if (invocation.isIncremental()) {
+                        switch (jarInput.getStatus()) {
                             case NOTCHANGED:
                                 break;
                             case ADDED:
                             case CHANGED:
-                                if (!inputFile.isDirectory()
-                                        && inputFile.getName().endsWith(SdkConstants.DOT_CLASS)) {
-                                    File out = toOutputFile(outputDir, inputDir, inputFile);
-                                    transformFile(function, inputFile, out);
-                                }
+                                transformJar(function, inputJar, outputJar);
                                 break;
                             case REMOVED:
-                                File outputFile = toOutputFile(outputDir, inputDir, inputFile);
-                                FileUtils.delete(outputFile);
+                                FileUtils.delete(outputJar);
                                 break;
                         }
+                    } else {
+                        transformJar(function, inputJar, outputJar);
                     }
-                } else {
-                    for (File in : FileUtils.getAllFiles(inputDir)) {
-                        if (in.getName().endsWith(SdkConstants.DOT_CLASS)) {
-                            File out = toOutputFile(outputDir, inputDir, in);
-                            transformFile(function, in, out);
+                }
+                for (DirectoryInput di : ti.getDirectoryInputs()) {
+                    File inputDir = di.getFile();
+                    String name = getOutputName(inputDir);
+                    File outputDir =
+                            invocation
+                                    .getOutputProvider()
+                                    .getContentLocation(
+                                            name,
+                                            di.getContentTypes(),
+                                            di.getScopes(),
+                                            Format.DIRECTORY);
+
+                    if (invocation.isIncremental()) {
+                        for (Map.Entry<File, Status> entry : di.getChangedFiles().entrySet()) {
+                            File inputFile = entry.getKey();
+                            switch (entry.getValue()) {
+                                case NOTCHANGED:
+                                    break;
+                                case ADDED:
+                                case CHANGED:
+                                    if (!inputFile.isDirectory()
+                                            && inputFile
+                                                    .getName()
+                                                    .endsWith(SdkConstants.DOT_CLASS)) {
+                                        File out = toOutputFile(outputDir, inputDir, inputFile);
+                                        transformFile(function, inputFile, out);
+                                    }
+                                    break;
+                                case REMOVED:
+                                    File outputFile = toOutputFile(outputDir, inputDir, inputFile);
+                                    FileUtils.delete(outputFile);
+                                    break;
+                            }
+                        }
+                    } else {
+                        for (File in : FileUtils.getAllFiles(inputDir)) {
+                            if (in.getName().endsWith(SdkConstants.DOT_CLASS)) {
+                                File out = toOutputFile(outputDir, inputDir, in);
+                                transformFile(function, in, out);
+                            }
                         }
                     }
                 }
             }
         }
-        loader.close();
     }
 
     private BiConsumer<InputStream, OutputStream> loadTransformFunction(URLClassLoader loader) {
