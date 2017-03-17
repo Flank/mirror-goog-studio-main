@@ -4205,6 +4205,33 @@ public class ApiDetectorTest extends AbstractCheckTest {
         );
     }
 
+    public void testLambdas() throws Exception {
+        checkApiCheck(""
+                        + "src/test/pkg/LambdaTest.java:9: Error: Call requires API level 23 (current min is 1): android.view.View#performContextClick [NewApi]\n"
+                        + "    private View.OnTouchListener myListener = (v, event) -> v.performContextClick();\n"
+                        + "                                                              ~~~~~~~~~~~~~~~~~~~\n"
+                        + "src/test/pkg/LambdaTest.java:12: Error: Call requires API level 24 (current min is 1): java.util.Map#forEach [NewApi]\n"
+                        + "        map.forEach((t, u) -> Log.i(\"tag\", t + u));\n"
+                        + "            ~~~~~~~\n"
+                        + "2 errors, 0 warnings\n",
+                "No warnings.",
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "import android.util.Log;\n"
+                        + "import android.view.View;\n"
+                        + "\n"
+                        + "import java.util.Map;\n"
+                        + "\n"
+                        + "public class LambdaTest {\n"
+                        + "    private View.OnTouchListener myListener = (v, event) -> v.performContextClick();\n"
+                        + "\n"
+                        + "    public void apiCheck(Map<String,String> map) {\n"
+                        + "        map.forEach((t, u) -> Log.i(\"tag\", t + u));\n"
+                        + "    }\n"
+                        + "}\n"));
+    }
+
     public void testVirtualMethods() throws Exception {
         // Regression test for b/32430124
         //noinspection all // Sample code

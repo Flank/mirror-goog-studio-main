@@ -52,6 +52,7 @@ import org.jetbrains.uast.UCallExpression;
 import org.jetbrains.uast.UClass;
 import org.jetbrains.uast.UElement;
 import org.jetbrains.uast.UExpression;
+import org.jetbrains.uast.ULambdaExpression;
 import org.jetbrains.uast.UMethod;
 import org.jetbrains.uast.UPolyadicExpression;
 import org.jetbrains.uast.UReferenceExpression;
@@ -1110,6 +1111,9 @@ public abstract class Detector {
          * Returns a list of fully qualified names for super classes that this
          * detector cares about. If not null, this detector will <b>only</b> be called
          * if the current class is a subclass of one of the specified superclasses.
+         * Lint will invoke {@link #visitClass(JavaContext, UClass)} (and sometimes
+         * {@link #visitClass(JavaContext, ULambdaExpression)} when it encounters
+         * subclasses and lambdas for these types.
          *
          * @return a list of fully qualified names
          */
@@ -1130,6 +1134,25 @@ public abstract class Detector {
          * @param declaration the class declaration node, or null for anonymous classes
          */
         void visitClass(@NonNull JavaContext context, @NonNull UClass declaration);
+
+        /**
+         * Like {@link #visitClass(JavaContext, UClass)}, but used for lambdas in
+         * SAM (single abstract method) types. For example, if you have
+         * have this method:
+         * <pre>
+         *     void enqueue(Runnable runnable) { ... }
+         *     ...
+         *     enqueue({ something(); })
+         * </pre>
+         * then the lambda being passed to the call can be thought of as a class
+         * implementing the Runnable interface.
+         * <p>
+         * The set of target types for the lambda are provided in {@link #applicableSuperClasses()}
+         *
+         * @param context the lint scanning context
+         * @param lambda  the lambda
+         */
+        void visitClass(@NonNull JavaContext context, @NonNull ULambdaExpression lambda);
     }
 
     /** Specialized interface for detectors that scan Java class files */
@@ -1719,6 +1742,10 @@ public abstract class Detector {
 
     @SuppressWarnings({"UnusedParameters", "unused", "javadoc", "MethodMayBeStatic"})
     public void visitClass(@NonNull JavaContext context, @NonNull UClass declaration) {
+    }
+
+    @SuppressWarnings({"UnusedParameters", "unused", "javadoc", "MethodMayBeStatic"})
+    public void visitClass(@NonNull JavaContext context, @NonNull ULambdaExpression declaration) {
     }
 
     @SuppressWarnings({"UnusedParameters", "unused", "javadoc", "MethodMayBeStatic"})
