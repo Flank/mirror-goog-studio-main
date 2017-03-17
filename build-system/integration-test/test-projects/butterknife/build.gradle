@@ -28,6 +28,7 @@ android {
     defaultConfig {
         minSdkVersion 15
         targetSdkVersion rootProject.latestCompileSdk
+        javaCompileOptions.annotationProcessorOptions.includeCompileClasspath false
     }
 }
 
