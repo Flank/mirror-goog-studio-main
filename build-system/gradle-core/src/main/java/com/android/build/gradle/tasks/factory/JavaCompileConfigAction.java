@@ -15,7 +15,6 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.model.SyncIssue;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import java.io.File;
 import java.util.Map;
 import org.gradle.api.JavaVersion;
@@ -107,13 +106,11 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
                         .getJavaCompileOptions()
                         .getAnnotationProcessorOptions()
                         .getIncludeCompileClasspath();
-        Preconditions.checkNotNull(includeCompileClasspath);
 
         FileCollection processorPath =
                 scope.getArtifactFileCollection(ANNOTATION_PROCESSOR, ALL, JAR);
-        if (includeCompileClasspath) {
-            // in this case we need the jar version of the classpath since the annotation processor
-            // cannot handle the class folder for sub-projects.
+        if (Boolean.TRUE.equals(includeCompileClasspath)) {
+            // We need the jar files because annotation processors require the resources.
             processorPath = processorPath.plus(scope.getJavaClasspath(JAR));
         }
 
