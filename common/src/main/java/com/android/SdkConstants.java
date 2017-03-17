@@ -766,6 +766,8 @@ public final class SdkConstants {
             "android.support.constraint.Barrier"; //$NON-NLS-1$
     public static final String CLASS_CONSTRAINT_LAYOUT_CHAIN =
             "android.support.constraint.Chain"; //$NON-NLS-1$
+    public static final String CLASS_CONSTRAINT_LAYOUT_LAYER =
+            "android.support.constraint.Layer"; //$NON-NLS-1$
     public static final String CLASS_CONSTRAINT_LAYOUT_PARAMS =
             "android.support.constraint.ConstraintLayout$LayoutParams"; //$NON-NLS-1$
     public static final String CLASS_TABLE_CONSTRAINT_LAYOUT =
@@ -1371,6 +1373,8 @@ public final class SdkConstants {
     public static final String ATTR_LAYOUT_CHAIN_SPREAD = "spread"; //$NON_NLS-1$
     public static final String ATTR_LAYOUT_CHAIN_SPREAD_INSIDE = "spread_inside"; //$NON_NLS-1$
     public static final String ATTR_LAYOUT_CHAIN_PACKED = "packed"; //$NON_NLS-1$
+    public static final String ATTR_LAYOUT_CHAIN_HELPER_USE_RTL = "chainUseRtl"; //$NON_NLS-1$
+    public static final String ATTR_LAYOUT_CONSTRAINTSET = "constraintSet"; //$NON_NLS-1$
 
     public static final String ATTR_GUIDELINE_ORIENTATION_HORIZONTAL = "horizontal"; //$NON-NLS-1$
     public static final String ATTR_GUIDELINE_ORIENTATION_VERTICAL = "vertical"; //$NON-NLS-1$
@@ -1475,6 +1479,7 @@ public final class SdkConstants {
     public static final String ATTR_ITEM_TEXT_COLOR = "itemTextColor"; //$NON-NLS-1$
     public static final String ATTR_POPUP_THEME = "popupTheme"; //$NON-NLS-1$
     public static final String ATTR_MIN_HEIGHT = "minHeight"; //$NON-NLS-1$
+    public static final String ATTR_MAX_HEIGHT = "maxHeight"; //$NON-NLS-1$
     public static final String ATTR_ACTION_BAR = "actionBar"; //$NON-NLS-1$
     public static final String ATTR_CONTENT_SCRIM = "contentScrim"; //$NON-NLS-1$
     public static final String ATTR_TOOLBAR_ID = "toolbarId"; //$NON-NLS-1$
@@ -1495,6 +1500,7 @@ public final class SdkConstants {
     public static final String ATTR_ENTRIES = "entries"; //$NON-NLS-1$
     public static final String ATTR_POPUP_BACKGROUND = "popupBackground"; //$NON-NLS-1$
     public static final String ATTR_MIN_WIDTH = "minWidth"; //$NON-NLS-1$
+    public static final String ATTR_MAX_WIDTH = "maxWidth"; //$NON-NLS-1$
     public static final String ATTR_DROPDOWN_HEIGHT = "dropDownHeight"; //$NON-NLS-1$
     public static final String ATTR_DROPDOWN_WIDTH = "dropDownWidth"; //$NON-NLS-1$
     public static final String ATTR_DRAW_SELECTOR_ON_TOP = "drawSelectorOnTop"; //$NON-NLS-1$
