@@ -1196,6 +1196,15 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
             return testSourceFolders;
         }
 
+        @NonNull
+        @Override
+        protected LintDriver createDriver(@NonNull IssueRegistry registry) {
+            LintDriver driver = super.createDriver(registry);
+            // 3rd party lint unit tests may need this for a while
+            driver.setRunCompatChecks(true, true);
+            return driver;
+        }
+
         public String analyze(List<File> files) throws Exception {
             driver = createDriver(new LintDetectorTest.CustomIssueRegistry());
             configureDriver(driver);
