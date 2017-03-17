@@ -19,16 +19,16 @@ apply plugin: 'java'
 group = 'com.android.tools'
 archivesBaseName = 'studio-profiler-lib'
 
-File androidJar = file('../../../../prebuilts/sdk/23/android.jar');
+File androidJar = file('../../../../prebuilts/sdk/25/android.jar');
 if (!androidJar.exists()) {
     // If not there, we're in one of the AOSP release branches where the
     // repo configuration does not include the whole prebuilts repository.
     // Fetch the SDK via $ANDROID_HOME instead.
-    File jar = file(System.env.ANDROID_HOME + '/platforms/android-23/android.jar');
+    File jar = file(System.env.ANDROID_HOME + '/platforms/android-25/android.jar');
     if (jar.exists()) {
         androidJar = jar
     } else {
-        throw new RuntimeException("android-23 android.jar not found at " + androidJar.absolutePath)
+        throw new RuntimeException("android-25 android.jar not found at " + androidJar.absolutePath)
     }
 }
 

@@ -15,13 +15,12 @@
  */
 package com.android.tools.profiler.support;
 
+import android.os.Build;
+import android.os.Debug;
 import com.android.tools.profiler.support.profilers.EventProfiler;
 import com.android.tools.profiler.support.profilers.MemoryProfiler;
 import com.android.tools.profiler.support.profilers.NetworkProfiler;
 import com.android.tools.profiler.support.profilers.ProfilerComponent;
-
-import android.os.Debug;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,6 +28,13 @@ import java.util.List;
 public class ProfilerService {
 
     public static final String STUDIO_PROFILER = "StudioProfiler";
+
+    /**
+     * In post-O, an JVMTI agent will be responsible for loading perfa and hooking up all
+     * native methods. This flag is used to guard against supportlib from loading classes
+     * or making jni calls that aren't ready yet.
+     */
+    public static boolean PERFA_ENABLED = false;
 
     private static ProfilerService sInstance;
     private final List<ProfilerComponent> mComponents;
@@ -43,7 +49,15 @@ public class ProfilerService {
          */
         Runtime.getRuntime().gc();
         Debug.startAllocCounting();
-        System.loadLibrary("perfa");
+
+        // If Build is pre-O and not a preview release for O, then load perfa and enable the global
+        // flag by default, as an agent will not be loaded.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N_MR1 ||
+                (Build.VERSION.SDK_INT == Build.VERSION_CODES.N_MR1
+                        && Build.VERSION.PREVIEW_SDK_INT == 0)) {
+            PERFA_ENABLED = true;
+            System.loadLibrary("perfa");
+        }
     }
 
     /**
@@ -51,7 +65,7 @@ public class ProfilerService {
      * Not thread safe so, when instrumented, it needs to be added in the main thread.
      */
     public static void initialize() {
-        if (sInstance != null) {
+        if (sInstance != null || !PERFA_ENABLED) {
             return;
         }
         sInstance = new ProfilerService();
