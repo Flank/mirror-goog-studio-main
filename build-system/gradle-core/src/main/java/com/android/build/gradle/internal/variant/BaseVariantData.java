@@ -139,6 +139,7 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
 
     private List<File> extraGeneratedSourceFolders;
     private FileCollection extraGeneratedResFolders;
+    private final ConfigurableFileCollection generatedBytecodeCollection;
 
     private final List<T> outputs = Lists.newArrayListWithExpectedSize(4);
     private T mainOutput;
@@ -193,6 +194,7 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
                         globalScope.getProject(), taskManager.getAndroidTasks(), errorReporter, recorder),
                 this);
         taskManager.configureScopeForNdk(scope);
+        generatedBytecodeCollection = scope.getGlobalScope().getProject().files();
     }
 
     @NonNull
@@ -321,6 +323,11 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
         return extraGeneratedResFolders;
     }
 
+    @NonNull
+    public ConfigurableFileCollection getGeneratedBytecodeCollection() {
+        return generatedBytecodeCollection;
+    }
+
     public void addJavaSourceFoldersToModel(@NonNull File... generatedSourceFolders) {
         if (extraGeneratedSourceFolders == null) {
             extraGeneratedSourceFolders = Lists.newArrayList();
@@ -401,6 +408,10 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
                         return null;
                     }
                 }));
+    }
+
+    public void registerGeneratedBytecode(@NonNull FileCollection fileCollection) {
+        generatedBytecodeCollection.from(fileCollection);
     }
 
     /**

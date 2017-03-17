@@ -63,7 +63,7 @@ class JacocoWithKotlinTest {
     void build() {
         project.execute("transformClassesWithJacocoForDebug")
 
-        File javaFile =
+        File transformOutputFolder =
                 FileUtils.join(
                         project.getTestDir(),
                         "build",
@@ -73,12 +73,19 @@ class JacocoWithKotlinTest {
                         "debug",
                         "folders",
                         "1",
-                        "1",
-                        "main",
+                        "1")
+        File[] children = transformOutputFolder.listFiles();
+        assertThat(children).isNotNull()
+        assertThat(children.length).isEqualTo(1);
+
+        File javaFile =
+                FileUtils.join(
+                        children[0],
                         "com",
                         "example",
                         "helloworld",
                         "HelloWorld.class")
+
         assertThat(javaFile).exists()
     }
 }

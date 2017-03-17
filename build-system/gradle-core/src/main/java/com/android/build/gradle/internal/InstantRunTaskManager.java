@@ -193,12 +193,13 @@ public class InstantRunTaskManager {
 
         Project project = variantScope.getGlobalScope().getProject();
         // also add a new stream for the extractor task output.
-        transformManager.addStream(OriginalStream.builder(project)
-                .addContentTypes(TransformManager.CONTENT_CLASS)
-                .addScope(InternalScope.MAIN_SPLIT)
-                .setJar(variantScope.getIncrementalRuntimeSupportJar())
-                .setDependency(extractorTask.get(tasks))
-                .build());
+        transformManager.addStream(
+                OriginalStream.builder(project, "main-split-from-extractor")
+                        .addContentTypes(TransformManager.CONTENT_CLASS)
+                        .addScope(InternalScope.MAIN_SPLIT)
+                        .setJar(variantScope.getIncrementalRuntimeSupportJar())
+                        .setDependency(extractorTask.get(tasks))
+                        .build());
 
         AndroidTask<GenerateInstantRunAppInfoTask> generateAppInfoAndroidTask = androidTasks
                 .create(tasks, new GenerateInstantRunAppInfoTask.ConfigAction(
@@ -210,12 +211,13 @@ public class InstantRunTaskManager {
                 generateAppInfoAndroidTask.get(tasks);
 
         // also add a new stream for the injector task output.
-        transformManager.addStream(OriginalStream.builder(project)
-                .addContentTypes(TransformManager.CONTENT_CLASS)
-                .addScope(InternalScope.MAIN_SPLIT)
-                .setJar(generateInstantRunAppInfoTask.getOutputFile())
-                .setDependency(generateInstantRunAppInfoTask)
-                .build());
+        transformManager.addStream(
+                OriginalStream.builder(project, "main-split-from-injector")
+                        .addContentTypes(TransformManager.CONTENT_CLASS)
+                        .addScope(InternalScope.MAIN_SPLIT)
+                        .setJar(generateInstantRunAppInfoTask.getOutputFile())
+                        .setDependency(generateInstantRunAppInfoTask)
+                        .build());
 
         // add a dependency on the manifest merger for the appInfo generation as it uses its output
         // the manifest merger task may be null depending if an external build system or Gradle

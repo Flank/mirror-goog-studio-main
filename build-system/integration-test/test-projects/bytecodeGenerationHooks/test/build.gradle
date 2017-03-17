@@ -1,0 +1,10 @@
+apply plugin: 'com.android.test'
+apply plugin: 'com.example.compiler'
+
+android {
+    compileSdkVersion rootProject.latestCompileSdk
+    buildToolsVersion = rootProject.buildToolsVersion
+
+    targetProjectPath ':app'
+    targetVariant 'debug'
+}

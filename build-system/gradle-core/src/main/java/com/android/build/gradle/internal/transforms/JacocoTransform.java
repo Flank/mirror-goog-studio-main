@@ -31,10 +31,13 @@ import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.utils.FileUtils;
+import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
 import java.io.File;
@@ -96,22 +99,43 @@ public class JacocoTransform extends Transform {
 
         checkNotNull(invocation.getOutputProvider(),
                 "Missing output object for transform " + getName());
-        File outputDir = invocation.getOutputProvider().getContentLocation(
-                "main", getOutputTypes(), getScopes(), Format.DIRECTORY);
-        FileUtils.mkdirs(outputDir);
 
-        TransformInput input = Iterables.getOnlyElement(invocation.getInputs());
-        // we don't want jar inputs.
-        Preconditions.checkState(input.getJarInputs().isEmpty());
-        DirectoryInput directoryInput = Iterables.getOnlyElement(input.getDirectoryInputs());
-        File inputDir = directoryInput.getFile();
+        for (TransformInput input : invocation.getInputs()) {
+            // we don't want jar inputs.
+            Preconditions.checkState(input.getJarInputs().isEmpty());
 
-        Instrumenter instrumenter = new Instrumenter(new OfflineInstrumentationAccessGenerator());
-        if (invocation.isIncremental()) {
-            instrumentFilesIncremental(instrumenter, inputDir, outputDir, directoryInput.getChangedFiles());
-        } else {
-            instrumentFilesFullRun(instrumenter, inputDir, outputDir);
+            for (DirectoryInput directoryInput : input.getDirectoryInputs()) {
+                File inputDir = directoryInput.getFile();
+
+                File outputDir =
+                        invocation
+                                .getOutputProvider()
+                                .getContentLocation(
+                                        // FIXME this should be changed when the transform input have unique names.
+                                        getOutputName(inputDir),
+                                        getOutputTypes(),
+                                        getScopes(),
+                                        Format.DIRECTORY);
+                FileUtils.mkdirs(outputDir);
+
+                Instrumenter instrumenter =
+                        new Instrumenter(new OfflineInstrumentationAccessGenerator());
+                if (invocation.isIncremental()) {
+                    instrumentFilesIncremental(
+                            instrumenter, inputDir, outputDir, directoryInput.getChangedFiles());
+                } else {
+                    instrumentFilesFullRun(instrumenter, inputDir, outputDir);
+                }
+            }
         }
+    }
+
+    @NonNull
+    private static String getOutputName(@NonNull File directory) {
+        // add a hash of the original file path.
+        HashFunction hashFunction = Hashing.sha1();
+        HashCode hashCode = hashFunction.hashString(directory.getAbsolutePath(), Charsets.UTF_16LE);
+        return Files.getNameWithoutExtension(directory.getName()) + "_" + hashCode.toString();
     }
 
     private static void instrumentFilesIncremental(

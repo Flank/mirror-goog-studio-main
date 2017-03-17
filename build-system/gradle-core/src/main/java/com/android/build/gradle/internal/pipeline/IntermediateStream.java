@@ -45,20 +45,22 @@ import org.gradle.api.file.FileCollection;
 @Immutable
 class IntermediateStream extends TransformStream {
 
-    static Builder builder(Project project) {
-        return new Builder(project);
+    static Builder builder(@NonNull Project project, @NonNull String name) {
+        return new Builder(project, name);
     }
 
     static final class Builder {
 
-        private final Project project;
+        @NonNull private final Project project;
+        @NonNull private final String name;
         private Set<ContentType> contentTypes = Sets.newHashSet();
         private Set<QualifiedContent.ScopeType> scopes = Sets.newHashSet();
         private File rootLocation;
         private String taskName;
 
-        public Builder(Project project) {
+        public Builder(@NonNull Project project, @NonNull String name) {
             this.project = project;
+            this.name = name;
         }
 
         public IntermediateStream build() {
@@ -78,6 +80,7 @@ class IntermediateStream extends TransformStream {
 
 
             return new IntermediateStream(
+                    name,
                     ImmutableSet.copyOf(contentTypes),
                     ImmutableSet.copyOf(scopes),
                     fileCollection);
@@ -117,10 +120,11 @@ class IntermediateStream extends TransformStream {
     }
 
     private IntermediateStream(
+            @NonNull String name,
             @NonNull Set<ContentType> contentTypes,
             @NonNull Set<? super Scope> scopes,
             @NonNull FileCollection fileCollection) {
-        super(contentTypes, scopes, fileCollection);
+        super(name, contentTypes, scopes, fileCollection);
     }
 
     /**
@@ -162,10 +166,7 @@ class IntermediateStream extends TransformStream {
     TransformStream makeRestrictedCopy(
             @NonNull Set<ContentType> types,
             @NonNull Set<? super Scope> scopes) {
-        return new IntermediateStream(
-                types,
-                scopes,
-                getFiles());
+        return new IntermediateStream(getName() + "-restricted-copy", types, scopes, getFiles());
     }
 
     @Override

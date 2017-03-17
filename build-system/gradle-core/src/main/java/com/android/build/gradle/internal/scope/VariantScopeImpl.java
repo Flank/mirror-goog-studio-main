@@ -28,6 +28,8 @@ import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML;
 import static com.android.build.gradle.internal.TaskManager.ATOM_SUFFIX;
 import static com.android.build.gradle.internal.TaskManager.DIR_ATOMBUNDLES;
 import static com.android.build.gradle.internal.TaskManager.DIR_BUNDLES;
+import static com.android.builder.core.VariantType.LIBRARY;
+import static com.android.builder.core.VariantType.UNIT_TEST;
 import static com.android.builder.model.AndroidProject.FD_GENERATED;
 import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
 
@@ -36,6 +38,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.external.gson.NativeBuildConfigValue;
+import com.android.build.gradle.internal.CompileOptions;
 import com.android.build.gradle.internal.InstantRunTaskManager;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.SdkHandler;
@@ -54,6 +57,7 @@ import com.android.build.gradle.internal.tasks.ResolveDependenciesTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingProcessLayoutsTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
+import com.android.build.gradle.internal.variant.LibVariantOutputData;
 import com.android.build.gradle.internal.variant.LibraryVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.options.BooleanOption;
@@ -75,6 +79,7 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BootClasspathBuilder;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.VariantType;
+import com.android.builder.dependency.level2.AndroidDependency;
 import com.android.builder.dependency.level2.AtomDependency;
 import com.android.builder.model.ApiVersion;
 import com.android.repository.api.ProgressIndicator;
@@ -101,7 +106,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.gradle.api.DefaultTask;
+import org.gradle.api.JavaVersion;
+import org.gradle.api.Project;
 import org.gradle.api.Task;
+import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.compile.JavaCompile;
@@ -311,8 +319,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     @NonNull
     public String getTaskName(@NonNull String prefix, @NonNull String suffix) {
-        if (getVariantData().getType() == VariantType.ATOM)
-            suffix = ATOM_SUFFIX + suffix;
+        if (variantData.getType() == VariantType.ATOM) suffix = ATOM_SUFFIX + suffix;
         return prefix + StringHelper.capitalize(getVariantConfiguration().getFullName()) + suffix;
     }
 
@@ -438,9 +445,91 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     @NonNull
     public FileCollection getJavaClasspath() {
-        return getGlobalScope().getProject().files(
-                getGlobalScope().getAndroidBuilder().getCompileClasspath(
-                        getVariantData().getVariantConfiguration()));
+        return getGlobalScope()
+                .getProject()
+                .files(
+                        getGlobalScope()
+                                .getAndroidBuilder()
+                                .getCompileClasspath(variantData.getVariantConfiguration()));
+    }
+
+    @Override
+    public boolean keepDefaultBootstrap() {
+        // javac 1.8 may generate code that uses class not available in android.jar.  This is fine
+        // if jack or desugar are used to compile code for the app or compile task is created only
+        // for unit test. In those cases, we want to keep the default bootstrap classpath.
+        if (!JavaVersion.current().isJava8Compatible()) {
+            return false;
+        }
+
+        VariantScope.Java8LangSupport java8LangSupport = getJava8LangSupportType();
+        if (java8LangSupport == VariantScope.Java8LangSupport.JACK) {
+            return true;
+        }
+
+        // only if target and source is explicitly specified to 1.8 (and above), we keep the
+        // default bootclasspath with Desugar. Otherwise, we use android.jar.
+        CompileOptions compileOptions = getGlobalScope().getExtension().getCompileOptions();
+        return java8LangSupport == VariantScope.Java8LangSupport.DESUGAR
+                && compileOptions.getTargetCompatibility().isJava8Compatible()
+                && compileOptions.getSourceCompatibility().isJava8Compatible();
+    }
+
+    @NonNull
+    @Override
+    public FileCollection getPreJavacClasspath() {
+        Project project = globalScope.getProject();
+        boolean keepDefaultBootstrap = keepDefaultBootstrap();
+        final BaseVariantData testedVariantData = getTestedVariantData();
+
+        ConfigurableFileCollection classpath = project.files();
+        classpath.from(getJavaClasspath());
+
+        if (keepDefaultBootstrap) {
+            classpath.from(project.files(globalScope.getAndroidBuilder().getBootClasspath(false)));
+        }
+
+        if (testedVariantData != null) {
+            // add the generated bytecode of the tested component
+            classpath.from(testedVariantData.getGeneratedBytecodeCollection());
+
+            final VariantType testedType = testedVariantData.getType();
+            final VariantType type = variantData.getType();
+
+            if (testedType != LIBRARY || type == UNIT_TEST) {
+                // For libraries, the classpath from androidBuilder includes the library
+                // output (bundle/classes.jar) as a normal dependency. In unit tests we
+                // don't want to package the jar at every run, so we use the *.class
+                // files instead.
+                classpath.from(
+                        project.files(
+                                testedVariantData.getScope().getJavaClasspath(),
+                                testedVariantData.getScope().getJavaOutputDir()));
+            }
+
+            if (testedType == LIBRARY) {
+                if (type == UNIT_TEST) {
+                    // The bundled classes.jar may exist, but it's probably old. Don't
+                    // use it, we already have the *.class files in the classpath.
+                    AndroidDependency testedLibrary =
+                            testedVariantData.getVariantConfiguration().getOutput();
+                    if (testedLibrary != null) {
+                        return classpath.minus(project.files(testedLibrary.getJarFile()));
+                    }
+                } else {
+                    // here we want to use the library's bundle jar. Add a dependency on it.
+                    // This is to ensure that the external compiler, using the bytecode generation
+                    // hooks are properly included in the dependency of the task consuming this
+                    // file collection.
+                    // FIXME: fix this to handle all dependencies the same way (this will be fixed in 2.5+)
+                    LibVariantOutputData output =
+                            ((LibraryVariantData) testedVariantData).getMainOutput();
+                    classpath.builtBy(output.packageLibTask);
+                }
+            }
+        }
+
+        return classpath;
     }
 
     @Override
@@ -590,7 +679,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     @NonNull
     public File getDefaultMergeResourcesOutputDir() {
-        if (getVariantData().getType() == VariantType.ATOM) {
+        if (variantData.getType() == VariantType.ATOM) {
             return FileUtils.join(getBaseBundleDir(), FD_RES);
         } else {
             return FileUtils.join(getGlobalScope().getIntermediatesDir(),
