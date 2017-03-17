@@ -20,6 +20,7 @@
 #include <mutex>
 
 #include "utils/config.h"
+#include "utils/log.h"
 #include "utils/stopwatch.h"
 #include "utils/thread_name.h"
 
@@ -61,22 +62,51 @@ Perfa::Perfa(const char* address)
   heartbeat_thread_ = std::thread(&Perfa::RunHeartbeatThread, this);
 }
 
+void Perfa::AddPerfdStatusChangedCallback(PerfdStatusChanged callback) {
+  lock_guard<std::mutex> guard(callback_mutex_);
+  perfd_status_changed_callbacks_.push_back(callback);
+}
+
 void Perfa::RunHeartbeatThread() {
   SetThreadName("Studio:Heartbeat");
   Stopwatch stopwatch;
+  bool was_perfd_alive = false;
   while (true) {
     int64_t start_ns = stopwatch.GetElapsed();
     // TODO: handle erroneous status
-    // TODO: set deadline to check if perfd is alive.
     HeartBeatResponse response;
     grpc::ClientContext context;
+
+    // Set a deadline on the context, so we can get a proper status code if
+    // perfd is not connected.
+    std::chrono::nanoseconds offset(kHeartBeatIntervalNs * 2);
+    std::chrono::system_clock::time_point deadline = std::chrono::system_clock::now();
+
+    // Linux and Mac are slightly different with respect to default accuracy of time_point
+    // Linux is nanoseconds, mac is milliseconds so we cater to the lowest common.
+    deadline += std::chrono::duration_cast<std::chrono::milliseconds>(offset);
+    context.set_deadline(deadline);
     CommonData data;
     data.set_process_id(getpid());
-    grpc::Status status = service_stub_->HeartBeat(&context, data, &response);
+
+    // Status returns OK if it succeeds, else it returns a standard grpc error
+    // code.
+    const grpc::Status status =
+        service_stub_->HeartBeat(&context, data, &response);
     int64_t elapsed_ns = stopwatch.GetElapsed() - start_ns;
+    // Use status to determine if perfd is alive.
+    bool is_perfd_alive = status.ok();
     if (kHeartBeatIntervalNs > elapsed_ns) {
       int64_t sleep_us = Clock::ns_to_us(kHeartBeatIntervalNs - elapsed_ns);
       usleep(static_cast<uint64_t>(sleep_us));
+    }
+
+    if (is_perfd_alive != was_perfd_alive) {
+      lock_guard<std::mutex> guard(callback_mutex_);
+      for (auto callback : perfd_status_changed_callbacks_) {
+        callback(is_perfd_alive);
+      }
+      was_perfd_alive = is_perfd_alive;
     }
   }
 }
