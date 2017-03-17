@@ -986,6 +986,9 @@ public final class SdkConstants {
     public static final String TAG_ADAPTIVE_ICON = "adaptive-icon";
     public static final String TAG_MASKABLE_ICON = "maskable-icon";
 
+    // Font family tag
+    public static final String TAG_FONT_FAMILY = "font-family";
+
     // Tags: XML
     public static final String TAG_HEADER = "header"; //$NON-NLS-1$
     public static final String TAG_APPWIDGET_PROVIDER = "appwidget-provider"; //$NON-NLS-1$
