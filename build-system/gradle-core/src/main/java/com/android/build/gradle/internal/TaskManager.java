@@ -2548,10 +2548,10 @@ public abstract class TaskManager {
                 .getJavaCompileOptions()
                 .getAnnotationProcessorOptions()
                 .getIncludeCompileClasspath();
-        checkNotNull(includeCompileClasspaths);
-        FileCollection processorPaths = includeCompileClasspaths
-                ? scope.getArtifactFileCollection(COMPILE_CLASSPATH, ALL, CLASSES)
-                : project.files();
+        FileCollection processorPaths =
+                Boolean.TRUE.equals(includeCompileClasspaths)
+                        ? scope.getArtifactFileCollection(COMPILE_CLASSPATH, ALL, CLASSES)
+                        : project.files();
         processorPaths =
                 processorPaths.plus(
                         scope.getArtifactFileCollection(ANNOTATION_PROCESSOR, ALL, JAR));
