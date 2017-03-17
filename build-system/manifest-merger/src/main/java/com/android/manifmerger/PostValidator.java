@@ -138,15 +138,17 @@ public class PostValidator {
             // move the activity-alias's comments if any.
             List<Node> comments = XmlElement.getLeadingComments(activityAlias.getXml());
 
-            if (comments.size() != 0 && !comments.get(0).equals(nextSibling)) {
+            if (!comments.isEmpty() && !comments.get(0).equals(nextSibling)) {
                 for (Node comment : comments) {
                     applicationElement.getXml().removeChild(comment);
                     applicationElement.getXml().insertBefore(comment, nextSibling);
                 }
             }
 
-            // move the activity-alias element.
-            if (!activityAlias.equals(nextSibling)) {
+            // move the activity-alias element if neither it or its comments immediately follow the
+            // target activity.
+            if (!activityAlias.getXml().equals(nextSibling)
+                    && !(!comments.isEmpty() && comments.get(0).equals(nextSibling))) {
                 applicationElement.getXml().removeChild(activityAlias.getXml());
                 applicationElement.getXml().insertBefore(activityAlias.getXml(), nextSibling);
             }
