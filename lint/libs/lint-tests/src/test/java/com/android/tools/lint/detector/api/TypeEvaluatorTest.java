@@ -19,7 +19,7 @@ package com.android.tools.lint.detector.api;
 import com.android.tools.lint.client.api.JavaParser.TypeDescriptor;
 import com.intellij.psi.JavaRecursiveElementVisitor;
 import com.intellij.psi.PsiExpression;
-import com.intellij.psi.PsiJavaFile;
+import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiLocalVariable;
 import com.intellij.psi.PsiType;
 import java.io.File;
@@ -82,7 +82,7 @@ public class TypeEvaluatorTest extends TestCase {
             final String targetVariable) {
         JavaContext context = LintUtilsTest.parsePsi(source, new File("src/test/pkg/Test.java"));
         assertNotNull(context);
-        PsiJavaFile javaFile = context.getJavaFile();
+        PsiFile javaFile = context.getJavaFile();
         assertNotNull(javaFile);
 
         // Find the expression
