@@ -42,7 +42,11 @@ public class AnnotationProcessorCompileClasspathTest {
     public void failWhenClasspathHasProcessor() throws IOException, InterruptedException {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
-                "dependencies {\n" + "    compile 'com.jakewharton:butterknife:7.0.1'\n" + "}\n");
+                "dependencies {\n"
+                        + "    compile 'com.jakewharton:butterknife:7.0.1'\n"
+                        + "}\n"
+                        + "android.defaultConfig.javaCompileOptions.annotationProcessorOptions.includeCompileClasspath null");
+
         GradleBuildResult result = project.executor().expectFailure().run("assembleDebug");
         assertThat(result.getFailureMessage())
                 .contains("Annotation processors must be explicitly declared");
