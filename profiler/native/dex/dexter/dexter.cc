@@ -16,6 +16,7 @@
 
 #include "dexter.h"
 #include "dissasembler.h"
+#include "experimental.h"
 #include "slicer/common.h"
 #include "slicer/scopeguard.h"
 #include "slicer/reader.h"
@@ -56,7 +57,7 @@ void Dexter::PrintHelp() {
 int Dexter::Run() {
   bool show_help = false;
   int opt = 0;
-  while ((opt = ::getopt(argc_, argv_, "hlsvdmo:e:")) != -1) {
+  while ((opt = ::getopt(argc_, argv_, "hlsvdmo:e:x:")) != -1) {
     switch (opt) {
       case 's':
         stats_ = true;
@@ -78,6 +79,9 @@ int Dexter::Run() {
         break;
       case 'o':
         out_dex_filename_ = ::optarg;
+        break;
+      case 'x':
+        experiments_.push_back(::optarg);
         break;
       default:
         show_help = true;
@@ -344,6 +348,11 @@ int Dexter::ProcessDex() {
   }
 
   auto dex_ir = reader.GetIr();
+
+  // experiments
+  for (auto experiment : experiments_) {
+    experimental::Run(experiment, dex_ir);
+  }
 
   // dissasemble method bodies?
   if (dissasemble_) {

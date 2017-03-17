@@ -1,10 +1,13 @@
 
 add_library(slicer
+            bytecode_encoder.cc
             code_ir.cc
             common.cc
+            debuginfo_encoder.cc
             dex_bytecode.cc
             dex_format.cc
             dex_ir.cc
             dex_utf8.cc
             reader.cc
+            tryblocks_encoder.cc
             writer.cc)

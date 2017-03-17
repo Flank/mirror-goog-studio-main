@@ -20,6 +20,7 @@
 
 #include <stdlib.h>
 #include <memory>
+#include <vector>
 
 // Encapsulates the state (command line switches, stats, ...) and
 // the interface of the command line .dex manipulation tool.
@@ -54,6 +55,7 @@ class Dexter {
   const char* dex_filename_ = nullptr;
   bool dissasemble_ = false;
   bool print_map_ = false;
+  std::vector<const char*> experiments_;
 
   // basic timing stats
   double reader_time_ = 0;

@@ -237,6 +237,13 @@ struct Bytecode : public Instruction {
   dex::Opcode opcode;
   std::vector<Operand*> operands;
 
+  template<class T>
+  T* CastOperand(int index) const {
+    T* operand = dynamic_cast<T*>(operands[index]);
+    CHECK(operand != nullptr);
+    return operand;
+  }
+
   virtual bool Accept(Visitor* visitor) override { return visitor->Visit(this); }
 };
 
@@ -302,7 +309,9 @@ struct DbgInfoHeader : public Instruction {
 struct LineNumber : public Operand {
   int line = 0;
 
-  LineNumber(int line) : line(line) {}
+  LineNumber(int line) : line(line) {
+    WEAK_CHECK(line > 0);
+  }
 
   virtual bool Accept(Visitor* visitor) override { return visitor->Visit(this); }
 };
@@ -312,6 +321,13 @@ struct DbgInfoAnnotation : public Instruction {
   std::vector<Operand*> operands;
 
   DbgInfoAnnotation(dex::u1 dbg_opcode) : dbg_opcode(dbg_opcode) {}
+
+  template<class T>
+  T* CastOperand(int index) const {
+    T* operand = dynamic_cast<T*>(operands[index]);
+    CHECK(operand != nullptr);
+    return operand;
+  }
 
   virtual bool Accept(Visitor* visitor) override { return visitor->Visit(this); }
 };
@@ -326,6 +342,8 @@ struct CodeIr {
       : ir_method_(ir_method), dex_ir_(dex_ir) {
     Dissasemble();
   }
+
+  void Assemble();
 
   void Accept(Visitor* visitor) {
     for (auto instr : instructions) {

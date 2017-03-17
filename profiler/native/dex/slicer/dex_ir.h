@@ -21,6 +21,7 @@
 #include "arrayview.h"
 #include "dex_format.h"
 #include "dex_leb128.h"
+#include "buffer.h"
 
 #include <stdlib.h>
 #include <map>
@@ -376,6 +377,10 @@ struct DexFile {
     return p;
   }
 
+  void AttachBuffer(slicer::Buffer&& buffer) {
+    buffers_.push_back(std::move(buffer));
+  }
+
   void Normalize();
 
  private:
@@ -409,6 +414,10 @@ struct DexFile {
   void Track(FieldAnnotation* p) { PushOwn(field_annotations, p); }
   void Track(MethodAnnotation* p) { PushOwn(method_annotations, p); }
   void Track(ParamAnnotation* p) { PushOwn(param_annotations, p); }
+
+private:
+  // additional memory buffers owned by this .dex IR
+  std::vector<slicer::Buffer> buffers_;
 };
 
 }  // namespace ir

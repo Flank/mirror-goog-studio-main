@@ -18,12 +18,39 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <cstdarg>
+#include <set>
+#include <utility>
 
 namespace slicer {
 
 // Helper for the default CHECK() policy
 void _checkFailed(const char* expr, int line, const char* file) {
   printf("\nCHECK failed [%s] at %s:%d\n\n", expr, file, line);
+  abort();
+}
+
+// keep track of the failures we already saw to avoid spamming with duplicates
+thread_local std::set<std::pair<int, const char*>> weak_failures;
+
+// Helper for the default WEAK_CHECK() policy
+//
+// TODO: implement a modal switch (abort/continue)
+//
+void _weakCheckFailed(const char* expr, int line, const char* file) {
+  auto failure_id = std::make_pair(line, file);
+  if (weak_failures.find(failure_id) == weak_failures.end()) {
+    printf("\nWEAK_CHECK failed [%s] at %s:%d\n\n", expr, file, line);
+    weak_failures.insert(failure_id);
+  }
+}
+
+// Prints a formatted message and aborts
+void _fatal(const char* format, ...) {
+  va_list args;
+  va_start(args, format);
+  vprintf(format, args);
+  va_end(args);
   abort();
 }
 
