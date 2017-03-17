@@ -18,11 +18,12 @@ package com.android.builder.dexing;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.dx.command.dexer.DxContext;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.testutils.TestClassesGenerator;
 import com.android.testutils.TestInputsGenerator;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.io.IOException;
@@ -71,7 +72,7 @@ public final class DexArchiveTestUtil {
 
     public static void mergeMonoDex(@NonNull Collection<Path> dexArchives, @NonNull Path outputDir)
             throws IOException, InterruptedException {
-        implMergeDexes(dexArchives, outputDir, ImmutableSet.of(), DexingMode.MONO_DEX);
+        implMergeDexes(dexArchives, outputDir, DexingMode.MONO_DEX, null);
     }
 
     public static void mergeLegacyDex(
@@ -79,13 +80,13 @@ public final class DexArchiveTestUtil {
             @NonNull Path outputDir,
             @NonNull Set<String> mainDexList)
             throws IOException, InterruptedException {
-        implMergeDexes(dexArchives, outputDir, mainDexList, DexingMode.LEGACY_MULTIDEX);
+        implMergeDexes(dexArchives, outputDir, DexingMode.LEGACY_MULTIDEX, mainDexList);
     }
 
     public static void mergeNativeDex(
             @NonNull Collection<Path> dexArchives, @NonNull Path outputDir)
             throws IOException, InterruptedException {
-        implMergeDexes(dexArchives, outputDir, ImmutableSet.of(), DexingMode.NATIVE_MULTIDEX);
+        implMergeDexes(dexArchives, outputDir, DexingMode.NATIVE_MULTIDEX, null);
     }
 
     /** Gets a DEX-style class names from the specified class names without the package. */
@@ -133,12 +134,22 @@ public final class DexArchiveTestUtil {
         }
     }
 
+    /**
+     * Runs the dex merger.
+     *
+     * @param mainDexList the list of classes to keep in the main dex. Must be set if the dexing
+     *     mode is legacy mulidex, must be null otherwise.
+     */
     private static void implMergeDexes(
             @NonNull Collection<Path> inputs,
             @NonNull Path outputDir,
-            @NonNull Set<String> mainDexList,
-            @NonNull DexingMode dexingMode)
+            @NonNull DexingMode dexingMode,
+            @Nullable Set<String> mainDexList)
             throws IOException, InterruptedException {
+        Preconditions.checkState(
+                (dexingMode == DexingMode.LEGACY_MULTIDEX) == (mainDexList != null),
+                "Main Dex list must be set if and only if legacy multidex is enabled.");
+
         WaitableExecutor<Void> executor = WaitableExecutor.useGlobalSharedThreadPool();
         DexMergerConfig config = new DexMergerConfig(dexingMode, dxContext);
         DexArchiveMerger merger = new DexArchiveMerger(config, executor);

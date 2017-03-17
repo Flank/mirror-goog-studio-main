@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.transforms;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.Format;
 import com.android.build.api.transform.JarInput;
@@ -93,17 +94,20 @@ public class DexMergerTransform extends Transform {
     private static final LoggerWrapper logger = LoggerWrapper.getLogger(DexMergerTransform.class);
 
     @NonNull private final DexingMode dexingMode;
-    @NonNull private final FileCollection mainDexListFile;
+    @Nullable private final FileCollection mainDexListFile;
     @NonNull private final ErrorReporter errorReporter;
     @NonNull private final WaitableExecutor<Void> callableExecutor;
     @NonNull private final WaitableExecutor<Void> dexMergerExecutor;
 
     public DexMergerTransform(
             @NonNull DexingMode dexingMode,
-            @NonNull FileCollection mainDexListFile,
+            @Nullable FileCollection mainDexListFile,
             @NonNull ErrorReporter errorReporter) {
         this.dexingMode = dexingMode;
         this.mainDexListFile = mainDexListFile;
+        Preconditions.checkState(
+                (dexingMode == DexingMode.LEGACY_MULTIDEX) == (mainDexListFile != null),
+                "Main dex list must only be set when in legacy multidex");
         this.errorReporter = errorReporter;
         this.callableExecutor = WaitableExecutor.useGlobalSharedThreadPool();
         this.dexMergerExecutor = WaitableExecutor.useGlobalSharedThreadPool();
@@ -136,7 +140,7 @@ public class DexMergerTransform extends Transform {
     @NonNull
     @Override
     public Collection<SecondaryFile> getSecondaryFiles() {
-        if (dexingMode == DexingMode.LEGACY_MULTIDEX) {
+        if (mainDexListFile != null) {
             return ImmutableList.of(SecondaryFile.nonIncremental(mainDexListFile));
         } else {
             return ImmutableList.of();
@@ -228,9 +232,12 @@ public class DexMergerTransform extends Transform {
         // this deletes and creates the dir for the output
         FileUtils.cleanOutputDir(outputDir);
 
-        Set<String> mainDexClasses = Sets.newHashSet();
-        Path mainDexListPath = mainDexListFile.getSingleFile().toPath();
-        if (Files.isRegularFile(mainDexListPath)) {
+        Set<String> mainDexClasses;
+        if (mainDexListFile == null) {
+            mainDexClasses = null;
+        } else {
+            mainDexClasses = Sets.newHashSet();
+            Path mainDexListPath = mainDexListFile.getSingleFile().toPath();
             mainDexClasses.addAll(Files.readAllLines(mainDexListPath));
         }
 
@@ -266,8 +273,7 @@ public class DexMergerTransform extends Transform {
             // if non-incremental, or inputs have changed, merge again
             FileUtils.cleanOutputDir(externalLibsOutput);
             if (!externalLibs.isEmpty()) {
-                submitForMerging(
-                        output, externalLibsOutput, externalLibs.values(), ImmutableSet.of());
+                submitForMerging(output, externalLibsOutput, externalLibs.values(), null);
             }
         }
     }
@@ -299,10 +305,7 @@ public class DexMergerTransform extends Transform {
                     || jarInput.getStatus() == Status.ADDED
                     || jarInput.getStatus() == Status.CHANGED) {
                 submitForMerging(
-                        output,
-                        dexOutput,
-                        ImmutableList.of(jarInput.getFile().toPath()),
-                        ImmutableSet.of());
+                        output, dexOutput, ImmutableList.of(jarInput.getFile().toPath()), null);
             }
         }
     }
@@ -344,17 +347,26 @@ public class DexMergerTransform extends Transform {
                             output,
                             dexOutput,
                             ImmutableList.of(directoryInput.getFile().toPath()),
-                            ImmutableSet.of());
+                            null);
                 }
             }
         }
     }
 
+    /**
+     * Add a merging task to the queue of tasks.
+     *
+     * @param output the process output that dx will output to.
+     * @param dexOutputDir the directory to output dexes to
+     * @param dexArchives the dex archive inputs
+     * @param mainDexList the list of classes to keep in the main dex. Must be set <em>if and only
+     *     if</em> the dex mode is legacy multidex.
+     */
     private void submitForMerging(
             @NonNull ProcessOutput output,
             @NonNull File dexOutputDir,
             @NonNull Collection<Path> dexArchives,
-            @NonNull Set<String> mainDexList) {
+            @Nullable Set<String> mainDexList) {
         DexMergerTransformCallable callable =
                 new DexMergerTransformCallable(
                         dexingMode,

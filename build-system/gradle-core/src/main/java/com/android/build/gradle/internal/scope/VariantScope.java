@@ -42,6 +42,7 @@ import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.build.gradle.tasks.RenderscriptCompile;
 import com.android.build.gradle.tasks.ShaderCompile;
 import com.android.builder.dependency.level2.AtomDependency;
+import com.android.builder.dexing.DexingMode;
 import com.android.builder.model.ApiVersion;
 import java.io.File;
 import java.util.Collection;
@@ -74,6 +75,9 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     boolean isJackEnabled();
 
     boolean isTestOnly();
+
+    @NonNull
+    DexingMode getDexingMode();
 
     @NonNull
     ApiVersion getMinSdkVersion();

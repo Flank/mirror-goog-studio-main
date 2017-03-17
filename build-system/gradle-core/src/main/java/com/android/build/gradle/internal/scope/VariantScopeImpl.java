@@ -48,6 +48,7 @@ import com.android.build.gradle.internal.coverage.JacocoReportTask;
 import com.android.build.gradle.internal.dsl.AbiSplitOptions;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
+import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.tasks.CheckManifest;
@@ -81,6 +82,7 @@ import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.VariantType;
 import com.android.builder.dependency.level2.AndroidDependency;
 import com.android.builder.dependency.level2.AtomDependency;
+import com.android.builder.dexing.DexingMode;
 import com.android.builder.model.ApiVersion;
 import com.android.repository.api.ProgressIndicator;
 import com.android.sdklib.AndroidTargetHash;
@@ -285,6 +287,30 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 || getVariantConfiguration().getTargetSdkVersion().getCodename() != null;
     }
 
+    @NonNull
+    @Override
+    public DexingMode getDexingMode() {
+        if (variantData.getType().isForTesting()
+                && getTestedVariantData() != null
+                && getTestedVariantData().getType() != VariantType.LIBRARY) {
+            // for non-library test variants, we always want to have exactly one DEX file
+            return DexingMode.MONO_DEX;
+        } else if (isInstantRunDexingModeOverride()) {
+            return DexingMode.NATIVE_MULTIDEX;
+        } else if (variantData.getVariantConfiguration().isLegacyMultiDexMode()) {
+            return DexingMode.LEGACY_MULTIDEX;
+        } else if (variantData.getVariantConfiguration().isMultiDexEnabled()) {
+            return DexingMode.NATIVE_MULTIDEX;
+        } else {
+            return DexingMode.MONO_DEX;
+        }
+    }
+
+    private boolean isInstantRunDexingModeOverride() {
+        return getInstantRunBuildContext().isInInstantRunMode()
+                && getInstantRunBuildContext().getPatchingPolicy()
+                        == InstantRunPatchingPolicy.MULTI_APK;
+    }
 
     @NonNull
     @Override

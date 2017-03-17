@@ -1014,8 +1014,9 @@ public abstract class TaskManager {
         BaseVariantData<? extends BaseVariantOutputData> variantData = scope.getVariantData();
 
         variantData.calculateFilters(scope.getGlobalScope().getExtension().getSplits());
+
         boolean useAaptToGenerateLegacyMultidexMainDexProguardRules =
-                isLegacyMultidexMode(scope);
+                scope.getDexingMode() == DexingMode.LEGACY_MULTIDEX;
 
         // loop on all outputs. The only difference will be the name of the task, and location
         // of the generated data.
@@ -1948,9 +1949,6 @@ public abstract class TaskManager {
         maybeCreateDesugarTask(tasks, variantScope, config.getMinSdkVersion(), transformManager);
 
         boolean isMinifyEnabled = isMinifyEnabled(variantScope);
-        boolean isMultiDexEnabled = config.isMultiDexEnabled();
-        // Switch to native multidex if possible when using instant run.
-        boolean isLegacyMultiDexMode = isLegacyMultidexMode(variantScope);
 
         AndroidConfig extension = variantScope.getGlobalScope().getExtension();
 
@@ -1989,8 +1987,7 @@ public abstract class TaskManager {
         // ----- Minify next -----
 
         if (isMinifyEnabled) {
-            boolean outputToJarFile = isMultiDexEnabled && isLegacyMultiDexMode;
-            createMinifyTransform(tasks, variantScope, outputToJarFile);
+            createMinifyTransform(tasks, variantScope);
         }
 
         maybeCreateShrinkResourcesTransform(tasks, variantScope);
@@ -2007,11 +2004,9 @@ public abstract class TaskManager {
                     .createPreColdswapTask(project);
             preColdSwapTask.dependsOn(tasks, allActionsAnchorTask);
 
-            // when dealing with platforms that can handle multi dexes natively, automatically
-            // turn on multi dexing so shards are packaged as individual dex files.
+
             if (InstantRunPatchingPolicy.PRE_LOLLIPOP !=
                     variantScope.getInstantRunBuildContext().getPatchingPolicy()) {
-                isMultiDexEnabled = true;
                 // force pre-dexing to be true as we rely on individual slices to be packaged
                 // separately.
                 extension.getDexOptions().setPreDexLibraries(true);
@@ -2022,9 +2017,10 @@ public abstract class TaskManager {
         }
         // ----- Multi-Dex support
 
+        DexingMode dexingMode = variantScope.getDexingMode();
         Optional<AndroidTask<TransformTask>> multiDexClassListTask;
-        // non Library test are running as native multi-dex
-        if (isMultiDexEnabled && isLegacyMultiDexMode) {
+
+        if (dexingMode == DexingMode.LEGACY_MULTIDEX) {
             boolean proguardInPipeline = isMinifyEnabled && config.getBuildType().isUseProguard();
 
             // If ProGuard will be used, we'll end up with a "fat" jar anyway. If we're using the
@@ -2059,7 +2055,6 @@ public abstract class TaskManager {
             multiDexClassListTask = Optional.empty();
         }
 
-        DexingMode dexingMode = getDexingMode(variantScope, isMultiDexEnabled);
 
         if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_DEX_ARCHIVE)
                 && variantScope.getVariantConfiguration().getBuildType().isDebuggable()) {
@@ -2113,23 +2108,6 @@ public abstract class TaskManager {
         }
     }
 
-    @NonNull
-    private DexingMode getDexingMode(@NonNull VariantScope scope, boolean isMultiDexEnabled) {
-        BaseVariantData<? extends BaseVariantOutputData> variantData = scope.getVariantData();
-        if (variantData.getType().isForTesting()
-                && scope.getTestedVariantData() != null
-                && scope.getTestedVariantData().getType() != VariantType.LIBRARY) {
-            // for non-library test variants, we always want to have exactly one DEX file
-            return DexingMode.MONO_DEX;
-        } else if (isLegacyMultidexMode(scope)) {
-            return DexingMode.LEGACY_MULTIDEX;
-        } else if (!isMultiDexEnabled) {
-            return DexingMode.MONO_DEX;
-        } else {
-            return DexingMode.NATIVE_MULTIDEX;
-        }
-    }
-
     /**
      * Creates tasks used for DEX generation. This will use a new pipeline that uses dex archives in
      * order to enable incremental dexing support.
@@ -2169,7 +2147,9 @@ public abstract class TaskManager {
         DexMergerTransform dexTransform =
                 new DexMergerTransform(
                         dexingMode,
-                        project.files(variantScope.getMainDexListFile()),
+                        dexingMode == DexingMode.LEGACY_MULTIDEX
+                                ? project.files(variantScope.getMainDexListFile())
+                                : null,
                         variantScope.getGlobalScope().getAndroidBuilder().getErrorReporter());
         Optional<AndroidTask<TransformTask>> dexTask =
                 transformManager.addTransform(tasks, variantScope, dexTransform);
@@ -2272,14 +2252,6 @@ public abstract class TaskManager {
                         variantScope.addColdSwapBuildTask(t);
                     });
         }
-    }
-
-    private boolean isLegacyMultidexMode(@NonNull VariantScope variantScope) {
-        return variantScope.getVariantData().getVariantConfiguration().isLegacyMultiDexMode() &&
-                (getIncrementalMode(variantScope.getVariantConfiguration()) == IncrementalMode.NONE
-                        || variantScope.getInstantRunBuildContext().getPatchingPolicy() ==
-                        InstantRunPatchingPolicy.PRE_LOLLIPOP);
-
     }
 
     private boolean isMinifyEnabled(VariantScope variantScope) {
@@ -3090,9 +3062,7 @@ public abstract class TaskManager {
     }
 
     protected void createMinifyTransform(
-            @NonNull TaskFactory taskFactory,
-            @NonNull final VariantScope variantScope,
-            boolean createJarFile) {
+            @NonNull TaskFactory taskFactory, @NonNull final VariantScope variantScope) {
         doCreateMinifyTransform(
                 taskFactory,
                 variantScope,

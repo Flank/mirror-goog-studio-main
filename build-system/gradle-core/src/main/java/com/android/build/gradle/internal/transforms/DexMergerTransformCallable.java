@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.transforms;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.builder.dexing.DexArchiveMerger;
 import com.android.builder.dexing.DexMergerConfig;
 import com.android.builder.dexing.DexingMode;
@@ -39,7 +40,7 @@ class DexMergerTransformCallable implements Callable<Void> {
     @NonNull private final ProcessOutput processOutput;
     @NonNull private final File dexOutputDir;
     @NonNull private final Collection<Path> dexArchives;
-    @NonNull private final Set<String> mainDexList;
+    @Nullable private final Set<String> mainDexList;
     @NonNull private final WaitableExecutor<Void> executor;
 
     public DexMergerTransformCallable(
@@ -47,7 +48,7 @@ class DexMergerTransformCallable implements Callable<Void> {
             @NonNull ProcessOutput processOutput,
             @NonNull File dexOutputDir,
             @NonNull Collection<Path> dexArchives,
-            @NonNull Set<String> mainDexList,
+            @Nullable Set<String> mainDexList,
             @NonNull WaitableExecutor<Void> executor) {
         this.dexingMode = dexingMode;
         this.processOutput = processOutput;
