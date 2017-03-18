@@ -51,8 +51,8 @@ public class ProguardSeedsMap {
         return classes.contains(fqcn);
     }
 
-    public boolean hasMethod(@NonNull String fqcn, @NonNull String methodSig) {
-        return methodSpecsByClass.containsEntry(fqcn, methodSig);
+    public boolean hasMethod(@NonNull String fqcn, @NonNull String methodNameAndParams) {
+        return methodSpecsByClass.containsEntry(fqcn, methodNameAndParams);
     }
 
     public boolean hasField(@NonNull String fqcn, @NonNull String fieldName) {
@@ -86,11 +86,14 @@ public class ProguardSeedsMap {
 
                 String fqcn = line.substring(0, index).trim();
                 String rest = line.substring(index + 1).trim();
-                if (rest.contains("(")) {
+                if (rest.contains("(")) { //it's a method
+                    if (rest.indexOf(' ') != -1) { //we don't need the return type
+                        rest = rest.substring(rest.indexOf(' ') + 1);
+                    }
                     methodsByClass.put(fqcn, rest);
-                } else {
-                    // TODO: why are we keeping the field names alone, but for methods we keep the entire type information?
-                    String fieldName = rest.substring(rest.indexOf(' ') + 1);
+                } else { //it's a field
+                    String fieldName =
+                            rest.substring(rest.indexOf(' ') + 1); //we don't need the field type
                     fieldsByClass.put(fqcn, fieldName);
                 }
             }
