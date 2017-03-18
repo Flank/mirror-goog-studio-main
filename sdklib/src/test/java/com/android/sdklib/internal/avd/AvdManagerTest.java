@@ -91,7 +91,7 @@ public class AvdManagerTest extends TestCase {
         assertEquals(null, properties.get("snapshot.present"));
         assertTrue("Expected " + AvdManager.USERDATA_IMG + " in " + mAvdFolder,
                 mFileOp.exists(new File(mAvdFolder, AvdManager.USERDATA_IMG)));
-        assertTrue("Expected " + AvdManager.USERDATA_QEMU_IMG + " in " + mAvdFolder,
+        assertFalse("Expected NO " + AvdManager.USERDATA_QEMU_IMG + " in " + mAvdFolder,
                 mFileOp.exists(new File(mAvdFolder, AvdManager.USERDATA_QEMU_IMG)));
         assertFalse("Expected NO snapshots.img in " + mAvdFolder,
                 mFileOp.exists(new File(mAvdFolder, "snapshots.img")));
@@ -185,7 +185,7 @@ public class AvdManagerTest extends TestCase {
         assertEquals("system-images/android-23/default/x86/", properties.get("image.sysdir.1"));
         assertTrue("Expected " + AvdManager.USERDATA_IMG + " in " + mAvdFolder,
                 mFileOp.exists(new File(mAvdFolder, AvdManager.USERDATA_IMG)));
-        assertTrue("Expected " + AvdManager.USERDATA_QEMU_IMG + " in " + mAvdFolder,
+        assertFalse("Expected NO " + AvdManager.USERDATA_QEMU_IMG + " in " + mAvdFolder,
                 mFileOp.exists(new File(mAvdFolder, AvdManager.USERDATA_QEMU_IMG)));
 
         // Create an AVD that is the same, but with a different name
@@ -220,7 +220,7 @@ public class AvdManagerTest extends TestCase {
         assertEquals("system-images/android-23/default/x86/", baseProperties.get("image.sysdir.1"));
         assertTrue("Expected " + AvdManager.USERDATA_IMG + " in " + mAvdFolder,
                    mFileOp.exists(new File(mAvdFolder, AvdManager.USERDATA_IMG)));
-        assertTrue("Expected " + AvdManager.USERDATA_QEMU_IMG + " in " + mAvdFolder,
+        assertFalse("Expected NO " + AvdManager.USERDATA_QEMU_IMG + " in " + mAvdFolder,
                    mFileOp.exists(new File(mAvdFolder, AvdManager.USERDATA_QEMU_IMG)));
     }
 
@@ -284,7 +284,7 @@ public class AvdManagerTest extends TestCase {
         assertEquals(newName, configProperties.get("avd.ini.displayname"));
         assertTrue("Expected " + AvdManager.USERDATA_IMG + " in " + newFolder,
                    mFileOp.exists(new File(newFolder, AvdManager.USERDATA_IMG)));
-        assertTrue("Expected " + AvdManager.USERDATA_QEMU_IMG + " in " + mAvdFolder,
+        assertFalse("Expected NO " + AvdManager.USERDATA_QEMU_IMG + " in " + mAvdFolder,
                    mFileOp.exists(new File(mAvdFolder, AvdManager.USERDATA_QEMU_IMG)));
         // Quick check that the original AVD directory still exists
         assertTrue(mFileOp.exists(new File(mAvdFolder, "foo.bar")));

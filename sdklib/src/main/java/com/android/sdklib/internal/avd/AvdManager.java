@@ -1746,7 +1746,7 @@ public class AvdManager {
     }
 
     /**
-     * Create the user data files for an AVD
+     * Create the user data file for an AVD
      * @param systemImage the system image of the AVD
      * @param avdFolder where the AVDs live
      * @param log receives error messages
@@ -1777,18 +1777,6 @@ public class AvdManager {
             if (!mFop.exists(userdataDest)) {
                 log.warning("Unable to create '%1$s' file in the AVD folder.",
                             userdataDest);
-                throw new AvdMgrException();
-            }
-        }
-        // Copy userdata.img to userdata-qemu.img in the *.avd directory
-        File userQemuDest = new File(avdFolder, USERDATA_QEMU_IMG);
-
-        if (!mFop.exists(userQemuDest)) {
-            mFop.copyFile(userdataSrc, userQemuDest);
-
-            if (!mFop.exists(userQemuDest)) {
-                log.warning("Unable to create '%1$s' file in the AVD folder.",
-                            userQemuDest);
                 throw new AvdMgrException();
             }
         }
