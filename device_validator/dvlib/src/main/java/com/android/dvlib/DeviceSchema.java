@@ -55,7 +55,7 @@ public class DeviceSchema {
      * The latest version of the device XML Schema.
      * Valid version numbers are between 1 and this number, included.
      */
-    public static final int NS_LATEST_VERSION = 2;
+    public static final int NS_LATEST_VERSION = 3;
 
     /** The XML namespace of the latest device XML. */
     public static final String NS_DEVICES_URI = getSchemaUri(NS_LATEST_VERSION);
@@ -209,6 +209,8 @@ public class DeviceSchema {
     public static final String NODE_ID = "id";
 
     public static final String NODE_API_LEVEL = "api-level";
+
+    public static final String NODE_PLAYSTORE_ENABLED = "playstore-enabled";
 
     public static final String NODE_MANUFACTURER = "manufacturer";
 

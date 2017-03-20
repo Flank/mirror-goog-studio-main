@@ -54,10 +54,15 @@ public class SystemImage implements ISystemImage {
 
     /**
      * Tag to apply to system images that include Google APIs.
-     * Note that {@link #WEAR_TAG} and {@link #TV_TAG} implies the presence of Google APIs in addition
-     * there is one system image that uses {@link #GOOGLE_APIS_X86_TAG}.
+     * Note that {@link #PLAY_STORE_TAG}, {@link #WEAR_TAG}, and {@link #TV_TAG} each imply the presence of Google APIs.
+     * In addition, there is one system image that uses {@link #GOOGLE_APIS_X86_TAG}.
      */
     public static final IdDisplay GOOGLE_APIS_TAG = IdDisplay.create("google_apis", "Google APIs");
+
+    /**
+     * Tag to apply to system images that have Google Play Store.
+     */
+    public static final IdDisplay PLAY_STORE_TAG = IdDisplay.create("google_apis_playstore", "Google Play");
 
     /**
      * A separate tag to apply to system images that include Google APIs on x86 systems.
@@ -159,6 +164,11 @@ public class SystemImage implements ISystemImage {
     @Override
     public boolean obsolete() {
         return mPackage.obsolete();
+    }
+
+    @Override
+    public boolean hasPlayStore() {
+        return (PLAY_STORE_TAG.equals(getTag()));
     }
 
     @Override

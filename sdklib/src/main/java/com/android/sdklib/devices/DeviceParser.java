@@ -144,6 +144,8 @@ public class DeviceParser {
                 mBuilder.setId(getString(mStringAccumulator));
             } else if (DeviceSchema.NODE_MANUFACTURER.equals(localName)) {
                 mBuilder.setManufacturer(getString(mStringAccumulator));
+            } else if (DeviceSchema.NODE_PLAYSTORE_ENABLED.equals(localName)) {
+                mBuilder.setPlayStore(getBool(mStringAccumulator));
             } else if (DeviceSchema.NODE_META.equals(localName)) {
                 mBuilder.setMeta(mMeta);
             } else if (DeviceSchema.NODE_SOFTWARE.equals(localName)) {

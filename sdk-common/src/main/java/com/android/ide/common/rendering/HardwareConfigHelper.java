@@ -31,6 +31,8 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.android.ide.common.rendering.api.HardwareConfig.*;
+
 /**
  * Helper method to create a {@link HardwareConfig} object.
  *
@@ -170,10 +172,6 @@ public class HardwareConfigHelper {
 
     // ---- Device Display Helpers ----
 
-    /** Manufacturer used by the generic devices in the device list */
-    public static final String MANUFACTURER_GENERIC = "Generic";          //$NON-NLS-1$
-    /** Manufacturer used by the Nexus devices in the device list */
-    public static final String MANUFACTURER_GOOGLE = "Google";          //$NON-NLS-1$
     private static final Pattern GENERIC_PATTERN =
             Pattern.compile("(\\d+\\.?\\d*)\" (.+?)( \\(.*Nexus.*\\))?"); //$NON-NLS-1$
 
@@ -289,7 +287,7 @@ public class HardwareConfigHelper {
      * @return true if the device is generic
      */
     public static boolean isGeneric(@NonNull Device device) {
-        return device.getManufacturer().equals(MANUFACTURER_GENERIC);
+        return MANUFACTURER_GENERIC.equals(device.getManufacturer());
     }
 
     /**
@@ -332,35 +330,35 @@ public class HardwareConfigHelper {
     public static int nexusRank(Device device) {
         String id = device.getId();
         switch (id) {
-            case "Nexus One":
+            case DEVICE_NEXUS_ONE:
                 return 1;
-            case "Nexus S":
+            case DEVICE_NEXUS_S:
                 return 2;
-            case "Galaxy Nexus":
+            case DEVICE_GALAXY_NEXUS:
                 return 3;
-            case "Nexus 7":
+            case DEVICE_NEXUS_7:
                 return 4; // 2012 version
-            case "Nexus 10":
+            case DEVICE_NEXUS_10:
                 return 5;
-            case "Nexus 4":
+            case DEVICE_NEXUS_4:
                 return 6;
-            case "Nexus 7 2013":
+            case DEVICE_NEXUS_7_2013:
                 return 7;
-            case "Nexus 5":
+            case DEVICE_NEXUS_5:
                 return 8;
-            case "Nexus 9":
+            case DEVICE_NEXUS_9:
                 return 9;
-            case "Nexus 6":
+            case DEVICE_NEXUS_6:
                 return 10;
-            case "pixel_c":
+            case DEVICE_PIXEL_C:
                 return 11;
-            case "Nexus 6P":
+            case DEVICE_NEXUS_6P:
                 return 12;
-            case "Nexus 5X":
+            case DEVICE_NEXUS_5X:
                 return 13;
-            case "pixel":
+            case DEVICE_PIXEL:
                 return 14;
-            case "pixel_xl":
+            case DEVICE_PIXEL_XL:
                 return 15;
             default:
                 return 100; // devices released in the future?

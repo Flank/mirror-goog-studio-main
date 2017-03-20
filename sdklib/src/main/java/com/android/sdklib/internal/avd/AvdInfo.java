@@ -67,6 +67,7 @@ public final class AvdInfo implements Comparable<AvdInfo> {
     private final Map<String, String> mProperties;
     private final AvdStatus mStatus;
     private final ISystemImage mSystemImage;
+    private final boolean mHasPlayStore;
 
 
     /**
@@ -116,6 +117,8 @@ public final class AvdInfo implements Comparable<AvdInfo> {
         mProperties = properties == null ? Collections.<String, String>emptyMap()
                 : Collections.unmodifiableMap(properties);
         mStatus = status;
+        String psString = properties.get(AvdManager.AVD_INI_PLAYSTORE_ENABLED);
+        mHasPlayStore = "true".equalsIgnoreCase(psString) || "yes".equalsIgnoreCase(psString);
     }
 
     /** Returns the name of the AVD. */
@@ -145,6 +148,11 @@ public final class AvdInfo implements Comparable<AvdInfo> {
     @NonNull
     public String getAbiType() {
         return getProperties().get(AvdManager.AVD_INI_ABI_TYPE);
+    }
+
+    /** Returns true if this AVD supports Google Play Store */
+    public boolean hasPlayStore() {
+        return mHasPlayStore;
     }
 
     @NonNull

@@ -26,6 +26,7 @@ import java.util.Set;
 public class Software {
     private int mMinSdkLevel = 0;
     private int mMaxSdkLevel = Integer.MAX_VALUE;
+    private boolean mPlayStoreEnabled = false;
     private boolean mLiveWallpaperSupport;
     private Set<BluetoothProfile> mBluetoothProfiles = EnumSet.noneOf(BluetoothProfile.class);
     private String mGlVersion;
@@ -46,6 +47,14 @@ public class Software {
 
     public void setMaxSdkLevel(int sdkLevel) {
         mMaxSdkLevel = sdkLevel;
+    }
+
+    public boolean isPlayStoreEnabled() {
+        return mPlayStoreEnabled;
+    }
+
+    public void setPlayStoreEnabled(boolean isEnabled) {
+        mPlayStoreEnabled = isEnabled;
     }
 
     public boolean hasLiveWallpaperSupport() {
