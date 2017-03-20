@@ -22,7 +22,9 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import com.android.annotations.NonNull;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.io.Resources;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import org.gradle.tooling.events.OperationDescriptor;
@@ -99,11 +101,10 @@ public class GradleTaskSubjectTest {
 
     @Test
     public void hadChangedInputs() throws Exception {
-    }
-
-    @Test
-    public void hadNoChangedInputs() throws Exception {
-
+        Set<String> inputChangedTasks = taskStateList.getInputChangedTasks();
+        assertThat(inputChangedTasks).hasSize(1);
+        assertThat(Iterables.getOnlyElement(inputChangedTasks))
+                .isEqualTo(":mergeDebugAtomResources");
     }
 
     @Test
