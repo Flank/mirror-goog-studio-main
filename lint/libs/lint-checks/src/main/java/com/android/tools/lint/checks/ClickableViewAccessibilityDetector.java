@@ -16,31 +16,46 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.SdkConstants.ANDROID_VIEW_VIEW;
+import static com.android.SdkConstants.CLASS_VIEW;
+import static com.android.tools.lint.checks.CleanupDetector.MOTION_EVENT_CLS;
+import static com.android.tools.lint.detector.api.LintUtils.skipParentheses;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.detector.api.Category;
-import com.android.tools.lint.detector.api.ClassContext;
 import com.android.tools.lint.detector.api.Detector;
+import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.tools.lint.detector.api.TypeEvaluator;
+import com.intellij.psi.PsiClass;
+import com.intellij.psi.PsiClassType;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiMethod;
+import com.intellij.psi.PsiType;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import java.util.ListIterator;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.tree.AbstractInsnNode;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.InsnList;
-import org.objectweb.asm.tree.MethodInsnNode;
-import org.objectweb.asm.tree.MethodNode;
+import org.jetbrains.uast.UCallExpression;
+import org.jetbrains.uast.UClass;
+import org.jetbrains.uast.UElement;
+import org.jetbrains.uast.ULambdaExpression;
+import org.jetbrains.uast.UMethod;
+import org.jetbrains.uast.UReferenceExpression;
+import org.jetbrains.uast.USuperExpression;
+import org.jetbrains.uast.UastContext;
+import org.jetbrains.uast.UastUtils;
+import org.jetbrains.uast.visitor.AbstractUastVisitor;
 
 /**
  * Checks that views that override View#onTouchEvent also implement View#performClick
  * and call performClick when click detection occurs.
  */
-public class ClickableViewAccessibilityDetector extends Detector implements Detector.ClassScanner {
+public class ClickableViewAccessibilityDetector extends Detector implements UastScanner {
 
     public static final Issue ISSUE = Issue.create(
             "ClickableViewAccessibility",
@@ -56,117 +71,106 @@ public class ClickableViewAccessibilityDetector extends Detector implements Dete
             Severity.WARNING,
             new Implementation(
                     ClickableViewAccessibilityDetector.class,
-                    Scope.CLASS_FILE_SCOPE));
+                    Scope.JAVA_FILE_SCOPE));
 
-    private static final String ON_TOUCH_EVENT = "onTouchEvent";
-    private static final String ON_TOUCH_EVENT_SIG = "(Landroid/view/MotionEvent;)Z";
     private static final String PERFORM_CLICK = "performClick";
-    private static final String PERFORM_CLICK_SIG = "()Z";
-    private static final String SET_ON_TOUCH_LISTENER = "setOnTouchListener";
-    private static final String SET_ON_TOUCH_LISTENER_SIG = "(Landroid/view/View$OnTouchListener;)V";
+    public static final String ON_TOUCH_EVENT = "onTouchEvent";
     private static final String ON_TOUCH = "onTouch";
-    private static final String ON_TOUCH_SIG = "(Landroid/view/View;Landroid/view/MotionEvent;)Z";
-    private static final String ON_TOUCH_LISTENER = "android/view/View$OnTouchListener";
+    private static final String CLASS_ON_TOUCH_LISTENER = "android.view.View.OnTouchListener";
 
-
-    /** Constructs a new {@link ClickableViewAccessibilityDetector} */
+    /**
+     * Constructs a new {@link ClickableViewAccessibilityDetector}
+     */
     public ClickableViewAccessibilityDetector() {
     }
 
-    // ---- Implements ClassScanner ----
+    // ---- Implements UastScanner ----
+
     @Override
-    public void checkClass(@NonNull ClassContext context, @NonNull ClassNode classNode) {
-        scanForAndCheckSetOnTouchListenerCalls(context, classNode);
+    public List<String> getApplicableMethodNames() {
+        return Collections.singletonList("setOnTouchListener");
+    }
+
+    @Override
+    public void visitMethod(
+            @NonNull JavaContext context,
+            @NonNull UCallExpression node,
+            @NonNull PsiMethod method) {
+        JavaEvaluator evaluator = context.getEvaluator();
+        if (!evaluator.isMemberInSubClassOf(method, CLASS_VIEW, false)) {
+            return;
+        }
+        if (!evaluator.parametersMatch(method, CLASS_ON_TOUCH_LISTENER)) {
+            return;
+        }
+
+        PsiType type = TypeEvaluator.evaluate(node.getReceiver());
+        if (!(type instanceof PsiClassType)) {
+            return;
+        }
+        PsiClass viewClass = ((PsiClassType) type).resolve();
+        if (viewClass == null) {
+            return;
+        }
 
         // Ignore abstract classes.
-        if ((classNode.access & Opcodes.ACC_ABSTRACT) != 0) {
+        if (evaluator.isAbstract(viewClass)) {
             return;
         }
 
-        if (context.getDriver().isSubclassOf(classNode, ANDROID_VIEW_VIEW)) {
-            checkView(context, classNode);
-        }
-
-        if (implementsOnTouchListener(classNode)) {
-            checkOnTouchListener(context, classNode);
-        }
-    }
-
-    @SuppressWarnings("unchecked") // ASM API
-    public static void scanForAndCheckSetOnTouchListenerCalls(
-            ClassContext context,
-            ClassNode classNode) {
-        List<MethodNode> methods = classNode.methods;
-        for (MethodNode methodNode : methods) {
-            ListIterator<AbstractInsnNode> iterator = methodNode.instructions.iterator();
-            while (iterator.hasNext()) {
-                AbstractInsnNode abstractInsnNode = iterator.next();
-                if (abstractInsnNode.getType() == AbstractInsnNode.METHOD_INSN) {
-                    MethodInsnNode methodInsnNode = (MethodInsnNode) abstractInsnNode;
-                    if (methodInsnNode.name.equals(SET_ON_TOUCH_LISTENER)
-                            && methodInsnNode.desc.equals(SET_ON_TOUCH_LISTENER_SIG)) {
-                        checkSetOnTouchListenerCall(context, methodNode, methodInsnNode);
-                    }
-                }
-            }
-        }
-    }
-
-    @SuppressWarnings("unchecked") // ASM API
-    public static void checkSetOnTouchListenerCall(
-            @NonNull ClassContext context,
-            @NonNull MethodNode method,
-            @NonNull MethodInsnNode call) {
-        String owner = call.owner;
-
-        // Ignore the call if it was called on a non-view.
-        ClassNode ownerClass = context.getDriver().findClass(context, owner, 0);
-        if (ownerClass == null
-                || !context.getDriver().isSubclassOf(ownerClass, ANDROID_VIEW_VIEW)) {
-            return;
-        }
-
-        MethodNode performClick = findMethod(ownerClass.methods, PERFORM_CLICK, PERFORM_CLICK_SIG);
+        PsiMethod performClick = findPerformClickMethod(viewClass);
         //noinspection VariableNotUsedInsideIf
         if (performClick == null) {
             String message = String.format(
                     "Custom view `%1$s` has `setOnTouchListener` called on it but does not "
-                            + "override `performClick`", ownerClass.name);
-            context.report(ISSUE, method, call, context.getLocation(call), message);
+                            + "override `performClick`", describeClass(viewClass));
+            context.report(ISSUE, method, context.getLocation(node), message);
         }
     }
 
-    @SuppressWarnings("unchecked") // ASM API
-    private static void checkOnTouchListener(ClassContext context, ClassNode classNode) {
-        MethodNode onTouchNode =
-            findMethod(
-                    classNode.methods,
-                    ON_TOUCH,
-                    ON_TOUCH_SIG);
-        if (onTouchNode != null) {
-            AbstractInsnNode performClickInsnNode = findMethodCallInstruction(
-                    onTouchNode.instructions,
-                    ANDROID_VIEW_VIEW,
-                    PERFORM_CLICK,
-                    PERFORM_CLICK_SIG);
-            if (performClickInsnNode == null) {
-                String message = String.format(
-                        "`%1$s#onTouch` should call `View#performClick` when a click is detected",
-                        classNode.name);
-                context.report(
-                        ISSUE,
-                        onTouchNode,
-                        null,
-                        context.getLocation(onTouchNode, classNode),
-                        message);
+    @Nullable
+    @Override
+    public List<String> applicableSuperClasses() {
+        //return Collections.singletonList("android.view.View.OnTouchListener");
+        return Arrays.asList(CLASS_VIEW, CLASS_ON_TOUCH_LISTENER);
+    }
+
+    @Override
+    public void visitClass(@NonNull JavaContext context, @NonNull UClass declaration) {
+        // Ignore abstract classes.
+        JavaEvaluator evaluator = context.getEvaluator();
+        if (evaluator.isAbstract(declaration)) {
+            return;
+        }
+
+        if (!evaluator.implementsInterface(declaration, CLASS_VIEW, true)) {
+            checkOnTouchListener(context, declaration);
+        } else {
+            checkCustomView(context, declaration);
+        }
+    }
+
+    @Override
+    public void visitClass(@NonNull JavaContext context, @NonNull ULambdaExpression lambda) {
+        // This must be an on-touch listener (view is not an interface so we can't supply a
+        // lambda)
+        checkOnTouchListenerLambda(context, lambda);
+    }
+
+    private static void checkCustomView(@NonNull JavaContext context,
+            @NonNull UClass declaration) {
+        JavaEvaluator evaluator = context.getEvaluator();
+
+        PsiMethod onTouchEvent = null;
+        PsiMethod[] onTouchEvents = declaration.findMethodsByName(ON_TOUCH_EVENT, false);
+        for (PsiMethod method : onTouchEvents) {
+            if (evaluator.parametersMatch(method, MOTION_EVENT_CLS)) {
+                onTouchEvent = method;
+                break;
             }
         }
-    }
 
-    @SuppressWarnings("unchecked") // ASM API
-    private static void checkView(ClassContext context, ClassNode classNode) {
-        MethodNode onTouchEvent = findMethod(classNode.methods, ON_TOUCH_EVENT, ON_TOUCH_EVENT_SIG);
-        MethodNode performClick = findMethod(classNode.methods, PERFORM_CLICK, PERFORM_CLICK_SIG);
+        PsiMethod performClick = findPerformClickMethod(declaration);
 
         // Check if we override onTouchEvent.
         if (onTouchEvent != null) {
@@ -174,83 +178,171 @@ public class ClickableViewAccessibilityDetector extends Detector implements Dete
             //noinspection VariableNotUsedInsideIf
             if (performClick == null) {
                 String message = String.format(
-                        "Custom view `%1$s` overrides `onTouchEvent` but not `performClick`",
-                        classNode.name);
-                context.report(ISSUE, onTouchEvent, null,
-                        context.getLocation(onTouchEvent, classNode), message);
+                        "Custom view %1$s overrides `onTouchEvent` but not `performClick`",
+                        describeClass(declaration));
+                context.report(ISSUE, onTouchEvent, context.getNameLocation(onTouchEvent),
+                        message);
             } else {
                 // If we override performClick, ensure that it is called inside onTouchEvent.
-                AbstractInsnNode performClickInOnTouchEventInsnNode = findMethodCallInstruction(
-                        onTouchEvent.instructions,
-                        classNode.name,
-                        PERFORM_CLICK,
-                        PERFORM_CLICK_SIG);
-                if (performClickInOnTouchEventInsnNode == null) {
+                UastContext uastContext = UastUtils.getUastContext(declaration);
+                UElement uastMethod = uastContext.convertElement(onTouchEvent, null,
+                        UMethod.class);
+                if (uastMethod != null && !performsClick(uastMethod)) {
                     String message = String.format(
-                            "`%1$s#onTouchEvent` should call `%1$s#performClick` when a click is detected",
-                            classNode.name);
-                    context.report(ISSUE, onTouchEvent, null,
-                            context.getLocation(onTouchEvent, classNode), message);
+                            "%1$s should call %2$s when a click is detected",
+                            describeMethod(ON_TOUCH_EVENT, declaration),
+                            describeMethod(PERFORM_CLICK, declaration));
+                    context.report(ISSUE, onTouchEvent, context.getNameLocation(onTouchEvent),
+                            message);
                 }
             }
         }
 
         // Ensure that, if performClick is implemented, performClick calls super.performClick.
         if (performClick != null) {
-            AbstractInsnNode superPerformClickInPerformClickInsnNode = findMethodCallInstruction(
-                    performClick.instructions,
-                    classNode.superName,
-                    PERFORM_CLICK,
-                    PERFORM_CLICK_SIG);
-            if (superPerformClickInPerformClickInsnNode == null) {
+            // If we override performClick, ensure that it is called inside onTouchEvent.
+            UastContext uastContext = UastUtils.getUastContext(declaration);
+            UElement uastMethod = uastContext.convertElement(performClick, null,
+                    UMethod.class);
+            if (uastMethod != null && !performsClickCallsSuper(uastMethod)) {
                 String message = String.format(
-                        "`%1$s#performClick` should call `super#performClick`",
-                        classNode.name);
-                context.report(ISSUE, performClick, null,
-                        context.getLocation(performClick, classNode), message);
+                        "%1$s should call `super#performClick`",
+                        describeMethod(PERFORM_CLICK, declaration));
+                context.report(ISSUE, performClick, context.getNameLocation(performClick),
+                        message);
             }
         }
     }
 
-    @Nullable
-    private static MethodNode findMethod(
-            @NonNull List<MethodNode> methods,
-            @NonNull String name,
-            @NonNull String desc) {
-        for (MethodNode method : methods) {
-            if (name.equals(method.name)
-                    && desc.equals(method.desc)) {
-                return method;
+    private static void checkOnTouchListener(@NonNull JavaContext context,
+            @NonNull UClass declaration) {
+        JavaEvaluator evaluator = context.getEvaluator();
+
+        // Just an OnTouchListener? onTouch must call performClick
+        PsiMethod[] onTouchMethods = declaration.findMethodsByName(ON_TOUCH, false);
+        for (PsiMethod method : onTouchMethods) {
+            if (evaluator.parametersMatch(method, CLASS_VIEW, MOTION_EVENT_CLS)) {
+                UastContext uastContext = UastUtils.getUastContext(declaration);
+                UElement uastMethod = uastContext.convertElement(method, null, UMethod.class);
+                if (uastMethod != null && !performsClick(uastMethod)) {
+                    String message = String.format(
+                            "%1$s should call `View#performClick` when a click is detected",
+                            describeMethod(ON_TOUCH, declaration));
+                    context.report(ISSUE, method, context.getNameLocation(method),
+                            message);
+                }
+
+                break;
             }
         }
-        return null;
     }
 
-    @SuppressWarnings("unchecked") // ASM API
-    @Nullable
-    private static AbstractInsnNode findMethodCallInstruction(
-            @NonNull InsnList instructions,
-            @NonNull String owner,
-            @NonNull String name,
-            @NonNull String desc) {
-        ListIterator<AbstractInsnNode> iterator = instructions.iterator();
+    private static void checkOnTouchListenerLambda(@NonNull JavaContext context,
+            @NonNull ULambdaExpression lambda) {
+        if (!performsClick(lambda.getBody())) {
+            String message = String.format(
+                    "%1$s lambda should call `View#performClick` when a click is detected",
+                    describeMethod(ON_TOUCH, null));
+            context.report(ISSUE, lambda, context.getNameLocation(lambda), message);
+        }
+    }
 
-        while (iterator.hasNext()) {
-            AbstractInsnNode insnNode = iterator.next();
-            if (insnNode.getType() == AbstractInsnNode.METHOD_INSN) {
-                MethodInsnNode methodInsnNode = (MethodInsnNode) insnNode;
-                if ((methodInsnNode.owner.equals(owner))
-                        && (methodInsnNode.name.equals(name))
-                        && (methodInsnNode.desc.equals(desc))) {
-                    return methodInsnNode;
+    @Nullable
+    private static PsiMethod findPerformClickMethod(PsiClass clz) {
+        PsiMethod performClick = null;
+        PsiMethod[] performClicks = clz.findMethodsByName(PERFORM_CLICK, false);
+        for (PsiMethod method : performClicks) {
+            if (method.getParameterList().getParametersCount() == 0) {
+                performClick = method;
+                break;
+            }
+        }
+        return performClick;
+    }
+
+    @NonNull
+    private static String describeClass(@NonNull PsiClass declaration) {
+        String name = declaration.getName();
+        if (name != null) {
+            return '`' + name + '`';
+        }
+
+        return "anonymous class";
+    }
+
+    private static String describeMethod(@NonNull String methodName, @Nullable PsiClass inClass) {
+        if (inClass != null) {
+            String name = inClass.getName();
+            if (name != null) {
+                return '`' + name + '#' + methodName + '`';
+            }
+        }
+
+        return '`' + methodName + '`';
+    }
+
+    private static boolean performsClick(UElement element) {
+        PerformsClickVisitor visitor = new PerformsClickVisitor();
+        element.accept(visitor);
+        return visitor.performsClick();
+    }
+
+    private static boolean performsClickCallsSuper(UElement element) {
+        PerformsClickCallsSuperVisitor visitor = new PerformsClickCallsSuperVisitor();
+        element.accept(visitor);
+        return visitor.callsSuper();
+    }
+
+    private static class PerformsClickVisitor extends AbstractUastVisitor {
+
+        private boolean performsClick;
+
+        public PerformsClickVisitor() {
+        }
+
+        @Override
+        public boolean visitCallExpression(UCallExpression node) {
+            // There are also methods like performContextClick and performLongClick
+            // which also perform accessibility work, but they seem to have different
+            // semantics than the intended onTouch to perform click check
+            if (PERFORM_CLICK.equals(node.getMethodName()) &&
+                    node.getValueArgumentCount() == 0) {
+                // TODO: Check receiver?
+                performsClick = true;
+            }
+            return super.visitCallExpression(node);
+        }
+
+        public boolean performsClick() {
+            return performsClick;
+        }
+    }
+
+    private static class PerformsClickCallsSuperVisitor extends AbstractUastVisitor {
+
+        private boolean callsSuper;
+
+        public PerformsClickCallsSuperVisitor() {
+        }
+
+        @Override
+        public boolean visitSuperExpression(USuperExpression node) {
+            UElement parent = skipParentheses(node.getUastParent());
+            if (parent instanceof UReferenceExpression) {
+                PsiElement resolved = ((UReferenceExpression) parent).resolve();
+                if (resolved instanceof PsiMethod && PERFORM_CLICK
+                        .equals(((PsiMethod) resolved).getName())) {
+                    callsSuper = true;
+                    return true;
                 }
             }
+
+            return false;
         }
 
-        return null;
-    }
 
-    private static boolean implementsOnTouchListener(ClassNode classNode) {
-        return (classNode.interfaces != null) && (classNode.interfaces.contains(ON_TOUCH_LISTENER));
+        public boolean callsSuper() {
+            return callsSuper;
+        }
     }
 }

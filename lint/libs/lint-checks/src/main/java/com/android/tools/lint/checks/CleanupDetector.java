@@ -159,7 +159,7 @@ public class CleanupDetector extends Detector implements Detector.UastScanner {
     private static final String CLOSE = "close";
     private static final String EDIT = "edit";
 
-    private static final String MOTION_EVENT_CLS = "android.view.MotionEvent";
+    public static final String MOTION_EVENT_CLS = "android.view.MotionEvent";
     private static final String PARCEL_CLS = "android.os.Parcel";
     private static final String VELOCITY_TRACKER_CLS = "android.view.VelocityTracker";
     private static final String DIALOG_FRAGMENT = "android.app.DialogFragment";

@@ -28,6 +28,7 @@ import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.StandardFileSystems;
 import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiCompiledElement;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
@@ -142,6 +143,17 @@ public class DefaultUastParser extends UastParser {
     @SuppressWarnings("MethodMayBeStatic") // subclasses may want to override/optimize
     @NonNull
     public Location getLocation(@NonNull JavaContext context, @NonNull PsiElement element) {
+        if (element instanceof PsiCompiledElement) {
+            PsiFile containingFile = element.getContainingFile();
+            if (containingFile != null) {
+                VirtualFile virtualFile = containingFile.getVirtualFile();
+                if (virtualFile != null) {
+                    return Location.create(VfsUtilCore.virtualToIoFile(virtualFile));
+                }
+            }
+            return Location.create(context.file);
+        }
+
         TextRange range = element.getTextRange();
         PsiFile containingFile = element.getContainingFile();
         File file = context.file;
