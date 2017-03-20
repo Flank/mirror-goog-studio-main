@@ -90,6 +90,33 @@ static dex::u4 Trim_S2(dex::u4 value) {
   return trim;
 }
 
+// Returns a register operand, checking the match between format and type
+// (register fields can encode either a single 32bit vreg or a wide 64bit vreg pair)
+static dex::u4 GetRegA(const Bytecode* bytecode, int index) {
+  auto flags = dex::GetFlagsFromOpcode(bytecode->opcode);
+  return (flags & dex::kInstrWideRegA) != 0
+             ? bytecode->CastOperand<VRegPair>(index)->base_reg
+             : bytecode->CastOperand<VReg>(index)->reg;
+}
+
+// Returns a register operand, checking the match between format and type
+// (register fields can encode either a single 32bit vreg or a wide 64bit vreg pair)
+static dex::u4 GetRegB(const Bytecode* bytecode, int index) {
+  auto flags = dex::GetFlagsFromOpcode(bytecode->opcode);
+  return (flags & dex::kInstrWideRegB) != 0
+             ? bytecode->CastOperand<VRegPair>(index)->base_reg
+             : bytecode->CastOperand<VReg>(index)->reg;
+}
+
+// Returns a register operand, checking the match between format and type
+// (register fields can encode either a single 32bit vreg or a wide 64bit vreg pair)
+static dex::u4 GetRegC(const Bytecode* bytecode, int index) {
+  auto flags = dex::GetFlagsFromOpcode(bytecode->opcode);
+  return (flags & dex::kInstrWideRegC) != 0
+             ? bytecode->CastOperand<VRegPair>(index)->base_reg
+             : bytecode->CastOperand<VReg>(index)->reg;
+}
+
 // Encode one instruction into a .dex bytecode
 //
 // NOTE: the formats and the operand notation is documented here:
@@ -119,16 +146,16 @@ bool BytecodeEncoder::Visit(Bytecode* bytecode) {
     case dex::kFmt12x:  // op vA, vB
     {
       CHECK(bytecode->operands.size() == 2);
-      dex::u4 vA = bytecode->CastOperand<VReg>(0)->reg;
-      dex::u4 vB = bytecode->CastOperand<VReg>(1)->reg;
+      dex::u4 vA = GetRegA(bytecode, 0);
+      dex::u4 vB = GetRegB(bytecode, 1);
       bytecode_.Push<dex::u2>(Pack_4_4_8(vB, vA, opcode));
     } break;
 
     case dex::kFmt22x:  // op vAA, vBBBB
     {
       CHECK(bytecode->operands.size() == 2);
-      dex::u4 vA = bytecode->CastOperand<VReg>(0)->reg;
-      dex::u4 vB = bytecode->CastOperand<VReg>(1)->reg;
+      dex::u4 vA = GetRegA(bytecode, 0);
+      dex::u4 vB = GetRegB(bytecode, 1);
       bytecode_.Push<dex::u2>(Pack_8_8(vA, opcode));
       bytecode_.Push<dex::u2>(Pack_16(vB));
     } break;
@@ -136,8 +163,8 @@ bool BytecodeEncoder::Visit(Bytecode* bytecode) {
     case dex::kFmt32x:  // op vAAAA, vBBBB
     {
       CHECK(bytecode->operands.size() == 2);
-      dex::u4 vA = bytecode->CastOperand<VReg>(0)->reg;
-      dex::u4 vB = bytecode->CastOperand<VReg>(1)->reg;
+      dex::u4 vA = GetRegA(bytecode, 0);
+      dex::u4 vB = GetRegB(bytecode, 1);
       bytecode_.Push<dex::u2>(Pack_Z_8(opcode));
       bytecode_.Push<dex::u2>(Pack_16(vA));
       bytecode_.Push<dex::u2>(Pack_16(vB));
@@ -146,7 +173,7 @@ bool BytecodeEncoder::Visit(Bytecode* bytecode) {
     case dex::kFmt11n:  // op vA, #+B
     {
       CHECK(bytecode->operands.size() == 2);
-      dex::u4 vA = bytecode->CastOperand<VReg>(0)->reg;
+      dex::u4 vA = GetRegA(bytecode, 0);
       dex::u4 B = Trim_S0(bytecode->CastOperand<Const32>(1)->u.u4_value);
       bytecode_.Push<dex::u2>(Pack_4_4_8(B, vA, opcode));
     } break;
@@ -154,7 +181,7 @@ bool BytecodeEncoder::Visit(Bytecode* bytecode) {
     case dex::kFmt21s:  // op vAA, #+BBBB
     {
       CHECK(bytecode->operands.size() == 2);
-      dex::u4 vA = bytecode->CastOperand<VReg>(0)->reg;
+      dex::u4 vA = GetRegA(bytecode, 0);
       dex::u4 B = Trim_S2(bytecode->CastOperand<Const32>(1)->u.u4_value);
       bytecode_.Push<dex::u2>(Pack_8_8(vA, opcode));
       bytecode_.Push<dex::u2>(Pack_16(B));
@@ -163,14 +190,14 @@ bool BytecodeEncoder::Visit(Bytecode* bytecode) {
     case dex::kFmt11x:  // op vAA
     {
       CHECK(bytecode->operands.size() == 1);
-      dex::u4 vA = bytecode->CastOperand<VReg>(0)->reg;
+      dex::u4 vA = GetRegA(bytecode, 0);
       bytecode_.Push<dex::u2>(Pack_8_8(vA, opcode));
     } break;
 
     case dex::kFmt31i:  // op vAA, #+BBBBBBBB
     {
       CHECK(bytecode->operands.size() == 2);
-      dex::u4 vA = bytecode->CastOperand<VReg>(0)->reg;
+      dex::u4 vA = GetRegA(bytecode, 0);
       dex::u4 B = bytecode->CastOperand<Const32>(1)->u.u4_value;
       bytecode_.Push<dex::u2>(Pack_8_8(vA, opcode));
       bytecode_.Push<dex::u2>(Pack_16(B & 0xffff));
@@ -214,7 +241,7 @@ bool BytecodeEncoder::Visit(Bytecode* bytecode) {
     case dex::kFmt21t:  // op vAA, +BBBB
     {
       CHECK(bytecode->operands.size() == 2);
-      dex::u4 vA = bytecode->CastOperand<VReg>(0)->reg;
+      dex::u4 vA = GetRegA(bytecode, 0);
       auto label = bytecode->CastOperand<CodeLocation>(1)->label;
       dex::u4 B = 0;
       if (label->offset != kInvalidOffset) {
@@ -232,8 +259,8 @@ bool BytecodeEncoder::Visit(Bytecode* bytecode) {
     case dex::kFmt22t:  // op vA, vB, +CCCC
     {
       CHECK(bytecode->operands.size() == 3);
-      dex::u4 vA = bytecode->CastOperand<VReg>(0)->reg;
-      dex::u4 vB = bytecode->CastOperand<VReg>(1)->reg;
+      dex::u4 vA = GetRegA(bytecode, 0);
+      dex::u4 vB = GetRegB(bytecode, 1);
       auto label = bytecode->CastOperand<CodeLocation>(2)->label;
       dex::u4 C = 0;
       if (label->offset != kInvalidOffset) {
@@ -251,7 +278,7 @@ bool BytecodeEncoder::Visit(Bytecode* bytecode) {
     case dex::kFmt31t:  // op vAA, +BBBBBBBB
     {
       CHECK(bytecode->operands.size() == 2);
-      dex::u4 vA = bytecode->CastOperand<VReg>(0)->reg;
+      dex::u4 vA = GetRegA(bytecode, 0);
       auto label = bytecode->CastOperand<CodeLocation>(1)->label;
       dex::u4 B = 0;
       if (label->offset != kInvalidOffset) {
@@ -269,9 +296,9 @@ bool BytecodeEncoder::Visit(Bytecode* bytecode) {
     case dex::kFmt23x:  // op vAA, vBB, vCC
     {
       CHECK(bytecode->operands.size() == 3);
-      dex::u4 vA = bytecode->CastOperand<VReg>(0)->reg;
-      dex::u4 vB = bytecode->CastOperand<VReg>(1)->reg;
-      dex::u4 vC = bytecode->CastOperand<VReg>(2)->reg;
+      dex::u4 vA = GetRegA(bytecode, 0);
+      dex::u4 vB = GetRegB(bytecode, 1);
+      dex::u4 vC = GetRegC(bytecode, 2);
       bytecode_.Push<dex::u2>(Pack_8_8(vA, opcode));
       bytecode_.Push<dex::u2>(Pack_8_8(vC, vB));
     } break;
@@ -279,8 +306,8 @@ bool BytecodeEncoder::Visit(Bytecode* bytecode) {
     case dex::kFmt22b:  // op vAA, vBB, #+CC
     {
       CHECK(bytecode->operands.size() == 3);
-      dex::u4 vA = bytecode->CastOperand<VReg>(0)->reg;
-      dex::u4 vB = bytecode->CastOperand<VReg>(1)->reg;
+      dex::u4 vA = GetRegA(bytecode, 0);
+      dex::u4 vB = GetRegB(bytecode, 1);
       dex::u4 C = Trim_S1(bytecode->CastOperand<Const32>(2)->u.u4_value);
       bytecode_.Push<dex::u2>(Pack_8_8(vA, opcode));
       bytecode_.Push<dex::u2>(Pack_8_8(C, vB));
@@ -289,8 +316,8 @@ bool BytecodeEncoder::Visit(Bytecode* bytecode) {
     case dex::kFmt22s:  // op vA, vB, #+CCCC
     {
       CHECK(bytecode->operands.size() == 3);
-      dex::u4 vA = bytecode->CastOperand<VReg>(0)->reg;
-      dex::u4 vB = bytecode->CastOperand<VReg>(1)->reg;
+      dex::u4 vA = GetRegA(bytecode, 0);
+      dex::u4 vB = GetRegB(bytecode, 1);
       dex::u4 C = Trim_S2(bytecode->CastOperand<Const32>(2)->u.u4_value);
       bytecode_.Push<dex::u2>(Pack_4_4_8(vB, vA, opcode));
       bytecode_.Push<dex::u2>(Pack_16(C));
@@ -299,8 +326,8 @@ bool BytecodeEncoder::Visit(Bytecode* bytecode) {
     case dex::kFmt22c:  // op vA, vB, thing@CCCC
     {
       CHECK(bytecode->operands.size() == 3);
-      dex::u4 vA = bytecode->CastOperand<VReg>(0)->reg;
-      dex::u4 vB = bytecode->CastOperand<VReg>(1)->reg;
+      dex::u4 vA = GetRegA(bytecode, 0);
+      dex::u4 vB = GetRegB(bytecode, 1);
       dex::u4 C = bytecode->CastOperand<IndexedOperand>(2)->index;
       bytecode_.Push<dex::u2>(Pack_4_4_8(vB, vA, opcode));
       bytecode_.Push<dex::u2>(Pack_16(C));
@@ -309,7 +336,7 @@ bool BytecodeEncoder::Visit(Bytecode* bytecode) {
     case dex::kFmt21c:  // op vAA, thing@BBBB
     {
       CHECK(bytecode->operands.size() == 2);
-      dex::u4 vA = bytecode->CastOperand<VReg>(0)->reg;
+      dex::u4 vA = GetRegA(bytecode, 0);
       dex::u4 B = bytecode->CastOperand<IndexedOperand>(1)->index;
       bytecode_.Push<dex::u2>(Pack_8_8(vA, opcode));
       bytecode_.Push<dex::u2>(Pack_16(B));
@@ -318,7 +345,7 @@ bool BytecodeEncoder::Visit(Bytecode* bytecode) {
     case dex::kFmt31c:  // op vAA, string@BBBBBBBB
     {
       CHECK(bytecode->operands.size() == 2);
-      dex::u4 vA = bytecode->CastOperand<VReg>(0)->reg;
+      dex::u4 vA = GetRegA(bytecode, 0);
       dex::u4 B = bytecode->CastOperand<IndexedOperand>(1)->index;
       bytecode_.Push<dex::u2>(Pack_8_8(vA, opcode));
       bytecode_.Push<dex::u2>(Pack_16(B & 0xffff));
@@ -366,7 +393,7 @@ bool BytecodeEncoder::Visit(Bytecode* bytecode) {
     case dex::kFmt51l:  // op vAA, #+BBBBBBBBBBBBBBBB
     {
       CHECK(bytecode->operands.size() == 2);
-      dex::u4 vA = bytecode->CastOperand<VRegPair>(0)->base_reg;
+      dex::u4 vA = GetRegA(bytecode, 0);
       dex::u8 B = bytecode->CastOperand<Const64>(1)->u.u8_value;
       bytecode_.Push<dex::u2>(Pack_8_8(vA, opcode));
       bytecode_.Push<dex::u2>(Pack_16((B >> 0) & 0xffff));
@@ -379,14 +406,14 @@ bool BytecodeEncoder::Visit(Bytecode* bytecode) {
       CHECK(bytecode->operands.size() == 2);
       switch (opcode) {
         case dex::OP_CONST_HIGH16: {
-          dex::u4 vA = bytecode->CastOperand<VReg>(0)->reg;
+          dex::u4 vA = GetRegA(bytecode, 0);
           dex::u4 B = bytecode->CastOperand<Const32>(1)->u.u4_value >> 16;
           bytecode_.Push<dex::u2>(Pack_8_8(vA, opcode));
           bytecode_.Push<dex::u2>(Pack_16(B));
         } break;
 
         case dex::OP_CONST_WIDE_HIGH16: {
-          dex::u4 vA = bytecode->CastOperand<VRegPair>(0)->base_reg;
+          dex::u4 vA = GetRegA(bytecode, 0);
           dex::u4 B = bytecode->CastOperand<Const64>(1)->u.u8_value >> 48;
           bytecode_.Push<dex::u2>(Pack_8_8(vA, opcode));
           bytecode_.Push<dex::u2>(Pack_16(B));

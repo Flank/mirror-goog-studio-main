@@ -280,13 +280,13 @@ void CodeIr::FixupSwitches() {
 
   // packed switches
   for (auto& fixup : packed_switches_) {
-    FixupPackedSwitch(fixup.second.instr, fixup.second.baseOffset,
+    FixupPackedSwitch(fixup.second.instr, fixup.second.base_offset,
                       begin + fixup.first);
   }
 
   // sparse switches
   for (auto& fixup : sparse_switches_) {
-    FixupSparseSwitch(fixup.second.instr, fixup.second.baseOffset,
+    FixupSparseSwitch(fixup.second.instr, fixup.second.base_offset,
                       begin + fixup.first);
   }
 }
@@ -369,17 +369,17 @@ PackedSwitch* CodeIr::DecodePackedSwitch(const dex::u2* /*ptr*/,
   return instr;
 }
 
-void CodeIr::FixupPackedSwitch(PackedSwitch* instr, dex::u4 baseOffset,
+void CodeIr::FixupPackedSwitch(PackedSwitch* instr, dex::u4 base_offset,
                                const dex::u2* ptr) {
   CHECK(instr->targets.empty());
 
-  auto dexPackedSwitch = reinterpret_cast<const dex::PackedSwitch*>(ptr);
-  CHECK(dexPackedSwitch->ident == dex::kPackedSwitchSignature);
+  auto dex_packed_switch = reinterpret_cast<const dex::PackedSwitch*>(ptr);
+  CHECK(dex_packed_switch->ident == dex::kPackedSwitchSignature);
 
-  instr->first_key = dexPackedSwitch->first_key;
-  for (dex::u2 i = 0; i < dexPackedSwitch->size; ++i) {
+  instr->first_key = dex_packed_switch->first_key;
+  for (dex::u2 i = 0; i < dex_packed_switch->size; ++i) {
     instr->targets.push_back(
-        GetLabel(baseOffset + dexPackedSwitch->targets[i]));
+        GetLabel(base_offset + dex_packed_switch->targets[i]));
   }
 }
 
@@ -395,27 +395,27 @@ SparseSwitch* CodeIr::DecodeSparseSwitch(const dex::u2* /*ptr*/,
   return instr;
 }
 
-void CodeIr::FixupSparseSwitch(SparseSwitch* instr, dex::u4 baseOffset,
+void CodeIr::FixupSparseSwitch(SparseSwitch* instr, dex::u4 base_offset,
                                const dex::u2* ptr) {
   CHECK(instr->switch_cases.empty());
 
-  auto dexSparseSwitch = reinterpret_cast<const dex::SparseSwitch*>(ptr);
-  CHECK(dexSparseSwitch->ident == dex::kSparseSwitchSignature);
+  auto dex_sparse_switch = reinterpret_cast<const dex::SparseSwitch*>(ptr);
+  CHECK(dex_sparse_switch->ident == dex::kSparseSwitchSignature);
 
-  auto& data = dexSparseSwitch->data;
-  auto& size = dexSparseSwitch->size;
+  auto& data = dex_sparse_switch->data;
+  auto& size = dex_sparse_switch->size;
 
   for (dex::u2 i = 0; i < size; ++i) {
-    SparseSwitch::SwitchCase switchCase = {};
-    switchCase.key = data[i];
-    switchCase.target = GetLabel(baseOffset + data[i + size]);
-    instr->switch_cases.push_back(switchCase);
+    SparseSwitch::SwitchCase switch_case = {};
+    switch_case.key = data[i];
+    switch_case.target = GetLabel(base_offset + data[i + size]);
+    instr->switch_cases.push_back(switch_case);
   }
 }
 
 ArrayData* CodeIr::DecodeArrayData(const dex::u2* ptr, dex::u4 offset) {
-  auto dexArrayData = reinterpret_cast<const dex::ArrayData*>(ptr);
-  CHECK(dexArrayData->ident == dex::kArrayDataSignature);
+  auto dex_array_data = reinterpret_cast<const dex::ArrayData*>(ptr);
+  CHECK(dex_array_data->ident == dex::kArrayDataSignature);
   CHECK(offset % 2 == 0);
 
   auto instr = Alloc<ArrayData>();
@@ -423,142 +423,169 @@ ArrayData* CodeIr::DecodeArrayData(const dex::u2* ptr, dex::u4 offset) {
   return instr;
 }
 
+Operand* CodeIr::GetRegA(const dex::Instruction& dex_instr) {
+  auto flags = dex::GetFlagsFromOpcode(dex_instr.opcode);
+  if ((flags & dex::kInstrWideRegA) != 0) {
+    return Alloc<VRegPair>(dex_instr.vA);
+  } else {
+    return Alloc<VReg>(dex_instr.vA);
+  }
+}
+
+Operand* CodeIr::GetRegB(const dex::Instruction& dex_instr) {
+  auto flags = dex::GetFlagsFromOpcode(dex_instr.opcode);
+  if ((flags & dex::kInstrWideRegB) != 0) {
+    return Alloc<VRegPair>(dex_instr.vB);
+  } else {
+    return Alloc<VReg>(dex_instr.vB);
+  }
+}
+
+Operand* CodeIr::GetRegC(const dex::Instruction& dex_instr) {
+  auto flags = dex::GetFlagsFromOpcode(dex_instr.opcode);
+  if ((flags & dex::kInstrWideRegC) != 0) {
+    return Alloc<VRegPair>(dex_instr.vC);
+  } else {
+    return Alloc<VReg>(dex_instr.vC);
+  }
+}
+
 Bytecode* CodeIr::DecodeBytecode(const dex::u2* ptr, dex::u4 offset) {
-  auto dexInstr = dex::DecodeInstruction(ptr);
+  auto dex_instr = dex::DecodeInstruction(ptr);
 
   auto instr = Alloc<Bytecode>();
-  instr->opcode = dexInstr.opcode;
+  instr->opcode = dex_instr.opcode;
 
-  auto indexType = dex::GetIndexTypeFromOpcode(dexInstr.opcode);
+  auto index_type = dex::GetIndexTypeFromOpcode(dex_instr.opcode);
 
-  switch (dex::GetFormatFromOpcode(dexInstr.opcode)) {
+  switch (dex::GetFormatFromOpcode(dex_instr.opcode)) {
     case dex::kFmt10x:  // op
       break;
 
     case dex::kFmt12x:  // op vA, vB
     case dex::kFmt22x:  // op vAA, vBBBB
     case dex::kFmt32x:  // op vAAAA, vBBBB
-      instr->operands.push_back(Alloc<VReg>(dexInstr.vA));
-      instr->operands.push_back(Alloc<VReg>(dexInstr.vB));
+      instr->operands.push_back(GetRegA(dex_instr));
+      instr->operands.push_back(GetRegB(dex_instr));
       break;
 
     case dex::kFmt11n:  // op vA, #+B
     case dex::kFmt21s:  // op vAA, #+BBBB
     case dex::kFmt31i:  // op vAA, #+BBBBBBBB
-      instr->operands.push_back(Alloc<VReg>(dexInstr.vA));
-      instr->operands.push_back(Alloc<Const32>(dexInstr.vB));
+      instr->operands.push_back(GetRegA(dex_instr));
+      instr->operands.push_back(Alloc<Const32>(dex_instr.vB));
       break;
 
     case dex::kFmt11x:  // op vAA
-      instr->operands.push_back(Alloc<VReg>(dexInstr.vA));
+      instr->operands.push_back(GetRegA(dex_instr));
       break;
 
     case dex::kFmt10t:  // op +AA
     case dex::kFmt20t:  // op +AAAA
     case dex::kFmt30t:  // op +AAAAAAAA
     {
-      auto label = GetLabel(offset + dex::s4(dexInstr.vA));
+      auto label = GetLabel(offset + dex::s4(dex_instr.vA));
       instr->operands.push_back(Alloc<CodeLocation>(label));
     } break;
 
     case dex::kFmt21t:  // op vAA, +BBBB
     case dex::kFmt31t:  // op vAA, +BBBBBBBB
     {
-      dex::u4 targetOffset = offset + dex::s4(dexInstr.vB);
-      instr->operands.push_back(Alloc<VReg>(dexInstr.vA));
+      dex::u4 targetOffset = offset + dex::s4(dex_instr.vB);
+      instr->operands.push_back(GetRegA(dex_instr));
       auto label = GetLabel(targetOffset);
       instr->operands.push_back(Alloc<CodeLocation>(label));
 
-      if (dexInstr.opcode == dex::OP_PACKED_SWITCH) {
+      if (dex_instr.opcode == dex::OP_PACKED_SWITCH) {
         label->aligned = true;
-        dex::u4& baseOffset = packed_switches_[targetOffset].baseOffset;
-        CHECK(baseOffset == kInvalidOffset);
-        baseOffset = offset;
-      } else if (dexInstr.opcode == dex::OP_SPARSE_SWITCH) {
+        dex::u4& base_offset = packed_switches_[targetOffset].base_offset;
+        CHECK(base_offset == kInvalidOffset);
+        base_offset = offset;
+      } else if (dex_instr.opcode == dex::OP_SPARSE_SWITCH) {
         label->aligned = true;
-        dex::u4& baseOffset = sparse_switches_[targetOffset].baseOffset;
-        CHECK(baseOffset == kInvalidOffset);
-        baseOffset = offset;
-      } else if (dexInstr.opcode == dex::OP_FILL_ARRAY_DATA) {
+        dex::u4& base_offset = sparse_switches_[targetOffset].base_offset;
+        CHECK(base_offset == kInvalidOffset);
+        base_offset = offset;
+      } else if (dex_instr.opcode == dex::OP_FILL_ARRAY_DATA) {
         label->aligned = true;
       }
     } break;
 
     case dex::kFmt23x:  // op vAA, vBB, vCC
-      instr->operands.push_back(Alloc<VReg>(dexInstr.vA));
-      instr->operands.push_back(Alloc<VReg>(dexInstr.vB));
-      instr->operands.push_back(Alloc<VReg>(dexInstr.vC));
+      instr->operands.push_back(GetRegA(dex_instr));
+      instr->operands.push_back(GetRegB(dex_instr));
+      instr->operands.push_back(GetRegC(dex_instr));
       break;
 
     case dex::kFmt22t:  // op vA, vB, +CCCC
     {
-      instr->operands.push_back(Alloc<VReg>(dexInstr.vA));
-      instr->operands.push_back(Alloc<VReg>(dexInstr.vB));
-      auto label = GetLabel(offset + dex::s4(dexInstr.vC));
+      instr->operands.push_back(GetRegA(dex_instr));
+      instr->operands.push_back(GetRegB(dex_instr));
+      auto label = GetLabel(offset + dex::s4(dex_instr.vC));
       instr->operands.push_back(Alloc<CodeLocation>(label));
     } break;
 
     case dex::kFmt22b:  // op vAA, vBB, #+CC
     case dex::kFmt22s:  // op vA, vB, #+CCCC
-      instr->operands.push_back(Alloc<VReg>(dexInstr.vA));
-      instr->operands.push_back(Alloc<VReg>(dexInstr.vB));
-      instr->operands.push_back(Alloc<Const32>(dexInstr.vC));
+      instr->operands.push_back(GetRegA(dex_instr));
+      instr->operands.push_back(GetRegB(dex_instr));
+      instr->operands.push_back(Alloc<Const32>(dex_instr.vC));
       break;
 
     case dex::kFmt22c:  // op vA, vB, thing@CCCC
-      instr->operands.push_back(Alloc<VReg>(dexInstr.vA));
-      instr->operands.push_back(Alloc<VReg>(dexInstr.vB));
-      instr->operands.push_back(GetIndexedOperand(indexType, dexInstr.vC));
+      instr->operands.push_back(GetRegA(dex_instr));
+      instr->operands.push_back(GetRegB(dex_instr));
+      instr->operands.push_back(GetIndexedOperand(index_type, dex_instr.vC));
       break;
 
     case dex::kFmt21c:  // op vAA, thing@BBBB
     case dex::kFmt31c:  // op vAA, string@BBBBBBBB
-      instr->operands.push_back(Alloc<VReg>(dexInstr.vA));
-      instr->operands.push_back(GetIndexedOperand(indexType, dexInstr.vB));
+      instr->operands.push_back(GetRegA(dex_instr));
+      instr->operands.push_back(GetIndexedOperand(index_type, dex_instr.vB));
       break;
 
     case dex::kFmt35c:  // op {vC,vD,vE,vF,vG}, thing@BBBB
     {
-      CHECK(dexInstr.vA <= 5);
+      CHECK(dex_instr.vA <= 5);
       auto vreg_list = Alloc<VRegList>();
-      for (dex::u4 i = 0; i < dexInstr.vA; ++i) {
-        vreg_list->registers.push_back(dexInstr.arg[i]);
+      for (dex::u4 i = 0; i < dex_instr.vA; ++i) {
+        vreg_list->registers.push_back(dex_instr.arg[i]);
       }
       instr->operands.push_back(vreg_list);
-      instr->operands.push_back(GetIndexedOperand(indexType, dexInstr.vB));
+      instr->operands.push_back(GetIndexedOperand(index_type, dex_instr.vB));
     } break;
 
     case dex::kFmt3rc:  // op {vCCCC .. v(CCCC+AA-1)}, thing@BBBB
     {
-      auto vreg_range = Alloc<VRegRange>(dexInstr.vC, dexInstr.vA);
+      auto vreg_range = Alloc<VRegRange>(dex_instr.vC, dex_instr.vA);
       instr->operands.push_back(vreg_range);
-      instr->operands.push_back(GetIndexedOperand(indexType, dexInstr.vB));
+      instr->operands.push_back(GetIndexedOperand(index_type, dex_instr.vB));
     } break;
 
     case dex::kFmt21h:  // op vAA, #+BBBB0000[00000000]
-      switch (dexInstr.opcode) {
+      switch (dex_instr.opcode) {
         case dex::OP_CONST_HIGH16:
-          instr->operands.push_back(Alloc<VReg>(dexInstr.vA));
-          instr->operands.push_back(Alloc<Const32>(dexInstr.vB << 16));
+          instr->operands.push_back(GetRegA(dex_instr));
+          instr->operands.push_back(Alloc<Const32>(dex_instr.vB << 16));
           break;
 
         case dex::OP_CONST_WIDE_HIGH16:
-          instr->operands.push_back(Alloc<VRegPair>(dexInstr.vA));
-          instr->operands.push_back(Alloc<Const64>(dex::u8(dexInstr.vB) << 48));
+          instr->operands.push_back(GetRegA(dex_instr));
+          instr->operands.push_back(Alloc<Const64>(dex::u8(dex_instr.vB) << 48));
           break;
 
         default:
-          FATAL("Unexpected opcode 0x%02x", dexInstr.opcode);
+          FATAL("Unexpected opcode 0x%02x", dex_instr.opcode);
       }
       break;
 
     case dex::kFmt51l:  // op vAA, #+BBBBBBBBBBBBBBBB
-      instr->operands.push_back(Alloc<VRegPair>(dexInstr.vA));
-      instr->operands.push_back(Alloc<Const64>(dexInstr.vB_wide));
+      instr->operands.push_back(GetRegA(dex_instr));
+      instr->operands.push_back(Alloc<Const64>(dex_instr.vB_wide));
       break;
 
     default:
-      FATAL("Unexpected bytecode format (opcode 0x%02x)", dexInstr.opcode);
+      FATAL("Unexpected bytecode format (opcode 0x%02x)", dex_instr.opcode);
   }
 
   return instr;
@@ -566,10 +593,10 @@ Bytecode* CodeIr::DecodeBytecode(const dex::u2* ptr, dex::u4 offset) {
 
 // Get a indexed object (string, field, ...)
 // (index must be valid != kNoIndex)
-IndexedOperand* CodeIr::GetIndexedOperand(dex::InstructionIndexType indexType,
+IndexedOperand* CodeIr::GetIndexedOperand(dex::InstructionIndexType index_type,
                                           dex::u4 index) {
   CHECK(index != dex::kNoIndex);
-  switch (indexType) {
+  switch (index_type) {
     case dex::kIndexStringRef:
       return Alloc<String>(dex_ir_->strings_map[index], index);
 
@@ -583,7 +610,7 @@ IndexedOperand* CodeIr::GetIndexedOperand(dex::InstructionIndexType indexType,
       return Alloc<Method>(dex_ir_->methods_map[index], index);
 
     default:
-      FATAL("Unexpected index type 0x%02x", indexType);
+      FATAL("Unexpected index type 0x%02x", index_type);
   }
 }
 

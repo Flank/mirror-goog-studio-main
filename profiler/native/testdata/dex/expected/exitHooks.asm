@@ -91,7 +91,7 @@ method Target.test() : void
 	   66| move-object v6, v0
 	   67| const/4 v7, #+3 (0x00000003 | 0.000000)
 	   68| invoke-virtual {v6,v7}, Target.testDouble
-	   71| move-result-wide v6
+	   71| move-result-wide v6:v7
 	   72| invoke-static {v6,v7}, java.lang.Double.valueOf
 	   75| move-result-object v6
 	   76| aput-object v6, v4, v5
@@ -137,26 +137,26 @@ method Target.testDouble(int) : double
 	    2| move v2, v1
 	    3| packed-switch v2, Label_5
 	.line 65
-	    6| const-wide v2/v3, #+4621762822593629389 (0x4023cccccccccccd | 9.900000)
-	   11| move-wide v0, v2
+	    6| const-wide v2:v3, #+4621762822593629389 (0x4023cccccccccccd | 9.900000)
+	   11| move-wide v0:v1, v2:v3
 Label_1:
 	.end_local v0
-	   12| return-wide v0
+	   12| return-wide v0:v1
 Label_2:
 	.line 62
 	.restart_local v0
-	   13| const-wide v2/v3, #+4607632778762754458 (0x3ff199999999999a | 1.100000)
-	   18| move-wide v0, v2
+	   13| const-wide v2:v3, #+4607632778762754458 (0x3ff199999999999a | 1.100000)
+	   18| move-wide v0:v1, v2:v3
 	   19| goto Label_1
 Label_3:
 	.line 63
-	   20| const-wide v2/v3, #+4612136378390124954 (0x400199999999999a | 2.200000)
-	   25| move-wide v0, v2
+	   20| const-wide v2:v3, #+4612136378390124954 (0x400199999999999a | 2.200000)
+	   25| move-wide v0:v1, v2:v3
 	   26| goto Label_1
 Label_4:
 	.line 64
-	   27| const-wide v2/v3, #+4614613358185178726 (0x400a666666666666 | 3.300000)
-	   32| move-wide v0, v2
+	   27| const-wide v2:v3, #+4614613358185178726 (0x400a666666666666 | 3.300000)
+	   32| move-wide v0:v1, v2:v3
 	   33| goto Label_1
 Label_5:
 	.line 60
@@ -300,7 +300,7 @@ method Tracer.onExit(double) : double
 	.line 12
 	.prologue_end
 	.line 12
-	    0| move-wide v0, v10
+	    0| move-wide v0:v1, v10:v11
 	.local v0, "value", double
 	    1| sget-object v2, java.lang.System.out
 	    3| const-string v3, ">>> onExit(double: %f)\n"
@@ -310,18 +310,18 @@ method Tracer.onExit(double) : double
 	    9| move-object v4, v9
 	   10| move-object v5, v9
 	   11| const/4 v6, #+0 (0x00000000 | 0.000000)
-	   12| move-wide v7, v0
+	   12| move-wide v7:v8, v0:v1
 	   13| invoke-static {v7,v8}, java.lang.Double.valueOf
 	   16| move-result-object v7
 	   17| aput-object v7, v5, v6
 	   19| invoke-virtual {v2,v3,v4}, java.io.PrintStream.printf
 	   22| move-result-object v2
 	.line 13
-	   23| move-wide v2, v0
-	   24| neg-double v2, v2
-	   25| move-wide v0, v2
+	   23| move-wide v2:v3, v0:v1
+	   24| neg-double v2:v3, v2:v3
+	   25| move-wide v0:v1, v2:v3
 	.end_local v0
-	   26| return-wide v0
+	   26| return-wide v0:v1
 }
 
 method Tracer.onExit(int) : int
