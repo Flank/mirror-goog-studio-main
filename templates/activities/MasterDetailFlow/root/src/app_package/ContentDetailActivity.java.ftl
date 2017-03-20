@@ -20,7 +20,7 @@ import ${applicationPackage}.R;
 
 /**
  * An activity representing a single ${objectKind} detail screen. This
- * activity is only used narrow width devices. On tablet-size devices,
+ * activity is only used on narrow width devices. On tablet-size devices,
  * item details are presented side-by-side with a list of items
  * in a {@link ${CollectionName}Activity}.
  */
