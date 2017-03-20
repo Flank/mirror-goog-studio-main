@@ -7,7 +7,9 @@ apply plugin: 'com.android.application'
 android {
     compileSdkVersion rootProject.ext.latestCompileSdk
     buildToolsVersion = rootProject.ext.buildToolsVersion
-	
+
+    defaultConfig.javaCompileOptions.annotationProcessorOptions.includeCompileClasspath false
+
     buildTypes {
         debug {
             testCoverageEnabled true
