@@ -29,7 +29,7 @@ import java.util.Map;
  * Wraps a {@link HttpURLConnection} instance and delegates the method calls to the wrapped object,
  * injecting calls to report HTTP activity through {@link HttpConnectionTracker}
  *
- * This class is instantiated through one of the {@link HttpWrapper} helper methods
+ * This class is instantiated through one of the HttpWrapper helper methods
  */
 // '$' intentionally used to mimic generated code since we insert this via bytecode instrumentation
 @SuppressWarnings("DollarSignInName")

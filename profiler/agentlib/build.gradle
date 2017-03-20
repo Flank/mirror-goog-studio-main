@@ -17,7 +17,7 @@
 apply plugin: 'java'
 
 group = 'com.android.tools'
-archivesBaseName = 'studio-profiler-lib'
+archivesBaseName = 'studio-agent-lib'
 
 File androidJar = file('../../../../prebuilts/sdk/25/android.jar');
 if (!androidJar.exists()) {
@@ -32,11 +32,6 @@ if (!androidJar.exists()) {
     }
 }
 
-configurations {
-    jni
-    slim
-}
-
 compileJava {
     sourceCompatibility = 1.6
     targetCompatibility = 1.6
@@ -44,8 +39,6 @@ compileJava {
 
 dependencies {
     compileOnly files(androidJar)
-    compileOnly project(":agentlib")
-    jni project(path: ":native", configuration: "perfa")
     testCompile 'junit:junit:4.12'
 }
 
@@ -54,20 +47,10 @@ tasks.withType(Javadoc) {
     options.addStringOption('Xdoclint:none', '-quiet')
 }
 
-jar {
-    from configurations.jni
-    from project(":agentlib").sourceSets.main.output
+// dx the output jar which will be used by the agent to load in at runtime.
+task jarToDex(dependsOn: 'jar', type: Exec) {
+  commandLine '../../../../prebuilts/sdk/tools/dx', "--dex",
+    "--output=" + libsDir.absolutePath + "/agentlib.jar",
+    libsDir.absolutePath + "/" + archivesBaseName + ".jar"
 }
-
-// Creates a jar that does not include the agentlib and jni for post-O scenario.
-// TODO this can be removed once post-O jvmti profiling is fully supported.
-task slimJar(dependsOn: 'classes', type: Jar) {
-    appendix 'slim'
-    // TODO remove perfa dependency when it is included with the agent.
-    from configurations.jni
-    from sourceSets.main.output
-}
-
-artifacts {
-   slim slimJar
-}
+assemble.dependsOn(jarToDex)
