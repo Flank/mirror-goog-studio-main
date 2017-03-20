@@ -23,7 +23,6 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.Maps;
 import com.google.common.io.Closeables;
 import com.google.common.primitives.UnsignedInts;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -45,6 +44,7 @@ public class VmTraceParser {
     private static final String KEY_CLOCK = "clock";
     private static final String KEY_DATA_OVERFLOW = "data-file-overflow";
     private static final String KEY_VM = "vm";
+    private static final String KEY_ELAPSED_TIME_US = "elapsed-time-usec";
 
     private final File mTraceFile;
 
@@ -166,6 +166,8 @@ public class VmTraceParser {
                 mTraceDataBuilder.setDataFileOverflow(Boolean.parseBoolean(value));
             } else if (key.equals(KEY_VM)) {
                 mTraceDataBuilder.setVm(value);
+            } else if (key.equals(KEY_ELAPSED_TIME_US)) {
+                mTraceDataBuilder.setElapsedTimeUs(Long.parseLong(value));
             } else {
                 mTraceDataBuilder.setProperty(key, value);
             }
