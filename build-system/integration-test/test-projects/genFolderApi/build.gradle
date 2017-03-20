@@ -38,7 +38,7 @@ public class GenerateRes extends DefaultTask {
 
     @TaskAction
     void taskAction() {
-        getOutputFile().text = "<xml>${getValue()}</xml>\n"
+        getOutputFile().text = '<?xml version="1.0" encoding="utf-8"?>\n' + getValue()
     }
 }
 
@@ -56,9 +56,21 @@ android.applicationVariants.all { variant ->
     // create a task that generates an XML file class
     File resFolder = file("${buildDir}/customRes/${variant.dirName}")
     def resGenerationTask = tasks.create(name: "generatedResFor${variant.name.capitalize()}", type: GenerateRes) {
-        value new Date().format("yyyy-MM-dd'T'HH:mm'Z'", TimeZone.getTimeZone("UTC"))
+        value '<xml>' + new Date().format("yyyy-MM-dd'T'HH:mm'Z'", TimeZone.getTimeZone("UTC")) + '</xml>'
         outputFile file("${resFolder.absolutePath}/xml/generated.xml")
     }
 
     variant.registerResGeneratingTask(resGenerationTask, resFolder)
+
+    // create a task that generates a values class
+    ConfigurableFileCollection resFolder2 = files("${buildDir}/customRes2/${variant.dirName}")
+    def resGenerationTask2 = tasks.create(name: "generatedRes2For${variant.name.capitalize()}", type: GenerateRes) {
+        value '<resources>\n' +
+                '    <string\n' +
+                '        name="generated_string">Hello World</string>\n' +
+                '</resources>'
+        outputFile file("${resFolder2.singleFile.absolutePath}/values/generated.xml")
+    }
+    resFolder2.builtBy(resGenerationTask2)
+    variant.registerGeneratedResFolders(resFolder2)
 }

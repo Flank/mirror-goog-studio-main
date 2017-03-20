@@ -27,6 +27,8 @@ import com.android.builder.model.Variant;
 import com.android.utils.FileUtils;
 import java.io.File;
 import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -59,6 +61,8 @@ public class GenFolderApiTest {
     @Test
     public void checkTheCustomResGenerationTaskRan() throws Exception {
         assertThat(project.getApk("debug")).contains("res/xml/generated.xml");
+        assertThat(project.file("build/intermediates/res/merged/debug/values/values.xml"))
+                .contains("generated_string");
     }
 
     @Test
@@ -104,26 +108,28 @@ public class GenFolderApiTest {
                     "Null-check on mainArtifactInfo for " + variant.getDisplayName(), mainInfo);
 
             // get the generated res folders.
-            Collection<File> genResFolder = mainInfo.getGeneratedResourceFolders();
-            String resFolderStart =
-                    new File(buildDir, "customRes").getAbsolutePath() + File.separatorChar;
-            boolean found = false;
-            for (File f : genResFolder) {
-                if (f.getAbsolutePath().startsWith(resFolderStart)) {
-                    found = true;
-                    break;
-                }
-            }
+            List<String> genResFolders =
+                    mainInfo.getGeneratedResourceFolders()
+                            .stream()
+                            .map(File::getAbsolutePath)
+                            .collect(Collectors.toList());
 
-            assertTrue("custom generated res folder check", found);
+            assertThat(genResFolders).containsNoDuplicates();
+            String buildDirPath = buildDir.getAbsolutePath();
+
+            assertThat(genResFolders)
+                    .containsAllOf(
+                            FileUtils.join(buildDirPath, "customRes", variant.getName()),
+                            FileUtils.join(buildDirPath, "customRes2", variant.getName()));
         }
     }
+
 
     @Test
     public void backwardsCompatible() throws Exception {
         // ATTENTION Author and Reviewers - please make sure required changes to the build file
         // are backwards compatible before updating this test.
         assertThat(FileUtils.sha1(project.file("build.gradle")))
-                .isEqualTo("91bcc58922415dacd78c737327e684d082895b66");
+                .isEqualTo("60734125e0720e42c7024dfde93870fc56459c79");
     }
 }
