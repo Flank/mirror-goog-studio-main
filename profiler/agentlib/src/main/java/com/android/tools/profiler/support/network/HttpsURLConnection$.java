@@ -39,7 +39,7 @@ import javax.net.ssl.SSLSocketFactory;
  */
 // '$' intentionally used to mimic generated code since we insert this via bytecode instrumentation
 @SuppressWarnings("DollarSignInName")
-final class HttpsURLConnection$ extends HttpsURLConnection {
+final public class HttpsURLConnection$ extends HttpsURLConnection {
 
     private final HttpsURLConnection myWrapped;
     private final HttpConnectionTracker myConnectionTracker;
