@@ -1,13 +1,19 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
+<#if isInstantApp>
+    def instantAppProperties = new Properties()
+    instantAppProperties.load(new FileInputStream('aia.properties'))
+    project.ext.instantAppSdkDir = file(instantAppProperties['aia.repo'])
+</#if>
+
     repositories {
-        jcenter()
-<#if isInstantApp!false>
+<#if isInstantApp>
         maven {
-            url(new File(System.getenv("WH_SDK") ?: "", "maven-repo"))
+            url(project.instantAppSdkDir.absolutePath)
         }
 </#if>
+        jcenter()
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:${gradlePluginVersion}'
@@ -19,12 +25,12 @@ buildscript {
 
 allprojects {
     repositories {
-        jcenter()
-<#if isInstantApp!false>
+<#if isInstantApp>
         maven {
-            url(new File(System.getenv("WH_SDK") ?: "", "maven-repo"))
+            url(project.instantAppSdkDir.absolutePath)
         }
 </#if>
+        jcenter()
     }
 }
 

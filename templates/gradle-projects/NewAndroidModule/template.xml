@@ -97,6 +97,18 @@
         type="boolean"
         default="true" />
 
+    <parameter
+        id="includeCppSupport"
+        name="Enable C++ Support"
+        type="boolean"
+        default="false" />
+
+    <parameter
+        id="isInstantApp"
+        name="Has Instant App support"
+        type="boolean"
+        default="false" />
+
     <globals file="globals.xml.ftl" />
     <execute file="recipe.xml.ftl" />
 
