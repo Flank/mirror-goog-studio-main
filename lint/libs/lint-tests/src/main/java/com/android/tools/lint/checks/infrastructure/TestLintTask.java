@@ -96,6 +96,7 @@ public class TestLintTask {
     Boolean supportResourceRepository;
     boolean allowMissingSdk;
     boolean requireCompileSdk;
+    boolean runCompatChecks = true;
 
     /** Creates a new lint test task */
     public TestLintTask() {
@@ -823,6 +824,18 @@ public class TestLintTask {
         }
 
         return checkedIssues;
+    }
+
+    /**
+     * Whether lint should run compat checks (for PSI and Lombok); for now, defaults
+     * to true.
+     *
+     * @param runCompatChecks whether to run compat checks
+     * @return this, for constructor chaining
+     */
+    public TestLintTask runCompatChecks(boolean runCompatChecks) {
+        this.runCompatChecks = runCompatChecks;
+        return this;
     }
 
     /**
