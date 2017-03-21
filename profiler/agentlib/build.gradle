@@ -48,9 +48,15 @@ tasks.withType(Javadoc) {
 }
 
 // dx the output jar which will be used by the agent to load in at runtime.
-task jarToDex(dependsOn: 'jar', type: Exec) {
-  commandLine '../../../../prebuilts/sdk/tools/dx', "--dex",
-    "--output=" + libsDir.absolutePath + "/agentlib.jar",
-    libsDir.absolutePath + "/" + archivesBaseName + ".jar"
+task jarToDex(dependsOn: jar) {
+    javaexec {
+        main = "-jar"
+        args = [
+          "../../../../prebuilts/sdk/tools/lib/dx.jar",
+          "--dex",
+          "--output=" + libsDir.absolutePath + "/agentlib.jar",
+          libsDir.absolutePath + "/" + archivesBaseName + ".jar"
+        ]
+    }
 }
 assemble.dependsOn(jarToDex)
