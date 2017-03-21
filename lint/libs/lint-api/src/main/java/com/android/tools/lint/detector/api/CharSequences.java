@@ -205,7 +205,7 @@ public class CharSequences {
         char first = needle.charAt(0);
 
         if (needleLength == 1) {
-            return indexOf(haystack, first);
+            return indexOf(haystack, first, start);
         }
 
         search:

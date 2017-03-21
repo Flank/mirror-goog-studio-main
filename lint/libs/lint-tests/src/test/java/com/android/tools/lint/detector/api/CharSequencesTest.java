@@ -43,6 +43,7 @@ public class CharSequencesTest extends TestCase {
         assertEquals(-1, indexOf("foobar", "bat"));
         assertEquals(-1, indexOf("foobar", "bar", 4));
         assertEquals(-1, indexOf("foobar", "are"));
+        assertEquals(-1, indexOf("foo", "o", 3));
     }
 
     public void testLastIndexOf() {
@@ -57,6 +58,7 @@ public class CharSequencesTest extends TestCase {
         assertEquals(3, lastIndexOf("barbar", "bar"));
         assertEquals(0, lastIndexOf("barbar", "bar", 2));
         assertEquals(-1, lastIndexOf("barbar", "barf", 2));
+        assertEquals(1, lastIndexOf("foo", "o", 1));
     }
 
     public void testStartsWith() {
