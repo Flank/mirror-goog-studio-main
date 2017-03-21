@@ -48,8 +48,6 @@ class BuildToolsTest {
     ]
 
     private static final List<String> JAVAC_TASKS = ImmutableList.builder().add(COMMON_TASKS)
-            .add(":transformClassesWithPreDexForDebug")
-            .add(":transformDexWithDexForDebug")
             .add(":transformClassesWithPreDexForRelease")
             .add(":transformDexWithDexForRelease")
             .build()

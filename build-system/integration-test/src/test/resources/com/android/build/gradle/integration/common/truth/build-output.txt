@@ -94,7 +94,7 @@ Skipping task ':generateDebugAtomResources' as it has no actions.
 :mergeDebugAtomResources (Thread[Daemon worker,5,main]) started.
 :mergeDebugAtomResources
 Executing task ':mergeDebugAtomResources' (up-to-date check took 0.005 secs) due to:
-  No history is available.
+  Value of input property 'someFakeInput' has changed for task ':mergeDebugAtomResources'
 All input files are considered out-of-date for incremental task ':mergeDebugAtomResources'.
 Unable do incremental execution: full task run
 QueuedCruncher is using /android-sdk/build-tools/25.0.0/aapt
