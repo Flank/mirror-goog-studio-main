@@ -75,6 +75,7 @@ public class AntennaPodPerformanceMatrixTest {
             ProjectScenario.NORMAL,
             ProjectScenario.DEX_ARCHIVE_MONODEX,
             ProjectScenario.DEX_OUT_OF_PROCESS,
+            ProjectScenario.DESUGAR,
         };
     }
 
@@ -91,6 +92,14 @@ public class AntennaPodPerformanceMatrixTest {
                 DexInProcessHelper.disableDexInProcess(appBuildFile);
                 break;
             case DEX_ARCHIVE_MONODEX:
+                break;
+            case DESUGAR:
+                TestFileUtils.searchAndReplace(
+                        appBuildFile, "apply plugin: \"me.tatarka.retrolambda\"", "");
+                TestFileUtils.searchAndReplace(
+                        project.getSubproject("AntennaPod/core").getBuildFile(),
+                        "apply plugin: \"me.tatarka.retrolambda\"",
+                        "");
                 break;
             default:
                 throw new IllegalArgumentException(

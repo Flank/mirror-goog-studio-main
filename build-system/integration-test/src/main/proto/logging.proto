@@ -113,6 +113,7 @@ message GradleBenchmarkResult {
       DEX = 0;
       JACK = 1;
       DEX_ARCHIVE = 2;
+      DESUGAR = 3;
     }
   }
 
