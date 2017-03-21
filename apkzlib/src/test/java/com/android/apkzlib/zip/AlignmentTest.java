@@ -770,4 +770,19 @@ public class AlignmentTest {
         assertArrayEquals(recognizable2, readSegment(zipFile, 150, recognizable2.length));
         assertArrayEquals(twoHundred, readSegment(zipFile, 204, twoHundred.length));
     }
+
+    @Test
+    public void alignCoveringEmptySpaceWhenExtraFieldIsInvalid() throws Exception {
+        File zipFile = new File(mTemporaryFolder.getRoot(), "a.zip");
+        ZFileOptions options = new ZFileOptions();
+        options.setCoverEmptySpaceUsingExtraField(true);
+        options.setAlignmentRule(AlignmentRules.constant(100));
+        try (ZFile zf = new ZFile(zipFile, options)) {
+            zf.add("foo", new ByteArrayInputStream(new byte[] { 1, 2, 3, 4 }));
+            StoredEntry foo = zf.get("foo");
+            assertNotNull(foo);
+            foo.setLocalExtra(new ExtraField(new byte[] { 0, 0 }));
+            zf.add("bar", new ByteArrayInputStream(new byte[] { 5, 6, 7, 8 }));
+        }
+    }
 }
