@@ -258,7 +258,9 @@ public class DuplicateIdDetector extends LayoutDetector {
                         if (parentName != null
                                 && (parentName.equals(SdkConstants.CLASS_CONSTRAINT_LAYOUT_BARRIER)
                                         || parentName.equals(
-                                                SdkConstants.CLASS_CONSTRAINT_LAYOUT_CHAIN))) {
+                                                SdkConstants.CLASS_CONSTRAINT_LAYOUT_CHAIN)
+                                        || parentName.equals(
+                                                SdkConstants.CLASS_CONSTRAINT_LAYOUT_LAYER))) {
                             return;
                         }
                     }
