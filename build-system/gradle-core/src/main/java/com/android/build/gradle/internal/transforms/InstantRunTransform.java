@@ -274,28 +274,29 @@ public class InstantRunTransform extends Transform {
         // with the android.jar only that could be stored in the GlobalScope for reuse. This
         // class loader could also be store in the VariantScope for potential reuse if some
         // other transform need to load project's classes.
-        URLClassLoader urlClassLoader = new NonDelegatingUrlClassloader(referencedInputUrls);
-        Thread.currentThread().setContextClassLoader(urlClassLoader);
-
-        workItems.forEach(workItem -> executor.execute(() -> {
-            ClassLoader currentThreadClassLoader = Thread.currentThread()
-                    .getContextClassLoader();
+        try (URLClassLoader urlClassLoader = new NonDelegatingUrlClassloader(referencedInputUrls)) {
             Thread.currentThread().setContextClassLoader(urlClassLoader);
-            try {
-                return workItem.doWork();
-            } finally {
-                Thread.currentThread().setContextClassLoader(currentThreadClassLoader);
-            }
-        }));
 
-        try {
-            // wait for all work items completion.
-            executor.waitForTasksWithQuickFail(true);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new TransformException(e);
-        } catch (Exception e) {
-            throw new TransformException(e);
+            workItems.forEach(workItem -> executor.execute(() -> {
+                ClassLoader currentThreadClassLoader = Thread.currentThread()
+                        .getContextClassLoader();
+                Thread.currentThread().setContextClassLoader(urlClassLoader);
+                try {
+                    return workItem.doWork();
+                } finally {
+                    Thread.currentThread().setContextClassLoader(currentThreadClassLoader);
+                }
+            }));
+
+            try {
+                // wait for all work items completion.
+                executor.waitForTasksWithQuickFail(true);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new TransformException(e);
+            } catch (Exception e) {
+                throw new TransformException(e);
+            }
         }
 
         // If our classes.2 transformations indicated that a cold swap was necessary,
