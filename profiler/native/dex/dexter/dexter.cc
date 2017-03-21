@@ -351,6 +351,7 @@ int Dexter::ProcessDex() {
 
   // experiments
   for (auto experiment : experiments_) {
+    slicer::Chronometer chrono(experiments_time_, true);
     experimental::Run(experiment, dex_ir);
   }
 
@@ -371,7 +372,8 @@ int Dexter::ProcessDex() {
   }
 
   if (verbose_) {
-    printf("\nDone (reader: %.3fms, writer: %.3fms)\n", reader_time_, writer_time_);
+    printf("\nDone (reader: %.3fms, writer: %.3fms, experiments: %.3fms)\n",
+           reader_time_, writer_time_, experiments_time_);
   }
 
   // done

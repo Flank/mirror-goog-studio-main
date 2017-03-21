@@ -60,4 +60,5 @@ class Dexter {
   // basic timing stats
   double reader_time_ = 0;
   double writer_time_ = 0;
+  double experiments_time_ = 0;
 };

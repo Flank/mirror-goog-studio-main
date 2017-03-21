@@ -143,7 +143,7 @@ method Hello.main(java.lang.String[]) : void
 	.local v0, "args", java.lang.String[]
 	    1| sget-object v2, java.lang.System.out
 	    3| const-string v3, "-------------------------------------------------------\n"
-	    5| const/4 v4, #+0 (0x00000000 | 0.000000)
+	    5| const/4 v4, #+0 (0x00000000 | 0.00000)
 	    6| new-array v4, v4, java.lang.Object[]
 	    8| invoke-virtual {v2,v3,v4}, java.io.PrintStream.printf
 	   11| move-result-object v2
@@ -154,7 +154,7 @@ method Hello.main(java.lang.String[]) : void
 	.line 36
 	   19| sget-object v2, java.lang.System.out
 	   21| const-string v3, "-------------------------------------------------------\n"
-	   23| const/4 v4, #+0 (0x00000000 | 0.000000)
+	   23| const/4 v4, #+0 (0x00000000 | 0.00000)
 	   24| new-array v4, v4, java.lang.Object[]
 	   26| invoke-virtual {v2,v3,v4}, java.io.PrintStream.printf
 	   29| move-result-object v2
@@ -168,12 +168,12 @@ method Hello.main(java.lang.String[]) : void
 	.line 38
 	.local v1, "x", Base
 	   39| move-object v2, v1
-	   40| const/4 v3, #+1 (0x00000001 | 0.000000)
+	   40| const/4 v3, #+1 (0x00000001 | 1.40130e-45)
 	   41| invoke-virtual {v2,v3}, Base.test
 	.line 40
 	   44| sget-object v2, java.lang.System.out
 	   46| const-string v3, "-------------------------------------------------------\n"
-	   48| const/4 v4, #+0 (0x00000000 | 0.000000)
+	   48| const/4 v4, #+0 (0x00000000 | 0.00000)
 	   49| new-array v4, v4, java.lang.Object[]
 	   51| invoke-virtual {v2,v3,v4}, java.io.PrintStream.printf
 	   54| move-result-object v2
@@ -186,7 +186,7 @@ method Hello.main(java.lang.String[]) : void
 	   63| move-object v1, v2
 	.line 42
 	   64| move-object v2, v1
-	   65| const/4 v3, #+2 (0x00000002 | 0.000000)
+	   65| const/4 v3, #+2 (0x00000002 | 2.80260e-45)
 	   66| invoke-virtual {v2,v3}, Base.test
 	.line 43
 	   69| return-void
@@ -213,7 +213,7 @@ method Hello.printStackTrace() : void
 	   15| move-object v5, v1
 	   16| array-length v5, v5
 	   17| move v2, v5
-	   18| const/4 v5, #+0 (0x00000000 | 0.000000)
+	   18| const/4 v5, #+0 (0x00000000 | 0.00000)
 	   19| move v3, v5
 Label_1:
 	   20| move v5, v3
@@ -227,12 +227,12 @@ Label_1:
 	.local v4, "e", java.lang.StackTraceElement
 	   29| sget-object v5, java.lang.System.out
 	   31| const-string v6, "   %s\n"
-	   33| const/4 v7, #+1 (0x00000001 | 0.000000)
+	   33| const/4 v7, #+1 (0x00000001 | 1.40130e-45)
 	   34| new-array v7, v7, java.lang.Object[]
 	   36| move-object v11, v7
 	   37| move-object v7, v11
 	   38| move-object v8, v11
-	   39| const/4 v9, #+0 (0x00000000 | 0.000000)
+	   39| const/4 v9, #+0 (0x00000000 | 0.00000)
 	   40| move-object v10, v4
 	   41| invoke-virtual {v10}, java.lang.StackTraceElement.toString
 	   44| move-result-object v10
@@ -240,7 +240,7 @@ Label_1:
 	   47| invoke-virtual {v5,v6,v7}, java.io.PrintStream.printf
 	   50| move-result-object v5
 	.line 48
-	   51| add-int/lit8 v3, v3, #+1 (0x00000001 | 0.000000)
+	   51| add-int/lit8 v3, v3, #+1 (0x00000001 | 1.40130e-45)
 	   53| goto Label_1
 Label_2:
 	.line 52
