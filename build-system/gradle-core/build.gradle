@@ -62,18 +62,16 @@ dependencies {
     // not exposed as a runtime dependency.
     provided gradleApi()
 
-    // Exclude plugins/core-* to avoiding adding Gradle's ECJ implementation to the classpath. Do the
-    // same for Guava.
-    testCompile fileTree(
+    testRuntime fileTree(
             dir:file("$rootProject.ext.androidHostOut/gradle-dist-link/lib"),
-            includes: ["*", "plugins/gradle*"],
-            excludes: ["guava-*"])
+            includes: ["**/**"])
 
     // Package the instant-run-server.jar, nothing else.
     includeInJar project(path: ':base:instant-run:instant-run-server', configuration: 'archives')
 
     antlr libs.antlr3
 
+    testCompile gradleApi()
     testCompile libs.junit
     testCompile libs.truth
     testCompile libs.mockito_core

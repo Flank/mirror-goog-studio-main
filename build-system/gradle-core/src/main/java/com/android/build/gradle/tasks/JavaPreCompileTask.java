@@ -21,6 +21,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.ANNOTATION_PROCESSOR;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.internal.dsl.CoreAnnotationProcessorOptions;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -30,9 +31,12 @@ import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
+import java.nio.file.ProviderNotFoundException;
+import java.util.Collection;
 import java.util.List;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
@@ -55,6 +59,18 @@ public class JavaPreCompileTask extends BaseTask {
     private FileCollection compileClasspaths;
 
     private CoreAnnotationProcessorOptions annotationProcessorOptions;
+
+    @VisibleForTesting
+    public void init(
+            @NonNull File annotationProcessorOutputFolder,
+            @NonNull FileCollection annotationProcessorConfiguration,
+            @NonNull FileCollection compileClasspaths,
+            @NonNull CoreAnnotationProcessorOptions annotationProcessorOptions) {
+        this.annotationProcessorOutputFolder = annotationProcessorOutputFolder;
+        this.annotationProcessorConfiguration = annotationProcessorConfiguration;
+        this.compileClasspaths = compileClasspaths;
+        this.annotationProcessorOptions = annotationProcessorOptions;
+    }
 
     @Input
     public File getAnnotationProcessorOutputFolder() {
@@ -81,13 +97,22 @@ public class JavaPreCompileTask extends BaseTask {
                         .getPlugins()
                         .hasPlugin(AbstractCompilesUtil.ANDROID_APT_PLUGIN_NAME)) {
             List<String> processors = Lists.newArrayList();
+            Collection<File> processorPath = annotationProcessorConfiguration.getFiles();
             for (File file : compileClasspaths) {
-                try (FileSystem fs = FileSystems.newFileSystem(file.toPath(), null)) {
-                    if (Files.exists(fs.getPath(PROCESSOR_SERVICES))
-                            && !annotationProcessorConfiguration.getFiles().contains(file)) {
+                if (!file.exists() || processorPath.contains(file)) {
+                    continue;
+                }
+                if (file.isDirectory()) {
+                    if (new File(file, PROCESSOR_SERVICES).exists()) {
                         processors.add(file.getName());
                     }
-                } catch (Exception ignore) {
+                } else {
+                    try (FileSystem fs = FileSystems.newFileSystem(file.toPath(), null)) {
+                        if (Files.exists(fs.getPath(PROCESSOR_SERVICES))) {
+                            processors.add(file.getName());
+                        }
+                    } catch (ProviderNotFoundException | IOException ignore) {
+                    }
                 }
             }
             if (!processors.isEmpty()) {
@@ -106,7 +131,6 @@ public class JavaPreCompileTask extends BaseTask {
                                 + "for more details.");
             }
         }
-
     }
 
     public static class ConfigAction implements TaskConfigAction<JavaPreCompileTask> {
