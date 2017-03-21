@@ -110,6 +110,7 @@ java_test(
         "//tools/base/third_party:nl.jqno.equalsverifier_equalsverifier",
         "//tools/base/third_party:org.bouncycastle_bcpkix-jdk15on",
         "//tools/base/third_party:org.mockito_mockito-core",
+        "//tools/base/third_party:org.ow2.asm_asm",
     ],
 )
 
