@@ -68,7 +68,7 @@ bool PrintCodeIrVisitor::Visit(lir::Const32* const32) {
   if (std::isnan(const32->u.float_value)) {
     printf("NaN)");
   } else {
-    printf("%f)", const32->u.float_value);
+    printf("%#.6g)", const32->u.float_value);
   }
   return true;
 }
@@ -78,7 +78,7 @@ bool PrintCodeIrVisitor::Visit(lir::Const64* const64) {
   if (std::isnan(const64->u.double_value)) {
     printf("NaN)");
   } else {
-    printf("%f)", const64->u.double_value);
+    printf("%#.6g)", const64->u.double_value);
   }
   return true;
 }

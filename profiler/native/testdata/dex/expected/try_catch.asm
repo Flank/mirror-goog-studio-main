@@ -53,7 +53,7 @@ method TryCatch.foo(int) : int
 	    4| move v1, v0
 	    5| packed-switch v1, Label_5
 	.line 31
-	    8| const/4 v1, #+1 (0x00000001 | 0.000000)
+	    8| const/4 v1, #+1 (0x00000001 | 1.40130e-45)
 	    9| move v0, v1
 Label_1:
 	.line 34
@@ -80,7 +80,7 @@ Label_3:
 Label_4:
 	.line 34
 	.line 28
-	   29| const/4 v1, #+0 (0x00000000 | 0.000000)
+	   29| const/4 v1, #+0 (0x00000000 | 0.00000)
 	   30| move v0, v1
 	   31| goto Label_1
 Label_5:
@@ -99,7 +99,7 @@ method TryCatch.main(java.lang.String[]) : void
 	.line 15
 	    0| move-object v0, v6
 	.local v0, "args", java.lang.String[]
-	    1| const/4 v3, #+0 (0x00000000 | 0.000000)
+	    1| const/4 v3, #+0 (0x00000000 | 0.00000)
 	.try_begin_1
 	    2| invoke-static {v3}, TryCatch.foo
 	.try_end_1
@@ -112,7 +112,7 @@ Label_1:
 	.line 22
 	    6| sget-object v3, java.lang.System.out
 	    8| const-string v4, "finally\n"
-	   10| const/4 v5, #+0 (0x00000000 | 0.000000)
+	   10| const/4 v5, #+0 (0x00000000 | 0.00000)
 	   11| new-array v5, v5, java.lang.Object[]
 	   13| invoke-virtual {v3,v4,v5}, java.io.PrintStream.printf
 	   16| move-result-object v3
@@ -130,7 +130,7 @@ Label_3:
 	.local v1, "ex", B
 	   20| sget-object v3, java.lang.System.out
 	   22| const-string v4, "catch: B\n"
-	   24| const/4 v5, #+0 (0x00000000 | 0.000000)
+	   24| const/4 v5, #+0 (0x00000000 | 0.00000)
 	   25| new-array v5, v5, java.lang.Object[]
 	   27| invoke-virtual {v3,v4,v5}, java.io.PrintStream.printf
 	.try_end_2
@@ -148,7 +148,7 @@ Label_4:
 	.local v1, "ex", A
 	   34| sget-object v3, java.lang.System.out
 	   36| const-string v4, "catch: A\n"
-	   38| const/4 v5, #+0 (0x00000000 | 0.000000)
+	   38| const/4 v5, #+0 (0x00000000 | 0.00000)
 	   39| new-array v5, v5, java.lang.Object[]
 	   41| invoke-virtual {v3,v4,v5}, java.io.PrintStream.printf
 	.try_end_3
@@ -157,7 +157,7 @@ Label_4:
 	.line 22
 	   45| sget-object v3, java.lang.System.out
 	   47| const-string v4, "finally\n"
-	   49| const/4 v5, #+0 (0x00000000 | 0.000000)
+	   49| const/4 v5, #+0 (0x00000000 | 0.00000)
 	   50| new-array v5, v5, java.lang.Object[]
 	   52| invoke-virtual {v3,v4,v5}, java.io.PrintStream.printf
 	   55| move-result-object v3
@@ -170,7 +170,7 @@ Label_5:
 	   58| move-object v2, v3
 	   59| sget-object v3, java.lang.System.out
 	   61| const-string v4, "finally\n"
-	   63| const/4 v5, #+0 (0x00000000 | 0.000000)
+	   63| const/4 v5, #+0 (0x00000000 | 0.00000)
 	   64| new-array v5, v5, java.lang.Object[]
 	   66| invoke-virtual {v3,v4,v5}, java.io.PrintStream.printf
 	   69| move-result-object v3

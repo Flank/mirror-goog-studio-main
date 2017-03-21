@@ -51,7 +51,7 @@ method Target.test() : void
 	.line 22
 	.local v0, "obj", Target
 	    9| move-object v1, v0
-	   10| const/16 v2, #+123 (0x0000007b | 0.000000)
+	   10| const/16 v2, #+123 (0x0000007b | 1.72360e-43)
 	   12| const-string v3, "Testing..."
 	   14| invoke-virtual {v1,v2,v3}, Target.foo
 	.line 23
@@ -73,12 +73,12 @@ method Target.foo(int, java.lang.String) : void
 	.local v2, "msg", java.lang.String
 	    3| sget-object v3, java.lang.System.out
 	    5| const-string v4, "foo(%d, %s)\n"
-	    7| const/4 v5, #+2 (0x00000002 | 0.000000)
+	    7| const/4 v5, #+2 (0x00000002 | 2.80260e-45)
 	    8| new-array v5, v5, java.lang.Object[]
 	   10| move-object v9, v5
 	   11| move-object v5, v9
 	   12| move-object v6, v9
-	   13| const/4 v7, #+0 (0x00000000 | 0.000000)
+	   13| const/4 v7, #+0 (0x00000000 | 0.00000)
 	   14| move v8, v1
 	   15| invoke-static {v8}, java.lang.Integer.valueOf
 	   18| move-result-object v8
@@ -86,7 +86,7 @@ method Target.foo(int, java.lang.String) : void
 	   21| move-object v9, v5
 	   22| move-object v5, v9
 	   23| move-object v6, v9
-	   24| const/4 v7, #+1 (0x00000001 | 0.000000)
+	   24| const/4 v7, #+1 (0x00000001 | 1.40130e-45)
 	   25| move-object v8, v2
 	   26| aput-object v8, v6, v7
 	   28| invoke-virtual {v3,v4,v5}, java.io.PrintStream.printf

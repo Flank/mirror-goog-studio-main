@@ -42,6 +42,7 @@ std::map<std::string, Experiment> experiments_registry = {
     { "full_rewrite", &FullRewrite },
 };
 
+// Lists all the registered experiments
 void ListExperiments(std::shared_ptr<ir::DexFile> dex_ir) {
   printf("\nAvailable experiments:\n");
   printf("-------------------------\n");
