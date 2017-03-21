@@ -66,6 +66,10 @@ public class DexByteCodeConverterTest {
         assertThat(PerformanceUtils.parseSizeToBytes("7M")).isEqualTo(1024L * 1024 * 7);
         assertThat(PerformanceUtils.parseSizeToBytes("17g")).isEqualTo(1024L * 1024 * 1024 * 17);
         assertThat(PerformanceUtils.parseSizeToBytes("foo")).isNull();
+
+        assertThat(PerformanceUtils.getNumThreadsForDexArchives())
+                .named("number of threads for dex archives")
+                .isAtLeast(1);
     }
 
     @Test
