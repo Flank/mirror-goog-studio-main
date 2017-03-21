@@ -5,6 +5,8 @@ cc_binary(
         "dexter.h",
         "dissasembler.cc",
         "dissasembler.h",
+        "experimental.cc",
+        "experimental.h",
         "main.cc",
     ],
     copts = [

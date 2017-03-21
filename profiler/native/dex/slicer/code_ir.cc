@@ -20,6 +20,9 @@
 #include "dex_format.h"
 #include "dex_ir.h"
 #include "dex_leb128.h"
+#include "bytecode_encoder.h"
+#include "debuginfo_encoder.h"
+#include "tryblocks_encoder.h"
 
 #include <assert.h>
 #include <string.h>
@@ -29,6 +32,29 @@
 #include <vector>
 
 namespace lir {
+
+void CodeIr::Assemble() {
+  auto ir_code = ir_method_->code;
+  CHECK(ir_code != nullptr);
+
+  // new .dex bytecode
+  //
+  // NOTE: this must be done before the debug information and
+  //   try/catch blocks since here is where we update the final offsets
+  //
+  BytecodeEncoder bytecode_encoder(instructions);
+  bytecode_encoder.Encode(ir_code, dex_ir_);
+
+  // debug information
+  if (ir_code->debug_info != nullptr) {
+    DebugInfoEncoder dbginfo_encoder(instructions);
+    dbginfo_encoder.Encode(ir_method_, dex_ir_);
+  }
+
+  // try/catch blocks
+  TryBlocksEncoder try_blocks_encoder(instructions);
+  try_blocks_encoder.Encode(ir_code, dex_ir_);
+}
 
 void CodeIr::DissasembleTryBlocks(const ir::Code* ir_code) {
   int nextTryBlockId = 1;
@@ -130,6 +156,7 @@ void CodeIr::DissasembleDebugInfo(const ir::DebugInfo* ir_debug_info) {
       case dex::DBG_ADVANCE_LINE:
         // line_diff
         line += dex::ReadSLeb128(&ptr);
+        WEAK_CHECK(line > 0);
         annotation = Alloc<DbgInfoAnnotation>(opcode);
         annotation->operands.push_back(Alloc<LineNumber>(line));
         break;
@@ -198,7 +225,7 @@ void CodeIr::DissasembleDebugInfo(const ir::DebugInfo* ir_debug_info) {
         int adjusted_opcode = opcode - dex::DBG_FIRST_SPECIAL;
         line += dex::DBG_LINE_BASE + (adjusted_opcode % dex::DBG_LINE_RANGE);
         address += (adjusted_opcode / dex::DBG_LINE_RANGE);
-
+        WEAK_CHECK(line > 0);
         annotation = Alloc<DbgInfoAnnotation>(dex::DBG_ADVANCE_LINE);
         annotation->operands.push_back(Alloc<LineNumber>(line));
       } break;
@@ -521,7 +548,7 @@ Bytecode* CodeIr::DecodeBytecode(const dex::u2* ptr, dex::u4 offset) {
           break;
 
         default:
-          CHECK(!"unexpected bytecode format");
+          FATAL("Unexpected opcode 0x%02x", dexInstr.opcode);
       }
       break;
 
@@ -531,8 +558,7 @@ Bytecode* CodeIr::DecodeBytecode(const dex::u2* ptr, dex::u4 offset) {
       break;
 
     default:
-      CHECK(!"unexpected bytecode format");
-      break;
+      FATAL("Unexpected bytecode format (opcode 0x%02x)", dexInstr.opcode);
   }
 
   return instr;
@@ -557,8 +583,7 @@ IndexedOperand* CodeIr::GetIndexedOperand(dex::InstructionIndexType indexType,
       return Alloc<Method>(dex_ir_->methods_map[index], index);
 
     default:
-      CHECK(!"unexpected index type");
-      return nullptr;
+      FATAL("Unexpected index type 0x%02x", indexType);
   }
 }
 

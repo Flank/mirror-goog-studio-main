@@ -22,6 +22,7 @@ test_cases = {
   'asm'             : { 'args' : '-d', 'input' : '*.dex' },
   'hello_stats'     : { 'args' : '-s -e Hello', 'input' : 'hello.dex' },
   'am_stats'        : { 'args' : '-s -e android.app.ActivityManager', 'input' : 'large.dex' },
+  'rewrite'         : { 'args' : '-d -x full_rewrite', 'input' : '*.dex' },
 }
 
 # run a shell command and returns the stdout content

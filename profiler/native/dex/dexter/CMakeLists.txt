@@ -1,6 +1,7 @@
 add_executable(dexter
                dexter.cc
                dissasembler.cc
+               experimental.cc
                main.cc)
 
 include_directories ("${PROJECT_SOURCE_DIR}/dex")
