@@ -52,6 +52,7 @@ import static com.android.build.gradle.integration.common.fixture.app.HelloWorld
 import static com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp.applicationMk
 import static com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp.cmakeLists
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
+
 /**
  * General Model tests
  */

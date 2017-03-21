@@ -202,7 +202,7 @@ class NativeBuildOutputTest {
             """
 
         checkFailed(
-                ["non/existent/CMakeLists.txt",
+                [FileUtils.toSystemDependentPath("non/existent/CMakeLists.txt"),
                  "externalNativeJsonGenerator.makefile",
                  "does not exist"],
                 ["cmake.path",
@@ -232,10 +232,9 @@ class NativeBuildOutputTest {
         project.file("src/main/cpp/Android.mk") << androidMk
 
         checkFailed(
-                ["ABIs [-unrecognized-abi-] are not available for platform and will be excluded" +
-                         " from building and packaging. Available ABIs are ["],
-                ["ABIs [-unrecognized-abi-] are not available for platform and will be excluded" +
-                         " from building and packaging. Available ABIs are ["], 2)
+                ["ABIs [-unrecognized-abi-] are not supported for platform. Supported ABIs are ["],
+                ["ABIs [-unrecognized-abi-] are not supported for platform. Supported ABIs are ["],
+                2);
     }
 
     @Test
@@ -258,10 +257,9 @@ class NativeBuildOutputTest {
         project.file("src/main/cpp/Android.mk") << androidMk
 
         checkFailed(
-                ["ABIs [-unrecognized-abi-] are not available for platform and will be excluded" +
-                         " from building and packaging. Available ABIs are ["],
-                ["ABIs [-unrecognized-abi-] are not available for platform and will be excluded" +
-                         " from building and packaging. Available ABIs are ["], 2)
+                ["ABIs [-unrecognized-abi-] are not supported for platform. Supported ABIs are ["],
+                ["ABIs [-unrecognized-abi-] are not supported for platform. Supported ABIs are ["],
+                2);
     }
 
     // In this test, ndk.abiFilters and ndkBuild.abiFilters only have "x86" in common.
@@ -343,10 +341,9 @@ class NativeBuildOutputTest {
         project.file("src/main/cpp/CMakeLists.txt") << cmakeLists
 
         checkFailed(
-                ["ABIs [-unrecognized-abi-] are not available for platform and will be excluded" +
-                         " from building and packaging. Available ABIs are ["],
-                ["ABIs [-unrecognized-abi-] are not available for platform and will be excluded" +
-                         " from building and packaging. Available ABIs are ["], 2)
+                ["ABIs [-unrecognized-abi-] are not supported for platform. Supported ABIs are ["],
+                ["ABIs [-unrecognized-abi-] are not supported for platform. Supported ABIs are ["],
+                2);
     }
 
     @Test
@@ -362,9 +359,12 @@ class NativeBuildOutputTest {
             """
 
         checkFailed(
-                ["non/existent/Android.mk", "externalNativeJsonGenerator.makefile", "does not exist"],
-                ["ndkBuild.path", "Android.mk but that file doesn't exist"],
-                2)
+                [FileUtils.toSystemDependentPath("non/existent/Android.mk"),
+                 "externalNativeJsonGenerator.makefile",
+                 "does not exist"],
+                ["ndkBuild.path",
+                 "Android.mk but that file doesn't exist"],
+                2);
     }
 
     @Test
@@ -478,8 +478,13 @@ class NativeBuildOutputTest {
 
         project.file("CMakeLists.txt") << cmakeLists
 
-        checkSucceeded(["Building CXX", FileUtils.join("cpp", "hello-jni.cpp"),
-                        FileUtils.join("x86", "libhello-jni.so")], [])
+        checkSucceeded(
+                [
+                        "Building CXX",
+                        FileUtils.toSystemIndependentPath(FileUtils.join("cpp", "hello-jni.cpp")),
+                        FileUtils.join("x86", "libhello-jni.so")
+                ],
+                []);
     }
 
     private void checkSucceeded(List<String> expectInStdout, List<String> dontExpectInStdout,

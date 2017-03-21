@@ -37,6 +37,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import org.gradle.api.GradleException;
@@ -53,7 +54,7 @@ class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
             @NonNull NdkHandler ndkHandler,
             int minSdkVersion,
             @NonNull String variantName,
-            @NonNull List<Abi> abis,
+            @NonNull Collection<Abi> abis,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull File sdkFolder,
             @NonNull File ndkFolder,
