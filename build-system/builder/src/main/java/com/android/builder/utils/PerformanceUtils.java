@@ -92,7 +92,7 @@ public class PerformanceUtils {
 
         long available = heapSize - NON_DEX_HEAP_SIZE;
         // assumption: on average we need 200MB for a single thread, on 1.5GB we would run 5 threads
-        long threadsBasedOnMemory = available / (200 * 1024 * 1024);
+        long threadsBasedOnMemory = Math.max(1, available / (200 * 1024 * 1024));
         return (int) Math.min(numCores, threadsBasedOnMemory);
     }
 }
