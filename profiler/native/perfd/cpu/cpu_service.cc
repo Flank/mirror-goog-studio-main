@@ -40,6 +40,8 @@ using profiler::proto::CpuStopRequest;
 using profiler::proto::CpuStopResponse;
 using profiler::proto::GetThreadsRequest;
 using profiler::proto::GetThreadsResponse;
+using profiler::proto::ProfilingStateRequest;
+using profiler::proto::ProfilingStateResponse;
 using std::map;
 using std::string;
 using std::vector;
@@ -176,6 +178,9 @@ grpc::Status CpuServiceImpl::StartProfilingApp(
 
   if (success) {
     response->set_status(CpuProfilingAppStartResponse::SUCCESS);
+    last_start_profiling_timestamps_[request->app_pkg_name()] =
+        clock_.GetCurrentTime();
+    last_start_profiling_requests_[request->app_pkg_name()] = *request;
   } else {
     response->set_status(CpuProfilingAppStartResponse::FAILURE);
     response->set_error_message(error);
@@ -207,10 +212,34 @@ grpc::Status CpuServiceImpl::StopProfilingApp(
     response->set_trace_id(trace_id);
     remove(trace_path_.c_str());  // No more use of this file. Delete it.
     trace_path_.clear();          // Make it clear no trace file is alive.
+    last_start_profiling_timestamps_.erase(request->app_pkg_name());
+    last_start_profiling_requests_.erase(request->app_pkg_name());
   } else {
     response->set_status(CpuProfilingAppStopResponse::FAILURE);
     response->set_error_message(error);
   }
+  return Status::OK;
+}
+
+grpc::Status CpuServiceImpl::CheckAppProfilingState(
+    ServerContext* context, const ProfilingStateRequest* request,
+    ProfilingStateResponse* response) {
+  const auto& last_request =
+      last_start_profiling_requests_.find(request->app_pkg_name());
+
+  // Whether the app is being profiled (there is a stored start profiling
+  // request corresponding to the app)
+  bool is_being_profiled = last_request != last_start_profiling_requests_.end();
+  response->set_being_profiled(is_being_profiled);
+  if (is_being_profiled) {
+    // App is being profiled. Include the start profiling request and its
+    // timestamp in the response.
+    response->set_start_timestamp(
+        last_start_profiling_timestamps_[request->app_pkg_name()]);
+    *(response->mutable_start_request()) =
+        last_start_profiling_requests_[request->app_pkg_name()];
+  }
+
   return Status::OK;
 }
 

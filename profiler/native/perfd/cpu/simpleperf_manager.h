@@ -54,7 +54,7 @@ class SimplePerfManager {
 
  private:
   const Clock &clock_;
-  static const char* kSimpleperfExecutable;
+  static const char *kSimpleperfExecutable;
   std::map<std::string, OnGoingProfiling> profiled_;
   std::mutex start_stop_mutex_;  // Protects simpleperf start/stop
 

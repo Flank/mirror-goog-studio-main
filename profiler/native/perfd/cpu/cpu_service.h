@@ -17,6 +17,7 @@
 #define PERFD_CPU_CPU_PROFILER_SERVICE_H_
 
 #include <grpc++/grpc++.h>
+#include <map>
 #include <string>
 
 #include "perfd/cpu/cpu_cache.h"
@@ -33,6 +34,7 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
   CpuServiceImpl(const Clock& clock, CpuCache* cpu_cache,
                  CpuUsageSampler* usage_sampler, ThreadMonitor* thread_monitor)
       : cache_(*cpu_cache),
+        clock_(clock),
         usage_sampler_(*usage_sampler),
         thread_monitor_(*thread_monitor),
         simplerperf_manager_(clock) {}
@@ -67,9 +69,16 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
       const profiler::proto::CpuProfilingAppStopRequest* request,
       profiler::proto::CpuProfilingAppStopResponse* response) override;
 
+  grpc::Status CheckAppProfilingState(
+      grpc::ServerContext* context,
+      const profiler::proto::ProfilingStateRequest* request,
+      profiler::proto::ProfilingStateResponse* response) override;
+
  private:
   // Data cache that will be queried to serve requests.
   CpuCache& cache_;
+  // Clock that timestamps start profiling requests.
+  const Clock& clock_;
   // The monitor that samples CPU usage data.
   CpuUsageSampler& usage_sampler_;
   // The monitor that detects thread activities (i.e., state changes).
@@ -78,6 +87,13 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
   // Absolute on-device path to the trace file. Activity manager or simpleperf
   // determines the path and populate the file with trace data.
   std::string trace_path_;
+  // The timestamp when the last start profiling request was processed
+  // successfully. Map from an app name to its correspondent timestamp.
+  std::map<std::string, int64_t> last_start_profiling_timestamps_;
+  // The last start profiling requests processed successfully.
+  // Map from an app name to its correspondent request.
+  std::map<std::string, profiler::proto::CpuProfilingAppStartRequest>
+      last_start_profiling_requests_;
 };
 
 }  // namespace profiler

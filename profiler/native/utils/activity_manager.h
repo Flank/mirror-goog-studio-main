@@ -18,9 +18,9 @@
 #define UTILS_PROFILER_ACTIVITYMANAGER_H
 
 #include <map>
+#include <memory>
 #include <mutex>
 #include <string>
-#include <memory>
 
 #include "bash_command.h"
 
@@ -31,7 +31,7 @@ class ActivityManager {
  public:
   enum ProfilingMode { SAMPLING, INSTRUMENTED };
 
-  static ActivityManager* Instance();
+  static ActivityManager *Instance();
 
   // Starts profiling using ART runtime profiler either by sampling or
   // code instrumentation.
@@ -41,14 +41,14 @@ class ActivityManager {
   // Calling start twice in a row (without a stop) will result in an error.
   bool StartProfiling(const ProfilingMode profiling_mode,
                       const std::string &app_package_name,
-                      std::string *trace_path, std::string *error_string) ;
+                      std::string *trace_path, std::string *error_string);
 
   // Stops ongoing profiling. If no profiling was ongoing, this function is a
   // no-op.
   // Returns true is profiling stopped successfully. Otherwise false
   // and populate error_string.
   bool StopProfiling(const std::string &app_package_name,
-                     std::string *error_string) ;
+                     std::string *error_string);
 
   bool TriggerHeapDump(int pid, const std::string &file_path,
                        std::string *error_string) const;
@@ -63,7 +63,7 @@ class ActivityManager {
   // Entry storing all data related to an ongoing profiling.
   class ArtOnGoingProfiling {
    public:
-    std::string trace_path;     // File path where trace will be made availabe.
+    std::string trace_path;  // File path where trace will be made available.
     std::string app_pkg_name;
   };
 
@@ -79,14 +79,16 @@ class ActivityManager {
   std::string GenerateTracePath(const std::string &app_package_name) const;
 
   // Returns true if app is being profiled.
-  bool IsAppProfiled(const std::string& app_package_name) const;
+  bool IsAppProfiled(const std::string &app_package_name) const;
 
-  void AddProfiledApp(const std::string& app_package_name, const std::string& trace_path);
+  void AddProfiledApp(const std::string &app_package_name,
+                      const std::string &trace_path);
 
-  void RemoveProfiledApp(const std::string& app_package_name);
+  void RemoveProfiledApp(const std::string &app_package_name);
   // Only call this method if you are certain the app is being profiled.
   // Otherwise result is undefined.
-  std::string GetProfiledAppTracePath(const std::string& app_package_name) const;
+  std::string GetProfiledAppTracePath(
+      const std::string &app_package_name) const;
 
   std::unique_ptr<BashCommandRunner> bash_;
 };
