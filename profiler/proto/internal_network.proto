@@ -17,6 +17,8 @@ syntax = "proto3";
 
 package profiler.proto;
 
+import "network.proto";
+
 service InternalNetworkService {
   rpc RegisterHttpData(HttpDataRequest) returns (EmptyNetworkReply) {}
   rpc SendChunk(ChunkRequest) returns (EmptyNetworkReply) {}
@@ -77,6 +79,8 @@ message HttpRequestRequest {
   // https://en.wikipedia.org/wiki/List_of_HTTP_header_fields#Request_fields.
   string fields = 2;
   string method = 3;
+  // The thread where this connection was connected.
+  JavaThread thread = 4;
 }
 
 // Response data of HTTP connection.

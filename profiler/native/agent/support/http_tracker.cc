@@ -157,11 +157,13 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onRe
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onRequest(
-    JNIEnv *env, jobject thiz, jlong juid, jstring jmethod, jstring jfields) {
+    JNIEnv *env, jobject thiz, jlong juid, jstring jmethod, jstring jfields,
+    jstring jthread_name, jlong jthread_id) {
   JStringWrapper fields(env, jfields);
   JStringWrapper method(env, jmethod);
+  JStringWrapper thread_name(env, jthread_name);
 
-  Agent::Instance().background_queue()->EnqueueTask([fields, juid, method] {
+  Agent::Instance().background_queue()->EnqueueTask([fields, juid, method, thread_name, jthread_id] {
     auto net_stub = Agent::Instance().network_stub();
     ClientContext ctx;
     HttpRequestRequest httpRequest;
@@ -170,6 +172,9 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onRe
     httpRequest.set_conn_id(juid);
     httpRequest.set_fields(fields.get());
     httpRequest.set_method(method.get());
+    auto thread = httpRequest.mutable_thread();
+    thread->set_name(thread_name.get());
+    thread->set_id(jthread_id);
     net_stub.SendHttpRequest(&ctx, httpRequest, &reply);
   });
 }
