@@ -269,7 +269,7 @@ public final class DevSdkUpdater {
             args.addAll(packages);
 
             Archive.sHostConfig = new Archive.HostConfig(osEntry.mName);
-            SdkManagerCli.main(args.stream().toArray(String[]::new));
+            SdkManagerCli.main(args.toArray(new String[0]));
         }
 
         if (!filterMap.isEmpty()) {
