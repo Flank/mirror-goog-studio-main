@@ -37,7 +37,3 @@ sourceSets {
 
 project.ext.pomName = 'Android Tools Fake ADB Server'
 project.ext.pomDesc = 'Library implementing the ADB Server protocol'
-
-apply from: "$rootDir/buildSrc/base/publish.gradle"
-apply from: "$rootDir/buildSrc/base/bintray.gradle"
-apply from: "$rootDir/buildSrc/base/javadoc.gradle"
