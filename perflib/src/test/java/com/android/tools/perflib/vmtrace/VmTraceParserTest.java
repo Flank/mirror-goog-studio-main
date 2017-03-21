@@ -18,9 +18,6 @@ package com.android.tools.perflib.vmtrace;
 
 import com.android.testutils.TestResources;
 import com.google.common.primitives.Ints;
-
-import junit.framework.TestCase;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -33,6 +30,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import junit.framework.TestCase;
 
 public class VmTraceParserTest extends TestCase {
     public void testParseHeader() throws IOException {
@@ -44,6 +42,7 @@ public class VmTraceParserTest extends TestCase {
         assertEquals(3, traceData.getVersion());
         assertTrue(traceData.isDataFileOverflow());
         assertEquals(VmTraceData.VmClockType.DUAL, traceData.getVmClockType());
+        assertEquals(4713089, traceData.getElapsedTimeUs());
         assertEquals("dalvik", traceData.getVm());
 
         Collection<ThreadInfo> threads = traceData.getThreads();
