@@ -89,7 +89,7 @@ bool PrintCodeIrVisitor::Visit(lir::VReg* vreg) {
 }
 
 bool PrintCodeIrVisitor::Visit(lir::VRegPair* vreg_pair) {
-  printf("v%d/v%d", vreg_pair->base_reg, vreg_pair->base_reg + 1);
+  printf("v%d:v%d", vreg_pair->base_reg, vreg_pair->base_reg + 1);
   return true;
 }
 

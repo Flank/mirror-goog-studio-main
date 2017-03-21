@@ -330,7 +330,7 @@ enum InstructionFormat : u1 {
   kFmt3rmi,     // [opt] inline invoke/range
 };
 
-using OpcodeFlags = u1;
+using OpcodeFlags = u4;
 
 enum : OpcodeFlags {
   kInstrCanBranch     = 1 << 0,   // conditional or unconditional branch
@@ -339,6 +339,9 @@ enum : OpcodeFlags {
   kInstrCanThrow      = 1 << 3,   // could cause an exception to be thrown
   kInstrCanReturn     = 1 << 4,   // returns, no additional statements
   kInstrInvoke        = 1 << 5,   // a flavor of invoke
+  kInstrWideRegA      = 1 << 6,   // wide (64bit) vA
+  kInstrWideRegB      = 1 << 7,   // wide (64bit) vB
+  kInstrWideRegC      = 1 << 8,   // wide (64bit) vC
 };
 
 // Types of indexed reference that are associated with opcodes whose
