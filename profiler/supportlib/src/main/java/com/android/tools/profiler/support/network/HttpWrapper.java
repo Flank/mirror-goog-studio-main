@@ -15,6 +15,7 @@
  */
 package com.android.tools.profiler.support.network;
 
+import com.android.tools.profiler.support.ProfilerService;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -32,6 +33,10 @@ import javax.net.ssl.HttpsURLConnection;
 public final class HttpWrapper {
 
     private static URLConnection wrapURLConnectionHelper(URLConnection wrapped) {
+        if (!ProfilerService.PERFA_ENABLED) {
+            return wrapped;
+        }
+
         // Skip the helper frames (the helpers are implemented so every path has exactly two helper frames)
         StackTraceElement[] callstack = new Throwable().getStackTrace();
         callstack = java.util.Arrays.copyOfRange(callstack, 2, callstack.length);
