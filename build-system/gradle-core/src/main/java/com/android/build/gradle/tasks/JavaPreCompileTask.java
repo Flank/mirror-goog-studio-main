@@ -18,10 +18,12 @@ package com.android.build.gradle.tasks;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.internal.dsl.CoreAnnotationProcessorOptions;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.BaseTask;
+import com.android.build.gradle.tasks.factory.AbstractCompilesUtil;
 import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
@@ -58,6 +60,18 @@ public class JavaPreCompileTask extends BaseTask {
 
     private CoreAnnotationProcessorOptions annotationProcessorOptions;
 
+    @VisibleForTesting
+    public void init(
+            @NonNull File annotationProcessorOutputFolder,
+            @NonNull Configuration annotationProcessorConfiguration,
+            @NonNull InputSupplier<FileCollection> compileClasspaths,
+            @NonNull CoreAnnotationProcessorOptions annotationProcessorOptions) {
+        this.annotationProcessorOutputFolder = annotationProcessorOutputFolder;
+        this.annotationProcessorConfiguration = annotationProcessorConfiguration;
+        this.compileClasspaths = compileClasspaths;
+        this.annotationProcessorOptions = annotationProcessorOptions;
+    }
+
     @Input
     public File getAnnotationProcessorOutputFolder() {
         return annotationProcessorOutputFolder;
@@ -92,31 +106,41 @@ public class JavaPreCompileTask extends BaseTask {
                         .collect(Collectors.toSet());
 
         if (annotationProcessorOptions.getIncludeCompileClasspath() == null
-                && !getProject().getPlugins().hasPlugin("com.neenbedankt.android-apt")) {
+                && !getProject()
+                        .getPlugins()
+                        .hasPlugin(AbstractCompilesUtil.ANDROID_APT_PLUGIN_NAME)) {
             List<String> processors = Lists.newArrayList();
             for (File file : compileClasspaths.getLastValue()) {
-                try (FileSystem fs = FileSystems.newFileSystem(file.toPath(), null)) {
-                    if (Files.exists(fs.getPath(PROCESSOR_SERVICES))
-                            && !processorPath.contains(file)) {
+                if (!file.exists() || processorPath.contains(file)) {
+                    continue;
+                }
+                if (file.isDirectory()) {
+                    if (new File(file, PROCESSOR_SERVICES).exists()) {
                         processors.add(file.getName());
                     }
-                } catch (ProviderNotFoundException | IOException e) {
+                } else {
+                    try (FileSystem fs = FileSystems.newFileSystem(file.toPath(), null)) {
+                        if (Files.exists(fs.getPath(PROCESSOR_SERVICES))) {
+                            processors.add(file.getName());
+                        }
+                    } catch (ProviderNotFoundException | IOException ignore) {
+                    }
                 }
-                if (!processors.isEmpty()) {
-                    throw new RuntimeException(
-                            "Annotation processors must be explicitly declared now.  The following "
-                                    + "dependencies on the compile classpath are found to contain "
-                                    + "annotation processor.  Please add them to the "
-                                    + "annotationProcessor configuration.\n  - "
-                                    + Joiner.on("\n  - ").join(processors)
-                                    + "\nAlternatively, set "
-                                    + "android.defaultConfig.javaCompileOptions.annotationProcessorOptions.includeCompileClasspath = true "
-                                    + "to continue with previous behavior.  Note that this option "
-                                    + "is deprecated and will be removed in the future.\n"
-                                    + "See "
-                                    + "https://developer.android.com/r/tools/annotation-processor-error-message.html "
-                                    + "for more details.");
-                }
+            }
+            if (!processors.isEmpty()) {
+                throw new RuntimeException(
+                        "Annotation processors must be explicitly declared now.  The following "
+                                + "dependencies on the compile classpath are found to contain "
+                                + "annotation processor.  Please add them to the "
+                                + "annotationProcessor configuration.\n  - "
+                                + Joiner.on("\n  - ").join(processors)
+                                + "\nAlternatively, set "
+                                + "android.defaultConfig.javaCompileOptions.annotationProcessorOptions.includeCompileClasspath = true "
+                                + "to continue with previous behavior.  Note that this option "
+                                + "is deprecated and will be removed in the future.\n"
+                                + "See "
+                                + "https://developer.android.com/r/tools/annotation-processor-error-message.html "
+                                + "for more details.");
             }
         }
 
