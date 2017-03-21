@@ -169,6 +169,8 @@ public final class DexMerger {
         contentsOut.header.off = 0;
         contentsOut.header.size = 1;
         contentsOut.fileSize = dexOut.getLength();
+        // computeSizesFromOffsets expects sections sorted by offset, so make it so
+        Arrays.sort(contentsOut.sections);
         contentsOut.computeSizesFromOffsets();
         contentsOut.writeHeader(headerOut, mergeApiLevels());
         contentsOut.writeMap(mapListOut);
@@ -254,6 +256,14 @@ public final class DexMerger {
                 offsets[i] = readIntoMap(
                         dexSections[i], sections[i], indexMaps[i], indexes[i], values, i);
             }
+
+            if (values.isEmpty()) {
+                // Dexdump gets grumpy over non-zero offsets of empty sections (b/28296539)
+                getSection(contentsOut).off = 0;
+                getSection(contentsOut).size = 0;
+                return;
+            }
+
             getSection(contentsOut).off = out.getPosition();
 
             int outCount = 0;
@@ -298,6 +308,14 @@ public final class DexMerger {
             for (int i = 0; i < dexes.length; i++) {
                 all.addAll(readUnsortedValues(dexes[i], indexMaps[i]));
             }
+
+            if (all.isEmpty()) {
+                // Dexdump gets grumpy over non-zero offsets of empty sections (b/28296539)
+                getSection(contentsOut).off = 0;
+                getSection(contentsOut).size = 0;
+                return;
+            }
+
             Collections.sort(all);
 
             int outCount = 0;

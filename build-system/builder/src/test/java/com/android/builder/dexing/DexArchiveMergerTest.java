@@ -19,7 +19,9 @@ package com.android.builder.dexing;
 import static com.android.builder.dexing.DexArchiveTestUtil.PACKAGE;
 import static com.android.testutils.truth.MoreTruth.assertThat;
 import static org.junit.Assert.fail;
+import static org.objectweb.asm.Opcodes.V1_6;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.testutils.apk.Dex;
 import com.android.utils.FileUtils;
@@ -41,6 +43,8 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Opcodes;
 
 /**
  * Testing the dex archive merger. It takes one or more dex archives as input, and outputs one or
@@ -229,6 +233,44 @@ public class DexArchiveMergerTest {
         assertThat(outputDex.resolve("classes.dex")).exists();
         assertThat(outputDex.resolve("classes2.dex")).exists();
         assertThat(outputDex.resolve("classes3.dex")).doesNotExist();
+    }
+
+    @Test
+    public void test_nativeMultiDex_empty_sections() throws Exception {
+        // regression test for - http://b.android.com/250705
+        int NUM_CLASSES = 2;
+        Path inputRoot = temporaryFolder.getRoot().toPath().resolve("classes");
+        for (int i = 0; i < NUM_CLASSES; i++) {
+            Path classFile = inputRoot.resolve(PACKAGE + "/" + "A" + i + SdkConstants.DOT_CLASS);
+            Files.createDirectories(classFile.getParent());
+
+            ClassWriter cw = new ClassWriter(0);
+            cw.visit(
+                    V1_6,
+                    Opcodes.ACC_PUBLIC + Opcodes.ACC_SUPER,
+                    PACKAGE + "/" + "A" + i,
+                    null,
+                    "java/lang/Object",
+                    null);
+            cw.visitEnd();
+
+            Files.write(classFile, cw.toByteArray());
+        }
+
+        Path dexArchive = temporaryFolder.getRoot().toPath().resolve("output");
+        DexArchiveTestUtil.convertClassesToDexArchive(inputRoot, dexArchive);
+
+        Path outputDex = temporaryFolder.getRoot().toPath().resolve("output_dex");
+        DexArchiveTestUtil.mergeNativeDex(ImmutableList.of(dexArchive), outputDex);
+
+        com.android.dex.Dex dexFile =
+                new com.android.dex.Dex(outputDex.resolve("classes.dex").toFile());
+        Truth.assertThat(dexFile.getTableOfContents().fieldIds.off)
+                .named("fields offset")
+                .isEqualTo(0);
+        Truth.assertThat(dexFile.getTableOfContents().methodIds.off)
+                .named("methods offset")
+                .isEqualTo(0);
     }
 
     @Test
