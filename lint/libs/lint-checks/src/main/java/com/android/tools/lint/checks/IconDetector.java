@@ -2463,7 +2463,9 @@ public class IconDetector extends ResourceXmlDetector implements UastScanner {
             }
             String menu = getBaseName(context.file.getName());
             menuToIcons.put(menu, icon);
-        } else {
+        } else if (tagName.equals(TAG_ACTIVITY)
+                || tagName.equals(TAG_ACTIVITY_ALIAS)
+                || tagName.equals(TAG_APPLICATION)) {
             // Manifest tags: launcher icons
             if (launcherIcons == null) {
                 launcherIcons = Sets.newHashSet();
