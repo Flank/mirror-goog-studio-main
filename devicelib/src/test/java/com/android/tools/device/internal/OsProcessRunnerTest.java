@@ -89,7 +89,7 @@ public class OsProcessRunnerTest {
                 new ProcessBuilder(ImmutableList.of("python", script.getAbsolutePath(), "1"));
         OsProcessRunner runner = new OsProcessRunner();
         runner.start(pb);
-        assertThat(runner.waitFor(1, TimeUnit.SECONDS)).isTrue();
+        assertThat(runner.waitFor(10, TimeUnit.SECONDS)).isTrue();
 
         // for this test, we assume that python was available, and we were able to run the script
         assume().that(runner.getStderr()).startsWith("Usage: yes");
