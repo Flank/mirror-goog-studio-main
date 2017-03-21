@@ -152,7 +152,6 @@ struct VReg : public Operand {
   virtual bool Accept(Visitor* visitor) override { return visitor->Visit(this); }
 };
 
-// TODO: ideally we should model the bytecodes accurately by always using this for pairs
 struct VRegPair : public Operand {
   dex::u4 base_reg;
 
@@ -365,19 +364,23 @@ struct CodeIr {
   void DissasembleDebugInfo(const ir::DebugInfo* ir_debug_info);
 
   void FixupSwitches();
-  void FixupPackedSwitch(PackedSwitch* instr, dex::u4 baseOffset, const dex::u2* ptr);
-  void FixupSparseSwitch(SparseSwitch* instr, dex::u4 baseOffset, const dex::u2* ptr);
+  void FixupPackedSwitch(PackedSwitch* instr, dex::u4 base_offset, const dex::u2* ptr);
+  void FixupSparseSwitch(SparseSwitch* instr, dex::u4 base_offset, const dex::u2* ptr);
 
   SparseSwitch* DecodeSparseSwitch(const dex::u2* /*ptr*/, dex::u4 offset);
   PackedSwitch* DecodePackedSwitch(const dex::u2* /*ptr*/, dex::u4 offset);
   ArrayData* DecodeArrayData(const dex::u2* ptr, dex::u4 offset);
   Bytecode* DecodeBytecode(const dex::u2* ptr, dex::u4 offset);
 
-  IndexedOperand* GetIndexedOperand(dex::InstructionIndexType indexType, dex::u4 index);
+  IndexedOperand* GetIndexedOperand(dex::InstructionIndexType index_type, dex::u4 index);
 
   Type* GetType(dex::u4 index);
   String* GetString(dex::u4 index);
   Label* GetLabel(dex::u4 offset);
+
+  Operand* GetRegA(const dex::Instruction& dex_instr);
+  Operand* GetRegB(const dex::Instruction& dex_instr);
+  Operand* GetRegC(const dex::Instruction& dex_instr);
 
  private:
   ir::EncodedMethod* ir_method_;
@@ -389,12 +392,12 @@ struct CodeIr {
   // data structures for fixing up switch payloads
   struct PackedSwitchFixup {
     PackedSwitch* instr = nullptr;
-    dex::u4 baseOffset = kInvalidOffset;
+    dex::u4 base_offset = kInvalidOffset;
   };
 
   struct SparseSwitchFixup {
     SparseSwitch* instr = nullptr;
-    dex::u4 baseOffset = kInvalidOffset;
+    dex::u4 base_offset = kInvalidOffset;
   };
 
   // used during bytecode raising
