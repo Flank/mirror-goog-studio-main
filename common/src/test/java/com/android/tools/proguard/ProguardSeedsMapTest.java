@@ -44,10 +44,7 @@ public class ProguardSeedsMapTest {
         assertTrue(parser.hasClass("android.support.constraint.ConstraintLayout"));
         assertFalse(parser.hasClass("someClass"));
 
-        assertTrue(
-                parser.hasMethod(
-                        "android.support.annotation.RestrictTo$Scope",
-                        "android.support.annotation.RestrictTo$Scope[] values()"));
+        assertTrue(parser.hasMethod("android.support.annotation.RestrictTo$Scope", "values()"));
         assertTrue(
                 parser.hasMethod(
                         "android.support.constraint.ConstraintLayout",
