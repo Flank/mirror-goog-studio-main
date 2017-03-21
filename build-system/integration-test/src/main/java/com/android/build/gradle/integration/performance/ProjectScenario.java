@@ -62,7 +62,10 @@ public enum ProjectScenario {
                 flags.setCompiler(Flags.Compiler.DEX_ARCHIVE);
                 flags.setMultiDex(Flags.MultiDexMode.LEGACY);
             }),
-
+    DESUGAR(
+            flags -> {
+                flags.setCompiler(Flags.Compiler.DESUGAR);
+            }),
     ;
 
     private final Flags flags;
