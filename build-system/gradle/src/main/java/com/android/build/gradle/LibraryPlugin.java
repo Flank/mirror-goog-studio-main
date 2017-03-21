@@ -67,7 +67,7 @@ public class LibraryPlugin extends BasePlugin implements Plugin<Project> {
         return project.getExtensions()
                 .create(
                         "android",
-                        LibraryExtension.class,
+                        getExtensionClass(),
                         project,
                         instantiator,
                         androidBuilder,
@@ -77,6 +77,11 @@ public class LibraryPlugin extends BasePlugin implements Plugin<Project> {
                         signingConfigContainer,
                         buildOutputs,
                         extraModelInfo);
+    }
+
+    @NonNull
+    protected Class<? extends BaseExtension> getExtensionClass() {
+        return LibraryExtension.class;
     }
 
     @NonNull

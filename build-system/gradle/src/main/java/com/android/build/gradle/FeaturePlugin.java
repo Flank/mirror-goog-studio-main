@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.DependencyManager;
 import com.android.build.gradle.internal.FeatureTaskManager;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.TaskManager;
+import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.options.ProjectOptions;
@@ -30,6 +31,7 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.profile.Recorder;
 import javax.inject.Inject;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.Configuration;
 import org.gradle.internal.reflect.Instantiator;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
@@ -39,6 +41,24 @@ public class FeaturePlugin extends LibraryPlugin {
     @Inject
     public FeaturePlugin(Instantiator instantiator, ToolingModelBuilderRegistry registry) {
         super(instantiator, registry);
+    }
+
+    @Override
+    public void apply(@NonNull Project project) {
+        super.apply(project);
+
+        // create the configuration used to declare the feature split in the base split.
+        Configuration featureSplit =
+                project.getConfigurations()
+                        .maybeCreate(VariantDependencies.CONFIG_NAME_FEATURE_SPLIT);
+        featureSplit.setCanBeConsumed(false);
+        featureSplit.setCanBeResolved(false);
+    }
+
+    @NonNull
+    @Override
+    protected Class<? extends BaseExtension> getExtensionClass() {
+        return FeatureExtension.class;
     }
 
     // FIXME: Re-enable when the protos changes have been submitted.
