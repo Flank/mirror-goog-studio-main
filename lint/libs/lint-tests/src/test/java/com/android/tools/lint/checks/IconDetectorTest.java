@@ -960,6 +960,37 @@ public class IconDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
+    public void testQuickTileIconsCanBeVectors() throws Exception {
+        // Make sure we don't confuse manifest declarations of quick tile icons with launcher
+        // icons and wrongly insist that they must be in PNG format
+        // Regression test for https://code.google.com/p/android/issues/detail?id=257174
+        lint().files(
+                manifest(""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    package=\"pkg.my.myapplication\">\n"
+                        + "    <application\n"
+                        + "        android:allowBackup=\"true\"\n"
+                        + "        android:icon=\"@drawable/ic_action_name\"\n"
+                        + "        android:label=\"@string/app_name\"\n"
+                        + "        android:roundIcon=\"@mipmap/ic_launcher_round\"/>\n"
+                        + "        <service\n"
+                        + "            android:name=\"com.example.features.tiles.PassiveTileServiceOnlyToggle\"\n"
+                        + "            android:icon=\"@drawable/tile_disabled\"\n"
+                        + "            android:label=\"@string/quick_settings_passive_tile_only_toggle_label_disabled\"\n"
+                        + "            android:permission=\"android.permission.BIND_QUICK_SETTINGS_TILE\">\n"
+                        + "            <intent-filter>\n"
+                        + "                <action android:name=\"android.service.quicksettings.action.QS_TILE\" />\n"
+                        + "            </intent-filter>\n"
+                        + "        </service>"
+                        + "</manifest>"),
+                xml("res/drawable-v21/tile_disabled.xml", ""
+                        + "<vector xmlns:android=\"http://schemas.android.com/apk/res/android\" />\n"))
+                .issues(IconDetector.ICON_LAUNCHER_FORMAT)
+                .run()
+                .expectClean();
+    }
+
     public void test118398_a() throws Exception {
         // Regression test for http://b.android.com/118398
         lint().files(
