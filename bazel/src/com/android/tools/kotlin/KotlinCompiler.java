@@ -66,16 +66,19 @@ public class KotlinCompiler extends JarOutputCompiler {
                         dir = split[0];
                         prefix = split[1];
                     }
-                    writer.print("<sources path=\"");
-                    writer.print(new File(dir).getAbsolutePath());
-                    writer.println("\"/>");
-                    writer.print("<javaSourceRoots path=\"");
-                    writer.print(new File(dir).getAbsolutePath());
-                    if (prefix != null) {
-                        writer.print("\" packagePrefix=\"");
-                        writer.print(prefix);
+                    File dirFile = new File(dir);
+                    if (dirFile.exists()) {
+                        writer.print("<sources path=\"");
+                        writer.print(new File(dir).getAbsolutePath());
+                        writer.println("\"/>");
+                        writer.print("<javaSourceRoots path=\"");
+                        writer.print(new File(dir).getAbsolutePath());
+                        if (prefix != null) {
+                            writer.print("\" packagePrefix=\"");
+                            writer.print(prefix);
+                        }
+                        writer.println("\"/>");
                     }
-                    writer.println("\"/>");
                 }
                 String[] cp = classPath.split(":");
                 for (String s : cp) {
