@@ -30,26 +30,20 @@ import com.android.repository.api.RepoManager;
 import com.android.repository.api.Uninstaller;
 import com.android.repository.impl.manager.RepoManagerImpl;
 import com.android.repository.impl.meta.RepositoryPackages;
-import com.android.repository.testframework.FakeDownloader;
-import com.android.repository.testframework.FakeProgressIndicator;
-import com.android.repository.testframework.FakeProgressRunner;
-import com.android.repository.testframework.FakeSettingsController;
-import com.android.repository.testframework.MockFileOp;
+import com.android.repository.testframework.*;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
-
-import java.nio.file.Path;
-import junit.framework.TestCase;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import junit.framework.TestCase;
 
 /**
  * Tests for {@link BasicInstallerFactory}.
@@ -89,6 +83,41 @@ public class BasicInstallerTest extends TestCase {
         // Verify that the deleted dir is gone.
         assertFalse(fop.exists(new File("/repo/dummy/foo")));
         assertTrue(fop.exists(new File("/repo/dummy/bar/package.xml")));
+    }
+
+    public void testDeleteNonstandardLocation() throws Exception {
+        File toDeleteDir = new File("/sdk/foo with space");
+        File otherDir1 = new File("/sdk/foo");
+        File otherDir2 = new File("/sdk/bar");
+        MockFileOp fop = new MockFileOp();
+        fop.mkdirs(otherDir1);
+        fop.mkdirs(otherDir2);
+        fop.mkdirs(toDeleteDir);
+        File toDeleteFile = new File(toDeleteDir, "a");
+        fop.recordExistingFile(toDeleteFile);
+        File otherFile1 = new File(otherDir1, "b");
+        fop.recordExistingFile(otherFile1);
+        File otherFile2 = new File(otherDir2, "c");
+        fop.recordExistingFile(otherFile2);
+
+        LocalPackage localPackage = new FakePackage.FakeLocalPackage("foo");
+        localPackage.setInstalledPath(toDeleteDir);
+        RepositoryPackages packages =
+                new RepositoryPackages(
+                        ImmutableList.of(new FakePackage.FakeLocalPackage("bar"), localPackage),
+                        ImmutableList.of());
+        RepoManager mgr = new FakeRepoManager(new File("/sdk"), packages);
+        InstallerFactory factory = new BasicInstallerFactory();
+        Uninstaller uninstaller = factory.createUninstaller(localPackage, mgr, fop);
+        FakeProgressIndicator progress = new FakeProgressIndicator();
+        uninstaller.prepare(progress);
+        uninstaller.complete(progress);
+        assertFalse(fop.exists(toDeleteFile));
+        assertFalse(fop.exists(toDeleteDir));
+        assertTrue(fop.exists(otherFile1));
+        assertTrue(fop.exists(otherFile2));
+        assertTrue(fop.exists(otherDir1));
+        assertTrue(fop.exists(otherDir2));
     }
 
     // Test installing a new package
