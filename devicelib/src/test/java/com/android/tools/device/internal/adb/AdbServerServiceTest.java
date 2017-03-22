@@ -61,7 +61,7 @@ public class AdbServerServiceTest {
      * Each test can take a maximum of this time to complete before it times out. The value is set
      * to be high enough such that the tests succeed on CI servers.
      */
-    @Rule public Timeout testTimeout = new Timeout(5000);
+    @Rule public Timeout testTimeout = new Timeout(5, TimeUnit.SECONDS);
 
     private AdbServerOptions options;
     @Mock private Launcher launcher;
