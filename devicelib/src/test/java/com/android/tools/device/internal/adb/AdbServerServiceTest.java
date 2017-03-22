@@ -48,16 +48,20 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import org.mockito.quality.Strictness;
 
 public class AdbServerServiceTest {
-    private static final int PROBE_TIMEOUT_MS = 50;
-    private static final int START_TIMEOUT_MS = 200;
-
     @Rule public MockitoRule rule = MockitoJUnit.rule().strictness(Strictness.STRICT_STUBS);
+
+    /**
+     * Each test can take a maximum of this time to complete before it times out. The value is set
+     * to be high enough such that the tests succeed on CI servers.
+     */
+    @Rule public Timeout testTimeout = new Timeout(5000);
 
     private AdbServerOptions options;
     @Mock private Launcher launcher;
@@ -81,12 +85,12 @@ public class AdbServerServiceTest {
     @Before
     public void setUp() throws IOException {
         executorService = Executors.newCachedThreadPool();
+        // we can use a smaller amount than in production code in tests since they are a more
+        // controlled environment
+        int probeTimeoutMs = 50;
         options =
                 new AdbServerOptions(
-                        AdbConstants.ANY_PORT,
-                        AdbConstants.DEFAULT_HOST,
-                        PROBE_TIMEOUT_MS,
-                        START_TIMEOUT_MS);
+                        AdbConstants.ANY_PORT, AdbConstants.DEFAULT_HOST, probeTimeoutMs);
     }
 
     @After
@@ -103,14 +107,14 @@ public class AdbServerServiceTest {
         adbService = new AdbServerService(options, launcher, probe, executorService);
 
         // start the server
-        adbService.startAsync().awaitRunning(START_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        adbService.startAsync().awaitRunning();
 
         // verify interactions during launch
         assertThat(adbService.state()).isEqualTo(Service.State.RUNNING);
         verify(launcher, never()).launch(anyInt(), anyLong(), any());
 
         // now attempt to stop
-        adbService.stopAsync().awaitTerminated(1, TimeUnit.MILLISECONDS);
+        adbService.stopAsync().awaitTerminated();
 
         // verify interactions during termination
         assertThat(adbService.state()).isEqualTo(Service.State.TERMINATED);
@@ -127,7 +131,7 @@ public class AdbServerServiceTest {
         adbService = new AdbServerService(options, launcher, probe, executorService);
 
         // start the server
-        adbService.startAsync().awaitRunning(START_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        adbService.startAsync().awaitRunning();
 
         // verify interactions during launch
         assertThat(adbService.state()).isEqualTo(Service.State.RUNNING);
@@ -138,7 +142,7 @@ public class AdbServerServiceTest {
                         eq(TimeUnit.MILLISECONDS));
 
         // now attempt to stop
-        adbService.stopAsync().awaitTerminated(10, TimeUnit.MILLISECONDS);
+        adbService.stopAsync().awaitTerminated();
 
         // verify interactions during termination
         assertThat(adbService.state()).isEqualTo(Service.State.TERMINATED);
@@ -157,7 +161,7 @@ public class AdbServerServiceTest {
         adbService = new AdbServerService(options, launcher, probe, executorService);
 
         try {
-            adbService.startAsync().awaitRunning(START_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            adbService.startAsync().awaitRunning();
             fail("Shouldn't have been able to start the server if the launcher threw an error");
         } catch (IllegalStateException ignored) {
             assertThat(adbService.state()).isEqualTo(Service.State.FAILED);
@@ -173,7 +177,7 @@ public class AdbServerServiceTest {
 
         adbService = new AdbServerService(options, launcher, probe, executorService);
 
-        adbService.startAsync().awaitRunning(START_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        adbService.startAsync().awaitRunning();
 
         try {
             adbService.stopAsync().awaitTerminated();
@@ -191,7 +195,7 @@ public class AdbServerServiceTest {
 
         CompletableFuture<UnsignedInteger> future = adbService.execute(new ServerVersion());
         try {
-            future.get(10, TimeUnit.MILLISECONDS);
+            future.get();
             fail("Shouldn't be able to execute a command when service is not running");
         } catch (ExecutionException e) {
             assertThat(e.getCause()).isInstanceOf(IllegalStateException.class);
@@ -207,12 +211,12 @@ public class AdbServerServiceTest {
         when(command.execute(connection)).thenThrow(new NullPointerException("foo"));
 
         adbService = new AdbServerService(options, launcher, probe, executorService);
-        adbService.startAsync().awaitRunning(START_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        adbService.startAsync().awaitRunning();
 
         CompletableFuture<?> cf = adbService.execute(command);
 
         try {
-            cf.get(10, TimeUnit.MILLISECONDS);
+            cf.get();
             fail(
                     "Should not have been able to obtain the result of a command that threw an exception");
         } catch (ExecutionException e) {
@@ -229,10 +233,10 @@ public class AdbServerServiceTest {
         when(command.getName()).thenReturn("mock");
 
         adbService = new AdbServerService(options, launcher, probe, executorService);
-        adbService.startAsync().awaitRunning(START_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        adbService.startAsync().awaitRunning();
 
         CompletableFuture<?> cf = adbService.execute(command);
-        cf.get(10, TimeUnit.MILLISECONDS);
+        cf.get();
 
         // verify that the execute method of the command was invoked
         verify(command, times(1)).execute(connection);

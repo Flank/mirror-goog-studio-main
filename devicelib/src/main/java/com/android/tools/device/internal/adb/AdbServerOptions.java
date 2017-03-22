@@ -36,16 +36,15 @@ class AdbServerOptions {
     private final long startTimeoutMs;
 
     public AdbServerOptions(int port, @Nullable String hostName) {
-        this(port, hostName, PROBE_TIMEOUT_MS, START_TIMEOUT_MS);
+        this(port, hostName, PROBE_TIMEOUT_MS);
     }
 
     @VisibleForTesting
-    AdbServerOptions(
-            int port, @Nullable String hostName, long probeTimeoutMs, long startTimeoutMs) {
+    AdbServerOptions(int port, @Nullable String hostName, long probeTimeoutMs) {
         this.port = port;
         this.hostName = hostName;
         this.probeTimeoutMs = probeTimeoutMs;
-        this.startTimeoutMs = startTimeoutMs;
+        this.startTimeoutMs = START_TIMEOUT_MS;
     }
 
     @Nullable
