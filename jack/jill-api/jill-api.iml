@@ -9,6 +9,6 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="inheritedJdk" />
     <orderEntry type="library" scope="TEST" name="JUnit4" level="project" />
-    <orderEntry type="library" name="jsr-305" level="project" />
+    <orderEntry type="library" name="jsr305" level="project" />
   </component>
 </module>
