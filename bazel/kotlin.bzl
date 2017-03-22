@@ -23,7 +23,7 @@ def _kotlin_jar_impl(ctx):
 
 
   ctx.action(
-    inputs = ctx.files.srcs + list(all_deps) + option_files,
+    inputs = ctx.files.inputs + list(all_deps) + option_files,
     outputs = [class_jar],
     mnemonic = "kotlinc",
     arguments = args,
