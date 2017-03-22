@@ -17,6 +17,7 @@
 package com.android.ddmlib;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.TruthJUnit.assume;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -98,6 +99,9 @@ public class IntegrationTest {
             }
 
             assertThat(bridge.isConnected()).isTrue();
+
+            // should we rather be waiting for the initial device list to become available?
+            assume().that(bridge.hasInitialDeviceList()).isTrue();
 
             IDevice[] devices = bridge.getDevices();
             assertThat(devices.length).isEqualTo(1);
