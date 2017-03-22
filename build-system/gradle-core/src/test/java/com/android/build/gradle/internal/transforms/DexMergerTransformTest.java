@@ -19,7 +19,9 @@ package com.android.build.gradle.internal.transforms;
 import static com.android.testutils.truth.MoreTruth.assertThat;
 import static org.mockito.Mockito.when;
 
+import android.databinding.tool.util.Preconditions;
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.api.transform.Context;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.Status;
@@ -228,16 +230,25 @@ public class DexMergerTransformTest {
     }
 
     private DexMergerTransform getTransform(@NonNull DexingMode mode) throws IOException {
-        return getTransform(mode, ImmutableSet.of());
+        Preconditions.check(
+                mode != DexingMode.LEGACY_MULTIDEX, "Main dex list required for legacy multidex");
+        return getTransform(mode, null);
     }
 
     private DexMergerTransform getTransform(
-            @NonNull DexingMode mode, @NonNull ImmutableSet<String> mainDex) throws IOException {
-        File tmpFile = tmpDir.newFile();
-        Files.write(tmpFile.toPath(), mainDex, StandardOpenOption.TRUNCATE_EXISTING);
-        FileCollection collection = Mockito.mock(FileCollection.class);
-        when(collection.getSingleFile()).thenReturn(tmpFile);
-
+            @NonNull DexingMode mode, @Nullable ImmutableSet<String> mainDex) throws IOException {
+        FileCollection collection;
+        if (mainDex != null) {
+            Preconditions.check(
+                    mode == DexingMode.LEGACY_MULTIDEX,
+                    "Main dex list must only be used for legacy multidex");
+            File tmpFile = tmpDir.newFile();
+            Files.write(tmpFile.toPath(), mainDex, StandardOpenOption.TRUNCATE_EXISTING);
+            collection = Mockito.mock(FileCollection.class);
+            when(collection.getSingleFile()).thenReturn(tmpFile);
+        } else {
+            collection = null;
+        }
         return new DexMergerTransform(mode, collection, new NoOpErrorReporter());
     }
 

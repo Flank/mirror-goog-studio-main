@@ -18,11 +18,13 @@ package com.android.builder.dexing;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.dex.Dex;
 import com.android.dex.DexIndexOverflowException;
 import com.android.dx.merge.DexMerger;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.utils.PathUtils;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
@@ -30,6 +32,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -106,7 +109,7 @@ public class DexArchiveMerger {
     public void merge(
             @NonNull Collection<Path> inputs,
             @NonNull Path outputDir,
-            @NonNull Set<String> mainDexClasses)
+            @Nullable Set<String> mainDexClasses)
             throws IOException {
         if (inputs.isEmpty()) {
             return;
@@ -115,10 +118,24 @@ public class DexArchiveMerger {
         // sort paths so we produce deterministic output
         List<Path> inputPaths = Ordering.natural().sortedCopy(inputs);
 
-        if (config.getDexingMode() == DexingMode.MONO_DEX) {
-            mergeMonoDex(inputPaths, outputDir);
-        } else {
-            mergeMultidex(inputPaths, outputDir, mainDexClasses);
+        switch (config.getDexingMode()) {
+            case MONO_DEX:
+                Preconditions.checkState(
+                        mainDexClasses == null, "Main dex list cannot be set for monodex.");
+                mergeMonoDex(inputPaths, outputDir);
+                break;
+            case LEGACY_MULTIDEX:
+                Preconditions.checkNotNull(
+                        mainDexClasses, "Main dex list must be set for legacy multidex.");
+                mergeMultidex(inputPaths, outputDir, mainDexClasses);
+                break;
+            case NATIVE_MULTIDEX:
+                Preconditions.checkState(
+                        mainDexClasses == null, "Main dex list cannot be set for native multidex.");
+                mergeMultidex(inputPaths, outputDir, Collections.emptySet());
+                break;
+            default:
+                throw new IllegalStateException("Unknown dexing mode" + config.getDexingMode());
         }
     }
 
@@ -227,7 +244,7 @@ public class DexArchiveMerger {
             }
         }
 
-        if (!toMergeInMain.isEmpty()) {
+        if (config.getDexingMode() == DexingMode.LEGACY_MULTIDEX) {
             // write the main dex file
             submitForMerging(toMergeInMain, output.resolve(getDexFileName(0)));
         }

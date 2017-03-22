@@ -134,6 +134,13 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         return (T) this;
     }
 
+    @Deprecated
+    @NonNull
+    public T withProperty(@NonNull String propertyName, @NonNull String value) {
+        withArgument("-P" + propertyName + "=" + value);
+        return (T) this;
+    }
+
     /** Add additional build arguments. */
     public final T withArguments(@NonNull List<String> arguments) {
         for (String argument : arguments) {
