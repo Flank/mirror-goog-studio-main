@@ -156,6 +156,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
     }
 
     public T withLoggingLevel(@NonNull LoggingLevel loggingLevel) {
+        this.loggingLevel = loggingLevel;
         return (T) this;
     }
 
