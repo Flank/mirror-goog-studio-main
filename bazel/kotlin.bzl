@@ -21,9 +21,8 @@ def _kotlin_jar_impl(ctx):
   args, option_files = create_java_compiler_args_srcs(ctx, content, class_jar.path,
                                                  all_deps)
 
-
   ctx.action(
-    inputs = ctx.files.srcs + list(all_deps) + option_files,
+    inputs = ctx.files.inputs + list(all_deps) + option_files,
     outputs = [class_jar],
     mnemonic = "kotlinc",
     arguments = args,
@@ -61,30 +60,32 @@ kotlin_jar = rule(
     implementation = _kotlin_jar_impl,
 )
 
-def kotlin_java_library(name, java_dir, kotlin_dir, resources_dir, deps, pom=None, visibility = None):
-  java_srcs = native.glob([java_dir + "/**/*.java"])
-  kotlin_srcs = native.glob([kotlin_dir + "/**/*.kt"])
-  resources = native.glob([resources_dir + "/**"])
+def kotlin_library(name, srcs, resources=[], deps=[], pom=None, visibility=None):
+  kotlins = native.glob([src + "/**/*.kt" for src in srcs])
+  javas = native.glob([src + "/**/*.java" for src in srcs])
 
   kotlin_name = name + ".kotlin"
+  targets = [kotlin_name]
   kotlin_jar(
       name = kotlin_name,
-      # kotlinc cannot take individual *.java files, just the directory.
-      srcs = kotlin_srcs + [java_dir],
+      srcs = srcs,
+      inputs = kotlins + javas,
       deps = deps,
   )
 
-  java_name = name + ".java"
-  native.java_library(
-      name = java_name,
-      srcs = java_srcs,
-      resources = resources,
-      deps = [":lib" + kotlin_name + ".jar"] + deps,
-  )
+  if javas:
+    java_name = name + ".java"
+    targets += [java_name]
+    native.java_library(
+        name = java_name,
+        srcs = javas,
+        resources = resources,
+        deps = [":lib" + kotlin_name + ".jar"] + deps,
+    )
 
   singlejar(
       name = name,
-      jars = [":lib" + target + ".jar" for target in (java_name, kotlin_name)],
+      jars = [":lib" + target + ".jar" for target in targets],
       visibility = visibility,
   )
 
