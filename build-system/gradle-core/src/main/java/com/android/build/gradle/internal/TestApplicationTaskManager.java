@@ -144,9 +144,7 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
 
     @Override
     protected void createMinifyTransform(
-            @NonNull TaskFactory taskFactory,
-            @NonNull VariantScope variantScope,
-            boolean createJarFile) {
+            @NonNull TaskFactory taskFactory, @NonNull VariantScope variantScope) {
         if (getTestTargetMapping(variantScope) != null) {
             doCreateMinifyTransform(taskFactory, variantScope, getTestTargetMapping(variantScope));
         }

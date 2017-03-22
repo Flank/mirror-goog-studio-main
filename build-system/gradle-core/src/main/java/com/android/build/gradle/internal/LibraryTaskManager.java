@@ -359,7 +359,7 @@ public class LibraryTaskManager extends TaskManager {
 
                         // ----- Minify next -----
                         if (buildType.isMinifyEnabled()) {
-                            createMinifyTransform(tasks, variantScope, false);
+                            createMinifyTransform(tasks, variantScope);
                         }
 
                         maybeCreateShrinkResourcesTransform(tasks, variantScope);
