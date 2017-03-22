@@ -22,12 +22,10 @@ import static com.android.builder.core.BuilderConstants.RELEASE;
 import com.android.annotations.NonNull;
 import com.android.build.OutputFile;
 import com.android.build.gradle.AndroidConfig;
-import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantModel;
-import com.android.build.gradle.internal.api.ApkVariantImpl;
-import com.android.build.gradle.internal.api.ApkVariantOutputImpl;
 import com.android.build.gradle.internal.api.ApplicationVariantImpl;
+import com.android.build.gradle.internal.api.BaseVariantImpl;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
@@ -40,8 +38,7 @@ import com.android.builder.core.VariantType;
 import com.android.builder.profile.Recorder;
 import com.android.utils.Pair;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import java.util.List;
+import java.util.Collection;
 import java.util.Set;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.internal.reflect.Instantiator;
@@ -135,14 +132,16 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
     }
 
     @Override
-    public Class<ApplicationVariantImpl> getVariantImplementationClass() {
+    @NonNull
+    public Class<? extends BaseVariantImpl> getVariantImplementationClass(
+            @NonNull BaseVariantData variantData) {
         return ApplicationVariantImpl.class;
     }
 
     @NonNull
     @Override
-    public VariantType getVariantConfigurationType() {
-        return VariantType.DEFAULT;
+    public Collection<VariantType> getVariantConfigurationTypes() {
+        return ImmutableList.of(VariantType.DEFAULT);
     }
 
     @Override

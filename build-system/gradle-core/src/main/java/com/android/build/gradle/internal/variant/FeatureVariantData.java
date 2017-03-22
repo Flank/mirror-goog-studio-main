@@ -16,77 +16,63 @@
 package com.android.build.gradle.internal.variant;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
 import com.android.builder.core.ErrorReporter;
 import com.android.builder.core.VariantType;
 import com.android.builder.profile.Recorder;
-import com.google.common.collect.Lists;
-import java.util.List;
+import com.google.common.collect.Maps;
+import java.util.Map;
 
-/**
- * Data about a variant that produce a test APK
- */
-public class TestVariantData extends ApkVariantData {
+/** Data about a variant that produce a feature split. */
+public class FeatureVariantData extends BaseVariantData implements TestedVariantData {
 
-    public DeviceProviderInstrumentTestTask connectedTestTask;
-    public final List<DeviceProviderInstrumentTestTask> providerTestTaskList = Lists.newArrayList();
-    @NonNull
-    private final TestedVariantData testedVariantData;
+    private final Map<VariantType, TestVariantData> testVariants;
 
-    public TestVariantData(
+    public FeatureVariantData(
             @NonNull GlobalScope globalScope,
             @NonNull AndroidConfig androidConfig,
             @NonNull TaskManager taskManager,
             @NonNull GradleVariantConfiguration config,
-            @NonNull TestedVariantData testedVariantData,
             @NonNull ErrorReporter errorReporter,
             @NonNull Recorder recorder) {
         super(globalScope, androidConfig, taskManager, config, errorReporter, recorder);
-        this.testedVariantData = testedVariantData;
+        testVariants = Maps.newEnumMap(VariantType.class);
 
         // create default output
         getSplitFactory().addMainApk();
     }
 
-    @NonNull
-    public TestedVariantData getTestedVariantData() {
-        return testedVariantData;
-    }
-
     @Override
     @NonNull
     public String getDescription() {
-        String prefix;
-        switch (getType()) {
-            case ANDROID_TEST:
-                prefix = "android (on device) tests";
-                break;
-            case UNIT_TEST:
-                prefix = "unit tests";
-                break;
-            default:
-                throw new IllegalStateException("Unknown test variant type.");
-        }
         if (getVariantConfiguration().hasFlavors()) {
-            return String.format("%s for the %s%s build", prefix,
-                    getCapitalizedFlavorName(), getCapitalizedBuildTypeName());
+            return String.format(
+                    "%s feature split build for flavor %s",
+                    getCapitalizedBuildTypeName(), getCapitalizedFlavorName());
         } else {
-            return String.format("%s for the %s build", prefix,
-                    getCapitalizedBuildTypeName());
+            return String.format("%s feature split build", getCapitalizedBuildTypeName());
         }
+    }
+
+    @Nullable
+    @Override
+    public TestVariantData getTestVariantData(@NonNull VariantType type) {
+        return testVariants.get(type);
+    }
+
+    @Override
+    public void setTestVariantData(
+            @NonNull TestVariantData testVariantData, @NonNull VariantType type) {
+        testVariants.put(type, testVariantData);
     }
 
     @NonNull
     @Override
     public String getTaskName(@NonNull String prefix, @NonNull String suffix) {
-        if (testedVariantData.getVariantConfiguration().getType() == VariantType.FEATURE) {
-            return super.getTaskName(prefix, TaskManager.FEATURE_SUFFIX + suffix);
-        } else {
-            return super.getTaskName(prefix, suffix);
-        }
+        return super.getTaskName(prefix, TaskManager.FEATURE_SUFFIX + suffix);
     }
 }

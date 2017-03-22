@@ -20,20 +20,24 @@ import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.gradle.AndroidConfig;
-import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
+import com.android.builder.core.VariantType;
 import com.android.builder.profile.Recorder;
+import com.google.common.collect.ImmutableMap;
+import java.util.Map;
 import java.util.Set;
 import org.gradle.api.Project;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
-/** TaskManager for creating tasks for feature variants in an Android feature project. */
-public class FeatureTaskManager extends TaskManager {
+/** TaskManager for creating tasks in an Android feature project. */
+public class MultiTypeTaskManager extends TaskManager {
 
-    public FeatureTaskManager(
+    @NonNull Map<VariantType, TaskManager> delegates;
+
+    public MultiTypeTaskManager(
             @NonNull GlobalScope globalScope,
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
@@ -55,18 +59,50 @@ public class FeatureTaskManager extends TaskManager {
                 dependencyManager,
                 toolingRegistry,
                 recorder);
+        delegates =
+                ImmutableMap.of(
+                        VariantType.FEATURE,
+                        new FeatureTaskManager(
+                                globalScope,
+                                project,
+                                projectOptions,
+                                androidBuilder,
+                                dataBindingBuilder,
+                                extension,
+                                sdkHandler,
+                                dependencyManager,
+                                toolingRegistry,
+                                recorder),
+                        VariantType.LIBRARY,
+                        new LibraryTaskManager(
+                                globalScope,
+                                project,
+                                projectOptions,
+                                androidBuilder,
+                                dataBindingBuilder,
+                                extension,
+                                sdkHandler,
+                                dependencyManager,
+                                toolingRegistry,
+                                recorder));
     }
 
     @Override
     public void createTasksForVariantScope(
-            @NonNull final TaskFactory tasks, @NonNull final VariantScope variantScope) {
-        // FIXME: Create feature tasks.
+            @NonNull TaskFactory tasks, @NonNull VariantScope variantScope) {
+        delegates
+                .get(variantScope.getVariantData().getType())
+                .createTasksForVariantScope(tasks, variantScope);
     }
 
     @NonNull
     @Override
     protected Set<? super QualifiedContent.Scope> getResMergingScopes(
             @NonNull VariantScope variantScope) {
-        return TransformManager.SCOPE_FULL_PROJECT;
+        VariantType variantType = variantScope.getVariantData().getType();
+        if (variantType.isForTesting()) {
+            variantType = variantScope.getTestedVariantData().getType();
+        }
+        return delegates.get(variantType).getResMergingScopes(variantScope);
     }
 }

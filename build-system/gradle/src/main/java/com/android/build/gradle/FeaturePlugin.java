@@ -19,12 +19,14 @@ package com.android.build.gradle;
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.DependencyManager;
-import com.android.build.gradle.internal.FeatureTaskManager;
+import com.android.build.gradle.internal.MultiTypeTaskManager;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.variant.MultiTypeVariantFactory;
+import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.AndroidProject;
@@ -69,6 +71,17 @@ public class FeaturePlugin extends LibraryPlugin {
         return GradleBuildProject.PluginType.FEATURE;
     }*/
 
+    @NonNull
+    @Override
+    protected VariantFactory createVariantFactory(
+            @NonNull GlobalScope globalScope,
+            @NonNull Instantiator instantiator,
+            @NonNull AndroidBuilder androidBuilder,
+            @NonNull AndroidConfig androidConfig) {
+        return new MultiTypeVariantFactory(
+                globalScope, androidBuilder, instantiator, androidConfig);
+    }
+
     @Override
     protected int getProjectType() {
         return AndroidProject.PROJECT_TYPE_FEATURE;
@@ -88,7 +101,7 @@ public class FeaturePlugin extends LibraryPlugin {
             @NonNull DependencyManager dependencyManager,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
-        return new FeatureTaskManager(
+        return new MultiTypeTaskManager(
                 globalScope,
                 project,
                 projectOptions,

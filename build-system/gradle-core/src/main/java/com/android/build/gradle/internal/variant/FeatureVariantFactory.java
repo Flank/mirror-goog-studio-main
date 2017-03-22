@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantModel;
 import com.android.build.gradle.internal.api.BaseVariantImpl;
-import com.android.build.gradle.internal.api.InstantAppVariantImpl;
+import com.android.build.gradle.internal.api.FeatureVariantImpl;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
@@ -38,13 +38,12 @@ import java.util.Collection;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.internal.reflect.Instantiator;
 
-/** An implementation of VariantFactory for a project that generates IAPKs. */
-public class InstantAppVariantFactory extends BaseVariantFactory {
+public class FeatureVariantFactory extends BaseVariantFactory {
 
-    public InstantAppVariantFactory(
+    public FeatureVariantFactory(
             @NonNull GlobalScope globalScope,
-            @NonNull Instantiator instantiator,
             @NonNull AndroidBuilder androidBuilder,
+            @NonNull Instantiator instantiator,
             @NonNull AndroidConfig extension) {
         super(globalScope, androidBuilder, instantiator, extension);
     }
@@ -55,29 +54,26 @@ public class InstantAppVariantFactory extends BaseVariantFactory {
             @NonNull GradleVariantConfiguration variantConfiguration,
             @NonNull TaskManager taskManager,
             @NonNull Recorder recorder) {
-        InstantAppVariantData variant =
-                new InstantAppVariantData(
-                        globalScope,
-                        extension,
-                        taskManager,
-                        variantConfiguration,
-                        androidBuilder.getErrorReporter(),
-                        recorder);
-        variant.getSplitFactory().addMainApk();
-        return variant;
+        return new FeatureVariantData(
+                globalScope,
+                extension,
+                taskManager,
+                variantConfiguration,
+                androidBuilder.getErrorReporter(),
+                recorder);
     }
 
     @Override
     @NonNull
     public Class<? extends BaseVariantImpl> getVariantImplementationClass(
             @NonNull BaseVariantData variantData) {
-        return InstantAppVariantImpl.class;
+        return FeatureVariantImpl.class;
     }
 
     @NonNull
     @Override
     public Collection<VariantType> getVariantConfigurationTypes() {
-        return ImmutableList.of(VariantType.INSTANTAPP);
+        return ImmutableList.of(VariantType.FEATURE);
     }
 
     @Override
@@ -86,12 +82,11 @@ public class InstantAppVariantFactory extends BaseVariantFactory {
     }
 
     @Override
-    public void validateModel(@NonNull VariantModel model) {
-        // No additional checks for InstantAppVariantFactory, so just return.
-    }
+    public void validateModel(@NonNull VariantModel model) {}
 
     @Override
-    public void createDefaultComponents(@NonNull NamedDomainObjectContainer<BuildType> buildTypes,
+    public void createDefaultComponents(
+            @NonNull NamedDomainObjectContainer<BuildType> buildTypes,
             @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavors,
             @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigs) {
         // must create signing config first so that build type 'debug' can be initialized

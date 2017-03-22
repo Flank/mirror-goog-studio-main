@@ -68,11 +68,13 @@ import com.android.builder.utils.FileCache;
 import com.android.utils.StringHelper;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
 import java.io.File;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -430,6 +432,11 @@ public class VariantManager implements VariantModel {
                     (BaseVariantData) ((TestVariantData) variantData).getTestedVariantData();
             final VariantType testedVariantType = testedVariantData.getVariantConfiguration().getType();
 
+            // FIXME: Remove this once we have proper tasks set for feature variants.
+            if (testedVariantType == VariantType.FEATURE) {
+                return;
+            }
+
             // Add the container of dependencies, the order of the libraries is important.
             // In descending order: build type (only for unit test), flavors, defaultConfig.
             List<DefaultAndroidSourceSet> testVariantSourceSets = Lists.newArrayListWithExpectedSize(
@@ -712,10 +719,21 @@ public class VariantManager implements VariantModel {
         }
     }
 
-    /** Create a VariantData for a specific combination of BuildType and ProductFlavor list. */
-    public BaseVariantData createVariantData(
+    public Collection<BaseVariantData> createVariantData(
             @NonNull com.android.builder.model.BuildType buildType,
             @NonNull List<? extends ProductFlavor> productFlavorList) {
+        ImmutableList.Builder<BaseVariantData> variantDataBuilder = new ImmutableList.Builder<>();
+        for (VariantType variantType : variantFactory.getVariantConfigurationTypes()) {
+            variantDataBuilder.add(
+                    createVariantDataForVariantType(buildType, productFlavorList, variantType));
+        }
+        return variantDataBuilder.build();
+    }
+
+    private BaseVariantData createVariantDataForVariantType(
+            @NonNull com.android.builder.model.BuildType buildType,
+            @NonNull List<? extends ProductFlavor> productFlavorList,
+            @NonNull VariantType variantType) {
         BuildTypeData buildTypeData = buildTypes.get(buildType.getName());
 
         final DefaultAndroidSourceSet sourceSet = defaultConfigData.getSourceSet();
@@ -728,10 +746,10 @@ public class VariantManager implements VariantModel {
                                 getParser(sourceSet.getManifestFile()),
                                 buildTypeData.getBuildType(),
                                 buildTypeData.getSourceSet(),
-                                variantFactory.getVariantConfigurationType(),
+                                variantType,
                                 signingOverride);
 
-        if (variantConfig.getType() == LIBRARY && variantConfig.isJackEnabled()) {
+        if (variantType == LIBRARY && variantConfig.isJackEnabled()) {
             project.getLogger().warn(
                     "{}, {}: Jack compiler is not supported in library projects, falling back to javac.",
                     project.getPath(),
@@ -955,6 +973,13 @@ public class VariantManager implements VariantModel {
      */
     private void createVariantDataForProductFlavors(
             @NonNull List<ProductFlavor> productFlavorList) {
+        for (VariantType variantType : variantFactory.getVariantConfigurationTypes()) {
+            createVariantDataForProductFlavorsAndVariantType(productFlavorList, variantType);
+        }
+    }
+
+    private void createVariantDataForProductFlavorsAndVariantType(
+            @NonNull List<ProductFlavor> productFlavorList, @NonNull VariantType variantType) {
 
         BuildTypeData testBuildTypeData = null;
         if (extension instanceof TestedAndroidConfig) {
@@ -981,8 +1006,9 @@ public class VariantManager implements VariantModel {
         final boolean projectMatch;
         final String restrictedVariantName;
         if (restrictVariants) {
-            projectMatch = variantFactory.getVariantConfigurationType() != VariantType.LIBRARY &&
-                    project.getPath().equals(restrictedProject);
+            projectMatch =
+                    variantType != VariantType.LIBRARY
+                            && project.getPath().equals(restrictedProject);
             restrictedVariantName = AndroidGradleOptions.getRestrictVariantName(project);
         } else {
             projectMatch = false;
@@ -996,7 +1022,7 @@ public class VariantManager implements VariantModel {
                 variantFilter.reset(
                         defaultConfig,
                         buildTypeData.getBuildType(),
-                        variantFactory.getVariantConfigurationType(),
+                        variantType,
                         productFlavorList);
 
                 if (restrictVariants) {
@@ -1014,7 +1040,8 @@ public class VariantManager implements VariantModel {
 
             if (!ignore) {
                 BaseVariantData variantData =
-                        createVariantData(buildTypeData.getBuildType(), productFlavorList);
+                        createVariantDataForVariantType(
+                                buildTypeData.getBuildType(), productFlavorList, variantType);
                 addVariant(variantData);
 
                 GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();

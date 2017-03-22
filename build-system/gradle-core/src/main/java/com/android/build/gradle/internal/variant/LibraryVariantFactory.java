@@ -37,8 +37,9 @@ import com.android.builder.core.ErrorReporter;
 import com.android.builder.core.VariantType;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.profile.Recorder;
+import com.google.common.collect.ImmutableList;
+import java.util.Collection;
 import org.gradle.api.NamedDomainObjectContainer;
-import org.gradle.api.Project;
 import org.gradle.internal.reflect.Instantiator;
 
 public class LibraryVariantFactory extends BaseVariantFactory {
@@ -67,14 +68,16 @@ public class LibraryVariantFactory extends BaseVariantFactory {
     }
 
     @Override
-    public Class<? extends BaseVariantImpl> getVariantImplementationClass() {
+    @NonNull
+    public Class<? extends BaseVariantImpl> getVariantImplementationClass(
+            @NonNull BaseVariantData variantData) {
         return LibraryVariantImpl.class;
     }
 
     @NonNull
     @Override
-    public VariantType getVariantConfigurationType() {
-        return VariantType.LIBRARY;
+    public Collection<VariantType> getVariantConfigurationTypes() {
+        return ImmutableList.of(VariantType.LIBRARY);
     }
 
     @Override

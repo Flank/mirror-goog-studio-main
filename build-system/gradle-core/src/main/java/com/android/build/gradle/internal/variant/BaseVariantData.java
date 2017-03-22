@@ -315,6 +315,11 @@ public abstract class BaseVariantData implements TaskContainer {
         return variantConfiguration.getFullName();
     }
 
+    @NonNull
+    public String getTaskName(@NonNull String prefix, @NonNull String suffix) {
+        return prefix + StringHelper.capitalize(variantConfiguration.getFullName()) + suffix;
+    }
+
     @Nullable
     public List<File> getExtraGeneratedSourceFolders() {
         return extraGeneratedSourceFolders;
