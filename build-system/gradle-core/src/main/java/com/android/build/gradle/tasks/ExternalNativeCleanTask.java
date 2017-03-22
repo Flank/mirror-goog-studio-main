@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.tasks.BaseTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.builder.core.AndroidBuilder;
@@ -49,13 +50,18 @@ import org.gradle.api.tasks.TaskAction;
  * <p>It declares no inputs or outputs, as it's supposed to always run when invoked. Incrementality
  * is left to the underlying build system.
  */
-public class ExternalNativeCleanTask extends ExternalNativeBaseTask {
+public class ExternalNativeCleanTask extends BaseTask {
 
     private List<File> nativeBuildConfigurationsJsons;
 
     private File objFolder;
 
     private Map<Abi, File> stlSharedObjectFiles;
+
+    /** Log low level diagnostic information. */
+    protected void diagnostic(String format, Object... args) {
+        getLogger().info(String.format(getName() + ": " + format, args));
+    }
 
     @TaskAction
     void clean() throws ProcessException, IOException {

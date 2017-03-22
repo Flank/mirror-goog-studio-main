@@ -70,8 +70,7 @@ public abstract class ExternalNativeJsonGenerator {
     @NonNull
     private final NdkHandler ndkHandler;
     private final int minSdkVersion;
-    @NonNull
-    final String variantName;
+    @NonNull protected final String variantName;
     @NonNull
     private final List<Abi> abis;
     @NonNull
