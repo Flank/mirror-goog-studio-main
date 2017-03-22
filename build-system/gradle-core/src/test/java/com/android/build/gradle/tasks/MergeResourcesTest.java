@@ -230,7 +230,7 @@ public class MergeResourcesTest {
     @NonNull
     private static ResourceSet createResourceSet(
             List<ResourceSet> folderSets, String name, File... files) {
-        ResourceSet mainSet = new ResourceSet(name, false);
+        ResourceSet mainSet = new ResourceSet(name, null, null, false);
         mainSet.addSources(Arrays.asList(files));
         folderSets.add(mainSet);
         return mainSet;

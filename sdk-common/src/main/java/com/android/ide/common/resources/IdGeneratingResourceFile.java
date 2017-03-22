@@ -24,7 +24,7 @@ import com.android.ide.common.resources.configuration.ResourceQualifier;
 import com.android.io.IAbstractFile;
 import com.android.io.StreamException;
 import com.android.resources.ResourceType;
-
+import com.android.resources.ResourceUrl;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.EnumSet;
@@ -191,14 +191,16 @@ public final class IdGeneratingResourceFile extends ResourceFile
 
         ResourceValue value;
         if (!ResourceQualifier.isValid(qualifier)) {
-            value = new ResourceValue(mFileType, mFileName,
-                    file.getOsLocation(), isFramework());
+            value =
+                    new ResourceValue(
+                            ResourceUrl.create(mFileType, mFileName, isFramework()),
+                            file.getOsLocation());
         } else {
-            value = new DensityBasedResourceValue(
-                    mFileType, mFileName,
-                    file.getOsLocation(),
-                    qualifier.getValue(),
-                    isFramework());
+            value =
+                    new DensityBasedResourceValue(
+                            ResourceUrl.create(mFileType, mFileName, isFramework()),
+                            file.getOsLocation(),
+                            qualifier.getValue());
         }
         return value;
     }
@@ -224,14 +226,5 @@ public final class IdGeneratingResourceFile extends ResourceFile
         // Just overwrite collisions. We're only interested in the unique
         // IDs declared
         mIdResources.put(value.getName(), value);
-    }
-
-    @Override
-    public boolean hasResourceValue(ResourceType type, String name) {
-        if (type == ResourceType.ID) {
-            return mIdResources.containsKey(name);
-        }
-
-        return false;
     }
 }

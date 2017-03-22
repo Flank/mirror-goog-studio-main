@@ -16,8 +16,10 @@
 
 package com.android.ide.common.rendering.api;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.resources.ResourceType;
-
+import com.android.resources.ResourceUrl;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,25 +28,14 @@ import java.util.List;
  */
 public class PluralsResourceValue extends ResourceValue {
 
-    private final List<String> mQuantities = new ArrayList<String>();
+    private final List<String> mQuantities = new ArrayList<>();
 
-    private final List<String> mValues = new ArrayList<String>();
+    private final List<String> mValues = new ArrayList<>();
 
-    /**
-     * @see #PluralsResourceValue(String, boolean, String)
-     */
-    public PluralsResourceValue(String name, boolean isFramework) {
-        this(name, isFramework, null);
-    }
-
-    /**
-     * Constructs a new {@linkplain PluralsResourceValue}
-     *
-     * @param name        the name of the array
-     * @param isFramework whether this is a framework resource
-     */
-    public PluralsResourceValue(String name, boolean isFramework, String libraryName) {
-        super(ResourceType.PLURALS, name, isFramework, libraryName);
+    public PluralsResourceValue(
+            @NonNull ResourceUrl url, @Nullable String value, @Nullable String libraryName) {
+        super(url, value, libraryName);
+        assert url.type == ResourceType.PLURALS;
     }
 
     /**

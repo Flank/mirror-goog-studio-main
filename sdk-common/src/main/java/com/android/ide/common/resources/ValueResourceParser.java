@@ -33,7 +33,7 @@ import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.rendering.api.StyleResourceValue;
 import com.android.ide.common.res2.ValueXmlHelper;
 import com.android.resources.ResourceType;
-
+import com.android.resources.ResourceUrl;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -43,9 +43,11 @@ import org.xml.sax.helpers.DefaultHandler;
  */
 public final class ValueResourceParser extends DefaultHandler {
 
+    private static final ResourceUrl TMP_URL =
+            ResourceUrl.create(ResourceType.STRING, "_tmp", false);
+
     public interface IValueResourceRepository {
         void addResourceValue(ResourceValue value);
-        boolean hasResourceValue(ResourceType type, String name);
     }
 
     private boolean inResources;
@@ -112,28 +114,30 @@ public final class ValueResourceParser extends DefaultHandler {
                     // get the resource name
                     String name = attributes.getValue(ATTR_NAME);
                     if (name != null) {
+                        ResourceUrl newUrl = ResourceUrl.create(type, name, mIsFramework);
                         switch (type) {
                             case STYLE:
                                 String parent = attributes.getValue(ATTR_PARENT);
-                                mCurrentStyle = new StyleResourceValue(type, name, parent,
-                                        mIsFramework, mLibraryName);
+                                mCurrentStyle =
+                                        new StyleResourceValue(newUrl, parent, mLibraryName);
                                 mRepository.addResourceValue(mCurrentStyle);
                                 break;
                             case DECLARE_STYLEABLE:
-                                mCurrentDeclareStyleable = new DeclareStyleableResourceValue(
-                                        type, name, mIsFramework, mLibraryName);
+                                mCurrentDeclareStyleable =
+                                        new DeclareStyleableResourceValue(
+                                                newUrl, null, mLibraryName);
                                 mRepository.addResourceValue(mCurrentDeclareStyleable);
                                 break;
                             case ATTR:
-                                mCurrentAttr = new AttrResourceValue(type, name, mIsFramework, mLibraryName);
+                                mCurrentAttr = new AttrResourceValue(newUrl, mLibraryName);
                                 mRepository.addResourceValue(mCurrentAttr);
                                 break;
                             case ARRAY:
-                                mArrayResourceValue = new ArrayResourceValue(name, mIsFramework, mLibraryName);
+                                mArrayResourceValue = new ArrayResourceValue(newUrl, mLibraryName);
                                 mRepository.addResourceValue(mArrayResourceValue);
                                 break;
                             default:
-                                mCurrentValue = new ResourceValue(type, name, mIsFramework, mLibraryName);
+                                mCurrentValue = new ResourceValue(newUrl, null, mLibraryName);
                                 mRepository.addResourceValue(mCurrentValue);
                                 break;
                         }
@@ -152,7 +156,9 @@ public final class ValueResourceParser extends DefaultHandler {
                             isFrameworkAttr = true;
                         }
 
-                        mCurrentValue = new ItemResourceValue(name, isFrameworkAttr, mIsFramework, mLibraryName);
+                        mCurrentValue =
+                                new ItemResourceValue(
+                                        name, isFrameworkAttr, null, mIsFramework, mLibraryName);
                         mCurrentStyle.addItem((ItemResourceValue)mCurrentValue);
                     } else if (mCurrentDeclareStyleable != null) {
                         // is the attribute in the android namespace?
@@ -162,7 +168,10 @@ public final class ValueResourceParser extends DefaultHandler {
                             isFramework = true;
                         }
 
-                        mCurrentAttr = new AttrResourceValue(ResourceType.ATTR, name, isFramework, mLibraryName);
+                        mCurrentAttr =
+                                new AttrResourceValue(
+                                        ResourceUrl.create(ResourceType.ATTR, name, isFramework),
+                                        mLibraryName);
                         mCurrentDeclareStyleable.addValue(mCurrentAttr);
 
                         // also add it to the repository.
@@ -182,9 +191,10 @@ public final class ValueResourceParser extends DefaultHandler {
                     }
                 } else //noinspection VariableNotUsedInsideIf
                     if (mArrayResourceValue != null) {
-                        // Create a temporary resource value to hold the item's value. The value is
-                        // not added to the repository, since it's just a holder.
-                        mCurrentValue = new ResourceValue(null, null, mIsFramework, mLibraryName);
+                    // Create a temporary resource value to hold the item's value. The value is
+                    // not added to the repository, since it's just a holder. The value will be set
+                    // in the `characters` method and then added to mArrayResourceValue in `endElement`.
+                    mCurrentValue = new ResourceValue(TMP_URL, null);
                     }
             } else if (mDepth == 4 && mCurrentAttr != null) {
                 // get the enum/flag name

@@ -16,8 +16,10 @@
 
 package com.android.ide.common.rendering.api;
 
+import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.resources.ResourceType;
+import com.android.resources.ResourceUrl;
 
 /**
  * Represents an android resource with a name and a string value.
@@ -25,27 +27,38 @@ import com.android.resources.ResourceType;
 public class ResourceValue extends ResourceReference {
     private final ResourceType mType;
     private final String mLibraryName;
+    private final String mNamespace;
     protected String mValue;
 
-    public ResourceValue(ResourceType type, String name, boolean isFramework) {
-        this(type, name, isFramework, null);
+    public ResourceValue(@NonNull ResourceUrl url, @Nullable String value) {
+        this(url, value, null);
     }
 
-    public ResourceValue(ResourceType type, String name, boolean isFramework, String libraryName) {
-        super(name, isFramework);
-        mType = type;
-        mLibraryName = libraryName;
+    /**
+     * Constructor still used by layoutlib. Remove ASAP.
+     *
+     * @deprecated Use {@link #ResourceValue(ResourceUrl, String)}
+     */
+    @Deprecated
+    public ResourceValue(
+            @NonNull ResourceType type,
+            @NonNull String name,
+            @Nullable String value,
+            boolean isFramework) {
+        this(ResourceUrl.create(type, name, isFramework), value);
     }
 
-    public ResourceValue(ResourceType type, String name, String value, boolean isFramework) {
-        this(type, name, value, isFramework, null);
-    }
-
-    public ResourceValue(ResourceType type, String name, String value, boolean isFramework, String libraryName) {
-        super(name, isFramework);
-        mType = type;
+    public ResourceValue(
+            @NonNull ResourceUrl url, @Nullable String value, @Nullable String libraryName) {
+        super(url.name, url.framework);
+        mNamespace = url.namespace;
         mValue = value;
+        mType = url.type;
         mLibraryName = libraryName;
+    }
+
+    public ResourceUrl getResourceUrl() {
+        return ResourceUrl.create(mNamespace, mType, getName());
     }
 
     public ResourceType getResourceType() {

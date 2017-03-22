@@ -72,12 +72,12 @@ import com.android.ide.common.rendering.api.StyleResourceValue;
 import com.android.ide.common.repository.GradleVersion;
 import com.android.ide.common.res2.AbstractResourceRepository;
 import com.android.ide.common.res2.ResourceItem;
-import com.android.ide.common.resources.ResourceUrl;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.resources.configuration.LocaleQualifier;
 import com.android.resources.FolderTypeRelationship;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
+import com.android.resources.ResourceUrl;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkVersionInfo;
@@ -99,7 +99,6 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiImportStatement;
 import com.intellij.psi.PsiLiteral;
 import com.intellij.psi.PsiMethod;
-import com.intellij.psi.PsiNewExpression;
 import com.intellij.psi.PsiParenthesizedExpression;
 import com.intellij.psi.PsiType;
 import com.intellij.psi.PsiWhiteSpace;
@@ -1057,7 +1056,7 @@ public class LintUtils {
         List<ResourceValue> result = null;
 
         Queue<ResourceValue> queue = new ArrayDeque<>();
-        queue.add(new ResourceValue(style.type, style.name, false));
+        queue.add(new ResourceValue(ResourceUrl.create(style.type, style.name, false), null));
         Set<String> seen = Sets.newHashSet();
         int count = 0;
         boolean isFrameworkAttribute = ANDROID_URI.equals(namespace);
@@ -1086,8 +1085,11 @@ public class LintUtils {
                             ResourceUrl p = ResourceUrl.parse(parent);
                             if (p != null && !p.framework && !seen.contains(p.name)) {
                                 seen.add(p.name);
-                                queue.add(new ResourceValue(ResourceType.STYLE, p.name,
-                                        false));
+                                queue.add(
+                                        new ResourceValue(
+                                                ResourceUrl.create(
+                                                        ResourceType.STYLE, p.name, false),
+                                                null));
                             }
                         }
 
@@ -1096,8 +1098,11 @@ public class LintUtils {
                             String parentName = name.substring(0, index);
                             if (!seen.contains(parentName)) {
                                 seen.add(parentName);
-                                queue.add(new ResourceValue(ResourceType.STYLE, parentName,
-                                        false));
+                                queue.add(
+                                        new ResourceValue(
+                                                ResourceUrl.create(
+                                                        ResourceType.STYLE, parentName, false),
+                                                null));
                             }
                         }
                     }
@@ -1131,7 +1136,7 @@ public class LintUtils {
         List<StyleResourceValue> result = null;
 
         Queue<ResourceValue> queue = new ArrayDeque<>();
-        queue.add(new ResourceValue(style.type, style.name, false));
+        queue.add(new ResourceValue(ResourceUrl.create(null, style.type, style.name), null));
         Set<String> seen = Sets.newHashSet();
         int count = 0;
         while (count < 30 && !queue.isEmpty()) {
@@ -1154,8 +1159,11 @@ public class LintUtils {
                             ResourceUrl p = ResourceUrl.parse(parent);
                             if (p != null && !p.framework && !seen.contains(p.name)) {
                                 seen.add(p.name);
-                                queue.add(new ResourceValue(ResourceType.STYLE, p.name,
-                                        false));
+                                queue.add(
+                                        new ResourceValue(
+                                                ResourceUrl.create(
+                                                        null, ResourceType.STYLE, p.name),
+                                                null));
                             }
                         }
 
@@ -1164,8 +1172,11 @@ public class LintUtils {
                             String parentName = name.substring(0, index);
                             if (!seen.contains(parentName)) {
                                 seen.add(parentName);
-                                queue.add(new ResourceValue(ResourceType.STYLE, parentName,
-                                        false));
+                                queue.add(
+                                        new ResourceValue(
+                                                ResourceUrl.create(
+                                                        null, ResourceType.STYLE, parentName),
+                                                null));
                             }
                         }
                     }

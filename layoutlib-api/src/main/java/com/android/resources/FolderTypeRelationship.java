@@ -65,6 +65,7 @@ public final class FolderTypeRelationship {
         add(ResourceType.RAW, ResourceFolderType.RAW);
         add(ResourceType.STRING, ResourceFolderType.VALUES);
         add(ResourceType.STYLE, ResourceFolderType.VALUES);
+        add(ResourceType.STYLE_ITEM, ResourceFolderType.VALUES);
         add(ResourceType.STYLEABLE, ResourceFolderType.VALUES);
         add(ResourceType.TRANSITION, ResourceFolderType.TRANSITION);
         add(ResourceType.ID, ResourceFolderType.TRANSITION);

@@ -34,7 +34,7 @@ import com.android.io.IAbstractResource;
 import com.android.resources.FolderTypeRelationship;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
-
+import com.android.resources.ResourceUrl;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;

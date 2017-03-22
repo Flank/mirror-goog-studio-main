@@ -13,5 +13,6 @@
     <orderEntry type="library" scope="TEST" name="JUnit4" level="project" />
     <orderEntry type="module" module-name="android-annotations" />
     <orderEntry type="library" name="intellij-annotations" level="project" />
+    <orderEntry type="module" module-name="common" />
   </component>
 </module>

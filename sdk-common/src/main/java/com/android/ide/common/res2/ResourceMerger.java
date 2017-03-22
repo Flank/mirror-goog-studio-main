@@ -33,19 +33,16 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Table;
-
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.ParserConfigurationException;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.ParserConfigurationException;
 
 /**
  * Implementation of {@link DataMerger} for {@link ResourceSet}, {@link ResourceItem}, and
@@ -88,21 +85,23 @@ public class ResourceMerger extends DataMerger<ResourceItem, ResourceFile, Resou
         /**
          * Constructs the object with a name, type and optional value.
          *
-         * Note that the object is not fully usable as-is. It must be added to a ResourceFile first.
+         * <p>Note that the object is not fully usable as-is. It must be added to a ResourceFile
+         * first.
          *
-         * @param name  the name of the resource
-         * @param type  the type of the resource
+         * @param name the name of the resource
+         * @param type the type of the resource
          * @param qualifiers the qualifiers of the resource
          * @param value an optional Node that represents the resource value.
          * @param libraryName name of library where resource came from if any
          */
         public MergedResourceItem(
                 @NonNull String name,
+                @Nullable String namespace,
                 @NonNull ResourceType type,
                 @NonNull String qualifiers,
                 @Nullable Node value,
                 @Nullable String libraryName) {
-            super(name, type, value, libraryName);
+            super(name, namespace, type, value, libraryName);
             mQualifiers = qualifiers;
         }
 
@@ -142,7 +141,7 @@ public class ResourceMerger extends DataMerger<ResourceItem, ResourceFile, Resou
         if (SdkConstants.VALUE_TRUE.equals(generated)) {
             set = new GeneratedResourceSet("", null);
         } else {
-            set = new ResourceSet("", null);
+            set = new ResourceSet("", null, null, true);
         }
         ResourceSet newResourceSet = (ResourceSet) set.createFromXml(node);
 
@@ -186,6 +185,7 @@ public class ResourceMerger extends DataMerger<ResourceItem, ResourceFile, Resou
         String itemName = sourceItem.getName();
         String qualifier = sourceItem.getQualifiers();
         String libraryName = sourceItem.getLibraryName();
+        String namespace = sourceItem.getNamespace();
         // get the matching mergedItem
         ResourceItem previouslyWrittenItem = getMergedItem(qualifier, itemName);
 
@@ -243,12 +243,14 @@ public class ResourceMerger extends DataMerger<ResourceItem, ResourceFile, Resou
                 }
 
                 // always write it for now.
-                MergedResourceItem newItem = new MergedResourceItem(
-                        itemName,
-                        sourceItem.getType(),
-                        qualifier,
-                        declareStyleableNode,
-                        libraryName);
+                MergedResourceItem newItem =
+                        new MergedResourceItem(
+                                itemName,
+                                namespace,
+                                sourceItem.getType(),
+                                qualifier,
+                                declareStyleableNode,
+                                libraryName);
 
                 // check whether the result of the merge is new or touched compared
                 // to the previous state.
@@ -387,7 +389,7 @@ public class ResourceMerger extends DataMerger<ResourceItem, ResourceFile, Resou
         String name = ValueResourceParser2.getName(node);
 
         if (name != null && type != null) {
-            return new MergedResourceItem(name, type, qualifiers, node, null);
+            return new MergedResourceItem(name, null, type, qualifiers, node, null);
         }
 
         return null;
