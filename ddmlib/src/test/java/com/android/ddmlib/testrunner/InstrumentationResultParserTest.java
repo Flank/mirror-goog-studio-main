@@ -402,6 +402,13 @@ public class InstrumentationResultParserTest extends TestCase {
         addLine(output,  "INSTRUMENTATION_STATUS: test=checkIgnoreTestsArePossible");
         addLine(output,  "INSTRUMENTATION_STATUS: class=com.example.helloworld.FailureAssumptionTest");
         addLine(output,  "INSTRUMENTATION_STATUS: current=1");
+        addLine(output,  "INSTRUMENTATION_STATUS_CODE: 1");
+        addLine(output,  "INSTRUMENTATION_STATUS: numtests=3");
+        addLine(output,  "INSTRUMENTATION_STATUS: stream=");
+        addLine(output,  "INSTRUMENTATION_STATUS: id=AndroidJUnitRunner");
+        addLine(output,  "INSTRUMENTATION_STATUS: test=checkIgnoreTestsArePossible");
+        addLine(output,  "INSTRUMENTATION_STATUS: class=com.example.helloworld.FailureAssumptionTest");
+        addLine(output,  "INSTRUMENTATION_STATUS: current=1");
         addLine(output,  "INSTRUMENTATION_STATUS_CODE: -3");
         addLine(output,  "INSTRUMENTATION_STATUS: numtests=3");
         addLine(output,  "INSTRUMENTATION_STATUS: stream=");
