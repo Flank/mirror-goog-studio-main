@@ -70,10 +70,14 @@ void EventCache::GetActivityData(int app_id, int64_t start_time,
     if (app_id != data.process_id()) {
       continue;
     }
+
+    // We don't do an explicit copy due to manually crafting the activity
+    // states.
     ActivityData* out_data = response->add_data();
     out_data->set_name(data.name());
     out_data->set_hash(data.hash());
     out_data->set_process_id(data.process_id());
+    out_data->mutable_fragment_data()->CopyFrom(data.fragment_data());
 
     const auto& states = data.state_changes();
     for (int i = 0; i < states.size(); i++) {

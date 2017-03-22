@@ -58,8 +58,9 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
     private native void sendActivityStopped(String name, int hashCode);
     private native void sendActivitySaved(String name, int hashCode);
     private native void sendActivityDestroyed(String name, int hashCode);
-    private native void sendFragmentAdded(String name, int hashCode);
-    private native void sendFragmentRemoved(String name, int hashCode);
+    private native void sendFragmentAdded(String name, int hashCode, int activityHash);
+
+    private native void sendFragmentRemoved(String name, int hashCode, int activityHash);
     private native void sendRotationEvent(int rotationValue);
 
     /**
@@ -147,7 +148,7 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
                         .getMethod("getSupportFragmentManager");
                 fragmentManager = fragmentManagerMethod.invoke(activity);
                 Class fragment = Class.forName("android.support.v4.app.Fragment");
-                fragmentList = new FragmentList();
+                fragmentList = new FragmentList(activity.hashCode());
             } catch (NoSuchMethodException ex) {
 
             } catch (IllegalAccessException ex) {
@@ -162,7 +163,7 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
         // the android library.
         if(fragmentManager == null) {
             fragmentManager = activity.getFragmentManager();
-            fragmentList = new FragmentList<android.app.Fragment>();
+            fragmentList = new FragmentList<android.app.Fragment>(activity.hashCode());
         }
 
         try {
@@ -233,24 +234,32 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
     // TODO Have fragment events get sent back to Android Studio
     private class FragmentList<E> extends ArrayList<E> {
 
+        private final int myActivityHash;
+
+        public FragmentList(int activityHash) {
+            myActivityHash = activityHash;
+        }
+
         @Override
         public boolean add(E fragment) {
-            sendFragmentAdded(fragment.getClass().getName(), fragment.hashCode());
+            sendFragmentAdded(fragment.getClass().getName(), fragment.hashCode(), myActivityHash);
             return super.add(fragment);
         }
 
         @Override
         public void add(int index, E fragment) {
-            sendFragmentAdded(fragment.getClass().getName(), fragment.hashCode());
+            sendFragmentAdded(fragment.getClass().getName(), fragment.hashCode(), myActivityHash);
             super.add(index, fragment);
         }
 
         @Override
         public E set(int index, E fragment) {
             if (fragment == null) {
-                sendFragmentRemoved(get(index).getClass().getName(), get(index).hashCode());
+                sendFragmentRemoved(
+                        get(index).getClass().getName(), get(index).hashCode(), myActivityHash);
             } else {
-                sendFragmentAdded(fragment.getClass().getName(), fragment.hashCode());
+                sendFragmentAdded(
+                        fragment.getClass().getName(), fragment.hashCode(), myActivityHash);
             }
             return super.set(index, fragment);
         }

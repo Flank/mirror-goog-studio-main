@@ -20,8 +20,7 @@
 namespace {
 using profiler::EventManager;
 using std::mutex;
-}
-
+}  // namespace
 
 using grpc::ClientContext;
 using profiler::Perfa;
@@ -31,7 +30,6 @@ using profiler::proto::EmptyEventResponse;
 using profiler::JStringWrapper;
 using std::lock_guard;
 
-
 namespace profiler {
 
 EventManager& EventManager::Instance() {
@@ -39,24 +37,28 @@ EventManager& EventManager::Instance() {
   return *instance;
 }
 
-EventManager::EventManager() : has_cached_data_(false) {
+EventManager::EventManager() {
   Perfa::Instance().AddPerfdStatusChangedCallback(std::bind(
       &profiler::EventManager::PerfdStateChanged, this, std::placeholders::_1));
 }
 
 void EventManager::CacheAndEnqueueActivityEvent(
     const profiler::proto::ActivityData& activity) {
-  lock_guard<mutex> guard(cache_mutex_);
-  activity_ = activity;
-  has_cached_data_ = true;
+  lock_guard<mutex> guard(activity_cache_mutex_);
+  // We may have multiple active activities / fragments, so we cache all
+  // that are not destroyed. When we get to this state, we no longer need to cache
+  // the component.
+  if (activity.state_changes(activity.state_changes_size() - 1).state() ==
+      ActivityStateData::DESTROYED) {
+    hash_activity_cache_.erase(activity.hash());
+  } else {
+    hash_activity_cache_[activity.hash()] = activity;
+  }
   EnqueueActivityEvent(activity);
 }
 
 void EventManager::EnqueueActivityEvent(
     const profiler::proto::ActivityData& activity) {
-  if (!has_cached_data_) {
-    return;
-  }
   Perfa::Instance().background_queue()->EnqueueTask([activity]() {
     auto event_stub = Perfa::Instance().event_stub();
     ClientContext context;
@@ -67,8 +69,11 @@ void EventManager::EnqueueActivityEvent(
 
 void EventManager::PerfdStateChanged(bool becomes_alive) {
   if (becomes_alive) {
-    lock_guard<mutex> guard(cache_mutex_);
-    EnqueueActivityEvent(activity_);
+    lock_guard<mutex> guard(activity_cache_mutex_);
+    for (const auto& map : hash_activity_cache_) {
+      EnqueueActivityEvent(map.second);
+    }
+    hash_activity_cache_.clear();
   }
 }
-} // namespace profiler
+}  // namespace profiler
