@@ -934,9 +934,19 @@ public class ZFile implements Closeable {
                  * the alignment field, if it exists. Also, sum the size of all kept extra field
                  * segments.
                  */
+                ImmutableList<ExtraField.Segment> currentSegments;
+                try {
+                    currentSegments = storedEntry.getLocalExtra().getSegments();
+                } catch (IOException e) {
+                    /*
+                     * Parsing current segments has failed. This means the contents of the extra
+                     * field are not valid. We'll continue discarding the existing segments.
+                     */
+                    currentSegments = ImmutableList.of();
+                }
+
                 List<ExtraField.Segment> extraFieldSegments = new ArrayList<>();
-                int newExtraFieldSize =
-                        storedEntry.getLocalExtra().getSegments().stream()
+                int newExtraFieldSize = currentSegments.stream()
                         .filter(s -> s.getHeaderId()
                                 != ExtraField.ALIGNMENT_ZIP_EXTRA_DATA_FIELD_HEADER_ID)
                         .peek(extraFieldSegments::add)
