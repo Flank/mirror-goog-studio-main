@@ -29,5 +29,6 @@
     <orderEntry type="module" module-name="db-compilerCommon-base" />
     <orderEntry type="module" module-name="sdklib-base" />
     <orderEntry type="module" module-name="testutils" scope="TEST" />
+    <orderEntry type="module" module-name="dx" />
   </component>
 </module>
