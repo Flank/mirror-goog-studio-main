@@ -30,6 +30,7 @@ import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
+import com.android.sdklib.AndroidVersion;
 import com.android.testutils.apk.Apk;
 import com.android.tools.fd.client.InstantRunArtifact;
 import com.android.tools.fd.client.InstantRunArtifactType;
@@ -67,7 +68,8 @@ public class LibDependencyTest {
         InstantRun instantRunModel = getInstantRunModel(modelContainer.getModelMap().get(":app"));
 
         // Check that original class is included.
-        project.executor().withInstantRun(23)
+        project.executor()
+                .withInstantRun(new AndroidVersion(23, null))
                 .run("clean", "assembleRelease", "assembleDebug");
 
         assertThat(InstantRunTestUtils.getCompiledColdSwapChange(instantRunModel))
@@ -97,11 +99,10 @@ public class LibDependencyTest {
         ModelContainer<AndroidProject> modelContainer = project.model().getMulti();
         InstantRun instantRunModel = getInstantRunModel(modelContainer.getModelMap().get(":app"));
         project.executor()
-                .withInstantRun(23, OptionalCompilationStep.RESTART_ONLY)
+                .withInstantRun(new AndroidVersion(23, null), OptionalCompilationStep.RESTART_ONLY)
                 .run("clean", ":app:assembleDebug");
         createJavaLibraryClass("changed");
-        project.executor().withInstantRun(23)
-                .run("assembleDebug");
+        project.executor().withInstantRun(new AndroidVersion(23, null)).run("assembleDebug");
         InstantRunBuildInfo context = InstantRunTestUtils.loadContext(instantRunModel);
         assertThat(context.getVerifierStatus()).isEqualTo(
                 InstantRunVerifierStatus.COMPATIBLE.toString());
@@ -121,7 +122,7 @@ public class LibDependencyTest {
 
         // Check that original class is included.
         project.executor()
-                .withInstantRun(23)
+                .withInstantRun(new AndroidVersion(23, null))
                 .run("clean", "assembleDebug");
 
         assertThat(InstantRunTestUtils.getCompiledColdSwapChange(instantRunModel))
@@ -131,9 +132,7 @@ public class LibDependencyTest {
 
         Files.write("changed java resource", resource, Charsets.UTF_8);
 
-        project.executor()
-                .withInstantRun(23)
-                .run("assembleDebug");
+        project.executor().withInstantRun(new AndroidVersion(23, null)).run("assembleDebug");
         InstantRunBuildInfo context = InstantRunTestUtils.loadContext(instantRunModel);
         assertThat(context.getVerifierStatus()).isEqualTo(
                 InstantRunVerifierStatus.JAVA_RESOURCES_CHANGED.toString());
@@ -151,9 +150,7 @@ public class LibDependencyTest {
             throws Exception {
         createLibraryClass("Hot swap change");
 
-        project.executor()
-                .withInstantRun(23)
-                .run("assembleDebug");
+        project.executor().withInstantRun(new AndroidVersion(23, null)).run("assembleDebug");
 
         InstantRunBuildInfo context = InstantRunTestUtils.loadContext(instantRunModel);
 

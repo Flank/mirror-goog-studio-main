@@ -19,8 +19,6 @@ package com.android.build.gradle.integration.instant;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.instant.InstantRunTestUtils.PORTS;
 import static com.android.testutils.truth.MoreTruth.assertThatDex;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.category.DeviceTests;
@@ -29,11 +27,11 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.Logcat;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher;
-import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.ddmlib.IDevice;
+import com.android.sdklib.AndroidVersion;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.SplitApks;
 import com.android.tools.fd.client.InstantRunArtifact;
@@ -84,7 +82,7 @@ public class HotSwapTest {
         InstantRun instantRunModel =
                 InstantRunTestUtils.getInstantRunModel(project.model().getSingle().getOnlyModel());
 
-        InstantRunTestUtils.doInitialBuild(project, 19);
+        InstantRunTestUtils.doInitialBuild(project, new AndroidVersion(19, null));
 
         SplitApks apks = InstantRunTestUtils.getCompiledColdSwapChange(instantRunModel);
         assertThat(apks).hasSize(1);
@@ -99,9 +97,7 @@ public class HotSwapTest {
 
         createActivityClass("CHANGE");
 
-        project.executor()
-                .withInstantRun(19)
-                .run("assembleDebug");
+        project.executor().withInstantRun(new AndroidVersion(19, null)).run("assembleDebug");
 
         InstantRunArtifact artifact =
                 InstantRunTestUtils.getReloadDexArtifact(instantRunModel);
@@ -117,12 +113,12 @@ public class HotSwapTest {
         InstantRun instantRunModel =
                 InstantRunTestUtils.getInstantRunModel(project.model().getSingle().getOnlyModel());
 
-        InstantRunTestUtils.doInitialBuild(project, 19);
+        InstantRunTestUtils.doInitialBuild(project, new AndroidVersion(19, null));
 
         createActivityClass("CHANGE");
 
         project.executor()
-                .withInstantRun(19, OptionalCompilationStep.RESTART_ONLY)
+                .withInstantRun(new AndroidVersion(19, null), OptionalCompilationStep.RESTART_ONLY)
                 .run("assembleDebug");
 
         InstantRunBuildInfo context = InstantRunTestUtils.loadContext(instantRunModel);

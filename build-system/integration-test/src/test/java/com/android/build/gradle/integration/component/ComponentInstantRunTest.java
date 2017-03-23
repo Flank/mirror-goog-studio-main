@@ -10,6 +10,7 @@ import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
+import com.android.sdklib.AndroidVersion;
 import com.android.testutils.apk.Apk;
 import com.android.tools.fd.client.InstantRunBuildInfo;
 import com.google.common.base.Charsets;
@@ -45,7 +46,7 @@ public class ComponentInstantRunTest {
 
     @Test
     public void basicAssemble() throws Exception {
-        project.executor().withInstantRun(21).run("assembleDebug");
+        project.executor().withInstantRun(new AndroidVersion(21, null)).run("assembleDebug");
         assertThat(project.getApk("debug")).exists();
     }
 
@@ -62,7 +63,7 @@ public class ComponentInstantRunTest {
                 Charsets.UTF_8);
 
         project.executor()
-                .withInstantRun(21, OptionalCompilationStep.RESTART_ONLY)
+                .withInstantRun(new AndroidVersion(21, null), OptionalCompilationStep.RESTART_ONLY)
                 .run("assembleDebug");
         AndroidProject model = project.model().getSingle().getOnlyModel();
         Apk apk = project.getApk("debug");
@@ -73,9 +74,7 @@ public class ComponentInstantRunTest {
         Files.append("\nvoid foo() {}\n", src, Charsets.UTF_8);
 
         InstantRun instantRunModel = InstantRunTestUtils.getInstantRunModel(model);
-        project.executor()
-                .withInstantRun(21)
-                .run("assembleDebug");
+        project.executor().withInstantRun(new AndroidVersion(21, null)).run("assembleDebug");
         InstantRunBuildInfo context = InstantRunTestUtils.loadContext(instantRunModel);
         assertThat(context.getVerifierStatus()).isEqualTo(
                 InstantRunVerifierStatus.JAVA_RESOURCES_CHANGED.toString());

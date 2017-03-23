@@ -257,7 +257,7 @@ public class InstantRunTaskManager {
         InstantRunBuildContext context = variantScope.getInstantRunBuildContext();
 
         context.setApiLevel(
-                AndroidGradleOptions.getTargetFeatureLevel(project),
+                AndroidGradleOptions.getTargetAndroidVersion(project),
                 AndroidGradleOptions.getBuildTargetAbi(project));
         context.setDensity(AndroidGradleOptions.getBuildTargetDensity(project));
 

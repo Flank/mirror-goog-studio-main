@@ -25,6 +25,7 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
+import com.android.sdklib.AndroidVersion;
 import com.android.tools.fd.client.InstantRunArtifact;
 import com.android.tools.fd.client.InstantRunArtifactType;
 import com.android.tools.fd.client.InstantRunBuildInfo;
@@ -80,9 +81,7 @@ public class InstantRunFullSplitApkTest {
     @Test
     public void testSplit() throws Exception {
         mProject.executor()
-                .withInstantRun(
-                        24,
-                        OptionalCompilationStep.FULL_APK)
+                .withInstantRun(new AndroidVersion(24, null), OptionalCompilationStep.FULL_APK)
                 .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "armeabi-v7a")
                 .run("assembleDebug");
         InstantRunBuildInfo initialContext = InstantRunTestUtils.loadContext(instantRunModel);

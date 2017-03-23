@@ -26,6 +26,7 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.instant.InstantRunTestUtils;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
+import com.android.sdklib.AndroidVersion;
 import com.android.tools.fd.client.InstantRunArtifact;
 import com.google.common.truth.Expect;
 import java.io.File;
@@ -57,18 +58,18 @@ public class AntennaPodInstantRunTest {
                         project.model().getMulti().getModelMap().get(":app"));
 
         getExecutor()
-                .withInstantRun(23, OptionalCompilationStep.RESTART_ONLY)
+                .withInstantRun(new AndroidVersion(23, null), OptionalCompilationStep.RESTART_ONLY)
                 .run(":app:assembleDebug");
 
         // Test the incremental build
         makeHotSwapChange(1);
         getExecutor()
-                .withInstantRun(23, OptionalCompilationStep.RESTART_ONLY)
+                .withInstantRun(new AndroidVersion(23, null), OptionalCompilationStep.RESTART_ONLY)
                 .run(":app:assembleDebug");
 
         makeHotSwapChange(100);
 
-        getExecutor().withInstantRun(23).run("assembleDebug");
+        getExecutor().withInstantRun(new AndroidVersion(23, null)).run("assembleDebug");
 
         InstantRunArtifact artifact = InstantRunTestUtils.getReloadDexArtifact(instantRunModel);
 
@@ -80,7 +81,7 @@ public class AntennaPodInstantRunTest {
         // Test cold swap
         makeColdSwapChange(100);
 
-        getExecutor().withInstantRun(23).run(":app:assembleDebug");
+        getExecutor().withInstantRun(new AndroidVersion(23, null)).run(":app:assembleDebug");
 
         InstantRunTestUtils.getCompiledColdSwapChange(instantRunModel);
     }

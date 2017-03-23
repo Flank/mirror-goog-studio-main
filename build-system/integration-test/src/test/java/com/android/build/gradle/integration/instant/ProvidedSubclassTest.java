@@ -25,6 +25,7 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.OptionalCompilationStep;
+import com.android.sdklib.AndroidVersion;
 import com.google.common.truth.Expect;
 import org.junit.Assume;
 import org.junit.Before;
@@ -71,9 +72,11 @@ public class ProvidedSubclassTest {
     @Test
     public void checkV() throws Exception {
         project.execute("clean");
-        GradleBuildResult result = project.executor()
-                .withInstantRun(23, OptionalCompilationStep.RESTART_ONLY)
-                .run("assembleDebug");
+        GradleBuildResult result =
+                project.executor()
+                        .withInstantRun(
+                                new AndroidVersion(23, null), OptionalCompilationStep.RESTART_ONLY)
+                        .run("assembleDebug");
 
         // Check we can find the parent class.
         assertThat(result.getStderr()).doesNotContain("ByteSink");

@@ -26,6 +26,7 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
+import com.android.sdklib.AndroidVersion;
 import com.android.testutils.apk.SplitApks;
 import com.android.tools.fd.client.InstantRunBuildInfo;
 import com.google.common.base.Charsets;
@@ -81,7 +82,7 @@ public class CmakeInstantRunTest {
     @Test
     public void checkHotSwapBuild() throws Exception {
         sProject.executor()
-                .withInstantRun(23)
+                .withInstantRun(new AndroidVersion(23, null))
                 .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "x86")
                 .run("clean", "assembleDebug");
 
@@ -99,19 +100,19 @@ public class CmakeInstantRunTest {
                             "tv.setText(\"Hello from Java\")");
 
                     sProject.executor()
-                            .withInstantRun(23)
+                            .withInstantRun(new AndroidVersion(23, null))
                             .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "x86")
                             .run("assembleDebug");
                     InstantRunBuildInfo context = InstantRunTestUtils.loadContext(instantRunModel);
-                    assertThat(context.getVerifierStatus()).isEqualTo(
-                            InstantRunVerifierStatus.COMPATIBLE.toString());
+                    assertThat(context.getVerifierStatus())
+                            .isEqualTo(InstantRunVerifierStatus.COMPATIBLE.toString());
                 });
     }
 
     @Test
     public void checkFullBuildIsTriggered() throws Exception {
         sProject.executor()
-                .withInstantRun(23)
+                .withInstantRun(new AndroidVersion(23, null))
                 .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "x86")
                 .run("clean", "assembleDebug");
 
@@ -123,7 +124,7 @@ public class CmakeInstantRunTest {
         Files.append("\nvoid foo() {}\n", src, Charsets.UTF_8);
 
         sProject.executor()
-                .withInstantRun(23)
+                .withInstantRun(new AndroidVersion(23, null))
                 .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "x86")
                 .run("assembleDebug");
         InstantRunBuildInfo context = InstantRunTestUtils.loadContext(instantRunModel);

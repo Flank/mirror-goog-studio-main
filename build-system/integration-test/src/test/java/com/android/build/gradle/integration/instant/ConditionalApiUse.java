@@ -25,6 +25,7 @@ import com.android.build.gradle.integration.common.fixture.Logcat;
 import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.InstantRun;
+import com.android.sdklib.AndroidVersion;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.SplitApks;
 import com.android.tools.fd.client.InstantRunArtifact;
@@ -66,8 +67,8 @@ public class ConditionalApiUse {
     @Test
     public void buildFor19() throws Exception {
 
-        InstantRun instantRunModel = InstantRunTestUtils.doInitialBuild(
-                project, 19);
+        InstantRun instantRunModel =
+                InstantRunTestUtils.doInitialBuild(project, new AndroidVersion(19, null));
 
         Apk apk = project.getApk("debug");
 
@@ -81,9 +82,7 @@ public class ConditionalApiUse {
 
         makeHotswapCompatibleChange();
 
-        project.executor()
-                .withInstantRun(19)
-                .run("assembleDebug");
+        project.executor().withInstantRun(new AndroidVersion(19, null)).run("assembleDebug");
 
         // because we touched a class that was not compatible with InstantRun, we should have
         // a coldswap event.
@@ -98,7 +97,7 @@ public class ConditionalApiUse {
     @Test
     public void buildFor23() throws Exception {
         InstantRun instantRunModel =
-                InstantRunTestUtils.doInitialBuild(project, 23);
+                InstantRunTestUtils.doInitialBuild(project, new AndroidVersion(23, null));
 
         SplitApks apks = InstantRunTestUtils.getCompiledColdSwapChange(instantRunModel);
 
@@ -111,7 +110,7 @@ public class ConditionalApiUse {
 
         makeHotswapCompatibleChange();
 
-        project.executor().withInstantRun(23).run("assembleDebug");
+        project.executor().withInstantRun(new AndroidVersion(23, null)).run("assembleDebug");
 
         InstantRunArtifact reloadDexArtifact = InstantRunTestUtils
                 .getReloadDexArtifact(instantRunModel);
