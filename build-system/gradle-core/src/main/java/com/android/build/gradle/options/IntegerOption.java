@@ -39,11 +39,12 @@ public enum IntegerOption implements Option<Integer> {
     IDE_BUILD_MODEL_ONLY_VERSION(AndroidProject.PROPERTY_BUILD_MODEL_ONLY_VERSIONED),
 
     /**
-     * The feature level for the target device.
+     * The api level for the target device.
      *
-     * <p>For preview versions that is the last stable version + 1.
+     * <p>For preview versions that is the last stable version, and the {@link
+     * StringOption#IDE_TARGET_DEVICE_CODENAME} will also be set.
      */
-    IDE_TARGET_FEATURE_LEVEL(AndroidProject.PROPERTY_BUILD_API),
+    IDE_TARGET_DEVICE_API(AndroidProject.PROPERTY_BUILD_API),
 
     IDE_VERSION_CODE_OVERRIDE(AndroidProject.PROPERTY_VERSION_CODE),
     ;

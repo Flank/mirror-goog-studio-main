@@ -28,6 +28,7 @@ import com.android.builder.model.InstantRun;
 import com.android.builder.packaging.PackagingUtils;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.logcat.LogCatMessage;
+import com.android.sdklib.AndroidVersion;
 import com.android.tools.fd.client.InstantRunArtifactType;
 import com.android.tools.fd.client.InstantRunBuildInfo;
 import com.android.tools.fd.client.InstantRunClient;
@@ -107,7 +108,7 @@ public class HotSwapTester {
 
             // Run first time on device
             InstantRunTestUtils.doInitialBuild(
-                    project, device.getVersion().getApiLevel());
+                    project, new AndroidVersion(device.getVersion().getApiLevel(), null));
 
             // Deploy to device
             InstantRunBuildInfo info = InstantRunTestUtils.loadContext(instantRunModel);
@@ -137,7 +138,7 @@ public class HotSwapTester {
 
                 // Now build the hot swap patch.
                 project.executor()
-                        .withInstantRun(device.getVersion().getApiLevel())
+                        .withInstantRun(new AndroidVersion(device.getVersion().getApiLevel(), null))
                         .run("assembleDebug");
 
                 FileTransfer fileTransfer;

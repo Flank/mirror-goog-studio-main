@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunBuildMode;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.InstantRun;
+import com.android.sdklib.AndroidVersion;
 import com.android.testutils.apk.SplitApks;
 import com.android.tools.fd.client.InstantRunBuildInfo;
 import java.util.List;
@@ -38,12 +39,11 @@ class ColdSwapTester {
     }
 
     void testDalvik(Steps steps) throws Exception {
-        doTest(steps, 19);
+        doTest(steps, new AndroidVersion(19, null));
     }
 
-    private void doTest(Steps steps, int apiLevel) throws Exception {
-        InstantRun instantRunModel =
-                InstantRunTestUtils.doInitialBuild(mProject, apiLevel);
+    private void doTest(Steps steps, AndroidVersion androidVersion) throws Exception {
+        InstantRun instantRunModel = InstantRunTestUtils.doInitialBuild(mProject, androidVersion);
 
         steps.checkApks(InstantRunTestUtils.getCompiledColdSwapChange(instantRunModel));
 
@@ -52,12 +52,10 @@ class ColdSwapTester {
 
         steps.makeChange();
 
-        mProject.executor()
-                .withInstantRun(apiLevel)
-                .run("assembleDebug");
+        mProject.executor().withInstantRun(androidVersion).run("assembleDebug");
 
         InstantRunBuildContext buildContext =
-                InstantRunTestUtils.loadBuildContext(apiLevel, instantRunModel);
+                InstantRunTestUtils.loadBuildContext(androidVersion, instantRunModel);
 
         InstantRunBuildContext.Build lastBuild = buildContext.getLastBuild();
         assertNotNull(lastBuild);
@@ -69,7 +67,7 @@ class ColdSwapTester {
     }
 
     void testMultiApk(Steps steps) throws Exception {
-        doTest(steps, 24);
+        doTest(steps, new AndroidVersion(24, null));
     }
 
     interface Steps {

@@ -25,6 +25,7 @@ import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
+import com.android.sdklib.AndroidVersion;
 import com.android.testutils.apk.Apk;
 import com.android.tools.fd.client.InstantRunArtifact;
 import com.android.tools.fd.client.InstantRunArtifactType;
@@ -98,7 +99,7 @@ public class InstantRunChangeDeviceTest {
         } else {
             mProject.executor()
                     .withInstantRun(
-                            firstBuild.getApiLevel(),
+                            new AndroidVersion(firstBuild.getApiLevel(), null),
                             OptionalCompilationStep.FULL_APK)
                     .run("assembleDebug");
             InstantRunBuildInfo initialContext = InstantRunTestUtils.loadContext(instantRunModel);
@@ -114,7 +115,7 @@ public class InstantRunChangeDeviceTest {
         } else {
             mProject.executor()
                     .withInstantRun(
-                            secondBuild.getApiLevel(),
+                            new AndroidVersion(secondBuild.getApiLevel(), null),
                             OptionalCompilationStep.FULL_APK)
                     .run("assembleDebug");
             InstantRunBuildInfo buildContext = InstantRunTestUtils.loadContext(instantRunModel);

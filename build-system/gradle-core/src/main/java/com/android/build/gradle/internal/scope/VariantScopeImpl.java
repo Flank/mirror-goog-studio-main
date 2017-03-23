@@ -91,7 +91,6 @@ import com.android.repository.api.ProgressIndicator;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
-import com.android.sdklib.SdkVersionInfo;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.LoggerProgressIndicatorWrapper;
 import com.android.utils.FileUtils;
@@ -370,7 +369,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
         return !Strings.isNullOrEmpty(projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI))
                 || !Strings.isNullOrEmpty(projectOptions.get(StringOption.IDE_BUILD_TARGET_DENISTY))
-                || projectOptions.get(IntegerOption.IDE_TARGET_FEATURE_LEVEL) != null
+                || projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API) != null
                 || globalScope.getAndroidBuilder().isPreviewTarget()
                 || getMinSdkVersion().getCodename() != null
                 || getVariantConfiguration().getTargetSdkVersion().getCodename() != null;
@@ -1594,43 +1593,28 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
         File annotationsJar = sdkHandler.getSdkLoader().getSdkInfo(LOGGER).getAnnotationsJar();
 
-        int targetDeviceFeatureLevel =
-                AndroidGradleOptions.getTargetFeatureLevel(getGlobalScope().getProject());
+        AndroidVersion targetDeviceVersion =
+                AndroidGradleOptions.getTargetAndroidVersion(getGlobalScope().getProject());
 
-        if (androidBuilderTarget.getVersion().getFeatureLevel() == targetDeviceFeatureLevel) {
+        if (targetDeviceVersion.equals(androidBuilderTarget.getVersion())) {
             // Compile SDK and the target device match, re-use the target that we have already
             // found earlier.
             return BootClasspathBuilder.computeFullBootClasspath(
                     androidBuilderTarget, annotationsJar);
         }
 
-        // Try treating it as a stable version
-        IAndroidTarget targetToUse = getAndroidTarget(
-                sdkHandler,
-                AndroidTargetHash.getPlatformHashString(
-                        new AndroidVersion(targetDeviceFeatureLevel, null)));
-
-        // Otherwise try a preview version
-        if (targetToUse == null) {
-            // Currently AS always sets the injected api level to a number, so the target hash above
-            // is something like "android-24". We failed to find it, so let's try "android-N".
-            String buildCode = SdkVersionInfo.getBuildCode(targetDeviceFeatureLevel);
-            if (buildCode != null) {
-                AndroidVersion versionFromBuildCode =
-                        new AndroidVersion(targetDeviceFeatureLevel - 1, buildCode);
-
-                targetToUse = getAndroidTarget(
-                        sdkHandler,
-                        AndroidTargetHash.getPlatformHashString(versionFromBuildCode));
-            }
-        }
+        IAndroidTarget targetToUse =
+                getAndroidTarget(
+                        sdkHandler, AndroidTargetHash.getPlatformHashString(targetDeviceVersion));
 
         if (targetToUse == null) {
-            // The device platform is not installed, let's carry on with the compile SDK.
-            throw new RuntimeException(String.format(""
-                    + "In order to use Instant Run with this device running API %1$d, "
-                    + "you must install platform %1$d in your SDK",
-                    targetDeviceFeatureLevel));
+            // The device platform is not installed, Studio should have done this already, so fail.
+            throw new RuntimeException(
+                    String.format(
+                            ""
+                                    + "In order to use Instant Run with this device running %1$S, "
+                                    + "you must install platform %1$S in your SDK",
+                            targetDeviceVersion.toString()));
         }
 
         return BootClasspathBuilder.computeFullBootClasspath(targetToUse, annotationsJar);

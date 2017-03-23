@@ -22,6 +22,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
+import com.android.sdklib.AndroidVersion;
 import com.android.tools.fd.client.InstantRunArtifactType;
 import com.android.tools.fd.client.InstantRunBuildInfo;
 import com.google.common.base.Charsets;
@@ -49,7 +50,7 @@ public class InstantRunLibraryAdd {
                 project.model().getMulti().getModelMap().get(":app"));
 
         project.executor()
-                .withInstantRun(23, OptionalCompilationStep.FULL_APK)
+                .withInstantRun(new AndroidVersion(23, null), OptionalCompilationStep.FULL_APK)
                 .run("assembleDebug");
 
         // get the build-info timestamp.
@@ -82,9 +83,7 @@ public class InstantRunLibraryAdd {
         // next instant run build.
 
         // now perform an incremental build.
-        project.executor()
-                .withInstantRun(23)
-                .run("assembleDebug");
+        project.executor().withInstantRun(new AndroidVersion(23, null)).run("assembleDebug");
 
         // check that the manifest change triggered a full apk build.
         context = InstantRunTestUtils.loadContext(instantRunModel);
@@ -102,7 +101,7 @@ public class InstantRunLibraryAdd {
                 project.model().getMulti().getModelMap().get(":app"));
 
         project.executor()
-                .withInstantRun(23, OptionalCompilationStep.FULL_APK)
+                .withInstantRun(new AndroidVersion(23, null), OptionalCompilationStep.FULL_APK)
                 .run("assembleDebug");
 
         // now add a library to the project.
@@ -123,7 +122,7 @@ public class InstantRunLibraryAdd {
         // now perform an incremental build, setting the RESTART_ONLY flag which would suggest
         // a cold swap build.
         project.executor()
-                .withInstantRun(23, OptionalCompilationStep.RESTART_ONLY)
+                .withInstantRun(new AndroidVersion(23, null), OptionalCompilationStep.RESTART_ONLY)
                 .run("assembleDebug");
 
         // check that the manifest change triggered a full apk build.

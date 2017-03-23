@@ -102,7 +102,9 @@ public class ExternalBuildPackagingScope implements PackagingScope {
     @NonNull
     @Override
     public ApiVersion getMinSdkVersion() {
-        return new DefaultApiVersion(mInstantRunBuildContext.getFeatureLevel());
+        return new DefaultApiVersion(
+                mInstantRunBuildContext.getAndroidVersion().getApiLevel(),
+                mInstantRunBuildContext.getAndroidVersion().getCodename());
     }
 
     @NonNull

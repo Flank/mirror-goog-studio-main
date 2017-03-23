@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
+import com.android.sdklib.AndroidVersion;
 import com.android.testutils.apk.SplitApks;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
@@ -46,6 +47,8 @@ public class HotSwapWithNoChangesTest {
     public static final String ACTIVITY_PATH =
             "src/main/java/com/example/helloworld/HelloWorld.java";
 
+    private static final AndroidVersion VERSION_UNDER_TEST = new AndroidVersion(23, null);
+
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder()
@@ -65,27 +68,29 @@ public class HotSwapWithNoChangesTest {
 
     @Test
     public void testRestartOnly() throws Exception {
-        doTestArtifacts(() -> {
-            // Force cold swap.
-            project.executor()
-                    .withInstantRun(23, OptionalCompilationStep.RESTART_ONLY)
-                    .run("assembleDebug");
-        });
+        doTestArtifacts(
+                () -> {
+                    // Force cold swap.
+                    project.executor()
+                            .withInstantRun(
+                                    VERSION_UNDER_TEST, OptionalCompilationStep.RESTART_ONLY)
+                            .run("assembleDebug");
+                });
     }
 
     @Test
     public void testIncompatibleChange() throws Exception {
-        doTestArtifacts(() -> {
-            String newPath = ACTIVITY_PATH.replace("HelloWorld", "HelloWorldCopy");
-            File newFile = project.file(newPath);
-            Files.copy(project.file(ACTIVITY_PATH), newFile);
-            TestFileUtils.searchAndReplace(newFile, "class HelloWorld", "class HelloWorldCopy");
+        doTestArtifacts(
+                () -> {
+                    String newPath = ACTIVITY_PATH.replace("HelloWorld", "HelloWorldCopy");
+                    File newFile = project.file(newPath);
+                    Files.copy(project.file(ACTIVITY_PATH), newFile);
+                    TestFileUtils.searchAndReplace(
+                            newFile, "class HelloWorld", "class HelloWorldCopy");
 
-            // Adding a new class will force a cold swap.
-            project.executor()
-                    .withInstantRun(23)
-                    .run("assembleDebug");
-        });
+                    // Adding a new class will force a cold swap.
+                    project.executor().withInstantRun(VERSION_UNDER_TEST).run("assembleDebug");
+                });
     }
 
     private void doTestArtifacts(BuildRunnable runColdSwapBuild) throws Exception {
@@ -93,7 +98,7 @@ public class HotSwapWithNoChangesTest {
                 InstantRunTestUtils.getInstantRunModel(project.model().getSingle().getOnlyModel());
 
         project.executor()
-                .withInstantRun(23, OptionalCompilationStep.FULL_APK)
+                .withInstantRun(VERSION_UNDER_TEST, OptionalCompilationStep.FULL_APK)
                 .run("assembleDebug");
 
 
@@ -115,12 +120,10 @@ public class HotSwapWithNoChangesTest {
 
 
         // now run again the incremental build.
-        project.executor()
-                .withInstantRun(23)
-                .run("assembleDebug");
+        project.executor().withInstantRun(VERSION_UNDER_TEST).run("assembleDebug");
 
         InstantRunBuildContext buildContext =
-                InstantRunTestUtils.loadBuildContext(23, instantRunModel);
+                InstantRunTestUtils.loadBuildContext(VERSION_UNDER_TEST, instantRunModel);
 
         assertThat(buildContext.getLastBuild().getArtifacts()).hasSize(0);
         assertThat(buildContext.getLastBuild().getVerifierStatus())

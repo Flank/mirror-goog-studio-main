@@ -71,14 +71,13 @@ public enum InstantRunPatchingPolicy {
      * Returns the patching policy following the {@link AndroidProject#PROPERTY_BUILD_API} value
      * passed by Android Studio.
      *
-     * @param featureLevel the feature level of the target device
+     * @param androidVersion the android version of the target device
      * @return a {@link InstantRunPatchingPolicy} instance.
      */
     @NonNull
-    public static InstantRunPatchingPolicy getPatchingPolicy(
-            int featureLevel) {
+    public static InstantRunPatchingPolicy getPatchingPolicy(AndroidVersion androidVersion) {
 
-        if (featureLevel < AndroidVersion.ART_RUNTIME.getFeatureLevel()) {
+        if (androidVersion.getFeatureLevel() < AndroidVersion.ART_RUNTIME.getFeatureLevel()) {
             return PRE_LOLLIPOP;
         } else {
             return MULTI_APK;

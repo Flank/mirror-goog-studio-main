@@ -30,6 +30,7 @@ import com.android.build.gradle.integration.common.fixture.app.KotlinHelloWorldA
 import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher;
 import com.android.builder.model.InstantRun;
 import com.android.ddmlib.IDevice;
+import com.android.sdklib.AndroidVersion;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.SplitApks;
 import com.android.tools.fd.client.InstantRunArtifact;
@@ -72,7 +73,7 @@ public class KotlinHotSwapTest {
         InstantRun instantRunModel =
                 InstantRunTestUtils.getInstantRunModel(project.model().getSingle().getOnlyModel());
 
-        InstantRunTestUtils.doInitialBuild(project, 19);
+        InstantRunTestUtils.doInitialBuild(project, new AndroidVersion(19, null));
 
         SplitApks apks = InstantRunTestUtils.getCompiledColdSwapChange(instantRunModel);
         assertThat(apks).hasSize(1);
@@ -87,7 +88,7 @@ public class KotlinHotSwapTest {
 
         createActivityClass("CHANGE");
 
-        project.executor().withInstantRun(19).run("assembleDebug");
+        project.executor().withInstantRun(new AndroidVersion(19, null)).run("assembleDebug");
 
         InstantRunArtifact artifact = InstantRunTestUtils.getReloadDexArtifact(instantRunModel);
 

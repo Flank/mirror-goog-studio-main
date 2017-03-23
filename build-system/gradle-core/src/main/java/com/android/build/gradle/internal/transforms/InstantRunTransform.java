@@ -46,6 +46,7 @@ import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.InstantRunVariantScope;
 import com.android.ide.common.internal.WaitableExecutor;
+import com.android.sdklib.AndroidVersion;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.base.Throwables;
@@ -80,7 +81,7 @@ public class InstantRunTransform extends Transform {
             new LoggerWrapper(Logging.getLogger(InstantRunTransform.class));
     private final ImmutableList.Builder<String> generatedClasses3Names = ImmutableList.builder();
     private final InstantRunVariantScope transformScope;
-    private final Integer targetPlatformApi;
+    private final AndroidVersion targetPlatformApi;
     private final WaitableExecutor<Void> executor;
 
     public InstantRunTransform(
@@ -88,8 +89,9 @@ public class InstantRunTransform extends Transform {
             InstantRunVariantScope transformScope) {
         this.transformScope = transformScope;
         this.executor = executor;
-        this.targetPlatformApi = AndroidGradleOptions.getTargetFeatureLevel(
-                transformScope.getGlobalScope().getProject());
+        this.targetPlatformApi =
+                AndroidGradleOptions.getTargetAndroidVersion(
+                        transformScope.getGlobalScope().getProject());
     }
 
     @NonNull
@@ -390,8 +392,12 @@ public class InstantRunTransform extends Transform {
             throws IOException {
         if (inputFile.getPath().endsWith(SdkConstants.DOT_CLASS)) {
             IncrementalVisitor.instrumentClass(
-                    targetPlatformApi, inputDir, inputFile, outputDir,
-                    IncrementalSupportVisitor.VISITOR_BUILDER, LOGGER);
+                    targetPlatformApi.getFeatureLevel(),
+                    inputDir,
+                    inputFile,
+                    outputDir,
+                    IncrementalSupportVisitor.VISITOR_BUILDER,
+                    LOGGER);
         }
         return null;
     }
@@ -427,8 +433,14 @@ public class InstantRunTransform extends Transform {
     protected Void transformToClasses3Format(File inputDir, File inputFile, File outputDir)
             throws IOException {
 
-        File outputFile = IncrementalVisitor.instrumentClass(targetPlatformApi,
-                inputDir, inputFile, outputDir, IncrementalChangeVisitor.VISITOR_BUILDER, LOGGER);
+        File outputFile =
+                IncrementalVisitor.instrumentClass(
+                        targetPlatformApi.getFeatureLevel(),
+                        inputDir,
+                        inputFile,
+                        outputDir,
+                        IncrementalChangeVisitor.VISITOR_BUILDER,
+                        LOGGER);
 
         // if the visitor returned null, that means the class cannot be hot swapped or more likely
         // that it was disabled for InstantRun, we don't add it to our collection of generated

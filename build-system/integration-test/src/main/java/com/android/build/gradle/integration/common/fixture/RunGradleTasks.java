@@ -85,14 +85,12 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
     /**
      * Inject the instant run arguments.
      *
-     * @param apiLevel The device api level.
+     * @param androidVersion The target device version
      * @param flags additional instant run flags, see {@link OptionalCompilationStep}.
      */
     public RunGradleTasks withInstantRun(
-            int apiLevel,
-            @NonNull OptionalCompilationStep... flags) {
-        setInstantRunArgs(
-                new AndroidVersion(apiLevel, null), null /* density */, flags);
+            AndroidVersion androidVersion, @NonNull OptionalCompilationStep... flags) {
+        setInstantRunArgs(androidVersion, null /* density */, flags);
         return this;
     }
 
@@ -258,7 +256,10 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
             @Nullable Density density,
             @NonNull OptionalCompilationStep[] flags) {
         if (androidVersion != null) {
-            with(IntegerOption.IDE_TARGET_FEATURE_LEVEL, androidVersion.getFeatureLevel());
+            with(IntegerOption.IDE_TARGET_DEVICE_API, androidVersion.getApiLevel());
+            if (androidVersion.getCodename() != null) {
+                with(StringOption.IDE_TARGET_DEVICE_CODENAME, androidVersion.getCodename());
+            }
         }
 
         if (density != null) {
