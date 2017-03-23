@@ -17,8 +17,10 @@
 package com.android.tools.lint.checks
 
 import com.android.tools.lint.checks.LocaleFolderDetector.suggestBcp47Correction
+import com.android.tools.lint.checks.infrastructure.LintDetectorTest
 import com.android.tools.lint.detector.api.Detector
 import org.intellij.lang.annotations.Language
+import java.io.File
 
 class LocaleFolderDetectorTest : AbstractCheckTest() {
 
@@ -110,7 +112,6 @@ res/values-b+en+Scr1: Error: Multiple locale folders for language en map to a si
 """)
     }
 
-    @Throws(Exception::class)
     fun testUsing3LetterCodesWithoutGetLocales() {
         // b/34520084
 
@@ -125,7 +126,6 @@ res/values-b+en+Scr1: Error: Multiple locale folders for language en map to a si
                 .expectClean()
     }
 
-    @Throws(Exception::class)
     fun testCrashApi19FromSource() {
         // b/34520084
 
@@ -156,7 +156,6 @@ src/test/pkg/myapplication/MyLibrary.java:9: Error: The app will crash on platfo
 """)
     }
 
-    @Throws(Exception::class)
     fun testCrashApi19FromLibrary() {
         // b/34520084
 
@@ -191,6 +190,39 @@ res/values-fil: Error: The app will crash on platforms older than v21 (minSdkVer
         assertEquals("b+es+419", suggestBcp47Correction("values-es-419"))
         assertNull(suggestBcp47Correction("values-car"))
         assertNull(suggestBcp47Correction("values-b+foo+bar"))
+    }
+
+    fun testMagicJar() {
+        // Same test case as #testCrashApi19FromLibrary, but with the classes packed
+        // in a jar file that has an unknown/foreign header; make sure lint reads files
+        // from the index at the back of the file instead
+
+        lint().files(
+                manifest().minSdk(18),
+                base64gzip("libs/build-compat.jar", ""
+                        + "H4sIAAAAAAAAAEspzc2t1M1ITUxJLeIK8GZmEWHg4OBgsFjE682ABEQYWBh8"
+                        + "XUMcdT393PR9Hf083VyDQ/R83f6dYmD47HvmtI+3rt5FXm9drXNnzm8OMrhi"
+                        + "/ODpo6dMDAHe7Byb6pneSQONkARi3BaoA3FiXkpRfmaKfnFpQUF+UYl+mYl+"
+                        + "frG+U2lmTopzfm5BYoleck5icXFr0Gm/Qw4its0eCxc9Yr7PJSX+4FDkjisz"
+                        + "BITDQ4UN82J4U4PcT0/xYRe2O92rpveHwf5UxfIFeT0lhfOf36l+t0R+fv57"
+                        + "hr4Nz5OlQuW1I75ubCvll5Yzk+RS99KuPmVwNeOe0ZPzk9alzOCfMm16c5z7"
+                        + "LOmLnSs3Sags7MhvDdSTF//8LW4pT3Xj1JVP/x7v+N626H5/qMYaL5P9Emyr"
+                        + "klsk5YzPlEwuuzT5yAXBQKnGC7GTV+jxC+cu3XbnxJT40yaSMwKWHffzOVmz"
+                        + "nGcrZwWbfhmXbNlLvQoB/6bjTu57cnlzl+y7f27B81Oa839PLHuxIFXkQeUN"
+                        + "rWRpa7ms1CsbTwfMLxF3flp+OfS5Y9u0xN/xS0vCVHK1fZcurdh/8c/nDWvq"
+                        + "Fbd0LFF8+9VTwqp/Gdt9/YBck/8VzG+U/OsbfxclvEvZ5HrKotKt7tcD0TeW"
+                        + "2dNPiLm5/kg5/biiTSmgXKw4uai75txVvrgJ1QdDPlgfOC8ld7Dr5oSpggKf"
+                        + "V0zQFypk7L75bmnP5j+soBhV+JweVMvIwLCeCRSjjEwiDIg4RY5tUKJBBbiS"
+                        + "ELopyDaoo5iQSHw6CfBmZQNpYQLC2UDamAnEAwBHypjM8QIAAA=="),
+                xml("res/values-no/strings.xml", stringsXml),
+                xml("res/values-fil/strings.xml", stringsXml),
+                xml("res/values-b+kok+IN//strings.xml", stringsXml))
+                .run()
+                .expect("""
+res/values-b+kok+IN: Error: The app will crash on platforms older than v21 (minSdkVersion is 18) because AssetManager#getLocales() is called (from the library jar file libs/build-compat.jar) and this folder resource name only works on v21 or later with that call present in the app [GetLocales]
+res/values-fil: Error: The app will crash on platforms older than v21 (minSdkVersion is 18) because AssetManager#getLocales() is called (from the library jar file libs/build-compat.jar) and this folder resource name only works on v21 or later with that call present in the app [GetLocales]
+2 errors, 0 warnings
+""")
     }
 
     companion object {
