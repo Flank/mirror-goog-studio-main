@@ -3140,6 +3140,58 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testIndirectTypedef() {
+        // Regression test for b/36384014
+        lint().files(
+                java("package test.pkg;\n"
+                        + "\n"
+                        + "import android.support.annotation.IntDef;\n"
+                        + "\n"
+                        + "public class Lifecycle {\n"
+                        + "    public static final int ON_CREATE = 1;\n"
+                        + "    public static final int ON_START = 2;\n"
+                        + "    public static final int ON_RESUME = 3;\n"
+                        + "    public static final int ON_PAUSE = 4;\n"
+                        + "    public static final int ON_STOP = 5;\n"
+                        + "    public static final int ON_DESTROY = 6;\n"
+                        + "    public static final int ANY = 7;\n"
+                        + "\n"
+                        + "    @IntDef(value = {ON_CREATE, ON_START, ON_RESUME, ON_PAUSE, ON_STOP, ON_DESTROY, ANY},\n"
+                        + "            flag = true)\n"
+                        + "    public @interface Event {\n"
+                        + "    }\n"
+                        + "}"),
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "import java.lang.annotation.ElementType;\n"
+                        + "import java.lang.annotation.Retention;\n"
+                        + "import java.lang.annotation.RetentionPolicy;\n"
+                        + "import java.lang.annotation.Target;\n"
+                        + "\n"
+                        + "@Retention(RetentionPolicy.RUNTIME)\n"
+                        + "@Target(ElementType.METHOD)\n"
+                        + "public @interface OnLifecycleEvent {\n"
+                        + "    @Lifecycle.Event\n"
+                        + "    int value();\n"
+                        + "}\n"),
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "public interface Usage {\n"
+                        + "    @OnLifecycleEvent(4494823) // this value is not valid\n"
+                        + "    void addLocationListener();\n"
+                        + "}\n"),
+                mSupportClasspath,
+                mSupportJar)
+                .run()
+                .expect(""
+                        + "src/test/pkg/Usage.java:4: Error: Must be one or more of: Lifecycle.ON_CREATE, Lifecycle.ON_START, Lifecycle.ON_RESUME, Lifecycle.ON_PAUSE, Lifecycle.ON_STOP, Lifecycle.ON_DESTROY, Lifecycle.ANY [WrongConstant]\n"
+                        + "    @OnLifecycleEvent(4494823) // this value is not valid\n"
+                        + "                      ~~~~~~~\n"
+                        + "1 errors, 0 warnings\n");
+    }
+
     public static final String SUPPORT_JAR_PATH = "libs/support-annotations.jar";
     private TestFile mSupportJar = base64gzip(SUPPORT_JAR_PATH,
             SUPPORT_ANNOTATIONS_JAR_BASE64_GZIP);

@@ -144,6 +144,7 @@ import org.jetbrains.uast.UIdentifier;
 import org.jetbrains.uast.UIfExpression;
 import org.jetbrains.uast.ULiteralExpression;
 import org.jetbrains.uast.UMethod;
+import org.jetbrains.uast.UNamedExpression;
 import org.jetbrains.uast.UParenthesizedExpression;
 import org.jetbrains.uast.UPolyadicExpression;
 import org.jetbrains.uast.UPrefixExpression;
@@ -2583,6 +2584,7 @@ public class SupportAnnotationDetector extends Detector implements UastScanner {
         types.add(UCallExpression.class);
         types.add(UEnumConstant.class);
         types.add(UMethod.class);
+        types.add(UAnnotation.class);
         return types;
     }
 
@@ -2630,6 +2632,47 @@ public class SupportAnnotationDetector extends Detector implements UastScanner {
             PsiMethod method = call.resolve();
             if (method != null) {
                 checkCall(method, call);
+            }
+        }
+
+        @Override
+        public void visitAnnotation(@NonNull UAnnotation annotation) {
+            // Check annotation references; these are a form of method call
+            String qualifiedName = annotation.getQualifiedName();
+            if (qualifiedName == null || qualifiedName.startsWith("java.") ||
+                    qualifiedName.startsWith(SUPPORT_ANNOTATIONS_PREFIX)) {
+                return;
+            }
+
+            List<UNamedExpression> attributeValues = annotation.getAttributeValues();
+            if (attributeValues.isEmpty()) {
+                return;
+            }
+
+            PsiClass resolved = annotation.resolve();
+            if (resolved == null) {
+                return;
+            }
+
+            for (UNamedExpression expression : attributeValues) {
+                String name = expression.getName();
+                if (name == null) {
+                    name = ATTR_VALUE;
+                }
+                PsiMethod[] methods = resolved.findMethodsByName(name, false);
+                if (methods.length == 1) {
+                    PsiMethod method = methods[0];
+                    JavaEvaluator evaluator = mContext.getEvaluator();
+                    PsiAnnotation[] methodAnnotations =
+                            filterRelevantAnnotations(evaluator,
+                                    evaluator.getAllAnnotations(method, true));
+                    if (methodAnnotations.length > 0) {
+                        UExpression value = expression.getExpression();
+                        List<UAnnotation> annotations = JavaUAnnotation.wrap(methodAnnotations);
+                        checkAnnotations(mContext, value, value, method,
+                                annotations, annotations, Collections.emptyList());
+                    }
+                }
             }
         }
 
