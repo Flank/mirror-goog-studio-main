@@ -1,7 +1,6 @@
 <?xml version="1.0"?>
 <recipe>
     <mkdir at="${escapeXmlAttribute(projectOut)}/libs" />
-    <mkdir at="${escapeXmlAttribute(resOut)}/drawable" />
 
     <merge from="root/settings.gradle.ftl"
              to="${escapeXmlAttribute(topOut)}/settings.gradle" />
@@ -77,29 +76,36 @@
 </#if>
 
 <#macro copyIconCommands destination>
-    <#if buildApi gte 25 && targetApi gte 25>
-        <copy from="root/res/mipmap-hdpi/"
-                to="${destination}/mipmap-hdpi/" />
-        <copy from="root/res/mipmap-mdpi"
-                to="${destination}/mipmap-mdpi/" />
-        <copy from="root/res/mipmap-xhdpi"
-                to="${destination}/mipmap-xhdpi/" />
-        <copy from="root/res/mipmap-xxhdpi"
-                to="${destination}/mipmap-xxhdpi/" />
-        <copy from="root/res/mipmap-xxxhdpi"
-                to="${destination}/mipmap-xxxhdpi/" />
-    <#else>
-        <copy from="root/res/mipmap-hdpi/ic_launcher.png"
-                to="${destination}/mipmap-hdpi/ic_launcher.png" />
-        <copy from="root/res/mipmap-mdpi/ic_launcher.png"
-                to="${destination}/mipmap-mdpi/ic_launcher.png" />
-        <copy from="root/res/mipmap-xhdpi/ic_launcher.png"
-                to="${destination}/mipmap-xhdpi/ic_launcher.png" />
-        <copy from="root/res/mipmap-xxhdpi/ic_launcher.png"
-                to="${destination}/mipmap-xxhdpi/ic_launcher.png" />
-        <copy from="root/res/mipmap-xxxhdpi/ic_launcher.png"
-                to="${destination}/mipmap-xxxhdpi/ic_launcher.png" />
+    <#if buildApi gte 26 && targetApi gte 26>
+        <#-- Copy adaptive-icons -->
+        <copy from="root/res/mipmap-anydpi/ic_launcher.xml"
+                to="${destination}/mipmap-anydpi/ic_launcher.xml" />
+        <copy from="root/res/mipmap-anydpi/ic_launcher_background.xml"
+                to="${destination}/mipmap-anydpi/ic_launcher_background.xml" />
+        <copy from="root/res/mipmap-anydpi/ic_launcher_round.xml"
+                to="${destination}/mipmap-anydpi/ic_launcher_round.xml" />
+        <@copyMipmap destination=escapeXmlAttribute(destination)
+                            icon="ic_launcher_foreground.png" />
     </#if>
+    <#if buildApi gte 25 && targetApi gte 25>
+        <@copyMipmap destination=escapeXmlAttribute(destination)
+                            icon="ic_launcher_round.png" />
+    </#if>
+
+    <@copyMipmap destination=escapeXmlAttribute(destination) icon="ic_launcher.png" />
+</#macro>
+
+<#macro copyMipmap destination icon>
+    <copy from="root/res/mipmap-hdpi/${icon}"
+            to="${destination}/mipmap-hdpi/${icon}" />
+    <copy from="root/res/mipmap-mdpi/${icon}"
+            to="${destination}/mipmap-mdpi/${icon}" />
+    <copy from="root/res/mipmap-xhdpi/${icon}"
+            to="${destination}/mipmap-xhdpi/${icon}" />
+    <copy from="root/res/mipmap-xxhdpi/${icon}"
+            to="${destination}/mipmap-xxhdpi/${icon}" />
+    <copy from="root/res/mipmap-xxxhdpi/${icon}"
+            to="${destination}/mipmap-xxxhdpi/${icon}" />
 </#macro>
 
 <#if copyIcons>
