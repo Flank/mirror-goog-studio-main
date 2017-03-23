@@ -30,9 +30,9 @@ import java.util.Set;
  */
 class TransformOutputProviderImpl implements TransformOutputProvider {
 
-    private final IntermediateFolderUtils folderUtils;
+    @NonNull private final IntermediateFolderUtils folderUtils;
 
-    TransformOutputProviderImpl(IntermediateFolderUtils folderUtils) {
+    TransformOutputProviderImpl(@NonNull IntermediateFolderUtils folderUtils) {
         this.folderUtils = folderUtils;
     }
 

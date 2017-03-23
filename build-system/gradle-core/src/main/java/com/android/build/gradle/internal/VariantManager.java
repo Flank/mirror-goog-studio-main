@@ -66,9 +66,7 @@ import com.android.builder.model.SigningConfig;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.Recorder;
-import com.android.builder.utils.FileCache;
 import com.android.utils.StringHelper;
-import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -92,7 +90,6 @@ import org.gradle.api.attributes.Attribute;
 import org.gradle.api.attributes.AttributesSchema;
 import org.gradle.api.attributes.Usage;
 import org.gradle.api.file.ConfigurableFileCollection;
-import org.gradle.api.internal.artifacts.ArtifactAttributes;
 
 /**
  * Class to create, manage variants.
@@ -563,19 +560,13 @@ public class VariantManager implements VariantModel {
         final DependencyHandler dependencies = project.getDependencies();
 
         // register transforms.
-        FileCache fileCache =
-                MoreObjects.firstNonNull(
-                        globalScope.getBuildCache(), globalScope.getProjectLevelCache());
-
         final String explodedAarType = AndroidArtifacts.ArtifactType.EXPLODED_AAR.getType();
         dependencies.registerTransform(
                 reg -> {
                     reg.getFrom().attribute(ARTIFACT_FORMAT, AndroidArtifacts.TYPE_AAR);
                     reg.getTo().attribute(ARTIFACT_FORMAT, explodedAarType);
-                    reg.artifactTransform(
-                            ExtractAarTransform.class, config -> config.params(project, fileCache));
+                    reg.artifactTransform(ExtractAarTransform.class);
                 });
-
 
         for (String transformTarget : AarTransform.getTransformTargets()) {
             dependencies.registerTransform(
@@ -619,8 +610,12 @@ public class VariantManager implements VariantModel {
                             if (producerValue.equals(consumerValue)) {
                                 details.compatible();
                             } else {
+                                // 1. Feature and aar are compatible for splits that depend on an AAR only.
+                                // 2. APK and aar are compatible for test-app that consumes APK. They need access to the aar dependencies of the tested app.
                                 if (AndroidTypeAttr.TYPE_AAR.equals(producerValue)
-                                        && AndroidTypeAttr.TYPE_FEATURE.equals(consumerValue)) {
+                                        && (AndroidTypeAttr.TYPE_FEATURE.equals(consumerValue)
+                                                || AndroidTypeAttr.TYPE_APK.equals(
+                                                        consumerValue))) {
                                     details.compatible();
                                 }
                             }
@@ -642,17 +637,6 @@ public class VariantManager implements VariantModel {
         schema.attribute(VariantAttr.ATTRIBUTE)
                 .getCompatibilityRules()
                 .assumeCompatibleWhenMissing();
-
-        // FIXME remove in next Gradle nightly.
-        schema.getMatchingStrategy(ArtifactAttributes.ARTIFACT_FORMAT)
-                .getCompatibilityRules()
-                .add(
-                        details -> {
-                            if (details.getConsumerValue().equals("jar")
-                                    && details.getProducerValue().equals("org.gradle.java.jar")) {
-                                details.compatible();
-                            }
-                        });
 
         // same for flavors, both for user-declared flavors and for attributes created from
         // absent flavor matching

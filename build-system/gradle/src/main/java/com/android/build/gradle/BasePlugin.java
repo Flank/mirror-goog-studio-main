@@ -319,8 +319,6 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
         project.getGradle()
                 .addBuildListener(
                         new BuildListener() {
-                            private final LibraryCache libraryCache = LibraryCache.getCache();
-
                             @Override
                             public void buildStarted(Gradle gradle) {
                                 TaskInputHelper.enableBypass();
@@ -362,7 +360,6 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
                                                                     "jack-cache",
                                                                     "cache.xml"),
                                                             getLogger());
-                                            libraryCache.unload();
                                             Main.clearInternTables();
                                         });
                             }

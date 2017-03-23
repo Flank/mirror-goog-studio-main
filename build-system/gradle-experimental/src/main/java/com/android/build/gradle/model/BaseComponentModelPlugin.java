@@ -229,7 +229,6 @@ public class BaseComponentModelPlugin implements Plugin<Project>, ToolingRegistr
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
-                LibraryCache.getCache().unload();
             }
         });
 

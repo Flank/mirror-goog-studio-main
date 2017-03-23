@@ -18,87 +18,91 @@ package com.android.build.gradle.internal.dependency;
 
 import static com.android.SdkConstants.FD_JARS;
 import static com.android.SdkConstants.FN_CLASSES_JAR;
+import static com.android.utils.FileUtils.mkdirs;
 
-import com.android.build.gradle.internal.LibraryCache;
-import com.android.build.gradle.internal.tasks.PrepareLibraryTask;
-import com.android.builder.utils.FileCache;
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.function.Consumer;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
-import org.gradle.api.Project;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import org.gradle.api.artifacts.transform.ArtifactTransform;
 
 /** Transform that extracts an AAR file into a folder. */
 public class ExtractAarTransform extends ArtifactTransform {
 
-    private final Project project;
-    private final FileCache fileCache;
-
-    public ExtractAarTransform(Project project, FileCache fileCache) {
-        this.project = project;
-        this.fileCache = fileCache;
-    }
+    public ExtractAarTransform() {}
 
     @Override
     public List<File> transform(File input) {
-        Consumer<File> unzipAarAction =
-                (File explodedDir) -> {
-                    LibraryCache.unzipAar(input, explodedDir, project);
-                    // verify that we have a classes.jar, if we don't just create an empty one.
-                    File classesJar = new File(new File(explodedDir, FD_JARS), FN_CLASSES_JAR);
-                    if (classesJar.exists()) {
-                        return;
-                    }
-                    try {
-                        Files.createParentDirs(classesJar);
-                        JarOutputStream jarOutputStream =
-                                new JarOutputStream(
-                                        new BufferedOutputStream(new FileOutputStream(classesJar)),
-                                        new Manifest());
-                        jarOutputStream.close();
-                    } catch (IOException e) {
-                        throw new RuntimeException("Cannot create missing classes.jar", e);
-                    }
-                };
+        File outputDir = getOutputDirectory();
 
-        // If the build cache is enabled, we create and cache the exploded aar using the cache's
-        // API; otherwise, we explode the aar without using the cache.
-        FileCache.Inputs buildCacheInputs = PrepareLibraryTask.getCacheInputs(input);
-        File explodedLocation = fileCache.getFileInCache(buildCacheInputs);
-        try {
-            fileCache.createFileInCacheIfAbsent(
-                    buildCacheInputs,
-                    unzipAarAction::accept);
-        } catch (ExecutionException exception) {
-            throw new RuntimeException(
-                    String.format(
-                            "Unable to unzip '%1$s' to '%2$s'",
-                            input.getAbsolutePath(), explodedLocation.getAbsolutePath()),
-                    exception);
-        } catch (Exception exception) {
-            throw new RuntimeException(
-                    String.format(
-                            "Unable to unzip '%1$s' to '%2$s' or find the cached output '%2$s'"
-                                    + " using the build cache at '%3$s'\n"
-                                    + "Please fix the underlying cause if possible or file a"
-                                    + " bug.\n"
-                                    + "To suppress this warning, disable the build cache by"
-                                    + " setting android.enableBuildCache=false in the"
-                                    + " gradle.properties file.",
-                            input.getAbsolutePath(),
-                            explodedLocation.getAbsolutePath(),
-                            fileCache.getCacheDirectory().getAbsolutePath()),
-                    exception);
+        mkdirs(outputDir);
+
+        try (InputStream fis = new BufferedInputStream(new FileInputStream(input));
+                ZipInputStream zis = new ZipInputStream(fis)) {
+            // loop on the entries of the intermediary package and put them in the final package.
+            ZipEntry entry;
+            while ((entry = zis.getNextEntry()) != null) {
+                try {
+                    String name = entry.getName();
+
+                    // do not take directories
+                    if (entry.isDirectory()) {
+                        continue;
+                    }
+
+                    String path = name;
+
+                    // relocate Jar files.
+                    if (path.equals("classes.jar")
+                            || path.equals("lint.jar")
+                            || path.startsWith("libs/")) {
+                        path = FD_JARS + File.separatorChar + path;
+                    }
+
+                    File outputFile = new File(outputDir, path.replace('/', File.separatorChar));
+                    mkdirs(outputFile.getParentFile());
+
+                    try (OutputStream outputStream =
+                            new BufferedOutputStream(new FileOutputStream(outputFile))) {
+                        ByteStreams.copy(zis, outputStream);
+                        outputStream.flush();
+                    }
+                } finally {
+                    zis.closeEntry();
+                }
+            }
+
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
         }
 
-        return ImmutableList.of(explodedLocation);
+        // verify that we have a classes.jar, if we don't just create an empty one.
+        File classesJar = new File(new File(outputDir, FD_JARS), FN_CLASSES_JAR);
+        if (!classesJar.exists()) {
+            try {
+                Files.createParentDirs(classesJar);
+                JarOutputStream jarOutputStream =
+                        new JarOutputStream(
+                                new BufferedOutputStream(new FileOutputStream(classesJar)),
+                                new Manifest());
+                jarOutputStream.close();
+            } catch (IOException e) {
+                throw new RuntimeException("Cannot create missing classes.jar", e);
+            }
+        }
+
+        return ImmutableList.of(outputDir);
     }
 }
