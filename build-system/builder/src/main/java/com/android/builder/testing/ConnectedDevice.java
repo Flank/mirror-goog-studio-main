@@ -32,7 +32,6 @@ import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.IOException;
@@ -116,8 +115,14 @@ public class ConnectedDevice extends DeviceConnector {
             int timeout,
             ILogger logger) throws DeviceException {
         try {
-            iDevice.installPackage(apkFile.getAbsolutePath(), true /*reinstall*/,
-                    options.isEmpty() ? null : options.toArray(new String[options.size()]));
+            // Prepend -t to install apk marked as testOnly.
+            List<String> installOptions = Lists.newArrayListWithCapacity(1 + options.size());
+            installOptions.add("-t");
+            installOptions.addAll(options);
+            iDevice.installPackage(
+                    apkFile.getAbsolutePath(),
+                    true /*reinstall*/,
+                    installOptions.toArray(new String[installOptions.size()]));
         } catch (Exception e) {
             logger.error(e, "Unable to install " + apkFile.getAbsolutePath());
             throw new DeviceException(e);
@@ -132,8 +137,16 @@ public class ConnectedDevice extends DeviceConnector {
             throws DeviceException {
 
         try {
-            iDevice.installPackages(splitApkFiles, true /*reinstall*/,
-                    ImmutableList.copyOf(options), timeoutInMs, TimeUnit.MILLISECONDS);
+            // Prepend -t to install apk marked as testOnly.
+            List<String> installOptions = Lists.newArrayListWithCapacity(1 + options.size());
+            installOptions.add("-t");
+            installOptions.addAll(options);
+            iDevice.installPackages(
+                    splitApkFiles,
+                    true /*reinstall*/,
+                    installOptions,
+                    timeoutInMs,
+                    TimeUnit.MILLISECONDS);
         } catch (Exception e) {
             List<String> apkFileNames =
                     Lists.transform(
