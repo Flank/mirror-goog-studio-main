@@ -62,8 +62,6 @@ public class AndroidGradleOptions {
 
     public static final String PROPERTY_KEEP_TIMESTAMPS_IN_APK = "android.keepTimestampsInApk";
 
-    public static final String PROPERTY_ENABLE_AAPT2 = "android.enableAapt2";
-
     public static final String ANDROID_ADVANCED_PROFILING_TRANSFORMS =
             "android.advanced.profiling.transforms";
 
@@ -76,18 +74,6 @@ public class AndroidGradleOptions {
             "android.androidTest.numShards";
     public static  final String PROPERTY_USE_SDK_DOWNLOAD =
             "android.builder.sdkDownload";
-
-    public static final String PROPERTY_BUILD_CACHE_DIR = "android.buildCacheDir";
-
-    public static final String PROPERTY_USE_DEX_ARCHIVE = "android.useDexArchive";
-
-    /**
-     * Build cache is used for dependency resolution, and for keeping the intermediate artifacts,
-     * such as pre-dexed libraries. Setting this property to {@code false} disables it, which is
-     * useful for e.g. performance benchmarks.
-     */
-    public static final String ENABLE_INTERMEDIATE_ARTIFACTS_CACHE =
-            "android.enableIntermediateArtifactsCache";
 
 
     public static final String GRADLE_VERSION_CHECK_OVERRIDE_PROPERTY =
@@ -278,37 +264,6 @@ public class AndroidGradleOptions {
         return size;
     }
 
-    @Nullable
-    public static SigningOptions getSigningOptions(@NonNull Project project) {
-        String signingStoreFile =
-                getString(project, AndroidProject.PROPERTY_SIGNING_STORE_FILE);
-        String signingStorePassword =
-                getString(project, AndroidProject.PROPERTY_SIGNING_STORE_PASSWORD);
-        String signingKeyAlias =
-                getString(project, AndroidProject.PROPERTY_SIGNING_KEY_ALIAS);
-        String signingKeyPassword =
-                getString(project, AndroidProject.PROPERTY_SIGNING_KEY_PASSWORD);
-
-        if (signingStoreFile != null
-                && signingStorePassword != null
-                && signingKeyAlias != null
-                && signingKeyPassword != null) {
-            String signingStoreType =
-                    getString(project, AndroidProject.PROPERTY_SIGNING_STORE_TYPE);
-
-            return new SigningOptions(
-                    signingStoreFile,
-                    signingStorePassword,
-                    signingKeyAlias,
-                    signingKeyPassword,
-                    signingStoreType,
-                    getOptionalBoolean(project, AndroidProject.PROPERTY_SIGNING_V1_ENABLED),
-                    getOptionalBoolean(project, AndroidProject.PROPERTY_SIGNING_V2_ENABLED));
-        }
-
-        return null;
-    }
-
     @NonNull
     public static EnumSet<OptionalCompilationStep> getOptionalCompilationSteps(
             @NonNull Project project) {
@@ -329,25 +284,11 @@ public class AndroidGradleOptions {
         return !getBoolean(project, PROPERTY_DISABLE_RESOURCE_VALIDATION);
     }
 
-    @Nullable
-    public static Integer getVersionCodeOverride(@NonNull Project project) {
-        return getInteger(project, AndroidProject.PROPERTY_VERSION_CODE);
-    }
-
-    @Nullable
-    public static String getVersionNameOverride(@NonNull Project project) {
-        return getString(project, AndroidProject.PROPERTY_VERSION_NAME);
-    }
-
     public static boolean isImprovedDependencyResolutionEnabled(@NonNull Project project) {
         return getBoolean(
                 project,
                 BooleanOption.ENABLE_IMPROVED_DEPENDENCY_RESOLUTION.getPropertyName(),
                 BooleanOption.ENABLE_IMPROVED_DEPENDENCY_RESOLUTION.getDefaultValue());
-    }
-
-    public static boolean isIntermediateArtifactsCacheEnabled(@NonNull Project project) {
-        return getBoolean(project, ENABLE_INTERMEDIATE_ARTIFACTS_CACHE, true);
     }
 
     @Nullable
@@ -385,17 +326,6 @@ public class AndroidGradleOptions {
             @NonNull Project project,
             @NonNull String propertyName) {
         return getBoolean(project, propertyName, false /*defaultValue*/);
-    }
-
-    @Nullable
-    private static Boolean getOptionalBoolean(
-            @NonNull Project project,
-            @NonNull String propertyName) {
-        if (project.hasProperty(propertyName)) {
-            return getBoolean(project, propertyName);
-        } else {
-            return null;
-        }
     }
 
     private static boolean getBoolean(
@@ -461,30 +391,4 @@ public class AndroidGradleOptions {
         }
     }
 
-    public static class SigningOptions {
-        @NonNull public final String storeFile;
-        @NonNull public final String storePassword;
-        @NonNull public final String keyAlias;
-        @NonNull public final String keyPassword;
-        @Nullable public final String storeType;
-        @Nullable public final Boolean v1Enabled;
-        @Nullable public final Boolean v2Enabled;
-
-        SigningOptions(
-                @NonNull String storeFile,
-                @NonNull String storePassword,
-                @NonNull String keyAlias,
-                @NonNull String keyPassword,
-                @Nullable String storeType,
-                @Nullable Boolean v1Enabled,
-                @Nullable Boolean v2Enabled) {
-            this.storeFile = storeFile;
-            this.storeType = storeType;
-            this.storePassword = storePassword;
-            this.keyAlias = keyAlias;
-            this.keyPassword = keyPassword;
-            this.v1Enabled = v1Enabled;
-            this.v2Enabled = v2Enabled;
-        }
-    }
 }
