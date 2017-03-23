@@ -21,34 +21,33 @@ import com.android.ide.common.process.JavaProcessInfo;
 import com.android.ide.common.process.ProcessEnvBuilder;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessInfoBuilder;
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 
 /** A builder to create an information necessary to run Desugar in a separate JVM process. */
 public final class DesugarProcessBuilder extends ProcessEnvBuilder<DesugarProcessBuilder> {
     private static final String DESUGAR_MAIN = "com.google.devtools.build.android.desugar.Desugar";
 
     private final boolean verbose;
-    private final Path input;
+    private final Map<Path, Path> inputsToOutputs;
     private final List<Path> classpath;
-    private final Path output;
     private final List<Path> bootClasspath;
     private final int minSdkVersion;
 
     public DesugarProcessBuilder(
             boolean verbose,
-            @NonNull Path input,
+            @NonNull Map<Path, Path> inputsToOutputs,
             @NonNull List<Path> classpath,
-            @NonNull Path output,
             @NonNull List<Path> bootClasspath,
             int minSdkVersion) {
         this.verbose = verbose;
-        this.input = input;
+        this.inputsToOutputs = ImmutableMap.copyOf(inputsToOutputs);
         this.classpath = classpath;
-        this.output = output;
         this.bootClasspath = bootClasspath;
         this.minSdkVersion = minSdkVersion;
     }
@@ -67,14 +66,15 @@ public final class DesugarProcessBuilder extends ProcessEnvBuilder<DesugarProces
             builder.addArgs("--verbose");
         }
 
-        builder.addArgs("--input", input.toString());
-        builder.addArgs("--output", output.toString());
+        inputsToOutputs.forEach(
+                (in, out) -> {
+                    builder.addArgs("--input", in.toString());
+                    builder.addArgs("--output", out.toString());
+                });
         classpath.forEach(c -> builder.addArgs("--classpath_entry", c.toString()));
         bootClasspath.forEach(b -> builder.addArgs("--bootclasspath_entry", b.toString()));
 
-        // Disable min sdk version param until we have a new DX supporting default and static
-        // interface methods merged. Current one will blow up.
-        // builder.addArgs("--min_sdk_version", Integer.toString(minSdkVersion));
+        builder.addArgs("--min_sdk_version", Integer.toString(minSdkVersion));
 
         return builder.createJavaProcess();
     }

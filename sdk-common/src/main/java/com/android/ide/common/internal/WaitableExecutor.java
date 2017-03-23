@@ -54,12 +54,15 @@ public class WaitableExecutor<T> {
     @Nullable private final ExecutorService mExecutorService;
     @NonNull private final CompletionService<T> mCompletionService;
     @NonNull private final Set<Future<T>> mFutureSet = Sets.newConcurrentHashSet();
+    private int parallelism;
 
     WaitableExecutor(
             @Nullable ExecutorService mExecutorService,
-            @NonNull CompletionService<T> mCompletionService) {
+            @NonNull CompletionService<T> mCompletionService,
+            int parallelism) {
         this.mExecutorService = mExecutorService;
         this.mCompletionService = mCompletionService;
+        this.parallelism = parallelism;
     }
 
     /**
@@ -76,7 +79,9 @@ public class WaitableExecutor<T> {
      */
     public static <T> WaitableExecutor<T> useGlobalSharedThreadPool() {
         return new WaitableExecutor<>(
-                null, new ExecutorCompletionService<T>(ExecutorSingleton.getExecutor()));
+                null,
+                new ExecutorCompletionService<T>(ExecutorSingleton.getExecutor()),
+                ExecutorSingleton.getThreadPoolSize());
     }
 
     /**
@@ -109,7 +114,7 @@ public class WaitableExecutor<T> {
         checkArgument(nThreads > 0, "Number of threads needs to be a positive number.");
         ExecutorService executorService = Executors.newFixedThreadPool(nThreads);
         return new WaitableExecutor<>(
-                executorService, new ExecutorCompletionService<T>(executorService));
+                executorService, new ExecutorCompletionService<T>(executorService), nThreads);
     }
 
     /**
@@ -122,7 +127,9 @@ public class WaitableExecutor<T> {
     @SuppressWarnings("unused") // Temporarily used when debugging.
     public static <T> WaitableExecutor<T> useDirectExecutor() {
         return new WaitableExecutor<>(
-                null, new ExecutorCompletionService<T>(MoreExecutors.newDirectExecutorService()));
+                null,
+                new ExecutorCompletionService<T>(MoreExecutors.newDirectExecutorService()),
+                1);
     }
 
     /**
@@ -253,6 +260,11 @@ public class WaitableExecutor<T> {
         }
     }
 
+    /** Returns the parallelism of this executor i.e. how many tasks can run in parallel. */
+    public int getParallelism() {
+        return parallelism;
+    }
+
     /**
      * A {@link WaitableExecutor} that limits the number of tasks (scheduled through this executor)
      * that can execute in parallel.
@@ -270,7 +282,7 @@ public class WaitableExecutor<T> {
                 @Nullable ExecutorService mExecutorService,
                 @NonNull CompletionService<T> mCompletionService,
                 int bound) {
-            super(mExecutorService, mCompletionService);
+            super(mExecutorService, mCompletionService, bound);
             this.bound = bound;
             this.inCompletionService = 0;
             this.overflow = new LinkedList<>();

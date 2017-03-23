@@ -51,12 +51,15 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Collections;
@@ -65,6 +68,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
@@ -104,6 +108,8 @@ public class DesugarTransform extends Transform {
     @NonNull private final JavaProcessExecutor executor;
     @NonNull private final WaitableExecutor<Void> waitableExecutor;
     private boolean verbose;
+
+    private Map<Path, Path> cacheMisses = Maps.newHashMap();
 
     public DesugarTransform(
             @NonNull Supplier<List<File>> androidJarClasspath,
@@ -176,6 +182,9 @@ public class DesugarTransform extends Transform {
         try {
             processInputs(transformInvocation);
             waitableExecutor.waitForTasksWithQuickFail(true);
+
+            processNonCachedOnes(getClasspath(transformInvocation));
+            waitableExecutor.waitForTasksWithQuickFail(true);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new TransformException(e);
@@ -192,7 +201,6 @@ public class DesugarTransform extends Transform {
             outputProvider.deleteAll();
         }
 
-        List<Path> classPaths = getClasspath(transformInvocation);
         for (TransformInput input : transformInvocation.getInputs()) {
             for (DirectoryInput dirInput : input.getDirectoryInputs()) {
                 Path rootFolder = dirInput.getFile().toPath();
@@ -208,7 +216,7 @@ public class DesugarTransform extends Transform {
 
                     if (reRun) {
                         PathUtils.deleteIfExists(output);
-                        submitForDesugaring(rootFolder, classPaths, output, dirInput.getScopes());
+                        processSingle(rootFolder, output, dirInput.getScopes());
                     }
                 }
             }
@@ -221,9 +229,48 @@ public class DesugarTransform extends Transform {
 
                 Path output = getOutputPath(outputProvider, jarInput);
                 PathUtils.deleteIfExists(output);
-                submitForDesugaring(
-                        jarInput.getFile().toPath(), classPaths, output, jarInput.getScopes());
+                processSingle(jarInput.getFile().toPath(), output, jarInput.getScopes());
             }
+        }
+    }
+
+    private void processNonCachedOnes(List<Path> classpath) throws IOException, ProcessException {
+        int parallelExecutions = waitableExecutor.getParallelism();
+
+        int index = 0;
+        Map<Integer, Map<Path, Path>> buckets = Maps.newHashMap();
+        for (Map.Entry<Path, Path> pathPathEntry : cacheMisses.entrySet()) {
+            int bucketId = index % parallelExecutions;
+            Map<Path, Path> executedTogether = buckets.get(bucketId);
+            if (executedTogether == null) {
+                executedTogether = Maps.newHashMap();
+            }
+
+            executedTogether.put(pathPathEntry.getKey(), pathPathEntry.getValue());
+            buckets.put(bucketId, executedTogether);
+
+            index++;
+        }
+
+        for (Integer bucketId : buckets.keySet()) {
+            Callable<Void> callable =
+                    () -> {
+                        DesugarProcessBuilder processBuilder =
+                                new DesugarProcessBuilder(
+                                        verbose,
+                                        buckets.get(bucketId),
+                                        classpath,
+                                        this.compilationBootclasspath,
+                                        minSdk);
+                        executor.execute(
+                                        processBuilder.build(),
+                                        new LoggedProcessOutputHandler(logger))
+                                .rethrowFailure()
+                                .assertNormalExitValue();
+
+                        return null;
+                    };
+            waitableExecutor.execute(callable);
         }
     }
 
@@ -250,18 +297,15 @@ public class DesugarTransform extends Transform {
                 .collect(Collectors.toList());
     }
 
-    private void submitForDesugaring(
-            @NonNull Path input,
-            @NonNull List<Path> classPath,
-            @NonNull Path output,
-            @NonNull Set<? super Scope> scopes)
+    private void processSingle(
+            @NonNull Path input, @NonNull Path output, @NonNull Set<? super Scope> scopes)
             throws Exception {
         waitableExecutor.execute(
                 () -> {
-                    if (Files.isDirectory(output)) {
-                        Files.createDirectories(output);
-                    } else {
+                    if (output.toString().endsWith(SdkConstants.DOT_JAR)) {
                         Files.createDirectories(output.getParent());
+                    } else {
+                        Files.createDirectories(output);
                     }
 
                     FileCache cacheToUse;
@@ -275,18 +319,17 @@ public class DesugarTransform extends Transform {
                         cacheToUse = null;
                     }
 
-                    processUsingCache(input, classPath, output, cacheToUse);
+                    processUsingCache(input, output, cacheToUse);
                     return null;
                 });
     }
 
     private void processUsingCache(
             @NonNull Path input,
-            @NonNull List<Path> classpath,
             @NonNull Path output,
             @Nullable FileCache cache)
             throws Exception {
-        ExceptionRunnable cacheMissAction = () -> cacheMissAction(input, classpath, output);
+        ExceptionRunnable cacheMissAction = () -> cacheMissAction(input, output);
 
         if (cache != null) {
             try {
@@ -320,17 +363,10 @@ public class DesugarTransform extends Transform {
         }
     }
 
-    private void cacheMissAction(
-            @NonNull Path input, @NonNull List<Path> classpath, @NonNull Path output)
+    private void cacheMissAction(@NonNull Path input, @NonNull Path output)
             throws IOException, ProcessException {
-        // TODO: once Desugar supports dirs, remove this
-        Path jarInputs = convertDirToJar(input);
-        DesugarProcessBuilder processBuilder =
-                new DesugarProcessBuilder(
-                        verbose, jarInputs, classpath, output, compilationBootclasspath, minSdk);
-        executor.execute(processBuilder.build(), new LoggedProcessOutputHandler(logger))
-                .rethrowFailure()
-                .assertNormalExitValue();
+        // add it to the list of cache misses, that will be processed
+        cacheMisses.put(input, output);
     }
 
     @NonNull
@@ -341,7 +377,7 @@ public class DesugarTransform extends Transform {
                         content.getName(),
                         content.getContentTypes(),
                         content.getScopes(),
-                        Format.JAR)
+                        content.getFile().isDirectory() ? Format.DIRECTORY : Format.JAR)
                 .toPath();
     }
 
@@ -372,7 +408,7 @@ public class DesugarTransform extends Transform {
         return buildCacheInputs.build();
     }
 
-    /** Tmp solution until support for input directories is added to Desugar. */
+    /** Tmp solution until support for classpath directories is added to Desugar. */
     @NonNull
     private static Path convertDirToJar(@NonNull Path input) {
         if (Files.isRegularFile(input)) {
@@ -394,7 +430,9 @@ public class DesugarTransform extends Transform {
                     .filter(Files::isRegularFile)
                     .forEach(
                             p -> {
-                                ZipEntry entry = new ZipEntry(input.relativize(p).toString());
+                                String entryName =
+                                        PathUtils.toSystemIndependentPath(input.relativize(p));
+                                ZipEntry entry = new ZipEntry(entryName);
                                 try {
                                     outputStream.putNextEntry(entry);
                                     outputStream.write(Files.readAllBytes(p));
@@ -413,13 +451,32 @@ public class DesugarTransform extends Transform {
 
     @NonNull
     private static List<Path> splitBootclasspath(@NonNull String bootClasspath) {
-        List<String> bootclasspathComponents =
-                Lists.newArrayList(Splitter.on(File.pathSeparator).split(bootClasspath));
-        // TODO: a dir is part of the bootclasspath, and Desugar does not support that, fix it.
-        return bootclasspathComponents
-                .stream()
-                .map(Paths::get)
-                .filter(Files::isRegularFile)
-                .collect(Collectors.toList());
+        Iterable<String> components = Splitter.on(File.pathSeparator).split(bootClasspath);
+
+        List<Path> bootClasspathJars = Lists.newArrayList();
+        PathMatcher zipOrJar =
+                FileSystems.getDefault()
+                        .getPathMatcher(
+                                String.format(
+                                        "glob:**{%s,%s}",
+                                        SdkConstants.EXT_ZIP, SdkConstants.EXT_JAR));
+
+        for (String component : components) {
+            Path componentPath = Paths.get(component);
+            if (Files.isRegularFile(componentPath)) {
+                bootClasspathJars.add(componentPath);
+            } else {
+                // this is a directory containing zips or jars, get them all
+                try {
+                    Files.walk(componentPath)
+                            .filter(zipOrJar::matches)
+                            .forEach(bootClasspathJars::add);
+                } catch (IOException ignored) {
+                    // just ignore, users can specify non-existing dirs as bootclasspath
+                }
+            }
+        }
+
+        return bootClasspathJars;
     }
 }
