@@ -2800,6 +2800,35 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                 ));
     }
 
+    public void testVisibleForTestingIncrementally() throws Exception {
+        lint().files(
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "import android.support.annotation.VisibleForTesting;\n"
+                        + "\n"
+                        + "public class ProductionCode {\n"
+                        + "    @VisibleForTesting\n"
+                        + "    public void testHelper() {\n"
+                        + "    }\n"
+                        + "}\n"),
+                // test/ prefix makes it a test folder entry:
+                java("test/test/pkg/UnitTest.java", ""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "public class UnitTest {\n"
+                        + "    public void test() {\n"
+                        + "        new ProductionCode().testHelper(); // OK\n"
+                        + "        \n"
+                        + "    }\n"
+                        + "}\n"),
+                mSupportClasspath,
+                mSupportJar)
+                .incremental("test/test/pkg/UnitTest.java")
+                .run()
+                .expectClean();
+    }
+
     public void testVisibleForTestingSameCompilationUnit() throws Exception {
         //noinspection all // Sample code
         lint().files(
