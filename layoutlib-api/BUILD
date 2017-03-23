@@ -18,8 +18,8 @@ iml_module(
         "//tools/idea/.idea/libraries:kxml2",
         "//tools/idea/.idea/libraries:JUnit4[test]",
         "//tools/base/annotations:studio.android-annotations[module]",
-        "//tools/base/common:studio.common[module]",
         "//tools/idea/platform/annotations[module]",
+        "//tools/base/common:studio.common[module]",
     ],
 )
 
