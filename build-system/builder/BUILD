@@ -30,7 +30,7 @@ maven_java_library(
         "//tools/base/apkzlib:srcjar",
         "//tools/base/build-system/profile:srcjar",
         "//tools/base/aaptjlib:srcjar",
-        "//tools/dx/dalvik/dx:srcjar",
+        "//dalvik/dx:srcjar",
     ],
     plugins = [
         ":auto-value-plugin",
