@@ -65,7 +65,7 @@ public class DexWrapper {
             @NonNull DexOptions dexOptions,
             @NonNull DxContext dxContext)
             throws ProcessException {
-        Main.Arguments args = new Main.Arguments();
+        Main.Arguments args = new Main.Arguments(dxContext);
 
         // Inputs:
         args.fileNames = Iterables.toArray(processBuilder.getFilesToAdd(), String.class);
@@ -94,7 +94,7 @@ public class DexWrapper {
         args.forceJumbo = dexOptions.getJumboMode();
 
         args.parseFlags(Iterables.toArray(dexOptions.getAdditionalParameters(), String.class));
-        args.makeOptionsObjects(dxContext);
+        args.makeOptionsObjects();
 
         return args;
     }

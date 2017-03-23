@@ -114,6 +114,14 @@ dependencies {
         transitive = false
     }
 
+    provided(project(':dx')) {
+        transitive = false
+    }
+
+    sourcesProvided(project(path:':dx', configuration:'sourcesOnly')) {
+        transitive = false
+    }
+
     resourcesRuntime(project(path: ':external:desugar', configuration: 'fatJar')) {
         transitive = false
     }
