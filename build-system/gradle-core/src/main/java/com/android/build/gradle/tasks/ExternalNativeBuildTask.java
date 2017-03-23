@@ -29,6 +29,7 @@ import com.android.build.gradle.internal.dsl.CoreExternalNativeCmakeOptions;
 import com.android.build.gradle.internal.dsl.CoreExternalNativeNdkBuildOptions;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.tasks.BaseTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.SyncIssue;
@@ -58,7 +59,7 @@ import org.gradle.api.tasks.TaskAction;
  * <p>It declares no inputs or outputs, as it's supposed to always run when invoked. Incrementality
  * is left to the underlying build system.
  */
-public class ExternalNativeBuildTask extends ExternalNativeBaseTask {
+public class ExternalNativeBuildTask extends BaseTask {
 
     private List<File> nativeBuildConfigurationsJsons;
 
@@ -69,6 +70,11 @@ public class ExternalNativeBuildTask extends ExternalNativeBaseTask {
     private Set<String> targets;
 
     private Map<Abi, File> stlSharedObjectFiles;
+
+    /** Log low level diagnostic information. */
+    protected void diagnostic(String format, Object... args) {
+        getLogger().info(String.format(getName() + ": " + format, args));
+    }
 
     @TaskAction
     void build() throws BuildCommandException, IOException {
@@ -115,6 +121,8 @@ public class ExternalNativeBuildTask extends ExternalNativeBaseTask {
                 }
             }
         }
+
+
 
         for (NativeBuildConfigValue config : configValueList) {
             if (config.libraries == null) {
@@ -167,8 +175,9 @@ public class ExternalNativeBuildTask extends ExternalNativeBaseTask {
             if (config.libraries == null) {
                 continue;
             }
-            for (String libraryName : config.libraries.keySet()) {
-                NativeLibraryValue libraryValue = config.libraries.get(libraryName);
+            for (String library : config.libraries.keySet()) {
+                NativeLibraryValue libraryValue = config.libraries.get(library);
+                String libraryName = libraryValue.artifactName + " " + libraryValue.abi;
                 checkNotNull(libraryValue);
                 checkNotNull(libraryValue.output);
                 checkState(!Strings.isNullOrEmpty(libraryValue.artifactName));
@@ -188,6 +197,36 @@ public class ExternalNativeBuildTask extends ExternalNativeBaseTask {
                 if (libraryValue.abi == null) {
                     throw new GradleException("Expected NativeLibraryValue to have non-null abi");
                 }
+
+                // If the build chose to write the library output somewhere besides objFolder
+                // then copy to objFolder (reference b.android.com/256515)
+                //
+                // Since there is now a .so file outside of the standard build/ folder we have to
+                // consider clean. Here's how the two files are covered.
+                // (1) Gradle plugin deletes the build/ folder. This covers the destination of the
+                //     copy.
+                // (2) ExternalNativeCleanTask calls the individual clean targets for everything
+                //     that was built. This should cover the source of the copy but it is up to the
+                //     CMakeLists.txt or Android.mk author to ensure this.
+                Abi abi = Abi.getByName(libraryValue.abi);
+                if (abi == null) {
+                    throw new RuntimeException(
+                            String.format("Unknown ABI seen %s", libraryValue.abi));
+                }
+                File expectedOutputFile =
+                        FileUtils.join(objFolder, abi.getName(), libraryValue.output.getName());
+                if (!FileUtils.isSameFile(libraryValue.output, expectedOutputFile)) {
+                    diagnostic(
+                            "external build set its own library output location for '%s', "
+                                    + "copy to expected location",
+                            libraryValue.output.getName());
+
+                    if (expectedOutputFile.getParentFile().mkdirs()) {
+                        diagnostic("created folder %s", expectedOutputFile.getParentFile());
+                    }
+                    diagnostic("copy file %s to %s", libraryValue.output, expectedOutputFile);
+                    Files.copy(libraryValue.output, expectedOutputFile);
+                }
             }
         }
 
@@ -195,10 +234,19 @@ public class ExternalNativeBuildTask extends ExternalNativeBaseTask {
             diagnostic("copy STL shared object files");
             for (Abi abi : stlSharedObjectFiles.keySet()) {
                 File stlSharedObjectFile = checkNotNull(stlSharedObjectFiles.get(abi));
-                File objAbi = FileUtils.join(objFolder, abi.getName(),
-                        stlSharedObjectFile.getName());
-                diagnostic("copy file %s to %s", stlSharedObjectFile, objAbi);
-                Files.copy(stlSharedObjectFile, objAbi);
+                File objAbi =
+                        FileUtils.join(objFolder, abi.getName(), stlSharedObjectFile.getName());
+                if (!objAbi.getParentFile().isDirectory()) {
+                    // A build failure can leave the obj/abi folder missing. Just note that case
+                    // and continue without copying STL.
+                    diagnostic(
+                            "didn't copy STL file to %s because that folder wasn't created "
+                                    + "by the build ",
+                            objAbi.getParentFile());
+                } else {
+                    diagnostic("copy file %s to %s", stlSharedObjectFile, objAbi);
+                    Files.copy(stlSharedObjectFile, objAbi);
+                }
             }
         }
 
