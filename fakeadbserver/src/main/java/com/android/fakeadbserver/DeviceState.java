@@ -144,9 +144,10 @@ public class DeviceState {
     }
 
     @NonNull
-    public ClientState startClient(int pid, int uid, @NonNull String packageName) {
+    public ClientState startClient(
+            int pid, int uid, @NonNull String packageName, boolean isWaiting) {
         synchronized (mClients) {
-            ClientState clientState = new ClientState(pid, uid, packageName);
+            ClientState clientState = new ClientState(pid, uid, packageName, isWaiting);
             mClients.put(pid, clientState);
             mClientStateChangeHub.clientListChanged(getClientListCopy());
             return clientState;
