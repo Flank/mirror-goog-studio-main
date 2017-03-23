@@ -33,7 +33,7 @@ import java.util.Map;
  */
 // '$' intentionally used to mimic generated code since we insert this via bytecode instrumentation
 @SuppressWarnings("DollarSignInName")
-final class HttpURLConnection$ extends HttpURLConnection {
+final public class HttpURLConnection$ extends HttpURLConnection {
 
     private final HttpURLConnection myWrapped;
     private final HttpConnectionTracker myConnectionTracker;
