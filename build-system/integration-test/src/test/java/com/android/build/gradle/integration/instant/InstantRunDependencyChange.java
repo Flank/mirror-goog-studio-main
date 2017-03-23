@@ -24,6 +24,7 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
+import com.android.sdklib.AndroidVersion;
 import com.android.tools.fd.client.InstantRunBuildInfo;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
@@ -51,7 +52,7 @@ public class InstantRunDependencyChange {
                 project.model().getSingle().getOnlyModel());
 
         project.executor()
-                .withInstantRun(23, OptionalCompilationStep.FULL_APK)
+                .withInstantRun(new AndroidVersion(23, null), OptionalCompilationStep.FULL_APK)
                 .run("assembleDebug");
 
         // add a dependency on the project build.
@@ -61,9 +62,7 @@ public class InstantRunDependencyChange {
                 Charsets.UTF_8);
 
         // now perform an incremental build.
-        project.executor()
-                .withInstantRun(23)
-                .run("assembleDebug");
+        project.executor().withInstantRun(new AndroidVersion(23, null)).run("assembleDebug");
 
         // check that adding a new dependency triggered a coldswap build.
         InstantRunBuildInfo context = InstantRunTestUtils.loadContext(instantRunModel);
@@ -91,7 +90,7 @@ public class InstantRunDependencyChange {
 
         project.execute("clean");
         project.executor()
-                .withInstantRun(23, OptionalCompilationStep.FULL_APK)
+                .withInstantRun(new AndroidVersion(23, null), OptionalCompilationStep.FULL_APK)
                 .run("assembleDebug");
 
         // change the dependency version on the project build.
@@ -102,9 +101,7 @@ public class InstantRunDependencyChange {
                 Charsets.UTF_8);
 
         // now perform an incremental build.
-        project.executor()
-                .withInstantRun(23)
-                .run("assembleDebug");
+        project.executor().withInstantRun(new AndroidVersion(23, null)).run("assembleDebug");
 
         // check that changing a dependency triggered a coldswap build.
         InstantRunBuildInfo context = InstantRunTestUtils.loadContext(instantRunModel);

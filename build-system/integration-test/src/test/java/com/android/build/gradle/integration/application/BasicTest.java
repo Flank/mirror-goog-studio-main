@@ -35,6 +35,7 @@ import com.android.builder.model.JavaCompileOptions;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.model.Variant;
+import com.android.sdklib.AndroidVersion;
 import java.util.regex.Pattern;
 import org.gradle.api.JavaVersion;
 import org.junit.AfterClass;
@@ -158,7 +159,7 @@ public class BasicTest {
     @Test
     public void checkDensityAndResourceConfigs() throws Exception {
         project.executor()
-                .withInstantRun(23, OptionalCompilationStep.RESTART_ONLY)
+                .withInstantRun(new AndroidVersion(23, null), OptionalCompilationStep.RESTART_ONLY)
                 .with(StringOption.IDE_BUILD_TARGET_DENISTY, "xxhdpi")
                 .run("assembleDebug");
     }

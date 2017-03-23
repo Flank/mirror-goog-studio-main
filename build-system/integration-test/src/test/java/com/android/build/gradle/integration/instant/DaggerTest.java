@@ -34,6 +34,7 @@ import com.android.build.gradle.internal.incremental.InstantRunBuildMode;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.InstantRun;
 import com.android.ddmlib.IDevice;
+import com.android.sdklib.AndroidVersion;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.SplitApks;
 import com.android.tools.fd.client.InstantRunArtifact;
@@ -140,11 +141,11 @@ public class DaggerTest {
     @Test
     public void hotSwap() throws Exception {
         InstantRun instantRunModel =
-                InstantRunTestUtils.doInitialBuild(project, 23);
+                InstantRunTestUtils.doInitialBuild(project, new AndroidVersion(23, null));
 
         TestFileUtils.searchAndReplace(mAppModule, "from module", "CHANGE");
 
-        project.executor().withInstantRun(23).run("assembleDebug");
+        project.executor().withInstantRun(new AndroidVersion(23, null)).run("assembleDebug");
 
         InstantRunArtifact artifact = InstantRunTestUtils.getReloadDexArtifact(instantRunModel);
 

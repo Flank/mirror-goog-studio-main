@@ -54,7 +54,7 @@ public class DeploymentApiOverrideTest {
     public void testMultiDexOnPost21Build() throws Exception {
         GradleBuildResult lastBuild =
                 project.executor()
-                        .with(IntegerOption.IDE_TARGET_FEATURE_LEVEL, 21)
+                        .with(IntegerOption.IDE_TARGET_DEVICE_API, 21)
                         .run("clean", "assembleIcsDebug");
         assertThat(lastBuild).isNotNull();
         assertThat(lastBuild.getStdout()).doesNotContain("Multidexlist");
@@ -65,7 +65,7 @@ public class DeploymentApiOverrideTest {
     public void testMultiDexOnReleaseBuild() throws Exception {
         GradleBuildResult lastBuild =
                 project.executor()
-                        .with(IntegerOption.IDE_TARGET_FEATURE_LEVEL, 21)
+                        .with(IntegerOption.IDE_TARGET_DEVICE_API, 21)
                         .run("clean", "assembleIcsRelease");
         assertThat(lastBuild).isNotNull();
         assertThat(lastBuild.getStdout()).contains("Multidexlist");

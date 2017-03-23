@@ -382,8 +382,6 @@ public class MergeResourcesTest {
                 appProject.file("src/main/java/com/example/android/multiproject/MainActivity.java"),
                 "public int useFoo() { return R.id.foo; }");
 
-        project.executor()
-                .with(IntegerOption.IDE_TARGET_FEATURE_LEVEL, 23)
-                .run(":app:assembleDebug");
+        project.executor().with(IntegerOption.IDE_TARGET_DEVICE_API, 23).run(":app:assembleDebug");
     }
 }

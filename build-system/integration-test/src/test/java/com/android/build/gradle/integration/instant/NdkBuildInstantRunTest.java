@@ -34,6 +34,7 @@ import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.builder.packaging.PackagingUtils;
 import com.android.ddmlib.IDevice;
+import com.android.sdklib.AndroidVersion;
 import com.android.testutils.apk.SplitApks;
 import com.android.tools.fd.client.InstantRunBuildInfo;
 import com.android.tools.fd.client.InstantRunClient;
@@ -93,7 +94,7 @@ public class NdkBuildInstantRunTest {
     @Test
     public void checkHotSwapBuild() throws Exception {
         project.executor()
-                .withInstantRun(23)
+                .withInstantRun(new AndroidVersion(23, null))
                 .with(StringOption.IDE_BUILD_TARGET_ABI, "x86")
                 .run("clean", "assembleDebug");
 
@@ -111,7 +112,7 @@ public class NdkBuildInstantRunTest {
                             "tv.setText(\"Hello from Java\")");
 
                     project.executor()
-                            .withInstantRun(23)
+                            .withInstantRun(new AndroidVersion(23, null))
                             .with(StringOption.IDE_BUILD_TARGET_ABI, "x86")
                             .run("assembleDebug");
                     InstantRunBuildInfo context = InstantRunTestUtils.loadContext(instantRunModel);
@@ -123,7 +124,7 @@ public class NdkBuildInstantRunTest {
     @Test
     public void checkFullBuildIsTriggered() throws Exception {
         project.executor()
-                .withInstantRun(23)
+                .withInstantRun(new AndroidVersion(23, null))
                 .with(StringOption.IDE_BUILD_TARGET_ABI, "x86")
                 .run("clean", "assembleDebug");
 
@@ -136,7 +137,7 @@ public class NdkBuildInstantRunTest {
         Files.append("\nvoid foo() {}\n", src, Charsets.UTF_8);
 
         project.executor()
-                .withInstantRun(23)
+                .withInstantRun(new AndroidVersion(23, null))
                 .with(StringOption.IDE_BUILD_TARGET_ABI, "x86")
                 .run("assembleDebug");
         InstantRunBuildInfo context = InstantRunTestUtils.loadContext(instantRunModel);
@@ -161,7 +162,8 @@ public class NdkBuildInstantRunTest {
         InstantRun instantRunModel = InstantRunTestUtils.getInstantRunModel(model);
         project.executor()
                 .withInstantRun(
-                        device.getVersion().getApiLevel(), OptionalCompilationStep.RESTART_ONLY)
+                        new AndroidVersion(device.getVersion().getApiLevel(), null),
+                        OptionalCompilationStep.RESTART_ONLY)
                 .run("assembleDebug");
         InstantRunBuildInfo info = InstantRunTestUtils.loadContext(instantRunModel);
         device.uninstallPackage("com.example.hellojni");

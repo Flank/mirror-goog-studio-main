@@ -83,9 +83,9 @@ public final class InstantRunTestUtils {
 
     @NonNull
     public static InstantRunBuildContext loadBuildContext(
-            int apiLevel, @NonNull InstantRun instantRunModel) throws Exception {
+            AndroidVersion androidVersion, @NonNull InstantRun instantRunModel) throws Exception {
         InstantRunBuildContext context = new InstantRunBuildContext();
-        context.setApiLevel(apiLevel, null);
+        context.setApiLevel(androidVersion, null);
         context.loadFromXml(Files.toString(instantRunModel.getInfoFile(), Charsets.UTF_8));
         return context;
     }
@@ -174,14 +174,15 @@ public final class InstantRunTestUtils {
     }
 
     @NonNull
-    static InstantRun doInitialBuild(@NonNull GradleTestProject project, int apiLevel)
+    static InstantRun doInitialBuild(
+            @NonNull GradleTestProject project, @NonNull AndroidVersion androidVersion)
             throws IOException, InterruptedException {
         project.execute("clean");
         InstantRun instantRunModel = getInstantRunModel(
                 Iterables.getOnlyElement(project.model().getSingle().getModelMap().values()));
 
         project.executor()
-                .withInstantRun(apiLevel, OptionalCompilationStep.FULL_APK)
+                .withInstantRun(androidVersion, OptionalCompilationStep.FULL_APK)
                 .run("assembleDebug");
 
         return instantRunModel;

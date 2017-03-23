@@ -26,6 +26,7 @@ import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.SdkHelper;
 import com.android.build.gradle.integration.instant.InstantRunTestUtils;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
+import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 import com.android.testutils.apk.Dex;
@@ -135,7 +136,7 @@ public class ExternalBuildPluginTest {
 + "  buildManifestPath = $/" + manifestFile.getAbsolutePath() + "/$\n"
 + "}\n");
 
-        mProject.executor().withInstantRun(23).run("clean", "process");
+        mProject.executor().withInstantRun(new AndroidVersion(23, null)).run("clean", "process");
 
         InstantRunBuildInfo info = loadBuildInfo();
 
@@ -179,7 +180,7 @@ public class ExternalBuildPluginTest {
             }
         }
 
-        mProject.executor().withInstantRun(23).run("process");
+        mProject.executor().withInstantRun(new AndroidVersion(23, null)).run("process");
 
         info = loadBuildInfo();
         assertThat(info.getVerifierStatus())

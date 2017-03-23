@@ -208,24 +208,19 @@ public class AndroidGradleOptions {
     /**
      * Returns the feature level for the target device.
      *
-     * For preview versions that is the last stable version + 1.
+     * <p>For preview versions that is the last stable version + 1.
      *
      * @param project the project being built
-     * @return a the feature level for the targeted device, following the
-     *         {@link AndroidProject#PROPERTY_BUILD_API} value passed by Android Studio.
+     * @return a the feature level for the targeted device, following the {@link
+     *     AndroidProject#PROPERTY_BUILD_API} value passed by Android Studio.
      */
-    public static int getTargetFeatureLevel(@NonNull Project project) {
-        String featureLevelString = getString(project, AndroidProject.PROPERTY_BUILD_API);
-        if (featureLevelString == null) {
-            return AndroidVersion.DEFAULT.getFeatureLevel();
+    public static AndroidVersion getTargetAndroidVersion(@NonNull Project project) {
+        Integer apiLevel = getInteger(project, AndroidProject.PROPERTY_BUILD_API);
+        if (apiLevel == null) {
+            return AndroidVersion.DEFAULT;
         }
-
-        try {
-            return Integer.parseInt(featureLevelString);
-        } catch (NumberFormatException ignore) {
-            project.getLogger().warn("Wrong build target version passed ", ignore);
-            return AndroidVersion.DEFAULT.getFeatureLevel();
-        }
+        @Nullable String codeName = getString(project, AndroidProject.PROPERTY_BUILD_API_CODENAME);
+        return new AndroidVersion(apiLevel, codeName);
     }
 
     public static boolean useDeprecatedNdk(@NonNull Project project) {
