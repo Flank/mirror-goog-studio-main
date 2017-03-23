@@ -1,5 +1,4 @@
 include 'transform'
-include 'agentlib'
 include 'supportlib'
 include 'native'
 include 'grpc-java'

@@ -19,22 +19,23 @@ apply plugin: 'java'
 group = 'com.android.tools'
 archivesBaseName = 'studio-profiler-lib'
 
-File androidJar = file('../../../../prebuilts/sdk/25/android.jar');
+File androidJar = file('../../../../prebuilts/sdk/23/android.jar');
 if (!androidJar.exists()) {
     // If not there, we're in one of the AOSP release branches where the
     // repo configuration does not include the whole prebuilts repository.
     // Fetch the SDK via $ANDROID_HOME instead.
-    File jar = file(System.env.ANDROID_HOME + '/platforms/android-25/android.jar');
+    File jar = file(System.env.ANDROID_HOME + '/platforms/android-23/android.jar');
     if (jar.exists()) {
         androidJar = jar
     } else {
-        throw new RuntimeException("android-25 android.jar not found at " + androidJar.absolutePath)
+        throw new RuntimeException("android-23 android.jar not found at " + androidJar.absolutePath)
     }
 }
 
 configurations {
+    provided
+    aar
     jni
-    slim
 }
 
 compileJava {
@@ -43,10 +44,13 @@ compileJava {
 }
 
 dependencies {
-    compileOnly files(androidJar)
-    compileOnly project(":agentlib")
+    provided files(androidJar)
     jni project(path: ":native", configuration: "perfa")
     testCompile 'junit:junit:4.12'
+}
+
+sourceSets {
+    main { compileClasspath += configurations.provided }
 }
 
 // turn off strict javadoc
@@ -56,18 +60,4 @@ tasks.withType(Javadoc) {
 
 jar {
     from configurations.jni
-    from project(":agentlib").sourceSets.main.output
-}
-
-// Creates a jar that does not include the agentlib and jni for post-O scenario.
-// TODO this can be removed once post-O jvmti profiling is fully supported.
-task slimJar(dependsOn: 'classes', type: Jar) {
-    appendix 'slim'
-    // TODO remove perfa dependency when it is included with the agent.
-    from configurations.jni
-    from sourceSets.main.output
-}
-
-artifacts {
-   slim slimJar
 }
