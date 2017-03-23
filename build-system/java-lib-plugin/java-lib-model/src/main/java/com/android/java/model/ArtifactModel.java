@@ -13,28 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package com.android.java.model.builder;
+package com.android.java.model;
 
 import com.android.annotations.NonNull;
-import javax.inject.Inject;
-import org.gradle.api.Plugin;
-import org.gradle.api.Project;
-import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
+import java.io.File;
+import java.util.Map;
+import java.util.Set;
 
-/** Custom plugin for Java Library. */
-public class JavaLibraryPlugin implements Plugin<Project> {
+/**
+ * Returns artifacts information of a module.
+ */
+public interface ArtifactModel {
 
-    private final ToolingModelBuilderRegistry registry;
+    /**
+     * Returns a user friendly name.
+     *
+     * @return a user friendly name.
+     */
+    @NonNull
+    String getName();
 
-    @Inject
-    JavaLibraryPlugin(@NonNull ToolingModelBuilderRegistry registry) {
-        this.registry = registry;
-    }
-
-    @Override
-    public void apply(Project project) {
-        registry.register(new JavaModelBuilder());
-        registry.register(new ArtifactModelBuilder());
-    }
+    /**
+     * Returns a map from configuration name to artifacts.
+     *
+     * @return a map from configuration name to artifacts.
+     */
+    @NonNull
+    Map<String, Set<File>> getArtifactsByConfiguration();
 }
