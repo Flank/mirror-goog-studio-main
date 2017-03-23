@@ -140,7 +140,7 @@ public class DexTransformTest {
 
         // The build cache
         FileCache buildCache =
-                FileCache.getInstanceWithInterProcessLocking(testDir.newFolder("cache"));
+                FileCache.getInstanceWithMultiProcessLocking(testDir.newFolder("cache"));
 
         // Run dexing
         runDexing(
@@ -285,7 +285,7 @@ public class DexTransformTest {
 
         // The build cache
         FileCache buildCache =
-                FileCache.getInstanceWithInterProcessLocking(testDir.newFolder("cache"));
+                FileCache.getInstanceWithMultiProcessLocking(testDir.newFolder("cache"));
 
         // Run dexing
         runDexing(

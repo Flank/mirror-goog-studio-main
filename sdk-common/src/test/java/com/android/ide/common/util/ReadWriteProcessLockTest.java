@@ -24,12 +24,13 @@ import com.android.annotations.NonNull;
 import com.android.testutils.classloader.SingleClassLoader;
 import com.android.testutils.concurrency.ConcurrencyTester;
 import com.android.testutils.concurrency.InterProcessConcurrencyTester;
+import com.android.utils.FileUtils;
+import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-import java.nio.file.FileSystemException;
-import java.nio.file.Path;
+import java.nio.charset.StandardCharsets;
 import java.util.function.Function;
 import org.junit.Rule;
 import org.junit.Test;
@@ -52,7 +53,7 @@ public class ReadWriteProcessLockTest {
         File lockFile1 = testFolder.newFile("lockfile1");
         assertThat(lockFile1).isFile();
 
-        ReadWriteProcessLock readWriteLock1 = new ReadWriteProcessLock(lockFile1.toPath());
+        ReadWriteProcessLock readWriteLock1 = new ReadWriteProcessLock(lockFile1);
         ReadWriteProcessLock.Lock lock1 = readWriteLock1.readLock();
         assertThat(lockFile1).isFile();
 
@@ -62,26 +63,11 @@ public class ReadWriteProcessLockTest {
         lock1.unlock();
         assertThat(lockFile1).isFile();
 
-        // Case 2: lock file existed as a directory, expect exception
-        File lockFile2 = testFolder.newFolder("lockfile2");
-        assertThat(lockFile2).isDirectory();
-
-        ReadWriteProcessLock readWriteLock2 = new ReadWriteProcessLock(lockFile2.toPath());
-        ReadWriteProcessLock.Lock lock2 = readWriteLock2.readLock();
-        assertThat(lockFile2).isDirectory();
-
-        try {
-            lock2.lock();
-            fail("Expected FileSystemException");
-        } catch (FileSystemException e) {
-            assertThat(e.getMessage()).contains("Is a directory");
-        }
-
-        // Case 3: lock file did not exist, is created and not deleted
+        // Case 2: lock file did not exist, is created and not deleted
         File lockFile3 = new File(testFolder.getRoot(), "lockfile3");
         assertThat(lockFile3).doesNotExist();
 
-        ReadWriteProcessLock readWriteLock3 = new ReadWriteProcessLock(lockFile3.toPath());
+        ReadWriteProcessLock readWriteLock3 = new ReadWriteProcessLock(lockFile3);
         ReadWriteProcessLock.Lock lock3 = readWriteLock3.writeLock();
         assertThat(lockFile3).doesNotExist();
 
@@ -90,6 +76,53 @@ public class ReadWriteProcessLockTest {
 
         lock3.unlock();
         assertThat(lockFile3).isFile();
+    }
+
+    @Test
+    public void testLockFile_ParentDirectoryDoesNotExist() throws Exception {
+        File lockFile = FileUtils.join(testFolder.getRoot(), "dir", "lockfile");
+        try {
+            //noinspection ResultOfObjectAllocationIgnored
+            new ReadWriteProcessLock(lockFile);
+            fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            assertThat(e.getMessage()).contains("does not exist");
+        }
+    }
+
+    @Test
+    public void testLockFile_UnexpectedLockFileFound() throws Exception {
+        File lockFile = new File(testFolder.getRoot(), "lockfile");
+
+        // It's okay that the lock file does not exist
+        //noinspection ResultOfObjectAllocationIgnored
+        new ReadWriteProcessLock(lockFile);
+
+        // It's okay that the lock file exists and it's empty
+        Files.touch(lockFile);
+        //noinspection ResultOfObjectAllocationIgnored
+        new ReadWriteProcessLock(lockFile);
+
+        // It's NOT okay that the lock file exists and it's not empty
+        Files.write("Some text", lockFile, StandardCharsets.UTF_8);
+        try {
+            //noinspection ResultOfObjectAllocationIgnored
+            new ReadWriteProcessLock(lockFile);
+            fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            assertThat(e.getMessage()).contains("Unexpected lock file found");
+        }
+
+        // It's NOT okay that the lock file exists as a directory
+        FileUtils.delete(lockFile);
+        FileUtils.mkdirs(lockFile);
+        try {
+            //noinspection ResultOfObjectAllocationIgnored
+            new ReadWriteProcessLock(lockFile);
+            fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            assertThat(e.getMessage()).contains("Unexpected lock file found");
+        }
     }
 
     @Test
@@ -153,7 +186,7 @@ public class ReadWriteProcessLockTest {
     }
 
     /** Performs a few steps common to the concurrency tests. */
-    private void prepareConcurrencyTest(
+    private static void prepareConcurrencyTest(
             @NonNull File[] lockFiles,
             @NonNull LockType[] lockTypes,
             @NonNull InterProcessConcurrencyTester interProcessTester,
@@ -218,7 +251,7 @@ public class ReadWriteProcessLockTest {
             @NonNull File lockFile,
             @NonNull LockType lockType)
             throws IOException {
-        ReadWriteProcessLock readWriteProcessLock = new ReadWriteProcessLock(lockFile.toPath());
+        ReadWriteProcessLock readWriteProcessLock = new ReadWriteProcessLock(lockFile);
         ReadWriteProcessLock.Lock lock =
                 lockType == LockType.READ
                         ? readWriteProcessLock.readLock()
@@ -234,7 +267,7 @@ public class ReadWriteProcessLockTest {
     @Test
     public void testNonReentrantProperty() throws IOException {
         File lockFile = testFolder.newFile("lockfile");
-        ReadWriteProcessLock readWriteProcessLock = new ReadWriteProcessLock(lockFile.toPath());
+        ReadWriteProcessLock readWriteProcessLock = new ReadWriteProcessLock(lockFile);
         ReadWriteProcessLock.Lock readLock = readWriteProcessLock.readLock();
         ReadWriteProcessLock.Lock writeLock = readWriteProcessLock.writeLock();
 
@@ -273,12 +306,12 @@ public class ReadWriteProcessLockTest {
     public void testDifferentClassLoaders() throws Exception {
         File lockFile = testFolder.newFile("lockfile");
 
-        ReadWriteProcessLock originalLock = new ReadWriteProcessLock(lockFile.toPath());
+        ReadWriteProcessLock originalLock = new ReadWriteProcessLock(lockFile);
         originalLock.readLock().lock();
 
         // Check that it's okay to acquire the same read lock again (without any
         // OverlappingFileLockException)
-        ReadWriteProcessLock lockWithSameClassLoader = new ReadWriteProcessLock(lockFile.toPath());
+        ReadWriteProcessLock lockWithSameClassLoader = new ReadWriteProcessLock(lockFile);
         lockWithSameClassLoader.readLock().lock();
 
         // Check that it's okay to acquire the same read lock again (without any
@@ -286,12 +319,17 @@ public class ReadWriteProcessLockTest {
         // different class loader
         SingleClassLoader classLoader = new SingleClassLoader(ReadWriteProcessLock.class.getName());
         Class clazz = classLoader.load();
-        Constructor constructor = clazz.getConstructor(Path.class);
+
+        @SuppressWarnings("unchecked")
+        Constructor constructor = clazz.getConstructor(File.class);
         constructor.setAccessible(true);
-        Object lockWithDifferentClassLoader = constructor.newInstance(lockFile.toPath());
+        Object lockWithDifferentClassLoader = constructor.newInstance(lockFile);
+
+        @SuppressWarnings("unchecked")
         Method readLockMethod = clazz.getMethod("readLock");
         Object lock = readLockMethod.invoke(lockWithDifferentClassLoader);
         Method lockMethod = lock.getClass().getMethod("lock");
+
         lockMethod.setAccessible(true);
         lockMethod.invoke(lock);
     }

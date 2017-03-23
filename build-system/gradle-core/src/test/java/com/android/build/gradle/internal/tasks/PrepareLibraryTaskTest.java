@@ -75,7 +75,7 @@ public class PrepareLibraryTaskTest {
 
     @Test
     public void testBuildCacheEnabled() throws Exception {
-        FileCache buildCache = FileCache.getInstanceWithInterProcessLocking(buildCacheDir);
+        FileCache buildCache = FileCache.getInstanceWithMultiProcessLocking(buildCacheDir);
 
         // Run PrepareLibraryTask, expect that the exploded aar is created in the build cache
         // directory
@@ -159,7 +159,7 @@ public class PrepareLibraryTaskTest {
     // http://b.android.com/228623
     @Test
     public void testBuildCacheEnabledWithSnapshotArtifact() throws IOException {
-        FileCache buildCache = FileCache.getInstanceWithInterProcessLocking(buildCacheDir);
+        FileCache buildCache = FileCache.getInstanceWithMultiProcessLocking(buildCacheDir);
         mavenCoordinates = new MavenCoordinatesImpl("testGroupId", "testArtifact", "1.0-SNAPSHOT");
 
         // Run PrepareLibraryTask, expect that the exploded aar is created in the exploded
