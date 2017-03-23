@@ -25,16 +25,16 @@ import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.google.common.io.ByteStreams;
-import com.google.common.io.Closeables;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
+import java.util.zip.ZipFile;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 
@@ -186,40 +186,24 @@ class ClassEntry implements Comparable<ClassEntry> {
                 if (!jarFile.exists()) {
                     continue;
                 }
-                ZipInputStream zis = null;
-                try {
-                    FileInputStream fis = new FileInputStream(jarFile);
-                    try {
-                        zis = new ZipInputStream(fis);
-                        ZipEntry entry = zis.getNextEntry();
-                        while (entry != null) {
-                            String name = entry.getName();
-                            if (name.endsWith(DOT_CLASS)) {
-                                try {
-                                    byte[] bytes = ByteStreams.toByteArray(zis);
-                                    if (bytes != null) {
-                                        File file = new File(entry.getName());
-                                        entries.add(new ClassEntry(file, jarFile, jarFile, bytes));
-                                    }
-                                } catch (Exception e) {
-                                    client.log(e, null);
-                                    continue;
+                try (ZipFile jar = new ZipFile(jarFile)) {
+                    Enumeration<? extends ZipEntry> enumeration = jar.entries();
+                    while (enumeration.hasMoreElements()) {
+                        ZipEntry entry = enumeration.nextElement();
+                        if (entry.getName().endsWith(DOT_CLASS)) {
+                            try (InputStream is = jar.getInputStream(entry)) {
+                                byte[] bytes = ByteStreams.toByteArray(is);
+                                if (bytes != null) {
+                                    File file = new File(entry.getName());
+                                    entries.add(new ClassEntry(file, jarFile, jarFile, bytes));
                                 }
+                            } catch (Exception e) {
+                                client.log(e, null);
                             }
-
-                            entry = zis.getNextEntry();
                         }
-                    } finally {
-                        Closeables.close(fis, true);
                     }
                 } catch (IOException e) {
                     client.log(e, "Could not read jar file contents from %1$s", jarFile);
-                } finally {
-                    try {
-                        Closeables.close(zis, true);
-                    } catch (IOException e) {
-                        // cannot happen
-                    }
                 }
             } else if (classPathEntry.isDirectory()) {
                 //noinspection UnnecessaryLocalVariable

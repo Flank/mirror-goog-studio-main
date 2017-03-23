@@ -27,21 +27,19 @@ import com.android.tools.lint.detector.api.Severity;
 import com.android.utils.SdkUtils;
 import com.google.common.collect.Lists;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.ref.SoftReference;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.EnumSet;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.jar.Attributes;
+import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
-import java.util.zip.ZipEntry;
 
 /**
  * <p> An {@link IssueRegistry} for a custom lint rule jar file. The rule jar should provide a
@@ -203,31 +201,30 @@ public class JarFileIssueRegistry extends IssueRegistry {
             @NonNull URLClassLoader loader) {
         // But first, proactively load all classes:
         try {
-            try (InputStream inputStream = new FileInputStream(file)) {
-                try (JarInputStream jarInputStream = new JarInputStream(inputStream)) {
-                    ZipEntry entry = jarInputStream.getNextEntry();
-                    while (entry != null) {
-                        String name = entry.getName();
-                        // Load non-inner-classes
-                        if (name.endsWith(DOT_CLASS)) {
-                            // Strip .class suffix and change .jar file path (/)
-                            // to class name (.'s).
-                            name = name.substring(0,
-                                    name.length() - DOT_CLASS.length());
-                            name = name.replace('/', '.');
-                            try {
-                                Class<?> aClass = Class.forName(name, true, loader);
-                                // Actually, initialize them too to make sure basic classes
-                                // needed by the detector are available
-                                aClass.newInstance();
-                            } catch (Throwable e) {
-                                client.log(Severity.ERROR, e,
-                                        "Failed to prefetch " + name + " from " + file);
-                            }
+            try (JarFile jar = new JarFile(file)) {
+                Enumeration<JarEntry> enumeration = jar.entries();
+                while (enumeration.hasMoreElements()) {
+                    JarEntry entry = enumeration.nextElement();
+                    String name = entry.getName();
+                    // Load non-inner-classes
+                    if (name.endsWith(DOT_CLASS)) {
+                        // Strip .class suffix and change .jar file path (/)
+                        // to class name (.'s).
+                        name = name.substring(0,
+                                name.length() - DOT_CLASS.length());
+                        name = name.replace('/', '.');
+                        try {
+                            Class<?> aClass = Class.forName(name, true, loader);
+                            // Actually, initialize them too to make sure basic classes
+                            // needed by the detector are available
+                            aClass.newInstance();
+                        } catch (Throwable e) {
+                            client.log(Severity.ERROR, e,
+                                    "Failed to prefetch " + name + " from " + file);
                         }
-                        entry = jarInputStream.getNextEntry();
                     }
                 }
+            } catch (Throwable ignore) {
             }
         } catch (Throwable ignore) {
         } finally {
