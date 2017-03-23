@@ -105,8 +105,9 @@ public class ZFileOptions {
      *
      * @param compressor the compressor
      */
-    public void setCompressor(@Nonnull Compressor compressor) {
+    public ZFileOptions setCompressor(@Nonnull Compressor compressor) {
         this.compressor = compressor;
+        return this;
     }
 
     /**
@@ -123,8 +124,9 @@ public class ZFileOptions {
      *
      * @param noTimestamps should timestamps be zeroed?
      */
-    public void setNoTimestamps(boolean noTimestamps) {
+    public ZFileOptions setNoTimestamps(boolean noTimestamps) {
         this.noTimestamps = noTimestamps;
+        return this;
     }
 
     /**
@@ -142,8 +144,9 @@ public class ZFileOptions {
      *
      * @param alignmentRule the alignment rule
      */
-    public void setAlignmentRule(@Nonnull AlignmentRule alignmentRule) {
+    public ZFileOptions setAlignmentRule(@Nonnull AlignmentRule alignmentRule) {
         this.alignmentRule = alignmentRule;
+        return this;
     }
 
     /**
@@ -162,8 +165,9 @@ public class ZFileOptions {
      *
      * @param coverEmptySpaceUsingExtraField should the extra field be used to cover empty spaces?
      */
-    public void setCoverEmptySpaceUsingExtraField(boolean coverEmptySpaceUsingExtraField) {
+    public ZFileOptions setCoverEmptySpaceUsingExtraField(boolean coverEmptySpaceUsingExtraField) {
         this.coverEmptySpaceUsingExtraField = coverEmptySpaceUsingExtraField;
+        return this;
     }
 
     /**
@@ -177,13 +181,14 @@ public class ZFileOptions {
     }
 
     /**
-     * Sets whether files should be automatically sorted before updating the zip file. See
-     * {@link ZFile} for an explanation on automatic sorting.
+     * Sets whether files should be automatically sorted before updating the zip file. See {@link
+     * ZFile} for an explanation on automatic sorting.
      *
      * @param autoSortFiles should the file be automatically sorted?
      */
-    public void setAutoSortFiles(boolean autoSortFiles) {
+    public ZFileOptions setAutoSortFiles(boolean autoSortFiles) {
         this.autoSortFiles = autoSortFiles;
+        return this;
     }
 
     /**
@@ -191,8 +196,9 @@ public class ZFileOptions {
      *
      * @param verifyLogFactory verification log factory
      */
-    public void setVerifyLogFactory(@Nonnull Supplier<VerifyLog> verifyLogFactory) {
+    public ZFileOptions setVerifyLogFactory(@Nonnull Supplier<VerifyLog> verifyLogFactory) {
         this.verifyLogFactory = verifyLogFactory;
+        return this;
     }
 
     /**
