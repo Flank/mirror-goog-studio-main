@@ -52,8 +52,8 @@ public class SynchronizedFileTest {
         public static Collection<Object[]> lockingScopes() {
             return Arrays.asList(
                     new Object[][] {
-                        {SynchronizedFile.LockingScope.INTER_PROCESS},
-                        {SynchronizedFile.LockingScope.WITHIN_PROCESS}
+                        {SynchronizedFile.LockingScope.MULTI_PROCESS},
+                        {SynchronizedFile.LockingScope.SINGLE_PROCESS}
                     });
         }
 
@@ -71,12 +71,12 @@ public class SynchronizedFileTest {
         @Before
         public void setUp() throws IOException {
             fileToSynchronize = testDir.newFile();
-            if (lockingScope == SynchronizedFile.LockingScope.INTER_PROCESS) {
+            if (lockingScope == SynchronizedFile.LockingScope.MULTI_PROCESS) {
                 synchronizedFile =
-                        SynchronizedFile.getInstanceWithInterProcessLocking(fileToSynchronize);
+                        SynchronizedFile.getInstanceWithMultiProcessLocking(fileToSynchronize);
             } else {
                 synchronizedFile =
-                        SynchronizedFile.getInstanceWithWithinProcessLocking(fileToSynchronize);
+                        SynchronizedFile.getInstanceWithSingleProcessLocking(fileToSynchronize);
             }
         }
 
@@ -151,12 +151,12 @@ public class SynchronizedFileTest {
         @Test
         public void testFilePathIsNormalized() throws Exception {
             File fileToSynchronize = FileUtils.join(testDir.getRoot(), "foo", "bar", "..");
-            if (lockingScope == SynchronizedFile.LockingScope.INTER_PROCESS) {
+            if (lockingScope == SynchronizedFile.LockingScope.MULTI_PROCESS) {
                 synchronizedFile =
-                        SynchronizedFile.getInstanceWithInterProcessLocking(fileToSynchronize);
+                        SynchronizedFile.getInstanceWithMultiProcessLocking(fileToSynchronize);
             } else {
                 synchronizedFile =
-                        SynchronizedFile.getInstanceWithWithinProcessLocking(fileToSynchronize);
+                        SynchronizedFile.getInstanceWithSingleProcessLocking(fileToSynchronize);
             }
             synchronizedFile.read(
                     file -> {
@@ -174,7 +174,7 @@ public class SynchronizedFileTest {
             assertThat(lockFile).doesNotExist();
 
             synchronizedFile.read((File) -> true);
-            if (lockingScope == SynchronizedFile.LockingScope.INTER_PROCESS) {
+            if (lockingScope == SynchronizedFile.LockingScope.MULTI_PROCESS) {
                 assertThat(lockFile).exists();
             } else {
                 assertThat(lockFile).doesNotExist();
@@ -284,13 +284,13 @@ public class SynchronizedFileTest {
                     };
             for (int i = 0; i < filesToSynchronize.length; i++) {
                 SynchronizedFile synchronizedFile;
-                if (lockingScope == SynchronizedFile.LockingScope.INTER_PROCESS) {
+                if (lockingScope == SynchronizedFile.LockingScope.MULTI_PROCESS) {
                     synchronizedFile =
-                            SynchronizedFile.getInstanceWithInterProcessLocking(
+                            SynchronizedFile.getInstanceWithMultiProcessLocking(
                                     filesToSynchronize[i]);
                 } else {
                     synchronizedFile =
-                            SynchronizedFile.getInstanceWithWithinProcessLocking(
+                            SynchronizedFile.getInstanceWithSingleProcessLocking(
                                     filesToSynchronize[i]);
                 }
                 SynchronizedFile.LockingType lockingType = lockingTypes[i];
@@ -312,7 +312,7 @@ public class SynchronizedFileTest {
         }
     }
 
-    public static class SynchronizedFileTestForInterProcessLockingScope {
+    public static class SynchronizedFileTestForMultiProcessLockingScope {
 
         @Rule public final TemporaryFolder testDir = new TemporaryFolder();
 
@@ -327,10 +327,10 @@ public class SynchronizedFileTest {
         public void testGetInstance_ParentDirectoryDoesNotExist() throws Exception {
             fileToSynchronize = FileUtils.join(testDir.getRoot(), "foo", "bar");
             try {
-                SynchronizedFile.getInstanceWithInterProcessLocking(fileToSynchronize);
+                SynchronizedFile.getInstanceWithMultiProcessLocking(fileToSynchronize);
                 fail("Expected IllegalArgumentException");
             } catch (IllegalArgumentException e) {
-                assertThat(e.getMessage()).contains("must exist but does not");
+                assertThat(e.getMessage()).contains("does not exist");
             }
         }
 
@@ -340,16 +340,26 @@ public class SynchronizedFileTest {
                     new File(fileToSynchronize.getParent(), fileToSynchronize.getName() + ".lock");
 
             // It's okay that the lock file does not exist
-            SynchronizedFile.getInstanceWithInterProcessLocking(fileToSynchronize);
+            SynchronizedFile.getInstanceWithMultiProcessLocking(fileToSynchronize);
 
             // It's okay that the lock file exists and it's empty
             Files.touch(lockFile);
-            SynchronizedFile.getInstanceWithInterProcessLocking(fileToSynchronize);
+            SynchronizedFile.getInstanceWithMultiProcessLocking(fileToSynchronize);
 
             // It's NOT okay that the lock file exists and it's not empty
             Files.write("Some text", lockFile, StandardCharsets.UTF_8);
             try {
-                SynchronizedFile.getInstanceWithInterProcessLocking(fileToSynchronize);
+                SynchronizedFile.getInstanceWithMultiProcessLocking(fileToSynchronize);
+                fail("Expected IllegalArgumentException");
+            } catch (IllegalArgumentException e) {
+                assertThat(e.getMessage()).contains("Unexpected lock file found");
+            }
+
+            // It's NOT okay that the lock file exists as a directory
+            FileUtils.delete(fileToSynchronize);
+            FileUtils.mkdirs(fileToSynchronize);
+            try {
+                SynchronizedFile.getInstanceWithMultiProcessLocking(fileToSynchronize);
                 fail("Expected IllegalArgumentException");
             } catch (IllegalArgumentException e) {
                 assertThat(e.getMessage()).contains("Unexpected lock file found");
@@ -413,13 +423,13 @@ public class SynchronizedFileTest {
                 @NonNull SynchronizedFile.LockingType[] lockingTypes) {
             for (int i = 0; i < filesToSynchronize.length; i++) {
                 tester.addClassInvocationFromNewProcess(
-                        DummyActionWithInterProcessLocking.class,
+                        DummyActionWithMultiProcessLocking.class,
                         new String[] {filesToSynchronize[i].getPath(), lockingTypes[i].name()});
             }
         }
 
-        /** Class whose main() method will execute a dummy action with inter-process locking. */
-        private static final class DummyActionWithInterProcessLocking {
+        /** Class whose main() method will execute a dummy action with multi-process locking. */
+        private static final class DummyActionWithMultiProcessLocking {
 
             public static void main(String[] args) throws IOException, ExecutionException {
                 File fileToSynchronize = new File(args[0]);
@@ -446,7 +456,7 @@ public class SynchronizedFileTest {
                         };
 
                 SynchronizedFile synchronizedFile =
-                        SynchronizedFile.getInstanceWithInterProcessLocking(fileToSynchronize);
+                        SynchronizedFile.getInstanceWithMultiProcessLocking(fileToSynchronize);
                 if (lockingType == SynchronizedFile.LockingType.SHARED) {
                     synchronizedFile.read(actionUnderTest::apply);
                 } else {

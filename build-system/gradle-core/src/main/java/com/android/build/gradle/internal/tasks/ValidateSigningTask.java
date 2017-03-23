@@ -28,6 +28,7 @@ import com.android.builder.utils.SynchronizedFile;
 import com.android.ide.common.signing.KeystoreHelper;
 import com.android.prefs.AndroidLocation;
 import com.android.utils.FileUtils;
+import com.google.common.base.Preconditions;
 import java.io.File;
 import java.util.concurrent.ExecutionException;
 import org.gradle.api.tasks.Input;
@@ -83,8 +84,11 @@ public class ValidateSigningTask extends BaseTask {
 
         if (FileUtils.isSameFile(
                 new File(KeystoreHelper.defaultDebugKeystoreLocation()), storeFile)) {
+            Preconditions.checkState(
+                    FileUtils.parentDirExists(storeFile),
+                    "Parent directory of " + storeFile.getAbsolutePath() + " does not exist");
             SynchronizedFile synchronizedStoreFile =
-                    SynchronizedFile.getInstanceWithInterProcessLocking(storeFile);
+                    SynchronizedFile.getInstanceWithMultiProcessLocking(storeFile);
             synchronizedStoreFile.createIfAbsent(
                     sameStoreFile -> {
                         checkState(

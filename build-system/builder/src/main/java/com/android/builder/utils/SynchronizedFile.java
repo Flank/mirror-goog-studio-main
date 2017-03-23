@@ -21,7 +21,9 @@ import com.android.annotations.VisibleForTesting;
 import com.android.annotations.concurrency.Immutable;
 import com.android.ide.common.util.ReadWriteProcessLock;
 import com.android.ide.common.util.ReadWriteThreadLock;
+import com.android.utils.FileUtils;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -32,15 +34,15 @@ import java.util.concurrent.ExecutionException;
  *
  * <p>When multiple threads or processes access the same file, they would require some form of
  * synchronization. This class provides a simple way for the clients to add synchronization
- * capability to a file without having to work with low-level details involving within-process or
- * inter-process locking.
+ * capability to a file without having to work with low-level details involving single-process or
+ * multi-process locking.
  *
  * <p>Synchronization can take effect for threads within the same process or across different
  * processes. The client can configure this locking scope when constructing a {@code
  * SynchronizedFile}. If the file is never accessed by more than one process at a time, the client
- * should configure the file with {@code WITHIN_PROCESS} locking scope since there will be less
+ * should configure the file with {@code SINGLE_PROCESS} locking scope since there will be less
  * synchronization overhead. However, if the file may be accessed by more than one process at a
- * time, the client must configure the file with {@code INTER_PROCESS} locking scope.
+ * time, the client must configure the file with {@code MULTI_PROCESS} locking scope.
  *
  * <p>In any case, synchronization takes effect only for the same file (i.e., threads/processes
  * accessing different files are not synchronized). Also, the client must access the file via {@code
@@ -85,13 +87,13 @@ public final class SynchronizedFile {
          * Synchronization takes effect for threads both within the same process and across
          * different processes.
          */
-        INTER_PROCESS,
+        MULTI_PROCESS,
 
         /**
          * Synchronization takes effect for threads within the same process but not for threads
          * across different processes.
          */
-        WITHIN_PROCESS
+        SINGLE_PROCESS
     }
 
     /** The type of the locking facility. */
@@ -134,18 +136,18 @@ public final class SynchronizedFile {
      * method is called.
      *
      * <p>Note: If the file is never accessed by more than one process at a time, the client should
-     * use the {@link #getInstanceWithWithinProcessLocking(File)} method instead since there will be
+     * use the {@link #getInstanceWithSingleProcessLocking(File)} method instead since there will be
      * less synchronization overhead.
      *
      * @param fileToSynchronize the file whose access will be synchronized; it may not yet exist,
      *     but its parent directory must exist
-     * @see #getInstanceWithWithinProcessLocking(File)
+     * @see #getInstanceWithSingleProcessLocking(File)
      * @throws IllegalArgumentException if the parent directory of file being synchronized does not
      *     exist, or a regular file with the same path as the lock file accidentally exists next to
      *     the file being synchronized
      */
     @NonNull
-    public static SynchronizedFile getInstanceWithInterProcessLocking(
+    public static SynchronizedFile getInstanceWithMultiProcessLocking(
             @NonNull File fileToSynchronize) {
         // Normalize the file path first
         try {
@@ -155,21 +157,21 @@ public final class SynchronizedFile {
         }
 
         Preconditions.checkArgument(
-                fileToSynchronize.getParentFile().exists(),
-                fileToSynchronize.getParentFile().getAbsolutePath() + " must exist but does not");
+                FileUtils.parentDirExists(fileToSynchronize),
+                "Parent directory of " + fileToSynchronize.getAbsolutePath() + " does not exist");
 
         File lockFile =
                 new File(
                         fileToSynchronize.getParent(),
                         fileToSynchronize.getName() + LOCK_FILE_EXTENSION);
         Preconditions.checkArgument(
-                !lockFile.exists() || lockFile.length() == 0,
+                !lockFile.exists() || (lockFile.isFile() && lockFile.length() == 0),
                 "Unexpected lock file found: "
                         + lockFile.getAbsolutePath()
                         + " with length="
                         + lockFile.length());
 
-        return new SynchronizedFile(fileToSynchronize, LockingScope.INTER_PROCESS);
+        return new SynchronizedFile(fileToSynchronize, LockingScope.MULTI_PROCESS);
     }
 
     /**
@@ -180,14 +182,14 @@ public final class SynchronizedFile {
      * the file's path in advance.
      *
      * <p>Note: If the file may be accessed by more than one process at a time, the client must use
-     * the {@link #getInstanceWithInterProcessLocking(File)} method instead.
+     * the {@link #getInstanceWithMultiProcessLocking(File)} method instead.
      *
      * @param fileToSynchronize the file whose access should be synchronized, which may not yet
      *     exist
-     * @see #getInstanceWithInterProcessLocking(File)
+     * @see #getInstanceWithMultiProcessLocking(File)
      */
     @NonNull
-    public static SynchronizedFile getInstanceWithWithinProcessLocking(
+    public static SynchronizedFile getInstanceWithSingleProcessLocking(
             @NonNull File fileToSynchronize) {
         // Normalize the file path first
         try {
@@ -196,7 +198,7 @@ public final class SynchronizedFile {
             throw new UncheckedIOException(e);
         }
 
-        return new SynchronizedFile(fileToSynchronize, LockingScope.WITHIN_PROCESS);
+        return new SynchronizedFile(fileToSynchronize, LockingScope.SINGLE_PROCESS);
     }
 
     /**
@@ -209,10 +211,10 @@ public final class SynchronizedFile {
      *     action
      */
     public <V> V read(@NonNull ExceptionFunction<File, V> action) throws ExecutionException {
-        if (lockingScope == LockingScope.INTER_PROCESS) {
-            return doActionWithInterProcessLocking(LockingType.SHARED, action);
+        if (lockingScope == LockingScope.MULTI_PROCESS) {
+            return doActionWithMultiProcessLocking(LockingType.SHARED, action);
         } else {
-            return doActionWithWithinProcessLocking(LockingType.SHARED, action);
+            return doActionWithSingleProcessLocking(LockingType.SHARED, action);
         }
     }
 
@@ -226,15 +228,15 @@ public final class SynchronizedFile {
      *     action
      */
     public <V> V write(@NonNull ExceptionFunction<File, V> action) throws ExecutionException {
-        if (lockingScope == LockingScope.INTER_PROCESS) {
-            return doActionWithInterProcessLocking(LockingType.EXCLUSIVE, action);
+        if (lockingScope == LockingScope.MULTI_PROCESS) {
+            return doActionWithMultiProcessLocking(LockingType.EXCLUSIVE, action);
         } else {
-            return doActionWithWithinProcessLocking(LockingType.EXCLUSIVE, action);
+            return doActionWithSingleProcessLocking(LockingType.EXCLUSIVE, action);
         }
     }
 
-    /** Executes an action that accesses the file with inter-process locking. */
-    private <V> V doActionWithInterProcessLocking(
+    /** Executes an action that accesses the file with multi-process locking. */
+    private <V> V doActionWithMultiProcessLocking(
             @NonNull LockingType lockingType, @NonNull ExceptionFunction<File, V> action)
             throws ExecutionException {
         // Use a lock file that is unique to the (physical) file being synchronized (note that
@@ -247,7 +249,9 @@ public final class SynchronizedFile {
         // ReadWriteProcessLock does not require the lock file to be normalized since internally it
         // will normalize it. Plus, fileToSynchronize, and therefore lockFile, are already
         // normalized, so we don't need to normalize it here.
-        ReadWriteProcessLock readWriteProcessLock = new ReadWriteProcessLock(lockFile.toPath());
+        // Also, the parent directory of fileToSynchronize and lockFile should already exist, as
+        // required by SynchronizedFile#getInstanceWithMultiProcessLocking(File).
+        ReadWriteProcessLock readWriteProcessLock = new ReadWriteProcessLock(lockFile);
         ReadWriteProcessLock.Lock lock =
                 lockingType == LockingType.SHARED
                         ? readWriteProcessLock.readLock()
@@ -271,8 +275,8 @@ public final class SynchronizedFile {
         }
     }
 
-    /** Executes an action that accesses the file with within-process locking. */
-    private <V> V doActionWithWithinProcessLocking(
+    /** Executes an action that accesses the file with single-process locking. */
+    private <V> V doActionWithSingleProcessLocking(
             @NonNull LockingType lockingType, @NonNull ExceptionFunction<File, V> action)
             throws ExecutionException {
         // ReadWriteThreadLock requires the lock file to be normalized. However, since
@@ -341,13 +345,14 @@ public final class SynchronizedFile {
                         });
             } catch (ExecutionException exception) {
                 // We need to figure out whether the exception comes from the action given to this
-                // method or not. If so, we rethrow the exception; otherwise, we throw a
-                // RuntimeException (as documented in the javadoc of this method).
-                if (exception.getCause() instanceof ActionExecutionException) {
-                    throw exception;
-                } else {
-                    throw new RuntimeException(exception);
+                // method. If so, we rethrow the ExecutionException; otherwise, we rethrow the
+                // exception as a RuntimeException (as documented in the javadoc of this method).
+                for (Throwable exceptionInCausalChain : Throwables.getCausalChain(exception)) {
+                    if (exceptionInCausalChain instanceof ActionExecutionException) {
+                        throw exception;
+                    }
                 }
+                throw new RuntimeException(exception);
             }
         }
     }
