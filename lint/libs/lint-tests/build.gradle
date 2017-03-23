@@ -7,6 +7,7 @@ version = rootProject.ext.baseVersion
 
 dependencies {
     compile project(':base:lint')
+    compile project(':base:layoutlib-api')
     compile project(':base:testutils')
     compile libs.junit
     compile libs.mockito_core

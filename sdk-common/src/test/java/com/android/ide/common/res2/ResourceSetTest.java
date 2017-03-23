@@ -26,12 +26,10 @@ import com.android.ide.common.blame.SourceFilePosition;
 import com.android.ide.common.blame.SourcePosition;
 import com.android.testutils.TestResources;
 import com.android.utils.XmlUtils;
-
-import org.junit.Test;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import org.junit.Test;
 
 public class ResourceSetTest extends BaseTestCase {
 
@@ -86,7 +84,7 @@ public class ResourceSetTest extends BaseTestCase {
     public void testDupResourceSet() throws Exception {
         File root = TestResources.getDirectory(getClass(), "/testData/resources/dupSet");
 
-        ResourceSet set = new ResourceSet("main", null);
+        ResourceSet set = new ResourceSet("main", null, null, true);
         set.addSource(new File(root, "res1"));
         set.addSource(new File(root, "res2"));
         boolean gotException = false;
@@ -117,7 +115,7 @@ public class ResourceSetTest extends BaseTestCase {
     public void testBrokenSet() throws Exception {
         File root = TestResources.getDirectory(getClass(), "/testData/resources/brokenSet");
 
-        ResourceSet set = new ResourceSet("main", null);
+        ResourceSet set = new ResourceSet("main", null, null, true);
         set.addSource(root);
 
         boolean gotException = false;
@@ -139,7 +137,7 @@ public class ResourceSetTest extends BaseTestCase {
     public void testBrokenSet2() throws Exception {
         File root = TestResources.getDirectory(getClass(), "/testData/resources/brokenSet2");
 
-        ResourceSet set = new ResourceSet("main", null);
+        ResourceSet set = new ResourceSet("main", null, null, true);
         set.addSource(root);
 
         boolean gotException = false;
@@ -161,7 +159,7 @@ public class ResourceSetTest extends BaseTestCase {
     public void testBrokenSet3() throws Exception {
         File root = TestResources.getDirectory(getClass(), "/testData/resources/brokenSet3");
 
-        ResourceSet set = new ResourceSet("main", null);
+        ResourceSet set = new ResourceSet("main", null, null, true);
         set.addSource(root);
 
         boolean gotException = false;
@@ -183,7 +181,7 @@ public class ResourceSetTest extends BaseTestCase {
     public void testBrokenSet4() throws Exception {
         File root = TestResources.getDirectory(getClass(), "/testData/resources/brokenSet4");
 
-        ResourceSet set = new ResourceSet("main", null);
+        ResourceSet set = new ResourceSet("main", null, null, true);
         set.addSource(root);
 
         boolean gotException = false;
@@ -206,7 +204,7 @@ public class ResourceSetTest extends BaseTestCase {
     public void testBrokenSetBadType() throws Exception {
         File root = TestResources.getDirectory(getClass(), "/testData/resources/brokenSetBadType");
 
-        ResourceSet set = new ResourceSet("main", null);
+        ResourceSet set = new ResourceSet("main", null, null, true);
         set.addSource(root);
 
         boolean gotException = false;
@@ -228,7 +226,7 @@ public class ResourceSetTest extends BaseTestCase {
     public void testBrokenSetBadType2() throws Exception {
         File root = TestResources.getDirectory(getClass(), "/testData/resources/brokenSetBadType2");
 
-        ResourceSet set = new ResourceSet("main", null);
+        ResourceSet set = new ResourceSet("main", null, null, true);
         set.addSource(root);
 
         boolean gotException = false;
@@ -251,7 +249,7 @@ public class ResourceSetTest extends BaseTestCase {
         File root = TestResources.getDirectory(getClass(), "/testData/resources/baseSet");
 
         // By default, track positions.
-        ResourceSet resourceSet = new ResourceSet("main", null);
+        ResourceSet resourceSet = new ResourceSet("main", null, null, true);
         resourceSet.addSource(root);
         RecordingLogger logger = new RecordingLogger();
         resourceSet.loadFromFiles(logger);
@@ -265,7 +263,7 @@ public class ResourceSetTest extends BaseTestCase {
                      XmlUtils.getSourceFilePosition(resources.get(0).getValue()).getPosition());
 
         // Try without positions.
-        resourceSet = new ResourceSet("main", null);
+        resourceSet = new ResourceSet("main", null, null, true);
         resourceSet.addSource(root);
         resourceSet.setTrackSourcePositions(false);
         logger = new RecordingLogger();
@@ -282,7 +280,7 @@ public class ResourceSetTest extends BaseTestCase {
         File root = TestResources
                 .getDirectory(ResourceSetTest.class, "/testData/resources/baseSet");
 
-        ResourceSet resourceSet = new ResourceSet("main", null);
+        ResourceSet resourceSet = new ResourceSet("main", null, null, true);
         resourceSet.addSource(root);
         RecordingLogger logger =  new RecordingLogger();
         resourceSet.loadFromFiles(logger);

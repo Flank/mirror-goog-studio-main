@@ -16,8 +16,9 @@
 
 package com.android.ide.common.rendering.api;
 
-import com.android.resources.ResourceType;
-
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+import com.android.resources.ResourceUrl;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -30,15 +31,10 @@ import java.util.Map;
  */
 public class AttrResourceValue extends ResourceValue {
 
-    private Map<String, Integer> mValueMap;
+    @Nullable private Map<String, Integer> mValueMap;
 
-
-    public AttrResourceValue(ResourceType type, String name, boolean isFramework) {
-        this(type, name, isFramework, null);
-    }
-
-    public AttrResourceValue(ResourceType type, String name, boolean isFramework, String libraryName) {
-        super(type, name, isFramework, libraryName);
+    public AttrResourceValue(@NonNull ResourceUrl url, @Nullable String libraryName) {
+        super(url, null, libraryName);
     }
 
     /**
@@ -46,13 +42,14 @@ public class AttrResourceValue extends ResourceValue {
      *
      * @return the map of (name, integer) values. Can be null.
      */
+    @Nullable
     public Map<String, Integer> getAttributeValues() {
         return mValueMap;
     }
 
     public void addValue(String name, Integer value) {
         if (mValueMap == null) {
-            mValueMap = new HashMap<String, Integer>();
+            mValueMap = new HashMap<>();
         }
 
         mValueMap.put(name, value);

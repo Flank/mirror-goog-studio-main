@@ -21,17 +21,14 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.resources.ResourceType;
 import com.android.testutils.TestResources;
-import com.android.testutils.TestUtils;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
-
-import org.junit.Test;
-
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.TreeSet;
+import org.junit.Test;
 
 /**
  * Test the IdGeneratingResourceParser.
@@ -44,7 +41,9 @@ public class IdGeneratingResourceParserTest extends BaseTestCase {
         File layout = new File(root, "layout");
         File layoutFile = new File(layout, "layout_for_id_scan.xml");
 
-        IdGeneratingResourceParser parser = new IdGeneratingResourceParser(layoutFile, "layout_for_id_scan", ResourceType.LAYOUT);
+        IdGeneratingResourceParser parser =
+                new IdGeneratingResourceParser(
+                        layoutFile, "layout_for_id_scan", ResourceType.LAYOUT, null);
         ResourceItem fileItem = parser.getFileResourceItem();
         assertEquals(fileItem.getName(), "layout_for_id_scan");
         assertEquals(fileItem.getType(), ResourceType.LAYOUT);
@@ -61,7 +60,8 @@ public class IdGeneratingResourceParserTest extends BaseTestCase {
         File menu = new File(root, "menu");
         File menuFile = new File(menu, "menu.xml");
 
-        IdGeneratingResourceParser parser = new IdGeneratingResourceParser(menuFile, "menu", ResourceType.MENU);
+        IdGeneratingResourceParser parser =
+                new IdGeneratingResourceParser(menuFile, "menu", ResourceType.MENU, null);
 
         ResourceItem fileItem = parser.getFileResourceItem();
         assertEquals(fileItem.getName(), "menu");
@@ -78,7 +78,8 @@ public class IdGeneratingResourceParserTest extends BaseTestCase {
         File layoutFile = new File(layout, "layout_with_databinding.xml");
 
         try {
-            new IdGeneratingResourceParser(layoutFile, "layout_with_databinding", ResourceType.LAYOUT);
+            new IdGeneratingResourceParser(
+                    layoutFile, "layout_with_databinding", ResourceType.LAYOUT, null);
             assertTrue("Should have thrown exception", true);
         }
         catch (MergingException e) {

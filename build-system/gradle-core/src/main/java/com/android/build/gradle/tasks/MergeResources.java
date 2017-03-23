@@ -504,9 +504,12 @@ public class MergeResources extends IncrementalTask {
             Set<ResolvedArtifactResult> libArtifacts = libraries.getArtifacts();
             // the order of the artifact is descending order, so we need to reverse it.
             for (ResolvedArtifactResult artifact : libArtifacts) {
-                ResourceSet resourceSet = new ResourceSet(
-                        MergeManifests.getArtifactName(artifact),
-                        validateEnabled);
+                ResourceSet resourceSet =
+                        new ResourceSet(
+                                MergeManifests.getArtifactName(artifact),
+                                null,
+                                null,
+                                validateEnabled);
                 resourceSet.setFromDependency(true);
                 resourceSet.addSource(artifact.getFile());
 

@@ -226,7 +226,7 @@ public class MergeResourcesTest {
     @NonNull
     private static ResourceSet createResourceSet(
             List<ResourceSet> folderSets, String name, File... files) {
-        ResourceSet mainSet = new ResourceSet(name, false);
+        ResourceSet mainSet = new ResourceSet(name, null, null, false);
         mainSet.addSources(Arrays.asList(files));
         folderSets.add(mainSet);
         return mainSet;
@@ -277,7 +277,7 @@ public class MergeResourcesTest {
             when(artifact.getId()).thenReturn(artifactId);
 
             // create a resource set that must match the one returned by the computation
-            ResourceSet set = new ResourceSet(path, false);
+            ResourceSet set = new ResourceSet(path, null, null, false);
             set.addSource(file);
             set.setFromDependency(true);
             resourceSets.add(set);

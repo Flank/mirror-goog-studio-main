@@ -17,7 +17,7 @@
 package com.android.ide.common.rendering.api;
 
 import com.android.resources.ResourceType;
-
+import com.android.resources.ResourceUrl;
 import java.util.List;
 
 /**
@@ -239,26 +239,16 @@ public class RenderResources {
         return null;
     }
 
+
     /**
-     * Resolves the value of a resource, if the value references a theme or resource value.
-     * <p>
-     * This method ensures that it returns a {@link ResourceValue} object that does not
-     * reference another resource.
-     * If the resource cannot be resolved, it returns <code>null</code>.
-     * <p>
-     * If a value that does not need to be resolved is given, the method will return a new
-     * instance of {@link ResourceValue} that contains the input value.
+     * Kept for layoutlib. Remove ASAP.
      *
-     * @param type the type of the resource
-     * @param name the name of the attribute containing this value.
-     * @param value the resource value, or reference to resolve
-     * @param isFrameworkValue whether the value is a framework value.
-     *
-     * @return the resolved resource value or <code>null</code> if it failed to resolve it.
+     * @deprecated Use {@link #resolveResValue(ResourceValue)}
      */
-    public ResourceValue resolveValue(ResourceType type, String name, String value,
-            boolean isFrameworkValue) {
-        return null;
+    public ResourceValue resolveValue(
+            ResourceType type, String name, String value, boolean isFrameworkValue) {
+        return resolveResValue(
+                new ResourceValue(ResourceUrl.create(type, name, isFrameworkValue), value));
     }
 
     /**

@@ -34,16 +34,14 @@ import com.android.utils.ILogger;
 import com.android.utils.SdkUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
-import java.util.Objects;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  * Implementation of {@link DataSet} for {@link ResourceItem} and {@link ResourceFile}.
@@ -56,6 +54,7 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
     public static final String ATTR_FROM_DEPENDENCY = "from-dependency";
 
     private final String mLibraryName;
+    private final String mNamespace;
     private ResourceSet mGeneratedSet;
     private ResourcePreprocessor mPreprocessor;
     private boolean mIsFromDependency;
@@ -63,16 +62,9 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
     private boolean mDontNormalizeQualifiers;
     private boolean mTrackSourcePositions = true;
 
-    public ResourceSet(String name, String libraryName) {
-        this(name, libraryName, true /*validateEnabled*/);
-    }
-
-    public ResourceSet(String name, boolean validateEnabled) {
-        this(name, null, validateEnabled);
-    }
-
-    public ResourceSet(String name, String libraryName, boolean validateEnabled) {
+    public ResourceSet(String name, String namespace, String libraryName, boolean validateEnabled) {
         super(name, validateEnabled);
+        mNamespace = namespace;
         mPreprocessor = NoOpResourcePreprocessor.INSTANCE;
         mLibraryName = libraryName;
     }
@@ -103,7 +95,7 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
 
     @Override
     protected DataSet<ResourceItem, ResourceFile> createSet(String name) {
-        return new ResourceSet(name, mLibraryName);
+        return new ResourceSet(name, null, mLibraryName, true);
     }
 
     @Override
@@ -158,9 +150,9 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
                 resourceItems.add(
                         new GeneratedResourceItem(
                                 getNameForFile(generatedFile),
+                                mNamespace,
                                 generatedFile,
-                                FolderTypeRelationship
-                                        .getRelatedResourceTypes(
+                                FolderTypeRelationship.getRelatedResourceTypes(
                                                 ResourceFolderType.getTypeByName(resourceType))
                                         .get(0),
                                 qualifers,
@@ -182,13 +174,15 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
                     continue;
                 }
 
-                ResourceItem r = ValueResourceParser2.getResource(resNode, file, mLibraryName);
+                ResourceItem r =
+                        ValueResourceParser2.getResource(resNode, file, mNamespace, mLibraryName);
                 if (r != null) {
                     resourceList.add(r);
                     if (r.getType() == ResourceType.DECLARE_STYLEABLE) {
                         // Need to also create ATTR items for its children
                         try {
-                            ValueResourceParser2.addStyleableItems(resNode, resourceList, null, file, mLibraryName);
+                            ValueResourceParser2.addStyleableItems(
+                                    resNode, resourceList, null, file, mNamespace, mLibraryName);
                         } catch (MergingException ignored) {
                             // since we are not passing a dup map, this will never be thrown
                             assert false : file + ": " + ignored.getMessage();
@@ -214,7 +208,7 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
             if (getValidateEnabled()) {
                 FileResourceNameValidator.validate(file, type);
             }
-            ResourceItem item = new ResourceItem(nameAttr, type, null, mLibraryName);
+            ResourceItem item = new ResourceItem(nameAttr, mNamespace, type, null, mLibraryName);
             return new ResourceFile(file, item, qualifier, folderConfiguration);
         }
     }
@@ -336,7 +330,8 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
                 break;
             case XML_VALUES:
                 // multi res. Need to parse the file and compare the items one by one.
-                ValueResourceParser2 parser = new ValueResourceParser2(changedFile, mLibraryName);
+                ValueResourceParser2 parser =
+                        new ValueResourceParser2(changedFile, mNamespace, mLibraryName);
                 parser.setTrackSourcePositions(mTrackSourcePositions);
 
                 List<ResourceItem> parsedItems = parser.parseFile();
@@ -455,7 +450,9 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
             } else if (mShouldParseResourceIds && folderData.isIdGenerating &&
                        SdkUtils.endsWithIgnoreCase(file.getPath(), SdkConstants.DOT_XML)) {
                 String resourceName = getNameForFile(file);
-                IdGeneratingResourceParser parser = new IdGeneratingResourceParser(file, resourceName, folderData.type);
+                IdGeneratingResourceParser parser =
+                        new IdGeneratingResourceParser(
+                                file, resourceName, folderData.type, mNamespace);
                 List<ResourceItem> items = parser.getIdResourceItems();
                 ResourceItem fileItem = parser.getFileResourceItem();
                 items.add(fileItem);
@@ -463,12 +460,19 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
             } else {
                 return new ResourceFile(
                         file,
-                        new ResourceItem(getNameForFile(file), folderData.type, null, mLibraryName),
-                        folderData.qualifiers, folderData.folderConfiguration);
+                        new ResourceItem(
+                                getNameForFile(file),
+                                mNamespace,
+                                folderData.type,
+                                null,
+                                mLibraryName),
+                        folderData.qualifiers,
+                        folderData.folderConfiguration);
             }
         } else {
             try {
-                ValueResourceParser2 parser = new ValueResourceParser2(file, mLibraryName);
+                ValueResourceParser2 parser =
+                        new ValueResourceParser2(file, mNamespace, mLibraryName);
                 parser.setTrackSourcePositions(mTrackSourcePositions);
                 List<ResourceItem> items = parser.parseFile();
 
@@ -506,6 +510,7 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
             resourceItems.add(
                     new GeneratedResourceItem(
                             getNameForFile(generatedFile),
+                            mNamespace,
                             generatedFile,
                             generatedFileFolderData.type,
                             generatedFileFolderData.qualifiers,

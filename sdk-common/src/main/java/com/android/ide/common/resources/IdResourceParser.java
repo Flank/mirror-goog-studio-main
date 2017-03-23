@@ -21,16 +21,15 @@ import com.android.annotations.NonNull;
 import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.resources.ValueResourceParser.IValueResourceRepository;
 import com.android.resources.ResourceType;
+import com.android.resources.ResourceUrl;
 import com.google.common.io.Closeables;
-
-import org.kxml2.io.KXmlParser;
-import org.xmlpull.v1.XmlPullParser;
-import org.xmlpull.v1.XmlPullParserException;
-
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import org.kxml2.io.KXmlParser;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
 
 /**
  * Parser for scanning an id-generating resource file such as a layout or a menu
@@ -140,8 +139,10 @@ public class IdResourceParser {
                     if (value.startsWith("@+")) {       //$NON-NLS-1$
                         // Strip out the @+id/ or @+android:id/ section
                         String id = value.substring(value.indexOf('/') + 1);
-                        ResourceValue newId = new ResourceValue(ResourceType.ID, id,
-                                mIsFramework);
+                        ResourceValue newId =
+                                new ResourceValue(
+                                        ResourceUrl.create(ResourceType.ID, id, mIsFramework),
+                                        null);
                         mRepository.addResourceValue(newId);
                     }
                 }

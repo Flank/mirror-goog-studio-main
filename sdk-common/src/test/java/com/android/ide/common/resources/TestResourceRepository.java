@@ -14,7 +14,6 @@ import com.android.io.IAbstractFolder;
 import com.android.testutils.TestUtils;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-
 import java.io.File;
 import java.io.IOException;
 
@@ -132,7 +131,7 @@ public class TestResourceRepository extends ResourceRepository {
         File resFolder = new File(dir, FD_RES);
 
         ResourceMerger merger = new ResourceMerger(0);
-        ResourceSet resourceSet = new ResourceSet("main", null);
+        ResourceSet resourceSet = new ResourceSet("main", null, null, true);
         resourceSet.addSource(resFolder);
         resourceSet.loadFromFiles(new RecordingLogger());
         merger.addDataSet(resourceSet);

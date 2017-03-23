@@ -18,6 +18,7 @@ iml_module(
         "//tools/idea/.idea/libraries:kxml2",
         "//tools/idea/.idea/libraries:JUnit4[test]",
         "//tools/base/annotations:studio.android-annotations[module]",
+        "//tools/base/common:studio.common[module]",
         "//tools/idea/platform/annotations[module]",
     ],
 )
@@ -29,6 +30,7 @@ maven_java_library(
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/annotations",
+        "//tools/base/common:tools.common",
         "//tools/base/third_party:com.intellij_annotations",
         "//tools/base/third_party:net.sf.kxml_kxml2",
     ],

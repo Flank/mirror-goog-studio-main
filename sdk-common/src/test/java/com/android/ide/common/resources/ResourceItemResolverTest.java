@@ -23,12 +23,11 @@ import com.android.ide.common.rendering.api.ResourceValue;
 import com.android.ide.common.res2.ResourceRepository;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.resources.ResourceType;
+import com.android.resources.ResourceUrl;
 import com.google.common.collect.Lists;
-
-import junit.framework.TestCase;
-
 import java.util.List;
 import java.util.Map;
+import junit.framework.TestCase;
 
 public class ResourceItemResolverTest extends TestCase {
     @SuppressWarnings("ConstantConditions")
@@ -269,11 +268,12 @@ public class ResourceItemResolverTest extends TestCase {
         resolver = new ResourceItemResolver(config, provider, logger);
         resolver.setLookupChainList(chain);
         chain.clear();
-        ResourceValue target = new ResourceValue(ResourceType.STRING, "dummy", false);
-        target.setValue("?foo");
+        ResourceValue target =
+                new ResourceValue(ResourceUrl.create(null, ResourceType.STRING, "dummy"), "?foo");
         assertEquals("#ff000000", resolver.resolveResValue(target).getValue());
-        assertEquals("?foo => ?android:colorForeground => @color/bright_foreground_light => " 
-                + "@android:color/background_dark => #ff000000",
+        assertEquals(
+                "?foo => ?android:colorForeground => @color/bright_foreground_light => "
+                        + "@android:color/background_dark => #ff000000",
                 ResourceItemResolver.getDisplayString("?foo", chain));
 
         // Test array values.

@@ -18,8 +18,8 @@ package com.android.tools.lint.checks;
 
 import com.android.annotations.NonNull;
 import com.android.ide.common.res2.AbstractResourceRepository;
-import com.android.ide.common.resources.ResourceUrl;
 import com.android.resources.ResourceFolderType;
+import com.android.resources.ResourceUrl;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Implementation;
