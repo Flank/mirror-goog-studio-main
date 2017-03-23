@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.Version;
 import com.android.ide.common.xml.XmlPrettyPrinter;
+import com.android.sdklib.AndroidVersion;
 import com.android.utils.XmlUtils;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CaseFormat;
@@ -258,7 +259,7 @@ public class InstantRunBuildContext {
     private final long[] taskDurationInMs = new long[TaskType.values().length];
     private InstantRunPatchingPolicy patchingPolicy;
     /** Null until setApiLevel is called. */
-    @Nullable private Integer featureLevel = null;
+    @Nullable private AndroidVersion androidVersion = null;
 
     private String density = null;
     private String abi = null;
@@ -385,18 +386,16 @@ public class InstantRunBuildContext {
         return currentBuild.buildMode == InstantRunBuildMode.HOT_WARM;
     }
 
-    public void setApiLevel(
-            int featureLevel, @Nullable String targetAbi) {
-        this.featureLevel = featureLevel;
+    public void setApiLevel(@NonNull AndroidVersion androidVersion, @Nullable String targetAbi) {
+        this.androidVersion = androidVersion;
         // cache the patching policy.
-        this.patchingPolicy =
-                InstantRunPatchingPolicy.getPatchingPolicy(featureLevel);
+        this.patchingPolicy = InstantRunPatchingPolicy.getPatchingPolicy(this.androidVersion);
         this.abi = targetAbi;
     }
 
-    public int getFeatureLevel() {
+    public AndroidVersion getAndroidVersion() {
         return Preconditions.checkNotNull(
-                featureLevel, "setApiLevel should be called before any other actions.");
+                androidVersion, "setApiLevel should be called before any other actions.");
     }
 
     @Nullable
@@ -602,8 +601,10 @@ public class InstantRunBuildContext {
 
         // check if we are using split apks on L or M, in that case, we need to add the main split
         // so deployment can be successful.
-        boolean inMultiAPKOnBefore24 = patchingPolicy == InstantRunPatchingPolicy.MULTI_APK
-                && featureLevel != null && featureLevel < 24;
+        boolean inMultiAPKOnBefore24 =
+                patchingPolicy == InstantRunPatchingPolicy.MULTI_APK
+                        && androidVersion != null
+                        && androidVersion.getFeatureLevel() < 24;
         if (inMultiAPKOnBefore24) {
             LOG.debug("Adding split main if a split is present as deploying to a device < 24");
             // Re-add the SPLIT_MAIN if any SPLIT is present.
@@ -875,7 +876,7 @@ public class InstantRunBuildContext {
         }
 
         currentBuild.toXml(document, instantRun);
-        instantRun.setAttribute(ATTR_API_LEVEL, String.valueOf(getFeatureLevel()));
+        instantRun.setAttribute(ATTR_API_LEVEL, String.valueOf(getAndroidVersion()));
         if (density != null) {
             instantRun.setAttribute(ATTR_DENSITY, density);
         }

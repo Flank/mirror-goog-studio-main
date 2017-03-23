@@ -26,6 +26,7 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
+import com.android.sdklib.AndroidVersion;
 import com.android.tools.fd.client.InstantRunArtifact;
 import com.android.tools.fd.client.InstantRunArtifactType;
 import com.android.tools.fd.client.InstantRunBuildInfo;
@@ -89,15 +90,13 @@ public class InstantRunFullBuildTest {
     private void doTest(int featureLevel) throws Exception {
         mProject.executor()
                 .withInstantRun(
-                        featureLevel,
-                        OptionalCompilationStep.FULL_APK)
+                        new AndroidVersion(featureLevel, null), OptionalCompilationStep.FULL_APK)
                 .run("assembleDebug");
         InstantRunBuildInfo initialContext = InstantRunTestUtils.loadContext(instantRunModel);
 
         mProject.executor()
                 .withInstantRun(
-                        featureLevel,
-                        OptionalCompilationStep.FULL_APK)
+                        new AndroidVersion(featureLevel, null), OptionalCompilationStep.FULL_APK)
                 .run("assembleDebug");
         InstantRunBuildInfo secondContext = InstantRunTestUtils.loadContext(instantRunModel);
         assertThat(secondContext.getTimeStamp()).isNotEqualTo(initialContext.getTimeStamp());

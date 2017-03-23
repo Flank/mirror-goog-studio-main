@@ -32,6 +32,7 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.instant.InstantRunTestUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
+import com.android.sdklib.AndroidVersion;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
@@ -48,6 +49,9 @@ import org.junit.runners.Parameterized;
 
 @RunWith(FilterableParameterized.class)
 public class AntennaPodPerformanceMatrixTest {
+
+    private static final AndroidVersion INSTANT_RUN_TARGET_DEVICE_VERSION =
+            new AndroidVersion(24, null);
 
     @Rule public final GradleTestProject mainProject;
     @NonNull private final ProjectScenario projectScenario;
@@ -159,7 +163,7 @@ public class AntennaPodPerformanceMatrixTest {
                     tasks = ImmutableList.of(":app:assembleDebug");
                     // Initial build for incremental instant run tasks
                     executor()
-                            .withInstantRun(24)
+                            .withInstantRun(INSTANT_RUN_TARGET_DEVICE_VERSION)
                             .withEnableInfoLogging(false)
                             .run(tasks);
                     isEdit = true;
@@ -215,7 +219,7 @@ public class AntennaPodPerformanceMatrixTest {
             if (instantRunModel != null) {
                 executor()
                         .recordBenchmark(benchmarkMode)
-                        .withInstantRun(24)
+                        .withInstantRun(INSTANT_RUN_TARGET_DEVICE_VERSION)
                         .run(tasks);
 
                 InstantRunTestUtils.loadContext(instantRunModel).getVerifierStatus();

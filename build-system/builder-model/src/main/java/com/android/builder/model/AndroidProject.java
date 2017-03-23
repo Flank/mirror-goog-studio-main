@@ -56,9 +56,11 @@ public interface AndroidProject {
 
     // Sent by Studio 1.5+
 
-    // The "feature level" of the device that is targeted, as returned by
-    // AndroidVersion.getFeatureLevel().
+    // The version api level of the target device.
     String PROPERTY_BUILD_API = "android.injected.build.api";
+    // The version codename of the target device. Null for released versions,
+    String PROPERTY_BUILD_API_CODENAME = "android.injected.build.codename";
+
     String PROPERTY_BUILD_ABI = "android.injected.build.abi";
     String PROPERTY_BUILD_DENSITY = "android.injected.build.density";
 

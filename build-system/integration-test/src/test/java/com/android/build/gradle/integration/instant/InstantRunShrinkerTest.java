@@ -25,6 +25,7 @@ import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.OptionalCompilationStep;
+import com.android.sdklib.AndroidVersion;
 import com.android.testutils.apk.SplitApks;
 import com.google.common.truth.Expect;
 import org.junit.Assume;
@@ -95,7 +96,7 @@ public class InstantRunShrinkerTest {
     public void checkApplicationIsNotRemoved() throws Exception {
         project.execute("clean");
         project.executor()
-                .withInstantRun(23, OptionalCompilationStep.FULL_APK)
+                .withInstantRun(new AndroidVersion(23, null), OptionalCompilationStep.FULL_APK)
                 .run("assembleDebug");
 
         AndroidProject model = project.model().getSingle().getOnlyModel();

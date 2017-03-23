@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.builder.profile.ProcessProfileWriterFactory;
+import com.android.sdklib.AndroidVersion;
 import java.io.File;
 import java.io.IOException;
 import org.gradle.api.Project;
@@ -69,7 +70,7 @@ public class BuildInfoTasksTest {
     private void initialFailedBuild() throws IOException {
         Project project = createProject();
         InstantRunBuildContext context = new InstantRunBuildContext();
-        context.setApiLevel(23, null);
+        context.setApiLevel(new AndroidVersion(23, null), null);
         runLoaderTask(project, context);
 
         context.addChangedFile(FileType.RESOURCES, new File("resources-debug.ap_"));
@@ -81,7 +82,7 @@ public class BuildInfoTasksTest {
     private void secondPassingBuild() throws IOException {
         Project project = createProject();
         InstantRunBuildContext context = new InstantRunBuildContext();
-        context.setApiLevel(23, null);
+        context.setApiLevel(new AndroidVersion(23, null), null);
 
         runLoaderTask(project, context);
 
