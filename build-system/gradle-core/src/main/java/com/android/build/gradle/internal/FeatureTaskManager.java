@@ -28,6 +28,8 @@ import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclaration;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclarationWriterTask;
+import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitPackageIds;
+import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitPackageIdsWriterTask;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.profile.Recorder;
@@ -67,10 +69,18 @@ public class FeatureTaskManager extends TaskManager {
     @Override
     public void createTasksForVariantScope(
             @NonNull final TaskFactory tasks, @NonNull final VariantScope variantScope) {
-        AndroidTask<FeatureSplitDeclarationWriterTask> featureDeclarationTasks =
-                createFeatureDeclarationTasks(tasks, variantScope);
-        // TODO: remove once base feature starts consuming these artifacts.
-        variantScope.getAssembleTask().dependsOn(tasks, featureDeclarationTasks);
+
+        // TODO : we need a better way to determine if we are dealing with a base split or not.
+        if (variantScope.getVariantDependencies().getManifestSplitConfiguration() != null) {
+            createFeatureDeclarationTasks(tasks, variantScope);
+
+        } else {
+            AndroidTask<FeatureSplitPackageIdsWriterTask> featureIdsWriterTask =
+                    createFeatureIdsWriterTask(tasks, variantScope);
+
+            // TODO : remove once the list is consumed by feature slits.
+            variantScope.getAssembleTask().dependsOn(tasks, featureIdsWriterTask.getName());
+        }
     }
 
     /**
@@ -104,6 +114,36 @@ public class FeatureTaskManager extends TaskManager {
                 AndroidArtifacts.ArtifactType.FEATURE_SPLIT_DECLARATION);
 
         return featureSplitWriterTaskAndroidTask;
+    }
+
+    @NonNull
+    private AndroidTask<FeatureSplitPackageIdsWriterTask> createFeatureIdsWriterTask(
+            @NonNull TaskFactory tasks, @NonNull VariantScope variantScope) {
+
+        File featureIdsOutputDirectory =
+                FileUtils.join(
+                        globalScope.getIntermediatesDir(),
+                        "feature-split",
+                        "ids",
+                        variantScope.getVariantConfiguration().getDirName());
+
+        AndroidTask<FeatureSplitPackageIdsWriterTask> writeTask =
+                androidTasks.create(
+                        tasks,
+                        new FeatureSplitPackageIdsWriterTask.ConfigAction(
+                                variantScope, featureIdsOutputDirectory));
+
+        variantScope.addTaskOutput(
+                TaskOutputHolder.TaskOutputType.FEATURE_IDS_DECLARATION,
+                featureIdsOutputDirectory,
+                writeTask.getName());
+
+        variantScope.publishIntermediateArtifact(
+                FeatureSplitPackageIds.getOutputFile(featureIdsOutputDirectory),
+                writeTask.getName(),
+                AndroidArtifacts.ArtifactType.FEATURE_IDS_DECLARATION);
+
+        return writeTask;
     }
 
     @NonNull

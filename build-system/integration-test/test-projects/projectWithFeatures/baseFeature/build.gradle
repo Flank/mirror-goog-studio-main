@@ -6,5 +6,6 @@ android {
 }
 
 dependencies {
+    featureSplit project(':feature')
     api project(':library')
 }

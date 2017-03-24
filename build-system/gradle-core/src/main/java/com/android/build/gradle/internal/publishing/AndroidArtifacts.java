@@ -86,12 +86,14 @@ public class AndroidArtifacts {
     private static final String TYPE_METADATA = "android-metadata";
 
     // types for feature-split content.
-    private static final String TYPE_FEATURE_SPLIT_DECLARATION = "feature-split-decl";
+    private static final String TYPE_FEATURE_SPLIT_DECLARATION = "android-feature-split-decl";
+    private static final String TYPE_FEATURE_IDS_DECLARATION = "android-feature-split-ids";
 
     public enum ConsumedConfigType {
         COMPILE_CLASSPATH(API_ELEMENTS),
         RUNTIME_CLASSPATH(RUNTIME_ELEMENTS),
-        ANNOTATION_PROCESSOR(RUNTIME_ELEMENTS);
+        ANNOTATION_PROCESSOR(RUNTIME_ELEMENTS),
+        FEATURE_CLASSPATH(FEATURE_ELEMENTS);
 
         @NonNull
         private final PublishedConfigType publishedTo;
@@ -179,7 +181,8 @@ public class AndroidArtifacts {
         JAR(TYPE_JAR, API_AND_RUNTIME_ELEMENTS),
 
         // Feature split related artifacts.
-        FEATURE_SPLIT_DECLARATION(TYPE_FEATURE_SPLIT_DECLARATION, FEATURE_ELEMENTS_ONLY);
+        FEATURE_SPLIT_DECLARATION(TYPE_FEATURE_SPLIT_DECLARATION, FEATURE_ELEMENTS_ONLY),
+        FEATURE_IDS_DECLARATION(TYPE_FEATURE_IDS_DECLARATION, BASE_ELEMENTS_ONLY);
 
         @NonNull
         private final String type;

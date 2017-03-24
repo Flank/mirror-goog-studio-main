@@ -689,6 +689,10 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                         .getVariantDependency()
                         .getAnnotationProcessorConfiguration();
                 break;
+            case FEATURE_CLASSPATH:
+                configuration =
+                        getVariantData().getVariantDependency().getFeatureSplitConfiguration();
+                break;
             default:
                 throw new RuntimeException("unknown ConfigType value");
         }
