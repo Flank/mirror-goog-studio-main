@@ -18,6 +18,7 @@ package com.android.ide.common.internal;
 
 import com.android.annotations.NonNull;
 import com.android.ide.common.util.JvmWideVariable;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -74,5 +75,10 @@ public class ExecutorSingleton {
         sExecutorService.doRunnableSynchronized(() -> {
             sThreadPoolSize.set(threadPoolSize);
         });
+    }
+
+    /** Returns the size of the thread pool. */
+    static int getThreadPoolSize() {
+        return Objects.requireNonNull(sThreadPoolSize.get());
     }
 }
