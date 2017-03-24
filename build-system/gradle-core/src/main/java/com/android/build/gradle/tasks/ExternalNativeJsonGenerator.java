@@ -33,6 +33,7 @@ import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.core.AndroidBuilder;
+import com.android.builder.core.ErrorReporter;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.model.SyncIssue;
 import com.android.ide.common.process.ProcessException;
@@ -70,8 +71,7 @@ public abstract class ExternalNativeJsonGenerator {
     private final NdkHandler ndkHandler;
     private final int minSdkVersion;
     @NonNull protected final String variantName;
-    @NonNull
-    private final List<Abi> abis;
+    @NonNull private final Collection<Abi> abis;
     @NonNull
     protected final AndroidBuilder androidBuilder;
     @NonNull
@@ -100,7 +100,7 @@ public abstract class ExternalNativeJsonGenerator {
             @NonNull NdkHandler ndkHandler,
             int minSdkVersion,
             @NonNull String variantName,
-            @NonNull List<Abi> abis,
+            @NonNull Collection<Abi> abis,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull File sdkFolder,
             @NonNull File ndkFolder,
@@ -326,8 +326,9 @@ public abstract class ExternalNativeJsonGenerator {
      * Derived class implements this method to post-process build output. Ndk-build uses this to
      * capture and analyze the compile and link commands that were written to stdout.
      */
-    abstract void processBuildOutput(@NonNull String buildOutput,
-            @NonNull String abi, int abiPlatformVersion) throws IOException;
+    abstract void processBuildOutput(
+            @NonNull String buildOutput, @NonNull String abi, int abiPlatformVersion)
+            throws IOException;
 
     @NonNull
     abstract ProcessInfoBuilder getProcessBuilder(
@@ -411,56 +412,49 @@ public abstract class ExternalNativeJsonGenerator {
         return result;
     }
 
-    /**
-     * Check for user requested ABIs that aren't valid. Give a SyncIssue.
-     */
-    private static void checkForRequestedButUnknownAbis (
-            @NonNull Collection<String> availableAbis,
-            @NonNull Collection<String> userRequestedAbis,
-            @NonNull AndroidBuilder androidBuilder,
-            @NonNull String variantName) {
-        List<String> requestedButNotAvailable = Lists.newArrayList();
-        for (String abiName : userRequestedAbis) {
-            if (!availableAbis.contains(abiName)) {
-                requestedButNotAvailable.add(abiName);
-            }
-        }
-
-        if (!requestedButNotAvailable.isEmpty()) {
-            androidBuilder.getErrorReporter().handleSyncError(
-                    variantName,
-                    SyncIssue.TYPE_EXTERNAL_NATIVE_BUILD_CONFIGURATION,
-                    String.format("ABIs [%s] are not available for platform and will be "
-                            + "excluded from building and packaging. Available ABIs are [%s].",
-                            Joiner.on(", ").join(requestedButNotAvailable),
-                            Joiner.on(", ").join(availableAbis)));
-        }
-    }
-
-    /**
-     * Return Abis that are available on the platform.
-     */
+    /** Return ABIs that are available on the platform. */
     @NonNull
     private static List<Abi> filterToAvailableAbis(
-            @NonNull Collection<String> availableAbis,
-            @NonNull Collection<String> abiNames) {
-        List<Abi> abis = Lists.newArrayList();
-        for (String abiName : abiNames) {
-            if (availableAbis.contains(abiName)) {
-                abis.add(Abi.getByName(abiName));
+            @NonNull Collection<Abi> supportedAbis,
+            @NonNull Collection<String> userRequestedAbis,
+            @NonNull ErrorReporter errorReporter,
+            @NonNull String variantName) {
+        List<String> requestedButNotAvailable = Lists.newArrayList();
+        List<Abi> result = Lists.newArrayList();
+        for (String abiName : userRequestedAbis) {
+            Abi requestedAbi = Abi.getByName(abiName);
+            if (requestedAbi == null || !supportedAbis.contains(requestedAbi)) {
+                requestedButNotAvailable.add(abiName);
+            }
+            if (requestedAbi != null) {
+                result.add(requestedAbi);
             }
         }
-        return abis;
+        if (!requestedButNotAvailable.isEmpty()) {
+            // If the user requested ABIs that aren't valid for the current platform then give
+            // them a SyncIssue that describes which ones are the problem.
+            Iterable<String> supportedAbisNames =
+                    supportedAbis.stream().map(Abi::getName)::iterator;
+            errorReporter.handleSyncError(
+                    variantName,
+                    SyncIssue.TYPE_EXTERNAL_NATIVE_BUILD_CONFIGURATION,
+                    String.format(
+                            "ABIs [%s] are not supported for platform. Supported ABIs are "
+                                    + "[%s].",
+                            Joiner.on(", ").join(requestedButNotAvailable),
+                            Joiner.on(", ").join(supportedAbisNames)));
+        }
+        return result;
     }
 
     /**
      * Get the set of abiFilters from the DSL.
      *
-     * @return a Set of ABIs to build. If the set is empty then build nothing.
+     * @return a Set of ABIs to build. If the set is empty then build nothing. If user did not
+     *     specify any ABI, return null.
      */
-    @NonNull
+    @Nullable
     private static Collection<String> getUserRequestedAbiFilters(
-            @NonNull Collection<String> availableAbis,
             @NonNull NativeBuildSystem buildSystem,
             @NonNull GradleVariantConfiguration variantConfig) {
 
@@ -473,9 +467,7 @@ public abstract class ExternalNativeJsonGenerator {
         Set<String> ndkAbiFilters = variantConfig.getNdkConfig().getAbiFilters();
         if (ndkAbiFilters == null || ndkAbiFilters.isEmpty()) {
             // There was no ndk.abiFilters so use the build system specific abiFilters.
-            return externalNativeBuildAbiFilters.isEmpty()
-                    ? availableAbis
-                    : externalNativeBuildAbiFilters;
+            return externalNativeBuildAbiFilters.isEmpty() ? null : externalNativeBuildAbiFilters;
         }
 
         // At this point, there are some ndk.abiFilters. If there are no build system specific
@@ -486,8 +478,7 @@ public abstract class ExternalNativeJsonGenerator {
 
         // At this point, there are both ndk.abiFilters and specific build system abiFilters.
         // We want to build the intersection of these. However, if the intersection is empty then
-        // we don't want to build anything at all. This latter case will be indicated by returning
-        // null.
+        // we don't want to build anything at all.
         externalNativeBuildAbiFilters.retainAll(ndkAbiFilters);
         return externalNativeBuildAbiFilters;
     }
@@ -572,27 +563,32 @@ public abstract class ExternalNativeJsonGenerator {
                 .getMinSdkVersion();
         int minSdkVersionApiLevel = minSdkVersion == null ? 1 : minSdkVersion.getApiLevel();
 
-        // Get the set of ABIs that are available on this platform
-        Collection<String> availableAbis = ndkHandler.getSupportedAbis().stream()
-                .map(Abi::getName)
-                .collect(Collectors.toList());
-
         // Get the filters specified in the DSL. Will be null if we should build all known ABIs.
-        Collection<String> userRequestedAbis = getUserRequestedAbiFilters(availableAbis,
-                buildSystem, variantConfig);
+        Collection<String> userRequestedAbis =
+                getUserRequestedAbiFilters(buildSystem, variantConfig);
 
         // These are ABIs that are available on the current platform
-        List<Abi> validAbis = filterToAvailableAbis(availableAbis, userRequestedAbis);
-
-        // If the user requested ABIs that aren't valid for the current platform then give
-        // them a SyncIssue that describes which ones are the problem.
-        checkForRequestedButUnknownAbis(availableAbis, userRequestedAbis, androidBuilder,
-                variantData.getName());
+        Collection<Abi> validAbis =
+                userRequestedAbis == null
+                        ? ndkHandler.getDefaultAbis()
+                        : filterToAvailableAbis(
+                                ndkHandler.getSupportedAbis(),
+                                userRequestedAbis,
+                                androidBuilder.getErrorReporter(),
+                                variantData.getName());
 
         // Produce the list of expected JSON files. This list includes possibly invalid ABIs
         // so that generator can create fallback JSON for them.
-        List<File> expectedJsons = ExternalNativeBuildTaskUtils.getOutputJsons(
-                externalNativeBuildFolder, userRequestedAbis);
+        List<File> expectedJsons =
+                ExternalNativeBuildTaskUtils.getOutputJsons(
+                        externalNativeBuildFolder,
+                        userRequestedAbis == null
+                                ? ndkHandler
+                                        .getDefaultAbis()
+                                        .stream()
+                                        .map(Abi::getName)
+                                        .collect(Collectors.toList())
+                                : userRequestedAbis);
 
         switch(buildSystem) {
             case NDK_BUILD: {
@@ -726,7 +722,7 @@ public abstract class ExternalNativeJsonGenerator {
 
     @Input
     @NonNull
-    List<Abi> getAbis() {
+    Collection<Abi> getAbis() {
         return abis;
     }
 }

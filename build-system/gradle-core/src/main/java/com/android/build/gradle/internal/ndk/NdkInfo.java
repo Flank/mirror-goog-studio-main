@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.Toolchain;
 import java.io.File;
+import java.util.Collection;
 
 /**
  * Interface describing the NDK.
@@ -129,4 +130,16 @@ public interface NdkInfo {
      */
     @NonNull
     String getDefaultToolchainVersion(@NonNull Toolchain toolchain, @NonNull Abi abi);
+
+    @NonNull
+    Collection<Abi> getDefault32BitsAbis();
+
+    @NonNull
+    Collection<Abi> getDefaultAbis();
+
+    @NonNull
+    Collection<Abi> getSupported32BitsAbis();
+
+    @NonNull
+    Collection<Abi> getSupportedAbis();
 }

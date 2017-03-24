@@ -38,6 +38,7 @@ import com.google.common.io.Files;
 import com.google.gson.GsonBuilder;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import org.gradle.api.GradleException;
@@ -47,14 +48,13 @@ import org.gradle.api.GradleException;
  * JSON can be generated during configuration.
  */
 class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
-    @NonNull
-    final private File projectDir;
+    @NonNull private final File projectDir;
 
     NdkBuildExternalNativeJsonGenerator(
             @NonNull NdkHandler ndkHandler,
             int minSdkVersion,
             @NonNull String variantName,
-            @NonNull List<Abi> abis,
+            @NonNull Collection<Abi> abis,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull File projectDir,
             @NonNull File sdkFolder,
@@ -88,8 +88,9 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
     }
 
     @Override
-    void processBuildOutput(@NonNull String buildOutput, @NonNull String abi,
-            int abiPlatformVersion) throws IOException {
+    void processBuildOutput(
+            @NonNull String buildOutput, @NonNull String abi, int abiPlatformVersion)
+            throws IOException {
         // Discover Application.mk if one exists next to Android.mk
         // If there is an Application.mk file next to Android.mk then pick it up.
         File applicationMk = new File(getMakeFile().getParent(), "Application.mk");
