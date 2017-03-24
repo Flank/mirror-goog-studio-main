@@ -75,6 +75,7 @@ import com.android.build.gradle.internal.tasks.AndroidReportTask;
 import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.DependencyReportTask;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
+import com.android.build.gradle.internal.tasks.ExtractJava8LangSupportJar;
 import com.android.build.gradle.internal.tasks.ExtractProguardFiles;
 import com.android.build.gradle.internal.tasks.FileSupplier;
 import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
@@ -452,6 +453,13 @@ public abstract class TaskManager {
         if (getGlobalScope().getBuildCache() != null) {
             androidTasks.create(tasks, new CleanBuildCache.ConfigAction(globalScope));
         }
+
+        ExtractJava8LangSupportJar.ConfigAction extractConfig =
+                new ExtractJava8LangSupportJar.ConfigAction(
+                        getGlobalScope().getJava8LangSupportJar(),
+                        ExtractJava8LangSupportJar.TASK_NAME);
+        androidTasks.create(tasks, extractConfig);
+        getGlobalScope().getJava8LangSupportJar().builtBy(ExtractJava8LangSupportJar.TASK_NAME);
     }
 
     public void createMockableJarTask(TaskFactory tasks) {
@@ -2103,6 +2111,7 @@ public abstract class TaskManager {
                             globalScope.getProjectLevelCache(),
                             minSdkVersion,
                             androidBuilder.getJavaProcessExecutor(),
+                            globalScope.getJava8LangSupportJar(),
                             isInfoLog());
             transformManager.addTransform(tasks, variantScope, desugarTransform);
         }

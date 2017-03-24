@@ -23,8 +23,6 @@ import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessInfoBuilder;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -33,18 +31,21 @@ import java.util.Map;
 public final class DesugarProcessBuilder extends ProcessEnvBuilder<DesugarProcessBuilder> {
     private static final String DESUGAR_MAIN = "com.google.devtools.build.android.desugar.Desugar";
 
+    @NonNull private final Path java8LangSupportJar;
     private final boolean verbose;
-    private final Map<Path, Path> inputsToOutputs;
-    private final List<Path> classpath;
-    private final List<Path> bootClasspath;
+    @NonNull private final Map<Path, Path> inputsToOutputs;
+    @NonNull private final List<Path> classpath;
+    @NonNull private final List<Path> bootClasspath;
     private final int minSdkVersion;
 
     public DesugarProcessBuilder(
+            @NonNull Path java8LangSupportJar,
             boolean verbose,
             @NonNull Map<Path, Path> inputsToOutputs,
             @NonNull List<Path> classpath,
             @NonNull List<Path> bootClasspath,
             int minSdkVersion) {
+        this.java8LangSupportJar = java8LangSupportJar;
         this.verbose = verbose;
         this.inputsToOutputs = ImmutableMap.copyOf(inputsToOutputs);
         this.classpath = classpath;
@@ -58,7 +59,7 @@ public final class DesugarProcessBuilder extends ProcessEnvBuilder<DesugarProces
         ProcessInfoBuilder builder = new ProcessInfoBuilder();
         builder.addEnvironments(mEnvironment);
 
-        builder.setClasspath(getExtractedDesugarDeployJar().toAbsolutePath().toString());
+        builder.setClasspath(java8LangSupportJar.toString());
         builder.setMain(DESUGAR_MAIN);
         builder.addJvmArg("-Xmx64M");
 
@@ -77,17 +78,5 @@ public final class DesugarProcessBuilder extends ProcessEnvBuilder<DesugarProces
         builder.addArgs("--min_sdk_version", Integer.toString(minSdkVersion));
 
         return builder.createJavaProcess();
-    }
-
-    @NonNull
-    private Path getExtractedDesugarDeployJar() throws IOException {
-        // TODO - extract to the same location per plugin version
-        Path tmp = Files.createTempDirectory("").resolve("desugar_deploy.jar");
-        try (InputStream in =
-                getClass().getClassLoader().getResourceAsStream("desugar_deploy.jar")) {
-            Files.copy(in, tmp);
-            tmp.toFile().deleteOnExit();
-        }
-        return tmp;
     }
 }
