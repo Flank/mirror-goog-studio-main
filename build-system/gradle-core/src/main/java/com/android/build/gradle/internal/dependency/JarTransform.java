@@ -20,6 +20,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactTyp
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.List;
+import javax.inject.Inject;
 import org.gradle.api.artifacts.transform.ArtifactTransform;
 
 /**
@@ -32,6 +33,9 @@ public class JarTransform extends ArtifactTransform {
     public static String[] getTransformTargets() {
         return new String[] {ArtifactType.CLASSES.getType(), ArtifactType.JAVA_RES.getType()};
     }
+
+    @Inject
+    public JarTransform() {}
 
     @Override
     public List<File> transform(File file) {

@@ -423,8 +423,14 @@ public class ApplicationTaskManager extends TaskManager {
                 createGenerateMicroApkDataTask(
                         tasks,
                         scope,
-                        wearApp.getIncoming().artifactView().attributes(
-                                container -> container.attribute(ARTIFACT_TYPE, APK.getType()))
+                        wearApp.getIncoming()
+                                .artifactView(
+                                        config -> {
+                                            config.attributes(
+                                                    container ->
+                                                            container.attribute(
+                                                                    ARTIFACT_TYPE, APK.getType()));
+                                        })
                                 .getFiles());
             }
         } else {

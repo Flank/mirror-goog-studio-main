@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /** Check that we fail when a library depends on an app. */
@@ -58,6 +59,7 @@ public class LibWithAppDependencyTest {
     }
 
     @Test
+    @Ignore("triggers a weird resolution error. Waiting for fix in Gradle.")
     public void build() throws IOException, InterruptedException {
         GradleBuildResult result =
                 project.executor().expectFailure().run("clean", ":library:assembleDebug");

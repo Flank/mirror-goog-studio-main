@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.dependency;
 import com.android.annotations.NonNull;
 import com.google.common.collect.Sets;
 import java.io.File;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.Set;
@@ -72,6 +73,11 @@ public class ArtifactCollectionWithTestedArtifact implements ArtifactCollection 
         }
 
         return artifactResults;
+    }
+
+    @Override
+    public Collection<Throwable> getFailures() {
+        throw new UnsupportedOperationException();
     }
 
     @NonNull

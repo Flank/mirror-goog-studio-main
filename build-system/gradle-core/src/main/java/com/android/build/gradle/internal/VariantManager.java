@@ -80,6 +80,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.inject.Inject;
 import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.NamedDomainObjectContainer;
@@ -87,7 +88,12 @@ import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
 import org.gradle.api.attributes.Attribute;
+import org.gradle.api.attributes.AttributeCompatibilityRule;
+import org.gradle.api.attributes.AttributeDisambiguationRule;
+import org.gradle.api.attributes.AttributeMatchingStrategy;
 import org.gradle.api.attributes.AttributesSchema;
+import org.gradle.api.attributes.CompatibilityCheckDetails;
+import org.gradle.api.attributes.MultipleCandidatesDetails;
 import org.gradle.api.attributes.Usage;
 import org.gradle.api.file.ConfigurableFileCollection;
 
@@ -598,40 +604,11 @@ public class VariantManager implements VariantModel {
         // and for the Usage attribute
         schema.attribute(Usage.USAGE_ATTRIBUTE).getCompatibilityRules().assumeCompatibleWhenMissing();
         // type for aar vs split.
-        schema.attribute(AndroidTypeAttr.ATTRIBUTE)
-                .getCompatibilityRules()
-                .assumeCompatibleWhenMissing();
-        schema.attribute(AndroidTypeAttr.ATTRIBUTE)
-                .getCompatibilityRules()
-                .add(
-                        details -> {
-                            final AndroidTypeAttr producerValue = details.getProducerValue();
-                            final AndroidTypeAttr consumerValue = details.getConsumerValue();
-                            if (producerValue.equals(consumerValue)) {
-                                details.compatible();
-                            } else {
-                                // 1. Feature and aar are compatible for splits that depend on an AAR only.
-                                // 2. APK and aar are compatible for test-app that consumes APK. They need access to the aar dependencies of the tested app.
-                                if (AndroidTypeAttr.TYPE_AAR.equals(producerValue)
-                                        && (AndroidTypeAttr.TYPE_FEATURE.equals(consumerValue)
-                                                || AndroidTypeAttr.TYPE_APK.equals(
-                                                        consumerValue))) {
-                                    details.compatible();
-                                }
-                            }
-                        });
-        schema.attribute(AndroidTypeAttr.ATTRIBUTE)
-                .getDisambiguationRules()
-                .add(
-                        details -> {
-                            // we should only get here, with both split and aar.
-                            Set<AndroidTypeAttr> values = details.getCandidateValues();
-                            if (values.size() == 2
-                                    && values.contains(AndroidTypeAttr.TYPE_AAR)
-                                    && values.contains(AndroidTypeAttr.TYPE_FEATURE)) {
-                                details.closestMatch(AndroidTypeAttr.TYPE_FEATURE);
-                            }
-                        });
+        final AttributeMatchingStrategy<AndroidTypeAttr> androidTypeAttrStrategy =
+                schema.attribute(AndroidTypeAttr.ATTRIBUTE);
+        androidTypeAttrStrategy.getCompatibilityRules().assumeCompatibleWhenMissing();
+        androidTypeAttrStrategy.getCompatibilityRules().add(AndroidTypeAttrCompatRule.class);
+        androidTypeAttrStrategy.getDisambiguationRules().add(AndroidTypeAttrDisambRule.class);
 
         // variant name as an attribute, this is to get the variant name on the consumption side.
         schema.attribute(VariantAttr.ATTRIBUTE)
@@ -657,6 +634,48 @@ public class VariantManager implements VariantModel {
         // missing from the producer
         for (Attribute<ProductFlavorAttr> dimensionAttribute : dimensionAttributes) {
             schema.attribute(dimensionAttribute).getCompatibilityRules().assumeCompatibleWhenMissing();
+        }
+    }
+
+    private static final class AndroidTypeAttrCompatRule
+            implements AttributeCompatibilityRule<AndroidTypeAttr> {
+
+        @Inject
+        public AndroidTypeAttrCompatRule() {}
+
+        @Override
+        public void execute(CompatibilityCheckDetails<AndroidTypeAttr> details) {
+            final AndroidTypeAttr producerValue = details.getProducerValue();
+            final AndroidTypeAttr consumerValue = details.getConsumerValue();
+            if (producerValue.equals(consumerValue)) {
+                details.compatible();
+            } else {
+                // 1. Feature and aar are compatible for splits that depend on an AAR only.
+                // 2. APK and aar are compatible for test-app that consumes APK. They need access to the aar dependencies of the tested app.
+                if (AndroidTypeAttr.TYPE_AAR.equals(producerValue)
+                        && (AndroidTypeAttr.TYPE_FEATURE.equals(consumerValue)
+                                || AndroidTypeAttr.TYPE_APK.equals(consumerValue))) {
+                    details.compatible();
+                }
+            }
+        }
+    }
+
+    private static final class AndroidTypeAttrDisambRule
+            implements AttributeDisambiguationRule<AndroidTypeAttr> {
+
+        @Inject
+        public AndroidTypeAttrDisambRule() {}
+
+        @Override
+        public void execute(MultipleCandidatesDetails<AndroidTypeAttr> details) {
+            // we should only get here, with both split and aar.
+            Set<AndroidTypeAttr> values = details.getCandidateValues();
+            if (values.size() == 2
+                    && values.contains(AndroidTypeAttr.TYPE_AAR)
+                    && values.contains(AndroidTypeAttr.TYPE_FEATURE)) {
+                details.closestMatch(AndroidTypeAttr.TYPE_FEATURE);
+            }
         }
     }
 
