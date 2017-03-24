@@ -16,11 +16,15 @@
 
 package com.android.build.gradle.integration.application;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.PerformanceTestProjects;
 import com.android.builder.model.AndroidProject;
+import com.android.builder.model.SyncIssue;
 import java.io.IOException;
 import java.util.Map;
 import org.junit.Before;
@@ -44,8 +48,26 @@ public class AntennaPodSmokeTest {
     @Test
     public void buildAntennaPod() throws Exception {
         GetAndroidModelAction.ModelContainer<AndroidProject> modelContainer =
-                project.model().getMulti();
+                project.model().ignoreSyncIssues().getMulti();
         Map<String, AndroidProject> models = modelContainer.getModelMap();
+
+        assertThat(models.get(":app").getSyncIssues()).hasSize(1);
+        TruthHelper.assertThat(models.get(":app"))
+                .hasSingleIssue(
+                        SyncIssue.SEVERITY_WARNING,
+                        SyncIssue.TYPE_GENERIC,
+                        null,
+                        "One of the plugins you are using supports Java 8 "
+                                + "language features. To try the support built into"
+                                + " the Android plugin, remove the following from "
+                                + "your build.gradle:\n"
+                                + "    apply plugin: '<plugin_name>'\n"
+                                + "or\n"
+                                + "    plugin {\n"
+                                + "        id '<plugin_name>' version '<version>'\n"
+                                + "    }\n\n"
+                                + "To learn more, go to https://d.android.com/r/"
+                                + "tools/java-8-support-message.html\n");
 
         project.executor().run("clean");
 

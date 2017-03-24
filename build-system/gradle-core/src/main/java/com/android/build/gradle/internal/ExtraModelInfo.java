@@ -116,7 +116,17 @@ public class ExtraModelInfo extends ErrorReporter {
                 // if it's a dependency issue we don't throw right away. we'll
                 // throw during build instead.
                 // but we do log.
-                project.getLogger().warn("WARNING: " + msg);
+                if (errorFormatMode == ErrorFormatMode.MACHINE_PARSABLE) {
+                    Message message =
+                            new Message(
+                                    Message.Kind.WARNING,
+                                    msg,
+                                    SourceFilePosition.UNKNOWN,
+                                    SourceFilePosition.UNKNOWN);
+                    project.getLogger().warn(machineReadableMessage(message));
+                } else {
+                    project.getLogger().warn("WARNING: " + msg);
+                }
                 issue = new SyncIssueImpl(type, severity, data, msg);
                 break;
             case IDE_LEGACY:

@@ -25,15 +25,14 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
 import java.io.IOException;
-import java.util.Locale;
-import org.junit.Ignore;
 import org.junit.Rule;
+import org.junit.Test;
 
 /**
- * Test to verify we emit sync warning when Jack is enabled, and that we ignore that setting. Remove
- * this test once we remove jackOptions from the DSL.
+ * Test to verify we emit sync warning when Jack is enabled. Remove this test once we remove
+ * jackOptions from the DSL.
  */
-public class JackDisabledTest {
+public class JackDeprecatedTest {
 
     @Rule
     public GradleTestProject project =
@@ -41,7 +40,7 @@ public class JackDisabledTest {
                     .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
                     .create();
 
-    @Ignore("http://b.android.com/241060")
+    @Test
     public void checkWarningEmitted() throws IOException, InterruptedException {
         TestFileUtils.appendToFile(
                 project.getBuildFile(), "android.defaultConfig.jackOptions.enabled true");
@@ -52,13 +51,19 @@ public class JackDisabledTest {
                         SyncIssue.SEVERITY_WARNING,
                         SyncIssue.TYPE_GENERIC,
                         null,
-                        "Jack toolchain has been deprecated, and will not run. "
-                                + "Please delete the 'jackOptions { ... }' block from your build "
-                                + "file, as it will be incompatible with next version of the "
-                                + "Android plugin for Gradle.");
+                        "The Jack toolchain is deprecated. To enable support for Java 8 "
+                                + "language features, remove 'jackOptions { ... }' from your "
+                                + "build.gradle file, and add\n\n"
+                                + "android.compileOptions.sourceCompatibility 1.8\n"
+                                + "android.compileOptions.targetCompatibility 1.8\n\n"
+                                + "Future versions of the plugin will not support usage of "
+                                + "'jackOptions' in build.gradle.\n"
+                                + "To learn more, go to "
+                                + "https://d.android.com/r/tools/java-8-support-message.html\n");
 
+        // assert that we still run Jack
         GradleBuildResult result = project.executor().run("assembleDebug");
-        result.getNotUpToDateTasks()
-                .forEach(task -> assertThat(task.toLowerCase(Locale.US)).doesNotContain("jack"));
+        assertThat(result.getNotUpToDateTasks())
+                .contains(":transformJackAndJavaSourcesWithJackCompileForDebug");
     }
 }
