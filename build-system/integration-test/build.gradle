@@ -27,6 +27,7 @@ dependencies {
     compile project(':base:sdk-common')
     compile project(':base:testing-infrastructure:device-pool:device-provider')
     compile project(':base:testutils')
+    compile project(':base:java-lib-model')
 
     compile gradleApi()
     compile libs.apache_commons_io
