@@ -109,7 +109,9 @@ public class DesugarTransform extends Transform {
     @NonNull private final WaitableExecutor<Void> waitableExecutor;
     private boolean verbose;
 
-    private Map<Path, Path> cacheMisses = Maps.newHashMap();
+    @NonNull private Map<Path, Path> cacheMisses = Maps.newHashMap();
+
+    @Nullable private Path tmpDirForClasspathJars = null;
 
     public DesugarTransform(
             @NonNull Supplier<List<File>> androidJarClasspath,
@@ -190,6 +192,8 @@ public class DesugarTransform extends Transform {
             throw new TransformException(e);
         } catch (Exception e) {
             throw new TransformException(e);
+        } finally {
+            removeTmpClasspathJars();
         }
     }
 
@@ -275,7 +279,8 @@ public class DesugarTransform extends Transform {
     }
 
     @NonNull
-    private List<Path> getClasspath(@NonNull TransformInvocation transformInvocation) {
+    private List<Path> getClasspath(@NonNull TransformInvocation transformInvocation)
+            throws IOException {
         Iterator<Path> inputs =
                 TransformInputUtil.getAllFiles(transformInvocation.getInputs())
                         .stream()
@@ -291,9 +296,12 @@ public class DesugarTransform extends Transform {
         Iterator<Path> androidBootclasspath =
                 androidJarClasspath.get().stream().map(File::toPath).iterator();
 
+        tmpDirForClasspathJars = Files.createTempDirectory("desugar_classpath");
+        assert tmpDirForClasspathJars != null;
+
         return Lists.newArrayList(Iterators.concat(inputs, referenced, androidBootclasspath))
                 .stream()
-                .map(DesugarTransform::convertDirToJar)
+                .map(e -> convertDirToJar(e, tmpDirForClasspathJars))
                 .collect(Collectors.toList());
     }
 
@@ -410,14 +418,14 @@ public class DesugarTransform extends Transform {
 
     /** Tmp solution until support for classpath directories is added to Desugar. */
     @NonNull
-    private static Path convertDirToJar(@NonNull Path input) {
+    private static Path convertDirToJar(@NonNull Path input, @NonNull Path tmpDir) {
         if (Files.isRegularFile(input)) {
             return input;
         }
 
         Path jarPath;
         try {
-            jarPath = Files.createTempFile(null, SdkConstants.DOT_JAR);
+            jarPath = Files.createTempFile(tmpDir, null, SdkConstants.DOT_JAR);
             jarPath.toFile().deleteOnExit();
         } catch (IOException e) {
             throw new UncheckedIOException(
@@ -447,6 +455,25 @@ public class DesugarTransform extends Transform {
         }
 
         return jarPath;
+    }
+
+    private void removeTmpClasspathJars() throws IOException {
+        if (tmpDirForClasspathJars != null) {
+            // delete the tmp files where classpath for desugar got zipped
+            Files.list(tmpDirForClasspathJars)
+                    .forEach(
+                            f -> {
+                                try {
+                                    Files.delete(f);
+                                } catch (IOException ignored) {
+                                    // best effort, keep on going
+                                    logger.verbose(
+                                            "Unable to remove Desugar classpath tmp file "
+                                                    + f.toString());
+                                }
+                            });
+            Files.delete(tmpDirForClasspathJars);
+        }
     }
 
     @NonNull
