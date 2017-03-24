@@ -33,6 +33,7 @@ import com.android.ide.common.blame.SourceFile;
 import com.android.ide.common.blame.SourceFilePosition;
 import com.android.ide.common.blame.SourcePosition;
 import com.android.ide.common.rendering.api.ResourceValue;
+import com.android.repository.testframework.MockFileOp;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 import com.android.testutils.TestResources;
@@ -974,7 +975,9 @@ public class ResourceMergerTest extends BaseTestCase {
                 mergingLog.find(
                         new SourceFilePosition(destFile, new SourcePosition(2,5,-1)));
 
-        assertEquals(new SourcePosition(2, 4, 55, 2, 51, 102), original.getPosition());
+        int extraOffset = new MockFileOp().isWindows() ? 2 : 0; // Account for \r on Windows
+        assertEquals(new SourcePosition(2, 4, 55 + extraOffset, 2, 51, 102 + extraOffset),
+                original.getPosition());
         assertTrue(original.getFile().getSourceFile().getAbsolutePath().endsWith(
                 "basicValues/overlay/values/values.xml".replace('/', File.separatorChar)));
 
