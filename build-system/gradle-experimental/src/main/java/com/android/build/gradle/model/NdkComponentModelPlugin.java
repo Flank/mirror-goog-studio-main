@@ -396,20 +396,42 @@ public class NdkComponentModelPlugin implements Plugin<Project> {
             final NativeLibrarySpec library = specs.get(ndkConfig.getModuleName());
 
             final ImmutableSet.Builder<String> builder = ImmutableSet.builder();
-            for(Abi abi : NdkHandler.getAbiList()) {
+            Iterable<Abi> defaultAbiList =
+                    ndkHandler.isConfigured()
+                            ? ndkHandler.getDefaultAbis()
+                            : NdkHandler.getAbiList();
+            for (Abi abi : defaultAbiList) {
                 builder.add(abi.getName());
             }
-            final ImmutableSet<String> supportedAbis = builder.build();
+            final ImmutableSet<String> defaultAbis = builder.build();
 
             binaries.withType(
                     AndroidBinaryInternal.class,
                     binary -> {
                         binary.computeMergedNdk(
-                                ndkConfig,
-                                binary.getProductFlavors(),
-                                binary.getBuildType());
+                                ndkConfig, binary.getProductFlavors(), binary.getBuildType());
                         if (binary.getMergedNdkConfig().getAbiFilters().isEmpty()) {
-                            binary.getMergedNdkConfig().getAbiFilters().addAll(supportedAbis);
+                            binary.getMergedNdkConfig().getAbiFilters().addAll(defaultAbis);
+                        } else {
+                            for (String filter : binary.getMergedNdkConfig().getAbiFilters()) {
+                                Abi abiFilter = Abi.getByName(filter);
+                                if (abiFilter == null) {
+                                    throw new InvalidUserDataException(
+                                            "ABI filter '"
+                                                    + filter
+                                                    + "' is not a valid ABI.  "
+                                                    + "Supported ABI are:\n"
+                                                    + ndkHandler.getSupportedAbis());
+                                } else if (!ndkHandler.getSupportedAbis().contains(abiFilter)) {
+                                    throw new InvalidUserDataException(
+                                            "ABI filter '"
+                                                    + filter
+                                                    + "' is no longer supported in "
+                                                    + "NDK version r"
+                                                    + ndkHandler.getRevision()
+                                                    + ".");
+                                }
+                            }
                         }
 
                         if (library != null) {
@@ -419,12 +441,11 @@ public class NdkComponentModelPlugin implements Plugin<Project> {
                                             binary.getBuildType(),
                                             binary.getProductFlavors());
                             for (NativeLibraryBinarySpec nativeBin : nativeBinaries) {
-                                if (binary.getMergedNdkConfig().getAbiFilters().contains(
-                                        nativeBin.getTargetPlatform().getName())) {
+                                if (binary.getMergedNdkConfig()
+                                        .getAbiFilters()
+                                        .contains(nativeBin.getTargetPlatform().getName())) {
                                     NdkConfiguration.configureBinary(
-                                            nativeBin,
-                                            binary.getMergedNdkConfig(),
-                                            ndkHandler);
+                                            nativeBin, binary.getMergedNdkConfig(), ndkHandler);
                                     binary.getNativeBinaries().add(nativeBin);
                                 }
                             }

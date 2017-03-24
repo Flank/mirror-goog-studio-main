@@ -26,12 +26,23 @@ import com.android.repository.Revision;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.FileUtils;
+import com.android.utils.ImmutableCollectors;
 import com.android.utils.Pair;
 import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
+import com.google.gson.Gson;
+import com.google.gson.JsonParseException;
+import com.google.gson.reflect.TypeToken;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.stream.Collectors;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.logging.Logging;
 
@@ -40,12 +51,62 @@ import org.gradle.api.logging.Logging;
  */
 public class DefaultNdkInfo implements NdkInfo {
 
+    private static final String ABI_LIST_FILE = "meta/abis.json";
+
     private final File root;
+
+    private final List<AbiInfo> abiInfoList;
 
     private final Map<Pair<Toolchain, Abi>, String> defaultToolchainVersions = Maps.newHashMap();
 
     public DefaultNdkInfo(@NonNull File root) {
         this.root = root;
+        File abiFile = new File(root, ABI_LIST_FILE);
+        if (abiFile.isFile()) {
+            Map<String, AbiInfo> infoMap;
+            try {
+                infoMap =
+                        new Gson()
+                                .fromJson(
+                                        new FileReader(abiFile),
+                                        new TypeToken<Map<String, AbiInfo>>() {}.getType());
+            } catch (FileNotFoundException e) {
+                throw new RuntimeException("Unreachable. Unable to find abi list file: " + abiFile);
+            } catch (JsonParseException e) {
+                Logging.getLogger(this.getClass())
+                        .warn(
+                                "WARNING: Error parsing ABI metadata file '"
+                                        + abiFile
+                                        + "'.  Using "
+                                        + "default ABI list.");
+                abiInfoList = getDefaultAbiInfoList();
+                return;
+            }
+            ImmutableList.Builder<AbiInfo> builder = ImmutableList.builder();
+            for (Map.Entry<String, AbiInfo> entry : infoMap.entrySet()) {
+                Abi abi = Abi.getByName(entry.getKey());
+                if (abi == null) {
+                    Logging.getLogger(this.getClass())
+                            .warn(
+                                    "WARNING: Ignoring invalid ABI '"
+                                            + entry.getKey()
+                                            + "' found in ABI metadata file '"
+                                            + abiFile
+                                            + "'.");
+                    continue;
+                }
+                builder.add(new AbiInfo(abi, entry.getValue().isDeprecated()));
+            }
+            abiInfoList = builder.build();
+        } else {
+            abiInfoList = getDefaultAbiInfoList();
+        }
+    }
+
+    private static List<AbiInfo> getDefaultAbiInfoList() {
+        return Arrays.stream(Abi.values())
+                .map(abi -> new AbiInfo(abi, false))
+                .collect(ImmutableCollectors.toImmutableList());
     }
 
     @Override
@@ -419,5 +480,42 @@ public class DefaultNdkInfo implements NdkInfo {
                         getDefaultToolchainVersion(Toolchain.GCC, abi)),
                 abi);
         return new DefaultStlNativeToolSpecification(this, spec, stl);
+    }
+
+    @NonNull
+    @Override
+    public Collection<Abi> getDefault32BitsAbis() {
+        return abiInfoList
+                .stream()
+                .filter(abiInfo -> !abiInfo.isDeprecated())
+                .map(AbiInfo::getAbi)
+                .filter(abi -> !abi.supports64Bits())
+                .collect(Collectors.toList());
+    }
+
+    @NonNull
+    @Override
+    public Collection<Abi> getDefaultAbis() {
+        return abiInfoList
+                .stream()
+                .filter(abiInfo -> !abiInfo.isDeprecated())
+                .map(AbiInfo::getAbi)
+                .collect(Collectors.toList());
+    }
+
+    @NonNull
+    @Override
+    public Collection<Abi> getSupported32BitsAbis() {
+        return abiInfoList
+                .stream()
+                .map(AbiInfo::getAbi)
+                .filter(abi -> !abi.supports64Bits())
+                .collect(Collectors.toList());
+    }
+
+    @NonNull
+    @Override
+    public Collection<Abi> getSupportedAbis() {
+        return abiInfoList.stream().map(AbiInfo::getAbi).collect(Collectors.toList());
     }
 }

@@ -391,6 +391,18 @@ public class NdkHandler {
      */
     @NonNull
     public Collection<Abi> getSupportedAbis() {
+        if (ndkInfo != null) {
+            return supports64Bits() ? ndkInfo.getSupportedAbis() : ndkInfo.getSupported32BitsAbis();
+        }
+        return supports64Bits() ? getAbiList() : getAbiList32();
+    }
+
+    /** Returns a list of supported ABI. */
+    @NonNull
+    public Collection<Abi> getDefaultAbis() {
+        if (ndkInfo != null) {
+            return supports64Bits() ? ndkInfo.getDefaultAbis() : ndkInfo.getDefault32BitsAbis();
+        }
         return supports64Bits() ? getAbiList() : getAbiList32();
     }
 
