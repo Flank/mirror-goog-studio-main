@@ -941,7 +941,7 @@ public class XmlPrettyPrinterTest {
                         "<myroot baz=\"baz\" foo=\"bar\"><mychild/><hasComment><!--This is my comment--></hasComment><hasText>  This is my text  </hasText></myroot>",
                 xml);
 
-        xml = XmlPrettyPrinter.prettyPrint(doc, false);
+        xml = prettyPrint(doc);
         assertEquals(""
                 + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                 + "<myroot\n"
@@ -990,7 +990,7 @@ public class XmlPrettyPrinterTest {
                 + "</resources>",
                 formatted);
 
-        formatted = XmlPrettyPrinter.prettyPrint(doc, false);
+        formatted = prettyPrint(doc);
         assertEquals(""
                 + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                 + "<resources>\n"
@@ -1019,7 +1019,7 @@ public class XmlPrettyPrinterTest {
         String formatted = XmlUtils.toXml(doc);
         assertEquals(xml, formatted);
 
-        xml = XmlPrettyPrinter.prettyPrint(doc, false);
+        xml = prettyPrint(doc);
         assertEquals(""
                 + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                 + "<root>\n"
@@ -1056,7 +1056,7 @@ public class XmlPrettyPrinterTest {
                 + "</resources>",
                 formatted);
 
-        xml = XmlPrettyPrinter.prettyPrint(doc, false);
+        xml = prettyPrint(doc);
         assertEquals(""
                 + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                 + "<resources>\n"
@@ -1088,7 +1088,7 @@ public class XmlPrettyPrinterTest {
                 + "<!-- ============== --><!-- Generic styles --><!-- ============== --><root/>",
                 xml);
 
-        xml = XmlPrettyPrinter.prettyPrint(doc, false);
+        xml = prettyPrint(doc);
         assertEquals(""
                 + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                 + "<!-- ============== -->\n"
@@ -1111,7 +1111,7 @@ public class XmlPrettyPrinterTest {
         Document doc = parse(xml);
         assertNotNull(doc);
 
-        xml = XmlPrettyPrinter.prettyPrint(doc, false);
+        xml = prettyPrint(doc);
         assertEquals(""
                 + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                 + "<resources>\n"
@@ -1145,7 +1145,7 @@ public class XmlPrettyPrinterTest {
         Document doc = parse(xml);
         assertNotNull(doc);
 
-        xml = XmlPrettyPrinter.prettyPrint(doc, false);
+        xml = prettyPrint(doc);
         assertEquals(""
                 + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                 + "<resources xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\">\n"
@@ -1176,7 +1176,7 @@ public class XmlPrettyPrinterTest {
         Document doc = parse(xml);
         assertNotNull(doc);
 
-        xml = XmlPrettyPrinter.prettyPrint(doc, false);
+        xml = prettyPrint(doc);
         assertEquals(""
                 + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                 + "<resources xmlns:xliff=\"urn:oasis:names:tc:xliff:document:1.2\">\n"
@@ -1200,7 +1200,7 @@ public class XmlPrettyPrinterTest {
         Document doc = parse(xml);
         assertNotNull(doc);
 
-        xml = XmlPrettyPrinter.prettyPrint(doc, false);
+        xml = prettyPrint(doc);
         assertEquals(""
                 + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                 + "<!-- Comment -->\n"
@@ -1432,13 +1432,20 @@ public class XmlPrettyPrinterTest {
             String testPath = testFile == null
                     ? XmlPrettyPrinterTest.class.getName() : testFile.getPath();
             String pathName = "$TESTFILE";
-            assertEquals(expectedError, error.toString().replace(testPath, pathName));
-            assertEquals(expectedOutput, output.toString().replace(testPath, pathName));
+            assertEquals(expectedError,
+                    error.toString().replace(testPath, pathName).replace("\r", ""));
+            assertEquals(expectedOutput,
+                    output.toString().replace(testPath, pathName).replace("\r", ""));
             assertEquals(expectedExitStatus, exitStatus);
         } finally {
             System.setOut(previousOut);
             System.setErr(previousErr);
         }
+    }
+
+    private static String prettyPrint(@NonNull Node node) {
+        return XmlPrettyPrinter.prettyPrint(node, XmlFormatPreferences.defaults(),
+                XmlFormatStyle.get(node), "\n", false);
     }
 
     private enum ExitStatus {
