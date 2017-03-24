@@ -297,7 +297,9 @@ final class ConnectionHandler implements Runnable {
         readFully(payloadBytes);
         String payload = new String(payloadBytes, US_ASCII);
 
-        String[] splitPayload = payload.split(":", 2);
+        // The track-jdwp packet comes without a trailing colon, so we need to special-case it
+        String[] splitPayload =
+                payload.equals("track-jdwp") ? new String[] {payload, ""} : payload.split(":", 2);
         if (splitPayload.length < 2) {
             sendFailWithReason("Invalid host command: " + payload);
             return null;

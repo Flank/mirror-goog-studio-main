@@ -27,10 +27,14 @@ public class ClientState {
     @NonNull
     private final String mPackageName;
 
-    ClientState(int pid, int uid, @NonNull String packageName) {
+    // Whether this client is waiting for a debugger connection or not
+    private boolean mWaiting;
+
+    ClientState(int pid, int uid, @NonNull String packageName, boolean isWaiting) {
         mPid = pid;
         mUid = uid;
         mPackageName = packageName;
+        mWaiting = isWaiting;
     }
 
     public int getPid() {
@@ -44,5 +48,9 @@ public class ClientState {
     @NonNull
     public String getPackageName() {
         return mPackageName;
+    }
+
+    public boolean getIsWaiting() {
+        return mWaiting;
     }
 }
