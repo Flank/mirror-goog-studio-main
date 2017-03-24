@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.ide.common.blame.SourceFilePosition;
 import com.android.ide.common.blame.SourcePosition;
+import com.android.repository.testframework.MockFileOp;
 import com.android.testutils.TestResources;
 import com.android.utils.XmlUtils;
 import java.io.File;
@@ -259,7 +260,8 @@ public class ResourceSetTest extends BaseTestCase {
         List<ResourceItem> resources = resourceSet.getDataMap().get(stringKey);
         assertNotNull(resources);
         assertFalse(resources.isEmpty());
-        assertEquals(new SourcePosition(13, 4, 529, 13, 53, 578),
+        int extraOffset = new MockFileOp().isWindows() ? 13 : 0;  // Account for \r on Windows
+        assertEquals(new SourcePosition(13, 4, 529 + extraOffset, 13, 53, 578 + extraOffset),
                      XmlUtils.getSourceFilePosition(resources.get(0).getValue()).getPosition());
 
         // Try without positions.
