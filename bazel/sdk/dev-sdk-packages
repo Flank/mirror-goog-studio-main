@@ -4,11 +4,13 @@
 platform-tools:{adb*,api/*,package.xml,*.dll}
 
 # Build tools
+build-tools;26.0.0-rc1
 build-tools;25.0.1
 build-tools;25.0.0
 build-tools;24.0.3
 
 # Platforms. There's no Google APIs for 25.
+platforms;android-O
 platforms;android-25
 platforms;android-24
 add-ons;addon-google_apis-google-24:**:docs/**
