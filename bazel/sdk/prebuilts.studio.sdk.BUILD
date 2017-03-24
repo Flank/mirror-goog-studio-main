@@ -9,6 +9,12 @@ filegroup(
 )
 
 filegroup(
+    name = "build-tools/latest-preview",
+    srcs = [":build-tools/26.0.0-rc1"],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
     name = "build-tools/latest",
     srcs = [":build-tools/25.0.1"],
     visibility = ["//visibility:public"],
@@ -18,6 +24,13 @@ filegroup(
     name = "build-tools/minimum",
     srcs = [":build-tools/25.0.0"],
     visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "build-tools/26.0.0-rc1",
+    srcs = glob(
+        include = ["*/build-tools/26.0.0-rc1/**"],
+    ),
 )
 
 filegroup(
@@ -126,6 +139,12 @@ filegroup(
     visibility = ["//visibility:public"],
 )
 
+filegroup(
+    name = "platforms/latest-preview",
+    srcs = [":platforms/android-O"],
+    visibility = ["//visibility:public"],
+)
+
 java_import(
     name = "platforms/latest_jar",
     jars = glob(["*/platforms/android-25/android.jar"]),
@@ -144,6 +163,10 @@ filegroup(
 
 # Version-specific rule left private in hopes we can depend on platforms/latest instead.
 # TODO: Migrate the packages below that depend on specific versions.
+platform_filegroup(
+    name = "platforms/android-O",
+)
+
 platform_filegroup(
     name = "platforms/android-25",
 )
