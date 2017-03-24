@@ -60,9 +60,14 @@ public class FeatureSplitDeclaration {
         if (persistedFile == null) {
             throw new FileNotFoundException("No feature split declaration present");
         }
+        return load(persistedFile);
+    }
+
+    @NonNull
+    public static FeatureSplitDeclaration load(@NonNull File input) throws FileNotFoundException {
         GsonBuilder gsonBuilder = new GsonBuilder();
         Gson gson = gsonBuilder.create();
-        return gson.fromJson(new FileReader(persistedFile), FeatureSplitDeclaration.class);
+        return gson.fromJson(new FileReader(input), FeatureSplitDeclaration.class);
     }
 
     @Nullable

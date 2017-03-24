@@ -20,10 +20,8 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclaration;
+import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitPackageIds;
 import java.io.File;
-import java.io.FileReader;
-import org.gradle.internal.impldep.com.google.gson.Gson;
-import org.gradle.internal.impldep.com.google.gson.GsonBuilder;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -50,15 +48,24 @@ public class FeatureTest {
     public void build() throws Exception {
         // just run test for now.
         sProject.execute("assemble");
+
+        // check the feature declaration file presence.
         GradleTestProject featureProject = sProject.getSubproject(":feature");
         File featureSplit =
                 featureProject.getIntermediateFile(
                         "feature-split/declaration/release/feature-split.json");
         assertThat(featureSplit.exists());
-        Gson gson = new GsonBuilder().create();
         FeatureSplitDeclaration featureSplitDeclaration =
-                gson.fromJson(new FileReader(featureSplit), FeatureSplitDeclaration.class);
+                FeatureSplitDeclaration.load(featureSplit);
         assertThat(featureSplitDeclaration).isNotNull();
         assertThat(featureSplitDeclaration.getUniqueIdentifier()).isEqualTo(":feature");
+
+        // check the base feature declared the list of features and their associated IDs.
+        GradleTestProject baseProject = sProject.getSubproject(":baseFeature");
+        File idsList = baseProject.getIntermediateFile("feature-split/ids/debug/package_ids.json");
+        assertThat(idsList.exists());
+        FeatureSplitPackageIds packageIds = FeatureSplitPackageIds.load(idsList);
+        assertThat(packageIds).isNotNull();
+        assertThat(packageIds.getIdFor(":feature")).isEqualTo(FeatureSplitPackageIds.BASE_ID);
     }
 }
