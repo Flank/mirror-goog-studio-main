@@ -28,6 +28,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.API_ELEMENTS;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.FEATURE_ELEMENTS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS;
 import static com.android.builder.model.AndroidProject.FD_GENERATED;
 import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
@@ -252,6 +253,16 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         if (configTypes.contains(RUNTIME_ELEMENTS)) {
             publishArtifactToConfiguration(
                     publishConfiguration.getRuntimeElements(), file, builtBy, artifactType);
+        }
+
+        if (configTypes.contains(FEATURE_ELEMENTS)
+                && getVariantData().getVariantDependency().getManifestSplitConfiguration()
+                        != null) {
+            publishArtifactToConfiguration(
+                    getVariantData().getVariantDependency().getManifestSplitConfiguration(),
+                    file,
+                    builtBy,
+                    artifactType);
         }
 
         artifactMap.put(artifactType, createCollection(file, builtBy));

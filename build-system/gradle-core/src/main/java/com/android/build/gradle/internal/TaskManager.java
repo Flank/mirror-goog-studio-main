@@ -278,7 +278,7 @@ public abstract class TaskManager {
     @NonNull protected final ToolingModelBuilderRegistry toolingRegistry;
     @NonNull protected final GlobalScope globalScope;
     @NonNull protected final Recorder recorder;
-    @NonNull private final AndroidTaskRegistry androidTasks;
+    @NonNull protected final AndroidTaskRegistry androidTasks;
     @NonNull private final DependencyManager dependencyManager;
     @NonNull private final Logger logger;
     @Nullable private final FileCache buildCache;
