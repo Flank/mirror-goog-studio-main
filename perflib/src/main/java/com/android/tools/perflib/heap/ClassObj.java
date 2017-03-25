@@ -102,6 +102,10 @@ public class ClassObj extends Instance implements Comparable<ClassObj> {
         mClassLoaderId = classLoader;
     }
 
+    public final long getClassLoaderId() {
+        return mClassLoaderId;
+    }
+
     public int getAllFieldsCount() {
         int result = 0;
         ClassObj clazz = this;
