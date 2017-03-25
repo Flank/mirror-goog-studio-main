@@ -53,6 +53,8 @@ public class DesugarAppTest {
         GradleBuildResult result = project.executor().run("assembleDebug");
         assertThat(result.getNotUpToDateTasks())
                 .doesNotContain(":transformClassesWithDesugarForDebug");
+
+        assertThat(result.getNotUpToDateTasks()).doesNotContain(":extractJava8LangSupportJar");
     }
 
     @Test
@@ -60,6 +62,7 @@ public class DesugarAppTest {
         enableDesugar();
         GradleBuildResult result = project.executor().run("assembleDebug");
         assertThat(result.getNotUpToDateTasks()).contains(":transformClassesWithDesugarForDebug");
+        assertThat(result.getNotUpToDateTasks()).contains(":extractJava8LangSupportJar");
     }
 
     @Test

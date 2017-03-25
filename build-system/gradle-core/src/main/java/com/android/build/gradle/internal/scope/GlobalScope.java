@@ -41,6 +41,7 @@ import java.io.File;
 import java.util.Set;
 import java.util.function.Supplier;
 import org.gradle.api.Project;
+import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /**
@@ -62,6 +63,8 @@ public class GlobalScope extends TaskOutputHolderImpl
 
     // TODO: Remove mutable state from this class.
     @Nullable private File mockableAndroidJarFile;
+
+    @Nullable private ConfigurableFileCollection java8LangSupportJar = null;
 
     public GlobalScope(
             @NonNull Project project,
@@ -250,5 +253,20 @@ public class GlobalScope extends TaskOutputHolderImpl
     @NonNull
     public FileCache getProjectLevelCache() {
         return projectLevelCache.get();
+    }
+
+    @NonNull
+    public ConfigurableFileCollection getJava8LangSupportJar() {
+        if (java8LangSupportJar == null) {
+            java8LangSupportJar =
+                    getProject()
+                            .files(
+                                    FileUtils.join(
+                                            getIntermediatesDir(),
+                                            "processing-tools",
+                                            "java8-lang-support",
+                                            "desugar.jar"));
+        }
+        return java8LangSupportJar;
     }
 }

@@ -92,6 +92,7 @@ import com.android.build.gradle.internal.tasks.AndroidReportTask;
 import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.DependencyReportTask;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
+import com.android.build.gradle.internal.tasks.ExtractJava8LangSupportJar;
 import com.android.build.gradle.internal.tasks.ExtractProguardFiles;
 import com.android.build.gradle.internal.tasks.FileSupplier;
 import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
@@ -465,6 +466,12 @@ public abstract class TaskManager {
                 task.consumable = true;
             }
         });
+
+        ExtractJava8LangSupportJar.ConfigAction extractConfig =
+                new ExtractJava8LangSupportJar.ConfigAction(
+                        globalScope.getJava8LangSupportJar(), ExtractJava8LangSupportJar.TASK_NAME);
+        androidTasks.create(tasks, extractConfig);
+        globalScope.getJava8LangSupportJar().builtBy(ExtractJava8LangSupportJar.TASK_NAME);
     }
 
     // This is for config attribute debugging
@@ -2192,6 +2199,7 @@ public abstract class TaskManager {
                             globalScope.getProjectLevelCache(),
                             minSdkVersion,
                             androidBuilder.getJavaProcessExecutor(),
+                            globalScope.getJava8LangSupportJar(),
                             project.getLogger().isEnabled(LogLevel.INFO));
             transformManager.addTransform(tasks, variantScope, desugarTransform);
         }
