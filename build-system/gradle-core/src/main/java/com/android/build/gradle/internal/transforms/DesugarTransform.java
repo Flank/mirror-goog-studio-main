@@ -73,6 +73,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import org.gradle.api.file.FileCollection;
 
 /** Desugar all Java 8 bytecode. */
 public class DesugarTransform extends Transform {
@@ -106,6 +107,7 @@ public class DesugarTransform extends Transform {
     @NonNull private final FileCache projectCache;
     private final int minSdk;
     @NonNull private final JavaProcessExecutor executor;
+    @NonNull private FileCollection java8LangSupportJar;
     @NonNull private final WaitableExecutor<Void> waitableExecutor;
     private boolean verbose;
 
@@ -120,6 +122,7 @@ public class DesugarTransform extends Transform {
             @NonNull FileCache projectCache,
             int minSdk,
             @NonNull JavaProcessExecutor executor,
+            @NonNull FileCollection java8LangSupportJar,
             boolean verbose) {
         this.androidJarClasspath = androidJarClasspath;
         this.compilationBootclasspath = splitBootclasspath(compilationBootclasspath);
@@ -127,6 +130,7 @@ public class DesugarTransform extends Transform {
         this.projectCache = projectCache;
         this.minSdk = minSdk;
         this.executor = executor;
+        this.java8LangSupportJar = java8LangSupportJar;
         this.waitableExecutor = WaitableExecutor.useGlobalSharedThreadPool();
         this.verbose = verbose;
     }
@@ -169,6 +173,8 @@ public class DesugarTransform extends Transform {
 
         compilationBootclasspath.forEach(
                 file -> files.add(SecondaryFile.nonIncremental(file.toFile())));
+
+        files.add(SecondaryFile.nonIncremental(java8LangSupportJar));
 
         return files.build();
     }
@@ -261,6 +267,7 @@ public class DesugarTransform extends Transform {
                     () -> {
                         DesugarProcessBuilder processBuilder =
                                 new DesugarProcessBuilder(
+                                        java8LangSupportJar.getSingleFile().toPath(),
                                         verbose,
                                         buckets.get(bucketId),
                                         classpath,

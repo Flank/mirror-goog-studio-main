@@ -41,6 +41,7 @@ import java.io.File;
 import java.util.Set;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Project;
+import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /**
@@ -77,6 +78,8 @@ public class GlobalScope implements TransformGlobalScope {
     private final FileCache buildCache;
 
     @Nullable private FileCache projectLevelCache = null;
+
+    @Nullable private ConfigurableFileCollection java8LangSupportJar = null;
 
     public GlobalScope(
             @NonNull Project project,
@@ -283,5 +286,20 @@ public class GlobalScope implements TransformGlobalScope {
                     + "be disabled by setting "
                     + "-Pandroid.enableImprovedDependenciesResolution=false.");
         }
+    }
+
+    @NonNull
+    public ConfigurableFileCollection getJava8LangSupportJar() {
+        if (java8LangSupportJar == null) {
+            java8LangSupportJar =
+                    getProject()
+                            .files(
+                                    FileUtils.join(
+                                            getIntermediatesDir(),
+                                            "processing-tools",
+                                            "java8-lang-support",
+                                            "desugar.jar"));
+        }
+        return java8LangSupportJar;
     }
 }
