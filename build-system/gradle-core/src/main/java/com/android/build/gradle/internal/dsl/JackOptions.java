@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.dsl;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.core.ErrorReporter;
+import com.android.builder.model.SyncIssue;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
@@ -36,9 +37,15 @@ import java.util.Map;
 public class JackOptions implements CoreJackOptions {
 
     static final String DEPRECATION_WARNING =
-            "Jack toolchain has been deprecated, and will not run. "
-                    + "Please delete the 'jackOptions { ... }' block from your build file, as "
-                    + "it will be incompatible with next version of the Android plugin for Gradle.";
+            "The Jack toolchain is deprecated. To enable support for Java 8 language features, "
+                    + "remove 'jackOptions { ... }' from your "
+                    + "build.gradle file, and add\n\n"
+                    + "android.compileOptions.sourceCompatibility 1.8\n"
+                    + "android.compileOptions.targetCompatibility 1.8\n\n"
+                    + "Future versions of the plugin will not support usage of 'jackOptions' "
+                    + "in build.gradle.\n"
+                    + "To learn more, go to "
+                    + "https://d.android.com/r/tools/java-8-support-message.html\n";
 
     @Nullable
     private Boolean isEnabledFlag;
@@ -70,6 +77,7 @@ public class JackOptions implements CoreJackOptions {
     }
 
     public void setEnabled(@Nullable Boolean enabled) {
+        errorReporter.handleSyncWarning(null, SyncIssue.TYPE_GENERIC, DEPRECATION_WARNING);
         isEnabledFlag = enabled;
     }
 

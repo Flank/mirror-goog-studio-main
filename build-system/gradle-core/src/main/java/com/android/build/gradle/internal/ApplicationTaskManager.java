@@ -252,8 +252,6 @@ public class ApplicationTaskManager extends TaskManager {
         if (java8LangSupport == VariantScope.Java8LangSupport.JACK) {
             createJackTask(tasks, variantScope);
         } else {
-            // Allow java 1.8 only for some configurations, which would otherwise cause an
-            // internal javac error.
             if (variantScope
                     .getGlobalScope()
                     .getExtension()
@@ -264,21 +262,31 @@ public class ApplicationTaskManager extends TaskManager {
                 if (java8LangSupport != VariantScope.Java8LangSupport.DESUGAR) {
                     // Only warn for users of retrolambda and dexguard
                     if (java8LangSupport == VariantScope.Java8LangSupport.EXTERNAL_PLUGIN) {
-                        getLogger()
-                                .warn(
-                                        "Jack is disabled, but one of the plugins you "
-                                                + "are using supports Java 8 language "
-                                                + "features.");
+                        androidBuilder
+                                .getErrorReporter()
+                                .handleSyncWarning(
+                                        null,
+                                        SyncIssue.TYPE_GENERIC,
+                                        "One of the plugins you are using supports Java 8 "
+                                                + "language features. To try the support built into"
+                                                + " the Android plugin, remove the following from "
+                                                + "your build.gradle:\n"
+                                                + "    apply plugin: '<plugin_name>'\n"
+                                                + "or\n"
+                                                + "    plugin {\n"
+                                                + "        id '<plugin_name>' version '<version>'\n"
+                                                + "    }\n\n"
+                                                + "To learn more, go to https://d.android.com/r/"
+                                                + "tools/java-8-support-message.html\n");
                     } else {
                         androidBuilder
                                 .getErrorReporter()
                                 .handleSyncError(
                                         variantScope.getVariantConfiguration().getFullName(),
-                                        SyncIssue.TYPE_JACK_REQUIRED_FOR_JAVA_8_LANGUAGE_FEATURES,
-                                        "Jack is required to support java 8 language "
-                                                + "features. Either enable Jack or remove "
-                                                + "sourceCompatibility "
-                                                + "JavaVersion.VERSION_1_8.");
+                                        SyncIssue.TYPE_GENERIC,
+                                        "Please add 'android.enableDesugar=true' to your "
+                                                + "gradle.properties file to enable Java 8 "
+                                                + "language support.");
                     }
                 }
             }
