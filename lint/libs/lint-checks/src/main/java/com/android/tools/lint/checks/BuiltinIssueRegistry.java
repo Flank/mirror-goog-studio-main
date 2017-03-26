@@ -143,7 +143,6 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(IconDetector.ICON_DIP_SIZE);
         issues.add(IconDetector.ICON_EXPECTED_SIZE);
         issues.add(IconDetector.ICON_EXTENSION);
-        issues.add(IconDetector.ICON_LAUNCHER_FORMAT);
         issues.add(IconDetector.ICON_LAUNCHER_SHAPE);
         issues.add(IconDetector.ICON_LOCATION);
         issues.add(IconDetector.ICON_MISSING_FOLDER);
