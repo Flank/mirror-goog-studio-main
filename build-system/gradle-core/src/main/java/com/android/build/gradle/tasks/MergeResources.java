@@ -482,7 +482,7 @@ public class MergeResources extends IncrementalTask {
         }
 
         // add the folder based next
-        List<ResourceSet> sourceFolderSets = sourceFolderInputs.getLastValue();
+        List<ResourceSet> sourceFolderSets = sourceFolderInputs.get();
         resourceSets.addAll(sourceFolderSets);
 
         // We add the generated folders to the main set
