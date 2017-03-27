@@ -43,7 +43,7 @@ public enum IntegerOption implements Option<Integer> {
      *
      * <p>For preview versions that is the last stable version + 1.
      */
-    IDE_TARGET_FEATURE_LEVEL(AndroidProject.PROPERTY_BUILD_API),
+    IDE_TARGET_API_LEVEL(AndroidProject.PROPERTY_BUILD_API),
 
     IDE_VERSION_CODE_OVERRIDE(AndroidProject.PROPERTY_VERSION_CODE),
     ;
