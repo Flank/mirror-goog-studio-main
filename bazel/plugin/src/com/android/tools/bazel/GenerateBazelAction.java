@@ -264,11 +264,6 @@ public class GenerateBazelAction extends AnAction {
 
         progress.append("Saving BUILD files...\n");
         bazel.generate(progress);
-
-        for (Map.Entry<String, String> entry : config.getCopySpec().entrySet()) {
-            FileUtil.copy(new File(workspace, entry.getKey()), new File(workspace, entry.getValue()));
-
-        }
         progress.append("Done.\n");
     }
 
