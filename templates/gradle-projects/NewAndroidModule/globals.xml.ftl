@@ -25,7 +25,7 @@
     <global id="instantAppProjectName" type="string" value="instantapp" />
     <global id="monolithicAppProjectName" type="string" value="app" />
     <global id="instantAppPackageName" type="string" value="${packageName}.instantapp" />
-    <global id="baseLibPackageName" type="string" value="${packageName}.baselib" />
+    <global id="baseLibPackageName" type="string" value="${instantAppPackageName!packageName}.baselib" />
 
     <global id="splitOut" type="string" value="${escapeXmlAttribute(splitDir!('./'+splitName!""))}" />
     <global id="instantAppOut" type="string" value="${escapeXmlAttribute(instantAppDir!'./instantapp')}" />
