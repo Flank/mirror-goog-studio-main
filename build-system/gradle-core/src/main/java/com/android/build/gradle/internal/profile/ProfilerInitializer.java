@@ -23,10 +23,13 @@ import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.ProcessProfileWriterFactory;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
+import org.gradle.BuildAdapter;
 import org.gradle.api.Project;
+import org.gradle.api.invocation.Gradle;
 import org.gradle.initialization.BuildCompletionListener;
 
 /**
@@ -71,15 +74,23 @@ public final class ProfilerInitializer {
             project.getGradle().addListener(recordingBuildListener);
         }
 
-        project.getGradle().addListener(new ProfileShutdownListener(project));
+        project.getGradle().addListener(new ProfileShutdownListener(project.getGradle()));
     }
 
-    private static final class ProfileShutdownListener implements BuildCompletionListener {
+    private static final class ProfileShutdownListener extends BuildAdapter
+            implements BuildCompletionListener {
 
-        private final Project project;
+        private final Gradle gradle;
+        @Nullable private Path profileDir = null;
 
-        ProfileShutdownListener(@NonNull Project project) {
-            this.project = project;
+        ProfileShutdownListener(@NonNull Gradle gradle) {
+            this.gradle = gradle;
+        }
+
+        @Override
+        public void projectsEvaluated(Gradle gradle) {
+            this.profileDir =
+                    gradle.getRootProject().getBuildDir().toPath().resolve(PROFILE_DIRECTORY);
         }
 
         @Override
@@ -87,14 +98,16 @@ public final class ProfilerInitializer {
             try {
                 synchronized (lock) {
                     if (recordingBuildListener != null) {
-                        project.getGradle().removeListener(recordingBuildListener);
+                        gradle.removeListener(recordingBuildListener);
                         recordingBuildListener = null;
-                        ProcessProfileWriterFactory.shutdownAndWrite(
-                                project.getRootProject()
-                                        .getBuildDir()
-                                        .toPath()
-                                        .resolve(PROFILE_DIRECTORY)
-                                        .resolve(PROFILE_FILE_NAME.format(LocalDateTime.now())));
+                        @Nullable
+                        Path profileFile =
+                                profileDir == null
+                                        ? null
+                                        : profileDir.resolve(
+                                                PROFILE_FILE_NAME.format(LocalDateTime.now()));
+
+                        ProcessProfileWriterFactory.shutdownAndMaybeWrite(profileFile);
                     }
                 }
             } catch (InterruptedException e) {

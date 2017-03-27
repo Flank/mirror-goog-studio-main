@@ -133,7 +133,7 @@ public class RecordingBuildListenerTest {
                             return null;
                         });
         listener.afterExecute(task, taskState);
-        ProcessProfileWriterFactory.shutdownAndWrite(mProfileProtoFile);
+        ProcessProfileWriterFactory.shutdownAndMaybeWrite(mProfileProtoFile);
 
         GradleBuildProfile profile = loadProfile();
         assertEquals("Span count", 2, profile.getSpanCount());
@@ -168,7 +168,7 @@ public class RecordingBuildListenerTest {
         listener.afterExecute(task, taskState);
         listener.afterExecute(secondTask, taskState);
 
-        ProcessProfileWriterFactory.shutdownAndWrite(mProfileProtoFile);
+        ProcessProfileWriterFactory.shutdownAndMaybeWrite(mProfileProtoFile);
         GradleBuildProfile profile = loadProfile();
 
         assertEquals(3, profile.getSpanCount());
