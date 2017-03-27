@@ -286,6 +286,11 @@ public class XmlElement extends OrphanXmlElement {
             mergeType = MergeType.MERGE;
         }
 
+        // record the fact the lower priority element is merged into this one.
+        mergingReport
+                .getActionRecorder()
+                .recordNodeAction(lowerPriorityNode, Actions.ActionType.MERGED);
+
         if (mergeType != MergeType.MERGE_CHILDREN_ONLY) {
             // make a copy of all the attributes metadata, it will eliminate elements from this
             // list as it finds them explicitly defined in the lower priority node.

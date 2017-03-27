@@ -23,6 +23,7 @@ import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.GuardedBy;
 import com.android.ide.common.blame.SourceFilePosition;
 import com.android.ide.common.blame.SourcePosition;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -288,13 +289,13 @@ public class ActionRecorder {
     @NonNull
     private synchronized List<Actions.AttributeRecord> getAttributeRecords(@NonNull XmlAttribute attribute) {
         XmlElement originElement = attribute.getOwnerElement();
-        Actions.DecisionTreeRecord nodeDecisionTree = getDecisionTreeRecord(originElement);
+        NodeKey storageKey = originElement.getOriginalId();
+        @Nullable Actions.DecisionTreeRecord nodeDecisionTree = mRecords.get(storageKey);
+        // by now the node should have been added for this element.
+        Preconditions.checkNotNull(nodeDecisionTree, "No record for key [%s]", storageKey);
         List<Actions.AttributeRecord> attributeRecords =
-                nodeDecisionTree.mAttributeRecords.get(attribute.getName());
-        if (attributeRecords == null) {
-            attributeRecords = new ArrayList<Actions.AttributeRecord>();
-            nodeDecisionTree.mAttributeRecords.put(attribute.getName(), attributeRecords);
-        }
+                nodeDecisionTree.mAttributeRecords.computeIfAbsent(
+                        attribute.getName(), k -> new ArrayList<>());
         return attributeRecords;
     }
 

@@ -17,6 +17,7 @@
 package com.android.manifmerger;
 
 import static com.android.manifmerger.PlaceholderHandler.KeyBasedValueResolver;
+import static com.android.testutils.BazelRunfilesManifestProcessor.logger;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -82,13 +83,7 @@ public class PlaceholderHandlerTest extends TestCase {
                 TestUtils.sourceFile(getClass(), "testPlaceholders#xml"), xml);
 
         PlaceholderHandler.visit(
-                ManifestMerger2.MergeType.APPLICATION,
-                refDocument, new KeyBasedValueResolver<String>() {
-                    @Override
-                    public String getValue(@NonNull String key) {
-                        return "newValue";
-                    }
-                }, mBuilder);
+                ManifestMerger2.MergeType.APPLICATION, refDocument, key -> "newValue", mBuilder);
 
         Optional<XmlElement> activityOne = refDocument.getRootNode()
                 .getNodeByTypeAndKey(ManifestModel.NodeTypes.ACTIVITY, ".activityOne");
@@ -137,16 +132,15 @@ public class PlaceholderHandlerTest extends TestCase {
 
         PlaceholderHandler.visit(
                 ManifestMerger2.MergeType.APPLICATION,
-                refDocument, new KeyBasedValueResolver<String>() {
-                    @Override
-                    public String getValue(@NonNull String key) {
-                        if (key.equals("first")) {
-                            return "firstValue";
-                        } else {
-                            return "secondValue";
-                        }
+                refDocument,
+                key -> {
+                    if (key.equals("first")) {
+                        return "firstValue";
+                    } else {
+                        return "secondValue";
                     }
-                }, mBuilder);
+                },
+                mBuilder);
 
         Optional<XmlElement> activityOne = refDocument.getRootNode()
                 .getNodeByTypeAndKey(ManifestModel.NodeTypes.ACTIVITY, ".activityOne");
@@ -222,4 +216,30 @@ public class PlaceholderHandlerTest extends TestCase {
                 any(SourceFilePosition.class),
                 eq(MergingReport.Record.Severity.INFO), anyString());
     }
+
+    public void testPlaceHolder_change_keyId()
+            throws ParserConfigurationException, SAXException, IOException {
+        String xml =
+                ""
+                        + "<manifest\n"
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
+                        + "    <activity android:name=\"${activityName}\"\n"
+                        + "         android:attr1=\"value\"/>\n"
+                        + "</manifest>";
+
+        XmlDocument refDocument =
+                TestUtils.xmlDocumentFromString(
+                        TestUtils.sourceFile(getClass(), "testPlaceholders#xml"), xml);
+
+        MergingReport.Builder builder = new MergingReport.Builder(logger);
+        PlaceholderHandler.visit(
+                ManifestMerger2.MergeType.APPLICATION, refDocument, key -> ".activityOne", builder);
+
+        Optional<XmlElement> activityOne =
+                refDocument
+                        .getRootNode()
+                        .getNodeByTypeAndKey(ManifestModel.NodeTypes.ACTIVITY, ".activityOne");
+        assertTrue(activityOne.isPresent());
+    }
+
 }
