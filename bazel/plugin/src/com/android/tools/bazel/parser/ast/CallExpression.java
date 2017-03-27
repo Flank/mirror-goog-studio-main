@@ -148,6 +148,15 @@ public class CallExpression extends Expression {
                 values.stream().map(Object::toString).collect(Collectors.toList()));
             list.setSingleLine(values.size() <= 1);
             setArgument(name, list);
+        } else {
+            removeArgument(name);
+        }
+    }
+
+    private void removeArgument(String name) {
+        Argument arg = getNamedArgument(name);
+        if (arg != null) {
+            arguments.remove(arg);
         }
     }
 

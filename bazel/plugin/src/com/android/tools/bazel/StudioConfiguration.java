@@ -60,16 +60,9 @@ public class StudioConfiguration implements Configuration {
             || rule.getLabel().startsWith("//tools/vendor/google3/blaze/")
             || rule.getName().endsWith("devkit")  // Kotlin compilation fails
             || rule.getName().endsWith("devkit-tests")  // depends on devkit
-            || rule.getName().endsWith("community-main_and_others")  // big nasty build-graph cycle
+            || rule.getName().endsWith("community-main")  // big nasty not needed module
             || rule.getName().endsWith("community-main-tests")  // depends on community-main
             || rule.getName().endsWith("android-uitests")  // depends on community-main
             || rule.getName().endsWith("lldb-integration-tests");  // depends on community-main
-    }
-
-    @Override
-    public Map<String, String> getCopySpec() {
-        return ImmutableMap.of(
-                "tools/BUILD", "tools/base/bazel/tools.idea.BUILD"
-        );
     }
 }
