@@ -38,6 +38,7 @@ import com.android.builder.core.DefaultApiVersion;
 import com.android.builder.core.ErrorReporter;
 import com.android.builder.core.JackProcessOptions;
 import com.android.ide.common.process.JavaProcessExecutor;
+import com.android.repository.Revision;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.SdkVersionInfo;
@@ -104,12 +105,14 @@ public class JackGenerateDexTransformTest {
     public static void setUpJackFiles()
             throws IOException, TransformException, InterruptedException {
         AndroidSdkHandler handler = AndroidSdkHandler.getInstance(TestUtils.getSdk());
+        Range<Revision> acceptedVersions =
+                Range.closedOpen(AndroidBuilder.MIN_BUILD_TOOLS_REV, new Revision(26, 0, 0, 1));
         buildToolInfo =
                 BuildToolInfo.fromLocalPackage(
                         Verify.verifyNotNull(
                                 handler.getPackageInRange(
                                         SdkConstants.FD_BUILD_TOOLS,
-                                        Range.atLeast(AndroidBuilder.MIN_BUILD_TOOLS_REV),
+                                        acceptedVersions,
                                         new FakeProgressIndicator())));
         errorReporter = new NoOpErrorReporter();
         noOpJavaExecutor = (javaProcessInfo, processOutputHandler) -> null;
