@@ -38,6 +38,7 @@ import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 import java.io.File;
 import org.intellij.lang.annotations.Language;
+import org.junit.Ignore;
 
 @SuppressWarnings({"javadoc", "ClassNameDiffersFromFileName"})
 public class ApiDetectorTest extends AbstractCheckTest {
@@ -3565,7 +3566,8 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 ));
     }
 
-    public void testMissingApiDatabase() throws Exception {
+    @Ignore("http://b.android.com/266795")
+    public void ignore_testMissingApiDatabase() throws Exception {
         ApiLookup.dispose();
         //noinspection all // Sample code
         checkApiCheck(""
@@ -4280,7 +4282,8 @@ public class ApiDetectorTest extends AbstractCheckTest {
         );
     }
 
-    public void testHigherCompileSdkVersionThanPlatformTools() throws Exception {
+    @Ignore("http://b.android.com/266795")
+    public void ignore_testHigherCompileSdkVersionThanPlatformTools() throws Exception {
         // Warn if the platform tools are too old on the system
         lint().files(
                 manifest().minSdk(14),
@@ -4292,7 +4295,8 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         + "Error: The SDK platform-tools version \\([^)]+\\) is too old to check APIs compiled with API 400; please update");
     }
 
-    public void testHigherCompileSdkVersionThanPlatformToolsInEditor() throws Exception {
+    @Ignore("http://b.android.com/266795")
+    public void ignore_testHigherCompileSdkVersionThanPlatformToolsInEditor() throws Exception {
         // When editing a file we place the error on the first line of the file instead
         lint().files(
                 manifest().minSdk(14),
