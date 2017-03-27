@@ -342,6 +342,10 @@ struct CodeIr {
     Dissasemble();
   }
 
+  // No-copy/move semantics
+  CodeIr(const CodeIr&) = delete;
+  CodeIr& operator=(const CodeIr&) = delete;
+
   void Assemble();
 
   void Accept(Visitor* visitor) {

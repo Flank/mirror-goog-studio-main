@@ -127,6 +127,7 @@ ir::Class* Reader::GetClass(dex::u4 index) {
     auto newClass = ParseClass(index);
     CHECK(p == dummy);
     p = newClass;
+    dex_ir_->classes_indexes.MarkUsedIndex(index);
   }
   CHECK(p != dummy);
   return p;
@@ -143,6 +144,7 @@ ir::Type* Reader::GetType(dex::u4 index) {
     auto newType = ParseType(index);
     CHECK(p == dummy);
     p = newType;
+    dex_ir_->types_indexes.MarkUsedIndex(index);
   }
   CHECK(p != dummy);
   return p;
@@ -159,6 +161,7 @@ ir::FieldDecl* Reader::GetFieldDecl(dex::u4 index) {
     auto newField = ParseFieldDecl(index);
     CHECK(p == dummy);
     p = newField;
+    dex_ir_->fields_indexes.MarkUsedIndex(index);
   }
   CHECK(p != dummy);
   return p;
@@ -175,6 +178,7 @@ ir::MethodDecl* Reader::GetMethodDecl(dex::u4 index) {
     auto newMethod = ParseMethodDecl(index);
     CHECK(p == dummy);
     p = newMethod;
+    dex_ir_->methods_indexes.MarkUsedIndex(index);
   }
   CHECK(p != dummy);
   return p;
@@ -191,6 +195,7 @@ ir::Proto* Reader::GetProto(dex::u4 index) {
     auto newProto = ParseProto(index);
     CHECK(p == dummy);
     p = newProto;
+    dex_ir_->protos_indexes.MarkUsedIndex(index);
   }
   CHECK(p != dummy);
   return p;
@@ -207,6 +212,7 @@ ir::String* Reader::GetString(dex::u4 index) {
     auto newString = ParseString(index);
     CHECK(p == dummy);
     p = newString;
+    dex_ir_->strings_indexes.MarkUsedIndex(index);
   }
   CHECK(p != dummy);
   return p;
@@ -365,7 +371,7 @@ ir::FieldAnnotation* Reader::ParseFieldAnnotation(const dex::u1** pptr) {
   auto dex_field_annotation = reinterpret_cast<const dex::FieldAnnotationsItem*>(*pptr);
   auto ir_field_annotation = dex_ir_->Alloc<ir::FieldAnnotation>();
 
-  ir_field_annotation->field = GetFieldDecl(dex_field_annotation->field_idx);
+  ir_field_annotation->field_decl = GetFieldDecl(dex_field_annotation->field_idx);
 
   ir_field_annotation->annotations =
       ExtractAnnotationSet(dex_field_annotation->annotations_off);
@@ -380,7 +386,7 @@ ir::MethodAnnotation* Reader::ParseMethodAnnotation(const dex::u1** pptr) {
       reinterpret_cast<const dex::MethodAnnotationsItem*>(*pptr);
   auto ir_method_annotation = dex_ir_->Alloc<ir::MethodAnnotation>();
 
-  ir_method_annotation->method = GetMethodDecl(dex_method_annotation->method_idx);
+  ir_method_annotation->method_decl = GetMethodDecl(dex_method_annotation->method_idx);
 
   ir_method_annotation->annotations =
       ExtractAnnotationSet(dex_method_annotation->annotations_off);
@@ -395,7 +401,7 @@ ir::ParamAnnotation* Reader::ParseParamAnnotation(const dex::u1** pptr) {
       reinterpret_cast<const dex::ParameterAnnotationsItem*>(*pptr);
   auto ir_param_annotation = dex_ir_->Alloc<ir::ParamAnnotation>();
 
-  ir_param_annotation->method = GetMethodDecl(dex_param_annotation->method_idx);
+  ir_param_annotation->method_decl = GetMethodDecl(dex_param_annotation->method_idx);
 
   ir_param_annotation->annotations =
       ExtractAnnotationSetRefList(dex_param_annotation->annotations_off);
@@ -416,7 +422,7 @@ ir::EncodedField* Reader::ParseEncodedField(const dex::u1** pptr, dex::u4* base_
   }
   *base_index = field_index;
 
-  ir_encoded_field->field = GetFieldDecl(field_index);
+  ir_encoded_field->decl = GetFieldDecl(field_index);
   ir_encoded_field->access_flags = dex::ReadULeb128(pptr);
 
   return ir_encoded_field;
@@ -772,7 +778,7 @@ ir::EncodedMethod* Reader::ParseEncodedMethod(const dex::u1** pptr, dex::u4* bas
   }
   *base_index = method_index;
 
-  ir_encoded_method->method = GetMethodDecl(method_index);
+  ir_encoded_method->decl = GetMethodDecl(method_index);
   ir_encoded_method->access_flags = dex::ReadULeb128(pptr);
 
   dex::u4 code_offset = dex::ReadULeb128(pptr);
@@ -854,8 +860,7 @@ ir::String* Reader::ParseString(dex::u4 index) {
   auto data = GetStringData(index);
   auto cstr = data;
   dex::ReadULeb128(&cstr);
-  size_t size =
-      (cstr - data) + ::strlen(reinterpret_cast<const char*>(cstr)) + 1;
+  size_t size = (cstr - data) + ::strlen(reinterpret_cast<const char*>(cstr)) + 1;
 
   ir_string->data = slicer::MemView(data, size);
   ir_string->orig_index = index;

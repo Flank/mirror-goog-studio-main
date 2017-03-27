@@ -22,6 +22,7 @@
 #include "dex_format.h"
 #include "dex_leb128.h"
 #include "buffer.h"
+#include "index_map.h"
 
 #include <stdlib.h>
 #include <map>
@@ -202,7 +203,7 @@ struct FieldDecl : public IndexedNode {
 struct EncodedField : public Node {
   IR_TYPE;
 
-  FieldDecl* field;
+  FieldDecl* decl;
   dex::u4 access_flags;
 };
 
@@ -241,7 +242,7 @@ struct MethodDecl : public IndexedNode {
 struct EncodedMethod : public Node {
   IR_TYPE;
 
-  MethodDecl* method;
+  MethodDecl* decl;
   Code* code;
   dex::u4 access_flags;
   Class* parent_class;
@@ -277,21 +278,21 @@ struct AnnotationSetRefList : public Node {
 struct FieldAnnotation : public Node {
   IR_TYPE;
 
-  FieldDecl* field;
+  FieldDecl* field_decl;
   AnnotationSet* annotations;
 };
 
 struct MethodAnnotation : public Node {
   IR_TYPE;
 
-  MethodDecl* method;
+  MethodDecl* method_decl;
   AnnotationSet* annotations;
 };
 
 struct ParamAnnotation : public Node {
   IR_TYPE;
 
-  MethodDecl* method;
+  MethodDecl* method_decl;
   AnnotationSetRefList* annotations;
 };
 
@@ -362,6 +363,15 @@ struct DexFile {
 
   // original .dex header "magic" signature
   slicer::MemView magic;
+
+  // keep track of the used index values
+  // (so we can easily allocate new ones)
+  IndexMap strings_indexes;
+  IndexMap types_indexes;
+  IndexMap protos_indexes;
+  IndexMap fields_indexes;
+  IndexMap methods_indexes;
+  IndexMap classes_indexes;
 
  public:
   DexFile() = default;
