@@ -58,9 +58,7 @@ public abstract class XmlNode {
         return mOriginalId;
     }
 
-    /**
-     * Returns an unique id within the manifest file for the element.
-     */
+    /** Returns an unique id within the manifest file for the element. */
     @NonNull
     public abstract NodeKey getId();
 

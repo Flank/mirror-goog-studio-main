@@ -128,18 +128,28 @@ public class PlaceholderHandler {
                 }
                 // append the last remainder (without placeholders) in the result string.
                 resultString.append(inputString);
+
                 xmlAttribute.getXml().setValue(resultString.toString());
 
-                for (int i = 0; i < injected; i++) {
-                    // record the attribute set
+                if (injected > 0) {
+                    // record the action on the element, as it may be the first time we
+                    // encounter changes on it.
                     mergingReportBuilder
                             .getActionRecorder()
-                            .recordAttributeAction(
-                                    xmlAttribute,
-                                    SourcePosition.UNKNOWN,
-                                    Actions.ActionType.INJECTED,
-                                    null /* attributeOperationType */);
+                            .recordNodeAction(xmlElement, Actions.ActionType.INJECTED);
+
+                    for (int i = 0; i < injected; i++) {
+                        // record the attribute set
+                        mergingReportBuilder
+                                .getActionRecorder()
+                                .recordAttributeAction(
+                                        xmlAttribute,
+                                        SourcePosition.UNKNOWN,
+                                        Actions.ActionType.INJECTED,
+                                        null /* attributeOperationType */);
+                    }
                 }
+
             }
         }
         for (XmlElement childElement : xmlElement.getMergeableElements()) {
