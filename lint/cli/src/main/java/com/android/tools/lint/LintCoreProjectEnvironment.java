@@ -17,22 +17,30 @@
 package com.android.tools.lint;
 
 import com.android.annotations.NonNull;
+import com.google.common.collect.Sets;
 import com.intellij.core.CoreApplicationEnvironment;
+import com.intellij.core.JavaCoreApplicationEnvironment;
 import com.intellij.core.JavaCoreProjectEnvironment;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.extensions.Extensions;
 import com.intellij.openapi.extensions.ExtensionsArea;
 import com.intellij.openapi.util.Disposer;
+import com.intellij.openapi.vfs.StandardFileSystems;
+import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.openapi.vfs.VirtualFileSystem;
 import com.intellij.psi.PsiElementFinder;
 import com.intellij.psi.impl.PsiTreeChangePreprocessor;
 import com.intellij.psi.impl.file.impl.JavaFileManager;
+import java.io.File;
+import java.util.List;
+import java.util.Set;
 
 public class LintCoreProjectEnvironment extends JavaCoreProjectEnvironment {
     @NonNull
-    public static LintCoreProjectEnvironment create() {
-        Disposable parentDisposable = Disposer.newDisposable();
-        return new LintCoreProjectEnvironment(parentDisposable,
-                LintCoreApplicationEnvironment.get());
+    public static LintCoreProjectEnvironment create(
+            @NonNull Disposable parentDisposable,
+            @NonNull JavaCoreApplicationEnvironment applicationEnvironment) {
+        return new LintCoreProjectEnvironment(parentDisposable, applicationEnvironment);
     }
 
     @Override
@@ -40,8 +48,10 @@ public class LintCoreProjectEnvironment extends JavaCoreProjectEnvironment {
         super.preregisterServices();
 
         ExtensionsArea area = Extensions.getArea(getProject());
-        CoreApplicationEnvironment.registerExtensionPoint(area, PsiTreeChangePreprocessor.EP_NAME, PsiTreeChangePreprocessor.class);
-        CoreApplicationEnvironment.registerExtensionPoint(area, PsiElementFinder.EP_NAME, PsiElementFinder.class);
+        CoreApplicationEnvironment.registerExtensionPoint(area,
+                PsiTreeChangePreprocessor.EP_NAME, PsiTreeChangePreprocessor.class);
+        CoreApplicationEnvironment.registerExtensionPoint(area,
+                PsiElementFinder.EP_NAME, PsiElementFinder.class);
     }
 
     public LintCoreProjectEnvironment(Disposable parentDisposable,
@@ -57,5 +67,30 @@ public class LintCoreProjectEnvironment extends JavaCoreProjectEnvironment {
     @Override
     protected JavaFileManager createCoreFileManager() {
         return super.createCoreFileManager();
+    }
+
+    public void registerPaths(@NonNull List<File> classpath) {
+        int expectedSize = classpath.size();
+        Set<File> files = Sets.newHashSetWithExpectedSize(expectedSize);
+
+        VirtualFileSystem local = StandardFileSystems.local();
+
+        for (File path : classpath) {
+            if (files.contains(path)) {
+                continue;
+            }
+            files.add(path);
+
+            if (path.exists()) {
+                if (path.isFile()) {
+                    addJarToClassPath(path);
+                } else if (path.isDirectory()) {
+                    VirtualFile virtualFile = local.findFileByPath(path.getPath());
+                    if (virtualFile != null) {
+                        addSourcesToClasspath(virtualFile);
+                    }
+                }
+            }
+        }
     }
 }

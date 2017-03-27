@@ -16,7 +16,6 @@
 
 package com.android.tools.lint;
 
-import com.android.annotations.NonNull;
 import com.intellij.codeInsight.ContainerProvider;
 import com.intellij.codeInsight.ExternalAnnotationsManager;
 import com.intellij.codeInsight.InferredAnnotationsManager;
@@ -36,6 +35,7 @@ import com.intellij.openapi.extensions.ExtensionsArea;
 import com.intellij.openapi.fileTypes.FileTypeExtensionPoint;
 import com.intellij.openapi.fileTypes.PlainTextFileType;
 import com.intellij.openapi.util.Disposer;
+import com.intellij.openapi.vfs.impl.ZipHandler;
 import com.intellij.psi.FileContextProvider;
 import com.intellij.psi.PsiElementFinder;
 import com.intellij.psi.augment.PsiAugmentProvider;
@@ -53,31 +53,71 @@ import org.jetbrains.uast.UastContext;
 import org.jetbrains.uast.UastLanguagePlugin;
 
 public class LintCoreApplicationEnvironment extends JavaCoreApplicationEnvironment {
-    private static LintCoreApplicationEnvironment environment;
+    private static final Object APPLICATION_LOCK = new Object();
 
-    @NonNull
+    private static LintCoreApplicationEnvironment ourApplicationEnvironment;
+    private static int ourProjectCount;
+
     public static LintCoreApplicationEnvironment get() {
-        if (environment == null) {
-            Disposable parentDisposable = Disposer.newDisposable();
-            environment = createApplicationEnvironment(parentDisposable);
-        }
+        synchronized (APPLICATION_LOCK) {
+            if (ourApplicationEnvironment != null) {
+                return ourApplicationEnvironment;
+            }
 
-        return environment;
+            Disposable parentDisposable = Disposer.newDisposable();
+            ourApplicationEnvironment = createApplicationEnvironment(parentDisposable);
+            ourProjectCount = 0;
+            Disposer.register(parentDisposable, () -> {
+                synchronized (APPLICATION_LOCK) {
+                    ourApplicationEnvironment = null;
+                }
+            });
+
+            return ourApplicationEnvironment;
+        }
     }
 
     public LintCoreApplicationEnvironment(Disposable parentDisposable) {
         super(parentDisposable);
     }
 
-    private static LintCoreApplicationEnvironment createApplicationEnvironment(Disposable parentDisposable/*, List<String> configFilePaths*/) {
+    private static LintCoreApplicationEnvironment createApplicationEnvironment(
+            Disposable parentDisposable) {
+        // We don't bundle .dll files in the Gradle plugin for native file system access;
+        // prevent warning logs on Windows when it's not found (see b.android.com/260180)
+        System.setProperty("idea.use.native.fs.for.win", "false");
+
         Extensions.cleanRootArea(parentDisposable);
         registerAppExtensionPoints();
-        LintCoreApplicationEnvironment applicationEnvironment = new LintCoreApplicationEnvironment(parentDisposable);
+        LintCoreApplicationEnvironment applicationEnvironment =
+                new LintCoreApplicationEnvironment(parentDisposable);
 
         registerApplicationServicesForCLI(applicationEnvironment);
         registerApplicationServices(applicationEnvironment);
 
+        synchronized (APPLICATION_LOCK) {
+            ourProjectCount++;
+        }
+
         return applicationEnvironment;
+    }
+
+    public static void clearAccessorCache() {
+        synchronized (APPLICATION_LOCK) {
+            ZipHandler.clearFileAccessorCache();
+        }
+    }
+
+    public static void disposeApplicationEnvironment() {
+        synchronized (APPLICATION_LOCK) {
+            LintCoreApplicationEnvironment environment = ourApplicationEnvironment;
+            if (environment == null) {
+                return;
+            }
+            ourApplicationEnvironment = null;
+            Disposer.dispose(environment.getParentDisposable());
+            ZipHandler.clearFileAccessorCache();
+        }
     }
 
     private static void registerAppExtensionPoints() {

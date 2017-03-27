@@ -39,6 +39,7 @@ import com.android.tools.lint.EcjParser;
 import com.android.tools.lint.ExternalAnnotationRepository;
 import com.android.tools.lint.LintCliClient;
 import com.android.tools.lint.LintCliFlags;
+import com.android.tools.lint.LintCoreApplicationEnvironment;
 import com.android.tools.lint.Reporter;
 import com.android.tools.lint.Reporter.Stats;
 import com.android.tools.lint.TextReporter;
@@ -327,6 +328,8 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         for (File f : files) {
             deleteFile(f);
         }
+
+        LintCoreApplicationEnvironment.disposeApplicationEnvironment();
 
         return result;
     }

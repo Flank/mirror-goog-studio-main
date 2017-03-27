@@ -17,6 +17,9 @@
 package com.android.tools.lint.detector.api;
 
 import com.android.tools.lint.client.api.JavaParser.TypeDescriptor;
+import com.android.utils.Pair;
+import com.intellij.openapi.Disposable;
+import com.intellij.openapi.util.Disposer;
 import com.intellij.psi.JavaRecursiveElementVisitor;
 import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiFile;
@@ -39,7 +42,11 @@ import org.jetbrains.uast.visitor.AbstractUastVisitor;
 public class TypeEvaluatorTest extends TestCase {
     private static void checkUast(Object expected, @Language("JAVA") String source,
             final String targetVariable) {
-        JavaContext context = LintUtilsTest.parseUast(source, new File("src/test/pkg/Test.java"));
+        Pair<JavaContext, Disposable> pair =
+                LintUtilsTest.parseUast(source, new File("src/test/pkg/Test.java"));
+        JavaContext context = pair.getFirst();
+        Disposable disposable = pair.getSecond();
+
         assertNotNull(context);
         UFile uFile = context.getUastFile();
         assertNotNull(uFile);
@@ -76,11 +83,15 @@ public class TypeEvaluatorTest extends TestCase {
                 assertEquals(expectedString, actual.getCanonicalText());
             }
         }
+        Disposer.dispose(disposable);
     }
 
     private static void checkPsi(Object expected, @Language("JAVA") String source,
             final String targetVariable) {
-        JavaContext context = LintUtilsTest.parsePsi(source, new File("src/test/pkg/Test.java"));
+        Pair<JavaContext, Disposable> pair =
+                LintUtilsTest.parsePsi(source, new File("src/test/pkg/Test.java"));
+        JavaContext context = pair.getFirst();
+        Disposable disposable = pair.getSecond();
         assertNotNull(context);
         PsiFile javaFile = context.getJavaFile();
         assertNotNull(javaFile);
@@ -115,6 +126,7 @@ public class TypeEvaluatorTest extends TestCase {
                 assertEquals(expectedString, actual.getCanonicalText());
             }
         }
+        Disposer.dispose(disposable);
     }
 
     private static void check(Object expected, @Language("JAVA") String source,

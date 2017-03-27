@@ -24,6 +24,7 @@ import static org.junit.Assert.fail;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.tools.lint.LintCoreApplicationEnvironment;
 import com.android.tools.lint.Warning;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
@@ -62,7 +63,7 @@ public class TestLintResult {
     private int maxLineLength;
 
     TestLintResult(@NonNull TestLintTask task, @Nullable String output,
-            @Nullable Exception e, List<Warning> warnings) {
+            @Nullable Exception e, @NonNull List<Warning> warnings) {
         this.task = task;
         this.output = output;
         this.exception = e;
@@ -91,7 +92,7 @@ public class TestLintResult {
      */
     public TestLintResult expect(@NonNull String expectedText) {
         assertEquals(expectedText, describeOutput());
-
+        cleanup();
         return this;
     }
 
@@ -137,6 +138,7 @@ public class TestLintResult {
      */
     public TestLintResult expectClean() {
         expect("No warnings.");
+        cleanup();
         return this;
     }
 
@@ -253,6 +255,7 @@ public class TestLintResult {
             }
         }
 
+        cleanup();
         return this;
     }
 
@@ -345,6 +348,7 @@ public class TestLintResult {
             fail("Did not find pattern\n  " + regexp + "\n in \n" + output);
         }
 
+        cleanup();
         return this;
     }
 
@@ -393,5 +397,10 @@ public class TestLintResult {
         }
 
         return this;
+    }
+
+    @SuppressWarnings("MethodMayBeStatic")
+    private void cleanup() {
+        LintCoreApplicationEnvironment.disposeApplicationEnvironment();
     }
 }
