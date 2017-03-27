@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.options;
 
+import android.databinding.tool.util.Preconditions;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
@@ -38,6 +39,7 @@ public final class ProjectOptions {
     public static final String PROPERTY_TEST_RUNNER_ARGS =
             "android.testInstrumentationRunnerArguments.";
 
+    private final ImmutableMap<DeprecatedOptions, String> deprecatedOptions;
     private final ImmutableMap<BooleanOption, Boolean> booleanOptions;
     private final ImmutableMap<OptionalBooleanOption, Boolean> optionalBooleanOptions;
     private final ImmutableMap<IntegerOption, Integer> integerOptions;
@@ -46,6 +48,7 @@ public final class ProjectOptions {
     private final EnumOptions enumOptions;
 
     public ProjectOptions(@NonNull ImmutableMap<String, Object> properties) {
+        deprecatedOptions = readOptions(DeprecatedOptions.values(), properties);
         booleanOptions = readOptions(BooleanOption.values(), properties);
         optionalBooleanOptions = readOptions(OptionalBooleanOption.values(), properties);
         integerOptions = readOptions(IntegerOption.values(), properties);
@@ -143,4 +146,25 @@ public final class ProjectOptions {
         return enumOptions;
     }
 
+
+    public boolean hasDeprecatedOptions() {
+        return !deprecatedOptions.isEmpty();
+    }
+
+    @NonNull
+    public String getDeprecatedOptionsErrorMessage() {
+        Preconditions.check(
+                hasDeprecatedOptions(),
+                "Has deprecated options should be checked before calling this method.");
+        StringBuilder builder =
+                new StringBuilder("The following project options are deprecated: \n");
+        deprecatedOptions.forEach(
+                (option, errorMessage) -> {
+                    builder.append(option.getPropertyName())
+                            .append("\n")
+                            .append(errorMessage)
+                            .append("\n\n");
+                });
+        return builder.toString();
+    }
 }

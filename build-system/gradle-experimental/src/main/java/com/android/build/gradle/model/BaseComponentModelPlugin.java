@@ -37,7 +37,6 @@ import com.android.build.gradle.internal.BuildCacheUtils;
 import com.android.build.gradle.internal.ExecutionConfigurationUtil;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.JniLibsLanguageTransform;
-import com.android.build.gradle.internal.LibraryCache;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.NativeBuildConfigGsonUtil;
 import com.android.build.gradle.internal.NativeDependencyLinkage;
@@ -373,8 +372,9 @@ public class BaseComponentModelPlugin implements Plugin<Project>, ToolingRegistr
 
         // TODO: Remove code duplicated from BasePlugin.
         @Model(EXTRA_MODEL_INFO)
-        public static ExtraModelInfo createExtraModelInfo(Project project) {
-            return new ExtraModelInfo(project);
+        public static ExtraModelInfo createExtraModelInfo(
+                Project project, ProjectOptions projectOptions) {
+            return new ExtraModelInfo(projectOptions, project.getLogger());
         }
 
         @Model

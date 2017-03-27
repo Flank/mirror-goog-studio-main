@@ -52,9 +52,6 @@ public class AndroidGradleOptions {
     public static final String PROPERTY_DISABLE_RESOURCE_VALIDATION =
             "android.disableResourceValidation";
 
-    public static final String PROPERTY_INCREMENTAL_JAVA_COMPILE =
-            "android.incrementalJavaCompile";
-
     public static final String DEPRECATED_NDK_COMPILE_LEASE = "android.deprecatedNdkCompileLease";
     public static final long DEPRECATED_NDK_COMPILE_LEASE_DAYS = 60;
     public static final long DEPRECATED_NDK_COMPILE_LEASE_MILLIS =
@@ -337,10 +334,6 @@ public class AndroidGradleOptions {
         }
 
         return defaultValue;
-    }
-
-    public static boolean isJavaCompileIncrementalPropertySet(@NonNull Project project) {
-        return project.hasProperty(PROPERTY_INCREMENTAL_JAVA_COMPILE);
     }
 
     @NonNull

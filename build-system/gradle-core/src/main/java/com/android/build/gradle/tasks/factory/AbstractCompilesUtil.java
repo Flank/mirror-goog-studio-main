@@ -19,10 +19,8 @@ package com.android.build.gradle.tasks.factory;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
-import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.CompileOptions;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.builder.model.SyncIssue;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.ILogger;
@@ -130,19 +128,6 @@ public class AbstractCompilesUtil {
                                 + "as you are using an incompatible plugin",
                         variantScope.getVariantConfiguration().getFullName());
             }
-        }
-
-        if (AndroidGradleOptions.isJavaCompileIncrementalPropertySet(project)) {
-            variantScope.getGlobalScope().getAndroidBuilder().getErrorReporter().handleSyncError(
-                    null,
-                    SyncIssue.TYPE_GENERIC,
-                    String.format(
-                            "The %s property has been replaced by a DSL property. Please add the "
-                                    + "following to your build.gradle instead:\n"
-                                    + "android {\n"
-                                    + "  compileOptions.incremental = false\n"
-                                    + "}",
-                            AndroidGradleOptions.PROPERTY_INCREMENTAL_JAVA_COMPILE));
         }
         return incremental;
     }

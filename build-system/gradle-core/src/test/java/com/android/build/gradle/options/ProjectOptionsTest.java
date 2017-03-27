@@ -114,6 +114,17 @@ public class ProjectOptionsTest {
     }
 
     @Test
+    public void deprecatedOptionUse() {
+        ProjectOptions projectOptions =
+                new ProjectOptions(ImmutableMap.of("android.incrementalJavaCompile", ""));
+
+        assertThat(projectOptions.hasDeprecatedOptions()).isTrue();
+
+        assertThat(projectOptions.getDeprecatedOptionsErrorMessage())
+                .contains("android.incrementalJavaCompile");
+    }
+
+    @Test
     public void ensureUniqueness() {
         List<String> optionsNames =
                 Stream.of(
