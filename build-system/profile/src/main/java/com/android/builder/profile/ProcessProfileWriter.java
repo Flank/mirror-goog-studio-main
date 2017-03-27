@@ -117,7 +117,7 @@ public final class ProcessProfileWriter implements ProfileRecordWriter {
      *
      * <p>Should be called exactly once.
      */
-    synchronized void finishAndWrite(Path outputFile) throws InterruptedException {
+    synchronized void finishAndMaybeWrite(@Nullable Path outputFile) throws InterruptedException {
         checkState(!finished, "Already finished");
         finished = true;
 
@@ -141,20 +141,22 @@ public final class ProcessProfileWriter implements ProfileRecordWriter {
             }
         }
 
-        // Write benchmark file into build directory.
-        try {
-            Files.createDirectories(outputFile.getParent());
-            try (BufferedOutputStream outputStream =
-                    new BufferedOutputStream(
-                            Files.newOutputStream(outputFile, StandardOpenOption.CREATE_NEW))) {
-                mBuild.build().writeTo(outputStream);
-            }
+        // Write benchmark file into build directory, if set.
+        if (outputFile != null) {
+            try {
+                Files.createDirectories(outputFile.getParent());
+                try (BufferedOutputStream outputStream =
+                        new BufferedOutputStream(
+                                Files.newOutputStream(outputFile, StandardOpenOption.CREATE_NEW))) {
+                    mBuild.build().writeTo(outputStream);
+                }
 
-            if (mEnableChromeTracingOutput) {
-                ChromeTracingProfileConverter.toJson(outputFile);
+                if (mEnableChromeTracingOutput) {
+                    ChromeTracingProfileConverter.toJson(outputFile);
+                }
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
             }
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
         }
 
         // Public build profile.
