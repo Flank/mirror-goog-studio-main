@@ -133,7 +133,7 @@ public class GradleVariantConfiguration
         if (targetApiLevel != null && getBuildType().isDebuggable()) {
             // Consider runtime API passed from the IDE only if the app is debuggable.
             int minVersion =
-                    getTargetSdkVersion().getApiLevel() > 0
+                    getTargetSdkVersion().getApiLevel() > 1
                             ? Integer.min(getTargetSdkVersion().getApiLevel(), targetApiLevel)
                             : targetApiLevel;
 
