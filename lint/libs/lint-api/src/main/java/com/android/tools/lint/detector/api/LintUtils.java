@@ -92,8 +92,11 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.intellij.ide.util.JavaAnonymousClassesHelper;
 import com.intellij.psi.CommonClassNames;
+import com.intellij.psi.PsiAnonymousClass;
 import com.intellij.psi.PsiCallExpression;
+import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiClassType;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiImportStatement;
@@ -102,6 +105,8 @@ import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiParenthesizedExpression;
 import com.intellij.psi.PsiType;
 import com.intellij.psi.PsiWhiteSpace;
+import com.intellij.psi.util.ClassUtil;
+import com.intellij.psi.util.PsiTreeUtil;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -140,6 +145,33 @@ import org.w3c.dom.NodeList;
 public class LintUtils {
     // Utility class, do not instantiate
     private LintUtils() {
+    }
+
+    @Nullable
+    public static String getInternalName(@NonNull PsiClass psiClass) {
+        if (psiClass instanceof PsiAnonymousClass) {
+            PsiClass parent = PsiTreeUtil.getParentOfType(psiClass, PsiClass.class);
+            if (parent != null) {
+                String internalName = getInternalName(parent);
+                if (internalName == null) {
+                    return null;
+                }
+                return internalName + JavaAnonymousClassesHelper.getName((PsiAnonymousClass)psiClass);
+            }
+        }
+        String sig = ClassUtil.getJVMClassName(psiClass);
+        if (sig == null) {
+            String qualifiedName = psiClass.getQualifiedName();
+            if (qualifiedName != null) {
+                return ClassContext.getInternalName(qualifiedName);
+            }
+            return null;
+        } else if (sig.indexOf('.') != -1) {
+            // Workaround -- ClassUtil doesn't treat this correctly!
+            // .replace('.', '/');
+            sig = ClassContext.getInternalName(sig);
+        }
+        return sig;
     }
 
     /** Returns the internal method name */

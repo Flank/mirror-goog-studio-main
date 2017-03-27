@@ -24,6 +24,7 @@ import com.android.builder.model.Dependencies;
 import com.android.builder.model.Variant;
 import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.detector.api.ClassContext;
+import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Project;
 import com.google.common.collect.Sets;
 import com.intellij.codeInsight.AnnotationUtil;
@@ -219,29 +220,7 @@ public class DefaultJavaEvaluator extends JavaEvaluator {
     @Override
     @Nullable
     public String getInternalName(@NonNull PsiClass psiClass) {
-        if (psiClass instanceof PsiAnonymousClass) {
-            PsiClass parent = PsiTreeUtil.getParentOfType(psiClass, PsiClass.class);
-            if (parent != null) {
-                String internalName = getInternalName(parent);
-                if (internalName == null) {
-                    return null;
-                }
-                return internalName + JavaAnonymousClassesHelper.getName((PsiAnonymousClass)psiClass);
-            }
-        }
-        String sig = ClassUtil.getJVMClassName(psiClass);
-        if (sig == null) {
-            String qualifiedName = psiClass.getQualifiedName();
-            if (qualifiedName != null) {
-                return ClassContext.getInternalName(qualifiedName);
-            }
-            return null;
-        } else if (sig.indexOf('.') != -1) {
-            // Workaround -- ClassUtil doesn't treat this correctly!
-            // .replace('.', '/');
-            sig = ClassContext.getInternalName(sig);
-        }
-        return sig;
+        return LintUtils.getInternalName(psiClass);
     }
 
     /**

@@ -34,8 +34,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.List;
-import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
-import org.junit.AssumptionViolatedException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -45,26 +43,11 @@ public class ExtractAnnotationsDriverTest {
     @Rule
     public TemporaryFolder mTemporaryFolder = new TemporaryFolder();
 
-    private static void checkValidEcj() {
-        try {
-            CompilerOptions.class.getField("originalComplianceLevel");
-        } catch (Throwable t) {
-            throw new AssumptionViolatedException(
-                    "When this test is run as part of the gradle-core tests, \n"
-                            + "Gradle's own *internal* dependencies are the classpath, \n"
-                            + "which includes an older (3.x) version of ECJ.\n"
-                            + "This causes the test to fail. For now, make the test only run\n"
-                            + " when a valid ECJ is present.");
-        }
-    }
-
     @Test
     public void testProGuard() throws Exception {
-        checkValidEcj();
-
         File androidJar = TestUtils.getPlatformFile("android.jar");
 
-        File project = createProject(mKeepTest, mKeepAnnotation);
+        File project = createProject(keepTest, keepAnnotation);
 
         File output = mTemporaryFolder.newFile("proguard.cfg");
 
@@ -75,8 +58,6 @@ public class ExtractAnnotationsDriverTest {
                 androidJar.getPath(),
 
                 "--quiet",
-                "--language-level",
-                "1.6",
                 "--proguard",
                 output.getPath()
         );
@@ -111,18 +92,18 @@ public class ExtractAnnotationsDriverTest {
 
     @Test
     public void testIncludeClassRetention() throws Exception {
-        checkValidEcj();
-
         File androidJar = TestUtils.getPlatformFile("android.jar");
 
         File project = createProject(
-                mIntDefTest,
-                mPermissionsTest,
-                mManifest,
-                mKeepAnnotation,
-                mIntDefAnnotation,
-                mIntRangeAnnotation,
-                mPermissionAnnotation);
+                packageTest,
+                genericTest,
+                intDefTest,
+                permissionsTest,
+                manifest,
+                keepAnnotation,
+                intDefAnnotation,
+                intRangeAnnotation,
+                permissionAnnotation);
 
         File output = mTemporaryFolder.newFile("annotations.zip");
         File proguard = mTemporaryFolder.newFile("proguard.cfg");
@@ -133,8 +114,6 @@ public class ExtractAnnotationsDriverTest {
                 "--classpath",
                 androidJar.getPath(),
                 "--quiet",
-                "--language-level",
-                "1.6",
                 "--output",
                 output.getPath(),
                 "--proguard",
@@ -145,21 +124,18 @@ public class ExtractAnnotationsDriverTest {
 
         new ExtractAnnotationsDriver().run(args);
 
-        // Check proguard rules
-        assertEquals(""
-                        + "-keep class test.pkg.IntDefTest {\n"
-                        + "    void testIntDef(int)\n"
-                        + "}\n"
-                        + "\n",
-                Files.toString(proguard, Charsets.UTF_8));
-
         // Check extracted annotations
         checkPackageXml("test.pkg", output, ""
                 + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
                 + "<root>\n"
+                + "  <item name=\"test.pkg\">\n"
+                + "    <annotation name=\"android.support.annotation.IntRange\">\n"
+                + "      <val name=\"from\" val=\"20\" />\n"
+                + "    </annotation>\n"
+                + "  </item>\n"
                 + "  <item name=\"test.pkg.IntDefTest void setFlags(java.lang.Object, int) 1\">\n"
                 + "    <annotation name=\"android.support.annotation.IntDef\">\n"
-                + "      <val name=\"value\" val=\"{test.pkg.IntDefTest.STYLE_NORMAL, test.pkg.IntDefTest.STYLE_NO_TITLE, test.pkg.IntDefTest.STYLE_NO_FRAME, test.pkg.IntDefTest.STYLE_NO_INPUT}\" />\n"
+                + "      <val name=\"value\" val=\"{test.pkg.IntDefTest.STYLE_NORMAL, test.pkg.IntDefTest.STYLE_NO_TITLE, test.pkg.IntDefTest.STYLE_NO_FRAME, test.pkg.IntDefTest.STYLE_NO_INPUT, 3, 4}\" />\n"
                 + "      <val name=\"flag\" val=\"true\" />\n"
                 + "    </annotation>\n"
                 + "  </item>\n"
@@ -169,6 +145,22 @@ public class ExtractAnnotationsDriverTest {
                 + "    </annotation>\n"
                 + "    <annotation name=\"android.support.annotation.IntRange\">\n"
                 + "      <val name=\"from\" val=\"20\" />\n"
+                + "    </annotation>\n"
+                + "  </item>\n"
+                + "  <item name=\"test.pkg.IntDefTest.Inner void setInner(int) 0\">\n"
+                + "    <annotation name=\"android.support.annotation.IntDef\">\n"
+                + "      <val name=\"value\" val=\"{test.pkg.IntDefTest.STYLE_NORMAL, test.pkg.IntDefTest.STYLE_NO_TITLE, test.pkg.IntDefTest.STYLE_NO_FRAME, test.pkg.IntDefTest.STYLE_NO_INPUT, 3, 4}\" />\n"
+                + "      <val name=\"flag\" val=\"true\" />\n"
+                + "    </annotation>\n"
+                + "  </item>\n"
+                + "  <item name=\"test.pkg.MyEnhancedList\">\n"
+                + "    <annotation name=\"android.support.annotation.IntRange\">\n"
+                + "      <val name=\"from\" val=\"0\" />\n"
+                + "    </annotation>\n"
+                + "  </item>\n"
+                + "  <item name=\"test.pkg.MyEnhancedList E getReversed(java.util.List&lt;java.lang.String&gt;, java.util.Comparator&lt;? super E&gt;)\">\n"
+                + "    <annotation name=\"android.support.annotation.IntRange\">\n"
+                + "      <val name=\"from\" val=\"10\" />\n"
                 + "    </annotation>\n"
                 + "  </item>\n"
                 + "  <item name=\"test.pkg.PermissionsTest CONTENT_URI\">\n"
@@ -184,26 +176,38 @@ public class ExtractAnnotationsDriverTest {
                 + "      <val name=\"value\" val=\"&quot;android.permission.MY_PERMISSION_STRING&quot;\" />\n"
                 + "    </annotation>\n"
                 + "  </item>\n"
+                + "  <item name=\"test.pkg.PermissionsTest void myMethod2()\">\n"
+                + "    <annotation name=\"android.support.annotation.RequiresPermission\">\n"
+                + "      <val name=\"anyOf\" val=\"{&quot;android.permission.MY_PERMISSION_STRING&quot;, &quot;android.permission.MY_PERMISSION_STRING2&quot;}\" />\n"
+                + "    </annotation>\n"
+                + "  </item>\n"
                 + "</root>\n"
                 + "\n");
+
+        // Check proguard rules
+        assertEquals(""
+                        + "-keep class test.pkg.IntDefTest {\n"
+                        + "    void testIntDef(int)\n"
+                        + "}\n"
+                        + "\n",
+                Files.toString(proguard, Charsets.UTF_8));
+
 
         deleteFile(project);
     }
 
     @Test
     public void testSkipClassRetention() throws Exception {
-        checkValidEcj();
-
         File androidJar = TestUtils.getPlatformFile("android.jar");
 
         File project = createProject(
-                mIntDefTest,
-                mPermissionsTest,
-                mManifest,
-                mKeepAnnotation,
-                mIntDefAnnotation,
-                mIntRangeAnnotation,
-                mPermissionAnnotation);
+                intDefTest,
+                permissionsTest,
+                manifest,
+                keepAnnotation,
+                intDefAnnotation,
+                intRangeAnnotation,
+                permissionAnnotation);
 
         File output = mTemporaryFolder.newFile("annotations.zip");
         File proguard = mTemporaryFolder.newFile("proguard.cfg");
@@ -215,8 +219,6 @@ public class ExtractAnnotationsDriverTest {
                 androidJar.getPath(),
                 "--quiet",
                 "--skip-class-retention",
-                "--language-level",
-                "1.6",
                 "--output",
                 output.getPath(),
                 "--proguard",
@@ -233,7 +235,7 @@ public class ExtractAnnotationsDriverTest {
                 + "<root>\n"
                 + "  <item name=\"test.pkg.IntDefTest void setFlags(java.lang.Object, int) 1\">\n"
                 + "    <annotation name=\"android.support.annotation.IntDef\">\n"
-                + "      <val name=\"value\" val=\"{test.pkg.IntDefTest.STYLE_NORMAL, test.pkg.IntDefTest.STYLE_NO_TITLE, test.pkg.IntDefTest.STYLE_NO_FRAME, test.pkg.IntDefTest.STYLE_NO_INPUT}\" />\n"
+                + "      <val name=\"value\" val=\"{test.pkg.IntDefTest.STYLE_NORMAL, test.pkg.IntDefTest.STYLE_NO_TITLE, test.pkg.IntDefTest.STYLE_NO_FRAME, test.pkg.IntDefTest.STYLE_NO_INPUT, 3, 4}\" />\n"
                 + "      <val name=\"flag\" val=\"true\" />\n"
                 + "    </annotation>\n"
                 + "  </item>\n"
@@ -245,26 +247,29 @@ public class ExtractAnnotationsDriverTest {
                 + "      <val name=\"from\" val=\"20\" />\n"
                 + "    </annotation>\n"
                 + "  </item>\n"
-                + "</root>\n"
-                + "\n");
+                + "  <item name=\"test.pkg.IntDefTest.Inner void setInner(int) 0\">\n"
+                + "    <annotation name=\"android.support.annotation.IntDef\">\n"
+                + "      <val name=\"value\" val=\"{test.pkg.IntDefTest.STYLE_NORMAL, test.pkg.IntDefTest.STYLE_NO_TITLE, test.pkg.IntDefTest.STYLE_NO_FRAME, test.pkg.IntDefTest.STYLE_NO_INPUT, 3, 4}\" />\n"
+                + "      <val name=\"flag\" val=\"true\" />\n"
+                + "    </annotation>\n"
+                + "  </item>\n"
+                + "</root>\n\n");
 
         deleteFile(project);
     }
 
     @Test
     public void testWriteJarRecipeFile() throws Exception {
-        checkValidEcj();
-
         File androidJar = TestUtils.getPlatformFile("android.jar");
 
         File project = createProject(
-                mIntDefTest,
-                mPermissionsTest,
-                mManifest,
-                mKeepAnnotation,
-                mIntDefAnnotation,
-                mIntRangeAnnotation,
-                mPermissionAnnotation);
+                intDefTest,
+                permissionsTest,
+                manifest,
+                keepAnnotation,
+                intDefAnnotation,
+                intRangeAnnotation,
+                permissionAnnotation);
 
         File output = mTemporaryFolder.newFile("annotations.zip");
         File proguard = mTemporaryFolder.newFile("proguard.cfg");
@@ -277,8 +282,6 @@ public class ExtractAnnotationsDriverTest {
                 androidJar.getPath(),
 
                 "--quiet",
-                "--language-level",
-                "1.6",
                 "--output",
                 output.getPath(),
                 "--proguard",
@@ -311,7 +314,7 @@ public class ExtractAnnotationsDriverTest {
         return dir;
     }
 
-    private final TestFile mKeepAnnotation = new TestFile(
+    private final TestFile keepAnnotation = new TestFile(
             "src/android/support/annotation/Keep.java", ""
             + "package android.support.annotation;\n"
             + "import java.lang.annotation.Retention;\n"
@@ -323,7 +326,7 @@ public class ExtractAnnotationsDriverTest {
             + "public @interface Keep {\n"
             + "}\n");
 
-    private final TestFile mIntDefAnnotation = new TestFile(
+    private final TestFile intDefAnnotation = new TestFile(
             "src/android/support/annotation/IntDef.java", ""
             + "package android.support.annotation;\n"
             + "import java.lang.annotation.Retention;\n"
@@ -338,7 +341,7 @@ public class ExtractAnnotationsDriverTest {
             + "    boolean flag() default false;\n"
             + "}\n");
 
-    private final TestFile mIntRangeAnnotation = new TestFile(
+    private final TestFile intRangeAnnotation = new TestFile(
             "src/android/support/annotation/IntRange.java", ""
             + "package android.support.annotation;\n"
             + "\n"
@@ -349,13 +352,15 @@ public class ExtractAnnotationsDriverTest {
             + "import static java.lang.annotation.RetentionPolicy.CLASS;\n"
             + "\n"
             + "@Retention(CLASS)\n"
-            + "@Target({CONSTRUCTOR,METHOD,PARAMETER,FIELD,LOCAL_VARIABLE,ANNOTATION_TYPE})\n"
+            // package is non-sensical here but included so I can use it in the package extraction
+            // test, packageTest
+            + "@Target({CONSTRUCTOR,METHOD,PARAMETER,FIELD,LOCAL_VARIABLE,ANNOTATION_TYPE,PACKAGE})\n"
             + "public @interface IntRange {\n"
             + "    long from() default Long.MIN_VALUE;\n"
             + "    long to() default Long.MAX_VALUE;\n"
             + "}\n");
 
-    private final TestFile mPermissionAnnotation = new TestFile(
+    private final TestFile permissionAnnotation = new TestFile(
             "src/android/support/annotation/RequiresPermission.java", ""
             + "package android.support.annotation;\n"
             + "import java.lang.annotation.Retention;\n"
@@ -380,7 +385,27 @@ public class ExtractAnnotationsDriverTest {
             + "    }\n"
             + "}");
 
-    private final TestFile mIntDefTest = new TestFile("src/test/pkg/IntDefTest.java", ""
+    private final TestFile packageTest = new TestFile("src/test/pkg/package-info.java", ""
+                    + "@IntRange(from = 20)\n"
+                    + "package test.pkg;\n"
+                    + "\n"
+                    + "import android.support.annotation.IntRange;");
+
+    private final TestFile genericTest = new TestFile("src/test/pkg/MyEnhancedList.java", ""
+            + "package test.pkg;\n"
+            + "\n"
+            + "import android.support.annotation.IntRange;\n"
+            + "\n"
+            + "import java.util.Comparator;\n"
+            + "import java.util.List;\n"
+            + "\n"
+            + "@IntRange(from = 0)\n"
+            + "public interface MyEnhancedList<E> extends List<E> {\n"
+            + "    @IntRange(from = 10)\n"
+            + "    E getReversed(List<String> filter, Comparator<? super E> comparator);\n"
+            + "}\n");
+
+    private final TestFile intDefTest = new TestFile("src/test/pkg/IntDefTest.java", ""
             + "package test.pkg;\n"
             + "\n"
             + "import android.content.Context;\n"
@@ -411,7 +436,7 @@ public class ExtractAnnotationsDriverTest {
             + "    @Keep"
             + "    public void testIntDef(int arg) {\n"
             + "    }\n"
-            + "    @IntDef(value = {STYLE_NORMAL, STYLE_NO_TITLE, STYLE_NO_FRAME, STYLE_NO_INPUT}, flag=true)\n"
+            + "    @IntDef(value = {STYLE_NORMAL, STYLE_NO_TITLE, STYLE_NO_FRAME, STYLE_NO_INPUT, 3, 3 + 1}, flag=true)\n"
             + "    @Retention(RetentionPolicy.SOURCE)\n"
             + "    private @interface DialogFlags {}\n"
             + "\n"
@@ -421,9 +446,14 @@ public class ExtractAnnotationsDriverTest {
             + "    public static final String TYPE_1 = \"type1\";\n"
             + "    public static final String TYPE_2 = \"type2\";\n"
             + "    public static final String UNRELATED_TYPE = \"other\";\n"
+            + "\n"
+            + "    public static class Inner {\n"
+            + "        public void setInner(@DialogFlags int flags) {\n"
+            + "        }\n"
+            + "    }\n"
             + "}");
 
-    private final TestFile mPermissionsTest = new TestFile("src/test/pkg/PermissionsTest.java", ""
+    private final TestFile permissionsTest = new TestFile("src/test/pkg/PermissionsTest.java", ""
             + "package test.pkg;\n"
             + "\n"
             + "import android.support.annotation.RequiresPermission;\n"
@@ -432,24 +462,29 @@ public class ExtractAnnotationsDriverTest {
             + "    @RequiresPermission(Manifest.permission.MY_PERMISSION)\n"
             + "    public void myMethod() {\n"
             + "    }\n"
+            + "    @RequiresPermission(anyOf={Manifest.permission.MY_PERMISSION,Manifest.permission.MY_PERMISSION2})\n"
+            + "    public void myMethod2() {\n"
+            + "    }\n"
+            + "\n"
             + "\n"
             + "    @RequiresPermission.Read(@RequiresPermission(Manifest.permission.MY_READ_PERMISSION))\n"
             + "    @RequiresPermission.Write(@RequiresPermission(Manifest.permission.MY_WRITE_PERMISSION))\n"
             + "    public static final String CONTENT_URI = \"\";\n"
             + "}\n");
 
-    private final TestFile mManifest = new TestFile("src/test/pkg/Manifest.java", ""
+    private final TestFile manifest = new TestFile("src/test/pkg/Manifest.java", ""
             + "package test.pkg;\n"
             + "\n"
             + "public class Manifest {\n"
             + "    public static final class permission {\n"
             + "        public static final String MY_PERMISSION = \"android.permission.MY_PERMISSION_STRING\";\n"
+            + "        public static final String MY_PERMISSION2 = \"android.permission.MY_PERMISSION_STRING2\";\n"
             + "        public static final String MY_READ_PERMISSION = \"android.permission.MY_READ_PERMISSION_STRING\";\n"
             + "        public static final String MY_WRITE_PERMISSION = \"android.permission.MY_WRITE_PERMISSION_STRING\";\n"
             + "    }\n"
             + "}\n");
 
-    private final TestFile mKeepTest = new TestFile("src/test/pkg/KeepTest.java", ""
+    private final TestFile keepTest = new TestFile("src/test/pkg/KeepTest.java", ""
             + "package test.pkg;\n"
             + "import android.support.annotation.Keep;\n"
             + "\n"

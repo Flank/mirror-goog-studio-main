@@ -21,22 +21,20 @@ import static java.io.File.pathSeparator;
 import static java.io.File.pathSeparatorChar;
 
 import com.android.annotations.NonNull;
-import com.android.tools.lint.EcjParser;
-import com.android.tools.lint.EcjSourceFile;
+import com.android.tools.lint.LintCoreApplicationEnvironment;
+import com.android.tools.lint.LintCoreProjectEnvironment;
 import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
+import com.intellij.mock.MockProject;
+import com.intellij.openapi.Disposable;
+import com.intellij.openapi.util.Disposer;
+import com.intellij.psi.PsiJavaFile;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
-import org.eclipse.jdt.core.compiler.IProblem;
-import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
-import org.eclipse.jdt.internal.compiler.impl.CompilerOptions;
-import org.eclipse.jdt.internal.compiler.util.Util;
 
 /**
  * The extract annotations driver is a command line interface to extracting annotations
@@ -71,8 +69,6 @@ public class ExtractAnnotationsDriver {
         output.println("--rmtypedefs <folder>    : Remove typedef classes found in the given folder");
         output.println("--allow-missing-types    : Don't fail even if some types can't be resolved");
         output.println("--allow-errors           : Don't fail even if there are some compiler errors");
-        output.println("--encoding <encoding>    : Encoding (defaults to utf-8)");
-        output.println("--language-level <level> : Java source language level, typically 1.6 (default) or 1.7");
         output.println("--api-filter <api.txt>   : A framework API definition to restrict included APIs to");
         output.println("--hide-filtered          : If filtering out non-APIs, supply this flag to hide listing matches");
         output.println("--skip-class-retention   : Don't extract annotations that have class retention");
@@ -82,7 +78,7 @@ public class ExtractAnnotationsDriver {
 
     @SuppressWarnings("MethodMayBeStatic")
     public void run(@NonNull String[] args) {
-        List<String> classpath = Lists.newArrayList();
+        List<File> classpath = Lists.newArrayList();
         List<File> sources = Lists.newArrayList();
         List<File> mergePaths = Lists.newArrayList();
         List<File> apiFilters = null;
@@ -93,11 +89,9 @@ public class ExtractAnnotationsDriver {
         boolean listFiltered = true;
         boolean skipClassRetention = false;
 
-        String encoding = Charsets.UTF_8.name();
         File output = null;
         File proguard = null;
         File typedefFile = null;
-        long languageLevel = EcjParser.getLanguageLevel(1, 7);
         if (args.length == 1 && "--help".equals(args[0])) {
             usage(System.out);
         }
@@ -135,7 +129,7 @@ public class ExtractAnnotationsDriver {
                     sources = getFiles(value);
                     break;
                 case "--classpath":
-                    classpath = getPaths(value);
+                    classpath = getFiles(value);
                     break;
                 case "--merge-zips":
                     mergePaths = getFiles(value);
@@ -173,9 +167,6 @@ public class ExtractAnnotationsDriver {
                 case "--typedef-file":
                     typedefFile = new File(value);
                     break;
-                case "--encoding":
-                    encoding = value;
-                    break;
                 case "--api-filter":
                     if (apiFilters == null) {
                         apiFilters = Lists.newArrayList();
@@ -187,17 +178,6 @@ public class ExtractAnnotationsDriver {
                             abort(message);
                         }
                         apiFilters.add(apiFilter);
-                    }
-                    break;
-                case "--language-level":
-                    if ("1.6".equals(value)) {
-                        languageLevel = EcjParser.getLanguageLevel(1, 6);
-                    } else if ("1.7".equals(value)) {
-                        languageLevel = EcjParser.getLanguageLevel(1, 7);
-                    } else if ("1.8".equals(value)) {
-                        languageLevel = EcjParser.getLanguageLevel(1, 8);
-                    } else {
-                        abort("Unsupported language level " + value);
                     }
                     break;
                 case "--rmtypedefs":
@@ -241,72 +221,44 @@ public class ExtractAnnotationsDriver {
                 true);
         extractor.setListIgnored(listFiltered);
 
-        EcjParser.EcjResult result = null;
-        try {
-            result = parseSources(sources, classpath, encoding, languageLevel);
-            Collection<CompilationUnitDeclaration> units = result.getCompilationUnits();
+        LintCoreApplicationEnvironment appEnv = LintCoreApplicationEnvironment.get();
+        Disposable parentDisposable = Disposer.newDisposable();
+        LintCoreProjectEnvironment projectEnvironment = LintCoreProjectEnvironment.create(
+                parentDisposable, appEnv);
 
-            boolean abort = false;
-            int errorCount = 0;
-            for (CompilationUnitDeclaration unit : units) {
-                // so maybe I don't need my map!!
-                IProblem[] problems = unit.compilationResult().getAllProblems();
-                if (problems != null) {
-                    for (IProblem problem : problems) {
-                        if (problem.isError()) {
-                            errorCount++;
-                            String message = problem.getMessage();
-                            if (allowMissingTypes) {
-                                if (message.contains("cannot be resolved")) {
-                                    continue;
-                                }
-                            }
 
-                            System.out.println("Error: " +
-                                    new String(problem.getOriginatingFileName()) + ":" +
-                                    problem.getSourceLineNumber() + ": " + message);
-                            abort = !allowErrors;
-                        }
-                    }
-                }
-            }
-            if (errorCount > 0) {
-                System.err.println("Found " + errorCount + " errors");
-            }
-            if (abort) {
-                abort("Not extracting annotations (compilation problems encountered)");
-            }
+        List<File> joined = Lists.newArrayList(sources);
+        joined.addAll(classpath);
+        projectEnvironment.registerPaths(joined);
 
-            extractor.extractFromProjectSource(units);
+        MockProject project = projectEnvironment.getProject();
+        List<PsiJavaFile> units = Extractor.createUnitsInDirectories(project, sources);
 
-            if (mergePaths != null) {
-                for (File jar : mergePaths) {
-                    extractor.mergeExisting(jar);
-                }
-            }
+        extractor.extractFromProjectSource(units);
 
-            extractor.export(output, proguard);
-
-            // Remove typedefs?
-            if (typedefFile != null) {
-                extractor.writeTypedefFile(typedefFile);
-            }
-
-            //noinspection VariableNotUsedInsideIf
-            if (rmTypeDefs != null) {
-                if (typedefFile != null) {
-                    Extractor.removeTypedefClasses(rmTypeDefs, typedefFile);
-                } else {
-                    extractor.removeTypedefClasses();
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            if (result != null) {
-                result.dispose();
+        if (mergePaths != null) {
+            for (File jar : mergePaths) {
+                extractor.mergeExisting(jar);
             }
         }
+
+        extractor.export(output, proguard);
+
+        // Remove typedefs?
+        if (typedefFile != null) {
+            extractor.writeTypedefFile(typedefFile);
+        }
+
+        //noinspection VariableNotUsedInsideIf
+        if (rmTypeDefs != null) {
+            if (typedefFile != null) {
+                Extractor.removeTypedefClasses(rmTypeDefs, typedefFile);
+            } else {
+                extractor.removeTypedefClasses();
+            }
+        }
+
+        Disposer.dispose(LintCoreApplicationEnvironment.get().getParentDisposable());
     }
 
     private static void abort(@NonNull String message) {
@@ -352,10 +304,6 @@ public class ExtractAnnotationsDriver {
         return files;
     }
 
-    private static List<String> getPaths(String value) {
-        return getFiles(value).stream().map(File::getPath).collect(Collectors.toList());
-    }
-
     private static void addJavaSources(List<File> list, File file) {
         if (file.isDirectory()) {
             File[] files = file.listFiles();
@@ -377,38 +325,5 @@ public class ExtractAnnotationsDriver {
             addJavaSources(sources, file);
         }
         return sources;
-    }
-
-    @NonNull
-    private static EcjParser.EcjResult parseSources(
-            @NonNull List<File> sourcePaths,
-            @NonNull List<String> classpath,
-            @NonNull String encoding,
-            long languageLevel)
-            throws IOException {
-        List<EcjSourceFile> sourceUnits = Lists.newArrayListWithExpectedSize(100);
-
-        for (File source : gatherJavaSources(sourcePaths)) {
-            char[] contents = Util.getFileCharContent(source, encoding);
-            EcjSourceFile unit = EcjSourceFile.create(contents, source, encoding);
-            sourceUnits.add(unit);
-        }
-
-        CompilerOptions options = EcjParser.createCompilerOptions();
-        options.docCommentSupport = true; // So I can find @hide
-
-        // Note: We can *not* set options.ignoreMethodBodies=true because it disables
-        // type attribution!
-
-        options.sourceLevel = languageLevel;
-        options.complianceLevel = options.sourceLevel;
-        // We don't generate code, but just in case the parser consults this flag
-        // and makes sure that it's not greater than the source level:
-        options.targetJDK = options.sourceLevel;
-        options.originalComplianceLevel = options.sourceLevel;
-        options.originalSourceLevel = options.sourceLevel;
-        options.inlineJsrBytecode = true; // >= 1.5
-
-        return EcjParser.parse(options, sourceUnits, classpath, null);
     }
 }

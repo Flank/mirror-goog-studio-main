@@ -461,6 +461,9 @@ public class LintUtilsTest extends TestCase {
         return parsePsi(javaSource, new File(path.replace('/', separatorChar)));
     }
 
+    /** @deprecated Use {@link #parseUast(String, File)} or {@link #parsePsi(String, File)}
+     * instead */
+    @Deprecated
     public static JavaContext parse(@Language("JAVA") String javaSource) {
         // Figure out the "to" path: the package plus class name + java in the src/ folder
         Matcher matcher = PACKAGE_PATTERN.matcher(javaSource);
@@ -475,6 +478,9 @@ public class LintUtilsTest extends TestCase {
         return parse(javaSource, new File(path.replace('/', separatorChar)));
     }
 
+    /** @deprecated Use {@link #parseUast(String, File)} or {@link #parsePsi(String, File)}
+     * instead */
+    @Deprecated
     public static JavaContext parse(@Language("JAVA") final String javaSource,
             final File relativePath) {
         Pair<JavaContext, Disposable> parse =

@@ -839,8 +839,8 @@ public class EcjParser extends JavaParser {
     @Nullable
     @Override
     public PsiElement findElementAt(@NonNull JavaContext context, int offset) {
-        PsiFile javaFile = context.getJavaFile();
-        return javaFile != null ? javaFile.findElementAt(offset) : null;
+        PsiFile file = context.getPsiFile();
+        return file != null ? file.findElementAt(offset) : null;
     }
 
     @NonNull
