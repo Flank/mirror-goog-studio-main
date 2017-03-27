@@ -23,12 +23,13 @@ import com.android.annotations.NonNull;
 import com.android.build.VariantOutput;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.TestedAndroidConfig;
+import com.android.build.gradle.internal.api.ApkVariantOutputImpl;
 import com.android.build.gradle.internal.api.BaseVariantImpl;
 import com.android.build.gradle.internal.api.ReadOnlyObjectProvider;
 import com.android.build.gradle.internal.api.TestVariantImpl;
 import com.android.build.gradle.internal.api.TestedVariant;
 import com.android.build.gradle.internal.api.UnitTestVariantImpl;
-import com.android.build.gradle.internal.variant.ApplicationVariantFactory;
+import com.android.build.gradle.internal.dsl.VariantOutputFactory;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.TestedVariantData;
@@ -65,6 +66,7 @@ public class ApiObjectFactory {
     public BaseVariantImpl create(BaseVariantData variantData) {
         if (variantData.getType().isForTesting()) {
             // Testing variants are handled together with their "owners".
+            createVariantOutput(variantData, null);
             return null;
         }
 
@@ -115,9 +117,33 @@ public class ApiObjectFactory {
             }
         }
 
+        createVariantOutput(variantData, variantApi);
+
         // Only add the variant API object to the domain object set once it's been fully
         // initialized.
         extension.addVariant(variantApi);
+
         return variantApi;
+    }
+
+    private void createVariantOutput(BaseVariantData variantData, BaseVariantImpl variantApi) {
+        variantData.variantOutputFactory =
+                new VariantOutputFactory(
+                        ApkVariantOutputImpl.class,
+                        instantiator,
+                        extension,
+                        variantApi,
+                        variantData);
+        variantData
+                .getSplitScope()
+                .getApkDatas()
+                .forEach(
+                        apkData -> {
+                            apkData.setVersionCode(
+                                    variantData.getVariantConfiguration().getVersionCode());
+                            apkData.setVersionName(
+                                    variantData.getVariantConfiguration().getVersionName());
+                            variantData.variantOutputFactory.create(apkData);
+                        });
     }
 }

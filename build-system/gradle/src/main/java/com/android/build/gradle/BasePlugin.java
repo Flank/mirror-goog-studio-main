@@ -33,7 +33,6 @@ import com.android.build.gradle.internal.BuildCacheUtils;
 import com.android.build.gradle.internal.DependencyManager;
 import com.android.build.gradle.internal.ExecutionConfigurationUtil;
 import com.android.build.gradle.internal.ExtraModelInfo;
-import com.android.build.gradle.internal.LibraryCache;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.NativeLibraryFactoryImpl;
 import com.android.build.gradle.internal.NonFinalPluginExpiry;
@@ -42,8 +41,6 @@ import com.android.build.gradle.internal.TaskContainerAdaptor;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.ToolingRegistryProvider;
 import com.android.build.gradle.internal.VariantManager;
-import com.android.build.gradle.internal.api.ApkVariantOutputImpl;
-import com.android.build.gradle.internal.api.BaseVariantImpl;
 import com.android.build.gradle.internal.coverage.JacocoPlugin;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.BuildTypeFactory;
@@ -51,7 +48,6 @@ import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.ProductFlavorFactory;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.dsl.SigningConfigFactory;
-import com.android.build.gradle.internal.dsl.VariantOutputFactory;
 import com.android.build.gradle.internal.ide.ModelBuilder;
 import com.android.build.gradle.internal.ide.NativeModelBuilder;
 import com.android.build.gradle.internal.ndk.NdkHandler;
@@ -640,29 +636,7 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
                                     androidBuilder, extension, variantFactory, instantiator);
                     for (VariantScope variantScope : variantManager.getVariantScopes()) {
                         BaseVariantData variantData = variantScope.getVariantData();
-                        BaseVariantImpl variantPublicApi = apiObjectFactory.create(variantData);
-                        variantData.variantOutputFactory =
-                                new VariantOutputFactory(
-                                        ApkVariantOutputImpl.class,
-                                        instantiator,
-                                        extension,
-                                        variantPublicApi,
-                                        variantData);
-                        variantData
-                                .getSplitScope()
-                                .getApkDatas()
-                                .forEach(
-                                        apkData -> {
-                                            apkData.setVersionCode(
-                                                    variantData
-                                                            .getVariantConfiguration()
-                                                            .getVersionCode());
-                                            apkData.setVersionName(
-                                                    variantData
-                                                            .getVariantConfiguration()
-                                                            .getVersionName());
-                                            variantData.variantOutputFactory.create(apkData);
-                                        });
+                        apiObjectFactory.create(variantData);
                     }
                 });
 

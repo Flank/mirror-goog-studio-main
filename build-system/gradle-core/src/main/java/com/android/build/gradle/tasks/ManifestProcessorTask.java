@@ -15,6 +15,8 @@
  */
 package com.android.build.gradle.tasks;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
@@ -34,6 +36,22 @@ public abstract class ManifestProcessorTask extends IncrementalTask {
     private File aaptFriendlyManifestOutputDirectory;
 
     private File instantRunManifestOutputDirectory;
+
+    /** The processed Manifest. */
+    @NonNull
+    public abstract File getManifestOutputFile();
+
+    @Nullable
+    public abstract File getInstantRunManifestOutputFile();
+
+    /**
+     * The aapt friendly processed Manifest. In case we are processing a library manifest, some
+     * placeholders may not have been resolved (and will be when the library is merged into the
+     * importing application). However, such placeholders keys are not friendly to aapt which flags
+     * some illegal characters. Such characters are replaced/encoded in this version.
+     */
+    @Nullable
+    public abstract File getAaptFriendlyManifestOutputFile();
 
     /** The processed Manifest. */
     @OutputDirectory

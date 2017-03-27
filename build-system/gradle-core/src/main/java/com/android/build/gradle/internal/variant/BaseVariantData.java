@@ -47,6 +47,7 @@ import com.android.build.gradle.tasks.BinaryFileProviderTask;
 import com.android.build.gradle.tasks.ExternalNativeBuildTask;
 import com.android.build.gradle.tasks.GenerateBuildConfig;
 import com.android.build.gradle.tasks.GenerateResValues;
+import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.NdkCompile;
@@ -116,6 +117,7 @@ public abstract class BaseVariantData implements TaskContainer {
     public RenderscriptCompile renderscriptCompileTask;
     public AidlCompile aidlCompileTask;
     public MergeResources mergeResourcesTask;
+    public ManifestProcessorTask processManifest;
     public MergeSourceSetFolders mergeAssetsTask;
     public GenerateBuildConfig generateBuildConfigTask;
     public GenerateResValues generateResValuesTask;
@@ -264,12 +266,10 @@ public abstract class BaseVariantData implements TaskContainer {
     @Nullable
     @Override
     public <U extends Task> U getTaskByType(Class<U> taskType) {
+        // Using Class::isInstance instead of Class::equal because the tasks are decorated by
+        // Gradle.
         Optional<Task> requestedTask =
-                registeredTasks
-                        .values()
-                        .stream()
-                        .filter(task -> taskType.equals(task.getClass()))
-                        .findFirst();
+                registeredTasks.values().stream().filter(taskType::isInstance).findFirst();
         return requestedTask.isPresent() ? taskType.cast(requestedTask.get()) : null;
     }
 

@@ -18,6 +18,7 @@ package com.android.build.gradle.tasks;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.scope.SplitScope;
@@ -25,6 +26,7 @@ import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
+import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.model.ApiVersion;
@@ -32,6 +34,8 @@ import com.android.builder.model.ProductFlavor;
 import com.android.manifmerger.ManifestMerger2;
 import com.android.manifmerger.MergingReport;
 import com.android.manifmerger.XmlDocument;
+import com.android.utils.FileUtils;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.IOException;
@@ -63,12 +67,8 @@ public class ProcessManifest extends ManifestProcessorTask {
 
     @Override
     protected void doFullTaskAction() {
-        File outputManifestFile =
-                new File(getManifestOutputDirectory(), SdkConstants.ANDROID_MANIFEST_XML);
-        File aaptFriendlyManifestOutputFile =
-                new File(
-                        getAaptFriendlyManifestOutputDirectory(),
-                        SdkConstants.ANDROID_MANIFEST_XML);
+        File outputManifestFile = getManifestOutputFile();
+        File aaptFriendlyManifestOutputFile = getAaptFriendlyManifestOutputFile();
         MergingReport mergingReport =
                 getBuilder()
                         .mergeManifestsForApplication(
@@ -118,6 +118,32 @@ public class ProcessManifest extends ManifestProcessorTask {
         } catch (IOException e) {
             throw new BuildException("Exception while saving build metadata : ", e);
         }
+    }
+
+    @NonNull
+    @Override
+    public File getManifestOutputFile() {
+        Preconditions.checkNotNull(splitScope.getMainSplit());
+        return FileUtils.join(
+                getManifestOutputDirectory(),
+                splitScope.getMainSplit().getDirName(),
+                SdkConstants.ANDROID_MANIFEST_XML);
+    }
+
+    @Nullable
+    @Override
+    public File getInstantRunManifestOutputFile() {
+        return null;
+    }
+
+    @Nullable
+    @Override
+    public File getAaptFriendlyManifestOutputFile() {
+        Preconditions.checkNotNull(splitScope.getMainSplit());
+        return FileUtils.join(
+                getAaptFriendlyManifestOutputDirectory(),
+                splitScope.getMainSplit().getDirName(),
+                SdkConstants.ANDROID_MANIFEST_XML);
     }
 
     @Input
@@ -265,6 +291,8 @@ public class ProcessManifest extends ManifestProcessorTask {
                     scope.getAaptFriendlyManifestOutputDirectory());
             processManifest.splitScope = scope.getSplitScope();
 
+            scope.getVariantData()
+                    .addTask(TaskContainer.TaskKind.PROCESS_MANIFEST, processManifest);
         }
     }
 }
