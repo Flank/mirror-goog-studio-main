@@ -280,7 +280,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
         return !Strings.isNullOrEmpty(projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI))
                 || !Strings.isNullOrEmpty(projectOptions.get(StringOption.IDE_BUILD_TARGET_DENISTY))
-                || projectOptions.get(IntegerOption.IDE_TARGET_FEATURE_LEVEL) != null
+                || projectOptions.get(IntegerOption.IDE_TARGET_API_LEVEL) != null
                 || globalScope.getAndroidBuilder().isPreviewTarget()
                 || getMinSdkVersion().getCodename() != null
                 || getVariantConfiguration().getTargetSdkVersion().getCodename() != null;

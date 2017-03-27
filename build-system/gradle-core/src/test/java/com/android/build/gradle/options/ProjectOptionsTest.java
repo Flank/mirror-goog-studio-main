@@ -37,7 +37,7 @@ public class ProjectOptionsTest {
 
     private static Integer parseInteger(@NonNull Object input) {
         return new ProjectOptions(ImmutableMap.of("android.injected.build.api", input))
-                .get(IntegerOption.IDE_TARGET_FEATURE_LEVEL);
+                .get(IntegerOption.IDE_TARGET_API_LEVEL);
     }
 
     private static Object asGroovyString(@NonNull Object input) {
@@ -72,10 +72,8 @@ public class ProjectOptionsTest {
 
     @Test
     public void integerSanity() {
-        assertThat(IntegerOption.IDE_TARGET_FEATURE_LEVEL.getDefaultValue()).isNull();
-        assertThat(
-                        new ProjectOptions(ImmutableMap.of())
-                                .get(IntegerOption.IDE_TARGET_FEATURE_LEVEL))
+        assertThat(IntegerOption.IDE_TARGET_API_LEVEL.getDefaultValue()).isNull();
+        assertThat(new ProjectOptions(ImmutableMap.of()).get(IntegerOption.IDE_TARGET_API_LEVEL))
                 .isNull();
 
         assertThat(parseInteger("20")).isEqualTo(20);
