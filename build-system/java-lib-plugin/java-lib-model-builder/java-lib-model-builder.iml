@@ -12,6 +12,7 @@
     <orderEntry type="library" name="gradle-api" level="project" />
     <orderEntry type="module" module-name="java-lib-model" />
     <orderEntry type="module" module-name="android-annotations" />
-    <orderEntry type="module" module-name="java-lib-model-impl" />
+    <orderEntry type="library" name="equalsverifier" level="project" />
+    <orderEntry type="library" scope="TEST" name="JUnit4" level="project" />
   </component>
 </module>
