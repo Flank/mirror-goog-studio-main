@@ -120,7 +120,8 @@ public class ProjectOptionsTest {
                                 BooleanOption.values(),
                                 OptionalBooleanOption.values(),
                                 IntegerOption.values(),
-                                StringOption.values())
+                                StringOption.values(),
+                                EnumOptions.EnumOption.values())
                         .flatMap(Arrays::stream)
                         .map(option -> option.getPropertyName())
                         .collect(Collectors.toList());

@@ -43,6 +43,7 @@ public final class ProjectOptions {
     private final ImmutableMap<IntegerOption, Integer> integerOptions;
     private final ImmutableMap<StringOption, String> stringOptions;
     private final ImmutableMap<String, String> testRunnerArgs;
+    private final EnumOptions enumOptions;
 
     public ProjectOptions(@NonNull ImmutableMap<String, Object> properties) {
         booleanOptions = readOptions(BooleanOption.values(), properties);
@@ -50,6 +51,7 @@ public final class ProjectOptions {
         integerOptions = readOptions(IntegerOption.values(), properties);
         stringOptions = readOptions(StringOption.values(), properties);
         testRunnerArgs = readTestRunnerArgs(properties);
+        enumOptions = EnumOptions.load(readOptions(EnumOptions.EnumOption.values(), properties));
     }
 
     public ProjectOptions(@NonNull Project project) {
@@ -136,4 +138,9 @@ public final class ProjectOptions {
         }
         return EnumSet.noneOf(OptionalCompilationStep.class);
     }
+
+    public EnumOptions getEnumOptions() {
+        return enumOptions;
+    }
+
 }
