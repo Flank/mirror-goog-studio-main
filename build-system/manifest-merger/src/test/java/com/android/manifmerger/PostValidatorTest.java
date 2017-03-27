@@ -28,6 +28,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import junit.framework.TestCase;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.w3c.dom.Comment;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -314,6 +315,69 @@ public class PostValidatorTest extends TestCase {
         checkAliases(xmlDocument, "com.example.lib3.aliasOne");
     }
 
+    public void testActivityAliasImmediatelyFollowing() throws Exception {
+        String input =
+                ""
+                        + "<manifest\n"
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                        + "    package=\"com.example.lib3\">\n"
+                        + "\n"
+                        + "    <application android:label=\"@string/lib_name\">\n"
+                        + "\n"
+                        + "      <activity android:name=\"activityOne\"/>"
+                        + "<activity-alias android:name=\"aliasOne\" android:targetActivity=\"activityOne\"/>\n"
+                        + "\n"
+                        + "    </application>\n"
+                        + "\n"
+                        + "    <uses-sdk minSdkVersion=\"14\"/>\n"
+                        + "\n"
+                        + "</manifest>";
+
+        XmlDocument xmlDocument =
+                TestUtils.xmlDocumentFromString(
+                        TestUtils.sourceFile(getClass(), "testApplicationInvalidOrder"), input);
+
+        MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mILogger);
+        PostValidator.validate(xmlDocument, mergingReportBuilder);
+
+        // ensure activity-alias is after activity.
+        checkAliases(xmlDocument, "com.example.lib3.aliasOne");
+    }
+
+    public void testActivityAliasImmediatelyFollowing_withComments() throws Exception {
+        String input =
+                ""
+                        + "<manifest\n"
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                        + "    package=\"com.example.lib3\">\n"
+                        + "\n"
+                        + "    <application android:label=\"@string/lib_name\">\n"
+                        + "\n"
+                        + "      <activity android:name=\"activityOne\"/>"
+                        + "<!--comment to come before alias-->"
+                        + "<activity-alias android:name=\"aliasOne\" android:targetActivity=\"activityOne\"/>\n"
+                        + "\n"
+                        + "    </application>\n"
+                        + "\n"
+                        + "    <uses-sdk minSdkVersion=\"14\"/>\n"
+                        + "\n"
+                        + "</manifest>";
+
+        XmlDocument xmlDocument =
+                TestUtils.xmlDocumentFromString(
+                        TestUtils.sourceFile(getClass(), "testApplicationInvalidOrder"), input);
+
+        MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mILogger);
+        PostValidator.validate(xmlDocument, mergingReportBuilder);
+
+        // ensure activity-alias is after activity.
+        checkAliases(xmlDocument, "com.example.lib3.aliasOne");
+        // ensure alias comment is before activity-alias
+        checkComments(xmlDocument, "com.example.lib3.aliasOne", "comment to come before alias");
+    }
+
     private static void checkAliases(XmlDocument manifest, String... aliasNames) {
         Set<String> scannedActivities = new HashSet<>();
         Set<String> scannedAliases = new HashSet<>();
@@ -346,6 +410,39 @@ public class PostValidatorTest extends TestCase {
         Set<String> aliasSet = new HashSet<>(Arrays.asList(aliasNames));
         assertTrue(scannedAliases.containsAll(aliasSet));
         assertTrue(aliasSet.containsAll(scannedAliases));
+    }
+
+    private static void checkComments(XmlDocument manifest, String aliasName, String... comments) {
+        Set<String> scannedComments = new HashSet<>();
+
+        Optional<XmlElement> application =
+                manifest.getRootNode()
+                        .getNodeByTypeAndKey(ManifestModel.NodeTypes.APPLICATION, null);
+        if (!application.isPresent()) {
+            throw new IllegalStateException(
+                    "The test manifest should have an application element.");
+        }
+
+        NodeList nodes = application.get().getXml().getChildNodes();
+
+        for (int i = 0; i < nodes.getLength(); i++) {
+            Node node = nodes.item(i);
+
+            if (node.getNodeType() == Node.COMMENT_NODE) {
+                Comment comment = (Comment) node;
+                scannedComments.add(comment.getTextContent());
+            } else if (node.getNodeType() == Node.ELEMENT_NODE) {
+                Element element = (Element) node;
+                if (element.getTagName().equals("activity-alias")
+                        && element.getAttributeNS(SdkConstants.ANDROID_URI, "name")
+                                .equals(aliasName)) {
+                    assertTrue(scannedComments.containsAll(Arrays.asList(comments)));
+                    return;
+                }
+            }
+        }
+        throw new IllegalStateException(
+                "The test manifest should have an activity-alias element named " + aliasName);
     }
 
     public void testApplicationInvalidOrder()
