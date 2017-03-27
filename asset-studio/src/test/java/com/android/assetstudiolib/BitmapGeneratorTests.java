@@ -16,23 +16,24 @@
 
 package com.android.assetstudiolib;
 
-import com.android.utils.FileUtils;
-
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static org.junit.Assert.fail;
 
+import com.android.utils.FileUtils;
+import com.google.common.base.Charsets;
+import com.google.common.io.CharStreams;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-
 import javax.imageio.ImageIO;
 
 /**
@@ -48,33 +49,53 @@ public final class BitmapGeneratorTests {
     static void checkGraphic(int expectedFileCount, String folderName, String baseName,
             GraphicGenerator generator, GraphicGenerator.Options options)
             throws IOException {
-        Map<String, Map<String, BufferedImage>> categoryMap = new HashMap<>();
         options.sourceImage = GraphicGenerator.getClipartImage("android.png");
-        generator.generate(null, categoryMap, GRAPHIC_GENERATOR_CONTEXT, options, baseName);
+        GeneratedIcons icons =
+                generator.generateIcons(GRAPHIC_GENERATOR_CONTEXT, options, baseName);
 
         List<String> errors = new ArrayList<>();
         int fileCount = 0;
-        for (Map<String, BufferedImage> previews : categoryMap.values()) {
-            for (Map.Entry<String, BufferedImage> entry : previews.entrySet()) {
-                String relativePath = entry.getKey();
-                BufferedImage image = entry.getValue();
+        for (GeneratedIcon generatedIcon : icons.getList()) {
+            Path relativePath = generatedIcon.getOutputPath();
+            if (relativePath == null) {
+                relativePath = Paths.get("extra").resolve(generatedIcon.getName() + ".png");
+            }
 
-                if (image == null) continue;
+            String path = "testdata" + File.separator + folderName + File.separator + relativePath;
+            if (generatedIcon instanceof GeneratedImageIcon) {
+                BufferedImage image = ((GeneratedImageIcon) generatedIcon).getImage();
 
-                String path = "testdata" + File.separator + folderName + File.separator
-                        + relativePath;
-                InputStream is = BitmapGeneratorTests.class.getResourceAsStream(FileUtils.toSystemIndependentPath(path));
+                InputStream is =
+                        BitmapGeneratorTests.class.getResourceAsStream(
+                                FileUtils.toSystemIndependentPath(path));
                 if (is == null) {
                     String filePath = folderName + File.separator + relativePath;
-                    String generatedFilePath = generateGoldenImage(getTargetDir(), image, path, filePath);
+                    String generatedFilePath =
+                            generateGoldenImage(getTargetDir(), image, path, filePath);
                     errors.add("File did not exist, created " + generatedFilePath);
                 } else {
                     BufferedImage goldenImage = ImageIO.read(is);
-                    assertImageSimilar(relativePath, goldenImage, image, 5.0f);
+                    assertImageSimilar(relativePath.toString(), goldenImage, image, 5.0f);
+                }
+                fileCount++;
+            } else if (generatedIcon instanceof GeneratedXmlResource) {
+                String text = ((GeneratedXmlResource) generatedIcon).getXmlText();
+                try (InputStream is =
+                        BitmapGeneratorTests.class.getResourceAsStream(
+                                FileUtils.toSystemIndependentPath(path))) {
+                    if (is == null) {
+                        String filePath = folderName + File.separator + relativePath;
+                        String generatedFilePath =
+                                generateGoldenText(getTargetDir(), text, path, filePath);
+                        errors.add("File did not exist, created " + generatedFilePath);
+                    } else {
+                        String goldenText =
+                                CharStreams.toString(new InputStreamReader(is, Charsets.UTF_8));
+                        assertThat(text).isEqualTo(goldenText);
+                    }
                 }
             }
 
-            fileCount += previews.values().size();
         }
         assertThat(errors).isEmpty();
 
@@ -114,7 +135,10 @@ public final class BitmapGeneratorTests {
             File targetDir, BufferedImage goldenImage, String missingFilePath, String filePath)
             throws IOException {
         if (targetDir == null) {
-            fail("Did not find " + missingFilePath + ". Set $ANDROID_SRC to have it created automatically");
+            fail(
+                    "Did not find "
+                            + missingFilePath
+                            + ". Set $ANDROID_SRC to have it created automatically");
         }
         File fileName = new File(targetDir, filePath);
         assertThat(fileName.exists()).isFalse();
@@ -127,14 +151,39 @@ public final class BitmapGeneratorTests {
         return fileName.getPath();
     }
 
-    public static void assertImageSimilar(String imageName,
+    private static String generateGoldenText(
+            File targetDir, String goldenText, String missingFilePath, String filePath)
+            throws IOException {
+        if (targetDir == null) {
+            fail(
+                    "Did not find "
+                            + missingFilePath
+                            + ". Set $ANDROID_SRC to have it created automatically");
+        }
+        File fileName = new File(targetDir, filePath);
+        assertThat(fileName.exists()).isFalse();
+        if (!fileName.getParentFile().exists()) {
+            boolean mkdir = fileName.getParentFile().mkdirs();
+            assertWithMessage(fileName.getParent()).that(mkdir).isTrue();
+        }
+
+        com.google.common.io.Files.write(goldenText, fileName, Charsets.UTF_8);
+        return fileName.getPath();
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    public static void assertImageSimilar(
+            String imageName,
             BufferedImage goldenImage,
             BufferedImage image,
-            float maxPercentDifferent) throws IOException {
+            float maxPercentDifferent)
+            throws IOException {
         assertThat(Math.abs(goldenImage.getWidth() - image.getWidth()))
-                .named("difference in width").isLessThan(2);
+                .named("difference in " + imageName + " width")
+                .isLessThan(2);
         assertThat(Math.abs(goldenImage.getHeight() - image.getHeight()))
-                .named("difference in height").isLessThan(2);
+                .named("difference in " + imageName + " height")
+                .isLessThan(2);
 
         assertThat(image.getType()).isEqualTo(BufferedImage.TYPE_INT_ARGB);
 
@@ -155,9 +204,8 @@ public final class BitmapGeneratorTests {
         // goldenImage = blur(goldenImage, 6);
         // image = blur(image, 6);
 
-        int width = 3 * imageWidth;
-        int height = imageHeight;
-        BufferedImage deltaImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        BufferedImage deltaImage =
+                new BufferedImage(3 * imageWidth, imageHeight, BufferedImage.TYPE_INT_ARGB);
         Graphics g = deltaImage.getGraphics();
 
         // Compute delta map
@@ -185,7 +233,8 @@ public final class BitmapGeneratorTests {
                 int newB = 128 + deltaB & 0xFF;
 
                 int avgAlpha =
-                        ((((goldenRgb & 0xFF000000) >>> 24) + ((rgb & 0xFF000000) >>> 24)) / 2) << 24;
+                        ((((goldenRgb & 0xFF000000) >>> 24) + ((rgb & 0xFF000000) >>> 24)) / 2)
+                                << 24;
 
                 int newRGB = avgAlpha | newR << 16 | newG << 8 | newB;
                 deltaImage.setRGB(imageWidth + x, y, newRGB);
@@ -198,7 +247,7 @@ public final class BitmapGeneratorTests {
 
         // 3 different colors, 256 color levels
         long total = imageHeight * imageWidth * 3L * 256L;
-        float percentDifference = (float)(delta * 100 / (double)total);
+        float percentDifference = (float) (delta * 100 / (double) total);
 
         if (percentDifference > maxPercentDifferent) {
             // Expected on the left
@@ -213,13 +262,17 @@ public final class BitmapGeneratorTests {
                 g.drawString("Actual", 2 * imageWidth + 10, 20);
             }
 
-            File output = new File(getTempDir(), "delta-" + imageName.replace(File.separatorChar, '_'));
+            File output =
+                    new File(getTempDir(), "delta-" + imageName.replace(File.separatorChar, '_'));
             if (output.exists()) {
+                //noinspection ResultOfMethodCallIgnored
                 output.delete();
             }
             ImageIO.write(deltaImage, "PNG", output);
             String message =
-                    String.format("Images differ (by %.1f%%) - see details in %s", percentDifference, output);
+                    String.format(
+                            "Images differ (by %.1f%%) - see details in %s",
+                            percentDifference, output);
             System.out.println(message);
             fail(message);
         }

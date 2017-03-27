@@ -16,20 +16,25 @@
 
 package com.android.assetstudiolib;
 
+import com.android.annotations.NonNull;
 import com.android.assetstudiolib.LauncherIconGenerator.LauncherOptions;
-
+import java.io.IOException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import java.io.IOException;
-
 @RunWith(JUnit4.class)
 public class LauncherIconGeneratorTest {
 
-    private static void checkGraphic(String baseName,
-            GraphicGenerator.Shape shape, GraphicGenerator.Style style,
-            boolean crop, int background, boolean isWebGraphic) throws IOException {
+    @SuppressWarnings("SameParameterValue")
+    private static void checkGraphic(
+            @NonNull String baseName,
+            @NonNull GraphicGenerator.Shape shape,
+            @NonNull GraphicGenerator.Style style,
+            boolean crop,
+            int background,
+            boolean isWebGraphic)
+            throws IOException {
         LauncherOptions options = new LauncherOptions();
         options.shape = shape;
         options.crop = crop;
@@ -47,11 +52,4 @@ public class LauncherIconGeneratorTest {
         checkGraphic("red_simple_circle", GraphicGenerator.Shape.CIRCLE,
                 GraphicGenerator.Style.SIMPLE, true, 0xFF0000, true);
     }
-
-    // The glossy rendering type is no longer included since it doesn't match the
-    // style guide.
-    //public void testLauncher_glossySquare() throws Exception {
-    //    checkGraphic("blue_glossy_square", GraphicGenerator.Shape.SQUARE,
-    //            GraphicGenerator.Style.GLOSSY, true, 0x0040FF, true);
-    //}
 }

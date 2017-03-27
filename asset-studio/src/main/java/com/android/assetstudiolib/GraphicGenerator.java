@@ -18,12 +18,14 @@ package com.android.assetstudiolib;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.resources.Density;
 import com.android.resources.ResourceFolderType;
+import com.android.utils.FileUtils;
 import com.android.utils.SdkUtils;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.io.Closeables;
-
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -31,25 +33,45 @@ import java.io.InputStream;
 import java.net.JarURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.file.Paths;
 import java.security.ProtectionDomain;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.jar.JarFile;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-
 import javax.imageio.ImageIO;
 
 /**
  * The base Generator class.
  */
 public abstract class GraphicGenerator {
+    private static final Map<Density, Pattern> DENSITY_PATTERNS;
+
+    static {
+        // Create regex patterns that search an icon path and find a valid density
+        // Paths look like: /mipmap-hdpi/, /drawable-xxdpi/, /drawable-xxxdpi-v9/
+        // Therefore, we search for the density value surrounded by symbols (especially to distinguish
+        // xdpi, xxdpi, and xxxdpi)
+        ImmutableMap.Builder<Density, Pattern> builder = ImmutableMap.builder();
+        for (Density density : Density.values()) {
+            builder.put(
+                    density,
+                    Pattern.compile(
+                            String.format(".*[^a-z]%s[^a-z].*", density.getResourceValue()),
+                            Pattern.CASE_INSENSITIVE));
+        }
+        DENSITY_PATTERNS = builder.build();
+    }
+
     /**
      * Options used for all generators.
      */
@@ -63,8 +85,15 @@ public abstract class GraphicGenerator {
         /** The density to generate the icon with */
         public Density density = Density.XHIGH;
 
-        /** Whether the icon should be written out to the mipmap folder instead of drawable */
-        public boolean mipmap;
+        /** Controls the directory where to store the icon/resource */
+        public IconFolderKind iconFolderKind = IconFolderKind.DRAWABLE;
+    }
+
+    public enum IconFolderKind {
+        DRAWABLE,
+        MIPMAP,
+        DRAWABLE_NO_DPI,
+        VALUES,
     }
 
     /** Shapes that can be used for icon backgrounds */
@@ -114,29 +143,87 @@ public abstract class GraphicGenerator {
      * @param options options controlling the appearance of the icon
      * @return a {@link BufferedImage} with the generated icon
      */
-    public abstract BufferedImage generate(GraphicGeneratorContext context, Options options);
+    @Nullable
+    public GeneratedIcon generateIcon(
+            @NonNull GraphicGeneratorContext context,
+            @NonNull Options options,
+            @NonNull String name,
+            @NonNull IconCategory category) {
+        BufferedImage image = generate(context, options);
+        if (image == null) {
+            return null;
+        }
+        return new GeneratedImageIcon(
+                getIconName(options, name),
+                Paths.get(getIconPath(options, name)),
+                category,
+                options.density,
+                image);
+    }
+
+    @NonNull
+    public GeneratedIcons generateIcons(
+            @NonNull GraphicGeneratorContext context,
+            @NonNull Options options,
+            @NonNull String name) {
+        Map<String, Map<String, BufferedImage>> categoryMap = new HashMap<>();
+        generate(null, categoryMap, context, options, name);
+
+        // Category map is a map from category name to a map from relative path to image.
+        GeneratedIcons icons = new GeneratedIcons();
+        categoryMap.forEach(
+                (category, images) ->
+                        images.forEach(
+                                (path, image) -> {
+                                    Density density = pathToDensity(path);
+                                    // Could be a "Web" image
+                                    if (density == null) {
+                                        density = Density.NODPI;
+                                    }
+                                    GeneratedImageIcon icon =
+                                            new GeneratedImageIcon(
+                                                    path,
+                                                    Paths.get(path),
+                                                    IconCategory.fromName(category),
+                                                    density,
+                                                    image);
+                                    icons.add(icon);
+                                }));
+        return icons;
+    }
 
     /**
-     * Computes the target filename (relative to the Android project folder)
-     * where an icon rendered with the given options should be stored. This is
-     * also used as the map keys in the result map used by
-     * {@link #generate(String, Map, GraphicGeneratorContext, Options, String)}.
+     * Generate a single icon using the given options
      *
-     * @param options the options object used by the generator for the current
-     *            image
-     * @param name the base name to use when creating the path
-     * @return a path relative to the res/ folder where the image should be
-     *         stored (will always use / as a path separator, not \ on Windows)
+     * @param context render context to use for looking up resources etc
+     * @param options options controlling the appearance of the icon
+     * @return a {@link BufferedImage} with the generated icon
      */
-    protected String getIconPath(Options options, String name) {
+    @NonNull
+    public abstract BufferedImage generate(
+            @NonNull GraphicGeneratorContext context, @NonNull Options options);
+
+    /**
+     * Computes the target filename (relative to the Android project folder) where an icon rendered
+     * with the given options should be stored. This is also used as the map keys in the result map
+     * used by {@link #generate(String, Map, GraphicGeneratorContext, Options, String)}.
+     *
+     * @param options the options object used by the generator for the current image
+     * @param name the base name to use when creating the path
+     * @return a path relative to the res/ folder where the image should be stored (will always use
+     *     / as a path separator, not \ on Windows)
+     */
+    @NonNull
+    protected String getIconPath(@NonNull Options options, @NonNull String name) {
         return getIconFolder(options) + '/' + getIconName(options, name);
     }
 
     /**
-     * Gets name of the file itself. It is sometimes modified by options, for
-     * example in unselected tabs we change foo.png to foo-unselected.png
+     * Gets name of the file itself. It is sometimes modified by options, for example in unselected
+     * tabs we change foo.png to foo-unselected.png
      */
-    protected String getIconName(Options options, String name) {
+    @NonNull
+    protected String getIconName(@NonNull Options options, @NonNull String name) {
         if (options.density == Density.ANYDPI) {
             return name + SdkConstants.DOT_XML;
         }
@@ -144,45 +231,67 @@ public abstract class GraphicGenerator {
     }
 
     /**
-     * Gets name of the folder to contain the resource. It usually includes the
-     * density, but is also sometimes modified by options. For example, in some
-     * notification icons we add in -v9 or -v11.
+     * Gets name of the folder to contain the resource. It usually includes the density, but is also
+     * sometimes modified by options. For example, in some notification icons we add in -v9 or -v11.
      */
-    protected String getIconFolder(Options options) {
-        if (options.density == Density.ANYDPI) {
-            return SdkConstants.FD_RES + '/' +
-                   ResourceFolderType.DRAWABLE.getName();
+    @NonNull
+    protected String getIconFolder(@NonNull Options options) {
+        switch (options.iconFolderKind) {
+            case DRAWABLE:
+                return getIconFolder(ResourceFolderType.DRAWABLE, options.density);
+            case MIPMAP:
+                return getIconFolder(ResourceFolderType.MIPMAP, options.density);
+            case DRAWABLE_NO_DPI:
+                return getIconFolder(ResourceFolderType.DRAWABLE, Density.NODPI);
+            case VALUES:
+                return getIconFolder(ResourceFolderType.VALUES, Density.NODPI);
+            default:
+                throw new IllegalArgumentException();
         }
+    }
+
+    @NonNull
+    private static String getIconFolder(
+            @NonNull ResourceFolderType folderType, @NonNull Density density) {
         StringBuilder sb = new StringBuilder(50);
         sb.append(SdkConstants.FD_RES);
         sb.append('/');
-        if (options.mipmap) {
-            sb.append(ResourceFolderType.MIPMAP.getName());
-        } else {
-            sb.append(ResourceFolderType.DRAWABLE.getName());
+        sb.append(folderType.getName());
+        if (density != Density.NODPI) {
+            sb.append('-');
+            sb.append(density.getResourceValue());
         }
-        sb.append('-');
-        sb.append(options.density.getResourceValue());
         return sb.toString();
     }
 
     /**
-     * Generates a full set of icons into the given map. The values in the map
-     * will be the generated images, and each value is keyed by the
-     * corresponding relative path of the image, which is determined by the
-     * {@link #getIconPath(Options, String)} method.
+     * Generates a full set of icons into the given map. The values in the map will be the generated
+     * images, and each value is keyed by the corresponding relative path of the image, which is
+     * determined by the {@link #getIconPath(Options, String)} method.
      *
-     * @param category the current category to place images into (if null the
-     *            density name will be used)
-     * @param categoryMap the map to put images into, should not be null. The
-     *            map is a map from a category name, to a map from file path to
-     *            image.
+     * @param category the current category to place images into (if null the density name will be
+     *     used)
+     * @param categoryMap the map to put images into, should not be null. The map is a map from a
+     *     category name, to a map from file path to image.
      * @param context a generator context which for example can load resources
      * @param options options to apply to this generator
      * @param name the base name of the icons to generate
      */
-    public void generate(String category, Map<String, Map<String, BufferedImage>> categoryMap,
-            GraphicGeneratorContext context, Options options, String name) {
+    public void generate(
+            String category,
+            Map<String, Map<String, BufferedImage>> categoryMap,
+            GraphicGeneratorContext context,
+            Options options,
+            String name) {
+        generateAllDensities(category, categoryMap, context, options, name);
+    }
+
+    protected void generateAllDensities(
+            String category,
+            Map<String, Map<String, BufferedImage>> categoryMap,
+            GraphicGeneratorContext context,
+            Options options,
+            String name) {
         // Vector image only need to generate one preview image, so we by pass all the
         // other image densities.
         if (options.density == Density.ANYDPI) {
@@ -191,12 +300,7 @@ public abstract class GraphicGenerator {
         }
         Density[] densityValues = Density.values();
         // Sort density values into ascending order
-        Arrays.sort(densityValues, new Comparator<Density>() {
-            @Override
-            public int compare(Density d1, Density d2) {
-                return d1.getDpiValue() - d2.getDpiValue();
-            }
-        });
+        Arrays.sort(densityValues, Comparator.comparingInt(Density::getDpiValue));
         for (Density density : densityValues) {
             if (!density.isValidValueForDevice()) {
                 continue;
@@ -211,24 +315,27 @@ public abstract class GraphicGenerator {
         }
     }
 
-    private void generateImageAndUpdateMap(String category,
-                                           Map<String, Map<String, BufferedImage>> categoryMap,
-                                           GraphicGeneratorContext context,
-                                           Options options,
-                                           String name) {
+    private void generateImageAndUpdateMap(
+            String category,
+            Map<String, Map<String, BufferedImage>> categoryMap,
+            GraphicGeneratorContext context,
+            Options options,
+            String name) {
         BufferedImage image = generate(context, options);
-        if (image != null) {
-            String mapCategory = category;
-            if (mapCategory == null) {
-                mapCategory = options.density.getResourceValue();
-            }
-            Map<String, BufferedImage> imageMap = categoryMap.get(mapCategory);
-            if (imageMap == null) {
-                imageMap = new LinkedHashMap<String, BufferedImage>();
-                categoryMap.put(mapCategory, imageMap);
-            }
-            imageMap.put(getIconPath(options, name), image);
+        if (image == null) {
+            return;
         }
+
+        // The category key is either the "category" parameter or the density if not present
+        String mapCategory = category;
+        if (mapCategory == null) {
+            mapCategory = options.density.getResourceValue();
+        }
+        Map<String, BufferedImage> imageMap =
+                categoryMap.computeIfAbsent(mapCategory, k -> new LinkedHashMap<>());
+
+        // Store image in map, where the key is the relative path to the image
+        imageMap.put(getIconPath(options, name), image);
     }
 
     protected boolean includeDensity(@NonNull Density density) {
@@ -246,6 +353,9 @@ public abstract class GraphicGenerator {
         if (density == Density.ANYDPI) {
             density = Density.XXXHIGH;
         }
+        if (density == Density.NODPI) {
+            density = Density.MEDIUM;
+        }
         return density.getDpiValue() / (float) Density.MEDIUM.getDpiValue();
     }
 
@@ -259,7 +369,7 @@ public abstract class GraphicGenerator {
     public static BufferedImage getStencilImage(String relativePath) throws IOException {
         InputStream is = GraphicGenerator.class.getResourceAsStream(relativePath);
         if (is == null) {
-          return null;
+            return null;
         }
         try {
             return ImageIO.read(is);
@@ -271,8 +381,8 @@ public abstract class GraphicGenerator {
     /**
      * Returns the icon (32x32) for a given clip art image.
      *
-     * @param name the name of the image to be loaded (which can be looked up via
-     *            {@link #getResourcesNames(String, String)} ()})
+     * @param name the name of the image to be loaded (which can be looked up via {@link
+     *     #getResourcesNames(String, String)} ()})
      * @return the icon image
      * @throws IOException if the image cannot be loaded
      */
@@ -289,8 +399,8 @@ public abstract class GraphicGenerator {
     /**
      * Returns the full size clip art image for a given image name.
      *
-     * @param name the name of the image to be loaded (which can be looked up via
-     *            {@link #getResourcesNames(String, String)})
+     * @param name the name of the image to be loaded (which can be looked up via {@link
+     *     #getResourcesNames(String, String)})
      * @return the clip art image
      * @throws IOException if the image cannot be loaded
      */
@@ -312,7 +422,7 @@ public abstract class GraphicGenerator {
      * @return an iterator for the available image names
      */
     public static Iterator<String> getResourcesNames(String pathPrefix, String filenameExtension) {
-        List<String> names = new ArrayList<String>(80);
+        List<String> names = new ArrayList<>(80);
         try {
             ZipFile zipFile = null;
             ProtectionDomain protectionDomain = GraphicGenerator.class.getProtectionDomain();
@@ -327,7 +437,7 @@ public abstract class GraphicGenerator {
                     url = en.nextElement();
                     URLConnection urlConnection = url.openConnection();
                     if (urlConnection instanceof JarURLConnection) {
-                        JarURLConnection urlConn = (JarURLConnection)(urlConnection);
+                        JarURLConnection urlConn = (JarURLConnection) (urlConnection);
                         zipFile = urlConn.getJarFile();
                     } else if ("file".equals(url.getProtocol())) { //$NON-NLS-1$
                         File directory = new File(url.getPath());
@@ -339,7 +449,8 @@ public abstract class GraphicGenerator {
             while (enumeration.hasMoreElements()) {
                 ZipEntry zipEntry = enumeration.nextElement();
                 String name = zipEntry.getName();
-                if (!name.startsWith(pathPrefix) || !name.endsWith(filenameExtension)) { //$NON-NLS-1$
+                if (!name.startsWith(pathPrefix)
+                        || !name.endsWith(filenameExtension)) { //$NON-NLS-1$
                     continue;
                 }
 
@@ -354,5 +465,26 @@ public abstract class GraphicGenerator {
         }
 
         return names.iterator();
+    }
+
+    /**
+     * Convert the path to a density, if possible. Output paths don't always map cleanly to density
+     * values, such as the path for the "web" icon, so in those cases, {@code null} is returned.
+     */
+    @Nullable
+    public static Density pathToDensity(@NonNull String iconPath) {
+
+        iconPath = FileUtils.toSystemIndependentPath(iconPath);
+        // Strip off the filename, in case the user names their icon "xxxhdpi" etc.
+        // but leave the trailing slash, as it's used in the regex pattern
+        iconPath = iconPath.substring(0, iconPath.lastIndexOf('/') + 1);
+
+        for (Density density : Density.values()) {
+            if (DENSITY_PATTERNS.get(density).matcher(iconPath).matches()) {
+                return density;
+            }
+        }
+
+        return null;
     }
 }

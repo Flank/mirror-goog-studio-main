@@ -16,15 +16,15 @@
 
 package com.android.assetstudiolib;
 
+import java.io.IOException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import java.io.IOException;
-
 @RunWith(JUnit4.class)
 public class TabIconGeneratorTest {
 
+    @SuppressWarnings("SameParameterValue")
     private static void checkGraphic(
             String folderName, String baseName, int minSdk, int expectedFileCount)
             throws IOException {
