@@ -70,9 +70,8 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Closeables;
 import com.intellij.codeInsight.ExternalAnnotationsManager;
-import com.intellij.openapi.vfs.StandardFileSystems;
-import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.openapi.vfs.VirtualFileSystem;
+import com.intellij.openapi.Disposable;
+import com.intellij.openapi.util.Disposer;
 import com.intellij.util.lang.UrlClassLoader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -863,7 +862,7 @@ public class LintCliClient extends LintClient {
 
 
     @Nullable private com.intellij.openapi.project.Project ideaProject;
-    @Nullable private LintCoreProjectEnvironment ideaProjectEnvironment;
+    @Nullable private Disposable projectDisposer;
 
     @Nullable
     public com.intellij.openapi.project.Project getIdeaProject() {
@@ -874,9 +873,12 @@ public class LintCliClient extends LintClient {
     public void initializeProjects(@NonNull Collection<Project> knownProjects) {
         // Initialize the associated idea project to use
 
-        LintCoreProjectEnvironment projectEnvironment = LintCoreProjectEnvironment.create();
+        LintCoreApplicationEnvironment appEnv = LintCoreApplicationEnvironment.get();
+        Disposable parentDisposable = Disposer.newDisposable();
+        projectDisposer = parentDisposable;
 
-        ideaProjectEnvironment = projectEnvironment;
+        LintCoreProjectEnvironment projectEnvironment = LintCoreProjectEnvironment.create(
+                parentDisposable, appEnv);
         ideaProject = projectEnvironment.getProject();
 
         // knownProject only lists root projects, not dependencies
@@ -886,23 +888,16 @@ public class LintCliClient extends LintClient {
             allProjects.addAll(project.getAllLibraries());
         }
 
-        Set<File> files = Sets.newHashSetWithExpectedSize(50);
-        Set<VirtualFile> virtualFiles = Sets.newHashSetWithExpectedSize(50);
-
-        VirtualFileSystem local = StandardFileSystems.local();
+        List<File> files = Lists.newArrayListWithCapacity(50);
 
         for (Project project : allProjects) {
-            registerClassPath(projectEnvironment, files, virtualFiles, local,
-                    project.getJavaSourceFolders());
-
-            registerClassPath(projectEnvironment, files, virtualFiles, local,
-                    project.getJavaLibraries(true));
-
-            registerClassPath(projectEnvironment, files, virtualFiles, local,
-                    project.getJavaClassFolders());
-
-            registerClassPath(projectEnvironment, files, virtualFiles, local,
-                    project.getTestLibraries());
+            // Note that there could be duplicates here since we're including multiple library
+            // dependencies that could have the same dependencies (e.g. lib1 and lib2 both
+            // referencing guava.jar)
+            files.addAll(project.getJavaSourceFolders());
+            files.addAll(project.getJavaLibraries(true));
+            files.addAll(project.getJavaClassFolders());
+            files.addAll(project.getTestLibraries());
         }
 
         IAndroidTarget buildTarget = null;
@@ -918,48 +913,25 @@ public class LintCliClient extends LintClient {
         }
 
         if (buildTarget != null) {
-            String path = buildTarget.getPath(IAndroidTarget.ANDROID_JAR);
-            if (path != null) {
-                File file = new File(path);
+            File file = buildTarget.getFile(IAndroidTarget.ANDROID_JAR);
+            if (file != null) {
                 files.add(file);
-                projectEnvironment.addJarToClassPath(file);
             }
         }
+
+        projectEnvironment.registerPaths(files);
 
         super.initializeProjects(knownProjects);
     }
 
-    private static void registerClassPath(LintCoreProjectEnvironment projectEnvironment,
-            Set<File> files,
-            Set<VirtualFile> virtualFiles, VirtualFileSystem local, List<File> javaClassFolders) {
-        for (File dir : javaClassFolders) {
-            if (dir.exists()) {
-                if (dir.isFile()) {
-                    if (files.contains(dir)) {
-                        continue;
-                    }
-                    files.add(dir);
-                    projectEnvironment.addJarToClassPath(dir);
-                } else if (dir.isDirectory()) {
-                    VirtualFile virtualFile = local.findFileByPath(dir.getPath());
-                    if (virtualFile != null) {
-                        if (virtualFiles.contains(virtualFile)) {
-                            continue;
-                        }
-                        virtualFiles.add(virtualFile);
-                        projectEnvironment.addSourcesToClasspath(virtualFile);
-                    }
-                }
-            }
-        }
-    }
-
     @Override
     public void disposeProjects(@NonNull Collection<Project> knownProjects) {
-        // TODO: Dispose the environment -- how do I do that?
-
+        if (projectDisposer != null) {
+            Disposer.dispose(projectDisposer);
+            LintCoreApplicationEnvironment.clearAccessorCache();
+        }
         ideaProject = null;
-        ideaProjectEnvironment = null;
+        projectDisposer = null;
 
         super.disposeProjects(knownProjects);
     }
@@ -1141,6 +1113,7 @@ public class LintCliClient extends LintClient {
         private final Project project;
 
         public LintCliUastParser(Project project) {
+            //noinspection ConstantConditions
             super(project, LintCliClient.this.ideaProject);
             this.project = project;
         }

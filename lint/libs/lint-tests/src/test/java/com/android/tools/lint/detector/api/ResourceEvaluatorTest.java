@@ -18,6 +18,9 @@ package com.android.tools.lint.detector.api;
 
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
+import com.android.utils.Pair;
+import com.intellij.openapi.Disposable;
+import com.intellij.openapi.util.Disposer;
 import com.intellij.psi.JavaRecursiveElementVisitor;
 import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiFile;
@@ -66,7 +69,10 @@ public class ResourceEvaluatorTest extends TestCase {
             final String targetVariable, boolean getSpecificType, boolean allowDereference) {
         @Language("JAVA")
         String source = getString(statementsSource);
-        JavaContext context = LintUtilsTest.parseUast(source, new File("src/test/pkg/Test.java"));
+        Pair<JavaContext, Disposable> pair =
+                LintUtilsTest.parseUast(source, new File("src/test/pkg/Test.java"));
+        JavaContext context = pair.getFirst();
+        Disposable disposable = pair.getSecond();
         assertNotNull(context);
         UFile uFile = context.getUastFile();
         assertNotNull(uFile);
@@ -110,6 +116,7 @@ public class ResourceEvaluatorTest extends TestCase {
                 assertEquals(expected, types.toString());
             }
         }
+        Disposer.dispose(disposable);
     }
 
     private static void check(String expected, String statementsSource,
@@ -118,7 +125,10 @@ public class ResourceEvaluatorTest extends TestCase {
 
         @Language("JAVA")
         String source = getString(statementsSource);
-        JavaContext context = LintUtilsTest.parsePsi(source, new File("src/test/pkg/Test.java"));
+        Pair<JavaContext, Disposable> pair =
+                LintUtilsTest.parsePsi(source, new File("src/test/pkg/Test.java"));
+        JavaContext context = pair.getFirst();
+        Disposable disposable = pair.getSecond();
         assertNotNull(context);
         PsiFile javaFile = context.getJavaFile();
         assertNotNull(javaFile);
@@ -160,6 +170,7 @@ public class ResourceEvaluatorTest extends TestCase {
                 assertEquals(expected, types.toString());
             }
         }
+        Disposer.dispose(disposable);
     }
 
     private static void checkType(String expected, String statementsSource,

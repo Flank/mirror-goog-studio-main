@@ -63,13 +63,16 @@ import com.android.sdklib.IAndroidTarget;
 import com.android.testutils.TestUtils;
 import com.android.tools.lint.LintCliClient;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
+import com.android.tools.lint.checks.infrastructure.TestLintClient;
 import com.android.tools.lint.client.api.JavaParser;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.UastParser;
+import com.android.utils.Pair;
 import com.android.utils.XmlUtils;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
+import com.intellij.openapi.Disposable;
 import com.intellij.psi.PsiJavaFile;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -440,7 +443,7 @@ public class LintUtilsTest extends TestCase {
     private static final Pattern CLASS_PATTERN = Pattern
             .compile("class\\s*(\\S+)\\s*(extends.*)?(implements.*)?\\{");
 
-    public static JavaContext parsePsi(@Language("JAVA") String javaSource) {
+    public static Pair<JavaContext,Disposable> parsePsi(@Language("JAVA") String javaSource) {
         // Figure out the "to" path: the package plus class name + java in the src/ folder
         Matcher matcher = PACKAGE_PATTERN.matcher(javaSource);
         String pkg = "";
@@ -474,20 +477,23 @@ public class LintUtilsTest extends TestCase {
 
     public static JavaContext parse(@Language("JAVA") final String javaSource,
             final File relativePath) {
-        return parse(javaSource, relativePath, true, false, false);
+        Pair<JavaContext, Disposable> parse =
+                parse(javaSource, relativePath, true, false, false);
+        // Disposal not necessary for lombok
+        return parse.getFirst();
     }
 
-    public static JavaContext parsePsi(@Language("JAVA") final String javaSource,
+    public static Pair<JavaContext,Disposable> parsePsi(@Language("JAVA") final String javaSource,
             final File relativePath) {
         return parse(javaSource, relativePath, false, true, false);
     }
 
-    public static JavaContext parseUast(@Language("JAVA") final String javaSource,
+    public static Pair<JavaContext,Disposable> parseUast(@Language("JAVA") final String javaSource,
             final File relativePath) {
         return parse(javaSource, relativePath, false, true, true);
     }
 
-    public static JavaContext parse(@Language("JAVA") final String javaSource,
+    public static Pair<JavaContext,Disposable>  parse(@Language("JAVA") final String javaSource,
             final File relativePath, boolean lombok, boolean psi, boolean uast) {
         // TODO: Clean up -- but where?
         File dir = Files.createTempDir();
@@ -559,8 +565,8 @@ public class LintUtilsTest extends TestCase {
             UFile uFile = uastParser.parse(context);
             context.setUastFile(uFile);
         }
-        client.disposeProjects(Collections.singletonList(project));
-        return context;
+        Disposable disposable = () -> client.disposeProjects(Collections.singletonList(project));
+        return Pair.of(context, disposable);
     }
 
     public void testConvertVersion() {

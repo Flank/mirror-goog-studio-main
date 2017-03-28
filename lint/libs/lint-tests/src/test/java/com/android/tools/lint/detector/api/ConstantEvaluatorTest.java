@@ -16,12 +16,17 @@
 
 package com.android.tools.lint.detector.api;
 
+import com.android.tools.lint.LintCoreApplicationEnvironment;
+import com.android.utils.Pair;
+import com.intellij.openapi.Disposable;
+import com.intellij.openapi.util.Disposer;
 import com.intellij.psi.JavaRecursiveElementVisitor;
 import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiLocalVariable;
 import java.io.File;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.concurrent.atomic.AtomicReference;
 import junit.framework.TestCase;
 import lombok.ast.CompilationUnit;
@@ -38,7 +43,10 @@ import org.jetbrains.uast.visitor.AbstractUastVisitor;
 public class ConstantEvaluatorTest extends TestCase {
     private static void checkUast(Object expected, @Language("JAVA") String source,
             final String targetVariable) {
-        JavaContext context = LintUtilsTest.parseUast(source, new File("src/test/pkg/Test.java"));
+        Pair<JavaContext, Disposable> pair =
+                LintUtilsTest.parseUast(source, new File("src/test/pkg/Test.java"));
+        JavaContext context = pair.getFirst();
+        Disposable disposable = pair.getSecond();
         assertNotNull(context);
         UFile uFile = context.getUastFile();
         assertNotNull(uFile);
@@ -88,12 +96,16 @@ public class ConstantEvaluatorTest extends TestCase {
             assertEquals(expected, ConstantEvaluator.evaluateString(context, expression,
                     false));
         }
+        Disposer.dispose(disposable);
     }
 
 
     private static void checkPsi(Object expected, @Language("JAVA") String source,
             final String targetVariable) {
-        JavaContext context = LintUtilsTest.parsePsi(source, new File("src/test/pkg/Test.java"));
+        Pair<JavaContext, Disposable> pair =
+                LintUtilsTest.parsePsi(source, new File("src/test/pkg/Test.java"));
+        JavaContext context = pair.getFirst();
+        Disposable disposable = pair.getSecond();
         assertNotNull(context);
         PsiFile javaFile = context.getJavaFile();
         assertNotNull(javaFile);
@@ -141,6 +153,7 @@ public class ConstantEvaluatorTest extends TestCase {
             assertEquals(expected, ConstantEvaluator.evaluateString(context, expression,
                     false));
         }
+        Disposer.dispose(disposable);
     }
 
     private void check(Object expected, @Language("JAVA") String source,
@@ -184,6 +197,8 @@ public class ConstantEvaluatorTest extends TestCase {
             assertEquals(expected, ConstantEvaluator.evaluateString(context, expression,
                     false));
         }
+
+        LintCoreApplicationEnvironment.disposeApplicationEnvironment();
     }
 
     private void checkStatements(Object expected, String statementsSource,
