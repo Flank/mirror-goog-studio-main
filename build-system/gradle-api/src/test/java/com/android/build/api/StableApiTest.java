@@ -31,7 +31,6 @@ import com.google.common.reflect.TypeToken;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.net.URL;
-import java.nio.charset.Charset;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -61,7 +60,9 @@ public class StableApiTest {
                         .collect(Collectors.joining("\n"));
 
         // Compare the two as strings, to get a nice diff UI in the IDE.
-        String expectedApiElements = Resources.toString(API_LIST_URL, Charset.defaultCharset());
+        String expectedApiElements =
+                Resources.toString(API_LIST_URL, Charsets.UTF_8)
+                        .replace(System.lineSeparator(), "\n");
         assertEquals(expectedApiElements, apiElements);
     }
 

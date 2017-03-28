@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.model.Version;
+import com.android.utils.FileUtils;
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
@@ -240,9 +241,10 @@ public class JarContentsTest {
     }
 
     private static boolean isIgnored(Path path) {
+        String normalizedPath = FileUtils.toSystemIndependentPath(path.toString());
         return IGNORED_ARTIFACTS
                 .stream()
-                .anyMatch(name -> path.toString().contains("/" + name + "/"));
+                .anyMatch(name -> normalizedPath.contains("/" + name + "/"));
     }
 
     private static boolean isCurrentVersion(Path path) {
@@ -254,8 +256,10 @@ public class JarContentsTest {
     private static void checkJar(Path jar, Path repo) throws Exception {
         String relativePath = repo.relativize(jar).toString();
 
+        String pathWithoutVersion =
+                relativePath.substring(0, CharMatcher.DIGIT.indexIn(relativePath));
         Collection<String> expected =
-                EXPECTED.get(relativePath.substring(0, CharMatcher.DIGIT.indexIn(relativePath)));
+                EXPECTED.get(FileUtils.toSystemIndependentPath(pathWithoutVersion));
         if (expected == null) {
             expected = Collections.emptySet();
         }
