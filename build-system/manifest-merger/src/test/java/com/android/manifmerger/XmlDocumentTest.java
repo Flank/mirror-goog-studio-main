@@ -22,6 +22,7 @@ import com.android.SdkConstants;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.testutils.MockLog;
 import com.android.utils.ILogger;
+import com.android.utils.SdkUtils;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
@@ -280,7 +281,7 @@ public class XmlDocumentTest extends TestCase {
 
         XmlDocument xmlDocument = TestUtils.xmlDocumentFromString(
                 TestUtils.sourceFile(getClass(), "testWriting()"), input);
-        assertEquals(input, xmlDocument.prettyPrint());
+        assertEquals(input, xmlDocument.prettyPrint().replace(SdkUtils.getLineSeparator(), "\n"));
     }
 
     public void testCustomElements()

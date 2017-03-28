@@ -506,7 +506,8 @@ public class InstantRunTransformTest {
 
         ImmutableList<File> processedFiles = filesElectedForClasses2Transformation.build();
         assertEquals("Wrong number of files elected for processing", 1, processedFiles.size());
-        assertThat(processedFiles.get(0).getAbsolutePath()).contains("com/other/B.class");
+        assertThat(processedFiles.get(0).getAbsolutePath()).contains(
+                FileUtils.join("com", "other", "B.class"));
 
         assertFalse("Incremental support class file should have been deleted.", outputFile.exists());
         assertFalse("Enhanced class file should have been deleted.", outputEnhancedFile.exists());
