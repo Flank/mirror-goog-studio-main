@@ -31,6 +31,7 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.profile.Recorder;
+import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import javax.inject.Inject;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
@@ -63,13 +64,11 @@ public class FeaturePlugin extends LibraryPlugin {
         return FeatureExtension.class;
     }
 
-    // FIXME: Re-enable when the protos changes have been submitted.
-    /*
     @NonNull
     @Override
     protected GradleBuildProject.PluginType getAnalyticsPluginType() {
         return GradleBuildProject.PluginType.FEATURE;
-    }*/
+    }
 
     @NonNull
     @Override
