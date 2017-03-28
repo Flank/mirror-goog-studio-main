@@ -72,5 +72,8 @@ android.applicationVariants.all { variant ->
         outputFile file("${resFolder2.singleFile.absolutePath}/values/generated.xml")
     }
     resFolder2.builtBy(resGenerationTask2)
-    variant.registerGeneratedResFolders(resFolder2)
+
+    if (Boolean.parseBoolean(project.property('inject_enable_generate_values_res'))) {
+        variant.registerGeneratedResFolders(resFolder2)
+    }
 }
