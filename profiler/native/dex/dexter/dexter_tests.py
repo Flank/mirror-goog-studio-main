@@ -25,6 +25,8 @@ test_cases = {
   'rewrite'         : { 'args' : '-d -x full_rewrite', 'input' : ['*.dex'] },
   'entry_hook'      : { 'args' : '-d -x stress_entry_hook', 'input' : [
                           'entry_hooks.dex', 'hello.dex', 'medium.dex', 'min.dex' ] },
+  'exit_hook'       : { 'args' : '-d -x stress_exit_hook', 'input' : [
+                          'exit_hooks.dex', 'medium.dex', 'try_catch.dex' ] },
 }
 
 # run a shell command and returns the stdout content

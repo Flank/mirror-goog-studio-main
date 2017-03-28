@@ -19,6 +19,7 @@
 #include "slicer/dex_ir.h"
 #include "slicer/dex_ir_builder.h"
 
+#include <string.h>
 #include <map>
 #include <memory>
 #include <vector>
@@ -100,6 +101,105 @@ void StressEntryHook(std::shared_ptr<ir::DexFile> dex_ir) {
   }
 }
 
+// For every method in the .dex image, insert an "exit hook" call
+// to a fictitious method: Tracer.OnExit(<return value...>).
+// OnExit() is called right before returning from the instrumented
+// method (on the non-exceptional path) and it will be passed the return
+// value, if any. For non-void return types, the return value from OnExit()
+// will also be used as the return value of the instrumented method.
+void StressExitHook(std::shared_ptr<ir::DexFile> dex_ir) {
+  for (auto& ir_method : dex_ir->encoded_methods) {
+    if (ir_method->code == nullptr) {
+      continue;
+    }
+
+    lir::CodeIr code_ir(ir_method.get(), dex_ir);
+    ir::Builder builder(dex_ir);
+
+    // do we have a void-return method?
+    bool return_void =
+        ::strcmp(ir_method->decl->prototype->return_type->descriptor->c_str(), "V") == 0;
+
+    // 1. construct call target
+    std::vector<ir::Type*> param_types;
+    if (!return_void) {
+      param_types.push_back(ir_method->decl->prototype->return_type);
+    }
+
+    auto ir_proto = builder.GetProto(ir_method->decl->prototype->return_type,
+                                     builder.GetTypeList(param_types));
+
+    auto ir_method_decl = builder.GetMethodDecl(builder.GetAsciiString("OnExit"),
+                                                ir_proto,
+                                                builder.GetType("LTracer;"));
+
+    auto target_method = code_ir.Alloc<lir::Method>(ir_method_decl, ir_method_decl->orig_index);
+
+    // 2. find and instrument the return instructions
+    for (auto instr : code_ir.instructions) {
+      auto bytecode = dynamic_cast<lir::Bytecode*>(instr);
+      if (bytecode == nullptr) {
+        continue;
+      }
+
+      dex::Opcode move_result_opcode = dex::OP_NOP;
+      dex::u4 reg = 0;
+      int reg_count = 0;
+
+      switch (bytecode->opcode) {
+        case dex::OP_RETURN_VOID:
+          CHECK(return_void);
+          break;
+        case dex::OP_RETURN:
+          CHECK(!return_void);
+          move_result_opcode = dex::OP_MOVE_RESULT;
+          reg = bytecode->CastOperand<lir::VReg>(0)->reg;
+          reg_count = 1;
+          break;
+        case dex::OP_RETURN_OBJECT:
+          CHECK(!return_void);
+          move_result_opcode = dex::OP_MOVE_RESULT_OBJECT;
+          reg = bytecode->CastOperand<lir::VReg>(0)->reg;
+          reg_count = 1;
+          break;
+        case dex::OP_RETURN_WIDE:
+          CHECK(!return_void);
+          move_result_opcode = dex::OP_MOVE_RESULT_WIDE;
+          reg = bytecode->CastOperand<lir::VRegPair>(0)->base_reg;
+          reg_count = 2;
+          break;
+        default:
+          // skip the bytecode...
+          continue;
+      }
+
+      // the call bytecode
+      auto args = code_ir.Alloc<lir::VRegRange>(reg, reg_count);
+      auto call = code_ir.Alloc<lir::Bytecode>();
+      call->opcode = dex::OP_INVOKE_STATIC_RANGE;
+      call->operands.push_back(args);
+      call->operands.push_back(target_method);
+      code_ir.instructions.InsertBefore(bytecode, call);
+
+      // move result back to the right register
+      //
+      // NOTE: we're reusing the original return's operand,
+      //   which is valid and more efficient than allocating
+      //   a new LIR node, but it's also fragile: we need to be
+      //   very careful about mutating shared nodes.
+      //
+      if (move_result_opcode != dex::OP_NOP) {
+        auto move_result = code_ir.Alloc<lir::Bytecode>();
+        move_result->opcode = move_result_opcode;
+        move_result->operands.push_back(bytecode->operands[0]);
+        code_ir.instructions.InsertBefore(bytecode, move_result);
+      }
+    }
+
+    code_ir.Assemble();
+  }
+}
+
 void ListExperiments(std::shared_ptr<ir::DexFile> dex_ir);
 
 using Experiment = void (*)(std::shared_ptr<ir::DexFile>);
@@ -109,6 +209,7 @@ std::map<std::string, Experiment> experiments_registry = {
     { "list_experiments", &ListExperiments },
     { "full_rewrite", &FullRewrite },
     { "stress_entry_hook", &StressEntryHook },
+    { "stress_exit_hook", &StressExitHook },
 };
 
 // Lists all the registered experiments
