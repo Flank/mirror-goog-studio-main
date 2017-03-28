@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.concurrency.Immutable;
 import com.android.builder.Version;
+import com.android.ide.common.util.BuildSessionVariable;
 import com.android.ide.common.util.JvmWideVariable;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -64,15 +65,16 @@ public final class BuildSessionHelper {
      * <p>Here, a "build" refers to the entire Gradle build. For composite builds, it means the
      * whole build that includes included builds.
      *
-     * <p>This method enforces that within a build, only one version of the plugin is loaded. If the
-     * plugin is loaded multiple times with the same version, there is still only one instance of
-     * {@link BuildSessionSingleton} in the JVM.
+     * <p>This method enforces that within a build, a project must apply the plugin only once, and
+     * different projects must apply the same version of the plugin. If the plugin is applied
+     * multiple times (to different projects and with the same version), there is still only one
+     * instance of {@link BuildSessionSingleton} in the JVM within the current build.
      *
-     * <p>This method should be called immediately when the plugin is first applied to a project.
+     * <p>This method should be called immediately when the plugin is applied to a project.
      *
      * @param project the project that the plugin is applied to
-     * @throws IllegalStateException if another version of the plugin has been loaded in the current
-     *     build
+     * @throws IllegalStateException if a project applies the plugin more than once or if different
+     *     projects apply different versions of the plugin in the current build
      */
     public static synchronized void startOnce(@NonNull Project project) {
         Set<JvmWideVariable<?>> jvmWidePluginVersionRecords =
@@ -81,7 +83,7 @@ public final class BuildSessionHelper {
                         Version.ANDROID_GRADLE_PLUGIN_VERSION,
                         Version.ANDROID_GRADLE_COMPONENT_PLUGIN_VERSION);
 
-        // If the plugin is loaded multiple times, there will be multiple calls to startOnce() in a
+        // If the plugin is applied multiple times, there will be multiple calls to startOnce() in a
         // build. The variable below indicates whether this is the first call.
         AtomicBoolean buildFirstStarted = new AtomicBoolean(false);
 
@@ -125,6 +127,11 @@ public final class BuildSessionHelper {
                     });
         }
 
+        // Invoke (or register) event handlers on the BuildSessionVariable class every time the
+        // plugin is applied, as required by that class
+        BuildSessionVariable.buildStarted();
+        executeLastWhenBuildFinished(BuildSessionVariable::buildFinished);
+
         // Also un-register the JVM-wide variables that keep track of plugin versions at the end of
         // a build (we allow different plugin versions to be used across different builds). We don't
         // need to un-link the references to them since there are none.
@@ -135,8 +142,8 @@ public final class BuildSessionHelper {
     }
 
     /**
-     * Verifies that only one version of the plugin (and the component model plugin) is loaded in
-     * the current build. Also make sure that the plugin is not applied twice to a project.
+     * Verifies that a project applies the plugin only once and different projects apply the same
+     * version of the plugin.
      *
      * @return the JVM-wide variables used to keep track of plugin versions
      */
@@ -163,7 +170,7 @@ public final class BuildSessionHelper {
         JvmWideVariable<ConcurrentMap<String, String>> jvmWideMap =
                 new JvmWideVariable<>(
                         "PLUGIN_VERSION",
-                        pluginName,
+                        pluginName.replace(' ', '_'),
                         new TypeToken<ConcurrentMap<String, String>>() {},
                         ConcurrentHashMap::new);
         ConcurrentMap<String, String> projectToPluginVersionMap = jvmWideMap.get();

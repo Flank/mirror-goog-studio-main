@@ -97,17 +97,18 @@ public final class ReadWriteThreadLock {
     private final ReadWriteThreadLock.Lock writeLock = new ReadWriteThreadLock.WriteLock();
 
     /**
-     * JVM-wide map from a lock object to a {@link ReentrantReadWriteLock}, used to make sure that
-     * there is only one instance of {@code ReentrantReadWriteLock} per lock object within the
-     * current JVM.
+     * Map from a lock object to a {@link ReentrantReadWriteLock}, used to make sure that there is
+     * only one instance of {@code ReentrantReadWriteLock} per lock object within the current JVM
+     * within the current build.
      */
     @NonNull
-    private static final JvmWideVariable<ConcurrentMap<Object, ReentrantReadWriteLock>> lockMap =
-            new JvmWideVariable<>(
-                    ReadWriteThreadLock.class.getName(),
-                    "lockMap",
-                    new TypeToken<ConcurrentMap<Object, ReentrantReadWriteLock>>() {},
-                    ConcurrentHashMap::new);
+    private static final BuildSessionVariable<ConcurrentMap<Object, ReentrantReadWriteLock>>
+            lockMap =
+                    new BuildSessionVariable<>(
+                            ReadWriteThreadLock.class.getName(),
+                            "lockMap",
+                            new TypeToken<ConcurrentMap<Object, ReentrantReadWriteLock>>() {},
+                            ConcurrentHashMap::new);
 
     /**
      * The unique {@link ReentrantReadWriteLock} instance corresponding to the given lock object.

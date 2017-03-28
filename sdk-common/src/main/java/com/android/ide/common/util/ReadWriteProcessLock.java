@@ -88,28 +88,42 @@ public final class ReadWriteProcessLock {
     private final ReadWriteProcessLock.Lock writeLock = new ReadWriteProcessLock.WriteLock();
 
     /**
-     * JVM-wide map from a lock file to a {@link FileChannel}, used to make sure that there is only
-     * one instance of {@code FileChannel} per lock file within the current process.
+     * Map from a lock file to a {@link FileChannel}, used to make sure that there is only one
+     * instance of {@code FileChannel} per lock file within the current process within the current
+     * build.
      */
     @NonNull
-    private static final JvmWideVariable<ConcurrentMap<File, FileChannel>> fileChannelMap =
-            new JvmWideVariable<>(
+    private static final BuildSessionVariable<ConcurrentMap<File, FileChannel>> fileChannelMap =
+            new BuildSessionVariable<>(
                     ReadWriteProcessLock.class.getName(),
                     "fileChannelMap",
                     new TypeToken<ConcurrentMap<File, FileChannel>>() {},
                     ConcurrentHashMap::new);
 
     /**
-     * JVM-wide map from a lock file to a {@link FileLock}, used to make sure that there is only one
-     * instance of {@code FileLock} per lock file within the current process.
+     * Map from a lock file to a {@link FileLock}, used to make sure that there is only one instance
+     * of {@code FileLock} per lock file within the current process within the current build.
      */
     @NonNull
-    private static final JvmWideVariable<ConcurrentMap<File, FileLock>> fileLockMap =
-            new JvmWideVariable<>(
+    private static final BuildSessionVariable<ConcurrentMap<File, FileLock>> fileLockMap =
+            new BuildSessionVariable<>(
                     ReadWriteProcessLock.class.getName(),
                     "fileLockMap",
                     new TypeToken<ConcurrentMap<File, FileLock>>() {},
                     ConcurrentHashMap::new);
+
+    /**
+     * Map from a lock file to an {@link AtomicInteger} that counts the number of actions that are
+     * holding the within-process read lock on the given lock file within the current build.
+     */
+    @NonNull
+    private static final BuildSessionVariable<ConcurrentMap<File, AtomicInteger>>
+            numOfReadingActionsMap =
+                    new BuildSessionVariable<>(
+                            ReadWriteProcessLock.class.getName(),
+                            "numOfReadingActionsMap",
+                            new TypeToken<ConcurrentMap<File, AtomicInteger>>() {},
+                            ConcurrentHashMap::new);
 
     /** The lock file, used solely for synchronization purposes. */
     @NonNull private final File lockFile;
@@ -176,14 +190,6 @@ public final class ReadWriteProcessLock {
         this.lockFile = lockFile;
         this.readWriteThreadLock = new ReadWriteThreadLock(lockFile);
 
-        // To make this.numOfReadingActions contain a value shared among all the threads, we use a
-        // JvmWideVariable map
-        JvmWideVariable<ConcurrentMap<File, AtomicInteger>> numOfReadingActionsMap =
-                new JvmWideVariable<>(
-                        ReadWriteProcessLock.class.getName(),
-                        "numOfReadingActionsMap",
-                        new TypeToken<ConcurrentMap<File, AtomicInteger>>() {},
-                        ConcurrentHashMap::new);
         ConcurrentMap<File, AtomicInteger> map = numOfReadingActionsMap.get();
         Preconditions.checkNotNull(map);
         this.numOfReadingActions = map.computeIfAbsent(lockFile, (any) -> new AtomicInteger(0));

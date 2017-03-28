@@ -61,6 +61,11 @@ import javax.management.ReflectionException;
  * still reference the same variable. That is, changes to a JVM-wide variable made from a class
  * loaded by one class loader can be seen from the same class loaded by a different class loader.
  *
+ * <p>A {@link JvmWideVariable} instance should typically be assigned to some static field of a
+ * class, not to an instance field or a local variable within a method, since the actual JVM-wide
+ * variable will not automatically be garbage-collected when it is no longer used, as one would have
+ * expected from an instance field or a local variable.
+ *
  * <p>The usage of this class is as follows. Suppose we previously used a static variable:
  *
  * <pre>{@code
@@ -130,6 +135,11 @@ import javax.management.ReflectionException;
  *     }
  * }
  * }</pre>
+ *
+ * <p>At the end of a build, JVM-wide variables usually need to be released (by un-registering the
+ * variables from the JVM via {@link #unregister()} or {@link #unregisterAll()}, and also un-linking
+ * all references to them) since every build should be independent and the user may also change the
+ * plugin version in between builds.
  *
  * <p>This class is thread-safe.
  *
@@ -202,13 +212,12 @@ public final class JvmWideVariable<T> {
         try {
             this.objectName =
                     new ObjectName(
-                            JvmWideVariable.class.getSimpleName()
-                                    + ":type="
-                                    + ValueWrapper.class.getSimpleName()
-                                    + ",group="
-                                    + group
-                                    + ",name="
-                                    + name);
+                            String.format(
+                                    "%1$s:type=%2$s,group=%3$s,name=%4$s",
+                                    JvmWideVariable.class.getSimpleName(),
+                                    ValueWrapper.class.getSimpleName(),
+                                    group,
+                                    name));
         } catch (MalformedObjectNameException e) {
             throw new RuntimeException(e);
         }

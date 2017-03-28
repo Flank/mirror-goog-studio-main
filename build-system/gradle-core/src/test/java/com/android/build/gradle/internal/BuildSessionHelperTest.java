@@ -229,7 +229,7 @@ public class BuildSessionHelperTest {
         }
         JvmWideVariable.unregisterAll();
 
-        // Load the plugin again in the same project with the same version, but in a different
+        // Load the plugin again in the same project with the same version, and in a different
         // build, expect success
         BuildSessionHelper.startOnce(project1);
         //noinspection ConstantConditions
@@ -240,7 +240,7 @@ public class BuildSessionHelperTest {
                 Version.ANDROID_GRADLE_COMPONENT_PLUGIN_VERSION);
         JvmWideVariable.unregisterAll();
 
-        // Load the plugin again in the same project with a different version, but in a different
+        // Load the plugin again in the same project with a different version, and in a different
         // build, expect success
         BuildSessionHelper.startOnce(project1);
         //noinspection ConstantConditions
@@ -248,7 +248,18 @@ public class BuildSessionHelperTest {
         BuildSessionHelper.verifyPluginVersion(project1, "1.2.3", "0.1.2");
         JvmWideVariable.unregisterAll();
 
-        // Load the plugin again in a different project with a different version, but in a different
+        // Load the plugin again in a different project with the same version, and in a different
+        // build, expect success
+        BuildSessionHelper.startOnce(project1);
+        //noinspection ConstantConditions
+        ((BuildSessionSingleton) BuildSessionHelper.getSingleton()).buildFinished();
+        BuildSessionHelper.verifyPluginVersion(
+                project2,
+                Version.ANDROID_GRADLE_PLUGIN_VERSION,
+                Version.ANDROID_GRADLE_COMPONENT_PLUGIN_VERSION);
+        JvmWideVariable.unregisterAll();
+
+        // Load the plugin again in a different project with a different version, and in a different
         // build, expect success
         BuildSessionHelper.startOnce(project1);
         //noinspection ConstantConditions

@@ -36,12 +36,13 @@ import org.gradle.api.invocation.Gradle;
  * <p>Here, a "build" refers to the entire Gradle build. For composite builds, it means the whole
  * build that includes included builds.
  *
- * <p>This class enforces that within a build, only one version of the plugin is loaded. If the
- * plugin is loaded multiple times with the same version, there is still only one instance of {@link
- * BuildSessionSingleton} in the JVM.
+ * <p>This class requires that within a build, a project must apply the plugin only once, and
+ * different projects must apply the same version of the plugin. If the plugin is applied multiple
+ * times (to different projects and with the same version), there is still only one instance of
+ * {@link BuildSessionSingleton} in the JVM within the current build.
  *
- * <p>The singleton object should be created immediately when the plugin is first applied to a
- * project by calling {@link BuildSessionHelper#startOnce(Project)}.
+ * <p>The singleton object should be created immediately when the plugin is applied to a project by
+ * calling {@link BuildSessionHelper#startOnce(Project)}.
  *
  * <p>This class is thread-safe.
  */
@@ -103,7 +104,7 @@ public final class BuildSessionSingleton implements BuildSessionInterface {
      *   <li>This method was not registered to be executed, if the build failed or if the user hit
      *       Ctrl-C before this method could be registered. To reduce this risk, we need to make
      *       sure {@link BuildSessionHelper#startOnce(Project)} is called immediately when the
-     *       plugin is first applied to a project and register this method early (see the {@link
+     *       plugin is applied to a project and register this method early (see the {@link
      *       #BuildSessionSingleton(Gradle)} constructor).
      *   <li>This method was registered but was not executed. Although Gradle will always execute
      *       build-finished event handlers even if the build fails or if the user hits Ctrl-C, it
@@ -111,7 +112,7 @@ public final class BuildSessionSingleton implements BuildSessionInterface {
      *       Ctrl-C while they were being executed. In that case, the remaining event handlers
      *       including this one will not get executed. To reduce this risk, we again need to make
      *       sure {@link BuildSessionHelper#startOnce(Project)} is called immediately when the
-     *       plugin is first applied to a project.
+     *       plugin is applied to a project.
      *   <li>This method was registered and was executed. However, it may not have finished
      *       properly, again possibly due to a failure or Ctrl-C.
      *   <li>This method was executed successfully. However, other build-finished event handlers may
@@ -127,6 +128,7 @@ public final class BuildSessionSingleton implements BuildSessionInterface {
      *   <li>The contract that this singleton's lifetime is limited to a build is broken.
      *   <li>The JVM-wide variables that keep track of plugin versions are not unset at the end of a
      *       build, possibly resulting in false alarms.
+     *   <li>The contract that build session variables' life time is limited to a build is broken.
      *   <li>Actions registered using the {@link BuildSessionHelper} API to be executed at the end
      *       of the build are not guaranteed to be executed or completed successfully.
      *   <li>Actions registered directly using the Gradle API to be executed at the end of the build
@@ -137,9 +139,9 @@ public final class BuildSessionSingleton implements BuildSessionInterface {
      * Gradle daemon was not enabled in the first place, then none of these issues apply.)
      *
      * <p>If we use this API properly (call {@link BuildSessionHelper#startOnce(Project)}
-     * immediately when the plugin is first applied to a project and always register build-finished
-     * event handlers using the {@link BuildSessionHelper} API), the chance of the above issues
-     * happening is rather small (however, we should be aware of them).
+     * immediately when the plugin is applied to a project and always register build-finished event
+     * handlers using the {@link BuildSessionHelper} API), the chance of the above issues happening
+     * is rather small (however, we should be aware of them).
      */
     @VisibleForTesting
     void buildFinished() {
