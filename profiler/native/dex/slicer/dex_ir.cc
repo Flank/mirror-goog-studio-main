@@ -85,8 +85,8 @@ void DexFile::SortClassIndexes() {
 static void SortEncodedFields(std::vector<EncodedField*>* fields) {
   std::sort(fields->begin(), fields->end(),
             [](const EncodedField* a, const EncodedField* b) {
-              CHECK(a->field->index != b->field->index || a == b);
-              return a->field->index < b->field->index;
+              CHECK(a->decl->index != b->decl->index || a == b);
+              return a->decl->index < b->decl->index;
             });
 }
 
@@ -94,8 +94,8 @@ static void SortEncodedFields(std::vector<EncodedField*>* fields) {
 static void SortEncodedMethods(std::vector<EncodedMethod*>* methods) {
   std::sort(methods->begin(), methods->end(),
             [](const EncodedMethod* a, const EncodedMethod* b) {
-              CHECK(a->method->index != b->method->index || a == b);
-              return a->method->index < b->method->index;
+              CHECK(a->decl->index != b->decl->index || a == b);
+              return a->decl->index < b->decl->index;
             });
 }
 
@@ -217,7 +217,7 @@ void DexFile::Normalize() {
     auto& field_annotations = irAnnotationDirectory->field_annotations;
     std::sort(field_annotations.begin(), field_annotations.end(),
               [](const FieldAnnotation* a, const FieldAnnotation* b) {
-                return a->field->index < b->field->index;
+                return a->field_decl->index < b->field_decl->index;
               });
 
     // method_annotations: The elements of the list must be
@@ -225,7 +225,7 @@ void DexFile::Normalize() {
     auto& method_annotations = irAnnotationDirectory->method_annotations;
     std::sort(method_annotations.begin(), method_annotations.end(),
               [](const MethodAnnotation* a, const MethodAnnotation* b) {
-                return a->method->index < b->method->index;
+                return a->method_decl->index < b->method_decl->index;
               });
 
     // parameter_annotations: The elements of the list must be
@@ -233,7 +233,7 @@ void DexFile::Normalize() {
     auto& param_annotations = irAnnotationDirectory->param_annotations;
     std::sort(param_annotations.begin(), param_annotations.end(),
               [](const ParamAnnotation* a, const ParamAnnotation* b) {
-                return a->method->index < b->method->index;
+                return a->method_decl->index < b->method_decl->index;
               });
   }
 }

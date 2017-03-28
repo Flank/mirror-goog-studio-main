@@ -697,21 +697,21 @@ dex::u4 Writer::WriteClassAnnotations(const ir::Class* ir_class) {
 
     for (auto irItem : ir_annotations->field_annotations) {
       dex::FieldAnnotationsItem dex_item = {};
-      dex_item.field_idx = irItem->field->index;
+      dex_item.field_idx = irItem->field_decl->index;
       dex_item.annotations_off = FilePointer(irItem->annotations);
       dex_field_annotations.push_back(dex_item);
     }
 
     for (auto irItem : ir_annotations->method_annotations) {
       dex::MethodAnnotationsItem dex_item = {};
-      dex_item.method_idx = irItem->method->index;
+      dex_item.method_idx = irItem->method_decl->index;
       dex_item.annotations_off = FilePointer(irItem->annotations);
       dex_method_annotations.push_back(dex_item);
     }
 
     for (auto irItem : ir_annotations->param_annotations) {
       dex::ParameterAnnotationsItem dex_item = {};
-      dex_item.method_idx = irItem->method->index;
+      dex_item.method_idx = irItem->method_decl->index;
       dex_item.annotations_off = FilePointer(irItem->annotations);
       dex_param_annotations.push_back(dex_item);
     }
@@ -972,13 +972,13 @@ dex::u4 Writer::WriteCode(const ir::Code* irCode) {
 // "encoded_field"
 void Writer::WriteEncodedField(const ir::EncodedField* ir_encoded_field,
                        dex::u4* base_index) {
-  dex::u4 index_delta = ir_encoded_field->field->index;
+  dex::u4 index_delta = ir_encoded_field->decl->index;
   CHECK(index_delta != dex::kNoIndex);
   if (*base_index != dex::kNoIndex) {
     CHECK(index_delta > *base_index);
     index_delta = index_delta - *base_index;
   }
-  *base_index = ir_encoded_field->field->index;
+  *base_index = ir_encoded_field->decl->index;
 
   auto& data = dex_->class_data;
   data.PushULeb128(index_delta);
@@ -988,13 +988,13 @@ void Writer::WriteEncodedField(const ir::EncodedField* ir_encoded_field,
 // "encoded_method"
 void Writer::WriteEncodedMethod(const ir::EncodedMethod* ir_encoded_method,
                         dex::u4* base_index) {
-  dex::u4 index_delta = ir_encoded_method->method->index;
+  dex::u4 index_delta = ir_encoded_method->decl->index;
   CHECK(index_delta != dex::kNoIndex);
   if (*base_index != dex::kNoIndex) {
     CHECK(index_delta > *base_index);
     index_delta = index_delta - *base_index;
   }
-  *base_index = ir_encoded_method->method->index;
+  *base_index = ir_encoded_method->decl->index;
 
   dex::u4 code_offset = FilePointer(ir_encoded_method->code);
 

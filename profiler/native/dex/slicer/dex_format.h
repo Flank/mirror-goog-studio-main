@@ -71,6 +71,28 @@ constexpr u1 kEncodedBoolean        = 0x1f;
 constexpr u1 kEncodedValueTypeMask  = 0x1f;
 constexpr u1 kEncodedValueArgShift  = 5;
 
+// access_flags
+constexpr u4 kAccPublic                 = 0x0001;     // class, field, method, ic
+constexpr u4 kAccPrivate                = 0x0002;     // field, method, ic
+constexpr u4 kAccProtected              = 0x0004;     // field, method, ic
+constexpr u4 kAccStatic                 = 0x0008;     // field, method, ic
+constexpr u4 kAccFinal                  = 0x0010;     // class, field, method, ic
+constexpr u4 kAccSynchronized           = 0x0020;     // method (only allowed on natives)
+constexpr u4 kAccSuper                  = 0x0020;     // class (not used in dex)
+constexpr u4 kAccVolatile               = 0x0040;     // field
+constexpr u4 kAccBridge                 = 0x0040;     // method
+constexpr u4 kAccTransient              = 0x0080;     // field
+constexpr u4 kAccVarargs                = 0x0080;     // method
+constexpr u4 kAccNative                 = 0x0100;     // method
+constexpr u4 kAccInterface              = 0x0200;     // class, ic
+constexpr u4 kAccAbstract               = 0x0400;     // class, method, ic
+constexpr u4 kAccStrict                 = 0x0800;     // method
+constexpr u4 kAccSynthetic              = 0x1000;     // class, field, method, ic
+constexpr u4 kAccAnnotation             = 0x2000;     // class, ic
+constexpr u4 kAccEnum                   = 0x4000;     // class, field, ic
+constexpr u4 kAccConstructor            = 0x00010000; // method (dex only) <(cl)init>
+constexpr u4 kAccDeclaredSynchronized   = 0x00020000; // method (dex only)
+
 // map_item type codes
 constexpr u2 kHeaderItem                = 0x0000;
 constexpr u2 kStringIdItem              = 0x0001;
@@ -281,6 +303,9 @@ struct AnnotationItem {
 u4 ComputeChecksum(const Header* header);
 
 // Converts a type descriptor to a human-readable declaration
-std::string DescriptorToDecl(const char* desc);
+std::string DescriptorToDecl(const char* descriptor);
+
+// Converts a type descriptor to the equivalent shorty type descriptor
+char DescriptorToShorty(const char* descriptor);
 
 }  // namespace dex
