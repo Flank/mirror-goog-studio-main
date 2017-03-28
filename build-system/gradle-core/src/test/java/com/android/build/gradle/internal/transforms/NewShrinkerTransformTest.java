@@ -42,11 +42,12 @@ public class NewShrinkerTransformTest {
         NewShrinkerTransform.printWhyAreYouKeepingExplanation(
                 ImmutableMap.of("test/Bbb", trace), new PrintStream(byteArrayOutputStream));
 
+        String expected =
+                "test/Bbb\n"
+                        + "  REQUIRED_CLASS_STRUCTURE from test/Aaa\n"
+                        + "  REQUIRED_CODE_REFERENCE from test/Main.main:()V\n"
+                        + "  REQUIRED_KEEP_RULES from keep rules\n";
         Truth.assertThat(byteArrayOutputStream.toString())
-                .isEqualTo(
-                        "test/Bbb\n"
-                                + "  REQUIRED_CLASS_STRUCTURE from test/Aaa\n"
-                                + "  REQUIRED_CODE_REFERENCE from test/Main.main:()V\n"
-                                + "  REQUIRED_KEEP_RULES from keep rules\n");
+                .isEqualTo(expected.replace("\n", System.lineSeparator()));
     }
 }

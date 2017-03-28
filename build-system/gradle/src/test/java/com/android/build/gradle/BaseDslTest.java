@@ -23,6 +23,7 @@ import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.core.AndroidBuilder;
+import com.android.testutils.OsType;
 import com.android.testutils.TestUtils;
 import com.android.utils.FileUtils;
 import com.google.common.collect.Lists;
@@ -106,7 +107,17 @@ public abstract class BaseDslTest extends TestCase {
         File manifest = new File(projectDirectory, "src/main/AndroidManifest.xml");
         FileUtils.createFile(manifest, String.format(MANIFEST_TEMPLATE, getClass().getName()));
 
-        project = ProjectBuilder.builder().withProjectDir(projectDirectory).build();
+        ProjectBuilder projectBuilder = ProjectBuilder.builder().withProjectDir(projectDirectory);
+
+        if (OsType.getHostOs() == OsType.WINDOWS) {
+            // On Windows Gradle assumes the user home $PROJECT_DIR/userHome and unzips some DLLs
+            // there that this JVM will load, so they cannot be deleted. Below we set things up so
+            // that all tests use a single userHome directory and project dirs can be deleted.
+            File tmpdir = new File(System.getProperty("java.io.tmpdir"));
+            projectBuilder.withGradleUserHomeDir(new File(tmpdir, "testGradleUserHome"));
+        }
+
+        project = projectBuilder.build();
     }
 
     @Override
