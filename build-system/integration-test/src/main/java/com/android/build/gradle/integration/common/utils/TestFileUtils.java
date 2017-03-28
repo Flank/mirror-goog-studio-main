@@ -26,6 +26,7 @@ import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
+import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
@@ -34,6 +35,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Helper to help verify content of a file.
@@ -140,5 +142,19 @@ public class TestFileUtils {
         return Arrays.asList(
                 FileUtils.toSystemIndependentPath(
                         path.getPath()).split("/"));
+    }
+
+    @NonNull
+    public static String sha1NormalizedLineEndings(@NonNull File file) throws IOException {
+        return sha1NormalizedLineEndings(file.toPath());
+    }
+
+    @NonNull
+    public static String sha1NormalizedLineEndings(@NonNull Path file) throws IOException {
+        String content =
+                java.nio.file.Files.readAllLines(file, Charsets.UTF_8)
+                        .stream()
+                        .collect(Collectors.joining("\n"));
+        return Hashing.sha1().hashString(content + "\n", Charsets.UTF_8).toString();
     }
 }

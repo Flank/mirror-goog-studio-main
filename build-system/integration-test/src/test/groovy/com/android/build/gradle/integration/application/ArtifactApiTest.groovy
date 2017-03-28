@@ -23,6 +23,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.truth.TruthHelper
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper
 import com.android.build.gradle.integration.common.utils.ModelHelper
+import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.ArtifactMetaData
 import com.android.builder.model.BuildTypeContainer
@@ -32,7 +33,6 @@ import com.android.builder.model.SourceProvider
 import com.android.builder.model.SourceProviderContainer
 import com.android.builder.model.Variant
 import com.android.builder.model.level2.DependencyGraphs
-import com.android.utils.FileUtils
 import groovy.transform.CompileStatic
 import org.junit.AfterClass
 import org.junit.BeforeClass
@@ -44,7 +44,6 @@ import static com.android.builder.model.AndroidProject.ARTIFACT_ANDROID_TEST
 import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertFalse
 import static org.junit.Assert.assertNotNull
-
 /**
  * Assemble tests for artifactApi.
  */
@@ -185,7 +184,7 @@ class ArtifactApiTest {
     public void backwardsCompatible() throws Exception {
         // ATTENTION Author and Reviewers - please make sure required changes to the build file
         // are backwards compatible before updating this test.
-        TruthHelper.assertThat(FileUtils.sha1(project.file("build.gradle")))
+        TruthHelper.assertThat(TestFileUtils.sha1NormalizedLineEndings(project.file("build.gradle")))
                 .isEqualTo("075b7b983ad2d77a378536f181f3cf17a758380c")
     }
 }
