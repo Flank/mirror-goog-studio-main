@@ -15,12 +15,13 @@
  */
 
 package com.android.build.gradle.integration.application
+
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
+import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.builder.model.AndroidArtifact
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.JavaArtifact
 import com.android.builder.model.Variant
-import com.android.utils.FileUtils
 import groovy.transform.CompileStatic
 import org.junit.AfterClass
 import org.junit.BeforeClass
@@ -90,7 +91,7 @@ class GenFolderApi2Test {
     public void backwardsCompatible() throws Exception {
         // ATTENTION Author and Reviewers - please make sure required changes to the build file
         // are backwards compatible before updating this test.
-        assertThat(FileUtils.sha1(project.file("build.gradle")))
+        assertThat(TestFileUtils.sha1NormalizedLineEndings(project.file("build.gradle")))
                 .isEqualTo("df3a072e7efbe889b653793e67f47a154d88bd26")
     }
 }

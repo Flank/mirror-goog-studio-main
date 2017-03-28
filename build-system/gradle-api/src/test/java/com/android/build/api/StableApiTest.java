@@ -19,6 +19,7 @@ package com.android.build.api;
 import static org.junit.Assert.assertEquals;
 
 import com.android.build.api.transform.Transform;
+import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
@@ -70,7 +71,12 @@ public class StableApiTest {
         // are backwards compatible.
         assertEquals(
                 "9755c368d764f69d404cbeadebe1d36c4d485b50",
-                Hashing.sha1().hashBytes(Resources.toByteArray(API_LIST_URL)).toString());
+                Hashing.sha1()
+                        .hashString(
+                                Resources.toString(API_LIST_URL, Charsets.UTF_8)
+                                        .replace(System.lineSeparator(), "\n"),
+                                Charsets.UTF_8)
+                        .toString());
     }
 
     private static Stream<String> getApiElements(Class<?> klass) {

@@ -18,7 +18,7 @@ package com.android.build.gradle.integration.library
 
 import com.android.build.gradle.integration.common.category.DeviceTests
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.utils.FileUtils
+import com.android.build.gradle.integration.common.utils.TestFileUtils
 import groovy.transform.CompileStatic
 import org.junit.AfterClass
 import org.junit.BeforeClass
@@ -27,7 +27,6 @@ import org.junit.Test
 import org.junit.experimental.categories.Category
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
-
 /**
  * Assemble tests for api.
  */
@@ -63,9 +62,9 @@ class ApiTest {
     public void backwardsCompatible() throws Exception {
         // ATTENTION Author and Reviewers - please make sure required changes to the build file
         // are backwards compatible before updating this test.
-        assertThat(FileUtils.sha1(project.file("app/build.gradle")))
+        assertThat(TestFileUtils.sha1NormalizedLineEndings(project.file("app/build.gradle")))
                 .isEqualTo("73f4266bf1cf99d3257112d4f46da19060079163")
-        assertThat(FileUtils.sha1(project.file("lib/build.gradle")))
+        assertThat(TestFileUtils.sha1NormalizedLineEndings(project.file("lib/build.gradle")))
                 .isEqualTo("f908668309ebe8e45fdf1f2eefb15803db6e844e")
     }
 }
