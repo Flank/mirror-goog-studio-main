@@ -254,8 +254,14 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
             @NonNull B buildType,
             @NonNull VariantType type) {
         StringBuilder sb = new StringBuilder();
+        boolean first = true;
+
+        if (type == VariantType.FEATURE) {
+            sb.append("feature");
+            first = false;
+        }
         if (!flavorName.isEmpty()) {
-            sb.append(flavorName);
+            sb.append(first ? flavorName : StringHelper.capitalize(flavorName));
             sb.append(StringHelper.capitalize(buildType.getName()));
         } else {
             sb.append(buildType.getName());
