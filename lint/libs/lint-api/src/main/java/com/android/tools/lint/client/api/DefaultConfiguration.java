@@ -84,7 +84,7 @@ public class DefaultConfiguration extends Configuration {
     public static final String VALUE_ALL = "all";
     private static final String ATTR_BASELINE = "baseline";
 
-    private static final String RES_PATH_START = "res/";
+    private static final String RES_PATH_START = "res" + File.separatorChar;
     private static final int RES_PATH_START_LEN = RES_PATH_START.length();
 
     private final Configuration parent;
