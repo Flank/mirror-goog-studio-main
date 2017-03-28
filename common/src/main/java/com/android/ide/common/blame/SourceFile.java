@@ -25,6 +25,8 @@ import java.io.File;
 
 /**
  * Represents a source file.
+ * Note: Since the same file may have different representations (eg a/b vs a/../a/b), it is better
+ * to use absolute files, otherwise the equals/hash method of this class may fail.
  */
 @Immutable
 public final class SourceFile {
