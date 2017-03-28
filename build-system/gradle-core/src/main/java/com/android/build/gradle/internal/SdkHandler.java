@@ -160,10 +160,9 @@ public class SdkHandler {
                 sdkLoader.installSdkTool(sdkLibData, SdkConstants.FD_PLATFORM_TOOLS);
             } else {
                 errorReporter.handleSyncError(
-                        null,
-                        SyncIssue.TYPE_GENERIC,
-                        SdkConstants.FD_PLATFORM_TOOLS
-                                + " package is not installed and SDK auto-download is disabled.");
+                        SdkConstants.FD_PLATFORM_TOOLS,
+                        SyncIssue.TYPE_MISSING_SDK_PACKAGE,
+                        SdkConstants.FD_PLATFORM_TOOLS + " package is not installed.");
             }
         }
     }
