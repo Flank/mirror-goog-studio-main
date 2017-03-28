@@ -51,6 +51,7 @@ import org.gradle.api.tasks.TaskState;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnit;
@@ -72,6 +73,9 @@ public class RecordingBuildListenerTest {
 
     private Path mProfileProtoFile;
 
+    @Rule
+    public TemporaryFolder tmpFolder = new TemporaryFolder();
+
     @NonNull
     private static GradleBuildProfileSpan getRecordForId(
             @NonNull List<GradleBuildProfileSpan> records, long recordId) {
@@ -89,7 +93,7 @@ public class RecordingBuildListenerTest {
     }
 
     @Before
-    public void setUp() {
+    public void setUp() throws IOException {
         MockitoAnnotations.initMocks(this);
         when(project.getPath()).thenReturn(":projectName");
         when(task.getName()).thenThrow(new AssertionError("Nothing should be using task name"));
@@ -99,7 +103,8 @@ public class RecordingBuildListenerTest {
         when(secondTask.getName())
                 .thenThrow(new AssertionError("Nothing should be using task name"));
         when(secondTask.getProject()).thenReturn(project);
-        mProfileProtoFile = Jimfs.newFileSystem().getPath("/tmp/profile_proto.rawproto");
+        mProfileProtoFile = Jimfs.newFileSystem().getPath(
+                tmpFolder.newFile("profile_proto.rawproto").getAbsolutePath());
         ProcessProfileWriterFactory.initializeForTests();
     }
 
