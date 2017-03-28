@@ -6,4 +6,5 @@ Thumbs.db
 *.DS_Store
 /out
 .idea/inspectionProfiles
+.idea/kotlinc.xml
 .idea/workspace.xml
