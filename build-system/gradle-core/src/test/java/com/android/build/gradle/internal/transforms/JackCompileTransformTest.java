@@ -425,10 +425,10 @@ public class JackCompileTransformTest {
                 wholeFile.substring(wholeFile.lastIndexOf("***" + System.lineSeparator()));
 
         Truth.assertThat(logContent).containsMatch("type: " + expectedType);
-        Truth.assertThat(logContent).containsMatch("added.*" + Joiner.on(',').join(added));
-        Truth.assertThat(logContent).containsMatch("deleted.*" + Joiner.on(',').join(deleted));
-        Truth.assertThat(logContent).containsMatch("modified.*" + Joiner.on(',').join(modified));
-        Truth.assertThat(logContent).containsMatch("compiled.*" + Joiner.on(',').join(compiled));
+        Truth.assertThat(logContent).containsMatch("added.*" + Joiner.on(',').join(added).replace("\\", "\\\\"));
+        Truth.assertThat(logContent).containsMatch("deleted.*" + Joiner.on(',').join(deleted).replace("\\", "\\\\"));
+        Truth.assertThat(logContent).containsMatch("modified.*" + Joiner.on(',').join(modified).replace("\\", "\\\\"));
+        Truth.assertThat(logContent).containsMatch("compiled.*" + Joiner.on(',').join(compiled).replace("\\", "\\\\"));
     }
 
     private JackProcessOptions createJackOptions() throws IOException {
