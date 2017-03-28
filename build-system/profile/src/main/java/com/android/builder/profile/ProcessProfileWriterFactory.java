@@ -44,11 +44,12 @@ import java.util.concurrent.TimeUnit;
  */
 public final class ProcessProfileWriterFactory {
 
-    public static void shutdownAndWrite(Path outputFile) throws InterruptedException {
+    public static void shutdownAndMaybeWrite(@Nullable Path outputFile)
+            throws InterruptedException {
         synchronized (LOCK) {
             if (sINSTANCE.isInitialized()) {
                 verifyNotNull(sINSTANCE.processProfileWriter);
-                sINSTANCE.processProfileWriter.finishAndWrite(outputFile);
+                sINSTANCE.processProfileWriter.finishAndMaybeWrite(outputFile);
             }
             sINSTANCE.processProfileWriter = null;
         }
