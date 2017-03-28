@@ -78,7 +78,7 @@ public class MergerTest extends TestCase {
         new MergerWithMock() {
             @Override
             protected ManifestMerger2.Invoker createInvoker(@NonNull File mainManifestFile, @NonNull ILogger logger) {
-                assertEquals(args[1], mainManifestFile.getPath());
+                assertEquals(args[1], mainManifestFile.getPath().replace(File.separatorChar, '/'));
                 return super.createInvoker(mainManifestFile, logger);
             }
         }.process(args);
