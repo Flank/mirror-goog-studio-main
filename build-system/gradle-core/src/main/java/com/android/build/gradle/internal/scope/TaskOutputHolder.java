@@ -55,9 +55,7 @@ public interface TaskOutputHolder {
         FULL_APK,
         APK,
         AAR,
-        APKB,
-        FEATURE_SPLIT_DECLARATION,
-        FEATURE_IDS_DECLARATION
+        APKB
     }
 
     /**

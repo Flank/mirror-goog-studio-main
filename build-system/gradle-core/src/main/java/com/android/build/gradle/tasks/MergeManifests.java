@@ -16,7 +16,12 @@
 package com.android.build.gradle.tasks;
 
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_APPLICATION_ID_DECLARATION;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_SPLIT_MANIFEST;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.MANIFEST;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.FEATURE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 
 import com.android.SdkConstants;
@@ -32,6 +37,7 @@ import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
+import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitApplicationId;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.builder.core.AndroidBuilder;
@@ -55,6 +61,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
@@ -83,8 +90,10 @@ public class MergeManifests extends ManifestProcessorTask {
     private VariantConfiguration<CoreBuildType, CoreProductFlavor, CoreProductFlavor>
             variantConfiguration;
     private ArtifactCollection manifests;
+    private ArtifactCollection featureManifests;
     private FileCollection microApkManifest;
     private FileCollection compatibleScreensManifest;
+    private FileCollection packageManifest;
     private List<Feature> optionalFeatures;
     private SplitScope splitScope;
 
@@ -95,6 +104,15 @@ public class MergeManifests extends ManifestProcessorTask {
                 BuildOutputs.load(
                         VariantScope.TaskOutputType.COMPATIBLE_SCREEN_MANIFEST,
                         compatibleScreensManifest);
+
+        String packageOverride;
+        if (packageManifest != null) {
+            FeatureSplitApplicationId loaded = FeatureSplitApplicationId.load(packageManifest);
+            packageOverride = loaded.getApplicationId();
+        } else {
+            packageOverride = getPackageOverride();
+        }
+
         @Nullable BuildOutput compatibleScreenManifestForSplit;
         // FIX ME : multi threading.
         for (ApkData apkData : splitScope.getApkDatas()) {
@@ -119,7 +137,7 @@ public class MergeManifests extends ManifestProcessorTask {
                                     getMainManifest(),
                                     getManifestOverlays(),
                                     computeFullProviderList(compatibleScreenManifestForSplit),
-                                    getPackageOverride(),
+                                    packageOverride,
                                     apkData.getVersionCode(),
                                     apkData.getVersionName(),
                                     getMinSdkVersion(),
@@ -274,6 +292,26 @@ public class MergeManifests extends ManifestProcessorTask {
 
         }
 
+        if (featureManifests != null) {
+            final Set<ResolvedArtifactResult> featureArtifacts = featureManifests.getArtifacts();
+            for (ResolvedArtifactResult artifact : featureArtifacts) {
+                File manifest = artifact.getFile();
+
+                Collection<BuildOutput> splitOutputs =
+                        BuildOutputs.load(
+                                VariantScope.TaskOutputType.MERGED_MANIFESTS,
+                                manifest.getParentFile());
+                if (splitOutputs.isEmpty()) {
+                    throw new GradleException("Could not load manifest from " + manifest);
+                }
+
+                providers.add(
+                        new ConfigAction.ManifestProviderImpl(
+                                splitOutputs.iterator().next().getOutputFile(),
+                                getArtifactName(artifact)));
+            }
+        }
+
         return providers;
     }
 
@@ -347,30 +385,42 @@ public class MergeManifests extends ManifestProcessorTask {
         this.variantConfiguration = variantConfiguration;
     }
 
-    @SuppressWarnings("unused")
     @InputFiles
     public FileCollection getManifests() {
         return manifests.getArtifactFiles();
     }
 
-    @SuppressWarnings("unused")
+    @InputFiles
+    @Optional
+    public FileCollection getFeatureManifests() {
+        if (featureManifests == null) {
+            return null;
+        }
+        return featureManifests.getArtifactFiles();
+    }
+
     @InputFiles
     @Optional
     public FileCollection getMicroApkManifest() {
         return microApkManifest;
     }
 
-    @SuppressWarnings("unused")
     @InputFiles
     @Optional
     public FileCollection getCompatibleScreensManifest() {
         return compatibleScreensManifest;
     }
 
+    @InputFiles
+    @Optional
+    public FileCollection getPackageManifest() {
+        return packageManifest;
+    }
+
     public static class ConfigAction implements TaskConfigAction<MergeManifests> {
 
-        private final VariantScope variantScope;
-        private final List<Feature> optionalFeatures;
+        protected final VariantScope variantScope;
+        protected final List<Feature> optionalFeatures;
 
         public ConfigAction(@NonNull VariantScope scope, @NonNull List<Feature> optionalFeatures) {
             this.variantScope = scope;
@@ -405,9 +455,9 @@ public class MergeManifests extends ManifestProcessorTask {
 
             Project project = globalScope.getProject();
 
-            // this includes the libraries and the atoms.
-            processManifestTask.manifests = variantScope.getArtifactCollection(
-                    RUNTIME_CLASSPATH, ALL, MANIFEST);
+            // This includes the dependent libraries.
+            processManifestTask.manifests =
+                    variantScope.getArtifactCollection(RUNTIME_CLASSPATH, ALL, MANIFEST);
 
             // optional manifest files too.
             if (variantScope.getMicroApkTask() != null &&
@@ -486,6 +536,41 @@ public class MergeManifests extends ManifestProcessorTask {
             public String getName() {
                 return name;
             }
+        }
+    }
+
+    public static class FeatureConfigAction extends ConfigAction {
+
+        public FeatureConfigAction(
+                @NonNull VariantScope scope, @NonNull List<Feature> optionalFeatures) {
+            super(scope, optionalFeatures);
+        }
+
+        @Override
+        public void execute(@NonNull MergeManifests processManifestTask) {
+            super.execute(processManifestTask);
+
+            processManifestTask.packageManifest =
+                    variantScope.getArtifactFileCollection(
+                            COMPILE_CLASSPATH, MODULE, FEATURE_APPLICATION_ID_DECLARATION);
+        }
+    }
+
+    public static class BaseFeatureConfigAction extends ConfigAction {
+
+        public BaseFeatureConfigAction(
+                @NonNull VariantScope scope, @NonNull List<Feature> optionalFeatures) {
+            super(scope, optionalFeatures);
+        }
+
+        @Override
+        public void execute(@NonNull MergeManifests processManifestTask) {
+            super.execute(processManifestTask);
+
+            // This includes the other features.
+            processManifestTask.featureManifests =
+                    variantScope.getArtifactCollection(
+                            FEATURE_CLASSPATH, MODULE, FEATURE_SPLIT_MANIFEST);
         }
     }
 }

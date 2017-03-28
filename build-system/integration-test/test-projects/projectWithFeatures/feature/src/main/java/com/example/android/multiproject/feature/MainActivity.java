@@ -14,9 +14,15 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.api;
+package com.example.android.multiproject.feature;
 
-import com.android.build.gradle.internal.api.TestedVariant;
+import android.app.Activity;
+import android.os.Bundle;
 
-/** A Build variant and all of its public data. */
-public interface FeatureVariant extends ApkVariant, TestedVariant {}
+public class MainActivity extends Activity {
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.main);
+    }
+}

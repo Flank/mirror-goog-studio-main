@@ -682,53 +682,8 @@ public abstract class TaskManager {
         handleJacocoDependencies(tasks, variantScope);
     }
 
-    // FIX ME : this is too much duplicated code with the normal path, OO to the rescue !
-    public void createMergeAtomManifestsTask(
+    public void createMergeApkManifestsTask(
             @NonNull TaskFactory tasks, @NonNull VariantScope variantScope) {
-        AndroidArtifactVariantData androidArtifactVariantData =
-                (AndroidArtifactVariantData) variantScope.getVariantData();
-        Set<String> screenSizes = androidArtifactVariantData.getCompatibleScreens();
-
-        AndroidTask<CompatibleScreensManifest> csmTask =
-                androidTasks.create(
-                        tasks,
-                        new CompatibleScreensManifest.ConfigAction(variantScope, screenSizes));
-        variantScope.addTaskOutput(
-                TaskOutputHolder.TaskOutputType.COMPATIBLE_SCREEN_MANIFEST,
-                variantScope.getCompatibleScreensManifestDirectory(),
-                csmTask.getName());
-
-        ImmutableList.Builder<ManifestMerger2.Invoker.Feature> optionalFeatures =
-                ImmutableList.builder();
-        if (getIncrementalMode(variantScope.getVariantConfiguration()) != IncrementalMode.NONE) {
-            optionalFeatures.add(ManifestMerger2.Invoker.Feature.INSTANT_RUN_REPLACEMENT);
-        }
-        if (AndroidGradleOptions.getTestOnly(project)) {
-            optionalFeatures.add(ManifestMerger2.Invoker.Feature.TEST_ONLY);
-        }
-
-        AndroidTask<? extends ManifestProcessorTask> processManifestTask =
-                createMergeManifestTask(tasks, variantScope, optionalFeatures);
-
-        processManifestTask.dependsOn(tasks, variantScope.getCheckManifestTask());
-
-        if (variantScope.getMicroApkTask() != null) {
-            processManifestTask.dependsOn(tasks, variantScope.getMicroApkTask());
-        }
-
-        if (csmTask != null) {
-            processManifestTask.dependsOn(tasks, csmTask);
-        }
-
-        variantScope.publishIntermediateArtifact(
-                variantScope.getManifestOutputDirectory(),
-                processManifestTask.getName(),
-                AndroidArtifacts.ArtifactType.ATOM_MANIFEST);
-    }
-
-    public void createMergeAppManifestsTask(
-            @NonNull TaskFactory tasks,
-            @NonNull VariantScope variantScope) {
         AndroidArtifactVariantData androidArtifactVariantData =
                 (AndroidArtifactVariantData) variantScope.getVariantData();
         Set<String> screenSizes = androidArtifactVariantData.getCompatibleScreens();
@@ -757,6 +712,16 @@ public abstract class TaskManager {
         AndroidTask<? extends ManifestProcessorTask> processManifestTask =
                 createMergeManifestTask(tasks, variantScope, optionalFeatures);
 
+        variantScope.addTaskOutput(
+                TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS,
+                variantScope.getManifestOutputDirectory(),
+                processManifestTask.getName());
+
+        variantScope.publishIntermediateArtifact(
+                BuildOutputs.getMetadataFile(variantScope.getManifestOutputDirectory()),
+                processManifestTask.getName(),
+                AndroidArtifacts.ArtifactType.MANIFEST_METADATA);
+
         // TODO: use FileCollection
         variantScope.setManifestProcessorTask(processManifestTask);
 
@@ -765,37 +730,26 @@ public abstract class TaskManager {
         if (variantScope.getMicroApkTask() != null) {
             processManifestTask.dependsOn(tasks, variantScope.getMicroApkTask());
         }
-
-        variantScope.publishIntermediateArtifact(
-                BuildOutputs.getMetadataFile(variantScope.getManifestOutputDirectory()),
-                processManifestTask.getName(),
-                AndroidArtifacts.ArtifactType.MANIFEST_METADATA);
     }
 
     /** Creates the merge manifests task. */
     @NonNull
     protected AndroidTask<? extends ManifestProcessorTask> createMergeManifestTask(
-            @NonNull TaskFactory taskFactory,
+            @NonNull TaskFactory tasks,
             @NonNull VariantScope variantScope,
             @NonNull ImmutableList.Builder<ManifestMerger2.Invoker.Feature> optionalFeatures) {
-
         if (getIncrementalMode(variantScope.getVariantConfiguration()) != IncrementalMode.NONE) {
             optionalFeatures.add(ManifestMerger2.Invoker.Feature.INSTANT_RUN_REPLACEMENT);
         }
 
         AndroidTask<MergeManifests> mergeManifestsAndroidTask =
                 androidTasks.create(
-                        taskFactory,
+                        tasks,
                         new MergeManifests.ConfigAction(variantScope, optionalFeatures.build()));
 
         variantScope.addTaskOutput(
                 VariantScope.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS,
                 variantScope.getInstantRunManifestOutputDirectory(),
-                mergeManifestsAndroidTask.getName());
-
-        variantScope.addTaskOutput(
-                TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS,
-                variantScope.getManifestOutputDirectory(),
                 mergeManifestsAndroidTask.getName());
 
         return mergeManifestsAndroidTask;

@@ -27,7 +27,6 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
 import com.android.build.gradle.internal.test.TestApplicationTestData;
@@ -214,22 +213,15 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
     @Override
     @NonNull
     protected AndroidTask<? extends ManifestProcessorTask> createMergeManifestTask(
-            @NonNull TaskFactory taskFactory,
+            @NonNull TaskFactory tasks,
             @NonNull VariantScope variantScope,
             @NonNull ImmutableList.Builder<ManifestMerger2.Invoker.Feature> optionalFeatures) {
-        AndroidTask<ProcessTestManifest> processTestManifestAndroidTask =
-                getAndroidTasks()
-                        .create(
-                                taskFactory,
-                                new ProcessTestManifest.ConfigAction(
-                                        variantScope,
-                                        getTestedManifestMetadata(variantScope.getVariantData())));
-
-        variantScope.addTaskOutput(
-                TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS,
-                variantScope.getManifestOutputDirectory(),
-                processTestManifestAndroidTask.getName());
-        return processTestManifestAndroidTask;
+        return getAndroidTasks()
+                .create(
+                        tasks,
+                        new ProcessTestManifest.ConfigAction(
+                                variantScope,
+                                getTestedManifestMetadata(variantScope.getVariantData())));
     }
 
     @Override

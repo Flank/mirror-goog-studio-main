@@ -86,7 +86,9 @@ public class AndroidArtifacts {
 
     // types for feature-split content.
     private static final String TYPE_FEATURE_SPLIT_DECLARATION = "android-feature-split-decl";
+    private static final String TYPE_FEATURE_SPLIT_MANIFEST = "android-feature-split-manifest";
     private static final String TYPE_FEATURE_IDS_DECLARATION = "android-feature-split-ids";
+    private static final String TYPE_FEATURE_APPLICATION_ID = "android-feature-application-id";
 
     public enum ConsumedConfigType {
         COMPILE_CLASSPATH(API_ELEMENTS),
@@ -110,7 +112,6 @@ public class AndroidArtifacts {
         API_ELEMENTS,
         RUNTIME_ELEMENTS,
         FEATURE_ELEMENTS,
-        BASE_ELEMENTS
     }
 
     public enum ArtifactScope {
@@ -179,7 +180,9 @@ public class AndroidArtifacts {
 
         // Feature split related artifacts.
         FEATURE_SPLIT_DECLARATION(TYPE_FEATURE_SPLIT_DECLARATION, FEATURE_ELEMENTS_ONLY),
-        FEATURE_IDS_DECLARATION(TYPE_FEATURE_IDS_DECLARATION, API_ELEMENTS_ONLY);
+        FEATURE_SPLIT_MANIFEST(TYPE_FEATURE_SPLIT_MANIFEST, FEATURE_ELEMENTS_ONLY),
+        FEATURE_IDS_DECLARATION(TYPE_FEATURE_IDS_DECLARATION, API_ELEMENTS_ONLY),
+        FEATURE_APPLICATION_ID_DECLARATION(TYPE_FEATURE_APPLICATION_ID, API_ELEMENTS_ONLY);
 
         @NonNull
         private final String type;

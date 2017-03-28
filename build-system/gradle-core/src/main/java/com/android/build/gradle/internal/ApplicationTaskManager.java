@@ -104,7 +104,7 @@ public class ApplicationTaskManager extends TaskManager {
                 ExecutionType.APP_TASK_MANAGER_CREATE_MERGE_MANIFEST_TASK,
                 project.getPath(),
                 variantScope.getFullVariantName(),
-                () -> createMergeAppManifestsTask(tasks, variantScope));
+                () -> createMergeApkManifestsTask(tasks, variantScope));
 
         // Add a task to create the res values
         recorder.record(
