@@ -21,14 +21,7 @@ import com.google.common.primitives.Ints;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import junit.framework.TestCase;
 
@@ -198,6 +191,10 @@ public class VmTraceParserTest extends TestCase {
     public void testMethodProfileData() throws IOException {
         VmTraceData traceData = getVmTraceData("/basic.trace");
         ThreadInfo thread = traceData.getThread("AsyncTask #1");
+        doTestMethodProfilingData(traceData, thread);
+    }
+
+    private static void doTestMethodProfilingData(VmTraceData traceData, ThreadInfo thread) {
         Call top = thread.getTopLevelCall();
 
         assertNotNull(top);
@@ -266,7 +263,7 @@ public class VmTraceParserTest extends TestCase {
         }
     }
 
-    private long sumInvocationCountsByCaller(MethodProfileData profile, ThreadInfo thread) {
+    private static long sumInvocationCountsByCaller(MethodProfileData profile, ThreadInfo thread) {
         long sum = 0;
         for (Long callerId : profile.getCallers(thread)) {
             sum += profile.getInvocationCountFromCaller(thread, callerId);
@@ -274,8 +271,8 @@ public class VmTraceParserTest extends TestCase {
         return sum;
     }
 
-    private long sumInclusiveTimesByCaller(MethodProfileData profile, ThreadInfo thread,
-            ClockType type, TimeUnit unit) {
+    private static long sumInclusiveTimesByCaller(
+            MethodProfileData profile, ThreadInfo thread, ClockType type, TimeUnit unit) {
         long sum = 0;
         for (Long calleeId : profile.getCallers(thread)) {
             sum += profile.getInclusiveTimeByCaller(thread, calleeId, type, unit);
@@ -283,8 +280,8 @@ public class VmTraceParserTest extends TestCase {
         return sum;
     }
 
-    private long sumExclusiveTimesByCaller(MethodProfileData profile, ThreadInfo thread,
-            ClockType type, TimeUnit unit) {
+    private static long sumExclusiveTimesByCaller(
+            MethodProfileData profile, ThreadInfo thread, ClockType type, TimeUnit unit) {
         long sum = 0;
         for (Long calleeId : profile.getCallers(thread)) {
             sum += profile.getExclusiveTimeByCaller(thread, calleeId, type, unit);
@@ -292,8 +289,8 @@ public class VmTraceParserTest extends TestCase {
         return sum;
     }
 
-    private long sumInclusiveTimesByCallee(MethodProfileData profile, ThreadInfo thread,
-            ClockType type, TimeUnit unit) {
+    private static long sumInclusiveTimesByCallee(
+            MethodProfileData profile, ThreadInfo thread, ClockType type, TimeUnit unit) {
         long sum = 0;
         for (Long calleeId : profile.getCallees(thread)) {
             sum += profile.getInclusiveTimeByCallee(thread, calleeId, type, unit);
@@ -333,6 +330,39 @@ public class VmTraceParserTest extends TestCase {
         } finally {
             Locale.setDefault(originalDefaultLocale);
         }
+    }
+
+    public void testStreamingTrace() throws IOException {
+        VmTraceData traceData = getVmTraceData("/streaming.trace");
+        // Check version
+        assertEquals(3, traceData.getVersion());
+
+        // Check values obtained from trace summary
+        // data-file-overflow=false
+        assertFalse(traceData.isDataFileOverflow());
+        // clock=dual
+        assertEquals(VmTraceData.VmClockType.DUAL, traceData.getVmClockType());
+        // elapsed-time-usec=53498073
+        assertEquals(53498073, traceData.getElapsedTimeUs());
+        // clock-call-overhead-nsec=10934
+        assertNotNull(traceData.getTraceProperties());
+        assertTrue(traceData.getTraceProperties().containsKey("clock-call-overhead-nsec"));
+        assertEquals("10934", traceData.getTraceProperties().get("clock-call-overhead-nsec"));
+        // vm=art
+        assertEquals("art", traceData.getVm());
+        // pid=15362
+        assertTrue(traceData.getTraceProperties().containsKey("pid"));
+        assertEquals("15362", traceData.getTraceProperties().get("pid"));
+
+        // Verify the presence of threads
+        assertFalse(traceData.getThreads().isEmpty());
+        ThreadInfo main = traceData.getThread("main");
+        assertEquals(15362, main.getId());
+        ThreadInfo okHttp = traceData.getThread("OkHttp ConnectionPool");
+        assertEquals(18089, okHttp.getId());
+
+        // Test the method profiling data
+        doTestMethodProfilingData(traceData, okHttp);
     }
 
     private VmTraceData getVmTraceData(String traceFilePath) throws IOException {
