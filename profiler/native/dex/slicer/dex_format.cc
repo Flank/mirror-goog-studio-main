@@ -27,15 +27,15 @@ u4 ComputeChecksum(const Header* header) {
   const u1* start = reinterpret_cast<const u1*>(header);
 
   uLong adler = adler32(0L, Z_NULL, 0);
-  const int nonSum = sizeof(header->magic) + sizeof(header->checksum);
+  const int non_sum = sizeof(header->magic) + sizeof(header->checksum);
 
   return static_cast<u4>(
-      adler32(adler, start + nonSum, header->file_size - nonSum));
+      adler32(adler, start + non_sum, header->file_size - non_sum));
 }
 
 // Returns the human-readable name for a primitive type
-static const char* PrimitiveTypeName(char typeChar) {
-  switch (typeChar) {
+static const char* PrimitiveTypeName(char type_char) {
+  switch (type_char) {
     case 'B': return "byte";
     case 'C': return "char";
     case 'D': return "double";
@@ -53,25 +53,25 @@ static const char* PrimitiveTypeName(char typeChar) {
 // Converts a type descriptor to human-readable "dotted" form.  For
 // example, "Ljava/lang/String;" becomes "java.lang.String", and
 // "[I" becomes "int[]".
-std::string DescriptorToDecl(const char* desc) {
+std::string DescriptorToDecl(const char* descriptor) {
   std::stringstream ss;
 
   int array_dimensions = 0;
-  while (*desc == '[') {
+  while (*descriptor == '[') {
     ++array_dimensions;
-    ++desc;
+    ++descriptor;
   }
 
-  if (*desc == 'L') {
-    for (++desc; *desc != ';'; ++desc) {
-      CHECK(*desc != '\0');
-      ss << (*desc == '/' ? '.' : *desc);
+  if (*descriptor == 'L') {
+    for (++descriptor; *descriptor != ';'; ++descriptor) {
+      CHECK(*descriptor != '\0');
+      ss << (*descriptor == '/' ? '.' : *descriptor);
     }
   } else {
-    ss << PrimitiveTypeName(*desc);
+    ss << PrimitiveTypeName(*descriptor);
   }
 
-  CHECK(desc[1] == '\0');
+  CHECK(descriptor[1] == '\0');
 
   // add the array brackets
   for (int i = 0; i < array_dimensions; ++i) {
@@ -79,6 +79,29 @@ std::string DescriptorToDecl(const char* desc) {
   }
 
   return ss.str();
+}
+
+// Converts a type descriptor to a single "shorty" char
+// (ex. "LFoo;" and "[[I" become 'L', "I" stays 'I')
+char DescriptorToShorty(const char* descriptor) {
+  // skip array dimensions
+  int array_dimensions = 0;
+  while (*descriptor == '[') {
+    ++array_dimensions;
+    ++descriptor;
+  }
+
+  char short_descriptor = *descriptor;
+  if (short_descriptor == 'L') {
+    // skip the full class name
+    for(; *descriptor && *descriptor != ';'; ++descriptor);
+    CHECK(*descriptor == ';');
+  }
+
+  CHECK(descriptor[1] == '\0');
+  CHECK(short_descriptor == 'L' || PrimitiveTypeName(short_descriptor) != nullptr);
+
+  return array_dimensions > 0 ? 'L' : short_descriptor;
 }
 
 }  // namespace dex

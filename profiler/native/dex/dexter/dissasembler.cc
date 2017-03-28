@@ -255,10 +255,10 @@ void DexDissasembler::DumpAllMethods() const {
 }
 
 void DexDissasembler::DumpMethod(ir::EncodedMethod* ir_method) const {
-  printf("\nmethod %s.%s(", ir_method->method->parent->Decl().c_str(),
-         ir_method->method->name->c_str());
+  printf("\nmethod %s.%s(", ir_method->decl->parent->Decl().c_str(),
+         ir_method->decl->name->c_str());
 
-  auto proto = ir_method->method->prototype;
+  auto proto = ir_method->decl->prototype;
 
   if (proto->param_types != nullptr) {
     bool first = true;

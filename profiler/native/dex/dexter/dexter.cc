@@ -372,8 +372,11 @@ int Dexter::ProcessDex() {
   }
 
   if (verbose_) {
-    printf("\nDone (reader: %.3fms, writer: %.3fms, experiments: %.3fms)\n",
-           reader_time_, writer_time_, experiments_time_);
+    printf("\nDone (reader: %.3fms, writer: %.3fms", reader_time_, writer_time_);
+    if (!experiments_.empty()) {
+      printf(", experiments: %.3fms)\n", experiments_time_);
+    }
+    printf(")\n");
   }
 
   // done
