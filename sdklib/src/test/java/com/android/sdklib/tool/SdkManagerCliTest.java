@@ -111,14 +111,14 @@ public class SdkManagerCliTest {
         installed = new FakeRemotePackage("upgrade");
         installed.setDisplayName("upgrade v1");
         Files.createDirectories(root.resolve("upgrade"));
-        InstallerUtil.writePackageXml(installed, new File(SDK_LOCATION, "upgrade"), repoManager,
-                mFileOp, progress);
+        InstallerUtil.writePackageXml(
+                installed, new File(SDK_LOCATION, "upgrade"), repoManager, mFileOp, progress);
         installed = new FakeRemotePackage("obsolete");
         installed.setDisplayName("obsolete local");
         installed.setObsolete(true);
         Files.createDirectories(root.resolve("obsolete"));
-        InstallerUtil.writePackageXml(installed, new File(SDK_LOCATION, "obsolete"), repoManager,
-                mFileOp, progress);
+        InstallerUtil.writePackageXml(
+                installed, new File(SDK_LOCATION, "obsolete"), repoManager, mFileOp, progress);
     }
 
     @NonNull
@@ -187,25 +187,28 @@ public class SdkManagerCliTest {
                 mDownloader,
                 mSdkHandler);
         downloader.run();
-        String expected = "Installed packages:\n"
-                + "  Path    | Version | Description | Location\n"
-                + "  ------- | ------- | -------     | ------- \n"
-                + "  test;p1 | 1       | package 1   | test/p1 \n"
-                + "  upgrade | 1       | upgrade v1  | upgrade \n"
-                + "\n"
-                + "Available Packages:\n"
-                + "  Path         | Version | Description \n"
-                + "  -------      | ------- | -------     \n"
-                + "  depended_on  | 1       | fake package\n"
-                + "  depends_on   | 1       | fake package\n"
-                + "  test;remote1 | 1       | fake package\n"
-                + "  upgrade      | 2       | upgrade v2  \n"
-                + "\n"
-                + "Available Updates:\n"
-                + "  ID      | Installed | Available\n"
-                + "  ------- | -------   | -------  \n"
-                + "  upgrade | 1         | 2        \n";
-        assertEquals(expected, out.toString());
+        String expected =
+                "Installed packages:\n"
+                        + "  Path    | Version | Description | Location\n"
+                        + "  ------- | ------- | -------     | ------- \n"
+                        + "  test;p1 | 1       | package 1   | test"
+                        + File.separator
+                        + "p1 \n"
+                        + "  upgrade | 1       | upgrade v1  | upgrade \n"
+                        + "\n"
+                        + "Available Packages:\n"
+                        + "  Path         | Version | Description \n"
+                        + "  -------      | ------- | -------     \n"
+                        + "  depended_on  | 1       | fake package\n"
+                        + "  depends_on   | 1       | fake package\n"
+                        + "  test;remote1 | 1       | fake package\n"
+                        + "  upgrade      | 2       | upgrade v2  \n"
+                        + "\n"
+                        + "Available Updates:\n"
+                        + "  ID      | Installed | Available\n"
+                        + "  ------- | -------   | -------  \n"
+                        + "  upgrade | 1         | 2        \n";
+        assertEquals(expected, out.toString().replaceAll("\\r\\n", "\n"));
     }
 
     /**
@@ -225,48 +228,50 @@ public class SdkManagerCliTest {
                 mSdkHandler);
         downloader.run();
         String expected =
-                "Installed packages:\n"
-                        + "--------------------------------------\n"
-                        + "test;p1\n"
-                        + "    Description:        package 1\n"
-                        + "    Version:            1\n"
-                        + "    Installed Location: /sdk/test/p1\n"
-                        + "\n"
-                        + "upgrade\n"
-                        + "    Description:        upgrade v1\n"
-                        + "    Version:            1\n"
-                        + "    Installed Location: /sdk/upgrade\n"
-                        + "\n"
-                        + "Available Packages:\n"
-                        + "--------------------------------------\n"
-                        + "depended_on\n"
-                        + "    Description:        fake package\n"
-                        + "    Version:            1\n"
-                        + "\n"
-                        + "depends_on\n"
-                        + "    Description:        fake package\n"
-                        + "    Version:            1\n"
-                        + "    Dependencies:\n"
-                        + "        depended_on\n"
-                        + "\n"
-                        + "test;remote1\n"
-                        + "    Description:        fake package\n"
-                        + "    Version:            1\n"
-                        + "\n"
-                        + "upgrade\n"
-                        + "    Description:        upgrade v2\n"
-                        + "    Version:            2\n"
-                        + "\n"
-                        + "Available Updates:\n"
-                        + "--------------------------------------\n"
-                        + "obsolete\n"
-                        + "    Installed Version: 1\n"
-                        + "    Available Version: 2\n"
-                        + "    (Obsolete)\n"
-                        + "upgrade\n"
-                        + "    Installed Version: 1\n"
-                        + "    Available Version: 2\n";
-        assertEquals(expected, out.toString());
+                String.format(
+                        "Installed packages:\n"
+                                + "--------------------------------------\n"
+                                + "test;p1\n"
+                                + "    Description:        package 1\n"
+                                + "    Version:            1\n"
+                                + "    Installed Location: %1$ssdk%1$stest%1$sp1\n"
+                                + "\n"
+                                + "upgrade\n"
+                                + "    Description:        upgrade v1\n"
+                                + "    Version:            1\n"
+                                + "    Installed Location: %1$ssdk%1$supgrade\n"
+                                + "\n"
+                                + "Available Packages:\n"
+                                + "--------------------------------------\n"
+                                + "depended_on\n"
+                                + "    Description:        fake package\n"
+                                + "    Version:            1\n"
+                                + "\n"
+                                + "depends_on\n"
+                                + "    Description:        fake package\n"
+                                + "    Version:            1\n"
+                                + "    Dependencies:\n"
+                                + "        depended_on\n"
+                                + "\n"
+                                + "test;remote1\n"
+                                + "    Description:        fake package\n"
+                                + "    Version:            1\n"
+                                + "\n"
+                                + "upgrade\n"
+                                + "    Description:        upgrade v2\n"
+                                + "    Version:            2\n"
+                                + "\n"
+                                + "Available Updates:\n"
+                                + "--------------------------------------\n"
+                                + "obsolete\n"
+                                + "    Installed Version: 1\n"
+                                + "    Available Version: 2\n"
+                                + "    (Obsolete)\n"
+                                + "upgrade\n"
+                                + "    Installed Version: 1\n"
+                                + "    Available Version: 2\n",
+                        File.separator);
+        assertEquals(expected, out.toString().replaceAll("\\r\\n", "\n"));
     }
 
     /**
@@ -299,36 +304,40 @@ public class SdkManagerCliTest {
                 mDownloader,
                 mSdkHandler);
         downloader.run();
-        String expected = "Installed packages:\n"
-                + "  Path    | Version | Description | Location\n"
-                + "  ------- | ------- | -------     | ------- \n"
-                + "  test;p1 | 1       | package 1   | test/p1 \n"
-                + "  upgrade | 1       | upgrade v1  | upgrade \n"
-                + "\n"
-                + "Installed Obsolete Packages:\n"
-                + "  Path     | Version | Description    | Location\n"
-                + "  -------  | ------- | -------        | ------- \n"
-                + "  obsolete | 1       | obsolete local | obsolete\n"
-                + "\n"
-                + "Available Packages:\n"
-                + "  Path         | Version | Description \n"
-                + "  -------      | ------- | -------     \n"
-                + "  depended_on  | 1       | fake package\n"
-                + "  depends_on   | 1       | fake package\n"
-                + "  test;remote1 | 1       | fake package\n"
-                + "  upgrade      | 2       | upgrade v2  \n"
-                + "\n"
-                + "Available Obsolete Packages:\n"
-                + "  Path     | Version | Description     \n"
-                + "  -------  | ------- | -------         \n"
-                + "  obsolete | 2       | obsolete package\n"
-                + "\n"
-                + "Available Updates:\n"
-                + "  ID       | Installed | Available\n"
-                + "  -------  | -------   | -------  \n"
-                + "  obsolete | 1         | 2        \n"
-                + "  upgrade  | 1         | 2        \n";
-        assertEquals(expected, out.toString());
+        String expected =
+                "Installed packages:\n"
+                        + "  Path    | Version | Description | Location\n"
+                        + "  ------- | ------- | -------     | ------- \n"
+                        + "  test;p1 | 1       | package 1   | test"
+                        + File.separator
+                        + "p1 \n"
+                        + "  upgrade | 1       | upgrade v1  | upgrade \n"
+                        + "\n"
+                        + "Installed Obsolete Packages:\n"
+                        + "  Path     | Version | Description    | Location\n"
+                        + "  -------  | ------- | -------        | ------- \n"
+                        + "  obsolete | 1       | obsolete local | obsolete\n"
+                        + "\n"
+                        + "Available Packages:\n"
+                        + "  Path         | Version | Description \n"
+                        + "  -------      | ------- | -------     \n"
+                        + "  depended_on  | 1       | fake package\n"
+                        + "  depends_on   | 1       | fake package\n"
+                        + "  test;remote1 | 1       | fake package\n"
+                        + "  upgrade      | 2       | upgrade v2  \n"
+                        + "\n"
+                        + "Available Obsolete Packages:\n"
+                        + "  Path     | Version | Description     \n"
+                        + "  -------  | ------- | -------         \n"
+                        + "  obsolete | 2       | obsolete package\n"
+                        + "\n"
+                        + "Available Updates:\n"
+                        + "  ID       | Installed | Available\n"
+                        + "  -------  | -------   | -------  \n"
+                        + "  obsolete | 1         | 2        \n"
+                        + "  upgrade  | 1         | 2        \n";
+        assertEquals(
+                expected, out.toString().replaceAll("\\r\\n", "\n").replaceAll("\\r\\n", "\n"));
 
     }
 
@@ -584,7 +593,8 @@ public class SdkManagerCliTest {
 
         assertEquals(
                 "2 of 2 SDK package licenses not accepted.\n"
-                        + "Review licenses that have not been accepted (y/N)? ", out.toString());
+                        + "Review licenses that have not been accepted (y/N)? ",
+                out.toString().replaceAll("\\r\\n", "\n"));
     }
 
     /**
@@ -620,7 +630,8 @@ public class SdkManagerCliTest {
                         + "Not yet accepted\n"
                         + "\n"
                         + "2 of 2 SDK package licenses not accepted.\n"
-                        + "Review licenses that have not been accepted (y/N)? ", out.toString());
+                        + "Review licenses that have not been accepted (y/N)? ",
+                out.toString().replaceAll("\\r\\n", "\n"));
     }
 
     /**
@@ -654,7 +665,7 @@ public class SdkManagerCliTest {
                         + "my license 2\n"
                         + "---------------------------------------\n"
                         + "Accept? (y/N): All SDK package licenses accepted\n",
-                out.toString());
+                out.toString().replaceAll("\\r\\n", "\n"));
         out.reset();
         // Subsequent call should pass without accepting again.
         new SdkManagerCli(
@@ -664,7 +675,8 @@ public class SdkManagerCliTest {
                 mDownloader,
                 mSdkHandler)
                 .run();
-        assertEquals("All SDK package licenses accepted.\n", out.toString());
+        assertEquals(
+                "All SDK package licenses accepted.\n", out.toString().replaceAll("\\r\\n", "\n"));
     }
 
     /**
@@ -698,7 +710,7 @@ public class SdkManagerCliTest {
                         + "my license 2\n"
                         + "---------------------------------------\n"
                         + "Accept? (y/N): 1 license not accepted\n",
-                out.toString());
+                out.toString().replaceAll("\\r\\n", "\n"));
 
         out.reset();
 
@@ -718,7 +730,7 @@ public class SdkManagerCliTest {
                         + "my license 2\n"
                         + "---------------------------------------\n"
                         + "Accept? (y/N): All SDK package licenses accepted\n",
-                out.toString());
+                out.toString().replaceAll("\\r\\n", "\n"));
     }
 
 
