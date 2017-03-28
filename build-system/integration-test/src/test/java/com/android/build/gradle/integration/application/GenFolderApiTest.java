@@ -21,6 +21,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
@@ -129,7 +130,7 @@ public class GenFolderApiTest {
     public void backwardsCompatible() throws Exception {
         // ATTENTION Author and Reviewers - please make sure required changes to the build file
         // are backwards compatible before updating this test.
-        assertThat(FileUtils.sha1(project.file("build.gradle")))
+        assertThat(TestFileUtils.sha1NormalizedLineEndings(project.file("build.gradle")))
                 .isEqualTo("60734125e0720e42c7024dfde93870fc56459c79");
     }
 }
