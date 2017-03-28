@@ -29,6 +29,8 @@ import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.builder.dependency.level2.AndroidDependency;
 import com.android.builder.utils.FileCache;
 import com.android.ide.common.internal.WaitableExecutor;
+import com.android.utils.FileUtils;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.IOException;
@@ -86,8 +88,8 @@ public class ResolveDependenciesTask extends BaseTask {
                 // Don't need to explode sub-module library.
                 continue;
             }
-            File input = androidDependency.getArtifactFile();
-            File output = androidDependency.getExtractedFolder();
+            File artifactFile = androidDependency.getArtifactFile();
+            File extractedFolder = androidDependency.getExtractedFolder();
 
             // Determine whether the exploded directory is in the user cache, the project cache, or
             // the project's intermediates directory, and use the corresponding cache to explode it.
@@ -121,29 +123,30 @@ public class ResolveDependenciesTask extends BaseTask {
 
             // We explode AARs only when a cache is used (as explained above)
             if (useBuildCache || useProjectCache) {
-                PrepareLibraryTask.prepareLibrary(
-                        input,
-                        output,
-                        useBuildCache ? buildCache : projectLevelCache,
-                        createAction(project, executor, input),
-                        project.getLogger(),
-                        false /* includeTroubleshootingMessage */);
+                FileCache fileCache = useBuildCache ? buildCache : projectLevelCache;
+                FileCache.Inputs inputs = PrepareLibraryTask.getCacheInputs(artifactFile);
+                if (!fileCache.cacheEntryExists(inputs)) {
+                    Consumer<File> extractAarAction =
+                            sameExtractedFolder -> {
+                                Preconditions.checkState(
+                                        FileUtils.isSameFile(extractedFolder, sameExtractedFolder));
+                                PrepareLibraryTask.extract(artifactFile, extractedFolder, project);
+                            };
+                    executor.execute(
+                            () -> {
+                                PrepareLibraryTask.prepareLibrary(
+                                        artifactFile,
+                                        extractedFolder,
+                                        fileCache,
+                                        extractAarAction,
+                                        project.getLogger(),
+                                        useBuildCache /* includeTroubleshootingMessage */);
+                                return null;
+                            });
+                }
             }
         }
         executor.waitForTasksWithQuickFail(false);
-    }
-
-    private static Consumer<File> createAction(
-            @NonNull Project project,
-            @NonNull WaitableExecutor<Void> executor,
-            @NonNull File input) {
-        return (outputDir) -> executor.execute(() -> {
-            PrepareLibraryTask.extract(
-                    input,
-                    outputDir,
-                    project);
-            return null;
-        });
     }
 
     public static class ConfigAction implements TaskConfigAction<ResolveDependenciesTask> {
