@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.publishing;
 
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.API_ELEMENTS;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.BASE_ELEMENTS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.FEATURE_ELEMENTS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS;
 
@@ -126,8 +125,6 @@ public class AndroidArtifacts {
             = ImmutableList.of(API_ELEMENTS, RUNTIME_ELEMENTS);
     private static final List<PublishedConfigType> FEATURE_ELEMENTS_ONLY =
             ImmutableList.of(FEATURE_ELEMENTS);
-    private static final List<PublishedConfigType> BASE_ELEMENTS_ONLY =
-            ImmutableList.of(BASE_ELEMENTS);
 
     public enum ArtifactType {
         CLASSES(JavaPlugin.CLASS_DIRECTORY, API_AND_RUNTIME_ELEMENTS),
@@ -182,7 +179,7 @@ public class AndroidArtifacts {
 
         // Feature split related artifacts.
         FEATURE_SPLIT_DECLARATION(TYPE_FEATURE_SPLIT_DECLARATION, FEATURE_ELEMENTS_ONLY),
-        FEATURE_IDS_DECLARATION(TYPE_FEATURE_IDS_DECLARATION, BASE_ELEMENTS_ONLY);
+        FEATURE_IDS_DECLARATION(TYPE_FEATURE_IDS_DECLARATION, API_ELEMENTS_ONLY);
 
         @NonNull
         private final String type;

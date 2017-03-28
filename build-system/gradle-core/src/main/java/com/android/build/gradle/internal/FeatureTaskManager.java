@@ -31,11 +31,13 @@ import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclarat
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitPackageIds;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitPackageIdsWriterTask;
 import com.android.build.gradle.options.ProjectOptions;
+import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.profile.Recorder;
 import com.android.utils.FileUtils;
 import java.io.File;
 import java.util.Set;
+import java.util.function.Supplier;
 import org.gradle.api.Project;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
@@ -151,5 +153,24 @@ public class FeatureTaskManager extends TaskManager {
     protected Set<? super QualifiedContent.Scope> getResMergingScopes(
             @NonNull VariantScope variantScope) {
         return TransformManager.SCOPE_FULL_PROJECT;
+    }
+
+    // so far this is no called as the LibraryTaskManager sets up the processAndroidResources.
+    @Override
+    protected ProcessAndroidResources.ConfigAction createProcessAndroidResourcesConfigAction(
+            @NonNull VariantScope scope,
+            @NonNull Supplier<File> symbolLocation,
+            @NonNull File resPackageOutputFolder,
+            boolean useAaptToGenerateLegacyMultidexMainDexProguardRules,
+            @NonNull MergeType mergeType,
+            @NonNull String baseName) {
+
+        return new ProcessAndroidResources.FeatureSplitConfigAction(
+                scope,
+                symbolLocation,
+                resPackageOutputFolder,
+                useAaptToGenerateLegacyMultidexMainDexProguardRules,
+                mergeType,
+                baseName);
     }
 }
