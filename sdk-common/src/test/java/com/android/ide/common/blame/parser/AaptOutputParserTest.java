@@ -65,12 +65,6 @@ public class AaptOutputParserTest {
 
     private ToolOutputParser parser;
 
-    @Nullable
-    private static String getSystemIndependentSourcePath(@NonNull Message message) {
-        String sourcePath = message.getSourcePath();
-        return sourcePath == null ? null : sourcePath.replace('\\', '/');
-    }
-
     private static boolean setupSdkHome() {
         AbstractAaptOutputParser.ourRootDir = new File(".");
         return true;
@@ -453,8 +447,8 @@ public class AaptOutputParserTest {
         assertNotNull(message);
 
         // NOT sourceFilePath; should be translated back from source comment
-        assertEquals(new File ("src/test/resources/testData/resources/baseSet/values/values.xml").getAbsolutePath(),
-                     getSystemIndependentSourcePath(message));
+        assertEquals(new File ("src/test/resources/testData/resources/baseSet/values/values.xml").getAbsoluteFile(),
+                     new File(message.getSourcePath()));
 
         assertEquals("[message severity]", Message.Kind.ERROR, message.getKind());
         assertEquals("[message text]", messageText, message.getText());
@@ -508,9 +502,9 @@ public class AaptOutputParserTest {
         assertNotNull(message);
 
         // NOT sourceFilePath; should be translated back from source comment
-        String expected = new File("src/test/resources/testData/resources/incMergeData/filesVsValues/main/layout/main.xml")
-          .getAbsolutePath();
-        assertEquals("[file path]", expected, getSystemIndependentSourcePath(message));
+        File expected = new File("src/test/resources/testData/resources/incMergeData/filesVsValues/main/layout/main.xml")
+          .getAbsoluteFile();
+        assertEquals("[file path]", expected, new File(message.getSourcePath()));
         assertEquals("[message severity]", Message.Kind.ERROR, message.getKind());
         assertEquals("[message text]", messageText, message.getText());
         assertEquals("[position line]", 4, message.getSourceFilePositions().get(0).getPosition().getStartLine() + 1);
