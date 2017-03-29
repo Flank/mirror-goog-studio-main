@@ -818,6 +818,43 @@ public class ManifestMerger2SmallTest {
                 nodes.item(1).getAttributes().getNamedItem("t:name").getNodeValue());
     }
 
+    @Test
+    public void testFeatureSplitOption() throws Exception {
+        String xml =
+                ""
+                        + "<manifest\n"
+                        + "    package=\"com.foo.example\""
+                        + "    xmlns:t=\"http://schemas.android.com/apk/res/android\">\n"
+                        + "    <application t:name=\".applicationOne\">\n"
+                        + "        <activity t:name=\"activityOne\"/>\n"
+                        + "    </application>\n"
+                        + "</manifest>";
+
+        File inputFile = inputAsFile("testFeatureSplitOption", xml);
+
+        MockLog mockLog = new MockLog();
+        MergingReport mergingReport =
+                ManifestMerger2.newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
+                        .withFeatures(ManifestMerger2.Invoker.Feature.ADD_FEATURE_SPLIT_INFO)
+                        .setFeatureName("feature")
+                        .merge();
+
+        assertTrue(mergingReport.getResult().isSuccess());
+        Document xmlDocument = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
+        assertEquals(
+                "feature",
+                xmlDocument.getDocumentElement().getAttribute(SdkConstants.ATTR_FEATURE_SPLIT));
+
+        assertEquals(
+                "feature",
+                xmlDocument
+                        .getElementsByTagName(SdkConstants.TAG_ACTIVITY)
+                        .item(0)
+                        .getAttributes()
+                        .getNamedItemNS(SdkConstants.ANDROID_URI, SdkConstants.ATTR_SPLIT_NAME)
+                        .getNodeValue());
+    }
+
     public static Optional<Node> getChildByName(@NonNull Node parent, @NonNull String localName) {
         NodeList childNodes = parent.getChildNodes();
         for (int i=0; i<childNodes.getLength(); i++) {
