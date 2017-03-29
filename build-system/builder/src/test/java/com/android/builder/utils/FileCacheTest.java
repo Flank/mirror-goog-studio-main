@@ -700,6 +700,33 @@ public class FileCacheTest {
     }
 
     @Test
+    public void testCacheEntryExists() throws Exception {
+        FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheDir);
+        FileCache.Inputs inputs =
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putFilePath("file", new File("input"))
+                        .build();
+        File outputFile = new File(outputDir, "output");
+
+        // Case 1: Cache entry does not exist
+        assertThat(fileCache.cacheEntryExists(inputs)).isFalse();
+
+        // Case 2: Cache entry exists and is not corrupted
+        fileCache.createFile(
+                outputFile,
+                inputs,
+                () -> Files.write("Some text", outputFile, StandardCharsets.UTF_8));
+        assertThat(fileCache.cacheEntryExists(inputs)).isTrue();
+
+        // Case 3: Cache entry exists but is corrupted
+        File cachedFile = fileCache.getFileInCache(inputs);
+        File inputsFile = new File(cachedFile.getParent(), "inputs");
+        FileUtils.delete(inputsFile);
+
+        assertThat(fileCache.cacheEntryExists(inputs)).isFalse();
+    }
+
+    @Test
     public void testGetFileInCache() throws Exception {
         FileCache fileCache = FileCache.getInstanceWithSingleProcessLocking(cacheDir);
         FileCache.Inputs inputs =
