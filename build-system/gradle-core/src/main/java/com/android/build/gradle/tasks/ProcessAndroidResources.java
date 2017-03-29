@@ -79,9 +79,11 @@ import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.resources.Density;
 import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -672,7 +674,6 @@ public class ProcessAndroidResources extends IncrementalTask {
 
         @Override
         public void execute(@NonNull ProcessAndroidResources processResources) {
-
             final BaseVariantData variantData = variantScope.getVariantData();
 
             variantData.addTask(TaskContainer.TaskKind.PROCESS_ANDROID_RESOURCES, processResources);
@@ -810,6 +811,16 @@ public class ProcessAndroidResources extends IncrementalTask {
     }
 
     FileCollection manifestFiles;
+
+    public File getManifestFile() {
+        File manifestDirectory = Iterables.getFirst(manifestFiles.getFiles(), null);
+        Preconditions.checkNotNull(manifestDirectory);
+        Preconditions.checkNotNull(splitScope.getMainSplit());
+        return FileUtils.join(
+                manifestDirectory,
+                splitScope.getMainSplit().getDirName(),
+                SdkConstants.ANDROID_MANIFEST_XML);
+    }
 
     @InputFiles
     public FileCollection getManifestFiles() {

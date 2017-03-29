@@ -52,11 +52,9 @@ public class AppPluginDslTest
         for (BaseVariantOutput baseVariantOutput : variant.getOutputs()) {
             Assert.assertTrue(baseVariantOutput instanceof ApkVariantOutput);
             ApkVariantOutput apkVariantOutput = (ApkVariantOutput) baseVariantOutput;
-
-            // FIX ME !
-            //assertNotNull(apkVariantOutput.getProcessManifest());
-            //assertNotNull(apkVariantOutput.getProcessResources());
-            //assertNotNull(apkVariantOutput.getPackageApplication());
+            assertNotNull(apkVariantOutput.getProcessManifest());
+            assertNotNull(apkVariantOutput.getProcessResources());
+            assertNotNull(apkVariantOutput.getPackageApplication());
         }
 
         if (variant.isSigningReady()) {
@@ -66,7 +64,7 @@ public class AppPluginDslTest
                 ApkVariantOutput apkVariantOutput = (ApkVariantOutput) baseVariantOutput;
 
                 // Check if we did the right thing, depending on the default value of the flag.
-                Assert.assertNull(apkVariantOutput.getZipAlign());
+                Assert.assertNotNull(apkVariantOutput.getZipAlign());
             }
 
         } else {

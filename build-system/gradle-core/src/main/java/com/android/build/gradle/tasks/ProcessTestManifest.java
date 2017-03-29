@@ -34,11 +34,13 @@ import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
+import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.builder.core.VariantConfiguration;
 import com.android.ide.common.build.ApkData;
 import com.android.manifmerger.ManifestProvider;
 import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.IOException;
@@ -155,6 +157,28 @@ public class ProcessTestManifest extends ManifestProcessorTask {
         splitScope.addOutputForSplit(
                 VariantScope.TaskOutputType.MERGED_MANIFESTS, mainApkData, manifestOutputFile);
         splitScope.save(VariantScope.TaskOutputType.MERGED_MANIFESTS, getManifestOutputDirectory());
+    }
+
+    @NonNull
+    @Override
+    public File getManifestOutputFile() {
+        Preconditions.checkState(!splitScope.getApkDatas().isEmpty());
+        return FileUtils.join(
+                getManifestOutputDirectory(),
+                splitScope.getApkDatas().get(0).getDirName(),
+                SdkConstants.ANDROID_MANIFEST_XML);
+    }
+
+    @Nullable
+    @Override
+    public File getInstantRunManifestOutputFile() {
+        return null;
+    }
+
+    @Nullable
+    @Override
+    public File getAaptFriendlyManifestOutputFile() {
+        return null;
     }
 
     @InputFile
@@ -327,6 +351,9 @@ public class ProcessTestManifest extends ManifestProcessorTask {
 
             processTestManifestTask.placeholdersValues =
                     TaskInputHelper.memoize(config::getManifestPlaceholders);
+
+            scope.getVariantData()
+                    .addTask(TaskContainer.TaskKind.PROCESS_MANIFEST, processTestManifestTask);
         }
     }
 }

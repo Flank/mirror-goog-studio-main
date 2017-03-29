@@ -25,6 +25,8 @@ public interface TaskContainer {
     enum TaskKind {
         // Task the process all variant's outputs.
         PROCESS_ANDROID_RESOURCES,
+        // Task the process all variant's outputs.
+        PROCESS_MANIFEST,
         // Task to package all variant's outputs.
         PACKAGE_ANDROID_ARTIFACT,
         // Task to assemble the variant and all its output.

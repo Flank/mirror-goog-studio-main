@@ -22,6 +22,7 @@ import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.variant.TaskContainer;
+import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.ide.common.build.ApkData;
 import com.google.common.collect.ImmutableList;
@@ -69,6 +70,12 @@ public abstract class BaseVariantOutputImpl implements BaseVariantOutput {
     @Override
     public ProcessAndroidResources getProcessResources() {
         return taskContainer.getTaskByType(ProcessAndroidResources.class);
+    }
+
+    @Override
+    @Nullable
+    public ManifestProcessorTask getProcessManifest() {
+        return taskContainer.getTaskByType(ManifestProcessorTask.class);
     }
 
     @Nullable

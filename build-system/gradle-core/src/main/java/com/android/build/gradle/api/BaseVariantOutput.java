@@ -19,6 +19,7 @@ package com.android.build.gradle.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.OutputFile;
+import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 import org.gradle.api.Task;
 import org.gradle.model.Managed;
@@ -35,6 +36,10 @@ public interface BaseVariantOutput extends OutputFile {
      */
     @NonNull
     ProcessAndroidResources getProcessResources();
+
+
+    @NonNull
+    ManifestProcessorTask getProcessManifest();
 
     /**
      * Returns the assemble task for this particular output
