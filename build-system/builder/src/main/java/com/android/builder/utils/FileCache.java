@@ -472,6 +472,42 @@ public class FileCache {
     }
 
     /**
+     * Returns {@code true} if the cache entry for the given list of inputs exists and is not
+     * corrupted, and {@code false} otherwise. This method will block if the cache/cache entry is
+     * being created/deleted by another thread/process.
+     *
+     * @param inputs all the inputs that affect the creation of the output file/directory
+     */
+    public boolean cacheEntryExists(@NonNull Inputs inputs) throws IOException {
+        // This method is a stripped-down version of queryCacheEntry(). See queryCacheEntry() for
+        // an explanation of this code.
+        if (lockingScope == LockingScope.MULTI_PROCESS) {
+            Preconditions.checkNotNull(
+                    cacheDirectory.getCanonicalFile().getParentFile(),
+                    "Cache directory must not be the root directory");
+            FileUtils.mkdirs(cacheDirectory.getCanonicalFile().getParentFile());
+        }
+
+        try {
+            QueryResult queryResult =
+                    getSynchronizedFile(cacheDirectory).read(
+                            sameCacheDirectory -> {
+                                FileUtils.mkdirs(cacheDirectory);
+                                return getSynchronizedFile(getCacheEntryDir(inputs)).read(
+                                        (cacheEntryDir) -> checkCacheEntry(inputs, cacheEntryDir));
+                            });
+            return queryResult.getQueryEvent().equals(QueryEvent.HIT);
+        } catch (ExecutionException exception) {
+            for (Throwable exceptionInCausalChain : Throwables.getCausalChain(exception)) {
+                if (exceptionInCausalChain instanceof IOException) {
+                    throw new IOException(exception);
+                }
+            }
+            throw new RuntimeException(exception);
+        }
+    }
+
+    /**
      * Checks the cache entry to see if it exists (and whether it is corrupted). If it is corrupted,
      * the returned result also contains its cause.
      *
