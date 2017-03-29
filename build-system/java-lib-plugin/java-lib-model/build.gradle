@@ -1,0 +1,42 @@
+apply plugin: 'java'
+
+dependencies {
+    compile project(':base:annotations')
+}
+
+group = 'com.android.java.tools.build'
+archivesBaseName = 'java-lib-model'
+// if plugin is built from studio, use "studio" as version number,
+// and set buildDir to out/studio/.
+// otherwise use the same version number as Android plugin.
+version = rootProject.ext.buildVersion
+if(System.getenv("BUILD_FROM_STUDIO")) {
+    version = "studio"
+    buildDir = "$rootProject.projectDir/../out/studio/java-lib-plugin"
+}
+
+project.ext.pomName = 'Java Library Plugin Model'
+project.ext.pomDesc = 'APIs for Java Library Plugin.'
+
+project.ext.apiVersion = rootProject.ext.apiVersion ?: 0
+
+// because the model is passed from the IDE to Gradle, no matter
+// what version of Gradle Plugin is running, we need to keep this
+// as Java6 bytecode in case Studio 2.2 loads a project running
+// an older plugin in a JDK6 VM.
+sourceCompatibility = JavaVersion.VERSION_1_6
+targetCompatibility = JavaVersion.VERSION_1_6
+
+apply from: "$rootDir/buildSrc/base/publish.gradle"
+apply from: "$rootDir/buildSrc/base/javadoc.gradle"
+
+def generated = new File("${project.buildDir}/generated/resources")
+
+sourceSets.main.resources.srcDir generated
+
+task copyVersionProperties(type: Copy) {
+    from project.file("$rootDir/buildSrc/base/version.properties")
+    into project.file("$generated/com/android/java/model")
+}
+
+tasks.compileJava.dependsOn copyVersionProperties
