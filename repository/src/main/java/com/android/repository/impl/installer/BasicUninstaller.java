@@ -21,10 +21,8 @@ import com.android.annotations.Nullable;
 import com.android.repository.api.LocalPackage;
 import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.RepoManager;
-import com.android.repository.api.RepoPackage;
 import com.android.repository.api.Uninstaller;
 import com.android.repository.io.FileOp;
-
 import java.io.File;
 
 /**
@@ -49,9 +47,7 @@ class BasicUninstaller extends AbstractUninstaller {
      */
     @Override
     protected boolean doComplete(@Nullable File tempPath, @NonNull ProgressIndicator progress) {
-        String path = getPackage().getPath();
-        path = path.replace(RepoPackage.PATH_SEPARATOR, File.separatorChar);
-        File location = new File(getRepoManager().getLocalPath(), path);
+        File location = getPackage().getLocation();
 
         mFop.deleteFileOrFolder(location);
         getRepoManager().markLocalCacheInvalid();;

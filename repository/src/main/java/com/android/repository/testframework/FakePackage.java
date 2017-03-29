@@ -65,6 +65,8 @@ public abstract class FakePackage implements RepoPackage {
 
         public FakeLocalPackage(@NonNull String path) {
             super(path);
+            String packagePath = getPath().replace(RepoPackage.PATH_SEPARATOR, File.separatorChar);
+            mLocation = new File("/sdk", packagePath);
         }
 
         @Override
