@@ -158,7 +158,8 @@ public class BaseComponentModelPlugin implements Plugin<Project>, ToolingRegistr
      */
     @Override
     public void apply(Project project) {
-        ExecutionConfigurationUtil.setThreadPoolSize(project);
+        ProjectOptions projectOptions = new ProjectOptions(project);
+        ExecutionConfigurationUtil.setThreadPoolSize(projectOptions);
 
         project.getPlugins().apply(AndroidComponentModelPlugin.class);
         project.getPlugins().apply(JavaBasePlugin.class);

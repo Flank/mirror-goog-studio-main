@@ -44,9 +44,6 @@ public class AndroidGradleOptions {
     public static final String PROPERTY_TEST_RUNNER_ARGS =
             "android.testInstrumentationRunnerArguments.";
 
-    public static final String PROPERTY_THREAD_POOL_SIZE = "android.threadPoolSize";
-    public static final String PROPERTY_THREAD_POOL_SIZE_OLD = "com.android.build.threadPoolSize";
-
     public static final String USE_DEPRECATED_NDK = "android.useDeprecatedNdk";
 
     public static final String PROPERTY_DISABLE_RESOURCE_VALIDATION =
@@ -244,16 +241,6 @@ public class AndroidGradleOptions {
             return true;
         }
         return false;
-    }
-
-    @Nullable
-    public static Integer getThreadPoolSize(@NonNull Project project) {
-        Integer size = getInteger(project, PROPERTY_THREAD_POOL_SIZE);
-        if (size == null) {
-            size = getInteger(project, PROPERTY_THREAD_POOL_SIZE_OLD);
-        }
-
-        return size;
     }
 
     @NonNull

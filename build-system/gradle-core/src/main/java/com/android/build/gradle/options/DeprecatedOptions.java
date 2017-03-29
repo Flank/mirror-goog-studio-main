@@ -31,7 +31,12 @@ public enum DeprecatedOptions implements Option<String> {
                     + "Please add the following to your build.gradle instead:\n"
                     + "android {\n"
                     + "  compileOptions.incremental = false\n"
-                    + "}");
+                    + "}"),
+    THREAD_POOL_SIZE_OLD(
+            "com.android.build.threadPoolSize",
+            "The com.android.build.threadPoolSize property has been replaced by "
+                    + IntegerOption.THREAD_POOL_SIZE.getPropertyName()),
+    ;
 
     @NonNull private final String propertyName;
     @NonNull private final String errorMessage;

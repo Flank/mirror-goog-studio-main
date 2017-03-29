@@ -244,7 +244,7 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
 
         this.project = project;
         this.projectOptions = new ProjectOptions(project);
-        ExecutionConfigurationUtil.setThreadPoolSize(project);
+        ExecutionConfigurationUtil.setThreadPoolSize(projectOptions);
         checkPathForErrors();
         checkModulesForErrors();
 
