@@ -177,6 +177,7 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
     @NonNull
     protected abstract BaseExtension createExtension(
             @NonNull Project project,
+            @NonNull ProjectOptions projectOptions,
             @NonNull Instantiator instantiator,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull SdkHandler sdkHandler,
@@ -417,6 +418,7 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
         extension =
                 createExtension(
                         project,
+                        projectOptions,
                         instantiator,
                         androidBuilder,
                         sdkHandler,
@@ -704,7 +706,7 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
                     extension.getBuildToolsRevision(),
                     extension.getLibraryRequests(),
                     androidBuilder,
-                    SdkHandler.useCachedSdk(project));
+                    SdkHandler.useCachedSdk(projectOptions));
 
             sdkHandler.ensurePlatformToolsIsInstalled(extraModelInfo);
         }

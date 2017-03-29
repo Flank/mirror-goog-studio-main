@@ -57,6 +57,7 @@ public class AtomPlugin extends BasePlugin implements Plugin<Project> {
     @Override
     protected BaseExtension createExtension(
             @NonNull Project project,
+            @NonNull ProjectOptions projectOptions,
             @NonNull Instantiator instantiator,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull SdkHandler sdkHandler,
@@ -70,6 +71,7 @@ public class AtomPlugin extends BasePlugin implements Plugin<Project> {
                         "android",
                         AtomExtension.class,
                         project,
+                        projectOptions,
                         instantiator,
                         androidBuilder,
                         sdkHandler,
