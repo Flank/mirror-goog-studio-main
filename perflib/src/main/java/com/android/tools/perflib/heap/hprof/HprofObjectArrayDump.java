@@ -34,6 +34,7 @@ public class HprofObjectArrayDump implements HprofDumpRecord {
         this.elements = elements;
     }
 
+    @Override
     public void write(HprofOutputStream hprof) throws IOException {
         hprof.writeU1(SUBTAG);
         hprof.writeId(arrayObjectId);
@@ -45,6 +46,7 @@ public class HprofObjectArrayDump implements HprofDumpRecord {
         }
     }
 
+    @Override
     public int getLength(int idSize) {
         return 1 + idSize + 4 + idSize + 4 + elements.length * idSize;
     }

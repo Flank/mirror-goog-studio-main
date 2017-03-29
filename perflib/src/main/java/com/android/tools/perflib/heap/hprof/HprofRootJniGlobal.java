@@ -29,12 +29,14 @@ public class HprofRootJniGlobal implements HprofDumpRecord {
         this.jniGlobalRefId = jniGlobalRefId;
     }
 
+    @Override
     public void write(HprofOutputStream hprof) throws IOException {
         hprof.writeU1(SUBTAG);
         hprof.writeId(objectId);
         hprof.writeId(jniGlobalRefId);
     }
 
+    @Override
     public int getLength(int idSize) {
         return 1 + 2*idSize;
     }

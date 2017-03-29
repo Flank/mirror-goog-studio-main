@@ -37,6 +37,7 @@ public class HprofHeapSummary implements HprofRecord {
         this.totalInstancesAllocated = totalInstancesAllocated;
     }
 
+    @Override
     public void write(HprofOutputStream hprof) throws IOException {
         hprof.writeRecordHeader(TAG, time, 4 + 4 + 8 + 8);
         hprof.writeU4(totalLiveBytes);

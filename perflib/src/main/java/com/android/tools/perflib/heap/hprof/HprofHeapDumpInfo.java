@@ -38,12 +38,14 @@ public class HprofHeapDumpInfo implements HprofDumpRecord {
         this.heapNameStringId = heapNameStringId;
     }
 
+    @Override
     public void write(HprofOutputStream hprof) throws IOException {
         hprof.writeU1(SUBTAG);
         hprof.writeU4(heapType);
         hprof.writeId(heapNameStringId);
     }
 
+    @Override
     public int getLength(int idSize) {
         return 1 + 4 + idSize;
     }

@@ -32,22 +32,27 @@ public class HprofOutputStream extends OutputStream {
         mOutputStream = os;
     }
 
+    @Override
     public void close() throws IOException {
         mOutputStream.close();
     }
 
+    @Override
     public void flush() throws IOException {
         mOutputStream.flush();
     }
 
+    @Override
     public void write(byte[] b) throws IOException {
         mOutputStream.write(b);
     }
 
+    @Override
     public void write(byte[] b, int off, int len) throws IOException {
         mOutputStream.write(b, off, len);
     }
 
+    @Override
     public void write(int b) throws IOException {
         mOutputStream.write(b);
     }

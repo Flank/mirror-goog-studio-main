@@ -34,6 +34,7 @@ public class HprofStackTrace implements HprofRecord {
         this.stackFrameIds = stackFrameIds;
     }
 
+    @Override
     public void write(HprofOutputStream hprof) throws IOException {
         int id = hprof.getIdSize();
         int u4 = 4;

@@ -27,6 +27,7 @@ public class HprofHeapDumpEnd implements HprofRecord {
         this.time = time;
     }
 
+    @Override
     public void write(HprofOutputStream hprof) throws IOException {
         hprof.writeRecordHeader(TAG, time, 0);
     }

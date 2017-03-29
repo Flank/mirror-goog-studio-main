@@ -48,6 +48,7 @@ public class HprofAllocSites implements HprofRecord {
         this.sites = sites;
     }
 
+    @Override
     public void write(HprofOutputStream hprof) throws IOException {
         hprof.writeRecordHeader(TAG, time,
                 2 + 4 + 4 + 4 + 8 + 8 + 4 + sites.length*HprofAllocSite.LENGTH);

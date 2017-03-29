@@ -32,6 +32,7 @@ public class HprofCpuSamples implements HprofRecord {
         this.samples = samples;
     }
 
+    @Override
     public void write(HprofOutputStream hprof) throws IOException {
         hprof.writeRecordHeader(TAG, time, 4 + 4 + samples.length*HprofCpuSample.LENGTH);
         hprof.writeU4(totalNumberOfSamples);

@@ -29,6 +29,7 @@ public class HprofEndThread implements HprofRecord {
         this.threadSerialNumber = threadSerialNumber;
     }
 
+    @Override
     public void write(HprofOutputStream hprof) throws IOException {
         hprof.writeRecordHeader(TAG, time, 4);
         hprof.writeU4(threadSerialNumber);

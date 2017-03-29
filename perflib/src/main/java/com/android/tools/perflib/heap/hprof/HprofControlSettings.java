@@ -35,6 +35,7 @@ public class HprofControlSettings implements HprofRecord {
         this.stackTraceDepth = stackTraceDepth;
     }
 
+    @Override
     public void write(HprofOutputStream hprof) throws IOException {
         hprof.writeRecordHeader(TAG, time, 4 + 2);
         hprof.writeU4(bitMaskFlags);
