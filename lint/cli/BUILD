@@ -11,8 +11,8 @@ maven_java_library(
     ),
     visibility = ["//visibility:public"],
     deps = [
-        "//prebuilts/tools/common/intellij-core:intellij-core-171.2455.10",
-        "//prebuilts/tools/common/uast:uast-171.2455.10",
+        "//prebuilts/tools/common/intellij-core:intellij-core-171.3780.107",
+        "//prebuilts/tools/common/uast:uast-171.3780.107",
         "//tools/base/annotations",
         "//tools/base/build-system:tools.manifest-merger",
         "//tools/base/build-system/builder-model",

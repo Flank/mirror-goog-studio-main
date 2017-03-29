@@ -2,7 +2,7 @@ apply plugin: 'java'
 
 group = 'com.android.tools.external.com-intellij'
 archivesBaseName = 'uast'
-version = '171.2455.10'
+version = '171.3780.107'
 
 dependencies {
     compile 'org.jetbrains.trove4j:trove4j:20160824'
@@ -10,10 +10,10 @@ dependencies {
 
 jar {
     // IntelliJ core
-    from zipTree("../../../../../prebuilts/tools/common/intellij-core/171.2455.10/intellij-core.jar")
-    from zipTree("../../../../../prebuilts/tools/common/intellij-core/171.2455.10/picocontainer.jar")
-    from zipTree("../../../../../prebuilts/tools/common/intellij-core/171.2455.10/annotations.jar")
-    from zipTree("../../../../../prebuilts/tools/common/intellij-core/171.2455.10/asm-all.jar")
+    from zipTree("../../../../../prebuilts/tools/common/intellij-core/171.3780.107/intellij-core.jar")
+    from zipTree("../../../../../prebuilts/tools/common/intellij-core/171.3780.107/picocontainer.jar")
+    from zipTree("../../../../../prebuilts/tools/common/intellij-core/171.3780.107/annotations.jar")
+    from zipTree("../../../../../prebuilts/tools/common/intellij-core/171.3780.107/asm-all.jar")
 
     // UAST
     from zipTree("../../../../../prebuilts/tools/common/uast/1.0/uast-common-1.0.jar")
