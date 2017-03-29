@@ -33,7 +33,6 @@ import com.android.build.gradle.internal.BuildCacheUtils;
 import com.android.build.gradle.internal.DependencyManager;
 import com.android.build.gradle.internal.ExecutionConfigurationUtil;
 import com.android.build.gradle.internal.ExtraModelInfo;
-import com.android.build.gradle.internal.LibraryCache;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.NativeLibraryFactoryImpl;
 import com.android.build.gradle.internal.NonFinalPluginExpiry;
@@ -277,7 +276,7 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
     }
 
     private void configureProject() {
-        extraModelInfo = new ExtraModelInfo(project);
+        extraModelInfo = new ExtraModelInfo(projectOptions, project.getLogger());
         checkGradleVersion();
 
         sdkHandler = new SdkHandler(project, getLogger());

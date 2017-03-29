@@ -19,7 +19,9 @@ package com.android.build.gradle.internal.externalBuild;
 import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.when;
 
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.utils.FileUtils;
+import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -90,7 +92,9 @@ public class ExternalBuildManifestLoaderTest {
         ExternalBuildManifestLoader.loadAndPopulateContext(
                 mTemporaryFolder.getRoot(),
                 apk_manifest_test,
-                mProject, externalBuildContext);
+                mProject,
+                new ProjectOptions(ImmutableMap.of()),
+                externalBuildContext);
 
         // assert build context population.
         assertThat(externalBuildContext.getBuildManifest()).isNotNull();
