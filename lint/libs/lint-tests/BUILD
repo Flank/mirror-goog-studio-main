@@ -3,8 +3,8 @@ java_library(
     srcs = glob(["src/main/java/**/*.java"]),
     visibility = ["//visibility:public"],
     deps = [
-        "//prebuilts/tools/common/intellij-core:intellij-core-171.2455.10",
-        "//prebuilts/tools/common/uast:uast-171.2455.10",
+        "//prebuilts/tools/common/intellij-core:intellij-core-171.3780.107",
+        "//prebuilts/tools/common/uast:uast-171.3780.107",
         "//tools/base/annotations",
         "//tools/base/build-system/builder-model",
         "//tools/base/common:tools.common",
@@ -43,9 +43,9 @@ java_test(
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
         ":lint-tests",
-        "//prebuilts/tools/common/intellij-core:intellij-core-171.2455.10",
+        "//prebuilts/tools/common/intellij-core:intellij-core-171.3780.107",
         "//prebuilts/tools/common/m2/repository/org/mockito/mockito-all/1.9.5:jar",
-        "//prebuilts/tools/common/uast:uast-171.2455.10",
+        "//prebuilts/tools/common/uast:uast-171.3780.107",
         "//tools/base/annotations",
         "//tools/base/build-system/builder-model",
         "//tools/base/common:tools.common",

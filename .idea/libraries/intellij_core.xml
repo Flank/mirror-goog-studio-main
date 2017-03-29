@@ -1,10 +1,10 @@
 <component name="libraryTable">
   <library name="intellij-core">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/intellij-core/171.2455.10/annotations.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/intellij-core/171.2455.10/asm-all.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/intellij-core/171.2455.10/intellij-core.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/intellij-core/171.2455.10/picocontainer.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/intellij-core/171.3780.107/annotations.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/intellij-core/171.3780.107/asm-all.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/intellij-core/171.3780.107/intellij-core.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/intellij-core/171.3780.107/picocontainer.jar!/" />
       <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/jetbrains/trove4j/trove4j/20160824/trove4j-20160824.jar!/" />
     </CLASSES>
     <JAVADOC />

@@ -230,6 +230,8 @@ public class ConstantEvaluator {
                         return -(Byte) operand;
                     }
                     break;
+                default:
+                    // Deliberately not handling all the other operators here
             }
         } else if (node instanceof InlineIfExpression) {
             InlineIfExpression expression = (InlineIfExpression) node;
@@ -276,6 +278,8 @@ public class ConstantEvaluator {
                         return left == right;
                     case NOT_EQUALS:
                         return left != right;
+                    default:
+                        // Deliberately not handling all the other operators here
                 }
             } else if (operandLeft instanceof Number && operandRight instanceof Number) {
                 Number left = (Number) operandLeft;
