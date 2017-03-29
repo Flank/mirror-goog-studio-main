@@ -23,13 +23,11 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.repository.api.Channel;
 import com.android.sdklib.AndroidVersion;
-import com.google.common.collect.Maps;
 import java.io.File;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Map;
 import java.util.StringTokenizer;
 import org.gradle.api.Project;
 
@@ -40,9 +38,6 @@ import org.gradle.api.Project;
  */
 @Deprecated
 public class AndroidGradleOptions {
-
-    public static final String PROPERTY_TEST_RUNNER_ARGS =
-            "android.testInstrumentationRunnerArguments.";
 
     public static final String USE_DEPRECATED_NDK = "android.useDeprecatedNdk";
 
@@ -83,21 +78,6 @@ public class AndroidGradleOptions {
 
     public static boolean getUseSdkDownload(@NonNull Project project) {
         return getBoolean(project, PROPERTY_USE_SDK_DOWNLOAD, true) && !invokedFromIde(project);
-    }
-
-    @NonNull
-    public static Map<String, String> getExtraInstrumentationTestRunnerArgs(@NonNull Project project) {
-        Map<String, String> argsMap = Maps.newHashMap();
-        for (Map.Entry<String, ?> entry : project.getProperties().entrySet()) {
-            if (entry.getKey().startsWith(PROPERTY_TEST_RUNNER_ARGS)) {
-                String argName = entry.getKey().substring(PROPERTY_TEST_RUNNER_ARGS.length());
-                String argValue = entry.getValue().toString();
-
-                argsMap.put(argName, argValue);
-            }
-        }
-
-        return argsMap;
     }
 
     public static boolean getShardAndroidTestsBetweenDevices(@NonNull Project project) {
