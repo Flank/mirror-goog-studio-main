@@ -105,6 +105,7 @@ public class CheckAll {
                     "projectWithFeatures",
 
                     // These are all right:
+                    "genFolderApi", // Has a required injectable property
                     "ndkJniPureSplitLib", // Doesn't build until externalNativeBuild {} is added.
                     "duplicateNameImport", // Fails on purpose.
                     "filteredOutBuildType", // assembleDebug does not exist as debug build type is removed.

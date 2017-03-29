@@ -45,7 +45,14 @@ public class GenFolderApiTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        model = project.executeAndReturnModel("clean", "assembleDebug").getOnlyModel();
+        project.executor()
+                .withProperty("inject_enable_generate_values_res", "true")
+                .run("clean", "assembleDebug");
+        model =
+                project.model()
+                        .withProperty("inject_enable_generate_values_res", "true")
+                        .getSingle()
+                        .getOnlyModel();
     }
 
     @AfterClass
@@ -61,6 +68,24 @@ public class GenFolderApiTest {
 
     @Test
     public void checkTheCustomResGenerationTaskRan() throws Exception {
+        assertThat(project.getApk("debug")).contains("res/xml/generated.xml");
+        assertThat(project.file("build/intermediates/res/merged/debug/values/values.xml"))
+                .contains("generated_string");
+    }
+
+
+    @Test
+    public void checkAddingAndRemovingGeneratingTasks() throws Exception {
+        project.executor()
+                .withProperty("inject_enable_generate_values_res", "false")
+                .run("assembleDebug");
+        assertThat(project.getApk("debug")).contains("res/xml/generated.xml");
+        assertThat(project.file("build/intermediates/res/merged/debug/values/values.xml"))
+                .doesNotContain("generated_string");
+
+        project.executor()
+                .withProperty("inject_enable_generate_values_res", "true")
+                .run("assembleDebug");
         assertThat(project.getApk("debug")).contains("res/xml/generated.xml");
         assertThat(project.file("build/intermediates/res/merged/debug/values/values.xml"))
                 .contains("generated_string");
@@ -131,6 +156,6 @@ public class GenFolderApiTest {
         // ATTENTION Author and Reviewers - please make sure required changes to the build file
         // are backwards compatible before updating this test.
         assertThat(TestFileUtils.sha1NormalizedLineEndings(project.file("build.gradle")))
-                .isEqualTo("60734125e0720e42c7024dfde93870fc56459c79");
+                .isEqualTo("073e20ecd397be009b7cd7fd6f6166012d9c39a0");
     }
 }
