@@ -23,6 +23,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
+import java.util.Objects;
 
 /**
  * A {@linkplain ResourceUrl} represents a parsed resource url such as {@code @string/foo} or {@code
@@ -248,6 +249,12 @@ public class ResourceUrl {
         return new ResourceUrl(type, name, namespace, isFramework, create, theme);
     }
 
+    /** Creates a copy of this {@link ResourceUrl} with the {@code theme} field set to true. */
+    @NonNull
+    public ResourceUrl asThemeUrl() {
+        return new ResourceUrl(type, name, namespace, framework, create, true);
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -265,7 +272,6 @@ public class ResourceUrl {
         return sb.toString();
     }
 
-    @SuppressWarnings("RedundantIfStatement")
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -274,31 +280,17 @@ public class ResourceUrl {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-
         ResourceUrl that = (ResourceUrl) o;
-
-        if (create != that.create) {
-            return false;
-        }
-        if (framework != that.framework) {
-            return false;
-        }
-        if (!name.equals(that.name)) {
-            return false;
-        }
-        if (type != that.type) {
-            return false;
-        }
-
-        return true;
+        return framework == that.framework
+                && create == that.create
+                && theme == that.theme
+                && type == that.type
+                && Objects.equals(name, that.name)
+                && Objects.equals(namespace, that.namespace);
     }
 
     @Override
     public int hashCode() {
-        int result = type.hashCode();
-        result = 31 * result + name.hashCode();
-        result = 31 * result + (framework ? 1 : 0);
-        result = 31 * result + (create ? 1 : 0);
-        return result;
+        return Objects.hash(type, name, namespace, framework, create, theme);
     }
 }
