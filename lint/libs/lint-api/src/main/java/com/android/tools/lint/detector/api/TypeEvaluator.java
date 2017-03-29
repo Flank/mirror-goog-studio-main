@@ -245,6 +245,8 @@ public class TypeEvaluator {
                 case LESS:
                 case LESS_OR_EQUAL:
                     return new DefaultTypeDescriptor(TYPE_BOOLEAN);
+                default:
+                    // Deliberately not handling all the other operators here
             }
 
             TypeDescriptor type = evaluate(expression.astLeft());
