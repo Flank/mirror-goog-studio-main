@@ -5,6 +5,7 @@ set(PROTO_FILES cpu.proto
                 internal_network.proto
                 memory.proto
                 network.proto
+                graphics.proto
                 perfa_service.proto
                 profiler.proto
                 profiler_service.proto)
