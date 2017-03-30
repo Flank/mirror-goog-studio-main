@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.dependency;
 
 import com.android.annotations.NonNull;
 import com.google.common.collect.Sets;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.Spliterator;
@@ -76,6 +77,11 @@ public class SubtractingArtifactCollection implements ArtifactCollection {
         }
 
         return artifactResults;
+    }
+
+    @Override
+    public Collection<Throwable> getFailures() {
+        throw new UnsupportedOperationException();
     }
 
     @NonNull

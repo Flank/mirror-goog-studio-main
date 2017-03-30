@@ -41,12 +41,14 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import javax.inject.Inject;
 import org.gradle.api.artifacts.transform.ArtifactTransform;
 
 /** Transform that returns the content of an extracted AAR folder. */
 public class AarTransform extends ArtifactTransform {
     @NonNull private final ArtifactType targetType;
 
+    @Inject
     public AarTransform(@NonNull String targetType) {
         this.targetType = ArtifactType.byType(targetType);
     }

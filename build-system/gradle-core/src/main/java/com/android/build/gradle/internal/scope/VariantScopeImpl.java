@@ -700,27 +700,33 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         Action<AttributeContainer> attributes =
                 container -> container.attribute(ARTIFACT_TYPE, artifactType.getType());
 
-        Spec<ComponentIdentifier> filter = null;
+        Spec<ComponentIdentifier> filter = getComponentFilter(scope);
+
+        return configuration
+                .getIncoming()
+                .artifactView(
+                        config -> {
+                            config.attributes(attributes);
+                            if (filter != null) {
+                                config.componentFilter(filter);
+                            }
+                        });
+    }
+
+    private Spec<ComponentIdentifier> getComponentFilter(
+            @NonNull AndroidArtifacts.ArtifactScope scope) {
         switch (scope) {
             case ALL:
-                break;
+                return null;
             case EXTERNAL:
                 // since we want both Module dependencies and file based dependencies in this case
                 // the best thing to do is search for non ProjectComponentIdentifier.
-                filter = id -> !(id instanceof ProjectComponentIdentifier);
-                break;
+                return id -> !(id instanceof ProjectComponentIdentifier);
             case MODULE:
-                filter = id -> id instanceof ProjectComponentIdentifier;
-                break;
+                return id -> id instanceof ProjectComponentIdentifier;
             default:
                 throw new RuntimeException("unknown ArtifactScope value");
         }
-
-        ArtifactView artifactView = configuration.getIncoming().artifactView().attributes(attributes);
-        if (filter != null) {
-            artifactView = artifactView.componentFilter(filter);
-        }
-        return artifactView;
     }
 
     private static void checkConfigType(

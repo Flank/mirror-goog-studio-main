@@ -36,11 +36,13 @@ import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import javax.inject.Inject;
 import org.gradle.api.artifacts.transform.ArtifactTransform;
 
 /** Transform that extracts an AAR file into a folder. */
 public class ExtractAarTransform extends ArtifactTransform {
 
+    @Inject
     public ExtractAarTransform() {}
 
     @Override

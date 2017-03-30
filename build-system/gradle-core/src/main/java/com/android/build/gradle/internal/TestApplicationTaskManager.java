@@ -99,8 +99,12 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
         // FULL_APK is published only to the runtime configuration
         FileCollection testedApks =
                 incomingRuntimeClasspath
-                        .artifactView()
-                        .attributes(container -> container.attribute(ARTIFACT_TYPE, APK.getType()))
+                        .artifactView(
+                                config ->
+                                        config.attributes(
+                                                container ->
+                                                        container.attribute(
+                                                                ARTIFACT_TYPE, APK.getType())))
                         .getFiles();
 
         // same for the manifests.
@@ -166,11 +170,13 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
                             .getVariantDependencies()
                             .getCompileClasspath()
                             .getIncoming()
-                            .artifactView()
-                            .attributes(
-                                    container ->
-                                            container.attribute(
-                                                    ARTIFACT_TYPE, APK_MAPPING.getType()))
+                            .artifactView(
+                                    config ->
+                                            config.attributes(
+                                                    container ->
+                                                            container.attribute(
+                                                                    ARTIFACT_TYPE,
+                                                                    APK_MAPPING.getType())))
                             .getFiles();
         }
 
@@ -191,11 +197,13 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
                             .getVariantDependency()
                             .getCompileClasspath()
                             .getIncoming()
-                            .artifactView()
-                            .attributes(
-                                    container ->
-                                            container.attribute(
-                                                    ARTIFACT_TYPE, MANIFEST_METADATA.getType()))
+                            .artifactView(
+                                    config ->
+                                            config.attributes(
+                                                    container ->
+                                                            container.attribute(
+                                                                    ARTIFACT_TYPE,
+                                                                    MANIFEST_METADATA.getType())))
                             .getFiles();
         }
 
