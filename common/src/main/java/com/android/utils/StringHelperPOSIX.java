@@ -18,7 +18,6 @@ package com.android.utils;
 
 import com.android.annotations.NonNull;
 import com.google.common.collect.Lists;
-
 import java.util.List;
 
 /**
@@ -43,9 +42,6 @@ public class StringHelperPOSIX extends StringHelper {
      */
     @NonNull
     public static List<String> splitCommandLine(@NonNull String commandLine) {
-
-        final String separators[] = { "&&", ";" };
-
         List<String> commands = Lists.newArrayList();
         boolean quoting = false;
         char quote = '\0';
@@ -73,13 +69,19 @@ public class StringHelperPOSIX extends StringHelper {
             }
 
             if (!quoting) {
-                for (final String separator : separators) {
-                    if (commandLine.substring(i).startsWith(separator)) {
-                        commands.add(commandLine.substring(commandStart, i));
-                        i += separator.length();
-                        commandStart = i;
-                        break;
-                    }
+                // Match either && or ; separator
+                int matched = 0;
+                if (commandLine.length() > i + 1
+                        && commandLine.charAt(i) == '&'
+                        && commandLine.charAt(i + 1) == '&') {
+                    matched = 2;
+                } else if (commandLine.charAt(i) == ';') {
+                    matched = 1;
+                }
+                if (matched > 0) {
+                    commands.add(commandLine.substring(commandStart, i));
+                    i += matched;
+                    commandStart = i;
                 }
             }
         }
