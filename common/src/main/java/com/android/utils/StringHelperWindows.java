@@ -18,7 +18,6 @@ package com.android.utils;
 
 import com.android.annotations.NonNull;
 import com.google.common.collect.Lists;
-
 import java.util.List;
 
 /**
@@ -49,9 +48,6 @@ public class StringHelperWindows extends StringHelper {
      */
     @NonNull
     public static List<String> splitCommandLine(@NonNull String commandLine) {
-
-        final String separators[] = { "&&", "&" };
-
         List<String> commands = Lists.newArrayList();
         boolean quoting = false;
         boolean escapingQuotes = false;
@@ -59,7 +55,8 @@ public class StringHelperWindows extends StringHelper {
 
         int commandStart = 0;
 
-        for (int i = 0; i < commandLine.length(); ++i) {
+        int length = commandLine.length();
+        for (int i = 0; i < length; ++i) {
             final char c = commandLine.charAt(i);
 
             if (c == '"' && !escapingQuotes) {
@@ -83,20 +80,19 @@ public class StringHelperWindows extends StringHelper {
             }
 
             if (!quoting) {
-                for (final String separator : separators) {
-                    if (commandLine.substring(i).startsWith(separator)) {
-                        commands.add(commandLine.substring(commandStart, i));
-                        i += separator.length();
-                        commandStart = i;
-                        break;
+                // Check for separators & and &&
+                if (commandLine.charAt(i) == '&') {
+                    commands.add(commandLine.substring(commandStart, i));
+                    i++;
+                    if (commandLine.length() > i && commandLine.charAt(i) == '&') {
+                        i++;
                     }
+                    commandStart = i;
                 }
             }
-
         }
 
-        if (commandStart < commandLine.length())
-            commands.add(commandLine.substring(commandStart));
+        if (commandStart < length) commands.add(commandLine.substring(commandStart));
 
         return commands;
     }
