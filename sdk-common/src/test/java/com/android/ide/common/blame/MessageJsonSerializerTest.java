@@ -145,7 +145,9 @@ public class MessageJsonSerializerTest {
                             "original error text",
                             "tool name",
                             new SourceFilePosition(
-                                    new SourceFile(new File("/path/file.java")),
+                                    // Note: On Windows the root '/' is transformed to 'C:/',
+                                    // so we call getAbsoluteFile()
+                                    new SourceFile(new File("/path/file.java").getAbsoluteFile()),
                                     new SourcePosition(1, 3, 5)))
                     }, {
                     new Message(

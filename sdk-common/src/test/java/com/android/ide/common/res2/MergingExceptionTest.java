@@ -18,7 +18,6 @@ package com.android.ide.common.res2;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -42,6 +41,9 @@ public class MergingExceptionTest {
 
     @Test
     public void testGetMessage() {
+        // Note: On Windows the root '/' is transformed to 'C:/', so we call getAbsoluteFile()
+        String msgPath = file.getAbsolutePath();
+
         assertEquals("Error: My error message",
                 MergingException.withMessage("My error message").build().getMessage());
         assertEquals("Error: My error message",
@@ -49,44 +51,41 @@ public class MergingExceptionTest {
                         "Error: My error message").build().getMessage());
         assertEquals("Error: My error message",
                 MergingException.withMessage("Error: My error message").build().getMessage());
-        assertEquals("/some/random/path: Error: My error message",
+        assertEquals(msgPath + ": Error: My error message",
                 MergingException.wrapException(new Exception("My error message")).withFile(file)
                         .build().getMessage());
         MergingException.Builder builder2 = MergingException
                 .wrapException(new Exception("My error message")).withFile(file)
                 .withPosition(new SourcePosition(49, -1, -1));
-        assertEquals("/some/random/path:50: Error: My error message",
-                builder2.build()
-                        .getMessage());
+        assertEquals(msgPath + ":50: Error: My error message",
+                builder2.build().getMessage());
         MergingException.Builder builder1 = MergingException
                 .wrapException(new Exception("My error message")).withFile(file)
                 .withPosition(new SourcePosition(49, 3, -1));
-        assertEquals("/some/random/path:50:4: Error: My error message",
-                builder1.build()
-                        .getMessage());
+        assertEquals(msgPath + ":50:4: Error: My error message",
+                builder1.build().getMessage());
         MergingException.Builder builder = MergingException
                 .wrapException(new Exception("My error message")).withFile(file)
                 .withPosition(new SourcePosition(49, 3, -1));
-        assertEquals("/some/random/path:50:4: Error: My error message",
-                builder.build()
-                        .getLocalizedMessage());
-        assertEquals("/some/random/path: Error: My error message",
-                MergingException.withMessage("/some/random/path: My error message").withFile(file)
+        assertEquals(msgPath + ":50:4: Error: My error message",
+                builder.build().getLocalizedMessage());
+        assertEquals(msgPath + ": Error: My error message",
+                MergingException.withMessage(msgPath + ": My error message").withFile(file)
                         .build().getMessage());
-        assertEquals("/some/random/path: Error: My error message",
-                MergingException.withMessage("/some/random/path My error message").withFile(file)
+        assertEquals(msgPath + ": Error: My error message",
+                MergingException.withMessage(msgPath + " My error message").withFile(file)
                         .build().getMessage());
 
         // end of string handling checks
-        assertEquals("/some/random/path: Error: ",
-                MergingException.withMessage("/some/random/path").withFile(file).build()
+        assertEquals(msgPath + ": Error: ",
+                MergingException.withMessage(msgPath).withFile(file).build()
                         .getMessage());
-        assertEquals("/some/random/path: Error: ",
-                MergingException.withMessage("/some/random/path").withFile(file).build().getMessage());
-        assertEquals("/some/random/path: Error: ",
-                MergingException.withMessage("/some/random/path:").withFile(file).build().getMessage());
-        assertEquals("/some/random/path: Error: ",
-                MergingException.withMessage("/some/random/path: ").withFile(file).build().getMessage());
+        assertEquals(msgPath + ": Error: ",
+                MergingException.withMessage(msgPath).withFile(file).build().getMessage());
+        assertEquals(msgPath + ": Error: ",
+                MergingException.withMessage(msgPath + ":").withFile(file).build().getMessage());
+        assertEquals(msgPath + ": Error: ",
+                MergingException.withMessage(msgPath + ": ").withFile(file).build().getMessage());
     }
 
 
