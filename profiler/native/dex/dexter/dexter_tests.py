@@ -27,6 +27,8 @@ test_cases = {
                           'entry_hooks.dex', 'hello.dex', 'medium.dex', 'min.dex' ] },
   'exit_hook'       : { 'args' : '-d -x stress_exit_hook', 'input' : [
                           'exit_hooks.dex', 'medium.dex', 'try_catch.dex' ] },
+  'wrap_invoke'     : { 'args' : '-d -x stress_wrap_invoke', 'input' : [
+                          'hello.dex', 'hello_nodebug.dex', 'medium.dex' ] },
 }
 
 # run a shell command and returns the stdout content

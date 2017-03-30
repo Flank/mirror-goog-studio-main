@@ -36,6 +36,89 @@ void FullRewrite(std::shared_ptr<ir::DexFile> dex_ir) {
   }
 }
 
+// For every method body in the .dex image, replace invoke-virtual[/range]
+// instances with a invoke-static[/range] to a fictitious Tracer.WrapInvoke(<args...>)
+// WrapInvoke() is a static method which takes the same arguments as the
+// original method plus an explicit "this" argument, and returns the same
+// type as the original method.
+void StressWrapInvoke(std::shared_ptr<ir::DexFile> dex_ir) {
+  for (auto& ir_method : dex_ir->encoded_methods) {
+    if (ir_method->code == nullptr) {
+      continue;
+    }
+
+    lir::CodeIr code_ir(ir_method.get(), dex_ir);
+    ir::Builder builder(dex_ir);
+
+    // search for invoke-virtual[/range] bytecodes
+    //
+    // NOTE: we may be removing the current bytecode
+    //   from the instructions list so we must use a
+    //   different iteration style (it++ is done before
+    //   handling *it, not after as in a normal iteration)
+    //
+    auto it = code_ir.instructions.begin();
+    while (it != code_ir.instructions.end()) {
+      auto instr = *it++;
+      auto bytecode = dynamic_cast<lir::Bytecode*>(instr);
+      if (bytecode == nullptr) {
+        continue;
+      }
+
+      dex::Opcode new_call_opcode = dex::OP_NOP;
+      switch (bytecode->opcode) {
+        case dex::OP_INVOKE_VIRTUAL:
+          new_call_opcode = dex::OP_INVOKE_STATIC;
+          break;
+        case dex::OP_INVOKE_VIRTUAL_RANGE:
+          new_call_opcode = dex::OP_INVOKE_STATIC_RANGE;
+          break;
+        default:
+          // skip instruction ...
+          continue;
+      }
+      assert(new_call_opcode != dex::OP_NOP);
+
+      auto orig_method = bytecode->CastOperand<lir::Method>(1)->ir_method;
+
+      // construct the wrapper method declaration
+      std::vector<ir::Type*> param_types;
+      param_types.push_back(orig_method->parent);
+      if (orig_method->prototype->param_types != nullptr) {
+        const auto& orig_param_types = orig_method->prototype->param_types->types;
+        param_types.insert(param_types.end(), orig_param_types.begin(), orig_param_types.end());
+      }
+
+      auto ir_proto = builder.GetProto(orig_method->prototype->return_type,
+                                       builder.GetTypeList(param_types));
+
+      auto ir_method_decl = builder.GetMethodDecl(builder.GetAsciiString("WrapInvoke"),
+                                                  ir_proto,
+                                                  builder.GetType("LTracer;"));
+
+      auto wraper_method = code_ir.Alloc<lir::Method>(ir_method_decl, ir_method_decl->orig_index);
+
+      // new call bytecode
+      auto new_call = code_ir.Alloc<lir::Bytecode>();
+      new_call->opcode = new_call_opcode;
+      new_call->operands.push_back(bytecode->operands[0]);
+      new_call->operands.push_back(wraper_method);
+      code_ir.instructions.InsertBefore(bytecode, new_call);
+
+      // remove the old call bytecode
+      //
+      // NOTE: we can mutate the original bytecode directly
+      //  since the instructions can't have multiple references
+      //  in the code IR, but for testing purposes we'll do it
+      //  the hard way here
+      //
+      code_ir.instructions.Remove(bytecode);
+    }
+
+    code_ir.Assemble();
+  }
+}
+
 // For every method in the .dex image, insert an "entry hook" call
 // to a fictitious method: Tracer.OnEntry(<args...>). OnEntry() has the
 // same argument types as the instrumented method plus an explicit
@@ -210,6 +293,7 @@ std::map<std::string, Experiment> experiments_registry = {
     { "full_rewrite", &FullRewrite },
     { "stress_entry_hook", &StressEntryHook },
     { "stress_exit_hook", &StressExitHook },
+    { "stress_wrap_invoke", &StressWrapInvoke },
 };
 
 // Lists all the registered experiments
