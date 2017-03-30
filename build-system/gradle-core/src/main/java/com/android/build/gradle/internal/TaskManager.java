@@ -1936,7 +1936,7 @@ public abstract class TaskManager {
 
         TestDataImpl testData = new TestDataImpl(testVariantData);
         testData.setExtraInstrumentationTestRunnerArgs(
-                AndroidGradleOptions.getExtraInstrumentationTestRunnerArgs(project));
+                projectOptions.getExtraInstrumentationTestRunnerArgs());
 
         configureTestData(testData);
 
