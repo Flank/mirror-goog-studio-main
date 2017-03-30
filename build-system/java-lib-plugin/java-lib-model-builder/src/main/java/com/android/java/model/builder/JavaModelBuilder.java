@@ -112,7 +112,7 @@ public class JavaModelBuilder implements ToolingModelBuilder {
         for (UnresolvedDependency dependency : unresolvedDependencies) {
             String unresolvedName = UNRESOLVED_DEPENDENCY_PREFIX + dependency.getSelector()
                     .toString().replaceAll(":", " ");
-            javaLibraries.add(new JavaLibraryImpl(null, unresolvedName.intern(), null));
+            javaLibraries.add(new JavaLibraryImpl(null, unresolvedName.intern(), new File(unresolvedName)));
         }
 
         // Collect jars from local directory

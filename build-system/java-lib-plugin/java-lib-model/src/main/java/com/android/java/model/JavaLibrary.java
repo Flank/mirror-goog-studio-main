@@ -56,7 +56,7 @@ public interface JavaLibrary {
      * @return The source file. Returns null when the source is not available for this dependency.
      */
     @Nullable
-    String getSource();
+    File getSource();
 
     /**
      * Returns the Javadoc directory/archive for this dependency.
@@ -64,5 +64,5 @@ public interface JavaLibrary {
      * @return The Javadoc file. Returns null when the Javadoc is not available for this dependency.
      */
     @Nullable
-    String getJavadoc();
+    File getJavadoc();
 }
