@@ -98,7 +98,7 @@ public class FeatureSplitPackageIds {
     }
 
     @Nullable
-    private static File getOutputFile(@NonNull FileCollection input) {
+    public static File getOutputFile(@NonNull FileCollection input) {
         for (File file : input.getAsFileTree().getFiles()) {
             if (file.getName().equals(OUTPUT_FILE_NAME)) {
                 return file;

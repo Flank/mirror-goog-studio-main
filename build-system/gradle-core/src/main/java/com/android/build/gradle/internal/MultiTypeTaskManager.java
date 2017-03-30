@@ -23,12 +23,15 @@ import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.options.ProjectOptions;
+import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.profile.Recorder;
 import com.google.common.collect.ImmutableMap;
+import java.io.File;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 import org.gradle.api.Project;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
@@ -93,6 +96,32 @@ public class MultiTypeTaskManager extends TaskManager {
         delegates
                 .get(variantScope.getVariantData().getType())
                 .createTasksForVariantScope(tasks, variantScope);
+    }
+
+    @Override
+    protected ProcessAndroidResources.ConfigAction createProcessAndroidResourcesConfigAction(
+            @NonNull VariantScope scope,
+            @NonNull Supplier<File> symbolLocation,
+            @NonNull File resPackageOutputFolder,
+            boolean useAaptToGenerateLegacyMultidexMainDexProguardRules,
+            @NonNull MergeType mergeType,
+            @NonNull String baseName) {
+        TaskManager delegateTaskManager = delegates.get(scope.getVariantData().getType());
+        return delegateTaskManager != null
+                ? delegateTaskManager.createProcessAndroidResourcesConfigAction(
+                        scope,
+                        symbolLocation,
+                        resPackageOutputFolder,
+                        useAaptToGenerateLegacyMultidexMainDexProguardRules,
+                        mergeType,
+                        baseName)
+                : super.createProcessAndroidResourcesConfigAction(
+                        scope,
+                        symbolLocation,
+                        resPackageOutputFolder,
+                        useAaptToGenerateLegacyMultidexMainDexProguardRules,
+                        mergeType,
+                        baseName);
     }
 
     @NonNull

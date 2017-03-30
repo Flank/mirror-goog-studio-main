@@ -20,6 +20,7 @@ import static com.android.SdkConstants.RES_QUALIFIER_SEP;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ATOM_RESOURCE_PKG;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_IDS_DECLARATION;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.MANIFEST;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.SYMBOL_LIST;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
@@ -51,6 +52,7 @@ import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
+import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitPackageIds;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
 import com.android.build.gradle.internal.variant.TaskContainer;
@@ -138,6 +140,7 @@ public class ProcessAndroidResources extends IncrementalTask {
     private ArtifactCollection manifests;
     @Nullable
     private ArtifactCollection symbolFiles;
+    @Nullable private ArtifactCollection packageIdsFiles;
 
     private Supplier<String> packageForR;
 
@@ -442,6 +445,16 @@ public class ProcessAndroidResources extends IncrementalTask {
                         : splitList.getFilters(SplitList.RESOURCE_CONFIGS).isEmpty()
                                 ? buildTargetDensity
                                 : null;
+
+        // TODO : use this information to pass to aapt2.
+        if (packageIdsFiles != null
+                && FeatureSplitPackageIds.getOutputFile(packageIdsFiles.getArtifactFiles())
+                        != null) {
+            FeatureSplitPackageIds featurePackageIds =
+                    FeatureSplitPackageIds.load(packageIdsFiles.getArtifactFiles());
+            Integer idFor = featurePackageIds.getIdFor(getProject().getPath());
+            System.out.println("ID For " + getProject().getPath() + " is " + idFor);
+        }
 
         try {
             // If the new resources flag is enabled and if we are dealing with a library process
@@ -807,6 +820,40 @@ public class ProcessAndroidResources extends IncrementalTask {
                             ? projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI)
                             : null;
             processResources.supportedAbis = config.getSupportedAbis();
+
+            // TODO : REMOVE once we have a processAndroidResources task for FEATURE/.
+            // sets the packageIds list.
+            processResources.packageIdsFiles =
+                    variantScope.getArtifactCollection(
+                            COMPILE_CLASSPATH, ALL, FEATURE_IDS_DECLARATION);
+        }
+    }
+
+    public static class FeatureSplitConfigAction extends ConfigAction {
+
+        public FeatureSplitConfigAction(
+                @NonNull VariantScope scope,
+                @NonNull Supplier<File> symbolLocation,
+                @NonNull File resPackageOutputFolder,
+                boolean generateLegacyMultidexMainDexProguardRules,
+                @NonNull TaskManager.MergeType mergeType,
+                @NonNull String baseName) {
+            super(
+                    scope,
+                    symbolLocation,
+                    resPackageOutputFolder,
+                    generateLegacyMultidexMainDexProguardRules,
+                    mergeType,
+                    baseName);
+        }
+
+        @Override
+        public void execute(@NonNull ProcessAndroidResources processResources) {
+            super.execute(processResources);
+            // sets the packageIds list.
+            processResources.packageIdsFiles =
+                    variantScope.getArtifactCollection(
+                            COMPILE_CLASSPATH, MODULE, FEATURE_IDS_DECLARATION);
         }
     }
 
@@ -829,6 +876,16 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     public void setManifestFiles(FileCollection manifestFiles) {
         this.manifestFiles = manifestFiles;
+    }
+
+    @Optional
+    @InputFiles
+    public FileCollection getPackageIdsFiles() {
+        return packageIdsFiles != null ? packageIdsFiles.getArtifactFiles() : null;
+    }
+
+    public void setPackageIdsFiles(ArtifactCollection packageIdsFiles) {
+        this.packageIdsFiles = packageIdsFiles;
     }
 
     /**

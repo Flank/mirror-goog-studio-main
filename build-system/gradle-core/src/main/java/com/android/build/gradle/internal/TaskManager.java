@@ -1130,7 +1130,7 @@ public abstract class TaskManager {
         AndroidTask<ProcessAndroidResources> processAndroidResources =
                 androidTasks.create(
                         tasks,
-                        new ProcessAndroidResources.ConfigAction(
+                        createProcessAndroidResourcesConfigAction(
                                 scope,
                                 symbolLocation,
                                 resPackageOutputFolder,
@@ -1152,6 +1152,22 @@ public abstract class TaskManager {
         }
         scope.getSourceGenTask().optionalDependsOn(tasks, processAndroidResources);
         return processAndroidResources;
+    }
+
+    protected ProcessAndroidResources.ConfigAction createProcessAndroidResourcesConfigAction(
+            @NonNull VariantScope scope,
+            @NonNull Supplier<File> symbolLocation,
+            @NonNull File resPackageOutputFolder,
+            boolean useAaptToGenerateLegacyMultidexMainDexProguardRules,
+            @NonNull MergeType mergeType,
+            @NonNull String baseName) {
+        return new ProcessAndroidResources.ConfigAction(
+                scope,
+                symbolLocation,
+                resPackageOutputFolder,
+                useAaptToGenerateLegacyMultidexMainDexProguardRules,
+                mergeType,
+                baseName);
     }
 
     /**
