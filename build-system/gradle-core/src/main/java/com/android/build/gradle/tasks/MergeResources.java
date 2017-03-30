@@ -22,7 +22,6 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidConfig;
-import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.aapt.AaptGradleFactory;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
@@ -30,6 +29,7 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.variant.BaseVariantData;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.model.VectorDrawablesOptions;
 import com.android.builder.png.VectorDrawableRenderer;
@@ -635,8 +635,10 @@ public class MergeResources extends IncrementalTask {
                     vectorDrawablesOptions.getUseSupportLibrary()
                             || mergeResourcesTask.getGeneratedDensities().isEmpty());
 
-            final boolean validateEnabled = AndroidGradleOptions.isResourceValidationEnabled(
-                    project);
+            final boolean validateEnabled =
+                    !scope.getGlobalScope()
+                            .getProjectOptions()
+                            .get(BooleanOption.DISABLE_RESOURCE_VALIDATION);
 
             mergeResourcesTask.setValidateEnabled(validateEnabled);
 

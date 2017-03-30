@@ -24,7 +24,6 @@ import com.android.builder.model.OptionalCompilationStep;
 import com.android.repository.api.Channel;
 import com.android.sdklib.AndroidVersion;
 import java.io.File;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -40,14 +39,6 @@ import org.gradle.api.Project;
 public class AndroidGradleOptions {
 
     public static final String USE_DEPRECATED_NDK = "android.useDeprecatedNdk";
-
-    public static final String PROPERTY_DISABLE_RESOURCE_VALIDATION =
-            "android.disableResourceValidation";
-
-    public static final String DEPRECATED_NDK_COMPILE_LEASE = "android.deprecatedNdkCompileLease";
-    public static final long DEPRECATED_NDK_COMPILE_LEASE_DAYS = 60;
-    public static final long DEPRECATED_NDK_COMPILE_LEASE_MILLIS =
-            DEPRECATED_NDK_COMPILE_LEASE_DAYS * 24 * 60 * 60 * 1000;
 
     public static final String PROPERTY_KEEP_TIMESTAMPS_IN_APK = "android.keepTimestampsInApk";
 
@@ -201,28 +192,6 @@ public class AndroidGradleOptions {
         return getBoolean(project, USE_DEPRECATED_NDK);
     }
 
-    public static long getFreshDeprecatedNdkCompileLease() {
-        return Instant.now().toEpochMilli();
-    }
-
-    public static boolean isDeprecatedNdkCompileLeaseExpired(@NonNull Project project) {
-        Long leaseDate = getLong(project, DEPRECATED_NDK_COMPILE_LEASE);
-        if (leaseDate == null) {
-            // There is no lease so it is expired by definition
-            return true;
-        }
-        long freshLease = getFreshDeprecatedNdkCompileLease();
-        if (freshLease - leaseDate > DEPRECATED_NDK_COMPILE_LEASE_MILLIS) {
-            // There is a lease but it expired
-            return true;
-        }
-        if (leaseDate > freshLease) {
-            // The lease date is set too far in the future so it is expired by definition
-            return true;
-        }
-        return false;
-    }
-
     @NonNull
     public static EnumSet<OptionalCompilationStep> getOptionalCompilationSteps(
             @NonNull Project project) {
@@ -237,10 +206,6 @@ public class AndroidGradleOptions {
             return EnumSet.copyOf(optionalCompilationSteps);
         }
         return EnumSet.noneOf(OptionalCompilationStep.class);
-    }
-
-    public static boolean isResourceValidationEnabled(@NonNull Project project) {
-        return !getBoolean(project, PROPERTY_DISABLE_RESOURCE_VALIDATION);
     }
 
     public static boolean isImprovedDependencyResolutionEnabled(@NonNull Project project) {
