@@ -113,6 +113,21 @@ class IntrusiveList {
     return Iterator(p);
   }
 
+  void Remove(T* pos) {
+    CHECK(pos != end_);
+    if (pos->prev != nullptr) {
+      assert(pos != begin_);
+      pos->prev->next = pos->next;
+    } else {
+      assert(pos == begin_);
+      begin_ = pos->next;
+    }
+    assert(pos->next != nullptr);
+    pos->next->prev = pos->prev;
+    pos->prev = nullptr;
+    pos->next = nullptr;
+  }
+
   bool empty() const { return begin_ == end_; }
 
   Iterator begin() const { return Iterator(begin_); }
