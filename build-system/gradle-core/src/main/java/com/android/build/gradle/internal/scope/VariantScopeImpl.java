@@ -713,7 +713,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                         });
     }
 
-    private Spec<ComponentIdentifier> getComponentFilter(
+    @Nullable
+    private static Spec<ComponentIdentifier> getComponentFilter(
             @NonNull AndroidArtifacts.ArtifactScope scope) {
         switch (scope) {
             case ALL:
