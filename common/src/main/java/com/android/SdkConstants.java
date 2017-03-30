@@ -2094,7 +2094,6 @@ public final class SdkConstants {
     public static final String GRADLE_PLUGIN_RECOMMENDED_VERSION = "2.2.0";
     public static final String GRADLE_EXPERIMENTAL_PLUGIN_RECOMMENDED_VERSION = "0.8.0";
     // Temporary - can be removed once the recommended version supports AIA (with splits).
-    public static final String GRADLE_PLUGIN_AIA_VERSION = "2.4.0-dev";
     public static final String GRADLE_PLUGIN_LATEST_VERSION = GRADLE_PLUGIN_RECOMMENDED_VERSION;
     public static final String GRADLE_EXPERIMENTAL_PLUGIN_LATEST_VERSION =
             GRADLE_EXPERIMENTAL_PLUGIN_RECOMMENDED_VERSION;

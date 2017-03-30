@@ -4,8 +4,6 @@
     <global id="sdkDir" type="string" value="unset" />
     <global id="gradlePluginVersion" type="string" value="2.2.3" />
 
-    <global id="instantAppSdkDir" type="string" value="unset" />
-
     <global id="hasSdkDir" type="boolean" value="<#if sdkDir??>true<#else>false</#if>" />
     <global id="isLowMemory" type="boolean" value="false" />
 </globals>
