@@ -81,18 +81,21 @@ public class DexArchiveBuilderTransform extends Transform {
     @Nullable private final FileCache projectLevelCache;
     private boolean instantRunMode;
     @NonNull private final WaitableExecutor<Void> executor;
+    private final int minSdkVersion;
 
     public DexArchiveBuilderTransform(
             @NonNull DexOptions dexOptions,
             @NonNull ErrorReporter errorReporter,
             @Nullable FileCache userLevelCache,
             @Nullable FileCache projectLevelCache,
-            boolean instantRunMode) {
+            boolean instantRunMode,
+            int minSdkVersion) {
         this.dexOptions = dexOptions;
         this.errorReporter = errorReporter;
         this.userLevelCache = userLevelCache;
         this.projectLevelCache = projectLevelCache;
         this.instantRunMode = instantRunMode;
+        this.minSdkVersion = minSdkVersion;
         this.executor = WaitableExecutor.useGlobalSharedThreadPool();
     }
 
@@ -124,10 +127,11 @@ public class DexArchiveBuilderTransform extends Transform {
     @Override
     public Map<String, Object> getParameterInputs() {
         try {
-            Map<String, Object> params = Maps.newHashMapWithExpectedSize(3);
+            Map<String, Object> params = Maps.newHashMapWithExpectedSize(4);
             params.put("optimize", !dexOptions.getAdditionalParameters().contains("--no-optimize"));
             params.put("jumbo", dexOptions.getJumboMode());
             params.put("dx-version", Version.VERSION);
+            params.put("min-sdk-version", minSdkVersion);
 
             return params;
         } catch (Exception e) {
@@ -304,7 +308,8 @@ public class DexArchiveBuilderTransform extends Transform {
                         processOutput,
                         userCache,
                         projectCache,
-                        dexOptions);
+                        dexOptions,
+                        minSdkVersion);
         executor.execute(converter);
     }
 

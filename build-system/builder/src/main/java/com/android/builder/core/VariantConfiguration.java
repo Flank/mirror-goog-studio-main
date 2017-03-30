@@ -1089,6 +1089,16 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         return minSdkVersion;
     }
 
+    /** Returns the minSdkVersion as integer. It recognizes preview versions. */
+    public int getMinSdkVersionValue() {
+        ApiVersion apiVersion = getMinSdkVersion();
+        int minSdk = apiVersion.getApiLevel();
+        if (apiVersion.getCodename() != null) {
+            minSdk = SdkVersionInfo.getApiByBuildCode(apiVersion.getCodename(), true);
+        }
+        return minSdk;
+    }
+
     /**
      * Return the targetSdkVersion for this variant.
      *
@@ -1520,11 +1530,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
 
         int targetApi = mergedFlavor.getRenderscriptTargetApi() != null ?
                 mergedFlavor.getRenderscriptTargetApi() : -1;
-        ApiVersion apiVersion = getMinSdkVersion();
-        int minSdk = apiVersion.getApiLevel();
-        if (apiVersion.getCodename() != null) {
-            minSdk = SdkVersionInfo.getApiByBuildCode(apiVersion.getCodename(), true);
-        }
+        int minSdk = getMinSdkVersionValue();
 
         return targetApi > minSdk ? targetApi : minSdk;
     }
