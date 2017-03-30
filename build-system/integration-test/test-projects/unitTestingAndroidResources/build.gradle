@@ -29,6 +29,10 @@ android {
 
     testOptions {
         unitTests.includeAndroidResources true
+
+        unitTests.all {
+            systemProperty 'robolectric.offline', 'true'
+        }
     }
 }
 
@@ -36,4 +40,5 @@ dependencies {
     compile "com.android.support:appcompat-v7:${rootProject.supportLibVersion}"
     compile "com.android.support.constraint:constraint-layout:${rootProject.constraintLayoutVersion}"
     testCompile 'junit:junit:4.12'
+    testCompile "org.robolectric:robolectric:3.3.2"
 }
