@@ -58,13 +58,13 @@ public final class JavaLibraryImpl implements JavaLibrary, Serializable {
 
     @Override
     @Nullable
-    public String getSource() {
+    public File getSource() {
         return null;
     }
 
     @Override
     @Nullable
-    public String getJavadoc() {
+    public File getJavadoc() {
         return null;
     }
 
