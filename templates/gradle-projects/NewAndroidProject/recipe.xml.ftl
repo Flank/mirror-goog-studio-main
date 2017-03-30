@@ -21,8 +21,4 @@
     <instantiate from="root/local.properties.ftl"
                    to="${escapeXmlAttribute(topOut)}/local.properties" />
 </#if>
-<#if isInstantApp>
-    <instantiate from="root/aia.properties.ftl"
-                   to="${escapeXmlAttribute(topOut)}/aia.properties" />
-</#if>
 </recipe>
