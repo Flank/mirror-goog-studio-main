@@ -78,6 +78,7 @@ public final class AndroidDebugBridge {
     private static AndroidDebugBridge sThis;
     private static boolean sInitialized = false;
     private static boolean sClientSupport;
+    private static boolean sUseLibusb;
 
     /** Full path to adb. */
     private String mAdbOsLocation = null;
@@ -209,11 +210,16 @@ public final class AndroidDebugBridge {
      * @see DdmPreferences
      */
     public static synchronized void init(boolean clientSupport) {
+        init(clientSupport, false);
+    }
+
+    public static synchronized void init(boolean clientSupport, boolean useLibusb) {
         if (sInitialized) {
             throw new IllegalStateException("AndroidDebugBridge.init() has already been called.");
         }
         sInitialized = true;
         sClientSupport = clientSupport;
+        sUseLibusb = useLibusb;
 
         // Determine port and instantiate socket address.
         initAdbSocketAddr();
@@ -868,11 +874,12 @@ public final class AndroidDebugBridge {
         try {
             Log.d(DDMS, String.format("Launching '%1$s' to ensure ADB is running.", commandString));
             ProcessBuilder processBuilder = new ProcessBuilder(command);
+            Map<String, String> env = processBuilder.environment();
+            env.put("ADB_LIBUSB", sUseLibusb ? "1" : "0");
             if (DdmPreferences.getUseAdbHost()) {
                 String adbHostValue = DdmPreferences.getAdbHostValue();
                 if (adbHostValue != null && !adbHostValue.isEmpty()) {
                     //TODO : check that the String is a valid IP address
-                    Map<String, String> env = processBuilder.environment();
                     env.put("ADBHOST", adbHostValue);
                 }
             }
