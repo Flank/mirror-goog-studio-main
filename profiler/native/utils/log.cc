@@ -55,7 +55,7 @@ void Log::E(const char *fmt, ...) {
 
 void Log::Handle(const char level, const char *fmt, va_list args) {
   printf("%s[%c]: ", kTag, level);
-  printf(fmt, args);
+  vprintf(fmt, args);
   printf("\n");
 }
 
