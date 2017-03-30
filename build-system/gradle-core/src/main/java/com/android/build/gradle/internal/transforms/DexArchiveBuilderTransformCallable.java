@@ -97,6 +97,7 @@ class DexArchiveBuilderTransformCallable implements Callable<Void> {
     @Nullable private final FileCache userLevelCache;
     @Nullable private final FileCache projectLevelCache;
     @NonNull private final DexOptions dexOptions;
+    private final int minSdkVersion;
 
     public DexArchiveBuilderTransformCallable(
             @NonNull Path rootPath,
@@ -107,7 +108,8 @@ class DexArchiveBuilderTransformCallable implements Callable<Void> {
             @NonNull ProcessOutput processOutput,
             @Nullable FileCache userLevelCache,
             @Nullable FileCache projectLevelCache,
-            @NonNull DexOptions dexOptions) {
+            @NonNull DexOptions dexOptions,
+            int minSdkVersion) {
         this.rootPath = rootPath;
         this.toProcess = toProcess;
         this.toRemove = toRemove;
@@ -117,6 +119,7 @@ class DexArchiveBuilderTransformCallable implements Callable<Void> {
         this.userLevelCache = userLevelCache;
         this.projectLevelCache = projectLevelCache;
         this.dexOptions = dexOptions;
+        this.minSdkVersion = minSdkVersion;
     }
 
     @Override
@@ -227,7 +230,11 @@ class DexArchiveBuilderTransformCallable implements Callable<Void> {
                                 processOutput.getStandardOutput(), processOutput.getErrorOutput());
                 DexArchiveBuilderConfig config =
                         new DexArchiveBuilderConfig(
-                                NUM_THREADS, dxContext, optimizedDex, dexOptions.getJumboMode());
+                                NUM_THREADS,
+                                dxContext,
+                                optimizedDex,
+                                dexOptions.getJumboMode(),
+                                minSdkVersion);
 
                 DexArchiveBuilder converter = new DexArchiveBuilder(config);
                 converter.convert(input, outputArchive);

@@ -2236,7 +2236,8 @@ public abstract class TaskManager {
                         variantScope.getGlobalScope().getAndroidBuilder().getErrorReporter(),
                         userLevelCache,
                         projectLevelCache,
-                        variantScope.getInstantRunBuildContext().isInInstantRunMode());
+                        variantScope.getInstantRunBuildContext().isInInstantRunMode(),
+                        variantScope.getVariantConfiguration().getMinSdkVersionValue());
         transformManager
                 .addTransform(tasks, variantScope, preDexTransform)
                 .ifPresent(variantScope::addColdSwapBuildTask);

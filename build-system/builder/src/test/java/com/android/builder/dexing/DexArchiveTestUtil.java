@@ -45,10 +45,17 @@ public final class DexArchiveTestUtil {
     /** Converts all class files in the input path the to the dex archive. */
     public static void convertClassesToDexArchive(
             @NonNull Path classesInput, @NonNull Path dexArchiveOutput) throws IOException {
+        convertClassesToDexArchive(classesInput, dexArchiveOutput, 0);
+    }
+
+    /** Converts all class files in the input path the to the dex archive. */
+    public static void convertClassesToDexArchive(
+            @NonNull Path classesInput, @NonNull Path dexArchiveOutput, int minSdkVersion)
+            throws IOException {
         try (DexArchive dexArchive = DexArchives.fromInput(dexArchiveOutput)) {
             ClassFileInput inputs = ClassFileInputs.fromPath(classesInput, e -> true);
             DexArchiveBuilderConfig config =
-                    new DexArchiveBuilderConfig(NUM_THREADS, dxContext, true, false);
+                    new DexArchiveBuilderConfig(NUM_THREADS, dxContext, true, false, minSdkVersion);
 
             DexArchiveBuilder dexArchiveBuilder = new DexArchiveBuilder(config);
             dexArchiveBuilder.convert(inputs, dexArchive);

@@ -25,9 +25,11 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.apkzlib.zip.ZFile;
 import com.android.testutils.apk.Dex;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
+import com.google.common.io.ByteStreams;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import com.google.common.truth.Truth;
@@ -64,6 +66,17 @@ public class DexArchiveBuilderTest {
     enum DexArchiveFormat {
         DIR,
         JAR
+    }
+
+    interface TestStaticAndDefault {
+        default void noBody() {}
+
+        static void staticMethod() {}
+
+        static void staticMethodTwo(TestStaticAndDefault t) {
+            t.noBody();
+            staticMethod();
+        }
     }
 
     @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
@@ -295,6 +308,41 @@ public class DexArchiveBuilderTest {
                 .containsClass(dexClassName)
                 .that()
                 .hasMethodWithLineInfoCount("anotherMethod", 4);
+    }
+
+    @Test
+    public void checkStaticAndDefaultInterfaceMethods() throws Exception {
+        Assume.assumeTrue(inputFormat == ClassesInputFormat.DIR);
+        Assume.assumeTrue(outputFormat == DexArchiveFormat.DIR);
+
+        Path classesDir = temporaryFolder.getRoot().toPath().resolve("classes");
+        String path =
+                TestStaticAndDefault.class.getName().replace('.', '/') + SdkConstants.DOT_CLASS;
+        Path outClassFile = classesDir.resolve(path);
+        try (InputStream in = getClass().getClassLoader().getResourceAsStream(path)) {
+            Files.createDirectories(outClassFile.getParent());
+            Files.write(outClassFile, ByteStreams.toByteArray(in));
+        }
+
+        Path output = createOutput();
+        DexArchiveTestUtil.convertClassesToDexArchive(classesDir, output, 24);
+
+        Path dexFile =
+                Iterators.getOnlyElement(
+                        Files.walk(output).filter(Files::isRegularFile).iterator());
+        String dexClassName = "L" + path.replaceAll("\\.class$", ";");
+        Dex dex = new Dex(dexFile);
+        assertThat(dex).containsClass(dexClassName);
+
+        try {
+            DexArchiveTestUtil.convertClassesToDexArchive(classesDir, output, 0);
+            fail("Default and static interface method should require min sdk 24.");
+        } catch (DexArchiveBuilder.DexBuilderException ignored) {
+            Truth.assertThat(Throwables.getStackTraceAsString(ignored))
+                    .contains(
+                            "default or static interface method used without "
+                                    + "--min-sdk-version >= 24");
+        }
     }
 
     @NonNull

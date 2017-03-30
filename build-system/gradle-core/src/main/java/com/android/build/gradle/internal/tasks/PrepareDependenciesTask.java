@@ -21,9 +21,7 @@ import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.builder.model.ApiVersion;
 import com.android.builder.model.SyncIssue;
-import com.android.sdklib.SdkVersionInfo;
 import com.android.utils.StringHelper;
 import com.google.common.collect.Lists;
 import java.util.List;
@@ -41,13 +39,7 @@ public class PrepareDependenciesTask extends BaseTask {
 
     @TaskAction
     protected void prepare() {
-        ApiVersion minSdkVersion = variant.getVariantConfiguration().getMinSdkVersion();
-        int minSdk = 1;
-        if (minSdkVersion.getCodename() != null) {
-            minSdk = SdkVersionInfo.getApiByBuildCode(minSdkVersion.getCodename(), true);
-        } else {
-            minSdk = minSdkVersion.getApiLevel();
-        }
+        int minSdk = variant.getVariantConfiguration().getMinSdkVersionValue();
 
         boolean foundError = false;
 

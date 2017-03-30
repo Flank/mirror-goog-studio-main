@@ -46,14 +46,20 @@ public class DexArchiveBuilderConfig {
      * @param dxContext used when invoking dx, mainly for getting the standard and error output
      * @param optimized generated dex should be optimized
      * @param jumboMode generated dex should contain longer opcodes
+     * @param minSdkVersion minimum sdk version used to enable dx features
      */
     public DexArchiveBuilderConfig(
-            int numThreads, @NonNull DxContext dxContext, boolean optimized, boolean jumboMode) {
+            int numThreads,
+            @NonNull DxContext dxContext,
+            boolean optimized,
+            boolean jumboMode,
+            int minSdkVersion) {
         this.numThreads = numThreads;
         this.dxContext = dxContext;
 
         this.dexOptions = new DexOptions();
         this.dexOptions.forceJumbo = jumboMode;
+        this.dexOptions.minSdkVersion = minSdkVersion;
 
         this.cfOptions = new CfOptions();
         this.cfOptions.optimize = optimized;
