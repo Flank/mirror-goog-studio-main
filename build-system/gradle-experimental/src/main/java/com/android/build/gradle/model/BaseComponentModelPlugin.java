@@ -536,10 +536,12 @@ public class BaseComponentModelPlugin implements Plugin<Project>, ToolingRegistr
             // check if the target has been set.
             TargetInfo targetInfo = androidBuilder.getTargetInfo();
             if (targetInfo == null) {
-                sdkHandler.initTarget(androidExtension.getCompileSdkVersion(),
+                sdkHandler.initTarget(
+                        androidExtension.getCompileSdkVersion(),
                         androidExtension.getBuildToolsRevision(),
-                        androidExtension.getLibraryRequests(), androidBuilder,
-                        SdkHandler.useCachedSdk(project));
+                        androidExtension.getLibraryRequests(),
+                        androidBuilder,
+                        SdkHandler.useCachedSdk(projectOptions));
             }
 
             VariantManager variantManager =

@@ -9,6 +9,7 @@ import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
 import org.gradle.api.DomainObjectSet;
 import org.gradle.api.NamedDomainObjectContainer;
@@ -26,6 +27,7 @@ public class AppExtension extends TestedExtension {
 
     public AppExtension(
             @NonNull Project project,
+            @NonNull ProjectOptions projectOptions,
             @NonNull Instantiator instantiator,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull SdkHandler sdkHandler,
@@ -36,6 +38,7 @@ public class AppExtension extends TestedExtension {
             @NonNull ExtraModelInfo extraModelInfo) {
         super(
                 project,
+                projectOptions,
                 instantiator,
                 androidBuilder,
                 sdkHandler,

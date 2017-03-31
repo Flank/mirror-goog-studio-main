@@ -10,6 +10,7 @@ import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
 import com.google.common.collect.Lists;
 import java.util.Collection;
@@ -33,6 +34,7 @@ public class LibraryExtension extends TestedExtension {
 
     public LibraryExtension(
             @NonNull Project project,
+            @NonNull ProjectOptions projectOptions,
             @NonNull Instantiator instantiator,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull SdkHandler sdkHandler,
@@ -43,6 +45,7 @@ public class LibraryExtension extends TestedExtension {
             @NonNull ExtraModelInfo extraModelInfo) {
         super(
                 project,
+                projectOptions,
                 instantiator,
                 androidBuilder,
                 sdkHandler,

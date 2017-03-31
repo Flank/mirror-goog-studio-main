@@ -42,6 +42,7 @@ import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.dsl.Splits;
 import com.android.build.gradle.internal.dsl.TestOptions;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.LibraryRequest;
@@ -163,8 +164,11 @@ public abstract class BaseExtension implements AndroidConfig {
 
     protected Project project;
 
+    private final ProjectOptions projectOptions;
+
     BaseExtension(
             @NonNull final Project project,
+            @NonNull final ProjectOptions projectOptions,
             @NonNull Instantiator instantiator,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull SdkHandler sdkHandler,
@@ -183,6 +187,7 @@ public abstract class BaseExtension implements AndroidConfig {
         this.extraModelInfo = extraModelInfo;
         this.buildOutputs = buildOutputs;
         this.project = project;
+        this.projectOptions = projectOptions;
 
         logger = Logging.getLogger(this.getClass());
 
@@ -1000,7 +1005,7 @@ public abstract class BaseExtension implements AndroidConfig {
                     buildToolsRevision,
                     libraryRequests,
                     androidBuilder,
-                    SdkHandler.useCachedSdk(project));
+                    SdkHandler.useCachedSdk(projectOptions));
         }
     }
 

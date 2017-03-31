@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
@@ -40,6 +41,7 @@ public class FeatureExtension extends LibraryExtension {
 
     public FeatureExtension(
             @NonNull Project project,
+            @NonNull ProjectOptions projectOptions,
             @NonNull Instantiator instantiator,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull SdkHandler sdkHandler,
@@ -50,6 +52,7 @@ public class FeatureExtension extends LibraryExtension {
             @NonNull ExtraModelInfo extraModelInfo) {
         super(
                 project,
+                projectOptions,
                 instantiator,
                 androidBuilder,
                 sdkHandler,
