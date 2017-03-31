@@ -469,7 +469,7 @@ public abstract class AbstractAppPluginDslTest<
             Assert.assertFalse(mockableJarFile.getAbsolutePath().contains(":"));
         }
 
-        assertEquals("mockable-Google-Inc.-Google-APIs-24.jar", mockableJarFile.getName());
+        assertEquals("mockable-Google-Inc.-Google-APIs-24.v2.jar", mockableJarFile.getName());
     }
 
     public void testEncoding() {
