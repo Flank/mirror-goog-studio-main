@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef PERFA_PERFA_H_
-#define PERFA_PERFA_H_
+#ifndef AGENT_AGENT_H_
+#define AGENT_AGENT_H_
 
 #include <memory>
 #include <mutex>
@@ -25,23 +25,23 @@
 #include "proto/internal_event.grpc.pb.h"
 #include "proto/internal_memory.grpc.pb.h"
 #include "proto/internal_network.grpc.pb.h"
-#include "proto/perfa_service.grpc.pb.h"
+#include "proto/agent_service.grpc.pb.h"
 
 #include "utils/background_queue.h"
 #include "utils/clock.h"
 
 namespace profiler {
 
-// Function call back that returns the true/false status if perfa is connected
+// Function call back that returns the true/false status if the agent is connected
 // to perfd. Each time the status changes this callback gets called with the new
 // (current) state of the connection.
 using PerfdStatusChanged = std::function<void(bool)>;
 
-class Perfa {
+class Agent {
  public:
-  // Grab the singleton instance of Perfa. This will initialize the class if
+  // Grab the singleton instance of the Agent. This will initialize the class if
   // necessary.
-  static Perfa& Instance();
+  static Agent& Instance();
 
   const proto::InternalEventService::Stub& event_stub() { return *event_stub_; }
 
@@ -60,11 +60,11 @@ class Perfa {
  private:
   static constexpr int64_t kHeartBeatIntervalNs = Clock::ms_to_ns(250);
 
-  // Use Perfa::Instance() to initialize.
-  explicit Perfa(const char* address);
-  ~Perfa() = delete;  // TODO: Support destroying perfa.
+  // Use Agent::Instance() to initialize.
+  explicit Agent(const char* address);
+  ~Agent() = delete;  // TODO: Support destroying the agent
 
-  std::unique_ptr<proto::PerfaService::Stub> service_stub_;
+  std::unique_ptr<proto::AgentService::Stub> service_stub_;
   std::unique_ptr<proto::InternalEventService::Stub> event_stub_;
   std::unique_ptr<proto::InternalMemoryService::Stub> memory_stub_;
   std::unique_ptr<proto::InternalNetworkService::Stub> network_stub_;
@@ -81,4 +81,4 @@ class Perfa {
 
 }  // end of namespace profiler
 
-#endif  // PERFA_PEFA_H_
+#endif  // AGENT_AGENT_H_

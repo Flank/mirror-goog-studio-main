@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef PERFA_CHANNEL_H
-#define PERFA_CHANNEL_H
+#ifndef UTILS_CHANNEL_H
+#define UTILS_CHANNEL_H
 
 #include <atomic>
 #include <cassert>
@@ -107,4 +107,4 @@ class Channel {
 
 }  // namespace profiler
 
-#endif  // PERFA_CHANNEL_H
+#endif  // UTILS_CHANNEL_H

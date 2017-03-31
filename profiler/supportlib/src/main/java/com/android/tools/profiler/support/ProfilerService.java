@@ -15,13 +15,11 @@
  */
 package com.android.tools.profiler.support;
 
+import android.os.Debug;
 import com.android.tools.profiler.support.profilers.EventProfiler;
 import com.android.tools.profiler.support.profilers.MemoryProfiler;
 import com.android.tools.profiler.support.profilers.NetworkProfiler;
 import com.android.tools.profiler.support.profilers.ProfilerComponent;
-
-import android.os.Debug;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,7 +41,7 @@ public class ProfilerService {
          */
         Runtime.getRuntime().gc();
         Debug.startAllocCounting();
-        System.loadLibrary("perfa");
+        System.loadLibrary("supportjni");
     }
 
     /**

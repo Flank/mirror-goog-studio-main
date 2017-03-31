@@ -18,7 +18,7 @@
 
 #include <mutex>
 
-#include "perfa/support/jni_wrappers.h"
+#include "agent/support/jni_wrappers.h"
 #include "proto/internal_event.grpc.pb.h"
 
 namespace profiler {

@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef PERFA_SUPPORT_JNI_TYPES_H_
-#define PERFA_SUPPORT_JNI_TYPES_H_
+#ifndef AGENT_SUPPORT_JNI_TYPES_H_
+#define AGENT_SUPPORT_JNI_TYPES_H_
 
 #include <jni.h>
 #include <memory>
@@ -62,4 +62,4 @@ class JStringWrapper {
 
 }  // namespace profiler
 
-#endif  // PERFA_SUPPORT_JNI_TYPES_H_
+#endif  // AGENT_SUPPORT_JNI_TYPES_H_

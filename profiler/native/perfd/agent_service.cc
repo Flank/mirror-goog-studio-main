@@ -13,18 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-syntax = "proto3";
+#include "agent_service.h"
 
-package profiler.proto;
-option java_package = "com.android.tools.profiler.proto";
-option java_outer_classname = "Perfa";
+using grpc::ServerContext;
+using profiler::proto::CommonData;
+using profiler::proto::HeartBeatResponse;
 
-import "profiler.proto";
+namespace profiler {
 
-service PerfaService {
-  // A simple ping mechanism to notify perfd of perfa's existence, vice versa.
-  rpc HeartBeat(CommonData) returns (HeartBeatResponse) {}
+grpc::Status AgentServiceImpl::HeartBeat(ServerContext* context,
+                                         const CommonData* data,
+                                         HeartBeatResponse* response) {
+  heartbeat_timestamp_map_[data->process_id()] = clock_.GetCurrentTime();
+  return grpc::Status::OK;
 }
 
-message HeartBeatResponse {
-}
+}  // namespace profiler

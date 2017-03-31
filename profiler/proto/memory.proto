@@ -219,7 +219,7 @@ message TrackAllocationsRequest {
   // via the legacy allocation tracking path. On pre-O
   // setups, legacy tracking would simply mark the start
   // and end times of a session. On O+ setups, perfd +
-  // perfa would perform allocation tracking.
+  // the agent would perform allocation tracking.
   bool legacy = 5;
 }
 
