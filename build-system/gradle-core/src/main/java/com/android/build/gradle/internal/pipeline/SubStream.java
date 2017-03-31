@@ -36,7 +36,6 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -120,8 +119,7 @@ public final class SubStream {
             return ImmutableList.of();
         }
 
-        try {
-            FileReader reader = new FileReader(jsonFile);
+        try (FileReader reader = new FileReader(jsonFile)) {
 
             GsonBuilder gsonBuilder = new GsonBuilder();
             gsonBuilder.registerTypeAdapter(SubStream.class, new SubStreamAdapter());
@@ -129,8 +127,7 @@ public final class SubStream {
 
             Type recordType = new TypeToken<List<SubStream>>() {}.getType();
             return gson.fromJson(reader, recordType);
-        } catch (FileNotFoundException e) {
-            // really shouldn't happen since we check up front.
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
