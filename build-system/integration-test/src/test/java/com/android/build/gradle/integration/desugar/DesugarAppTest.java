@@ -112,6 +112,27 @@ public class DesugarAppTest {
         project.executor().run("assembleDebug");
     }
 
+    @Test
+    public void testBuildCacheIntegration()
+            throws IOException, InterruptedException, ProcessException {
+        // regression test for - http://b.android.com/292762
+        enableDesugar();
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\nandroid.buildTypes.debug.testCoverageEnabled true\n"
+                        + "\nandroid.defaultConfig.minSdkVersion 9\n"
+                        + "dependencies {\n"
+                        + "    compile 'com.android.support:support-v4:"
+                        + GradleTestProject.SUPPORT_LIB_VERSION
+                        + "'\n"
+                        + "}");
+
+        project.executor().run("assembleDebug");
+        project.executor().run("clean", "assembleDebug");
+        assertThat(project.getApk("debug"))
+                .containsClass("Landroid/support/v4/app/ActivityCompat;");
+    }
+
     private void enableDesugar() throws IOException {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),

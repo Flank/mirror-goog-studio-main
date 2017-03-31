@@ -36,7 +36,6 @@ import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.builder.Version;
 import com.android.builder.core.DesugarProcessBuilder;
-import com.android.builder.utils.ExceptionRunnable;
 import com.android.builder.utils.FileCache;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.ide.common.process.JavaProcessExecutor;
@@ -46,12 +45,14 @@ import com.android.utils.PathUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.IOException;
@@ -99,6 +100,44 @@ public class DesugarTransform extends Transform {
         MIN_SDK_VERSION,
     }
 
+    private static class InputEntry {
+        @Nullable private final FileCache cache;
+        @Nullable private final FileCache.Inputs inputs;
+        @NonNull private final Path inputPath;
+        @NonNull private final Path outputPath;
+
+        public InputEntry(
+                @Nullable FileCache cache,
+                @Nullable FileCache.Inputs inputs,
+                @NonNull Path inputPath,
+                @NonNull Path outputPath) {
+            this.cache = cache;
+            this.inputs = inputs;
+            this.inputPath = inputPath;
+            this.outputPath = outputPath;
+        }
+
+        @Nullable
+        public FileCache getCache() {
+            return cache;
+        }
+
+        @Nullable
+        public FileCache.Inputs getInputs() {
+            return inputs;
+        }
+
+        @NonNull
+        public Path getInputPath() {
+            return inputPath;
+        }
+
+        @NonNull
+        public Path getOutputPath() {
+            return outputPath;
+        }
+    }
+
     private static final LoggerWrapper logger = LoggerWrapper.getLogger(DesugarTransform.class);
 
     @NonNull private final Supplier<List<File>> androidJarClasspath;
@@ -111,7 +150,7 @@ public class DesugarTransform extends Transform {
     @NonNull private final WaitableExecutor<Void> waitableExecutor;
     private boolean verbose;
 
-    @NonNull private Map<Path, Path> cacheMisses = Maps.newHashMap();
+    @NonNull private Set<InputEntry> cacheMisses = Sets.newConcurrentHashSet();
 
     @Nullable private Path tmpDirForClasspathJars = null;
 
@@ -248,28 +287,26 @@ public class DesugarTransform extends Transform {
         int parallelExecutions = waitableExecutor.getParallelism();
 
         int index = 0;
-        Map<Integer, Map<Path, Path>> buckets = Maps.newHashMap();
-        for (Map.Entry<Path, Path> pathPathEntry : cacheMisses.entrySet()) {
+        Multimap<Integer, InputEntry> procBuckets = ArrayListMultimap.create();
+        for (InputEntry pathPathEntry : cacheMisses) {
             int bucketId = index % parallelExecutions;
-            Map<Path, Path> executedTogether = buckets.get(bucketId);
-            if (executedTogether == null) {
-                executedTogether = Maps.newHashMap();
-            }
-
-            executedTogether.put(pathPathEntry.getKey(), pathPathEntry.getValue());
-            buckets.put(bucketId, executedTogether);
-
+            procBuckets.put(bucketId, pathPathEntry);
             index++;
         }
 
-        for (Integer bucketId : buckets.keySet()) {
+        for (Integer bucketId : procBuckets.keySet()) {
             Callable<Void> callable =
                     () -> {
+                        Map<Path, Path> inToOut = Maps.newHashMap();
+                        for (InputEntry e : procBuckets.get(bucketId)) {
+                            inToOut.put(e.getInputPath(), e.getOutputPath());
+                        }
+
                         DesugarProcessBuilder processBuilder =
                                 new DesugarProcessBuilder(
                                         java8LangSupportJar.getSingleFile().toPath(),
                                         verbose,
-                                        buckets.get(bucketId),
+                                        inToOut,
                                         classpath,
                                         this.compilationBootclasspath,
                                         minSdk);
@@ -278,6 +315,16 @@ public class DesugarTransform extends Transform {
                                         new LoggedProcessOutputHandler(logger))
                                 .rethrowFailure()
                                 .assertNormalExitValue();
+
+                        // now copy to the cache because now we have the file
+                        for (InputEntry e : procBuckets.get(bucketId)) {
+                            if (e.getCache() != null && e.getInputs() != null) {
+                                e.getCache()
+                                        .createFileInCacheIfAbsent(
+                                                e.getInputs(),
+                                                in -> Files.copy(e.getOutputPath(), in.toPath()));
+                            }
+                        }
 
                         return null;
                     };
@@ -344,24 +391,39 @@ public class DesugarTransform extends Transform {
             @NonNull Path output,
             @Nullable FileCache cache)
             throws Exception {
-        ExceptionRunnable cacheMissAction = () -> cacheMissAction(input, output);
-
         if (cache != null) {
             try {
                 FileCache.Inputs cacheKey = getBuildCacheInputs(input, minSdk);
-                FileCache.QueryResult result =
-                        cache.createFile(output.toFile(), cacheKey, cacheMissAction);
+                if (cache.cacheEntryExists(cacheKey)) {
+                    FileCache.QueryResult result =
+                            cache.createFile(
+                                    output.toFile(),
+                                    cacheKey,
+                                    () -> {
+                                        throw new AssertionError("Entry should exist.");
+                                    });
 
-                if (result.getQueryEvent().equals(FileCache.QueryEvent.CORRUPTED)) {
-                    Objects.requireNonNull(result.getCauseOfCorruption());
-                    logger.verbose(
-                            "The build cache at '%1$s' contained an invalid cache entry.\n"
-                                    + "Cause: %2$s\n"
-                                    + "We have recreated the cache entry.\n",
-                            cache.getCacheDirectory().getAbsolutePath(),
-                            Throwables.getStackTraceAsString(result.getCauseOfCorruption()));
+                    if (result.getQueryEvent().equals(FileCache.QueryEvent.CORRUPTED)) {
+                        Objects.requireNonNull(result.getCauseOfCorruption());
+                        logger.verbose(
+                                "The build cache at '%1$s' contained an invalid cache entry.\n"
+                                        + "Cause: %2$s\n"
+                                        + "We have recreated the cache entry.\n",
+                                cache.getCacheDirectory().getAbsolutePath(),
+                                Throwables.getStackTraceAsString(result.getCauseOfCorruption()));
+                    }
+
+                    if (Files.notExists(output)) {
+                        throw new RuntimeException(
+                                String.format(
+                                        "Entry for %s is invalid. Please clean your build cache "
+                                                + "under %s.",
+                                        output.toString(),
+                                        cache.getCacheDirectory().getAbsolutePath()));
+                    }
+                } else {
+                    cacheMissAction(cache, cacheKey, input, output);
                 }
-
             } catch (Exception exception) {
                 logger.error(
                         null,
@@ -374,14 +436,18 @@ public class DesugarTransform extends Transform {
                 throw new RuntimeException(exception);
             }
         } else {
-            cacheMissAction.run();
+            cacheMissAction(null, null, input, output);
         }
     }
 
-    private void cacheMissAction(@NonNull Path input, @NonNull Path output)
+    private void cacheMissAction(
+            @Nullable FileCache cache,
+            @Nullable FileCache.Inputs inputs,
+            @NonNull Path input,
+            @NonNull Path output)
             throws IOException, ProcessException {
         // add it to the list of cache misses, that will be processed
-        cacheMisses.put(input, output);
+        cacheMisses.add(new InputEntry(cache, inputs, input, output));
     }
 
     @NonNull
