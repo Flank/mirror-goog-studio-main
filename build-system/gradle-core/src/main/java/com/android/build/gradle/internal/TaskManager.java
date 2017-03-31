@@ -1455,18 +1455,6 @@ public abstract class TaskManager {
             @NonNull TaskFactory tasks, @NonNull VariantScope scope, AndroidTask<?> compileTask) {
 
         compileTask.optionalDependsOn(tasks, scope.getSourceGenTask());
-        // TODO - dependency information for the compile classpath is being lost.
-        // Add a temporary approximation
-        compileTask.dependsOn(
-                tasks,
-                scope.getVariantData()
-                        .getVariantDependency()
-                        .getCompileClasspath());
-        compileTask.dependsOn(
-                tasks,
-                scope.getVariantData()
-                        .getVariantDependency()
-                        .getAnnotationProcessorConfiguration());
     }
 
     /**
