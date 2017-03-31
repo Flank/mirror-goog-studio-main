@@ -36,6 +36,7 @@ import com.android.builder.model.AndroidProject;
 import com.android.io.StreamException;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.internal.project.ProjectPropertiesWorkingCopy;
+import com.android.testutils.OsType;
 import com.android.testutils.TestUtils;
 import com.android.testutils.apk.Aar;
 import com.android.testutils.apk.Apk;
@@ -54,6 +55,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -126,6 +128,14 @@ public final class GradleTestProject implements TestRule {
     public static final File OUT_DIR;
     public static final File GRADLE_USER_HOME;
     public static final File ANDROID_SDK_HOME;
+
+    /**
+     * List of Apk file reference that should be closed and deleted once the TestRule is done.
+     * This is useful on Windows when Apk will lock the underlying file and most test code
+     * do not use try-with-resources nor explicitly call close().
+     *
+     */
+    private static final List<Apk> tmpApkFiles = new ArrayList<>();
 
     static {
         try {
@@ -388,6 +398,18 @@ public final class GradleTestProject implements TestRule {
                     testFailed = true;
                     throw e;
                 } finally {
+                    for (Apk tmpApkFile : tmpApkFiles) {
+                        try {
+                            tmpApkFile.close();
+                        } catch(Exception e) {
+                            System.err.println("Error while closing APK file : " + e.getMessage());
+                        }
+                        File tmpFile = tmpApkFile.getFile().toFile();
+                        if (tmpFile.exists() && !tmpFile.delete()) {
+                            System.err.println("Cannot delete temporary file "
+                                    + tmpApkFile.getFile());
+                        }
+                    }
                     openConnections.forEach(ProjectConnection::close);
                     if (benchmarkRecorder != null) {
                         benchmarkRecorder.doUploads();
@@ -708,7 +730,16 @@ public final class GradleTestProject implements TestRule {
         File apkFile =
                 getOutputFile("apk/" + Joiner.on("-").join(dimensionList)
                         + SdkConstants.DOT_ANDROID_PACKAGE);
-        return new Apk(apkFile);
+        Apk apk;
+        if (OsType.getHostOs() == OsType.WINDOWS && apkFile.exists()) {
+            File copy = File.createTempFile("tmp", ".apk");
+            FileUtils.copyFile(apkFile, copy);
+            apk = new Apk(copy);
+            tmpApkFiles.add(apk);
+        } else {
+            apk = new Apk(apkFile);
+        }
+        return apk;
     }
 
     @NonNull

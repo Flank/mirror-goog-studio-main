@@ -22,6 +22,7 @@ import com.android.annotations.concurrency.Immutable;
 import com.google.common.base.Preconditions;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystem;
@@ -37,7 +38,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Immutable
-public class Zip {
+public class Zip implements AutoCloseable {
 
     @NonNull final String displayName;
     @NonNull private final Path file;
@@ -126,5 +127,13 @@ public class Zip {
     @Override
     public String toString() {
         return "Zip<" + displayName + ">";
+    }
+
+    @Override
+    public void close() throws Exception {
+        zip.close();
+        for (Zip innerZip : innerZips.values()) {
+            innerZip.close();
+        }
     }
 }
