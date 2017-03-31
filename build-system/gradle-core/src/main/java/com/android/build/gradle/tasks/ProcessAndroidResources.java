@@ -83,6 +83,8 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     private File resDir;
 
+    private File mergeResourcesOutputDir;
+
     private File sourceOutputDir;
 
     private Supplier<File> textSymbolOutputDir = () -> null;
@@ -165,10 +167,22 @@ public class ProcessAndroidResources extends IncrementalTask {
         } else {
             AndroidBuilder builder = getBuilder();
             MergingLog mergingLog = new MergingLog(getMergeBlameLogFolder());
+
+            File resDir = getResDir();
+            File mergeResourcesOutputDir = getMergeResourcesOutputDir();
+
+            MergingLogRewriter mergingLogRewriter =
+                    new MergingLogRewriter(
+                            resDir.equals(mergeResourcesOutputDir)
+                                    ? mergingLog::find
+                                    : MergingLogRewriter.rewriteDir(resDir, mergeResourcesOutputDir)
+                                            .andThen(mergingLog::find),
+                            builder.getErrorReporter());
+
             ProcessOutputHandler processOutputHandler =
                     new ParsingProcessOutputHandler(
                             new ToolOutputParser(new AaptOutputParser(), getILogger()),
-                            new MergingLogRewriter(mergingLog, builder.getErrorReporter()));
+                            mergingLogRewriter);
 
             String preferredDensity =
                     getResourceConfigs().isEmpty()
@@ -346,6 +360,9 @@ public class ProcessAndroidResources extends IncrementalTask {
                     "resDir",
                     () -> scope.getVariantScope().getFinalResourcesDir());
 
+            processResources.setMergeResourcesOutputDir(
+                    scope.getVariantScope().getMergeResourcesOutputDir());
+
             processResources.setPackageOutputFile(packageOutputSupplier);
 
             processResources.setType(config.getType());
@@ -431,6 +448,15 @@ public class ProcessAndroidResources extends IncrementalTask {
     @Input
     public boolean isInstantRunMode() {
         return this.instantRunBuildContext.isInInstantRunMode();
+    }
+
+    @Input
+    public File getMergeResourcesOutputDir() {
+        return mergeResourcesOutputDir;
+    }
+
+    public void setMergeResourcesOutputDir(File file) {
+        mergeResourcesOutputDir = file;
     }
 
     @NonNull

@@ -93,7 +93,7 @@ public class ProcessAtomsResources extends IncrementalTask {
             ProcessOutputHandler processOutputHandler =
                     new ParsingProcessOutputHandler(
                             new ToolOutputParser(new AaptOutputParser(), getILogger()),
-                            new MergingLogRewriter(mergingLog, builder.getErrorReporter()));
+                            new MergingLogRewriter(mergingLog::find, builder.getErrorReporter()));
 
             try {
                 Aapt aapt =

@@ -18,11 +18,11 @@ package com.android.ide.common.blame;
 
 
 import com.android.annotations.NonNull;
-import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-
+import java.io.File;
 import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * A proxy {@link MessageReceiver} that uses a {@link MergingLog} to rewrite {@link Message}s to
@@ -39,18 +39,14 @@ public class MergingLogRewriter implements MessageReceiver {
     /**
      * Creates a new MessageLogRewriter.
      *
-     * @param mergingLog  the MergingLog to look up file positions in.
-     * @param messageReceiver  the MessageReceiver to notify with the rewritten messages.
+     * @param mergingLogLookup a function to look up the original resource position
+     * @param messageReceiver the MessageReceiver to notify with the rewritten messages.
      */
-    public MergingLogRewriter(@NonNull final MergingLog mergingLog,
+    public MergingLogRewriter(
+            @NonNull Function<SourceFilePosition, SourceFilePosition> mergingLogLookup,
             @NonNull MessageReceiver messageReceiver) {
         mMessageReceiver = messageReceiver;
-        mGetOriginalPosition = new Function<SourceFilePosition, SourceFilePosition>() {
-            @Override
-            public SourceFilePosition apply(SourceFilePosition input) {
-                return mergingLog.find(input);
-            }
-        };
+        mGetOriginalPosition = mergingLogLookup;
     }
 
     @Override
@@ -58,7 +54,7 @@ public class MergingLogRewriter implements MessageReceiver {
         List<SourceFilePosition> originalPositions = message.getSourceFilePositions();
 
         Iterable<SourceFilePosition> positions =
-                Iterables.transform(originalPositions, mGetOriginalPosition);
+                originalPositions.stream().map(mGetOriginalPosition).collect(Collectors.toList());
 
         mMessageReceiver.receiveMessage(
                 new Message(
@@ -67,5 +63,20 @@ public class MergingLogRewriter implements MessageReceiver {
                         message.getRawMessage(),
                         message.getToolName(),
                         ImmutableList.copyOf(positions)));
+    }
+
+    public static Function<SourceFilePosition, SourceFilePosition> rewriteDir(File from, File to) {
+        return input -> {
+            File file = input.getFile().getSourceFile();
+            if (file != null && file.toPath().startsWith(from.toPath())) {
+                return new SourceFilePosition(
+                        new SourceFile(
+                                to.toPath()
+                                        .resolve(from.toPath().relativize(file.toPath()))
+                                        .toFile()),
+                        input.getPosition());
+            }
+            return input;
+        };
     }
 }
