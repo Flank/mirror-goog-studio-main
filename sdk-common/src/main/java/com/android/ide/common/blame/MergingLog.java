@@ -22,7 +22,6 @@ import com.android.utils.FileUtils;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Comparator;
@@ -178,22 +177,25 @@ public class MergingLog {
 
         /*
 
-        e.g. if we have
-        <pre>
-                  error1     error2
-                   /--/       /--/
-        <a> <b key="c"  value="d" /> </a>
-        \----------------a---------------\
-            \-----------b-----------\
-                   \--\
-                    c
-       </pre>
-       we want to find c for error 1 and b for error 2.
-         */
+         e.g. if we have
+         <pre>
+                   error1     error2
+                    /--/       /--/
+         <a> <b key="c"  value="d" /> </a>
+         \----------------a---------------\
+             \-----------b-----------\
+                    \--\
+                     c
+        </pre>
+        we want to find c for error 1 and b for error 2.
+          */
 
         // get the element just before this one.
         @Nullable
-        Map.Entry<SourcePosition, SourceFilePosition> candidate = sortedMap.floorEntry(position);
+        Map.Entry<SourcePosition, SourceFilePosition> candidate =
+                position.getStartColumn() == -1
+                        ? sortedMap.ceilingEntry(position)
+                        : sortedMap.floorEntry(position);
 
         // Don't traverse the whole file.
         // This is the product of the depth and breadth of nesting that can be handled.
