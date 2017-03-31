@@ -74,8 +74,7 @@ public class FeatureSplitPackageIds {
     }
 
     @NonNull
-    public static FeatureSplitPackageIds load(@NonNull FileCollection input)
-            throws FileNotFoundException {
+    public static FeatureSplitPackageIds load(@NonNull FileCollection input) throws IOException {
         File outputFile = getOutputFile(input);
         if (outputFile == null) {
             throw new FileNotFoundException("Cannot find package ids json file");
@@ -84,12 +83,14 @@ public class FeatureSplitPackageIds {
     }
 
     @NonNull
-    public static FeatureSplitPackageIds load(@NonNull File input) throws FileNotFoundException {
+    public static FeatureSplitPackageIds load(@NonNull File input) throws IOException {
         GsonBuilder gsonBuilder = new GsonBuilder();
         Gson gson = gsonBuilder.create();
         Type typeToken = new TypeToken<HashSet<SplitPackageId>>() {}.getType();
-        Set<SplitPackageId> featureIds = gson.fromJson(new FileReader(input), typeToken);
-        return new FeatureSplitPackageIds(featureIds);
+        try (FileReader fileReader = new FileReader(input)) {
+            Set<SplitPackageId> featureIds = gson.fromJson(fileReader, typeToken);
+            return new FeatureSplitPackageIds(featureIds);
+        }
     }
 
     @NonNull
