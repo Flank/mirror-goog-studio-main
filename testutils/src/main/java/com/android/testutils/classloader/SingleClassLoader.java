@@ -18,64 +18,35 @@ package com.android.testutils.classloader;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.concurrency.Immutable;
-import com.google.common.base.Preconditions;
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UncheckedIOException;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 /**
- * A custom class loader that loads only one given class (and its inner classes if any) and
- * delegates everything else to the default class loaders.
+ * A custom class loader that loads only one given class and delegates loading other classes to the
+ * default class loaders. (To avoid access restriction issues, it also loads any inner classes of
+ * the given class.)
  *
- * <p>Once the {@code SingleClassLoader} instance is initialized with the class to load, the client
- * should call {@link #load()} instead of {@link #loadClass(String)}.
+ * <p>Once the client creates the {@link SingleClassLoader} instance with a class to load, it should
+ * call {@link #load()} instead of {@link #loadClass(String)}.
  */
 @Immutable
 public final class SingleClassLoader extends ClassLoader {
 
-    @NonNull private final String classToLoad;
+    @NonNull private final MultiClassLoader multiClassLoader;
 
     public SingleClassLoader(@NonNull String classToLoad) {
-        this.classToLoad = classToLoad;
+        multiClassLoader = new MultiClassLoader(ImmutableList.of(classToLoad));
     }
 
     @NonNull
-    public Class load() throws ClassNotFoundException {
-        return loadClass(classToLoad);
+    public Class<?> load() throws ClassNotFoundException {
+        return Iterables.getOnlyElement(multiClassLoader.load());
     }
 
     @NonNull
     @Override
-    public Class loadClass(@NonNull String name) throws ClassNotFoundException {
-        if (name.startsWith(classToLoad)) {
-            Preconditions.checkState(findLoadedClass(name) == null);
-            return defineClass(name);
-        } else {
-            return super.loadClass(name);
-        }
-    }
-
-    @NonNull
-    private Class defineClass(@NonNull String name) throws ClassNotFoundException {
-        String classFile = name.replace('.', File.separatorChar) + ".class";
-        InputStream stream = getClass().getClassLoader().getResourceAsStream(classFile);
-        byte[] bytes;
-        try {
-            bytes = convertStreamToBytes(stream);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-        return defineClass(name, bytes, 0, bytes.length);
-    }
-
-    @NonNull
-    private byte[] convertStreamToBytes(@NonNull InputStream stream) throws IOException {
-        byte bytes[] = new byte[stream.available()];
-        DataInputStream dataInputStream = new DataInputStream(stream);
-        dataInputStream.readFully(bytes);
-        dataInputStream.close();
-        return bytes;
+    public Class<?> loadClass(@NonNull String name) {
+        throw new IllegalStateException(
+                "This method must not be called directly. Use SingleClassLoader#load() instead.");
     }
 }

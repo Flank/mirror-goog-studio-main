@@ -45,22 +45,26 @@ public class ExecutorSingleton {
 
     @NonNull
     public static ExecutorService getExecutor() {
-        return sExecutorService.doSupplierSynchronized(() -> {
-            if (sExecutorService.get() == null) {
-                sExecutorService.set(Executors.newFixedThreadPool(sThreadPoolSize.get()));
-            }
-            return sExecutorService.get();
-        });
+        //noinspection ConstantConditions
+        return sExecutorService.executeSupplierSynchronously(
+                () -> {
+                    if (sExecutorService.get() == null) {
+                        //noinspection ConstantConditions
+                        sExecutorService.set(Executors.newFixedThreadPool(sThreadPoolSize.get()));
+                    }
+                    return sExecutorService.get();
+                });
     }
 
-    @NonNull
     public static void shutdown() {
-        sExecutorService.doRunnableSynchronized(() -> {
-            if (sExecutorService.get() != null) {
-                sExecutorService.get().shutdown();
-                sExecutorService.set(null);
-            }
-        });
+        sExecutorService.executeRunnableSynchronously(
+                () -> {
+                    if (sExecutorService.get() != null) {
+                        //noinspection ConstantConditions
+                        sExecutorService.get().shutdown();
+                        sExecutorService.set(null);
+                    }
+                });
     }
 
     /**
@@ -72,9 +76,7 @@ public class ExecutorSingleton {
      * @param threadPoolSize the number of threads to use.
      */
     public static void setThreadPoolSize(int threadPoolSize) {
-        sExecutorService.doRunnableSynchronized(() -> {
-            sThreadPoolSize.set(threadPoolSize);
-        });
+        sExecutorService.executeRunnableSynchronously(() -> sThreadPoolSize.set(threadPoolSize));
     }
 
     /** Returns the size of the thread pool. */

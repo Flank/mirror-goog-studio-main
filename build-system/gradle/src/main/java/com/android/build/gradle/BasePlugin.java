@@ -233,8 +233,8 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
     }
 
     protected void apply(@NonNull Project project) {
-        checkPluginVersion();
         project.getPluginManager().apply(AndroidBasePlugin.class);
+        checkPluginVersion();
 
         TaskInputHelper.enableBypass();
 
