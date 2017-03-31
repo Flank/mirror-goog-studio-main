@@ -286,8 +286,20 @@ public class ProcessAndroidResources extends IncrementalTask {
         }
         Collection<BuildOutput> manifestsOutputs = BuildOutputs.load(taskInputType, manifestFiles);
 
+        // compute the library info list up front in the normal thread since it's resolving
+        // dependencies and we cannot do this in the executor threads.
+        getLibraryInfoList();
+
+        final Set<File> packageIdFileSet =
+                packageIdsFiles != null
+                        ? packageIdsFiles.getArtifactFiles().getAsFileTree().getFiles()
+                        : null;
+
         for (ApkData apkData : splitsToGenerate) {
             if (apkData.requiresAapt()) {
+                // get the atom res package up front in the normal thread since it's resolving
+                // dependencies and we cannot do this in the executor threads.
+                Set<File> atomResourcePackageFiles = atomResourcePackages.getFiles();
                 executor.execute(
                         () -> {
                             boolean codeGen =
@@ -299,7 +311,12 @@ public class ProcessAndroidResources extends IncrementalTask {
                             if (codeGen) {
                                 codeGenNecessary.set(false);
                             }
-                            invokeAaptForSplit(manifestsOutputs, apkData, codeGen);
+                            invokeAaptForSplit(
+                                    manifestsOutputs,
+                                    atomResourcePackageFiles,
+                                    packageIdFileSet,
+                                    apkData,
+                                    codeGen);
                             return null;
                         });
             }
@@ -381,7 +398,11 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     @Nullable
     File invokeAaptForSplit(
-            Collection<BuildOutput> manifestsOutputs, ApkData apkData, boolean generateCode)
+            Collection<BuildOutput> manifestsOutputs,
+            @NonNull Set<File> atomResourcePackageFiles,
+            @Nullable Set<File> packageIdFileSet,
+            ApkData apkData,
+            boolean generateCode)
             throws IOException {
 
         AndroidBuilder builder = getBuilder();
@@ -405,7 +426,7 @@ public class ProcessAndroidResources extends IncrementalTask {
 
         // Find the base atom package, if it exists.
         @Nullable File baseAtomPackage = null;
-        for (File atomPackage : atomResourcePackages) {
+        for (File atomPackage : atomResourcePackageFiles) {
             Collection<BuildOutput> splitOutputs =
                     BuildOutputs.load(VariantScope.TaskOutputType.PROCESSED_RES, atomPackage);
             if (!splitOutputs.isEmpty()) {
@@ -461,11 +482,10 @@ public class ProcessAndroidResources extends IncrementalTask {
                                 : null;
 
         // TODO : use this information to pass to aapt2.
-        if (packageIdsFiles != null
-                && FeatureSplitPackageIds.getOutputFile(packageIdsFiles.getArtifactFiles())
-                        != null) {
+        if (packageIdFileSet != null
+                && FeatureSplitPackageIds.getOutputFile(packageIdFileSet) != null) {
             FeatureSplitPackageIds featurePackageIds =
-                    FeatureSplitPackageIds.load(packageIdsFiles.getArtifactFiles());
+                    FeatureSplitPackageIds.load(packageIdFileSet);
             Integer idFor = featurePackageIds.getIdFor(getProject().getPath());
             System.out.println("ID For " + getProject().getPath() + " is " + idFor);
         }
