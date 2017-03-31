@@ -38,28 +38,23 @@ public class WorkspaceUtils {
      * invoked through {@code bazel run}.
      */
     public static Path findWorkspace() throws IOException {
-        Path workingDirectory = Paths.get("").toAbsolutePath();
-        if (!workingDirectory.getFileName().toString().equals("__main__")
-                || !workingDirectory.getParent().getFileName().toString().endsWith("runfiles")) {
-            throw new IllegalStateException(
-                    "Can't find workspace root, the binary was not invoked through 'bazel run'.");
-        }
-
-        Path parentDir = workingDirectory.getParent();
-
-        while (parentDir != null) {
-            Path doNotBuildHere = parentDir.resolve(DO_NOT_BUILD_HERE);
+        Path currDir = Paths.get("").toAbsolutePath();
+        while (currDir != null) {
+            Path doNotBuildHere = currDir.resolve(DO_NOT_BUILD_HERE);
             if (Files.exists(doNotBuildHere)) {
                 return Paths.get(
                         new String(
                                 Files.readAllBytes(doNotBuildHere), StandardCharsets.ISO_8859_1));
             }
 
-            parentDir = parentDir.getParent();
+            currDir = currDir.getParent();
         }
 
         throw new RuntimeException(
-                "Can't find the " + DO_NOT_BUILD_HERE + " file in any of the parent directories.");
+                "Can't find the "
+                        + DO_NOT_BUILD_HERE
+                        + " file in any of the parent directories. "
+                        + "Was binary invoked through 'bazel run'?");
     }
 
     /** Finds the absolute path to the prebuilts repository. */
