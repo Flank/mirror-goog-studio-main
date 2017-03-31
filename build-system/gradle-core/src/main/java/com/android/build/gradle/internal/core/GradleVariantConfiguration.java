@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.TestAndroidConfig;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
@@ -75,7 +76,8 @@ public class GradleVariantConfiguration
     private final MergedJavaCompileOptions mergedJavaCompileOptions =
             new MergedJavaCompileOptions();
 
-    private GradleVariantConfiguration(
+    @VisibleForTesting
+    GradleVariantConfiguration(
             @NonNull ProjectOptions projectOptions,
             @Nullable
                     VariantConfiguration<CoreBuildType, CoreProductFlavor, CoreProductFlavor>
@@ -126,12 +128,12 @@ public class GradleVariantConfiguration
      *
      * @see VariantConfiguration#getMinSdkVersion()
      */
-    @Override
     @NonNull
-    public ApiVersion getMinSdkVersion() {
+    public ApiVersion getMinSdkVersionWithTargetDeviceApi() {
         Integer targetApiLevel = projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API);
-        if (targetApiLevel != null && getBuildType().isDebuggable()) {
-            // Consider runtime API passed from the IDE only if the app is debuggable.
+        if (targetApiLevel != null && isMultiDexEnabled() && getBuildType().isDebuggable()) {
+            // Consider runtime API passed from the IDE only if multi-dex is enabled and the app is
+            // debuggable.
             int minVersion =
                     getTargetSdkVersion().getApiLevel() > 1
                             ? Integer.min(getTargetSdkVersion().getApiLevel(), targetApiLevel)
@@ -140,25 +142,6 @@ public class GradleVariantConfiguration
             return new DefaultApiVersion(minVersion);
         } else {
             return super.getMinSdkVersion();
-        }
-    }
-
-    /**
-     * Return the minSdkVersion for filtering out resources.
-     *
-     * <p>This is always the minimum SDK version read from the manifest and/or DSL, ignoring the
-     * property passed from the IDE. This way R.java contents don't change depending on the device
-     * selected in the IDE.
-     */
-    @NonNull
-    public ApiVersion getResourcesMinSdkVersion() {
-        VariantConfiguration testedConfig = getTestedConfig();
-        if (testedConfig == null) {
-            return super.getMinSdkVersion();
-        } else if (testedConfig instanceof GradleVariantConfiguration) {
-            return ((GradleVariantConfiguration) testedConfig).getResourcesMinSdkVersion();
-        } else {
-            return testedConfig.getMinSdkVersion();
         }
     }
 

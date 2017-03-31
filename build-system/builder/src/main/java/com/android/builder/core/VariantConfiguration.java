@@ -23,6 +23,8 @@ import static com.google.common.base.Preconditions.checkState;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.dependency.level2.AndroidDependency;
+import com.android.builder.dexing.DexingMode;
+import com.android.builder.dexing.DexingType;
 import com.android.builder.internal.ClassFieldImpl;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.ApiVersion;
@@ -33,7 +35,6 @@ import com.android.builder.model.SigningConfig;
 import com.android.builder.model.SourceProvider;
 import com.android.ide.common.res2.AssetSet;
 import com.android.ide.common.res2.ResourceSet;
-import com.android.sdklib.SdkVersionInfo;
 import com.android.utils.StringHelper;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -1032,14 +1033,9 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         return minSdkVersion;
     }
 
-    /** Returns the minSdkVersion as integer. It recognizes preview versions. */
+    /** Returns the minSdkVersion as integer. */
     public int getMinSdkVersionValue() {
-        ApiVersion apiVersion = getMinSdkVersion();
-        int minSdk = apiVersion.getApiLevel();
-        if (apiVersion.getCodename() != null) {
-            minSdk = SdkVersionInfo.getApiByBuildCode(apiVersion.getCodename(), true);
-        }
-        return minSdk;
+        return DefaultApiVersion.getFeatureLevel(getMinSdkVersion());
     }
 
     /**
@@ -1780,15 +1776,24 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     }
 
     public boolean isLegacyMultiDexMode() {
-        if (!isMultiDexEnabled()) {
+        if (isMultiDexEnabled()) {
+            return getMinSdkVersionValue() < 21;
+        } else {
             return false;
         }
+    }
 
-        ApiVersion minSdk = getMinSdkVersion();
-        if (minSdk.getCodename() == null) {
-            return minSdk.getApiLevel() < 21;
+    @NonNull
+    public DexingMode getDexingMode() {
+        ApiVersion minSdkVersion = getMinSdkVersion();
+        if (isMultiDexEnabled()) {
+            return new DexingMode(
+                    DefaultApiVersion.getFeatureLevel(minSdkVersion) < 21
+                            ? DexingType.LEGACY_MULTIDEX
+                            : DexingType.NATIVE_MULTIDEX,
+                    minSdkVersion);
         } else {
-            return SdkVersionInfo.getApiByPreviewName(minSdk.getCodename(), true) < 21;
+            return new DexingMode(DexingType.MONO_DEX, minSdkVersion);
         }
     }
 

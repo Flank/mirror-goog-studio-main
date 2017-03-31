@@ -478,5 +478,5 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     /** Min sdk version to pass to dx. This is necessary to allow API 24+ features. */
     @Nullable
-    Integer getMinSdkForDx();
+    ApiVersion getMinSdkForDx();
 }

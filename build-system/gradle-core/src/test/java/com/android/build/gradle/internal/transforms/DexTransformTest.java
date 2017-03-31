@@ -45,6 +45,7 @@ import com.android.builder.core.DexByteCodeConverter;
 import com.android.builder.core.DexOptions;
 import com.android.builder.core.ErrorReporter;
 import com.android.builder.dexing.DexingMode;
+import com.android.builder.dexing.DexingType;
 import com.android.builder.internal.FakeAndroidTarget;
 import com.android.builder.sdk.TargetInfo;
 import com.android.builder.utils.FileCache;
@@ -499,13 +500,12 @@ public class DexTransformTest {
         DexTransform dexTransform =
                 new DexTransform(
                         new DefaultDexOptions(),
-                        DexingMode.MONO_DEX,
+                        new DexingMode(DexingType.MONO_DEX),
                         true,
                         null, // mainDexListFile
                         targetInfo,
                         byteCodeConverter,
-                        mock(ErrorReporter.class),
-                        null);
+                        mock(ErrorReporter.class));
 
         TransformInput transformInput = getTransformInput(preDexedInputs, ImmutableList.of());
         TransformOutputProvider mockTransformOutputProvider = mock(TransformOutputProvider.class);
@@ -533,9 +533,8 @@ public class DexTransformTest {
                         new DefaultDexOptions(),
                         fakeAndroidBuilder,
                         buildCache,
-                        DexingMode.MONO_DEX,
-                        false,
-                        null);
+                        new DexingMode(DexingType.MONO_DEX),
+                        false);
 
         TransformInput transformInput = getTransformInput(jarInputs, directoryInputs);
         TransformOutputProvider mockTransformOutputProvider = mock(TransformOutputProvider.class);

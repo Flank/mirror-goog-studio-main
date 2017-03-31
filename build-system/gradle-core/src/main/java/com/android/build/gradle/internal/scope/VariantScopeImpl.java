@@ -88,9 +88,11 @@ import com.android.build.gradle.tasks.RenderscriptCompile;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BootClasspathBuilder;
 import com.android.builder.core.BuilderConstants;
+import com.android.builder.core.DefaultApiVersion;
 import com.android.builder.core.ErrorReporter;
 import com.android.builder.core.VariantType;
 import com.android.builder.dexing.DexingMode;
+import com.android.builder.dexing.DexingType;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.model.SyncIssue;
 import com.android.repository.api.ProgressIndicator;
@@ -555,15 +557,13 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 && getTestedVariantData() != null
                 && getTestedVariantData().getType() != VariantType.LIBRARY) {
             // for non-library test variants, we always want to have exactly one DEX file
-            return DexingMode.MONO_DEX;
+            return new DexingMode(
+                    DexingType.MONO_DEX, getVariantConfiguration().getMinSdkVersion());
         } else if (isInstantRunDexingModeOverride()) {
-            return DexingMode.NATIVE_MULTIDEX;
-        } else if (variantData.getVariantConfiguration().isLegacyMultiDexMode()) {
-            return DexingMode.LEGACY_MULTIDEX;
-        } else if (variantData.getVariantConfiguration().isMultiDexEnabled()) {
-            return DexingMode.NATIVE_MULTIDEX;
+            return new DexingMode(
+                    DexingType.NATIVE_MULTIDEX, getVariantConfiguration().getMinSdkVersion());
         } else {
-            return DexingMode.MONO_DEX;
+            return variantData.getVariantConfiguration().getDexingMode();
         }
     }
 
@@ -1923,7 +1923,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @Nullable
     @Override
-    public Integer getMinSdkForDx() {
+    public ApiVersion getMinSdkForDx() {
         if (getJava8LangSupportType() != Java8LangSupport.DESUGAR) {
             return null;
         }
@@ -1936,8 +1936,9 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             return null;
         }
 
-        if (getVariantConfiguration().getMinSdkVersionValue() >= 24) {
-            return getVariantConfiguration().getMinSdkVersionValue();
+        ApiVersion minSdkVersion = getVariantConfiguration().getMinSdkVersionWithTargetDeviceApi();
+        if (DefaultApiVersion.getFeatureLevel(minSdkVersion) >= 24) {
+            return minSdkVersion;
         } else {
             return null;
         }

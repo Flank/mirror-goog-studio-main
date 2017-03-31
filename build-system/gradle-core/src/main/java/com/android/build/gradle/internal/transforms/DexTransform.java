@@ -32,6 +32,7 @@ import com.android.builder.core.DexByteCodeConverter;
 import com.android.builder.core.DexOptions;
 import com.android.builder.core.ErrorReporter;
 import com.android.builder.dexing.DexingMode;
+import com.android.builder.dexing.DexingType;
 import com.android.builder.sdk.TargetInfo;
 import com.android.ide.common.blame.Message;
 import com.android.ide.common.blame.ParsingProcessOutputHandler;
@@ -78,8 +79,6 @@ public class DexTransform extends Transform {
     @NonNull private final TargetInfo targetInfo;
     @NonNull private final DexByteCodeConverter dexByteCodeConverter;
     @NonNull private final ErrorReporter errorReporter;
-    @Nullable private Integer minSdkVersion;
-
     public DexTransform(
             @NonNull DexOptions dexOptions,
             @NonNull DexingMode dexingMode,
@@ -87,8 +86,7 @@ public class DexTransform extends Transform {
             @Nullable FileCollection mainDexListFile,
             @NonNull TargetInfo targetInfo,
             @NonNull DexByteCodeConverter dexByteCodeConverter,
-            @NonNull ErrorReporter errorReporter,
-            @Nullable Integer minSdkVersion) {
+            @NonNull ErrorReporter errorReporter) {
         this.dexOptions = dexOptions;
         this.dexingMode = dexingMode;
         this.preDexEnabled = preDexEnabled;
@@ -96,7 +94,6 @@ public class DexTransform extends Transform {
         this.targetInfo = targetInfo;
         this.dexByteCodeConverter = dexByteCodeConverter;
         this.errorReporter = errorReporter;
-        this.minSdkVersion = minSdkVersion;
     }
 
     @NonNull
@@ -150,7 +147,7 @@ public class DexTransform extends Transform {
             params.put("optimize", true);
             params.put("predex", preDexEnabled);
             params.put("jumbo", dexOptions.getJumboMode());
-            params.put("dexing-mode", dexingMode.toString());
+            params.put("dexing-mode", dexingMode.getDexingType().name());
             params.put("java-max-heap-size", dexOptions.getJavaMaxHeapSize());
             params.put(
                     "additional-parameters",
@@ -158,8 +155,8 @@ public class DexTransform extends Transform {
 
             BuildToolInfo buildTools = targetInfo.getBuildTools();
             params.put("build-tools", buildTools.getRevision().toString());
-            if (minSdkVersion != null) {
-                params.put("min-sdk-version", minSdkVersion);
+            if (dexingMode.getMinSdkVersionValue() != null) {
+                params.put("min-sdk-version", dexingMode.getMinSdkVersionValue());
             }
 
             return params;
@@ -208,7 +205,8 @@ public class DexTransform extends Transform {
             FileUtils.cleanOutputDir(outputDir);
 
             File mainDexList = null;
-            if (mainDexListFile != null && dexingMode == DexingMode.LEGACY_MULTIDEX) {
+            if (mainDexListFile != null
+                    && dexingMode.getDexingType() == DexingType.LEGACY_MULTIDEX) {
                 mainDexList = mainDexListFile.getSingleFile();
             }
 
@@ -219,7 +217,7 @@ public class DexTransform extends Transform {
                     mainDexList,
                     dexOptions,
                     outputHandler,
-                    minSdkVersion);
+                    dexingMode.getMinSdkVersionValue());
         } catch (Exception e) {
             throw new TransformException(e);
         }

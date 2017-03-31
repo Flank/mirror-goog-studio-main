@@ -184,6 +184,7 @@ import com.android.builder.core.VariantConfiguration;
 import com.android.builder.core.VariantType;
 import com.android.builder.dependency.level2.AndroidDependency;
 import com.android.builder.dexing.DexingMode;
+import com.android.builder.dexing.DexingType;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.model.DataBindingOptions;
 import com.android.builder.model.OptionalCompilationStep;
@@ -201,6 +202,7 @@ import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -1108,7 +1110,7 @@ public abstract class TaskManager {
         variantData.calculateFilters(scope.getGlobalScope().getExtension().getSplits());
 
         boolean useAaptToGenerateLegacyMultidexMainDexProguardRules =
-                scope.getDexingMode() == DexingMode.LEGACY_MULTIDEX;
+                scope.getDexingMode().getDexingType() == DexingType.LEGACY_MULTIDEX;
 
         // split list calculation and save to this file.
         File splitListOutputFile = new File(scope.getSplitSupportDirectory(), FN_SPLIT_LIST);
@@ -2118,9 +2120,38 @@ public abstract class TaskManager {
         // ----- Multi-Dex support
 
         DexingMode dexingMode = variantScope.getDexingMode();
+
+        // Upgrade from legacy multi-dex to native multi-dex if possible when using with a device
+        if (dexingMode.getDexingType() == DexingType.LEGACY_MULTIDEX) {
+            if (variantScope.getVariantConfiguration().isMultiDexEnabled()
+                    && DefaultApiVersion.getFeatureLevel(
+                                    variantScope
+                                            .getVariantConfiguration()
+                                            .getMinSdkVersionWithTargetDeviceApi())
+                            >= 21) {
+                // We bump minSdkVersion to 21 (just enough to enable native multi-dex)
+                dexingMode =
+                        new DexingMode(DexingType.NATIVE_MULTIDEX, new DefaultApiVersion(21, null));
+            }
+        }
+
+        Preconditions.checkNotNull(
+                dexingMode.getMinSdkVersion(), "minSdkVersion must be set for dexing mode");
+
+        // Support API 24+ features
+        if (!projectOptions.get(BooleanOption.ENABLE_DEX_ARCHIVE)) {
+            // variantScope.getMinSdkForDx() may be null here and it is intended (see
+            // DexByteCodeConverter#dexOutOfProcess)
+            ApiVersion minSdkForDx = variantScope.getMinSdkForDx();
+            dexingMode =
+                    minSdkForDx != null
+                            ? new DexingMode(dexingMode.getDexingType(), minSdkForDx)
+                            : new DexingMode(dexingMode.getDexingType());
+        }
+
         Optional<AndroidTask<TransformTask>> multiDexClassListTask;
 
-        if (dexingMode == DexingMode.LEGACY_MULTIDEX) {
+        if (dexingMode.getDexingType() == DexingType.LEGACY_MULTIDEX) {
             boolean proguardInPipeline = variantScope.getCodeShrinker() == CodeShrinker.PROGUARD;
 
             // If ProGuard will be used, we'll end up with a "fat" jar anyway. If we're using the
@@ -2228,6 +2259,7 @@ public abstract class TaskManager {
         boolean minified = runJavaCodeShrinker(variantScope);
         FileCache userLevelCache = getUserDexCache(minified, dexOptions.getPreDexLibraries());
         FileCache projectLevelCache = getProjectDexCache(minified, dexOptions.getPreDexLibraries());
+        Preconditions.checkNotNull(dexingMode.getMinSdkVersionValue());
         DexArchiveBuilderTransform preDexTransform =
                 new DexArchiveBuilderTransform(
                         dexOptions,
@@ -2235,15 +2267,15 @@ public abstract class TaskManager {
                         userLevelCache,
                         projectLevelCache,
                         variantScope.getInstantRunBuildContext().isInInstantRunMode(),
-                        variantScope.getVariantConfiguration().getMinSdkVersionValue());
+                        dexingMode.getMinSdkVersionValue());
         transformManager
                 .addTransform(tasks, variantScope, preDexTransform)
                 .ifPresent(variantScope::addColdSwapBuildTask);
 
         DexMergerTransform dexTransform =
                 new DexMergerTransform(
-                        dexingMode,
-                        dexingMode == DexingMode.LEGACY_MULTIDEX
+                        dexingMode.getDexingType(),
+                        dexingMode.getDexingType() == DexingType.LEGACY_MULTIDEX
                                 ? project.files(variantScope.getMainDexListFile())
                                 : null,
                         variantScope.getGlobalScope().getAndroidBuilder().getErrorReporter());
@@ -2338,13 +2370,12 @@ public abstract class TaskManager {
                             androidBuilder,
                             buildCache,
                             dexingMode,
-                            variantScope.getInstantRunBuildContext().isInInstantRunMode(),
-                            variantScope.getMinSdkForDx());
+                            variantScope.getInstantRunBuildContext().isInInstantRunMode());
             transformManager.addTransform(tasks, variantScope, preDexTransform)
                     .ifPresent(variantScope::addColdSwapBuildTask);
         }
 
-        if (!preDexEnabled || dexingMode != DexingMode.NATIVE_MULTIDEX) {
+        if (!preDexEnabled || dexingMode.getDexingType() != DexingType.NATIVE_MULTIDEX) {
             // run if non native multidex or no pre-dexing
             DexTransform dexTransform =
                     new DexTransform(
@@ -2354,8 +2385,7 @@ public abstract class TaskManager {
                             project.files(variantScope.getMainDexListFile()),
                             verifyNotNull(androidBuilder.getTargetInfo(), "Target Info not set."),
                             androidBuilder.getDexByteCodeConverter(),
-                            androidBuilder.getErrorReporter(),
-                            variantScope.getMinSdkForDx());
+                            androidBuilder.getErrorReporter());
             Optional<AndroidTask<TransformTask>> dexTask =
                     transformManager.addTransform(tasks, variantScope, dexTransform);
             // need to manually make dex task depend on MultiDexTransform since there's no stream
@@ -2418,6 +2448,7 @@ public abstract class TaskManager {
                 variantScope.getOutput(VariantScope.TaskOutputType.PROCESSED_RES);
 
         variantScope.setInstantRunTaskManager(instantRunTaskManager);
+        ApiVersion minSdkForDx = variantScope.getMinSdkForDx();
         AndroidTask<BuildInfoLoaderTask> buildInfoLoaderTask =
                 instantRunTaskManager.createInstantRunAllTasks(
                         variantScope.getGlobalScope().getExtension().getDexOptions(),
@@ -2428,7 +2459,9 @@ public abstract class TaskManager {
                         instantRunMergedManifests,
                         processedResources,
                         true /* addResourceVerifier */,
-                        variantScope.getMinSdkForDx());
+                        minSdkForDx != null
+                                ? DefaultApiVersion.getFeatureLevel(minSdkForDx)
+                                : null);
 
         if (variantScope.getSourceGenTask() != null) {
             variantScope.getSourceGenTask().dependsOn(tasks, buildInfoLoaderTask);

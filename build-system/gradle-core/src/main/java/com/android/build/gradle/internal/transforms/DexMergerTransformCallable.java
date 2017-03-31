@@ -20,7 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.dexing.DexArchiveMerger;
 import com.android.builder.dexing.DexMergerConfig;
-import com.android.builder.dexing.DexingMode;
+import com.android.builder.dexing.DexingType;
 import com.android.dx.command.dexer.DxContext;
 import com.android.ide.common.process.ProcessOutput;
 import java.io.File;
@@ -36,7 +36,7 @@ import java.util.concurrent.ForkJoinPool;
  */
 class DexMergerTransformCallable implements Callable<Void> {
 
-    @NonNull private final DexingMode dexingMode;
+    @NonNull private final DexingType dexingType;
     @NonNull private final ProcessOutput processOutput;
     @NonNull private final File dexOutputDir;
     @NonNull private final Collection<Path> dexArchives;
@@ -44,13 +44,13 @@ class DexMergerTransformCallable implements Callable<Void> {
     @NonNull private final ForkJoinPool forkJoinPool;
 
     public DexMergerTransformCallable(
-            @NonNull DexingMode dexingMode,
+            @NonNull DexingType dexingType,
             @NonNull ProcessOutput processOutput,
             @NonNull File dexOutputDir,
             @NonNull Collection<Path> dexArchives,
             @Nullable Set<String> mainDexList,
             @NonNull ForkJoinPool forkJoinPool) {
-        this.dexingMode = dexingMode;
+        this.dexingType = dexingType;
         this.processOutput = processOutput;
         this.dexOutputDir = dexOutputDir;
         this.dexArchives = dexArchives;
@@ -62,7 +62,7 @@ class DexMergerTransformCallable implements Callable<Void> {
     public Void call() throws Exception {
         DxContext dxContext =
                 new DxContext(processOutput.getStandardOutput(), processOutput.getErrorOutput());
-        DexMergerConfig config = new DexMergerConfig(dexingMode, dxContext);
+        DexMergerConfig config = new DexMergerConfig(dexingType, dxContext);
         DexArchiveMerger merger = new DexArchiveMerger(config, forkJoinPool);
         merger.merge(dexArchives, dexOutputDir.toPath(), mainDexList);
         return null;

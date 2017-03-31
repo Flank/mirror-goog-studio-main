@@ -34,7 +34,7 @@ import com.android.builder.dexing.DexArchive;
 import com.android.builder.dexing.DexArchiveBuilder;
 import com.android.builder.dexing.DexArchiveBuilderConfig;
 import com.android.builder.dexing.DexArchives;
-import com.android.builder.dexing.DexingMode;
+import com.android.builder.dexing.DexingType;
 import com.android.dx.command.dexer.DxContext;
 import com.android.testutils.TestInputsGenerator;
 import com.android.testutils.TestUtils;
@@ -86,7 +86,7 @@ public class DexMergerTransformTest {
         Path dexArchive = tmpDir.getRoot().toPath().resolve("archive.jar");
         generateArchive(ImmutableList.of(PKG + "/A", PKG + "/B", PKG + "/C"), dexArchive);
 
-        getTransform(DexingMode.MONO_DEX)
+        getTransform(DexingType.MONO_DEX)
                 .transform(
                         new TransformInvocationBuilder(context)
                                 .addInputs(
@@ -115,7 +115,7 @@ public class DexMergerTransformTest {
         List<TransformInput> inputs =
                 getTransformInputs(NUM_INPUTS, QualifiedContent.Scope.EXTERNAL_LIBRARIES);
 
-        getTransform(DexingMode.MONO_DEX)
+        getTransform(DexingType.MONO_DEX)
                 .transform(
                         new TransformInvocationBuilder(context)
                                 .addInputs(inputs)
@@ -137,7 +137,7 @@ public class DexMergerTransformTest {
         List<TransformInput> inputs =
                 getTransformInputs(NUM_INPUTS, QualifiedContent.Scope.EXTERNAL_LIBRARIES);
 
-        getTransform(DexingMode.NATIVE_MULTIDEX)
+        getTransform(DexingType.NATIVE_MULTIDEX)
                 .transform(
                         new TransformInvocationBuilder(context)
                                 .addInputs(inputs)
@@ -154,7 +154,7 @@ public class DexMergerTransformTest {
         List<TransformInput> inputs =
                 getTransformInputs(NUM_INPUTS, QualifiedContent.Scope.PROJECT);
 
-        getTransform(DexingMode.NATIVE_MULTIDEX)
+        getTransform(DexingType.NATIVE_MULTIDEX)
                 .transform(
                         new TransformInvocationBuilder(context)
                                 .addInputs(inputs)
@@ -173,7 +173,7 @@ public class DexMergerTransformTest {
                 getTransformInputs(1, QualifiedContent.Scope.PROJECT, "B");
         inputs.addAll(projectInputs);
 
-        getTransform(DexingMode.NATIVE_MULTIDEX)
+        getTransform(DexingType.NATIVE_MULTIDEX)
                 .transform(
                         new TransformInvocationBuilder(context)
                                 .addInputs(inputs)
@@ -202,7 +202,7 @@ public class DexMergerTransformTest {
                                                         QualifiedContent.Scope.EXTERNAL_LIBRARIES))
                                         .create()));
 
-        getTransform(DexingMode.NATIVE_MULTIDEX)
+        getTransform(DexingType.NATIVE_MULTIDEX)
                 .transform(
                         new TransformInvocationBuilder(context)
                                 .addInputs(updatedInputs)
@@ -221,7 +221,7 @@ public class DexMergerTransformTest {
         int inputCnt = 3 * Runtime.getRuntime().availableProcessors();
         List<TransformInput> inputs =
                 getTransformInputs(inputCnt, QualifiedContent.Scope.SUB_PROJECTS);
-        getTransform(DexingMode.NATIVE_MULTIDEX)
+        getTransform(DexingType.NATIVE_MULTIDEX)
                 .transform(
                         new TransformInvocationBuilder(context)
                                 .addInputs(inputs)
@@ -229,18 +229,20 @@ public class DexMergerTransformTest {
                                 .build());
     }
 
-    private DexMergerTransform getTransform(@NonNull DexingMode mode) throws IOException {
+    private DexMergerTransform getTransform(@NonNull DexingType dexingType) throws IOException {
         Preconditions.check(
-                mode != DexingMode.LEGACY_MULTIDEX, "Main dex list required for legacy multidex");
-        return getTransform(mode, null);
+                dexingType != DexingType.LEGACY_MULTIDEX,
+                "Main dex list required for legacy multidex");
+        return getTransform(dexingType, null);
     }
 
     private DexMergerTransform getTransform(
-            @NonNull DexingMode mode, @Nullable ImmutableSet<String> mainDex) throws IOException {
+            @NonNull DexingType dexingType, @Nullable ImmutableSet<String> mainDex)
+            throws IOException {
         FileCollection collection;
         if (mainDex != null) {
             Preconditions.check(
-                    mode == DexingMode.LEGACY_MULTIDEX,
+                    dexingType == DexingType.LEGACY_MULTIDEX,
                     "Main dex list must only be used for legacy multidex");
             File tmpFile = tmpDir.newFile();
             Files.write(tmpFile.toPath(), mainDex, StandardOpenOption.TRUNCATE_EXISTING);
@@ -249,7 +251,7 @@ public class DexMergerTransformTest {
         } else {
             collection = null;
         }
-        return new DexMergerTransform(mode, collection, new NoOpErrorReporter());
+        return new DexMergerTransform(dexingType, collection, new NoOpErrorReporter());
     }
 
     @NonNull

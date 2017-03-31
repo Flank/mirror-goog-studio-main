@@ -16,36 +16,58 @@
 
 package com.android.builder.dexing;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+import com.android.annotations.concurrency.Immutable;
+import com.android.builder.core.DefaultApiVersion;
+import com.android.builder.model.ApiVersion;
+
 /**
- * The type of dex we produce. It can be:
- *
- * <ul>
- *   <li>mono dex: no multidex enabled, only one final DEX file produced
- *   <li>legacy multidex: multidex enabled, and min sdk version is less than 21
- *   <li>native multidex: multidex enabled, and min sdk version is greater or equal to 21
- * </ul>
+ * The mode of dexing, which includes the {@link DexingType} and an optional minimum SDK version
+ * associated with the dexing type.
  */
-public enum DexingMode {
-    MONO_DEX(false, true),
-    LEGACY_MULTIDEX(true, false),
-    NATIVE_MULTIDEX(true, true);
+@Immutable
+public final class DexingMode {
 
-    /** If this mode allows multiple DEX files. */
-    private final boolean isMultiDex;
+    @NonNull private final DexingType dexingType;
 
-    /** If we should pre-dex in this dexing mode. */
-    private final boolean preDex;
+    /** The optional minimum SDK version associated with the dexing type. */
+    @Nullable private final ApiVersion minSdkVersion;
 
-    DexingMode(boolean isMultiDex, boolean preDex) {
-        this.isMultiDex = isMultiDex;
-        this.preDex = preDex;
+    public DexingMode(@NonNull DexingType dexingType) {
+        this.dexingType = dexingType;
+        this.minSdkVersion = null;
+    }
+
+    public DexingMode(@NonNull DexingType dexingType, @NonNull ApiVersion minSdkVersion) {
+        this.dexingType = dexingType;
+        this.minSdkVersion = minSdkVersion;
+    }
+
+    @NonNull
+    public DexingType getDexingType() {
+        return dexingType;
     }
 
     public boolean isMultiDex() {
-        return isMultiDex;
+        return dexingType.isMultiDex();
     }
 
     public boolean isPreDex() {
-        return preDex;
+        return dexingType.isPreDex();
+    }
+
+    /** Returns the optional minimum SDK version associated with the dexing type. */
+    @Nullable
+    public ApiVersion getMinSdkVersion() {
+        return minSdkVersion;
+    }
+
+    /**
+     * Returns the optional minimum SDK version associated with the dexing type as an integer value.
+     */
+    @Nullable
+    public Integer getMinSdkVersionValue() {
+        return minSdkVersion != null ? DefaultApiVersion.getFeatureLevel(minSdkVersion) : null;
     }
 }

@@ -97,7 +97,6 @@ class PreDexCallable implements Callable<Void> {
     @NonNull private final DexingMode dexingMode;
     @NonNull private final DexOptions dexOptions;
     @NonNull private final AndroidBuilder androidBuilder;
-    @Nullable private Integer minSdkVersion;
 
     public PreDexCallable(
             @NonNull File from,
@@ -107,8 +106,7 @@ class PreDexCallable implements Callable<Void> {
             @Nullable FileCache buildCache,
             @NonNull DexingMode dexingMode,
             @NonNull DexOptions dexOptions,
-            @NonNull AndroidBuilder androidBuilder,
-            @Nullable Integer minSdkVersion) {
+            @NonNull AndroidBuilder androidBuilder) {
         this.from = from;
         this.to = to;
         this.hashes = hashes;
@@ -117,7 +115,6 @@ class PreDexCallable implements Callable<Void> {
         this.dexingMode = dexingMode;
         this.dexOptions = dexOptions;
         this.androidBuilder = androidBuilder;
-        this.minSdkVersion = minSdkVersion;
     }
 
     @Override
@@ -148,7 +145,7 @@ class PreDexCallable implements Callable<Void> {
                             dexingMode.isMultiDex(),
                             dexOptions,
                             outputHandler,
-                            minSdkVersion);
+                            dexingMode.getMinSdkVersionValue());
                 };
 
         // If the build cache is used, run pre-dexing using the cache
@@ -159,7 +156,7 @@ class PreDexCallable implements Callable<Void> {
                             androidBuilder.getTargetInfo().getBuildTools().getRevision(),
                             dexOptions,
                             dexingMode.isMultiDex(),
-                            minSdkVersion);
+                            dexingMode.getMinSdkVersionValue());
             FileCache.QueryResult result;
             try {
                 result = buildCache.createFile(to, buildCacheInputs, preDexLibraryAction);

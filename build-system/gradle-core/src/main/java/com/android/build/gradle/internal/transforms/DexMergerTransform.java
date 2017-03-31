@@ -34,7 +34,7 @@ import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.builder.core.ErrorReporter;
-import com.android.builder.dexing.DexingMode;
+import com.android.builder.dexing.DexingType;
 import com.android.dx.Version;
 import com.android.ide.common.blame.Message;
 import com.android.ide.common.blame.ParsingProcessOutputHandler;
@@ -76,13 +76,13 @@ import org.gradle.api.file.FileCollection;
  * TransformManager#CONTENT_DEX} type.
  *
  * <p>This transform will try to get incremental updates about its inputs (see {@link
- * #isIncremental()}). However, in {@link DexingMode#MONO_DEX} and {@link
- * DexingMode#LEGACY_MULTIDEX} modes, we will need to pass entire list of dex archives for merging.
+ * #isIncremental()}). However, in {@link DexingType#MONO_DEX} and {@link
+ * DexingType#LEGACY_MULTIDEX} modes, we will need to pass entire list of dex archives for merging.
  * This includes inputs that have not changed as well, as merged does not support incremental
  * merging of DEX files currently. Therefore, incremental and full build are the same in these two
  * modes.
  *
- * <p>In {@link DexingMode#NATIVE_MULTIDEX} mode, we will process only updated dex archives in the
+ * <p>In {@link DexingType#NATIVE_MULTIDEX} mode, we will process only updated dex archives in the
  * following way. For full builds, all external jar libraries will be merged to DEX file(s).
  * Remaining inputs will produce a DEX file per input i.e. dex archive. Reason for this is that the
  * external libraries rarely change, and native multidex mode on android L does not support more
@@ -95,19 +95,19 @@ public class DexMergerTransform extends Transform {
 
     private static final LoggerWrapper logger = LoggerWrapper.getLogger(DexMergerTransform.class);
 
-    @NonNull private final DexingMode dexingMode;
+    @NonNull private final DexingType dexingType;
     @Nullable private final FileCollection mainDexListFile;
     @NonNull private final ErrorReporter errorReporter;
     @NonNull private final ForkJoinPool forkJoinPool = ForkJoinPool.commonPool();
 
     public DexMergerTransform(
-            @NonNull DexingMode dexingMode,
+            @NonNull DexingType dexingType,
             @Nullable FileCollection mainDexListFile,
             @NonNull ErrorReporter errorReporter) {
-        this.dexingMode = dexingMode;
+        this.dexingType = dexingType;
         this.mainDexListFile = mainDexListFile;
         Preconditions.checkState(
-                (dexingMode == DexingMode.LEGACY_MULTIDEX) == (mainDexListFile != null),
+                (dexingType == DexingType.LEGACY_MULTIDEX) == (mainDexListFile != null),
                 "Main dex list must only be set when in legacy multidex");
         this.errorReporter = errorReporter;
     }
@@ -150,7 +150,7 @@ public class DexMergerTransform extends Transform {
     @Override
     public Map<String, Object> getParameterInputs() {
         Map<String, Object> params = Maps.newHashMapWithExpectedSize(2);
-        params.put("dexing-mode", dexingMode.name());
+        params.put("dexing-type", dexingType.name());
         params.put("dx-version", Version.VERSION);
 
         return params;
@@ -181,7 +181,7 @@ public class DexMergerTransform extends Transform {
         ProcessOutput output = null;
         List<ForkJoinTask<Void>> mergeTasks;
         try (Closeable ignored = output = outputHandler.createOutput()) {
-            if (dexingMode == DexingMode.NATIVE_MULTIDEX) {
+            if (dexingType == DexingType.NATIVE_MULTIDEX) {
                 mergeTasks =
                         handleNativeMultiDex(
                                 transformInvocation.getInputs(),
@@ -382,7 +382,7 @@ public class DexMergerTransform extends Transform {
             @Nullable Set<String> mainDexList) {
         DexMergerTransformCallable callable =
                 new DexMergerTransformCallable(
-                        dexingMode, output, dexOutputDir, dexArchives, mainDexList, forkJoinPool);
+                        dexingType, output, dexOutputDir, dexArchives, mainDexList, forkJoinPool);
         return forkJoinPool.submit(callable);
     }
 
