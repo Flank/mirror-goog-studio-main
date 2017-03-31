@@ -149,14 +149,20 @@ java_binary(
     jvm_flags = ["-Xmx1g"],
     main_class = "com.android.tools.maven.PomGenerator",
     visibility = ["//visibility:public"],
-    runtime_deps = [":maven"],
+    runtime_deps = [
+        ":maven",
+        "//prebuilts/tools/common/m2/repository/org/slf4j/slf4j-simple/1.7.2:jar",
+    ],
 )
 
 java_binary(
     name = "repo_builder",
     main_class = "com.android.tools.maven.RepoBuilder",
     visibility = ["//visibility:public"],
-    runtime_deps = [":maven"],
+    runtime_deps = [
+        ":maven",
+        "//prebuilts/tools/common/m2/repository/org/slf4j/slf4j-simple/1.7.2:jar",
+    ],
 )
 
 # See README.md
@@ -166,6 +172,7 @@ java_binary(
     visibility = ["//visibility:public"],
     runtime_deps = [
         ":maven",
+        "//prebuilts/tools/common/m2/repository/org/slf4j/slf4j-simple/1.7.2:jar",
     ],
 )
 
@@ -174,7 +181,10 @@ java_binary(
     name = "third_party_build_generator",
     main_class = "com.android.tools.maven.ThirdPartyBuildGenerator",
     visibility = ["//visibility:public"],
-    runtime_deps = [":maven"],
+    runtime_deps = [
+        ":maven",
+        "//prebuilts/tools/common/m2/repository/org/slf4j/slf4j-simple/1.7.2:jar",
+    ],
 )
 
 # See README.md
@@ -184,6 +194,7 @@ java_binary(
     visibility = ["//visibility:public"],
     runtime_deps = [
         ":maven",
+        "//prebuilts/tools/common/m2/repository/org/slf4j/slf4j-simple/1.7.2:jar",
     ],
 )
 
@@ -197,7 +208,8 @@ java_binary(
         "//prebuilts/tools/common/m2/repository/org/anarres/jarjar/jarjar-core/1.0.0:jar",
         "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-commons/5.0.4:jar",
         "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm/5.0.4:jar",
-        "//prebuilts/tools/common/m2/repository/org/slf4j/slf4j-api/1.7.7:jar",
+        "//prebuilts/tools/common/m2/repository/org/slf4j/slf4j-api/1.7.2:jar",
+        "//prebuilts/tools/common/m2/repository/org/slf4j/slf4j-simple/1.7.2:jar",
     ],
 )
 
