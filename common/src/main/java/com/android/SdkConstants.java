@@ -1186,6 +1186,8 @@ public final class SdkConstants {
     public static final String ATTR_ORIENTATION = "orientation"; //$NON-NLS-1$
     public static final String ATTR_BARRIER_DIRECTION = "barrierDirection"; //$NON-NLS-1$
     public static final String ATTR_LAYOUT = "layout"; //$NON-NLS-1$
+    /** Tools namespace attribute for declaring a surrounding layout to be used */
+    public static final String ATTR_RENDER_IN = "showIn";
     public static final String ATTR_ROW_COUNT = "rowCount"; //$NON-NLS-1$
     public static final String ATTR_COLUMN_COUNT = "columnCount"; //$NON-NLS-1$
     public static final String ATTR_LABEL_FOR = "labelFor"; //$NON-NLS-1$
