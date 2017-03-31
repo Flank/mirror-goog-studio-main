@@ -31,7 +31,6 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -56,9 +55,9 @@ public class BuildOutputs {
         if (metadataFile == null || !metadataFile.exists()) {
             return ImmutableList.of();
         }
-        try {
-            return load(new FileReader(metadataFile));
-        } catch (FileNotFoundException e) {
+        try (FileReader reader = new FileReader(metadataFile)) {
+            return load(reader);
+        } catch (IOException e) {
             return ImmutableList.of();
         }
     }
@@ -75,9 +74,9 @@ public class BuildOutputs {
         if (metadataFile == null || !metadataFile.exists()) {
             return ImmutableList.of();
         }
-        try {
-            return load(new FileReader(metadataFile));
-        } catch (FileNotFoundException e) {
+        try (FileReader reader = new FileReader(metadataFile)) {
+            return load(reader);
+        } catch (IOException e) {
             return ImmutableList.of();
         }
     }
@@ -99,9 +98,9 @@ public class BuildOutputs {
         if (metadataFile == null || !metadataFile.exists()) {
             return ImmutableList.of();
         }
-        try {
-            return load(types, new FileReader(metadataFile));
-        } catch (FileNotFoundException e) {
+        try (FileReader reader = new FileReader(metadataFile)) {
+            return load(types, reader);
+        } catch (IOException e) {
             return ImmutableList.of();
         }
     }
@@ -171,9 +170,9 @@ public class BuildOutputs {
         if (metadataFile == null || !metadataFile.exists()) {
             return ImmutableList.of();
         }
-        try {
-            return load(outputTypes, new FileReader(metadataFile));
-        } catch (FileNotFoundException e) {
+        try (FileReader reader = new FileReader(metadataFile)) {
+            return load(outputTypes, reader);
+        } catch (IOException e) {
             return ImmutableList.of();
         }
     }
