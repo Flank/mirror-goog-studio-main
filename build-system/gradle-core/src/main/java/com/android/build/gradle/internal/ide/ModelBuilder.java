@@ -21,6 +21,7 @@ import static com.android.builder.model.AndroidProject.ARTIFACT_MAIN;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.VisibleForTesting;
 import com.android.build.VariantOutput;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.AndroidGradleOptions;
@@ -62,12 +63,14 @@ import com.android.builder.model.NativeLibrary;
 import com.android.builder.model.NativeToolchain;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.ProductFlavorContainer;
+import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.model.SourceProviderContainer;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.model.TestedTargetVariant;
 import com.android.builder.model.Variant;
+import com.android.builder.model.VariantBuildOutput;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.GlobalLibraryMap;
 import com.android.ide.common.build.ApkInfo;
@@ -154,8 +157,9 @@ public class ModelBuilder implements ToolingModelBuilder {
     @Override
     public boolean canBuild(String modelName) {
         // The default name for a model is the name of the Java interface.
-        return modelName.equals(AndroidProject.class.getName()) || modelName.equals(
-                GlobalLibraryMap.class.getName());
+        return modelName.equals(AndroidProject.class.getName())
+                || modelName.equals(GlobalLibraryMap.class.getName())
+                || modelName.equals(ProjectBuildOutput.class.getName());
     }
 
     @Override
@@ -163,8 +167,28 @@ public class ModelBuilder implements ToolingModelBuilder {
         if (modelName.equals(AndroidProject.class.getName())) {
             return buildAndroidProject(project);
         }
+        if (modelName.equals(ProjectBuildOutput.class.getName())) {
+            return buildMinimalisticModel();
+        }
 
         return buildGlobalLibraryMap();
+    }
+
+    @VisibleForTesting
+    ProjectBuildOutput buildMinimalisticModel() {
+
+        ImmutableList.Builder<VariantBuildOutput> variantsOutput = ImmutableList.builder();
+
+        for (VariantScope variantScope : variantManager.getVariantScopes()) {
+            if (!variantScope.getVariantData().getType().isForTesting()) {
+                variantsOutput.add(
+                        new DefaultVariantBuildOutput(
+                                variantScope.getFullVariantName(),
+                                getBuildOutputSupplier(variantScope.getVariantData()).get()));
+            }
+        }
+
+        return new DefaultProjectBuildOutput(variantsOutput.build());
     }
 
     private static Object buildGlobalLibraryMap() {
@@ -459,95 +483,10 @@ public class ModelBuilder implements ToolingModelBuilder {
         SourceProviders sourceProviders = determineSourceProviders(variantData);
 
         // get the outputs
-        BuildOutputSupplier<Collection<BuildOutput>> splitOutputsProxy = null;
-        BuildOutputSupplier<Collection<BuildOutput>> manifestsProxy = null;
-        switch (variantData.getType()) {
-            case DEFAULT:
-                splitOutputsProxy =
-                        new BuildOutputsSupplier(
-                                ImmutableList.of(
-                                        VariantScope.TaskOutputType.APK,
-                                        VariantScope.TaskOutputType.ABI_PACKAGED_SPLIT,
-                                        VariantScope.TaskOutputType
-                                                .DENSITY_OR_LANGUAGE_PACKAGED_SPLIT),
-                                ImmutableList.of(
-                                        new File(
-                                                variantData
-                                                        .getScope()
-                                                        .getGlobalScope()
-                                                        .getApkLocation(),
-                                                variantData
-                                                        .getVariantConfiguration()
-                                                        .getDirName())));
-
-                manifestsProxy =
-                        new BuildOutputsSupplier(
-                                ImmutableList.of(VariantScope.TaskOutputType.MERGED_MANIFESTS),
-                                ImmutableList.of(
-                                        variantData.getScope().getManifestOutputDirectory()));
-                break;
-            case LIBRARY:
-                ApkInfo mainApkInfo =
-                        ApkInfo.of(VariantOutput.OutputType.MAIN, ImmutableList.of(), 0);
-                splitOutputsProxy =
-                        BuildOutputSupplier.of(
-                                ImmutableList.of(
-                                        new BuildOutput(
-                                                VariantScope.TaskOutputType.AAR,
-                                                mainApkInfo,
-                                                scope.getOutputBundleFile())));
-                manifestsProxy =
-                        BuildOutputSupplier.of(
-                                ImmutableList.of(
-                                        new BuildOutput(
-                                                VariantScope.TaskOutputType.MERGED_MANIFESTS,
-                                                mainApkInfo,
-                                                new File(
-                                                        scope.getManifestOutputDirectory(),
-                                                        SdkConstants.ANDROID_MANIFEST_XML))));
-                break;
-            case ATOM:
-            case INSTANTAPP:
-                splitOutputsProxy =
-                        new BuildOutputsSupplier(
-                                ImmutableList.of(VariantScope.TaskOutputType.APKB),
-                                ImmutableList.of(
-                                        new File(
-                                                variantData
-                                                        .getScope()
-                                                        .getGlobalScope()
-                                                        .getApkLocation(),
-                                                variantData
-                                                        .getVariantConfiguration()
-                                                        .getDirName())));
-                manifestsProxy =
-                        new BuildOutputsSupplier(
-                                ImmutableList.of(VariantScope.TaskOutputType.MERGED_MANIFESTS),
-                                ImmutableList.of(
-                                        variantData.getScope().getManifestOutputDirectory()));
-                break;
-            case ANDROID_TEST:
-                splitOutputsProxy =
-                        new BuildOutputsSupplier(
-                                ImmutableList.of(VariantScope.TaskOutputType.APK),
-                                ImmutableList.of(
-                                        new File(
-                                                variantData
-                                                        .getScope()
-                                                        .getGlobalScope()
-                                                        .getApkLocation(),
-                                                variantData
-                                                        .getVariantConfiguration()
-                                                        .getDirName())));
-                manifestsProxy =
-                        new BuildOutputsSupplier(
-                                ImmutableList.of(VariantScope.TaskOutputType.MERGED_MANIFESTS),
-                                ImmutableList.of(
-                                        variantData.getScope().getManifestOutputDirectory()));
-                break;
-            default:
-                throw new RuntimeException("Unhandled build type " + variantData.getType());
-        }
+        BuildOutputSupplier<Collection<BuildOutput>> splitOutputsProxy =
+                getBuildOutputSupplier(variantData);
+        BuildOutputSupplier<Collection<BuildOutput>> manifestsProxy =
+                getManifestsSupplier(variantData);
 
         CoreNdkOptions ndkConfig = variantData.getVariantConfiguration().getNdkConfig();
         Collection<NativeLibrary> nativeLibraries = ImmutableList.of();
@@ -626,6 +565,76 @@ public class ModelBuilder implements ToolingModelBuilder {
                 instantRun,
                 splitOutputsProxy,
                 manifestsProxy);
+    }
+
+    private static BuildOutputSupplier<Collection<BuildOutput>> getBuildOutputSupplier(
+            BaseVariantData variantData) {
+        switch (variantData.getType()) {
+            case DEFAULT:
+                return new BuildOutputsSupplier(
+                        ImmutableList.of(
+                                VariantScope.TaskOutputType.APK,
+                                VariantScope.TaskOutputType.ABI_PACKAGED_SPLIT,
+                                VariantScope.TaskOutputType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT),
+                        ImmutableList.of(
+                                new File(
+                                        variantData.getScope().getGlobalScope().getApkLocation(),
+                                        variantData.getVariantConfiguration().getDirName())));
+
+            case LIBRARY:
+                ApkInfo mainApkInfo =
+                        ApkInfo.of(VariantOutput.OutputType.MAIN, ImmutableList.of(), 0);
+                return BuildOutputSupplier.of(
+                        ImmutableList.of(
+                                new BuildOutput(
+                                        VariantScope.TaskOutputType.AAR,
+                                        mainApkInfo,
+                                        variantData.getScope().getOutputBundleFile())));
+            case ATOM:
+            case INSTANTAPP:
+                return new BuildOutputsSupplier(
+                        ImmutableList.of(VariantScope.TaskOutputType.APKB),
+                        ImmutableList.of(
+                                new File(
+                                        variantData.getScope().getGlobalScope().getApkLocation(),
+                                        variantData.getVariantConfiguration().getDirName())));
+            case ANDROID_TEST:
+                return new BuildOutputsSupplier(
+                        ImmutableList.of(VariantScope.TaskOutputType.APK),
+                        ImmutableList.of(
+                                new File(
+                                        variantData.getScope().getGlobalScope().getApkLocation(),
+                                        variantData.getVariantConfiguration().getDirName())));
+            default:
+                throw new RuntimeException("Unhandled build type " + variantData.getType());
+        }
+    }
+
+    private static BuildOutputSupplier<Collection<BuildOutput>> getManifestsSupplier(
+            BaseVariantData variantData) {
+
+        switch (variantData.getType()) {
+            case DEFAULT:
+            case ATOM:
+            case INSTANTAPP:
+            case ANDROID_TEST:
+                return new BuildOutputsSupplier(
+                        ImmutableList.of(VariantScope.TaskOutputType.MERGED_MANIFESTS),
+                        ImmutableList.of(variantData.getScope().getManifestOutputDirectory()));
+            case LIBRARY:
+                ApkInfo mainApkInfo =
+                        ApkInfo.of(VariantOutput.OutputType.MAIN, ImmutableList.of(), 0);
+                return BuildOutputSupplier.of(
+                        ImmutableList.of(
+                                new BuildOutput(
+                                        VariantScope.TaskOutputType.MERGED_MANIFESTS,
+                                        mainApkInfo,
+                                        new File(
+                                                variantData.getScope().getManifestOutputDirectory(),
+                                                SdkConstants.ANDROID_MANIFEST_XML))));
+            default:
+                throw new RuntimeException("Unhandled build type " + variantData.getType());
+        }
     }
 
     private static Collection<Abi> createAbiList(Collection<String> abiNames) {
