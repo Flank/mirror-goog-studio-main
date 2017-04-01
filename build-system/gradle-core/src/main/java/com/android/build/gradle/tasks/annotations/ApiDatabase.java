@@ -38,16 +38,17 @@ public class ApiDatabase {
     private final List<String> lines;
     /** Map from class name to set of field names */
     @NonNull private final  Map<String,Set<String>> fieldMap =
-            Maps.newHashMapWithExpectedSize(1000);
+            Maps.newHashMapWithExpectedSize(4000);
     /** Map from class name to map of method names whose values are overloaded signatures */
     @NonNull private final  Map<String,Map<String,List<String>>> methodMap =
-            Maps.newHashMapWithExpectedSize(1000);
+            Maps.newHashMapWithExpectedSize(4000);
     @NonNull private final Map<String, List<String>> inheritsFrom =
-            Maps.newHashMapWithExpectedSize(1000);
+            Maps.newHashMapWithExpectedSize(4000);
     @NonNull private final  Map<String,Set<String>> intFieldMap =
-            Maps.newHashMapWithExpectedSize(1000);
+            Maps.newHashMapWithExpectedSize(4000);
     @NonNull private final  Set<String> classSet =
-            Sets.newHashSetWithExpectedSize(1000);
+            Sets.newHashSetWithExpectedSize(4000);
+    private final Set<String> packageSet = Sets.newHashSetWithExpectedSize(300);
 
     public ApiDatabase(@NonNull List<String> lines) {
         this.lines = lines;
@@ -242,6 +243,7 @@ public class ApiDatabase {
                     Extractor.warning("Warning: Did not match as a package: " + line);
                 } else {
                     currentPackage = matcher.group(1);
+                    packageSet.add(currentPackage);
                 }
             } else {
                 Matcher matcher = CLASS.matcher(line);
@@ -351,5 +353,9 @@ public class ApiDatabase {
         }
 
         return sb.toString();
+    }
+
+    public boolean hasPackage(String pkg) {
+        return packageSet.contains(pkg);
     }
 }

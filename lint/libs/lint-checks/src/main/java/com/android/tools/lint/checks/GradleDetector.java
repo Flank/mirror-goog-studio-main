@@ -984,13 +984,16 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             }
         } else if ("com.google.guava".equals(dependency.getGroupId()) &&
                 "guava".equals(dependency.getArtifactId())) {
-            version = getNewerRevision(dependency, new Revision(20, 0));
+            version = getNewerRevision(dependency, new Revision(21, 0));
         } else if ("com.google.code.gson".equals(dependency.getGroupId()) &&
                 "gson".equals(dependency.getArtifactId())) {
-            version = getNewerRevision(dependency, new Revision(2, 7));
+            version = getNewerRevision(dependency, new Revision(2, 8, 0));
         } else if ("org.apache.httpcomponents".equals(dependency.getGroupId()) &&
                 "httpclient".equals(dependency.getArtifactId())) {
             version = getNewerRevision(dependency, new Revision(4, 3, 5));
+        } else if ("com.squareup.okhttp3".equals(dependency.getGroupId()) &&
+                "okhttp".equals(dependency.getArtifactId())) {
+            version = getNewerRevision(dependency, new Revision(3, 6, 0));
         } else if ("com.github.bumptech.glide".equals(dependency.getGroupId()) &&
                 "glide".equals(dependency.getArtifactId())) {
             version = getNewerRevision(dependency, new Revision(3, 7, 0));
@@ -1001,6 +1004,9 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                 report(context, cookie, DEPENDENCY, "Use Fabric Gradle plugin version 1.21.6 or "
                         + "later to improve Instant Run performance (was " +
                         dependency.getRevision() + ")");
+            } else {
+                // From https://s3.amazonaws.com/fabric-artifacts/public/io/fabric/tools/gradle/maven-metadata.xml
+                version = getNewerRevision(dependency, new Revision(1, 22, 1));
             }
         } else if ("com.bugsnag".equals(dependency.getGroupId()) &&
                 "bugsnag-android-gradle-plugin".equals(dependency.getArtifactId())) {
@@ -1009,6 +1015,8 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                 report(context, cookie, DEPENDENCY, "Use BugSnag Gradle plugin version 2.1.2 or "
                         + "later to improve Instant Run performance (was " +
                         dependency.getRevision() + ")");
+            } else {
+                version = getNewerRevision(dependency, new Revision(2, 4, 1));
             }
         }
 

@@ -247,7 +247,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 + "build.gradle:5: Warning: Old buildToolsVersion 19.0.0; recommended version is 19.1 or later [GradleDependency]\n"
                 + "    buildToolsVersion \"19.0.0\"\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "build.gradle:24: Warning: A newer version of com.google.guava:guava than 11.0.2 is available: 20.0 [GradleDependency]\n"
+                + "build.gradle:24: Warning: A newer version of com.google.guava:guava than 11.0.2 is available: 21.0 [GradleDependency]\n"
                 + "    freeCompile 'com.google.guava:guava:11.0.2'\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "build.gradle:25: Warning: A newer version of com.android.support:appcompat-v7 than 13.0.0 is available: 21.0.2 [GradleDependency]\n"
@@ -392,7 +392,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 + "build.gradle:5: Warning: Old buildToolsVersion 19.0.0; recommended version is 19.1 or later [GradleDependency]\n"
                 + "    buildToolsVersion \"19.0.0\"\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "build.gradle:24: Warning: A newer version of com.google.guava:guava than 11.0.2 is available: 20.0 [GradleDependency]\n"
+                + "build.gradle:24: Warning: A newer version of com.google.guava:guava than 11.0.2 is available: 21.0 [GradleDependency]\n"
                 + "    freeCompile 'com.google.guava:guava:11.0.2'\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "build.gradle:25: Warning: A newer version of com.android.support:appcompat-v7 than 13.0.0 is available: 21.0.2 [GradleDependency]\n"
@@ -501,7 +501,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
     public void testDependenciesNoMicroVersion() throws Exception {
         // Regression test for https://code.google.com/p/android/issues/detail?id=77594
         String expected = ""
-                + "build.gradle:13: Warning: A newer version of com.google.code.gson:gson than 2.2 is available: 2.7 [GradleDependency]\n"
+                + "build.gradle:13: Warning: A newer version of com.google.code.gson:gson than 2.2 is available: 2.8.0 [GradleDependency]\n"
                 + "    compile 'com.google.code.gson:gson:2.2'\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "0 errors, 1 warnings\n";
@@ -1187,15 +1187,18 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 + "build.gradle:4: Warning: Use Fabric Gradle plugin version 1.21.6 or later to improve Instant Run performance (was 1.20.0) [GradleDependency]\n"
                 + "    classpath 'io.fabric.tools:gradle:1.20.0'\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "0 errors, 2 warnings\n";
+                + "build.gradle:5: Warning: A newer version of io.fabric.tools:gradle than 1.22.0 is available: 1.22.1 [GradleDependency]\n"
+                + "    classpath 'io.fabric.tools:gradle:1.22.0'\n"
+                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 3 warnings\n";
 
         lint().files(
                 gradle(""
                         + "buildscript {\n"
                         + "  dependencies {\n"
                         + "    classpath 'io.fabric.tools:gradle:1.21.2'\n" // Not OK
-                        + "    classpath 'io.fabric.tools:gradle:1.20.0'\n" // Old
-                        + "    classpath 'io.fabric.tools:gradle:1.22.0'\n" // OK
+                        + "    classpath 'io.fabric.tools:gradle:1.20.0'\n" // Not OK
+                        + "    classpath 'io.fabric.tools:gradle:1.22.0'\n" // Old
                         + "    classpath 'io.fabric.tools:gradle:1.+'\n" // OK
                         + "  }\n"
                         + "}\n"))
@@ -1214,16 +1217,23 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 + "build.gradle:4: Warning: Use BugSnag Gradle plugin version 2.1.2 or later to improve Instant Run performance (was 2.1.1) [GradleDependency]\n"
                 + "    classpath 'com.bugsnag:bugsnag-android-gradle-plugin:2.1.1'\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "0 errors, 2 warnings\n";
+                + "build.gradle:5: Warning: A newer version of com.bugsnag:bugsnag-android-gradle-plugin than 2.1.2 is available: 2.4.1 [GradleDependency]\n"
+                + "    classpath 'com.bugsnag:bugsnag-android-gradle-plugin:2.1.2'\n"
+                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "build.gradle:6: Warning: A newer version of com.bugsnag:bugsnag-android-gradle-plugin than 2.2 is available: 2.4.1 [GradleDependency]\n"
+                + "    classpath 'com.bugsnag:bugsnag-android-gradle-plugin:2.2'\n"
+                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 4 warnings\n";
 
         lint().files(
                 gradle(""
                         + "buildscript {\n"
                         + "  dependencies {\n"
-                        + "    classpath 'com.bugsnag:bugsnag-android-gradle-plugin:2.1.0'\n" // Old
-                        + "    classpath 'com.bugsnag:bugsnag-android-gradle-plugin:2.1.1'\n" // Old
-                        + "    classpath 'com.bugsnag:bugsnag-android-gradle-plugin:2.1.2'\n" // OK
-                        + "    classpath 'com.bugsnag:bugsnag-android-gradle-plugin:2.2'\n" // OK
+                        + "    classpath 'com.bugsnag:bugsnag-android-gradle-plugin:2.1.0'\n" // Bad
+                        + "    classpath 'com.bugsnag:bugsnag-android-gradle-plugin:2.1.1'\n" // Bad
+                        + "    classpath 'com.bugsnag:bugsnag-android-gradle-plugin:2.1.2'\n" // Old
+                        + "    classpath 'com.bugsnag:bugsnag-android-gradle-plugin:2.2'\n" // Old
+                        + "    classpath 'com.bugsnag:bugsnag-android-gradle-plugin:2.5'\n" // OK
                         + "  }\n"
                         + "}\n"))
                 .issues(DEPENDENCY)

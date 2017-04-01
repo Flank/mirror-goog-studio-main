@@ -54,6 +54,7 @@ import static com.android.tools.lint.detector.api.ResourceEvaluator.COLOR_RES_AN
 import static com.android.tools.lint.detector.api.ResourceEvaluator.DIMENSION_ANNOTATION;
 import static com.android.tools.lint.detector.api.ResourceEvaluator.DIMEN_RES_ANNOTATION;
 import static com.android.tools.lint.detector.api.ResourceEvaluator.DRAWABLE_RES_ANNOTATION;
+import static com.android.tools.lint.detector.api.ResourceEvaluator.FONT_RES_ANNOTATION;
 import static com.android.tools.lint.detector.api.ResourceEvaluator.FRACTION_RES_ANNOTATION;
 import static com.android.tools.lint.detector.api.ResourceEvaluator.ID_RES_ANNOTATION;
 import static com.android.tools.lint.detector.api.ResourceEvaluator.INTEGER_RES_ANNOTATION;
@@ -530,6 +531,7 @@ public class SupportAnnotationDetector extends Detector implements UastScanner {
                 case ATTR_RES_ANNOTATION:
                 case BOOL_RES_ANNOTATION:
                 case COLOR_RES_ANNOTATION:
+                case FONT_RES_ANNOTATION:
                 case DIMEN_RES_ANNOTATION:
                 case DRAWABLE_RES_ANNOTATION:
                 case FRACTION_RES_ANNOTATION:
