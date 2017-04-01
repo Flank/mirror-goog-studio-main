@@ -27,12 +27,12 @@ import com.android.repository.api.SchemaModule;
 import com.android.repository.api.SimpleRepositorySource;
 import com.android.repository.io.FileOp;
 import com.android.repository.io.impl.FileOpImpl;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
@@ -176,7 +176,7 @@ public class LocalSourceProvider implements RepositorySourceProvider {
                 loadUserAddons(logger);
             }
         }
-        return mSources;
+        return ImmutableList.copyOf(mSources);
     }
 
     /**
@@ -210,9 +210,7 @@ public class LocalSourceProvider implements RepositorySourceProvider {
     @Override
     public void save(@NonNull ProgressIndicator progress) {
         synchronized (LOCK) {
-            FileOutputStream fos = null;
-            try {
-                fos = new FileOutputStream(mLocation);
+            try (OutputStream fos = mFop.newFileOutputStream(mLocation)) {
 
                 Properties props = new Properties();
 
@@ -236,20 +234,12 @@ public class LocalSourceProvider implements RepositorySourceProvider {
             } catch (IOException e) {
                 progress.logWarning("failed to save sites", e);
 
-            } finally {
-                if (fos != null) {
-                    try {
-                        fos.close();
-                    } catch (IOException e) {
-                        // nothing
-                    }
-                }
             }
         }
     }
 
     /**
-     * Remove the specified source from this provider. Node that the remove won't be persisted until
+     * Remove the specified source from this provider. Note that the remove won't be persisted until
      * {@link #save(ProgressIndicator)} is called.
      *
      * @param source The source to remove.

@@ -16,7 +16,7 @@
 
 package com.android.repository.impl.remote;
 
-import static com.android.repository.testframework.FakePackage.*;
+import static com.android.repository.testframework.FakePackage.FakeRemotePackage;
 
 import com.android.repository.Revision;
 import com.android.repository.api.Channel;
@@ -37,18 +37,14 @@ import com.android.repository.testframework.FakeSettingsController;
 import com.android.repository.testframework.MockFileOp;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
-import junit.framework.TestCase;
-
 import java.net.URL;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
+import junit.framework.TestCase;
 
-/**
- * Tests for {@link RemoteRepoLoaderImpl}
- */
-public class RemoteRepoTest extends TestCase {
+/** Tests for {@link RemoteRepoLoaderImpl} */
+public class RemoteRepoLoaderImplTest extends TestCase {
 
     public void testRemoteRepo() throws Exception {
         RepositorySource source = new SimpleRepositorySource("http://www.example.com",
@@ -284,5 +280,4 @@ public class RemoteRepoTest extends TestCase {
         assertEquals(2, pkgs.size());
         assertTrue(pkgs.get("dummy;foo") instanceof FakePackage);
     }
-
 }
