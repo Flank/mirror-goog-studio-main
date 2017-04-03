@@ -345,7 +345,7 @@ class BlameFile {
         private boolean visit(Node node) {
             if (node.getNodeType() == Node.ELEMENT_NODE) {
                 Element tag = (Element) node;
-                if (visitTag(tag, tag.getTagName())) {
+                if (visitTag(tag, tag.getLocalName())) {
                     return true;
                 }
 

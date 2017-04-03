@@ -170,7 +170,7 @@ class ResourceVisitor {
     }
 
     private void visitElement(@NonNull XmlContext context, @NonNull Element element) {
-        List<Detector.XmlScanner> elementChecks = elementToCheck.get(element.getTagName());
+        List<Detector.XmlScanner> elementChecks = elementToCheck.get(element.getLocalName());
         if (elementChecks != null) {
             assert elementChecks instanceof RandomAccess;
             for (XmlScanner check : elementChecks) {

@@ -108,6 +108,15 @@ public class LintUtilsTest extends TestCase {
                 LintUtils.formatList(Arrays.asList("foo", "bar", "baz"), 0));
     }
 
+    public void testIsDataBindingExpression() {
+        assertTrue(LintUtils.isDataBindingExpression("@{foo}"));
+        assertTrue(LintUtils.isDataBindingExpression("@={foo}"));
+        assertFalse(LintUtils.isDataBindingExpression("@string/foo"));
+        assertFalse(LintUtils.isDataBindingExpression("?string/foo"));
+        assertFalse(LintUtils.isDataBindingExpression(""));
+        assertFalse(LintUtils.isDataBindingExpression("foo"));
+    }
+
     public void testDescribeCounts() throws Exception {
         assertThat(LintUtils.describeCounts(0, 0, true)).isEqualTo("No errors or warnings");
         assertThat(LintUtils.describeCounts(0, 1, true)).isEqualTo("1 warning");

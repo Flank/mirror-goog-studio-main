@@ -31,7 +31,7 @@ import org.jetbrains.uast.UElement;
  */
 public class QuickfixData implements Iterable {
 
-    private final Map<Object, Object> map = Maps.newHashMap();
+    private final Map<Object, Object> map = Maps.newHashMapWithExpectedSize(4);
 
     @Nullable
     public <T> T get(@NonNull Class<T> key) {
@@ -82,5 +82,60 @@ public class QuickfixData implements Iterable {
     @Override
     public String toString() {
         return map.toString();
+    }
+
+    /**
+     * Convenience class for the common scenario of suggesting a fix which involves
+     * setting an XML attribute.
+     */
+    public static class SetAttribute extends QuickfixData {
+        public final String namespace;
+        public final String attribute;
+        public final String value;
+
+        /**
+         * Set or reset the given attribute
+         *
+         * @param namespace optional name space
+         * @param attribute attribute name
+         * @param value     value, or null to delete (if already set) or to edit (if already set)
+         */
+        public SetAttribute(@Nullable String namespace, @NonNull String attribute,
+                @Nullable String value) {
+            this.namespace = namespace;
+            this.attribute = attribute;
+            this.value = value;
+        }
+    }
+
+    /**
+     * Convenience class for the common scenario of suggesting a fix which involves
+     * replacing a static string or regular expression with a replacement string
+     */
+    public static class ReplaceString extends QuickfixData {
+        public final String oldString;
+        public final String oldPattern;
+        public final String replacement;
+
+        /**
+         * Replace the given string within the range of the element this warning is marked on
+         *
+         * @param oldString   the literal string to replace
+         * @param oldPattern  the regular expression to replace (provided as a string such that it
+         *                    only needs to be compiled if actually referenced by the IDE
+         * @param replacement the replacement literal string
+         */
+        public ReplaceString(@Nullable String oldString, @Nullable String oldPattern,
+                @NonNull String replacement) {
+            // Exactly one of old or pattern should be specified. Since both are strings, using
+            // a single constructor instead of overloaded ones to avoid accidentally picking the
+            // wrong one.
+            assert oldString != null || oldPattern != null;
+            assert oldString == null || oldPattern == null;
+
+            this.oldString = oldString;
+            this.oldPattern = oldPattern;
+            this.replacement = replacement;
+        }
     }
 }
