@@ -29,9 +29,9 @@ class EventManager {
   // if necessary.
   static EventManager& Instance();
 
-  // Cache the raw activity data, also enqueue the event to send to perfd.
-  // We cache off the last activity event sent, and resend it when we reset
-  // connection to perfd. If we don't do this, the activity manifest it self as
+  // Cache the raw component data, also enqueue the event to send to perfd.
+  // We cache off the last component event sent, and resend it when we reset
+  // connection to perfd. If we don't do this, the component manifest it self as
   // not starting when reconnecting to perfd with a cleared cache.
   void CacheAndEnqueueActivityEvent(
       const profiler::proto::ActivityData& activity);
@@ -42,20 +42,19 @@ class EventManager {
   // Helper funciton to enque event without caching the values first.
   void EnqueueActivityEvent(const profiler::proto::ActivityData& activity);
 
-  // Function callback to listen to perfd state chagnes, this happens on the heartbeat thread.
-  // This thread is not the thread that CacheAndEnqueueActivityEvent is run on.
+  // Function callback to listen to perfd state chagnes, this happens on the
+  // heartbeat thread. This thread is not the thread that
+  // CacheAndEnqueuecomponentEvent is run on.
   void PerfdStateChanged(bool becomes_alive);
 
-  // Cached values
-  profiler::proto::ActivityData activity_;
-
-  // In the current iteration we should always have cached data when we call
-  // EnqueActivity, however this protects us from system changes in the future.
-  bool has_cached_data_;
+  // Cached values of active activities. The key is the
+  // unique hash of the component, the value being a copy of the
+  // component data needed by perfd upon connection.
+  std::map<int, profiler::proto::ActivityData> hash_activity_cache_;
 
   // Mutex guards us from attempting to send a state change, the exact same
   // moment we change the perfd state to online.
-  std::mutex cache_mutex_;
+  std::mutex activity_cache_mutex_;
 };
 
 }  // end of namespace profiler
