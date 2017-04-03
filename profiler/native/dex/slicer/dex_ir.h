@@ -23,6 +23,7 @@
 #include "dex_leb128.h"
 #include "buffer.h"
 #include "index_map.h"
+#include "strings_hash_table.h"
 
 #include <stdlib.h>
 #include <map>
@@ -372,6 +373,9 @@ struct DexFile {
   IndexMap fields_indexes;
   IndexMap methods_indexes;
   IndexMap classes_indexes;
+
+  // strings lookup hash table
+  StringsLookup strings_lookup;
 
  public:
   DexFile() = default;

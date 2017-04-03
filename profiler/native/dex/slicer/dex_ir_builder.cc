@@ -21,13 +21,11 @@
 
 namespace ir {
 
-// TODO: index the strings for faster lookups
 String* Builder::GetAsciiString(const char* str) {
   // look for the string first...
-  for (const auto& ir_string : dex_ir_->strings) {
-    if (strcmp(ir_string->c_str(), str) == 0) {
-      return ir_string.get();
-    }
+  auto ir_string = dex_ir_->strings_lookup.Lookup(str);
+  if(ir_string != nullptr) {
+    return ir_string;
   }
 
   // create a new string data
@@ -38,7 +36,7 @@ String* Builder::GetAsciiString(const char* str) {
   buff.Seal(1);
 
   // create the new .dex IR string node
-  auto ir_string = dex_ir_->Alloc<String>();
+  ir_string = dex_ir_->Alloc<String>();
   ir_string->data = slicer::MemView(buff.data(), buff.size());
 
   // update the index -> ir node map
@@ -50,6 +48,9 @@ String* Builder::GetAsciiString(const char* str) {
 
   // attach the new string data to the .dex IR
   dex_ir_->AttachBuffer(std::move(buff));
+
+  // update the strings lookup table
+  dex_ir_->strings_lookup.Insert(ir_string);
 
   return ir_string;
 }
