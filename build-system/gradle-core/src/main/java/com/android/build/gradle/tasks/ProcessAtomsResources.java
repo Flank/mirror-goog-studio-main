@@ -102,7 +102,7 @@ public class ProcessAtomsResources extends IncrementalTask {
             ProcessOutputHandler processOutputHandler =
                     new ParsingProcessOutputHandler(
                             new ToolOutputParser(new AaptOutputParser(), getILogger()),
-                            new MergingLogRewriter(mergingLog, builder.getErrorReporter()));
+                            new MergingLogRewriter(mergingLog::find, builder.getErrorReporter()));
 
             // Compute the R class package name.
             DefaultManifestParser manifestParser =

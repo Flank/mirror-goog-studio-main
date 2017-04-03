@@ -124,6 +124,8 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     private Supplier<File> resDir;
 
+    private File mergeResourcesOutputDir;
+
     private String buildTargetAbi;
     private Set<String> supportedAbis;
 
@@ -384,10 +386,22 @@ public class ProcessAndroidResources extends IncrementalTask {
 
         AndroidBuilder builder = getBuilder();
         MergingLog mergingLog = new MergingLog(getMergeBlameLogFolder());
+
+        File resDir = getResDir();
+        File mergeResourcesOutputDir = getMergeResourcesOutputDir();
+
+        MergingLogRewriter mergingLogRewriter =
+                new MergingLogRewriter(
+                        resDir.equals(mergeResourcesOutputDir)
+                                ? mergingLog::find
+                                : MergingLogRewriter.rewriteDir(resDir, mergeResourcesOutputDir)
+                                        .andThen(mergingLog::find),
+                        builder.getErrorReporter());
+
         ProcessOutputHandler processOutputHandler =
                 new ParsingProcessOutputHandler(
                         new ToolOutputParser(new AaptOutputParser(), getILogger()),
-                        new MergingLogRewriter(mergingLog, builder.getErrorReporter()));
+                        mergingLogRewriter);
 
         // Find the base atom package, if it exists.
         @Nullable File baseAtomPackage = null;
@@ -788,6 +802,8 @@ public class ProcessAndroidResources extends IncrementalTask {
             processResources.mergedResources = variantScope.getOutputs(mergeType.getOutputType());
             processResources.resDir = TaskInputHelper.memoize(variantScope::getFinalResourcesDir);
 
+            processResources.setMergeResourcesOutputDir(variantScope.getMergeResourcesOutputDir());
+
             processResources.setType(config.getType());
             processResources.setDebuggable(config.getBuildType().isDebuggable());
             processResources.setAaptOptions(
@@ -896,6 +912,15 @@ public class ProcessAndroidResources extends IncrementalTask {
     @Input
     public boolean isInstantRunMode() {
         return this.buildContext.isInInstantRunMode();
+    }
+
+    @Input
+    public File getMergeResourcesOutputDir() {
+        return mergeResourcesOutputDir;
+    }
+
+    public void setMergeResourcesOutputDir(File file) {
+        mergeResourcesOutputDir = file;
     }
 
     private FileCollection mergedResources;
