@@ -38,6 +38,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
@@ -230,8 +231,10 @@ public class AntennaPodPerformanceMatrixTest {
     }
 
     @NonNull
-    private BuildModel model() {
-        return project.model().withoutOfflineFlag();
+    private BuildModel model() throws IOException {
+        BuildModel buildModel = project.model().ignoreSyncIssues().withoutOfflineFlag();
+        PerformanceTestProjects.assertNoSyncErrors(buildModel.getMulti().getModelMap());
+        return buildModel;
     }
 
     public RunGradleTasks executor() {
