@@ -43,6 +43,7 @@ public final class ProjectOptions {
     private final ImmutableMap<BooleanOption, Boolean> booleanOptions;
     private final ImmutableMap<OptionalBooleanOption, Boolean> optionalBooleanOptions;
     private final ImmutableMap<IntegerOption, Integer> integerOptions;
+    private final ImmutableMap<LongOption, Long> longOptions;
     private final ImmutableMap<StringOption, String> stringOptions;
     private final ImmutableMap<String, String> testRunnerArgs;
     private final EnumOptions enumOptions;
@@ -52,6 +53,7 @@ public final class ProjectOptions {
         booleanOptions = readOptions(BooleanOption.values(), properties);
         optionalBooleanOptions = readOptions(OptionalBooleanOption.values(), properties);
         integerOptions = readOptions(IntegerOption.values(), properties);
+        longOptions = readOptions(LongOption.values(), properties);
         stringOptions = readOptions(StringOption.values(), properties);
         testRunnerArgs = readTestRunnerArgs(properties);
         enumOptions = EnumOptions.load(readOptions(EnumOptions.EnumOption.values(), properties));
@@ -116,6 +118,11 @@ public final class ProjectOptions {
     @Nullable
     public Integer get(IntegerOption option) {
         return integerOptions.getOrDefault(option, option.getDefaultValue());
+    }
+
+    @Nullable
+    public Long get(LongOption option) {
+        return longOptions.getOrDefault(option, option.getDefaultValue());
     }
 
     @Nullable

@@ -18,9 +18,9 @@ package com.android.build.gradle.tasks;
 
 import static com.android.SdkConstants.CURRENT_PLATFORM;
 import static com.android.SdkConstants.PLATFORM_WINDOWS;
-import static com.android.build.gradle.AndroidGradleOptions.DEPRECATED_NDK_COMPILE_LEASE;
-import static com.android.build.gradle.AndroidGradleOptions.DEPRECATED_NDK_COMPILE_LEASE_DAYS;
 import static com.android.build.gradle.AndroidGradleOptions.USE_DEPRECATED_NDK;
+import static com.android.build.gradle.options.LongOption.DEPRECATED_NDK_COMPILE_LEASE;
+import static com.android.build.gradle.options.NdkLease.DEPRECATED_NDK_COMPILE_LEASE_DAYS;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.AndroidGradleOptions;
@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NdkTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.variant.BaseVariantData;
+import com.android.build.gradle.options.NdkLease;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessInfoBuilder;
@@ -105,6 +106,8 @@ public class NdkCompile extends NdkTask {
 
     private boolean isForTesting;
 
+    private boolean isDeprecatedNdkCompileLeaseExpired;
+
     @OutputFile
     public File getGeneratedMakefile() {
         return generatedMakefile;
@@ -178,6 +181,11 @@ public class NdkCompile extends NdkTask {
         isForTesting = forTesting;
     }
 
+    @Input
+    public boolean isDeprecatedNdkCompileLeaseExpired() {
+        return isDeprecatedNdkCompileLeaseExpired;
+    }
+
     @SkipWhenEmpty
     @InputFiles
     public FileTree getSource() {
@@ -191,8 +199,8 @@ public class NdkCompile extends NdkTask {
                         + "set \n"
                         + "%s=%s in gradle.properties",
                 DEPRECATED_NDK_COMPILE_LEASE_DAYS,
-                DEPRECATED_NDK_COMPILE_LEASE,
-                AndroidGradleOptions.getFreshDeprecatedNdkCompileLease());
+                DEPRECATED_NDK_COMPILE_LEASE.getPropertyName(),
+                NdkLease.getFreshDeprecatedNdkCompileLease());
     }
 
     @TaskAction
@@ -212,7 +220,7 @@ public class NdkCompile extends NdkTask {
                             USE_DEPRECATED_NDK,
                             getAlternativesAndLeaseNotice(makefile, "#ndkCompile")));
         }
-        if (AndroidGradleOptions.isDeprecatedNdkCompileLeaseExpired(getProject())) {
+        if (isDeprecatedNdkCompileLeaseExpired) {
             writeMakefile(sourceFiles, makefile);
             // Normally, we would catch the user when they try to configure the NDK, but NDK do
             // not need to be configured by default.  Throw this exception during task execution in
@@ -273,7 +281,7 @@ public class NdkCompile extends NdkTask {
         getLogger()
                 .warn(
                         "Warning: Deprecated NDK integration enabled by "
-                                + DEPRECATED_NDK_COMPILE_LEASE
+                                + DEPRECATED_NDK_COMPILE_LEASE.getPropertyName()
                                 + " flag in gradle.properties will be removed from Android Gradle "
                                 + "plugin in the next version.\n"
                                 + getAlternatives(makefile, "#ndkCompile"));
@@ -445,6 +453,9 @@ public class NdkCompile extends NdkTask {
             ndkCompile.setNdkDirectory(
                     variantScope.getGlobalScope().getSdkHandler().getNdkFolder());
             ndkCompile.setForTesting(variantData.getType().isForTesting());
+            ndkCompile.isDeprecatedNdkCompileLeaseExpired =
+                    NdkLease.isDeprecatedNdkCompileLeaseExpired(
+                            variantScope.getGlobalScope().getProjectOptions());
             variantData.ndkCompileTask = ndkCompile;
 
             final GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
