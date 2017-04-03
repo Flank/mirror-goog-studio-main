@@ -1,9 +1,9 @@
 cc_binary(
-    name = "libagent.so",
+    name = "libperfa.so",
     srcs = [
         "agent.cc",
-        "jvmti_helper.h",
         "jvmti_helper.cc",
+        "jvmti_helper.h",
         "scoped_local_ref.h",
     ],
     copts = [
@@ -14,8 +14,8 @@ cc_binary(
     visibility = ["//visibility:public"],
     deps = [
         "//prebuilts/studio/jdk:jni_headers",
+        "//tools/base/profiler/native/agent",
         "//tools/base/profiler/native/utils:profiler_utils",
         "//tools/base/profiler/proto:profiler_cc_proto",
-        "//tools/base/profiler/native/perfa:perfa_static",
     ],
 )

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "perfa.h"
+#include "agent.h"
 
 #include <sys/types.h>
 #include <unistd.h>
@@ -26,7 +26,7 @@
 
 namespace {
 
-// If perfa is disconnected from perfd, grpc requests will begin backing up.
+// If the agent is disconnected from perfd, grpc requests will begin backing up.
 // Given that downloading a 1MB image would send 1000 1K chunk messages (plus
 // general network event messages), it seems reasonable to limit our queue to
 // something one or two magnitudes above that, to be safe.
@@ -40,34 +40,34 @@ using proto::HeartBeatResponse;
 using proto::InternalEventService;
 using proto::InternalMemoryService;
 using proto::InternalNetworkService;
-using proto::PerfaService;
+using proto::AgentService;
 using proto::CommonData;
 using std::lock_guard;
 
-Perfa& Perfa::Instance() {
-  static Perfa* instance = new Perfa(kServerAddress);
+Agent& Agent::Instance() {
+  static Agent* instance = new Agent(kServerAddress);
   return *instance;
 }
 
-Perfa::Perfa(const char* address)
-    : background_queue_("Studio:Perfa", kMaxBackgroundTasks) {
+Agent::Agent(const char* address)
+    : background_queue_("Studio:Agent", kMaxBackgroundTasks) {
   auto channel =
       grpc::CreateChannel(address, grpc::InsecureChannelCredentials());
-  service_stub_ = PerfaService::NewStub(channel);
+  service_stub_ = AgentService::NewStub(channel);
   event_stub_ = InternalEventService::NewStub(channel);
   memory_stub_ = InternalMemoryService::NewStub(channel);
   network_stub_ = InternalNetworkService::NewStub(channel);
 
   // Enable the heartbeat.
-  heartbeat_thread_ = std::thread(&Perfa::RunHeartbeatThread, this);
+  heartbeat_thread_ = std::thread(&Agent::RunHeartbeatThread, this);
 }
 
-void Perfa::AddPerfdStatusChangedCallback(PerfdStatusChanged callback) {
+void Agent::AddPerfdStatusChangedCallback(PerfdStatusChanged callback) {
   lock_guard<std::mutex> guard(callback_mutex_);
   perfd_status_changed_callbacks_.push_back(callback);
 }
 
-void Perfa::RunHeartbeatThread() {
+void Agent::RunHeartbeatThread() {
   SetThreadName("Studio:Heartbeat");
   Stopwatch stopwatch;
   bool was_perfd_alive = false;

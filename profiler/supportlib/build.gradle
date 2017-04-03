@@ -45,7 +45,7 @@ compileJava {
 
 dependencies {
     provided files(androidJar)
-    jni project(path: ":native", configuration: "perfa")
+    jni project(path: ":native", configuration: "supportjni")
     testCompile 'junit:junit:4.12'
 }
 

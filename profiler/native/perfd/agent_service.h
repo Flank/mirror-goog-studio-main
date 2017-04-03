@@ -13,21 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef PERFD_PERFA_SERVICE_H_
-#define PERFD_PERFA_SERVICE_H_
+#ifndef PERFD_AGENT_SERVICE_H_
+#define PERFD_AGENT_SERVICE_H_
 
 #include <grpc++/grpc++.h>
 
-#include "proto/perfa_service.grpc.pb.h"
+#include "proto/agent_service.grpc.pb.h"
 #include "utils/clock.h"
 
 #include <unordered_map>
 
 namespace profiler {
 
-class PerfaServiceImpl : public proto::PerfaService::Service {
+class AgentServiceImpl : public proto::AgentService::Service {
  public:
-  explicit PerfaServiceImpl(
+  explicit AgentServiceImpl(
       const Clock& clock,
       std::unordered_map<int32_t, int64_t>* heartbeat_timestamp_map)
       : clock_(clock), heartbeat_timestamp_map_(*heartbeat_timestamp_map) {}
@@ -38,10 +38,10 @@ class PerfaServiceImpl : public proto::PerfaService::Service {
 
  private:
   const Clock& clock_;
-  // used for marking the last time this service receives a ping from perfa.
+  // used for marking the last time this service receives a ping from the agent.
   std::unordered_map<int32_t, int64_t>& heartbeat_timestamp_map_;
 };
 
 }  // namespace profiler
 
-#endif  // PERFD_PERFA_SERVICE_H_
+#endif  // PERFD_AGENT_SERVICE_H_

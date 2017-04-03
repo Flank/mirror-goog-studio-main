@@ -24,7 +24,7 @@ namespace profiler {
 
 GenericComponent::GenericComponent(Daemon::Utilities* utilities)
     : generic_public_service_(utilities, &heartbeat_timestamp_map_),
-      perfa_service_(utilities->clock(), &heartbeat_timestamp_map_),
+      agent_service_(utilities->clock(), &heartbeat_timestamp_map_),
       clock_(utilities->clock()) {
   status_thread_ = std::thread(&GenericComponent::RunAgentStatusThread, this);
 }

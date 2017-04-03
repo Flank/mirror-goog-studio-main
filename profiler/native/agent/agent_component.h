@@ -13,17 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef PERFA_AGENT_COMPONENT_H_
-#define PERFA_AGENT_COMPONENT_H_
+#ifndef AGENT_AGENT_COMPONENT_H_
+#define AGENT_AGENT_COMPONENT_H_
 
 #include <grpc++/grpc++.h>
 
 namespace profiler {
 
-// The interface of a profiler component in perfa.
+// The interface of a profiler component in the agent.
 // TODO: Fill this placeholder.
 class AgentComponent {};
 
 }  // namespace profiler
 
-#endif  // PERFA_AGENT_COMPONENT_H_
+#endif  // AGENT_AGENT_COMPONENT_H_

@@ -1,17 +1,17 @@
 cc_binary(
-    name = "libperfa.so",
+    name = "libsupportjni.so",
     linkshared = 1,
     deps = [
-        ":perfa_static",
+        ":agent",
     ],
 )
 
 cc_library(
-    name = "perfa_static",
+    name = "agent",
     srcs = [
+        "agent.cc",
+        "agent.h",
         "agent_component.h",
-        "perfa.cc",
-        "perfa.h",
         "support/event_manager.cc",
         "support/event_manager.h",
         "support/event_passthrough.cc",

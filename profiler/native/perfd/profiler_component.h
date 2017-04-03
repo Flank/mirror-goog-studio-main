@@ -29,7 +29,7 @@ class ProfilerComponent {
   // Returns the service that talks to desktop clients (e.g., Studio).
   virtual grpc::Service* GetPublicService() = 0;
 
-  // Returns the service that talks to device clients (e.g., perfa).
+  // Returns the service that talks to device clients (e.g., the agent).
   virtual grpc::Service* GetInternalService() = 0;
 };
 

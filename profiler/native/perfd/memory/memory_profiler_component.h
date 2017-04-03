@@ -33,7 +33,7 @@ class MemoryProfilerComponent final : public ProfilerComponent {
   // Returns the service that talks to desktop clients (e.g., Studio).
   grpc::Service* GetPublicService() override { return &public_service_; }
 
-  // Returns the service that talks to device clients (e.g., perfa).
+  // Returns the service that talks to device clients (e.g., the agent).
   grpc::Service* GetInternalService() override { return &private_service_; }
 
  private:

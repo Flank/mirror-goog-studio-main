@@ -1,7 +1,7 @@
 task build {}
 
 configurations {
-    perfa
+    supportjni
 }
 
 def buildTypesList = ['Debug', 'Release'] as String[]
@@ -26,16 +26,16 @@ buildTypesList.each() { buildType ->
     project."precompileAndroid$buildType".dependsOn "compileToolsHostRelease"
 }
 
-task assemblePerfa(type: Copy, dependsOn: compileAndroidRelease) {
+task assembleSupportJni(type: Copy, dependsOn: compileAndroidRelease) {
     into "$buildDir/artifacts/lib"
     from("$buildDir/out/release") {
-        include "*/libperfa.so"
+        include "*/libsupportjni.so"
         exclude "host/**"
     }
 }
 
 artifacts {
-    perfa file: file("$buildDir/artifacts"), builtBy: assemblePerfa
+    supportjni file: file("$buildDir/artifacts"), builtBy: assembleSupportJni
 }
 
 // Linking "compileAndroid" to "build" will trigger it's build from IntelliJ, we don't want to do that just yet

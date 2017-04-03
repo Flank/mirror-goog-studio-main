@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef PERFA_BACKGROUND_QUEUE_H
-#define PERFA_BACKGROUND_QUEUE_H
+#ifndef UTILS_BACKGROUND_QUEUE_H
+#define UTILS_BACKGROUND_QUEUE_H
 
 #include <atomic>
 #include <string>
@@ -68,4 +68,4 @@ class BackgroundQueue {
 
 }  // namespace profiler
 
-#endif  // PERFA_BACKGROUND_QUEUE_H
+#endif  // UTILS_BACKGROUND_QUEUE_H

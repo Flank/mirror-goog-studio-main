@@ -17,13 +17,13 @@
 #include <jni.h>
 #include <unistd.h>
 
-#include "perfa/perfa.h"
+#include "agent/agent.h"
 #include "utils/clock.h"
 #include "utils/stopwatch.h"
 
 using grpc::ClientContext;
 using profiler::SteadyClock;
-using profiler::Perfa;
+using profiler::Agent;
 using profiler::proto::EmptyMemoryReply;
 using profiler::proto::VmStatsRequest;
 using profiler::proto::MemoryData;
@@ -39,9 +39,9 @@ void EnqueueVmStats(int32_t alloc_count, int32_t free_count, int32_t gc_count) {
   int64_t timestamp = GetClock().GetCurrentTime();
 
   int32_t pid = getpid();
-  Perfa::Instance().background_queue()->EnqueueTask(
+  Agent::Instance().background_queue()->EnqueueTask(
       [alloc_count, free_count, gc_count, pid, timestamp]() {
-        auto mem_stub = Perfa::Instance().memory_stub();
+        auto mem_stub = Agent::Instance().memory_stub();
 
         ClientContext context;
         EmptyMemoryReply reply;

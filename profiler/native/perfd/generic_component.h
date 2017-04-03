@@ -19,7 +19,7 @@
 #include <unordered_map>
 
 #include "perfd/daemon.h"
-#include "perfd/perfa_service.h"
+#include "perfd/agent_service.h"
 #include "perfd/profiler_component.h"
 #include "perfd/profiler_service.h"
 
@@ -40,8 +40,8 @@ class GenericComponent final : public ProfilerComponent {
     return &generic_public_service_;
   }
 
-  // Returns the service that talks to device clients (e.g., perfa).
-  grpc::Service* GetInternalService() override { return &perfa_service_; }
+  // Returns the service that talks to device clients (e.g., the agent).
+  grpc::Service* GetInternalService() override { return &agent_service_; }
 
   void AddAgentStatusChangedCallback(AgentStatusChanged callback) {
     agent_status_changed_callbacks_.push_back(callback);
@@ -51,10 +51,10 @@ class GenericComponent final : public ProfilerComponent {
   void RunAgentStatusThread();
 
   ProfilerServiceImpl generic_public_service_;
-  PerfaServiceImpl perfa_service_;
+  AgentServiceImpl agent_service_;
 
   const Clock& clock_;
-  // Mapping pid -> timestamp of last ping from perfa.
+  // Mapping pid -> timestamp of last ping from the agent.
   std::unordered_map<int32_t, int64_t> heartbeat_timestamp_map_;
   std::list<AgentStatusChanged> agent_status_changed_callbacks_;
   // Mapping pid -> latest status of heartbeat (Attached / Detached).

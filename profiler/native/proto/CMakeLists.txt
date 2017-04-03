@@ -6,7 +6,7 @@ set(PROTO_FILES cpu.proto
                 memory.proto
                 network.proto
                 graphics.proto
-                perfa_service.proto
+                agent_service.proto
                 profiler.proto
                 profiler_service.proto)
 
