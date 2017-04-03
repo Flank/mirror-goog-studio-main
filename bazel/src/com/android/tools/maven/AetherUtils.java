@@ -18,6 +18,7 @@ import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;
 import org.eclipse.aether.spi.connector.transport.TransporterFactory;
 import org.eclipse.aether.spi.localrepo.LocalRepositoryManagerFactory;
 import org.eclipse.aether.transport.http.HttpTransporterFactory;
+import org.eclipse.aether.util.artifact.JavaScopes;
 import org.eclipse.aether.util.graph.selector.AndDependencySelector;
 import org.eclipse.aether.util.graph.selector.ExclusionDependencySelector;
 import org.eclipse.aether.util.graph.selector.OptionalDependencySelector;
@@ -75,7 +76,8 @@ class AetherUtils {
     static AndDependencySelector buildDependencySelector(ImmutableList<Exclusion> exclusions) {
         return new AndDependencySelector(
                 new OptionalDependencySelector(),
-                new ScopeDependencySelector(ImmutableList.of("compile"), null),
+                new ScopeDependencySelector(
+                        ImmutableList.of(JavaScopes.COMPILE, JavaScopes.RUNTIME), null),
                 new ExclusionDependencySelector(exclusions));
     }
 }
