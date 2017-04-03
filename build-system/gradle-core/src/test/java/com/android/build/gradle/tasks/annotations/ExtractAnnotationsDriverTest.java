@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.List;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -43,6 +44,7 @@ public class ExtractAnnotationsDriverTest {
     @Rule
     public TemporaryFolder mTemporaryFolder = new TemporaryFolder();
 
+    @Ignore("Skipped due to http://b/36862785")
     @Test
     public void testProGuard() throws Exception {
         File androidJar = TestUtils.getPlatformFile("android.jar");
@@ -90,6 +92,7 @@ public class ExtractAnnotationsDriverTest {
         deleteFile(project);
     }
 
+    @Ignore("Skipped due to http://b/36862785")
     @Test
     public void testIncludeClassRetention() throws Exception {
         File androidJar = TestUtils.getPlatformFile("android.jar");
@@ -196,6 +199,7 @@ public class ExtractAnnotationsDriverTest {
         deleteFile(project);
     }
 
+    @Ignore("Skipped due to http://b/36862785")
     @Test
     public void testSkipClassRetention() throws Exception {
         File androidJar = TestUtils.getPlatformFile("android.jar");
