@@ -133,6 +133,57 @@ public class DesugarAppTest {
                 .containsClass("Landroid/support/v4/app/ActivityCompat;");
     }
 
+    @Test
+    public void testWithoutDexArchives()
+            throws IOException, InterruptedException, ProcessException {
+        enableDesugar();
+        TestFileUtils.appendToFile(
+                project.getBuildFile(), "\nandroid.defaultConfig.minSdkVersion 24");
+
+        Files.write(
+                project.getMainSrcDir().toPath().resolve("com/example/helloworld/Data.java"),
+                ImmutableList.of(
+                        "package com.example.helloworld;",
+                        "interface Data {",
+                        "    static void staticMethod() {",
+                        "    }",
+                        "    default void defaultMethod() {",
+                        "    }",
+                        "}"));
+
+        project.executor().withUseDexArchive(false).run("assembleDebug");
+        assertThat(project.getApk("debug")).containsClass("Lcom/example/helloworld/Data;");
+    }
+
+    @Test
+    public void testWithoutDexArchivesNoPredexing()
+            throws IOException, InterruptedException, ProcessException {
+        enableDesugar();
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\nandroid.defaultConfig.minSdkVersion 24\n"
+                        + "android.dexOptions.preDexLibraries false\n"
+                        + "dependencies {\n"
+                        + "    compile 'com.android.support:support-v4:"
+                        + GradleTestProject.SUPPORT_LIB_VERSION
+                        + "'\n"
+                        + "}");
+
+        Files.write(
+                project.getMainSrcDir().toPath().resolve("com/example/helloworld/Data.java"),
+                ImmutableList.of(
+                        "package com.example.helloworld;",
+                        "interface Data {",
+                        "    static void staticMethod() {",
+                        "    }",
+                        "    default void defaultMethod() {",
+                        "    }",
+                        "}"));
+
+        project.executor().withUseDexArchive(false).run("assembleDebug");
+        assertThat(project.getApk("debug")).containsClass("Lcom/example/helloworld/Data;");
+    }
+
     private void enableDesugar() throws IOException {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),

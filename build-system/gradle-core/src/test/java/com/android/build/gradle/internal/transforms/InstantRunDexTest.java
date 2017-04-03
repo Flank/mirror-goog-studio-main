@@ -186,11 +186,9 @@ public class InstantRunDexTest {
         when(project.getProperties()).then(
                 invocation -> ImmutableMap.of("android.injected.build.api", "15"));
 
-        InstantRunDex instantRunDex = new InstantRunDex(
-                variantScope,
-                ()-> dexByteCodeConverter,
-                dexOptions,
-                logger);
+        InstantRunDex instantRunDex =
+                new InstantRunDex(
+                        variantScope, () -> dexByteCodeConverter, dexOptions, logger, null);
 
         instantRunDex.transform(new TransformInvocationBuilder(context)
                 .addReferencedInputs(ImmutableList.of(getTransformInput(directoryInput)))
@@ -207,11 +205,9 @@ public class InstantRunDexTest {
                 invocation -> ImmutableMap.of("android.injected.build.api", "15"));
 
 
-        InstantRunDex instantRunDex = new InstantRunDex(
-                variantScope,
-                ()-> dexByteCodeConverter,
-                dexOptions,
-                logger);
+        InstantRunDex instantRunDex =
+                new InstantRunDex(
+                        variantScope, () -> dexByteCodeConverter, dexOptions, logger, null);
 
         instantRunDex.transform(new TransformInvocationBuilder(context)
                 .addOutputProvider(transformOutputProvider)
@@ -222,11 +218,8 @@ public class InstantRunDexTest {
     }
 
     private InstantRunDex getTestedDex(final List<File> convertedFiles) {
-        return  new InstantRunDex(
-                variantScope,
-                ()-> dexByteCodeConverter,
-                dexOptions,
-                logger) {
+        return new InstantRunDex(
+                variantScope, () -> dexByteCodeConverter, dexOptions, logger, null) {
 
             @Override
             protected JarClassesBuilder getJarClassBuilder(File outputFile) {

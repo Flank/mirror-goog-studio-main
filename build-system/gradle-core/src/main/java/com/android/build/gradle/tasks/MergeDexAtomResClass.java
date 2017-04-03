@@ -53,6 +53,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectories;
 import org.gradle.api.tasks.TaskAction;
 
@@ -89,7 +90,8 @@ public class MergeDexAtomResClass extends BaseTask {
                                 false,
                                 null,
                                 dexOptions,
-                                outputHandler);
+                                outputHandler,
+                                getMinSdkVersionForDx());
             } catch (Exception e) {
                 throw new TransformException(e);
             }
@@ -180,6 +182,12 @@ public class MergeDexAtomResClass extends BaseTask {
 
     public void setFlatAtomList(@NonNull Supplier<List<String>> flatAtomList) {
         this.flatAtomList = flatAtomList;
+    }
+
+    @Input
+    @Optional
+    public Integer getMinSdkVersionForDx() {
+        return scope.getMinSdkForDx();
     }
 
     private VariantScope scope;

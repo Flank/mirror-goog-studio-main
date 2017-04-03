@@ -21,22 +21,38 @@ import static com.android.testutils.truth.MoreTruth.assertThatDex;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.RunGradleTasks;
+import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.PerformanceTestProjects;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.instant.InstantRunTestUtils;
+import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.sdklib.AndroidVersion;
 import com.android.tools.fd.client.InstantRunArtifact;
+import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Expect;
 import java.io.File;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
+@RunWith(FilterableParameterized.class)
 public class AntennaPodInstantRunTest {
 
     @Rule public Expect expect = Expect.createAndEnableStackTrace();
+
+    @Parameterized.Parameter public VariantScope.Java8LangSupport java8LangSupport;
+
+    @Parameterized.Parameters
+    public static List<VariantScope.Java8LangSupport> getJava8LangSupport() {
+        return ImmutableList.of(
+                VariantScope.Java8LangSupport.EXTERNAL_PLUGIN,
+                VariantScope.Java8LangSupport.DESUGAR);
+    }
 
     @Rule
     public GradleTestProject mainProject =
@@ -47,6 +63,16 @@ public class AntennaPodInstantRunTest {
     @Before
     public void setUp() throws Exception {
         project = mainProject.getSubproject("AntennaPod");
+        if (java8LangSupport == VariantScope.Java8LangSupport.DESUGAR) {
+            TestFileUtils.searchAndReplace(
+                    project.getSubproject("AntennaPod/app").getBuildFile(),
+                    "apply plugin: \"me.tatarka.retrolambda\"",
+                    "");
+            TestFileUtils.searchAndReplace(
+                    project.getSubproject("AntennaPod/core").getBuildFile(),
+                    "apply plugin: \"me.tatarka.retrolambda\"",
+                    "");
+        }
         PerformanceTestProjects.initializeAntennaPod(mainProject);
     }
 

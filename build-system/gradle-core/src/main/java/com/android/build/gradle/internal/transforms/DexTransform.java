@@ -78,6 +78,7 @@ public class DexTransform extends Transform {
     @NonNull private final TargetInfo targetInfo;
     @NonNull private final DexByteCodeConverter dexByteCodeConverter;
     @NonNull private final ErrorReporter errorReporter;
+    @Nullable private Integer minSdkVersion;
 
     public DexTransform(
             @NonNull DexOptions dexOptions,
@@ -86,7 +87,8 @@ public class DexTransform extends Transform {
             @Nullable FileCollection mainDexListFile,
             @NonNull TargetInfo targetInfo,
             @NonNull DexByteCodeConverter dexByteCodeConverter,
-            @NonNull ErrorReporter errorReporter) {
+            @NonNull ErrorReporter errorReporter,
+            @Nullable Integer minSdkVersion) {
         this.dexOptions = dexOptions;
         this.dexingMode = dexingMode;
         this.preDexEnabled = preDexEnabled;
@@ -94,6 +96,7 @@ public class DexTransform extends Transform {
         this.targetInfo = targetInfo;
         this.dexByteCodeConverter = dexByteCodeConverter;
         this.errorReporter = errorReporter;
+        this.minSdkVersion = minSdkVersion;
     }
 
     @NonNull
@@ -142,7 +145,7 @@ public class DexTransform extends Transform {
         try {
             // ATTENTION: if you add something here, consider adding the value to DexKey - it needs
             // to be saved if affects how dx is invoked.
-            Map<String, Object> params = Maps.newHashMapWithExpectedSize(7);
+            Map<String, Object> params = Maps.newHashMapWithExpectedSize(8);
 
             params.put("optimize", true);
             params.put("predex", preDexEnabled);
@@ -155,6 +158,9 @@ public class DexTransform extends Transform {
 
             BuildToolInfo buildTools = targetInfo.getBuildTools();
             params.put("build-tools", buildTools.getRevision().toString());
+            if (minSdkVersion != null) {
+                params.put("min-sdk-version", minSdkVersion);
+            }
 
             return params;
         } catch (Exception e) {
@@ -212,7 +218,8 @@ public class DexTransform extends Transform {
                     dexingMode.isMultiDex(),
                     mainDexList,
                     dexOptions,
-                    outputHandler);
+                    outputHandler,
+                    minSdkVersion);
         } catch (Exception e) {
             throw new TransformException(e);
         }

@@ -19,6 +19,7 @@ package com.android.builder.core;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.process.JavaProcessInfo;
 import com.android.ide.common.process.ProcessEnvBuilder;
 import com.android.ide.common.process.ProcessException;
@@ -36,66 +37,79 @@ import java.util.Set;
  */
 public class DexProcessBuilder extends ProcessEnvBuilder<DexProcessBuilder> {
 
-    @NonNull
-    private final File mOutputFile;
-    private boolean mVerbose = false;
-    private boolean mMultiDex = false;
-    private File mMainDexList = null;
-    private Set<File> mInputs = Sets.newHashSet();
+    @NonNull private final File outputFile;
+    private boolean verbose = false;
+    private boolean multiDex = false;
+    @Nullable private File mainDexList = null;
+    @NonNull private Set<File> inputs = Sets.newHashSet();
+    @Nullable private Integer minSdkVersion;
 
     public DexProcessBuilder(@NonNull File outputFile) {
-        mOutputFile = outputFile;
+        this.outputFile = outputFile;
     }
 
     @NonNull
     public DexProcessBuilder setVerbose(boolean verbose) {
-        mVerbose = verbose;
+        this.verbose = verbose;
         return this;
     }
 
     @NonNull
     public DexProcessBuilder setMultiDex(boolean multiDex) {
-        mMultiDex = multiDex;
+        this.multiDex = multiDex;
         return this;
     }
 
     @NonNull
-    public DexProcessBuilder setMainDexList(File mainDexList) {
-        mMainDexList = mainDexList;
+    public DexProcessBuilder setMainDexList(@Nullable File mainDexList) {
+        this.mainDexList = mainDexList;
         return this;
     }
 
     @NonNull
-    public DexProcessBuilder addInput(File input) {
-        mInputs.add(input);
+    public DexProcessBuilder addInput(@NonNull File input) {
+        inputs.add(input);
         return this;
     }
 
     @NonNull
     public DexProcessBuilder addInputs(@NonNull Collection<File> inputs) {
-        mInputs.addAll(inputs);
+        this.inputs.addAll(inputs);
+        return this;
+    }
+
+    @Nullable
+    public Integer getMinSdkVersion() {
+        return minSdkVersion;
+    }
+
+    @NonNull
+    public DexProcessBuilder setMinSdkVersion(@Nullable Integer minSdkVersion) {
+        this.minSdkVersion = minSdkVersion;
         return this;
     }
 
     @NonNull
     public File getOutputFile() {
-        return mOutputFile;
+        return outputFile;
     }
 
     public boolean isVerbose() {
-        return mVerbose;
+        return verbose;
     }
 
     public boolean isMultiDex() {
-        return mMultiDex;
+        return multiDex;
     }
 
+    @Nullable
     public File getMainDexList() {
-        return mMainDexList;
+        return mainDexList;
     }
 
+    @NonNull
     public Set<File> getInputs() {
-        return mInputs;
+        return inputs;
     }
 
     @NonNull
@@ -124,7 +138,7 @@ public class DexProcessBuilder extends ProcessEnvBuilder<DexProcessBuilder> {
 
         builder.addArgs("--dex");
 
-        if (mVerbose) {
+        if (verbose) {
             builder.addArgs("--verbose");
         }
 
@@ -139,11 +153,11 @@ public class DexProcessBuilder extends ProcessEnvBuilder<DexProcessBuilder> {
             builder.addArgs("--num-threads=" + threadCount);
         }
 
-        if (mMultiDex) {
+        if (multiDex) {
             builder.addArgs("--multi-dex");
 
-            if (mMainDexList != null ) {
-                builder.addArgs("--main-dex-list", mMainDexList.getAbsolutePath());
+            if (mainDexList != null) {
+                builder.addArgs("--main-dex-list", mainDexList.getAbsolutePath());
             }
         }
 
@@ -151,7 +165,7 @@ public class DexProcessBuilder extends ProcessEnvBuilder<DexProcessBuilder> {
             builder.addArgs(arg);
         }
 
-        builder.addArgs("--output", mOutputFile.getAbsolutePath());
+        builder.addArgs("--output", outputFile.getAbsolutePath());
 
         // input
         builder.addArgs(getFilesToAdd());
@@ -163,7 +177,7 @@ public class DexProcessBuilder extends ProcessEnvBuilder<DexProcessBuilder> {
     public List<String> getFilesToAdd()
             throws ProcessException {
         // remove non-existing files.
-        Set<File> existingFiles = Sets.filter(mInputs, input -> input != null && input.exists());
+        Set<File> existingFiles = Sets.filter(inputs, input -> input != null && input.exists());
 
         if (existingFiles.isEmpty()) {
             throw new ProcessException("No files to pass to dex.");

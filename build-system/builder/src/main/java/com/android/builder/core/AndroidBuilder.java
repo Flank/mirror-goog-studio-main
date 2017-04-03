@@ -205,8 +205,13 @@ public class AndroidBuilder {
      */
     public void setTargetInfo(@NonNull TargetInfo targetInfo) {
         mTargetInfo = targetInfo;
-        mDexByteCodeConverter = new DexByteCodeConverter(
-                getLogger(), mTargetInfo, mJavaProcessExecutor, mVerboseExec);
+        mDexByteCodeConverter =
+                new DexByteCodeConverter(
+                        getLogger(),
+                        mTargetInfo,
+                        mJavaProcessExecutor,
+                        mVerboseExec,
+                        getErrorReporter());
 
         if (mTargetInfo.getBuildTools().getRevision().compareTo(MIN_BUILD_TOOLS_REV) < 0) {
             mErrorReporter.handleSyncError(
@@ -1342,6 +1347,7 @@ public class AndroidBuilder {
      * @param multiDex whether multidex is enabled
      * @param dexOptions dex options
      * @param processOutputHandler output handler to use
+     * @param minSdkVersion min sdk version passed to dx
      * @throws IOException failed
      * @throws InterruptedException failed
      * @throws ProcessException failed
@@ -1351,23 +1357,26 @@ public class AndroidBuilder {
             @NonNull File outFile,
             boolean multiDex,
             @NonNull DexOptions dexOptions,
-            @NonNull ProcessOutputHandler processOutputHandler)
+            @NonNull ProcessOutputHandler processOutputHandler,
+            @Nullable Integer minSdkVersion)
             throws IOException, InterruptedException, ProcessException {
         checkState(mTargetInfo != null,
                 "Cannot call preDexLibrary() before setTargetInfo() is called.");
 
         getLogger().verbose("AndroidBuilder::preDexLibrary %1$s", inputFile.getAbsolutePath());
         if (inputFile.isFile()) {
-            PreDexCache.getCache().preDexLibrary(
-                    this,
-                    inputFile,
-                    outFile,
-                    multiDex,
-                    dexOptions,
-                    processOutputHandler);
+            PreDexCache.getCache()
+                    .preDexLibrary(
+                            this,
+                            inputFile,
+                            outFile,
+                            multiDex,
+                            dexOptions,
+                            processOutputHandler,
+                            minSdkVersion);
         } else {
             preDexLibraryNoCache(
-                    inputFile, outFile, multiDex, dexOptions, processOutputHandler);
+                    inputFile, outFile, multiDex, dexOptions, processOutputHandler, minSdkVersion);
         }
     }
 
@@ -1378,6 +1387,8 @@ public class AndroidBuilder {
      * @param outFile the output file or folder if multi-dex is enabled.
      * @param multiDex whether multidex is enabled.
      * @param dexOptions the dex options
+     * @param processOutputHandler handles the logging output
+     * @param minSdkVersion min sdk passed to dx
      * @return the list of generated files.
      * @throws ProcessException failed
      */
@@ -1387,7 +1398,8 @@ public class AndroidBuilder {
             @NonNull File outFile,
             boolean multiDex,
             @NonNull DexOptions dexOptions,
-            @NonNull ProcessOutputHandler processOutputHandler)
+            @NonNull ProcessOutputHandler processOutputHandler,
+            @Nullable Integer minSdkVersion)
             throws ProcessException, IOException, InterruptedException {
         checkNotNull(inputFile, "inputFile cannot be null.");
         checkNotNull(outFile, "outFile cannot be null.");
@@ -1405,7 +1417,8 @@ public class AndroidBuilder {
 
         builder.setVerbose(mVerboseExec)
                 .setMultiDex(multiDex)
-                .addInput(inputFile);
+                .addInput(inputFile)
+                .setMinSdkVersion(minSdkVersion);
 
         getDexByteCodeConverter().runDexer(builder, dexOptions, processOutputHandler);
 
