@@ -17,6 +17,9 @@ def main():
   elif sys.platform == 'darwin':
     platform = 'darwin-x86_64'
     jdk_subdir = os.path.join('mac', 'Contents', 'Home')
+  elif sys.platform == 'win32':
+    platform = 'windows-x86_64'
+    jdk_subdir = 'win64'
   else:
     sys.exit('Platform %s is not yet supported.' % sys.platform)
 
@@ -24,11 +27,11 @@ def main():
                        'bazel-real')
   env = {
       'CC':
-          '/usr/bin/gcc',
+          os.environ.get('GCC', '/usr/bin/gcc'),
       'JAVA_HOME':
           os.path.join(workspace, 'prebuilts', 'studio', 'jdk', jdk_subdir),
       'TERM':
-          os.environ.get('TERM') or '',
+          os.environ.get('TERM', ''),
   }
   args = sys.argv[1:]
 
@@ -48,6 +51,19 @@ def main():
 
   if sys.platform == 'darwin':
     args.insert(0, '--watchfs')
+  elif sys.platform == 'win32':
+    # Bazel for windows requires a couple of extra env vars be set
+    # SYSTEMROOT must be defined to run a win .exe; otherwise, subprocess.call
+    # will hang.
+    env['SYSTEMROOT'] = 'C:\\Windows'
+    env['BAZEL_PYTHON'] = os.environ.get('BAZEL_PYTHON')
+    env['BAZEL_SH'] = os.environ.get('BAZEL_SH')
+    # Only pass in BAZEL_VS if explicitly defined. Otherwise, leave it unset,
+    # which causes Bazel to auto-search for the installation (this is good
+    # enough for most developers).
+    vs_env = os.environ.get('BAZEL_VS')
+    if vs_env:
+      env['BAZEL_VS'] = vs_env
 
   sys.exit(subprocess.call([bazel] + args, env=env))
 
