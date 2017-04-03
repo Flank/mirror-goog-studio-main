@@ -3166,6 +3166,33 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                         + "1 errors, 0 warnings\n");
     }
 
+    public void testCalendar() {
+        // Regression test for
+        // https://code.google.com/p/android/issues/detail?id=251256 and
+        // http://youtrack.jetbrains.com/issue/IDEA-144891
+        //noinspection all // Sample code
+        lint().files(
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "import java.util.Calendar;\n"
+                        + "\n"
+                        + "public class CalendarTest {\n"
+                        + "    public void test() {\n"
+                        + "        Calendar now = Calendar.getInstance();\n"
+                        + "        now.get(Calendar.DAY_OF_MONTH);\n"
+                        + "        now.get(Calendar.HOUR_OF_DAY);\n"
+                        + "        now.get(Calendar.MINUTE);\n"
+                        + "        if (now.get(Calendar.MONTH) == Calendar.JANUARY) {\n"
+                        + "        }\n"
+                        + "        now.set(Calendar.HOUR_OF_DAY, 50);\n"
+                        + "        now.set(2017, 3, 29);\n"
+                        + "    }\n"
+                        + "}\n"))
+                .run()
+                .expectClean();
+    }
+
     public static final String SUPPORT_JAR_PATH = "libs/support-annotations.jar";
     private TestFile mSupportJar = base64gzip(SUPPORT_JAR_PATH,
             SUPPORT_ANNOTATIONS_JAR_BASE64_GZIP);

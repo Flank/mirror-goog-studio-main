@@ -2006,16 +2006,24 @@ public class ApiDetector extends ResourceXmlDetector
         @Override
         public void visitMethod(@NonNull UMethod method) {
             // API check for default methods
-            if (method.getModifierList().hasExplicitModifier(PsiModifier.DEFAULT)) {
-                int api = 24; // minSdk for default methods
-                int minSdk = getMinSdk(mContext);
+            PsiClass containingClass = method.getContainingClass();
+            if (containingClass != null && containingClass.isInterface()) {
+                PsiModifierList methodModifierList = method.getModifierList();
+                if (methodModifierList.hasExplicitModifier(PsiModifier.DEFAULT) ||
+                        methodModifierList.hasExplicitModifier(PsiModifier.STATIC)) {
+                    int api = 24; // minSdk for default methods
+                    int minSdk = getMinSdk(mContext);
 
-                if (!isSuppressed(mContext, api, method, minSdk)) {
-                    Location location = mContext.getLocation(method);
-                    String message = String.format("Default method requires API level %1$d "
-                            + "(current min is %2$d)", api,
-                            Math.max(minSdk, getTargetApi(method)));
-                    mContext.report(UNSUPPORTED, method, location, message);
+                    if (!isSuppressed(mContext, api, method, minSdk)) {
+                        Location location = mContext.getLocation(method);
+                        String message = String.format("%1$s method requires API level %2$d "
+                                        + "(current min is %3$d)",
+                                methodModifierList.hasExplicitModifier(PsiModifier.DEFAULT)
+                                        ? "Default" : "Static interface ",
+                                api,
+                                Math.max(minSdk, getTargetApi(method)));
+                        mContext.report(UNSUPPORTED, method, location, message);
+                    }
                 }
             }
 
@@ -2055,8 +2063,6 @@ public class ApiDetector extends ResourceXmlDetector
 
                             // TODO: Don't complain if it's annotated with @Override; that means
                             // somehow the build target isn't correct.
-
-                            PsiClass containingClass = method.getContainingClass();
                             if (containingClass != null) {
                                 String className = containingClass.getName();
                                 String fullClassName = containingClass.getQualifiedName();
