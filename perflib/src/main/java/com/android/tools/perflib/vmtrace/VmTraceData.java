@@ -300,7 +300,7 @@ public class VmTraceData {
         }
 
         private long createUniqueMethodIdForThread(int threadId) {
-            long id = Long.MAX_VALUE - mThreads.indexOfKey(threadId);
+            long id = Long.MAX_VALUE - threadId;
             assert mMethods.get(id) == null :
                     "Unexpected error while attempting to create a unique key - key already exists";
             MethodInfo info = new MethodInfo(id, mThreads.get(threadId), "", "", "", 0);
