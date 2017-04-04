@@ -89,5 +89,6 @@
     </orderEntry>
     <orderEntry type="library" scope="TEST" name="KotlinJavaRuntime" level="project" />
     <orderEntry type="module" module-name="gradle-api" />
+    <orderEntry type="module" module-name="java-lib-model" />
   </component>
 </module>
