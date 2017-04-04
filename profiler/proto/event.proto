@@ -104,47 +104,39 @@ message ActivityData {
   int64 hash = 2;
   // Application Id this activity is associated with.
   int32 process_id = 3;
-  // State changes that took place on this activity.
+  // State changes for activities and fragments.
   repeated ActivityStateData state_changes = 4;
+
+  // TODO: Expand this to a oneof if more components need to add specific information.
+  // Additional data needed by specific UI components
+  FragmentData fragment_data = 5;
 }
 
 message ActivityStateData {
     enum ActivityState {
       UNSPECIFIED = 0;
-      // State when an activity gets created
-      CREATED = 1;
-      STARTED = 2;
-      RESUMED = 3;
-      PAUSED = 4;
-      STOPPED = 5;
-      SAVED = 6;
-      // Event to fire when an activity gets destroyed
-      DESTROYED = 7;
-      RESTARTED = 8;
-      // TODO: Flush this out to map the activity lifecycle.
+      ADDED = 1;
+      ATTACHED = 2;
+      CREATED = 3;
+      CREATEDVIEW = 4;
+      ACTIVITYCREATED = 5;
+      STARTED = 6;
+      RESUMED = 7;
+      PAUSED = 8;
+      STOPPED = 9;
+      SAVED = 10;
+      DETACHED = 11;
+      REMOVED = 12;
+      DESTROYED = 13;
+      DESTROYEDVIEW = 14;
+      RESTARTED = 15;
     }
   int64 timestamp = 1;
   ActivityState state = 2;
 }
 
-//TODO: Send fragment data to studio.
-message FragmentEventData {
-  enum FragmentState {
-    UNSPECIFIED = 0;
-    ADDED = 1;
-    REMOVED = 2;
-    ATTACHED = 3;
-    CREATED= 4;
-    CREATEDVIEW = 5;
-    ACTIVITYCREATED = 6;
-    STARTED = 7;
-    RESUMED = 8;
-    PAUSED = 9;
-    STOPPED = 10;
-    DESTROYEDVIEW = 11;
-    DESTROYED = 12;
-    DETACHED = 13;
-  }
+message FragmentData {
+  int64 activity_context_hash = 1;
 }
 
 message EventDataRequest {

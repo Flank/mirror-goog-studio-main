@@ -29,7 +29,7 @@ using profiler::Perfa;
 using profiler::proto::ActivityData;
 using profiler::proto::ActivityStateData;
 using profiler::proto::SystemData;
-using profiler::proto::FragmentEventData;
+using profiler::proto::FragmentData;
 
 using profiler::proto::EmptyEventResponse;
 using profiler::JStringWrapper;
@@ -66,11 +66,9 @@ void SendKeyboardEvent(JStringWrapper& text, int64_t event_down_time) {
       });
 }
 
-// TODO: Combine activity and fragment protos, fragments are a subset of
-// activity.
-void EnqueueActivityEvent(JNIEnv* env, const jstring& name,
-                          const ActivityStateData::ActivityState& state,
-                          int hash) {
+void EnqueueActivityDataEvent(JNIEnv* env, const jstring& name,
+                               const ActivityStateData::ActivityState& state, int hash,
+                               FragmentData* fragment) {
   JStringWrapper activity_name(env, name);
   int64_t timestamp = GetClock().GetCurrentTime();
   int32_t pid = getpid();
@@ -78,16 +76,27 @@ void EnqueueActivityEvent(JNIEnv* env, const jstring& name,
   activity.set_name(activity_name.get());
   activity.set_process_id(pid);
   activity.set_hash(hash ^ pid);
+  if (fragment != nullptr) {
+    activity.mutable_fragment_data()->set_activity_context_hash(
+        fragment->activity_context_hash() ^ pid);
+  }
   ActivityStateData* state_data = activity.add_state_changes();
   state_data->set_state(state);
   state_data->set_timestamp(timestamp);
   EventManager::Instance().CacheAndEnqueueActivityEvent(activity);
 }
 
+void EnqueueActivityEvent(JNIEnv* env, const jstring& name,
+                          const ActivityStateData::ActivityState& state, int hash) {
+  EnqueueActivityDataEvent(env, name, state, hash, nullptr);
+}
+
 void EnqueueFragmentEvent(JNIEnv* env, const jstring& name,
-                          const FragmentEventData::FragmentState& state,
-                          int hash) {
-  // TODO using Perfa::Instance().background_queue()
+                          const ActivityStateData::ActivityState& state, int hash,
+                          int activityContextHash) {
+  FragmentData fragment;
+  fragment.set_activity_context_hash(activityContextHash);
+  EnqueueActivityDataEvent(env, name, state, hash, &fragment);
 }
 }  // namespace
 
@@ -172,14 +181,15 @@ Java_com_android_tools_profiler_support_activity_ActivityWrapper_sendActivityOnR
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_profilers_EventProfiler_sendFragmentAdded(
-    JNIEnv* env, jobject thiz, jstring jname, jint jhash) {
-  EnqueueFragmentEvent(env, jname, FragmentEventData::ADDED, jhash);
+    JNIEnv* env, jobject thiz, jstring jname, jint jhash, jint activity_hash) {
+  EnqueueFragmentEvent(env, jname, ActivityStateData::ADDED, jhash, activity_hash);
 }
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_profilers_EventProfiler_sendFragmentRemoved(
-    JNIEnv* env, jobject thiz, jstring jname, jint jhash) {
-  EnqueueFragmentEvent(env, jname, FragmentEventData::REMOVED, jhash);
+    JNIEnv* env, jobject thiz, jstring jname, jint jhash, jint activity_hash) {
+  EnqueueFragmentEvent(env, jname, ActivityStateData::REMOVED, jhash,
+                       activity_hash);
 }
 
 JNIEXPORT void JNICALL
