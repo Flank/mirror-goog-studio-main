@@ -63,7 +63,6 @@ import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.AbiSplitOptions;
 import com.android.build.gradle.internal.dsl.AnnotationProcessorOptions;
 import com.android.build.gradle.internal.dsl.CoreAnnotationProcessorOptions;
-import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreJavaCompileOptions;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
@@ -81,6 +80,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.AndroidTaskRegistry;
 import com.android.build.gradle.internal.scope.BuildOutputs;
+import com.android.build.gradle.internal.scope.CodeShrinker;
 import com.android.build.gradle.internal.scope.DefaultGradlePackagingScope;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.PackagingScope;
@@ -2040,13 +2040,9 @@ public abstract class TaskManager {
         }
 
         // ----- Minify next -----
+        maybeCreateJavaCodeShrinkerTransform(tasks, variantScope);
 
-        boolean runJavaCodeShrinker = runJavaCodeShrinker(variantScope);
-        if (runJavaCodeShrinker) {
-            createJavaCodeShrinkerTransform(tasks, variantScope);
-        }
-
-        maybeCreateShrinkResourcesTransform(tasks, variantScope);
+        maybeCreateResourcesShrinkerTransform(tasks, variantScope);
 
         // ----- 10x support
 
@@ -2076,8 +2072,7 @@ public abstract class TaskManager {
         Optional<AndroidTask<TransformTask>> multiDexClassListTask;
 
         if (dexingMode == DexingMode.LEGACY_MULTIDEX) {
-            boolean proguardInPipeline =
-                    runJavaCodeShrinker && config.getBuildType().isUseProguard();
+            boolean proguardInPipeline = variantScope.getCodeShrinker() == CodeShrinker.PROGUARD;
 
             // If ProGuard will be used, we'll end up with a "fat" jar anyway. If we're using the
             // new dexing pipeline, we'll use the new MainDexListTransform below, so there's no need
@@ -2310,16 +2305,16 @@ public abstract class TaskManager {
     }
 
     private boolean runJavaCodeShrinker(VariantScope variantScope) {
-        return variantScope.useJavaCodeShrinker() || isTestedAppMinified(variantScope);
+        return variantScope.getCodeShrinker() != null || isTestedAppObfuscated(variantScope);
     }
 
     /**
      * Default values if {@code false}, only {@link TestApplicationTaskManager} overrides this,
-     * because tested applications might be minified.
+     * because tested applications might be obfuscated.
      *
-     * @return if the tested application is minified
+     * @return if the tested application is obfuscated
      */
-    protected boolean isTestedAppMinified(@NonNull VariantScope variantScope) {
+    protected boolean isTestedAppObfuscated(@NonNull VariantScope variantScope) {
         return false;
     }
 
@@ -2984,13 +2979,18 @@ public abstract class TaskManager {
         return jacocoAgentTask;
     }
 
-    protected void createJavaCodeShrinkerTransform(
+    protected void maybeCreateJavaCodeShrinkerTransform(
             @NonNull TaskFactory taskFactory, @NonNull final VariantScope variantScope) {
-        doCreateJavaCodeShrinkerTransform(
-                taskFactory,
-                variantScope,
-                // No mapping in non-test modules.
-                null);
+        CodeShrinker codeShrinker = variantScope.getCodeShrinker();
+
+        if (codeShrinker != null) {
+            doCreateJavaCodeShrinkerTransform(
+                    taskFactory,
+                    variantScope,
+                    // No mapping in non-test modules.
+                    codeShrinker,
+                    null);
+        }
     }
 
     /**
@@ -3000,19 +3000,21 @@ public abstract class TaskManager {
     protected final void doCreateJavaCodeShrinkerTransform(
             @NonNull TaskFactory taskFactory,
             @NonNull final VariantScope variantScope,
+            @NonNull CodeShrinker codeShrinker,
             @Nullable FileCollection mappingFileCollection) {
-        if (variantScope
-                .getVariantData()
-                .getVariantConfiguration()
-                .getBuildType()
-                .isUseProguard()) {
-            createProguardTransform(taskFactory, variantScope, mappingFileCollection);
-        } else {
-            // Since the built-in class shrinker does not obfuscate, there's no point running
-            // it on the test FULL_APK (it also doesn't have a -dontshrink mode).
-            if (variantScope.getTestedVariantData() == null) {
-                createBuiltInShrinkerTransform(variantScope, taskFactory);
-            }
+        switch (codeShrinker) {
+            case PROGUARD:
+                createProguardTransform(taskFactory, variantScope, mappingFileCollection);
+                break;
+            case ANDROID_GRADLE:
+                // Since the built-in class shrinker does not obfuscate, there's no point running
+                // it on the test FULL_APK (it also doesn't have a -dontshrink mode).
+                if (variantScope.getTestedVariantData() == null) {
+                    createBuiltInShrinkerTransform(variantScope, taskFactory);
+                }
+                break;
+            default:
+                throw new AssertionError("Unknown value " + codeShrinker);
         }
     }
 
@@ -3062,7 +3064,7 @@ public abstract class TaskManager {
             // register the mapping file which may or may not exists (only exist if obfuscation)
             // is enabled.
             transform.applyTestedMapping(testedVariantData.getMappingFile());
-        } else if (isTestedAppMinified(variantScope)) {
+        } else if (isTestedAppObfuscated(variantScope)) {
             applyProguardDefaultsForTest(transform);
             // All -dontwarn rules for test dependencies should go in here:
             transform.setConfigurationFiles(
@@ -3130,38 +3132,9 @@ public abstract class TaskManager {
      * Checks if {@link ShrinkResourcesTransform} should be added to the build pipeline and either
      * adds it or registers a {@link SyncIssue} with the reason why it was skipped.
      */
-    protected void maybeCreateShrinkResourcesTransform(
+    protected void maybeCreateResourcesShrinkerTransform(
             @NonNull TaskFactory taskFactory, @NonNull VariantScope scope) {
-        CoreBuildType buildType = scope.getVariantConfiguration().getBuildType();
-
-        if (!buildType.isShrinkResources()) {
-            // The user didn't enable resource shrinking, silently move on.
-            return;
-        }
-
         if (!scope.useResourceShrinker()) {
-            // The user enabled resource shrinking, but we disabled it for some reason. Try to
-            // explain.
-
-            if (getIncrementalMode(scope.getVariantConfiguration()) != IncrementalMode.NONE) {
-                logger.warn(
-                        "Instant Run: Resource shrinker automatically disabled for {}.",
-                        scope.getVariantConfiguration().getFullName());
-                return;
-            }
-
-            if (!scope.useJavaCodeShrinker()) {
-                androidBuilder
-                        .getErrorReporter()
-                        .handleSyncError(
-                                null,
-                                SyncIssue.TYPE_GENERIC,
-                                "shrinkResources requires minifyEnabled to be turned on. See "
-                                        + "http://d.android.com/r/tools/shrink-resources.html "
-                                        + "for more information.");
-                return;
-            }
-
             return;
         }
 

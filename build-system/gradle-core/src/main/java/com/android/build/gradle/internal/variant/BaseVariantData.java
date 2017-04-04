@@ -199,8 +199,10 @@ public abstract class BaseVariantData implements TaskContainer {
                             variantConfiguration.getMinSdkVersion().getApiLevel()));
         }
 
-        scope = new VariantScopeImpl(
+        scope =
+                new VariantScopeImpl(
                         globalScope,
+                        errorReporter,
                         new TransformManager(
                                 globalScope.getProject(),
                                 taskManager.getAndroidTasks(),

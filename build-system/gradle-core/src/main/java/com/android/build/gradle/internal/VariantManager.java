@@ -1057,7 +1057,7 @@ public class VariantManager implements VariantModel {
                 ProcessProfileWriter.addVariant(project.getPath(), variantData.getName())
                         .setIsDebug(variantConfig.getBuildType().isDebuggable())
                         .setUseJack(variantConfig.isJackEnabled())
-                        .setMinifyEnabled(variantScope.useJavaCodeShrinker())
+                        .setMinifyEnabled(variantScope.getCodeShrinker() != null)
                         .setUseMultidex(variantConfig.isMultiDexEnabled())
                         .setUseLegacyMultidex(variantConfig.isLegacyMultiDexMode())
                         .setVariantType(variantData.getType().getAnalyticsVariantType());

@@ -26,6 +26,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.scope.AndroidTask;
+import com.android.build.gradle.internal.scope.CodeShrinker;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
@@ -148,16 +149,19 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
     }
 
     @Override
-    protected boolean isTestedAppMinified(@NonNull VariantScope variantScope) {
+    protected boolean isTestedAppObfuscated(@NonNull VariantScope variantScope) {
         return getTestTargetMapping(variantScope) != null;
     }
 
     @Override
-    protected void createJavaCodeShrinkerTransform(
+    protected void maybeCreateJavaCodeShrinkerTransform(
             @NonNull TaskFactory taskFactory, @NonNull VariantScope variantScope) {
-        if (getTestTargetMapping(variantScope) != null) {
+        if (isTestedAppObfuscated(variantScope)) {
             doCreateJavaCodeShrinkerTransform(
-                    taskFactory, variantScope, getTestTargetMapping(variantScope));
+                    taskFactory,
+                    variantScope,
+                    CodeShrinker.PROGUARD,
+                    getTestTargetMapping(variantScope));
         }
     }
 

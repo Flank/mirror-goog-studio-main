@@ -382,7 +382,7 @@ public abstract class AbstractAppPluginDslTest<
         }
     }
 
-    public void testProguardDsl() throws Exception {
+    public void testOldProguardDsl() throws Exception {
         Eval.me(
                 "project",
                 project,
@@ -434,7 +434,7 @@ public abstract class AbstractAppPluginDslTest<
         checkProguardFiles(expected);
     }
 
-    public void testSettingLanguageLevelFromCompileSdk_dontOverride() {
+    public void testSettingLanguageLevelFromCompileSdk_doNotOverride() {
         Eval.me(
                 "project",
                 project,

@@ -81,13 +81,13 @@ public class JackOptionsUtils {
                 .setDexOptimize(true);
 
         final GradleVariantConfiguration config = scope.getVariantData().getVariantConfiguration();
-        builder.setMinified(scope.useJavaCodeShrinker())
+        builder.setMinified(scope.getCodeShrinker() != null)
                 .setMultiDex(config.isMultiDexEnabled())
                 .setMinSdkVersion(config.getMinSdkVersion());
 
         /* Dex generation only for non-minified, native multidex, w/o JarJar. */
         builder.setGenerateDex(
-                !scope.useJavaCodeShrinker()
+                !(scope.getCodeShrinker() != null)
                         && config.isMultiDexEnabled()
                         && !DefaultApiVersion.isLegacyMultidex(config.getMinSdkVersion())
                         && config.getJarJarRuleFiles().isEmpty());
@@ -180,7 +180,7 @@ public class JackOptionsUtils {
         final GradleVariantConfiguration config = scope.getVariantData().getVariantConfiguration();
         Project project = scope.getGlobalScope().getProject();
         /* Minification setup. */
-        if (scope.useJavaCodeShrinker()) {
+        if (scope.getCodeShrinker() != null) {
             // since all the output use the same resources, we can use the first output
             // to query for a proguard file.
             File sdkDir = scope.getGlobalScope().getSdkHandler().getAndCheckSdkFolder();

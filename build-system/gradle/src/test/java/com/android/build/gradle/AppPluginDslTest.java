@@ -24,6 +24,8 @@ import com.android.build.gradle.api.ApkVariantOutput;
 import com.android.build.gradle.api.ApplicationVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.TestVariant;
+import com.android.build.gradle.internal.dsl.BuildType;
+import com.android.build.gradle.internal.dsl.PostprocessingOptions;
 import com.android.build.gradle.tasks.MergeResources;
 import groovy.util.Eval;
 import java.util.Arrays;
@@ -230,5 +232,142 @@ public class AppPluginDslTest
         MergeResources mergeResources = getTask(taskName, MergeResources.class);
         assertThat(mergeResources.getGeneratedDensities())
                 .containsExactlyElementsIn(Arrays.asList(densities));
+    }
+
+    public void testPostprocessingBlock_noActions() throws Exception {
+        BuildType release = android.getBuildTypes().getByName("release");
+        release.getPostprocessing().setCodeShrinker("proguard");
+
+        plugin.createAndroidTasks(false);
+
+        assertThat(project.getTasks().getNames())
+                .doesNotContain("transformClassesAndResourcesWithProguardForRelease");
+    }
+
+    public void testPostprocessingBlock_proguard() throws Exception {
+        BuildType release = android.getBuildTypes().getByName("release");
+        release.getPostprocessing().setRemoveUnusedCode(true);
+
+        plugin.createAndroidTasks(false);
+
+        assertThat(project.getTasks().getNames())
+                .contains("transformClassesAndResourcesWithProguardForRelease");
+    }
+
+    public void testPostprocessingBlock_justObfuscate() throws Exception {
+        BuildType release = android.getBuildTypes().getByName("release");
+        release.getPostprocessing().setObfuscate(true);
+
+        plugin.createAndroidTasks(false);
+
+        assertThat(project.getTasks().getNames())
+                .contains("transformClassesAndResourcesWithProguardForRelease");
+    }
+
+    public void testPostprocessingBlock_builtInShrinker() throws Exception {
+        PostprocessingOptions postprocessing =
+                android.getBuildTypes().getByName("release").getPostprocessing();
+        postprocessing.setRemoveUnusedCode(true);
+        postprocessing.setCodeShrinker("android_gradle");
+
+        assertThat(postprocessing.getCodeShrinker()).isEqualTo("android_gradle");
+
+        plugin.createAndroidTasks(false);
+
+        assertThat(project.getTasks().getNames())
+                .contains("transformClassesWithAndroidGradleClassShrinkerForRelease");
+    }
+
+    public void testPostprocessingBlock_mixingDsls_newOld() throws Exception {
+        BuildType release = android.getBuildTypes().getByName("release");
+        release.getPostprocessing().setCodeShrinker("android_gradle");
+
+        try {
+            release.setMinifyEnabled(true);
+            Assert.fail();
+        } catch (Exception e) {
+            assertThat(e.getMessage()).contains("setMinifyEnabled");
+        }
+    }
+
+    public void testPostprocessingBlock_mixingDsls_oldNew() throws Exception {
+        BuildType release = android.getBuildTypes().getByName("release");
+        release.setMinifyEnabled(true);
+
+        try {
+            release.getPostprocessing().setCodeShrinker("android_gradle");
+            Assert.fail();
+        } catch (Exception e) {
+            assertThat(e.getMessage()).contains("setMinifyEnabled");
+        }
+    }
+
+    public void testPostprocessingBlock_validating() throws Exception {
+        PostprocessingOptions postprocessing =
+                android.getBuildTypes().getByName("release").getPostprocessing();
+        postprocessing.setCodeShrinker("android_gradle");
+        postprocessing.setRemoveUnusedCode(true);
+        postprocessing.setObfuscate(true);
+
+        try {
+            plugin.createAndroidTasks(false);
+            Assert.fail();
+        } catch (Exception e) {
+            assertThat(e.getMessage()).contains("does not support obfuscating");
+        }
+    }
+
+    public void testPostprocessingBlock_resourceShrinker() throws Exception {
+        PostprocessingOptions postprocessing =
+                android.getBuildTypes().getByName("release").getPostprocessing();
+        postprocessing.setCodeShrinker("android_gradle");
+        postprocessing.setRemoveUnusedCode(true);
+        postprocessing.setRemoveUnusedResources(true);
+
+        plugin.createAndroidTasks(false);
+
+        assertThat(project.getTasks().getNames())
+                .containsAllOf(
+                        "transformClassesWithAndroidGradleClassShrinkerForRelease",
+                        "transformClassesWithShrinkResForRelease");
+    }
+
+    public void testPostprocessingBlock_noCodeShrinking() throws Exception {
+        PostprocessingOptions postprocessing =
+                android.getBuildTypes().getByName("release").getPostprocessing();
+        postprocessing.setCodeShrinker("android_gradle");
+        postprocessing.setRemoveUnusedCode(false);
+        postprocessing.setRemoveUnusedResources(true);
+
+        try {
+            plugin.createAndroidTasks(false);
+        } catch (Exception e) {
+            assertThat(e.getMessage()).contains("requires unused code shrinking");
+        }
+    }
+
+    public void testPostprocessingBlock_noCodeShrinking_oldDsl() throws Exception {
+        BuildType release = android.getBuildTypes().getByName("release");
+        release.setShrinkResources(true);
+
+        try {
+            plugin.createAndroidTasks(false);
+        } catch (Exception e) {
+            assertThat(e.getMessage()).contains("requires unused code shrinking");
+        }
+    }
+
+    public void testPostprocessingBlock_initWith() throws Exception {
+        BuildType debug = android.getBuildTypes().getByName("debug");
+        BuildType release = android.getBuildTypes().getByName("release");
+
+        debug.setMinifyEnabled(true);
+        release.getPostprocessing().setRemoveUnusedCode(true);
+
+        BuildType debugCopy = android.getBuildTypes().create("debugCopy");
+        debugCopy.initWith(debug);
+
+        BuildType releaseCopy = android.getBuildTypes().create("releaseCopy");
+        releaseCopy.initWith(release);
     }
 }

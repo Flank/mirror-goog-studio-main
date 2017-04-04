@@ -22,6 +22,7 @@ import static com.android.SdkConstants.FD_RES;
 import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML;
 import static com.android.build.gradle.internal.TaskManager.DIR_ATOMBUNDLES;
 import static com.android.build.gradle.internal.TaskManager.DIR_BUNDLES;
+import static com.android.build.gradle.internal.dsl.BuildType.PostprocessingConfiguration.OLD_DSL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
@@ -30,6 +31,8 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.API_ELEMENTS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.FEATURE_ELEMENTS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS;
+import static com.android.build.gradle.internal.scope.CodeShrinker.ANDROID_GRADLE;
+import static com.android.build.gradle.internal.scope.CodeShrinker.PROGUARD;
 import static com.android.builder.model.AndroidProject.FD_GENERATED;
 import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
 
@@ -47,7 +50,9 @@ import com.android.build.gradle.internal.coverage.JacocoReportTask;
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithTestedArtifact;
 import com.android.build.gradle.internal.dependency.SubtractingArtifactCollection;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
+import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
+import com.android.build.gradle.internal.dsl.PostprocessingOptions;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
 import com.android.build.gradle.internal.pipeline.TransformManager;
@@ -85,10 +90,11 @@ import com.android.build.gradle.tasks.ShaderCompile;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BootClasspathBuilder;
 import com.android.builder.core.BuilderConstants;
-import com.android.builder.core.VariantConfiguration;
+import com.android.builder.core.ErrorReporter;
 import com.android.builder.core.VariantType;
 import com.android.builder.dexing.DexingMode;
 import com.android.builder.model.ApiVersion;
+import com.android.builder.model.SyncIssue;
 import com.android.repository.api.ProgressIndicator;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
@@ -98,6 +104,7 @@ import com.android.sdklib.repository.LoggerProgressIndicatorWrapper;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.android.utils.StringHelper;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -142,6 +149,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     private GlobalScope globalScope;
     @NonNull private BaseVariantData variantData;
+    private ErrorReporter errorReporter;
     @NonNull
     private TransformManager transformManager;
     @Nullable
@@ -221,11 +229,38 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     public VariantScopeImpl(
             @NonNull GlobalScope globalScope,
+            @NonNull ErrorReporter errorReporter,
             @NonNull TransformManager transformManager,
             @NonNull BaseVariantData variantData) {
         this.globalScope = globalScope;
+        this.errorReporter = errorReporter;
         this.transformManager = transformManager;
         this.variantData = variantData;
+
+        validatePostprocessingOptions();
+    }
+
+    private void validatePostprocessingOptions() {
+        PostprocessingOptions postprocessingOptions = getPostprocessingOptionsIfUsed();
+        if (postprocessingOptions == null) {
+            return;
+        }
+
+        if (postprocessingOptions.getCodeShrinkerEnum() == ANDROID_GRADLE) {
+            if (postprocessingOptions.isObfuscate()) {
+                errorReporter.handleSyncError(
+                        null,
+                        SyncIssue.TYPE_GENERIC,
+                        "The 'android-gradle' code shrinker does not support obfuscating.");
+            }
+
+            if (postprocessingOptions.isOptimizeCode()) {
+                errorReporter.handleSyncError(
+                        null,
+                        SyncIssue.TYPE_GENERIC,
+                        "The 'android-gradle' code shrinker does not support optimizing code.");
+            }
+        }
     }
 
     @Override
@@ -336,32 +371,107 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         return getVariantConfiguration().getFullName();
     }
 
+    /** Returns the {@link PostprocessingOptions} if they should be used, null otherwise. */
+    @Nullable
+    private PostprocessingOptions getPostprocessingOptionsIfUsed() {
+        CoreBuildType coreBuildType = getCoreBuildType();
+
+        // This may not be the case with the experimental plugin.
+        if (coreBuildType instanceof BuildType) {
+            BuildType dslBuildType = (BuildType) coreBuildType;
+            if (dslBuildType.getPostprocessingConfiguration() != OLD_DSL) {
+                return dslBuildType.getPostprocessing();
+            }
+        }
+
+        return null;
+    }
+
+    @NonNull
+    private CoreBuildType getCoreBuildType() {
+        return getVariantConfiguration().getBuildType();
+    }
+
     @Override
-    public boolean useJavaCodeShrinker() {
-        if (!getVariantConfiguration().getBuildType().isMinifyEnabled()) {
+    public boolean useResourceShrinker() {
+        PostprocessingOptions postprocessingOptions = getPostprocessingOptionsIfUsed();
+
+        boolean userEnabledShrinkResources;
+        if (postprocessingOptions != null) {
+            userEnabledShrinkResources = postprocessingOptions.isRemoveUnusedResources();
+        } else {
+            //noinspection deprecation - this needs to use the old DSL methods.
+            userEnabledShrinkResources = getCoreBuildType().isShrinkResources();
+        }
+
+        if (!userEnabledShrinkResources) {
             return false;
         }
 
-        if (getVariantConfiguration().getType().isForTesting()) {
-            VariantConfiguration testedVariantConfiguration =
-                    getVariantConfiguration().getTestedConfig();
+        if (getCodeShrinker() == null) {
+            errorReporter.handleSyncError(
+                    null,
+                    SyncIssue.TYPE_GENERIC,
+                    "Removing unused resources requires unused code shrinking to be turned on. See "
+                            + "http://d.android.com/r/tools/shrink-resources.html "
+                            + "for more information.");
 
-            assert testedVariantConfiguration != null; // isForTesting() called above.
-            return testedVariantConfiguration.getType() != VariantType.LIBRARY;
+            return false;
+        }
+
+        if (getInstantRunBuildContext().isInInstantRunMode()) {
+            LOGGER.warning(
+                    "Instant Run: Resource shrinker automatically disabled for %s.",
+                    getVariantConfiguration().getFullName());
+
+            return false;
         }
 
         return true;
     }
 
+    @Nullable
     @Override
-    public boolean useResourceShrinker() {
-        // Cases when resource shrinking is disabled despite the user setting the flag should
-        // be explained in TaskManager#maybeCreateShrinkResourcesTransform.
+    public CodeShrinker getCodeShrinker() {
+        //noinspection ConstantConditions - getType() will not return null for a testing variant.
+        if (getVariantConfiguration().getType().isForTesting()
+                && getTestedVariantData().getType() == VariantType.LIBRARY) {
+            // For now we seem to include the production library code as both program and library
+            // input to the test ProGuard run, which confuses it.
+            return null;
+        }
 
-        CoreBuildType buildType = getVariantConfiguration().getBuildType();
-        return buildType.isShrinkResources()
-                && this.useJavaCodeShrinker()
-                && !getInstantRunBuildContext().isInInstantRunMode();
+        PostprocessingOptions postprocessingOptions = getPostprocessingOptionsIfUsed();
+
+        if (postprocessingOptions == null) {
+            CoreBuildType coreBuildType = getCoreBuildType();
+            //noinspection deprecation - this needs to use the old DSL methods.
+            if (!coreBuildType.isMinifyEnabled()) {
+                return null;
+            } else {
+                //noinspection deprecation - this needs to use the old DSL methods.
+                return coreBuildType.isUseProguard() ? PROGUARD : ANDROID_GRADLE;
+            }
+        } else {
+            CodeShrinker userChoice = postprocessingOptions.getCodeShrinkerEnum();
+            if (userChoice == null) {
+                // TODO: consider Instant Run here.
+                userChoice = PROGUARD;
+            }
+
+            switch (userChoice) {
+                case PROGUARD:
+                    boolean somethingToDo =
+                            postprocessingOptions.isRemoveUnusedCode()
+                                    || postprocessingOptions.isObfuscate()
+                                    || postprocessingOptions.isOptimizeCode();
+                    return somethingToDo ? PROGUARD : null;
+                case ANDROID_GRADLE:
+                    return postprocessingOptions.isRemoveUnusedCode() ? ANDROID_GRADLE : null;
+                default:
+                    throw new AssertionError("Unknown value " + userChoice);
+            }
+        }
     }
 
     @Override
@@ -1914,5 +2024,10 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         } else {
             return null;
         }
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this).addValue(getFullVariantName()).toString();
     }
 }

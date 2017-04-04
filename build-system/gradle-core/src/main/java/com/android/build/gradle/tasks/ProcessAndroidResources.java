@@ -34,7 +34,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
-import com.android.build.gradle.internal.LoggingUtil;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.aapt.AaptGradleFactory;
@@ -777,13 +776,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                         .setSourceOutputDir(variantScope.getRClassSourceOutputDir());
                 processResources.setTextSymbolOutputDir(symbolLocation);
 
-            if (variantScope.useJavaCodeShrinker()) {
-                if (config.getBuildType().isShrinkResources() && config.isJackEnabled()) {
-                    LoggingUtil.displayWarning(
-                            Logging.getLogger(getClass()),
-                            variantScope.getGlobalScope().getProject(),
-                            "shrinkResources does not yet work with useJack=true");
-                }
+            if (variantScope.getCodeShrinker() != null) {
                 processResources.setProguardOutputFile(
                         variantScope.getProcessAndroidResourcesProguardOutputFile());
             }

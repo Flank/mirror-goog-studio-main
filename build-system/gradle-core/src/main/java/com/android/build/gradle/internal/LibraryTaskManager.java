@@ -496,11 +496,8 @@ public class LibraryTaskManager extends TaskManager {
                         createMergeJavaResTransform(tasks, variantScope);
 
                         // ----- Minify next -----
-                        if (variantScope.useJavaCodeShrinker()) {
-                            createJavaCodeShrinkerTransform(tasks, variantScope);
-                        }
-
-                        maybeCreateShrinkResourcesTransform(tasks, variantScope);
+                        maybeCreateJavaCodeShrinkerTransform(tasks, variantScope);
+                        maybeCreateResourcesShrinkerTransform(tasks, variantScope);
 
                         // now add a transform that will take all the class/res and package them
                         // into the main and secondary jar files that goes in the AAR.
