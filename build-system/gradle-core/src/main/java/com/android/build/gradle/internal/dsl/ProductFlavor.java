@@ -178,8 +178,8 @@ public class ProductFlavor extends DefaultProductFlavor implements CoreProductFl
      * <p>See <a href="http://developer.android.com/guide/topics/manifest/uses-sdk-element.html">
      * uses-sdk element documentation</a>.
      */
-    public void maxSdkVersion(int targetSdkVersion) {
-        setMaxSdkVersion(targetSdkVersion);
+    public void maxSdkVersion(int maxSdkVersion) {
+        setMaxSdkVersion(maxSdkVersion);
     }
 
     @Nullable
