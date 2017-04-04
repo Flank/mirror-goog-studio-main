@@ -16,6 +16,7 @@
 package com.android.layoutinspector.model;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ddmlib.Client;
 import com.android.ddmlib.ClientData;
 import com.android.ddmlib.HandleViewDebug;
@@ -55,6 +56,7 @@ public class ClientWindow {
     }
 
     /** Byte array representing the view hierarchy dump of the window. */
+    @Nullable
     public byte[] loadWindowData(long timeout, TimeUnit unit) {
         CaptureByteArrayHandler handler = new CaptureByteArrayHandler(HandleViewDebug.CHUNK_VURT);
         try {
@@ -68,6 +70,7 @@ public class ClientWindow {
     }
 
     /** Byte array representing image preview of the provided node. */
+    @Nullable
     public byte[] loadViewImage(@NonNull ViewNode node, long timeout, TimeUnit unit) {
         CaptureByteArrayHandler handler = new CaptureByteArrayHandler(HandleViewDebug.CHUNK_VUOP);
         try {
@@ -80,6 +83,7 @@ public class ClientWindow {
     }
 
     /** Lists all the active window for the current client. */
+    @Nullable
     public static List<ClientWindow> getAll(
             @NonNull Client client, long timeout, @NonNull TimeUnit unit) {
         ClientData cd = client.getClientData();
