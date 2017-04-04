@@ -865,6 +865,9 @@ ir::String* Reader::ParseString(dex::u4 index) {
   ir_string->data = slicer::MemView(data, size);
   ir_string->orig_index = index;
 
+  // update the strings lookup table
+  dex_ir_->strings_lookup.Insert(ir_string);
+
   return ir_string;
 }
 

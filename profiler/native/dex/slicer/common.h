@@ -38,8 +38,11 @@ void _fatal(const char* format, ...) __attribute__((noreturn));
 #define FATAL(format, ...) slicer::_fatal("\nFATAL: " format "\n\n", ##__VA_ARGS__);
 
 // Annotation customization point for extra validation / state.
-// TODO: put this under a #if that can switch it off
+#ifdef NDEBUG
+#define EXTRA(x)
+#else
 #define EXTRA(x) x
+#endif
 
 } // namespace slicer
 
