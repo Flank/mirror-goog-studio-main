@@ -371,7 +371,10 @@ public class DesugarTransform extends Transform {
                     }
 
                     FileCache cacheToUse;
-                    if (Objects.equals(scopes, Collections.singleton(Scope.EXTERNAL_LIBRARIES))) {
+                    if (Files.isDirectory(input)) {
+                        cacheToUse = null;
+                    } else if (Objects.equals(
+                            scopes, Collections.singleton(Scope.EXTERNAL_LIBRARIES))) {
                         cacheToUse = userCache;
                     } else if (scopes.equals(Collections.singleton(Scope.PROJECT_LOCAL_DEPS))
                             || scopes.equals(
