@@ -2470,32 +2470,6 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                                 + "}\n")));
     }
 
-    public void testAlias() throws Exception {
-        assertEquals("No warnings.",
-                lintProject(
-                        java("src/test/pkg/FlagAlias.java", ""
-                                + "package test.pkg;\n"
-                                + "\n"
-                                + "import android.graphics.Canvas;\n"
-                                + "import android.graphics.RectF;\n"
-                                + "\n"
-                                + "@SuppressWarnings(\"unused\")\n"
-                                + "public class FlagAlias {\n"
-                                + "    private static final int CANVAS_SAVE_FLAGS =\n"
-                                + "            Canvas.CLIP_SAVE_FLAG |\n"
-                                + "                    Canvas.HAS_ALPHA_LAYER_SAVE_FLAG |\n"
-                                + "                    Canvas.FULL_COLOR_LAYER_SAVE_FLAG;\n"
-                                + "    private RectF mBounds;\n"
-                                + "    private int mAlpha;\n"
-                                + "\n"
-                                + "\n"
-                                + "    public void draw(Canvas canvas) {\n"
-                                + "        canvas.saveLayerAlpha(mBounds, mAlpha, CANVAS_SAVE_FLAGS);\n"
-                                + "    }\n"
-                                + "}\n")
-                ));
-    }
-
     @SuppressWarnings("ALL") // sample code with warnings
     public void testRestrictToSubClass() throws Exception {
         assertEquals(""
