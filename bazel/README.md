@@ -151,7 +151,9 @@ Invoked by running:
 bazel run //tools/base/bazel:third_party_build_generator
 ```
 
-The dependencies we need are specified in the BUILD file in this package.
+The tool looks for names and versions of libraries in `//tools/buildSrc/base/dependencies.properties`.
+The same file is read by our Gradle scripts, to keep the set of dependencies consistent between the
+two.
 
 ### add\_dependency
 
