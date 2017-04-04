@@ -36,7 +36,7 @@ import org.jf.dexlib2.dexbacked.DexBackedClassDef;
  * example as a truth subject.
  */
 @Immutable
-public final class SplitApks {
+public final class SplitApks implements AutoCloseable {
 
     @NonNull private final List<Apk> apks;
     // Cached state
@@ -81,6 +81,13 @@ public final class SplitApks {
                 .map(apk -> apk.getEntry(name))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public void close() throws Exception {
+        for (Apk apk : apks) {
+            apk.close();
+        }
     }
 
     @Override

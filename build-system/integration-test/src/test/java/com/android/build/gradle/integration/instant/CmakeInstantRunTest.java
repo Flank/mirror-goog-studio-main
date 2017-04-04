@@ -88,8 +88,9 @@ public class CmakeInstantRunTest {
 
         AndroidProject model = sProject.model().getSingle().getOnlyModel();
         InstantRun instantRunModel = InstantRunTestUtils.getInstantRunModel(model);
-        SplitApks apks = InstantRunTestUtils.getCompiledColdSwapChange(instantRunModel);
-        assertThat(apks.getEntries("lib/x86/libhello-jni.so")).hasSize(1);
+        try (SplitApks apks = InstantRunTestUtils.getCompiledColdSwapChange(instantRunModel)) {
+            assertThat(apks.getEntries("lib/x86/libhello-jni.so")).hasSize(1);
+        }
 
         TemporaryProjectModification.doTest(
                 sProject,
@@ -136,9 +137,10 @@ public class CmakeInstantRunTest {
     }
 
     private static byte[] getSo(InstantRun instantRunModel) throws Exception {
-        SplitApks apks = InstantRunTestUtils.getCompiledColdSwapChange(instantRunModel);
-        Path so = Iterables.getOnlyElement(apks.getEntries("lib/x86/libhello-jni.so"));
-        return java.nio.file.Files.readAllBytes(so);
+        try (SplitApks apks = InstantRunTestUtils.getCompiledColdSwapChange(instantRunModel)) {
+            Path so = Iterables.getOnlyElement(apks.getEntries("lib/x86/libhello-jni.so"));
+            return java.nio.file.Files.readAllBytes(so);
+        }
     }
 
 }
