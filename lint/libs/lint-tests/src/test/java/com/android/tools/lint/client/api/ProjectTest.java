@@ -20,7 +20,6 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.common.repository.GradleVersion;
 import com.android.tools.lint.checks.AbstractCheckTest;
 import com.android.tools.lint.checks.UnusedResourceDetector;
 import com.android.tools.lint.detector.api.Detector;

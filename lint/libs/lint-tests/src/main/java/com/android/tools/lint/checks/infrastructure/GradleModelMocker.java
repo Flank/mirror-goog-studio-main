@@ -40,6 +40,7 @@ import com.android.builder.model.ClassField;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.Library;
+import com.android.builder.model.LintOptions;
 import com.android.builder.model.MavenCoordinates;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.ProductFlavorContainer;
@@ -107,6 +108,7 @@ public class GradleModelMocker {
     private final List<JavaLibrary> allJavaLibraries = Lists.newArrayList();
     private ProductFlavor mergedFlavor;
     private ProductFlavor defaultFlavor;
+    private LintOptions lintOptions;
     private File projectDir = new File("");
     private final List<ProductFlavor> productFlavors = Lists.newArrayList();
     private final Multimap<String, String> splits = ArrayListMultimap.create();
@@ -223,6 +225,9 @@ public class GradleModelMocker {
 
         variant = mock(Variant.class);
 
+        lintOptions = createLintOptions();
+        when(project.getLintOptions()).thenReturn(lintOptions);
+
         // built-in build-types
         getBuildType("debug", true);
         getBuildType("release", true);
@@ -327,6 +332,29 @@ public class GradleModelMocker {
             }
         }
         setVariantName(defaultVariant);
+    }
+
+    private static LintOptions createLintOptions() {
+        LintOptions options = mock(LintOptions.class);
+        // Configure default (and make it mutable, e.g. lists that we can append to)
+        when(options.getEnable()).thenReturn(Sets.newHashSet());
+        when(options.getDisable()).thenReturn(Sets.newHashSet());
+        when(options.getCheck()).thenReturn(Sets.newHashSet());
+        when(options.getEnable()).thenReturn(Sets.newHashSet());
+        when(options.getSeverityOverrides()).thenReturn(Maps.newHashMap());
+
+        // Set the same defaults as the Gradle side
+        when(options.isAbortOnError()).thenReturn(true);
+        when(options.isCheckReleaseBuilds()).thenReturn(true);
+        when(options.getHtmlReport()).thenReturn(true);
+        when(options.getXmlReport()).thenReturn(true);
+
+        /* These are true in lint in general, but we want them to be false in the unit tests
+        when(options.isAbsolutePaths()).thenReturn(true);
+        when(options.isExplainIssues()).thenReturn(true);
+        */
+
+        return options;
     }
 
     @NonNull
@@ -840,9 +868,168 @@ public class GradleModelMocker {
             } else if (line.startsWith("exclude ")) {
                 warn("Warning: Split exclude not supported for mocked builder model yet");
             }
+        } else if (key.startsWith("android.lintOptions.")) {
+            key = key.substring("android.lintOptions.".length());
+            int argIndex = key.indexOf(' ');
+            if (argIndex == -1) {
+                error("No value supplied for lint option " + key);
+                return;
+            }
+            String arg = key.substring(argIndex).trim();
+            key = key.substring(0, argIndex);
+
+            switch (key) {
+                case "quiet":
+                    when(lintOptions.isQuiet()).thenReturn(Boolean.valueOf(arg));
+                    break;
+                case "abortOnError":
+                    when(lintOptions.isAbortOnError()).thenReturn(Boolean.valueOf(arg));
+                    break;
+                case "checkReleaseBuilds":
+                    when(lintOptions.isCheckReleaseBuilds()).thenReturn(Boolean.valueOf(arg));
+                    break;
+                case "ignoreWarnings":
+                    when(lintOptions.isIgnoreWarnings()).thenReturn(Boolean.valueOf(arg));
+                    break;
+                case "absolutePaths":
+                    when(lintOptions.isAbsolutePaths()).thenReturn(Boolean.valueOf(arg));
+                    break;
+                case "checkAllWarnings":
+                    when(lintOptions.isCheckAllWarnings()).thenReturn(Boolean.valueOf(arg));
+                    break;
+                case "warningsAsErrors":
+                    when(lintOptions.isWarningsAsErrors()).thenReturn(Boolean.valueOf(arg));
+                    break;
+                case "noLines":
+                    when(lintOptions.isNoLines()).thenReturn(Boolean.valueOf(arg));
+                    break;
+                case "showAll":
+                    when(lintOptions.isShowAll()).thenReturn(Boolean.valueOf(arg));
+                    break;
+                case "explainIssues":
+                    when(lintOptions.isExplainIssues()).thenReturn(Boolean.valueOf(arg));
+                    break;
+                case "textReport":
+                    when(lintOptions.getTextReport()).thenReturn(Boolean.valueOf(arg));
+                    break;
+                case "xmlReport":
+                    when(lintOptions.getXmlReport()).thenReturn(Boolean.valueOf(arg));
+                    break;
+                case "htmlReport":
+                    when(lintOptions.getHtmlReport()).thenReturn(Boolean.valueOf(arg));
+                    break;
+                case "checkTestSources":
+                    when(lintOptions.isCheckTestSources()).thenReturn(Boolean.valueOf(arg));
+                    break;
+
+                case "enable": {
+                    for (String s : Splitter.on(',').trimResults().omitEmptyStrings().split(arg)) {
+                        lintOptions.getEnable().add(stripQuotes(s, true));
+                    }
+                    break;
+                }
+                case "disable": {
+                    for (String s : Splitter.on(',').trimResults().omitEmptyStrings().split(arg)) {
+                        lintOptions.getDisable().add(stripQuotes(s, true));
+                    }
+                    break;
+                }
+                case "check": {
+                    for (String s : Splitter.on(',').trimResults().omitEmptyStrings().split(arg)) {
+                        lintOptions.getCheck().add(stripQuotes(s, true));
+                    }
+                    break;
+                }
+                case "fatal": {
+                    for (String s : Splitter.on(',').trimResults().omitEmptyStrings().split(arg)) {
+                        lintOptions.getSeverityOverrides().put(stripQuotes(s, true),
+                                LintOptions.SEVERITY_FATAL);
+                    }
+                    break;
+                }
+                case "error": {
+                    for (String s : Splitter.on(',').trimResults().omitEmptyStrings().split(arg)) {
+                        lintOptions.getSeverityOverrides().put(stripQuotes(s, true),
+                                LintOptions.SEVERITY_ERROR);
+                    }
+                    break;
+                }
+                case "warning": {
+                    for (String s : Splitter.on(',').trimResults().omitEmptyStrings().split(arg)) {
+                        lintOptions.getSeverityOverrides().put(stripQuotes(s, true),
+                                LintOptions.SEVERITY_WARNING);
+                    }
+                    break;
+                }
+                case "informational": {
+                    for (String s : Splitter.on(',').trimResults().omitEmptyStrings().split(arg)) {
+                        lintOptions.getSeverityOverrides().put(stripQuotes(s, true),
+                                LintOptions.SEVERITY_INFORMATIONAL);
+                    }
+                    break;
+                }
+                case "ignore": {
+                    for (String s : Splitter.on(',').trimResults().omitEmptyStrings().split(arg)) {
+                        lintOptions.getSeverityOverrides().put(stripQuotes(s, true),
+                                LintOptions.SEVERITY_IGNORE);
+                    }
+                    break;
+                }
+
+                case "lintConfig": {
+                    when(lintOptions.getLintConfig()).thenReturn(file(arg, true));
+                    break;
+                }
+                case "textOutput": {
+                    when(lintOptions.getTextOutput()).thenReturn(file(arg, true));
+                    break;
+                }
+                case "xmlOutput": {
+                    when(lintOptions.getXmlOutput()).thenReturn(file(arg, true));
+                    break;
+                }
+                case "htmlOutput": {
+                    when(lintOptions.getHtmlOutput()).thenReturn(file(arg, true));
+                    break;
+                }
+                case "baseline": {
+                    when(lintOptions.getBaselineFile()).thenReturn(file(arg, true));
+                    break;
+                }
+            }
         } else {
             warn("ignored line: " + line + ", context=" + context);
         }
+    }
+
+    @NonNull
+    private File file(String gradle, boolean reportError) {
+        if (gradle.startsWith("file(\"") && gradle.endsWith("\")") ||
+                gradle.startsWith("file('") && gradle.endsWith("')")) {
+            String path = gradle.substring(6, gradle.length() - 2);
+            return new File(projectDir, path);
+        }
+        gradle = stripQuotes(gradle, true);
+        if (gradle.equals("stdout") || gradle.equals("stderr")) {
+            return new File(gradle);
+        }
+        if (reportError) {
+            error("Only support file(\"\") paths in gradle mocker");
+        }
+        return new File(gradle);
+    }
+
+    private String stripQuotes(String string, boolean reportError) {
+        if (string.startsWith("'") && string.endsWith("'") && string.length() >= 2) {
+            return string.substring(1, string.length() - 1);
+        }
+        if (string.startsWith("\"") && string.endsWith("\"") && string.length() >= 2) {
+            return string.substring(1, string.length() - 1);
+        }
+        if (reportError) {
+            error("Expected quotes around " + string);
+        }
+        return string;
     }
 
     @Nullable

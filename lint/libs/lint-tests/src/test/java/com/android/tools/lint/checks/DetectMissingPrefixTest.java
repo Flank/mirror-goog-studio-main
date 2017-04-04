@@ -19,7 +19,6 @@ package com.android.tools.lint.checks;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import java.util.List;
 

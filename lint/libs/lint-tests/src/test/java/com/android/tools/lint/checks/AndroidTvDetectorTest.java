@@ -24,11 +24,8 @@ import static com.android.tools.lint.checks.AndroidTvDetector.MISSING_LEANBACK_S
 import static com.android.tools.lint.checks.AndroidTvDetector.PERMISSION_IMPLIES_UNSUPPORTED_HARDWARE;
 import static com.android.tools.lint.checks.AndroidTvDetector.UNSUPPORTED_TV_HARDWARE;
 
-import com.android.annotations.NonNull;
-import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.Project;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;

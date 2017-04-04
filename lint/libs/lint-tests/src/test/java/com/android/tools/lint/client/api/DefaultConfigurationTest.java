@@ -21,13 +21,13 @@ import com.android.annotations.NonNull;
 import com.android.tools.lint.checks.AbstractCheckTest;
 import com.android.tools.lint.checks.AccessibilityDetector;
 import com.android.tools.lint.checks.ApiDetector;
-import com.android.tools.lint.checks.BuiltinIssueRegistry;
 import com.android.tools.lint.checks.FieldGetterDetector;
 import com.android.tools.lint.checks.HardcodedValuesDetector;
 import com.android.tools.lint.checks.MathDetector;
 import com.android.tools.lint.checks.ObsoleteLayoutParamsDetector;
 import com.android.tools.lint.checks.SdCardDetector;
 import com.android.tools.lint.checks.TypoDetector;
+import com.android.tools.lint.checks.infrastructure.TestIssueRegistry;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Location;
@@ -90,7 +90,7 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
         );
         LintClient client = createClient();
         Project project = Project.create(client, projectDir, projectDir);
-        LintDriver driver = new LintDriver(new BuiltinIssueRegistry(), client);
+        LintDriver driver = new LintDriver(new TestIssueRegistry(), client);
         File plainFile = new File(projectDir,
                 "res" + File.separator + "layout" + File.separator + "onclick.xml");
         assertTrue(plainFile.exists());
@@ -158,7 +158,7 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
         );
         LintClient client = createClient();
         Project project = Project.create(client, projectDir, projectDir);
-        LintDriver driver = new LintDriver(new BuiltinIssueRegistry(), client);
+        LintDriver driver = new LintDriver(new TestIssueRegistry(), client);
         File plainFile = new File(projectDir,
                 "res" + File.separator + "layout" + File.separator + "onclick.xml");
         assertTrue(plainFile.exists());
@@ -215,7 +215,7 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
         );
         LintClient client = createClient();
         Project project = Project.create(client, projectDir, projectDir);
-        LintDriver driver = new LintDriver(new BuiltinIssueRegistry(), client);
+        LintDriver driver = new LintDriver(new TestIssueRegistry(), client);
         File plainFile = new File(projectDir,
                 "res" + File.separator + "layout" + File.separator + "onclick.xml");
         assertTrue(plainFile.exists());
@@ -260,7 +260,7 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
         );
         LintClient client = createClient();
         Project project = Project.create(client, projectDir, projectDir);
-        LintDriver driver = new LintDriver(new BuiltinIssueRegistry(), client);
+        LintDriver driver = new LintDriver(new TestIssueRegistry(), client);
         File file = new File(projectDir,
                 "res" + File.separator + "layout" + File.separator + "onclick.xml");
         assertTrue(file.exists());
@@ -404,7 +404,7 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
         };
 
         Project project = Project.create(client, projectDir, projectDir);
-        LintDriver driver = new LintDriver(new BuiltinIssueRegistry(), client);
+        LintDriver driver = new LintDriver(new TestIssueRegistry(), client);
         // Main resource dir => src/main/res
         File resourceDir = new File(projectDir, "src" + File.separator +
                 "main" + File.separator + "res");

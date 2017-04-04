@@ -19,11 +19,9 @@ import static com.android.tools.lint.checks.infrastructure.TestFiles.base64gzip;
 import static com.android.tools.lint.checks.infrastructure.TestFiles.classpath;
 import static com.android.tools.lint.checks.infrastructure.TestFiles.java;
 import static com.android.tools.lint.checks.infrastructure.TestFiles.manifest;
-import static com.android.tools.lint.checks.infrastructure.TestFiles.toBase64gzip;
 import static org.junit.Assert.assertTrue;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.tools.lint.checks.infrastructure.TestFile;
 import com.android.tools.lint.checks.infrastructure.TestFiles;
 import com.android.tools.lint.checks.infrastructure.TestLintTask;

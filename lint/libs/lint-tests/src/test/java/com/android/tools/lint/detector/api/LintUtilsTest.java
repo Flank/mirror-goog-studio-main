@@ -62,8 +62,7 @@ import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.testutils.TestUtils;
 import com.android.tools.lint.LintCliClient;
-import com.android.tools.lint.checks.BuiltinIssueRegistry;
-import com.android.tools.lint.checks.infrastructure.TestLintClient;
+import com.android.tools.lint.checks.infrastructure.TestIssueRegistry;
 import com.android.tools.lint.client.api.JavaParser;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.UastParser;
@@ -542,7 +541,7 @@ public class LintUtilsTest extends TestCase {
         };
         Project project = client.getProject(dir, dir);
         client.initializeProjects(Collections.singletonList(project));
-        LintDriver driver = new LintDriver(new BuiltinIssueRegistry(),
+        LintDriver driver = new LintDriver(new TestIssueRegistry(),
                 new LintCliClient());
         driver.setScope(Scope.JAVA_FILE_SCOPE);
         TestContext context = new TestContext(driver, client, project, javaSource, fullPath);

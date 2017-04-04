@@ -22,7 +22,6 @@ import com.android.tools.lint.checks.AbstractCheckTest;
 import com.android.tools.lint.checks.HardcodedValuesDetector;
 import com.android.tools.lint.checks.IconDetector;
 import com.android.tools.lint.checks.ManifestDetector;
-import com.android.tools.lint.checks.infrastructure.TestFile;
 import com.android.tools.lint.checks.infrastructure.TestFile.ImageTestFile;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.detector.api.DefaultPosition;

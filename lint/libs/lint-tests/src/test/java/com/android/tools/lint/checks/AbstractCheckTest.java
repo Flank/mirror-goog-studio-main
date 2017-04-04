@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.testutils.TestUtils;
 import com.android.tools.lint.checks.infrastructure.LintDetectorTest;
+import com.android.tools.lint.checks.infrastructure.TestIssueRegistry;
 import com.android.tools.lint.checks.infrastructure.TestLintTask;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.client.api.LintDriver;
@@ -49,7 +50,7 @@ public abstract class AbstractCheckTest extends LintDetectorTest {
         Class<? extends Detector> detectorClass = getDetectorInstance().getClass();
         // Get the list of issues from the registry and filter out others, to make sure
         // issues are properly registered
-        List<Issue> candidates = new BuiltinIssueRegistry().getIssues();
+        List<Issue> candidates = new TestIssueRegistry().getIssues();
         for (Issue issue : candidates) {
             if (issue.getImplementation().getDetectorClass() == detectorClass) {
                 issues.add(issue);

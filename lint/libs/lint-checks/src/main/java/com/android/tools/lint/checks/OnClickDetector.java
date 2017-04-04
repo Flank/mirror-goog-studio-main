@@ -28,7 +28,6 @@ import static com.android.SdkConstants.TOOLS_URI;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.JavaEvaluator;
-import com.android.tools.lint.client.api.JavaParser;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.UastParser;
 import com.android.tools.lint.detector.api.Category;
