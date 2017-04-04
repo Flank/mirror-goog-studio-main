@@ -119,13 +119,15 @@ public class DesugarAppTest {
         enableDesugar();
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
-                "\nandroid.buildTypes.debug.testCoverageEnabled true\n"
-                        + "\nandroid.defaultConfig.minSdkVersion 9\n"
-                        + "dependencies {\n"
-                        + "    compile 'com.android.support:support-v4:"
-                        + GradleTestProject.SUPPORT_LIB_VERSION
-                        + "'\n"
-                        + "}");
+                String.format(
+                        "\n"
+                                + "android.buildTypes.debug.testCoverageEnabled true\n"
+                                + "android.defaultConfig.minSdkVersion %d\n"
+                                + "dependencies {\n"
+                                + "    compile 'com.android.support:support-v4:%s'\n"
+                                + "}",
+                        GradleTestProject.SUPPORT_LIB_MIN_SDK,
+                        GradleTestProject.SUPPORT_LIB_VERSION));
 
         project.executor().run("assembleDebug");
         project.executor().run("clean", "assembleDebug");
@@ -189,6 +191,25 @@ public class DesugarAppTest {
                 project.getBuildFile(),
                 "android.compileOptions.sourceCompatibility 1.8\n"
                         + "android.compileOptions.targetCompatibility 1.8");
+    }
+
+    @Test
+    public void testDatabinding() throws IOException, ProcessException, InterruptedException {
+        // regression test for - http://b.android.com/321693
+        enableDesugar();
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                String.format(
+                        "\n"
+                                + "android.dataBinding.enabled true\n"
+                                + "android.defaultConfig.minSdkVersion %d\n"
+                                + "dependencies {\n"
+                                + "    compile 'com.android.support:support-v4:%s'\n"
+                                + "}",
+                        GradleTestProject.SUPPORT_LIB_MIN_SDK,
+                        GradleTestProject.SUPPORT_LIB_VERSION));
+
+        project.executor().run("assembleDebug");
     }
 
     @NonNull
