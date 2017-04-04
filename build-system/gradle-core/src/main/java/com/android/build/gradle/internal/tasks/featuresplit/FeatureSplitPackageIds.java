@@ -32,7 +32,6 @@ import java.lang.reflect.Type;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
-import org.gradle.api.file.FileCollection;
 
 /** Container for all the feature split related package ids. */
 public class FeatureSplitPackageIds {
@@ -74,8 +73,8 @@ public class FeatureSplitPackageIds {
     }
 
     @NonNull
-    public static FeatureSplitPackageIds load(@NonNull FileCollection input) throws IOException {
-        File outputFile = getOutputFile(input);
+    public static FeatureSplitPackageIds load(@NonNull Set<File> files) throws IOException {
+        File outputFile = getOutputFile(files);
         if (outputFile == null) {
             throw new FileNotFoundException("Cannot find package ids json file");
         }
@@ -99,14 +98,15 @@ public class FeatureSplitPackageIds {
     }
 
     @Nullable
-    public static File getOutputFile(@NonNull FileCollection input) {
-        for (File file : input.getAsFileTree().getFiles()) {
+    public static File getOutputFile(@NonNull Set<File> files) {
+        for (File file : files) {
             if (file.getName().equals(OUTPUT_FILE_NAME)) {
                 return file;
             }
         }
         return null;
     }
+
 
     private static class SplitPackageId {
         final String splitIdentifier;

@@ -17,39 +17,28 @@
 package com.android.build.gradle.internal.tasks.featuresplit;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.mockito.Mockito.when;
 
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import org.gradle.api.file.FileCollection;
-import org.gradle.api.file.FileTree;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
 /** Tests for {@link FeatureSplitPackageIds} class. */
 public class FeatureSplitPackageIdsTest {
-
-    @Mock FileCollection fileCollection;
-    @Mock FileTree fileTree;
 
     @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @Before
     public void setUp() {
-        MockitoAnnotations.initMocks(this);
-        when(fileCollection.getAsFileTree()).thenReturn(fileTree);
     }
 
     @Test(expected = FileNotFoundException.class)
     public void testMissingPesistenceFile() throws IOException {
-        when(fileTree.getFiles()).thenReturn(ImmutableSet.of());
-        FeatureSplitPackageIds loaded = FeatureSplitPackageIds.load(fileCollection);
+        FeatureSplitPackageIds loaded = FeatureSplitPackageIds.load(ImmutableSet.of());
     }
 
     @Test
@@ -66,8 +55,7 @@ public class FeatureSplitPackageIdsTest {
         assertThat(outputFile.exists()).isTrue();
 
         // now reload the file.
-        when(fileTree.getFiles()).thenReturn(ImmutableSet.of(outputFile));
-        FeatureSplitPackageIds loaded = FeatureSplitPackageIds.load(fileCollection);
+        FeatureSplitPackageIds loaded = FeatureSplitPackageIds.load(ImmutableSet.of(outputFile));
 
         assertThat(loaded.getIdFor("one")).isEqualTo(FeatureSplitPackageIds.BASE_ID);
         assertThat(loaded.getIdFor("two")).isEqualTo(FeatureSplitPackageIds.BASE_ID + 1);
