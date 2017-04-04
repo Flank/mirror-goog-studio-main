@@ -166,14 +166,14 @@ class HelloWorldShrinkerTest {
 
     private File findHelloWorld() {
         return FileUtils.find(
-                project.file("build/intermediates/transforms/newClassShrinker"),
+                ShrinkerTestUtils.getShrinkerOutputDir(project),
                 "HelloWorld.class")
                 .get()
     }
 
     private File findUtils() {
         return FileUtils.find(
-                project.file("build/intermediates/transforms/newClassShrinker"),
+                ShrinkerTestUtils.getShrinkerOutputDir(project),
                 "Utils.class")
                 .get()
     }

@@ -64,17 +64,17 @@ import org.slf4j.LoggerFactory;
  * Transform that performs shrinking - only reachable methods in reachable class files are copied
  * into the output folders (one per stream).
  */
-public class NewShrinkerTransform extends ProguardConfigurable {
+public class BuiltInShrinkerTransform extends ProguardConfigurable {
 
-    private static final Logger logger = LoggerFactory.getLogger(NewShrinkerTransform.class);
-    private static final String NAME = "newClassShrinker";
+    private static final Logger logger = LoggerFactory.getLogger(BuiltInShrinkerTransform.class);
+    private static final String NAME = "androidGradleClassShrinker";
 
     private final Set<File> platformJars;
     private final File incrementalDir;
     private final List<String> dontwarnLines;
     private final List<String> keepLines;
 
-    public NewShrinkerTransform(@NonNull VariantScope scope) {
+    public BuiltInShrinkerTransform(@NonNull VariantScope scope) {
         super(scope);
         this.platformJars = ImmutableSet.copyOf(
                 scope.getGlobalScope().getAndroidBuilder().getBootClasspath(true));

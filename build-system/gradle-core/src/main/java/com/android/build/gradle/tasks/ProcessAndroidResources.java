@@ -777,7 +777,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                         .setSourceOutputDir(variantScope.getRClassSourceOutputDir());
                 processResources.setTextSymbolOutputDir(symbolLocation);
 
-            if (config.getBuildType().isMinifyEnabled()) {
+            if (variantScope.useJavaCodeShrinker()) {
                 if (config.getBuildType().isShrinkResources() && config.isJackEnabled()) {
                     LoggingUtil.displayWarning(
                             Logging.getLogger(getClass()),
@@ -786,12 +786,6 @@ public class ProcessAndroidResources extends IncrementalTask {
                 }
                 processResources.setProguardOutputFile(
                         variantScope.getProcessAndroidResourcesProguardOutputFile());
-
-            } else if (config.getBuildType().isShrinkResources()) {
-                LoggingUtil.displayWarning(
-                        Logging.getLogger(getClass()),
-                        variantScope.getGlobalScope().getProject(),
-                        "To shrink resources you must also enable ProGuard");
             }
 
             if (generateLegacyMultidexMainDexProguardRules) {

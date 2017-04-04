@@ -224,7 +224,7 @@ public abstract class BaseVariantData implements TaskContainer {
     @NonNull
     public LayoutXmlProcessor getLayoutXmlProcessor() {
         if (layoutXmlProcessor == null) {
-            File resourceBlameLogDir = getScope().getResourceBlameLogDir();
+            File resourceBlameLogDir = scope.getResourceBlameLogDir();
             final MergingLog mergingLog = new MergingLog(resourceBlameLogDir);
             layoutXmlProcessor = new LayoutXmlProcessor(
                     getVariantConfiguration().getOriginalApplicationId(),
@@ -449,9 +449,9 @@ public abstract class BaseVariantData implements TaskContainer {
         if (extraGeneratedResFolders != null) {
             generatedResFolders.addAll(extraGeneratedResFolders.getFiles());
         }
-        if (getScope().getMicroApkTask() != null &&
-                getVariantConfiguration().getBuildType().isEmbedMicroApp()) {
-            generatedResFolders.add(getScope().getMicroApkResDirectory());
+        if (scope.getMicroApkTask() != null
+                && getVariantConfiguration().getBuildType().isEmbedMicroApp()) {
+            generatedResFolders.add(scope.getMicroApkResDirectory());
         }
         return generatedResFolders;
     }
@@ -734,7 +734,7 @@ public abstract class BaseVariantData implements TaskContainer {
         if (processJavaResourcesTask != null) {
             return processJavaResourcesTask.getOutputs().getFiles().getSingleFile();
         } else {
-            return getScope().getSourceFoldersJavaResDestinationDir();
+            return scope.getSourceFoldersJavaResDestinationDir();
         }
     }
 

@@ -87,7 +87,7 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     @NonNull
     BaseVariantData getVariantData();
 
-    boolean isMinifyEnabled();
+    boolean useJavaCodeShrinker();
 
     boolean useResourceShrinker();
 

@@ -27,7 +27,7 @@ import java.io.PrintStream;
 import java.util.Collections;
 import org.junit.Test;
 
-public class NewShrinkerTransformTest {
+public class BuiltInShrinkerTransformTest {
 
     @Test
     public void whyAreYouKeepingExplanation() throws Exception {
@@ -39,7 +39,7 @@ public class NewShrinkerTransformTest {
                         .with("test/Bbb", DependencyType.REQUIRED_CLASS_STRUCTURE);
 
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        NewShrinkerTransform.printWhyAreYouKeepingExplanation(
+        BuiltInShrinkerTransform.printWhyAreYouKeepingExplanation(
                 ImmutableMap.of("test/Bbb", trace), new PrintStream(byteArrayOutputStream));
 
         String expected =

@@ -1053,28 +1053,21 @@ public class VariantManager implements VariantModel {
                 addVariant(variantData);
 
                 GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
+                VariantScope variantScope = variantData.getScope();
                 ProcessProfileWriter.addVariant(project.getPath(), variantData.getName())
                         .setIsDebug(variantConfig.getBuildType().isDebuggable())
                         .setUseJack(variantConfig.isJackEnabled())
-                        .setMinifyEnabled(variantConfig.isMinifyEnabled())
+                        .setMinifyEnabled(variantScope.useJavaCodeShrinker())
                         .setUseMultidex(variantConfig.isMultiDexEnabled())
                         .setUseLegacyMultidex(variantConfig.isLegacyMultiDexMode())
                         .setVariantType(variantData.getType().getAnalyticsVariantType());
 
                 if (variantFactory.hasTestScope()) {
-                    TestVariantData unitTestVariantData = createTestVariantData(
-                            variantData,
-                            UNIT_TEST);
+                    TestVariantData unitTestVariantData =
+                            createTestVariantData(variantData, UNIT_TEST);
                     addVariant(unitTestVariantData);
 
                     if (buildTypeData == testBuildTypeData) {
-                        if (variantConfig.isMinifyEnabled() && variantConfig.isJackEnabled()) {
-                            androidBuilder.getErrorReporter().handleSyncError(
-                                    variantConfig.getFullName(),
-                                    SyncIssue.TYPE_JACK_IS_NOT_SUPPORTED,
-                                    "Minifying the variant used for tests is not supported when "
-                                            + "using Jack.");
-                        }
                         variantForAndroidTest = variantData;
                     }
                 }

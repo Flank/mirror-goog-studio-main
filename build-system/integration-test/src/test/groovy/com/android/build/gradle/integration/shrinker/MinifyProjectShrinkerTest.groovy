@@ -49,7 +49,7 @@ class MinifyProjectShrinkerTest {
     }
 
     @Test
-    public void "APK is correct"() throws Exception {
+    public void "test APK is correct"() throws Exception {
         project.execute("assembleMinified")
         checkShrinkerWasUsed(project)
         assertThatApk(project.getApk("minified")).containsClass("Lcom/android/tests/basic/Main;")

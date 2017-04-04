@@ -38,7 +38,6 @@ import com.android.build.api.transform.Transform;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
 import com.android.build.gradle.internal.pipeline.TransformManager;
@@ -125,7 +124,6 @@ public class LibraryTaskManager extends TaskManager {
         final LibraryVariantData libVariantData =
                 (LibraryVariantData) variantScope.getVariantData();
         final GradleVariantConfiguration variantConfig = variantScope.getVariantConfiguration();
-        final CoreBuildType buildType = variantConfig.getBuildType();
 
         GlobalScope globalScope = variantScope.getGlobalScope();
 
@@ -498,8 +496,8 @@ public class LibraryTaskManager extends TaskManager {
                         createMergeJavaResTransform(tasks, variantScope);
 
                         // ----- Minify next -----
-                        if (buildType.isMinifyEnabled()) {
-                            createMinifyTransform(tasks, variantScope);
+                        if (variantScope.useJavaCodeShrinker()) {
+                            createJavaCodeShrinkerTransform(tasks, variantScope);
                         }
 
                         maybeCreateShrinkResourcesTransform(tasks, variantScope);

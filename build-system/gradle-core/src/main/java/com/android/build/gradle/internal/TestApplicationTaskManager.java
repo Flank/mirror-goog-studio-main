@@ -153,10 +153,11 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
     }
 
     @Override
-    protected void createMinifyTransform(
+    protected void createJavaCodeShrinkerTransform(
             @NonNull TaskFactory taskFactory, @NonNull VariantScope variantScope) {
         if (getTestTargetMapping(variantScope) != null) {
-            doCreateMinifyTransform(taskFactory, variantScope, getTestTargetMapping(variantScope));
+            doCreateJavaCodeShrinkerTransform(
+                    taskFactory, variantScope, getTestTargetMapping(variantScope));
         }
     }
 

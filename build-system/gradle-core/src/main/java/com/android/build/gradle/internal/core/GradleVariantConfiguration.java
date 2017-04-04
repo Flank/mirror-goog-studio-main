@@ -347,17 +347,6 @@ public class GradleVariantConfiguration
         return mergedNdkConfig.getAbiFilters();
     }
 
-    /**
-     * Returns whether the configuration has minification enabled.
-     */
-    public boolean isMinifyEnabled() {
-        VariantType type = getType();
-        // if type == test then getTestedConfig always returns non-null
-        //noinspection ConstantConditions
-        return getBuildType().isMinifyEnabled() &&
-                (!type.isForTesting() || (getTestedConfig().getType() != VariantType.LIBRARY));
-    }
-
     public CoreJackOptions getJackOptions() {
         return mergedJackOptions;
     }

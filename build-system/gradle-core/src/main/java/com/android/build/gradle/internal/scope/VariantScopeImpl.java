@@ -85,6 +85,7 @@ import com.android.build.gradle.tasks.ShaderCompile;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BootClasspathBuilder;
 import com.android.builder.core.BuilderConstants;
+import com.android.builder.core.VariantConfiguration;
 import com.android.builder.core.VariantType;
 import com.android.builder.dexing.DexingMode;
 import com.android.builder.model.ApiVersion;
@@ -336,8 +337,20 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     }
 
     @Override
-    public boolean isMinifyEnabled() {
-        return getVariantConfiguration().getBuildType().isMinifyEnabled();
+    public boolean useJavaCodeShrinker() {
+        if (!getVariantConfiguration().getBuildType().isMinifyEnabled()) {
+            return false;
+        }
+
+        if (getVariantConfiguration().getType().isForTesting()) {
+            VariantConfiguration testedVariantConfiguration =
+                    getVariantConfiguration().getTestedConfig();
+
+            assert testedVariantConfiguration != null; // isForTesting() called above.
+            return testedVariantConfiguration.getType() != VariantType.LIBRARY;
+        }
+
+        return true;
     }
 
     @Override
@@ -347,7 +360,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
         CoreBuildType buildType = getVariantConfiguration().getBuildType();
         return buildType.isShrinkResources()
-                && buildType.isMinifyEnabled()
+                && this.useJavaCodeShrinker()
                 && !getInstantRunBuildContext().isInInstantRunMode();
     }
 

@@ -111,6 +111,7 @@ import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeArtif
 import com.android.build.gradle.internal.tasks.databinding.DataBindingProcessLayoutsTask;
 import com.android.build.gradle.internal.test.AbstractTestDataImpl;
 import com.android.build.gradle.internal.test.TestDataImpl;
+import com.android.build.gradle.internal.transforms.BuiltInShrinkerTransform;
 import com.android.build.gradle.internal.transforms.CustomClassTransform;
 import com.android.build.gradle.internal.transforms.DesugarTransform;
 import com.android.build.gradle.internal.transforms.DexArchiveBuilderTransform;
@@ -126,7 +127,6 @@ import com.android.build.gradle.internal.transforms.JarMergingTransform;
 import com.android.build.gradle.internal.transforms.MainDexListTransform;
 import com.android.build.gradle.internal.transforms.MergeJavaResourcesTransform;
 import com.android.build.gradle.internal.transforms.MultiDexTransform;
-import com.android.build.gradle.internal.transforms.NewShrinkerTransform;
 import com.android.build.gradle.internal.transforms.PreDexTransform;
 import com.android.build.gradle.internal.transforms.ProGuardTransform;
 import com.android.build.gradle.internal.transforms.ProguardConfigurable;
@@ -2005,8 +2005,6 @@ public abstract class TaskManager {
 
         maybeCreateDesugarTask(tasks, variantScope, config.getMinSdkVersion(), transformManager);
 
-        boolean isMinifyEnabled = isMinifyEnabled(variantScope);
-
         AndroidConfig extension = variantScope.getGlobalScope().getExtension();
 
         // ----- External Transforms -----
@@ -2043,8 +2041,9 @@ public abstract class TaskManager {
 
         // ----- Minify next -----
 
-        if (isMinifyEnabled) {
-            createMinifyTransform(tasks, variantScope);
+        boolean runJavaCodeShrinker = runJavaCodeShrinker(variantScope);
+        if (runJavaCodeShrinker) {
+            createJavaCodeShrinkerTransform(tasks, variantScope);
         }
 
         maybeCreateShrinkResourcesTransform(tasks, variantScope);
@@ -2077,7 +2076,8 @@ public abstract class TaskManager {
         Optional<AndroidTask<TransformTask>> multiDexClassListTask;
 
         if (dexingMode == DexingMode.LEGACY_MULTIDEX) {
-            boolean proguardInPipeline = isMinifyEnabled && config.getBuildType().isUseProguard();
+            boolean proguardInPipeline =
+                    runJavaCodeShrinker && config.getBuildType().isUseProguard();
 
             // If ProGuard will be used, we'll end up with a "fat" jar anyway. If we're using the
             // new dexing pipeline, we'll use the new MainDexListTransform below, so there's no need
@@ -2185,7 +2185,7 @@ public abstract class TaskManager {
             dexOptions = extension.getDexOptions();
         }
 
-        boolean minified = isMinifyEnabled(variantScope);
+        boolean minified = runJavaCodeShrinker(variantScope);
         FileCache userLevelCache = getUserLevelCache(minified, dexOptions.getPreDexLibraries());
         FileCache projectLevelCache =
                 getProjectLevelCache(minified, dexOptions.getPreDexLibraries());
@@ -2261,7 +2261,7 @@ public abstract class TaskManager {
         boolean cachePreDex =
                 dexingMode.isPreDex()
                         && dexOptions.getPreDexLibraries()
-                        && !isMinifyEnabled(variantScope);
+                        && !runJavaCodeShrinker(variantScope);
         boolean preDexEnabled =
                 variantScope.getInstantRunBuildContext().isInInstantRunMode() || cachePreDex;
         if (preDexEnabled) {
@@ -2309,9 +2309,8 @@ public abstract class TaskManager {
         }
     }
 
-    private boolean isMinifyEnabled(VariantScope variantScope) {
-        return variantScope.getVariantConfiguration().isMinifyEnabled()
-                || isTestedAppMinified(variantScope);
+    private boolean runJavaCodeShrinker(VariantScope variantScope) {
+        return variantScope.useJavaCodeShrinker() || isTestedAppMinified(variantScope);
     }
 
     /**
@@ -2985,9 +2984,9 @@ public abstract class TaskManager {
         return jacocoAgentTask;
     }
 
-    protected void createMinifyTransform(
+    protected void createJavaCodeShrinkerTransform(
             @NonNull TaskFactory taskFactory, @NonNull final VariantScope variantScope) {
-        doCreateMinifyTransform(
+        doCreateJavaCodeShrinkerTransform(
                 taskFactory,
                 variantScope,
                 // No mapping in non-test modules.
@@ -2998,7 +2997,7 @@ public abstract class TaskManager {
      * Actually creates the minify transform, using the given mapping configuration. The mapping is
      * only used by test-only modules.
      */
-    protected final void doCreateMinifyTransform(
+    protected final void doCreateJavaCodeShrinkerTransform(
             @NonNull TaskFactory taskFactory,
             @NonNull final VariantScope variantScope,
             @Nullable FileCollection mappingFileCollection) {
@@ -3012,13 +3011,13 @@ public abstract class TaskManager {
             // Since the built-in class shrinker does not obfuscate, there's no point running
             // it on the test FULL_APK (it also doesn't have a -dontshrink mode).
             if (variantScope.getTestedVariantData() == null) {
-                createNewShrinkerTransform(variantScope, taskFactory);
+                createBuiltInShrinkerTransform(variantScope, taskFactory);
             }
         }
     }
 
-    private void createNewShrinkerTransform(VariantScope scope, TaskFactory taskFactory) {
-        NewShrinkerTransform transform = new NewShrinkerTransform(scope);
+    private void createBuiltInShrinkerTransform(VariantScope scope, TaskFactory taskFactory) {
+        BuiltInShrinkerTransform transform = new BuiltInShrinkerTransform(scope);
         applyProguardConfig(transform, scope);
 
         if (getIncrementalMode(scope.getVariantConfiguration()) != IncrementalMode.NONE) {
@@ -3151,7 +3150,7 @@ public abstract class TaskManager {
                 return;
             }
 
-            if (!buildType.isMinifyEnabled()) {
+            if (!scope.useJavaCodeShrinker()) {
                 androidBuilder
                         .getErrorReporter()
                         .handleSyncError(
@@ -3327,7 +3326,7 @@ public abstract class TaskManager {
 
         scope.getPreBuildTask().dependsOn(tasks, MAIN_PREBUILD);
 
-        if (isMinifyEnabled(scope)) {
+        if (runJavaCodeShrinker(scope)) {
             scope.getPreBuildTask().dependsOn(tasks, EXTRACT_PROGUARD_FILES);
         }
     }
