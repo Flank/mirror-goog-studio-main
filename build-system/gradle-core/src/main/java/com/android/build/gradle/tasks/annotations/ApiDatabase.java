@@ -107,6 +107,24 @@ public class ApiDatabase {
         return classSet.contains(className);
     }
 
+    @NonNull
+    private static String stripTypeArgs(@NonNull String line) {
+        StringBuilder sb = new StringBuilder(line.length());
+        int balance = 0;
+        for (int i = 0, n = line.length(); i < n; i++) {
+            char c = line.charAt(i);
+            if (c == '<') {
+                balance++;
+            } else if (c == '>') {
+                balance--;
+            } else if (balance == 0) {
+                sb.append(c);
+            }
+        }
+
+        return sb.toString();
+    }
+
     public Set<String> getDeclaredIntFields(String className) {
         return intFieldMap.get(className);
     }
@@ -117,7 +135,7 @@ public class ApiDatabase {
         Pattern PACKAGE = Pattern.compile("package (\\S+) \\{");
         Pattern CLASS =
                 Pattern.compile(MODIFIERS
-                        + "(class|interface|enum)\\s+(\\S+)\\s+(extends (.+))?(implements (.+))?(.*)\\{");
+                        + "(class|interface|enum)\\s+(\\S+)\\s+(extends\\s+(\\S+))?(implements\\s+(.+))?(.*)\\{");
         Pattern METHOD = Pattern.compile("(method|ctor)\\s+" +
                 MODIFIERS + "(.+)??\\s+(\\S+)\\s*\\((.*)\\)(.*);");
         Pattern CTOR = Pattern.compile("(method|ctor)\\s+.*\\((.*)\\)(.*);");
@@ -132,6 +150,7 @@ public class ApiDatabase {
             if (line.isEmpty() || line.equals("}")) {
                 continue;
             }
+            line = stripTypeArgs(line);
             if (line.startsWith("method ")) {
                 Matcher matcher = METHOD.matcher(line);
                 if (!matcher.matches()) {
@@ -257,17 +276,17 @@ public class ApiDatabase {
                     if (superClass != null) {
                         Splitter splitter = Splitter.on(' ').trimResults().omitEmptyStrings();
                         for (String from : splitter.split(superClass)) {
-                            if (from.equals("implements")) {  // workaround for broken regexp
-                                continue;
-                            }
                             addInheritsFrom(currentClass, from);
                         }
                         addInheritsFrom(currentClass, superClass.trim());
                     }
-                    String implementsList = matcher.group(8);
+                    String implementsList = matcher.group(9);
                     if (implementsList != null) {
                         Splitter splitter = Splitter.on(' ').trimResults().omitEmptyStrings();
                         for (String from : splitter.split(implementsList)) {
+                            if (from.equals("implements")) {  // workaround for broken regexp
+                                continue;
+                            }
                             addInheritsFrom(currentClass, from);
                         }
                     }

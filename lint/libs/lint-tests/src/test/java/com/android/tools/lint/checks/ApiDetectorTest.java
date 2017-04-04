@@ -3186,7 +3186,10 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 + "src/test/pkg/InterfaceMethodTest.java:6: Error: Default method requires API level 24 (current min is 15) [NewApi]\n"
                 + "    default void method2() {\n"
                 + "    ^\n"
-                + "1 errors, 0 warnings\n",
+                + "src/test/pkg/InterfaceMethodTest.java:9: Error: Static interface  method requires API level 24 (current min is 15) [NewApi]\n"
+                + "    static void method3() {\n"
+                + "    ^\n"
+                + "2 errors, 0 warnings\n",
                 lintProject(
                         manifest().minSdk(15),
                         java("src/test/pkg/InterfaceMethodTest.java", ""
@@ -3196,6 +3199,10 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 + "public interface InterfaceMethodTest {\n"
                                 + "    void someMethod();\n"
                                 + "    default void method2() {\n"
+                                + "        System.out.println(\"test\");\n"
+                                + "    }\n"
+                                // Regression test for http//b.android.com/300016
+                                + "    static void method3() {\n"
                                 + "        System.out.println(\"test\");\n"
                                 + "    }\n"
                                 + "}")
@@ -3215,6 +3222,9 @@ public class ApiDetectorTest extends AbstractCheckTest {
                                 + "public interface InterfaceMethodTest {\n"
                                 + "    void someMethod();\n"
                                 + "    default void method2() {\n"
+                                + "        System.out.println(\"test\");\n"
+                                + "    }\n"
+                                + "    static void method3() {\n"
                                 + "        System.out.println(\"test\");\n"
                                 + "    }\n"
                                 + "}")

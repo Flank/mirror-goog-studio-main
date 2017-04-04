@@ -24,6 +24,7 @@ import static com.android.SdkConstants.DOT_CLASS;
 import static com.android.SdkConstants.DOT_JAR;
 import static com.android.SdkConstants.DOT_JAVA;
 import static com.android.SdkConstants.DOT_XML;
+import static com.android.SdkConstants.DOT_ZIP;
 import static com.android.SdkConstants.GT_ENTITY;
 import static com.android.SdkConstants.INT_DEF_ANNOTATION;
 import static com.android.SdkConstants.LT_ENTITY;
@@ -790,8 +791,7 @@ public class Extractor {
                     JarEntry outEntry = new JarEntry(name);
                     zos.putNextEntry(outEntry);
 
-                    StringWriter stringWriter = new StringWriter(1000);
-                    try (PrintWriter writer = new PrintWriter(stringWriter)) {
+                    try (StringPrintWriter writer = StringPrintWriter.create()) {
                         writer.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                                 "<root>");
 
@@ -822,7 +822,7 @@ public class Extractor {
 
                         writer.println("</root>\n");
                         writer.close();
-                        String xml = stringWriter.toString();
+                        String xml = writer.getContents();
 
                         // Validate
                         if (assertionsEnabled()) {
@@ -959,7 +959,7 @@ public class Extractor {
                 }
             }
         } else if (file.isFile()) {
-            if (file.getPath().endsWith(DOT_JAR)) {
+            if (file.getPath().endsWith(DOT_JAR) || file.getPath().endsWith(DOT_ZIP)) {
                 mergeFromJar(file);
             } else if (file.getPath().endsWith(DOT_XML)) {
                 try {
@@ -1040,10 +1040,14 @@ public class Extractor {
             }
 
             signature = unescapeXml(signature);
-            if (signature.equals("java.util.Arrays void sort(T[], java.util.Comparator<?) 0")) {
-                // Incorrect metadata (unbalanced <>'s)
-                // See IDEA-137385
-                signature = "java.util.Arrays void sort(T[], java.util.Comparator<?>) 0";
+            if (signature.equals("java.util.Calendar int get(int)")) {
+                // https://youtrack.jetbrains.com/issue/IDEA-137385
+                continue;
+            } else if (signature.equals("java.util.Calendar void set(int, int, int) 1")
+                    || signature.equals("java.util.Calendar void set(int, int, int, int, int) 1")
+                    || signature.equals("java.util.Calendar void set(int, int, int, int, int, int) 1")) {
+                // http://b.android.com/76090
+                continue;
             }
 
             Matcher matcher = XML_SIGNATURE.matcher(signature);
@@ -1563,6 +1567,43 @@ public class Extractor {
         return new AnnotationData(name, pairs);
     }
 
+    /**
+     * A writer which stores all its contents into a string and has the ability to mark
+     * a certain freeze point and then reset back to it
+     */
+    private static class StringPrintWriter extends PrintWriter {
+        private final StringWriter stringWriter;
+        private int mark;
+
+        private StringPrintWriter(@NonNull StringWriter stringWriter) {
+            super(stringWriter);
+            this.stringWriter = stringWriter;
+        }
+
+        public void mark() {
+            flush();
+            mark = stringWriter.getBuffer().length();
+        }
+
+        public void reset() {
+            stringWriter.getBuffer().setLength(mark);
+        }
+
+        @NonNull
+        public String getContents() {
+            return stringWriter.toString();
+        }
+
+        @Override
+        public String toString() {
+            return getContents();
+        }
+
+        public static StringPrintWriter create() {
+             return new StringPrintWriter(new StringWriter(1000));
+        }
+    }
+
     private class AnnotationData {
         @NonNull
         public final String name;
@@ -1589,7 +1630,8 @@ public class Extractor {
             assert attributeStrings != null && attributeStrings.length > 0;
         }
 
-        void write(PrintWriter writer) {
+        void write(StringPrintWriter writer) {
+            writer.mark();
             writer.print("    <annotation name=\"");
             writer.print(name);
 
@@ -1645,11 +1687,13 @@ public class Extractor {
                     attributes = annotation.getParameterList().getAttributes();
                 }
 
+                boolean empty = true;
                 for (PsiNameValuePair pair : attributes) {
                     String value = attributeString(pair.getValue());
                     if (value == null) {
                         continue;
                     }
+                    empty = false;
                     writer.print("      <val name=\"");
                     if (pair.getName() != null) {
                         writer.print(pair.getName());
@@ -1660,6 +1704,13 @@ public class Extractor {
                     writer.print(escapeXml(value));
                     writer.println("\" />");
                 }
+
+                if (empty) {
+                    // All items were filtered out: don't write the annotation at all
+                    writer.reset();
+                    return;
+                }
+
                 writer.println("    </annotation>");
 
             } else if (attributeStrings != null) {
@@ -1882,7 +1933,7 @@ public class Extractor {
 
         public final List<AnnotationData> annotations = Lists.newArrayList();
 
-        void write(PrintWriter writer) {
+        void write(StringPrintWriter writer) {
             if (annotations.isEmpty()) {
                 return;
             }
