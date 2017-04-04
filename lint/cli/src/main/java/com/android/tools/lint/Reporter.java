@@ -503,7 +503,6 @@ public abstract class Reporter {
                     GradleDetector.REMOTE_VERSION,
                     GradleDetector.STRING_INTEGER,
                     GridLayoutDetector.ISSUE,
-                    IconDetector.ICON_LAUNCHER_FORMAT,
                     IconDetector.WEBP_ELIGIBLE,
                     IconDetector.WEBP_UNSUPPORTED,
                     IncludeDetector.ISSUE,

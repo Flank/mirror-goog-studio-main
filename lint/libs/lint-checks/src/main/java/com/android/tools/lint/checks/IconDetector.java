@@ -387,19 +387,6 @@ public class IconDetector extends ResourceXmlDetector implements UastScanner {
             IMPLEMENTATION_JAVA).addMoreInfo(
                 "http://developer.android.com/design/style/iconography.html");
 
-    /** Launcher icon using wrong format */
-    public static final Issue ICON_LAUNCHER_FORMAT = Issue.create(
-            "IconLauncherFormat",
-            "Wrong launcher icon format",
-
-            "Launcher icons should be in the PNG format. This requirement is enforced by the " +
-            "The Google Play Developer Console.",
-            Category.ICONS,
-            6,
-            Severity.ERROR,
-            IMPLEMENTATION_JAVA).addMoreInfo(
-            "https://developer.android.com/guide/practices/ui_guidelines/icon_design_launcher.html#size");
-
     /** Switch to webp? */
     public static final Issue WEBP_ELIGIBLE = Issue.create(
             "ConvertToWebp",
@@ -1441,19 +1428,12 @@ public class IconDetector extends ResourceXmlDetector implements UastScanner {
             }
         }
 
-        boolean checkLauncherShape = context.isEnabled(ICON_LAUNCHER_SHAPE);
-        boolean checkLauncherFormat = context.isEnabled(ICON_LAUNCHER_FORMAT);
-        if (checkLauncherShape || checkLauncherFormat) {
+        if (context.isEnabled(ICON_LAUNCHER_SHAPE)) {
             for (File file : files) {
                 String name = file.getName();
                 if (isLauncherIcon(folderName, getBaseName(name))) {
-                    if (checkLauncherShape
-                            && !endsWith(name, DOT_XML)
-                            && !endsWith(name, DOT_9PNG)) {
+                    if (!endsWith(name, DOT_XML) && !endsWith(name, DOT_9PNG)) {
                         checkLauncherShape(context, folderName, file);
-                    }
-                    if (checkLauncherFormat) {
-                        checkLauncherIconFormat(context, file);
                     }
                 }
             }
@@ -1528,19 +1508,6 @@ public class IconDetector extends ResourceXmlDetector implements UastScanner {
                 }
             }
         }
-    }
-
-    /**
-     * Check that launcher icons are PNG or JPEG
-     */
-    private static void checkLauncherIconFormat(Context context, File file) {
-        String path = file.getPath();
-        if (endsWithIgnoreCase(path, DOT_PNG) || endsWithIgnoreCase(path, DOT_JPEG)) {
-            return;
-        }
-        Location location = Location.create(file);
-        String message = "Launcher icons must be in PNG format";
-        context.report(ICON_LAUNCHER_FORMAT, location, message);
     }
 
     /**
