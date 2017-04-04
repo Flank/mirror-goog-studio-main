@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 #include "event_manager.h"
-#include "perfa/perfa.h"
-#include "perfa/support/jni_wrappers.h"
+#include "agent/agent.h"
+#include "agent/support/jni_wrappers.h"
 
 namespace {
 using profiler::EventManager;
@@ -23,7 +23,7 @@ using std::mutex;
 }  // namespace
 
 using grpc::ClientContext;
-using profiler::Perfa;
+using profiler::Agent;
 using profiler::proto::ActivityData;
 using profiler::proto::ActivityStateData;
 using profiler::proto::EmptyEventResponse;
@@ -38,7 +38,7 @@ EventManager& EventManager::Instance() {
 }
 
 EventManager::EventManager() {
-  Perfa::Instance().AddPerfdStatusChangedCallback(std::bind(
+  Agent::Instance().AddPerfdStatusChangedCallback(std::bind(
       &profiler::EventManager::PerfdStateChanged, this, std::placeholders::_1));
 }
 
@@ -46,7 +46,8 @@ void EventManager::CacheAndEnqueueActivityEvent(
     const profiler::proto::ActivityData& activity) {
   lock_guard<mutex> guard(activity_cache_mutex_);
   // We may have multiple active activities / fragments, so we cache all
-  // that are not destroyed. When we get to this state, we no longer need to cache
+  // that are not destroyed. When we get to this state, we no longer need to
+  // cache
   // the component.
   if (activity.state_changes(activity.state_changes_size() - 1).state() ==
       ActivityStateData::DESTROYED) {
@@ -59,8 +60,8 @@ void EventManager::CacheAndEnqueueActivityEvent(
 
 void EventManager::EnqueueActivityEvent(
     const profiler::proto::ActivityData& activity) {
-  Perfa::Instance().background_queue()->EnqueueTask([activity]() {
-    auto event_stub = Perfa::Instance().event_stub();
+  Agent::Instance().background_queue()->EnqueueTask([activity]() {
+    auto event_stub = Agent::Instance().event_stub();
     ClientContext context;
     EmptyEventResponse response;
     event_stub.SendActivity(&context, activity, &response);

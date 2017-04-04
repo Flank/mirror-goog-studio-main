@@ -20,14 +20,14 @@
 #include <atomic>
 #include <memory>
 
-#include "perfa/perfa.h"
-#include "perfa/support/jni_wrappers.h"
+#include "agent/agent.h"
+#include "agent/support/jni_wrappers.h"
 #include "utils/clock.h"
 
 using grpc::ClientContext;
 using profiler::JByteArrayWrapper;
 using profiler::JStringWrapper;
-using profiler::Perfa;
+using profiler::Agent;
 using profiler::SteadyClock;
 using profiler::proto::ChunkRequest;
 using profiler::proto::HttpDataRequest;
@@ -46,7 +46,7 @@ const SteadyClock &GetClock() {
 
 void SendHttpEvent(uint64_t uid, int64_t timestamp,
                    HttpEventRequest::Event event) {
-  auto net_stub = Perfa::Instance().network_stub();
+  auto net_stub = Agent::Instance().network_stub();
 
   ClientContext ctx;
   HttpEventRequest httpEvent;
@@ -61,7 +61,7 @@ void SendHttpEvent(uint64_t uid, int64_t timestamp,
 
 void EnqueueHttpEvent(uint64_t uid, HttpEventRequest::Event event) {
   int64_t timestamp = GetClock().GetCurrentTime();
-  Perfa::Instance().background_queue()->EnqueueTask(
+  Agent::Instance().background_queue()->EnqueueTask(
       [uid, event, timestamp] { SendHttpEvent(uid, timestamp, event); });
 }
 
@@ -99,8 +99,8 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024InputStreamTrac
     JNIEnv *env, jobject thiz, jlong juid, jbyteArray jbytes) {
   JByteArrayWrapper bytes(env, jbytes);
 
-  Perfa::Instance().background_queue()->EnqueueTask([bytes, juid] {
-    auto net_stub = Perfa::Instance().network_stub();
+  Agent::Instance().background_queue()->EnqueueTask([bytes, juid] {
+    auto net_stub = Agent::Instance().network_stub();
 
     ClientContext ctx;
     EmptyNetworkReply reply;
@@ -132,9 +132,9 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onPr
 
   int64_t timestamp = GetClock().GetCurrentTime();
   int32_t pid = getpid();
-  Perfa::Instance().background_queue()->EnqueueTask(
+  Agent::Instance().background_queue()->EnqueueTask(
       [juid, pid, stack, timestamp, url] {
-        auto net_stub = Perfa::Instance().network_stub();
+        auto net_stub = Agent::Instance().network_stub();
         ClientContext ctx;
         HttpDataRequest httpData;
         EmptyNetworkReply reply;
@@ -161,8 +161,8 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onRe
   JStringWrapper fields(env, jfields);
   JStringWrapper method(env, jmethod);
 
-  Perfa::Instance().background_queue()->EnqueueTask([fields, juid, method] {
-    auto net_stub = Perfa::Instance().network_stub();
+  Agent::Instance().background_queue()->EnqueueTask([fields, juid, method] {
+    auto net_stub = Agent::Instance().network_stub();
     ClientContext ctx;
     HttpRequestRequest httpRequest;
     EmptyNetworkReply reply;
@@ -179,8 +179,8 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onRe
     JNIEnv *env, jobject thiz, jlong juid, jstring jresponse, jstring jfields) {
   JStringWrapper fields(env, jfields);
 
-  Perfa::Instance().background_queue()->EnqueueTask([fields, juid] {
-    auto net_stub = Perfa::Instance().network_stub();
+  Agent::Instance().background_queue()->EnqueueTask([fields, juid] {
+    auto net_stub = Agent::Instance().network_stub();
 
     ClientContext ctx;
     HttpResponseRequest httpResponse;

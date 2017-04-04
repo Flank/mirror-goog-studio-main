@@ -48,7 +48,7 @@ service ProfilerService {
   rpc GetBytes(BytesRequest) returns (BytesResponse) {
   }
 
-  // Query for whether perfa is alive.
+  // Query for whether the agent is alive.
   rpc GetAgentStatus(AgentStatusRequest) returns (AgentStatusResponse) {
   }
 

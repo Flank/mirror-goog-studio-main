@@ -17,15 +17,15 @@
 #include <jni.h>
 #include <unistd.h>
 
+#include "agent/agent.h"
+#include "agent/support/jni_wrappers.h"
 #include "event_manager.h"
-#include "perfa/perfa.h"
-#include "perfa/support/jni_wrappers.h"
 #include "utils/clock.h"
 
 using grpc::ClientContext;
 using profiler::EventManager;
 using profiler::SteadyClock;
-using profiler::Perfa;
+using profiler::Agent;
 using profiler::proto::ActivityData;
 using profiler::proto::ActivityStateData;
 using profiler::proto::SystemData;
@@ -48,7 +48,7 @@ void SendSystemEvent(SystemData* event, int32_t pid, int64_t timestamp,
   event->set_process_id(pid);
   event->set_event_id(jdownTime);
 
-  auto event_stub = Perfa::Instance().event_stub();
+  auto event_stub = Agent::Instance().event_stub();
   ClientContext context;
   EmptyEventResponse response;
   event_stub.SendSystem(&context, *event, &response);
@@ -57,7 +57,7 @@ void SendSystemEvent(SystemData* event, int32_t pid, int64_t timestamp,
 void SendKeyboardEvent(JStringWrapper& text, int64_t event_down_time) {
   int64_t timestamp = GetClock().GetCurrentTime();
   int32_t pid = getpid();
-  Perfa::Instance().background_queue()->EnqueueTask(
+  Agent::Instance().background_queue()->EnqueueTask(
       [pid, text, timestamp, event_down_time]() {
         SystemData event;
         event.set_type(SystemData::KEY);
@@ -67,8 +67,8 @@ void SendKeyboardEvent(JStringWrapper& text, int64_t event_down_time) {
 }
 
 void EnqueueActivityDataEvent(JNIEnv* env, const jstring& name,
-                               const ActivityStateData::ActivityState& state, int hash,
-                               FragmentData* fragment) {
+                              const ActivityStateData::ActivityState& state,
+                              int hash, FragmentData* fragment) {
   JStringWrapper activity_name(env, name);
   int64_t timestamp = GetClock().GetCurrentTime();
   int32_t pid = getpid();
@@ -87,13 +87,14 @@ void EnqueueActivityDataEvent(JNIEnv* env, const jstring& name,
 }
 
 void EnqueueActivityEvent(JNIEnv* env, const jstring& name,
-                          const ActivityStateData::ActivityState& state, int hash) {
+                          const ActivityStateData::ActivityState& state,
+                          int hash) {
   EnqueueActivityDataEvent(env, name, state, hash, nullptr);
 }
 
 void EnqueueFragmentEvent(JNIEnv* env, const jstring& name,
-                          const ActivityStateData::ActivityState& state, int hash,
-                          int activityContextHash) {
+                          const ActivityStateData::ActivityState& state,
+                          int hash, int activityContextHash) {
   FragmentData fragment;
   fragment.set_activity_context_hash(activityContextHash);
   EnqueueActivityDataEvent(env, name, state, hash, &fragment);
@@ -115,7 +116,7 @@ Java_com_android_tools_profiler_support_event_WindowProfilerCallback_sendTouchEv
     JNIEnv* env, jobject thiz, jint jstate, jlong jdownTime) {
   int64_t timestamp = GetClock().GetCurrentTime();
   int32_t pid = getpid();
-  Perfa::Instance().background_queue()->EnqueueTask(
+  Agent::Instance().background_queue()->EnqueueTask(
       [jdownTime, jstate, pid, timestamp]() {
         SystemData event;
         event.set_type(SystemData::TOUCH);
@@ -182,7 +183,8 @@ Java_com_android_tools_profiler_support_activity_ActivityWrapper_sendActivityOnR
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_profilers_EventProfiler_sendFragmentAdded(
     JNIEnv* env, jobject thiz, jstring jname, jint jhash, jint activity_hash) {
-  EnqueueFragmentEvent(env, jname, ActivityStateData::ADDED, jhash, activity_hash);
+  EnqueueFragmentEvent(env, jname, ActivityStateData::ADDED, jhash,
+                       activity_hash);
 }
 
 JNIEXPORT void JNICALL
@@ -197,7 +199,7 @@ Java_com_android_tools_profiler_support_profilers_EventProfiler_sendRotationEven
     JNIEnv* env, jobject thiz, jint jstate) {
   int64_t timestamp = GetClock().GetCurrentTime();
   int32_t pid = getpid();
-  Perfa::Instance().background_queue()->EnqueueTask([jstate, pid, timestamp]() {
+  Agent::Instance().background_queue()->EnqueueTask([jstate, pid, timestamp]() {
     SystemData event;
     event.set_type(SystemData::ROTATION);
     event.set_action_id(jstate);

@@ -21,12 +21,12 @@
 #include <algorithm>
 
 #include "jvmti_helper.h"
-#include "perfa/perfa.h"
+#include "agent/agent.h"
 #include "scoped_local_ref.h"
 #include "utils/log.h"
 
 using profiler::Log;
-using profiler::Perfa;
+using profiler::Agent;
 using profiler::ScopedLocalRef;
 
 namespace profiler {
@@ -41,7 +41,7 @@ jint InitAgent(JavaVM *vm) {
   }
 
   SetAllCapabilities(jvmti_);
-  Perfa::Instance();
+  Agent::Instance();
 
   return JNI_OK;
 }

@@ -32,7 +32,7 @@ void NetStatsFileReader::Refresh() {
     // Line, broken into tokens, with tokens we care about |highlighted|:
     // idx iface acct_tag_hex |uid| cnt_set |rx_bytes| rx_packets |tx_bytes|
     // Currently, we are not only sampling the user's traffic but also the
-    // bytes sent between perfa <-> perfd, which to the user is noise. Here,
+    // bytes sent between agent <-> perfd, which to the user is noise. Here,
     // we ignore the bytes sent on the loopback device to avoid counting such
     // traffic. We agree as of right now that, users care about traffic from
     // outside much more than inter-process traffic.
