@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.tasks.annotations;
 
-import static com.android.SdkConstants.DOT_JAVA;
 import static java.io.File.pathSeparator;
 import static java.io.File.pathSeparatorChar;
 
@@ -302,28 +301,5 @@ public class ExtractAnnotationsDriver {
         }
 
         return files;
-    }
-
-    private static void addJavaSources(List<File> list, File file) {
-        if (file.isDirectory()) {
-            File[] files = file.listFiles();
-            if (files != null) {
-                for (File child : files) {
-                    addJavaSources(list, child);
-                }
-            }
-        } else {
-            if (file.isFile() && file.getName().endsWith(DOT_JAVA)) {
-                list.add(file);
-            }
-        }
-    }
-
-    private static List<File> gatherJavaSources(List<File> sourcePath) {
-        List<File> sources = Lists.newArrayList();
-        for (File file : sourcePath) {
-            addJavaSources(sources, file);
-        }
-        return sources;
     }
 }
