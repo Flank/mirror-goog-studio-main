@@ -25,6 +25,7 @@ import com.android.builder.model.NativeFile
 import com.android.builder.model.NativeFolder
 import com.android.builder.model.NativeSettings
 import com.android.builder.model.NativeToolchain
+import com.android.testutils.OsType
 import groovy.transform.CompileStatic
 import org.junit.Rule
 import org.junit.Test
@@ -39,6 +40,9 @@ class ExternalNativeComponentPluginTest {
 
     private final boolean isWindows =
             SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS;
+
+    String buildCommand = isWindows ? "cmd /c echo '' >" : "touch "
+    String cleanCommand = isWindows ? "cmd /c del " : "rm "
 
     @Rule
     public GradleTestProject project = GradleTestProject.builder()
@@ -61,11 +65,11 @@ model {
 """
         project.file("config.json") << """
 {
-    "cleanCommands" : ["rm output.txt"],
+    "cleanCommands" : [\"""" + cleanCommand + """output.txt"],
     "buildFiles" : ["CMakeLists.txt"],
     "libraries" : {
         "foo" : {
-            "buildCommand" : "touch output.txt",
+            "buildCommand" : \"""" + buildCommand + """output.txt",
             "artifactName" : "output",
             "toolchain" : "toolchain1",
             "output" : "build/libfoo.so",
@@ -132,7 +136,7 @@ model {
     "buildFiles" : ["CMakeLists.txt"],
     "libraries" : {
         "foo-DEBUG" : {
-            "buildCommand" : "touch foo.txt",
+            "buildCommand" : \"""" + buildCommand + """output.txt",
             "buildType" : "debug",
             "artifactName" : "foo",
             "abi" : "x86",
@@ -151,7 +155,7 @@ model {
     "buildFiles" : ["CMakeLists.txt"],
     "libraries" : {
         "foo-RELEASE" : {
-            "buildCommand" : "touch foo.txt",
+            "buildCommand" : \"""" + buildCommand + """output.txt",
             "buildType" : "release",
             "artifactName" : "foo",
             "abi" : "x86",
@@ -178,7 +182,7 @@ ${copy} ${project.file("config2.json.template")} ${project.file("config2.json")}
     "buildFiles" : ["CMakeLists.txt"],
     "libraries" : {
         "bar-DEBUG" : {
-            "buildCommand" : "touch bar.txt",
+            "buildCommand" : \"""" + buildCommand + """output.txt",
             "buildType" : "debug",
             "artifactName" : "bar",
             "abi" : "x86",
@@ -199,7 +203,7 @@ ${copy} ${project.file("config2.json.template")} ${project.file("config2.json")}
     "buildFiles" : ["CMakeLists.txt"],
     "libraries" : {
         "bar-RELEASE" : {
-            "buildCommand" : "touch bar.txt",
+            "buildCommand" : \"""" + buildCommand + """bar.txt",
             "buildType" : "release",
             "artifactName" : "bar",
             "abi" : "x86",
@@ -278,14 +282,14 @@ apply plugin: 'com.android.model.external'
 
 model {
     nativeBuildConfig {
-        cleanCommands.add("rm output.txt")
+        cleanCommands.add(\"""" + cleanCommand + """output.txt")
         buildFiles.addAll([file("CMakeLists.txt")])
         cFileExtensions.add("c")
         cppFileExtensions.add("cpp")
 
         libraries {
             create("foo") {
-                buildCommand "touch output.txt"
+                buildCommand \""""+ buildCommand +"""output.txt"
                 abi "x86"
                 artifactName "output"
                 toolchain "toolchain1"

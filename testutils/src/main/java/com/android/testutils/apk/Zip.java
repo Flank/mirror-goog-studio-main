@@ -73,7 +73,7 @@ public class Zip implements AutoCloseable {
     }
 
     @NonNull
-    public final Path getFile() {
+    public Path getFile() {
         return file;
     }
 
