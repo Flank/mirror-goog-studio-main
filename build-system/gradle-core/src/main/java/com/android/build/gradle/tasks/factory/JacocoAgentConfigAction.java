@@ -66,11 +66,8 @@ public class JacocoAgentConfigAction implements TaskConfigAction<Copy> {
         // {@link FileTree} using {@link project#zipTree}.  To avoid resolving the
         // AGENT_CONFIGURATION_NAME configuration during configuration phase, we use a bypass
         // supplier that returns empty list during configuration.
-        Supplier<Collection<File>> jacocoAgent = TaskInputHelper.bypassFileSupplier(() -> {
-            JacocoPlugin plugin = project.getPlugins().getPlugin(JacocoPlugin.class);
-            plugin.resolveAgentDependencies();
-            return config.getFiles();
-        });
+        Supplier<Collection<File>> jacocoAgent =
+                TaskInputHelper.bypassFileSupplier(config::getFiles);
         Callable<Collection<FileTree>> callable  =
                 () -> jacocoAgent.get().stream().map(project::zipTree).collect(Collectors.toList());
 
