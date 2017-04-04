@@ -202,7 +202,8 @@ class ExternalBuildTaskManager {
                                 return processedAndroidResourcesFile;
                             }
                         },
-                        false /* addResourceVerifier */);
+                        false /* addResourceVerifier */,
+                        null);
 
         extractJarsTask.ifPresent(t -> t.dependsOn(tasks, buildInfoLoaderTask));
 
@@ -310,7 +311,8 @@ class ExternalBuildTaskManager {
                         androidBuilder,
                         variantScope.getGlobalScope().getBuildCache(),
                         dexingMode,
-                        variantScope.getInstantRunBuildContext().isInInstantRunMode());
+                        variantScope.getInstantRunBuildContext().isInInstantRunMode(),
+                        null);
         transformManager.addTransform(tasks, variantScope, preDexTransform);
 
         if (dexingMode != DexingMode.NATIVE_MULTIDEX) {
@@ -322,7 +324,8 @@ class ExternalBuildTaskManager {
                             null,
                             verifyNotNull(androidBuilder.getTargetInfo(), "Target Info not set."),
                             androidBuilder.getDexByteCodeConverter(),
-                            androidBuilder.getErrorReporter());
+                            androidBuilder.getErrorReporter(),
+                            null);
 
             transformManager.addTransform(tasks, variantScope, dexTransform);
         }

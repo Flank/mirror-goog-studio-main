@@ -27,6 +27,7 @@ import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.concurrency.GuardedBy;
 import com.android.builder.internal.compiler.DexWrapper;
+import com.android.builder.model.SyncIssue;
 import com.android.builder.sdk.TargetInfo;
 import com.android.builder.utils.PerformanceUtils;
 import com.android.ide.common.process.JavaProcessExecutor;
@@ -79,21 +80,24 @@ public class DexByteCodeConverter {
     private final TargetInfo mTargetInfo;
     private final ILogger mLogger;
     private Boolean mIsDexInProcess = null;
-
+    @NonNull private ErrorReporter errorReporter;
 
     public DexByteCodeConverter(
             ILogger logger,
             TargetInfo targetInfo,
             JavaProcessExecutor javaProcessExecutor,
-            boolean verboseExec) {
+            boolean verboseExec,
+            @NonNull ErrorReporter errorReporter) {
         mLogger = logger;
         mTargetInfo = targetInfo;
         mJavaProcessExecutor = javaProcessExecutor;
         mVerboseExec = verboseExec;
+        this.errorReporter = errorReporter;
     }
 
     /**
      * Converts the bytecode to Dalvik format
+     *
      * @param inputs the input files
      * @param outDexFolder the location of the output folder
      * @param dexOptions dex options
@@ -104,8 +108,10 @@ public class DexByteCodeConverter {
             boolean multidex,
             @Nullable File mainDexList,
             @NonNull DexOptions dexOptions,
-            @NonNull ProcessOutputHandler processOutputHandler)
-            throws IOException, InterruptedException, ProcessException {checkNotNull(inputs, "inputs cannot be null.");
+            @NonNull ProcessOutputHandler processOutputHandler,
+            @Nullable Integer minSdkVersion)
+            throws IOException, InterruptedException, ProcessException {
+        checkNotNull(inputs, "inputs cannot be null.");
         checkNotNull(outDexFolder, "outDexFolder cannot be null.");
         checkNotNull(dexOptions, "dexOptions cannot be null.");
         checkArgument(outDexFolder.isDirectory(), "outDexFolder must be a folder");
@@ -124,7 +130,8 @@ public class DexByteCodeConverter {
         builder.setVerbose(mVerboseExec)
                 .setMultiDex(multidex)
                 .setMainDexList(mainDexList)
-                .addInputs(verifiedInputs.build());
+                .addInputs(verifiedInputs.build())
+                .setMinSdkVersion(minSdkVersion);
 
         runDexer(builder, dexOptions, processOutputHandler);
     }
@@ -172,6 +179,17 @@ public class DexByteCodeConverter {
             @NonNull final DexOptions dexOptions,
             @NonNull final ProcessOutputHandler processOutputHandler)
             throws ProcessException, InterruptedException {
+        if (builder.getMinSdkVersion() != null) {
+            errorReporter.handleSyncError(
+                    null,
+                    SyncIssue.TYPE_GENERIC,
+                    "Java 8 language features that require min API level 24 and above "
+                            + "(see https://d.android.com/r/tools/java-8-support-message.html) are "
+                            + "not supported when dexing out of process.\n"
+                            + "Please switch to dexing in process.");
+            return;
+        }
+
         final String submission = Joiner.on(',').join(builder.getInputs());
         mLogger.verbose("Dexing out-of-process : %1$s", submission);
         try {

@@ -504,7 +504,8 @@ public class DexTransformTest {
                         null, // mainDexListFile
                         targetInfo,
                         byteCodeConverter,
-                        mock(ErrorReporter.class));
+                        mock(ErrorReporter.class),
+                        null);
 
         TransformInput transformInput = getTransformInput(preDexedInputs, ImmutableList.of());
         TransformOutputProvider mockTransformOutputProvider = mock(TransformOutputProvider.class);
@@ -533,7 +534,8 @@ public class DexTransformTest {
                         fakeAndroidBuilder,
                         buildCache,
                         DexingMode.MONO_DEX,
-                        false);
+                        false,
+                        null);
 
         TransformInput transformInput = getTransformInput(jarInputs, directoryInputs);
         TransformOutputProvider mockTransformOutputProvider = mock(TransformOutputProvider.class);
@@ -593,7 +595,8 @@ public class DexTransformTest {
                 @NonNull File outFile,
                 boolean multiDex,
                 @NonNull DexOptions dexOptions,
-                @NonNull ProcessOutputHandler processOutputHandler)
+                @NonNull ProcessOutputHandler processOutputHandler,
+                @Nullable Integer minSdkVersion)
                 throws IOException {
             String content =
                     inputFile.isDirectory()
@@ -611,7 +614,7 @@ public class DexTransformTest {
                 TargetInfo targetInfo,
                 JavaProcessExecutor javaProcessExecutor,
                 boolean verboseExec) {
-            super(logger, targetInfo, javaProcessExecutor, verboseExec);
+            super(logger, targetInfo, javaProcessExecutor, verboseExec, new NoOpErrorReporter());
         }
 
         @Override
@@ -621,7 +624,8 @@ public class DexTransformTest {
                 boolean multidex,
                 @Nullable File mainDexList,
                 @NonNull DexOptions dexOptions,
-                @NonNull ProcessOutputHandler processOutputHandler)
+                @NonNull ProcessOutputHandler processOutputHandler,
+                @Nullable Integer minSdkVersion)
                 throws IOException, InterruptedException, ProcessException {
             Files.write(
                     "Dexed content", new File(outDexFolder, "classes.dex"), StandardCharsets.UTF_8);

@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.transforms;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.QualifiedContent;
@@ -79,16 +80,19 @@ public class InstantRunDex extends Transform {
 
     @NonNull
     private final InstantRunVariantScope variantScope;
+    @Nullable private final Integer minSdkForDx;
 
     public InstantRunDex(
             @NonNull InstantRunVariantScope transformVariantScope,
             @NonNull Supplier<DexByteCodeConverter> dexByteCodeConverter,
             @NonNull DexOptions dexOptions,
-            @NonNull Logger logger) {
+            @NonNull Logger logger,
+            @Nullable Integer minSdkForDx) {
         this.variantScope = transformVariantScope;
         this.dexByteCodeConverter = dexByteCodeConverter;
         this.dexOptions = dexOptions;
         this.logger = new LoggerWrapper(logger);
+        this.minSdkForDx = minSdkForDx;
     }
 
     @Override
@@ -202,12 +206,16 @@ public class InstantRunDex extends Transform {
     @VisibleForTesting
     protected void convertByteCode(List<File> inputFiles, File outputFolder)
             throws InterruptedException, ProcessException, IOException {
-        dexByteCodeConverter.get().convertByteCode(inputFiles,
-                outputFolder,
-                false /* multiDexEnabled */,
-                null /*getMainDexListFile */,
-                dexOptions,
-                new LoggedProcessOutputHandler(logger));
+        dexByteCodeConverter
+                .get()
+                .convertByteCode(
+                        inputFiles,
+                        outputFolder,
+                        false /* multiDexEnabled */,
+                        null /*getMainDexListFile */,
+                        dexOptions,
+                        new LoggedProcessOutputHandler(logger),
+                        minSdkForDx);
     }
 
     @VisibleForTesting
@@ -252,11 +260,17 @@ public class InstantRunDex extends Transform {
     @NonNull
     @Override
     public Map<String, Object> getParameterInputs() {
-        return ImmutableMap.of(
+        ImmutableMap.Builder<String, Object> params = ImmutableMap.builder();
+        params.put(
                 "changesAreCompatible",
-                variantScope.getInstantRunBuildContext().hasPassedVerification(),
+                variantScope.getInstantRunBuildContext().hasPassedVerification());
+        params.put(
                 "restartDexRequested",
                 variantScope.getGlobalScope().isActive(OptionalCompilationStep.RESTART_ONLY));
+        if (minSdkForDx != null) {
+            params.put("minSdkForDx", minSdkForDx);
+        }
+        return params.build();
     }
 
     @NonNull

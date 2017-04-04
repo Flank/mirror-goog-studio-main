@@ -43,12 +43,11 @@ final class DxDexKey extends DexKey {
     private static final String ATTR_ADDITIONAL_PARAMETERS = "custom-flags";
 
     private static final String ATTR_IS_MULTIDEX = "is-multidex";
+    private static final String ATTR_MIN_SDK_VERSION = "min-sdk-version";
 
-    @NonNull
-    private final ImmutableSortedSet<String> mAdditionalParameters;
-
-    @Nullable
-    private Boolean mIsMultiDex;
+    @NonNull private final ImmutableSortedSet<String> additionalParameters;
+    @Nullable private Integer minSdkVersion;
+    @Nullable private Boolean isMultiDex;
 
     private DxDexKey(
             @NonNull File sourceFile,
@@ -56,10 +55,12 @@ final class DxDexKey extends DexKey {
             boolean jumboMode,
             boolean optimize,
             @NonNull Iterable<String> additionalParameters,
-            @Nullable Boolean isMultiDex) {
+            @Nullable Boolean isMultiDex,
+            @Nullable Integer minSdkVersion) {
         super(sourceFile, buildToolsRevision, jumboMode, optimize);
-        mAdditionalParameters = ImmutableSortedSet.copyOf(additionalParameters);;
-        mIsMultiDex = isMultiDex;
+        this.additionalParameters = ImmutableSortedSet.copyOf(additionalParameters);
+        this.minSdkVersion = minSdkVersion;
+        this.isMultiDex = isMultiDex;
     }
 
     static DxDexKey of(
@@ -68,71 +69,88 @@ final class DxDexKey extends DexKey {
             boolean jumboMode,
             boolean optimize,
             @NonNull Iterable<String> additionalParameters,
-            @Nullable Boolean isMultiDex) {
+            @Nullable Boolean isMultiDex,
+            @Nullable Integer minSdkVersion) {
         return new DxDexKey(
                 sourceFile,
                 buildToolsRevision,
                 jumboMode,
                 optimize,
                 additionalParameters,
-                isMultiDex);
+                isMultiDex,
+                minSdkVersion);
     }
 
-    static final PreProcessCache.KeyFactory<DxDexKey> FACTORY = (sourceFile, revision, attrMap) -> {
-        boolean jumboMode =
-                Boolean.parseBoolean(attrMap.getNamedItem(ATTR_JUMBO_MODE).getNodeValue());
+    static final PreProcessCache.KeyFactory<DxDexKey> FACTORY =
+            (sourceFile, revision, attrMap) -> {
+                boolean jumboMode =
+                        Boolean.parseBoolean(attrMap.getNamedItem(ATTR_JUMBO_MODE).getNodeValue());
 
-        boolean optimize;
-        Node optimizeAttribute = attrMap.getNamedItem(ATTR_OPTIMIZE);
+                boolean optimize;
+                Node optimizeAttribute = attrMap.getNamedItem(ATTR_OPTIMIZE);
 
-        //noinspection SimplifiableIfStatement
-        if (optimizeAttribute != null) {
-            optimize = Boolean.parseBoolean(optimizeAttribute.getNodeValue());
-        } else {
-            // Old code didn't set this attribute and always used optimizations.
-            optimize = true;
-        }
+                //noinspection SimplifiableIfStatement
+                if (optimizeAttribute != null) {
+                    optimize = Boolean.parseBoolean(optimizeAttribute.getNodeValue());
+                } else {
+                    // Old code didn't set this attribute and always used optimizations.
+                    optimize = true;
+                }
 
-        List<String> additionalParameters = ImmutableList.of();
-        Node additionalParametersAttribute = attrMap.getNamedItem(ATTR_ADDITIONAL_PARAMETERS);
-        if (additionalParametersAttribute != null) {
-            additionalParameters =
-                    Splitter.on(ADDITIONAL_PARAMETERS_SEPARATOR)
-                            .omitEmptyStrings()
-                            .splitToList(additionalParametersAttribute.getNodeValue());
-        }
+                List<String> additionalParameters = ImmutableList.of();
+                Node additionalParametersAttribute =
+                        attrMap.getNamedItem(ATTR_ADDITIONAL_PARAMETERS);
+                if (additionalParametersAttribute != null) {
+                    additionalParameters =
+                            Splitter.on(ADDITIONAL_PARAMETERS_SEPARATOR)
+                                    .omitEmptyStrings()
+                                    .splitToList(additionalParametersAttribute.getNodeValue());
+                }
 
-        Boolean isMultiDex = null;
-        Node multiDexAttr = attrMap.getNamedItem(ATTR_IS_MULTIDEX);
-        if (multiDexAttr != null) {
-            isMultiDex = Boolean.parseBoolean(multiDexAttr.getNodeValue());
-        }
+                Boolean isMultiDex = null;
+                Node multiDexAttr = attrMap.getNamedItem(ATTR_IS_MULTIDEX);
+                if (multiDexAttr != null) {
+                    isMultiDex = Boolean.parseBoolean(multiDexAttr.getNodeValue());
+                }
 
-        return DxDexKey.of(
-                sourceFile,
-                revision,
-                jumboMode,
-                optimize,
-                additionalParameters,
-                isMultiDex);
-    };
+                Integer minSdkVersion = null;
+                Node minSdkVersionAttr = attrMap.getNamedItem(ATTR_MIN_SDK_VERSION);
+                if (minSdkVersionAttr != null) {
+                    minSdkVersion = Integer.parseInt(minSdkVersionAttr.getNodeValue());
+                }
+
+                return DxDexKey.of(
+                        sourceFile,
+                        revision,
+                        jumboMode,
+                        optimize,
+                        additionalParameters,
+                        isMultiDex,
+                        minSdkVersion);
+            };
 
     @Override
     protected void writeFieldsToXml(@NonNull Node itemNode) {
         super.writeFieldsToXml(itemNode);
 
         Document document = itemNode.getOwnerDocument();
-        if (!mAdditionalParameters.isEmpty()) {
+        if (!additionalParameters.isEmpty()) {
             Attr additionalParameters = document.createAttribute(ATTR_ADDITIONAL_PARAMETERS);
             additionalParameters.setValue(
-                    Joiner.on(ADDITIONAL_PARAMETERS_SEPARATOR).join(mAdditionalParameters));
+                    Joiner.on(ADDITIONAL_PARAMETERS_SEPARATOR).join(this.additionalParameters));
             itemNode.getAttributes().setNamedItem(additionalParameters);
         }
 
-        if (mIsMultiDex != null) {
+        if (isMultiDex != null) {
             Attr multiDexAttr = document.createAttribute(ATTR_IS_MULTIDEX);
-            multiDexAttr.setValue(Boolean.toString(mIsMultiDex));
+            multiDexAttr.setValue(Boolean.toString(isMultiDex));
             itemNode.getAttributes().setNamedItem(multiDexAttr);
+        }
+
+        if (minSdkVersion != null) {
+            Attr minSdkVersionAttr = document.createAttribute(ATTR_MIN_SDK_VERSION);
+            minSdkVersionAttr.setValue(Integer.toString(minSdkVersion));
+            itemNode.getAttributes().setNamedItem(minSdkVersionAttr);
         }
     }
 
@@ -150,21 +168,23 @@ final class DxDexKey extends DexKey {
 
         DxDexKey dxDexKey = (DxDexKey) o;
 
-        return mAdditionalParameters.equals(dxDexKey.mAdditionalParameters)
-                && Objects.equal(mIsMultiDex, dxDexKey.mIsMultiDex);
+        return additionalParameters.equals(dxDexKey.additionalParameters)
+                && Objects.equal(isMultiDex, dxDexKey.isMultiDex)
+                && Objects.equal(minSdkVersion, dxDexKey.minSdkVersion);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(super.hashCode(), mAdditionalParameters, mIsMultiDex);
+        return Objects.hashCode(super.hashCode(), additionalParameters, isMultiDex, minSdkVersion);
     }
 
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
                 .add("dexKey", super.toString())
-                .add("mAdditionalParameters", mAdditionalParameters)
-                .add("mIsMultiDex", mIsMultiDex)
+                .add("additionalParameters", additionalParameters)
+                .add("isMultiDex", isMultiDex)
+                .add("minSdkVersion", minSdkVersion)
                 .toString();
     }
 }

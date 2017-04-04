@@ -47,7 +47,7 @@ import org.w3c.dom.Node;
  * version of the build tools are used as keys in the cache.
  *
  * <p>The API is fairly simple, just call {@link #preDexLibrary(AndroidBuilder, File, File, boolean,
- * DexOptions, ProcessOutputHandler)}
+ * DexOptions, ProcessOutputHandler, int)}
  *
  * <p>The call will be blocking until the pre-dexing happened, either through actual pre-dexing or
  * through copying the output of a previous pre-dex run.
@@ -77,6 +77,8 @@ public class PreDexCache extends PreProcessCache<DxDexKey> {
      * @param outFile the output file or folder (if multi-dex is enabled), must exist
      * @param multiDex whether multi-dex is enabled
      * @param dexOptions the dex options to run pre-dex
+     * @param processOutputHandler handles the logging output
+     * @param minSdkVersion min sdk passed to dx
      */
     public void preDexLibrary(
             @NonNull AndroidBuilder builder,
@@ -84,7 +86,8 @@ public class PreDexCache extends PreProcessCache<DxDexKey> {
             @NonNull File outFile,
             boolean multiDex,
             @NonNull DexOptions dexOptions,
-            @NonNull ProcessOutputHandler processOutputHandler)
+            @NonNull ProcessOutputHandler processOutputHandler,
+            @Nullable Integer minSdkVersion)
             throws IOException, ProcessException, InterruptedException {
         checkState(!multiDex || outFile.isDirectory());
         checkState(builder.getTargetInfo() != null);
@@ -92,13 +95,15 @@ public class PreDexCache extends PreProcessCache<DxDexKey> {
         // Forcing optimize to true as it has no effect due to b.android.com/82031.
         boolean optimize = true;
 
-        DxDexKey itemKey = DxDexKey.of(
-                inputFile,
-                builder.getTargetInfo().getBuildTools().getRevision(),
-                dexOptions.getJumboMode(),
-                optimize,
-                dexOptions.getAdditionalParameters(),
-                multiDex);
+        DxDexKey itemKey =
+                DxDexKey.of(
+                        inputFile,
+                        builder.getTargetInfo().getBuildTools().getRevision(),
+                        dexOptions.getJumboMode(),
+                        optimize,
+                        dexOptions.getAdditionalParameters(),
+                        multiDex,
+                        minSdkVersion);
 
         ILogger logger = builder.getLogger();
         logger.verbose("preDexLibrary : %1$s", itemKey);
@@ -122,12 +127,14 @@ public class PreDexCache extends PreProcessCache<DxDexKey> {
         if (pair.getSecond()) {
             try {
                 // haven't process this file yet so do it and record it.
-                List<File> files = builder.preDexLibraryNoCache(
-                        inputFile,
-                        outFile,
-                        multiDex,
-                        dexOptions,
-                        processOutputHandler);
+                List<File> files =
+                        builder.preDexLibraryNoCache(
+                                inputFile,
+                                outFile,
+                                multiDex,
+                                dexOptions,
+                                processOutputHandler,
+                                minSdkVersion);
 
                 item.getOutputFiles().clear();
                 item.getOutputFiles().addAll(files);
