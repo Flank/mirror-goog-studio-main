@@ -125,6 +125,9 @@ grpc::Status NetworkServiceImpl::GetHttpRange(grpc::ServerContext *context,
     data->set_start_timestamp(conn.start_timestamp);
     data->set_downloading_timestamp(conn.downloading_timestamp);
     data->set_end_timestamp(conn.end_timestamp);
+    auto thread = data->mutable_thread();
+    thread->set_id(conn.thread.id);
+    thread->set_name(conn.thread.name);
   }
 
   return Status::OK;

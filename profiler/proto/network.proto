@@ -161,6 +161,16 @@ message HttpRangeRequest {
   int64 end_timestamp = 4;
 }
 
+// Thread information obtained from Java, which is different from the thread data we would obtain from a JNI context.
+// See also: https://docs.oracle.com/javase/7/docs/api/java/lang/Thread.html
+message JavaThread {
+  // ID of the thread obtained from Java, which is different from the thread ID obtained in a JNI context.
+  int64 id = 1;
+  // Name of the thread.
+  // https://docs.oracle.com/javase/7/docs/api/java/lang/Thread.html#getName().
+  string name = 2;
+}
+
 // An HTTP connection represents the full lifetime of a single HTTP request /
 // response network communication.
 message HttpConnectionData {
@@ -173,6 +183,8 @@ message HttpConnectionData {
   int64 downloading_timestamp = 3;
   // If not 0, time when request was closed. Always > start.
   int64 end_timestamp = 4;
+  // The thread where this connection was connected.
+  JavaThread thread = 5;
 }
 
 message HttpRangeResponse {
