@@ -41,8 +41,6 @@ import com.android.manifmerger.Actions;
 import com.android.prefs.AndroidLocation;
 import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.ProgressIndicatorAdapter;
-import com.android.sdklib.AndroidTargetHash;
-import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkVersionInfo;

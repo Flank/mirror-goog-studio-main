@@ -1516,7 +1516,28 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             if (cookie != null) {
                 report(context, cookie, COMPATIBILITY, message);
             } else {
-                context.report(COMPATIBILITY, guessGradleLocation(context.getProject()), message);
+                File projectDir = context.getProject().getDir();
+                Location location1 = guessGradleLocation(context.getClient(), projectDir, example1);
+                Location location2 = guessGradleLocation(context.getClient(), projectDir, example2);
+                if (location1.getStart() != null) {
+                    if (location2.getStart() != null) {
+                        location1.setSecondary(location2);
+                    }
+                } else {
+                    if (location2.getStart() == null) {
+                        location1 = guessGradleLocation(context.getClient(), projectDir,
+                                // Probably using version variable
+                                c1.getGroupId() + ":" + c1.getArtifactId() + ":");
+                        if (location1.getStart() == null) {
+                            location1 = guessGradleLocation(context.getClient(), projectDir,
+                                    // Probably using version variable
+                                    c2.getGroupId() + ":" + c2.getArtifactId() + ":");
+                        }
+                    } else {
+                        location1 = location2;
+                    }
+                }
+                context.report(COMPATIBILITY, location1, message);
             }
         }
     }

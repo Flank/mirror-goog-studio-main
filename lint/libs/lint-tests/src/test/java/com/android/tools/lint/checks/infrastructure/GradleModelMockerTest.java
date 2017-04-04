@@ -31,6 +31,7 @@ import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.ClassField;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaLibrary;
+import com.android.builder.model.LintOptions;
 import com.android.builder.model.MavenCoordinates;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.ProductFlavorContainer;
@@ -942,6 +943,49 @@ public class GradleModelMockerTest {
         Library library = libraryMap.getLibraries().get("org.hamcrest:hamcrest-core:1.3@aar");
         assertThat(library.getArtifactAddress()).isEqualTo("org.hamcrest:hamcrest-core:1.3@aar");
         assertThat(library.getJarFile()).isNotNull();
+    }
+
+    @Test
+    public void testLintOptions() {
+        GradleModelMocker mocker = createMocker(""
+                + "android {\n"
+                + "    lintOptions {\n"
+                + "        quiet true\n"
+                + "        abortOnError false\n"
+                + "        ignoreWarnings true\n"
+                + "        absolutePaths false\n"
+                + "        checkAllWarnings true\n"
+                + "        warningsAsErrors true\n"
+                + "        disable 'TypographyFractions','TypographyQuotes'\n"
+                + "        enable 'RtlHardcoded','RtlCompat', 'RtlEnabled'\n"
+                + "        check 'NewApi', 'InlinedApi'\n"
+                + "        noLines true\n"
+                + "        showAll true\n"
+                + "        lintConfig file(\"default-lint.xml\")\n"
+                + "        textReport true\n"
+                + "        textOutput 'stdout'\n"
+                + "        xmlReport false\n"
+                + "        xmlOutput file(\"lint-report.xml\")\n"
+                + "        htmlReport true\n"
+                + "        htmlOutput file(\"lint-report.html\")\n"
+                + "        informational 'LogConditional'\n"
+                + "        checkTestSources true\n"
+                + "    }\n"
+                + "}\n");
+        assertThat(mocker).isNotNull();
+        AndroidProject project = mocker.getProject();
+        assertThat(project).isNotNull();
+        LintOptions options = project.getLintOptions();
+        assertThat(options).isNotNull();
+        assertThat(options.isQuiet()).isTrue();
+        assertThat(options.isAbortOnError()).isFalse();
+        assertThat(options.isIgnoreWarnings()).isTrue();
+        assertThat(options.isCheckAllWarnings()).isTrue();
+        assertThat(options.isWarningsAsErrors()).isTrue();
+        assertThat(options.isAbsolutePaths()).isFalse();
+        assertThat(options.getDisable()).containsExactly("TypographyFractions", "TypographyQuotes");
+        assertThat(options.getEnable()).containsExactly("RtlHardcoded", "RtlCompat", "RtlEnabled");
+        assertThat(options.getCheck()).containsExactly("NewApi", "InlinedApi");
     }
 
     private static final Comparator<AndroidLibrary> LIBRARY_COMPARATOR = (o1, o2) -> {

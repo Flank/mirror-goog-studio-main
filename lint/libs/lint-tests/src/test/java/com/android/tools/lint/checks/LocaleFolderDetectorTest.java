@@ -20,7 +20,6 @@ package com.android.tools.lint.checks;
 import static com.android.tools.lint.checks.LocaleFolderDetector.suggestBcp47Correction;
 
 import com.android.tools.lint.detector.api.Detector;
-import java.io.File;
 import org.intellij.lang.annotations.Language;
 
 @SuppressWarnings("javadoc")

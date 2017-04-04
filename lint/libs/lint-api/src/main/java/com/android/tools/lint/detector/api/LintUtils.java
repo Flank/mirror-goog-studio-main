@@ -1508,6 +1508,7 @@ public class LintUtils {
      * @return location for the top level gradle file if it exists, otherwise fall back to
      *     the project directory.
      */
+    @NonNull
     public static Location guessGradleLocation(@NonNull Project project) {
         File dir = project.getDir();
         Location location;
@@ -1518,6 +1519,66 @@ public class LintUtils {
             location = Location.create(dir);
         }
         return location;
+    }
+
+    /**
+     * Attempts to find a string in the build.gradle file for a given project directory.
+     * It will skip comments.
+     *
+     * @param client     the client (used to read the file)
+     * @param projectDir the project directory
+     * @param string     the string to locate
+     * @return a suitable location (or just the build.gradle file, or the project directory, if not
+     * found)
+     */
+    @NonNull
+    public static Location guessGradleLocation(
+            @NonNull LintClient client,
+            @NonNull File projectDir,
+            @NonNull String string) {
+        File gradle = new File(projectDir, FN_BUILD_GRADLE);
+        if (gradle.isFile()) {
+            String contents = client.readFile(gradle).toString();
+            int match = contents.indexOf(string);
+            if (match != -1) {
+                int length = string.length();
+                if (contents.indexOf(string, match + length) == -1) {
+                    // Only one match in the file: just use it
+                    return Location.create(gradle, contents, match, match + length);
+                }
+                // Tokenize the file such that we can skip comments
+                int end = contents.length();
+                char first = string.charAt(0);
+                for (int offset = 0; offset < end - 1; offset++) {
+                    char c = contents.charAt(offset);
+                    if (c == '/') {
+                        char next = contents.charAt(offset + 1); // safe because we loop to end-1
+                        if (next == '/') {
+                            // Line comment: jump to end of line
+                            offset = contents.indexOf('\n', offset);
+                            if (offset == -1) {
+                                break;
+                            }
+                            continue;
+                        } else if (next == '*') {
+                            // Comment: jump to end of comment
+                            offset = contents.indexOf("*/", offset);
+                            if (offset == -1) {
+                                break;
+                            }
+                            continue;
+                        }
+                    }
+                    if (c == first && contents.regionMatches(offset, string, 0, length)) {
+                        return Location.create(gradle, contents, offset, offset + length);
+                    }
+                }
+            }
+
+            return Location.create(gradle);
+        }
+
+        return Location.create(projectDir);
     }
 
     /**

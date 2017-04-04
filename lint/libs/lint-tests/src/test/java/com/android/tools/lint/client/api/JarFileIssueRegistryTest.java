@@ -24,8 +24,6 @@ import com.android.testutils.TestUtils;
 import com.android.tools.lint.checks.AbstractCheckTest;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.Speed;
-import com.google.common.truth.Truth;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;

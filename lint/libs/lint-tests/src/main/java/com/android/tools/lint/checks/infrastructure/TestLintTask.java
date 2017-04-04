@@ -32,6 +32,7 @@ import com.android.tools.lint.Warning;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
 import com.android.tools.lint.checks.infrastructure.TestFile.GradleTestFile;
 import com.android.tools.lint.checks.infrastructure.TestFile.JavaTestFile;
+import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.client.api.JarFileIssueRegistry;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.LintListener;
@@ -256,6 +257,12 @@ public class TestLintTask {
     public TestLintTask issues(@NonNull Issue... issues) {
         ensurePreRun();
         this.issues = issues;
+        for (Issue issue : issues) {
+            if (issue == IssueRegistry.LINT_ERROR) {
+                allowSystemErrors = true;
+                break;
+            }
+        }
         checkedIssues = null; // force recompute
         return this;
     }
@@ -269,6 +276,12 @@ public class TestLintTask {
     public TestLintTask issueIds(@NonNull String... ids) {
         ensurePreRun();
         this.issueIds = ids;
+        for (String id : ids) {
+            if (IssueRegistry.LINT_ERROR.getId().equals(id)) {
+                allowSystemErrors = true;
+                break;
+            }
+        }
         checkedIssues = null; // force recompute
         return this;
     }
@@ -808,8 +821,9 @@ public class TestLintTask {
 
             if (issueIds != null && issueIds.length > 0) {
                 checkedIssues = Lists.newArrayList();
+                TestIssueRegistry registry = new TestIssueRegistry();
                 for (String id : issueIds) {
-                    Issue issue = new BuiltinIssueRegistry().getIssue(id);
+                    Issue issue = registry.getIssue(id);
                     if (issue != null) {
                         checkedIssues.add(issue);
                     } // else: could be loaded by custom rule

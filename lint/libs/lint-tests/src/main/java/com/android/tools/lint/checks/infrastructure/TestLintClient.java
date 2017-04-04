@@ -32,6 +32,7 @@ import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.BuildTypeContainer;
+import com.android.builder.model.LintOptions;
 import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.model.Variant;
@@ -348,8 +349,11 @@ public class TestLintClient extends LintCliClient {
         } catch (IOException ignore) {
             mocker = task.projectMocks.get(dir);
         }
-        if (task.variantName != null) {
-            mocker.setVariantName(task.variantName);
+        if (mocker != null && mocker.getProject() != null)  {
+            syncLintOptionsToFlags(mocker.getProject().getLintOptions(), flags);
+            if (task.variantName != null) {
+                mocker.setVariantName(task.variantName);
+            }
         }
 
         return new TestProject(this, dir, referenceDir, description, mocker);
@@ -360,25 +364,52 @@ public class TestLintClient extends LintCliClient {
         return "unittest"; // Hardcode version to keep unit test output stable
     }
 
-    public static class CustomIssueRegistry extends IssueRegistry {
-        private final List<Issue> issues;
-
-        public CustomIssueRegistry(List<Issue> issues) {
-            this.issues = issues;
-        }
-
-        @NonNull
-        @Override
-        public List<Issue> getIssues() {
-            return issues;
-        }
-    }
-
     @SuppressWarnings("StringBufferField")
     private StringBuilder output = null;
 
+    private static void syncLintOptionsToFlags(
+            @NonNull LintOptions options,
+            @NonNull LintCliFlags flags) {
+        flags.getSuppressedIds().addAll(options.getDisable());
+        flags.getEnabledIds().addAll(options.getEnable());
+        if (options.getCheck() != null && !options.getCheck().isEmpty()) {
+            flags.setExactCheckedIds(options.getCheck());
+        }
+        flags.setSetExitCode(options.isAbortOnError());
+        flags.setFullPath(options.isAbsolutePaths());
+        flags.setShowSourceLines(!options.isNoLines());
+        flags.setQuiet(options.isQuiet());
+        flags.setCheckAllWarnings(options.isCheckAllWarnings());
+        flags.setIgnoreWarnings(options.isIgnoreWarnings());
+        flags.setWarningsAsErrors(options.isWarningsAsErrors());
+        flags.setCheckTestSources(options.isCheckTestSources());
+        flags.setShowEverything(options.isShowAll());
+        flags.setDefaultConfiguration(options.getLintConfig());
+        flags.setExplainIssues(options.isExplainIssues());
+        flags.setBaselineFile(options.getBaselineFile());
+
+        Map<String, Integer> severityOverrides = options.getSeverityOverrides();
+        if (severityOverrides != null) {
+            Map<String, Severity> overrides = Maps.newHashMap();
+            for (Map.Entry<String, Integer> entry : severityOverrides.entrySet()) {
+                String id = entry.getKey();
+                Severity severity;
+                switch (entry.getValue()) {
+                    case LintOptions.SEVERITY_FATAL: severity = Severity.FATAL; break;
+                    case LintOptions.SEVERITY_ERROR: severity = Severity.ERROR; break;
+                    case LintOptions.SEVERITY_WARNING: severity = Severity.WARNING; break;
+                    case LintOptions.SEVERITY_INFORMATIONAL: severity = Severity.INFORMATIONAL; break;
+                    case LintOptions.SEVERITY_IGNORE: severity = Severity.IGNORE; break;
+                    default: continue;
+                }
+                overrides.put(id, severity);
+            }
+            flags.setSeverityOverrides(overrides);
+        }
+    }
+
     public String analyze(List<File> files, List<Issue> issues) throws Exception {
-        driver = createDriver(new CustomIssueRegistry(issues));
+        driver = createDriver(new TestIssueRegistry(issues));
 
         if (task.driverConfigurator != null) {
             task.driverConfigurator.configure(driver);
@@ -400,6 +431,8 @@ public class TestLintClient extends LintCliClient {
                 }
             });
         }
+
+        validateIssueIds();
 
         LintRequest request = new LintRequest(this, files);
         if (incrementalCheck != null) {
