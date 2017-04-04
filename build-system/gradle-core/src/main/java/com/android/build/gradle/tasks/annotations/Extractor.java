@@ -22,6 +22,7 @@ import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.ATTR_VALUE;
 import static com.android.SdkConstants.DOT_CLASS;
 import static com.android.SdkConstants.DOT_JAR;
+import static com.android.SdkConstants.DOT_JAVA;
 import static com.android.SdkConstants.DOT_XML;
 import static com.android.SdkConstants.GT_ENTITY;
 import static com.android.SdkConstants.INT_DEF_ANNOTATION;
@@ -37,6 +38,7 @@ import static com.android.tools.lint.detector.api.LintUtils.assertionsEnabled;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.tools.lint.detector.api.LintUtils;
 import com.android.utils.XmlUtils;
 import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
@@ -47,6 +49,38 @@ import com.google.common.io.ByteStreams;
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
 import com.google.common.xml.XmlEscapers;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vfs.StandardFileSystems;
+import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.openapi.vfs.VirtualFileSystem;
+import com.intellij.psi.JavaRecursiveElementVisitor;
+import com.intellij.psi.PsiAnnotation;
+import com.intellij.psi.PsiAnnotationMemberValue;
+import com.intellij.psi.PsiAnonymousClass;
+import com.intellij.psi.PsiArrayInitializerMemberValue;
+import com.intellij.psi.PsiClass;
+import com.intellij.psi.PsiClassInitializer;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiExpression;
+import com.intellij.psi.PsiField;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiImportList;
+import com.intellij.psi.PsiJavaCodeReferenceElement;
+import com.intellij.psi.PsiJavaFile;
+import com.intellij.psi.PsiLiteral;
+import com.intellij.psi.PsiManager;
+import com.intellij.psi.PsiMethod;
+import com.intellij.psi.PsiModifier;
+import com.intellij.psi.PsiModifierList;
+import com.intellij.psi.PsiNameValuePair;
+import com.intellij.psi.PsiPackageStatement;
+import com.intellij.psi.PsiParameter;
+import com.intellij.psi.PsiParameterList;
+import com.intellij.psi.PsiReferenceExpression;
+import com.intellij.psi.PsiType;
+import com.intellij.psi.PsiVariable;
+import com.intellij.psi.impl.JavaConstantExpressionEvaluator;
+import com.intellij.psi.javadoc.PsiDocComment;
 import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -60,7 +94,6 @@ import java.io.Writer;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -72,50 +105,6 @@ import java.util.jar.JarOutputStream;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
-import org.eclipse.jdt.internal.compiler.ASTVisitor;
-import org.eclipse.jdt.internal.compiler.ast.AbstractMethodDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.Annotation;
-import org.eclipse.jdt.internal.compiler.ast.Argument;
-import org.eclipse.jdt.internal.compiler.ast.ArrayInitializer;
-import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.ConstructorDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.Expression;
-import org.eclipse.jdt.internal.compiler.ast.FalseLiteral;
-import org.eclipse.jdt.internal.compiler.ast.FieldDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.MemberValuePair;
-import org.eclipse.jdt.internal.compiler.ast.MethodDeclaration;
-import org.eclipse.jdt.internal.compiler.ast.NameReference;
-import org.eclipse.jdt.internal.compiler.ast.NumberLiteral;
-import org.eclipse.jdt.internal.compiler.ast.SingleMemberAnnotation;
-import org.eclipse.jdt.internal.compiler.ast.StringLiteral;
-import org.eclipse.jdt.internal.compiler.ast.TrueLiteral;
-import org.eclipse.jdt.internal.compiler.ast.TypeDeclaration;
-import org.eclipse.jdt.internal.compiler.impl.BooleanConstant;
-import org.eclipse.jdt.internal.compiler.impl.ByteConstant;
-import org.eclipse.jdt.internal.compiler.impl.CharConstant;
-import org.eclipse.jdt.internal.compiler.impl.Constant;
-import org.eclipse.jdt.internal.compiler.impl.DoubleConstant;
-import org.eclipse.jdt.internal.compiler.impl.FloatConstant;
-import org.eclipse.jdt.internal.compiler.impl.IntConstant;
-import org.eclipse.jdt.internal.compiler.impl.LongConstant;
-import org.eclipse.jdt.internal.compiler.impl.ReferenceContext;
-import org.eclipse.jdt.internal.compiler.impl.ShortConstant;
-import org.eclipse.jdt.internal.compiler.impl.StringConstant;
-import org.eclipse.jdt.internal.compiler.lookup.AnnotationBinding;
-import org.eclipse.jdt.internal.compiler.lookup.Binding;
-import org.eclipse.jdt.internal.compiler.lookup.BlockScope;
-import org.eclipse.jdt.internal.compiler.lookup.ClassScope;
-import org.eclipse.jdt.internal.compiler.lookup.CompilationUnitScope;
-import org.eclipse.jdt.internal.compiler.lookup.ElementValuePair;
-import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
-import org.eclipse.jdt.internal.compiler.lookup.LocalVariableBinding;
-import org.eclipse.jdt.internal.compiler.lookup.MemberTypeBinding;
-import org.eclipse.jdt.internal.compiler.lookup.MethodBinding;
-import org.eclipse.jdt.internal.compiler.lookup.MethodScope;
-import org.eclipse.jdt.internal.compiler.lookup.Scope;
-import org.eclipse.jdt.internal.compiler.lookup.SourceTypeBinding;
-import org.eclipse.jdt.internal.compiler.lookup.TypeBinding;
-import org.eclipse.jdt.internal.compiler.lookup.TypeIds;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -143,15 +132,8 @@ import org.xml.sax.SAXParseException;
  * to skip annotations for any method/field not mentioned in the API database, and code
  * to rewrite the android.jar file to insert annotations in the generated bytecode.
  * <p>
- * TODO:
- * - Warn if the {@code @IntDef} annotation is used on a non-int, and similarly if
- *   {@code @StringDef} is used on a non-string
- * - Ignore annotations defined on @hide elements
  */
 public class Extractor {
-    /** Whether we should include type args like &lt;T*gt; in external annotations signatures */
-    private static final boolean INCLUDE_TYPE_ARGS = false;
-
     /**
      * If true, remove typedefs (even public ones) if they are marked with {@code @hide}.
      * This is disabled because for some reason, the ECJ nodes do not provide valid
@@ -196,6 +178,7 @@ public class Extractor {
     public static final String IDEA_CONTRACT = "org.jetbrains.annotations.Contract";
     public static final String IDEA_NON_NLS = "org.jetbrains.annotations.NonNls";
     public static final String ATTR_VAL = "val";
+    public static final String ATTR_PURE = "pure";
 
     @NonNull
     private final Map<String, List<AnnotationData>> types = Maps.newHashMap();
@@ -205,8 +188,10 @@ public class Extractor {
 
     private final File classDir;
 
+    /** Map from package to map from class to items */
     @NonNull
     private final Map<String, Map<String, List<Item>>> itemMap = Maps.newHashMap();
+    private Map<String, PackageItem> packageMap;
 
     @Nullable
     private final ApiDatabase apiFilter;
@@ -216,13 +201,58 @@ public class Extractor {
     private final Map<String,Integer> stats = Maps.newHashMap();
     private int filteredCount;
     private int mergedCount;
-    private final Set<CompilationUnitDeclaration> processedFiles = Sets.newHashSetWithExpectedSize(100);
+
     private final Set<String> ignoredAnnotations = Sets.newHashSet();
     private boolean listIgnored;
-    private Map<String,List<Annotation>> typedefs;
     private List<String> typedefsToRemove;
     private Map<String,Boolean> sourceRetention;
     private final List<Item> keepItems = Lists.newArrayList();
+
+    public static List<PsiJavaFile> createUnitsForFiles(@NonNull Project project,
+            @NonNull List<File> specificSources) {
+        List<PsiJavaFile> units = Lists.newArrayListWithCapacity(specificSources.size());
+        VirtualFileSystem fileSystem = StandardFileSystems.local();
+        PsiManager manager = PsiManager.getInstance(project);
+
+        for (File source : specificSources) {
+            VirtualFile virtualFile = fileSystem.findFileByPath(source.getPath());
+            if (virtualFile != null) {
+                PsiFile psiFile = manager.findFile(virtualFile);
+                if (psiFile instanceof PsiJavaFile) {
+                    units.add((PsiJavaFile) psiFile);
+                }
+            }
+        }
+        return units;
+    }
+
+    public static List<PsiJavaFile> createUnitsInDirectories(@NonNull Project project,
+            @NonNull List<File> sourceDirs) {
+        return createUnitsForFiles(project, gatherJavaSources(sourceDirs));
+    }
+
+    private static void addJavaSources(List<File> list, File file) {
+        if (file.isDirectory()) {
+            File[] files = file.listFiles();
+            if (files != null) {
+                for (File child : files) {
+                    addJavaSources(list, child);
+                }
+            }
+        } else {
+            if (file.isFile() && file.getName().endsWith(DOT_JAVA)) {
+                list.add(file);
+            }
+        }
+    }
+
+    private static List<File> gatherJavaSources(List<File> sourcePath) {
+        List<File> sources = Lists.newArrayList();
+        for (File file : sourcePath) {
+            addJavaSources(sources, file);
+        }
+        return sources;
+    }
 
     public Extractor(@Nullable ApiDatabase apiFilter, @Nullable File classDir, boolean displayInfo,
             boolean includeClassRetentionAnnotations, boolean sortAnnotations) {
@@ -234,15 +264,14 @@ public class Extractor {
         this.sortAnnotations = sortAnnotations;
     }
 
-    public void extractFromProjectSource(Collection<CompilationUnitDeclaration> units) {
-        TypedefCollector collector = new TypedefCollector(units, false /*requireHide*/,
-                true /*requireSourceRetention*/);
-        typedefs = collector.getTypedefs();
-        typedefsToRemove = collector.getPrivateTypedefClasses();
+    public void extractFromProjectSource(List<PsiJavaFile> units) {
+        AnnotationVisitor visitor = new AnnotationVisitor(false, true);
 
-        for (CompilationUnitDeclaration unit : units) {
-            analyze(unit);
+        for (PsiJavaFile unit : units) {
+            unit.accept(visitor);
         }
+
+        typedefsToRemove = visitor.getPrivateTypedefClasses();
     }
 
     public void removeTypedefClasses() {
@@ -286,7 +315,7 @@ public class Extractor {
                     return;
                 }
             }
-            if (!desc.isEmpty()) {
+            if (!desc.isEmpty()) { // TODO: Remove this restriction?
                 Files.write(desc, file, Charsets.UTF_8);
             }
         } catch (IOException e) {
@@ -317,7 +346,7 @@ public class Extractor {
         }
 
         if (annotationsZip != null) {
-            if (itemMap.isEmpty()) {
+            if (itemMap.isEmpty() && packageMap == null) {
                 if (annotationsZip.exists()) {
                     //noinspection ResultOfMethodCallIgnored
                     annotationsZip.delete();
@@ -336,17 +365,14 @@ public class Extractor {
 
         if (!stats.isEmpty()) {
             List<String> annotations = Lists.newArrayList(stats.keySet());
-            Collections.sort(annotations, new Comparator<String>() {
-                @Override
-                public int compare(String s1, String s2) {
-                    int frequency1 = stats.get(s1);
-                    int frequency2 = stats.get(s2);
-                    int delta = frequency2 - frequency1;
-                    if (delta != 0) {
-                        return delta;
-                    }
-                    return s1.compareTo(s2);
+            annotations.sort((s1, s2) -> {
+                int frequency1 = stats.get(s1);
+                int frequency2 = stats.get(s2);
+                int delta = frequency2 - frequency1;
+                if (delta != 0) {
+                    return delta;
                 }
+                return s1.compareTo(s2);
             });
             Map<String,String> fqnToName = Maps.newHashMap();
             int max = 0;
@@ -401,68 +427,33 @@ public class Extractor {
         System.out.println("Warning: " + message);
     }
 
-    private void analyze(CompilationUnitDeclaration unit) {
-        if (processedFiles.contains(unit)) {
-            // The code to process all roots seems to hit some of the same classes
-            // repeatedly... so filter these out manually
-            return;
-        }
-        processedFiles.add(unit);
-
-        AnnotationVisitor visitor = new AnnotationVisitor();
-        unit.traverse(visitor, unit.scope);
+    @Nullable
+    private static String getFqn(@NonNull PsiAnnotation annotation) {
+        return annotation.getQualifiedName();
     }
 
+    private PsiClass lastClass; // Cache for getFqn(PsiClass)
+    private String lastFqn; // Cache for getFqn(PsiClass)
+
     @Nullable
-    private static ClassScope findClassScope(Scope scope) {
-        while (scope != null) {
-            if (scope instanceof ClassScope) {
-                return (ClassScope)scope;
+    private String getFqn(@Nullable PsiClass cls) {
+        if (cls != null) {
+            if (cls.equals(lastClass)) {
+                return lastFqn;
             }
-            scope = scope.parent;
+            lastClass = cls;
+            lastFqn = cls.getQualifiedName();
+            return lastFqn;
         }
 
         return null;
     }
 
-    @Nullable
-    static String getFqn(@NonNull Annotation annotation) {
-        if (annotation.resolvedType != null) {
-            return new String(annotation.resolvedType.readableName());
-        }
-        return null;
-    }
-
-    @Nullable
-    private static String getFqn(@NonNull ClassScope scope) {
-        TypeDeclaration typeDeclaration = scope.referenceType();
-        if (typeDeclaration != null && typeDeclaration.binding != null) {
-            return new String(typeDeclaration.binding.readableName());
-        }
-        return null;
-    }
-
-    @Nullable
-    private static String getFqn(@NonNull MethodScope scope) {
-        ClassScope classScope = findClassScope(scope);
-        if (classScope != null) {
-            return getFqn(classScope);
+    private boolean hasSourceRetention(@NonNull String fqn, @Nullable PsiAnnotation annotation) {
+        if (annotation == null) {
+            return false;
         }
 
-        return null;
-    }
-
-    @Nullable
-    private static String getFqn(@NonNull BlockScope scope) {
-        ClassScope classScope = findClassScope(scope);
-        if (classScope != null) {
-            return getFqn(classScope);
-        }
-
-        return null;
-    }
-
-    boolean hasSourceRetention(@NonNull String fqn, @Nullable Annotation annotation) {
         if (sourceRetention == null) {
             sourceRetention = Maps.newHashMapWithExpectedSize(20);
             // The @IntDef and @String annotations have always had source retention,
@@ -473,12 +464,6 @@ public class Extractor {
             // The @Nullable and @NonNull annotations have always had class retention
             sourceRetention.put(SUPPORT_NOTNULL, false);
             sourceRetention.put(SUPPORT_NULLABLE, false);
-
-            // TODO: Look at support library statistics and put the other most
-            // frequently referenced annotations in here statically
-
-            // The resource annotations vary: up until 22.0.1 they had source
-            // retention but then switched to class retention.
         }
 
         Boolean source = sourceRetention.get(fqn);
@@ -487,71 +472,35 @@ public class Extractor {
             return source;
         }
 
-        if (annotation == null || annotation.type == null
-                || annotation.type.resolvedType == null) {
-            // Assume it's class retention: that's what nearly all annotations
-            // currently are. (We do dynamic lookup of unknown ones to allow for
-            // this version of the Gradle plugin to be able to work on future
-            // versions of the support library with new annotations, where it's
-            // possible some annotations need to use source retention.
-            sourceRetention.put(fqn, false);
-            return false;
-        } else if (annotation.type.resolvedType.getAnnotations() != null) {
-            for (AnnotationBinding binding : annotation.type.resolvedType.getAnnotations()) {
-                if (hasSourceRetention(binding)) {
-                    sourceRetention.put(fqn, true);
-                    return true;
-                }
+        boolean hasSourceRetention = false;
+        PsiJavaCodeReferenceElement ref = annotation.getNameReferenceElement();
+        if (ref != null) {
+            PsiElement resolved = ref.resolve();
+            if (resolved instanceof PsiClass) {
+                hasSourceRetention = hasSourceRetention((PsiClass) resolved);
             }
         }
+        sourceRetention.put(fqn, hasSourceRetention);
 
-        sourceRetention.put(fqn, false);
-        return false;
+        return hasSourceRetention;
     }
 
-    static boolean hasSourceRetention(@NonNull AnnotationBinding a) {
-        if (new String(a.getAnnotationType().readableName()).equals("java.lang.annotation.Retention")) {
-            ElementValuePair[] pairs = a.getElementValuePairs();
-            if (pairs == null || pairs.length != 1) {
-                warning("Expected exactly one parameter passed to @Retention");
+    static boolean hasSourceRetention(@NonNull PsiAnnotation psiAnnotation) {
+        if ("java.lang.annotation.Retention".equals(psiAnnotation.getQualifiedName())) {
+            PsiNameValuePair[] attributes = psiAnnotation.getParameterList()
+                    .getAttributes();
+            if (attributes.length != 1) {
+                error("Expected exactly one parameter passed to @Retention");
                 return false;
             }
-            ElementValuePair pair = pairs[0];
-            Object value = pair.getValue();
-            if (value instanceof FieldBinding) {
-                FieldBinding field = (FieldBinding) value;
-                if ("SOURCE".equals(new String(field.readableName()))) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    static boolean hasSourceRetention(@NonNull Annotation[] annotations) {
-        for (Annotation annotation : annotations) {
-            String typeName = Extractor.getFqn(annotation);
-            if ("java.lang.annotation.Retention".equals(typeName)) {
-                MemberValuePair[] pairs = annotation.memberValuePairs();
-                if (pairs == null || pairs.length != 1) {
-                    warning("Expected exactly one parameter passed to @Retention");
-                    return false;
-                }
-                MemberValuePair pair = pairs[0];
-                Expression value = pair.value;
-                if (value instanceof NameReference) {
-                    NameReference reference = (NameReference) value;
-                    Binding binding = reference.binding;
-                    if (binding != null) {
-                        if (binding instanceof FieldBinding) {
-                            FieldBinding fb = (FieldBinding) binding;
-                            if ("SOURCE".equals(new String(fb.name)) &&
-                                    "java.lang.annotation.RetentionPolicy".equals(
-                                            new String(fb.declaringClass.readableName()))) {
-                                return true;
-                            }
-                        }
+            PsiAnnotationMemberValue value = attributes[0].getValue();
+            if (value instanceof PsiReferenceExpression) {
+                PsiReferenceExpression expression = (PsiReferenceExpression) value;
+                PsiElement element = expression.resolve();
+                if (element instanceof PsiField) {
+                    PsiField field = (PsiField) element;
+                    if ("SOURCE".equals(field.getName())) {
+                        return true;
                     }
                 }
             }
@@ -560,9 +509,22 @@ public class Extractor {
         return false;
     }
 
-    private void addAnnotations(@Nullable Annotation[] annotations, @NonNull Item item) {
-        if (annotations != null) {
-            for (Annotation annotation : annotations) {
+    static boolean hasSourceRetention(PsiClass cls) {
+        PsiModifierList modifierList = cls.getModifierList();
+        if (modifierList != null) {
+            for (PsiAnnotation psiAnnotation : modifierList.getAnnotations()) {
+                if (hasSourceRetention(psiAnnotation)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private void addAnnotations(@Nullable PsiModifierList modifierList, @NonNull Item item) {
+        if (modifierList != null) {
+            for (PsiAnnotation annotation : modifierList.getAnnotations()) {
                 if (isRelevantAnnotation(annotation)) {
                     String fqn = getFqn(annotation);
                     if (SUPPORT_KEEP.equals(fqn)) {
@@ -578,7 +540,7 @@ public class Extractor {
         }
     }
 
-    private void addAnnotation(@NonNull Annotation annotation, @Nullable String fqn,
+    private void addAnnotation(@NonNull PsiAnnotation annotation, @Nullable String fqn,
             @NonNull List<AnnotationData> list) {
         if (fqn == null) {
             return;
@@ -637,7 +599,7 @@ public class Extractor {
             return;
         }
 
-        if (isMagicConstant(fqn)) {
+        if (isMagicConstant(annotation, fqn)) {
             List<AnnotationData> indirect = types.get(fqn);
             if (indirect != null) {
                 list.addAll(indirect);
@@ -653,21 +615,29 @@ public class Extractor {
         stats.put(fqn, count + 1);
     }
 
-    private boolean hasRelevantAnnotations(@Nullable Annotation[] annotations) {
-        if (annotations == null) {
-            return false;
-        }
-
-        for (Annotation annotation : annotations) {
-            if (isRelevantAnnotation(annotation)) {
-                return true;
+    private boolean hasRelevantAnnotations(@Nullable PsiModifierList modifiers) {
+        if (modifiers != null) {
+            for (PsiAnnotation annotation : modifiers.getAnnotations()) {
+                if (isRelevantAnnotation(annotation)) {
+                    return true;
+                }
             }
         }
 
         return false;
     }
 
-    private boolean isRelevantAnnotation(@NonNull Annotation annotation) {
+    private boolean isRelevantAnnotation(@NonNull PsiAnnotation annotation) {
+        PsiJavaCodeReferenceElement nameReferenceElement = annotation.getNameReferenceElement();
+        if (nameReferenceElement != null) {
+            // Common case: Don't even look up qualified name for the common @Override
+            // annotation.
+            String name = nameReferenceElement.getReferenceName();
+            if ("Override".equals(name) || "SuppressWarnings".equals(name)) {
+                return false;
+            }
+        }
+
         String fqn = getFqn(annotation);
         if (fqn == null || fqn.startsWith("java.lang.")) {
             return false;
@@ -687,7 +657,7 @@ public class Extractor {
             return isRelevantFrameworkAnnotation(fqn);
         }
         if (fqn.equals(ANDROID_NULLABLE) || fqn.equals(ANDROID_NOTNULL)
-                || isMagicConstant(fqn)) {
+                || isMagicConstant(annotation, fqn)) {
             return true;
         } else if (fqn.equals(IDEA_CONTRACT)) {
             return true;
@@ -705,39 +675,50 @@ public class Extractor {
                 && !fqn.endsWith(".SdkConstant");
     }
 
-    boolean isMagicConstant(String typeName) {
+    boolean isMagicConstant(@NonNull PsiAnnotation annotation, @NonNull String typeName) {
         if (irrelevantAnnotations.contains(typeName)
                 || typeName.startsWith("java.lang.")) { // @Override, @SuppressWarnings, etc.
             return false;
         }
-        if (types.containsKey(typeName) ||
-                typeName.equals(INT_DEF_ANNOTATION) ||
-                typeName.equals(STRING_DEF_ANNOTATION) ||
-                typeName.equals(INT_RANGE_ANNOTATION) ||
-                typeName.equals(ANDROID_INT_RANGE) ||
-                typeName.equals(ANDROID_INT_DEF) ||
-                typeName.equals(ANDROID_STRING_DEF)) {
+        if (types.containsKey(typeName)) {
             return true;
         }
+        switch (typeName) {
+            case INT_DEF_ANNOTATION:
+            case STRING_DEF_ANNOTATION:
+            case INT_RANGE_ANNOTATION:
+            case ANDROID_INT_RANGE:
+            case ANDROID_INT_DEF:
+            case ANDROID_STRING_DEF:
+                return true;
+        }
 
-        List<Annotation> typeDefs = typedefs.get(typeName);
+        // See if this annotation is itself annotated.
         // We only support a single level of IntDef type annotations, not arbitrary nesting
-        if (typeDefs != null) {
-            boolean match = false;
-            for (Annotation typeDef : typeDefs) {
-                String fqn = getFqn(typeDef);
-                if (isNestedAnnotation(fqn)) {
-                    List<AnnotationData> list = types.get(typeName);
-                    if (list == null) {
-                        list = new ArrayList<>(2);
-                        types.put(typeName, list);
+        PsiJavaCodeReferenceElement referenceElement = annotation.getNameReferenceElement();
+        if (referenceElement != null) {
+            PsiElement resolved = referenceElement.resolve();
+            if (resolved instanceof PsiClass) {
+                PsiModifierList modifierList = ((PsiClass) resolved).getModifierList();
+                if (modifierList != null) {
+                    boolean match = false;
+                    for (PsiAnnotation a : modifierList.getAnnotations()) {
+                        String fqn = a.getQualifiedName();
+                        if (isNestedAnnotation(fqn)) {
+                            List<AnnotationData> list = types.get(typeName);
+                            if (list == null) {
+                                list = new ArrayList<>(2);
+                                types.put(typeName, list);
+                            }
+                            addAnnotation(a, fqn, list);
+                            match = true;
+                        }
                     }
-                    addAnnotation(typeDef, fqn, list);
-                    match = true;
+                    if (match) {
+                        return true;
+                    }
                 }
             }
-
-            return match;
         }
 
         irrelevantAnnotations.add(typeName);
@@ -791,8 +772,16 @@ public class Extractor {
             JarOutputStream zos = new JarOutputStream(new BufferedOutputStream(fileOutputStream));
 
             try {
-                // TODO: Extract to share with keep rules
                 List<String> sortedPackages = new ArrayList<>(itemMap.keySet());
+
+                if (packageMap != null) {
+                    for (String pkg : packageMap.keySet()) {
+                        if (!itemMap.containsKey(pkg)) {
+                            sortedPackages.add(pkg);
+                        }
+                    }
+                }
+
                 Collections.sort(sortedPackages);
                 for (String pkg : sortedPackages) {
                     // Note: Using / rather than File.separator: jar lib requires it
@@ -807,6 +796,20 @@ public class Extractor {
                                 "<root>");
 
                         Map<String, List<Item>> classMap = itemMap.get(pkg);
+
+                        if (classMap == null) {
+                            // package only contains package-info.java annotations
+                            classMap = Collections.emptyMap();
+                        }
+
+                        // Export package items first
+                        if (packageMap != null) {
+                            PackageItem item = packageMap.get(pkg);
+                            if (item != null) {
+                                item.write(writer);
+                            }
+                        }
+
                         List<String> classes = new ArrayList<>(classMap.keySet());
                         Collections.sort(classes);
                         for (String cls : classes) {
@@ -845,6 +848,24 @@ public class Extractor {
         }
 
         return true;
+    }
+
+    private void addPackage(@NonNull String pkg, @NonNull PackageItem item) {
+        // Not part of the API?
+        if (apiFilter != null && item.isFiltered(apiFilter)) {
+            if (isListIgnored()) {
+                info("Skipping API because it is not part of the API file: " + item);
+            }
+
+            filteredCount++;
+            return;
+        }
+
+        if (packageMap == null) {
+            packageMap = Maps.newHashMap();
+        }
+
+        packageMap.put(pkg, item);
     }
 
     private void addItem(@NonNull String fqn, @NonNull Item item) {
@@ -1109,7 +1130,7 @@ public class Extractor {
             }
             filteredCount++;
         } else {
-            FieldItem fieldItem = new FieldItem(containingClass, ClassKind.CLASS, fieldName, null);
+            FieldItem fieldItem = new FieldItem(null, containingClass, fieldName, null);
             Item existing = findItem(containingClass, fieldItem);
             if (existing != null) {
                 mergedCount += mergeAnnotations(item, existing);
@@ -1138,7 +1159,7 @@ public class Extractor {
         String argNum = matcher.group(7);
         if (argNum != null) {
             argNum = argNum.trim();
-            ParameterItem parameterItem = new ParameterItem(containingClass, ClassKind.CLASS, type,
+            ParameterItem parameterItem = new ParameterItem(null, containingClass, type,
                     methodName, parameters, constructor, argNum);
             Item existing = findItem(containingClass, parameterItem);
 
@@ -1156,7 +1177,7 @@ public class Extractor {
                 mergedCount += addAnnotations(item, parameterItem);
             }
         } else {
-            MethodItem methodItem = new MethodItem(containingClass, ClassKind.CLASS, type,
+            MethodItem methodItem = new MethodItem(null, containingClass, type,
                     methodName, parameters, constructor);
             Item existing = findItem(containingClass, methodItem);
             if (existing != null) {
@@ -1173,7 +1194,10 @@ public class Extractor {
     // since for example the spaces around the "extends" keyword needs to be there in
     // types like Map<String,? extends Number>
     private static String fixParameterString(String parameters) {
-        return parameters.replace("  ", " ").replace(", ", ",");
+        return parameters.replace("  ", " ").
+                replace(", ", ",").
+                replace("?super","? super ").
+                replace("?extends","? extends ");
     }
 
     private boolean hasRelevantAnnotations(Element item) {
@@ -1315,7 +1339,6 @@ public class Extractor {
                     StringBuilder sb = new StringBuilder();
                     sb.append('{');
 
-
                     Field[] reflectionFields = null;
                     try {
                         Class<?> cls = Class.forName(clsName);
@@ -1347,17 +1370,14 @@ public class Extractor {
                                 for (int i = 0, n = reflectionFields.length; i < n; i++) {
                                     rank.put(reflectionFields[i].getName(), i);
                                 }
-                                Collections.sort(sorted, new Comparator<String>() {
-                                    @Override
-                                    public int compare(String o1, String o2) {
-                                        int rank1 = rank.get(o1);
-                                        int rank2 = rank.get(o2);
-                                        int delta = rank1 - rank2;
-                                        if (delta != 0) {
-                                            return delta;
-                                        }
-                                        return o1.compareTo(o2);
+                                sorted.sort((o1, o2) -> {
+                                    int rank1 = rank.get(o1);
+                                    int rank2 = rank.get(o2);
+                                    int delta = rank1 - rank2;
+                                    if (delta != 0) {
+                                        return delta;
                                     }
+                                    return o1.compareTo(o2);
                                 });
                             }
                             boolean first = true;
@@ -1436,10 +1456,18 @@ public class Extractor {
                     flag ? TYPE_DEF_FLAG_ATTRIBUTE : null, flag ? VALUE_TRUE : null});
         } else if (IDEA_CONTRACT.equals(name)) {
             List<Element> children = getChildren(annotationElement);
-            assert children.size() == 1 : children.size();
             Element valueElement = children.get(0);
             String value = valueElement.getAttribute(ATTR_VAL);
-            annotation = new AnnotationData(name, new String[] { TYPE_DEF_VALUE_ATTRIBUTE, value });
+            String pure = valueElement.getAttribute(ATTR_PURE);
+            if (pure != null && !pure.isEmpty()) {
+                annotation = new AnnotationData(name,
+                        new String[]{
+                                TYPE_DEF_VALUE_ATTRIBUTE, value,
+                                ATTR_PURE, pure});
+            } else {
+                annotation = new AnnotationData(name,
+                        new String[]{TYPE_DEF_VALUE_ATTRIBUTE, value});
+            }
         } else if (isNonNull(name)) {
             annotation = new AnnotationData(SUPPORT_NOTNULL);
         } else if (isNullable(name)) {
@@ -1496,7 +1524,6 @@ public class Extractor {
         return escapeXml(sb.toString());
     }
 
-
     private static String getPackage(String fqn) {
         // Extract package from the given fqn. Attempts to handle inner classes;
         // e.g.  "foo.bar.Foo.Bar will return "foo.bar".
@@ -1528,9 +1555,9 @@ public class Extractor {
         return listIgnored;
     }
 
-    public AnnotationData createData(@NonNull String name, @NonNull Annotation annotation) {
-        MemberValuePair[] pairs = annotation.memberValuePairs();
-        if (pairs == null || pairs.length == 0) {
+    public AnnotationData createData(@NonNull String name, @NonNull PsiAnnotation annotation) {
+        PsiNameValuePair[] pairs = annotation.getParameterList().getAttributes();
+        if (pairs.length == 0) {
             return new AnnotationData(name);
         }
         return new AnnotationData(name, pairs);
@@ -1544,13 +1571,13 @@ public class Extractor {
         public String[] attributeStrings;
 
         @Nullable
-        public MemberValuePair[] attributes;
+        public PsiNameValuePair[] attributes;
 
         private AnnotationData(@NonNull String name) {
             this.name = name;
         }
 
-        private AnnotationData(@NonNull String name, @Nullable MemberValuePair[] pairs) {
+        private AnnotationData(@NonNull String name, @Nullable PsiNameValuePair[] pairs) {
             this(name);
             attributes = pairs;
             assert attributes == null || attributes.length > 0;
@@ -1572,21 +1599,22 @@ public class Extractor {
                 //noinspection PointlessBooleanExpression,ConstantConditions
                 if (attributes.length > 1 && sortAnnotations) {
                     // Ensure that the value attribute is written first
-                    Arrays.sort(attributes, new Comparator<MemberValuePair>() {
-                        private String getName(MemberValuePair pair) {
-                            if (pair.name == null) {
+                    Arrays.sort(attributes, new Comparator<PsiNameValuePair>() {
+                        private String getName(PsiNameValuePair pair) {
+                            String name = pair.getName();
+                            if (name == null) {
                                 return ATTR_VALUE;
                             } else {
-                                return new String(pair.name);
+                                return name;
                             }
                         }
 
-                        private int rank(MemberValuePair pair) {
+                        private int rank(PsiNameValuePair pair) {
                             return ATTR_VALUE.equals(getName(pair)) ? -1 : 0;
                         }
 
                         @Override
-                        public int compare(MemberValuePair o1, MemberValuePair o2) {
+                        public int compare(PsiNameValuePair o1, PsiNameValuePair o2) {
                             int r1 = rank(o1);
                             int r2 = rank(o2);
                             int delta = r1 - r2;
@@ -1598,12 +1626,12 @@ public class Extractor {
                     });
                 }
 
-                MemberValuePair[] attributes = this.attributes;
+                PsiNameValuePair[] attributes = this.attributes;
 
                 if (attributes.length == 1
                         && name.startsWith(REQUIRES_PERMISSION)
                         && name.length() > REQUIRES_PERMISSION.length()
-                        && attributes[0].value instanceof SingleMemberAnnotation) {
+                        && attributes[0].getValue() instanceof PsiAnnotation) {
                     // The external annotations format does not allow for nested/complex annotations.
                     // However, these special annotations (@RequiresPermission.Read,
                     // @RequiresPermission.Write, etc) are known to only be simple containers with a
@@ -1613,19 +1641,23 @@ public class Extractor {
                     //      @RequiresPermission.Read(allOf({P1,P2},conditional=true)
                     // That's setting attributes that don't actually exist on the container permission,
                     // but we'll counteract that on the read-annotations side.
-                    SingleMemberAnnotation annotation = (SingleMemberAnnotation)attributes[0].value;
-                    attributes = annotation.memberValuePairs();
+                    PsiAnnotation annotation = (PsiAnnotation) attributes[0].getValue();
+                    attributes = annotation.getParameterList().getAttributes();
                 }
 
-                for (MemberValuePair pair : attributes) {
+                for (PsiNameValuePair pair : attributes) {
+                    String value = attributeString(pair.getValue());
+                    if (value == null) {
+                        continue;
+                    }
                     writer.print("      <val name=\"");
-                    if (pair.name != null) {
-                        writer.print(pair.name);
+                    if (pair.getName() != null) {
+                        writer.print(pair.getName());
                     } else {
                         writer.print(ATTR_VALUE); // default name
                     }
                     writer.print("\" val=\"");
-                    writer.print(escapeXml(attributeString(pair.value)));
+                    writer.print(escapeXml(value));
                     writer.println("\" />");
                 }
                 writer.println("    </annotation>");
@@ -1670,20 +1702,25 @@ public class Extractor {
             return name.hashCode();
         }
 
-        private String attributeString(@NonNull Expression value) {
+        @Nullable
+        private String attributeString(@Nullable PsiAnnotationMemberValue value) {
             StringBuilder sb = new StringBuilder();
-            appendExpression(sb, value);
-            return sb.toString();
+            if (appendExpression(sb, value)) {
+                return sb.toString();
+            } else {
+                return null;
+            }
         }
 
         private boolean appendExpression(@NonNull StringBuilder sb,
-                @NonNull Expression expression) {
-            if (expression instanceof ArrayInitializer) {
+                @NonNull PsiAnnotationMemberValue expression) {
+            if (expression instanceof PsiArrayInitializerMemberValue) {
                 sb.append('{');
-                ArrayInitializer initializer = (ArrayInitializer) expression;
+                PsiArrayInitializerMemberValue initializer
+                        = (PsiArrayInitializerMemberValue) expression;
                 boolean first = true;
                 int initialLength = sb.length();
-                for (Expression e : initializer.expressions) {
+                for (PsiAnnotationMemberValue e : initializer.getInitializers()) {
                     int length = sb.length();
                     if (first) {
                         first = false;
@@ -1701,112 +1738,87 @@ public class Extractor {
                     }
                 }
                 sb.append('}');
-                return true;
-            } else if (expression instanceof NameReference) {
-                NameReference reference = (NameReference) expression;
-                if (reference.binding != null) {
-                    if (reference.binding instanceof FieldBinding) {
-                        FieldBinding fb = (FieldBinding)reference.binding;
-                        Constant constant = fb.constant();
-                        if (constant != null && constant != Constant.NotAConstant &&
-                                !(name.equals(INT_DEF_ANNOTATION)) &&
-                                !(name.equals(STRING_DEF_ANNOTATION))) {
-                            if (constant instanceof StringConstant) {
-                                sb.append('"').append(constant.stringValue()).append('"');
-                                return true;
-                            } else if (constant instanceof IntConstant) {
-                                sb.append(Integer.toString(constant.intValue()));
-                                return true;
-                            } else if (constant instanceof BooleanConstant) {
-                                sb.append(Boolean.toString(constant.booleanValue()));
-                                return true;
-                            } else if (constant instanceof LongConstant) {
-                                sb.append(Long.toString(constant.longValue()));
-                                return true;
-                            } else if (constant instanceof DoubleConstant) {
-                                sb.append(Double.toString(constant.doubleValue()));
-                                return true;
-                            } else if (constant instanceof CharConstant) {
-                                sb.append('\'').append(Character.toString(constant.charValue())).append('\'');
-                                return true;
-                            } else if (constant instanceof FloatConstant) {
-                                sb.append(Float.toString(constant.floatValue()));
-                                return true;
-                            } else if (constant instanceof ShortConstant) {
-                                sb.append(Short.toString(constant.shortValue()));
-                                return true;
-                            } else if (constant instanceof ByteConstant) {
-                                sb.append(Byte.toString(constant.byteValue()));
-                                return true;
-                            }
-                        }
-                        if (fb.declaringClass != null) {
-                            if (apiFilter != null &&
-                                    !apiFilter.hasField(
-                                            new String(fb.declaringClass.readableName()),
-                                            new String(fb.name))) {
-                                if (isListIgnored()) {
-                                    info("Filtering out typedef constant "
-                                            + new String(fb.declaringClass.readableName()) + "."
-                                            + new String(fb.name) + "");
-                                }
-                                return false;
-                            }
-                            sb.append(fb.declaringClass.readableName());
-                            sb.append('.');
-                            sb.append(fb.name);
-                        } else {
-                            sb.append(reference.binding.readableName());
-                        }
-                    } else {
-                        sb.append(reference.binding.readableName());
-                    }
-                    return true;
-                } else {
-                    warning("No binding for reference " + reference);
+                if (sb.length() == 2) {
+                    // All values filtered out
+                    return false;
                 }
-                return false;
-            } else if (expression instanceof StringLiteral) {
-                StringLiteral s = (StringLiteral) expression;
-                sb.append('"');
-                sb.append(s.source());
-                sb.append('"');
                 return true;
-            } else if (expression instanceof NumberLiteral) {
-                NumberLiteral number = (NumberLiteral) expression;
-                sb.append(number.source());
-                return true;
-            } else if (expression instanceof TrueLiteral) {
-                sb.append(true);
-                return true;
-            } else if (expression instanceof FalseLiteral) {
-                sb.append(false);
-                return true;
-            } else if (expression instanceof org.eclipse.jdt.internal.compiler.ast.NullLiteral) {
-                sb.append("null");
-                return true;
-            } else {
-                // BinaryExpression etc can happen if you put "3 + 4" in as an integer!
-                if (expression.constant != null) {
-                    if (expression.constant.typeID() == TypeIds.T_int) {
-                        sb.append(expression.constant.intValue());
-                        return true;
-                    } else if (expression.constant.typeID() == TypeIds.T_JavaLangString) {
-                        sb.append('"');
-                        sb.append(expression.constant.stringValue());
-                        sb.append('"');
-                        return true;
-                    } else {
-                        warning("Unexpected type for constant " + expression.constant.toString());
+            } else if (expression instanceof PsiReferenceExpression) {
+                PsiReferenceExpression referenceExpression = (PsiReferenceExpression) expression;
+                PsiElement resolved = referenceExpression.resolve();
+                if (resolved instanceof PsiField) {
+                    PsiField field = (PsiField) resolved;
+                    if (!(name.equals(INT_DEF_ANNOTATION)) &&
+                            !(name.equals(STRING_DEF_ANNOTATION))) {
+                        // Inline constants
+                        Object value = field.computeConstantValue();
+                        if (appendLiteralValue(sb, value)) {
+                            return true;
+                        }
                     }
+
+                    PsiClass declaringClass = field.getContainingClass();
+                    if (declaringClass == null) {
+                        error("No containing class found for " + field.getName());
+                        return false;
+                    }
+                    String qualifiedName = declaringClass.getQualifiedName();
+                    String fieldName = field.getName();
+                    if (qualifiedName != null && fieldName != null) {
+                        if (apiFilter != null &&
+                                !apiFilter.hasField(qualifiedName, fieldName)) {
+                            if (isListIgnored()) {
+                                info("Filtering out typedef constant "
+                                        + qualifiedName + "."
+                                        + fieldName + "");
+                            }
+                            return false;
+                        }
+                        sb.append(qualifiedName);
+                        sb.append('.');
+                        sb.append(fieldName);
+                        return true;
+                    }
+                    return false;
                 } else {
-                    warning("Unexpected annotation expression of type " + expression.getClass() + " and is "
-                            + expression);
+                    warning("Unexpected reference to " + resolved);
+                    return false;
+                }
+            } else if (expression instanceof PsiLiteral) {
+                PsiLiteral literal = (PsiLiteral) expression;
+                Object literalValue = literal.getValue();
+                if (appendLiteralValue(sb, literalValue)) {
+                    return true;
+                }
+            } else if (expression instanceof PsiExpression) {
+                // For example, binary expressions like 3 + 4
+                Object literalValue = JavaConstantExpressionEvaluator.computeConstantExpression(
+                        (PsiExpression) expression, false);
+                if (appendLiteralValue(sb, literalValue)) {
+                    return true;
                 }
             }
 
+            warning("Unexpected annotation expression of type " + expression.getClass()
+                    + " and is " + expression);
+
             return false;
         }
+    }
+
+    private static boolean appendLiteralValue(
+            @NonNull StringBuilder sb,
+            @Nullable Object literalValue) {
+        if (literalValue instanceof Number || literalValue instanceof Boolean) {
+            sb.append(literalValue.toString());
+            return true;
+        } else if (literalValue instanceof String || literalValue instanceof Character) {
+            sb.append('"');
+            XmlUtils.appendXmlAttributeValue(sb, literalValue.toString());
+            sb.append('"');
+            return true;
+        }
+        return false;
     }
 
     public enum ClassKind {
@@ -1816,19 +1828,18 @@ public class Extractor {
         ANNOTATION;
 
         @NonNull
-        public static ClassKind forType(@Nullable TypeDeclaration declaration) {
+        public static ClassKind forClass(@Nullable PsiClass declaration) {
             if (declaration == null) {
                 return CLASS;
             }
-            switch (TypeDeclaration.kind(declaration.modifiers)) {
-                case TypeDeclaration.INTERFACE_DECL:
-                    return INTERFACE;
-                case TypeDeclaration.ANNOTATION_TYPE_DECL:
-                    return ANNOTATION;
-                case TypeDeclaration.ENUM_DECL:
-                    return ENUM;
-                default:
-                    return CLASS;
+            if (declaration.isEnum()) {
+                return ENUM;
+            } else if (declaration.isAnnotationType()) {
+                return ANNOTATION;
+            } else if (declaration.isInterface()) {
+                return INTERFACE;
+            } else {
+                return CLASS;
             }
         }
 
@@ -1846,6 +1857,12 @@ public class Extractor {
                     return "class";
             }
         }
+
+
+        @Override
+        public String toString() {
+            return getKeepType();
+        }
     }
 
     /**
@@ -1854,11 +1871,13 @@ public class Extractor {
      */
     private abstract static class Item implements Comparable<Item> {
         @NonNull public final String containingClass;
-        @NonNull public final ClassKind classKind;
+        @Nullable public final PsiClass psiClass;
 
-        public Item(@NonNull String containingClass, @NonNull ClassKind classKind) {
+        public Item(
+                @Nullable PsiClass psiClass,
+                @NonNull String containingClass) {
+            this.psiClass = psiClass;
             this.containingClass = containingClass;
-            this.classKind = classKind;
         }
 
         public final List<AnnotationData> annotations = Lists.newArrayList();
@@ -1906,14 +1925,13 @@ public class Extractor {
     }
 
     private static class ClassItem extends Item {
-        private ClassItem(@NonNull String containingClass, @NonNull ClassKind classKind) {
-            super(containingClass, classKind);
+        private ClassItem(@Nullable PsiClass psiClass, @NonNull String containingClass) {
+            super(psiClass, containingClass);
         }
 
         @NonNull
-        static ClassItem create(@NonNull String classFqn, @NonNull ClassKind kind) {
-            classFqn = ApiDatabase.getRawClass(classFqn);
-            return new ClassItem(classFqn, kind);
+        static ClassItem create(@Nullable PsiClass psiClass, @NonNull String classFqn) {
+            return new ClassItem(psiClass, classFqn);
         }
 
         @Override
@@ -1931,7 +1949,8 @@ public class Extractor {
         @Override
         public String getKeepRule() {
             // See http://proguard.sourceforge.net/manual/usage.html#classspecification
-            return "-keep " + classKind.getKeepType() + " " + containingClass + "\n";
+            return "-keep " + ClassKind.forClass(psiClass).getKeepType() + " " +
+                    containingClass + "\n";
         }
 
         @NonNull
@@ -1965,6 +1984,64 @@ public class Extractor {
         }
     }
 
+    private static class PackageItem extends Item {
+        private PackageItem(@NonNull String containingClass) {
+            super(null, containingClass);
+        }
+
+        @NonNull
+        static PackageItem create(@NonNull String fqn) {
+            return new PackageItem(fqn);
+        }
+
+        @Override
+        boolean isFiltered(@NonNull ApiDatabase database) {
+            return !database.hasPackage(containingClass);
+        }
+
+        @NonNull
+        @Override
+        String getSignature() {
+            return escapeXml(containingClass);
+        }
+
+        @NonNull
+        @Override
+        public String getKeepRule() {
+            return "";
+        }
+
+        @NonNull
+        @Override
+        public String getQualifiedClassName() {
+            return containingClass;
+        }
+
+        @Override
+        public String toString() {
+            return "Package " + containingClass;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+
+            PackageItem that = (PackageItem) o;
+
+            return containingClass.equals(that.containingClass);
+        }
+
+        @Override
+        public int hashCode() {
+            return containingClass.hashCode();
+        }
+    }
+
     private static class FieldItem extends Item {
 
         @NonNull
@@ -1973,26 +2050,24 @@ public class Extractor {
         @Nullable
         public final String fieldType;
 
-        private FieldItem(@NonNull String containingClass, @NonNull ClassKind classKind,
+        private FieldItem(@Nullable PsiClass psiClass, @NonNull String containingClass,
                 @NonNull String fieldName, @Nullable String fieldType) {
-            super(containingClass, classKind);
+            super(psiClass, containingClass);
             this.fieldName = fieldName;
             this.fieldType = fieldType;
         }
 
         @Nullable
-        static FieldItem create(String classFqn, @NonNull ClassKind classKind, FieldBinding field) {
-            String name = new String(field.name);
-            String type = getFieldType(field);
-            return classFqn != null ? new FieldItem(classFqn, classKind, name, type) : null;
-        }
-
-        @Nullable
-        private static String getFieldType(FieldBinding binding) {
-            if (binding.type != null) {
-                return new String(binding.type.readableName());
+        static FieldItem create(@Nullable PsiClass psiClass, @Nullable String classFqn,
+                @NonNull PsiField field) {
+            if (classFqn == null) {
+                return null;
             }
-
+            String name = field.getName();
+            String type = getVariableType(field);
+            if (name != null && type != null) {
+                return new FieldItem(psiClass, classFqn, name, type);
+            }
             return null;
         }
 
@@ -2014,7 +2089,7 @@ public class Extractor {
                 return ""; // imported item; these can't have keep rules
             }
             // See http://proguard.sourceforge.net/manual/usage.html#classspecification
-            return "-keep " + classKind.getKeepType() + " " + containingClass +
+            return "-keep " + ClassKind.forClass(psiClass).getKeepType() + " " + containingClass +
                     " {\n    " + fieldType + " " + fieldName + "\n}\n";
         }
 
@@ -2066,13 +2141,13 @@ public class Extractor {
         public final boolean isConstructor;
 
         private MethodItem(
+                @Nullable PsiClass psiClass,
                 @NonNull String containingClass,
-                @NonNull ClassKind classKind,
                 @Nullable String returnType,
                 @NonNull String methodName,
                 @NonNull String parameterList,
                 boolean isConstructor) {
-            super(containingClass, classKind);
+            super(psiClass, containingClass);
             this.returnType = returnType;
             this.methodName = methodName;
             this.parameterList = parameterList;
@@ -2085,30 +2160,22 @@ public class Extractor {
         }
 
         @Nullable
-        static MethodItem create(@Nullable String classFqn,
-                @NonNull ClassKind classKind,
-                @NonNull AbstractMethodDeclaration declaration,
-                @Nullable MethodBinding binding) {
-            if (classFqn == null || binding == null) {
+        static MethodItem create(
+                @Nullable PsiClass psiClass,
+                @Nullable String classFqn,
+                @NonNull PsiMethod declaration) {
+            if (classFqn == null) {
                 return null;
             }
-            String returnType = getReturnType(binding);
-            String methodName = getMethodName(binding);
-            Argument[] arguments = declaration.arguments;
-            boolean isVarargs = arguments != null && arguments.length > 0 &&
-                    arguments[arguments.length - 1].isVarArgs();
-            String parameterList = getParameterList(binding, isVarargs);
-            if (returnType == null || methodName == null) {
+            String returnType = getReturnType(declaration);
+            String methodName = getMethodName(declaration);
+            if (returnType == null) {
                 return null;
             }
-            //noinspection PointlessBooleanExpression,ConstantConditions
-            if (!INCLUDE_TYPE_ARGS) {
-                classFqn = ApiDatabase.getRawClass(classFqn);
-                methodName = ApiDatabase.getRawMethod(methodName);
-            }
-            return new MethodItem(classFqn, classKind, returnType,
-                    methodName, parameterList,
-                    binding.isConstructor());
+            String parameterList = getParameterList(declaration);
+
+            return new MethodItem(psiClass, classFqn, returnType,
+                    methodName, parameterList, declaration.isConstructor());
         }
 
         @NonNull
@@ -2201,7 +2268,7 @@ public class Extractor {
             // See http://proguard.sourceforge.net/manual/usage.html#classspecification
             StringBuilder sb = new StringBuilder();
             sb.append("-keep ");
-            sb.append(classKind.getKeepType());
+            sb.append(ClassKind.forClass(psiClass).getKeepType());
             sb.append(" ");
             sb.append(containingClass);
             sb.append(" {\n");
@@ -2214,7 +2281,7 @@ public class Extractor {
                 sb.append(methodName);
             }
             sb.append("(");
-            sb.append(parameterList); // TODO: Strip generics?
+            sb.append(parameterList);
             sb.append(")\n");
             sb.append("}\n");
 
@@ -2229,119 +2296,94 @@ public class Extractor {
     }
 
     @Nullable
-    private static String getReturnType(MethodBinding binding) {
-        if (binding.returnType != null) {
-            return new String(binding.returnType.readableName());
-        } else if (binding.declaringClass != null) {
-            assert binding.isConstructor();
-            return new String(binding.declaringClass.readableName());
+    private static String getReturnType(PsiMethod method) {
+        if (method.isConstructor()) {
+            PsiClass containingClass = method.getContainingClass();
+            if (containingClass != null) {
+                return containingClass.getName();
+            }
+        } else {
+            PsiType returnType = method.getReturnType();
+            if (returnType != null) {
+                return returnType.getCanonicalText();
+            }
         }
 
         return null;
     }
 
     @Nullable
-    private static String getMethodName(@NonNull MethodBinding binding) {
-        if (binding.isConstructor()) {
-            if (binding.declaringClass != null) {
-                String classFqn = new String(binding.declaringClass.readableName());
-                return classFqn.substring(classFqn.lastIndexOf('.') + 1);
-            }
+    private static String getVariableType(PsiVariable variable) {
+        PsiType type = variable.getType();
+        return type.getCanonicalText();
+    }
 
-        }
-        if (binding.selector != null) {
-            return new String(binding.selector);
+    private static String getMethodName(@NonNull PsiMethod method) {
+        if (method.isConstructor()) {
+            return method.getName();
         }
 
-        assert binding.isConstructor();
-
-        return null;
+        return method.getName();
     }
 
     @NonNull
-    private static String getParameterList(@NonNull MethodBinding binding, boolean isVarargs) {
+    private static String getParameterList(PsiMethod method) {
         // Create compact type signature (no spaces around commas or generics arguments)
         StringBuilder sb = new StringBuilder();
-        TypeBinding[] typeParameters = binding.parameters;
-        if (typeParameters != null) {
-            for (int i = 0, n = typeParameters.length; i < n; i++) {
-                TypeBinding parameter = typeParameters[i];
-                if (i > 0) {
-                    sb.append(',');
-                }
-                String str = fixParameterString(new String(parameter.readableName()));
-                if (isVarargs && i == n - 1 && str.endsWith("[]")) {
-                    str = str.substring(0, str.length() - 2) + "...";
-                }
-                sb.append(str);
+        boolean isFirst = true;
+        PsiParameterList parameterList = method.getParameterList();
+        for (PsiParameter parameter : parameterList.getParameters()) {
+            if (isFirst) {
+                isFirst = false;
+            } else {
+                sb.append(',');
             }
+
+            PsiType type = parameter.getType();
+            sb.append(type.getCanonicalText());
         }
         return sb.toString();
     }
+
 
     private static class ParameterItem extends MethodItem {
         @NonNull
         public final String argIndex;
 
         private ParameterItem(
+                @Nullable PsiClass psiClass,
                 @NonNull String containingClass,
-                @NonNull ClassKind classKind,
                 @Nullable String returnType,
                 @NonNull String methodName,
                 @NonNull String parameterList,
                 boolean isConstructor,
                 @NonNull String argIndex) {
-            super(containingClass, classKind, returnType, methodName, parameterList, isConstructor);
+            super(psiClass, containingClass, returnType, methodName, parameterList, isConstructor);
             this.argIndex = argIndex;
         }
 
         @Nullable
         static ParameterItem create(
-                AbstractMethodDeclaration methodDeclaration,
-                Argument argument,
-                String classFqn,
-                ClassKind classKind,
-                MethodBinding methodBinding,
-                LocalVariableBinding parameterBinding) {
-            if (classFqn == null || methodBinding == null || parameterBinding == null) {
+                @Nullable PsiClass psiClass,
+                @Nullable String classFqn,
+                @NonNull PsiMethod method,
+                @NonNull PsiParameter parameter,
+                int index) {
+            if (classFqn == null) {
                 return null;
             }
 
-            String methodName = getMethodName(methodBinding);
-            Argument[] arguments = methodDeclaration.arguments;
-            boolean isVarargs = arguments != null && arguments.length > 0 &&
-                    arguments[arguments.length - 1].isVarArgs();
-            String parameterList = getParameterList(methodBinding, isVarargs);
-            String returnType = getReturnType(methodBinding);
+            String methodName = getMethodName(method);
+            String returnType = getReturnType(method);
             if (methodName == null || returnType == null) {
                 return null;
             }
-
-            int index = 0;
-            boolean found = false;
-            if (methodDeclaration.arguments != null) {
-                for (Argument a : methodDeclaration.arguments) {
-                    if (a == argument) {
-                        found = true;
-                        break;
-                    }
-                    index++;
-                }
-            }
-            if (!found) {
-                return null;
-            }
+            String parameterList = getParameterList(method);
             String argNum = Integer.toString(index);
 
-            //noinspection PointlessBooleanExpression,ConstantConditions
-            if (!INCLUDE_TYPE_ARGS) {
-                classFqn = ApiDatabase.getRawClass(classFqn);
-                methodName = ApiDatabase.getRawMethod(methodName);
-            }
-            return new ParameterItem(classFqn, classKind, returnType, methodName, parameterList,
-                    methodBinding.isConstructor(), argNum);
+            return new ParameterItem(psiClass, classFqn, returnType, methodName, parameterList,
+                    method.isConstructor(), argNum);
         }
-
 
         @NonNull
         @Override
@@ -2386,93 +2428,67 @@ public class Extractor {
         }
     }
 
-    private class AnnotationVisitor extends ASTVisitor {
-        @Override
-        public boolean visit(Argument argument, BlockScope scope) {
-            Annotation[] annotations = argument.annotations;
-            if (hasRelevantAnnotations(annotations)) {
-                ReferenceContext referenceContext = scope.referenceContext();
-                if (referenceContext instanceof AbstractMethodDeclaration) {
-                    MethodBinding binding = ((AbstractMethodDeclaration) referenceContext).binding;
-                    ClassScope classScope = findClassScope(scope);
-                    if (classScope == null) {
-                        return false;
-                    }
-                    String fqn = getFqn(classScope);
-                    ClassKind kind = ClassKind.forType(classScope.referenceContext);
-                    Item item = ParameterItem.create(
-                            (AbstractMethodDeclaration) referenceContext, argument, fqn, kind,
-                            binding, argument.binding);
-                    if (item != null) {
-                        addItem(fqn, item);
-                        addAnnotations(annotations, item);
-                    }
-                }
+    /**
+     * Returns true if the given javadoc contains a {@code @hide} marker
+     *
+     * @param docComment the javadoc
+     * @return true if the javadoc contains a hide marker
+     */
+    private static boolean javadocContainsHide(@Nullable PsiDocComment docComment) {
+        if (docComment != null) {
+            String text = docComment.getText();
+            if (text.contains("@hide")) {
+                return true;
             }
-            return false;
+        }
+
+        return false;
+    }
+
+    /**
+     * Returns true if this type declaration for a typedef is hidden (e.g. should not
+     * be extracted into an external annotation database)
+     *
+     * @param declaration the type declaration
+     * @return true if the type is hidden
+     */
+    @SuppressWarnings("RedundantIfStatement")
+    public static boolean isHiddenTypeDef(@NonNull PsiClass declaration) {
+        PsiModifierList modifierList = declaration.getModifierList();
+        if (modifierList == null || !modifierList.hasModifierProperty(PsiModifier.PUBLIC)) {
+            return true;
+        }
+
+        if (REMOVE_HIDDEN_TYPEDEFS && javadocContainsHide(declaration.getDocComment())) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private class AnnotationVisitor extends JavaRecursiveElementVisitor {
+        private List<String> privateTypedefs = Lists.newArrayList();
+        private final boolean requireHide;
+        private final boolean requireSourceRetention;
+
+        public AnnotationVisitor(boolean requireHide, boolean requireSourceRetention) {
+            this.requireHide = requireHide;
+            this.requireSourceRetention = requireSourceRetention;
+        }
+
+        public List<String> getPrivateTypedefClasses() {
+            return privateTypedefs;
         }
 
         @Override
-        public boolean visit(ConstructorDeclaration constructorDeclaration, ClassScope scope) {
-            Annotation[] annotations = constructorDeclaration.annotations;
-            if (hasRelevantAnnotations(annotations)) {
-                MethodBinding constructorBinding = constructorDeclaration.binding;
-                if (constructorBinding == null) {
-                    return false;
-                }
+        public void visitMethod(@NonNull PsiMethod method) {
+            // Not calling super: don't recurse inside methods
 
-                String fqn = getFqn(scope);
-                ClassKind kind = ClassKind.forType(scope.referenceContext);
-                Item item = MethodItem.create(fqn, kind, constructorDeclaration, constructorBinding);
-                if (item != null) {
-                    addItem(fqn, item);
-                    addAnnotations(annotations, item);
-                }
-            }
-
-            Argument[] arguments = constructorDeclaration.arguments;
-            if (arguments != null) {
-                for (Argument argument : arguments) {
-                    argument.traverse(this, constructorDeclaration.scope);
-                }
-            }
-            return false;
-        }
-
-        @Override
-        public boolean visit(FieldDeclaration fieldDeclaration, MethodScope scope) {
-            Annotation[] annotations = fieldDeclaration.annotations;
-            if (hasRelevantAnnotations(annotations)) {
-                FieldBinding fieldBinding = fieldDeclaration.binding;
-                if (fieldBinding == null) {
-                    return false;
-                }
-
-                String fqn = getFqn(scope);
-                ClassKind kind = scope.referenceContext instanceof TypeDeclaration ?
-                        ClassKind.forType((TypeDeclaration)scope.referenceContext) :
-                        ClassKind.CLASS;
-                Item item = FieldItem.create(fqn, kind, fieldBinding);
-                if (item != null && fqn != null) {
-                    addItem(fqn, item);
-                    addAnnotations(annotations, item);
-                }
-            }
-            return false;
-        }
-
-        @Override
-        public boolean visit(MethodDeclaration methodDeclaration, ClassScope scope) {
-            Annotation[] annotations = methodDeclaration.annotations;
-            if (hasRelevantAnnotations(annotations)) {
-                MethodBinding methodBinding = methodDeclaration.binding;
-                if (methodBinding == null) {
-                    return false;
-                }
-                String fqn = getFqn(scope);
-                ClassKind kind = ClassKind.forType(scope.referenceContext);
-                MethodItem item = MethodItem.create(fqn, kind, methodDeclaration,
-                        methodDeclaration.binding);
+            PsiModifierList modifierList = method.getModifierList();
+            PsiClass containingClass = method.getContainingClass();
+            if (hasRelevantAnnotations(modifierList)) {
+                String fqn = getFqn(containingClass);
+                MethodItem item = MethodItem.create(containingClass, fqn, method);
                 if (item != null) {
                     addItem(fqn, item);
 
@@ -2492,85 +2508,136 @@ public class Extractor {
                     }
 
                     if (!skipReturnAnnotations) {
-                        addAnnotations(annotations, item);
+                        addAnnotations(modifierList, item);
                     }
                 }
             }
 
-            Argument[] arguments = methodDeclaration.arguments;
-            if (arguments != null) {
-                for (Argument argument : arguments) {
-                    argument.traverse(this, methodDeclaration.scope);
+            PsiParameterList parameterList = method.getParameterList();
+            PsiParameter[] parameters = parameterList.getParameters();
+            int index = 0;
+            for (PsiParameter parameter : parameters) {
+                PsiModifierList parameterModifierList = parameter.getModifierList();
+                if (hasRelevantAnnotations(parameterModifierList)) {
+                    String fqn = getFqn(containingClass);
+                    Item item = ParameterItem.create(containingClass, fqn, method, parameter,
+                            index);
+                    if (item != null) {
+                        addItem(fqn, item);
+                        addAnnotations(parameterModifierList, item);
+                    }
                 }
+                index++;
             }
-            return false;
         }
 
         @Override
-        public boolean visit(TypeDeclaration localTypeDeclaration, BlockScope scope) {
-            Annotation[] annotations = localTypeDeclaration.annotations;
-            if (hasRelevantAnnotations(annotations)) {
-                SourceTypeBinding binding = localTypeDeclaration.binding;
-                if (binding == null) {
-                    return true;
+        public void visitField(PsiField field) {
+            // Not calling super: don't recurse inside field (e.g. field initializer)
+            //super.visitField(field);
+            PsiModifierList modifierList = field.getModifierList();
+            if (hasRelevantAnnotations(modifierList)) {
+                PsiClass containingClass = field.getContainingClass();
+                if (containingClass != null) {
+                    String fqn = getFqn(containingClass);
+                    Item item = FieldItem.create(containingClass, fqn, field);
+                    if (item != null) {
+                        addItem(fqn, item);
+                        addAnnotations(modifierList, item);
+                    }
                 }
-
-                if (binding.isAnnotationType()
-                        // Public typedef annotation need to be kept; they're not
-                        // removed by TypedefCollector#recordTypedefs so users may
-                        // end up referencing the typedef annotation itself
-                        && TypedefCollector.isHiddenTypeDef(localTypeDeclaration)) {
-                    return true;
-                }
-
-                String fqn = getFqn(scope);
-                if (fqn == null) {
-                    fqn = new String(localTypeDeclaration.binding.readableName());
-                }
-                Item item = ClassItem.create(fqn, ClassKind.forType(localTypeDeclaration));
-                addItem(fqn, item);
-                addAnnotations(annotations, item);
-
             }
-            return true;
         }
 
         @Override
-        public boolean visit(TypeDeclaration memberTypeDeclaration, ClassScope scope) {
-            Annotation[] annotations = memberTypeDeclaration.annotations;
-            if (hasRelevantAnnotations(annotations)) {
-                SourceTypeBinding binding = memberTypeDeclaration.binding;
-                if (!(binding instanceof MemberTypeBinding)) {
-                    return true;
-                }
-                if (binding.isAnnotationType()
-                        && TypedefCollector.isHiddenTypeDef(memberTypeDeclaration)
-                        || binding.isAnonymousType()) {
-                    return true;
-                }
-                String fqn = new String(memberTypeDeclaration.binding.readableName());
-                Item item = ClassItem.create(fqn, ClassKind.forType(memberTypeDeclaration));
-                addItem(fqn, item);
-                addAnnotations(annotations, item);
-            }
-            return true;
+        public void visitClassInitializer(PsiClassInitializer initializer) {
+            // Don't look inside
         }
 
         @Override
-        public boolean visit(TypeDeclaration typeDeclaration, CompilationUnitScope scope) {
-            Annotation[] annotations = typeDeclaration.annotations;
-            if (hasRelevantAnnotations(annotations)) {
-                SourceTypeBinding binding = typeDeclaration.binding;
-                if (binding == null) {
-                    return true;
-                }
-                String fqn = new String(typeDeclaration.binding.readableName());
-                Item item = ClassItem.create(fqn, ClassKind.forType(typeDeclaration));
-                addItem(fqn, item);
-                addAnnotations(annotations, item);
+        public void visitImportList(PsiImportList list) {
+            // Don't look inside
+        }
 
+        @Override
+        public void visitPackageStatement(PsiPackageStatement statement) {
+            // Extract package. PSI doesn't expose the fact that for a package-info
+            // the modifier list is one of the children of the package statement
+            PsiElement curr = statement.getFirstChild();
+            if (curr instanceof PsiModifierList) {
+                // Is it a package-info.java file?
+                PsiModifierList modifierList = (PsiModifierList) curr;
+                if (hasRelevantAnnotations(modifierList)) {
+                    String fqn = statement.getPackageName();
+                    if (fqn != null) {
+                        PackageItem item = PackageItem.create(fqn);
+                        addPackage(fqn, item);
+                        addAnnotations(modifierList, item);
+                    }
+                }
             }
-            return true;
+        }
+
+        @Override
+        public void visitDocComment(PsiDocComment comment) {
+            // Don't look inside
+        }
+
+        @Override
+        public void visitClass(PsiClass aClass) {
+            super.visitClass(aClass);
+
+            if (aClass instanceof PsiAnonymousClass) {
+                return;
+            }
+
+            if (aClass.isAnnotationType()) {
+                // Let's see if it's a typedef
+                PsiModifierList modifierList = aClass.getModifierList();
+                if (modifierList != null) {
+                    for (PsiAnnotation annotation : modifierList.getAnnotations()) {
+                        String fqn = annotation.getQualifiedName();
+                        if (isNestedAnnotation(fqn)) {
+                            if (requireHide && !javadocContainsHide(aClass.getDocComment())) {
+                                Extractor.warning(aClass.getQualifiedName()
+                                        + ": This typedef annotation should specify @hide in a "
+                                        + "doc comment");
+                            }
+                            if (requireSourceRetention
+                                    && !hasSourceRetention(aClass)) {
+                                Extractor.warning(aClass.getQualifiedName()
+                                        + ": The typedef annotation should have "
+                                        + "@Retention(RetentionPolicy.SOURCE)");
+                            }
+                            if (isHiddenTypeDef(aClass)) {
+                                String cls = LintUtils.getInternalName(aClass);
+                                if (!privateTypedefs.contains(cls)) {
+                                    privateTypedefs.add(cls);
+                                }
+                            }
+
+                            break;
+                        }
+                    }
+                }
+            }
+            if (aClass.isAnnotationType()
+                    // Public typedef annotation need to be kept; they're not
+                    // removed by TypedefCollector#recordTypedefs so users may
+                    // end up referencing the typedef annotation itself
+                    && isHiddenTypeDef(aClass)) {
+                return;
+            }
+
+            PsiModifierList modifierList = aClass.getModifierList();
+            if (hasRelevantAnnotations(modifierList)) {
+                String fqn = getFqn(aClass);
+                if (fqn != null) {
+                    Item item = ClassItem.create(aClass, fqn);
+                    addItem(fqn, item);
+                    addAnnotations(modifierList, item);
+                }
+            }
         }
     }
 }

@@ -299,7 +299,7 @@ public class Context {
             PsiElement element = (PsiElement) source;
             if (this instanceof JavaContext) {
                 JavaContext javaContext = (JavaContext) this;
-                if (Objects.equals(element.getContainingFile(), javaContext.getJavaFile())) {
+                if (Objects.equals(element.getContainingFile(), javaContext.getPsiFile())) {
                     javaContext.report(issue, element, location, message, quickfixData);
                     return;
                 }

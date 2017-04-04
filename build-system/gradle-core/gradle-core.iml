@@ -56,5 +56,6 @@
     <orderEntry type="library" name="jacoco-core" level="project" />
     <orderEntry type="module" module-name="testutils" scope="TEST" />
     <orderEntry type="module" module-name="dx" />
+    <orderEntry type="library" name="intellij-core" level="project" />
   </component>
 </module>

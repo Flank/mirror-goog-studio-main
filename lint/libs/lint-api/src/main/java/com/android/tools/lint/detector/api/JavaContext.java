@@ -27,7 +27,6 @@ import com.android.tools.lint.client.api.JavaParser;
 import com.android.tools.lint.client.api.JavaParser.ResolvedClass;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.UastParser;
-import com.android.tools.lint.detector.api.Detector.JavaPsiScanner;
 import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.utils.Pair;
 import com.intellij.openapi.util.TextRange;
@@ -368,7 +367,7 @@ public class JavaContext extends Context {
     }
 
     /**
-     * Returns the parser which created the {@link #getJavaFile()}
+     * Returns the parser which created the {@link #getPsiFile()}
      *
      * @return the parser
      */
@@ -410,10 +409,26 @@ public class JavaContext extends Context {
     /**
      * Returns the {@link PsiJavaFile}.
      *
+     * @deprecated Use {@link #getPsiFile()} instead
      * @return the parsed Java source file
      */
     @Nullable
-    public PsiFile getJavaFile() {
+    @Deprecated
+    public PsiJavaFile getJavaFile() {
+        if (psiFile instanceof PsiJavaFile) {
+            return (PsiJavaFile) psiFile;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Returns the {@link PsiJavaFile}.
+     *
+     * @return the parsed Java source file
+     */
+    @Nullable
+    public PsiFile getPsiFile() {
         return psiFile;
     }
 

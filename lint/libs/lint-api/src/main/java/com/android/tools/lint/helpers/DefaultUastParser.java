@@ -158,7 +158,7 @@ public class DefaultUastParser extends UastParser {
         PsiFile containingFile = element.getContainingFile();
         File file = context.file;
         CharSequence contents = context.getContents();
-        if (!containingFile.equals(context.getJavaFile())) {
+        if (!containingFile.equals(context.getPsiFile())) {
             // Reporting an error in a different file.
             if (context.getDriver().getScope().size() == 1) {
                 // Don't bother with this error if it's in a different file during single-file analysis
@@ -350,7 +350,7 @@ public class DefaultUastParser extends UastParser {
         if (psi != null) {
             PsiFile containingFile = psi.getContainingFile();
             contents = context.getContents();
-            if (!containingFile.equals(context.getJavaFile())) {
+            if (!containingFile.equals(context.getPsiFile())) {
                 // Reporting an error in a different file.
                 if (context.getDriver().getScope().size() == 1) {
                     // Don't bother with this error if it's in a different file during single-file analysis

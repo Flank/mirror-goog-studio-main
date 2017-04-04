@@ -82,28 +82,29 @@ public class ResourceEvaluator {
     public static final String DIMENSION_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "Dimension";
     public static final String RES_SUFFIX = "Res";
 
-    public static final String INTEGER_RES_ANNOTATION = "android.support.annotation.IntegerRes";
-    public static final String MENU_RES_ANNOTATION = "android.support.annotation.MenuRes";
-    public static final String INTERPOLATOR_RES_ANNOTATION = "android.support.annotation.InterpolatorRes";
-    public static final String ID_RES_ANNOTATION = "android.support.annotation.IdRes";
-    public static final String TRANSITION_RES_ANNOTATION = "android.support.annotation.TransitionRes";
-    public static final String STYLE_RES_ANNOTATION = "android.support.annotation.StyleRes";
-    public static final String STRING_RES_ANNOTATION = "android.support.annotation.StringRes";
-    public static final String XML_RES_ANNOTATION = "android.support.annotation.XmlRes";
-    public static final String BOOL_RES_ANNOTATION = "android.support.annotation.BoolRes";
-    public static final String FRACTION_RES_ANNOTATION = "android.support.annotation.FractionRes";
-    public static final String COLOR_RES_ANNOTATION = "android.support.annotation.ColorRes";
-    public static final String DRAWABLE_RES_ANNOTATION = "android.support.annotation.DrawableRes";
-    public static final String DIMEN_RES_ANNOTATION = "android.support.annotation.DimenRes";
-    public static final String RAW_RES_ANNOTATION = "android.support.annotation.RawRes";
-    public static final String ATTR_RES_ANNOTATION = "android.support.annotation.AttrRes";
-    public static final String ARRAY_RES_ANNOTATION = "android.support.annotation.ArrayRes";
-    public static final String STYLEABLE_RES_ANNOTATION = "android.support.annotation.StyleableRes";
     public static final String ANIMATOR_RES_ANNOTATION = "android.support.annotation.AnimatorRes";
-    public static final String LAYOUT_RES_ANNOTATION = "android.support.annotation.LayoutRes";
-    public static final String PLURALS_RES_ANNOTATION = "android.support.annotation.PluralsRes";
     public static final String ANIM_RES_ANNOTATION = "android.support.annotation.AnimRes";
     public static final String ANY_RES_ANNOTATION = "android.support.annotation.AnyRes";
+    public static final String ARRAY_RES_ANNOTATION = "android.support.annotation.ArrayRes";
+    public static final String ATTR_RES_ANNOTATION = "android.support.annotation.AttrRes";
+    public static final String BOOL_RES_ANNOTATION = "android.support.annotation.BoolRes";
+    public static final String COLOR_RES_ANNOTATION = "android.support.annotation.ColorRes";
+    public static final String DIMEN_RES_ANNOTATION = "android.support.annotation.DimenRes";
+    public static final String DRAWABLE_RES_ANNOTATION = "android.support.annotation.DrawableRes";
+    public static final String FONT_RES_ANNOTATION = "android.support.annotation.FontRes";
+    public static final String FRACTION_RES_ANNOTATION = "android.support.annotation.FractionRes";
+    public static final String ID_RES_ANNOTATION = "android.support.annotation.IdRes";
+    public static final String INTEGER_RES_ANNOTATION = "android.support.annotation.IntegerRes";
+    public static final String INTERPOLATOR_RES_ANNOTATION = "android.support.annotation.InterpolatorRes";
+    public static final String LAYOUT_RES_ANNOTATION = "android.support.annotation.LayoutRes";
+    public static final String MENU_RES_ANNOTATION = "android.support.annotation.MenuRes";
+    public static final String PLURALS_RES_ANNOTATION = "android.support.annotation.PluralsRes";
+    public static final String RAW_RES_ANNOTATION = "android.support.annotation.RawRes";
+    public static final String STRING_RES_ANNOTATION = "android.support.annotation.StringRes";
+    public static final String STYLEABLE_RES_ANNOTATION = "android.support.annotation.StyleableRes";
+    public static final String STYLE_RES_ANNOTATION = "android.support.annotation.StyleRes";
+    public static final String TRANSITION_RES_ANNOTATION = "android.support.annotation.TransitionRes";
+    public static final String XML_RES_ANNOTATION = "android.support.annotation.XmlRes";
 
     private final JavaEvaluator evaluator;
 
@@ -602,6 +603,8 @@ public class ResourceEvaluator {
                 return ResourceType.DIMEN;
             case DRAWABLE_RES_ANNOTATION:
                 return ResourceType.DRAWABLE;
+            case FONT_RES_ANNOTATION:
+                return ResourceType.FONT;
             case FRACTION_RES_ANNOTATION:
                 return ResourceType.FRACTION;
             case ID_RES_ANNOTATION:

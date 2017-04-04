@@ -130,7 +130,7 @@ public class ResourceEvaluatorTest extends TestCase {
         JavaContext context = pair.getFirst();
         Disposable disposable = pair.getSecond();
         assertNotNull(context);
-        PsiFile javaFile = context.getJavaFile();
+        PsiFile javaFile = context.getPsiFile();
         assertNotNull(javaFile);
 
         // Find the expression
