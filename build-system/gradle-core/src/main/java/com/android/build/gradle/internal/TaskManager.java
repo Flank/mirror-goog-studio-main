@@ -2336,7 +2336,8 @@ public abstract class TaskManager {
                             androidBuilder,
                             buildCache,
                             dexingMode,
-                            variantScope.getInstantRunBuildContext().isInInstantRunMode());
+                            variantScope.getInstantRunBuildContext().isInInstantRunMode(),
+                            variantScope.getMinSdkForDx());
             transformManager.addTransform(tasks, variantScope, preDexTransform)
                     .ifPresent(variantScope::addColdSwapBuildTask);
         }
@@ -2351,7 +2352,8 @@ public abstract class TaskManager {
                             project.files(variantScope.getMainDexListFile()),
                             verifyNotNull(androidBuilder.getTargetInfo(), "Target Info not set."),
                             androidBuilder.getDexByteCodeConverter(),
-                            androidBuilder.getErrorReporter());
+                            androidBuilder.getErrorReporter(),
+                            variantScope.getMinSdkForDx());
             Optional<AndroidTask<TransformTask>> dexTask =
                     transformManager.addTransform(tasks, variantScope, dexTransform);
             // need to manually make dex task depend on MultiDexTransform since there's no stream
@@ -2424,7 +2426,8 @@ public abstract class TaskManager {
                         getResMergingScopes(variantScope),
                         instantRunMergedManifests,
                         processedResources,
-                        true /* addResourceVerifier */);
+                        true /* addResourceVerifier */,
+                        variantScope.getMinSdkForDx());
 
         if (variantScope.getSourceGenTask() != null) {
             variantScope.getSourceGenTask().dependsOn(tasks, buildInfoLoaderTask);

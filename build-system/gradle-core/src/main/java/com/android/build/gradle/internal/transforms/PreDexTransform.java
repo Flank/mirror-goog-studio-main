@@ -86,17 +86,21 @@ public class PreDexTransform extends Transform {
 
     private boolean instantRunMode;
 
+    @Nullable private final Integer minSdkVersion;
+
     public PreDexTransform(
             @NonNull DexOptions dexOptions,
             @NonNull AndroidBuilder androidBuilder,
             @Nullable FileCache buildCache,
             @NonNull DexingMode dexingMode,
-            boolean instantRunMode) {
+            boolean instantRunMode,
+            @Nullable Integer minSdkVersion) {
         this.dexOptions = dexOptions;
         this.androidBuilder = androidBuilder;
         this.buildCache = buildCache;
         this.dexingMode = dexingMode;
         this.instantRunMode = instantRunMode;
+        this.minSdkVersion = minSdkVersion;
     }
 
     @NonNull
@@ -130,7 +134,7 @@ public class PreDexTransform extends Transform {
             // ATTENTION: if you add something here, consider adding the value to DexKey - it needs
             // to be saved if affects how dx is invoked.
 
-            Map<String, Object> params = Maps.newHashMapWithExpectedSize(6);
+            Map<String, Object> params = Maps.newHashMapWithExpectedSize(7);
 
             params.put("optimize", true);
             params.put("jumbo", dexOptions.getJumboMode());
@@ -147,6 +151,9 @@ public class PreDexTransform extends Transform {
                     getName());
             BuildToolInfo buildTools = targetInfo.getBuildTools();
             params.put("build-tools", buildTools.getRevision().toString());
+            if (minSdkVersion != null) {
+                params.put("min-sdk-version", minSdkVersion);
+            }
 
             return params;
         } catch (Exception e) {
@@ -269,7 +276,8 @@ public class PreDexTransform extends Transform {
                                 usedBuildCache,
                                 dexingMode,
                                 dexOptions,
-                                androidBuilder);
+                                androidBuilder,
+                                minSdkVersion);
                 logger.verbose("Adding PreDexCallable for %s : %s", entry.getKey(), action);
                 executor.execute(action);
             }

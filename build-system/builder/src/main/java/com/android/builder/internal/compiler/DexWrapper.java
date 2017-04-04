@@ -26,7 +26,7 @@ import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessOutput;
 import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.ide.common.process.ProcessResult;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Iterables;
 import java.io.Closeable;
 import java.io.File;
@@ -90,8 +90,11 @@ public class DexWrapper {
         args.verbose = processBuilder.isVerbose();
         // due to b.android.com/82031
         args.optimize = true;
-        args.numThreads = Objects.firstNonNull(dexOptions.getThreadCount(), 4);
+        args.numThreads = MoreObjects.firstNonNull(dexOptions.getThreadCount(), 4);
         args.forceJumbo = dexOptions.getJumboMode();
+        if (processBuilder.getMinSdkVersion() != null) {
+            args.minSdkVersion = processBuilder.getMinSdkVersion();
+        }
 
         args.parseFlags(Iterables.toArray(dexOptions.getAdditionalParameters(), String.class));
         args.makeOptionsObjects();

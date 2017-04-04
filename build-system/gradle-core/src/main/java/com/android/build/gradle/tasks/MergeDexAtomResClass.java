@@ -46,7 +46,9 @@ import java.util.Collection;
 import java.util.regex.Pattern;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectories;
 import org.gradle.api.tasks.TaskAction;
 
@@ -86,7 +88,8 @@ public class MergeDexAtomResClass extends BaseTask {
                                             false,
                                             null,
                                             dexOptions,
-                                            outputHandler);
+                                            outputHandler,
+                                            getMinSdkVersionForDx());
                         } catch (Exception e) {
                             throw new TransformException(e);
                         }
@@ -134,6 +137,12 @@ public class MergeDexAtomResClass extends BaseTask {
     @NonNull
     public Collection<File> getOutputDirsCollection() {
         return atomConfigTask.getFinalDexDirsCollection();
+    }
+
+    @Input
+    @Optional
+    public Integer getMinSdkVersionForDx() {
+        return scope.getMinSdkForDx();
     }
 
     private VariantScope scope;

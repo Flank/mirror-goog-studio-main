@@ -1879,4 +1879,26 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
         return Java8LangSupport.NONE;
     }
+
+    @Nullable
+    @Override
+    public Integer getMinSdkForDx() {
+        if (getJava8LangSupportType() != Java8LangSupport.DESUGAR) {
+            return null;
+        }
+
+        if (!globalScope
+                .getExtension()
+                .getCompileOptions()
+                .getTargetCompatibility()
+                .isJava8Compatible()) {
+            return null;
+        }
+
+        if (getVariantConfiguration().getMinSdkVersionValue() >= 24) {
+            return getVariantConfiguration().getMinSdkVersionValue();
+        } else {
+            return null;
+        }
+    }
 }

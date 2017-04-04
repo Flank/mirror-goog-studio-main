@@ -108,7 +108,8 @@ public class InstantRunTaskManager {
             Set<? super QualifiedContent.Scope> resMergingScopes,
             FileCollection instantRunMergedManifests,
             FileCollection processedResources,
-            boolean addDependencyChangeChecker) {
+            boolean addDependencyChangeChecker,
+            @Nullable Integer minSdkForDx) {
         final Project project = variantScope.getGlobalScope().getProject();
 
         TransformVariantScope transformVariantScope = variantScope.getTransformVariantScope();
@@ -219,11 +220,9 @@ public class InstantRunTaskManager {
 
         // we always produce the reload.dex irrespective of the targeted version,
         // and if we are not in incremental mode, we need to still need to clean our output state.
-        InstantRunDex reloadDexTransform = new InstantRunDex(
-                variantScope,
-                dexByteCodeConverter,
-                dexOptions,
-                logger);
+        InstantRunDex reloadDexTransform =
+                new InstantRunDex(
+                        variantScope, dexByteCodeConverter, dexOptions, logger, minSdkForDx);
 
         reloadDexTask =
                 transformManager

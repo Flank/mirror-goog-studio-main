@@ -52,11 +52,13 @@ public class DexByteCodeConverterTest {
     @Before
     public void initLoggerMock() {
         logger = mock(StdLogger.class, withSettings().verboseLogging());
-        dexByteCodeConverter = new DexByteCodeConverter(
-                logger,
-                null /* targetInfo */,
-                mock(JavaProcessExecutor.class),
-                false /* verboseExec */);
+        dexByteCodeConverter =
+                new DexByteCodeConverter(
+                        logger,
+                        null /* targetInfo */,
+                        mock(JavaProcessExecutor.class),
+                        false /* verboseExec */,
+                        new ThrowingErrorReporter());
     }
 
     @Test
