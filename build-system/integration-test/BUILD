@@ -183,10 +183,23 @@ filegroup(
 )
 
 # Maven repo with all the dependencies required by test projects.
+#
+# Quick way of updating this list:
+# - Run the new test with bazel
+# - Copy the output log to $PWD/test.log
+# - Run this command:
+# grep -F '> Could not find' test.log \
+#   | sed -e 's:> Could not find :"//prebuilts/tools/common/m2/repository/:' \
+#   | sed -e 's/:/\//g' \
+#   | sed -e 's/\.$/:jar",/' \
+#   | sed -e 's/\([a-z]\)\.\([a-z]\)/\1\/\2/g'
 maven_repo(
     name = "prebuilts_repo",
     # keep sorted
     artifacts = [
+        "//prebuilts/tools/common/m2/repository/backport-util-concurrent/backport-util-concurrent/3.1:jar",
+        "//prebuilts/tools/common/m2/repository/classworlds/classworlds/1.1-alpha-2:jar",
+        "//prebuilts/tools/common/m2/repository/com/almworks/sqlite4java/sqlite4java/0.282:jar",
         "//prebuilts/tools/common/m2/repository/com/amazonaws/aws-java-sdk-acm/1.11.18:jar",
         "//prebuilts/tools/common/m2/repository/com/amazonaws/aws-java-sdk-api-gateway/1.11.18:jar",
         "//prebuilts/tools/common/m2/repository/com/amazonaws/aws-java-sdk-applicationautoscaling/1.11.18:jar",
@@ -303,6 +316,7 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/com/github/moduth/blockcanary-core/1.2.1:aar",
         "//prebuilts/tools/common/m2/repository/com/github/pwittchen/reactivenetwork/0.4.0:aar",
         "//prebuilts/tools/common/m2/repository/com/github/xizzhu/simple-tool-tip/0.5.0:aar",
+        "//prebuilts/tools/common/m2/repository/com/google/android/apps/common/testing/accessibility/framework/accessibility-test-framework/2.1:jar",
         "//prebuilts/tools/common/m2/repository/com/google/android/exoplayer/exoplayer/r1.5.9:aar",
         "//prebuilts/tools/common/m2/repository/com/google/auto/auto-common/0.4:jar",
         "//prebuilts/tools/common/m2/repository/com/google/auto/auto-common/0.6:jar",
@@ -324,10 +338,13 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/com/google/dexmaker/dexmaker/1.0:jar",
         "//prebuilts/tools/common/m2/repository/com/google/dexmaker/dexmaker/1.2:jar",
         "//prebuilts/tools/common/m2/repository/com/google/guava/guava/18.0:jar",
+        "//prebuilts/tools/common/m2/repository/com/google/guava/guava/20.0:jar",
+        "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/2.6.1:jar",
         "//prebuilts/tools/common/m2/repository/com/googlecode/jarjar/jarjar/1.3:jar",
         "//prebuilts/tools/common/m2/repository/com/hannesdorfmann/mosby/mvp-common/2.0.1:jar",
         "//prebuilts/tools/common/m2/repository/com/hannesdorfmann/mosby/mvp/2.0.1:aar",
         "//prebuilts/tools/common/m2/repository/com/helpshift/android-helpshift-aar/4.7.0:aar",
+        "//prebuilts/tools/common/m2/repository/com/ibm/icu/icu4j/53.1:jar",
         "//prebuilts/tools/common/m2/repository/com/jakewharton/butterknife-annotations/8.4.0:jar",
         "//prebuilts/tools/common/m2/repository/com/jakewharton/butterknife-compiler/8.4.0:jar",
         "//prebuilts/tools/common/m2/repository/com/jakewharton/butterknife/7.0.1:jar",
@@ -384,6 +401,7 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/com/squareup/picasso/picasso/2.5.2:jar",
         "//prebuilts/tools/common/m2/repository/com/squareup/retrofit2/retrofit/2.1.0:jar",
         "//prebuilts/tools/common/m2/repository/com/thoughtworks/xstream/xstream/1.4.7:jar",
+        "//prebuilts/tools/common/m2/repository/com/thoughtworks/xstream/xstream/1.4.8:jar",
         "//prebuilts/tools/common/m2/repository/com/trello/rxlifecycle/0.6.1:aar",
         "//prebuilts/tools/common/m2/repository/com/uber/rave-compiler/0.6.0:jar",
         "//prebuilts/tools/common/m2/repository/com/uber/rave/0.6.0:jar",
@@ -410,9 +428,13 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/me/tatarka/gradle-retrolambda/3.2.4:jar",
         "//prebuilts/tools/common/m2/repository/me/tatarka/retrolambda/projectlombok/lombok.ast/0.2.3.a2:jar",
         "//prebuilts/tools/common/m2/repository/me/zhanghai/android/materialprogressbar/library/1.1.4:aar",
+        "//prebuilts/tools/common/m2/repository/nekohtml/nekohtml/1.9.6.2:jar",
+        "//prebuilts/tools/common/m2/repository/nekohtml/xercesMinimal/1.9.6.2:jar",
         "//prebuilts/tools/common/m2/repository/net/bytebuddy/byte-buddy-agent/1.6.5:jar",
         "//prebuilts/tools/common/m2/repository/net/bytebuddy/byte-buddy/1.6.5:jar",
         "//prebuilts/tools/common/m2/repository/net/orfjackal/retrolambda/retrolambda/2.0.6:jar",
+        "//prebuilts/tools/common/m2/repository/org/apache/ant/ant-launcher/1.8.0:jar",
+        "//prebuilts/tools/common/m2/repository/org/apache/ant/ant/1.8.0:jar",
         "//prebuilts/tools/common/m2/repository/org/apache/commons/commons-lang3/3.4:jar",
         "//prebuilts/tools/common/m2/repository/org/apache/httpcomponents/httpclient/4.1.1:jar",
         "//prebuilts/tools/common/m2/repository/org/apache/httpcomponents/httpclient/4.5.2:jar",
@@ -420,10 +442,28 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/org/apache/httpcomponents/httpcore/4.4.4:jar",
         "//prebuilts/tools/common/m2/repository/org/apache/logging/log4j/log4j-api/2.5:jar",
         "//prebuilts/tools/common/m2/repository/org/apache/logging/log4j/log4j-core/2.5:jar",
+        "//prebuilts/tools/common/m2/repository/org/apache/maven/maven-ant-tasks/2.1.3:jar",
+        "//prebuilts/tools/common/m2/repository/org/apache/maven/maven-artifact-manager/2.2.1:jar",
+        "//prebuilts/tools/common/m2/repository/org/apache/maven/maven-artifact/2.2.1:jar",
+        "//prebuilts/tools/common/m2/repository/org/apache/maven/maven-error-diagnostics/2.2.1:jar",
+        "//prebuilts/tools/common/m2/repository/org/apache/maven/maven-model/2.2.1:jar",
+        "//prebuilts/tools/common/m2/repository/org/apache/maven/maven-plugin-registry/2.2.1:jar",
+        "//prebuilts/tools/common/m2/repository/org/apache/maven/maven-profile/2.2.1:jar",
+        "//prebuilts/tools/common/m2/repository/org/apache/maven/maven-project/2.2.1:jar",
+        "//prebuilts/tools/common/m2/repository/org/apache/maven/maven-repository-metadata/2.2.1:jar",
+        "//prebuilts/tools/common/m2/repository/org/apache/maven/maven-settings/2.2.1:jar",
+        "//prebuilts/tools/common/m2/repository/org/apache/maven/wagon/wagon-file/1.0-beta-6:jar",
+        "//prebuilts/tools/common/m2/repository/org/apache/maven/wagon/wagon-http-lightweight/1.0-beta-6:jar",
+        "//prebuilts/tools/common/m2/repository/org/apache/maven/wagon/wagon-http-shared/1.0-beta-6:jar",
+        "//prebuilts/tools/common/m2/repository/org/apache/maven/wagon/wagon-provider-api/1.0-beta-6:jar",
+        "//prebuilts/tools/common/m2/repository/org/assertj/assertj-core/2.6.0:jar",
         "//prebuilts/tools/common/m2/repository/org/bitbucket/b_c/jose4j/0.5.0:jar",
         "//prebuilts/tools/common/m2/repository/org/bouncycastle/bcprov-jdk15on/1.50:jar",
         "//prebuilts/tools/common/m2/repository/org/bouncycastle/bcprov-jdk16/1.46:jar",
         "//prebuilts/tools/common/m2/repository/org/ccil/cowan/tagsoup/tagsoup/1.2.1:jar",
+        "//prebuilts/tools/common/m2/repository/org/codehaus/plexus/plexus-container-default/1.0-alpha-9-stable-1:jar",
+        "//prebuilts/tools/common/m2/repository/org/codehaus/plexus/plexus-interpolation/1.11:jar",
+        "//prebuilts/tools/common/m2/repository/org/codehaus/plexus/plexus-utils/1.5.15:jar",
         "//prebuilts/tools/common/m2/repository/org/hamcrest/hamcrest-integration/1.3:jar",
         "//prebuilts/tools/common/m2/repository/org/hamcrest/hamcrest-library/1.3:jar",
         "//prebuilts/tools/common/m2/repository/org/javassist/javassist/3.19.0-GA:jar",
@@ -444,7 +484,19 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/org/mockito/mockito-core/2.7.1:jar",
         "//prebuilts/tools/common/m2/repository/org/objenesis/objenesis/2.1:jar",
         "//prebuilts/tools/common/m2/repository/org/objenesis/objenesis/2.5:jar",
+        "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-commons/5.0.1:jar",
+        "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-tree/5.0.1:jar",
+        "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm/5.0.1:jar",
         "//prebuilts/tools/common/m2/repository/org/reflections/reflections/0.9.10:jar",
+        "//prebuilts/tools/common/m2/repository/org/robolectric/android-all/7.0.0_r1-robolectric-0:jar",
+        "//prebuilts/tools/common/m2/repository/org/robolectric/robolectric-annotations/3.3.2:jar",
+        "//prebuilts/tools/common/m2/repository/org/robolectric/robolectric-junit/3.3.2:jar",
+        "//prebuilts/tools/common/m2/repository/org/robolectric/robolectric-resources/3.3.2:jar",
+        "//prebuilts/tools/common/m2/repository/org/robolectric/robolectric-sandbox/3.3.2:jar",
+        "//prebuilts/tools/common/m2/repository/org/robolectric/robolectric-utils/3.3.2:jar",
+        "//prebuilts/tools/common/m2/repository/org/robolectric/robolectric/3.3.2:jar",
+        "//prebuilts/tools/common/m2/repository/org/robolectric/shadow-api/3.3.2:jar",
+        "//prebuilts/tools/common/m2/repository/org/robolectric/shadows-core/3.3.2:jar",
         "//prebuilts/tools/common/m2/repository/org/shredzone/flattr4j/flattr4j-core/2.12:jar",
         "//prebuilts/tools/common/m2/repository/org/slf4j/slf4j-api/1.7.2:jar",
         "//prebuilts/tools/common/m2/repository/org/slf4j/slf4j-api/1.7.5:jar",
