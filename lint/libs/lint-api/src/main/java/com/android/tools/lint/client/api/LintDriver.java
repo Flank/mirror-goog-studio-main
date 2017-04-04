@@ -75,6 +75,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.intellij.openapi.progress.ProcessCanceledException;
+import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiAnnotationMemberValue;
 import com.intellij.psi.PsiAnnotationParameterList;
@@ -1918,11 +1919,22 @@ public class LintDriver {
             @NonNull List<File> files) {
 
         List<JavaContext> contexts = Lists.newArrayListWithExpectedSize(files.size());
+        List<File> testFolders = project.getTestSourceFolders();
         for (File file : files) {
             if (file.isFile()) {
                 String path = file.getPath();
                 if (path.endsWith(DOT_JAVA) || path.endsWith(DOT_KT)) {
-                    contexts.add(new JavaContext(this, project, main, file));
+                    JavaContext context = new JavaContext(this, project, main, file);
+
+                    // Figure out if this file is a test context
+                    for (File testFolder : testFolders) {
+                        if (FileUtil.isAncestor(testFolder, file, false)) {
+                            context.setTestSource(true);
+                            break;
+                        }
+                    }
+
+                    contexts.add(context);
                 }
             }
         }
