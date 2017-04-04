@@ -113,6 +113,8 @@ Status InternalNetworkServiceImpl::SendHttpRequest(
   if (conn != nullptr) {
     conn->request.fields = httpRequest->fields();
     conn->request.method = httpRequest->method();
+    conn->thread.id = httpRequest->thread().id();
+    conn->thread.name = httpRequest->thread().name();
   }
   else {
     Log::V("Unhandled http request (%lld)", (long long) httpRequest->conn_id());

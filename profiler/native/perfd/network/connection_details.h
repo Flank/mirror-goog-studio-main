@@ -68,6 +68,16 @@ struct ConnectionDetails final {
     std::string payload_id;
   };
 
+  // Thread information obtained from Java, which is different from the thread data we would obtain from a JNI context.
+  // See also: https://docs.oracle.com/javase/7/docs/api/java/lang/Thread.html
+  struct JavaThread {
+    // ID of the thread obtained from Java, which is different from the thread ID obtained in a JNI context.
+    int64_t id;
+    // Name of the thread.
+    // https://docs.oracle.com/javase/7/docs/api/java/lang/Thread.html#getName().
+    std::string name;
+  };
+
   // ID that can identify this connection globally across all active apps
   int64_t id = 0;
   // The ID of the app that created this connection
@@ -80,7 +90,8 @@ struct ConnectionDetails final {
   // Time when the connection was closed (either completed or aborted). This
   // value will be 0 until then.
   int64_t end_timestamp = 0;
-
+  // The thread where this connection was connected.
+  JavaThread thread;
   Request request;
   Response response;
 };
