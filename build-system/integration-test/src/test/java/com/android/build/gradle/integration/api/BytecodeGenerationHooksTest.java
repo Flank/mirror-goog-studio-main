@@ -24,6 +24,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.Dex;
+import com.android.utils.SdkUtils;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import java.io.File;
@@ -32,8 +33,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -140,7 +143,7 @@ public class BytecodeGenerationHooksTest {
     private static void checkDependencies(
             GradleBuildResult result, String prefix, boolean exactly, String... dependencies) {
         String stdout = result.getStdout();
-        Iterable<String> stdoutlines = Splitter.on("\n").omitEmptyStrings().split(stdout);
+        Iterable<String> stdoutlines = Splitter.on(SdkUtils.getLineSeparator()).omitEmptyStrings().split(stdout);
         List<String> lines = Lists.newArrayList(stdoutlines);
 
         lines =
@@ -155,7 +158,7 @@ public class BytecodeGenerationHooksTest {
                 Arrays.stream(dependencies)
                         .map(
                                 s ->
-                                        new File(projectDir, s.replaceAll("/", File.separator))
+                                        new File(projectDir, s.replace('/', File.separatorChar))
                                                 .getAbsolutePath())
                         .collect(Collectors.toList());
 
