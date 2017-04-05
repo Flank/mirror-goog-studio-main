@@ -18,6 +18,7 @@ package com.android.ide.common.res2;
 
 import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.TAG_ATTR;
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -47,6 +48,7 @@ import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -270,6 +272,31 @@ public class ResourceMergerTest extends BaseTestCase {
         assertEquals("Rewritten String through merger",
                 value,
                 newValue);
+    }
+
+    @Test
+    public void testResourcesInOrder() throws Exception {
+        ResourceMerger merger = getResourceMerger();
+
+        Collection<Map.Entry<String, ResourceItem>> entries =
+                merger.getDataSets().get(0).getDataMap().entries();
+        ArrayList<String> strings = new ArrayList<>();
+
+        for (Map.Entry<String, ResourceItem> entry : entries) {
+            if (entry.getValue().getType() == ResourceType.STRING) {
+                strings.add(entry.getValue().getName());
+            }
+        }
+
+        assertThat(strings)
+                .containsExactly(
+                        "basic_string",
+                        "xliff_string",
+                        "xliff_with_carriage_return",
+                        "styled_string",
+                        "two",
+                        "many")
+                .inOrder();
     }
 
     @Test
