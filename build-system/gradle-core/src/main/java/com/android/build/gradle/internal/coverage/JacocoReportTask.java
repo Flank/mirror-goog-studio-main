@@ -40,6 +40,7 @@ import java.util.Locale;
 import java.util.function.Supplier;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputDirectory;
@@ -67,7 +68,7 @@ import org.jacoco.report.xml.XMLFormatter;
  */
 public class JacocoReportTask extends DefaultTask {
 
-    private Supplier<Collection<File>> jacocoClasspath;
+    private FileCollection jacocoClasspath;
 
     private Supplier<File> coverageDirectory;
     private Supplier<File> classDir;
@@ -127,11 +128,11 @@ public class JacocoReportTask extends DefaultTask {
     }
 
     @InputFiles
-    public Collection<File> getJacocoClasspath() {
-        return jacocoClasspath.get();
+    public FileCollection getJacocoClasspath() {
+        return jacocoClasspath;
     }
 
-    public void setJacocoClasspath(Supplier<Collection<File>> jacocoClasspath) {
+    public void setJacocoClasspath(FileCollection jacocoClasspath) {
         this.jacocoClasspath = jacocoClasspath;
     }
 
@@ -300,13 +301,8 @@ public class JacocoReportTask extends DefaultTask {
             checkNotNull(scope.getTestedVariantData());
             final VariantScope testedScope = scope.getTestedVariantData().getScope();
 
-            task.jacocoClasspath = TaskInputHelper.bypassFileSupplier(() -> {
-                JacocoPlugin plugin = project.getPlugins().getPlugin(JacocoPlugin.class);
-                plugin.resolveTaskClasspathDefaults();
-                return project.getConfigurations()
-                        .getAt(JacocoPlugin.ANT_CONFIGURATION_NAME)
-                        .getFiles();
-            });
+            task.jacocoClasspath =
+                    project.getConfigurations().getAt(JacocoPlugin.ANT_CONFIGURATION_NAME);
 
             task.coverageDirectory = TaskInputHelper.memoize(
                     () -> ((TestVariantData) scope.getVariantData()).connectedTestTask
