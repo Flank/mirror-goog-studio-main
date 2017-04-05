@@ -39,10 +39,11 @@ import java.util.Set;
 public class EventProfiler implements ProfilerComponent, Application.ActivityLifecycleCallbacks {
 
     private static final int UNINITIALIZED_ROTATION = -1;
+    private static final int MAX_SLEEP_BACKOFF_MS = 500;
     private Set<Activity> myActivities = new HashSet<Activity>();
     private Class mSupportLibFragment;
     private int myCurrentRotation = UNINITIALIZED_ROTATION;
-
+    private volatile boolean myInitialized = false;
     public EventProfiler() {
         initialize();
         initalizeInputConnection();
@@ -96,36 +97,85 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
     }
 
     private void initialize() {
-        try {
-            Log.v(ProfilerService.STUDIO_PROFILER, "Acquiring Activity for Events");
-            Class activityThreadClass = Class.forName("android.app.ActivityThread");
-            Application app = (Application) activityThreadClass.getMethod("currentApplication")
-                    .invoke(null);
-            if(app != null) {
-                app.registerActivityLifecycleCallbacks(this);
-            } else {
-                Log.e(ProfilerService.STUDIO_PROFILER, "Failed to capture application");
-            }
-        } catch (ClassNotFoundException ex) {
-            Log.e(ProfilerService.STUDIO_PROFILER, "Failed to get ActivityThread class");
+        final EventProfiler profiler = this;
 
-        } catch (NoSuchMethodException ex) {
-            Log.e(ProfilerService.STUDIO_PROFILER, "Failed to find currentApplication method");
+        // Setting up the initializer as a thread, we need to do this because some applications
+        // may have a delay in starting the application object. If this is the case then,
+        // we need to poll for the object.
+        Thread initThread =
+                new Thread(
+                        new Runnable() {
+                            @Override
+                            public void run() {
+                                long sleepBackoffMs = 10;
+                                boolean logErrorOnce = false;
+                                while (!myInitialized) {
+                                    try {
+                                        Class activityThreadClass =
+                                                Class.forName("android.app.ActivityThread");
+                                        Application app =
+                                                (Application)
+                                                        activityThreadClass
+                                                                .getMethod("currentApplication")
+                                                                .invoke(null);
+                                        if (app != null) {
+                                            Log.v(
+                                                    ProfilerService.STUDIO_PROFILER,
+                                                    "Acquiring Application for Events");
+                                            myInitialized = true;
+                                            app.registerActivityLifecycleCallbacks(profiler);
+                                            break;
+                                        } else if (!logErrorOnce) {
+                                            Log.e(
+                                                    ProfilerService.STUDIO_PROFILER,
+                                                    "Failed to capture application");
+                                            logErrorOnce = true;
+                                        }
+                                    } catch (ClassNotFoundException ex) {
+                                        Log.e(
+                                                ProfilerService.STUDIO_PROFILER,
+                                                "Failed to get ActivityThread class");
 
-        } catch (IllegalAccessException ex) {
-            Log.e(ProfilerService.STUDIO_PROFILER, "Insufficient privileges to get application handle");
+                                    } catch (NoSuchMethodException ex) {
+                                        Log.e(
+                                                ProfilerService.STUDIO_PROFILER,
+                                                "Failed to find currentApplication method");
 
-        } catch (InvocationTargetException ex) {
-            Log.e(ProfilerService.STUDIO_PROFILER, "Failed to call static function currentApplication");
-        }
+                                    } catch (IllegalAccessException ex) {
+                                        Log.e(
+                                                ProfilerService.STUDIO_PROFILER,
+                                                "Insufficient privileges to get application handle");
 
-        try {
-            // Attempt to load the FragmentActivity from the support lib. If this class does not
-            // exist this is a good indication that the support lib is not used by this application.
-            mSupportLibFragment = Class.forName("android.support.v4.app.FragmentActivity");
-        } catch (ClassNotFoundException ex) {
-            mSupportLibFragment = null;
-        }
+                                    } catch (InvocationTargetException ex) {
+                                        Log.e(
+                                                ProfilerService.STUDIO_PROFILER,
+                                                "Failed to call static function currentApplication");
+                                    }
+
+                                    try {
+                                        Thread.sleep(sleepBackoffMs);
+                                        if (sleepBackoffMs < MAX_SLEEP_BACKOFF_MS) {
+                                            sleepBackoffMs *= 2;
+                                        } else {
+                                            sleepBackoffMs = MAX_SLEEP_BACKOFF_MS;
+                                        }
+                                    } catch (InterruptedException ex) {
+                                        // Do nothing.
+                                    }
+                                }
+
+                                try {
+                                    // Attempt to load the FragmentActivity from the support lib. If this class does not
+                                    // exist this is a good indication that the support lib is not used by this application.
+                                    mSupportLibFragment =
+                                            Class.forName(
+                                                    "android.support.v4.app.FragmentActivity");
+                                } catch (ClassNotFoundException ex) {
+                                    mSupportLibFragment = null;
+                                }
+                            }
+                        });
+        initThread.start();
     }
 
     private void initalizeInputConnection() {
