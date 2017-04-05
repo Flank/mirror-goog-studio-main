@@ -39,7 +39,6 @@ import com.android.testutils.OsType;
 import com.android.testutils.TestUtils;
 import com.android.testutils.apk.Aar;
 import com.android.testutils.apk.Apk;
-import com.android.testutils.apk.Zip;
 import com.android.utils.FileUtils;
 import com.android.utils.Pair;
 import com.google.common.base.Charsets;
@@ -54,7 +53,6 @@ import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -848,6 +846,40 @@ public final class GradleTestProject implements TestRule {
                         "apk"
                                 + (apkType.getTestName() != null ? "/" + apkType.getTestName() : "")
                                 + "/"
+                                + mangleDimensions(dimensions)
+                                + "/"
+                                + apkType.getBuildType()
+                                + "/"
+                                + mangleApkName(
+                                        apkType, filterName, ImmutableList.copyOf(dimensions))
+                                + (apkType.isSigned()
+                                        ? SdkConstants.DOT_ANDROID_PACKAGE
+                                        : "-unsigned" + SdkConstants.DOT_ANDROID_PACKAGE)));
+    }
+
+    /**
+     * Return the output apk File from the feature plugin for the given dimension.
+     *
+     * <p>Expected dimensions orders are: - product flavors -
+     */
+    @NonNull
+    public Apk getFeatureApk(ApkType apk, String... dimensions) throws IOException {
+        return getFeatureApk(null /* filterName */, apk, dimensions);
+    }
+
+    /**
+     * Return the output full split apk File from the feature plugin for the given dimension.
+     *
+     * <p>Expected dimensions orders are: - product flavors -
+     */
+    @NonNull
+    public Apk getFeatureApk(@Nullable String filterName, ApkType apkType, String... dimensions)
+            throws IOException {
+        return new Apk(
+                getOutputFile(
+                        "apk"
+                                + (apkType.getTestName() != null ? "/" + apkType.getTestName() : "")
+                                + "/feature/"
                                 + mangleDimensions(dimensions)
                                 + "/"
                                 + apkType.getBuildType()

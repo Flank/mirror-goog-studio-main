@@ -85,6 +85,7 @@ public class AarTransform extends ArtifactTransform {
             case APK_CLASSES:
             case CLASSES:
             case JAVA_RES:
+            case FEATURE_CLASSES:
             case JAR:
                 // even though resources are supposed to only be in the main jar of the AAR, this
                 // is not necessarily enforced by all build systems generating AAR so it's safer to

@@ -20,6 +20,7 @@ import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.gradle.AndroidConfig;
+import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.AndroidTask;
@@ -34,12 +35,15 @@ import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitPackageI
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitPackageIdsWriterTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.FeatureVariantData;
+import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
+import com.android.build.gradle.tasks.AndroidJarTask;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.MergeManifests;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.builder.core.AndroidBuilder;
+import com.android.builder.model.SyncIssue;
 import com.android.builder.profile.Recorder;
 import com.android.manifmerger.ManifestMerger2;
 import com.android.utils.FileUtils;
@@ -48,6 +52,7 @@ import java.io.File;
 import java.util.Set;
 import java.util.function.Supplier;
 import org.gradle.api.Project;
+import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** TaskManager for creating tasks for feature variants in an Android feature project. */
@@ -105,8 +110,17 @@ public class FeatureTaskManager extends TaskManager {
         // Add a task to create the res values
         createGenerateResValuesTask(tasks, variantScope);
 
+        // Add a task to compile renderscript files.
+        createRenderscriptTask(tasks, variantScope);
+
         // Add a task to merge the resource folders
         createMergeResourcesTask(tasks, variantScope);
+
+        // Add a task to merge the asset folders
+        createMergeAssetsTask(tasks, variantScope, null);
+
+        // Add a task to create the BuildConfig class
+        createBuildConfigTask(tasks, variantScope);
 
         // Add a task to process the Android Resources and generate source files
         AndroidTask<ProcessAndroidResources> processAndroidResourcesTask =
@@ -130,8 +144,64 @@ public class FeatureTaskManager extends TaskManager {
                 processAndroidResourcesTask.getName(),
                 AndroidArtifacts.ArtifactType.FEATURE_RESOURCE_PKG);
 
-        // TODO: remove once we generate APKs.
-        variantScope.getAssembleTask().dependsOn(tasks, processAndroidResourcesTask);
+        // Add a task to process the java resources
+        createProcessJavaResTask(tasks, variantScope);
+        createMergeJavaResTransform(tasks, variantScope);
+
+        createAidlTask(tasks, variantScope);
+
+        createShaderTask(tasks, variantScope);
+
+        // Add NDK tasks
+        if (!isComponentModelPlugin()) {
+            createNdkTasks(tasks, variantScope);
+        } else {
+            if (variantData.compileTask != null) {
+                variantData.compileTask.dependsOn(getNdkBuildable(variantData));
+            } else {
+                variantScope.getCompileTask().dependsOn(tasks, getNdkBuildable(variantData));
+            }
+        }
+        variantScope.setNdkBuildable(getNdkBuildable(variantData));
+
+        // Add external native build tasks
+        createExternalNativeBuildJsonGenerators(variantScope);
+        createExternalNativeBuildTasks(tasks, variantScope);
+
+        // Add a task to merge the jni libs folders
+        createMergeJniLibFoldersTasks(tasks, variantScope);
+
+        // Add a compile task
+        addCompileTask(tasks, variantScope);
+
+        // Add data binding tasks if enabled
+        createDataBindingTasksIfNecessary(tasks, variantScope);
+
+        createStripNativeLibraryTask(tasks, variantScope);
+
+        if (variantScope
+                .getSplitScope()
+                .getSplitHandlingPolicy()
+                .equals(SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY)) {
+            if (extension.getBuildToolsRevision().getMajor() < 21) {
+                throw new RuntimeException(
+                        "Pure splits can only be used with buildtools 21 and later");
+            }
+            createSplitTasks(tasks, variantScope);
+        }
+
+        @NonNull
+        AndroidTask<BuildInfoWriterTask> buildInfoWriterTask =
+                getAndroidTasks()
+                        .create(
+                                tasks,
+                                new BuildInfoWriterTask.ConfigAction(variantScope, getLogger()));
+
+        //createInstantRunPackagingTasks(tasks, buildInfoWriterTask, variantScope);
+        createPackagingTask(tasks, variantScope, true /*publishApk*/, buildInfoWriterTask);
+
+        // create the lint tasks.
+        createLintTasks(tasks, variantScope);
     }
 
     /**
@@ -251,6 +321,64 @@ public class FeatureTaskManager extends TaskManager {
                 mergeManifestsAndroidTask.getName());
 
         return mergeManifestsAndroidTask;
+    }
+
+    private void addCompileTask(@NonNull TaskFactory tasks, @NonNull VariantScope variantScope) {
+        // create data binding merge task before the javac task so that it can
+        // parse jars before any consumer
+        createDataBindingMergeArtifactsTaskIfNecessary(tasks, variantScope);
+        AndroidTask<? extends JavaCompile> javacTask = createJavacTask(tasks, variantScope);
+        VariantScope.Java8LangSupport java8LangSupport = variantScope.getJava8LangSupportType();
+
+        if (variantScope
+                .getGlobalScope()
+                .getExtension()
+                .getCompileOptions()
+                .getTargetCompatibility()
+                .isJava8Compatible()) {
+
+            if (java8LangSupport != VariantScope.Java8LangSupport.DESUGAR) {
+                // Only warn for users of retrolambda and dexguard
+                if (java8LangSupport == VariantScope.Java8LangSupport.EXTERNAL_PLUGIN) {
+                    androidBuilder
+                            .getErrorReporter()
+                            .handleSyncWarning(
+                                    null,
+                                    SyncIssue.TYPE_GENERIC,
+                                    "One of the plugins you are using supports Java 8 "
+                                            + "language features. To try the support built into"
+                                            + " the Android plugin, remove the following from "
+                                            + "your build.gradle:\n"
+                                            + "    apply plugin: '<plugin_name>'\n"
+                                            + "or\n"
+                                            + "    plugin {\n"
+                                            + "        id '<plugin_name>' version '<version>'\n"
+                                            + "    }\n\n"
+                                            + "To learn more, go to https://d.android.com/r/"
+                                            + "tools/java-8-support-message.html\n");
+                } else {
+                    androidBuilder
+                            .getErrorReporter()
+                            .handleSyncError(
+                                    variantScope.getVariantConfiguration().getFullName(),
+                                    SyncIssue.TYPE_GENERIC,
+                                    "Please add 'android.enableDesugar=true' to your "
+                                            + "gradle.properties file to enable Java 8 "
+                                            + "language support.");
+                }
+            }
+        }
+
+        addJavacClassesStream(variantScope);
+        setJavaCompilerTask(javacTask, tasks, variantScope);
+        getAndroidTasks().create(tasks, new AndroidJarTask.JarClassesConfigAction(variantScope));
+        createPostCompilationTasks(tasks, variantScope);
+
+        // TODO: Publish an obfuscated JAR instead.
+        variantScope.publishIntermediateArtifact(
+                javacTask.get(tasks).getDestinationDir(),
+                javacTask.getName(),
+                AndroidArtifacts.ArtifactType.FEATURE_CLASSES);
     }
 
     @NonNull

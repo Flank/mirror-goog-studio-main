@@ -548,6 +548,7 @@ public class ModelBuilder implements ToolingModelBuilder {
             BaseVariantData variantData) {
         switch (variantData.getType()) {
             case DEFAULT:
+            case FEATURE:
                 return new BuildOutputsSupplier(
                         ImmutableList.of(
                                 VariantScope.TaskOutputType.APK,
@@ -585,6 +586,7 @@ public class ModelBuilder implements ToolingModelBuilder {
         switch (variantData.getType()) {
             case DEFAULT:
             case ANDROID_TEST:
+            case FEATURE:
                 return new BuildOutputsSupplier(
                         ImmutableList.of(VariantScope.TaskOutputType.MERGED_MANIFESTS),
                         ImmutableList.of(variantData.getScope().getManifestOutputDirectory()));

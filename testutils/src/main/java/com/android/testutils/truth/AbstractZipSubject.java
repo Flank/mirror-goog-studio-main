@@ -24,6 +24,7 @@ import com.google.common.primitives.Bytes;
 import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.IterableSubject;
 import com.google.common.truth.Subject;
+import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -34,7 +35,7 @@ import java.util.stream.Collectors;
 /** Truth support for zip files. */
 @SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
 public abstract class AbstractZipSubject<S extends Subject<S, T>, T extends Zip>
-        extends Subject<S, T> {
+        extends Subject<S, T> implements Closeable {
 
     public AbstractZipSubject(@NonNull FailureStrategy failureStrategy, @NonNull T subject) {
         super(failureStrategy, subject);

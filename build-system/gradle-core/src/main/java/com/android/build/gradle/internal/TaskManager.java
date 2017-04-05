@@ -135,7 +135,6 @@ import com.android.build.gradle.internal.transforms.ShrinkResourcesTransform;
 import com.android.build.gradle.internal.transforms.StripDebugSymbolTransform;
 import com.android.build.gradle.internal.variant.AndroidArtifactVariantData;
 import com.android.build.gradle.internal.variant.ApkVariantData;
-import com.android.build.gradle.internal.variant.ApplicationVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
 import com.android.build.gradle.internal.variant.TaskContainer;
@@ -1198,7 +1197,7 @@ public abstract class TaskManager {
             @NonNull TaskFactory tasks,
             @NonNull VariantScope scope,
             @NonNull PackagingScope packagingScope) {
-        ApplicationVariantData variantData = (ApplicationVariantData) scope.getVariantData();
+        BaseVariantData variantData = scope.getVariantData();
 
         checkState(
                 variantData

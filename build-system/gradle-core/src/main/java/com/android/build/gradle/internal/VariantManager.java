@@ -440,11 +440,6 @@ public class VariantManager implements VariantModel {
                     (BaseVariantData) ((TestVariantData) variantData).getTestedVariantData();
             final VariantType testedVariantType = testedVariantData.getVariantConfiguration().getType();
 
-            // FIXME: Remove this once we have proper tasks set for feature variants.
-            if (testedVariantType == VariantType.FEATURE) {
-                return;
-            }
-
             // Add the container of dependencies, the order of the libraries is important.
             // In descending order: build type (only for unit test), flavors, defaultConfig.
             List<DefaultAndroidSourceSet> testVariantSourceSets = Lists.newArrayListWithExpectedSize(
