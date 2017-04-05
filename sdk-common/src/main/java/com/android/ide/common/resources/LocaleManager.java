@@ -28,7 +28,6 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -412,8 +411,9 @@ public class LocaleManager {
             //     (since that's a region specific overlay) so pick for example GB
             //     instead.
             if (resources != null) {
-                ListMultimap<String, com.android.ide.common.res2.ResourceItem> strings = resources
-                        .getItems().get(ResourceType.STRING);
+                // TODO: namespaces
+                ListMultimap<String, com.android.ide.common.res2.ResourceItem> strings =
+                        resources.getItems().get(null, ResourceType.STRING);
                 if (strings != null) {
                     Set<String> specified = Sets.newHashSet();
                     for (com.android.ide.common.res2.ResourceItem item : strings.values()) {

@@ -92,15 +92,14 @@ public class TestResourceRepository extends ResourceRepository {
     }
 
     /**
-     * Creates a res2 resource repository for a resource folder whose contents is identified
-     * by the pairs of relative paths and file contents
+     * Creates a res2 resource repository for a resource folder whose contents is identified by the
+     * pairs of relative paths and file contents
      *
      * @see #create(boolean, Object[])
      */
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @NonNull
-    public static com.android.ide.common.res2.ResourceRepository createRes2(
-            boolean isFramework, Object[] data)
+    public static com.android.ide.common.res2.ResourceRepository createRes2(Object[] data)
             throws IOException, MergingException {
         File dir = TestUtils.createTempDirDeletedOnExit();
         File res = new File(dir, FD_RES);
@@ -137,8 +136,8 @@ public class TestResourceRepository extends ResourceRepository {
         merger.addDataSet(resourceSet);
 
         com.android.ide.common.res2.ResourceRepository repository;
-        repository = new com.android.ide.common.res2.ResourceRepository(isFramework);
-        merger.mergeData(repository.createMergeConsumer(), true /*doCleanUp*/);
+        repository = new com.android.ide.common.res2.ResourceRepository();
+        repository.getItems().update(merger);
 
         return repository;
     }
