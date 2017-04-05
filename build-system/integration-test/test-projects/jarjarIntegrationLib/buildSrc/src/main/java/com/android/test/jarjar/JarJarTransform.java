@@ -58,9 +58,7 @@ public class JarJarTransform extends Transform {
             // needs to run on everything to rename what is using gson
             return EnumSet.of(
                     Scope.PROJECT,
-                    Scope.PROJECT_LOCAL_DEPS,
                     Scope.SUB_PROJECTS,
-                    Scope.SUB_PROJECTS_LOCAL_DEPS,
                     Scope.EXTERNAL_LIBRARIES);
         }
 

@@ -29,6 +29,7 @@ import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.objectweb.asm.ClassReader
@@ -53,6 +54,7 @@ import static org.junit.Assert.assertNotNull
  * Test for the jarjar integration.
  */
 @CompileStatic
+@Ignore("http://b/37529666")
 public class JarJarLibTest {
 
     @Rule

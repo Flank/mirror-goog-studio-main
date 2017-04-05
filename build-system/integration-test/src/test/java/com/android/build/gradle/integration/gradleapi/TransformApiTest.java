@@ -33,10 +33,12 @@ import com.google.common.collect.Iterators;
 import com.google.common.io.Files;
 import java.util.Collection;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
 /** Test for building a transform against version 1.5. */
+@Ignore("http://b/37529666")
 public class TransformApiTest {
 
     @Rule
