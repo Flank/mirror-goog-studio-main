@@ -24,7 +24,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 @Immutable
-public final class Apk extends DexAndroidArchive {
+public class Apk extends DexAndroidArchive {
 
     public Apk(@NonNull Path file) throws IOException {
         super(file, "classes.dex", "classes%d.dex");

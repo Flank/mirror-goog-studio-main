@@ -734,7 +734,13 @@ public final class GradleTestProject implements TestRule {
         if (OsType.getHostOs() == OsType.WINDOWS && apkFile.exists()) {
             File copy = File.createTempFile("tmp", ".apk");
             FileUtils.copyFile(apkFile, copy);
-            apk = new Apk(copy);
+            apk = new Apk(copy) {
+                @NonNull
+                @Override
+                public Path getFile() {
+                    return apkFile.toPath();
+                }
+            };
             tmpApkFiles.add(apk);
         } else {
             apk = new Apk(apkFile);
