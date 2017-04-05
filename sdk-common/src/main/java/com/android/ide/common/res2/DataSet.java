@@ -23,20 +23,19 @@ import com.android.utils.ILogger;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
-import org.w3c.dom.Attr;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  * Represents a set of {@link DataItem}s.
@@ -74,11 +73,13 @@ abstract class DataSet<I extends DataItem<F>, F extends DataFile<I>> implements 
     private final List<File> mSourceFiles = Lists.newArrayList();
 
     /**
-     * The key is the {@link DataItem#getKey()}.
-     * This is a multimap to support moving a data item from one file to another (values file)
-     * during incremental update.
+     * The key is the {@link DataItem#getKey()}. This is a multimap to support moving a data item
+     * from one file to another (values file) during incremental update.
+     *
+     * <p>Use LinkedListMultimap to preserve original order of items for any display of resources
+     * that want to show them in order.
      */
-    private final ListMultimap<String, I> mItems = ArrayListMultimap.create();
+    private final ListMultimap<String, I> mItems = LinkedListMultimap.create();
 
     /**
      * Map of source files to DataFiles. This is a multimap because the key is the source
