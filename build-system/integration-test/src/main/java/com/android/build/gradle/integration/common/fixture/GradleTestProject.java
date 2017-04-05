@@ -55,7 +55,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
-import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -586,8 +585,7 @@ public final class GradleTestProject implements TestRule {
 
     @NonNull
     public static String mavenSnippet(@NonNull Path repo) {
-        return String.format(
-                "maven { url '%s' }\n", repo.toAbsolutePath().toString().replace("\\", "\\\\"));
+        return String.format("maven { url '%s' }\n", repo.toUri().toString());
     }
 
     @NonNull
