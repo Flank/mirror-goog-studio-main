@@ -16,9 +16,11 @@
 
 package com.android.build.gradle.integration.application;
 
+import com.android.SdkConstants;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.utils.FileUtils;
 import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -61,6 +63,14 @@ public class CrashlyticsTest {
                         + "        android:value=\"testkey\"\n"
                         + "    />\n"
                         + "</application>");
+
+        if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_DARWIN) {
+            // Crashlytics plugin normally writes to the $HOME/.crashlytics directory, but on Mac,
+            // it writes to the $HOME/Library/Caches/com.crashlytics directory.  Since we changed
+            // the home directory in the tests, we need to create $HOME/Library/Caches that would
+            // normally exists.
+            FileUtils.mkdirs(project.file("Library/Caches"));
+        }
     }
 
     @AfterClass
