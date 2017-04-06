@@ -25,6 +25,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import java.io.File;
+import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -76,6 +77,8 @@ public class ManifestMergingTest {
 
     @Test
     public void checkTestOnlyAttribute() throws Exception {
+        // do not run if compile sdk is a preview
+        Assume.assumeFalse(GradleTestProject.DEFAULT_COMPILE_SDK_VERSION.startsWith("android-"));
         flavors.executor()
                 .run("clean", "assembleF1FaDebug");
 

@@ -61,9 +61,7 @@ public class KotlinAppTest {
         assertFalse("Library Project", model.isLibrary());
         assertEquals("Project Type", AndroidProject.PROJECT_TYPE_APP, model.getProjectType());
         assertEquals(
-                "Compile Target",
-                "android-" + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION,
-                model.getCompileTarget());
+                "Compile Target", GradleTestProject.getCompileSdkHash(), model.getCompileTarget());
     }
 
     @Test

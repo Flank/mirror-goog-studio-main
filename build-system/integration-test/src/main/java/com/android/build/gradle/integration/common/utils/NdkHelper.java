@@ -27,16 +27,15 @@ import java.io.File;
 public class NdkHelper {
 
     /**
-     * Gets the platform version supported by the specified ndk directory
-     * with specified upper bound version. If the specified upper bound one is a preview
-     * version, than we just return the maximum one supported by the ndk.
+     * Gets the platform version supported by the specified ndk directory with specified upper bound
+     * version. If the specified upper bound one is a preview version, than we just return the
+     * maximum one supported by the ndk.
      *
      * @param ndkDir path to the NDK dir
      * @param maxVersion maximum allowed version, can be a preview version
-     *
      * @return platform version supported by this ndk
      */
-    public static int getPlatformSupported(File ndkDir, String maxVersion) {
+    public static String getPlatformSupported(File ndkDir, String maxVersion) {
         Revision ndkRevision = NdkHandler.findRevision(ndkDir);
         int major = ndkRevision != null ? ndkRevision.getMajor() : 10;
         // for r10 max platform is 21, r11 max is 24, r12 max platform is 24
@@ -46,13 +45,12 @@ public class NdkHelper {
                 12, 24,
                 13, 24,
                 14, 24);
-        Integer ndkMaxVersion = perVersion.get(major);
-        if (maxVersion.length() == 1 && Character.isLetter(maxVersion.charAt(0))) {
-            // max version is a preview one, ndk supported on is def smaller
-            return ndkMaxVersion;
+        if (maxVersion.startsWith("android-")) {
+            return maxVersion;
         } else {
+            Integer ndkMaxVersion = perVersion.get(major);
             // get the smaller one out of ndkMaxVersion and maxVersion
-            return Math.min(ndkMaxVersion, Integer.parseInt(maxVersion));
+            return "android-" + Math.min(ndkMaxVersion, Integer.parseInt(maxVersion));
         }
     }
 }
