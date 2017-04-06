@@ -434,13 +434,7 @@ public class MergeManifests extends ManifestProcessorTask {
                             });
 
             processManifestTask.maxSdkVersion =
-                    TaskInputHelper.memoize(
-                            () -> {
-                                if (androidBuilder.isPreviewTarget()) {
-                                    return null;
-                                }
-                                return config.getMergedFlavor().getMaxSdkVersion();
-                            });
+                    TaskInputHelper.memoize(config.getMergedFlavor()::getMaxSdkVersion);
 
             processManifestTask.setManifestOutputDirectory(
                     variantScope.getManifestOutputDirectory());

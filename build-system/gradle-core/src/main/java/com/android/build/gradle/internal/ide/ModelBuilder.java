@@ -53,7 +53,6 @@ import com.android.builder.core.VariantType;
 import com.android.builder.model.AaptOptions;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
-import com.android.builder.model.ApiVersion;
 import com.android.builder.model.ArtifactMetaData;
 import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.Dependencies;
@@ -74,8 +73,6 @@ import com.android.builder.model.VariantBuildOutput;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.GlobalLibraryMap;
 import com.android.ide.common.build.ApkInfo;
-import com.android.sdklib.AndroidVersion;
-import com.android.sdklib.IAndroidTarget;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -354,18 +351,6 @@ public class ModelBuilder implements ToolingModelBuilder {
             }
         }
 
-        // if the target is a codename, override the model value.
-        ApiVersion sdkVersionOverride = null;
-
-        // we know the getTargetInfo won't return null here.
-        @SuppressWarnings("ConstantConditions")
-        IAndroidTarget androidTarget = androidBuilder.getTargetInfo().getTarget();
-
-        AndroidVersion version = androidTarget.getVersion();
-        if (version.getCodename() != null) {
-            sdkVersionOverride = ApiVersionImpl.clone(version);
-        }
-
         // used for test only modules
         Collection<TestedTargetVariant> testTargetVariants = getTestTargetVariants(variantData);
 
@@ -374,10 +359,7 @@ public class ModelBuilder implements ToolingModelBuilder {
                 variantConfiguration.getBaseName(),
                 variantConfiguration.getBuildType().getName(),
                 getProductFlavorNames(variantData),
-                new ProductFlavorImpl(
-                        variantConfiguration.getMergedFlavor(),
-                        sdkVersionOverride,
-                        sdkVersionOverride),
+                new ProductFlavorImpl(variantConfiguration.getMergedFlavor()),
                 mainArtifact,
                 extraAndroidArtifacts,
                 clonedExtraJavaArtifacts,

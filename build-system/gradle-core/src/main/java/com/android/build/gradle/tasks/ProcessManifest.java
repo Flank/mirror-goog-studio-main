@@ -275,15 +275,7 @@ public class ProcessManifest extends ManifestProcessorTask {
                                 return targetSdkVersion.getApiString();
                             });
 
-            processManifest.maxSdkVersion =
-                    TaskInputHelper.memoize(
-                            () -> {
-                                if (androidBuilder.isPreviewTarget()) {
-                                    return null;
-                                } else {
-                                    return mergedFlavor.getMaxSdkVersion();
-                                }
-                            });
+            processManifest.maxSdkVersion = TaskInputHelper.memoize(mergedFlavor::getMaxSdkVersion);
 
             processManifest.setManifestOutputDirectory(scope.getManifestOutputDirectory());
 
