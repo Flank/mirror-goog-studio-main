@@ -27,6 +27,7 @@ import com.android.ide.common.process.ProcessInfoBuilder;
 import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.repository.Revision;
 import com.android.sdklib.BuildToolInfo;
+import com.android.tools.aapt2.Aapt2RenamingConventions;
 import com.android.utils.ILogger;
 import com.google.common.base.Preconditions;
 import java.io.File;

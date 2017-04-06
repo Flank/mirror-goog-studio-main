@@ -20,7 +20,7 @@ import java.io.File;
 import javax.annotation.Nonnull;
 
 /** Class containing the file renaming rules for {@code aapt2}. */
-final class Aapt2RenamingConventions {
+public final class Aapt2RenamingConventions {
 
     private Aapt2RenamingConventions() {}
 
@@ -53,9 +53,12 @@ final class Aapt2RenamingConventions {
         fileName = extIdx == -1 ? fileName : fileName.substring(0, extIdx);
 
         /*
-         * values/strings.xml becomes values_strings.arsc.flat and not values_strings.xml.flat.
+         * Values are compiled to arsc. This mirrors the implementation of the Compile method in
+         * frameworks/base/tools/aapt2/compile/Compile.cpp
+         *
+         * e.g. values/strings.xml becomes values_strings.arsc.flat and not values_strings.xml.flat.
          */
-        if (parentName.equals("values") && fileName.equals("strings") && ext.equals(".xml")) {
+        if (parentName.equals("values") && ext.equals(".xml")) {
             ext = ".arsc";
         }
 
