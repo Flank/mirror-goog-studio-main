@@ -83,7 +83,9 @@ public class BuildDirTest {
 
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
-                String.format("project.buildDir = '%s'", buildDir.getAbsolutePath()));
+                String.format(
+                        "project.buildDir = '%s'",
+                        buildDir.getAbsolutePath().replace(File.separatorChar, '/')));
         return buildDir;
     }
 }

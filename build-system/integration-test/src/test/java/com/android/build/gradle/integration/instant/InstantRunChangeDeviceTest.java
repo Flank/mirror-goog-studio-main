@@ -133,20 +133,21 @@ public class InstantRunChangeDeviceTest {
                 .filter(artifact -> artifact.type == InstantRunArtifactType.SPLIT_MAIN)
                 .findFirst().orElseThrow(() -> new AssertionError("Main artifact not found"));
 
-        Apk apk = new Apk(main.file);
-
-        assertThat(apk).doesNotContainClass("Lcom/example/helloworld/HelloWorld;");
-        assertThat(apk).containsClass("Lcom/android/tools/fd/runtime/Server;");
+        try (Apk apk = new Apk(main.file)) {
+            assertThat(apk).doesNotContainClass("Lcom/example/helloworld/HelloWorld;");
+            assertThat(apk).containsClass("Lcom/android/tools/fd/runtime/Server;");
+        }
     }
 
     private static void checkNormalApk(@NonNull File apkFile) throws Exception {
-        Apk apk = new Apk(apkFile);
-        assertThat(apk)
-                .hasMainClass("Lcom/example/helloworld/HelloWorld;")
-                .that()
-                .hasMethod("onCreate");
-        assertThat(apk).doesNotContainMainClass("Lcom/android/tools/fd/runtime/Server;");
-        assertThat(apk).doesNotContainMainClass("Lcom/android/tools/fd/runtime/AppInfo;");
+        try (Apk apk = new Apk(apkFile)) {
+            assertThat(apk)
+                    .hasMainClass("Lcom/example/helloworld/HelloWorld;")
+                    .that()
+                    .hasMethod("onCreate");
+            assertThat(apk).doesNotContainMainClass("Lcom/android/tools/fd/runtime/Server;");
+            assertThat(apk).doesNotContainMainClass("Lcom/android/tools/fd/runtime/AppInfo;");
+        }
     }
 
 
