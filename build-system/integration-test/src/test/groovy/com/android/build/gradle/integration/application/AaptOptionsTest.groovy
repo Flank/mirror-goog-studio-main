@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.application
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.testutils.apk.Apk
+import com.google.common.base.Joiner
 import groovy.transform.CompileStatic
 import org.junit.Before
 import org.junit.Rule
@@ -27,8 +28,9 @@ import org.junit.Test
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.searchAndReplace
 import static com.android.utils.FileUtils.createFile
+
 /**
- * General Model tests
+ * Tests for DSL AAPT options.
  */
 @CompileStatic
 class AaptOptionsTest {
@@ -45,7 +47,7 @@ class AaptOptionsTest {
     }
 
     @Test
-    public void "test aaptOptions flags"() {
+    public void "test aaptOptions flags with AAPT"() {
         project.getBuildFile() << """
 android {
     aaptOptions {
@@ -53,7 +55,7 @@ android {
     }
 }
 """
-        project.execute("clean", "assembleDebug")
+        project.executor().withEnabledAapt2(false).run("clean", "assembleDebug")
         Apk apk = project.getApk("debug")
         assertThat(apk).containsFileWithContent("res/raw/kept", "kept")
         assertThat(apk).doesNotContain("res/raw/ignored")
@@ -61,7 +63,7 @@ android {
         createFile(project.file("src/main/res/raw/ignored2"), "ignored2")
         createFile(project.file("src/main/res/raw/kept2"), "kept2")
 
-        project.execute("assembleDebug")
+        project.executor().withEnabledAapt2(false).run("assembleDebug")
         apk = project.getApk("debug")
         assertThat(apk).containsFileWithContent("res/raw/kept2", "kept2")
         assertThat(apk).doesNotContain("res/raw/ignored2")
@@ -71,11 +73,44 @@ android {
                 'additionalParameters "--ignore-assets", "!ignored\\*"',
                 "")
 
-        project.execute("assembleDebug")
+        project.executor().withEnabledAapt2(false).run("assembleDebug")
         apk = project.getApk("debug")
         assertThat(apk).containsFileWithContent("res/raw/kept", "kept")
         assertThat(apk).containsFileWithContent("res/raw/ignored", "ignored")
         assertThat(apk).containsFileWithContent("res/raw/kept2", "kept2")
         assertThat(apk).containsFileWithContent("res/raw/ignored2", "ignored2")
+    }
+
+    @Test
+    public void "test aaptOptions flags with AAPT2"() {
+        project.getBuildFile() << """
+            android {
+                aaptOptions {
+                    additionalParameters "--extra-packages", "com.boop.beep"
+                }
+            }
+            """
+
+        project.executor().withEnabledAapt2(true).run("clean", "assembleDebug")
+
+        Joiner joiner = Joiner.on(File.separator);
+        File extraR = new File(
+                joiner.join(
+                        project.getOutputDir().getParentFile(),
+                        "generated", "source", "r", "debug", "com", "boop", "beep", "R.java"))
+
+        // Check that the extra R.java file was generated in the specified package.
+        assertThat(extraR).exists()
+        assertThat(extraR).contains("package com.boop.beep")
+
+        searchAndReplace(
+                project.buildFile,
+                'additionalParameters "--extra-packages", "com.boop.beep"',
+                '')
+
+        project.executor().withEnabledAapt2(true).run("assembleDebug")
+
+        // Check that the extra R.java file is not generated if the extra options aren't present.
+        assertThat(extraR).doesNotExist()
     }
 }
