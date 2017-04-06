@@ -23,6 +23,7 @@ import static org.objectweb.asm.Opcodes.V1_6;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.testutils.TestClassesGenerator;
 import com.android.testutils.apk.Dex;
 import com.android.utils.FileUtils;
 import com.google.common.base.Throwables;
@@ -334,6 +335,27 @@ public class DexArchiveMergerTest {
 
         assertThat(outputDex)
                 .containsExactlyClassesIn(DexArchiveTestUtil.getDexClasses("A", "B", "C"));
+    }
+
+    @Test
+    public void testStringsAbove64k() throws Exception {
+        int numClasses = 16;
+        Path inputRoot = temporaryFolder.getRoot().toPath().resolve("classes");
+        for (int i = 0; i < numClasses; i++) {
+            String className = PACKAGE + "/" + "A" + i;
+            Path classFile = inputRoot.resolve(className + SdkConstants.DOT_CLASS);
+            Files.createDirectories(classFile.getParent());
+
+            Files.write(
+                    classFile,
+                    TestClassesGenerator.classWithStrings(className, (65536 / numClasses) + 1));
+        }
+
+        Path dexArchive = temporaryFolder.getRoot().toPath().resolve("output");
+        DexArchiveTestUtil.convertClassesToDexArchive(inputRoot, dexArchive);
+
+        Path outputDex = temporaryFolder.getRoot().toPath().resolve("output_dex");
+        DexArchiveTestUtil.mergeNativeDex(ImmutableList.of(dexArchive), outputDex);
     }
 
     @NonNull

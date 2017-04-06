@@ -55,7 +55,7 @@ public final class DexArchiveTestUtil {
         try (DexArchive dexArchive = DexArchives.fromInput(dexArchiveOutput)) {
             ClassFileInput inputs = ClassFileInputs.fromPath(classesInput, e -> true);
             DexArchiveBuilderConfig config =
-                    new DexArchiveBuilderConfig(NUM_THREADS, dxContext, true, false, minSdkVersion);
+                    new DexArchiveBuilderConfig(NUM_THREADS, dxContext, true, minSdkVersion);
 
             DexArchiveBuilder dexArchiveBuilder = new DexArchiveBuilder(config);
             dexArchiveBuilder.convert(inputs, dexArchive);

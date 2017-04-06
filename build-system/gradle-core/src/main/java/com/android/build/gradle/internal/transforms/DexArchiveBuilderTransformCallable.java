@@ -233,7 +233,6 @@ class DexArchiveBuilderTransformCallable implements Callable<Void> {
                                 NUM_THREADS,
                                 dxContext,
                                 optimizedDex,
-                                dexOptions.getJumboMode(),
                                 minSdkVersion);
 
                 DexArchiveBuilder converter = new DexArchiveBuilder(config);

@@ -24,7 +24,7 @@ import com.android.dx.dex.cf.CfOptions;
 /**
  * Configuration object used to setup dx when creating a dex archive. It contains information about
  * the number of parallel .class to .dex file conversions. Also, it specifies if the generated dex
- * should be optimized, or using larger opcodes (jumbo mode).
+ * should be optimized.
  *
  * <p>Currently, there is a limited set of options to configure, and if necessary, other can be
  * added in the future.
@@ -45,20 +45,19 @@ public class DexArchiveBuilderConfig {
      * @param numThreads number of .class to .dex file conversions to run in parallel
      * @param dxContext used when invoking dx, mainly for getting the standard and error output
      * @param optimized generated dex should be optimized
-     * @param jumboMode generated dex should contain longer opcodes
      * @param minSdkVersion minimum sdk version used to enable dx features
      */
     public DexArchiveBuilderConfig(
             int numThreads,
             @NonNull DxContext dxContext,
             boolean optimized,
-            boolean jumboMode,
             int minSdkVersion) {
         this.numThreads = numThreads;
         this.dxContext = dxContext;
 
         this.dexOptions = new DexOptions();
-        this.dexOptions.forceJumbo = jumboMode;
+        /* jumbo mode always on - see http://b.android.com/321744 */
+        this.dexOptions.forceJumbo = true;
         this.dexOptions.minSdkVersion = minSdkVersion;
 
         this.cfOptions = new CfOptions();
