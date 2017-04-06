@@ -576,8 +576,7 @@ public final class GradleTestProject implements TestRule {
 
     @NonNull
     public static String mavenSnippet(@NonNull Path repo) {
-        return String.format(
-                "maven { url '%s' }\n", repo.toAbsolutePath().toString().replace("\\", "\\\\"));
+        return String.format("maven { url '%s' }\n", repo.toUri().toString());
     }
 
     @NonNull
