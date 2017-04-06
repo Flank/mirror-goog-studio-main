@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.ide;
 
 import static com.android.build.gradle.internal.ide.DependenciesLevel2Converter.cloneGraph;
 import static com.android.builder.model.AndroidProject.ARTIFACT_MAIN;
-import static org.gradle.internal.impldep.com.amazonaws.auth.policy.Statement.Effect.Allow;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -55,7 +54,6 @@ import com.android.builder.model.AaptOptions;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidArtifactOutput;
 import com.android.builder.model.AndroidProject;
-import com.android.builder.model.ApiVersion;
 import com.android.builder.model.ArtifactMetaData;
 import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.JavaArtifact;
@@ -72,8 +70,6 @@ import com.android.builder.model.TestedTargetVariant;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.GlobalLibraryMap;
-import com.android.sdklib.AndroidVersion;
-import com.android.sdklib.IAndroidTarget;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -357,18 +353,6 @@ public class ModelBuilder implements ToolingModelBuilder {
             }
         }
 
-        // if the target is a codename, override the model value.
-        ApiVersion sdkVersionOverride = null;
-
-        // we know the getTargetInfo won't return null here.
-        @SuppressWarnings("ConstantConditions")
-        IAndroidTarget androidTarget = androidBuilder.getTargetInfo().getTarget();
-
-        AndroidVersion version = androidTarget.getVersion();
-        if (version.getCodename() != null) {
-            sdkVersionOverride = ApiVersionImpl.clone(version);
-        }
-
         // used for test only modules
         Collection<TestedTargetVariant> testTargetVariants = getTestTargetVariants();
 
@@ -377,10 +361,7 @@ public class ModelBuilder implements ToolingModelBuilder {
                 variantConfiguration.getBaseName(),
                 variantConfiguration.getBuildType().getName(),
                 getProductFlavorNames(variantData),
-                new ProductFlavorImpl(
-                        variantConfiguration.getMergedFlavor(),
-                        sdkVersionOverride,
-                        sdkVersionOverride),
+                new ProductFlavorImpl(variantConfiguration.getMergedFlavor()),
                 mainArtifact,
                 extraAndroidArtifacts,
                 clonedExtraJavaArtifacts,
