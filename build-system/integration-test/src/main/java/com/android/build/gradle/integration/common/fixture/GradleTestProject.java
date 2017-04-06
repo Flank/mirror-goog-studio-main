@@ -1190,4 +1190,13 @@ public final class GradleTestProject implements TestRule {
     public String getBuildToolsVersion() {
         return buildToolsVersion;
     }
+
+    @NonNull
+    public static String getCompileSdkHash() {
+        String compileTarget = GradleTestProject.DEFAULT_COMPILE_SDK_VERSION;
+        if (!compileTarget.startsWith("android-")) {
+            compileTarget = "android-" + compileTarget;
+        }
+        return compileTarget;
+    }
 }

@@ -103,11 +103,11 @@ public class NdkPlatformVersionTest {
             if (artifact.getName().endsWith("x86")) {
                 assertThat(sysrootFlag.get()).contains("android-19");
             } else {
-                int expected =
+                String expected =
                         NdkHelper.getPlatformSupported(
                                 GradleTestProject.ANDROID_NDK_HOME,
                                 GradleTestProject.DEFAULT_COMPILE_SDK_VERSION);
-                assertThat(sysrootFlag.get()).contains("android-" + expected);
+                assertThat(sysrootFlag.get()).contains(expected);
             }
         }
     }
