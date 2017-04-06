@@ -19,15 +19,18 @@ package com.android.build.gradle.integration.application;
 import static com.android.testutils.truth.MoreTruth.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.SdkConstants;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.tasks.annotations.Extractor;
 import com.android.testutils.apk.Zip;
 import java.io.File;
 import org.junit.AfterClass;
+import org.junit.Assume;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
+
 /**
  * Integration test for extracting annotations.
  *
@@ -55,6 +58,9 @@ public class ExtractAnnotationTest {
 
     @Test
     public void checkExtractAnnotation() throws Exception {
+        // disable test on Windows, b.android.com/329605
+        Assume.assumeTrue(SdkConstants.CURRENT_PLATFORM != SdkConstants.PLATFORM_WINDOWS);
+
         File debugFileOutput = project.file("build/intermediates/annotations/debug");
         Zip classesJar = new Zip(project.file("build/intermediates/bundles/debug/classes.jar"));
         Zip file = new Zip(new File(debugFileOutput, "annotations.zip"));
