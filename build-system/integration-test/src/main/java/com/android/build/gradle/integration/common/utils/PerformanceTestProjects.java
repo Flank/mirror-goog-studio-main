@@ -356,7 +356,10 @@ public class PerformanceTestProjects {
                 "androidTestCompile 'com.squareup.okhttp:mockwebserver:2.7.5'",
                 "androidTestCompile 'com.squareup.okhttp:mockwebserver:2.7.4'");
 
-
+        TestFileUtils.searchAndReplace(
+                project.file("WordPress/src/main/AndroidManifest.xml"),
+                "<action android:name=\"com\\.google\\.android\\.c2dm\\.intent\\.REGISTRATION\" />",
+                "");
 
     }
 
