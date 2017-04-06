@@ -23,7 +23,6 @@ import com.android.SdkConstants;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.build.gradle.integration.common.utils.SdkHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.utils.FileUtils;
 import java.io.File;
@@ -57,14 +56,14 @@ public class PlatformLoaderTest {
         Assume.assumeFalse(SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS);
 
         // Copy all necessary prebuilts
-        File realAndroidHome = SdkHelper.findSdkDir();
+        File realAndroidHome = GradleTestProject.ANDROID_HOME;
 
         FileUtils.copyDirectoryContentToDirectory(
                 FileUtils.join(
-                        realAndroidHome, SdkConstants.FD_PLATFORMS,
-                        "android-" + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION),
-                FileUtils.join(mPrebuiltSdk,
-                        GradleTestProject.DEFAULT_COMPILE_SDK_VERSION));
+                        realAndroidHome,
+                        SdkConstants.FD_PLATFORMS,
+                        GradleTestProject.getCompileSdkHash()),
+                FileUtils.join(mPrebuiltSdk, GradleTestProject.DEFAULT_COMPILE_SDK_VERSION));
 
         FileUtils.copyDirectoryToDirectory(
                 FileUtils.join(
