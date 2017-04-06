@@ -43,8 +43,9 @@ public class NonDefaultVariantAtomTest {
 
     @Test
     public void build() throws Exception {
-        sProject.execute("clean");
-        sProject.execute(":instantApp:assembleRelease");
+        // TODO: add feature-split support for AAPT2
+        sProject.executor().withEnabledAapt2(false).run("clean");
+        sProject.executor().withEnabledAapt2(false).run(":instantApp:assembleRelease");
 
         // Tests that the proper sources are compiled.
         AtomBundleSubject releaseAtomBundle =
@@ -59,7 +60,7 @@ public class NonDefaultVariantAtomTest {
         releaseAtom.doesNotContainClass("Lcom/android/tests/publishatom/atom/AtomDebug;");
 
         // Same tests for the debug variant.
-        sProject.execute(":instantApp:assembleDebug");
+        sProject.executor().withEnabledAapt2(false).run(":instantApp:assembleDebug");
 
         AtomBundleSubject debugAtomBundle =
                 TruthHelper.assertThat(sProject.getSubproject("atom").getAtomBundle("debug"));

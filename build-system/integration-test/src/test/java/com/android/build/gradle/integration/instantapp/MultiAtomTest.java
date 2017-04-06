@@ -63,7 +63,8 @@ public class MultiAtomTest {
 
     @Test
     public void build() throws Exception {
-        sProject.execute("clean", ":instantApp:assembleRelease");
+        // TODO: add support for feature-splits for AAPT2
+        sProject.executor().withEnabledAapt2(false).run("clean", ":instantApp:assembleRelease");
 
         // Tests that the atom-dependent library R.java file is regenerated.
         File libResFile =
