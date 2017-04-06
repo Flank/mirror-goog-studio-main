@@ -14,12 +14,15 @@
               </K2JSCompilerArguments>
             </option>
             <option name="k2jvmCompilerArguments">
-              <K2JVMCompilerArguments />
+              <K2JVMCompilerArguments>
+                <option name="jvmTarget" value="1.6" />
+              </K2JVMCompilerArguments>
             </option>
             <option name="_commonCompilerArguments">
               <DummyImpl>
                 <option name="languageVersion" value="1.0" />
                 <option name="apiVersion" value="1.0" />
+                <option name="coroutinesWarn" value="true" />
               </DummyImpl>
             </option>
           </KotlinCompilerInfo>
