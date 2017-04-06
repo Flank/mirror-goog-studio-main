@@ -1078,6 +1078,16 @@ class AvdManagerCli extends CommandLineParser {
                     map.put(property.getName(), result);
                     i++; // valid reply, move to next property
                     break;
+                case INTEGER_ENUM:
+                    // We will need to implement this if an INTEGER_ENUM field is
+                    // added to SdkConstants.FN_HARDWARE_INI
+                    errorAndExit("Program error: INTEGER_ENUM is not supported");
+                    break;
+                case STRING_ENUM:
+                    // We will need to implement this if a STRING_ENUM field is
+                    // added to SdkConstants.FN_HARDWARE_INI
+                    errorAndExit("Program error: STRING_ENUM is not supported");
+                    break;
             }
 
             mSdkLog.info("\n"); // empty line
