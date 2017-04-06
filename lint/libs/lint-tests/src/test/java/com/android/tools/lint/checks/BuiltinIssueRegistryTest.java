@@ -17,6 +17,7 @@
 package com.android.tools.lint.checks;
 
 import com.android.annotations.NonNull;
+import com.android.tools.lint.checks.infrastructure.TestIssueRegistry;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Scope;
 import java.lang.reflect.Field;
@@ -34,7 +35,7 @@ import junit.framework.TestCase;
 
 public class BuiltinIssueRegistryTest extends TestCase {
     public void testNoListResize() {
-        BuiltinIssueRegistry registry = new BuiltinIssueRegistry();
+        BuiltinIssueRegistry registry = new TestIssueRegistry();
         List<Issue> issues = registry.getIssues();
         int issueCount = issues.size();
         assertTrue(Integer.toString(issueCount),
@@ -60,7 +61,7 @@ public class BuiltinIssueRegistryTest extends TestCase {
     public void testUnique() {
         // Check that ids are unique
         Set<String> ids = new HashSet<>();
-        for (Issue issue : new BuiltinIssueRegistry().getIssues()) {
+        for (Issue issue : new TestIssueRegistry().getIssues()) {
             String id = issue.getId();
             assertTrue("Duplicate id " + id, !ids.contains(id));
             ids.add(id);
@@ -82,6 +83,7 @@ public class BuiltinIssueRegistryTest extends TestCase {
         // Regression test for b/27563821: bogus
         //     Error: Unknown issue id "UseCompoundDrawables"
 
+        BuiltinIssueRegistry.reset();
         final BuiltinIssueRegistry registry1 = new BuiltinIssueRegistry();
         assertNotNull(registry1.getIssue(UseCompoundDrawableDetector.ISSUE.getId()));
 
@@ -169,14 +171,5 @@ public class BuiltinIssueRegistryTest extends TestCase {
             // This is expected; see comment in iterator() above
         }
         thread.join();
-    }
-
-    private static class TestIssueRegistry extends BuiltinIssueRegistry {
-        // Override to make method accessible outside package
-        @NonNull
-        @Override
-        public List<Issue> getIssuesForScope(@NonNull EnumSet<Scope> scope) {
-            return super.getIssuesForScope(scope);
-        }
     }
 }

@@ -377,8 +377,10 @@ public abstract class IssueRegistry {
      * Reset the registry such that it recomputes its available issues.
      */
     protected static void reset() {
-        idToIssue = null;
-        categories = null;
-        scopeIssues = Maps.newHashMap();
+        synchronized (IssueRegistry.class) {
+            idToIssue = null;
+            categories = null;
+            scopeIssues = Maps.newHashMap();
+        }
     }
 }

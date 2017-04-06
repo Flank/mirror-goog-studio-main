@@ -147,13 +147,7 @@ public class LintCliClient extends LintClient {
         driver = createDriver(registry);
 
         addProgressPrinter();
-        driver.addLintListener((driver, type, context) -> {
-            if (type == LintListener.EventType.SCANNING_PROJECT && !validatedIds) {
-                // Make sure all the id's are valid once the driver is all set up and
-                // ready to run (such that custom rules are available in the registry etc)
-                validateIssueIds(context != null ? context.getProject() : null);
-            }
-        });
+        validateIssueIds();
 
         driver.analyze(createLintRequest(files));
 
@@ -221,6 +215,16 @@ public class LintCliClient extends LintClient {
         }
 
         return flags.isSetExitCode() ? (hasErrors ? ERRNO_ERRORS : ERRNO_SUCCESS) : ERRNO_SUCCESS;
+    }
+
+    protected void validateIssueIds() {
+        driver.addLintListener((driver, type, context) -> {
+            if (type == LintListener.EventType.SCANNING_PROJECT && !validatedIds) {
+                // Make sure all the id's are valid once the driver is all set up and
+                // ready to run (such that custom rules are available in the registry etc)
+                validateIssueIds(context != null ? context.getProject() : null);
+            }
+        });
     }
 
     @NonNull
@@ -676,7 +680,7 @@ public class LintCliClient extends LintClient {
         String message = String.format("Unknown issue id \"%1$s\"", id);
 
         if (driver != null && project != null) {
-            Location location = Location.create(project.getDir());
+            Location location = LintUtils.guessGradleLocation(this, project.getDir(), id);
             if (!isSuppressed(IssueRegistry.LINT_ERROR)) {
                 report(new Context(driver, project, project, project.getDir()),
                         IssueRegistry.LINT_ERROR,

@@ -18,7 +18,6 @@ package com.android.tools.lint.checks;
 
 import static com.android.tools.lint.checks.AnnotationDetectorTest.SUPPORT_ANNOTATIONS_JAR_BASE64_GZIP;
 import static com.android.tools.lint.checks.ApiDetector.INLINED;
-import static com.android.tools.lint.checks.ApiDetector.OBSOLETE_SDK;
 import static com.android.tools.lint.checks.ApiDetector.UNSUPPORTED;
 import static com.android.tools.lint.detector.api.TextFormat.TEXT;
 import static org.mockito.Mockito.spy;

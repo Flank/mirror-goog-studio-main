@@ -26,7 +26,6 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiLocalVariable;
 import java.io.File;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.concurrent.atomic.AtomicReference;
 import junit.framework.TestCase;
 import lombok.ast.CompilationUnit;

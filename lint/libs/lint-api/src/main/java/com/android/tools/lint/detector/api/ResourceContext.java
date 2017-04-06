@@ -23,7 +23,6 @@ import com.android.ide.common.resources.configuration.VersionQualifier;
 import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.client.api.LintDriver;
 import com.google.common.annotations.Beta;
-
 import java.io.File;
 
 /**

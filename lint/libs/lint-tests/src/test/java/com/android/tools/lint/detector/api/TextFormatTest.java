@@ -22,7 +22,7 @@ import static com.android.tools.lint.detector.api.TextFormat.HTML_WITH_UNICODE;
 import static com.android.tools.lint.detector.api.TextFormat.RAW;
 import static com.android.tools.lint.detector.api.TextFormat.TEXT;
 
-import com.android.tools.lint.checks.BuiltinIssueRegistry;
+import com.android.tools.lint.checks.infrastructure.TestIssueRegistry;
 import junit.framework.TestCase;
 
 public class TextFormatTest extends TestCase {
@@ -343,7 +343,7 @@ public class TextFormatTest extends TestCase {
     }
 
     public void testConvertAll() {
-        for (Issue issue : new BuiltinIssueRegistry().getIssues()) {
+        for (Issue issue : new TestIssueRegistry().getIssues()) {
             // Make sure there are no exceptions during conversion for any of the builtin strings
             issue.getExplanation(TextFormat.RAW);
             issue.getBriefDescription(TextFormat.RAW);

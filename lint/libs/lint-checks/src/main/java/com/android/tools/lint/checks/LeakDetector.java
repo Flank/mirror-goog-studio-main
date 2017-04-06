@@ -39,13 +39,11 @@ import com.intellij.psi.PsiKeyword;
 import com.intellij.psi.PsiModifier;
 import com.intellij.psi.PsiModifierList;
 import com.intellij.psi.PsiType;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import org.jetbrains.uast.UElement;
 import org.jetbrains.uast.UField;
-import org.jetbrains.uast.UVariable;
 
 /**
  * Looks for leaks via static fields
