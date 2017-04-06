@@ -19,6 +19,7 @@
 #include <unistd.h>
 #include <mutex>
 
+#include <grpc++/support/channel_arguments.h>
 #include "utils/config.h"
 #include "utils/log.h"
 #include "utils/stopwatch.h"
@@ -51,8 +52,16 @@ Agent& Agent::Instance() {
 
 Agent::Agent(const char* address)
     : background_queue_("Studio:Agent", kMaxBackgroundTasks) {
+  // Override default channel arguments in gRPC to limit the reconnect delay to
+  // 1 second when the daemon is unavailable. GRPC's default arguments may
+  // have backoff as long as 120 seconds. In cases when the phone is
+  // disconnected and plugged back in, a 120-second-long delay hurts the user
+  // experience very much.
+  grpc::ChannelArguments channel_args;
+  channel_args.SetInt(GRPC_ARG_MAX_RECONNECT_BACKOFF_MS, 1000);
   auto channel =
-      grpc::CreateChannel(address, grpc::InsecureChannelCredentials());
+      grpc::CreateCustomChannel(address, grpc::InsecureChannelCredentials(),
+                                channel_args);
   service_stub_ = AgentService::NewStub(channel);
   event_stub_ = InternalEventService::NewStub(channel);
   memory_stub_ = InternalMemoryService::NewStub(channel);
