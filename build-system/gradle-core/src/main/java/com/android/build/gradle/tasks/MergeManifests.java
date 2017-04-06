@@ -308,16 +308,10 @@ public class MergeManifests extends ManifestProcessorTask {
                         }
                     });
 
-            ConventionMappingHelper.map(processManifestTask, "maxSdkVersion",
-                    new Callable<Integer>() {
-                        @Override
-                        public Integer call() throws Exception {
-                            if (scope.getGlobalScope().getAndroidBuilder().isPreviewTarget()) {
-                                return null;
-                            }
-                            return config.getMergedFlavor().getMaxSdkVersion();
-                        }
-                    });
+            ConventionMappingHelper.map(
+                    processManifestTask,
+                    "maxSdkVersion",
+                    config.getMergedFlavor()::getMaxSdkVersion);
 
             processManifestTask.setManifestOutputFile(scope.getManifestOutputFile());
             processManifestTask.setInstantRunManifestOutputFile(

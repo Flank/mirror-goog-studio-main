@@ -219,13 +219,8 @@ public class ProcessManifest extends ManifestProcessorTask {
                         return targetSdkVersion.getApiString();
                     });
 
-            ConventionMappingHelper.map(processManifest, "maxSdkVersion", () -> {
-                        if (androidBuilder.isPreviewTarget()) {
-                            return null;
-                        } else {
-                            return mergedFlavor.getMaxSdkVersion();
-                        }
-                    });
+            ConventionMappingHelper.map(
+                    processManifest, "maxSdkVersion", mergedFlavor::getMaxSdkVersion);
 
             processManifest.setManifestOutputFile(
                     variantOutputData.getScope().getManifestOutputFile());
