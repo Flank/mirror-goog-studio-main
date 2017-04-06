@@ -808,27 +808,36 @@ public class AndroidBuilder {
 
         File sourceOut = aaptConfig.getSourceOutputDir();
         if (sourceOut != null) {
-            // Figure out what the main symbol file's package is.
-            String mainPackageName = aaptConfig.getCustomPackageForR();
-            if (mainPackageName == null) {
-                mainPackageName =
-                        SymbolUtils.getPackageNameFromManifest(aaptConfig.getManifestFile());
-            }
+            // Until R.txt is added in AAPT2, this part should only be executed for AAPT1.
+            // With AAPT2 we make AAPT2 generate copies of the R.java for the dependencies.
+            if (aapt instanceof AaptV1) {
+                // Figure out what the main symbol file's package is.
+                String mainPackageName = aaptConfig.getCustomPackageForR();
+                if (mainPackageName == null) {
+                    mainPackageName =
+                            SymbolUtils.getPackageNameFromManifest(aaptConfig.getManifestFile());
+                }
 
-            // Load the main symbol file.
-            File mainRTxt = new File(aaptConfig.getSymbolOutputDir(), "R.txt");
-            SymbolTable mainSymbols =
-                    mainRTxt.isFile()? SymbolIo.read(mainRTxt) : SymbolTable.builder().build();
-            mainSymbols = mainSymbols.rename(mainPackageName);
+                // Load the main symbol file.
+                File mainRTxt = new File(aaptConfig.getSymbolOutputDir(), "R.txt");
+                SymbolTable mainSymbols =
+                        mainRTxt.isFile() ? SymbolIo.read(mainRTxt) : SymbolTable.builder().build();
+                mainSymbols = mainSymbols.rename(mainPackageName);
 
-            // For each dependency, load its symbol file.
-            Set<SymbolTable> depSymbolTables =
-                    SymbolUtils.loadDependenciesSymbolTables(
-                            aaptConfig.getLibraries(), enforceUniquePackageName, mainPackageName);
+                // For each dependency, load its symbol file.
+                Set<SymbolTable> depSymbolTables =
+                        SymbolUtils.loadDependenciesSymbolTables(
+                                aaptConfig.getLibraries(),
+                                enforceUniquePackageName,
+                                mainPackageName);
 
-            boolean finalIds = true;
-            if (aaptConfig.getVariantType() == VariantType.LIBRARY) {
-                finalIds = false;
+                boolean finalIds = true;
+                if (aaptConfig.getVariantType() == VariantType.LIBRARY) {
+                    finalIds = false;
+                }
+
+                RGeneration.generateRForLibraries(
+                        mainSymbols, depSymbolTables, sourceOut, finalIds);
             }
 
             // Generate manifest_keep.txt for main dex when using AAPT2 (until the flag is added).
@@ -839,8 +848,6 @@ public class AndroidBuilder {
                         SymbolUtils.generateMainDexKeepRules(
                                 SymbolUtils.parseManifest(aaptConfig.getManifestFile())));
             }
-
-            RGeneration.generateRForLibraries(mainSymbols, depSymbolTables, sourceOut, finalIds);
         }
     }
 
