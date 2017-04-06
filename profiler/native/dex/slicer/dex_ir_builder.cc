@@ -21,18 +21,55 @@
 
 namespace ir {
 
-String* Builder::GetAsciiString(const char* str) {
+bool MethodId::Match(MethodDecl* method_decl) const {
+  return ::strcmp(class_descriptor, method_decl->parent->descriptor->c_str()) == 0
+    && ::strcmp(method_name, method_decl->name->c_str()) == 0
+    && method_decl->prototype->Signature() == signature;
+}
+
+// TODO: index methods, perhaps using the same hashtable used for strings?
+EncodedMethod* Builder::FindMethod(const MethodId& method_id) {
+  // first, lookup the strings
+  auto ir_descriptor = FindAsciiString(method_id.class_descriptor);
+  auto ir_method_name = FindAsciiString(method_id.method_name);
+  if (ir_descriptor == nullptr || ir_method_name == nullptr) {
+    return nullptr;
+  }
+
+  // search for the method definition
+  for (auto& ir_method : dex_ir_->encoded_methods) {
+    auto method_decl = ir_method->decl;
+    if (method_decl->parent->descriptor == ir_descriptor &&
+        method_decl->name == ir_method_name) {
+      // CONSIDER: it would be more efficient to parse the signature,
+      //  extract one descriptor at a time and compare the descriptors.
+      //  (at the same time signature check is only done for "overload resolution"
+      //   so the extra complexity may not be worth it)
+      if (method_decl->prototype->Signature() == method_id.signature) {
+        return ir_method.get();
+      }
+    }
+  }
+
+  return nullptr;
+}
+
+String* Builder::FindAsciiString(const char* cstr) {
+    return dex_ir_->strings_lookup.Lookup(cstr);
+}
+
+String* Builder::GetAsciiString(const char* cstr) {
   // look for the string first...
-  auto ir_string = dex_ir_->strings_lookup.Lookup(str);
+  auto ir_string = FindAsciiString(cstr);
   if(ir_string != nullptr) {
     return ir_string;
   }
 
   // create a new string data
-  dex::u4 len = strlen(str);
+  dex::u4 len = strlen(cstr);
   slicer::Buffer buff;
   buff.PushULeb128(len);
-  buff.Push(str, len + 1);
+  buff.Push(cstr, len + 1);
   buff.Seal(1);
 
   // create the new .dex IR string node

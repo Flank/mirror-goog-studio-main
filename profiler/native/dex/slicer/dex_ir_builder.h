@@ -23,18 +23,38 @@
 
 namespace ir {
 
+// Packing together the name components which identify a Java method
+// (depending on the use some fields, ex. signature, are optional)
+//
+// NOTE: the "signature" uses the JNI signature syntax:
+//  https://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/types.html#type_signatures
+//
+struct MethodId {
+  const char* class_descriptor;
+  const char* method_name;
+  const char* signature;
+
+  MethodId(const char* class_descriptor, const char* method_name, const char* signature = nullptr)
+      : class_descriptor(class_descriptor), method_name(method_name), signature(signature) {
+    assert(class_descriptor != nullptr);
+    assert(method_name != nullptr);
+  }
+
+  bool Match(MethodDecl* method_decl) const;
+};
+
 // This class enables modifications to a .dex IR
 class Builder {
  public:
   Builder(std::shared_ptr<ir::DexFile> dex_ir) : dex_ir_(dex_ir) {}
 
-  // No-copy/move semantics
+  // No copy/move semantics
   Builder(const Builder&) = delete;
   Builder& operator=(const Builder&) = delete;
 
   // Get/Create .dex IR nodes
   // (get existing instance or create a new one)
-  String* GetAsciiString(const char* str);
+  String* GetAsciiString(const char* cstr);
   Type* GetType(String* descriptor);
   Proto* GetProto(Type* return_type, TypeList* param_types);
   FieldDecl* GetFieldDecl(String* name, Type* type, Type* parent);
@@ -45,6 +65,15 @@ class Builder {
   Type* GetType(const char* descriptor) {
     return GetType(GetAsciiString(descriptor));
   }
+
+  // Locate an existing method definition
+  // (returns nullptr if the method is not found)
+  EncodedMethod* FindMethod(const MethodId& method_id);
+
+ private:
+  // Locate an existing .dex IR string
+  // (returns nullptr if the string is not found)
+  String* FindAsciiString(const char* cstr);
 
  private:
   std::shared_ptr<ir::DexFile> dex_ir_;

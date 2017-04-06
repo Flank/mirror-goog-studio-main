@@ -191,6 +191,8 @@ struct Proto : public IndexedNode {
   String* shorty;
   Type* return_type;
   TypeList* param_types;
+
+  std::string Signature() const;
 };
 
 struct FieldDecl : public IndexedNode {
@@ -380,7 +382,7 @@ struct DexFile {
  public:
   DexFile() = default;
 
-  // No-copy/move semantics
+  // No copy/move semantics
   DexFile(const DexFile&) = delete;
   DexFile& operator=(const DexFile&) = delete;
 

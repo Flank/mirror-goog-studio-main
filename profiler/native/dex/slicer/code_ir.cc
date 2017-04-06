@@ -34,7 +34,7 @@
 namespace lir {
 
 void CodeIr::Assemble() {
-  auto ir_code = ir_method_->code;
+  auto ir_code = ir_method->code;
   CHECK(ir_code != nullptr);
 
   // new .dex bytecode
@@ -43,17 +43,17 @@ void CodeIr::Assemble() {
   //   try/catch blocks since here is where we update the final offsets
   //
   BytecodeEncoder bytecode_encoder(instructions);
-  bytecode_encoder.Encode(ir_code, dex_ir_);
+  bytecode_encoder.Encode(ir_code, dex_ir);
 
   // debug information
   if (ir_code->debug_info != nullptr) {
     DebugInfoEncoder dbginfo_encoder(instructions);
-    dbginfo_encoder.Encode(ir_method_, dex_ir_);
+    dbginfo_encoder.Encode(ir_method, dex_ir);
   }
 
   // try/catch blocks
   TryBlocksEncoder try_blocks_encoder(instructions);
-  try_blocks_encoder.Encode(ir_code, dex_ir_);
+  try_blocks_encoder.Encode(ir_code, dex_ir);
 }
 
 void CodeIr::DissasembleTryBlocks(const ir::Code* ir_code) {
@@ -77,7 +77,7 @@ void CodeIr::DissasembleTryBlocks(const ir::Code* ir_code) {
 
       // type
       dex::u4 type_index = dex::ReadULeb128(&ptr);
-      handler.ir_type = dex_ir_->types_map[type_index];
+      handler.ir_type = dex_ir->types_map[type_index];
       CHECK(handler.ir_type != nullptr);
 
       // address
@@ -114,7 +114,7 @@ void CodeIr::DissasembleDebugInfo(const ir::DebugInfo* ir_debug_info) {
   // debug info state machine registers
   dex::u4 address = 0;
   int line = ir_debug_info->line_start;
-  ir::String* source_file = ir_method_->parent_class->source_file;
+  ir::String* source_file = ir_method->parent_class->source_file;
 
   // header
   if (!ir_debug_info->param_names.empty()) {
@@ -217,7 +217,7 @@ void CodeIr::DissasembleDebugInfo(const ir::DebugInfo* ir_debug_info) {
         dex::u4 name_index = dex::ReadULeb128(&ptr) - 1;
         source_file = (name_index == dex::kNoIndex)
                           ? nullptr
-                          : dex_ir_->strings_map[name_index];
+                          : dex_ir->strings_map[name_index];
         annotation->operands.push_back(Alloc<String>(source_file, name_index));
       } break;
 
@@ -276,7 +276,7 @@ void CodeIr::DissasembleBytecode(const ir::Code* ir_code) {
 }
 
 void CodeIr::FixupSwitches() {
-  const dex::u2* begin = ir_method_->code->instructions.begin();
+  const dex::u2* begin = ir_method->code->instructions.begin();
 
   // packed switches
   for (auto& fixup : packed_switches_) {
@@ -325,7 +325,7 @@ void CodeIr::Dissasemble() {
   packed_switches_.clear();
   sparse_switches_.clear();
 
-  auto ir_code = ir_method_->code;
+  auto ir_code = ir_method->code;
   if (ir_code == nullptr) {
     return;
   }
@@ -598,16 +598,16 @@ IndexedOperand* CodeIr::GetIndexedOperand(dex::InstructionIndexType index_type,
   CHECK(index != dex::kNoIndex);
   switch (index_type) {
     case dex::kIndexStringRef:
-      return Alloc<String>(dex_ir_->strings_map[index], index);
+      return Alloc<String>(dex_ir->strings_map[index], index);
 
     case dex::kIndexTypeRef:
-      return Alloc<Type>(dex_ir_->types_map[index], index);
+      return Alloc<Type>(dex_ir->types_map[index], index);
 
     case dex::kIndexFieldRef:
-      return Alloc<Field>(dex_ir_->fields_map[index], index);
+      return Alloc<Field>(dex_ir->fields_map[index], index);
 
     case dex::kIndexMethodRef:
-      return Alloc<Method>(dex_ir_->methods_map[index], index);
+      return Alloc<Method>(dex_ir->methods_map[index], index);
 
     default:
       FATAL("Unexpected index type 0x%02x", index_type);
@@ -616,13 +616,13 @@ IndexedOperand* CodeIr::GetIndexedOperand(dex::InstructionIndexType index_type,
 
 // Get a type based on its index (potentially kNoIndex)
 Type* CodeIr::GetType(dex::u4 index) {
-  auto ir_type = (index == dex::kNoIndex) ? nullptr : dex_ir_->types_map[index];
+  auto ir_type = (index == dex::kNoIndex) ? nullptr : dex_ir->types_map[index];
   return Alloc<Type>(ir_type, index);
 }
 
 // Get a string based on its index (potentially kNoIndex)
 String* CodeIr::GetString(dex::u4 index) {
-  auto ir_string = (index == dex::kNoIndex) ? nullptr : dex_ir_->strings_map[index];
+  auto ir_string = (index == dex::kNoIndex) ? nullptr : dex_ir->strings_map[index];
   return Alloc<String>(ir_string, index);
 }
 

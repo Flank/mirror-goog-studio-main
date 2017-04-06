@@ -24,12 +24,28 @@
 #include <map>
 #include <memory>
 #include <vector>
+#include <sstream>
 
 namespace ir {
 
 // Human-readable type declaration
 std::string Type::Decl() const {
   return dex::DescriptorToDecl(descriptor->c_str());
+}
+
+// Create the corresponding JNI signature:
+//  https://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/types.html#type_signatures
+std::string Proto::Signature() const {
+  std::stringstream ss;
+  ss << "(";
+  if (param_types != nullptr) {
+    for (const auto& type : param_types->types) {
+      ss << type->descriptor->c_str();
+    }
+  }
+  ss << ")";
+  ss << return_type->descriptor->c_str();
+  return ss.str();
 }
 
 // Helper for IR normalization

@@ -39,7 +39,7 @@ class Reader {
   Reader(const dex::u1* image, size_t size);
   ~Reader() = default;
 
-  // no-copy/move semantics
+  // No copy/move semantics
   Reader(const Reader&) = delete;
   Reader& operator=(const Reader&) = delete;
 

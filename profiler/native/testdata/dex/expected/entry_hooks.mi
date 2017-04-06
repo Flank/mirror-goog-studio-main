@@ -1,4 +1,6 @@
 
+Running experiment 'test_method_instrumenter' ... 
+
 method Base.<init>() : void
 {
 	.src "entryHooks.java"
@@ -231,42 +233,45 @@ method Target.foo(int, java.lang.String) : int
 	.line 65
 	.prologue_end
 	.line 65
-	    0| move-object v0, v9
+	    0| invoke-static/range {v9..v11}, Tracer.onFooEntry
+	    3| move-object v0, v9
 	.local v0, "this", Target
-	    1| move v1, v10
+	    4| move v1, v10
 	.local v1, "x", int
-	    2| move-object v2, v11
+	    5| move-object v2, v11
 	.local v2, "msg", java.lang.String
-	    3| const/4 v5, #+0 (0x00000000 | 0.00000)
-	    4| move v3, v5
+	    6| const/4 v5, #+0 (0x00000000 | 0.00000)
+	    7| move v3, v5
 	.line 66
 	.local v3, "sum", int
-	    5| const/4 v5, #+0 (0x00000000 | 0.00000)
-	    6| move v4, v5
+	    8| const/4 v5, #+0 (0x00000000 | 0.00000)
+	    9| move v4, v5
 Label_1:
 	.local v4, "i", int
-	    7| move v5, v4
-	    8| move v6, v1
-	    9| if-ge v5, v6, Label_2
+	   10| move v5, v4
+	   11| move v6, v1
+	   12| if-ge v5, v6, Label_2
 	.line 68
-	   11| move v5, v3
-	   12| move-object v6, v0
-	   13| iget-object v6, v6, Target.test
-	   15| move v7, v4
-	   16| move-object v8, v2
-	   17| invoke-virtual {v6,v7,v8}, Base.foo
-	   20| move-result v6
-	   21| add-int/2addr v5, v6
-	   22| move v3, v5
+	   14| move v5, v3
+	   15| move-object v6, v0
+	   16| iget-object v6, v6, Target.test
+	   18| move v7, v4
+	   19| move-object v8, v2
+	   20| invoke-static {v6,v7,v8}, Tracer.wrapFoo
+	   23| move-result v6
+	   24| add-int/2addr v5, v6
+	   25| move v3, v5
 	.line 66
-	   23| add-int/lit8 v4, v4, #+1 (0x00000001 | 1.40130e-45)
-	   25| goto Label_1
+	   26| add-int/lit8 v4, v4, #+1 (0x00000001 | 1.40130e-45)
+	   28| goto/16 Label_1
 Label_2:
 	.line 70
-	   26| move v5, v3
-	   27| move v0, v5
+	   30| move v5, v3
+	   31| move v0, v5
 	.end_local v0
-	   28| return v0
+	   32| invoke-static/range {v0..v0}, Tracer.onFooExit
+	   35| move-result v0
+	   36| return v0
 }
 
 method Target.foo(int, java.lang.String, java.lang.String) : int
@@ -316,18 +321,21 @@ method Target.foo(int, java.lang.String[][]) : java.lang.Integer
 	.line 78
 	.prologue_end
 	.line 78
-	    0| move-object v0, v4
+	    0| invoke-static/range {v4..v6}, Tracer.onFooEntry
+	    3| move-object v0, v4
 	.local v0, "this", Target
-	    1| move v1, v5
+	    4| move v1, v5
 	.local v1, "x", int
-	    2| move-object v2, v6
+	    5| move-object v2, v6
 	.local v2, "msgs", java.lang.String[][]
-	    3| const/4 v3, #+5 (0x00000005 | 7.00649e-45)
-	    4| invoke-static {v3}, java.lang.Integer.valueOf
-	    7| move-result-object v3
-	    8| move-object v0, v3
+	    6| const/4 v3, #+5 (0x00000005 | 7.00649e-45)
+	    7| invoke-static {v3}, java.lang.Integer.valueOf
+	   10| move-result-object v3
+	   11| move-object v0, v3
 	.end_local v0
-	    9| return-object v0
+	   12| invoke-static/range {v0..v0}, Tracer.onFooExit
+	   15| move-result-object v0
+	   16| return-object v0
 }
 
 method Target.foo() : void
