@@ -24,6 +24,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.testutils.apk.Apk;
+import com.android.testutils.apk.Zip;
 import com.android.utils.FileUtils;
 import java.io.File;
 import java.nio.file.Files;
@@ -201,8 +202,9 @@ public class MergeResourcesTest {
                 "res",
                 "resources-debug.ap_");
 
-        assertThatZip(apUnderscore)
-                .containsFileWithContent("res/raw/me.raw", new byte[] { 0, 1, 2 });
+        try (Zip zip = new Zip(apUnderscore)){
+            assertThatZip(zip).containsFileWithContent("res/raw/me.raw", new byte[]{0, 1, 2});
+        }
 
         /*
          * Remove the resource from the project and build the project incrementally.
@@ -214,7 +216,9 @@ public class MergeResourcesTest {
          * Check that the file has been removed from the intermediates and from the apk.
          */
         assertThat(inIntermediate).doesNotExist();
-        assertThatZip(apUnderscore).doesNotContain("res/raw/me.raw");
+        try (Zip zip = new Zip(apUnderscore)) {
+            assertThatZip(zip).doesNotContain("res/raw/me.raw");
+        }
     }
 
     @Test
@@ -262,9 +266,10 @@ public class MergeResourcesTest {
                 "res",
                 "resources-debug.ap_");
 
-        assertThat(new Apk(apUnderscore))
-                .containsFileWithContent("res/raw/me.raw", new byte[] { 0, 1, 2 });
-
+        try (Apk apk = new Apk(apUnderscore)) {
+            assertThat(apk)
+                    .containsFileWithContent("res/raw/me.raw", new byte[]{0, 1, 2});
+        }
         /*
          * Change the resource file from the project and build the project incrementally.
          */
@@ -279,8 +284,10 @@ public class MergeResourcesTest {
         } else {
             assertThat(inIntermediate).exists();
         }
-        assertThat(new Apk(apUnderscore))
-                .containsFileWithContent("res/raw/me.raw", new byte[] { 1, 2, 3, 4 });
+        try (Apk apk = new Apk(apUnderscore)) {
+            assertThat(apk)
+                    .containsFileWithContent("res/raw/me.raw", new byte[]{1, 2, 3, 4});
+        }
     }
 
     @Test
@@ -328,8 +335,10 @@ public class MergeResourcesTest {
                 "res",
                 "resources-debug.ap_");
 
-        assertThat(new Apk(apUnderscore))
-                .containsFileWithContent("res/raw/me.raw", new byte[] { 0, 1, 2 });
+        try (Apk apk = new Apk(apUnderscore)) {
+            assertThat(apk)
+                    .containsFileWithContent("res/raw/me.raw", new byte[]{0, 1, 2});
+        }
 
         /*
          * Change the resource file with one with a different extension and build the project
@@ -350,8 +359,10 @@ public class MergeResourcesTest {
             assertThat(new File(inIntermediate.getParent(), "raw_me.war.flat")).exists();
         }
         assertThat(apUnderscore).doesNotContain("res/raw/me.raw");
-        assertThat(new Apk(apUnderscore))
-                .containsFileWithContent("res/raw/me.war", new byte[] { 1, 2, 3, 4 });
+        try (Apk apk = new Apk(apUnderscore)) {
+            assertThat(apk)
+                    .containsFileWithContent("res/raw/me.war", new byte[]{1, 2, 3, 4});
+        }
     }
 
     @Test

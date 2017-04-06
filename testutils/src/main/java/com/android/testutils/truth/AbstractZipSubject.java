@@ -136,6 +136,14 @@ public abstract class AbstractZipSubject<S extends Subject<S, T>, T extends Zip>
         }
     }
 
+    public final void close() {
+        try {
+            getSubject().close();
+        } catch (Exception e) {
+            failWithRawMessage("Exception while closing %1$s", getSubject());
+        }
+    }
+
     protected final String extractContentAsString(@NonNull String path) {
         Path entry = getSubject().getEntry(path);
         if (entry == null) {
