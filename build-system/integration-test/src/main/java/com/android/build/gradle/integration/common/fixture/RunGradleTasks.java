@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.StringOption;
@@ -143,10 +144,13 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
         ByteArrayOutputStream stdout = new ByteArrayOutputStream();
         ByteArrayOutputStream stderr = new ByteArrayOutputStream();
         String message =
-                "[GradleTestProject] Executing tasks: gradle "
+                "[GradleTestProject "
+                        + projectDirectory
+                        + "] Executing tasks: \ngradle "
                         + Joiner.on(' ').join(args)
                         + " "
-                        + Joiner.on(' ').join(tasksList);
+                        + Joiner.on(' ').join(tasksList)
+                        + "\n\n";
         stdout.write(message.getBytes());
 
         BuildLauncher launcher =
@@ -216,9 +220,34 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
      * {@link #withNewResourceProcessing(boolean)} with the {@code false} parameter.
      */
     public RunGradleTasks withEnabledAapt2(boolean enableAapt2) {
-        with(BooleanOption.ENABLE_AAPT2, enableAapt2);
-        if (enableAapt2) {
-            with(BooleanOption.ENABLE_NEW_RESOURCE_PROCESSING, true);
+        with(enableAapt2 ? AaptGeneration.AAPT_V2_JNI : AaptGeneration.AAPT_V1);
+        return this;
+    }
+
+    /**
+     * Makes the project execute with AAPT2 flag set to {@param enableAapt2}.
+     *
+     * <p>If param is {@code true} it will also trigger setting the new resource processing flag to
+     * {@code true}. To run AAPT2 without new resource processing, after this method also call
+     * {@link #withNewResourceProcessing(boolean)} with the {@code false} parameter.
+     */
+    public RunGradleTasks with(@NonNull AaptGeneration aaptGeneration) {
+        switch (aaptGeneration) {
+            case AAPT_V1:
+                with(BooleanOption.ENABLE_AAPT2, false);
+                break;
+            case AAPT_V2:
+                with(BooleanOption.ENABLE_AAPT2, true);
+                with(BooleanOption.ENABLE_NEW_RESOURCE_PROCESSING, true);
+                with(BooleanOption.ENABLE_IN_PROCESS_AAPT2, false);
+                break;
+            case AAPT_V2_JNI:
+                with(BooleanOption.ENABLE_AAPT2, true);
+                with(BooleanOption.ENABLE_NEW_RESOURCE_PROCESSING, true);
+                with(BooleanOption.ENABLE_IN_PROCESS_AAPT2, true);
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown AAPT Generation");
         }
         return this;
     }

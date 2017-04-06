@@ -22,8 +22,10 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.v1.AaptV1;
+import com.android.builder.internal.aapt.v2.AaptV2Jni;
 import com.android.builder.internal.aapt.v2.OutOfProcessAaptV2;
 import com.android.builder.sdk.TargetInfo;
+import com.android.ide.common.internal.WaitableExecutor;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.ide.common.process.TeeProcessOutputHandler;
@@ -138,21 +140,30 @@ public final class AaptGradleFactory {
                         outputHandler,
                         new LoggedProcessOutputHandler(new FilteringLogger(builder.getLogger())));
 
-        if (aaptGeneration.equals(AaptGeneration.AAPT_V2)) {
-            return new OutOfProcessAaptV2(
-                    builder.getProcessExecutor(),
-                    teeOutputHandler,
-                    buildTools,
-                    intermediateDir,
-                    new FilteringLogger(builder.getLogger()));
+        switch (aaptGeneration) {
+            case AAPT_V1:
+                return new AaptV1(
+                        builder.getProcessExecutor(),
+                        teeOutputHandler,
+                        buildTools,
+                        new FilteringLogger(builder.getLogger()),
+                        crunchPng ? AaptV1.PngProcessMode.ALL : AaptV1.PngProcessMode.NO_CRUNCH,
+                        cruncherProcesses);
+            case AAPT_V2:
+                return new OutOfProcessAaptV2(
+                        builder.getProcessExecutor(),
+                        teeOutputHandler,
+                        buildTools,
+                        intermediateDir,
+                        new FilteringLogger(builder.getLogger()));
+            case AAPT_V2_JNI:
+                return new AaptV2Jni(
+                        intermediateDir,
+                        WaitableExecutor.useGlobalSharedThreadPool(),
+                        teeOutputHandler);
+            default:
+                throw new IllegalArgumentException("unknown aapt generation" + aaptGeneration);
         }
-        return new AaptV1(
-                builder.getProcessExecutor(),
-                teeOutputHandler,
-                buildTools,
-                new FilteringLogger(builder.getLogger()),
-                crunchPng ? AaptV1.PngProcessMode.ALL : AaptV1.PngProcessMode.NO_CRUNCH,
-                cruncherProcesses);
     }
 
     /**

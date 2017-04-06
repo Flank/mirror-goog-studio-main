@@ -23,9 +23,18 @@ import com.android.build.gradle.options.ProjectOptions;
 public enum AaptGeneration {
     AAPT_V1,
     AAPT_V2,
+    AAPT_V2_JNI,
     ;
 
     public static AaptGeneration fromProjectOptions(@NonNull ProjectOptions projectOptions) {
-        return projectOptions.get(BooleanOption.ENABLE_AAPT2) ? AAPT_V2 : AAPT_V1;
+        if (projectOptions.get(BooleanOption.ENABLE_AAPT2)) {
+            if (projectOptions.get(BooleanOption.ENABLE_IN_PROCESS_AAPT2)) {
+                return AAPT_V2_JNI;
+            } else {
+                return AAPT_V2;
+            }
+        } else {
+            return AAPT_V1;
+        }
     }
 }
