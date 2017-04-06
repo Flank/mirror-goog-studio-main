@@ -354,9 +354,13 @@ public class ManifestMerger2 {
             }
 
             if (mOptionalFeatures.contains(Invoker.Feature.ADD_FEATURE_SPLIT_INFO)) {
+                boolean transitionalAttributes =
+                        mOptionalFeatures.contains(
+                                Invoker.Feature.TRANSITIONAL_FEATURE_SPLIT_ATTRIBUTES);
                 mergingReport.setMergedDocument(
                         MergingReport.MergedManifestKind.MERGED,
-                        addFeatureSplitAttributes(document, mFeatureName).prettyPrint());
+                        addFeatureSplitAttributes(document, mFeatureName, transitionalAttributes)
+                                .prettyPrint());
             }
         }
     }
@@ -383,19 +387,35 @@ public class ManifestMerger2 {
      * element.
      */
     @NonNull
-    private static XmlDocument addFeatureSplitAttributes(XmlDocument document, String featureName) {
+    private static XmlDocument addFeatureSplitAttributes(
+            XmlDocument document, String featureName, boolean transitionalAttributes) {
         Optional<XmlElement> applicationOptional =
                 document.getByTypeAndKey(ManifestModel.NodeTypes.APPLICATION, null /* keyValue */);
         if (applicationOptional.isPresent()) {
             addFeatureSplitAttributes(
-                    applicationOptional.get(), featureName, ManifestModel.NodeTypes.ACTIVITY);
+                    applicationOptional.get(),
+                    featureName,
+                    ManifestModel.NodeTypes.ACTIVITY,
+                    transitionalAttributes);
             addFeatureSplitAttributes(
-                    applicationOptional.get(), featureName, ManifestModel.NodeTypes.SERVICE);
+                    applicationOptional.get(),
+                    featureName,
+                    ManifestModel.NodeTypes.SERVICE,
+                    transitionalAttributes);
             addFeatureSplitAttributes(
-                    applicationOptional.get(), featureName, ManifestModel.NodeTypes.PROVIDER);
+                    applicationOptional.get(),
+                    featureName,
+                    ManifestModel.NodeTypes.PROVIDER,
+                    transitionalAttributes);
         }
 
-        document.getRootNode().getXml().setAttribute(SdkConstants.ATTR_FEATURE_SPLIT, featureName);
+        if (transitionalAttributes) {
+            document.getRootNode().getXml().setAttribute(SdkConstants.ATTR_SPLIT, featureName);
+        } else {
+            document.getRootNode()
+                    .getXml()
+                    .setAttribute(SdkConstants.ATTR_FEATURE_SPLIT, featureName);
+        }
 
         return document.reparse();
     }
@@ -405,10 +425,17 @@ public class ManifestMerger2 {
      * nodeType</code> under the <code>applicationElement</code> element.
      */
     private static void addFeatureSplitAttributes(
-            XmlElement applicationElement, String featureName, ManifestModel.NodeTypes nodeType) {
+            XmlElement applicationElement,
+            String featureName,
+            ManifestModel.NodeTypes nodeType,
+            boolean transitionalAttributes) {
         ImmutableList<XmlElement> nodeElements = applicationElement.getAllNodesByType(nodeType);
         for (XmlElement xmlElement : nodeElements) {
-            setAndroidAttribute(xmlElement.getXml(), SdkConstants.ATTR_SPLIT_NAME, featureName);
+            if (transitionalAttributes) {
+                xmlElement.getXml().setAttribute(SdkConstants.ATTR_SPLIT, featureName);
+            } else {
+                setAndroidAttribute(xmlElement.getXml(), SdkConstants.ATTR_SPLIT_NAME, featureName);
+            }
         }
     }
 
@@ -1039,6 +1066,9 @@ public class ManifestMerger2 {
 
             /** Add feature split information */
             ADD_FEATURE_SPLIT_INFO,
+
+            /** Set transitional feature split attributes */
+            TRANSITIONAL_FEATURE_SPLIT_ATTRIBUTES
         }
 
         /**

@@ -68,7 +68,6 @@ public class FeatureSplitApplicationIdWriterTask extends BaseTask {
         public void execute(@NonNull FeatureSplitApplicationIdWriterTask task) {
             task.setVariantName(variantScope.getFullVariantName());
             task.applicationId = variantScope.getVariantConfiguration().getApplicationId();
-            ;
             task.outputDirectory = outputDirectory;
         }
     }

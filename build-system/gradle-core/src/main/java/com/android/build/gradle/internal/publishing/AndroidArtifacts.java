@@ -79,6 +79,7 @@ public class AndroidArtifacts {
     private static final String TYPE_FEATURE_SPLIT_MANIFEST = "android-feature-split-manifest";
     private static final String TYPE_FEATURE_IDS_DECLARATION = "android-feature-split-ids";
     private static final String TYPE_FEATURE_APPLICATION_ID = "android-feature-application-id";
+    private static final String TYPE_FEATURE_RESOURCE_PKG = "android-feature-res-ap_";
 
     public enum ConsumedConfigType {
         COMPILE_CLASSPATH(API_ELEMENTS),
@@ -162,7 +163,8 @@ public class AndroidArtifacts {
         FEATURE_SPLIT_DECLARATION(TYPE_FEATURE_SPLIT_DECLARATION, FEATURE_ELEMENTS_ONLY),
         FEATURE_SPLIT_MANIFEST(TYPE_FEATURE_SPLIT_MANIFEST, FEATURE_ELEMENTS_ONLY),
         FEATURE_IDS_DECLARATION(TYPE_FEATURE_IDS_DECLARATION, API_ELEMENTS_ONLY),
-        FEATURE_APPLICATION_ID_DECLARATION(TYPE_FEATURE_APPLICATION_ID, API_ELEMENTS_ONLY);
+        FEATURE_APPLICATION_ID_DECLARATION(TYPE_FEATURE_APPLICATION_ID, API_ELEMENTS_ONLY),
+        FEATURE_RESOURCE_PKG(TYPE_FEATURE_RESOURCE_PKG, API_ELEMENTS_ONLY);
 
         @NonNull
         private final String type;
