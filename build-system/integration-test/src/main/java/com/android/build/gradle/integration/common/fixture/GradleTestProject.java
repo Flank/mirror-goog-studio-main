@@ -1049,7 +1049,8 @@ public final class GradleTestProject implements TestRule {
 
     @NonNull
     public static String getCompileSdkHash() {
-        String compileTarget = GradleTestProject.DEFAULT_COMPILE_SDK_VERSION;
+        String compileTarget =
+                GradleTestProject.DEFAULT_COMPILE_SDK_VERSION.replaceAll("[\"']", "");
         if (!compileTarget.startsWith("android-")) {
             compileTarget = "android-" + compileTarget;
         }
