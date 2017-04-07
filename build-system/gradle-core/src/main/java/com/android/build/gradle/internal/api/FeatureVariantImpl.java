@@ -22,7 +22,7 @@ import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.FeatureVariant;
 import com.android.build.gradle.api.TestVariant;
 import com.android.build.gradle.api.UnitTestVariant;
-import com.android.build.gradle.internal.variant.BaseVariantData;
+import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.internal.variant.FeatureVariantData;
 import com.android.builder.core.AndroidBuilder;
 import org.gradle.api.NamedDomainObjectContainer;
@@ -34,7 +34,7 @@ import org.gradle.api.NamedDomainObjectContainer;
  * <p>This is a wrapper around the internal data model, in order to control what is accessible
  * through the external API.
  */
-public class FeatureVariantImpl extends BaseVariantImpl implements FeatureVariant, TestedVariant {
+public class FeatureVariantImpl extends ApkVariantImpl implements FeatureVariant {
 
     @NonNull private final FeatureVariantData variantData;
     @Nullable private TestVariant testVariant = null;
@@ -51,7 +51,7 @@ public class FeatureVariantImpl extends BaseVariantImpl implements FeatureVarian
 
     @Override
     @NonNull
-    protected BaseVariantData getVariantData() {
+    public ApkVariantData getVariantData() {
         return variantData;
     }
 

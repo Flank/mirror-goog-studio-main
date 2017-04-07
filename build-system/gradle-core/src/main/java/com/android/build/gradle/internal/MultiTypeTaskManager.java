@@ -98,32 +98,6 @@ public class MultiTypeTaskManager extends TaskManager {
                 .createTasksForVariantScope(tasks, variantScope);
     }
 
-    @Override
-    protected ProcessAndroidResources.ConfigAction createProcessAndroidResourcesConfigAction(
-            @NonNull VariantScope scope,
-            @NonNull Supplier<File> symbolLocation,
-            @NonNull File resPackageOutputFolder,
-            boolean useAaptToGenerateLegacyMultidexMainDexProguardRules,
-            @NonNull MergeType mergeType,
-            @NonNull String baseName) {
-        TaskManager delegateTaskManager = delegates.get(scope.getVariantData().getType());
-        return delegateTaskManager != null
-                ? delegateTaskManager.createProcessAndroidResourcesConfigAction(
-                        scope,
-                        symbolLocation,
-                        resPackageOutputFolder,
-                        useAaptToGenerateLegacyMultidexMainDexProguardRules,
-                        mergeType,
-                        baseName)
-                : super.createProcessAndroidResourcesConfigAction(
-                        scope,
-                        symbolLocation,
-                        resPackageOutputFolder,
-                        useAaptToGenerateLegacyMultidexMainDexProguardRules,
-                        mergeType,
-                        baseName);
-    }
-
     @NonNull
     @Override
     protected Set<? super QualifiedContent.Scope> getResMergingScopes(

@@ -457,13 +457,15 @@ public class AndroidBuilder {
 
             Invoker manifestMergerInvoker =
                     ManifestMerger2.newMerger(mainManifest, mLogger, mergeType)
-                    .setPlaceHolderValues(placeHolders)
-                    .addFlavorAndBuildTypeManifests(
-                            manifestOverlays.toArray(new File[manifestOverlays.size()]))
-                    .addManifestProviders(dependencies)
-                    .withFeatures(optionalFeatures.toArray(
-                            new Invoker.Feature[optionalFeatures.size()]))
-                    .setMergeReportFile(reportFile);
+                            .setPlaceHolderValues(placeHolders)
+                            .addFlavorAndBuildTypeManifests(
+                                    manifestOverlays.toArray(new File[manifestOverlays.size()]))
+                            .addManifestProviders(dependencies)
+                            .withFeatures(
+                                    optionalFeatures.toArray(
+                                            new Invoker.Feature[optionalFeatures.size()]))
+                            .setMergeReportFile(reportFile)
+                            .setFeatureName(mProjectId);
 
             if (mergeType == ManifestMerger2.MergeType.APPLICATION) {
                 manifestMergerInvoker.withFeatures(Invoker.Feature.REMOVE_TOOLS_DECLARATIONS);

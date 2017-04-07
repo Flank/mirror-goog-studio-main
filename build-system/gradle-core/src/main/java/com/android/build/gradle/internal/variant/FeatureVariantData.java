@@ -28,7 +28,7 @@ import com.google.common.collect.Maps;
 import java.util.Map;
 
 /** Data about a variant that produce a feature split. */
-public class FeatureVariantData extends BaseVariantData implements TestedVariantData {
+public class FeatureVariantData extends ApkVariantData implements TestedVariantData {
 
     private final Map<VariantType, TestVariantData> testVariants;
 
@@ -68,11 +68,5 @@ public class FeatureVariantData extends BaseVariantData implements TestedVariant
     public void setTestVariantData(
             @NonNull TestVariantData testVariantData, @NonNull VariantType type) {
         testVariants.put(type, testVariantData);
-    }
-
-    @NonNull
-    @Override
-    public String getTaskName(@NonNull String prefix, @NonNull String suffix) {
-        return super.getTaskName(prefix, TaskManager.FEATURE_SUFFIX + suffix);
     }
 }

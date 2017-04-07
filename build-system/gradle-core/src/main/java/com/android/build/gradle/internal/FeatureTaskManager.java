@@ -23,18 +23,26 @@ import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.AndroidTask;
+import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitApplicationId;
+import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitApplicationIdWriterTask;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclaration;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclarationWriterTask;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitPackageIds;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitPackageIdsWriterTask;
+import com.android.build.gradle.internal.variant.BaseVariantData;
+import com.android.build.gradle.internal.variant.FeatureVariantData;
 import com.android.build.gradle.options.ProjectOptions;
+import com.android.build.gradle.tasks.ManifestProcessorTask;
+import com.android.build.gradle.tasks.MergeManifests;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.profile.Recorder;
+import com.android.manifmerger.ManifestMerger2;
 import com.android.utils.FileUtils;
+import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -71,25 +79,30 @@ public class FeatureTaskManager extends TaskManager {
     @Override
     public void createTasksForVariantScope(
             @NonNull final TaskFactory tasks, @NonNull final VariantScope variantScope) {
+        BaseVariantData variantData = variantScope.getVariantData();
+        assert variantData instanceof FeatureVariantData;
+
+        createAnchorTasks(tasks, variantScope);
+        createCheckManifestTask(tasks, variantScope);
 
         // TODO : we need a better way to determine if we are dealing with a base split or not.
         if (variantScope.getVariantDependencies().getManifestSplitConfiguration() != null) {
+            // Non-base feature specific tasks.
             createFeatureDeclarationTasks(tasks, variantScope);
-
         } else {
-            AndroidTask<FeatureSplitPackageIdsWriterTask> featureIdsWriterTask =
-                    createFeatureIdsWriterTask(tasks, variantScope);
-
-            // TODO : remove once the list is consumed by feature slits.
-            variantScope.getAssembleTask().dependsOn(tasks, featureIdsWriterTask.getName());
+            // Base feature specific tasks.
+            createFeatureApplicationIdWriterTask(tasks, variantScope);
+            createFeatureIdsWriterTask(tasks, variantScope);
         }
+
+        // Add a task to process the manifest(s)
+        createMergeApkManifestsTask(tasks, variantScope);
     }
 
     /**
      * Creates feature declaration task. Task will produce artifacts consumed by the base feature.
      */
-    @NonNull
-    public AndroidTask<FeatureSplitDeclarationWriterTask> createFeatureDeclarationTasks(
+    private void createFeatureDeclarationTasks(
             @NonNull TaskFactory tasks, @NonNull VariantScope variantScope) {
 
         File featureSplitDeclarationOutputDirectory =
@@ -105,23 +118,36 @@ public class FeatureTaskManager extends TaskManager {
                         new FeatureSplitDeclarationWriterTask.ConfigAction(
                                 variantScope, featureSplitDeclarationOutputDirectory));
 
-        variantScope.addTaskOutput(
-                TaskOutputHolder.TaskOutputType.FEATURE_SPLIT_DECLARATION,
-                featureSplitDeclarationOutputDirectory,
-                featureSplitWriterTaskAndroidTask.getName());
-
         variantScope.publishIntermediateArtifact(
                 FeatureSplitDeclaration.getOutputFile(featureSplitDeclarationOutputDirectory),
                 featureSplitWriterTaskAndroidTask.getName(),
                 AndroidArtifacts.ArtifactType.FEATURE_SPLIT_DECLARATION);
-
-        return featureSplitWriterTaskAndroidTask;
     }
 
-    @NonNull
-    private AndroidTask<FeatureSplitPackageIdsWriterTask> createFeatureIdsWriterTask(
+    private void createFeatureApplicationIdWriterTask(
             @NonNull TaskFactory tasks, @NonNull VariantScope variantScope) {
 
+        File applicationIdOutputDirectory =
+                FileUtils.join(
+                        globalScope.getIntermediatesDir(),
+                        "feature-split",
+                        "applicationId",
+                        variantScope.getVariantConfiguration().getDirName());
+
+        AndroidTask<FeatureSplitApplicationIdWriterTask> writeTask =
+                androidTasks.create(
+                        tasks,
+                        new FeatureSplitApplicationIdWriterTask.ConfigAction(
+                                variantScope, applicationIdOutputDirectory));
+
+        variantScope.publishIntermediateArtifact(
+                FeatureSplitApplicationId.getOutputFile(applicationIdOutputDirectory),
+                writeTask.getName(),
+                AndroidArtifacts.ArtifactType.FEATURE_APPLICATION_ID_DECLARATION);
+    }
+
+    private void createFeatureIdsWriterTask(
+            @NonNull TaskFactory tasks, @NonNull VariantScope variantScope) {
         File featureIdsOutputDirectory =
                 FileUtils.join(
                         globalScope.getIntermediatesDir(),
@@ -135,17 +161,57 @@ public class FeatureTaskManager extends TaskManager {
                         new FeatureSplitPackageIdsWriterTask.ConfigAction(
                                 variantScope, featureIdsOutputDirectory));
 
-        variantScope.addTaskOutput(
-                TaskOutputHolder.TaskOutputType.FEATURE_IDS_DECLARATION,
-                featureIdsOutputDirectory,
-                writeTask.getName());
-
         variantScope.publishIntermediateArtifact(
                 FeatureSplitPackageIds.getOutputFile(featureIdsOutputDirectory),
                 writeTask.getName(),
                 AndroidArtifacts.ArtifactType.FEATURE_IDS_DECLARATION);
 
-        return writeTask;
+        // TODO: Remove this once the feature plugin is functional.
+        variantScope.getAssembleTask().dependsOn(tasks, writeTask.getName());
+    }
+
+    /** Creates the merge manifests task. */
+    @Override
+    @NonNull
+    protected AndroidTask<? extends ManifestProcessorTask> createMergeManifestTask(
+            @NonNull TaskFactory tasks,
+            @NonNull VariantScope variantScope,
+            @NonNull ImmutableList.Builder<ManifestMerger2.Invoker.Feature> optionalFeatures) {
+        if (getIncrementalMode(variantScope.getVariantConfiguration()) != IncrementalMode.NONE) {
+            optionalFeatures.add(ManifestMerger2.Invoker.Feature.INSTANT_RUN_REPLACEMENT);
+        }
+
+        AndroidTask<? extends ManifestProcessorTask> mergeManifestsAndroidTask;
+        // TODO : we need a better way to determine if we are dealing with a base split or not.
+        if (variantScope.getVariantDependencies().getManifestSplitConfiguration() != null) {
+            optionalFeatures.add(ManifestMerger2.Invoker.Feature.ADD_FEATURE_SPLIT_INFO);
+            mergeManifestsAndroidTask =
+                    androidTasks.create(
+                            tasks,
+                            new MergeManifests.FeatureConfigAction(
+                                    variantScope, optionalFeatures.build()));
+
+            variantScope.publishIntermediateArtifact(
+                    BuildOutputs.getMetadataFile(variantScope.getManifestOutputDirectory()),
+                    mergeManifestsAndroidTask.getName(),
+                    AndroidArtifacts.ArtifactType.FEATURE_SPLIT_MANIFEST);
+        } else {
+            mergeManifestsAndroidTask =
+                    androidTasks.create(
+                            tasks,
+                            new MergeManifests.BaseFeatureConfigAction(
+                                    variantScope, optionalFeatures.build()));
+        }
+
+        variantScope.addTaskOutput(
+                VariantScope.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS,
+                variantScope.getInstantRunManifestOutputDirectory(),
+                mergeManifestsAndroidTask.getName());
+
+        // TODO: Remove this once the feature plugin is functional.
+        variantScope.getAssembleTask().dependsOn(tasks, mergeManifestsAndroidTask.getName());
+
+        return mergeManifestsAndroidTask;
     }
 
     @NonNull

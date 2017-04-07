@@ -30,11 +30,15 @@ import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.AndroidJarTask;
 import com.android.build.gradle.tasks.BundleAtom;
+import com.android.build.gradle.tasks.ManifestProcessorTask;
+import com.android.build.gradle.tasks.MergeManifests;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.profile.Recorder;
+import com.android.manifmerger.ManifestMerger2;
 import com.android.utils.FileUtils;
+import com.google.common.collect.ImmutableList;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
 import java.util.Set;
 import org.gradle.api.Project;
@@ -84,7 +88,7 @@ public class AtomTaskManager extends TaskManager {
                 ExecutionType.ATOM_TASK_MANAGER_CREATE_MERGE_MANIFEST_TASK,
                 project.getPath(),
                 variantScope.getFullVariantName(),
-                () -> createMergeAtomManifestsTask(tasks, variantScope));
+                () -> createMergeApkManifestsTask(tasks, variantScope));
 
         // Add a task to create the res values
         recorder.record(
@@ -342,6 +346,36 @@ public class AtomTaskManager extends TaskManager {
                 bundleAtom.get(tasks).getJavaResBundleFolder(),
                 bundleAtom.getName(),
                 AndroidArtifacts.ArtifactType.ATOM_JAVA_RES);
+    }
+
+    /** Creates the merge manifests task. */
+    @Override
+    @NonNull
+    protected AndroidTask<? extends ManifestProcessorTask> createMergeManifestTask(
+            @NonNull TaskFactory tasks,
+            @NonNull VariantScope variantScope,
+            @NonNull ImmutableList.Builder<ManifestMerger2.Invoker.Feature> optionalFeatures) {
+        if (getIncrementalMode(variantScope.getVariantConfiguration()) != IncrementalMode.NONE) {
+            optionalFeatures.add(ManifestMerger2.Invoker.Feature.INSTANT_RUN_REPLACEMENT);
+        }
+
+        AndroidTask<? extends ManifestProcessorTask> mergeManifestsAndroidTask;
+        mergeManifestsAndroidTask =
+                androidTasks.create(
+                        tasks,
+                        new MergeManifests.ConfigAction(variantScope, optionalFeatures.build()));
+
+        variantScope.addTaskOutput(
+                VariantScope.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS,
+                variantScope.getInstantRunManifestOutputDirectory(),
+                mergeManifestsAndroidTask.getName());
+
+        variantScope.publishIntermediateArtifact(
+                variantScope.getManifestOutputDirectory(),
+                mergeManifestsAndroidTask.getName(),
+                AndroidArtifacts.ArtifactType.ATOM_MANIFEST);
+
+        return mergeManifestsAndroidTask;
     }
 
     @NonNull

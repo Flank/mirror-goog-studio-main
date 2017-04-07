@@ -1249,6 +1249,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         switch (getVariantConfiguration().getType()) {
             case DEFAULT:
             case INSTANTAPP:
+            case FEATURE:
                 return FileUtils.join(
                         getGlobalScope().getIntermediatesDir(),
                         "manifests",

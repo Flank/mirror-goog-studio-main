@@ -254,17 +254,16 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
             @NonNull B buildType,
             @NonNull VariantType type) {
         StringBuilder sb = new StringBuilder();
-        boolean first = true;
 
-        if (type == VariantType.FEATURE) {
-            sb.append("feature");
-            first = false;
-        }
         if (!flavorName.isEmpty()) {
-            sb.append(first ? flavorName : StringHelper.capitalize(flavorName));
+            sb.append(flavorName);
             sb.append(StringHelper.capitalize(buildType.getName()));
         } else {
             sb.append(buildType.getName());
+        }
+
+        if (type == VariantType.FEATURE) {
+            sb.append("Feature");
         }
 
         if (type.isForTesting()) {
@@ -403,6 +402,9 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     public String getDirName() {
         if (mDirName == null) {
             StringBuilder sb = new StringBuilder();
+            if (mType == VariantType.FEATURE) {
+                sb.append("feature/");
+            }
 
             if (mType.isForTesting()) {
                 sb.append(mType.getPrefix()).append("/");

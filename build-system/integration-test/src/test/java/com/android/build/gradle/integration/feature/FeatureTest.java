@@ -53,19 +53,58 @@ public class FeatureTest {
         GradleTestProject featureProject = sProject.getSubproject(":feature");
         File featureSplit =
                 featureProject.getIntermediateFile(
-                        "feature-split/declaration/release/feature-split.json");
+                        "feature-split/declaration/feature/release/feature-split.json");
         assertThat(featureSplit.exists());
         FeatureSplitDeclaration featureSplitDeclaration =
                 FeatureSplitDeclaration.load(featureSplit);
         assertThat(featureSplitDeclaration).isNotNull();
         assertThat(featureSplitDeclaration.getUniqueIdentifier()).isEqualTo(":feature");
 
+        // Check the feature manifest contains only the feature data.
+        File featureManifest =
+                featureProject.getIntermediateFile(
+                        "manifests/full/feature/release/AndroidManifest.xml");
+        assertThat(featureManifest.exists());
+        assertThat(featureManifest)
+                .containsAllOf(
+                        "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"",
+                        "package=\"com.example.android.multiproject\"",
+                        "featureSplit=\"feature\"",
+                        "<meta-data",
+                        "android:name=\"feature\"",
+                        "android:value=\"84\" />",
+                        "<activity",
+                        "android:name=\"com.example.android.multiproject.feature.MainActivity\"",
+                        "android:label=\"@string/app_name\"",
+                        "android:splitName=\"feature\" >");
+        assertThat(featureManifest).doesNotContain("android:name=\"library\"");
+        assertThat(featureManifest).doesNotContain("android:value=\"42\"");
+
         // check the base feature declared the list of features and their associated IDs.
         GradleTestProject baseProject = sProject.getSubproject(":baseFeature");
-        File idsList = baseProject.getIntermediateFile("feature-split/ids/debug/package_ids.json");
+        File idsList =
+                baseProject.getIntermediateFile("feature-split/ids/feature/debug/package_ids.json");
         assertThat(idsList.exists());
         FeatureSplitPackageIds packageIds = FeatureSplitPackageIds.load(idsList);
         assertThat(packageIds).isNotNull();
         assertThat(packageIds.getIdFor(":feature")).isEqualTo(FeatureSplitPackageIds.BASE_ID);
+
+        // Check that the base feature manifest contains the expected content.
+        File baseFeatureManifest =
+                baseProject.getIntermediateFile(
+                        "manifests/full/feature/release/AndroidManifest.xml");
+        assertThat(baseFeatureManifest.exists());
+        assertThat(baseFeatureManifest)
+                .containsAllOf(
+                        "<meta-data",
+                        "android:name=\"feature\"",
+                        "android:value=\"84\" />",
+                        "android:name=\"library\"",
+                        "android:value=\"42\" />",
+                        "<activity",
+                        "android:name=\"com.example.android.multiproject.feature.MainActivity\"",
+                        "android:label=\"@string/app_name\"",
+                        "android:splitName=\"feature\" >");
+        assertThat(baseFeatureManifest).doesNotContain("featureSplit");
     }
 }

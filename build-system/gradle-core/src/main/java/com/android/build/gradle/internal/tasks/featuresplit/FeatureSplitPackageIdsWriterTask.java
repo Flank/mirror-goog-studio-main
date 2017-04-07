@@ -92,7 +92,7 @@ public class FeatureSplitPackageIdsWriterTask extends BaseTask {
             task.input =
                     variantScope.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.FEATURE_CLASSPATH,
-                            AndroidArtifacts.ArtifactScope.ALL,
+                            AndroidArtifacts.ArtifactScope.MODULE,
                             AndroidArtifacts.ArtifactType.FEATURE_SPLIT_DECLARATION);
         }
     }
