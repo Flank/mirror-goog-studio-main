@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import com.google.wireless.android.sdk.stats.GradleBuildProfile;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
@@ -44,7 +45,7 @@ public class ProcessProfileWriterTest {
     @Before
     public void setUp() throws IOException {
         // reset for each test.
-        outputFile = Jimfs.newFileSystem().getPath("/tmp/profile_proto");
+        outputFile = Jimfs.newFileSystem(Configuration.unix()).getPath("/tmp/profile_proto");
         ProcessProfileWriterFactory.initializeForTests();
         threadRecorder = ThreadRecorder.get();
     }
