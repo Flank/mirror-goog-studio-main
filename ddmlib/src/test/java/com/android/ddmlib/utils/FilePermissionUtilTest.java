@@ -17,6 +17,7 @@ package com.android.ddmlib.utils;
 
 import static org.junit.Assert.assertEquals;
 
+import com.android.SdkConstants;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -28,6 +29,9 @@ import java.io.IOException;
  * Unit tests for {@link FilePermissionUtil}
  */
 public class FilePermissionUtilTest {
+
+    private static final boolean isWindows =
+            SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS;
 
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
@@ -45,9 +49,10 @@ public class FilePermissionUtilTest {
         testFile.setWritable(true, true);
         testFile.setReadable(true, false);
         testFile.setExecutable(false, false);
-        assertEquals(0644, FilePermissionUtil.getFilePosixPermission(testFile));
+        // when on Windows, the file will be "rwx------" which is 700
+        assertEquals(isWindows ? 0700 : 0644, FilePermissionUtil.getFilePosixPermission(testFile));
         // set executable for owner only
         testFile.setExecutable(true, true);
-        assertEquals(0744, FilePermissionUtil.getFilePosixPermission(testFile));
+        assertEquals(isWindows ? 0700 : 0744, FilePermissionUtil.getFilePosixPermission(testFile));
     }
 }
