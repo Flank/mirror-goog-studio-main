@@ -34,7 +34,6 @@ import com.android.ide.common.blame.SourceFile;
 import com.android.ide.common.blame.SourceFilePosition;
 import com.android.ide.common.blame.SourcePosition;
 import com.android.ide.common.rendering.api.ResourceValue;
-import com.android.repository.testframework.MockFileOp;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 import com.android.testutils.TestResources;
@@ -43,7 +42,11 @@ import com.android.utils.FileUtils;
 import com.android.utils.Pair;
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
-import com.google.common.collect.*;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
@@ -1002,12 +1005,13 @@ public class ResourceMergerTest extends BaseTestCase {
                 mergingLog.find(
                         new SourceFilePosition(destFile, new SourcePosition(2,5,-1)));
 
-        int extraOffset = new MockFileOp().isWindows() ? 2 : 0; // Account for \r on Windows
+        // check for \r presence to adapt the source position calculation.
+        int extraOffset =  Files.toString(original.getFile().getSourceFile(), Charsets.UTF_8)
+                .contains("\r") ? 2 : 0;
         assertEquals(new SourcePosition(2, 4, 55 + extraOffset, 2, 51, 102 + extraOffset),
                 original.getPosition());
         assertTrue(original.getFile().getSourceFile().getAbsolutePath().endsWith(
                 "basicValues/overlay/values/values.xml".replace('/', File.separatorChar)));
-
     }
 
     @Test
