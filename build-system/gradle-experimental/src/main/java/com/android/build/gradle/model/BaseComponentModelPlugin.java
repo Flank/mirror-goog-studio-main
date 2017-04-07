@@ -98,6 +98,7 @@ import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.signing.KeystoreHelper;
 import com.android.prefs.AndroidLocation;
 import com.android.resources.Density;
+import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
@@ -113,6 +114,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
+import org.gradle.BuildListener;
+import org.gradle.BuildResult;
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
@@ -120,6 +123,8 @@ import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationContainer;
 import org.gradle.api.execution.TaskExecutionGraph;
+import org.gradle.api.initialization.Settings;
+import org.gradle.api.invocation.Gradle;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.internal.reflect.Instantiator;
@@ -225,23 +230,52 @@ public class BaseComponentModelPlugin implements Plugin<Project>, ToolingRegistr
         // after the current project is done).
         // This is will be called for each (android) projects though, so this should support
         // being called 2+ times.
-        project.getGradle().buildFinished(new Closure<Object>(this, this) {
-            public void doCall(Object it) {
-                ExecutorSingleton.shutdown();
-                sdkHandler.unload();
-                try {
-                    PreDexCache.getCache().clear(project.getRootProject()
-                            .file(String.valueOf(project.getRootProject().getBuildDir()) + "/"
-                                    + FD_INTERMEDIATES + "/dex-cache/cache.xml"), logger);
-                    JackConversionCache.getCache().clear(project.getRootProject()
-                            .file(String.valueOf(project.getRootProject().getBuildDir()) + "/"
-                                    + FD_INTERMEDIATES + "/jack-cache/cache.xml"), logger);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-                LibraryCache.getCache().unload();
-            }
-        });
+        project.getGradle()
+                .addBuildListener(
+                        new BuildListener() {
+                            @Override
+                            public void buildStarted(Gradle gradle) {}
+
+                            @Override
+                            public void settingsEvaluated(Settings settings) {}
+
+                            @Override
+                            public void projectsLoaded(Gradle gradle) {}
+
+                            @Override
+                            public void projectsEvaluated(Gradle gradle) {}
+
+                            @Override
+                            public void buildFinished(BuildResult buildResult) {
+                                // Do not run buildFinished for included project in composite build.
+                                if (buildResult.getGradle().getParent() != null) {
+                                    return;
+                                }
+                                ExecutorSingleton.shutdown();
+                                sdkHandler.unload();
+                                try {
+                                    PreDexCache.getCache()
+                                            .clear(
+                                                    FileUtils.join(
+                                                            project.getRootProject().getBuildDir(),
+                                                            FD_INTERMEDIATES,
+                                                            "dex-cache",
+                                                            "cache.xml"),
+                                                    logger);
+                                    JackConversionCache.getCache()
+                                            .clear(
+                                                    FileUtils.join(
+                                                            project.getRootProject().getBuildDir(),
+                                                            FD_INTERMEDIATES,
+                                                            "jack-cache",
+                                                            "cache.xml"),
+                                                    logger);
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                }
+                                LibraryCache.getCache().unload();
+                            }
+                        });
 
         project.getGradle().getTaskGraph().whenReady(new Closure<Void>(this, this) {
             public void doCall(TaskExecutionGraph taskGraph) {
