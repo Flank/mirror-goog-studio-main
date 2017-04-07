@@ -332,6 +332,10 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
 
                             @Override
                             public void buildFinished(BuildResult buildResult) {
+                                // Do not run buildFinished for included project in composite build.
+                                if (buildResult.getGradle().getParent() != null) {
+                                    return;
+                                }
                                 ExecutorSingleton.shutdown();
                                 sdkHandler.unload();
                                 threadRecorder.record(

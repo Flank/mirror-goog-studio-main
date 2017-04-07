@@ -47,12 +47,25 @@ public class CompositeBuildTest {
                     .withName("lib")
                     .create();
 
+    @Rule
+    public GradleTestProject androidLib =
+            GradleTestProject.builder()
+                    .fromTestApp(new EmptyAndroidTestApp())
+                    .withName("androidLib")
+                    .withDependencyChecker(false)
+                    .create();
+
     @Before
     public void setUp() throws IOException {
         Files.write(
                 "includeBuild('../lib') {\n"
                         + "    dependencySubstitution {\n"
                         + "        substitute module('com.example:lib') with project(':')\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "includeBuild('../androidLib') {\n"
+                        + "    dependencySubstitution {\n"
+                        + "        substitute module('com.example:androidLib') with project(':')\n"
                         + "    }\n"
                         + "}\n",
                 app.file("settings.gradle"),
@@ -65,11 +78,35 @@ public class CompositeBuildTest {
                         + "}\n"
                         + "dependencies {\n"
                         + "    compile 'com.example:lib'\n"
+                        + "    compile 'com.example:androidLib'\n"
                         + "}\n");
 
         // lib is just an empty project.
         lib.file("settings.gradle").createNewFile();
         TestFileUtils.appendToFile(lib.getBuildFile(), "apply plugin: 'java'\n");
+
+        // lib is just an empty project.
+        androidLib.file("settings.gradle").createNewFile();
+        TestFileUtils.appendToFile(
+                androidLib.getBuildFile(),
+                "apply plugin: 'com.android.library'\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    compileSdkVersion "
+                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "}\n");
+        Files.createParentDirs(androidLib.file("src/main/AndroidManifest.xml"));
+        Files.write(
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "        package=\"com.example.androidLib\"\n"
+                        + "        android:versionCode=\"1\"\n"
+                        + "        android:versionName=\"1.0\">\n"
+                        + "    <application/>\n"
+                        + "</manifest>\n",
+                androidLib.file("src/main/AndroidManifest.xml"),
+                Charsets.UTF_8);
     }
 
     @Test
