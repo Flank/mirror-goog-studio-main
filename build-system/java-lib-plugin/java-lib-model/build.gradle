@@ -6,14 +6,7 @@ dependencies {
 
 group = 'com.android.java.tools.build'
 archivesBaseName = 'java-lib-model'
-// if plugin is built from studio, use "studio" as version number,
-// and set buildDir to out/studio/.
-// otherwise use the same version number as Android plugin.
 version = rootProject.ext.buildVersion
-if(System.getenv("BUILD_FROM_STUDIO")) {
-    version = "studio"
-    buildDir = "$rootProject.projectDir/../out/studio/java-lib-plugin"
-}
 
 project.ext.pomName = 'Java Library Plugin Model'
 project.ext.pomDesc = 'APIs for Java Library Plugin.'
