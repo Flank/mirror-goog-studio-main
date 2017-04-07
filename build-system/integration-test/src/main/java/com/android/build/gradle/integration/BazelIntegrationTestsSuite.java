@@ -30,6 +30,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import org.gradle.tooling.internal.consumer.DefaultGradleConnector;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
@@ -37,32 +38,31 @@ import org.junit.runner.RunWith;
 @RunWith(BazelIntegrationTestSuiteRunner.class)
 public class BazelIntegrationTestsSuite {
 
-    private static final Path DATA_DIR;
+    public static final Path DATA_DIR;
+    public static final Path OFFLINE_REPO;
+    public static final Path PREBUILTS_REPO;
+    public static final Path NDK_IN_TMP;
+    public static final Path GRADLE_USER_HOME;
 
     static {
         try {
             DATA_DIR = Files.createTempDirectory("data");
+            OFFLINE_REPO = DATA_DIR.resolve("offlineRepo").toAbsolutePath();
+            PREBUILTS_REPO = DATA_DIR.resolve("prebuiltsRepo").toAbsolutePath();
+            NDK_IN_TMP = DATA_DIR.resolve("ndk").toAbsolutePath();
+            GRADLE_USER_HOME = Files.createTempDirectory("gradleUserHome");
+
+            System.setProperty("gradle.user.home", GRADLE_USER_HOME.toAbsolutePath().toString());
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
         }
     }
 
-    public static final Path OFFLINE_REPO = DATA_DIR.resolve("offlineRepo").toAbsolutePath();
-    public static final Path PREBUILTS_REPO = DATA_DIR.resolve("prebuiltsRepo").toAbsolutePath();
-    public static final Path NDK_IN_TMP = DATA_DIR.resolve("ndk").toAbsolutePath();
-
     @BeforeClass
     public static void unzipOfflineRepo() throws Exception {
         unzip(OFFLINE_REPO, "tools/base/bazel/offline_repo_repo.zip");
         unzip(PREBUILTS_REPO, "tools/base/build-system/integration-test/prebuilts_repo_repo.zip");
-    }
-
-    @AfterClass
-    public static void deleteData() throws Exception {
-        FileUtils.deletePath(OFFLINE_REPO.toFile());
-        FileUtils.deletePath(PREBUILTS_REPO.toFile());
-        Files.delete(NDK_IN_TMP);
     }
 
     /**
@@ -77,6 +77,15 @@ public class BazelIntegrationTestsSuite {
         assertThat(NDK_IN_TMP).doesNotExist();
         Files.createSymbolicLink(
                 NDK_IN_TMP, new File(GradleTestProject.ANDROID_HOME, SdkConstants.FD_NDK).toPath());
+    }
+
+    @AfterClass
+    public static void cleanUp() throws Exception {
+        DefaultGradleConnector.close();
+
+        FileUtils.deletePath(OFFLINE_REPO.toFile());
+        FileUtils.deletePath(PREBUILTS_REPO.toFile());
+        Files.delete(NDK_IN_TMP);
     }
 
     private static void unzip(@NonNull Path repoPath, @NonNull String zipName) throws IOException {

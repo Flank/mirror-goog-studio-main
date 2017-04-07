@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.common.fixture;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static java.nio.file.Files.createTempDirectory;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -154,7 +153,7 @@ public final class GradleTestProject implements TestRule {
             // across invocations to save disk space.
             GRADLE_USER_HOME =
                     TestUtils.runningFromBazel()
-                            ? createTempDirectory(BUILD_DIR.toPath(), "GRADLE_USER_HOME").toFile()
+                            ? BazelIntegrationTestsSuite.GRADLE_USER_HOME.toFile()
                             : new File(BUILD_DIR, "GRADLE_USER_HOME");
 
             boolean useNightly =
