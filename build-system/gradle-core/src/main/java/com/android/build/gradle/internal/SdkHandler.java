@@ -159,7 +159,7 @@ public class SdkHandler {
             if (sdkLibData.useSdkDownload()) {
                 sdkLoader.installSdkTool(sdkLibData, SdkConstants.FD_PLATFORM_TOOLS);
             } else {
-                errorReporter.handleSyncError(
+                errorReporter.handleSyncWarning(
                         SdkConstants.FD_PLATFORM_TOOLS,
                         SyncIssue.TYPE_MISSING_SDK_PACKAGE,
                         SdkConstants.FD_PLATFORM_TOOLS + " package is not installed.");
