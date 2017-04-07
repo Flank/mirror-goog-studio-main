@@ -83,7 +83,7 @@ public class ManifestMergingTest {
     @Test
     public void checkTestOnlyAttribute() throws Exception {
         // do not run if compile sdk is a preview
-        Assume.assumeFalse(GradleTestProject.DEFAULT_COMPILE_SDK_VERSION.startsWith("android-"));
+        Assume.assumeFalse(GradleTestProject.getCompileSdkHash().startsWith("android-"));
         flavors.executor()
                 .run("clean", "assembleF1FaDebug");
 

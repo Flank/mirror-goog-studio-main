@@ -106,7 +106,7 @@ public class NdkPlatformVersionTest {
                 String expected =
                         NdkHelper.getPlatformSupported(
                                 GradleTestProject.ANDROID_NDK_HOME,
-                                GradleTestProject.DEFAULT_COMPILE_SDK_VERSION);
+                                GradleTestProject.getCompileSdkHash());
                 assertThat(sysrootFlag.get()).contains(expected);
             }
         }
