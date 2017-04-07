@@ -278,7 +278,6 @@ public class SdkAutoDownloadTest {
      * Tests that the platform tools were automatically downloaded, when they weren't already
      * installed.
      */
-
     @Test
     public void checkPlatformToolsDownloading() throws Exception {
         TestFileUtils.appendToFile(
@@ -292,12 +291,34 @@ public class SdkAutoDownloadTest {
                         + "\"");
 
         // Delete the platform-tools folder from the set-up.
-        FileUtils.deleteDirectoryContents(FileUtils.join(mSdkHome, SdkConstants.FD_PLATFORM_TOOLS));
+        File platformTools = FileUtils.join(mSdkHome, SdkConstants.FD_PLATFORM_TOOLS);
+        FileUtils.deletePath(platformTools);
+        assertThat(platformTools).doesNotExist();
 
         getExecutor().run("assembleDebug");
-
-        File platformTools = FileUtils.join(mSdkHome, SdkConstants.FD_PLATFORM_TOOLS);
         assertThat(platformTools).isDirectory();
+    }
+
+    /** Tests that missing platform tools don't break the build. */
+    @Test
+    public void checkMissingPlatformTools() throws Exception {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                System.lineSeparator()
+                        + "android.compileSdkVersion "
+                        + PLATFORM_VERSION
+                        + System.lineSeparator()
+                        + "android.buildToolsVersion \""
+                        + BUILD_TOOLS_VERSION
+                        + "\"");
+
+        // Delete the platform-tools folder from the set-up.
+        File platformTools = FileUtils.join(mSdkHome, SdkConstants.FD_PLATFORM_TOOLS);
+        FileUtils.deletePath(platformTools);
+        assertThat(platformTools).doesNotExist();
+
+        getOfflineExecutor().run("assembleDebug");
+        assertThat(platformTools).doesNotExist();
     }
 
     @Test
@@ -430,7 +451,11 @@ public class SdkAutoDownloadTest {
 
     @NonNull
     private RunGradleTasks getExecutor() {
-        return project.executor().withSdkAutoDownload().withoutOfflineFlag();
+        return getOfflineExecutor().withoutOfflineFlag();
+    }
+
+    private RunGradleTasks getOfflineExecutor() {
+        return project.executor().withSdkAutoDownload();
     }
 
     private void checkForLibrary(
