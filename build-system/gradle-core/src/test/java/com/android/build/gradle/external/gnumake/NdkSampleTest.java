@@ -45,6 +45,8 @@ import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.junit.Assume;
+import org.junit.Before;
 import org.junit.Test;
 
 
@@ -276,7 +278,6 @@ public class NdkSampleTest {
     private static NativeBuildConfigValue checkJson(String path, int operatingSystem)
             throws IOException, InterruptedException {
 
-
         if (isWindows) {
             path = path.replace("/", "\\");
         }
@@ -464,6 +465,11 @@ public class NdkSampleTest {
     @NonNull
     public static NativeBuildConfigValueSubject assertThat(@Nullable NativeBuildConfigValue project) {
         return assert_().about(NativeBuildConfigValueSubject.FACTORY).that(project);
+    }
+
+    @Before
+    public void setUp() {
+        Assume.assumeTrue(SdkConstants.CURRENT_PLATFORM != SdkConstants.PLATFORM_WINDOWS);
     }
 
     // Related to b.android.com/227685 which caused wrong file path in src file when path was
