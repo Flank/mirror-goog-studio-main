@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks;
 
+import com.android.SdkConstants;
 import com.android.tools.lint.detector.api.Detector;
 
 @SuppressWarnings("javadoc")
@@ -26,6 +27,9 @@ public class CommentDetectorTest extends AbstractCheckTest {
     }
 
     public void test() throws Exception {
+        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
+            return;
+        }
         String expected = ""
                 + "src/test/pkg/Hidden.java:11: Warning: STOPSHIP comment found; points to code which must be fixed prior to release [StopShip]\n"
                 + "    // STOPSHIP\n"

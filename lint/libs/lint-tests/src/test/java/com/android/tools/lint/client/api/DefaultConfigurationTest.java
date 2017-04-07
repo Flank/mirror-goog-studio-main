@@ -17,6 +17,7 @@ package com.android.tools.lint.client.api;
 
 import static com.android.tools.lint.client.api.DefaultConfiguration.globToRegexp;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.tools.lint.checks.AbstractCheckTest;
 import com.android.tools.lint.checks.AccessibilityDetector;
@@ -376,6 +377,9 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
     // Tests for a structure that looks like a gradle project with
     // multiple resource folders.
     public void testResourcePathIgnore() throws Exception {
+        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
+            return;
+        }
         DefaultConfiguration configuration = getConfiguration(""
                 + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
                 + "<lint>\n"

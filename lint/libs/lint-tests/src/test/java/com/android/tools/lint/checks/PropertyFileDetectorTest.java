@@ -19,6 +19,7 @@ package com.android.tools.lint.checks;
 import static com.android.tools.lint.checks.PropertyFileDetector.suggestEscapes;
 import static com.android.tools.lint.detector.api.TextFormat.TEXT;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
@@ -33,6 +34,9 @@ public class PropertyFileDetectorTest extends AbstractCheckTest {
     }
 
     public void test() throws Exception {
+        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
+            return;
+        }
         //noinspection all // Sample code
         assertEquals(""
                 + "local.properties:11: Error: Windows file separators (\\) and drive letter separators (':') must be escaped (\\\\) in property files; use C\\:\\\\my\\\\path\\\\to\\\\sdk [PropertyEscape]\n"
@@ -60,6 +64,9 @@ public class PropertyFileDetectorTest extends AbstractCheckTest {
     }
 
     public void testGetSuggestedEscape() {
+        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
+            return;
+        }
         assertEquals("C:\\\\my\\\\path\\\\to\\\\sdk", PropertyFileDetector.getSuggestedEscape(
                 "Windows file separators (\\) must be escaped (\\\\); use C:\\\\my\\\\path\\\\to\\\\sdk",
                 TEXT));
@@ -69,6 +76,9 @@ public class PropertyFileDetectorTest extends AbstractCheckTest {
     }
 
     public void testUseHttpInsteadOfHttps() throws Exception {
+        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
+            return;
+        }
         //noinspection all // Sample code
         assertEquals(""
                 + "gradle/wrapper/gradle-wrapper.properties:5: Warning: Replace HTTP with HTTPS for better security; use https\\://services.gradle.org/distributions/gradle-2.1-all.zip [UsingHttp]\n"
@@ -84,6 +94,10 @@ public class PropertyFileDetectorTest extends AbstractCheckTest {
     }
 
     public void testIssue92789() throws Exception {
+        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
+            return;
+        }
+
         // Regression test for https://code.google.com/p/android/issues/detail?id=92789
         //noinspection all // Sample code
         assertEquals(""

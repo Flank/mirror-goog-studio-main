@@ -19,12 +19,14 @@ package com.android.tools.lint.checks;
 import static com.android.tools.lint.detector.api.TextFormat.RAW;
 import static com.android.tools.lint.detector.api.TextFormat.TEXT;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Severity;
+import org.junit.Assume;
 
 @SuppressWarnings("javadoc")
 public class DuplicateResourceDetectorTest extends AbstractCheckTest {
@@ -282,6 +284,10 @@ public class DuplicateResourceDetectorTest extends AbstractCheckTest {
     }
 
     public void testInvalidXml() throws Exception {
+        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
+            return;
+        }
+
         // Regression test for https://code.google.com/p/android/issues/detail?id=224150
         // 224150: Flag apostrophes escaping in XML string resources
         assertEquals(""

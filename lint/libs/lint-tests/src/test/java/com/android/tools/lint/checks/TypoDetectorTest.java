@@ -18,6 +18,7 @@ package com.android.tools.lint.checks;
 
 import static com.android.tools.lint.detector.api.TextFormat.TEXT;
 
+import com.android.SdkConstants;
 import com.android.tools.lint.detector.api.Detector;
 import java.util.Arrays;
 
@@ -56,6 +57,9 @@ public class TypoDetectorTest extends AbstractCheckTest {
     }
 
     public void testRepeatedWords() throws Exception {
+        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
+            return;
+        }
         //noinspection all // Sample code
         assertEquals(""
                 + "res/values/strings.xml:5: Warning: Repeated word \"to\" in message: possible typo [Typos]\n"

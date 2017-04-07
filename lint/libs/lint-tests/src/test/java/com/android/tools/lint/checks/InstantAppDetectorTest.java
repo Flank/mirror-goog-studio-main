@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks;
 
+import com.android.SdkConstants;
 import com.android.tools.lint.checks.infrastructure.TestFile.GradleTestFile;
 import com.android.tools.lint.detector.api.Detector;
 
@@ -348,6 +349,9 @@ public class InstantAppDetectorTest extends AbstractCheckTest {
     }
 
     public void testSingleLaunchableActivity() {
+        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
+            return;
+        }
         //noinspection all // Sample code
         lint().files(
                 manifest(""

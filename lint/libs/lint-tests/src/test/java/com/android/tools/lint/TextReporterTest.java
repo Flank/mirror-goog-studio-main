@@ -68,7 +68,7 @@ public class TextReporterTest extends AbstractCheckTest {
             warning2.file = new File("/foo/bar/Foo/res/layout/main.xml");
             warning2.errorLine = "        android:text=\"Fooo\" />\n" +
                     "        ~~~~~~~~~~~~~~~~~~~\n";
-            warning2.path = "res/layout/main.xml";
+            warning2.path = "res/layout/main.xml".replace('/', File.separatorChar);
             warning2.location = Location.create(warning2.file,
                     new DefaultPosition(11, 8, 377), new DefaultPosition(11, 27, 396));
             secondary = Location.create(warning1.file,
@@ -98,7 +98,7 @@ public class TextReporterTest extends AbstractCheckTest {
                     + "    AndroidManifest.xml:8: Secondary location\n"
                     + "Also affects: res/layout/main.xml:6\n"
                     + "0 errors, 2 warnings\n",
-                    report);
+                    report.replace(File.separatorChar, '/'));
         } finally {
             //noinspection ResultOfMethodCallIgnored
             file.delete();
@@ -213,7 +213,7 @@ public class TextReporterTest extends AbstractCheckTest {
                     + "   resource lookup.\n"
                     + "\n"
                     + "0 errors, 3 warnings\n",
-                    report);
+                    report.replace(File.separatorChar, '/'));
         } finally {
             //noinspection ResultOfMethodCallIgnored
             file.delete();

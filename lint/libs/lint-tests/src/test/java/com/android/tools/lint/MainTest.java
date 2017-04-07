@@ -20,6 +20,7 @@ import static com.android.tools.lint.LintCliFlags.ERRNO_EXISTS;
 import static com.android.tools.lint.LintCliFlags.ERRNO_INVALID_ARGS;
 import static com.android.tools.lint.LintCliFlags.ERRNO_SUCCESS;
 
+import com.android.SdkConstants;
 import com.android.tools.lint.checks.AbstractCheckTest;
 import com.android.tools.lint.checks.AccessibilityDetector;
 import com.android.tools.lint.detector.api.Detector;
@@ -369,6 +370,9 @@ public class MainTest extends AbstractCheckTest {
     }
 
     public void test_getCleanPath() throws Exception {
+        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
+            return;
+        }
         assertEquals("foo", LintCliClient.getCleanPath(new File("foo")));
         String sep = File.separator;
         assertEquals("foo" + sep + "bar",
@@ -429,6 +433,9 @@ public class MainTest extends AbstractCheckTest {
     }
 
     public void testValidateOutput() throws Exception {
+        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
+            return;
+        }
         File project = getProjectDir(null,
                 mAccessibility2
         );

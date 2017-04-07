@@ -18,6 +18,7 @@ package com.android.tools.lint.client.api;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.SdkConstants;
 import com.android.tools.lint.checks.infrastructure.LintDetectorTest.TestFile;
 import com.android.tools.lint.checks.infrastructure.TestFile.XmlTestFile;
 import com.android.tools.lint.checks.infrastructure.TestLintClient;
@@ -41,6 +42,9 @@ public class BlameFileTest {
 
     @Test
     public void test() throws IOException {
+        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
+            return;
+        }
         File root = folder.getRoot();
 
         File sourceManifest = XmlTestFile.create("app/src/main/AndroidManifest.xml", ""

@@ -116,7 +116,7 @@ public class XmlReporterTest extends AbstractCheckTest {
                     + "    </issue>\n"
                     + "\n"
                     + "</issues>\n",
-                report);
+                report.replace(File.separatorChar, '/'));
 
             // Make sure the XML is valid
             Document document = PositionXmlParser.parse(report);
@@ -187,7 +187,7 @@ public class XmlReporterTest extends AbstractCheckTest {
                     + "        errorLine1=\"    &lt;uses-sdk android:minSdkVersion=&quot;8&quot; />\"\n"
                     + "        errorLine2=\"    ^\">\n"
                     + "        <location\n"
-                    + "            file=\"/foo/Foo/AndroidManifest.xml\"\n"
+                    + "            file=\"" + new File("/foo/Foo/AndroidManifest.xml").getAbsolutePath() + "\"\n"
                     + "            line=\"7\"\n"
                     + "            column=\"5\"/>\n"
                     + "    </issue>\n"
@@ -203,7 +203,7 @@ public class XmlReporterTest extends AbstractCheckTest {
                     + "        errorLine1=\"        android:text=&quot;Fooo&quot; />\"\n"
                     + "        errorLine2=\"        ~~~~~~~~~~~~~~~~~~~\">\n"
                     + "        <location\n"
-                    + "            file=\"/foo/bar/Foo/res/layout/main.xml\"\n"
+                    + "            file=\"" + new File("/foo/bar/Foo/res/layout/main.xml").getAbsolutePath() + "\"\n"
                     + "            line=\"12\"\n"
                     + "            column=\"9\"/>\n"
                     + "    </issue>\n"
@@ -271,7 +271,7 @@ public class XmlReporterTest extends AbstractCheckTest {
                     + "    </issue>\n"
                     + "\n"
                     + "</issues>\n",
-                    report);
+                    report.replace(File.separatorChar, '/'));
 
             // Make sure the XML is valid
             Document document = PositionXmlParser.parse(report);
@@ -357,7 +357,7 @@ public class XmlReporterTest extends AbstractCheckTest {
                             + "    </issue>\n"
                             + "\n"
                             + "</issues>\n",
-                    report);
+                    report.replace(File.separatorChar, '/'));
 
             // Make sure the XML is valid
             Document document = PositionXmlParser.parse(report);

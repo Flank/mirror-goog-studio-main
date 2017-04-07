@@ -18,6 +18,7 @@ package com.android.tools.lint.checks;
 
 import static com.android.tools.lint.checks.StringFormatDetector.isLocaleSpecific;
 
+import com.android.SdkConstants;
 import com.android.tools.lint.detector.api.Detector;
 import java.util.HashSet;
 import java.util.Set;
@@ -31,6 +32,9 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
     }
 
     public void testAll() throws Exception {
+        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
+            return;
+        }
         String expected = ""
                 + "src/test/pkg/StringFormatActivity.java:13: Error: Wrong argument type for formatting argument '#1' in hello: conversion is 'd', received String (argument #2 in method call) [StringFormatMatches]\n"
                 + "        String output1 = String.format(hello, target);\n"
@@ -535,6 +539,9 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
     }
 
     public void testIncremental() throws Exception {
+        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
+            return;
+        }
         String expected = ""
                 + "src/test/pkg/StringFormatActivity.java:13: Error: Wrong argument type for formatting argument '#1' in hello: conversion is 'd', received String (argument #2 in method call) [StringFormatMatches]\n"
                 + "        String output1 = String.format(hello, target);\n"
