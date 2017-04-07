@@ -778,10 +778,6 @@ public final class SdkConstants {
             "android.support.constraint.Chain"; //$NON-NLS-1$
     public static final String CLASS_CONSTRAINT_LAYOUT_LAYER =
             "android.support.constraint.Layer"; //$NON-NLS-1$
-    public static final String CLASS_CONSTRAINT_LAYOUT_CONSTRAINTS =
-            "android.support.constraint.Constraints"; //$NON-NLS-1$
-    public static final String CLASS_CONSTRAINT_LAYOUT_REFERENCE =
-            "android.support.constraint.Reference"; //$NON-NLS-1$
     public static final String CLASS_CONSTRAINT_LAYOUT_PARAMS =
             "android.support.constraint.ConstraintLayout$LayoutParams"; //$NON-NLS-1$
     public static final String CLASS_TABLE_CONSTRAINT_LAYOUT =
