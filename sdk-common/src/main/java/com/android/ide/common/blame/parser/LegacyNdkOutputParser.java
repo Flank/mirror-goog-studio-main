@@ -52,7 +52,7 @@ public class LegacyNdkOutputParser implements PatternAwareOutputParser {
             unknownMsgCause = "(Unknown) " + unknownMsgCause;
             String coordinates = line.substring(fromIndex + FROM.length()).trim();
             if (!coordinates.isEmpty()) {
-                int colonIndex1 = line.indexOf(COLON);
+                int colonIndex1 = coordinates.indexOf(COLON);
                 if (colonIndex1 == 1) { // drive letter (Windows)
                     coordinates = coordinates.substring(colonIndex1 + 1);
                 }
