@@ -35,6 +35,7 @@ import org.w3c.dom.Node;
  * zero or multiple resources of the following types:
  *
  * <table>
+ *     <caption>Types of resources</caption>
  *     <tr><th>Type         </th><th>XML Tag (*1)             </th><th>Symbol Type          </th><th>Java Type    </th></tr>
  *     <tr><td>Animation    </td><td>{@code anim}             </td><td>{@code anim}         </td><td>{@code int}  </td></tr>
  *     <tr><td>Animator     </td><td>{@code animator}         </td><td>{@code animator}     </td><td>{@code int}  </td></tr>

@@ -124,6 +124,7 @@
  * <p>Then the parsers would create a following SymbolTable:
  *
  * <table>
+ *     <caption>Symbol table</caption>
  *     <tr><th>Java type  </th><th>Resource type  </th><th>Resource name    </th><th>ID</th></tr>
  *     <tr><td>int        </td><td>drawable       </td><td>a                </td><td>1 </td></tr>
  *     <tr><td>int        </td><td>layout         </td><td>activity_main    </td><td>2 </td></tr>

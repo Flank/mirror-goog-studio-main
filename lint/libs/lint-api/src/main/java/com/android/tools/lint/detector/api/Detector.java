@@ -740,6 +740,7 @@ public abstract class Detector {
      * the following mapping table in alphabetical order might be helpful, since it lists the
      * corresponding UAST classes.
      * <table>
+     *     <caption>Mapping between PSI and UAST classes</caption>
      *     <tr><th>PSI</th><th>UAST</th></tr>
      *     <tr><th>com.intellij.psi.</th><th>org.jetbrains.uast.</th></tr>
      *     <tr><td>IElementType</td><td>UastBinaryOperator</td></tr>
@@ -880,6 +881,7 @@ public abstract class Detector {
      * The following table maps some common method names and what their corresponding
      * names are in UAST.
      * <table>
+     *     <caption>Mapping between PSI and UAST method names</caption></caption>
      *     <tr><th>PSI</th><th>UAST</th></tr>
      *     <tr><td>getArgumentList</td><td>getValueArguments</td></tr>
      *     <tr><td>getCatchSections</td><td>getCatchClauses</td></tr>

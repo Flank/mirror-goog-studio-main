@@ -360,6 +360,7 @@ public abstract class BaseExtension implements AndroidConfig {
      * <p>Each released plugin has a fixed default, so builds are reproducible.
      *
      * <table>
+     *     <caption>Versions of build tools</caption>
      *     <tr><th>Gradle plugin</th><th>Minimum build tools</th><th>Default build tools</th></tr>
      *     <tr><td>2.0.x</td><td>21.1.1</td><td>-</td></tr>
      *     <tr><td>2.1.x</td><td>23.0.2</td><td>-</td></tr>
