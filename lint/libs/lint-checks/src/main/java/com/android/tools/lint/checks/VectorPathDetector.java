@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
 import static com.android.SdkConstants.TAG_VECTOR;
 
 import com.android.SdkConstants;
@@ -27,7 +28,10 @@ import com.android.resources.ResourceUrl;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.Location;
+import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.Project;
+import com.android.tools.lint.detector.api.QuickfixData;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -42,8 +46,8 @@ import org.w3c.dom.Element;
  * Looks for issues with long vector paths
  */
 public class VectorPathDetector extends ResourceXmlDetector {
-    /** The main issue discovered by this detector */
-    public static final Issue ISSUE = Issue.create(
+    /** Paths that are too long */
+    public static final Issue PATH_LENGTH = Issue.create(
             "VectorPath",
             "Long vector paths",
             "Using long vector paths is bad for performance. There are several ways to " +
@@ -59,6 +63,22 @@ public class VectorPathDetector extends ResourceXmlDetector {
             new Implementation(
                     VectorPathDetector.class,
                     Scope.RESOURCE_FILE_SCOPE));
+
+    /** Path validation */
+    public static final Issue PATH_VALID = Issue.create(
+            "InvalidVectorPath",
+            "Invalid vector paths",
+            "This check ensures that vector paths are valid. For example, it makes "
+                    + "sure that the numbers are not using scientific notation (such as 1.0e3) "
+                    + "which can lead to runtime crashes on older devices.",
+
+            Category.CORRECTNESS,
+            5,
+            Severity.ERROR,
+            new Implementation(
+                    VectorPathDetector.class,
+                    Scope.RESOURCE_FILE_SCOPE))
+            .addMoreInfo("https://code.google.com/p/android/issues/detail?id=78162");
 
     // Arbitrary limit suggested in https://code.google.com/p/android/issues/detail?id=235219
     private static final int MAX_PATH_DATA_LENGTH = 800;
@@ -76,7 +96,7 @@ public class VectorPathDetector extends ResourceXmlDetector {
     @Override
     public void visitAttribute(@NonNull XmlContext context, @NonNull Attr attribute) {
         String value = attribute.getValue();
-        if (value.startsWith(SdkConstants.PREFIX_RESOURCE_REF)) {
+        if (value.startsWith(PREFIX_RESOURCE_REF)) {
             ResourceUrl url = ResourceUrl.parse(value);
             if (url == null || url.framework) {
                 return;
@@ -96,13 +116,15 @@ public class VectorPathDetector extends ResourceXmlDetector {
             }
         }
 
-        if (value.length() < MAX_PATH_DATA_LENGTH) {
-            return;
-        }
-
         // Make sure this is in a vector; pathData can occur in transition files too!
         Element root = attribute.getOwnerDocument().getDocumentElement();
         if (root == null || !root.getTagName().equals(TAG_VECTOR)) {
+            return;
+        }
+
+        validatePath(context, attribute, value);
+
+        if (value.length() < MAX_PATH_DATA_LENGTH) {
             return;
         }
 
@@ -114,7 +136,7 @@ public class VectorPathDetector extends ResourceXmlDetector {
         String message = String.format("Very long vector path (%1$d characters), which is bad for "
                 + "performance. Considering reducing precision, removing minor details or "
                 + "rasterizing vector.", value.length());
-        context.report(ISSUE, attribute, context.getValueLocation(attribute), message);
+        context.report(PATH_LENGTH, attribute, context.getValueLocation(attribute), message);
     }
 
     private static boolean isRasterizingVector(XmlContext context) {
@@ -142,4 +164,135 @@ public class VectorPathDetector extends ResourceXmlDetector {
         return project.isGradleProject();
     }
 
+    private static void validatePath(XmlContext context, Attr attribute, String value) {
+        if (context.getMainProject().getMinSdkVersion().getFeatureLevel() >= 21) {
+            // Fixed in lollipop
+            return;
+        }
+        try {
+            checkPathData(value);
+        } catch (NumberFormatException t) {
+            String s = t.getMessage();
+            Location location = context.getValueLocation(attribute);
+            Position start = location.getStart();
+            assert start != null;
+            int index = value.indexOf(s);
+            if (index != -1 && attribute.getValue().contains(s)) {
+                location = Location.create(context.file, context.getContents(),
+                        start.getOffset() + index,
+                        start.getOffset() + index + s.length());
+            }
+
+            QuickfixData quickfixData = QuickfixData.create(s);
+            if (attribute.getValue().startsWith(PREFIX_RESOURCE_REF)) {
+                quickfixData.put(ResourceUrl.parse(attribute.getValue()));
+            }
+            context.report(PATH_VALID, attribute, location,
+                    String.format("Avoid scientific notation (`%1$s`) in vector paths because "
+                            + "it can lead to crashes on some devices", s), quickfixData);
+        }
+    }
+
+    // This code is based on the path parser in the platform. However, it focuses
+    // on just validating the numbers - and since it doesn't have to build up actual
+    // path nodes etc the code was simplified significantly such that it doesn't really
+    // resemble the original code.
+    // (frameworks/support/compat/java/android/support/v4/graphics/PathParser.java)
+
+    /**
+     * Check the given path data and throw a number format exception (containing the
+     * exact invalid string) if it finds a problem
+     */
+    public static void checkPathData(@NonNull String path) throws NumberFormatException {
+        int start = 0;
+        int end = 1;
+        while (end < path.length()) {
+            end = findNextStart(path, end);
+            int trimStart = start;
+            while (trimStart < end && Character.isWhitespace(path.charAt(trimStart))) {
+                trimStart++;
+            }
+            int trimEnd = end;
+            while (trimEnd > trimStart + 1 && Character.isWhitespace(path.charAt(trimEnd - 1))) {
+                trimEnd--;
+            }
+            if (trimEnd > trimStart) {
+                checkFloats(path, trimStart, trimEnd);
+            }
+            start = end;
+            end++;
+        }
+    }
+
+    private static void checkFloats(String s, int start, int end) throws NumberFormatException {
+        if (s.charAt(0) == 'z' || s.charAt(0) == 'Z') {
+            return;
+        }
+        int startPosition = start + 1;
+        while (startPosition < end) {
+            int currentIndex = startPosition;
+            boolean foundSeparator = false;
+            boolean endWithNegOrDot = false;
+            boolean hasExponential = false;
+            boolean secondDot = false;
+            boolean isExponential = false;
+            for (; currentIndex < end; currentIndex++) {
+                boolean isPrevExponential = isExponential;
+                isExponential = false;
+                char currentChar = s.charAt(currentIndex);
+                switch (currentChar) {
+                    case ' ':
+                    case ',':
+                        foundSeparator = true;
+                        break;
+                    case '-':
+                        if (currentIndex != startPosition && !isPrevExponential) {
+                            foundSeparator = true;
+                            endWithNegOrDot = true;
+                        }
+                        break;
+                    case '.':
+                        if (!secondDot) {
+                            secondDot = true;
+                        } else {
+                            foundSeparator = true;
+                            endWithNegOrDot = true;
+                        }
+                        break;
+                    case 'e':
+                    case 'E':
+                        hasExponential = isExponential = true;
+                        break;
+                }
+                if (foundSeparator) {
+                    break;
+                }
+            }
+
+            if (hasExponential && startPosition < currentIndex) {
+                String expNumber = s.substring(startPosition, currentIndex);
+                throw new NumberFormatException(expNumber);
+            }
+
+            int endPosition = currentIndex;
+            if (endWithNegOrDot) {
+                // Keep the '-' or '.' sign with next number.
+                startPosition = endPosition;
+            } else {
+                startPosition = endPosition + 1;
+            }
+        }
+    }
+
+    private static int findNextStart(String s, int end) {
+        while (end < s.length()) {
+            char c = s.charAt(end);
+            if ((((c - 'A') * (c - 'Z') <= 0) || ((c - 'a') * (c - 'z') <= 0))
+                    && c != 'e' && c != 'E') {
+                return end;
+            }
+            end++;
+        }
+        return end;
+    }
 }
