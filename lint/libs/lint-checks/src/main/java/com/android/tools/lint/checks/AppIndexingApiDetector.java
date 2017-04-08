@@ -16,35 +16,19 @@
 package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.ANDROID_URI;
-import static com.android.SdkConstants.ATTR_EXPORTED;
-import static com.android.SdkConstants.ATTR_HOST;
-import static com.android.SdkConstants.ATTR_PATH;
-import static com.android.SdkConstants.ATTR_PATH_PREFIX;
-import static com.android.SdkConstants.ATTR_SCHEME;
 import static com.android.SdkConstants.CLASS_ACTIVITY;
 import static com.android.utils.XmlUtils.getFirstSubTagTagByName;
 import static com.android.utils.XmlUtils.getSubTagsByName;
-import static com.android.xml.AndroidManifest.ATTRIBUTE_MIME_TYPE;
 import static com.android.xml.AndroidManifest.ATTRIBUTE_NAME;
-import static com.android.xml.AndroidManifest.ATTRIBUTE_PORT;
-import static com.android.xml.AndroidManifest.NODE_ACTION;
 import static com.android.xml.AndroidManifest.NODE_ACTIVITY;
 import static com.android.xml.AndroidManifest.NODE_APPLICATION;
-import static com.android.xml.AndroidManifest.NODE_CATEGORY;
 import static com.android.xml.AndroidManifest.NODE_DATA;
 import static com.android.xml.AndroidManifest.NODE_INTENT;
 import static com.android.xml.AndroidManifest.NODE_MANIFEST;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.common.rendering.api.ResourceValue;
-import com.android.ide.common.res2.AbstractResourceRepository;
-import com.android.ide.common.res2.ResourceItem;
-import com.android.resources.ResourceType;
-import com.android.resources.ResourceUrl;
 import com.android.tools.lint.client.api.JavaEvaluator;
-import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
@@ -54,7 +38,6 @@ import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.LintUtils;
-import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
@@ -75,11 +58,8 @@ import org.jetbrains.uast.UExpression;
 import org.jetbrains.uast.UastUtils;
 import org.jetbrains.uast.util.UastExpressionUtils;
 import org.jetbrains.uast.visitor.AbstractUastVisitor;
-import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
 
 
 /**
@@ -97,22 +77,14 @@ public class AppIndexingApiDetector extends Detector implements XmlScanner, Uast
                     EnumSet.of(Scope.JAVA_FILE, Scope.MANIFEST),
                     Scope.JAVA_FILE_SCOPE, Scope.MANIFEST_SCOPE);
 
-    public static final Issue ISSUE_URL_ERROR = Issue.create(
-            "GoogleAppIndexingUrlError",
-            "URL not supported by app for Firebase App Indexing",
-            "Ensure the URL is supported by your app, to get installs and traffic to your"
-                    + " app from Google Search.",
-            Category.USABILITY, 5, Severity.ERROR, URL_IMPLEMENTATION)
-            .addMoreInfo("https://g.co/AppIndexing/AndroidStudio");
-
     public static final Issue ISSUE_APP_INDEXING =
-      Issue.create(
-        "GoogleAppIndexingWarning",
-        "Missing support for Firebase App Indexing",
-        "Adds URLs to get your app into the Google index, to get installs"
-          + " and traffic to your app from Google Search.",
-        Category.USABILITY, 5, Severity.WARNING, URL_IMPLEMENTATION)
-        .addMoreInfo("https://g.co/AppIndexing/AndroidStudio");
+            Issue.create(
+                    "GoogleAppIndexingWarning",
+                    "Missing support for Firebase App Indexing",
+                    "Adds URLs to get your app into the Google index, to get installs"
+                            + " and traffic to your app from Google Search.",
+                    Category.USABILITY, 5, Severity.WARNING, URL_IMPLEMENTATION)
+                    .addMoreInfo("https://g.co/AppIndexing/AndroidStudio");
 
     public static final Issue ISSUE_APP_INDEXING_API =
             Issue.create(
@@ -123,15 +95,6 @@ public class AppIndexingApiDetector extends Detector implements XmlScanner, Uast
                     Category.USABILITY, 5, Severity.WARNING, APP_INDEXING_API_IMPLEMENTATION)
                     .addMoreInfo("https://g.co/AppIndexing/AndroidStudio")
                     .setEnabledByDefault(false);
-
-    private static final String[] PATH_ATTR_LIST = new String[]{ATTR_PATH_PREFIX, ATTR_PATH};
-    private static final String SCHEME_MISSING = "android:scheme is missing";
-    private static final String HOST_MISSING = "android:host is missing";
-    private static final String DATA_MISSING = "Missing data element";
-    private static final String URL_MISSING = "Missing URL for the intent filter";
-    private static final String NOT_BROWSABLE
-            = "Activity supporting ACTION_VIEW is not set as BROWSABLE";
-    private static final String ILLEGAL_NUMBER = "android:port is not a legal number";
 
     private static final String APP_INDEX_START = "start";
     private static final String APP_INDEX_END = "end";
@@ -149,33 +112,6 @@ public class AppIndexingApiDetector extends Detector implements XmlScanner, Uast
             = "com.google.android.gms.common.api.GoogleApiClient.Builder";
     private static final String API_CLASS = "com.google.android.gms.appindexing.AppIndex";
 
-    public enum IssueType {
-        SCHEME_MISSING(AppIndexingApiDetector.SCHEME_MISSING),
-        HOST_MISSING(AppIndexingApiDetector.HOST_MISSING),
-        DATA_MISSING(AppIndexingApiDetector.DATA_MISSING),
-        URL_MISSING(AppIndexingApiDetector.URL_MISSING),
-        NOT_BROWSABLE(AppIndexingApiDetector.NOT_BROWSABLE),
-        ILLEGAL_NUMBER(AppIndexingApiDetector.ILLEGAL_NUMBER),
-        EMPTY_FIELD("cannot be empty"),
-        MISSING_SLASH("attribute should start with '/'"),
-        UNKNOWN("unknown error type");
-
-        private final String message;
-
-        IssueType(String str) {
-            this.message = str;
-        }
-
-        public static IssueType parse(String str) {
-            for (IssueType type : IssueType.values()) {
-                if (str.contains(type.message)) {
-                    return type;
-                }
-            }
-            return UNKNOWN;
-        }
-    }
-
     // ---- Implements XmlScanner ----
     @Override
     @Nullable
@@ -187,24 +123,10 @@ public class AppIndexingApiDetector extends Detector implements XmlScanner, Uast
     public void visitElement(@NonNull XmlContext context, @NonNull Element application) {
         boolean applicationHasActionView = false;
         for (Element activity : XmlUtils.getSubTagsByName(application, NODE_ACTIVITY)) {
-            boolean activityHasActionView = false;
             for (Element intent : XmlUtils.getSubTagsByName(activity, NODE_INTENT)) {
-                boolean actionView = hasActionView(intent);
+                boolean actionView = AppLinksValidDetector.hasActionView(intent);
                 if (actionView) {
-                    activityHasActionView = true;
-                }
-                visitIntent(context, intent);
-            }
-            if (activityHasActionView) {
-                applicationHasActionView = true;
-                if (activity.hasAttributeNS(ANDROID_URI, ATTR_EXPORTED)) {
-                    Attr exported = activity.getAttributeNodeNS(ANDROID_URI, ATTR_EXPORTED);
-                    if (!exported.getValue().equals("true")) {
-                        // Report error if the activity supporting action view is not exported.
-                        context.report(ISSUE_URL_ERROR, activity,
-                                       context.getLocation(activity),
-                                       "Activity supporting ACTION_VIEW is not exported");
-                    }
+                    applicationHasActionView = true;
                 }
             }
         }
@@ -260,6 +182,7 @@ public class AppIndexingApiDetector extends Detector implements XmlScanner, Uast
 
         @Override
         public boolean visitClass(UClass aClass) {
+            //noinspection SimplifiableIfStatement
             if (aClass.getPsi().equals(mCls.getPsi())) {
                 return super.visitClass(aClass);
             } else {
@@ -461,207 +384,6 @@ public class AppIndexingApiDetector extends Detector implements XmlScanner, Uast
             }
         }
         return activitiesToCheck;
-    }
-
-    private static void visitIntent(@NonNull XmlContext context, @NonNull Element intent) {
-        boolean actionView = hasActionView(intent);
-        boolean browsable = isBrowsable(intent);
-        boolean isHttp = false;
-        boolean hasScheme = false;
-        boolean hasHost = false;
-        boolean hasPort = false;
-        boolean hasPath = false;
-        boolean hasMimeType = false;
-        Element firstData = null;
-        for (Element data : XmlUtils.getSubTagsByName(intent, NODE_DATA)) {
-            if (firstData == null) {
-                firstData = data;
-            }
-            if (isHttpSchema(data)) {
-                isHttp = true;
-            }
-            checkSingleData(context, data);
-
-            for (String name : PATH_ATTR_LIST) {
-                if (data.hasAttributeNS(ANDROID_URI, name)) {
-                    hasPath = true;
-                }
-            }
-
-            if (data.hasAttributeNS(ANDROID_URI, ATTR_SCHEME)) {
-                hasScheme = true;
-            }
-
-            if (data.hasAttributeNS(ANDROID_URI, ATTR_HOST)) {
-                hasHost = true;
-            }
-
-            if (data.hasAttributeNS(ANDROID_URI, ATTRIBUTE_PORT)) {
-                hasPort = true;
-            }
-
-            if (data.hasAttributeNS(ANDROID_URI, ATTRIBUTE_MIME_TYPE)) {
-                hasMimeType = true;
-            }
-        }
-
-        // In data field, a URL is consisted by
-        // <scheme>://<host>:<port>[<path>|<pathPrefix>|<pathPattern>]
-        // Each part of the URL should not have illegal character.
-        if ((hasPath || hasHost || hasPort) && !hasScheme) {
-            context.report(ISSUE_URL_ERROR, firstData, context.getLocation(firstData),
-                    SCHEME_MISSING);
-        }
-
-        if ((hasPath || hasPort) && !hasHost) {
-            context.report(ISSUE_URL_ERROR, firstData, context.getLocation(firstData),
-                    HOST_MISSING);
-        }
-
-        if (actionView && browsable) {
-            if (firstData == null) {
-                // If this activity is an ACTION_VIEW action with category BROWSABLE, but doesn't
-                // have data node, it may be a mistake and we will report error.
-                context.report(ISSUE_URL_ERROR, intent, context.getLocation(intent),
-                        DATA_MISSING);
-            } else if (!hasScheme && !hasMimeType) {
-                // If this activity is an action view, is browsable, but has neither a
-                // URL nor mimeType, it may be a mistake and we will report error.
-                context.report(ISSUE_URL_ERROR, firstData, context.getLocation(firstData),
-                        URL_MISSING);
-            }
-        }
-
-        // If this activity is an ACTION_VIEW action, has a http URL but doesn't have
-        // BROWSABLE, it may be a mistake and and we will report warning.
-        if (actionView && isHttp && !browsable) {
-            context.report(ISSUE_APP_INDEXING, intent, context.getLocation(intent),
-                    NOT_BROWSABLE);
-        }
-
-        if (actionView && !hasScheme) {
-            context.report(ISSUE_APP_INDEXING, intent, context.getLocation(intent),
-                    "Missing URL");
-        }
-    }
-
-    /**
-     * Check if the intent filter supports action view.
-     *
-     * @param intent the intent filter
-     * @return true if it does
-     */
-    private static boolean hasActionView(@NonNull Element intent) {
-        for (Element action : XmlUtils.getSubTagsByName(intent, NODE_ACTION)) {
-            if (action.hasAttributeNS(ANDROID_URI, ATTRIBUTE_NAME)) {
-                Attr attr = action.getAttributeNodeNS(ANDROID_URI, ATTRIBUTE_NAME);
-                if (attr.getValue().equals("android.intent.action.VIEW")) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Check if the intent filter is browsable.
-     *
-     * @param intent the intent filter
-     * @return true if it does
-     */
-    private static boolean isBrowsable(@NonNull Element intent) {
-        for (Element e : XmlUtils.getSubTagsByName(intent, NODE_CATEGORY)) {
-            if (e.hasAttributeNS(ANDROID_URI, ATTRIBUTE_NAME)) {
-                Attr attr = e.getAttributeNodeNS(ANDROID_URI, ATTRIBUTE_NAME);
-                if (attr.getNodeValue().equals("android.intent.category.BROWSABLE")) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Check if the data node contains http schema
-     *
-     * @param data the data node
-     * @return true if it does
-     */
-    private static boolean isHttpSchema(@NonNull Element data) {
-        if (data.hasAttributeNS(ANDROID_URI, ATTR_SCHEME)) {
-            String value = data.getAttributeNodeNS(ANDROID_URI, ATTR_SCHEME).getValue();
-            if (value.equalsIgnoreCase("http") || value.equalsIgnoreCase("https")) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static void checkSingleData(@NonNull XmlContext context, @NonNull Element data) {
-        // path, pathPrefix and pathPattern should starts with /.
-        for (String name : PATH_ATTR_LIST) {
-            if (data.hasAttributeNS(ANDROID_URI, name)) {
-                Attr attr = data.getAttributeNodeNS(ANDROID_URI, name);
-                String path = replaceUrlWithValue(context, attr.getValue());
-                if (!path.startsWith("/") && !path.startsWith(SdkConstants.PREFIX_RESOURCE_REF)) {
-                    context.report(ISSUE_URL_ERROR, attr, context.getLocation(attr),
-                            "android:" + name + " attribute should start with '/', but it is : "
-                                    + path);
-                }
-            }
-        }
-
-        // port should be a legal number.
-        if (data.hasAttributeNS(ANDROID_URI, ATTRIBUTE_PORT)) {
-            Attr attr = data.getAttributeNodeNS(ANDROID_URI, ATTRIBUTE_PORT);
-            try {
-                String port = replaceUrlWithValue(context, attr.getValue());
-                //noinspection ResultOfMethodCallIgnored
-                Integer.parseInt(port);
-            } catch (NumberFormatException e) {
-                context.report(ISSUE_URL_ERROR, attr, context.getLocation(attr),
-                        ILLEGAL_NUMBER);
-            }
-        }
-
-        // Each field should be non empty.
-        NamedNodeMap attrs = data.getAttributes();
-        for (int i = 0; i < attrs.getLength(); i++) {
-            Node item = attrs.item(i);
-            if (item.getNodeType() == Node.ATTRIBUTE_NODE) {
-                Attr attr = (Attr) attrs.item(i);
-                if (attr.getValue().isEmpty()) {
-                    context.report(ISSUE_URL_ERROR, attr, context.getLocation(attr),
-                            attr.getName() + " cannot be empty");
-                }
-            }
-        }
-    }
-
-    private static String replaceUrlWithValue(@NonNull XmlContext context,
-            @NonNull String str) {
-        Project project = context.getProject();
-        LintClient client = context.getClient();
-        if (!client.supportsProjectResources()) {
-            return str;
-        }
-        ResourceUrl style = ResourceUrl.parse(str);
-        if (style == null || style.type != ResourceType.STRING || style.framework) {
-            return str;
-        }
-        AbstractResourceRepository resources = client.getResourceRepository(project, true, true);
-        if (resources == null) {
-            return str;
-        }
-        List<ResourceItem> items = resources.getResourceItem(ResourceType.STRING, style.name);
-        if (items == null || items.isEmpty()) {
-            return str;
-        }
-        ResourceValue resourceValue = items.get(0).getResourceValue(false);
-        if (resourceValue == null) {
-            return str;
-        }
-        return resourceValue.getValue() == null ? str : resourceValue.getValue();
     }
 
     /**

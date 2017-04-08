@@ -902,6 +902,24 @@ public class XmlUtils {
         return null;
     }
 
+    /** Returns the previous sibling element from the given node */
+    @Nullable
+    public static Element getPreviousTag(@Nullable Node node) {
+        if (node == null) {
+            return null;
+        }
+        Node curr = node.getPreviousSibling();
+        while (curr != null) {
+            if (curr.getNodeType() == Node.ELEMENT_NODE) {
+                return (Element) curr;
+            }
+
+            curr = curr.getPreviousSibling();
+        }
+
+        return null;
+    }
+
     /** Returns the next sibling element from the given node that matches the given name */
     @Nullable
     public static Element getFirstSubTagTagByName(@Nullable Node parent, @NonNull String name) {
@@ -911,7 +929,7 @@ public class XmlUtils {
         Node curr = parent.getFirstChild();
         while (curr != null) {
             if (curr.getNodeType() == Node.ELEMENT_NODE &&
-                    name.equals(curr.getNodeName())) {
+                    name.equals(curr.getLocalName())) {
                 return (Element) curr;
             }
 
@@ -930,11 +948,29 @@ public class XmlUtils {
         Node curr = node.getNextSibling();
         while (curr != null) {
             if (curr.getNodeType() == Node.ELEMENT_NODE &&
-                    name.equals(curr.getNodeName())) {
+                    name.equals(curr.getLocalName())) {
                 return (Element) curr;
             }
 
             curr = curr.getNextSibling();
+        }
+
+        return null;
+    }
+
+    @Nullable
+    public static Element getPreviousTagByName(@Nullable Node node, @NonNull String name) {
+        if (node == null) {
+            return null;
+        }
+        Node curr = node.getPreviousSibling();
+        while (curr != null) {
+            if (curr.getNodeType() == Node.ELEMENT_NODE &&
+                    name.equals(curr.getLocalName())) {
+                return (Element) curr;
+            }
+
+            curr = curr.getPreviousSibling();
         }
 
         return null;

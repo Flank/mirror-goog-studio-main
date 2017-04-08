@@ -18,6 +18,8 @@ package com.android.tools.lint.detector.api;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.tools.lint.detector.api.QuickfixData.ReplaceString;
+import com.android.tools.lint.detector.api.QuickfixData.SetAttribute;
 import java.math.BigDecimal;
 import junit.framework.TestCase;
 
@@ -49,5 +51,25 @@ public class QuickfixDataTest extends TestCase {
         assertThat(foundString).isTrue();
         assertThat(foundInteger).isTrue();
         assertThat(foundBigDecimal).isTrue();
+    }
+
+    public void testSetAttribute() {
+        SetAttribute fixData = new SetAttribute("namespace",
+                "attribute", "value");
+        assertThat(fixData.namespace).isEqualTo("namespace");
+        assertThat(fixData.attribute).isEqualTo("attribute");
+        assertThat(fixData.value).isEqualTo("value");
+    }
+
+    public void testReplaceString() {
+        ReplaceString fixData = new ReplaceString("old", null, "new");
+        assertThat(fixData.oldString).isEqualTo("old");
+        assertThat(fixData.replacement).isEqualTo("new");
+        assertThat(fixData.oldPattern).isNull();
+
+        fixData = new ReplaceString(null, "oldPattern", "new");
+        assertThat(fixData.oldPattern).isEqualTo("oldPattern");
+        assertThat(fixData.replacement).isEqualTo("new");
+        assertThat(fixData.oldString).isNull();
     }
 }

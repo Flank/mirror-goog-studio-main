@@ -65,10 +65,11 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(AppCompatCustomViewDetector.ISSUE);
         issues.add(AppCompatResourceDetector.ISSUE);
         issues.add(AppIndexingApiDetector.ISSUE_APP_INDEXING_API);
-        issues.add(AppIndexingApiDetector.ISSUE_URL_ERROR);
         issues.add(AppIndexingApiDetector.ISSUE_APP_INDEXING);
         issues.add(AppLinksAutoVerifyDetector.ISSUE_ERROR);
         issues.add(AppLinksAutoVerifyDetector.ISSUE_WARNING);
+        issues.add(AppLinksValidDetector.VALIDATION);
+        issues.add(AppLinksValidDetector.TEST_URL);
         issues.add(ArraySizeDetector.INCONSISTENT);
         issues.add(AssertDetector.ISSUE);
         issues.add(BadHostnameVerifierDetector.ISSUE);

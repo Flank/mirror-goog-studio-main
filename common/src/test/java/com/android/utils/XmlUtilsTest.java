@@ -528,6 +528,8 @@ public class XmlUtilsTest extends TestCase {
         assertThat(child2).isNotNull();
         Element child3 = XmlUtils.getNextTag(child2);
         assertThat(child3).isNotNull();
+        assertThat(XmlUtils.getPreviousTag(child3)).isSameAs(child2);
+        assertThat(XmlUtils.getPreviousTag(child2)).isSameAs(child1);
         Element grandchild = XmlUtils.getFirstSubTag(child3);
         assertThat(grandchild).isNotNull();
         assertThat(XmlUtils.getNextTag(child3)).isNull();
@@ -558,6 +560,7 @@ public class XmlUtilsTest extends TestCase {
         assertThat(child1).isNotNull();
         Element child2 = XmlUtils.getNextTagByName(child1, "child2");
         assertThat(child2).isNotNull();
+        assertThat(XmlUtils.getPreviousTagByName(child2, "child1")).isSameAs(child1);
         assertThat(XmlUtils.getFirstSubTagTagByName(root, "child2")).isSameAs(child2);
         Element child3 = XmlUtils.getNextTagByName(child1, "child3");
         assertThat(child3).isNotNull();

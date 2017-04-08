@@ -489,7 +489,7 @@ public abstract class Reporter {
                     AppCompatCallDetector.ISSUE,
                     AppIndexingApiDetector.ISSUE_APP_INDEXING,
                     AppIndexingApiDetector.ISSUE_APP_INDEXING_API,
-                    AppIndexingApiDetector.ISSUE_URL_ERROR,
+                    //AppIndexingApiDetector.ISSUE_URL_ERROR,
                     ByteOrderMarkDetector.BOM,
                     CleanupDetector.SHARED_PREF,
                     CommentDetector.STOP_SHIP,

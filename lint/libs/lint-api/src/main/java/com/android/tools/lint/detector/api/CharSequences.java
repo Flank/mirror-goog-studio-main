@@ -192,6 +192,56 @@ public class CharSequences {
         return true;
     }
 
+    /**
+     * Returns true if the given character sequence ends with the given suffix
+     *
+     * @param sequence      the sequence to check
+     * @param suffix        the suffix to check for
+     * @param caseSensitive whether the check should be case sensitive
+     * @return true if the sequence ends with the given suffix
+     */
+    public static boolean endsWith(@NonNull CharSequence sequence, @NonNull CharSequence suffix,
+            boolean caseSensitive) {
+        if (suffix.length() > sequence.length()) {
+            return false;
+        }
+
+        int suffixLength = suffix.length();
+        int sequenceLength = sequence.length();
+
+        for (int i = sequenceLength - suffixLength, j = 0; i < sequenceLength; i++, j++) {
+            char c1 = sequence.charAt(i);
+            char c2 = suffix.charAt(j);
+            if (c1 != c2) {
+                if (caseSensitive) {
+                    return false;
+                } else if (Character.toLowerCase(c1) != Character.toLowerCase(c2)) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Returns true if the given sequence contains any upper case characters
+     *
+     * @param s the sequence to test
+     * @return true if there are any upper case characters in the string
+     */
+    public static boolean containsUpperCase(@Nullable CharSequence s) {
+        if (s != null) {
+            for (int i = 0, n = s.length(); i < n; i++) {
+                if (Character.isUpperCase(s.charAt(i))) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     public static int indexOf(@NonNull CharSequence haystack, CharSequence needle) {
         return indexOf(haystack, needle, 0);
     }

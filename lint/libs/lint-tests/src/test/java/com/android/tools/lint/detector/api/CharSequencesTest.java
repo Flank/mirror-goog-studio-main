@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.detector.api;
 
+import static com.android.tools.lint.detector.api.CharSequences.endsWith;
 import static com.android.tools.lint.detector.api.CharSequences.indexOf;
 import static com.android.tools.lint.detector.api.CharSequences.lastIndexOf;
 import static com.android.tools.lint.detector.api.CharSequences.regionMatches;
@@ -76,6 +77,18 @@ public class CharSequencesTest extends TestCase {
         assertTrue(startsWith("haystack", "stack", 3));
     }
 
+    public void testEndsWith() {
+        assertTrue(endsWith("", "", true));
+        assertFalse(endsWith("", "suffix", true));
+        assertTrue(endsWith("haystack", "", true));
+        assertTrue(endsWith("haystack", "k", true));
+        assertFalse(endsWith("haystack", "K", true));
+        assertTrue(endsWith("haystack", "K", false));
+        assertTrue(endsWith("haystack", "CK", false));
+        assertTrue(endsWith("haystack", "ck", true));
+        assertFalse(endsWith("haystack", "hay", true));
+    }
+
     public void testRegionMatches() {
         assertTrue(regionMatches("", 0, "", 0, 0));
         assertTrue(regionMatches("foo", 0, "foo", 0, 3));
@@ -90,6 +103,13 @@ public class CharSequencesTest extends TestCase {
         assertFalse(regionMatches("For", false, 0, "fob", 0, 2));
         assertFalse(regionMatches("For", true, 0, "fob", 0, 20));
         assertFalse(regionMatches("For", 0, "fob", 0, 20));
+    }
+
+    public void testContainsUpperCase() {
+        assertTrue(CharSequences.containsUpperCase("A"));
+        assertTrue(CharSequences.containsUpperCase("abcA"));
+        assertFalse(CharSequences.containsUpperCase("abc1235_1%"));
+        assertFalse(CharSequences.containsUpperCase(""));
     }
 
     public void testCreateSequence() {
