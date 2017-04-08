@@ -32,6 +32,8 @@ import static com.android.SdkConstants.DOT_XML;
 import static com.android.SdkConstants.FN_BUILD_GRADLE;
 import static com.android.SdkConstants.ID_PREFIX;
 import static com.android.SdkConstants.NEW_ID_PREFIX;
+import static com.android.SdkConstants.PREFIX_BINDING_EXPR;
+import static com.android.SdkConstants.PREFIX_TWOWAY_BINDING_EXPR;
 import static com.android.SdkConstants.TOOLS_URI;
 import static com.android.SdkConstants.UTF_8;
 import static com.android.ide.common.resources.configuration.FolderConfiguration.QUALIFIER_SPLITTER;
@@ -707,6 +709,17 @@ public class LintUtils {
         }
 
         return getEncodedString(bytes, createString);
+    }
+
+    /**
+     * Returns true if the given resource value is a data binding expression
+     *
+     * @param expression the expression to test
+     * @return true if this is a data binding expression
+     */
+    public static boolean isDataBindingExpression(@NonNull String expression) {
+        return (expression.startsWith(PREFIX_BINDING_EXPR) ||
+                expression.startsWith(PREFIX_TWOWAY_BINDING_EXPR));
     }
 
     /**
