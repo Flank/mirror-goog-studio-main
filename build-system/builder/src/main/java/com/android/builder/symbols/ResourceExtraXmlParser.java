@@ -44,6 +44,7 @@ import org.w3c.dom.Node;
  * it still needs to be parsed and processed into a Symbol:
  *
  * <table>
+ *     <caption>Parsing result</caption>
  *     <tr><th>Java type  </th><th>Resource type  </th><th>Resource name    </th><th>ID</th></tr>
  *     <tr><td>int        </td><td>id             </td><td>activity_main    </td><td>0 </td></tr>
  * </table>
