@@ -45,13 +45,19 @@ public class QuickfixData implements Iterable {
         return map.get(key);
     }
 
-    public <T> void put(@NonNull T value) {
+    public <T> void put(@Nullable T value) {
+        if (value == null) {
+            return;
+        }
         Class<?> key = value.getClass();
         assert !map.containsKey(key);
         map.put(key, value);
     }
 
-    public void put(@NonNull String key, Object value) {
+    public void put(@NonNull String key, @Nullable Object value) {
+        if (value == null) {
+            return;
+        }
         assert !map.containsKey(key);
         map.put(key, value);
     }

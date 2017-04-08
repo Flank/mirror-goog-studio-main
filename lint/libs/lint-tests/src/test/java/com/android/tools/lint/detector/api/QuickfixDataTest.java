@@ -26,6 +26,7 @@ public class QuickfixDataTest extends TestCase {
         QuickfixData quickfixData = QuickfixData.create("foo", 3, new BigDecimal(50));
         quickfixData.put("name1", "Name1");
         quickfixData.put("name2", "Name2");
+        quickfixData.put(null); // no-op
         assertThat(quickfixData.get(Float.class)).isNull();
         assertThat(quickfixData.get(String.class)).isEqualTo("foo");
         assertThat(quickfixData.get(Integer.class)).isEqualTo(3);

@@ -162,4 +162,49 @@ public class VectorPathDetectorTest extends AbstractCheckTest {
                         + "                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~…\n"
                         + "0 errors, 1 warnings\n");
     }
+
+    public void testInvalidScientificNotation() {
+        // Regression test for https://code.google.com/p/android/issues/detail?id=254147
+        lint().files(
+                xml("res/drawable/my_vector.xml", ""
+                        + "<vector\n"
+                        + "  xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "  android:name=\"root\" android:width=\"48dp\" android:height=\"48dp\"\n"
+                        + "  android:viewportHeight=\"48\" android:viewportWidth=\"48\">\n"
+                        + "  <path\n"
+                        + "    android:fillColor=\"@android:color/white\"\n"
+                        + "    android:pathData=\"m 1.05e-4,2.75448\" />\n"
+                        + "</vector>"))
+                .incremental("res/drawable/my_vector.xml")
+                .run()
+                .expect(""
+                        + "res/drawable/my_vector.xml:7: Error: Avoid scientific notation (1.05e-4) in vector paths because it can lead to crashes on some devices [InvalidVectorPath]\n"
+                        + "    android:pathData=\"m 1.05e-4,2.75448\" />\n"
+                        + "                        ~~~~~~~\n"
+                        + "1 errors, 0 warnings\n");
+    }
+
+    public void testInvalidScientificNotationWithResources() {
+        lint().files(
+                xml("res/drawable/my_vector.xml", ""
+                        + "<vector\n"
+                        + "  xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "  android:name=\"root\" android:width=\"48dp\" android:height=\"48dp\"\n"
+                        + "  android:viewportHeight=\"48\" android:viewportWidth=\"48\">\n"
+                        + "  <path\n"
+                        + "    android:fillColor=\"@android:color/white\"\n"
+                        + "    android:pathData=\"@string/my_vector_path\" />\n"
+                        + "</vector>"),
+                xml("res/values/strings.xml", ""
+                        + "<resources>\n"
+                        + "  <string name=\"my_vector_path\">m1.05e-4,2.75448</string>\n"
+                        + "</resources>"))
+                .incremental("res/drawable/my_vector.xml")
+                .run()
+                .expect(""
+                        + "res/drawable/my_vector.xml:7: Error: Avoid scientific notation (1.05e-4) in vector paths because it can lead to crashes on some devices [InvalidVectorPath]\n"
+                        + "    android:pathData=\"@string/my_vector_path\" />\n"
+                        + "                      ~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "1 errors, 0 warnings\n");
+    }
 }
