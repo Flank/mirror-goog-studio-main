@@ -267,6 +267,17 @@ public abstract class LintClient {
     }
 
     /**
+     * Returns the list of generated source folders
+     *
+     * @param project the project to look up generated source file locations for
+     * @return a list of generated source folders to search for source files
+     */
+    @NonNull
+    public List<File> getGeneratedSourceFolders(@NonNull Project project) {
+        return getClassPath(project).getGeneratedFolders();
+    }
+
+    /**
      * Returns the list of output folders for class files
      *
      * @param project the project to look up class file locations for
@@ -572,6 +583,7 @@ public abstract class LintClient {
         private final List<File> nonProvidedLibraries;
         private final List<File> testFolders;
         private final List<File> testLibraries;
+        private final List<File> generatedFolders;
 
         public ClassPathInfo(
                 @NonNull List<File> sourceFolders,
@@ -579,13 +591,15 @@ public abstract class LintClient {
                 @NonNull List<File> libraries,
                 @NonNull List<File> nonProvidedLibraries,
                 @NonNull List<File> testFolders,
-                @NonNull List<File> testLibraries) {
+                @NonNull List<File> testLibraries,
+                @NonNull List<File> generatedFolders) {
             this.sourceFolders = sourceFolders;
             this.classFolders = classFolders;
             this.libraries = libraries;
             this.nonProvidedLibraries = nonProvidedLibraries;
             this.testFolders = testFolders;
             this.testLibraries = testLibraries;
+            this.generatedFolders = generatedFolders;
         }
 
         @NonNull
@@ -603,12 +617,19 @@ public abstract class LintClient {
             return includeProvided ? libraries : nonProvidedLibraries;
         }
 
+        @NonNull
         public List<File> getTestSourceFolders() {
             return testFolders;
         }
 
+        @NonNull
         public List<File> getTestLibraries() {
             return testLibraries;
+        }
+
+        @NonNull
+        public List<File> getGeneratedFolders() {
+            return generatedFolders;
         }
     }
 
@@ -636,6 +657,7 @@ public abstract class LintClient {
         if (info == null) {
             List<File> sources = new ArrayList<>(2);
             List<File> classes = new ArrayList<>(1);
+            List<File> generated = new ArrayList<>(1);
             List<File> libraries = new ArrayList<>();
             // No test folders in Eclipse:
             // https://bugs.eclipse.org/bugs/show_bug.cgi?id=224708
@@ -716,7 +738,7 @@ public abstract class LintClient {
                                     + "generated-sources" + File.separator
                                     + "r");
                             if (gen.exists()) {
-                                sources.add(gen);
+                                generated.add(gen);
                             }
                         }
                     }
@@ -731,12 +753,12 @@ public abstract class LintClient {
                 }
                 File gen = new File(projectDir, GEN_FOLDER);
                 if (gen.exists()) {
-                    sources.add(gen);
+                    generated.add(gen);
                 }
             }
 
             info = new ClassPathInfo(sources, classes, libraries, libraries, tests,
-                    Collections.emptyList());
+                    Collections.emptyList(), generated);
             projectInfo.put(project, info);
         }
 

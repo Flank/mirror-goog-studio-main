@@ -921,7 +921,9 @@ public class GradleModelMocker {
                 case "checkTestSources":
                     when(lintOptions.isCheckTestSources()).thenReturn(Boolean.valueOf(arg));
                     break;
-
+                case "checkGeneratedSources":
+                    when(lintOptions.isCheckGeneratedSources()).thenReturn(Boolean.valueOf(arg));
+                    break;
                 case "enable": {
                     for (String s : Splitter.on(',').trimResults().omitEmptyStrings().split(arg)) {
                         lintOptions.getEnable().add(stripQuotes(s, true));
@@ -1171,6 +1173,15 @@ public class GradleModelMocker {
         resDirectories.add(new File(root, "src/" + name + "/res"));
         javaDirectories.add(new File(root, "src/" + name + "/java"));
         javaDirectories.add(new File(root, "src/" + name + "/kotlin"));
+
+        // Add generated source provider to let us test generated source handling
+        if ("main".equals(name)) {
+            File generated = new File(root, "generated");
+            if (generated.exists()) {
+                javaDirectories.add(generated);
+            }
+        }
+
         when(provider.getResDirectories()).thenReturn(resDirectories);
         when(provider.getJavaDirectories()).thenReturn(javaDirectories);
 

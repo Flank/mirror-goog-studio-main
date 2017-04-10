@@ -238,16 +238,21 @@ public class SdCardDetectorTest extends AbstractCheckTest {
     public void testMatchInTestIfEnabled() throws Exception {
         //noinspection all // Sample code
         lint().files(
-                java("test/test/pkg/MyTest.java", ""
+                java("src/test/java/test/pkg/MyTest.java", ""
                         + "package test.pkg;\n"
                         + "\n"
                         + "public class MyTest {\n"
                         + "    String s = \"/sdcard/mydir\";\n"
+                        + "}\n"),
+                gradle(""
+                        + "android {\n"
+                        + "    lintOptions {\n"
+                        + "        checkTestSources true\n"
+                        + "    }\n"
                         + "}\n"))
-                .configureOptions(flags -> flags.setCheckTestSources(true))
                 .run()
                 .expect(""
-                        + "test/test/pkg/MyTest.java:4: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n"
+                        + "src/test/java/test/pkg/MyTest.java:4: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n"
                         + "    String s = \"/sdcard/mydir\";\n"
                         + "               ~~~~~~~~~~~~~~~\n"
                         + "0 errors, 1 warnings\n");
@@ -256,14 +261,62 @@ public class SdCardDetectorTest extends AbstractCheckTest {
     public void testNothingInTests() throws Exception {
         //noinspection all // Sample code
         lint().files(
-                java("test/test/pkg/MyTest.java", ""
+                java("src/test/java/test/pkg/MyTest.java", ""
                         + "package test.pkg;\n"
                         + "\n"
                         + "public class MyTest {\n"
                         + "    String s = \"/sdcard/mydir\";\n"
+                        + "}\n"),
+                gradle(""
+                        + "android {\n"
+                        + "    lintOptions {\n"
+                        + "        checkTestSources false\n"
+                        + "    }\n"
                         + "}\n"))
                 .run()
                 .expectClean();
+    }
+
+    public void testNothingInGenerated() throws Exception {
+        //noinspection all // Sample code
+        lint().files(
+                java("generated/test/pkg/MyTest.java", ""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "public class MyTest {\n"
+                        + "    String s = \"/sdcard/mydir\";\n"
+                        + "}\n"),
+                gradle(""
+                        + "android {\n"
+                        + "    lintOptions {\n"
+                        + "        checkGeneratedSources false\n"
+                        + "    }\n"
+                        + "}\n"))
+                .run()
+                .expectClean();
+    }
+
+    public void testMatchInGeneratedIfEnabled() throws Exception {
+        //noinspection all // Sample code
+        lint().files(
+                java("generated/test/pkg/MyTest.java", ""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "public class MyTest {\n"
+                        + "    String s = \"/sdcard/mydir\";\n"
+                        + "}\n"),
+                gradle(""
+                        + "android {\n"
+                        + "    lintOptions {\n"
+                        + "        checkGeneratedSources true\n"
+                        + "    }\n"
+                        + "}\n"))
+                .run()
+                .expect(""
+                        + "generated/test/pkg/MyTest.java:4: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n"
+                        + "    String s = \"/sdcard/mydir\";\n"
+                        + "               ~~~~~~~~~~~~~~~\n"
+                        + "0 errors, 1 warnings\n");
     }
 
     public void testKotlin() throws Exception {
