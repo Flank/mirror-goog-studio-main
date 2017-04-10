@@ -48,6 +48,8 @@ public class SimpleTestCallable implements Callable<Boolean> {
 
     public static final String FILE_COVERAGE_EC = "coverage.ec";
 
+    @NonNull private RemoteAndroidTestRunner runner;
+
     @NonNull
     private final String projectName;
     @NonNull
@@ -74,6 +76,7 @@ public class SimpleTestCallable implements Callable<Boolean> {
     public SimpleTestCallable(
             @NonNull DeviceConnector device,
             @NonNull String projectName,
+            @NonNull RemoteAndroidTestRunner runner,
             @NonNull String flavorName,
             @NonNull File testApk,
             @NonNull List<File> testedApks,
@@ -85,6 +88,7 @@ public class SimpleTestCallable implements Callable<Boolean> {
             @NonNull ILogger logger) {
         this.projectName = projectName;
         this.device = device;
+        this.runner = runner;
         this.flavorName = flavorName;
         this.resultsDir = resultsDir;
         this.coverageDir = coverageDir;
@@ -130,11 +134,6 @@ public class SimpleTestCallable implements Callable<Boolean> {
             logger.verbose("DeviceConnector '%s': installing %s", deviceName, testApk);
             device.installPackage(testApk, installOptions, timeoutInMs, logger);
             isInstalled = true;
-
-            RemoteAndroidTestRunner runner = new RemoteAndroidTestRunner(
-                    testData.getApplicationId(),
-                    testData.getInstrumentationRunner(),
-                    device);
 
             for (Map.Entry<String, String> argument:
                     testData.getInstrumentationRunnerArguments().entrySet()) {

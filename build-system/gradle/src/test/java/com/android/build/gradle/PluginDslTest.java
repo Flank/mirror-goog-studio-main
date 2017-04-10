@@ -25,6 +25,7 @@ import com.android.SdkConstants;
 import com.android.build.gradle.api.TestVariant;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.BuildType;
+import com.android.build.gradle.internal.dsl.TestOptions;
 import com.android.build.gradle.internal.fixture.BaseTestedVariant;
 import com.android.build.gradle.internal.fixture.TestConstants;
 import com.android.build.gradle.internal.fixture.TestProjects;
@@ -575,6 +576,13 @@ public class PluginDslTest {
         assertThat(debug.isShrinkResources()).isTrue();
         //noinspection deprecation
         assertThat(debug.getUseJack()).isNull();
+    }
+
+    @Test
+    public void testTestOptionsExecution() throws Exception {
+        android.getTestOptions().setExecution("on_device_orchestrator");
+        assertThat(android.getTestOptions().getExecutionEnum())
+                .isEqualTo(TestOptions.Execution.ON_DEVICE_ORCHESTRATOR);
     }
 
     @SuppressWarnings("deprecation")

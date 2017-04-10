@@ -110,10 +110,8 @@ public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
         return mRunnerName;
     }
 
-    /**
-     * Returns the complete instrumentation component path.
-     */
-    private String getRunnerPath() {
+    /** Returns the complete instrumentation component path. */
+    protected String getRunnerPath() {
         return getPackageName() + RUNNER_SEPARATOR + getRunnerName();
     }
 
@@ -324,10 +322,9 @@ public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
 
     /**
      * Returns the full instrumentation command line syntax for the provided instrumentation
-     * arguments.
-     * Returns an empty string if no arguments were specified.
+     * arguments. Returns an empty string if no arguments were specified.
      */
-    private String getArgsCommand() {
+    protected String getArgsCommand() {
         StringBuilder commandBuilder = new StringBuilder();
         for (Entry<String, String> argPair : mArgMap.entrySet()) {
             final String argCmd = String.format(" -e %1$s %2$s", argPair.getKey(),

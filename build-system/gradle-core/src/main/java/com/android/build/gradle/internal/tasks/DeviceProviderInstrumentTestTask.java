@@ -34,6 +34,8 @@ import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.builder.internal.testing.SimpleTestCallable;
 import com.android.builder.sdk.TargetInfo;
 import com.android.builder.testing.ConnectedDeviceProvider;
+import com.android.builder.testing.OnDeviceOrchestratorTestRunner;
+import com.android.builder.testing.ShardedTestRunner;
 import com.android.builder.testing.SimpleTestRunner;
 import com.android.builder.testing.TestData;
 import com.android.builder.testing.TestRunner;
@@ -43,6 +45,7 @@ import com.android.builder.testing.api.TestException;
 import com.android.ide.common.process.ProcessExecutor;
 import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
@@ -65,6 +68,10 @@ import org.xml.sax.SAXException;
  */
 public class DeviceProviderInstrumentTestTask extends BaseTask implements AndroidTestTask {
 
+    private interface TestRunnerFactory {
+        TestRunner build(@Nullable File splitSelectExec, @NonNull ProcessExecutor processExecutor);
+    }
+
     private File reportsDir;
     private File resultsDir;
     private File coverageDir;
@@ -77,16 +84,14 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
     private DeviceProvider deviceProvider;
     private TestData testData;
 
-    @Nullable
     private Supplier<File> splitSelectExec;
     private ProcessExecutor processExecutor;
 
     private boolean ignoreFailures;
     private boolean testFailed;
-    private boolean enableSharding;
 
-    @Nullable
-    private Integer numShards;
+    private TestRunnerFactory testRunnerFactory;
+
 
     @Nullable private FileCollection testTargetManifests;
 
@@ -116,30 +121,29 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
             emptyCoverageFile.createNewFile();
             success = true;
         } else {
-            File testApk = testData.getTestApk();
-            String flavor = getFlavorName();
-
-            final TestRunner testRunner;
-            testRunner = new SimpleTestRunner(
-                    splitSelectExec.get(),
-                    getProcessExecutor(),
-                    enableSharding,
-                    numShards);
             deviceProvider.init();
 
-            Collection<String> extraArgs = installOptions == null || installOptions.isEmpty()
-                    ? ImmutableList.<String>of() : installOptions;
+            TestRunner testRunner =
+                    testRunnerFactory.build(splitSelectExec.get(), getProcessExecutor());
+
+            Collection<String> extraArgs =
+                    installOptions == null || installOptions.isEmpty()
+                            ? ImmutableList.of()
+                            : installOptions;
             try {
-                success = testRunner.runTests(getProject().getName(), flavor,
-                        testApk,
-                        testData,
-                        deviceProvider.getDevices(),
-                        deviceProvider.getMaxThreads(),
-                        deviceProvider.getTimeoutInMs(),
-                        extraArgs,
-                        resultsOutDir,
-                        coverageOutDir,
-                        getILogger());
+                success =
+                        testRunner.runTests(
+                                getProject().getName(),
+                                getFlavorName(),
+                                testData.getTestApk(),
+                                testData,
+                                deviceProvider.getDevices(),
+                                deviceProvider.getMaxThreads(),
+                                deviceProvider.getTimeoutInMs(),
+                                extraArgs,
+                                resultsOutDir,
+                                coverageOutDir,
+                                getILogger());
             } finally {
                 deviceProvider.terminate();
             }
@@ -168,14 +172,6 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
         }
 
         testFailed = false;
-    }
-
-    public void setEnableSharding(boolean enableSharding) {
-        this.enableSharding = enableSharding;
-    }
-
-    public void setNumShards(Integer numShards) {
-        this.numShards = numShards;
     }
 
     /**
@@ -344,13 +340,38 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
                     scope.getGlobalScope().getExtension().getAdbOptions().getInstallOptions());
             task.setProcessExecutor(
                     scope.getGlobalScope().getAndroidBuilder().getProcessExecutor());
-            boolean shardBetweenDevices = AndroidGradleOptions
-                    .getShardAndroidTestsBetweenDevices(task.getProject());
-            task.setEnableSharding(shardBetweenDevices);
-            if (shardBetweenDevices) {
-                task.setNumShards(AndroidGradleOptions.getInstrumentationShardCount(
-                        task.getProject()));
+
+            boolean shardBetweenDevices =
+                    AndroidGradleOptions.getShardAndroidTestsBetweenDevices(task.getProject());
+
+            switch (scope.getGlobalScope().getExtension().getTestOptions().getExecutionEnum()) {
+                case ON_DEVICE_ORCHESTRATOR:
+                    Preconditions.checkArgument(
+                            !shardBetweenDevices, "Sharding is not supported with Odo.");
+                    task.testRunnerFactory = OnDeviceOrchestratorTestRunner::new;
+                    break;
+                case HOST:
+                    if (shardBetweenDevices) {
+                        Integer numShards =
+                                AndroidGradleOptions.getInstrumentationShardCount(
+                                        task.getProject());
+                        task.testRunnerFactory =
+                                (splitSelect, processExecutor) ->
+                                        new ShardedTestRunner(
+                                                splitSelect, processExecutor, numShards);
+                    } else {
+                        task.testRunnerFactory = SimpleTestRunner::new;
+                    }
+                    break;
+                default:
+                    throw new AssertionError(
+                            "Unknown value "
+                                    + scope.getGlobalScope()
+                                            .getExtension()
+                                            .getTestOptions()
+                                            .getExecutionEnum());
             }
+
             String flavorFolder = testData.getFlavorName();
             if (!flavorFolder.isEmpty()) {
                 flavorFolder = FD_FLAVORS + "/" + flavorFolder;

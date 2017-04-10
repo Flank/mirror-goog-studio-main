@@ -28,12 +28,14 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import com.android.builder.testing.StubTestData;
 import com.android.builder.testing.TestData;
 import com.android.builder.testing.api.DeviceConnector;
 import com.android.ddmlib.InstallException;
+import com.android.ddmlib.testrunner.RemoteAndroidTestRunner;
+import com.android.testutils.MockLog;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,29 +43,26 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
+import org.mockito.Mockito;
 
 public class SimpleTestCallableTest {
-    @Rule public MockitoRule rule = MockitoJUnit.rule().silent();
-
-    @Mock DeviceConnector deviceConnector;
-    @Mock ILogger logger;
-    @Mock TestData testData;
-
     @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
+    private DeviceConnector deviceConnector;
+    private ILogger logger;
+    private TestData testData;
     private File testApk;
     private List<File> testedApks;
 
     @Before
     public void setUpMocks() {
-        when(testData.getApplicationId()).thenReturn("com.example.app");
-        when(testData.getInstrumentationRunner())
-                .thenReturn("android.support.test.runner.AndroidJUnitRunner");
-        when(testData.getInstrumentationRunnerArguments())
-                .thenReturn(ImmutableMap.of("numShards", "10", "shardIndex", "2"));
+        deviceConnector = Mockito.mock(DeviceConnector.class);
+        logger = new MockLog();
+        testData =
+                new StubTestData(
+                        "com.example.app", "android.support.test.runner.AndroidJUnitRunner");
+        testData.getInstrumentationRunnerArguments().put("numShards", "10");
+        testData.getInstrumentationRunnerArguments().put("shardIndex", "2");
     }
 
     @Test
@@ -114,6 +113,10 @@ public class SimpleTestCallableTest {
                 new SimpleTestCallable(
                         deviceConnector,
                         "project",
+                        new RemoteAndroidTestRunner(
+                                testData.getApplicationId(),
+                                testData.getInstrumentationRunner(),
+                                deviceConnector),
                         "flavor",
                         testApk,
                         testedApks,
