@@ -1,134 +1,118 @@
-/*
- * Copyright (C) 2015 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+package com.android.build.gradle.integration.application;
 
-package com.android.build.gradle.integration.application
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
-import com.android.build.gradle.integration.common.utils.SdkHelper
-import com.android.builder.model.AndroidProject
-import com.android.builder.model.SyncIssue
-import com.android.repository.testframework.FakeProgressIndicator
-import com.android.sdklib.IAndroidTarget
-import com.android.sdklib.repository.AndroidSdkHandler
-import com.android.sdklib.repository.targets.AndroidTargetManager
-import groovy.transform.CompileStatic
-import org.junit.After
-import org.junit.Rule
-import org.junit.Test
+import static com.android.SdkConstants.FN_FRAMEWORK_LIBRARY;
 
-import static com.android.SdkConstants.FN_FRAMEWORK_LIBRARY
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
-/**
- * Test for the new useLibrary mechanism
- */
-@CompileStatic
-class OptionalLibraryTest {
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
+import com.android.build.gradle.integration.common.truth.TruthHelper;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.builder.model.AndroidProject;
+import com.android.builder.model.SyncIssue;
+import com.android.repository.testframework.FakeProgressIndicator;
+import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.repository.AndroidSdkHandler;
+import com.android.sdklib.repository.targets.AndroidTargetManager;
+import java.io.File;
+import java.io.IOException;
+import org.junit.Rule;
+import org.junit.Test;
+
+/** Test for the new useLibrary mechanism */
+public class OptionalLibraryTest {
     @Rule
-    public GradleTestProject project = GradleTestProject.builder()
-            .fromTestApp(HelloWorldApp.noBuildFile())
-            .create()
+    public GradleTestProject project =
+            GradleTestProject.builder().fromTestApp(HelloWorldApp.noBuildFile()).create();
 
-    @After
-    void cleanUp() {
-        project = null
+    @Test
+    public void testUnknownUseLibraryTriggerSyncIssue() throws IOException {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "apply plugin: 'com.android.application'\n"
+                        + "android {\n"
+                        + "    compileSdkVersion "
+                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "    buildToolsVersion '"
+                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
+                        + "'\n"
+                        + "    useLibrary 'foo'\n"
+                        + "}");
+
+        AndroidProject model = project.model().ignoreSyncIssues().getSingle().getOnlyModel();
+
+        TruthHelper.assertThat(model)
+                .hasSingleIssue(
+                        SyncIssue.SEVERITY_ERROR, SyncIssue.TYPE_OPTIONAL_LIB_NOT_FOUND, "foo");
     }
 
     @Test
-    void "test unknown useLibrary trigger sync issue"() {
-        project.getBuildFile() << """
-            apply plugin: 'com.android.application'
+    public void testUsingOptionalLibrary() throws IOException {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "apply plugin: 'com.android.application'\n"
+                        + "android {\n"
+                        + "    compileSdkVersion "
+                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "    buildToolsVersion '"
+                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
+                        + "'\n"
+                        + "    useLibrary 'org.apache.http.legacy'\n"
+                        + "}");
 
-            android {
-                compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-                buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
-
-                useLibrary 'foo'
-
-            }
-            """.stripIndent()
-
-        AndroidProject project = project.model().ignoreSyncIssues().getSingle().getOnlyModel()
-
-        assertThat(project).hasSingleIssue(
-                SyncIssue.SEVERITY_ERROR,
-                SyncIssue.TYPE_OPTIONAL_LIB_NOT_FOUND,
-                'foo');
-    }
-
-    @Test
-    void "test using optional library"() {
-        project.getBuildFile() << """
-            apply plugin: 'com.android.application'
-
-            android {
-                compileSdkVersion 23
-                buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
-
-                useLibrary 'org.apache.http.legacy'
-
-            }
-            """.stripIndent()
-
-        AndroidProject project = project.model().getSingle().getOnlyModel()
+        AndroidProject model = project.model().getSingle().getOnlyModel();
 
         // get the SDK folder
-        File sdkLocation = SdkHelper.findSdkDir()
-        FakeProgressIndicator progress = new FakeProgressIndicator()
-        AndroidTargetManager targetMgr = AndroidSdkHandler.getInstance(sdkLocation).
-                getAndroidTargetManager(progress)
-        IAndroidTarget target = targetMgr.getTargetFromHashString('android-23', progress)
+        File sdkLocation = GradleTestProject.getAndroidHome();
+        FakeProgressIndicator progress = new FakeProgressIndicator();
+        AndroidTargetManager targetMgr =
+                AndroidSdkHandler.getInstance(sdkLocation).getAndroidTargetManager(progress);
+        IAndroidTarget target =
+                targetMgr.getTargetFromHashString(GradleTestProject.getCompileSdkHash(), progress);
 
-        File targetLocation = new File(target.getLocation())
+        File targetLocation = new File(target.getLocation());
 
         // the files that the bootclasspath should contain.
-        File androidJar = new File(targetLocation, FN_FRAMEWORK_LIBRARY)
-        File httpJar = new File(targetLocation, "optional/org.apache.http.legacy.jar")
-        assertThat(project.getBootClasspath()).containsExactly(
-                androidJar.getAbsolutePath(),
-                httpJar.getAbsolutePath())
+        File androidJar = new File(targetLocation, FN_FRAMEWORK_LIBRARY);
+        File httpJar = new File(targetLocation, "optional/org.apache.http.legacy.jar");
+        TruthHelper.assertThat(model.getBootClasspath())
+                .containsExactly(androidJar.getAbsolutePath(), httpJar.getAbsolutePath());
 
         // for safety, let's make sure these files actually exists.
-        assertThat(androidJar).isFile()
-        assertThat(httpJar).isFile()
+        TruthHelper.assertThat(androidJar).isFile();
+        TruthHelper.assertThat(httpJar).isFile();
     }
 
     @Test
-    void "test not using optional library"() {
-        project.getBuildFile() << """
-            apply plugin: 'com.android.application'
+    public void testNotUsingOptionalLibrary() throws IOException {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "apply plugin: 'com.android.application'\n"
+                        + "android {\n"
+                        + "    compileSdkVersion "
+                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "    buildToolsVersion '"
+                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
+                        + "'\n"
+                        + "}");
 
-            android {
-                compileSdkVersion 23
-                buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
-            }
-            """.stripIndent()
-
-        AndroidProject project = project.model().getSingle().getOnlyModel()
+        AndroidProject model = project.model().getSingle().getOnlyModel();
 
         // get the SDK folder
-        File sdkLocation = SdkHelper.findSdkDir()
-        FakeProgressIndicator progress = new FakeProgressIndicator()
-        AndroidTargetManager targetMgr = AndroidSdkHandler.getInstance(sdkLocation).
-                getAndroidTargetManager(progress)
-        IAndroidTarget target = targetMgr.getTargetFromHashString('android-23', progress)
+        File sdkLocation = GradleTestProject.getAndroidHome();
+        FakeProgressIndicator progress = new FakeProgressIndicator();
+        AndroidTargetManager targetMgr =
+                AndroidSdkHandler.getInstance(sdkLocation).getAndroidTargetManager(progress);
+        IAndroidTarget target =
+                targetMgr.getTargetFromHashString(GradleTestProject.getCompileSdkHash(), progress);
 
-        File targetLocation = new File(target.getLocation())
+        File targetLocation = new File(target.getLocation());
 
-        assertThat(project.getBootClasspath()).containsExactly(
-                new File(targetLocation, FN_FRAMEWORK_LIBRARY).getAbsolutePath())
+        TruthHelper.assertThat(model.getBootClasspath())
+                .containsExactly(new File(targetLocation, FN_FRAMEWORK_LIBRARY).getAbsolutePath());
     }
-
 }
