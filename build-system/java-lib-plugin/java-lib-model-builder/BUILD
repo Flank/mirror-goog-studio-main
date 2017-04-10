@@ -1,5 +1,20 @@
-load("//tools/base/bazel:bazel.bzl", "fileset")
+load("//tools/base/bazel:bazel.bzl", "iml_module", "fileset")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
+
+iml_module(
+    name = "studio.java-lib-model-builder",
+    srcs = ["src/main/java"],
+    tags = ["managed"],
+    visibility = ["//visibility:public"],
+    # do not sort: must match IML order
+    deps = [
+        "//tools/base/build-system:gradle-api_neverlink",
+        "//tools/base/build-system/java-lib-plugin/java-lib-model:studio.java-lib-model[module]",
+        "//tools/base/annotations:studio.android-annotations[module]",
+        "//tools/idea/.idea/libraries:equalsverifier[test]",
+        "//tools/idea/.idea/libraries:JUnit4[test]",
+    ],
+)
 
 fileset(
     name = "resources",
