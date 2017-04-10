@@ -9,6 +9,7 @@ add_library(slicer
             dex_ir.cc
             dex_ir_builder.cc
             dex_utf8.cc
+            instrumentation.cc
             reader.cc
             strings_hash_table.cc
             tryblocks_encoder.cc

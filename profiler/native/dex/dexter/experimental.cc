@@ -18,6 +18,7 @@
 #include "slicer/code_ir.h"
 #include "slicer/dex_ir.h"
 #include "slicer/dex_ir_builder.h"
+#include "slicer/instrumentation.h"
 
 #include <string.h>
 #include <map>
@@ -283,6 +284,38 @@ void StressExitHook(std::shared_ptr<ir::DexFile> dex_ir) {
   }
 }
 
+// Test slicer::MethodInstrumenter
+void TestMethodInstrumenter(std::shared_ptr<ir::DexFile> dex_ir) {
+  slicer::MethodInstrumenter mi(dex_ir);
+  mi.AddTransformation<slicer::EntryHook>(ir::MethodId("LTracer;", "onFooEntry"));
+  mi.AddTransformation<slicer::ExitHook>(ir::MethodId("LTracer;", "onFooExit"));
+  mi.AddTransformation<slicer::DetourVirtualInvoke>(
+      ir::MethodId("LBase;", "foo", "(ILjava/lang/String;)I"),
+      ir::MethodId("LTracer;", "wrapFoo"))  ;
+
+  auto method1 = ir::MethodId("LTarget;", "foo", "(ILjava/lang/String;)I");
+  CHECK(mi.InstrumentMethod(method1));
+
+  auto method2 = ir::MethodId("LTarget;", "foo", "(I[[Ljava/lang/String;)Ljava/lang/Integer;");
+  CHECK(mi.InstrumentMethod(method2));
+}
+
+// Stress the roundtrip: EncodedMethod -> MethodId -> FindMethod -> EncodedMethod
+// NOTE: until we start indexing methods this test is slow on debug builds + large .dex images
+void StressFindMethod(std::shared_ptr<ir::DexFile> dex_ir) {
+  ir::Builder builder(dex_ir);
+  int method_count = 0;
+  for (auto& ir_method : dex_ir->encoded_methods) {
+    auto decl = ir_method->decl;
+    auto signature = decl->prototype->Signature();
+    auto class_descriptor = decl->parent->descriptor;
+    ir::MethodId method_id(class_descriptor->c_str(), decl->name->c_str(), signature.c_str());
+    CHECK(builder.FindMethod(method_id) == ir_method.get());
+    ++method_count;
+  }
+  printf("Everything looks fine, found %d methods.\n", method_count);
+}
+
 void ListExperiments(std::shared_ptr<ir::DexFile> dex_ir);
 
 using Experiment = void (*)(std::shared_ptr<ir::DexFile>);
@@ -294,6 +327,8 @@ std::map<std::string, Experiment> experiments_registry = {
     { "stress_entry_hook", &StressEntryHook },
     { "stress_exit_hook", &StressExitHook },
     { "stress_wrap_invoke", &StressWrapInvoke },
+    { "test_method_instrumenter", &TestMethodInstrumenter },
+    { "stress_find_method", &StressFindMethod },
 };
 
 // Lists all the registered experiments

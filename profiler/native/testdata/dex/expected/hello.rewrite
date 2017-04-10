@@ -249,3 +249,46 @@ Label_2:
 	.end_local v4
 	   55| return-void
 }
+
+method Hello.wrapTest(Base, int) : void
+{
+	.params "?", "?"
+	.src "hello.java"
+	.line 56
+	.prologue_end
+	.line 56
+	    0| move-object v0, v9
+	.local v0, "_this", Base
+	    1| move v1, v10
+	.local v1, "n", int
+	    2| sget-object v2, java.lang.System.out
+	    4| const-string v3, ">>> %s.test(int n = %d)\n"
+	    6| const/4 v4, #+2 (0x00000002 | 2.80260e-45)
+	    7| new-array v4, v4, java.lang.Object[]
+	    9| move-object v8, v4
+	   10| move-object v4, v8
+	   11| move-object v5, v8
+	   12| const/4 v6, #+0 (0x00000000 | 0.00000)
+	   13| move-object v7, v0
+	   14| invoke-virtual {v7}, java.lang.Object.getClass
+	   17| move-result-object v7
+	   18| invoke-virtual {v7}, java.lang.Class.getName
+	   21| move-result-object v7
+	   22| aput-object v7, v5, v6
+	   24| move-object v8, v4
+	   25| move-object v4, v8
+	   26| move-object v5, v8
+	   27| const/4 v6, #+1 (0x00000001 | 1.40130e-45)
+	   28| move v7, v1
+	   29| invoke-static {v7}, java.lang.Integer.valueOf
+	   32| move-result-object v7
+	   33| aput-object v7, v5, v6
+	   35| invoke-virtual {v2,v3,v4}, java.io.PrintStream.printf
+	   38| move-result-object v2
+	.line 57
+	   39| move-object v2, v0
+	   40| move v3, v1
+	   41| invoke-virtual {v2,v3}, Base.test
+	.line 58
+	   44| return-void
+}
