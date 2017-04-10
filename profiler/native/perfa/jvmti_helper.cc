@@ -23,7 +23,7 @@
 
 namespace profiler {
 
-bool CheckJvmtiError(jvmtiEnv* jvmti, jvmtiError err_num, bool fatal) {
+bool CheckJvmtiError(jvmtiEnv* jvmti, jvmtiError err_num) {
   if (err_num == JVMTI_ERROR_NONE) {
     return false;
   }
@@ -32,11 +32,6 @@ bool CheckJvmtiError(jvmtiEnv* jvmti, jvmtiError err_num, bool fatal) {
   jvmti->GetErrorName(err_num, &error);
   Log::E("JVMTI error: %d(%s)", err_num, error == nullptr ? "Unknown" : error);
   Deallocate(jvmti, error);
-
-  if (fatal) {
-    exit(EXIT_FAILURE);
-  }
-
   return true;
 }
 
@@ -44,15 +39,15 @@ void SetAllCapabilities(jvmtiEnv* jvmti) {
   jvmtiCapabilities caps;
   jvmtiError error;
   error = jvmti->GetPotentialCapabilities(&caps);
-  CheckJvmtiError(jvmti, error, false);
+  CheckJvmtiError(jvmti, error);
   error = jvmti->AddCapabilities(&caps);
-  CheckJvmtiError(jvmti, error, false);
+  CheckJvmtiError(jvmti, error);
 }
 
 void SetEventNotification(jvmtiEnv* jvmti, jvmtiEventMode mode,
                           jvmtiEvent event_type) {
   jvmtiError err = jvmti->SetEventNotificationMode(mode, event_type, nullptr);
-  CheckJvmtiError(jvmti, err, false);
+  CheckJvmtiError(jvmti, err);
 }
 
 JNIEnv* GetThreadLocalJNI(JavaVM* vm) {
@@ -77,13 +72,20 @@ JNIEnv* GetThreadLocalJNI(JavaVM* vm) {
   return jni;
 }
 
+void* Allocate(jvmtiEnv* jvmti, jlong size) {
+  unsigned char* alloc = nullptr;
+  jvmtiError err = jvmti->Allocate(size, &alloc);
+  CheckJvmtiError(jvmti, err);
+  return (void*)alloc;  
+}
+
 void Deallocate(jvmtiEnv* jvmti, void* ptr) {
   if (ptr == nullptr) {
     return;
   }
 
   jvmtiError err = jvmti->Deallocate((unsigned char*)ptr);
-  CheckJvmtiError(jvmti, err, false);
+  CheckJvmtiError(jvmti, err);
 }
 
 std::string GetMangledName(const char* klass_signature,
