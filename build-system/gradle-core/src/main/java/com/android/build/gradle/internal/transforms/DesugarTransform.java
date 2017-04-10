@@ -143,7 +143,7 @@ public class DesugarTransform extends Transform {
     @NonNull private final Supplier<List<File>> androidJarClasspath;
     @NonNull private final List<Path> compilationBootclasspath;
     @Nullable private final FileCache userCache;
-    @NonNull private final FileCache projectCache;
+    @Nullable private final FileCache projectCache;
     private final int minSdk;
     @NonNull private final JavaProcessExecutor executor;
     @NonNull private FileCollection java8LangSupportJar;
@@ -158,7 +158,7 @@ public class DesugarTransform extends Transform {
             @NonNull Supplier<List<File>> androidJarClasspath,
             @NonNull String compilationBootclasspath,
             @Nullable FileCache userCache,
-            @NonNull FileCache projectCache,
+            @Nullable FileCache projectCache,
             int minSdk,
             @NonNull JavaProcessExecutor executor,
             @NonNull FileCollection java8LangSupportJar,
