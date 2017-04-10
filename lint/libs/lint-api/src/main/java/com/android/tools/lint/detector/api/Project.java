@@ -125,6 +125,7 @@ public class Project {
     protected List<File> gradleFiles;
     protected List<File> manifestFiles;
     protected List<File> javaSourceFolders;
+    protected List<File> generatedSourceFolders;
     protected List<File> javaClassFolders;
     protected List<File> nonProvidedJavaLibraries;
     protected List<File> javaLibraries;
@@ -442,6 +443,15 @@ public class Project {
                 }
             }
 
+            javaSourceFolders = client.getJavaSourceFolders(this);
+        }
+
+        return javaSourceFolders;
+    }
+
+    @NonNull
+    public List<File> getGeneratedSourceFolders() {
+        if (generatedSourceFolders == null) {
             javaSourceFolders = client.getJavaSourceFolders(this);
         }
 

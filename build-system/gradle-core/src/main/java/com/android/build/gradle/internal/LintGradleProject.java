@@ -21,6 +21,7 @@ import com.android.builder.model.Variant;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
+import com.android.tools.lint.LintCliClient;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Project;
 import com.android.utils.Pair;
@@ -395,14 +396,22 @@ public class LintGradleProject extends Project {
                             .filter(File::exists)
                             .collect(Collectors.toList()));
                 }
-
-                javaSourceFolders.addAll(
-                        mVariant.getMainArtifact().getGeneratedSourceFolders().stream()
-                                .filter(File::exists)
-                                .collect(Collectors.toList()));
             }
 
             return javaSourceFolders;
+        }
+
+        @NonNull
+        @Override
+        public List<File> getGeneratedSourceFolders() {
+            if (generatedSourceFolders == null) {
+                AndroidArtifact artifact = mVariant.getMainArtifact();
+                generatedSourceFolders = artifact.getGeneratedSourceFolders().stream()
+                                .filter(File::exists)
+                                .collect(Collectors.toList());
+            }
+
+            return generatedSourceFolders;
         }
 
         @NonNull
@@ -691,6 +700,12 @@ public class LintGradleProject extends Project {
         @NonNull
         @Override
         public List<File> getJavaSourceFolders() {
+            return Collections.emptyList();
+        }
+
+        @NonNull
+        @Override
+        public List<File> getGeneratedSourceFolders() {
             return Collections.emptyList();
         }
 
@@ -1186,6 +1201,12 @@ public class LintGradleProject extends Project {
         @NonNull
         @Override
         public List<File> getJavaSourceFolders() {
+            return Collections.emptyList();
+        }
+
+        @NonNull
+        @Override
+        public List<File> getGeneratedSourceFolders() {
             return Collections.emptyList();
         }
 

@@ -111,6 +111,8 @@ android {
         informational 'LogConditional'
         // Run all lint checks on all test sources, not just production code
         checkTestSources true
+        // Run all lint checks on generated sources
+        checkGeneratedSources true
     }
 
     // Override the versionCode of the release version
