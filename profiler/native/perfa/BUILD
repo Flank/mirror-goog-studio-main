@@ -1,9 +1,9 @@
 cc_binary(
     name = "libperfa.so",
     srcs = [
-        "agent.cc",
         "jvmti_helper.cc",
         "jvmti_helper.h",
+        "perfa.cc",
         "scoped_local_ref.h",
     ],
     copts = [
@@ -15,6 +15,7 @@ cc_binary(
     deps = [
         "//prebuilts/studio/jdk:jni_headers",
         "//tools/base/profiler/native/agent",
+        "//tools/base/profiler/native/dex/slicer",
         "//tools/base/profiler/native/utils:profiler_utils",
         "//tools/base/profiler/proto:profiler_cc_proto",
     ],

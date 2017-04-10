@@ -67,7 +67,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WARNING_FLAGS} -std=c++11 -DOSATOMIC_U
 
 # Add profiler components
 add_subdirectory(dex)
-add_subdirectory(jvmti)
+add_subdirectory(perfa)
 add_subdirectory(agent)
 add_subdirectory(perfd)
 add_subdirectory(proto)

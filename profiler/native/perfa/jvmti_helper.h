@@ -28,7 +28,7 @@ namespace profiler {
  * Checks against the err_num.
  * Returns true if there is an error, false otherwise.
  */
-bool CheckJvmtiError(jvmtiEnv* jvmti, jvmtiError err_num, bool fatal);
+bool CheckJvmtiError(jvmtiEnv* jvmti, jvmtiError err_num);
 
 /**
  * Sets all available capabilities on the given JVMTI environment.
@@ -43,7 +43,11 @@ void SetEventNotification(jvmtiEnv* jvmti, jvmtiEventMode mode,
 
 /**
  * Helper to deallocate memory allocated with jvmti.
- * TODO: replace with a custom deleter that auto-manages this.
+ */
+void* Allocate(jvmtiEnv* jvmti, jlong size);
+
+/**
+ * Helper to deallocate memory allocated with jvmti.
  */
 void Deallocate(jvmtiEnv* jvmti, void* ptr);
 
