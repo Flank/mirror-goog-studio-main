@@ -18,9 +18,12 @@ package com.android.testutils;
 
 import static org.objectweb.asm.Opcodes.ACC_PRIVATE;
 import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
+import static org.objectweb.asm.Opcodes.ACC_STATIC;
 import static org.objectweb.asm.Opcodes.ACC_SUPER;
 import static org.objectweb.asm.Opcodes.ALOAD;
+import static org.objectweb.asm.Opcodes.GETSTATIC;
 import static org.objectweb.asm.Opcodes.INVOKESPECIAL;
+import static org.objectweb.asm.Opcodes.INVOKEVIRTUAL;
 import static org.objectweb.asm.Opcodes.RETURN;
 import static org.objectweb.asm.Opcodes.V1_6;
 
@@ -140,6 +143,46 @@ public final class TestClassesGenerator {
                 mv.visitMaxs(0, 1);
                 mv.visitEnd();
             }
+        }
+        cw.visitEnd();
+
+        return cw.toByteArray();
+    }
+
+    /** Generates a class containing specified fields and methods. */
+    public static byte[] classWithStrings(@NonNull String className, int cntStringsToGenerate)
+            throws Exception {
+
+        ClassWriter cw = new ClassWriter(0);
+        MethodVisitor mv;
+
+        cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, className, null, "java/lang/Object", null);
+
+        {
+            mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
+            mv.visitCode();
+            mv.visitVarInsn(ALOAD, 0);
+            mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
+            mv.visitInsn(RETURN);
+            mv.visitMaxs(1, 1);
+            mv.visitEnd();
+        }
+        {
+            mv = cw.visitMethod(ACC_STATIC, "<clinit>", "()V", null, null);
+            mv.visitCode();
+            for (int i = 0; i < cntStringsToGenerate; i++) {
+                mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
+                mv.visitLdcInsn("generated_string_" + className + "_" + i);
+                mv.visitMethodInsn(
+                        INVOKEVIRTUAL,
+                        "java/io/PrintStream",
+                        "println",
+                        "(Ljava/lang/String;)V",
+                        false);
+            }
+            mv.visitInsn(RETURN);
+            mv.visitMaxs(2, 0);
+            mv.visitEnd();
         }
         cw.visitEnd();
 
