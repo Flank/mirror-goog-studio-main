@@ -336,13 +336,16 @@ struct CodeIr {
   // linked list of the method's instructions
   InstructionsList instructions;
 
+  ir::EncodedMethod* ir_method = nullptr;
+  std::shared_ptr<ir::DexFile> dex_ir;
+
  public:
   CodeIr(ir::EncodedMethod* ir_method, std::shared_ptr<ir::DexFile> dex_ir)
-      : ir_method_(ir_method), dex_ir_(dex_ir) {
+      : ir_method(ir_method), dex_ir(dex_ir) {
     Dissasemble();
   }
 
-  // No-copy/move semantics
+  // No copy/move semantics
   CodeIr(const CodeIr&) = delete;
   CodeIr& operator=(const CodeIr&) = delete;
 
@@ -387,9 +390,6 @@ struct CodeIr {
   Operand* GetRegC(const dex::Instruction& dex_instr);
 
  private:
-  ir::EncodedMethod* ir_method_;
-  std::shared_ptr<ir::DexFile> dex_ir_;
-
   // the "master index" of all the LIR owned nodes
   std::vector<own<Node>> nodes_;
 
