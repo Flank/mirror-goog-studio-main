@@ -16,13 +16,16 @@
 
 package com.android.tools.aapt2;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -33,22 +36,45 @@ public class CompileTest {
 
     @Test
     public void compilePng() throws Exception {
-        File drawable = temporaryFolder.newFolder("drawable");
-        File lena = new File(drawable, "lena.png");
-        File out = temporaryFolder.newFolder("out");
+        Path drawable = temporaryFolder.newFolder("drawable").toPath();
+        Path lena = drawable.resolve("lena.png");
+        Path out = temporaryFolder.newFolder("out").toPath();
 
-        try (InputStream is = CompileTest.class.getResourceAsStream("/lena.png");
-                FileOutputStream fos = new FileOutputStream(lena)) {
-            assertNotNull(is);
-            byte[] buf = new byte[1024 * 1024];
-            int r;
-            while ((r = is.read(buf)) >= 0) {
-                fos.write(buf, 0, r);
-            }
-        }
+        Aapt2TestFiles.writeLenaPng(lena);
 
-        Aapt2Jni.compile(Arrays.asList("-o", out.getAbsolutePath(), lena.getAbsolutePath()));
-        File expectedOut = new File(out, Aapt2RenamingConventions.compilationRename(lena));
-        assertTrue(expectedOut.exists());
+        assertEquals(0, Aapt2Jni.compile(Arrays.asList("-o", out.toString(), lena.toString())));
+        Path expectedOut = out.resolve(Aapt2RenamingConventions.compilationRename(lena.toFile()));
+        assertTrue(Files.exists(expectedOut));
+    }
+
+    @Test
+    public void compileXml() throws Exception {
+        Path values = temporaryFolder.newFolder("values").toPath();
+        Path strings = values.resolve("strings.xml");
+        Path out = temporaryFolder.newFolder("out").toPath();
+
+        Aapt2TestFiles.writeStringsXml(strings);
+
+        assertEquals(0, Aapt2Jni.compile(Arrays.asList("-o", out.toString(), strings.toString())));
+        Path expectedOut =
+                out.resolve(Aapt2RenamingConventions.compilationRename(strings.toFile()));
+        assertTrue(Files.isRegularFile(expectedOut));
+    }
+
+    @Test
+    public void compileXmlWithError() throws Exception {
+        Path values = temporaryFolder.newFolder("values").toPath();
+        Path strings = values.resolve("strings.xml");
+        Path out = temporaryFolder.newFolder("out").toPath();
+
+        List<String> lines = new ArrayList<>();
+        lines.add("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
+        lines.add("<reso");
+        Files.write(strings, lines, StandardCharsets.UTF_8);
+
+        assertEquals(1, Aapt2Jni.compile(Arrays.asList("-o", out.toString(), strings.toString())));
+        Path expectedOut =
+                out.resolve(Aapt2RenamingConventions.compilationRename(strings.toFile()));
+        assertFalse("Compiled file should not be created.", Files.exists(expectedOut));
     }
 }
