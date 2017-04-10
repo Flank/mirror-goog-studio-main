@@ -113,6 +113,7 @@ public class ManifestMerger2Test {
             "79_custom_node.xml",
             "80_remove_ns_in_nodes",
             "81_do_not_duplicate_xmlns_in_nodes",
+            "82_remove_tools_nodes",
     };
 
 

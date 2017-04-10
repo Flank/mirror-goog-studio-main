@@ -37,7 +37,7 @@ import org.w3c.dom.NodeList;
  *
  * All attributes belonging to the {@link com.android.SdkConstants#ANDROID_URI} namespace will be
  * removed. If an element contained a "tools:node=\"remove\"" attribute, the element will be
- * deleted.
+ * deleted. And elements that are themselves in the tools namespace will also be removed.
  */
 @Immutable
 public class ToolsInstructionsCleaner {
@@ -76,6 +76,12 @@ public class ToolsInstructionsCleaner {
             @NonNull ManifestMerger2.MergeType mergeType,
             @NonNull Element element,
             @NonNull ILogger logger) {
+
+        if (SdkConstants.TOOLS_URI.equals(element.getNamespaceURI())) {
+            // Delete the entire node
+            element.getParentNode().removeChild(element);
+            return MergingReport.Result.SUCCESS;
+        }
 
         NamedNodeMap namedNodeMap = element.getAttributes();
         if (namedNodeMap != null) {
