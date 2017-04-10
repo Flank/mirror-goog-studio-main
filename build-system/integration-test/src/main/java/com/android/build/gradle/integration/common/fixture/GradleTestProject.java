@@ -1056,4 +1056,9 @@ public final class GradleTestProject implements TestRule {
         }
         return compileTarget;
     }
+
+    @NonNull
+    public static File getAndroidHome() {
+        return ANDROID_HOME;
+    }
 }
