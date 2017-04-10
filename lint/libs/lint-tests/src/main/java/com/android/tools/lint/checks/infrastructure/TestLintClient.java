@@ -99,7 +99,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
@@ -383,6 +382,7 @@ public class TestLintClient extends LintCliClient {
         flags.setIgnoreWarnings(options.isIgnoreWarnings());
         flags.setWarningsAsErrors(options.isWarningsAsErrors());
         flags.setCheckTestSources(options.isCheckTestSources());
+        flags.setCheckGeneratedSources(options.isCheckGeneratedSources());
         flags.setShowEverything(options.isShowAll());
         flags.setDefaultConfiguration(options.getLintConfig());
         flags.setExplainIssues(options.isExplainIssues());
@@ -409,6 +409,15 @@ public class TestLintClient extends LintCliClient {
     }
 
     public String analyze(List<File> files, List<Issue> issues) throws Exception {
+        // We'll sync lint options to flags later when the project is created, but try
+        // to do it early before the driver is initialized
+        if (!files.isEmpty()) {
+            GradleModelMocker mocker = task.projectMocks.get(files.get(0));
+            if (mocker != null) {
+                syncLintOptionsToFlags(mocker.getProject().getLintOptions(), flags);
+            }
+        }
+
         driver = createDriver(new TestIssueRegistry(issues));
 
         if (task.driverConfigurator != null) {
@@ -1182,14 +1191,17 @@ public class TestLintClient extends LintCliClient {
             if (javaSourceFolders == null) {
                 //noinspection VariableNotUsedInsideIf
                 if (mocker != null) {
-                    javaSourceFolders = Lists.newArrayList();
+                    List<File> list = Lists.newArrayList();
                     for (SourceProvider provider : getSourceProviders()) {
                         Collection<File> srcDirs = provider.getJavaDirectories();
                         // model returns path whether or not it exists
-                        javaSourceFolders.addAll(srcDirs.stream()
-                                .filter(File::exists)
-                                .collect(Collectors.toList()));
+                        for (File srcDir : srcDirs) {
+                            if (!isGenerated(srcDir) && srcDir.exists()) {
+                                list.add(srcDir);
+                            }
+                        }
                     }
+                    javaSourceFolders = list;
                 }
                 if (javaSourceFolders == null || javaSourceFolders.isEmpty()) {
                     javaSourceFolders = super.getJavaSourceFolders();
@@ -1197,6 +1209,66 @@ public class TestLintClient extends LintCliClient {
             }
 
             return javaSourceFolders;
+        }
+
+        private static boolean isGenerated(@NonNull File srcDir) {
+            return srcDir.getName().equals("generated") ||
+                    srcDir.getName().equals("gen");
+        }
+
+        @NonNull
+        @Override
+        public List<File> getGeneratedSourceFolders() {
+            // In the tests the only way to mark something as generated is "gen" or "generated"
+            if (generatedSourceFolders == null) {
+                //noinspection VariableNotUsedInsideIf
+                if (mocker != null) {
+                    List<File> list = Lists.newArrayList();
+                    for (SourceProvider provider : getSourceProviders()) {
+                        Collection<File> srcDirs = provider.getJavaDirectories();
+                        // model returns path whether or not it exists
+                        for (File srcDir : srcDirs) {
+                            if (isGenerated(srcDir) && srcDir.exists()) {
+                                list.add(srcDir);
+                            }
+                        }
+                    }
+                    generatedSourceFolders = list;
+                }
+                if (generatedSourceFolders == null || generatedSourceFolders.isEmpty()) {
+                    generatedSourceFolders = super.getGeneratedSourceFolders();
+                }
+            }
+
+            return generatedSourceFolders;
+        }
+
+        @NonNull
+        @Override
+        public List<File> getTestSourceFolders() {
+            if (testSourceFolders == null) {
+                //noinspection VariableNotUsedInsideIf
+                if (mocker != null) {
+                    testSourceFolders = Lists.newArrayList();
+                    for (SourceProvider provider : LintUtils
+                            .getTestSourceProviders(mocker.getProject(), mocker.getVariant())) {
+                        Collection<File> srcDirs = provider.getJavaDirectories();
+                        // model returns path whether or not it exists
+                        List<File> list = new ArrayList<>();
+                        for (File srcDir : srcDirs) {
+                            if (srcDir.exists()) {
+                                list.add(srcDir);
+                            }
+                        }
+                        testSourceFolders.addAll(list);
+                    }
+                }
+                if (testSourceFolders == null || testSourceFolders.isEmpty()) {
+                    testSourceFolders = super.getTestSourceFolders();
+                }
+            }
+
+            return testSourceFolders;
         }
     }
 }

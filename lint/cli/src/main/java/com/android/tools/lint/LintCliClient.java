@@ -232,6 +232,7 @@ public class LintCliClient extends LintClient {
         driver = new LintDriver(registry, this);
         driver.setAbbreviating(!flags.isShowEverything());
         driver.setCheckTestSources(flags.isCheckTestSources());
+        driver.setCheckGeneratedSources(flags.isCheckGeneratedSources());
 
         File baselineFile = flags.getBaselineFile();
         if (baselineFile != null) {
@@ -490,7 +491,8 @@ public class LintCliClient extends LintClient {
             }
 
             info = new ClassPathInfo(sources, classes, libraries, classPath.getLibraries(false),
-                    classPath.getTestSourceFolders(), classPath.getTestLibraries());
+                    classPath.getTestSourceFolders(), classPath.getTestLibraries(),
+                    classPath.getGeneratedFolders());
             mProjectInfo.put(project, info);
         }
 
@@ -899,6 +901,7 @@ public class LintCliClient extends LintClient {
             // dependencies that could have the same dependencies (e.g. lib1 and lib2 both
             // referencing guava.jar)
             files.addAll(project.getJavaSourceFolders());
+            files.addAll(project.getGeneratedSourceFolders());
             files.addAll(project.getJavaLibraries(true));
             files.addAll(project.getJavaClassFolders());
             files.addAll(project.getTestLibraries());

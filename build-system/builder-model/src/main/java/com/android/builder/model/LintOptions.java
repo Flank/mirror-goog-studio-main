@@ -89,6 +89,8 @@ import java.util.Set;
  *          // dedicated to looking for mistakes in unit or instrumentation tests.) You can
  *          // turn on normal lint checking in all sources with the following:
  *          checkTestSources true
+ *          // Normally lint will skip generated sources, but you can turn it on with this flag
+ *          checkGeneratedSources true
  *     }
  * }
  * </pre>
@@ -156,6 +158,14 @@ public interface LintOptions {
      * @since 2.4
      */
     boolean isCheckTestSources();
+
+    /**
+     * Returns whether lint should run checks on generated sources.
+     *
+     * @return true to check generated sources, defaults to false
+     * @since 2.4
+     */
+    boolean isCheckGeneratedSources();
 
     /** Returns whether lint should include explanations for issue errors. (Note that
      * HTML and XML reports intentionally do this unconditionally, ignoring this setting.) */

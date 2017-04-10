@@ -179,6 +179,8 @@ public class LintDriver {
     private boolean runPsiCompatChecks = false;
     /** Whether we should run all normal checks on test sources */
     private boolean checkTestSources;
+    /** Whether we should include generated sources in the analysis */
+    private boolean checkGeneratedSources;
     private LintBaseline baseline;
 
     /**
@@ -440,6 +442,15 @@ public class LintDriver {
      */
     public boolean isCheckTestSources() {
         return checkTestSources;
+    }
+
+
+    public void setCheckGeneratedSources(boolean checkGeneratedSources) {
+        this.checkGeneratedSources = checkGeneratedSources;
+    }
+
+    public boolean isCheckGeneratedSources() {
+        return checkGeneratedSources;
     }
 
     /**
@@ -1219,7 +1230,9 @@ public class LintDriver {
                     List<File> sourceFolders = project.getJavaSourceFolders();
                     List<File> testFolders = scope.contains(Scope.TEST_SOURCES)
                             ? project.getTestSourceFolders() : Collections.emptyList();
-                    checkJava(project, main, sourceFolders, testFolders, checks);
+                    List<File> generatedFolders = checkGeneratedSources
+                            ? project.getGeneratedSourceFolders() : Collections.emptyList();
+                    checkJava(project, main, sourceFolders, testFolders, generatedFolders, checks);
                 }
             }
         }
@@ -1654,12 +1667,16 @@ public class LintDriver {
             @Nullable Project main,
             @NonNull List<File> sourceFolders,
             @NonNull List<File> testSourceFolders,
+            @NonNull List<File> generatedSources,
             @NonNull List<Detector> checks) {
         assert !checks.isEmpty();
 
         // Gather all Java source files in a single pass; more efficient.
         List<File> sources = new ArrayList<>(100);
         for (File folder : sourceFolders) {
+            gatherJavaFiles(folder, sources);
+        }
+        for (File folder : generatedSources) {
             gatherJavaFiles(folder, sources);
         }
 
@@ -2346,6 +2363,12 @@ public class LintDriver {
         @NonNull
         public List<File> getJavaSourceFolders(@NonNull Project project) {
             return mDelegate.getJavaSourceFolders(project);
+        }
+
+        @NonNull
+        @Override
+        public List<File> getGeneratedSourceFolders(@NonNull Project project) {
+            return mDelegate.getGeneratedSourceFolders(project);
         }
 
         @Override
