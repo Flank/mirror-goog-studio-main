@@ -602,10 +602,16 @@ public class DependencyManager {
             }
             // new dependency artifact! Might be a jar, or a library
 
-            // get the associated gradlepath
+            // Get the associated gradlepath if the dependency is a subproject and not an included
+            // build.
             ComponentIdentifier id = resolvedComponentResult.getId();
-            String gradlePath = (id instanceof ProjectComponentIdentifier) ?
-                    ((ProjectComponentIdentifier) id).getProjectPath() : null;
+            String gradlePath =
+                    (id instanceof ProjectComponentIdentifier
+                                    && ((ProjectComponentIdentifier) id)
+                                            .getBuild()
+                                            .isCurrentBuild())
+                            ? ((ProjectComponentIdentifier) id).getProjectPath()
+                            : null;
 
             // check if this is a tested app project (via a separate test module).
             // In which case, all the dependencies must become provided.

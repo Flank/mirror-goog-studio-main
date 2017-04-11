@@ -21,8 +21,10 @@ import static com.android.testutils.truth.MoreTruth.assertThat;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
+import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 import java.io.IOException;
 import org.junit.Before;
@@ -50,7 +52,13 @@ public class CompositeBuildTest {
     @Rule
     public GradleTestProject androidLib =
             GradleTestProject.builder()
-                    .fromTestApp(new EmptyAndroidTestApp())
+                    .fromTestApp(
+                            new MultiModuleTestProject(
+                                    ImmutableMap.of(
+                                            "androidLib1",
+                                            new EmptyAndroidTestApp("com.example.androidLib1"),
+                                            "androidLib2",
+                                            new EmptyAndroidTestApp("com.example.androidLib2"))))
                     .withName("androidLib")
                     .withDependencyChecker(false)
                     .create();
@@ -65,7 +73,8 @@ public class CompositeBuildTest {
                         + "}\n"
                         + "includeBuild('../androidLib') {\n"
                         + "    dependencySubstitution {\n"
-                        + "        substitute module('com.example:androidLib') with project(':')\n"
+                        + "        substitute module('com.example:androidLib1') with project(':androidLib1')\n"
+                        + "        substitute module('com.example:androidLib2') with project(':androidLib2')\n"
                         + "    }\n"
                         + "}\n",
                 app.file("settings.gradle"),
@@ -78,35 +87,31 @@ public class CompositeBuildTest {
                         + "}\n"
                         + "dependencies {\n"
                         + "    compile 'com.example:lib'\n"
-                        + "    compile 'com.example:androidLib'\n"
+                        + "    compile 'com.example:androidLib1'\n"
+                        + "    compile 'com.example:androidLib2'\n"
                         + "}\n");
 
         // lib is just an empty project.
         lib.file("settings.gradle").createNewFile();
         TestFileUtils.appendToFile(lib.getBuildFile(), "apply plugin: 'java'\n");
 
-        // lib is just an empty project.
-        androidLib.file("settings.gradle").createNewFile();
-        TestFileUtils.appendToFile(
-                androidLib.getBuildFile(),
+        // androidLib1 and androidLib2 are empty aar project.
+        Files.write(
+                "include 'androidLib1'\n" + "include 'androidLib2'\n",
+                androidLib.file("settings.gradle"),
+                Charsets.UTF_8);
+        String androidLibBuildGradle =
                 "apply plugin: 'com.android.library'\n"
                         + "\n"
                         + "android {\n"
                         + "    compileSdkVersion "
                         + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
                         + "\n"
-                        + "}\n");
-        Files.createParentDirs(androidLib.file("src/main/AndroidManifest.xml"));
-        Files.write(
-                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "        package=\"com.example.androidLib\"\n"
-                        + "        android:versionCode=\"1\"\n"
-                        + "        android:versionName=\"1.0\">\n"
-                        + "    <application/>\n"
-                        + "</manifest>\n",
-                androidLib.file("src/main/AndroidManifest.xml"),
-                Charsets.UTF_8);
+                        + "}\n";
+        TestFileUtils.appendToFile(
+                androidLib.getSubproject(":androidLib1").getBuildFile(), androidLibBuildGradle);
+        TestFileUtils.appendToFile(
+                androidLib.getSubproject(":androidLib2").getBuildFile(), androidLibBuildGradle);
     }
 
     @Test
