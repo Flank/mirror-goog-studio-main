@@ -17,8 +17,9 @@
 package com.android.build.gradle.tasks;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.when;
 
+import com.android.build.VariantOutput;
 import com.android.build.gradle.internal.scope.SplitList;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
@@ -32,7 +33,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 /**
@@ -45,25 +45,23 @@ public class SplitsDiscoveryTest {
 
     Project project;
     SplitsDiscovery task;
+    File outputFile;
 
-    @Mock
-    FileCollection mergedFolders;
-
-    @Mock
-    SplitList splitList;
+    @Mock FileCollection mergedFolders;
+    @Mock FileCollection outputs;
 
     @Before
     public void setUp() throws IOException {
 
         MockitoAnnotations.initMocks(this);
         File testDir = temporaryFolder.newFolder();
-        File outputFile = temporaryFolder.newFile();
+        outputFile = temporaryFolder.newFile();
+        when(outputs.getSingleFile()).thenReturn(outputFile);
         project = ProjectBuilder.builder().withProjectDir(testDir).build();
 
         task = project.getTasks().create("test", SplitsDiscovery.class);
         task.mergedResourcesFolders = mergedFolders;
         task.persistedList = outputFile;
-        task.splitList = splitList;
         task.resourceConfigs = ImmutableSet.of();
     }
 
@@ -80,13 +78,12 @@ public class SplitsDiscoveryTest {
         task.densityFilters = ImmutableSet.of("hdpi", "xhdpi");
 
         task.taskAction();
-        Mockito.verify(splitList)
-                .save(
-                        eq(task.persistedList),
-                        eq(ImmutableSet.of("hdpi", "xhdpi")),
-                        eq(ImmutableSet.of()),
-                        eq(ImmutableSet.of()),
-                        eq(ImmutableSet.of()));
+
+        SplitList splitList = SplitList.load(outputs);
+        assertThat(splitList.getFilters(VariantOutput.FilterType.DENSITY))
+                .containsExactly("hdpi", "xhdpi");
+        assertThat(splitList.getFilters(VariantOutput.FilterType.LANGUAGE)).isEmpty();
+        assertThat(splitList.getFilters(VariantOutput.FilterType.ABI)).isEmpty();
     }
 
     @Test
@@ -95,13 +92,11 @@ public class SplitsDiscoveryTest {
         task.languageFilters = ImmutableSet.of("en", "fr", "de");
 
         task.taskAction();
-        Mockito.verify(splitList)
-                .save(
-                        eq(task.persistedList),
-                        eq(ImmutableSet.of()),
-                        eq(ImmutableSet.of("en", "fr", "de")),
-                        eq(ImmutableSet.of()),
-                        eq(ImmutableSet.of()));
+        SplitList splitList = SplitList.load(outputs);
+        assertThat(splitList.getFilters(VariantOutput.FilterType.LANGUAGE))
+                .containsExactly("en", "fr", "de");
+        assertThat(splitList.getFilters(VariantOutput.FilterType.DENSITY)).isEmpty();
+        assertThat(splitList.getFilters(VariantOutput.FilterType.ABI)).isEmpty();
     }
 
     @Test
@@ -109,13 +104,11 @@ public class SplitsDiscoveryTest {
         task.abiFilters = ImmutableSet.of("x86", "arm", "arm-v4");
 
         task.taskAction();
-        Mockito.verify(splitList)
-                .save(
-                        eq(task.persistedList),
-                        eq(ImmutableSet.of()),
-                        eq(ImmutableSet.of()),
-                        eq(ImmutableSet.of("x86", "arm", "arm-v4")),
-                        eq(ImmutableSet.of()));
+        SplitList splitList = SplitList.load(outputs);
+        assertThat(splitList.getFilters(VariantOutput.FilterType.ABI))
+                .containsExactly("x86", "arm", "arm-v4");
+        assertThat(splitList.getFilters(VariantOutput.FilterType.LANGUAGE)).isEmpty();
+        assertThat(splitList.getFilters(VariantOutput.FilterType.DENSITY)).isEmpty();
     }
 
     @Test
@@ -127,13 +120,13 @@ public class SplitsDiscoveryTest {
         task.abiFilters = ImmutableSet.of("x86", "arm", "arm-v4");
 
         task.taskAction();
-        Mockito.verify(splitList)
-                .save(
-                        eq(task.persistedList),
-                        eq(ImmutableSet.of("hdpi", "xhdpi")),
-                        eq(ImmutableSet.of("en", "fr", "de")),
-                        eq(ImmutableSet.of("x86", "arm", "arm-v4")),
-                        eq(ImmutableSet.of()));
+        SplitList splitList = SplitList.load(outputs);
+        assertThat(splitList.getFilters(VariantOutput.FilterType.DENSITY))
+                .containsExactly("hdpi", "xhdpi");
+        assertThat(splitList.getFilters(VariantOutput.FilterType.LANGUAGE))
+                .containsExactly("en", "fr", "de");
+        assertThat(splitList.getFilters(VariantOutput.FilterType.ABI))
+                .containsExactly("x86", "arm", "arm-v4");
     }
 
     @Test
@@ -149,13 +142,11 @@ public class SplitsDiscoveryTest {
         task.densityAuto = true;
         task.taskAction();
 
-        Mockito.verify(splitList)
-                .save(
-                        eq(task.persistedList),
-                        eq(ImmutableSet.of("hdpi", "xhdpi")),
-                        eq(ImmutableSet.of()),
-                        eq(ImmutableSet.of()),
-                        eq(ImmutableSet.of()));
+        SplitList splitList = SplitList.load(outputs);
+        assertThat(splitList.getFilters(VariantOutput.FilterType.DENSITY))
+                .containsExactly("hdpi", "xhdpi");
+        assertThat(splitList.getFilters(VariantOutput.FilterType.LANGUAGE)).isEmpty();
+        assertThat(splitList.getFilters(VariantOutput.FilterType.ABI)).isEmpty();
     }
 
     @Test
@@ -171,14 +162,11 @@ public class SplitsDiscoveryTest {
 
         task.languageAuto = true;
         task.taskAction();
-
-        Mockito.verify(splitList)
-                .save(
-                        eq(task.persistedList),
-                        eq(ImmutableSet.of()),
-                        eq(ImmutableSet.of("fr", "de", "fr_be")),
-                        eq(ImmutableSet.of()),
-                        eq(ImmutableSet.of()));
+        SplitList splitList = SplitList.load(outputs);
+        assertThat(splitList.getFilters(VariantOutput.FilterType.DENSITY)).isEmpty();
+        assertThat(splitList.getFilters(VariantOutput.FilterType.LANGUAGE))
+                .containsExactly("fr", "de", "fr_be");
+        assertThat(splitList.getFilters(VariantOutput.FilterType.ABI)).isEmpty();
     }
 
     @Test
@@ -200,13 +188,12 @@ public class SplitsDiscoveryTest {
         task.languageAuto = true;
         task.taskAction();
 
-        Mockito.verify(splitList)
-                .save(
-                        eq(task.persistedList),
-                        eq(ImmutableSet.of("hdpi", "xhdpi")),
-                        eq(ImmutableSet.of("fr", "de", "fr_be")),
-                        eq(ImmutableSet.of()),
-                        eq(ImmutableSet.of()));
+        SplitList splitList = SplitList.load(outputs);
+        assertThat(splitList.getFilters(VariantOutput.FilterType.DENSITY))
+                .containsExactly("hdpi", "xhdpi");
+        assertThat(splitList.getFilters(VariantOutput.FilterType.LANGUAGE))
+                .containsExactly("fr", "de", "fr_be");
+        assertThat(splitList.getFilters(VariantOutput.FilterType.ABI)).isEmpty();
     }
 
     @Test
@@ -218,12 +205,9 @@ public class SplitsDiscoveryTest {
 
         task.taskAction();
 
-        Mockito.verify(splitList)
-                .save(
-                        eq(task.persistedList),
-                        eq(ImmutableSet.of()),
-                        eq(ImmutableSet.of()),
-                        eq(ImmutableSet.of()),
-                        eq(ImmutableSet.of()));
+        SplitList splitList = SplitList.load(outputs);
+        assertThat(splitList.getFilters(VariantOutput.FilterType.DENSITY)).isEmpty();
+        assertThat(splitList.getFilters(VariantOutput.FilterType.LANGUAGE)).isEmpty();
+        assertThat(splitList.getFilters(VariantOutput.FilterType.ABI)).isEmpty();
     }
 }

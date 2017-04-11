@@ -56,17 +56,10 @@ public class SplitsDiscovery extends BaseTask {
     boolean languageAuto;
     Set<String> abiFilters;
     Collection<String> resourceConfigs;
-    // FIX ME : use mergedResourcesFolders.
-    Set<File> resourceFolders;
 
     @InputFiles
     FileCollection getMergedResourcesFolders() {
         return mergedResourcesFolders;
-    }
-
-    @InputFiles
-    Set<File> getResourceFolders() {
-        return resourceFolders;
     }
 
     @Input
@@ -110,8 +103,6 @@ public class SplitsDiscovery extends BaseTask {
         return persistedList;
     }
 
-    SplitList splitList;
-
     @TaskAction
     void taskAction() throws IOException {
 
@@ -121,7 +112,7 @@ public class SplitsDiscovery extends BaseTask {
                 && Iterators.getOnlyElement(resourceConfigs.iterator()).equals("auto")) {
             resConfigs = discoverListOfResourceConfigsNotDensities();
         }
-        splitList.save(
+        SplitList.save(
                 getPersistedList(),
                 getFilters(mergedResourcesFolderFiles, DiscoverableFilterType.DENSITY),
                 getFilters(mergedResourcesFolderFiles, DiscoverableFilterType.LANGUAGE),
@@ -153,9 +144,10 @@ public class SplitsDiscovery extends BaseTask {
 
     @NonNull
     public List<String> discoverListOfResourceConfigsNotDensities() {
-        List<String> resFoldersOnDisk = new ArrayList<String>();
+        List<String> resFoldersOnDisk = new ArrayList<>();
         resFoldersOnDisk.addAll(
-                getAllFilters(resourceFolders, DiscoverableFilterType.LANGUAGE.folderPrefix));
+                getAllFilters(
+                        mergedResourcesFolders, DiscoverableFilterType.LANGUAGE.folderPrefix));
         return resFoldersOnDisk;
     }
 
@@ -283,7 +275,6 @@ public class SplitsDiscovery extends BaseTask {
         public void execute(@NonNull SplitsDiscovery task) {
             task.setVariantName(variantScope.getFullVariantName());
             Splits splits = variantScope.getGlobalScope().getExtension().getSplits();
-            task.splitList = variantScope.getVariantData().getSplitList();
             task.persistedList = persistedList;
             if (splits.getDensity().isEnable()) {
                 task.densityFilters = splits.getDensityFilters();
@@ -303,9 +294,6 @@ public class SplitsDiscovery extends BaseTask {
                             .getVariantConfiguration()
                             .getMergedFlavor()
                             .getResourceConfigurations();
-            // TODO: make sure this is known at configuration.
-            task.resourceFolders = variantScope.getVariantConfiguration().getResourceFolders();
-
         }
     }
 }

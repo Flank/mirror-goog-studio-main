@@ -103,7 +103,6 @@ public class ShrinkResourcesTransform extends Transform {
     @NonNull private final FileCollection mergedManifests;
     @Nullable
     private final File mappingFile;
-    @NonNull private final SplitList splitList;
     @NonNull private final AaptGeneration aaptGeneration;
 
     public ShrinkResourcesTransform(
@@ -112,14 +111,15 @@ public class ShrinkResourcesTransform extends Transform {
             @NonNull File compressedResources,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull AaptGeneration aaptGeneration,
+            @NonNull FileCollection splitListInput,
             @NonNull Logger logger) {
         this.variantData = variantData;
         this.uncompressedResources = uncompressedResources;
         this.compressedResources = compressedResources;
         this.androidBuilder = androidBuilder;
         this.aaptGeneration = aaptGeneration;
+        this.splitListInput = splitListInput;
         this.logger = logger;
-        this.splitList = variantData.getSplitList();
 
         sourceDir = variantData.getScope().getRClassSourceOutputDir();
         resourceDir = variantData.getScope().getFinalResourcesDir();
@@ -196,9 +196,11 @@ public class ShrinkResourcesTransform extends Transform {
         return ImmutableMap.of("AaptGeneration", aaptGeneration.name());
     }
 
+    FileCollection splitListInput;
+
     @InputFiles
     public FileCollection getSplitListResource() {
-        return splitList.getFileCollection();
+        return splitListInput;
     }
 
     @Override
@@ -210,6 +212,7 @@ public class ShrinkResourcesTransform extends Transform {
     public void transform(@NonNull TransformInvocation invocation)
             throws IOException, TransformException, InterruptedException {
 
+        SplitList splitList = SplitList.load(splitListInput);
         Collection<BuildOutput> uncompressedBuildOutputs = BuildOutputs.load(uncompressedResources);
         SplitScope splitScope = variantData.getScope().getSplitScope();
         splitScope.parallelForEachOutput(
@@ -217,7 +220,8 @@ public class ShrinkResourcesTransform extends Transform {
                 TaskOutputHolder.TaskOutputType.PROCESSED_RES,
                 TaskOutputHolder.TaskOutputType.SHRUNK_PROCESSED_RES,
                 this::splitAction,
-                invocation);
+                invocation,
+                splitList);
         splitScope.save(TaskOutputHolder.TaskOutputType.SHRUNK_PROCESSED_RES, compressedResources);
     }
 
@@ -225,7 +229,8 @@ public class ShrinkResourcesTransform extends Transform {
     public File splitAction(
             @NonNull ApkData apkData,
             @Nullable File uncompressedResourceFile,
-            TransformInvocation invocation) {
+            TransformInvocation invocation,
+            SplitList splitList) {
 
         if (uncompressedResourceFile == null) {
             return null;
@@ -328,7 +333,7 @@ public class ShrinkResourcesTransform extends Transform {
                                 .setDebuggable(processResourcesTask.getDebuggable())
                                 .setResourceConfigs(
                                         splitList.getFilters(SplitList.RESOURCE_CONFIGS))
-                                .setSplits(processResourcesTask.getSplits());
+                                .setSplits(processResourcesTask.getSplits(splitList));
 
                 androidBuilder.processResources(
                         aapt,

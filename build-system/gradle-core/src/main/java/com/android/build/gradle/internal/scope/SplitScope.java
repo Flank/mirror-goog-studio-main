@@ -191,6 +191,25 @@ public class SplitScope implements Serializable {
             VariantScope.OutputType outputType,
             ParameterizedSplitOutputAction<T> action,
             T parameter) {
+
+        parallelForEachOutput(
+                inputs,
+                inputType,
+                outputType,
+                (TwoParameterizedSplitOutputAction<T, Void>)
+                        (apkData, output, paramOne, paramTwo) ->
+                                action.processSplit(apkData, output, paramOne),
+                parameter,
+                null);
+    }
+
+    public <T, U> void parallelForEachOutput(
+            Collection<BuildOutput> inputs,
+            VariantScope.OutputType inputType,
+            VariantScope.OutputType outputType,
+            TwoParameterizedSplitOutputAction<T, U> action,
+            T parameterOne,
+            U parameterTwo) {
         WaitableExecutor<Void> executor = WaitableExecutor.useGlobalSharedThreadPool();
         apkDatas.forEach(
                 split -> {
@@ -202,7 +221,10 @@ public class SplitScope implements Serializable {
                                             outputType,
                                             split,
                                             action.processSplit(
-                                                    split, buildOutput.getOutputFile(), parameter),
+                                                    split,
+                                                    buildOutput.getOutputFile(),
+                                                    parameterOne,
+                                                    parameterTwo),
                                             buildOutput.getProperties());
                                 }
                                 return null;
@@ -231,6 +253,12 @@ public class SplitScope implements Serializable {
     public interface ParameterizedSplitOutputAction<T> {
         @Nullable
         File processSplit(@NonNull ApkData apkData, @Nullable File output, T param)
+                throws IOException;
+    }
+
+    public interface TwoParameterizedSplitOutputAction<T, U> {
+        @Nullable
+        File processSplit(@NonNull ApkData apkData, @Nullable File output, T paramOne, U paramTwo)
                 throws IOException;
     }
 

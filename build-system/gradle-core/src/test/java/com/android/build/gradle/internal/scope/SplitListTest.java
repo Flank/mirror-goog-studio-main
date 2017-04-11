@@ -51,9 +51,8 @@ public class SplitListTest {
 
     @Test
     public void testDensityPersistence() throws IOException {
-        SplitList splitList = new SplitList(fileCollection);
         File outputFile = temporaryFolder.newFile();
-        splitList.save(
+        SplitList.save(
                 outputFile,
                 ImmutableSet.of("hdpi", "xxhdpi"),
                 ImmutableSet.of(),
@@ -70,9 +69,8 @@ public class SplitListTest {
 
     @Test
     public void testLanguagePersistence() throws IOException {
-        SplitList splitList = new SplitList(fileCollection);
         File outputFile = temporaryFolder.newFile();
-        splitList.save(
+        SplitList.save(
                 outputFile,
                 ImmutableSet.of(),
                 ImmutableSet.of("fr", "fr_BE"),
@@ -89,9 +87,8 @@ public class SplitListTest {
 
     @Test
     public void testAbiPersistence() throws IOException {
-        SplitList splitList = new SplitList(fileCollection);
         File outputFile = temporaryFolder.newFile();
-        splitList.save(
+        SplitList.save(
                 outputFile,
                 ImmutableSet.of(),
                 ImmutableSet.of(),
@@ -108,9 +105,8 @@ public class SplitListTest {
 
     @Test
     public void testAllPersistence() throws IOException {
-        SplitList splitList = new SplitList(fileCollection);
         File outputFile = temporaryFolder.newFile();
-        splitList.save(
+        SplitList.save(
                 outputFile,
                 ImmutableSet.of("xhdpi", "xxhdpi"),
                 ImmutableSet.of("de", "it"),
@@ -127,9 +123,8 @@ public class SplitListTest {
 
     @Test
     public void testDensityLoading() throws IOException {
-        SplitList splitList = new SplitList(fileCollection);
         File outputFile = temporaryFolder.newFile();
-        splitList.save(
+        SplitList.save(
                 outputFile,
                 ImmutableSet.of("hdpi", "xxhdpi"),
                 ImmutableSet.of(),
@@ -138,7 +133,7 @@ public class SplitListTest {
 
         when(fileCollection.getSingleFile()).thenReturn(outputFile);
 
-        SplitList newSplitList = new SplitList(fileCollection);
+        SplitList newSplitList = SplitList.load(fileCollection);
         Truth.assertThat(newSplitList.getFilters(OutputFile.FilterType.DENSITY))
                 .containsExactly("hdpi", "xxhdpi");
         Truth.assertThat(newSplitList.getFilters(OutputFile.FilterType.LANGUAGE)).isEmpty();
@@ -147,9 +142,8 @@ public class SplitListTest {
 
     @Test
     public void testLanguageLoading() throws IOException {
-        SplitList splitList = new SplitList(fileCollection);
         File outputFile = temporaryFolder.newFile();
-        splitList.save(
+        SplitList.save(
                 outputFile,
                 ImmutableSet.of(),
                 ImmutableSet.of("fr", "fr_CA"),
@@ -158,7 +152,7 @@ public class SplitListTest {
 
         when(fileCollection.getSingleFile()).thenReturn(outputFile);
 
-        SplitList newSplitList = new SplitList(fileCollection);
+        SplitList newSplitList = SplitList.load(fileCollection);
         Truth.assertThat(newSplitList.getFilters(OutputFile.FilterType.LANGUAGE))
                 .containsExactly("fr", "fr_CA");
         Truth.assertThat(newSplitList.getFilters(OutputFile.FilterType.DENSITY)).isEmpty();
@@ -168,9 +162,8 @@ public class SplitListTest {
 
     @Test
     public void testAbiLoading() throws IOException {
-        SplitList splitList = new SplitList(fileCollection);
         File outputFile = temporaryFolder.newFile();
-        splitList.save(
+        SplitList.save(
                 outputFile,
                 ImmutableSet.of(),
                 ImmutableSet.of(),
@@ -179,7 +172,7 @@ public class SplitListTest {
 
         when(fileCollection.getSingleFile()).thenReturn(outputFile);
 
-        SplitList newSplitList = new SplitList(fileCollection);
+        SplitList newSplitList = SplitList.load(fileCollection);
         Truth.assertThat(newSplitList.getFilters(OutputFile.FilterType.ABI))
                 .containsExactly("arm", "x86");
         Truth.assertThat(newSplitList.getFilters(OutputFile.FilterType.DENSITY)).isEmpty();
@@ -188,9 +181,8 @@ public class SplitListTest {
 
     @Test
     public void testAllLoading() throws IOException {
-        SplitList splitList = new SplitList(fileCollection);
         File outputFile = temporaryFolder.newFile();
-        splitList.save(
+        SplitList.save(
                 outputFile,
                 ImmutableSet.of("xhdpi", "xxxhdpi"),
                 ImmutableSet.of("es", "it"),
@@ -199,7 +191,7 @@ public class SplitListTest {
 
         when(fileCollection.getSingleFile()).thenReturn(outputFile);
 
-        SplitList newSplitList = new SplitList(fileCollection);
+        SplitList newSplitList = SplitList.load(fileCollection);
         Truth.assertThat(newSplitList.getFilters(OutputFile.FilterType.DENSITY))
                 .containsExactly("xhdpi", "xxxhdpi");
         Truth.assertThat(newSplitList.getFilters(OutputFile.FilterType.LANGUAGE))
@@ -208,25 +200,5 @@ public class SplitListTest {
                 .containsExactly("arm", "x86");
         // check we only load the file once.
         Mockito.verify(fileCollection, times(1)).getSingleFile();
-    }
-
-    @Test
-    public void testCachingAfterSave() throws IOException {
-        SplitList splitList = new SplitList(fileCollection);
-        File outputFile = temporaryFolder.newFile();
-        splitList.save(
-                outputFile,
-                ImmutableSet.of("xhdpi", "xxxhdpi"),
-                ImmutableSet.of("es", "it"),
-                ImmutableSet.of("arm", "x86"),
-                ImmutableSet.of());
-
-        Truth.assertThat(splitList.getFilters(OutputFile.FilterType.DENSITY))
-                .containsExactly("xhdpi", "xxxhdpi");
-        Truth.assertThat(splitList.getFilters(OutputFile.FilterType.LANGUAGE))
-                .containsExactly("es", "it");
-        Truth.assertThat(splitList.getFilters(OutputFile.FilterType.ABI))
-                .containsExactly("arm", "x86");
-        Mockito.verifyNoMoreInteractions(fileCollection);
     }
 }

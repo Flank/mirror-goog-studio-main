@@ -166,8 +166,6 @@ public abstract class BaseVariantData implements TaskContainer {
 
     @NonNull private final SplitScope splitScope;
 
-    @NonNull private final SplitList splitList;
-
     @NonNull private final SplitFactory splitFactory;
     public VariantOutputFactory variantOutputFactory;
 
@@ -208,11 +206,7 @@ public abstract class BaseVariantData implements TaskContainer {
                                 errorReporter,
                                 recorder),
                         this);
-        File splitListOutputFile = new File(scope.getSplitSupportDirectory(), FN_SPLIT_LIST);
-        ConfigurableFileCollection splitListInput =
-                globalScope.getProject().files(splitListOutputFile);
         splitScope = new SplitScope(splitHandlingPolicy);
-        splitList = new SplitList(splitListInput);
         splitFactory = new SplitFactory(variantConfiguration, splitScope);
 
         taskManager.configureScopeForNdk(scope);
@@ -476,11 +470,6 @@ public abstract class BaseVariantData implements TaskContainer {
                 DiscoverableFilterType.LANGUAGE.folderPrefix,
                 DiscoverableFilterType.DENSITY.folderPrefix));
         return resFoldersOnDisk;
-    }
-
-    @NonNull
-    public SplitList getSplitList() {
-        return splitList;
     }
 
     /**

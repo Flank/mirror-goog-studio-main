@@ -142,7 +142,6 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     private Supplier<String> packageForR;
 
-    private SplitList splitList;
     private SplitHandlingPolicy splitHandlingPolicy;
 
     private boolean enforceUniquePackageName;
@@ -205,11 +204,13 @@ public class ProcessAndroidResources extends IncrementalTask {
         return supportedAbis;
     }
 
-    public Set<String> getSplits() throws IOException {
+    public Set<String> getSplits(SplitList splitList) throws IOException {
         return splitHandlingPolicy == SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY
                 ? splitList.getResourcesSplit()
                 : ImmutableSet.of();
     }
+
+    FileCollection splitListInput;
 
     private SplitScope splitScope;
 
@@ -289,6 +290,8 @@ public class ProcessAndroidResources extends IncrementalTask {
                         ? packageIdsFiles.getArtifactFiles().getAsFileTree().getFiles()
                         : null;
 
+        SplitList splitList = SplitList.load(splitListInput);
+
         for (ApkData apkData : splitsToGenerate) {
             if (apkData.requiresAapt()) {
                 executor.execute(
@@ -305,6 +308,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                             invokeAaptForSplit(
                                     manifestsOutputs,
                                     packageIdFileSet,
+                                    splitList,
                                     apkData,
                                     codeGen);
                             return null;
@@ -389,6 +393,7 @@ public class ProcessAndroidResources extends IncrementalTask {
     void invokeAaptForSplit(
             Collection<BuildOutput> manifestsOutputs,
             @Nullable Set<File> packageIdFileSet,
+            @NonNull SplitList splitList,
             ApkData apkData,
             boolean generateCode)
             throws IOException {
@@ -515,7 +520,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                                 .setPseudoLocalize(getPseudoLocalesEnabled())
                                 .setResourceConfigs(
                                         splitList.getFilters(SplitList.RESOURCE_CONFIGS))
-                                .setSplits(getSplits())
+                                .setSplits(getSplits(splitList))
                                 .setPreferredDensity(preferredDensity)
                                 .setPackageId(packageId)
                                 .setDependentFeatures(featurePackagesBuilder.build());
@@ -695,7 +700,9 @@ public class ProcessAndroidResources extends IncrementalTask {
             // per exec
             processResources.setIncrementalFolder(variantScope.getIncrementalDir(getName()));
 
-            processResources.splitList = variantData.getSplitList();
+            processResources.splitListInput =
+                    variantScope.getOutputs(TaskOutputHolder.TaskOutputType.SPLIT_LIST);
+
             processResources.splitHandlingPolicy =
                     variantData.getSplitScope().getSplitHandlingPolicy();
 
@@ -944,10 +951,7 @@ public class ProcessAndroidResources extends IncrementalTask {
         return packageForR != null ? packageForR.get() : null;
     }
 
-    @InputFiles
-    public FileCollection getSplitListResource() {
-        return splitList.getFileCollection();
-    }
+
 
     @Input
     public boolean getEnforceUniquePackageName() {
@@ -1029,8 +1033,8 @@ public class ProcessAndroidResources extends IncrementalTask {
     }
 
     @InputFiles
-    FileCollection getSplitList() {
-        return splitList.getFileCollection();
+    FileCollection getSplitListInput() {
+        return splitListInput;
     }
 
     @Input

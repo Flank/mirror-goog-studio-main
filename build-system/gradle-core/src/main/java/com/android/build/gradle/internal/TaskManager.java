@@ -1108,10 +1108,11 @@ public abstract class TaskManager {
         File splitListOutputFile = new File(scope.getSplitSupportDirectory(), FN_SPLIT_LIST);
         AndroidTask<SplitsDiscovery> splitsDiscoveryAndroidTask = androidTasks
                 .create(tasks, new SplitsDiscovery.ConfigAction(scope, splitListOutputFile));
-        scope.getVariantData()
-                .getSplitList()
-                .getFileCollection()
-                .builtBy(splitsDiscoveryAndroidTask.getName());
+
+        scope.addTaskOutput(
+                TaskOutputHolder.TaskOutputType.SPLIT_LIST,
+                splitListOutputFile,
+                splitsDiscoveryAndroidTask.getName());
 
         AndroidTask<ProcessAndroidResources> processAndroidResources =
                 androidTasks.create(
@@ -3230,6 +3231,7 @@ public abstract class TaskManager {
                         scope.getShrunkProcessedResourcesOutputDirectory(),
                         androidBuilder,
                         AaptGeneration.fromProjectOptions(projectOptions),
+                        scope.getOutputs(TaskOutputHolder.TaskOutputType.SPLIT_LIST),
                         logger);
 
         Optional<AndroidTask<TransformTask>> shrinkTask =

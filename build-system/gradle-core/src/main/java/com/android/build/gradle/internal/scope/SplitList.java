@@ -27,11 +27,11 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Stream;
 import org.apache.commons.io.FileUtils;
-import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.file.FileCollection;
 
 /**
  * Singleton object per variant that holds the list of splits declared by the DSL or discovered.
@@ -40,36 +40,29 @@ public class SplitList {
 
     public static final String RESOURCE_CONFIGS = "ResConfigs";
 
-    /** FileCollection for a single file with the persisted split list */
-    private final ConfigurableFileCollection persistedList;
-
     /**
      * Split list cache, valid only during this build.
      */
     private ImmutableList<Record> records;
 
-    public SplitList(ConfigurableFileCollection persistedList) {
-        this.persistedList = persistedList;
+    private SplitList(List<Record> records) {
+        this.records = ImmutableList.copyOf(records);
     }
 
-    public ConfigurableFileCollection getFileCollection() {
-        return persistedList;
+    public static SplitList load(FileCollection persistedList) throws IOException {
+        String persistedData = FileUtils.readFileToString(persistedList.getSingleFile());
+        Gson gson = new Gson();
+        Type collectionType = new TypeToken<ArrayList<Record>>() {}.getType();
+        return new SplitList(gson.fromJson(persistedData, collectionType));
     }
 
     public Set<String> getFilters(OutputFile.FilterType splitType) throws IOException {
         return getFilters(splitType.name());
     }
 
-    private synchronized Stream<Record> stream() throws IOException {
-        if (records == null) {
-            String gson = FileUtils.readFileToString(persistedList.getSingleFile());
-            load(gson);
-        }
-        return records.stream();
-    }
-
     public synchronized Set<String> getFilters(String filterType) throws IOException {
-        Optional<Record> record = stream().filter(r -> r.splitType.equals(filterType)).findFirst();
+        Optional<Record> record =
+                records.stream().filter(r -> r.splitType.equals(filterType)).findFirst();
         return record.isPresent()
                 ? record.get().values
                 : ImmutableSet.of();
@@ -80,14 +73,13 @@ public class SplitList {
     }
 
     public void forEach(SplitAction action) throws IOException {
-        stream().forEach(
-                        record -> {
-                            if (record.isConfigSplit() && !record.values.isEmpty()) {
-                                action.apply(
-                                        OutputFile.FilterType.valueOf(record.splitType),
-                                        record.values);
-                            }
-                        });
+        records.forEach(
+                record -> {
+                    if (record.isConfigSplit() && !record.values.isEmpty()) {
+                        action.apply(
+                                OutputFile.FilterType.valueOf(record.splitType), record.values);
+                    }
+                });
     }
 
     public Set<String> getResourcesSplit() throws IOException {
@@ -97,7 +89,7 @@ public class SplitList {
         return allFilters.build();
     }
 
-    public synchronized void save(
+    public static synchronized void save(
             @NonNull File outputFile,
             @NonNull Set<String> densityFilters,
             @NonNull Set<String> languageFilters,
@@ -105,7 +97,7 @@ public class SplitList {
             @NonNull Collection<String> resourceConfigs)
             throws IOException {
 
-        records =
+        ImmutableList<Record> records =
                 ImmutableList.of(
                         new Record(OutputFile.FilterType.DENSITY.name(), densityFilters),
                         new Record(OutputFile.FilterType.LANGUAGE.name(), languageFilters),
@@ -115,14 +107,6 @@ public class SplitList {
         Gson gson = new Gson();
         String listOfFilters = gson.toJson(records);
         FileUtils.write(outputFile, listOfFilters);
-    }
-
-    @SuppressWarnings("unchecked")
-    private void load(String persistedData) throws IOException {
-        Gson gson = new Gson();
-        Type collectionType = new TypeToken<ArrayList<Record>>(){}.getType();
-        records = ImmutableList.copyOf(
-                (Collection<? extends Record>) gson.fromJson(persistedData, collectionType));
     }
 
     /**
