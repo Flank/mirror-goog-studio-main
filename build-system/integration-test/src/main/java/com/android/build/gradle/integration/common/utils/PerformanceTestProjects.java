@@ -119,6 +119,12 @@ public class PerformanceTestProjects {
                 mainProject.file("afollestad/core/src/main/res/values-v11/styles.xml"),
                 "abc_ic_ab_back_mtrl_am_alpha",
                 "abc_ic_ab_back_material");
+
+        TestFileUtils.searchAndReplace(
+                project.file("app/build.gradle"),
+                ",\\s*commit: \"git rev-parse --short HEAD\".execute\\(\\).text\\]",
+                "]"
+        );
     }
 
 
