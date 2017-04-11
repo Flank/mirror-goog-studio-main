@@ -23,11 +23,9 @@ import com.android.builder.model.AndroidProject;
 import java.io.IOException;
 import java.util.Map;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
-@Ignore("http://b.android.com/234781")
 public class UberSkeletonSmokeTest {
 
     @Rule

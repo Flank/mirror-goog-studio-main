@@ -29,14 +29,12 @@ import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode;
 import java.util.Map;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 @RunWith(FilterableParameterized.class)
-@Ignore("http://b.android.com/234781")
 public class LargeGradleProjectPerformanceMatrixTest {
 
     @Rule public final GradleTestProject project;
