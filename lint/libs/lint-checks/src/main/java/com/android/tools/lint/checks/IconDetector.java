@@ -951,8 +951,12 @@ public class IconDetector extends ResourceXmlDetector implements UastScanner {
                 double heightStdDev = Math.sqrt(squareHeightSum / count);
 
                 if (widthStdDev > meanWidth / 10 || heightStdDev > meanHeight) {
-                    Location location = null;
                     StringBuilder sb = new StringBuilder(100);
+                    sb.append("The image `").append(name).append("` varies significantly in its " +
+                            "density-independent (dip) size across the various density " +
+                            "versions: ");
+
+                    Location location = null;
 
                     // Sort entries by decreasing dip size
                     List<Map.Entry<File, Dimension>> entries = new ArrayList<>();
@@ -968,8 +972,12 @@ public class IconDetector extends ResourceXmlDetector implements UastScanner {
 
                         return d2.height - d1.height;
                     });
+
+                    boolean first = true;
                     for (Map.Entry<File, Dimension> entry2 : entries) {
-                        if (sb.length() > 0) {
+                        if (first) {
+                            first = false;
+                        } else {
                             sb.append(", ");
                         }
                         File file = entry2.getKey();
@@ -981,17 +989,13 @@ public class IconDetector extends ResourceXmlDetector implements UastScanner {
                         Dimension dip = entry2.getValue();
                         Dimension px = pixelSizes.get(file);
                         //noinspection ConstantConditions
-                        String fileName = file.getParentFile().getName() + File.separator
-                                + file.getName();
-                        sb.append(String.format("%1$s: %2$dx%3$d dp (%4$dx%5$d px)",
-                                fileName, dip.width, dip.height, px.width, px.height));
+                        sb.append(file.getParentFile().getName()).append(File.separator)
+                                .append(file.getName()).append(": ");
+                        sb.append(String.format("%1$dx%2$d dp (%3$dx%4$d px)",
+                                dip.width, dip.height, px.width, px.height));
                     }
-                    String message = String.format(
-                        "The image `%1$s` varies significantly in its density-independent (dip) " +
-                        "size across the various density versions: %2$s",
-                            name, sb.toString());
                     if (location != null) {
-                        context.report(ICON_DIP_SIZE, location, message);
+                        context.report(ICON_DIP_SIZE, location, sb.toString());
                     }
                 }
             }
@@ -2061,19 +2065,20 @@ public class IconDetector extends ResourceXmlDetector implements UastScanner {
             if (exactMatch && (size.width != width || size.height != height)) {
                 context.report(
                         ICON_EXPECTED_SIZE,
-                    Location.create(file),
-                    String.format(
-                        "Incorrect icon size for `%1$s`: expected %2$dx%3$d, but was %4$dx%5$d",
-                        folderName + File.separator + file.getName(),
-                        width, height, size.width, size.height));
+                        Location.create(file),
+                        "Incorrect icon size for `" + folderName + File.separator
+                                + file.getName() + "`: "
+                                + String.format("expected %1$dx%2$d, but was %3$dx%4$d",
+                                width, height, size.width, size.height));
             } else if (!exactMatch && (size.width > width || size.height > height)) {
                 context.report(
                         ICON_EXPECTED_SIZE,
-                    Location.create(file),
-                    String.format(
-                        "Incorrect icon size for `%1$s`: icon size should be at most %2$dx%3$d, but was %4$dx%5$d",
-                        folderName + File.separator + file.getName(),
-                        width, height, size.width, size.height));
+                        Location.create(file),
+                        "Incorrect icon size for `" + folderName + File.separator
+                                + file.getName() + "`: "
+                                + String.format("icon size should be at most %1$dx%2$d, but " +
+                                        "was %3$dx%4$d",
+                                width, height, size.width, size.height));
             }
         }
     }
