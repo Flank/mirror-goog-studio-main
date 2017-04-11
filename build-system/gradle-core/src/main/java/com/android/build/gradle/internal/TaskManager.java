@@ -1368,6 +1368,7 @@ public abstract class TaskManager {
 
         AndroidTask<JavaPreCompileTask> preCompileTask = androidTasks.create(tasks,
                 new JavaPreCompileTask.ConfigAction(scope));
+        preCompileTask.dependsOn(tasks, scope.getPreBuildTask());
 
         final AndroidTask<? extends JavaCompile> javacTask =
                 androidTasks.create(tasks, new JavaCompileConfigAction(scope));
