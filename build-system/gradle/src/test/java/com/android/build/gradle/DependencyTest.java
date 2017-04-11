@@ -18,34 +18,44 @@ package com.android.build.gradle;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.build.gradle.internal.fixture.TestConstants;
+import com.android.build.gradle.internal.fixture.TestProjects;
+import com.android.build.gradle.internal.fixture.VariantCheckers;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import org.gradle.api.Project;
+import org.junit.Assume;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 /** Test variant dependencies. */
-public class DependencyTest extends BaseDslTest {
+public class DependencyTest {
 
+    @Rule public TemporaryFolder projectDirectory = new TemporaryFolder();
     private AppPlugin plugin;
+    private Project project;
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
+        project =
+                TestProjects.builder(projectDirectory.newFolder("project").toPath())
+                        .withPlugin(TestProjects.Plugin.APP)
+                        .build();
 
-        project.apply(ImmutableMap.of("plugin", "com.android.application"));
         AppExtension android = project.getExtensions().getByType(AppExtension.class);
-        android.setCompileSdkVersion(COMPILE_SDK_VERSION);
-        android.setBuildToolsVersion(BUILD_TOOL_VERSION);
+        android.setCompileSdkVersion(TestConstants.COMPILE_SDK_VERSION);
+        android.setBuildToolsVersion(TestConstants.BUILD_TOOL_VERSION);
         plugin = project.getPlugins().getPlugin(AppPlugin.class);
     }
 
+    @Test
     public void testProvidedDependency() throws IOException {
-        // Ignore if improved dependency resolution enabled (Note that Assume does not work in
-        // JUnit 3 test.
-        if (AndroidGradleOptions.isImprovedDependencyResolutionEnabled(project)) {
-            return;
-        };
+        // Ignore if improved dependency resolution enabled
+        Assume.assumeFalse(AndroidGradleOptions.isImprovedDependencyResolutionEnabled(project));
 
         File providedJar = File.createTempFile("provided", ".jar");
         providedJar.createNewFile();
@@ -62,13 +72,13 @@ public class DependencyTest extends BaseDslTest {
 
         List<BaseVariantData<?>> variants = plugin.getVariantManager().getVariantDataList();
 
-        checkDefaultVariants(variants);
+        VariantCheckers.checkDefaultVariants(variants);
 
-        BaseVariantData<?> release = findVariantData(variants, "release");
+        BaseVariantData<?> release = VariantCheckers.findVariantData(variants, "release");
         assertThat(release.getVariantConfiguration().getProvidedOnlyJars())
                 .containsExactly(providedJar);
 
-        BaseVariantData<?> debug = findVariantData(variants, "debug");
+        BaseVariantData<?> debug = VariantCheckers.findVariantData(variants, "debug");
         assertThat(debug.getVariantConfiguration().getProvidedOnlyJars())
                 .containsExactly(providedJar, debugJar);
     }
