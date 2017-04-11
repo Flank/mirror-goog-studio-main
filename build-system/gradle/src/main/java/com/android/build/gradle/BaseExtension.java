@@ -15,6 +15,7 @@
  */
 package com.android.build.gradle;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.transform.Transform;
@@ -310,6 +311,15 @@ public abstract class BaseExtension implements AndroidConfig {
                         sourceSet.setRoot(String.format("src/%s", sourceSet.getName()));
                     }
                 });
+
+        // Create the "special" configuration for test buddy APKs. It will be resolved by the test
+        // running task, so that we can install all the found APKs before running tests.
+        // TODO: resolve it in ModelBuilder and put the files in the model.
+        createConfiguration(
+                project.getConfigurations(),
+                SdkConstants.TEST_HELPERS_CONFIGURATION,
+                "Additional APKs used during instrumentation testing.",
+                true);
 
         sourceSetsContainer.create(defaultConfig.getName());
         buildToolsRevision = AndroidBuilder.DEFAULT_BUILD_TOOLS_REVISION;

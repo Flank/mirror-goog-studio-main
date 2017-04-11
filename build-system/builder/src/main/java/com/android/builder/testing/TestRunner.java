@@ -24,6 +24,7 @@ import com.google.common.annotations.Beta;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 /** A test runner able to run tests on a list of {@link DeviceConnector} */
 @Beta
@@ -40,8 +41,8 @@ public interface TestRunner {
     boolean runTests(
             @NonNull String projectName,
             @NonNull String variantName,
-            @NonNull File testApk,
             @NonNull TestData testData,
+            @NonNull Set<File> helperApks,
             @NonNull List<? extends DeviceConnector> deviceList,
             int maxThreads,
             int timeoutInMs,

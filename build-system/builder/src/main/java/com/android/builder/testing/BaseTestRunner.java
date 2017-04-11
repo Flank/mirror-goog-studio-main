@@ -40,6 +40,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /** Common code for {@link TestRunner} implementations. */
 public abstract class BaseTestRunner implements TestRunner {
@@ -110,8 +111,8 @@ public abstract class BaseTestRunner implements TestRunner {
     public boolean runTests(
             @NonNull String projectName,
             @NonNull String variantName,
-            @NonNull File testApk,
             @NonNull TestData testData,
+            @NonNull Set<File> helperApks,
             @NonNull List<? extends DeviceConnector> deviceList,
             int maxThreadsInParallel,
             int timeoutInMs,
@@ -178,16 +179,15 @@ public abstract class BaseTestRunner implements TestRunner {
                     scheduleTests(
                             projectName,
                             variantName,
-                            testApk,
                             testData,
-                            deviceList,
+                            apksForDevice,
+                            helperApks,
                             maxThreadsInParallel,
                             timeoutInMs,
                             installOptions,
                             resultsDir,
                             coverageDir,
-                            logger,
-                            apksForDevice);
+                            logger);
 
             List<WaitableExecutor.TaskResult<Boolean>> results = executor.waitForAllTasks();
 
@@ -210,14 +210,13 @@ public abstract class BaseTestRunner implements TestRunner {
     protected abstract WaitableExecutor<Boolean> scheduleTests(
             @NonNull String projectName,
             @NonNull String variantName,
-            @NonNull File testApk,
             @NonNull TestData testData,
-            @NonNull List<? extends DeviceConnector> deviceList,
+            @NonNull Map<DeviceConnector, ImmutableList<File>> apksForDevice,
+            @NonNull Set<File> helperApks,
             int maxThreadsInParallel,
             int timeoutInMs,
             @NonNull Collection<String> installOptions,
             @NonNull File resultsDir,
             @NonNull File coverageDir,
-            @NonNull ILogger logger,
-            Map<DeviceConnector, ImmutableList<File>> apksForDevice);
+            @NonNull ILogger logger);
 }

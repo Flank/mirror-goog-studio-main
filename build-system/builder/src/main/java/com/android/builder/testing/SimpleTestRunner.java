@@ -27,8 +27,8 @@ import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /** Basic {@link TestRunner} running tests on all devices. */
 public class SimpleTestRunner extends BaseTestRunner {
@@ -43,32 +43,31 @@ public class SimpleTestRunner extends BaseTestRunner {
     protected WaitableExecutor<Boolean> scheduleTests(
             @NonNull String projectName,
             @NonNull String variantName,
-            @NonNull File testApk,
             @NonNull TestData testData,
-            @NonNull List<? extends DeviceConnector> deviceList,
+            @NonNull Map<DeviceConnector, ImmutableList<File>> apksForDevice,
+            @NonNull Set<File> helperApks,
             int maxThreadsInParallel,
             int timeoutInMs,
             @NonNull Collection<String> installOptions,
             @NonNull File resultsDir,
             @NonNull File coverageDir,
-            @NonNull ILogger logger,
-            Map<DeviceConnector, ImmutableList<File>> apksForDevice) {
+            @NonNull ILogger logger) {
         WaitableExecutor<Boolean> executor =
                 maxThreadsInParallel > 0
                         ? WaitableExecutor.useGlobalSharedThreadPoolWithLimit(maxThreadsInParallel)
                         : WaitableExecutor.useGlobalSharedThreadPool();
 
-        for (Map.Entry<DeviceConnector, ImmutableList<File>> runners : apksForDevice.entrySet()) {
-            DeviceConnector device = runners.getKey();
+        for (Map.Entry<DeviceConnector, ImmutableList<File>> apks : apksForDevice.entrySet()) {
+            DeviceConnector device = apks.getKey();
             SimpleTestCallable testCallable =
                     new SimpleTestCallable(
                             device,
                             projectName,
                             createRemoteAndroidTestRunner(testData, device),
                             variantName,
-                            testApk,
-                            runners.getValue(),
+                            apks.getValue(),
                             testData,
+                            helperApks,
                             resultsDir,
                             coverageDir,
                             timeoutInMs,

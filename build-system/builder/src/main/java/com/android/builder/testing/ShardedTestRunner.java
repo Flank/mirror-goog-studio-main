@@ -26,8 +26,8 @@ import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /** A {@link TestRunner} that uses all connected devices to execute tests in parallel. */
@@ -48,18 +48,17 @@ public class ShardedTestRunner extends BaseTestRunner {
     protected WaitableExecutor<Boolean> scheduleTests(
             @NonNull String projectName,
             @NonNull String variantName,
-            @NonNull File testApk,
             @NonNull TestData testData,
-            @NonNull List<? extends DeviceConnector> deviceList,
+            @NonNull Map<DeviceConnector, ImmutableList<File>> apksForDevice,
+            @NonNull Set<File> helperApks,
             int maxThreadsInParallel,
             int timeoutInMs,
             @NonNull Collection<String> installOptions,
             @NonNull File resultsDir,
             @NonNull File coverageDir,
-            @NonNull ILogger logger,
-            Map<DeviceConnector, ImmutableList<File>> apksForDevice) {
+            @NonNull ILogger logger) {
         WaitableExecutor<Boolean> executor =
-                WaitableExecutor.useNewFixedSizeThreadPool(deviceList.size());
+                WaitableExecutor.useNewFixedSizeThreadPool(apksForDevice.keySet().size());
 
         int numShards;
         if (this.numShards == null) {
@@ -92,7 +91,6 @@ public class ShardedTestRunner extends BaseTestRunner {
                             runners.getKey(),
                             projectName,
                             variantName,
-                            testApk,
                             runners.getValue(),
                             testData,
                             resultsDir,
