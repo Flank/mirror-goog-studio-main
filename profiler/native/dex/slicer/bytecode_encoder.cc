@@ -399,7 +399,7 @@ bool BytecodeEncoder::Visit(Bytecode* bytecode) {
       bytecode_.Push<dex::u2>(Pack_16((B >> 0) & 0xffff));
       bytecode_.Push<dex::u2>(Pack_16((B >> 16) & 0xffff));
       bytecode_.Push<dex::u2>(Pack_16((B >> 32) & 0xffff));
-      bytecode_.Push<dex::u2>(Pack_16((B >> 24) & 0xffff));
+      bytecode_.Push<dex::u2>(Pack_16((B >> 48) & 0xffff));
     } break;
 
     case dex::kFmt21h:  // op vAA, #+BBBB0000[00000000]

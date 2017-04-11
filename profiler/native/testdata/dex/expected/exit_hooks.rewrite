@@ -1,6 +1,4 @@
 
-Running experiment 'full_rewrite' ... 
-
 method Target.<init>() : void
 {
 	.src "exitHooks.java"
@@ -139,7 +137,7 @@ method Target.testDouble(int) : double
 	    2| move v2, v1
 	    3| packed-switch v2, Label_5
 	.line 65
-	    6| const-wide v2:v3, #-3689348814741910323 (0xcccccccccccccccd | -9.25596e+61)
+	    6| const-wide v2:v3, #+4621762822593629389 (0x4023cccccccccccd | 9.90000)
 	   11| move-wide v0:v1, v2:v3
 Label_1:
 	.end_local v0
@@ -147,17 +145,17 @@ Label_1:
 Label_2:
 	.line 62
 	.restart_local v0
-	   13| const-wide v2:v3, #-7378697629483820646 (0x999999999999999a | -2.35344e-185)
+	   13| const-wide v2:v3, #+4607632778762754458 (0x3ff199999999999a | 1.10000)
 	   18| move-wide v0:v1, v2:v3
 	   19| goto/16 Label_1
 Label_3:
 	.line 63
-	   21| const-wide v2:v3, #-7378697629483820646 (0x999999999999999a | -2.35344e-185)
+	   21| const-wide v2:v3, #+4612136378390124954 (0x400199999999999a | 2.20000)
 	   26| move-wide v0:v1, v2:v3
 	   27| goto/16 Label_1
 Label_4:
 	.line 64
-	   29| const-wide v2:v3, #+7378697629483820646 (0x6666666666666666 | 1.90360e+185)
+	   29| const-wide v2:v3, #+4614613358185178726 (0x400a666666666666 | 3.30000)
 	   34| move-wide v0:v1, v2:v3
 	   35| goto/16 Label_1
 	   37| nop

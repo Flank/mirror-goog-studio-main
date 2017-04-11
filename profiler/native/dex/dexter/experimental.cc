@@ -350,7 +350,7 @@ void Run(const char* experiment, std::shared_ptr<ir::DexFile> dex_ir) {
     exit(1);
   }
 
-  printf("\nRunning experiment '%s' ... \n", experiment);
+  // running the experiment entry point
   (*it->second)(dex_ir);
 }
 
