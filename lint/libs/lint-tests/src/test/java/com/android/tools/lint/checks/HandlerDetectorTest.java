@@ -34,6 +34,7 @@ public class HandlerDetectorTest extends AbstractCheckTest {
                 + "        Handler anonymous = new Handler() { // ERROR\n"
                 + "                            ^\n"
                 + "0 errors, 2 warnings\n";
+        //noinspection all // Sample code
         lint().files(
                 java("src/test/pkg/HandlerTest.java", ""
                         + "package test.pkg;\n"
@@ -81,7 +82,8 @@ public class HandlerDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testSuppress() throws Exception {
+    public void testSuppress() {
+        //noinspection all // Sample code
         lint().files(
                     java("src/test/pkg/CheckActivity.java", ""
                             + "package test.pkg;\n"
