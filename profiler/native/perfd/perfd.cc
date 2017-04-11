@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include <cstring>
+#include "perfd/connector.h"
 #include "perfd/cpu/cpu_profiler_component.h"
 #include "perfd/daemon.h"
 #include "perfd/event/event_profiler_component.h"
@@ -22,14 +24,28 @@
 #include "perfd/network/network_profiler_component.h"
 #include "utils/config.h"
 #include "utils/current_process.h"
+#include "utils/device_info.h"
 #include "utils/file_cache.h"
 #include "utils/fs/path.h"
+#include "utils/socket_utils.h"
 #include "utils/trace.h"
 
-#include <string>
-
 int main(int argc, char** argv) {
-  using std::string;
+  // If directed by command line argument, establish a communication channel
+  // by sending the file descriptor of an existing socket to the agent
+  // which is running a Unix socket server. When this argument is used, the
+  // program is usually invoked by from GenericComponent's
+  // ProfilerServiceImpl::AttachAgent().
+  if (argc >= 3 && strcmp(argv[1], profiler::kConnectCmdLineArg) == 0) {
+    int daemon_socket_fd = atoi(argv[2]);
+    profiler::SendDaemonSocketFdToAgent(profiler::kAgentSocketName,
+                                        daemon_socket_fd);
+    return 0;
+    // Note that in this case we should not initialize various profiler
+    // components as the following code does. They create threads but the
+    // associated thread objects might be destructed before the threads exit,
+    // causing 'terminate called without an active exception' error.
+  }
 
   profiler::Trace::Init();
   profiler::Daemon daemon;
@@ -52,6 +68,19 @@ int main(int argc, char** argv) {
   profiler::NetworkProfilerComponent network_component{&daemon.utilities()};
   daemon.RegisterComponent(&network_component);
 
-  daemon.RunServer(profiler::kServerAddress);
+  if (profiler::DeviceInfo::feature_level() >= 26 &&
+      // TODO: remove the check on argument after agent uses only JVMTI to
+      // instrument bytecode on O+ devices.
+      argc >= 2 && strcmp(argv[1], "-use_jvmti") == 0) {
+    // For O and newer devices, use a Unix abstract socket.
+    // Since we are building a gRPC server, we need a special prefix to inform
+    // gRPC that this is a Unix socket name.
+    std::string grpc_target{profiler::kGrpcUnixSocketAddrPrefix};
+    grpc_target.append(profiler::kDaemonSocketName);
+    daemon.RunServer(grpc_target);
+  } else {
+    // For legacy devices (Nougat or older), use an internet address.
+    daemon.RunServer(profiler::kServerAddress);
+  }
   return 0;
 }

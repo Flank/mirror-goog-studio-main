@@ -7,10 +7,6 @@
 
 using std::string;
 
-namespace {
-const char *const kRunAsExecutable = "/system/bin/run-as";
-}
-
 namespace profiler {
 BashCommandRunner::BashCommandRunner(const string &executable_path)
     : executable_path_(executable_path) {}

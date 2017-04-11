@@ -161,7 +161,7 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
   jclass classes[] = {klass};
   CheckJvmtiError(jvmti_env, jvmti_env->RetransformClasses(1, classes));
 
-  Agent::Instance();
+  Agent::Instance(Agent::SocketType::kAbstractSocket);
   MemoryAgent::Instance(vm);
 
   return JNI_OK;

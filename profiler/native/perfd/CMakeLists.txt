@@ -1,6 +1,7 @@
 add_executable(perfd
                daemon.cc
                agent_service.cc
+               connector.cc
                perfd.cc
                profiler_service.cc
                generic_component.cc)

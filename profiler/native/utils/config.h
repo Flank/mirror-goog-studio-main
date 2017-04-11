@@ -18,6 +18,16 @@
 
 namespace profiler {
 
+// This is a Unix abstract socket name that designates an abstract socket of
+// name "AndroidStudioProfiler" (removing the "@" prefix).
+const char* const kDaemonSocketName = "@AndroidStudioProfiler";
+
+// This is a Unix abstract socket name that is passed to bind() with the
+// '@' replaced by '\0'. It designates an abstract socket of name
+// "AndroidStudioProfilerAgent" (removing the "@" prefix).
+const char* const kAgentSocketName = "@AndroidStudioProfilerAgent";
+
+// Address used for legacy devices (Nougat or older).
 const char* const kServerAddress = "127.0.0.1:12389";
 
 }  // namespace profiler

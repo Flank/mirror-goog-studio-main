@@ -7,6 +7,7 @@
 #include <iostream>
 #include <memory>
 
+#include "utils/bash_command.h"
 #include "utils/fs/disk_file_system.h"
 #include "utils/log.h"
 #include "utils/trace.h"
@@ -72,7 +73,20 @@ bool ProcessManager::IsPidAlive(int pid) const {
   return fs.GetDir(process_path.str())->Exists();
 }
 
+std::string ProcessManager::GetCmdlineForPid(int pid) {
+  std::ostringstream os;
+  os << "/proc/" << pid << "/cmdline";
+  BashCommandRunner cat("cat");
+  string output;
+  if (cat.Run(os.str(), &output)) {
+    return output;
+  }
+  return "";
+}
+
 Process::Process(pid_t pid, const string &cmdline,
                  const std::string &binary_name)
     : pid(pid), cmdline(cmdline), binary_name(binary_name) {}
-}
+
+}  // namespace profiler
+
