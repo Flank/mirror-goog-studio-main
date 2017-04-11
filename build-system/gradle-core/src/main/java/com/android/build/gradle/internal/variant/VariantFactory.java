@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.variant;
 import static com.android.build.gradle.tasks.factory.AbstractCompilesUtil.ANDROID_APT_PLUGIN_NAME;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.VariantOutput;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantModel;
@@ -50,18 +51,25 @@ public interface VariantFactory {
             @NonNull TaskManager taskManager,
             @NonNull Recorder recorder);
 
-    @NonNull
+    //FIXME: Restore these to @NonNull when the instantApp plugin is simplified.
+    @Nullable
     Class<? extends BaseVariantImpl> getVariantImplementationClass(
             @NonNull BaseVariantData variantData);
 
-    @NonNull
+    @Nullable
     default BaseVariantImpl createVariantApi(
             @NonNull Instantiator instantiator,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull BaseVariantData variantData,
             @NonNull ReadOnlyObjectProvider readOnlyObjectProvider) {
+        Class<? extends BaseVariantImpl> implementationClass =
+                getVariantImplementationClass(variantData);
+        if (implementationClass == null) {
+            return null;
+        }
+
         return instantiator.newInstance(
-                getVariantImplementationClass(variantData),
+                implementationClass,
                 variantData,
                 androidBuilder,
                 readOnlyObjectProvider,

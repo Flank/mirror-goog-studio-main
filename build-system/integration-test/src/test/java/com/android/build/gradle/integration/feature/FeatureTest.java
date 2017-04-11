@@ -154,6 +154,7 @@ public class FeatureTest {
         try (ZipFileSubject baseFeatureResources =
                 assertThatZip(
                         baseProject.getIntermediateFile("res/feature/debug/resources-debug.ap_"))) {
+            baseFeatureResources.exists();
             baseFeatureResources.contains("AndroidManifest.xml");
             baseFeatureResources.contains("resources.arsc");
         }
@@ -166,6 +167,14 @@ public class FeatureTest {
             baseFeatureApk.containsClass("Lcom/example/android/multiproject/library/R;");
             baseFeatureApk.containsClass("Lcom/example/android/multiproject/library/PersonView;");
             baseFeatureApk.containsClass("Lcom/example/android/multiproject/base/PersonView2;");
+        }
+
+        // Check that the instantApp bundle gets built properly.
+        try (ZipFileSubject instantAppBundle =
+                assertThatZip(sProject.getSubproject(":bundle").getInstantAppBundle("release"))) {
+            instantAppBundle.exists();
+            instantAppBundle.contains("baseFeature-release-unsigned.apk");
+            instantAppBundle.contains("feature-release-unsigned.apk");
         }
     }
 }

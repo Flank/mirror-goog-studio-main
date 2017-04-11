@@ -521,6 +521,7 @@ public class VariantManager implements VariantModel {
             case LIBRARY:
                 return AndroidTypeAttr.TYPE_AAR;
             case FEATURE:
+            case INSTANTAPP:
                 return AndroidTypeAttr.TYPE_FEATURE;
             case ANDROID_TEST:
             case UNIT_TEST:
@@ -539,6 +540,7 @@ public class VariantManager implements VariantModel {
             case LIBRARY:
                 return AndroidTypeAttr.TYPE_AAR;
             case FEATURE:
+            case INSTANTAPP:
                 return AndroidTypeAttr.TYPE_FEATURE;
             case ANDROID_TEST:
             case UNIT_TEST:

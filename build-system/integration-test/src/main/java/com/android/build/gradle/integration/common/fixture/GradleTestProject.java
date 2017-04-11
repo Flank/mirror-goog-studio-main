@@ -39,6 +39,7 @@ import com.android.testutils.OsType;
 import com.android.testutils.TestUtils;
 import com.android.testutils.apk.Aar;
 import com.android.testutils.apk.Apk;
+import com.android.testutils.apk.Zip;
 import com.android.utils.FileUtils;
 import com.android.utils.Pair;
 import com.google.common.base.Charsets;
@@ -943,6 +944,23 @@ public final class GradleTestProject implements TestRule {
         dimensionList.addAll(Arrays.asList(dimensions));
             return new Aar(getOutputFile(
                     "aar/" + Joiner.on("-").join(dimensionList) + SdkConstants.DOT_AAR));
+    }
+
+    /**
+     * Returns the output bundle file from the instantapp plugin for the given dimension.
+     *
+     * <p>Expected dimensions orders are: - product flavors - build type
+     */
+    public Zip getInstantAppBundle(String... dimensions) throws IOException {
+        List<String> dimensionList = Lists.newArrayListWithExpectedSize(1 + dimensions.length);
+        dimensionList.add(getName());
+        dimensionList.addAll(Arrays.asList(dimensions));
+        return new Zip(
+                getOutputFile(
+                        FileUtils.join(
+                                "apk",
+                                mangleDimensions(dimensions),
+                                Joiner.on("-").join(dimensionList) + SdkConstants.DOT_ZIP)));
     }
 
     /** Returns a string that contains the gradle buildscript content */
