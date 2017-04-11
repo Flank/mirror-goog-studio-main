@@ -185,7 +185,7 @@ public abstract class BaseVariantData implements TaskContainer {
         // eventually, this will require a more open ended comparison.
         SplitHandlingPolicy splitHandlingPolicy =
                 androidConfig.getGeneratePureSplits()
-                                && variantConfiguration.getMinSdkVersion().getApiLevel() >= 21
+                                && variantConfiguration.getMinSdkVersionValue() >= 21
                         ? SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY
                         : SplitHandlingPolicy.PRE_21_POLICY;
 
