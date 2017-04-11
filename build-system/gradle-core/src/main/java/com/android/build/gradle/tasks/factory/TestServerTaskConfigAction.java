@@ -72,10 +72,10 @@ public class TestServerTaskConfigAction implements TaskConfigAction<TestServerTa
         if (testedVariantData != null
                 && testedVariantData.getScope().hasOutput(TaskOutputHolder.TaskOutputType.APK)) {
             serverTask.setTestedApks(
-                    testedVariantData.getScope().getOutputs(TaskOutputHolder.TaskOutputType.APK));
+                    testedVariantData.getScope().getOutput(TaskOutputHolder.TaskOutputType.APK));
         }
 
-        serverTask.setTestApks(scope.getOutputs(TaskOutputHolder.TaskOutputType.APK));
+        serverTask.setTestApks(scope.getOutput(TaskOutputHolder.TaskOutputType.APK));
 
         if (!testServer.isConfigured()) {
             serverTask.setEnabled(false);

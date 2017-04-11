@@ -93,7 +93,7 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
                 variantScope.getVariantDependencies().getCompileClasspath();
         final ResolvableDependencies incomingRuntimeClasspath = runtimeClasspath.getIncoming();
 
-        FileCollection testingApk = variantScope.getOutputs(VariantScope.TaskOutputType.APK);
+        FileCollection testingApk = variantScope.getOutput(VariantScope.TaskOutputType.APK);
 
         // create a FileCollection that will contain the APKs to be tested.
         // FULL_APK is published only to the runtime configuration
@@ -146,6 +146,12 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
         if (connectedAndroidTest != null) {
             connectedAndroidTest.dependsOn(instrumentTestTask.getName());
         }
+    }
+
+    @Override
+    protected void postJavacCreation(
+            @NonNull final TaskFactory tasks, @NonNull VariantScope scope) {
+        // do nothing.
     }
 
     @Override

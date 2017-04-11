@@ -149,7 +149,7 @@ public class PackageSplitRes extends BaseTask {
 
             packageSplitResourcesTask.splitScope = scope.getSplitScope();
             packageSplitResourcesTask.processedResources =
-                    scope.getOutputs(VariantScope.TaskOutputType.PROCESSED_RES);
+                    scope.getOutput(VariantScope.TaskOutputType.PROCESSED_RES);
             packageSplitResourcesTask.signingConfig = config.getSigningConfig();
             packageSplitResourcesTask.splitResApkOutputDirectory = outputDirectory;
             packageSplitResourcesTask.incrementalDir = scope.getIncrementalDir(getName());

@@ -338,6 +338,7 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
 
         @NonNull private AndroidConfig extension;
         @NonNull private VariantScope variantScope;
+        private File outputFile;
 
         public ConfigAction(
                 @NonNull AndroidConfig extension,
@@ -373,7 +374,8 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
                     new File(
                             variantScope.getGlobalScope().getIntermediatesDir(),
                             LibraryTaskManager.ANNOTATIONS + "/" + variantConfig.getDirName()));
-            task.setOutput(new File(task.getDestinationDir(), SdkConstants.FN_ANNOTATIONS_ZIP));
+            outputFile = new File(task.getDestinationDir(), SdkConstants.FN_ANNOTATIONS_ZIP);
+            task.setOutput(outputFile);
             task.setTypedefFile(variantScope.getTypedefFile());
             task.setClassDir(variantScope.getJavaOutputDir());
             task.setSource(variantScope.getVariantData().getJavaSources());

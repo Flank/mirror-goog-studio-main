@@ -16,23 +16,24 @@
 
 package com.android.build.gradle.internal;
 
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.JAVAC;
+
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.options.ProjectOptions;
-import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.profile.Recorder;
 import com.google.common.collect.ImmutableMap;
-import java.io.File;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Supplier;
 import org.gradle.api.Project;
+import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** TaskManager for creating tasks in an Android feature project. */
@@ -107,5 +108,16 @@ public class MultiTypeTaskManager extends TaskManager {
             variantType = variantScope.getTestedVariantData().getType();
         }
         return delegates.get(variantType).getResMergingScopes(variantScope);
+    }
+
+    @Override
+    protected void postJavacCreation(@NonNull TaskFactory tasks, @NonNull VariantScope scope) {
+        // This task manager is used when creating the unit tests of a variant so we need to do this.
+        // FIXME remove when we remove the unit test of a feature (Since the aar variant is already tested with unit tests).
+        // create an anchor collection for usage inside the same module (unit tests basically)
+        ConfigurableFileCollection fileCollection =
+                scope.createAnchorOutput(TaskOutputHolder.AnchorOutputType.CLASSES_FOR_UNIT_TESTS);
+        fileCollection.from(scope.getOutput(JAVAC));
+        fileCollection.from(scope.getVariantData().getAllGeneratedBytecode());
     }
 }

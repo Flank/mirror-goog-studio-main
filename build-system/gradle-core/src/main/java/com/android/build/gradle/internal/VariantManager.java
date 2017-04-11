@@ -45,6 +45,7 @@ import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
 import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -555,7 +556,7 @@ public class VariantManager implements VariantModel {
         final DependencyHandler dependencies = project.getDependencies();
 
         // register transforms.
-        final String explodedAarType = AndroidArtifacts.ArtifactType.EXPLODED_AAR.getType();
+        final String explodedAarType = ArtifactType.EXPLODED_AAR.getType();
         dependencies.registerTransform(
                 reg -> {
                     reg.getFrom().attribute(ARTIFACT_FORMAT, AndroidArtifacts.TYPE_AAR);
@@ -563,11 +564,11 @@ public class VariantManager implements VariantModel {
                     reg.artifactTransform(ExtractAarTransform.class);
                 });
 
-        for (String transformTarget : AarTransform.getTransformTargets()) {
+        for (ArtifactType transformTarget : AarTransform.getTransformTargets()) {
             dependencies.registerTransform(
                     reg -> {
                         reg.getFrom().attribute(ARTIFACT_FORMAT, explodedAarType);
-                        reg.getTo().attribute(ARTIFACT_FORMAT, transformTarget);
+                        reg.getTo().attribute(ARTIFACT_FORMAT, transformTarget.getType());
                         reg.artifactTransform(
                                 AarTransform.class, config -> config.params(transformTarget));
                     });

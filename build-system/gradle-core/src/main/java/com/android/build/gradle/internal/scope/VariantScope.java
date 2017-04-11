@@ -28,6 +28,7 @@ import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
+import com.android.build.gradle.internal.publishing.VariantPublishingSpec;
 import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingProcessLayoutsTask;
@@ -43,7 +44,6 @@ import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.build.gradle.tasks.RenderscriptCompile;
 import com.android.build.gradle.tasks.ShaderCompile;
-import com.android.builder.core.VariantType;
 import com.android.builder.dexing.DexingMode;
 import com.android.builder.model.ApiVersion;
 import java.io.File;
@@ -53,7 +53,6 @@ import org.gradle.api.DefaultTask;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.ArtifactView;
-import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.compile.JavaCompile;
@@ -64,25 +63,15 @@ import org.gradle.api.tasks.compile.JavaCompile;
 public interface VariantScope extends TransformVariantScope, InstantRunVariantScope,
         TaskOutputHolder {
 
-    void publishIntermediateArtifact(
-            @NonNull File file,
-            @NonNull String builtBy,
-            @NonNull ArtifactType artifactType);
-
-    @Nullable
-    ConfigurableFileCollection getInternalArtifact(@NonNull ArtifactType type);
-
-    @Nullable
-    ConfigurableFileCollection getTestedArtifact(
-            @NonNull ArtifactType type,
-            @NonNull VariantType testedVariantType);
-
     @Override
     @NonNull
     GlobalScope getGlobalScope();
 
     @NonNull
     GradleVariantConfiguration getVariantConfiguration();
+
+    @NonNull
+    VariantPublishingSpec getPublishingSpec();
 
     @NonNull
     BaseVariantData getVariantData();

@@ -147,7 +147,7 @@ public class GenerateTestConfig extends DefaultTask {
         @Override
         public void execute(@NonNull GenerateTestConfig task) {
             // get the file collection that this task consumes.
-            FileCollection assets = testedScope.getOutputs(MERGED_ASSETS);
+            FileCollection assets = testedScope.getOutput(MERGED_ASSETS);
 
             // we don't actually consume the task, only the path, so make a manual dependency
             // on the filecollections.
@@ -158,7 +158,7 @@ public class GenerateTestConfig extends DefaultTask {
             task.resourcesDirectory = testedScope.getMergeResourcesOutputDir().toPath();
             task.assetsDirectory = assets.getSingleFile().toPath();
             task.manifests =
-                    testedScope.getOutputs(TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS);
+                    testedScope.getOutput(TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS);
             task.splitScope = testedScope.getSplitScope();
             task.sdkHome =
                     Paths.get(scope.getGlobalScope().getAndroidBuilder().getTarget().getLocation());

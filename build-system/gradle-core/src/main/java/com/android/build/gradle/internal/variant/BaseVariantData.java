@@ -137,7 +137,6 @@ public abstract class BaseVariantData implements TaskContainer {
     // empty anchor compile task to set all compilations tasks as dependents.
     public Task compileTask;
 
-    public FileSupplier mappingFileProviderTask;
     public BinaryFileProviderTask binaryFileProviderTask;
 
     // TODO : why is Jack not registered as the obfuscationTask ???
@@ -749,16 +748,6 @@ public abstract class BaseVariantData implements TaskContainer {
         return MoreObjects.toStringHelper(this)
                 .addValue(variantConfiguration.getFullName())
                 .toString();
-    }
-
-    @Nullable
-    public FileSupplier getMappingFileProvider() {
-        return mappingFileProviderTask;
-    }
-
-    @Nullable
-    public File getMappingFile() {
-        return mappingFileProviderTask != null ? mappingFileProviderTask.get() : null;
     }
 
     @NonNull

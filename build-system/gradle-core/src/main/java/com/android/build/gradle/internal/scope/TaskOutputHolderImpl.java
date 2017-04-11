@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.scope;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.google.common.collect.Maps;
 import java.io.File;
 import java.util.Map;
@@ -34,10 +35,11 @@ public abstract class TaskOutputHolderImpl implements TaskOutputHolder {
 
     @NonNull
     @Override
-    public FileCollection getOutputs(@NonNull OutputType outputType) {
+    public FileCollection getOutput(@NonNull OutputType outputType)
+            throws MissingTaskOutputException {
         FileCollection fileCollection = outputMap.get(outputType);
         if (fileCollection == null) {
-            throw new IllegalStateException("No output of type: " + outputType.toString());
+            throw new MissingTaskOutputException(outputType);
         }
         return fileCollection;
     }
@@ -49,30 +51,26 @@ public abstract class TaskOutputHolderImpl implements TaskOutputHolder {
 
     @Override
     public ConfigurableFileCollection addTaskOutput(
-            @NonNull TaskOutputType outputType, @NonNull File file, @NonNull String taskName) {
-        ConfigurableFileCollection collection = createCollection(file, taskName);
-        addTaskOutput(outputType, collection);
-        return collection;
-    }
-
-    @Override
-    public void addTaskOutput(@NonNull TaskOutputType outputType,
-            @NonNull FileCollection fileCollection) {
+            @NonNull TaskOutputType outputType, @NonNull File file, @Nullable String taskName)
+            throws TaskOutputAlreadyRegisteredException {
         if (outputMap.containsKey(outputType)) {
-            throw new IllegalStateException("Output already registered for type: " + outputType);
+            throw new TaskOutputAlreadyRegisteredException(outputType);
         }
 
-        outputMap.put(outputType, fileCollection);
+        final ConfigurableFileCollection collection = createCollection(file, taskName);
+        outputMap.put(outputType, collection);
+        return collection;
     }
 
     @NonNull
     @Override
-    public FileCollection createAnchorOutput(@NonNull AnchorOutputType outputType) {
+    public ConfigurableFileCollection createAnchorOutput(@NonNull AnchorOutputType outputType)
+            throws TaskOutputAlreadyRegisteredException {
         if (outputMap.containsKey(outputType)) {
-            throw new IllegalStateException("Anchor Output already created for type: " + outputType);
+            throw new TaskOutputAlreadyRegisteredException(outputType);
         }
 
-        FileCollection fileCollection = getProject().files();
+        ConfigurableFileCollection fileCollection = getProject().files();
         outputMap.put(outputType, fileCollection);
 
         return fileCollection;
@@ -107,7 +105,13 @@ public abstract class TaskOutputHolderImpl implements TaskOutputHolder {
     }
 
     @NonNull
-    protected ConfigurableFileCollection createCollection(@NonNull File file, @NonNull String taskName) {
-        return getProject().files(file).builtBy(taskName);
+    protected ConfigurableFileCollection createCollection(
+            @NonNull File file, @Nullable String taskName) {
+        final ConfigurableFileCollection collection = getProject().files(file);
+        if (taskName != null) {
+            collection.builtBy(taskName);
+        }
+
+        return collection;
     }
 }

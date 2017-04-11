@@ -21,6 +21,8 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
+import com.android.build.gradle.internal.scope.TaskOutputHolder;
+import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.build.gradle.tasks.AidlCompile;
@@ -234,7 +236,11 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Nullable
     @Override
     public File getMappingFile() {
-        return getVariantData().getMappingFile();
+        VariantScope scope = getVariantData().getScope();
+        if (scope.hasOutput(TaskOutputHolder.TaskOutputType.APK_MAPPING)) {
+            return scope.getOutput(TaskOutputHolder.TaskOutputType.APK_MAPPING).getSingleFile();
+        }
+        return null;
     }
 
     @Override

@@ -644,7 +644,7 @@ public class ProcessAndroidResources extends IncrementalTask {
         protected final Supplier<File> symbolLocation;
         @NonNull private final File resPackageOutputFolder;
         private final boolean generateLegacyMultidexMainDexProguardRules;
-        private final TaskManager.MergeType mergeType;
+        private final TaskManager.MergeType sourceTaskOutputType;
         private final String baseName;
 
         public ConfigAction(
@@ -652,7 +652,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                 @NonNull Supplier<File> symbolLocation,
                 @NonNull File resPackageOutputFolder,
                 boolean generateLegacyMultidexMainDexProguardRules,
-                @NonNull TaskManager.MergeType mergeType,
+                @NonNull TaskManager.MergeType sourceTaskOutputType,
                 @NonNull String baseName) {
             this.variantScope = scope;
             this.symbolLocation = symbolLocation;
@@ -660,7 +660,7 @@ public class ProcessAndroidResources extends IncrementalTask {
             this.generateLegacyMultidexMainDexProguardRules
                     = generateLegacyMultidexMainDexProguardRules;
             this.baseName = baseName;
-            this.mergeType = mergeType;
+            this.sourceTaskOutputType = sourceTaskOutputType;
         }
 
         @NonNull
@@ -705,7 +705,7 @@ public class ProcessAndroidResources extends IncrementalTask {
             processResources.setIncrementalFolder(variantScope.getIncrementalDir(getName()));
 
             processResources.splitListInput =
-                    variantScope.getOutputs(TaskOutputHolder.TaskOutputType.SPLIT_LIST);
+                    variantScope.getOutput(TaskOutputHolder.TaskOutputType.SPLIT_LIST);
 
             processResources.splitHandlingPolicy =
                     variantData.getSplitScope().getSplitHandlingPolicy();
@@ -761,11 +761,12 @@ public class ProcessAndroidResources extends IncrementalTask {
                                     ? VariantScope.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS
                                     : VariantScope.TaskOutputType.MERGED_MANIFESTS;
             processResources.setManifestFiles(
-                    variantScope.getOutputs(processResources.taskInputType));
+                    variantScope.getOutput(processResources.taskInputType));
 
             // FIX ME : we should not have both a file collection and a resDir plus, we should
             // express the dependency on the databinding task through a file collection.
-            processResources.mergedResources = variantScope.getOutputs(mergeType.getOutputType());
+            processResources.mergedResources =
+                    variantScope.getOutput(sourceTaskOutputType.getOutputType());
             processResources.resDir = TaskInputHelper.memoize(variantScope::getFinalResourcesDir);
 
             processResources.setMergeResourcesOutputDir(variantScope.getMergeResourcesOutputDir());

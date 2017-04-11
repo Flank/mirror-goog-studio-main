@@ -18,6 +18,8 @@ package com.android.build.gradle.internal;
 
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.APK;
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.JAVAC;
+import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
@@ -33,6 +35,8 @@ import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.DefaultGradlePackagingScope;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.PackagingScope;
+import com.android.build.gradle.internal.scope.TaskConfigAction;
+import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AppPreBuildTask;
 import com.android.build.gradle.internal.tasks.TestPreBuildTask;
@@ -46,6 +50,7 @@ import com.android.build.gradle.tasks.AndroidJarTask;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.profile.Recorder;
+import com.android.utils.FileUtils;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
 import java.io.File;
 import java.util.Optional;
@@ -53,6 +58,9 @@ import java.util.Set;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.file.FileCollection;
+import org.gradle.api.tasks.bundling.Jar;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
@@ -234,12 +242,11 @@ public class ApplicationTaskManager extends TaskManager {
                 variantScope.getFullVariantName(),
                 () -> {
                     @NonNull
-                    AndroidTask<BuildInfoWriterTask> buildInfoWriterTask = createBuildInfoWriterTask(
-                            tasks, variantScope);
+                    AndroidTask<BuildInfoWriterTask> buildInfoWriterTask =
+                            createBuildInfoWriterTask(tasks, variantScope);
 
                     createInstantRunPackagingTasks(tasks, buildInfoWriterTask, variantScope);
-                    createPackagingTask(
-                            tasks, variantScope, true /*publishApk*/, buildInfoWriterTask);
+                    createPackagingTask(tasks, variantScope, buildInfoWriterTask);
                 });
 
         // create the lint tasks.
@@ -385,6 +392,58 @@ public class ApplicationTaskManager extends TaskManager {
             // the build-info.xml.
             variantScope.getAssembleTask().dependsOn(tasks, buildInfoGeneratorTask);
         }
+    }
+
+    @Override
+    protected void postJavacCreation(
+            @NonNull final TaskFactory tasks, @NonNull VariantScope scope) {
+        final FileCollection javacOutput = scope.getOutput(JAVAC);
+        final FileCollection generatedBC = scope.getVariantData().getAllGeneratedBytecode();
+
+        // Create the classes artifact for uses by external test modules.
+        File dest =
+                new File(
+                        globalScope.getBuildDir(),
+                        FileUtils.join(
+                                FD_INTERMEDIATES,
+                                "classes-jar",
+                                scope.getVariantConfiguration().getDirName()));
+
+        AndroidTask<Jar> task =
+                androidTasks.create(
+                        tasks,
+                        new TaskConfigAction<Jar>() {
+                            @NonNull
+                            @Override
+                            public String getName() {
+                                return scope.getTaskName("bundleAppClasses");
+                            }
+
+                            @NonNull
+                            @Override
+                            public Class<Jar> getType() {
+                                return Jar.class;
+                            }
+
+                            @Override
+                            public void execute(@NonNull Jar task) {
+                                task.from(javacOutput);
+                                task.from(generatedBC);
+                                task.setDestinationDir(dest);
+                                task.setArchiveName("classes.jar");
+                            }
+                        });
+
+        scope.addTaskOutput(
+                TaskOutputHolder.TaskOutputType.APP_CLASSES,
+                new File(dest, "classes.jar"),
+                task.getName());
+
+        // create a lighter weight version for usage inside the same module (unit tests basically)
+        ConfigurableFileCollection fileCollection =
+                scope.createAnchorOutput(TaskOutputHolder.AnchorOutputType.CLASSES_FOR_UNIT_TESTS);
+        fileCollection.from(javacOutput);
+        fileCollection.from(generatedBC);
     }
 
     @Override

@@ -20,7 +20,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.JAVAC;
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.AnchorOutputType.CLASSES_FOR_UNIT_TESTS;
 import static com.android.builder.core.VariantType.UNIT_TEST;
 
 import com.android.annotations.NonNull;
@@ -123,7 +123,7 @@ public class AndroidUnitTest extends Test {
 
             configureSources(runTestsTask);
 
-            runTestsTask.setClasspath(computeClasspath(testedVariantData));
+            runTestsTask.setClasspath(computeClasspath());
 
             // if android resources are meant to be accessible, then we need to make sure
             // changes to them trigger a new run of the tasks
@@ -133,9 +133,8 @@ public class AndroidUnitTest extends Test {
                     .getUnitTests()
                     .isIncludeAndroidResources()) {
                 VariantScope testedScope = testedVariantData.getScope();
-                runTestsTask.assetsCollection =
-                        testedScope.getOutputs(TaskOutputType.MERGED_ASSETS);
-                runTestsTask.resCollection = testedScope.getOutputs(TaskOutputType.MERGED_RES);
+                runTestsTask.assetsCollection = testedScope.getOutput(TaskOutputType.MERGED_ASSETS);
+                runTestsTask.resCollection = testedScope.getOutput(TaskOutputType.MERGED_RES);
             }
 
             // Put the variant name in the report path, so that different testing tasks don't
@@ -163,22 +162,14 @@ public class AndroidUnitTest extends Test {
         }
 
         @NonNull
-        private ConfigurableFileCollection computeClasspath(BaseVariantData testedVariantData) {
+        private ConfigurableFileCollection computeClasspath() {
             ConfigurableFileCollection collection = scope.getGlobalScope().getProject().files();
 
-            final VariantScope testedScope = testedVariantData.getScope();
-
             // the test classpath is made up of:
-            // - the java runtime classpath for this scope (which includes the tested code)
-            // - the test compilation output
-            collection.from(scope.getOutputs(JAVAC));
-            collection.from(scope.getVariantData().getAllGeneratedBytecode());
-            collection.from(testedScope.getOutputs(JAVAC));
-            collection.from(testedVariantData.getAllGeneratedBytecode());
-
-            // - the test and tested java resources
-            collection.from(scope.getOutputs(TaskOutputType.JAVA_RES));
-            collection.from(testedScope.getOutputs(TaskOutputType.JAVA_RES));
+            // - the test component classes and java_res
+            collection.from(scope.getOutput(CLASSES_FOR_UNIT_TESTS));
+            // TODO is this the right thing? this doesn't include the res merging via transform AFAIK
+            collection.from(scope.getOutput(TaskOutputType.JAVA_RES));
 
             // - the runtime dependencies for both CLASSES and JAVA_RES type
             collection.from(
@@ -191,7 +182,7 @@ public class AndroidUnitTest extends Test {
 
             // Mockable JAR is last, to make sure you can shadow the classes with
             // dependencies.
-            collection.from(scope.getGlobalScope().getOutputs(TaskOutputType.MOCKABLE_JAR));
+            collection.from(scope.getGlobalScope().getOutput(TaskOutputType.MOCKABLE_JAR));
             return collection;
         }
 

@@ -481,8 +481,8 @@ public class Lint extends BaseTask {
             }
             lint.setAndroidBuilder(globalScope.getAndroidBuilder());
             lint.setVariantName(scope.getVariantConfiguration().getFullName());
-            lint.manifestsForVariant = scope.getOutputs(
-                    TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS);
+            lint.manifestsForVariant =
+                    scope.getOutput(TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS);
             lint.setToolingRegistry(globalScope.getToolingRegistry());
             lint.setReportsDir(globalScope.getReportsDir());
             lint.setOutputsDir(scope.getGlobalScope().getOutputsDir());
@@ -523,8 +523,8 @@ public class Lint extends BaseTask {
             task.setSdkHome(checkNotNull(
                     globalScope.getSdkHandler().getSdkFolder(), "SDK not set up."));
             task.setVariantName(variantName);
-            task.manifestsForVariant = scope.getOutputs(
-                    TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS);
+            task.manifestsForVariant =
+                    scope.getOutput(TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS);
             task.setToolingRegistry(globalScope.getToolingRegistry());
             task.setReportsDir(globalScope.getReportsDir());
             task.setOutputsDir(scope.getGlobalScope().getOutputsDir());

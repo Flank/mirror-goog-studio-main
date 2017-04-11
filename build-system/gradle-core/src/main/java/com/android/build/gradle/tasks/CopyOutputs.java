@@ -122,14 +122,14 @@ public class CopyOutputs extends BaseTask {
         public void execute(@NonNull CopyOutputs task) {
             task.setVariantName(packagingScope.getFullVariantName());
             task.splitScope = packagingScope.getSplitScope();
-            task.fullApks = packagingScope.getOutputs(TaskOutputType.FULL_APK);
+            task.fullApks = packagingScope.getOutput(TaskOutputType.FULL_APK);
             task.abiSplits =
                     packagingScope.hasOutput(TaskOutputType.ABI_PACKAGED_SPLIT)
-                            ? packagingScope.getOutputs(TaskOutputType.ABI_PACKAGED_SPLIT)
+                            ? packagingScope.getOutput(TaskOutputType.ABI_PACKAGED_SPLIT)
                             : packagingScope.getProject().files();
             task.resourcesSplits =
                     packagingScope.hasOutput(TaskOutputType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT)
-                            ? packagingScope.getOutputs(
+                            ? packagingScope.getOutput(
                                     TaskOutputType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT)
                             : packagingScope.getProject().files();
             task.destinationDir = outputDirectory;

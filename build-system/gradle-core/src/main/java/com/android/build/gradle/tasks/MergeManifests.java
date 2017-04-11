@@ -466,7 +466,7 @@ public class MergeManifests extends ManifestProcessorTask {
                         variantScope.getMicroApkManifestFile());
             }
             processManifestTask.compatibleScreensManifest =
-                    variantScope.getOutputs(VariantScope.TaskOutputType.COMPATIBLE_SCREEN_MANIFEST);
+                    variantScope.getOutput(VariantScope.TaskOutputType.COMPATIBLE_SCREEN_MANIFEST);
 
             processManifestTask.minSdkVersion =
                     TaskInputHelper.memoize(

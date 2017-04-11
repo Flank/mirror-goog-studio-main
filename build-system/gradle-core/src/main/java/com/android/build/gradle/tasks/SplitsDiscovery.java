@@ -288,7 +288,7 @@ public class SplitsDiscovery extends BaseTask {
                 task.abiFilters = splits.getAbiFilters();
             }
             task.mergedResourcesFolders =
-                    variantScope.getOutputs(VariantScope.TaskOutputType.MERGED_RES);
+                    variantScope.getOutput(VariantScope.TaskOutputType.MERGED_RES);
             task.resourceConfigs =
                     variantScope
                             .getVariantConfiguration()

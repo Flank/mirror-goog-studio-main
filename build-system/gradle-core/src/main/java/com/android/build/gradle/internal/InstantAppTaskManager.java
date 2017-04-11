@@ -33,7 +33,6 @@ import com.android.utils.FileUtils;
 import java.io.File;
 import java.util.Set;
 import org.gradle.api.Project;
-import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** TaskManager for creating tasks in an Android InstantApp project. */
@@ -76,10 +75,8 @@ public class InstantAppTaskManager extends TaskManager {
                         .create(tasks, new BundleInstantApp.ConfigAction(variantScope, bundleDir));
         variantScope.getAssembleTask().dependsOn(tasks, bundleTask);
 
-        ConfigurableFileCollection bundleFileCollection = project.files(bundleDir);
-        bundleFileCollection.builtBy(bundleTask.getName());
         variantScope.addTaskOutput(
-                TaskOutputHolder.TaskOutputType.INSTANTAPP_BUNDLE, bundleFileCollection);
+                TaskOutputHolder.TaskOutputType.INSTANTAPP_BUNDLE, bundleDir, bundleTask.getName());
 
         // FIXME: Stop creating dummy tasks just to make the IDE sync shut up.
         tasks.create(variantScope.getTaskName("generate", "Sources"));
@@ -90,5 +87,10 @@ public class InstantAppTaskManager extends TaskManager {
     @Override
     protected Set<QualifiedContent.Scope> getResMergingScopes(@NonNull VariantScope variantScope) {
         return TransformManager.EMPTY_SCOPES;
+    }
+
+    @Override
+    protected void postJavacCreation(@NonNull TaskFactory tasks, @NonNull VariantScope scope) {
+        // do nothing.
     }
 }

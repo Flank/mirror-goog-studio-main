@@ -23,7 +23,6 @@ import static com.android.build.gradle.internal.TaskManager.DIR_BUNDLES;
 import static com.android.build.gradle.internal.dsl.BuildType.PostprocessingConfiguration.OLD_DSL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.APK_CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
@@ -62,6 +61,8 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactSco
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType;
+import com.android.build.gradle.internal.publishing.VariantPublishingSpec;
+import com.android.build.gradle.internal.publishing.VariantPublishingSpec.OutputPublishingSpec;
 import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
@@ -147,8 +148,9 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     private static final ILogger LOGGER = LoggerWrapper.getLogger(VariantScopeImpl.class);
 
-    @NonNull
-    private GlobalScope globalScope;
+    @NonNull private final VariantPublishingSpec variantPublishingSpec;
+
+    @NonNull private GlobalScope globalScope;
     @NonNull private BaseVariantData variantData;
     private ErrorReporter errorReporter;
     @NonNull
@@ -226,8 +228,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     private InstantRunTaskManager instantRunTaskManager;
 
-    private final Map<AndroidArtifacts.ArtifactType, ConfigurableFileCollection> artifactMap = Maps.newHashMap();
-
     public VariantScopeImpl(
             @NonNull GlobalScope globalScope,
             @NonNull ErrorReporter errorReporter,
@@ -237,6 +237,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         this.errorReporter = errorReporter;
         this.transformManager = transformManager;
         this.variantData = variantData;
+        this.variantPublishingSpec = VariantPublishingSpec.getVariantSpec(variantData.getType());
 
         validatePostprocessingOptions();
     }
@@ -270,11 +271,53 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     }
 
     @Override
-    public void publishIntermediateArtifact(
+    @NonNull
+    public VariantPublishingSpec getPublishingSpec() {
+        return variantPublishingSpec;
+    }
+
+    @Override
+    public ConfigurableFileCollection addTaskOutput(
+            @NonNull TaskOutputType outputType, @NonNull File file, @Nullable String taskName) {
+        ConfigurableFileCollection fileCollection;
+        try {
+            fileCollection = super.addTaskOutput(outputType, file, taskName);
+        } catch (TaskOutputAlreadyRegisteredException e) {
+            throw new RuntimeException(
+                    String.format(
+                            "OutputType '%s' already registered for variant '%s'",
+                            e.getOutputType(), this.getFullVariantName()),
+                    e);
+        }
+
+        OutputPublishingSpec taskSpec = variantPublishingSpec.getSpec(outputType);
+        if (taskSpec != null) {
+            publishIntermediateArtifact(
+                    file, taskName, taskSpec.getArtifactType(), taskSpec.getPublishedConfigTypes());
+        }
+        return fileCollection;
+    }
+
+    @NonNull
+    @Override
+    public FileCollection getOutput(@NonNull OutputType outputType)
+            throws MissingTaskOutputException {
+        try {
+            return super.getOutput(outputType);
+        } catch (MissingTaskOutputException e) {
+            throw new RuntimeException(
+                    String.format(
+                            "Variant '%s' has no output with type '%s'",
+                            this.getFullVariantName(), e.getOutputType()),
+                    e);
+        }
+    }
+
+    private void publishIntermediateArtifact(
             @NonNull File file,
             @NonNull String builtBy,
-            @NonNull ArtifactType artifactType) {
-        Collection<PublishedConfigType> configTypes = artifactType.getPublishingConfigurations();
+            @NonNull ArtifactType artifactType,
+            @NonNull Collection<PublishedConfigType> configTypes) {
         Preconditions.checkState(!configTypes.isEmpty());
 
         // FIXME this needs to be parameterized based on the variant's publishing type.
@@ -301,8 +344,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                     builtBy,
                     artifactType);
         }
-
-        artifactMap.put(artifactType, createCollection(file, builtBy));
     }
 
     private void publishArtifactToConfiguration(
@@ -320,32 +361,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                                 artifact.builtBy(project.getTasks().getByName(builtBy));
                             }));
                 });
-    }
-
-    @Override
-    @Nullable
-    public ConfigurableFileCollection getInternalArtifact(@NonNull ArtifactType type) {
-        return artifactMap.get(type);
-    }
-
-    @Nullable
-    @Override
-    public ConfigurableFileCollection getTestedArtifact(
-            @NonNull ArtifactType type,
-            @NonNull VariantType testedVariantType) {
-        // get the matching file collection for the tested variant, if any.
-        if (variantData instanceof TestVariantData) {
-            TestedVariantData tested = ((TestVariantData) variantData).getTestedVariantData();
-
-            if (tested instanceof BaseVariantData) {
-                BaseVariantData testedVariantData = (BaseVariantData) tested;
-                if (testedVariantData.getVariantConfiguration().getType() == testedVariantType) {
-                    return testedVariantData.getScope().getInternalArtifact(type);
-                }
-            }
-        }
-
-        return null;
     }
 
     @Override
@@ -817,7 +832,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             @NonNull ConsumedConfigType configType,
             @NonNull ArtifactScope scope,
             @NonNull ArtifactType artifactType) {
-        checkConfigType(artifactType, configType);
 
         Configuration configuration;
         switch (configType) {
@@ -870,25 +884,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 return id -> id instanceof ProjectComponentIdentifier;
             default:
                 throw new RuntimeException("unknown ArtifactScope value");
-        }
-    }
-
-    private static void checkConfigType(
-            @NonNull ArtifactType artifactType,
-            @NonNull ConsumedConfigType consumedConfigType) {
-        // check if the queried configuration matches where this artifact has been published.
-        // this is mostly a check against typo'ed configuration.
-        Collection<PublishedConfigType> publishedConfigs = artifactType.getPublishingConfigurations();
-        PublishedConfigType publishedTo = consumedConfigType.getPublishedTo();
-        // if empty, means it was published to all configs.
-        if (!publishedConfigs.isEmpty() && !publishedConfigs.contains(publishedTo)) {
-            throw new RuntimeException(
-                    "Querying Artifact '"
-                            + artifactType.name()
-                            + "' with config '"
-                            + consumedConfigType.name()
-                            + "' for artifact published to: "
-                            + publishedConfigs);
         }
     }
 
@@ -1870,62 +1865,45 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         // get the matching file collection for the tested variant, if any.
         if (variantData instanceof TestVariantData) {
             TestedVariantData tested = ((TestVariantData) variantData).getTestedVariantData();
+            final VariantScope testedScope = tested.getScope();
 
-            if (tested instanceof LibraryVariantData) {
-                // we only add the tested component to the MODULE scope.
-                if (artifactScope == ArtifactScope.MODULE || artifactScope == ALL) {
-                    // for the library, always add the tested scope no matter the
-                    // configuration type (package or compile)
-                    final LibraryVariantData testedVariantData = (LibraryVariantData) tested;
-                    FileCollection testedFC;
-                    // FIXME we really need to unify ArtifactType and TaskOutputType and remove getInternalArtifact, and generally clean this up...
-                    if (variantType == VariantType.UNIT_TEST && artifactType == CLASSES) {
-                        // in this case we want JAVAC instead of the internal artifact, because
-                        // otherwise we are missing the R class.
-                        // But this means we also need to manually include the generated byte
-                        // code from the tested variant manually.
-                        ConfigurableFileCollection fc = getProject().files();
-                        fc.from(testedVariantData.getScope().getOutputs(TaskOutputType.JAVAC));
-                        fc.from(testedVariantData.getAllGeneratedBytecode());
-                        testedFC = fc;
-                    } else {
-                        testedFC = testedVariantData.getScope().getInternalArtifact(artifactType);
-                    }
+            // we only add the tested component to the MODULE | ALL scopes.
+            if (artifactScope == ArtifactScope.MODULE || artifactScope == ALL) {
+                VariantPublishingSpec testedSpec =
+                        testedScope.getPublishingSpec().getTestingSpec(variantType);
 
-                    if (testedFC != null) {
-                        result = plusFunction.apply(collection, testedFC);
-                    }
-                }
+                // get the OutputPublishingSpec from the ArtifactType for this particular variant spec
+                OutputPublishingSpec taskOutputSpec = testedSpec.getSpec(artifactType);
 
-            } else if (tested instanceof ApplicationVariantData) {
-                final ApplicationVariantData testedVariantData = (ApplicationVariantData) tested;
+                if (taskOutputSpec != null) {
+                    Collection<PublishedConfigType> publishedConfigs =
+                            taskOutputSpec.getPublishedConfigTypes();
 
-                // We need to add the tested code in most case when it's COMPILE_CLASSPATH,
-                // but also if it's RUNTIME and UNIT_TEST.
-                if ((configType == COMPILE_CLASSPATH || variantType == VariantType.UNIT_TEST)
-                        && (artifactScope == ArtifactScope.MODULE || artifactScope == ALL)
-                        && artifactType == CLASSES) {
-                    final VariantScope testedScope = testedVariantData.getScope();
-                    ConfigurableFileCollection testedFC =
-                            testedScope.getInternalArtifact(APK_CLASSES);
-
-                    if (testedFC != null) {
-                        result = plusFunction.apply(collection, testedFC);
+                    // check that we are querying for a config type that the tested artifact
+                    // was published to.
+                    if (publishedConfigs.contains(configType.getPublishedTo())) {
+                        // if it's the case then we add the tested artifact.
+                        final OutputType taskOutputType = taskOutputSpec.getOutputType();
+                        if (testedScope.hasOutput(taskOutputType)) {
+                            result =
+                                    plusFunction.apply(
+                                            result, testedScope.getOutput(taskOutputType));
+                        }
                     }
                 }
+            }
 
-                if (variantType == VariantType.ANDROID_TEST && configType == RUNTIME_CLASSPATH) {
-                    // However for RUNTIME/AndroidTest, we also always remove the transitive
-                    // dependencies coming from the tested app to avoid having the same artifact
-                    // on each app and tested app. This applies only to the package scope since
-                    // we do want these in the compile scope in order to compile
-                    result =
-                            minusFunction.apply(
-                                    result,
-                                    testedVariantData
-                                            .getScope()
-                                            .getArtifactView(configType, ALL, artifactType));
-                }
+            // We remove the transitive dependencies coming from the
+            // tested app to avoid having the same artifact on each app and tested app.
+            // This applies only to the package scope since we do want these in the compile
+            // scope in order to compile.
+            // We only do this for the AndroidTest.
+            if (tested instanceof ApplicationVariantData
+                    && configType == RUNTIME_CLASSPATH
+                    && variantType == VariantType.ANDROID_TEST) {
+                result =
+                        minusFunction.apply(
+                                result, testedScope.getArtifactView(configType, ALL, artifactType));
             }
         }
 

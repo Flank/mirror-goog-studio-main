@@ -114,7 +114,7 @@ public class TestDataImpl extends AbstractTestDataImpl {
                                 VariantScope.TaskOutputType.APK,
                                 testedVariantData
                                         .getScope()
-                                        .getOutputs(VariantScope.TaskOutputType.APK)));
+                                        .getOutput(VariantScope.TaskOutputType.APK)));
         apks.addAll(
                 SplitOutputMatcher.computeBestOutput(
                         processExecutor,
@@ -131,7 +131,7 @@ public class TestDataImpl extends AbstractTestDataImpl {
         Optional<File> testApkFile =
                 testVariantData
                         .getScope()
-                        .getOutputs(TaskOutputHolder.TaskOutputType.APK)
+                        .getOutput(TaskOutputHolder.TaskOutputType.APK)
                         .getAsFileTree()
                         .getFiles()
                         .stream()

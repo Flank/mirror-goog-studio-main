@@ -55,6 +55,7 @@ import com.android.builder.dexing.DexingMode;
 import com.android.builder.profile.Recorder;
 import com.android.builder.signing.DefaultSigningConfig;
 import com.android.ide.common.build.ApkData;
+import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
@@ -227,12 +228,14 @@ class ExternalBuildTaskManager {
                 processedAndroidResourcesFile);
 
         packagingScope.addTaskOutput(
-                TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS,
-                project.files(androidManifestFile));
+                TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS, androidManifestFile, null);
 
         // TODO: Where should assets come from?
+        // For now, we need to fake an assets task output since we don't have one, use a
+        // non-existing folder name.
+        File assetsFolder = FileUtils.join(project.getBuildDir(), "__external_assets__");
         packagingScope.addTaskOutput(
-                TaskOutputHolder.TaskOutputType.MERGED_ASSETS, project.files());
+                TaskOutputHolder.TaskOutputType.MERGED_ASSETS, assetsFolder, null);
 
         Logger logger = Logging.getLogger(ExternalBuildTaskManager.class);
 

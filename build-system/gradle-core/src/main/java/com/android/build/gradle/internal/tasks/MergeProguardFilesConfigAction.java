@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.tasks;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -28,11 +27,15 @@ public class MergeProguardFilesConfigAction implements TaskConfigAction<MergeFil
 
     @NonNull private final Project project;
     @NonNull private final VariantScope variantScope;
+    @NonNull private final File outputFile;
 
     public MergeProguardFilesConfigAction(
-            @NonNull Project project, @NonNull VariantScope variantScope) {
+            @NonNull Project project,
+            @NonNull VariantScope variantScope,
+            @NonNull File outputFile) {
         this.project = project;
         this.variantScope = variantScope;
+        this.outputFile = outputFile;
     }
 
     @NonNull
@@ -53,7 +56,6 @@ public class MergeProguardFilesConfigAction implements TaskConfigAction<MergeFil
         mergeProguardFiles.setInputFiles(
                 project.files(variantScope.getVariantConfiguration().getConsumerProguardFiles())
                         .getFiles());
-        mergeProguardFiles.setOutputFile(
-                new File(variantScope.getBaseBundleDir(), SdkConstants.FN_PROGUARD_TXT));
+        mergeProguardFiles.setOutputFile(outputFile);
     }
 }

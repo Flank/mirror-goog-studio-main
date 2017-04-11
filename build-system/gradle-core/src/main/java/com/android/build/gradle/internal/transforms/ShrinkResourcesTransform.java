@@ -22,6 +22,7 @@ import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.JarInput;
 import com.android.build.api.transform.QualifiedContent.ContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
+import com.android.build.api.transform.SecondaryFile;
 import com.android.build.api.transform.Transform;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
@@ -33,7 +34,8 @@ import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.build.gradle.internal.scope.SplitList;
 import com.android.build.gradle.internal.scope.SplitScope;
-import com.android.build.gradle.internal.scope.TaskOutputHolder;
+import com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType;
+import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.build.gradle.tasks.ResourceUsageAnalyzer;
@@ -93,16 +95,14 @@ public class ShrinkResourcesTransform extends Transform {
     @NonNull
     private final Logger logger;
 
-    @NonNull
-    private final ImmutableList<File> secondaryInputs;
+    @NonNull private final ImmutableList<SecondaryFile> secondaryInputs;
 
     @NonNull
     private final File sourceDir;
     @NonNull
     private final File resourceDir;
     @NonNull private final FileCollection mergedManifests;
-    @Nullable
-    private final File mappingFile;
+    @Nullable private final FileCollection mappingFileSrc;
     @NonNull private final AaptGeneration aaptGeneration;
 
     public ShrinkResourcesTransform(
@@ -121,19 +121,28 @@ public class ShrinkResourcesTransform extends Transform {
         this.splitListInput = splitListInput;
         this.logger = logger;
 
-        sourceDir = variantData.getScope().getRClassSourceOutputDir();
-        resourceDir = variantData.getScope().getFinalResourcesDir();
-        mergedManifests =
-                variantData.getScope().getOutputs(TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS);
-        mappingFile = variantData.getMappingFile();
+        final VariantScope scope = variantData.getScope();
+        sourceDir = scope.getRClassSourceOutputDir();
+        resourceDir = scope.getFinalResourcesDir();
+        mergedManifests = scope.getOutput(TaskOutputType.MERGED_MANIFESTS);
+        mappingFileSrc =
+                scope.hasOutput(TaskOutputType.APK_MAPPING)
+                        ? scope.getOutput(TaskOutputType.APK_MAPPING)
+                        : null;
 
-        if (mappingFile != null) {
-            secondaryInputs = ImmutableList.of(
-                    sourceDir,
-                    resourceDir,
-                    mappingFile);
+        if (mappingFileSrc != null) {
+            // FIXME use Task output to get FileCollection for sourceDir/resourceDir
+            secondaryInputs =
+                    ImmutableList.of(
+                            SecondaryFile.nonIncremental(sourceDir),
+                            SecondaryFile.nonIncremental(resourceDir),
+                            SecondaryFile.nonIncremental(mappingFileSrc));
         } else {
-            secondaryInputs = ImmutableList.of(sourceDir, resourceDir);
+            // FIXME use Task output to get FileCollection for sourceDir/resourceDir
+            secondaryInputs =
+                    ImmutableList.of(
+                            SecondaryFile.nonIncremental(sourceDir),
+                            SecondaryFile.nonIncremental(resourceDir));
         }
     }
 
@@ -169,7 +178,7 @@ public class ShrinkResourcesTransform extends Transform {
 
     @NonNull
     @Override
-    public Collection<File> getSecondaryFileInputs() {
+    public Collection<SecondaryFile> getSecondaryFiles() {
         return secondaryInputs;
     }
 
@@ -217,12 +226,12 @@ public class ShrinkResourcesTransform extends Transform {
         SplitScope splitScope = variantData.getScope().getSplitScope();
         splitScope.parallelForEachOutput(
                 uncompressedBuildOutputs,
-                TaskOutputHolder.TaskOutputType.PROCESSED_RES,
-                TaskOutputHolder.TaskOutputType.SHRUNK_PROCESSED_RES,
+                TaskOutputType.PROCESSED_RES,
+                TaskOutputType.SHRUNK_PROCESSED_RES,
                 this::splitAction,
                 invocation,
                 splitList);
-        splitScope.save(TaskOutputHolder.TaskOutputType.SHRUNK_PROCESSED_RES, compressedResources);
+        splitScope.save(TaskOutputType.SHRUNK_PROCESSED_RES, compressedResources);
     }
 
     @Nullable
@@ -248,6 +257,7 @@ public class ShrinkResourcesTransform extends Transform {
         }
 
         File reportFile = null;
+        File mappingFile = mappingFileSrc != null ? mappingFileSrc.getSingleFile() : null;
         if (mappingFile != null) {
             File logDir = mappingFile.getParentFile();
             if (logDir != null) {
@@ -263,8 +273,7 @@ public class ShrinkResourcesTransform extends Transform {
 
         Collection<BuildOutput> mergedManifests = BuildOutputs.load(this.mergedManifests);
         BuildOutput mergedManifest =
-                SplitScope.getOutput(
-                        mergedManifests, TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS, apkData);
+                SplitScope.getOutput(mergedManifests, TaskOutputType.MERGED_MANIFESTS, apkData);
         if (mergedManifest == null) {
             try {
                 FileUtils.copyFile(uncompressedResourceFile, compressedResourceFile);

@@ -49,28 +49,28 @@ public class AarTransform extends ArtifactTransform {
     @NonNull private final ArtifactType targetType;
 
     @Inject
-    public AarTransform(@NonNull String targetType) {
-        this.targetType = ArtifactType.byType(targetType);
+    public AarTransform(@NonNull ArtifactType targetType) {
+        this.targetType = targetType;
     }
 
     @NonNull
-    public static String[] getTransformTargets() {
-        return new String[] {
-            ArtifactType.CLASSES.getType(),
-            ArtifactType.JAVA_RES.getType(),
-            ArtifactType.JAR.getType(),
-            ArtifactType.MANIFEST.getType(),
-            ArtifactType.ANDROID_RES.getType(),
-            ArtifactType.ASSETS.getType(),
-            ArtifactType.JNI.getType(),
-            ArtifactType.AIDL.getType(),
-            ArtifactType.RENDERSCRIPT.getType(),
-            ArtifactType.PROGUARD_RULES.getType(),
-            ArtifactType.LINT.getType(),
-            ArtifactType.ANNOTATIONS.getType(),
-            ArtifactType.PUBLIC_RES.getType(),
-            ArtifactType.SYMBOL_LIST.getType(),
-            ArtifactType.DATA_BINDING.getType(),
+    public static ArtifactType[] getTransformTargets() {
+        return new ArtifactType[] {
+            ArtifactType.CLASSES,
+            ArtifactType.JAVA_RES,
+            ArtifactType.JAR,
+            ArtifactType.MANIFEST,
+            ArtifactType.ANDROID_RES,
+            ArtifactType.ASSETS,
+            ArtifactType.JNI,
+            ArtifactType.AIDL,
+            ArtifactType.RENDERSCRIPT,
+            ArtifactType.PROGUARD_RULES,
+            ArtifactType.LINT,
+            ArtifactType.ANNOTATIONS,
+            ArtifactType.PUBLIC_RES,
+            ArtifactType.SYMBOL_LIST,
+            ArtifactType.DATA_BINDING,
         };
     }
 
@@ -80,12 +80,8 @@ public class AarTransform extends ArtifactTransform {
         File file;
 
         switch (targetType) {
-            // because both APK_CLASSES and CLASSES resolve to JavaPlugin.CLASS_DIRECTORY, we check for both
-            // depending on what the map will contain
-            case APK_CLASSES:
             case CLASSES:
             case JAVA_RES:
-            case FEATURE_CLASSES:
             case JAR:
                 // even though resources are supposed to only be in the main jar of the AAR, this
                 // is not necessarily enforced by all build systems generating AAR so it's safer to

@@ -21,25 +21,8 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Publ
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.tasks.FileSupplier;
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Supplier;
-import com.google.common.collect.ImmutableList;
-import java.io.File;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import org.gradle.api.Task;
-import org.gradle.api.artifacts.PublishArtifact;
 import org.gradle.api.attributes.Attribute;
 import org.gradle.api.plugins.JavaPlugin;
-import org.gradle.api.tasks.TaskDependency;
-import org.gradle.api.tasks.bundling.AbstractArchiveTask;
 
 /**
  * Helper for publishing android artifacts, both for internal (inter-project) and external
@@ -109,211 +92,58 @@ public class AndroidArtifacts {
         ALL, EXTERNAL, MODULE
     }
 
-    private static final List<PublishedConfigType> API_ELEMENTS_ONLY
-            = ImmutableList.of(API_ELEMENTS);
-    private static final List<PublishedConfigType> RUNTIME_ELEMENTS_ONLY
-            = ImmutableList.of(RUNTIME_ELEMENTS);
-    private static final List<PublishedConfigType> API_AND_RUNTIME_ELEMENTS
-            = ImmutableList.of(API_ELEMENTS, RUNTIME_ELEMENTS);
-    private static final List<PublishedConfigType> FEATURE_ELEMENTS_ONLY =
-            ImmutableList.of(FEATURE_ELEMENTS);
-
     public enum ArtifactType {
-        CLASSES(JavaPlugin.CLASS_DIRECTORY, API_AND_RUNTIME_ELEMENTS),
+        CLASSES(JavaPlugin.CLASS_DIRECTORY),
+        // Jar file for annotation processor as both classes and resources are needed, and for building model
+        JAR(TYPE_JAR),
 
         // manifest is published to both to compare and detect provided-only library dependencies.
-        MANIFEST(TYPE_MANIFEST, API_AND_RUNTIME_ELEMENTS),
-        MANIFEST_METADATA(TYPE_MANIFEST_METADATA, API_ELEMENTS_ONLY),
+        MANIFEST(TYPE_MANIFEST),
+        MANIFEST_METADATA(TYPE_MANIFEST_METADATA),
 
         // API only elements.
-        AIDL(TYPE_AIDL, API_ELEMENTS_ONLY),
-        RENDERSCRIPT(TYPE_RENDERSCRIPT, API_ELEMENTS_ONLY),
-        DATA_BINDING(TYPE_DATA_BINDING, API_ELEMENTS_ONLY),
+        AIDL(TYPE_AIDL),
+        RENDERSCRIPT(TYPE_RENDERSCRIPT),
+        DATA_BINDING(TYPE_DATA_BINDING),
 
         // runtime only elements
-        JAVA_RES(JavaPlugin.RESOURCES_DIRECTORY, RUNTIME_ELEMENTS_ONLY),
-        ANDROID_RES(TYPE_ANDROID_RES, RUNTIME_ELEMENTS_ONLY),
-        ASSETS(TYPE_ASSETS, RUNTIME_ELEMENTS_ONLY),
-        SYMBOL_LIST(TYPE_SYMBOL, RUNTIME_ELEMENTS_ONLY),
-        JNI(TYPE_JNI, RUNTIME_ELEMENTS_ONLY),
-        ANNOTATIONS(TYPE_EXT_ANNOTATIONS, RUNTIME_ELEMENTS_ONLY),
-        PUBLIC_RES(TYPE_PUBLIC_RES, RUNTIME_ELEMENTS_ONLY),
-        PROGUARD_RULES(TYPE_PROGUARD_RULES, RUNTIME_ELEMENTS_ONLY),
+        JAVA_RES(JavaPlugin.RESOURCES_DIRECTORY),
+        ANDROID_RES(TYPE_ANDROID_RES),
+        ASSETS(TYPE_ASSETS),
+        SYMBOL_LIST(TYPE_SYMBOL),
+        JNI(TYPE_JNI),
+        ANNOTATIONS(TYPE_EXT_ANNOTATIONS),
+        PUBLIC_RES(TYPE_PUBLIC_RES),
+        PROGUARD_RULES(TYPE_PROGUARD_RULES),
 
         // FIXME: we need a different publishing config with a CHECK Usage for this.
-        LINT(TYPE_LINT_JAR, API_AND_RUNTIME_ELEMENTS),
+        LINT(TYPE_LINT_JAR),
 
-        // create a duplication of CLASSES because we don't want to publish
-        // the classes of an FULL_APK to the runtime configuration as it's meant to be
-        // used only for compilation, not runtime. Actually use TYPE_JAR to give access
-        // to this via the model for now, the JarTransform will convert it back to CLASSES
-        // FIXME: stop using TYPE_JAR for APK_CLASSES
-        APK_CLASSES(TYPE_JAR, API_ELEMENTS_ONLY),
-        APK_MAPPING(TYPE_MAPPING, API_ELEMENTS_ONLY),
-        APK_METADATA(TYPE_METADATA, API_ELEMENTS_ONLY),
-        APK(TYPE_APK, RUNTIME_ELEMENTS_ONLY),
+        APK_MAPPING(TYPE_MAPPING),
+        APK_METADATA(TYPE_METADATA),
+        APK(TYPE_APK),
 
         // types for querying only. Not publishable.
         // FIXME once we only support level 2 sync, then this can be not publishable
-        EXPLODED_AAR(TYPE_EXPLODED_AAR, API_AND_RUNTIME_ELEMENTS),
-        // Jar file for annotation processor as both classes and resources are needed, and for building model
-        JAR(TYPE_JAR, API_AND_RUNTIME_ELEMENTS),
+        EXPLODED_AAR(TYPE_EXPLODED_AAR),
 
         // Feature split related artifacts.
-        FEATURE_SPLIT_DECLARATION(TYPE_FEATURE_SPLIT_DECLARATION, FEATURE_ELEMENTS_ONLY),
-        FEATURE_SPLIT_MANIFEST(TYPE_FEATURE_SPLIT_MANIFEST, FEATURE_ELEMENTS_ONLY),
-        FEATURE_IDS_DECLARATION(TYPE_FEATURE_IDS_DECLARATION, API_ELEMENTS_ONLY),
-        FEATURE_APPLICATION_ID_DECLARATION(TYPE_FEATURE_APPLICATION_ID, API_ELEMENTS_ONLY),
-        FEATURE_RESOURCE_PKG(TYPE_FEATURE_RESOURCE_PKG, API_ELEMENTS_ONLY),
-        FEATURE_CLASSES(JavaPlugin.CLASS_DIRECTORY, API_ELEMENTS_ONLY);
+        FEATURE_SPLIT_DECLARATION(TYPE_FEATURE_SPLIT_DECLARATION),
+        FEATURE_SPLIT_MANIFEST(TYPE_FEATURE_SPLIT_MANIFEST),
+        FEATURE_IDS_DECLARATION(TYPE_FEATURE_IDS_DECLARATION),
+        FEATURE_APPLICATION_ID_DECLARATION(TYPE_FEATURE_APPLICATION_ID),
+        FEATURE_RESOURCE_PKG(TYPE_FEATURE_RESOURCE_PKG);
 
         @NonNull
         private final String type;
-        @NonNull
-        private final List<PublishedConfigType> publishedConfigTypes;
 
-        ArtifactType(
-                @NonNull String type,
-                @NonNull List<PublishedConfigType> publishedConfigTypes) {
+        ArtifactType(@NonNull String type) {
             this.type = type;
-            this.publishedConfigTypes = ImmutableList.copyOf(publishedConfigTypes);
         }
 
         @NonNull
         public String getType() {
             return type;
-        }
-
-        @NonNull
-        public Collection<PublishedConfigType> getPublishingConfigurations() {
-            return publishedConfigTypes;
-        }
-
-        private static final Map<String, ArtifactType> reverseMap = new HashMap<>();
-
-        static {
-            for (ArtifactType type : values()) {
-                reverseMap.put(type.getType(), type);
-            }
-        }
-
-        public static ArtifactType byType(@NonNull String typeValue) {
-            return reverseMap.get(typeValue);
-        }
-    }
-
-    public static PublishArtifact getAarArtifact(
-            @NonNull AbstractArchiveTask task,
-            @NonNull String classifier) {
-        return new AndroidArtifact(task.getBaseName(),
-                TYPE_AAR, TYPE_AAR,
-                classifier, new FileSupplier() {
-            @NonNull
-            @Override
-            public Task getTask() {
-                return task;
-            }
-
-            @Override
-            public File get() {
-                return task.getArchivePath();
-            }
-        });
-    }
-
-    private static class AndroidArtifact implements PublishArtifact {
-
-        @NonNull
-        private final String name;
-        @NonNull
-        private final String extension;
-        @NonNull
-        private final String type;
-        @Nullable
-        private final String classifier;
-        @NonNull
-        private final Supplier<File> outputFileSupplier;
-        @NonNull
-        private final TaskDependency taskDependency;
-
-        private static final class DefaultTaskDependency implements TaskDependency {
-
-            @NonNull
-            private final Set<Task> tasks;
-
-            DefaultTaskDependency(@NonNull Task task) {
-                this.tasks = Collections.singleton(task);
-            }
-
-            @Override
-            public Set<? extends Task> getDependencies(Task task) {
-                return tasks;
-            }
-        }
-
-        private AndroidArtifact(
-                @NonNull String name,
-                @NonNull String extension,
-                @NonNull String type,
-                @Nullable String classifier,
-                @NonNull FileSupplier outputFileSupplier) {
-            this.name = name;
-            this.extension = extension;
-            this.type = type;
-            this.classifier = classifier;
-            this.outputFileSupplier = outputFileSupplier;
-            this.taskDependency
-                    = new DefaultTaskDependency(outputFileSupplier.getTask());
-        }
-
-        @Override
-        @NonNull
-        public String getName() {
-            return name;
-        }
-
-        @Nullable
-        @Override
-        public String getClassifier() {
-            return classifier;
-        }
-
-        @Override
-        public File getFile() {
-            return outputFileSupplier.get();
-        }
-
-        @Override
-        @NonNull
-        public String getExtension() {
-            return extension;
-        }
-
-        @Override
-        @NonNull
-        public String getType() {
-            return type;
-        }
-
-        @Override
-        public Date getDate() {
-            // return null to let gradle use the current date during publication.
-            return null;
-        }
-
-        @Override
-        public TaskDependency getBuildDependencies() {
-            return taskDependency;
-        }
-
-        @Override
-        public String toString() {
-            return MoreObjects.toStringHelper(this)
-                    .add("name", name)
-                    .add("classifier", classifier)
-                    .add("outputFile", outputFileSupplier.get())
-                    .add("taskDependency", taskDependency)
-                    .toString();
         }
     }
 }

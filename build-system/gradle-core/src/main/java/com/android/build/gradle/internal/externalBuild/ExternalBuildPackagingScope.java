@@ -245,8 +245,8 @@ public class ExternalBuildPackagingScope implements PackagingScope {
 
     @NonNull
     @Override
-    public FileCollection getOutputs(@NonNull OutputType outputType) {
-        return mVariantScope.getOutputs(outputType);
+    public FileCollection getOutput(@NonNull OutputType outputType) {
+        return mVariantScope.getOutput(outputType);
     }
 
     @Override
@@ -260,15 +260,9 @@ public class ExternalBuildPackagingScope implements PackagingScope {
         return mVariantScope.addTaskOutput(outputType, file, taskName);
     }
 
-    @Override
-    public void addTaskOutput(
-            @NonNull TaskOutputType outputType, @NonNull FileCollection fileCollection) {
-        mVariantScope.addTaskOutput(outputType, fileCollection);
-    }
-
     @NonNull
     @Override
-    public FileCollection createAnchorOutput(@NonNull AnchorOutputType outputType) {
+    public ConfigurableFileCollection createAnchorOutput(@NonNull AnchorOutputType outputType) {
         return mVariantScope.createAnchorOutput(outputType);
     }
 
