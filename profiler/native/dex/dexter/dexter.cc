@@ -352,6 +352,9 @@ int Dexter::ProcessDex() {
   // experiments
   for (auto experiment : experiments_) {
     slicer::Chronometer chrono(experiments_time_, true);
+    if (verbose_) {
+      printf("\nRunning experiment '%s' ... \n", experiment);
+    }
     experimental::Run(experiment, dex_ir);
   }
 

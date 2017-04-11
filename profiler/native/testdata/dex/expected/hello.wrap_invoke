@@ -1,6 +1,4 @@
 
-Running experiment 'stress_wrap_invoke' ... 
-
 method Base$Inner.<init>(Base) : void
 {
 	.params "?"

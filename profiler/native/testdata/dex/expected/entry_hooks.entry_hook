@@ -1,6 +1,4 @@
 
-Running experiment 'stress_entry_hook' ... 
-
 method Base.<init>() : void
 {
 	.src "entryHooks.java"

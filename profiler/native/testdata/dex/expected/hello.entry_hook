@@ -1,6 +1,4 @@
 
-Running experiment 'stress_entry_hook' ... 
-
 method Base$Inner.<init>(Base) : void
 {
 	.params "?"

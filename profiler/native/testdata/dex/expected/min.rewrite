@@ -1,6 +1,4 @@
 
-Running experiment 'full_rewrite' ... 
-
 method Minimal.<init>() : void
 {
 	.src "min.java"
