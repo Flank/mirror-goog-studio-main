@@ -18,10 +18,11 @@ package com.android.builder.internal.aapt.v1;
 
 import static com.android.testutils.TestUtils.eventually;
 import static com.google.common.base.Verify.verifyNotNull;
+import static com.google.common.truth.Truth.assertThat;
+import static java.nio.file.Files.readAllBytes;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import com.android.SdkConstants;
@@ -33,6 +34,7 @@ import com.android.builder.internal.aapt.AaptTestUtils;
 import com.android.builder.model.AaptOptions;
 import com.android.ide.common.process.DefaultProcessExecutor;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
+import com.android.ide.common.res2.CompileResourceRequest;
 import com.android.repository.Revision;
 import com.android.repository.io.impl.FileOpImpl;
 import com.android.repository.testframework.FakeProgressIndicator;
@@ -183,8 +185,10 @@ public class AaptV1Test {
         Aapt aapt = makeAapt();
         Future<File> compiledFuture =
                 aapt.compile(
-                        AaptTestUtils.getTestPng(mTemporaryFolder),
-                        AaptTestUtils.getOutputDir(mTemporaryFolder));
+                        new CompileResourceRequest(
+                                AaptTestUtils.getTestPng(mTemporaryFolder),
+                                AaptTestUtils.getOutputDir(mTemporaryFolder),
+                                "test"));
         File compiled = compiledFuture.get();
         assertNotNull(compiled);
         assertTrue(compiled.isFile());
@@ -195,8 +199,10 @@ public class AaptV1Test {
         Aapt aapt = makeAapt();
         Future<File> compiledFuture =
                 aapt.compile(
-                        AaptTestUtils.getTestPngWithLongFileName(mTemporaryFolder),
-                        AaptTestUtils.getOutputDir(mTemporaryFolder));
+                        new CompileResourceRequest(
+                                AaptTestUtils.getTestPngWithLongFileName(mTemporaryFolder),
+                                AaptTestUtils.getOutputDir(mTemporaryFolder),
+                                "test"));
         File compiled = compiledFuture.get();
         assertNotNull(compiled);
         assertTrue(compiled.isFile());
@@ -205,12 +211,17 @@ public class AaptV1Test {
     @Test
     public void compileTxt() throws Exception {
         Aapt aapt = makeAapt();
+        File shouldBeCopied = AaptTestUtils.getTestTxt(mTemporaryFolder);
         Future<File> compiledFuture =
                 aapt.compile(
-                        AaptTestUtils.getTestTxt(mTemporaryFolder),
-                        AaptTestUtils.getOutputDir(mTemporaryFolder));
+                        new CompileResourceRequest(
+                                shouldBeCopied,
+                                AaptTestUtils.getOutputDir(mTemporaryFolder),
+                                "test"));
         File compiled = compiledFuture.get();
-        assertNull(compiled);
+        assertTrue(compiled.isFile());
+        assertThat(readAllBytes(compiled.toPath()))
+                .isEqualTo(readAllBytes(shouldBeCopied.toPath()));
     }
 
     @Test
@@ -227,7 +238,10 @@ public class AaptV1Test {
         @SuppressWarnings("unchecked")
         Future<File>[] futures = new Future[parallel];
         for (int i = 0; i < parallel; i++) {
-            futures[i] = aapt.compile(imgs[i], AaptTestUtils.getOutputDir(mTemporaryFolder));
+            futures[i] =
+                    aapt.compile(
+                            new CompileResourceRequest(
+                                    imgs[i], AaptTestUtils.getOutputDir(mTemporaryFolder), "test"));
             assertFalse(futures[i].isDone());
         }
 
@@ -245,7 +259,11 @@ public class AaptV1Test {
         File originalFile = AaptTestUtils.getNonCrunchableTestPng();
 
         Future<File> compiledFuture =
-                aapt.compile(originalFile, AaptTestUtils.getOutputDir(mTemporaryFolder));
+                aapt.compile(
+                        new CompileResourceRequest(
+                                originalFile,
+                                AaptTestUtils.getOutputDir(mTemporaryFolder),
+                                "test"));
         File compiled = compiledFuture.get();
         assertNotNull(compiled);
         assertTrue(compiled.isFile());
@@ -268,7 +286,11 @@ public class AaptV1Test {
         File originalFile = AaptTestUtils.getCrunchableTestPng();
 
         Future<File> compiledFuture =
-                aapt.compile(originalFile, AaptTestUtils.getOutputDir(mTemporaryFolder));
+                aapt.compile(
+                        new CompileResourceRequest(
+                                originalFile,
+                                AaptTestUtils.getOutputDir(mTemporaryFolder),
+                                "test"));
         File compiled = compiledFuture.get();
         assertNotNull(compiled);
         assertTrue(compiled.isFile());
@@ -290,7 +312,11 @@ public class AaptV1Test {
         File originalFile = AaptTestUtils.getNinePatchTestPng();
 
         Future<File> compiledFuture =
-                aapt.compile(originalFile, AaptTestUtils.getOutputDir(mTemporaryFolder));
+                aapt.compile(
+                        new CompileResourceRequest(
+                                originalFile,
+                                AaptTestUtils.getOutputDir(mTemporaryFolder),
+                                "test"));
         File compiled = compiledFuture.get();
         assertNotNull(compiled);
         assertTrue(compiled.isFile());
@@ -315,7 +341,8 @@ public class AaptV1Test {
         File outputDir = AaptTestUtils.getOutputDir(mTemporaryFolder);
 
         File originalFile = AaptTestUtils.getTestPng(mTemporaryFolder);
-        Future<File> compiledFuture = aapt.compile(originalFile, outputDir);
+        Future<File> compiledFuture =
+                aapt.compile(new CompileResourceRequest(originalFile, outputDir, "drawable"));
         if (compiledFuture.get() == null) {
             File ddir = new File(outputDir, "drawable");
             assertTrue(ddir.mkdir());
@@ -368,7 +395,8 @@ public class AaptV1Test {
         File outputDir = AaptTestUtils.getOutputDir(mTemporaryFolder);
 
         File originalFile = AaptTestUtils.getTestPng(mTemporaryFolder);
-        Future<File> compiledFuture = aapt.compile(originalFile, outputDir);
+        Future<File> compiledFuture =
+                aapt.compile(new CompileResourceRequest(originalFile, outputDir, "drawable"));
         if (compiledFuture.get() == null) {
             File ddir = new File(outputDir, "drawable");
             assertTrue(ddir.mkdir());

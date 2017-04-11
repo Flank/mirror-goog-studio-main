@@ -49,8 +49,8 @@ public class CompileTest {
 
     @Test
     public void compileXml() throws Exception {
-        Path values = temporaryFolder.newFolder("values").toPath();
-        Path strings = values.resolve("strings.xml");
+        Path values = temporaryFolder.newFolder("values-w820dp").toPath();
+        Path strings = values.resolve("strings-w820dp.xml");
         Path out = temporaryFolder.newFolder("out").toPath();
 
         Aapt2TestFiles.writeStringsXml(strings);

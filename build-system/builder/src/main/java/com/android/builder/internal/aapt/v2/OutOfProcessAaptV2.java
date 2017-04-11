@@ -25,6 +25,7 @@ import com.android.builder.png.QueuedCruncher;
 import com.android.ide.common.process.ProcessExecutor;
 import com.android.ide.common.process.ProcessInfoBuilder;
 import com.android.ide.common.process.ProcessOutputHandler;
+import com.android.ide.common.res2.CompileResourceRequest;
 import com.android.repository.Revision;
 import com.android.sdklib.BuildToolInfo;
 import com.android.tools.aapt2.Aapt2RenamingConventions;
@@ -85,17 +86,21 @@ public class OutOfProcessAaptV2 extends AbstractProcessExecutionAapt {
 
     @Nullable
     @Override
-    protected CompileInvocation makeCompileProcessBuilder(
-            @NonNull File file, @NonNull File output) throws AaptException {
-        Preconditions.checkArgument(file.isFile(), "!file.isFile()");
-        Preconditions.checkArgument(output.isDirectory(), "!output.isDirectory()");
+    protected CompileInvocation makeCompileProcessBuilder(@NonNull CompileResourceRequest request)
+            throws AaptException {
+        Preconditions.checkArgument(request.getInput().isFile(), "!file.isFile()");
+        Preconditions.checkArgument(request.getOutput().isDirectory(), "!output.isDirectory()");
 
         return new CompileInvocation(
                 new ProcessInfoBuilder()
                         .setExecutable(getAapt2ExecutablePath())
                         .addArgs("compile")
-                        .addArgs(AaptV2CommandBuilder.makeCompile(file, output)),
-                new File(output, Aapt2RenamingConventions.compilationRename(file)));
+                        .addArgs(
+                                AaptV2CommandBuilder.makeCompile(
+                                        request.getInput(), request.getOutput())),
+                new File(
+                        request.getOutput(),
+                        Aapt2RenamingConventions.compilationRename(request.getInput())));
     }
 
     @NonNull
@@ -131,5 +136,13 @@ public class OutOfProcessAaptV2 extends AbstractProcessExecutionAapt {
     @Override
     public void end() throws InterruptedException {
         // since we don't batch, we are done.
+    }
+
+    @Override
+    @NonNull
+    public File compileOutputFor(@NonNull CompileResourceRequest request) {
+        return new File(
+                request.getOutput(),
+                Aapt2RenamingConventions.compilationRename(request.getInput()));
     }
 }

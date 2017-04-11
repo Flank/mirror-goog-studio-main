@@ -31,7 +31,7 @@ import com.android.ide.common.internal.PngException;
 import com.android.ide.common.process.ProcessExecutor;
 import com.android.ide.common.process.ProcessInfoBuilder;
 import com.android.ide.common.process.ProcessOutputHandler;
-import com.android.ide.common.res2.QueueableResourceCompiler;
+import com.android.ide.common.res2.CompileResourceRequest;
 import com.android.repository.Revision;
 import com.android.resources.ResourceFolderType;
 import com.android.sdklib.BuildToolInfo;
@@ -61,7 +61,7 @@ import java.util.concurrent.TimeUnit;
  * Implementation of an interface to the original {@code aapt}. This implementation relies on
  * process execution of {@code aapt}.
  */
-public class AaptV1 extends AbstractProcessExecutionAapt implements QueueableResourceCompiler {
+public class AaptV1 extends AbstractProcessExecutionAapt {
 
     /**
      * What mode should PNG be processed?
@@ -376,137 +376,149 @@ public class AaptV1 extends AbstractProcessExecutionAapt implements QueueableRes
 
     @NonNull
     @Override
-    public ListenableFuture<File> compile(@NonNull File file, @NonNull File output)
+    public ListenableFuture<File> compile(@NonNull CompileResourceRequest request)
             throws AaptException {
         /*
          * Do not compile raw resources.
          */
-        if (ResourceFolderType.getFolderType(file.getParentFile().getName()) ==
-                ResourceFolderType.RAW) {
-            return Futures.immediateFuture(null);
+        if (ResourceFolderType.getFolderType(request.getInput().getParentFile().getName())
+                == ResourceFolderType.RAW) {
+            return copyFile(request);
         }
 
         if (mCruncher == null) {
             /*
              * Revert to old-style crunching.
              */
-            return super.compile(file, output);
+            return super.compile(request);
         }
-        Preconditions.checkArgument(file.isFile(), "!file.isFile()");
-        Preconditions.checkArgument(output.isDirectory(), "!output.isDirectory()");
+        Preconditions.checkArgument(request.getInput().isFile(), "!file.isFile()");
+        Preconditions.checkArgument(request.getOutput().isDirectory(), "!output.isDirectory()");
 
         SettableFuture<File> actualResult = SettableFuture.create();
 
-        if (!mProcessMode.shouldProcess(file)) {
-            actualResult.set(null);
-            return actualResult;
+        if (!mProcessMode.shouldProcess(request.getInput())) {
+            return copyFile(request);
         }
-        File outputFile = compileOutputFor(file, output);
+        File outputFile = compileOutputFor(request);
 
         try {
             Files.createParentDirs(outputFile);
         } catch (IOException e) {
-            throw new AaptException(e, String.format(
-                    "Failed to create parent directories for file '%s'",
-                    output.getAbsolutePath()));
+            throw new AaptException(
+                    e,
+                    String.format(
+                            "Failed to create parent directories for file '%s'",
+                            request.getOutput().getAbsolutePath()));
         }
 
         ListenableFuture<File> futureResult;
         try {
-            futureResult = mCruncher.crunchPng(key, file, outputFile);
+            futureResult = mCruncher.crunchPng(key, request.getInput(), outputFile);
         } catch (PngException e) {
-            throw new AaptException(e, String.format(
-                    "Failed to crunch file '%s' into '%s'",
-                    file.getAbsolutePath(),
-                    outputFile.getAbsolutePath()));
+            throw new AaptException(
+                    e,
+                    String.format(
+                            "Failed to crunch file '%s' into '%s'",
+                            request.getInput().getAbsolutePath(), outputFile.getAbsolutePath()));
         }
-        futureResult.addListener(() -> {
+        futureResult.addListener(
+                () -> {
+                    File result;
+                    try {
+                        result = futureResult.get();
+                    } catch (InterruptedException e) {
+                        Thread.interrupted();
+                        actualResult.setException(e);
+                        return;
+                    } catch (ExecutionException e) {
+                        actualResult.setException(e);
+                        return;
+                    }
 
-            File result;
-            try {
-                result = futureResult.get();
-            } catch (InterruptedException e) {
-                Thread.interrupted();
-                actualResult.setException(e);
-                return;
-            } catch (ExecutionException e) {
-                actualResult.setException(e);
-                return;
-            }
+                    /*
+                     * When the compilationFuture is complete, check if the generated file is not bigger than
+                     * the original file. If the original file is smaller, copy the original file over the
+                     * generated file.
+                     *
+                     * However, this doesn't work with 9-patch because those need to be processed.
+                     *
+                     * Return a new future after this verification is done.
+                     */
+                    if (request.getInput().getName().endsWith(SdkConstants.DOT_9PNG)) {
+                        actualResult.set(result);
+                        return;
+                    }
 
-            /*
-             * When the compilationFuture is complete, check if the generated file is not bigger than
-             * the original file. If the original file is smaller, copy the original file over the
-             * generated file.
-             *
-             * However, this doesn't work with 9-patch because those need to be processed.
-             *
-             * Return a new future after this verification is done.
-             */
-            if (file.getName().endsWith(SdkConstants.DOT_9PNG)) {
-                actualResult.set(result);
-                return;
-            }
+                    if (result != null && request.getInput().length() < result.length()) {
+                        try {
+                            Files.copy(request.getInput(), result);
+                        } catch (IOException e) {
+                            actualResult.setException(e);
+                            return;
+                        }
+                    }
 
-            if (result != null && file.length() < result.length()) {
-                try {
-                    Files.copy(file, result);
-                } catch (IOException e) {
-                    actualResult.setException(e);
-                    return;
-                }
-            }
-
-            actualResult.set(result);
-
-        }, mWaitExecutor);
+                    actualResult.set(result);
+                },
+                mWaitExecutor);
         return actualResult;
+    }
+
+    private ListenableFuture<File> copyFile(@NonNull CompileResourceRequest request)
+            throws AaptException {
+        File outFile = compileOutputFor(request);
+        try {
+            FileUtils.copyFile(request.getInput(), outFile);
+        } catch (IOException e) {
+            throw new AaptException("Could not copy file", e);
+        }
+        return Futures.immediateFuture(outFile);
     }
 
     @Nullable
     @Override
-    protected CompileInvocation makeCompileProcessBuilder(@NonNull File file, @NonNull File output)
+    protected CompileInvocation makeCompileProcessBuilder(@NonNull CompileResourceRequest request)
             throws AaptException {
-        Preconditions.checkArgument(file.isFile(), "!file.isFile()");
-        Preconditions.checkArgument(output.isDirectory(), "!directory.isDirectory()");
+        Preconditions.checkArgument(request.getInput().isFile(), "!file.isFile()");
+        Preconditions.checkArgument(request.getOutput().isDirectory(), "!directory.isDirectory()");
 
-        if (!file.getName().endsWith(SdkConstants.DOT_PNG)) {
+        if (!request.getInput().getName().endsWith(SdkConstants.DOT_PNG)) {
             return null;
         }
 
-        if (!mProcessMode.shouldProcess(file)) {
+        if (!mProcessMode.shouldProcess(request.getInput())) {
             return null;
         }
 
-        File outputFile = compileOutputFor(file, output);
+        File outputFile = compileOutputFor(request);
 
         ProcessInfoBuilder builder = new ProcessInfoBuilder();
         builder.setExecutable(getAaptExecutablePath());
         builder.addArgs("singleCrunch");
-        builder.addArgs("-i", file.getAbsolutePath());
+        builder.addArgs("-i", request.getInput().getAbsolutePath());
         builder.addArgs("-o", outputFile.getAbsolutePath());
         return new CompileInvocation(builder, outputFile);
     }
 
     /**
-     * Obtains the file that will receive the compilation output of a given file. This method
-     * will return a unique file in the output directory for each input file.
+     * Obtains the file that will receive the compilation output of a given file. This method will
+     * return a unique file in the output directory for each input file.
      *
      * <p>This method will also create any parent directories needed to hold the output file.
      *
-     * @param file the file
-     * @param output the output directory
      * @return the output file
      */
     @NonNull
-    private static File compileOutputFor(@NonNull File file, @NonNull File output) {
-        Preconditions.checkArgument(file.isFile(), "!file.isFile()");
-        Preconditions.checkArgument(output.isDirectory(), "!output.isDirectory()");
+    @Override
+    public File compileOutputFor(@NonNull CompileResourceRequest request) {
+        Preconditions.checkArgument(request.getInput().isFile(), "!file.isFile()");
+        Preconditions.checkArgument(request.getOutput().isDirectory(), "!output.isDirectory()");
 
-        File parentDir = new File(output, file.getParentFile().getName());
+        File parentDir = new File(request.getOutput(), request.getFolderName());
         FileUtils.mkdirs(parentDir);
 
-        return new File(parentDir, file.getName());
+        return new File(parentDir, request.getInput().getName());
     }
 
     /**
