@@ -1,8 +1,12 @@
 <#import "./shared_macros.ftl" as shared>
-<#if isLibraryProject>
-apply plugin: 'com.android.library'
+<#if isInstantApp>
+apply plugin: 'com.android.feature'
 <#else>
+  <#if isLibraryProject>
+apply plugin: 'com.android.library'
+  <#else>
 apply plugin: 'com.android.application'
+  </#if>
 </#if>
 
 <@shared.androidConfig hasApplicationId=isApplicationProject hasTests=true canHaveCpp=true/>
@@ -17,6 +21,6 @@ dependencies {
     compile 'com.google.android.gms:play-services-wearable:+'
 </#if>
 <#if isInstantApp>
-    compile project(':${baseLibName}')
+    implementation project(':${baseLibName}')
 </#if>
 }

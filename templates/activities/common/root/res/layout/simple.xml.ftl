@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<#if isInstantApp><LinearLayout
-<#else><android.support.constraint.ConstraintLayout</#if>
+<android.support.constraint.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -20,11 +19,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Hello World!"
-        <#if !isInstantApp>app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent"</#if> />
+        app:layout_constraintTop_toTopOf="parent" />
 
 </#if>
-<#if isInstantApp></LinearLayout>
-<#else></android.support.constraint.ConstraintLayout></#if>
+</android.support.constraint.ConstraintLayout>

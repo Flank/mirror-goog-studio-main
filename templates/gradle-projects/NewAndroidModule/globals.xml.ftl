@@ -16,21 +16,15 @@
     <global id="isApplicationProject" type="boolean" value="${(!(isInstantApp!false) && !(isLibraryProject!false))?string}" />
     <global id="isInstantAppProject" type="boolean" value="${(!(isInstantApp!false) && !(isLibraryProject!false))?string}" />
 
-    <global id="hasSplitWrapper" type="boolean" value="${(isInstantApp!false)?string}" />
     <global id="hasInstantAppWrapper" type="boolean" value="${(isInstantApp!false)?string}" />
 
     <global id="baseLibName" type="string" value="base" />
-    <global id="baseSplitName" type="string" value="basesplit" />
-    <global id="splitName" type="string" value="split" />
     <global id="instantAppProjectName" type="string" value="instantapp" />
     <global id="monolithicAppProjectName" type="string" value="app" />
     <global id="instantAppPackageName" type="string" value="${packageName}.instantapp" />
-    <global id="baseLibPackageName" type="string" value="${instantAppPackageName!packageName}.baselib" />
 
-    <global id="splitOut" type="string" value="${escapeXmlAttribute(splitDir!('./'+splitName!""))}" />
-    <global id="instantAppOut" type="string" value="${escapeXmlAttribute(instantAppDir!'./instantapp')}" />
-    <global id="monolithicAppOut" type="string" value="${escapeXmlAttribute(monolithicAppDir!'./app')}" />
-    <global id="baseLibOut" type="string" value="${escapeXmlAttribute(baseLibDir!'./base')}" />
-    <global id="baseLibResOut" type="string" value="${escapeXmlAttribute(baseLibResDir!'./base/src/main/res')}" />
-    <global id="baseSplitOut" type="string" value="${escapeXmlAttribute(baseSplitDir!'./basesplit')}" />
+    <global id="instantAppOut" type="string" value="${escapeXmlAttribute(instantAppDir!'./' + (instantAppProjectName!'instantapp'))}" />
+    <global id="monolithicAppOut" type="string" value="${escapeXmlAttribute(monolithicAppDir!'./' + (monolithicAppProjectName!'app'))}" />
+    <global id="baseLibOut" type="string" value="${escapeXmlAttribute(baseLibDir!'./' + baseLibName!'base')}" />
+    <global id="baseLibResOut" type="string" value="${escapeXmlAttribute(baseLibResDir!'./' + baseLibName!'base' + '/src/main/res')}" />
 </globals>
