@@ -151,36 +151,38 @@ public class LayoutLog {
 
     /**
      * Logs a warning.
+     *
      * @param tag a tag describing the type of the warning
      * @param message the message of the warning
+     * @param viewCookie the view cookie where the error generated, if available
      * @param data an optional data bundle that the client can use to improve the warning display.
      */
-    public void warning(String tag, String message, Object data) {
-    }
+    public void warning(String tag, String message, Object viewCookie, Object data) {}
 
     /**
      * Logs a fidelity warning.
      *
-     * This type of warning indicates that the render will not be
-     * the same as the rendering on a device due to limitation of the Java rendering API.
+     * <p>This type of warning indicates that the render will not be the same as the rendering on a
+     * device due to limitation of the Java rendering API.
      *
      * @param tag a tag describing the type of the warning
      * @param message the message of the warning
      * @param throwable an optional Throwable that triggered the warning
+     * @param viewCookie the view cookie where the error generated, if available
      * @param data an optional data bundle that the client can use to improve the warning display.
      */
-    public void fidelityWarning(String tag, String message, Throwable throwable, Object data) {
-    }
+    public void fidelityWarning(
+            String tag, String message, Throwable throwable, Object viewCookie, Object data) {}
 
     /**
      * Logs an error.
      *
      * @param tag a tag describing the type of the error
      * @param message the message of the error
+     * @param viewCookie the view cookie where the error generated, if available
      * @param data an optional data bundle that the client can use to improve the error display.
      */
-    public void error(String tag, String message, Object data) {
-    }
+    public void error(String tag, String message, Object viewCookie, Object data) {}
 
     /**
      * Logs an error, and the {@link Throwable} that triggered it.
@@ -188,8 +190,47 @@ public class LayoutLog {
      * @param tag a tag describing the type of the error
      * @param message the message of the error
      * @param throwable the Throwable that triggered the error
+     * @param viewCookie the view cookie where the error generated, if available
      * @param data an optional data bundle that the client can use to improve the error display.
      */
+    public void error(
+            String tag, String message, Throwable throwable, Object viewCookie, Object data) {}
+
+    // Old methods that didn't include the support for viewCookie
+
+    /**
+     * To be removed after layoutlib transitions to the new interface.
+     *
+     * @deprecated use {@link #warning(String, String, Object, Object)}
+     */
+    public void warning(String tag, String message, Object data) {
+        warning(tag, message, null, data);
+    }
+
+    /**
+     * To be removed after layoutlib transitions to the new interface.
+     *
+     * @deprecated use {@link #fidelityWarning(String, String, Throwable, Object, Object)}
+     */
+    public void fidelityWarning(String tag, String message, Throwable throwable, Object data) {
+        fidelityWarning(tag, message, throwable, null, data);
+    }
+
+    /**
+     * To be removed after layoutlib transitions to the new interface.
+     *
+     * @deprecated use {@link #error(String, String, Object, Object)}
+     */
+    public void error(String tag, String message, Object data) {
+        error(tag, message, (Object) null, data);
+    }
+
+    /**
+     * To be removed after layoutlib transitions to the new interface.
+     *
+     * @deprecated use {@link #error(String, String, Throwable, Object, Object)}
+     */
     public void error(String tag, String message, Throwable throwable, Object data) {
+        error(tag, message, throwable, null, data);
     }
 }

@@ -128,28 +128,39 @@ public class ResourceItemResolverTest extends TestCase {
         assertFalse(appResources.isFramework());
         assertNotNull(config);
 
-        final LayoutLog logger = new LayoutLog() {
-            @Override
-            public void warning(String tag, String message, Object data) {
-                fail(message);
-            }
+        final LayoutLog logger =
+                new LayoutLog() {
+                    @Override
+                    public void warning(
+                            String tag, String message, Object viewCookie, Object data) {
+                        fail(message);
+                    }
 
-            @Override
-            public void fidelityWarning(String tag, String message, Throwable throwable,
-                    Object data) {
-                fail(message);
-            }
+                    @Override
+                    public void fidelityWarning(
+                            String tag,
+                            String message,
+                            Throwable throwable,
+                            Object viewCookie,
+                            Object data) {
+                        fail(message);
+                    }
 
-            @Override
-            public void error(String tag, String message, Object data) {
-                fail(message);
-            }
+                    @Override
+                    public void error(String tag, String message, Object viewCookie, Object data) {
+                        fail(message);
+                    }
 
-            @Override
-            public void error(String tag, String message, Throwable throwable, Object data) {
-                fail(message);
-            }
-        };
+                    @Override
+                    public void error(
+                            String tag,
+                            String message,
+                            Throwable throwable,
+                            Object viewCookie,
+                            Object data) {
+                        fail(message);
+                    }
+                };
 
         ResourceItemResolver.ResourceProvider provider = new ResourceItemResolver.ResourceProvider() {
             private ResourceResolver mResolver;
