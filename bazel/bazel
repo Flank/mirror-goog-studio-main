@@ -35,7 +35,7 @@ def main():
   }
   args = sys.argv[1:]
 
-  if args[0] == 'test':
+  if bazel_command(args) == 'test':
     # Keep this logic in sync with integration-test BUILD file and CheckAllRunner.
     cpus = multiprocessing.cpu_count()
     if cpus > 20:
@@ -46,7 +46,7 @@ def main():
       test_jobs = 2
 
     # Insert the flag right after "test".
-    args.insert(1, '--local_test_jobs=' + str(test_jobs))
+    args.insert(bazel_command_index(args) + 1, '--local_test_jobs=' + str(test_jobs))
     print('Running with {} local test jobs.'.format(test_jobs))
 
   if sys.platform == 'darwin':
@@ -75,6 +75,24 @@ def find_workspace(path):
     parent = os.path.dirname(path)
     return None if parent == path else find_workspace(parent)
 
+"""
+Returns the command index, which is the first non-option argument.
+https://bazel.build/versions/master/docs/command-line-reference.html
+"""
+def bazel_command_index(args):
+  for i in range(len(args)):
+    if not args[i].startswith('-'):
+      return i
+  return None
+
+"""
+Returns the command itself, or None if not defined.
+"""
+def bazel_command(args):
+  index = bazel_command_index(args)
+  if index is None:
+    return None
+  return args[index]
 
 if __name__ == '__main__':
   main()
