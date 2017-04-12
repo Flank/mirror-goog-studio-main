@@ -233,7 +233,7 @@ struct Instruction : public Node {
 using InstructionsList = slicer::IntrusiveList<Instruction>;
 
 struct Bytecode : public Instruction {
-  dex::Opcode opcode;
+  dex::Opcode opcode = dex::OP_NOP;
   std::vector<Operand*> operands;
 
   template<class T>
@@ -247,7 +247,7 @@ struct Bytecode : public Instruction {
 };
 
 struct PackedSwitch : public Instruction {
-  dex::s4 first_key;
+  dex::s4 first_key = 0;
   std::vector<Label*> targets;
 
   virtual bool Accept(Visitor* visitor) override { return visitor->Visit(this); }
@@ -255,8 +255,8 @@ struct PackedSwitch : public Instruction {
 
 struct SparseSwitch : public Instruction {
   struct SwitchCase {
-    dex::s4 key;
-    Label* target;
+    dex::s4 key = 0;
+    Label* target = nullptr;
   };
 
   std::vector<SwitchCase> switch_cases;
@@ -287,8 +287,8 @@ struct TryBlockBegin : public Instruction {
 };
 
 struct CatchHandler {
-  ir::Type* ir_type;
-  Label* label;
+  ir::Type* ir_type = nullptr;
+  Label* label = nullptr;
 };
 
 struct TryBlockEnd : public Instruction {

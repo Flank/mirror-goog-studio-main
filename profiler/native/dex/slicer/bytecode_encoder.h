@@ -29,7 +29,7 @@ namespace lir {
 // Generates .dex bytecode from code IR
 class BytecodeEncoder : public Visitor {
  public:
-  BytecodeEncoder(const InstructionsList& instructions)
+  explicit BytecodeEncoder(const InstructionsList& instructions)
     : instructions_(instructions) {
   }
 
