@@ -42,7 +42,6 @@ import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
 import com.android.build.gradle.internal.tasks.PrepareDependenciesTask;
 import com.android.build.gradle.internal.transforms.JackCompileTransform;
 import com.android.build.gradle.tasks.AidlCompile;
-import com.android.build.gradle.tasks.AtomConfig;
 import com.android.build.gradle.tasks.BinaryFileProviderTask;
 import com.android.build.gradle.tasks.ExternalNativeBuildTask;
 import com.android.build.gradle.tasks.GenerateBuildConfig;
@@ -127,7 +126,6 @@ public abstract class BaseVariantData implements TaskContainer {
 
     public Sync processJavaResourcesTask;
     public NdkCompile ndkCompileTask;
-    public AtomConfig atomConfigTask;
 
     /** Can be JavaCompile or JackTask depending on user's settings. */
     public Task javaCompilerTask;

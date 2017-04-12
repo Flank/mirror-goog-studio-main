@@ -705,11 +705,6 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      */
     @NonNull
     public String getApplicationId() {
-        // instantApp modules do not need a manifest.
-        if (mType == VariantType.INSTANTAPP) {
-            return "unused";
-        }
-
         String id;
 
         if (mType.isForTesting()) {
@@ -1823,7 +1818,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      * Returns true if the variant output is a bundle.
      */
     public boolean isBundled() {
-        return mType == VariantType.LIBRARY || mType == VariantType.ATOM;
+        return mType == VariantType.LIBRARY;
     }
 
     @NonNull

@@ -23,6 +23,7 @@ import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaLibrary;
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableSet;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
@@ -32,29 +33,23 @@ import java.util.Objects;
 public class DependenciesImpl implements Dependencies, Serializable {
     private static final long serialVersionUID = 1L;
 
-    @NonNull private final List<AndroidAtom> atoms;
     @NonNull private final List<AndroidLibrary> libraries;
     @NonNull private final List<JavaLibrary> javaLibraries;
     @NonNull private final List<String> projects;
-    @Nullable private final AndroidAtom baseAtom;
 
     DependenciesImpl(
-            @NonNull List<AndroidAtom> atoms,
             @NonNull List<AndroidLibrary> libraries,
             @NonNull List<JavaLibrary> javaLibraries,
-            @NonNull List<String> projects,
-            @Nullable AndroidAtom baseAtom) {
-        this.atoms = atoms;
+            @NonNull List<String> projects) {
         this.libraries = libraries;
         this.javaLibraries = javaLibraries;
         this.projects = projects;
-        this.baseAtom = baseAtom;
     }
 
     @NonNull
     @Override
     public Collection<AndroidAtom> getAtoms() {
-        return atoms;
+        return ImmutableSet.of();
     }
 
     @NonNull
@@ -78,7 +73,7 @@ public class DependenciesImpl implements Dependencies, Serializable {
     @Nullable
     @Override
     public AndroidAtom getBaseAtom() {
-        return baseAtom;
+        return null;
     }
 
     @Override
@@ -87,8 +82,6 @@ public class DependenciesImpl implements Dependencies, Serializable {
                 .add("libraries", libraries)
                 .add("javaLibraries", javaLibraries)
                 .add("projects", projects)
-                .add("atoms", atoms)
-                .add("baseAtom", baseAtom)
                 .toString();
     }
 
@@ -101,15 +94,13 @@ public class DependenciesImpl implements Dependencies, Serializable {
             return false;
         }
         DependenciesImpl that = (DependenciesImpl) o;
-        return Objects.equals(atoms, that.atoms)
-                && Objects.equals(libraries, that.libraries)
+        return Objects.equals(libraries, that.libraries)
                 && Objects.equals(javaLibraries, that.javaLibraries)
-                && Objects.equals(projects, that.projects)
-                && Objects.equals(baseAtom, that.baseAtom);
+                && Objects.equals(projects, that.projects);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(atoms, libraries, javaLibraries, projects, baseAtom);
+        return Objects.hash(libraries, javaLibraries, projects);
     }
 }

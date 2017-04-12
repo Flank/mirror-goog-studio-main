@@ -39,8 +39,8 @@ import org.gradle.internal.reflect.Instantiator;
 /**
  * Interface for Variant Factory.
  *
- * While VariantManager is the general variant management, implementation of this interface
- * provides variant type (app, lib, atom) specific implementation.
+ * <p>While VariantManager is the general variant management, implementation of this interface
+ * provides variant type (app, lib) specific implementation.
  */
 public interface VariantFactory {
 

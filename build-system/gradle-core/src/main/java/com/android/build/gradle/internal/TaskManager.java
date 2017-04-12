@@ -250,11 +250,9 @@ public abstract class TaskManager {
 
     public static final String DEFAULT_PROGUARD_CONFIG_FILE = "proguard-android.txt";
     public static final String DIR_BUNDLES = "bundles";
-    public static final String DIR_ATOMBUNDLES = "atombundles";
     public static final String INSTALL_GROUP = "Install";
     public static final String BUILD_GROUP = BasePlugin.BUILD_GROUP;
     public static final String ANDROID_GROUP = "Android";
-    public static final String ATOM_SUFFIX = "Atom";
     public static final String FEATURE_SUFFIX = "Feature";
 
     // Task names. These cannot be AndroidTasks as in the component model world there is nothing to

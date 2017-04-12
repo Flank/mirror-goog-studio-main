@@ -39,7 +39,6 @@ import com.android.testutils.OsType;
 import com.android.testutils.TestUtils;
 import com.android.testutils.apk.Aar;
 import com.android.testutils.apk.Apk;
-import com.android.testutils.apk.AtomBundle;
 import com.android.testutils.apk.Zip;
 import com.android.utils.FileUtils;
 import com.android.utils.Pair;
@@ -912,62 +911,6 @@ public final class GradleTestProject implements TestRule {
         dimensionList.addAll(Arrays.asList(dimensions));
             return new Aar(getOutputFile(
                     "aar/" + Joiner.on("-").join(dimensionList) + SdkConstants.DOT_AAR));
-    }
-
-    /**
-     * Return the output atombundle file from the atom plugin for the given dimension.
-     *
-     * <p>Expected dimensions orders are: - product flavors - build type - other modifiers (e.g.
-     * "unsigned", "aligned")
-     */
-    public AtomBundle getAtomBundle(String... dimensions) {
-        List<String> dimensionList = Lists.newArrayListWithExpectedSize(1 + dimensions.length);
-        dimensionList.add(getName());
-        dimensionList.addAll(Arrays.asList(dimensions));
-        try {
-            return new AtomBundle(getOutputFile(
-                    FileUtils.join(
-                            "atombundle",
-                            Joiner.on("-").join(dimensionList) + SdkConstants.DOT_ATOMBUNDLE)));
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-    }
-
-    /**
-     * Return the output atom file from the instantApp plugin for the given atom name and dimension.
-     *
-     * <p>Expected dimensions orders are: - product flavors - build type - other modifiers (e.g.
-     * "unsigned", "aligned")
-     */
-    public Apk getAtom(String atomName, String... dimensions) throws IOException {
-            return new Apk(
-                    getIntermediateFile(
-                            FileUtils.join(
-                                    "atoms",
-                                    Joiner.on("-").join(dimensions),
-                                    atomName + SdkConstants.DOT_ANDROID_PACKAGE)));
-    }
-
-    /**
-     * Returns the output instantApp bundle file from the instantApp plugin for the given dimension.
-     *
-     * <p>Expected dimensions orders are: - product flavors - build type - other modifiers (e.g.
-     * "unsigned", "aligned")
-     */
-    public Zip getInstantAppBundle(String... dimensions) {
-        List<String> dimensionList = Lists.newArrayListWithExpectedSize(1 + dimensions.length);
-        dimensionList.add(getName());
-        dimensionList.addAll(Arrays.asList(dimensions));
-        File zipFile =
-                getOutputFile(
-                        FileUtils.join(
-                                "apk", Joiner.on("-").join(dimensionList) + SdkConstants.DOT_ZIP));
-        try {
-            return new Zip(zipFile);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
     }
 
     /** Returns a string that contains the gradle buildscript content */

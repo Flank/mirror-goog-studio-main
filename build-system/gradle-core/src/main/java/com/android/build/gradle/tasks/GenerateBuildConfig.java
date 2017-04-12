@@ -222,19 +222,7 @@ public class GenerateBuildConfig extends BaseTask {
             generateBuildConfigTask.setVariantName(scope.getVariantConfiguration().getFullName());
 
             generateBuildConfigTask.buildConfigPackageName =
-                    TaskInputHelper.memoize(
-                            () -> {
-                                // For atoms, the package name is applicationId.SplitName.
-                                // Non-atom projects should never set a split name.
-                                String splitName = variantConfiguration.getSplitFromManifest();
-                                String applicationId =
-                                        variantConfiguration.getOriginalApplicationId();
-                                if (splitName == null) {
-                                    return applicationId;
-                                } else {
-                                    return applicationId + "." + splitName;
-                                }
-                            });
+                    TaskInputHelper.memoize(variantConfiguration::getOriginalApplicationId);
 
             generateBuildConfigTask.appPackageName =
                     TaskInputHelper.memoize(variantConfiguration::getApplicationId);

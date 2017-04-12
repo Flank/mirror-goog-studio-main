@@ -362,16 +362,10 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     @NonNull
     File getManifestOutputDirectory();
 
-    @NonNull
-    File getInstantAppPackage();
-
     AndroidTask<? extends ManifestProcessorTask> getManifestProcessorTask();
 
     void setManifestProcessorTask(
             AndroidTask<? extends ManifestProcessorTask> manifestProcessorTask);
-
-    @NonNull
-    File getLibInfoFile();
 
     AndroidTask<DefaultTask> getAssembleTask();
 

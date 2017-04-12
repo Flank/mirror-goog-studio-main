@@ -130,8 +130,8 @@ public interface AndroidProject {
     int PROJECT_TYPE_APP = 0;
     int PROJECT_TYPE_LIBRARY = 1;
     int PROJECT_TYPE_TEST = 2;
-    int PROJECT_TYPE_ATOM = 3;
-    int PROJECT_TYPE_INSTANTAPP = 4;
+    @Deprecated int PROJECT_TYPE_ATOM = 3;
+    @Deprecated int PROJECT_TYPE_INSTANTAPP = 4;
     int PROJECT_TYPE_FEATURE = 5;
 
     /**
@@ -174,7 +174,7 @@ public interface AndroidProject {
     boolean isLibrary();
 
     /**
-     * Returns the type of project: Android application, library, atom or instantApp.
+     * Returns the type of project: Android application, library.
      *
      * @return the type of project.
      * @since 2.3

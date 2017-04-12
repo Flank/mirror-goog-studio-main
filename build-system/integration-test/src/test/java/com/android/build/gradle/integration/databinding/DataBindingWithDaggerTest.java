@@ -20,7 +20,6 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
-import com.android.build.gradle.integration.common.truth.AtomBundleSubject;
 import com.android.testutils.truth.DexSubject;
 import java.util.Arrays;
 import java.util.List;
@@ -70,15 +69,5 @@ public class DataBindingWithDaggerTest {
         DexSubject mainDex = assertThat(project.getApk("debug")).hasMainDexFile().that();
         mainDex.containsClass(MAIN_ACTIVITY_BINDING_CLASS);
         mainDex.containsClass(DAGGER_APP_COMPONENT);
-    }
-
-    @Test
-    public void testAtom() throws Exception {
-        project.setBuildFile("build.atom" + buildSuffix);
-        project.execute("assembleDebug");
-
-        AtomBundleSubject atombundle = assertThat(project.getAtomBundle("debug"));
-        atombundle.containsClass(MAIN_ACTIVITY_BINDING_CLASS);
-        atombundle.containsClass(DAGGER_APP_COMPONENT);
     }
 }
