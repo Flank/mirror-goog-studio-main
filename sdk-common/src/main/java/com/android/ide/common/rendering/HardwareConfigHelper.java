@@ -308,6 +308,13 @@ public class HardwareConfigHelper {
     }
 
     /**
+     * Whether the given device is an Android Things device
+     */
+    public static boolean isThings(@Nullable Device device) {
+        return device != null && "android-things".equals(device.getTagId());
+    }
+
+    /**
      * Whether the given device is a TV device
      */
     public static boolean isTv(@Nullable Device device) {
@@ -318,7 +325,7 @@ public class HardwareConfigHelper {
      * Whether the given device appears to be a mobile device (e.g. not wear, tv, auto, etc)
      */
     public static boolean isMobile(@Nullable Device device) {
-        return !isTv(device) && !isWear(device);
+        return !isTv(device) && !isWear(device) && !isThings(device);
     }
 
     /**
