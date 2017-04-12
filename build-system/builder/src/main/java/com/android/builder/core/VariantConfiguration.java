@@ -232,7 +232,12 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     @NonNull
     public String getFullName() {
         if (mFullName == null) {
-            mFullName = computeFullName(getFlavorName(), mBuildType, mType);
+            mFullName =
+                    computeFullName(
+                            getFlavorName(),
+                            mBuildType,
+                            mType,
+                            mTestedConfig == null ? null : mTestedConfig.getType());
         }
 
         return mFullName;
@@ -245,14 +250,14 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      * @param flavorName the flavor name, as computed by {@link #computeFlavorName(List)}
      * @param buildType the build type
      * @param type the variant type
-     *
      * @return the name of the variant
      */
     @NonNull
     public static <B extends BuildType> String computeFullName(
             @NonNull String flavorName,
             @NonNull B buildType,
-            @NonNull VariantType type) {
+            @NonNull VariantType type,
+            @Nullable VariantType testedType) {
         StringBuilder sb = new StringBuilder();
 
         if (!flavorName.isEmpty()) {
@@ -267,6 +272,9 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         }
 
         if (type.isForTesting()) {
+            if (testedType == VariantType.FEATURE) {
+                sb.append("Feature");
+            }
             sb.append(type.getSuffix());
         }
         return sb.toString();
@@ -440,6 +448,10 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     public Collection<String> getDirectorySegments() {
         if (mDirSegments == null) {
             ImmutableList.Builder<String> builder = ImmutableList.builder();
+
+            if (mType == VariantType.FEATURE) {
+                builder.add("feature");
+            }
 
             if (mType.isForTesting()) {
                 builder.add(mType.getPrefix());

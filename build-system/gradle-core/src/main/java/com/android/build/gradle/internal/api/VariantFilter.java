@@ -113,10 +113,12 @@ public class VariantFilter implements com.android.build.gradle.api.VariantFilter
     @Override
     public String getName() {
         if (name == null) {
-            name = VariantConfiguration.computeFullName(
-                    VariantConfiguration.computeFlavorName(flavors),
-                    buildType,
-                    type);
+            name =
+                    VariantConfiguration.computeFullName(
+                            VariantConfiguration.computeFlavorName(flavors),
+                            buildType,
+                            type,
+                            null /* testedType */);
         }
 
         return name;
