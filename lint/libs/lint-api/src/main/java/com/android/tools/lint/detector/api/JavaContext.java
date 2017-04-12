@@ -71,6 +71,7 @@ import org.jetbrains.uast.UClass;
 import org.jetbrains.uast.UDeclaration;
 import org.jetbrains.uast.UElement;
 import org.jetbrains.uast.UEnumConstant;
+import org.jetbrains.uast.UField;
 import org.jetbrains.uast.UFile;
 import org.jetbrains.uast.UMethod;
 import org.jetbrains.uast.USwitchExpression;
@@ -349,6 +350,11 @@ public class JavaContext extends Context {
         return uastParser.getLocation(this, (PsiMethod)element);
     }
 
+    @NonNull
+    public Location getLocation(@NonNull UField element) {
+        return uastParser.getLocation(this, (PsiField)element);
+    }
+
     /**
      * Creates a location for the given call.
      *
@@ -600,7 +606,7 @@ public class JavaContext extends Context {
 
     /**
      * {@link UClass} is both a {@link PsiElement} and a {@link UElement} so this method
-     * is here to make calling getNameLocation(UClass) easier without having to make
+     * is here to make calling report(..., UClass, ...) easier without having to make
      * an explicit cast.
      */
     public void report(
@@ -613,12 +619,25 @@ public class JavaContext extends Context {
 
     /**
      * {@link UMethod} is both a {@link PsiElement} and a {@link UElement} so this method
-     * is here to make calling getNameLocation(uMethod) easier without having to make
+     * is here to make calling report(..., UFieUMethodld, ...) easier without having to make
      * an explicit cast.
      */
     public void report(
             @NonNull Issue issue,
             @Nullable UMethod scopeClass,
+            @NonNull Location location,
+            @NonNull String message) {
+        report(issue, (UElement)scopeClass, location, message);
+    }
+
+    /**
+     * {@link UField} is both a {@link PsiElement} and a {@link UElement} so this method
+     * is here to make calling report(..., UField, ...) easier without having to make
+     * an explicit cast.
+     */
+    public void report(
+            @NonNull Issue issue,
+            @Nullable UField scopeClass,
             @NonNull Location location,
             @NonNull String message) {
         report(issue, (UElement)scopeClass, location, message);

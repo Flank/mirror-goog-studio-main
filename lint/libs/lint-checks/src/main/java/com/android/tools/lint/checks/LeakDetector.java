@@ -21,6 +21,7 @@ import static com.android.SdkConstants.CLASS_FRAGMENT;
 import static com.android.SdkConstants.CLASS_VIEW;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.client.api.UElementHandler;
 import com.android.tools.lint.detector.api.Category;
@@ -31,19 +32,34 @@ import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.intellij.openapi.util.Ref;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiClassType;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiField;
 import com.intellij.psi.PsiKeyword;
+import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiModifier;
 import com.intellij.psi.PsiModifierList;
 import com.intellij.psi.PsiType;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import org.jetbrains.uast.UAnonymousClass;
+import org.jetbrains.uast.UBinaryExpression;
+import org.jetbrains.uast.UCallExpression;
+import org.jetbrains.uast.UClass;
 import org.jetbrains.uast.UElement;
+import org.jetbrains.uast.UExpression;
 import org.jetbrains.uast.UField;
+import org.jetbrains.uast.UMethod;
+import org.jetbrains.uast.UObjectLiteralExpression;
+import org.jetbrains.uast.UQualifiedReferenceExpression;
+import org.jetbrains.uast.UResolvable;
+import org.jetbrains.uast.UastUtils;
+import org.jetbrains.uast.util.UastExpressionUtils;
+import org.jetbrains.uast.visitor.AbstractUastVisitor;
 
 /**
  * Looks for leaks via static fields
@@ -54,7 +70,15 @@ public class LeakDetector extends Detector implements Detector.UastScanner {
             "StaticFieldLeak",
             "Static Field Leaks",
 
-            "A static field will leak contexts.",
+            "A static field will leak contexts.\n" +
+            "\n" +
+            "Non-static inner classes have an implicit reference to their outer class. " +
+            "If that outer class is for example a `Fragment` or `Activity`, then this " +
+            "reference means that the long-running handler/loader/task will hold a reference " +
+            "to the activity which prevents it from getting garbage collected.\n" +
+            "\n" +
+            "Similarly, direct field references to activities and fragments from these " +
+            "longer running instances can cause leaks.",
 
             Category.PERFORMANCE,
             6,
@@ -63,11 +87,93 @@ public class LeakDetector extends Detector implements Detector.UastScanner {
                     LeakDetector.class,
                     Scope.JAVA_FILE_SCOPE));
 
+    private static final List<String> SUPER_CLASSES = Arrays.asList(
+            "android.content.Loader",
+            "android.support.v4.content.Loader",
+            "android.os.AsyncTask"
+    );
+
     /** Constructs a new {@link LeakDetector} check */
     public LeakDetector() {
     }
 
     // ---- Implements UastScanner ----
+
+    @Nullable
+    @Override
+    public List<String> applicableSuperClasses() {
+        return SUPER_CLASSES;
+    }
+
+    /** Warn about inner classes that aren't static: these end up retaining the outer class */
+    @Override
+    public void visitClass(@NonNull JavaContext context, @NonNull UClass declaration) {
+        // Only consider static inner classes
+        if (context.getEvaluator().isStatic(declaration)) {
+            // But look for fields that store contexts
+            for (UField field : declaration.getFields()) {
+                checkInstanceField(context, field);
+            }
+
+            return;
+        }
+        boolean isAnonymous = declaration instanceof UAnonymousClass;
+        if (declaration.getContainingClass() == null && !isAnonymous) {
+            return;
+        }
+
+        String superClass = null;
+        for (String cls : SUPER_CLASSES) {
+            if (context.getEvaluator().inheritsFrom(declaration, cls, false)) {
+                superClass = cls;
+                break;
+            }
+        }
+        assert superClass != null;
+
+        //noinspection unchecked
+        UCallExpression invocation = UastUtils.getParentOfType(
+                declaration, UObjectLiteralExpression.class, true, UMethod.class);
+
+        Location location;
+        if (isAnonymous && invocation != null) {
+            location = context.getCallLocation(invocation, false, false);
+        } else {
+            location = context.getNameLocation(declaration);
+        }
+        String name;
+        if (isAnonymous) {
+            name = "anonymous " + ((UAnonymousClass)declaration).getBaseClassReference().getQualifiedName();
+        } else {
+            name = declaration.getQualifiedName();
+        }
+
+        String superClassName = superClass.substring(superClass.lastIndexOf('.') + 1);
+        context.report(ISSUE, declaration, location, String.format(
+                "This %1$s class should be static or leaks might occur (%2$s)",
+                superClassName,  name));
+    }
+
+    private static void checkInstanceField(@NonNull JavaContext context, @NonNull UField field) {
+        PsiType type = field.getType();
+        if (!(type instanceof PsiClassType)) {
+            return;
+        }
+
+        String fqn = type.getCanonicalText();
+        if (fqn.startsWith("java.")) {
+            return;
+        }
+        PsiClass cls = ((PsiClassType) type).resolve();
+        if (cls == null) {
+            return;
+        }
+
+        if (LeakDetector.isLeakCandidate(cls, context.getEvaluator())) {
+            context.report(LeakDetector.ISSUE, field, context.getLocation(field),
+                    "This field leaks a context object");
+        }
+    }
 
     @Override
     public List<Class<? extends UElement>> getApplicableUastTypes() {
@@ -108,7 +214,8 @@ public class LeakDetector extends Detector implements Detector.UastScanner {
             }
             if (fqn.startsWith("android.")) {
                 if (isLeakCandidate(cls, mContext.getEvaluator())
-                        && !isAppContextName(cls, field)) {
+                        && !isAppContextName(cls, field)
+                        && !isInitializedToAppContext(field)) {
                     String message = "Do not place Android context classes in static fields; "
                             + "this is a memory leak (and also breaks Instant Run)";
                     report(field, modifierList, message);
@@ -155,6 +262,56 @@ public class LeakDetector extends Detector implements Detector.UastScanner {
             }
         }
 
+        /**
+         * If it's a static field see if it's initialized to an app context in
+         * one of the constructors
+         */
+        private boolean isInitializedToAppContext(
+                @NonNull UField field) {
+            PsiClass containingClass = field.getContainingClass();
+            if (containingClass == null) {
+                return false;
+            }
+
+            for (PsiMethod method : containingClass.getConstructors()) {
+                UExpression methodBody = mContext.getUastContext().getMethodBody(method);
+                if (methodBody == null) {
+                    continue;
+                }
+                Ref<Boolean> assignedToAppContext = new Ref<>();
+
+                methodBody.accept(new AbstractUastVisitor() {
+                    @Override
+                    public boolean visitBinaryExpression(UBinaryExpression node) {
+                        if (UastExpressionUtils.isAssignment(node) &&
+                                node.getLeftOperand() instanceof UResolvable &&
+                                field.getPsi().equals(
+                                        ((UResolvable)node.getLeftOperand()).resolve())) {
+                            // Yes, assigning to this field
+                            // See if the right hand side looks like an app context
+                            UElement rhs = node.getRightOperand();
+                            while (rhs instanceof UQualifiedReferenceExpression) {
+                                rhs = ((UQualifiedReferenceExpression)rhs).getSelector();
+                            }
+                            if (rhs instanceof UCallExpression) {
+                                UCallExpression call = (UCallExpression) rhs;
+                                if ("getApplicationContext".equals(call.getMethodName())) {
+                                    assignedToAppContext.set(true);
+                                }
+                            }
+                        }
+                        return super.visitBinaryExpression(node);
+                    }
+                });
+
+                if (assignedToAppContext.get()) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private void report(@NonNull PsiField field, @NonNull PsiModifierList modifierList,
                 @NonNull String message) {
             PsiElement locationNode = field;
@@ -190,7 +347,7 @@ public class LeakDetector extends Detector implements Detector.UastScanner {
         return false;
     }
 
-    private static boolean isLeakCandidate(
+    static boolean isLeakCandidate(
             @NonNull PsiClass cls,
             @NonNull JavaEvaluator evaluator) {
         return evaluator.extendsClass(cls, CLASS_CONTEXT, false)

@@ -95,19 +95,14 @@ public class HandlerDetector extends Detector implements UastScanner {
             return;
         }
 
-        // Only flag handlers using the default looper
         //noinspection unchecked
         UCallExpression invocation = UastUtils.getParentOfType(
                 declaration, UObjectLiteralExpression.class, true, UMethod.class);
+
+        // Only flag handlers using the default looper
         if (invocation != null) {
-            if (isAnonymous && invocation.getValueArgumentCount() > 0) {
-                for (UExpression expression : invocation.getValueArguments()) {
-                    PsiType type = expression.getExpressionType();
-                    if (type instanceof PsiClassType
-                            && LOOPER_CLS.equals(type.getCanonicalText())) {
-                        return;
-                    }
-                }
+            if (isAnonymous && hasLooperArgument(invocation)) {
+                return;
             }
         } else if (hasLooperConstructorParameter(declaration)) {
             // This is an inner class which takes a Looper parameter:
@@ -129,8 +124,20 @@ public class HandlerDetector extends Detector implements UastScanner {
         }
 
         context.report(ISSUE, declaration, location, String.format(
-                "This Handler class should be static or leaks might occur (%1$s)",
-                name));
+                "This Handler class should be static or leaks might occur (%1$s)", name));
+    }
+
+    private static boolean hasLooperArgument(@NonNull UCallExpression invocation) {
+        if (invocation.getValueArgumentCount() > 0) {
+            for (UExpression expression : invocation.getValueArguments()) {
+                PsiType type = expression.getExpressionType();
+                if (type instanceof PsiClassType
+                        && LOOPER_CLS.equals(type.getCanonicalText())) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private static boolean hasLooperConstructorParameter(@NonNull PsiClass cls) {

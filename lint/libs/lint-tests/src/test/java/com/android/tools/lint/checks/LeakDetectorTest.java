@@ -25,8 +25,7 @@ public class LeakDetectorTest extends AbstractCheckTest {
         return new LeakDetector();
     }
 
-    @SuppressWarnings("ALL") // sample code
-    public void test() throws Exception {
+    public void testStaticFields() throws Exception {
         String expected = ""
                 + "src/test/pkg/LeakTest.java:18: Warning: Do not place Android context classes in static fields; this is a memory leak (and also breaks Instant Run) [StaticFieldLeak]\n"
                 + "    private static Activity sField7; // LEAK!\n"
@@ -44,6 +43,7 @@ public class LeakDetectorTest extends AbstractCheckTest {
                 + "    private static Activity sAppContext1; // LEAK\n"
                 + "            ~~~~~~\n"
                 + "0 errors, 5 warnings\n";
+        //noinspection all // Sample code
         lint().files(
                 java("src/test/pkg/LeakTest.java", ""
                         + "package test.pkg;\n"
@@ -81,5 +81,153 @@ public class LeakDetectorTest extends AbstractCheckTest {
                         + "}\n"))
                 .run()
                 .expect(expected);
+    }
+
+    public void testLoader() {
+        //noinspection all // Sample code
+        lint().files(
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "import android.app.Activity;\n"
+                        + "import android.content.Context;\n"
+                        + "import android.content.Loader;\n"
+                        + "\n"
+                        + "public class LoaderTest {\n"
+                        + "    public static class MyLoader1 extends Loader { // OK\n"
+                        + "        public MyLoader1(Context context) { super(context); }\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    public class MyLoader2 extends Loader { // Leak\n"
+                        + "        public MyLoader2(Context context) { super(context); }\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    public static class MyLoader3 extends Loader {\n"
+                        + "        private Activity activity; // Leak\n"
+                        + "        public MyLoader3(Context context) { super(context); }\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    public Loader createLoader(Context context) {\n"
+                        + "        return new Loader(context) { // Leak\n"
+                        + "        };\n"
+                        + "    }\n"
+                        + "}\n"))
+                .run()
+                .expect(""
+                        + "src/test/pkg/LoaderTest.java:12: Warning: This Loader class should be static or leaks might occur (test.pkg.LoaderTest.MyLoader2) [StaticFieldLeak]\n"
+                        + "    public class MyLoader2 extends Loader { // Leak\n"
+                        + "                 ~~~~~~~~~\n"
+                        + "src/test/pkg/LoaderTest.java:17: Warning: This field leaks a context object [StaticFieldLeak]\n"
+                        + "        private Activity activity; // Leak\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "src/test/pkg/LoaderTest.java:22: Warning: This Loader class should be static or leaks might occur (anonymous android.content.Loader) [StaticFieldLeak]\n"
+                        + "        return new Loader(context) { // Leak\n"
+                        + "               ^\n"
+                        + "0 errors, 3 warnings\n");
+    }
+
+    public void testSupportLoader() {
+        //noinspection all // Sample code
+        lint().files(
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "import android.app.Activity;\n"
+                        + "import android.content.Context;\n"
+                        + "import android.support.v4.content.Loader;\n"
+                        + "\n"
+                        + "public class SupportLoaderTest {\n"
+                        + "    public static class MyLoader1 extends Loader { // OK\n"
+                        + "        public MyLoader1(Context context) { super(context); }\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    public class MyLoader2 extends Loader { // Leak\n"
+                        + "        public MyLoader2(Context context) { super(context); }\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    public static class MyLoader3 extends Loader {\n"
+                        + "        private Activity activity; // Leak\n"
+                        + "        public MyLoader3(Context context) { super(context); }\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    public Loader createLoader(Context context) {\n"
+                        + "        return new Loader(context) { // Leak\n"
+                        + "        };\n"
+                        + "    }\n"
+                        + "}\n"),
+                // Stub since support library isn't in SDK
+                java(""
+                        + "package android.support.v4.content;\n"
+                        + "public class Loader {\n"
+                        + "}\n"))
+                .run()
+                .expect(""
+                        + "src/test/pkg/SupportLoaderTest.java:12: Warning: This Loader class should be static or leaks might occur (test.pkg.SupportLoaderTest.MyLoader2) [StaticFieldLeak]\n"
+                        + "    public class MyLoader2 extends Loader { // Leak\n"
+                        + "                 ~~~~~~~~~\n"
+                        + "src/test/pkg/SupportLoaderTest.java:17: Warning: This field leaks a context object [StaticFieldLeak]\n"
+                        + "        private Activity activity; // Leak\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "src/test/pkg/SupportLoaderTest.java:22: Warning: This Loader class should be static or leaks might occur (anonymous android.support.v4.content.Loader) [StaticFieldLeak]\n"
+                        + "        return new Loader(context) { // Leak\n"
+                        + "               ^\n"
+                        + "0 errors, 3 warnings\n");
+    }
+
+    public void testAsyncTask() {
+        //noinspection all // Sample code
+        lint().files(
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "import android.os.AsyncTask;\n"
+                        + "\n"
+                        + "public class AsyncTaskTest {\n"
+                        + "    public static class MyAsyncTask1 extends AsyncTask { // OK\n"
+                        + "        @Override protected Object doInBackground(Object[] objects) { return null; }\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    public class MyAsyncTask2 extends AsyncTask { // Leak\n"
+                        + "        @Override protected Object doInBackground(Object[] objects) { return null; }\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    public AsyncTask createTask() {\n"
+                        + "        return new AsyncTask() { // Leak\n"
+                        + "            @Override protected Object doInBackground(Object[] objects) { return null; }\n"
+                        + "        };\n"
+                        + "    }\n"
+                        + "}\n"))
+                .run()
+                .expect(""
+                        + "src/test/pkg/AsyncTaskTest.java:10: Warning: This AsyncTask class should be static or leaks might occur (test.pkg.AsyncTaskTest.MyAsyncTask2) [StaticFieldLeak]\n"
+                        + "    public class MyAsyncTask2 extends AsyncTask { // Leak\n"
+                        + "                 ~~~~~~~~~~~~\n"
+                        + "src/test/pkg/AsyncTaskTest.java:15: Warning: This AsyncTask class should be static or leaks might occur (anonymous android.os.AsyncTask) [StaticFieldLeak]\n"
+                        + "        return new AsyncTask() { // Leak\n"
+                        + "               ^\n"
+                        + "0 errors, 2 warnings\n");
+    }
+
+    public void testAssignAppContext() {
+        //noinspection all // Sample code
+        lint().files(
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "import android.content.Context;\n"
+                        + "\n"
+                        + "public class StaticFieldTest {\n"
+                        + "    public static Context context;\n"
+                        + "\n"
+                        + "    public StaticFieldTest(Context c) {\n"
+                        + "        context = c.getApplicationContext();\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    public StaticFieldTest() {\n"
+                        + "        context = null;\n"
+                        + "    }\n"
+                        + "}\n"))
+                .run()
+                .expectClean();
     }
 }
