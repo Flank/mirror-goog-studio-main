@@ -66,20 +66,20 @@ grpc::Status NetworkServiceImpl::GetData(
   int64_t start_time = request->start_timestamp();
   int64_t end_time = request->end_timestamp();
 
-  for (auto &value : device_buffer_->GetValues(start_time, end_time)) {
+  for (const auto &value : device_buffer_->GetValues(start_time, end_time)) {
     if (type == NetworkDataRequest::ALL ||
         (type == NetworkDataRequest::CONNECTIVITY &&
          value.has_connectivity_data())) {
-      response->add_data()->Swap(&value);
+      *(response->add_data()) = value;
     }
   }
 
-  for (auto &value : app_buffer->GetValues(start_time, end_time)) {
+  for (const auto &value : app_buffer->GetValues(start_time, end_time)) {
     if (type == NetworkDataRequest::ALL ||
         (type == NetworkDataRequest::SPEED && value.has_speed_data()) ||
         (type == NetworkDataRequest::CONNECTIONS &&
          value.has_connection_data())) {
-      response->add_data()->Swap(&value);
+      *(response->add_data()) = value;
     }
   }
   return Status::OK;
