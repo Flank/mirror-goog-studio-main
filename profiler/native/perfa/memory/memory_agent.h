@@ -21,9 +21,11 @@
 
 #include <unistd.h>
 
+#include "proto/internal_memory.grpc.pb.h"
 #include "utils/clock.h"
 
 using profiler::Clock;
+using profiler::proto::MemoryControlRequest;
 
 namespace profiler {
 
@@ -46,6 +48,8 @@ class MemoryAgent {
   void Initialize();
   void LogGcStart();
   void LogGcFinish();
+
+  void HandleControlSignal(const MemoryControlRequest* request);
 
   // JVMTI Callback for garbage collection start events.
   static void JNICALL GCStartCallback(jvmtiEnv* jvmti);

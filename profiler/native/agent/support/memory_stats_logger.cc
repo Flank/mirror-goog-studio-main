@@ -44,7 +44,7 @@ void EnqueueAllocStats(int32_t alloc_count, int32_t free_count) {
   int32_t pid = getpid();
   Agent::Instance().background_queue()->EnqueueTask(
       [alloc_count, free_count, pid, timestamp]() {
-        auto mem_stub = Agent::Instance().memory_stub();
+        auto mem_stub = Agent::Instance().memory_component()->service_stub();
 
         ClientContext context;
         EmptyMemoryReply reply;
@@ -66,7 +66,7 @@ void EnqueueGcStats(int64_t start_time, int64_t end_time) {
   int32_t pid = getpid();
   Agent::Instance().background_queue()->EnqueueTask(
       [start_time, end_time, pid]() {
-        auto mem_stub = Agent::Instance().memory_stub();
+        auto mem_stub = Agent::Instance().memory_component()->service_stub();
 
         ClientContext context;
         EmptyMemoryReply reply;

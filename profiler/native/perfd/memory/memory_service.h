@@ -19,6 +19,7 @@
 #include <grpc++/grpc++.h>
 #include <unordered_map>
 
+#include "internal_memory_service.h"
 #include "memory_collector.h"
 #include "perfd/daemon.h"
 #include "proto/memory.grpc.pb.h"
@@ -29,9 +30,11 @@ namespace profiler {
 class MemoryServiceImpl final
     : public ::profiler::proto::MemoryService::Service {
  public:
-  MemoryServiceImpl(Daemon::Utilities* utilities,
+  MemoryServiceImpl(InternalMemoryServiceImpl* private_service,
+                    Daemon::Utilities* utilities,
                     std::unordered_map<int32_t, MemoryCollector>* collectors)
-      : clock_(utilities->clock()),
+      : private_service_(private_service),
+        clock_(utilities->clock()),
         file_cache_(utilities->file_cache()),
         collectors_(*collectors) {}
   virtual ~MemoryServiceImpl() = default;
@@ -93,6 +96,7 @@ class MemoryServiceImpl final
  private:
   MemoryCollector* GetCollector(int32_t app_id);
 
+  InternalMemoryServiceImpl* private_service_;
   const Clock& clock_;
   FileCache* file_cache_;
   std::unordered_map<int32_t, MemoryCollector>&

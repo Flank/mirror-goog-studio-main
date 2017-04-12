@@ -17,6 +17,7 @@
 
 #include <cassert>
 
+#include "proto/internal_memory.grpc.pb.h"
 #include "utils/trace.h"
 
 using profiler::proto::AllocationContextsRequest;
@@ -29,6 +30,7 @@ using profiler::proto::TriggerHeapDumpRequest;
 using profiler::proto::TriggerHeapDumpResponse;
 using profiler::proto::ListHeapDumpInfosResponse;
 using profiler::proto::ListDumpInfosRequest;
+using profiler::proto::MemoryControlRequest;
 using profiler::proto::MemoryData;
 using profiler::proto::MemoryRequest;
 using profiler::proto::MemoryStartRequest;
@@ -43,9 +45,9 @@ using profiler::proto::ForceGarbageCollectionResponse;
 
 namespace profiler {
 
-grpc::Status MemoryServiceImpl::StartMonitoringApp(::grpc::ServerContext* context,
-                                                const MemoryStartRequest* request,
-                                                MemoryStartResponse* response) {
+grpc::Status MemoryServiceImpl::StartMonitoringApp(
+    ::grpc::ServerContext* context, const MemoryStartRequest* request,
+    MemoryStartResponse* response) {
   MemoryCollector* collector = GetCollector(request->process_id());
   if (!collector->IsRunning()) {
     collector->Start();
@@ -54,9 +56,9 @@ grpc::Status MemoryServiceImpl::StartMonitoringApp(::grpc::ServerContext* contex
   return ::grpc::Status::OK;
 }
 
-grpc::Status MemoryServiceImpl::StopMonitoringApp(::grpc::ServerContext* context,
-                                               const MemoryStopRequest* request,
-                                               MemoryStopResponse* response) {
+grpc::Status MemoryServiceImpl::StopMonitoringApp(
+    ::grpc::ServerContext* context, const MemoryStopRequest* request,
+    MemoryStopResponse* response) {
   auto got = collectors_.find(request->process_id());
   if (got != collectors_.end() && got->second.IsRunning()) {
     got->second.Stop();
@@ -82,15 +84,16 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(::grpc::ServerContext* context
   return ::grpc::Status::OK;
 }
 
-#define PROFILER_MEMORY_SERVICE_RETURN_IF_NOT_FOUND_WITH_STATUS( \
-    result, collectors, response, status) { \
-  if ((result) == (collectors).end()) { \
-    (response)->set_status(status); \
-    return ::grpc::Status( \
-        ::grpc::StatusCode::NOT_FOUND, \
-        "The memory collector for the specified pid has not been started yet."); \
-  } \
-}
+#define PROFILER_MEMORY_SERVICE_RETURN_IF_NOT_FOUND_WITH_STATUS(              \
+    result, collectors, response, status)                                     \
+  {                                                                           \
+    if ((result) == (collectors).end()) {                                     \
+      (response)->set_status(status);                                         \
+      return ::grpc::Status(::grpc::StatusCode::NOT_FOUND,                    \
+                            "The memory collector for the specified pid has " \
+                            "not been started yet.");                         \
+    }                                                                         \
+  }
 
 ::grpc::Status MemoryServiceImpl::TriggerHeapDump(
     ::grpc::ServerContext* context, const TriggerHeapDumpRequest* request,
@@ -115,9 +118,9 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(::grpc::ServerContext* context
   return ::grpc::Status::OK;
 }
 
-::grpc::Status MemoryServiceImpl::GetHeapDump(
-    ::grpc::ServerContext* context, const DumpDataRequest* request,
-    DumpDataResponse* response) {
+::grpc::Status MemoryServiceImpl::GetHeapDump(::grpc::ServerContext* context,
+                                              const DumpDataRequest* request,
+                                              DumpDataResponse* response) {
   Trace trace("MEM:GetHeapDump");
   int32_t app_id = request->process_id();
 
@@ -131,13 +134,11 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(::grpc::ServerContext* context
     case DumpDataResponse::SUCCESS:
       return ::grpc::Status::OK;
     case DumpDataResponse::NOT_FOUND:
-      return ::grpc::Status(
-          ::grpc::StatusCode::NOT_FOUND,
-          "The requested file_id was not matched to a file.");
+      return ::grpc::Status(::grpc::StatusCode::NOT_FOUND,
+                            "The requested file_id was not matched to a file.");
     default:
-      return ::grpc::Status(
-          ::grpc::StatusCode::UNKNOWN,
-          "Unknown issue when attempting to retrieve file.");
+      return ::grpc::Status(::grpc::StatusCode::UNKNOWN,
+                            "Unknown issue when attempting to retrieve file.");
   }
 }
 
@@ -151,8 +152,8 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(::grpc::ServerContext* context
 ::grpc::Status MemoryServiceImpl::ListHeapDumpInfos(
     ::grpc::ServerContext* context, const ListDumpInfosRequest* request,
     ListHeapDumpInfosResponse* response) {
-    return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED,
-                          "Not implemented on device");
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED,
+                        "Not implemented on device");
 }
 
 ::grpc::Status MemoryServiceImpl::TrackAllocations(
@@ -166,6 +167,23 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(::grpc::ServerContext* context
       result, collectors_, response, TrackAllocationsResponse::FAILURE_UNKNOWN)
 
   if ((result->second).IsRunning()) {
+    // Legacy allocation tracking is handled in the perfd-proxy layer.
+    // This code path should only be valid for post-O.
+    assert(!request->legacy());
+
+    // Forwards a control signal to perfa to toggle JVMTI-based tracking.
+    MemoryControlRequest control_request;
+    control_request.set_pid(app_id);
+    control_request.set_signal(request->enabled()
+                                   ? MemoryControlRequest::ENABLE_TRACKING
+                                   : MemoryControlRequest::DISABLE_TRACKING);
+    if (!private_service_->SendRequestToAgent(control_request)) {
+      return ::grpc::Status(::grpc::StatusCode::UNKNOWN,
+                            "Unable to start live allocation tracking.");
+    }
+
+    // If a signal was successful sent, update the AllocationsInfo sample
+    // that we track in perfd.
     (result->second)
         .TrackAllocations(request->enabled(), request->legacy(), response);
     switch (response->status()) {
@@ -201,7 +219,8 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(::grpc::ServerContext* context
 }
 
 ::grpc::Status MemoryServiceImpl::ForceGarbageCollection(
-    ::grpc::ServerContext* context, const ForceGarbageCollectionRequest* request,
+    ::grpc::ServerContext* context,
+    const ForceGarbageCollectionRequest* request,
     ForceGarbageCollectionResponse* response) {
   return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED,
                         "Not implemented on device");

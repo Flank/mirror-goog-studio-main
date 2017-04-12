@@ -17,6 +17,9 @@
 #define PERFD_MEMORY_INTERNAL_MEMORY_SERVICE_H_
 
 #include <grpc++/grpc++.h>
+#include <condition_variable>
+#include <map>
+#include <mutex>
 #include <unordered_map>
 
 #include "memory_collector.h"
@@ -32,6 +35,11 @@ class InternalMemoryServiceImpl final
       : collectors_(*collectors) {}
   virtual ~InternalMemoryServiceImpl() = default;
 
+  grpc::Status RegisterMemoryAgent(
+      grpc::ServerContext *context,
+      const proto::RegisterMemoryAgentRequest *request,
+      grpc::ServerWriter<proto::MemoryControlRequest> *writer) override;
+
   grpc::Status RecordAllocStats(grpc::ServerContext *context,
                                 const proto::AllocStatsRequest *request,
                                 proto::EmptyMemoryReply *reply) override;
@@ -40,9 +48,27 @@ class InternalMemoryServiceImpl final
                              const proto::GcStatsRequest *request,
                              proto::EmptyMemoryReply *reply) override;
 
+  /**
+   * Sends a MemoryControlRequest to the profiling agent.
+   * Returns true if the signal is sent, false otherwise (if the agent
+   * is not alive). This method is protected so only one thread
+   * can send a signal to an app at a time.
+   */
+  bool SendRequestToAgent(const proto::MemoryControlRequest &request);
+
  private:
+  std::mutex status_mutex_;
+  std::mutex control_mutex_;
+  std::condition_variable control_cv_;
+
   std::unordered_map<int32_t, MemoryCollector>
       &collectors_;  // maps pid to MemoryCollector
+
+  // Per-app flag which indicates whether a perfd->perfa grpc streaming
+  // call (RegisterMemoryAgent) has been established. Value is true if a stream
+  // is alive, false otherwise.
+  std::map<int32_t, bool> app_control_stream_statuses_;
+  std::map<int32_t, proto::MemoryControlRequest> pending_control_requests_;
 };
 
 }  // namespace profiler

@@ -3,7 +3,8 @@ set(AGENT_SOURCE
     support/event_manager.cc
     support/http_tracker.cc
     support/memory_stats_logger.cc
-    agent.cc)
+    agent.cc
+    memory_component.cc)
 
 add_library(supportjni SHARED
             ${AGENT_SOURCE})
