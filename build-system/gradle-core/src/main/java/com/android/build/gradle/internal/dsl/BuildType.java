@@ -29,6 +29,7 @@ import com.android.builder.model.ClassField;
 import com.android.builder.model.SyncIssue;
 import com.google.common.collect.Iterables;
 import java.io.Serializable;
+import java.util.function.Supplier;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.internal.reflect.Instantiator;
@@ -45,7 +46,14 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
      *
      * <p>The checks are disabled during {@link #initWith(com.android.builder.model.BuildType)}.
      */
-    private static ThreadLocal<Boolean> dslChecksEnabled = ThreadLocal.withInitial(() -> true);
+    private static ThreadLocal<Boolean> dslChecksEnabled =
+            ThreadLocal.withInitial(
+                    new Supplier<Boolean>() {
+                        @Override
+                        public Boolean get() {
+                            return true;
+                        }
+                    });
 
     /**
      * Describes how code postprocessing is configured. We don't allow mixing the old and new DSLs.
