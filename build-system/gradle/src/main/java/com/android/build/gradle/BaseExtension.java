@@ -84,8 +84,6 @@ import org.gradle.internal.reflect.Instantiator;
  * <li>Plugin <code>com.android.application</code> uses {@link AppExtension}
  * <li>Plugin <code>com.android.library</code> uses {@link LibraryExtension}
  * <li>Plugin <code>com.android.test</code> uses {@link TestExtension}
- * <li>Plugin <code>com.android.atom</code> uses {@link AtomExtension}
- * <li>Plugin <code>com.android.instantapp</code> uses {@link InstantAppExtension}
  * </ul>
  */
 // All the public methods are meant to be exposed in the DSL.

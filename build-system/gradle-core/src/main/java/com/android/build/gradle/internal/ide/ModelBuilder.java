@@ -101,12 +101,7 @@ public class ModelBuilder implements ToolingModelBuilder {
 
     @NonNull
     static final DependenciesImpl EMPTY_DEPENDENCIES_IMPL =
-            new DependenciesImpl(
-                    ImmutableList.of(),
-                    ImmutableList.of(),
-                    ImmutableList.of(),
-                    ImmutableList.of(),
-                    null);
+            new DependenciesImpl(ImmutableList.of(), ImmutableList.of(), ImmutableList.of());
 
     @NonNull static final DependencyGraphs EMPTY_DEPENDENCY_GRAPH = new EmptyDependencyGraphs();
 
@@ -572,14 +567,6 @@ public class ModelBuilder implements ToolingModelBuilder {
                                         VariantScope.TaskOutputType.AAR,
                                         mainApkInfo,
                                         variantData.getScope().getOutputBundleFile())));
-            case ATOM:
-            case INSTANTAPP:
-                return new BuildOutputsSupplier(
-                        ImmutableList.of(VariantScope.TaskOutputType.APKB),
-                        ImmutableList.of(
-                                new File(
-                                        variantData.getScope().getGlobalScope().getApkLocation(),
-                                        variantData.getVariantConfiguration().getDirName())));
             case ANDROID_TEST:
                 return new BuildOutputsSupplier(
                         ImmutableList.of(VariantScope.TaskOutputType.APK),
@@ -597,8 +584,6 @@ public class ModelBuilder implements ToolingModelBuilder {
 
         switch (variantData.getType()) {
             case DEFAULT:
-            case ATOM:
-            case INSTANTAPP:
             case ANDROID_TEST:
                 return new BuildOutputsSupplier(
                         ImmutableList.of(VariantScope.TaskOutputType.MERGED_MANIFESTS),

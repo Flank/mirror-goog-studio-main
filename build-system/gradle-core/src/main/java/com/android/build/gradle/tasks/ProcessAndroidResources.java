@@ -19,7 +19,6 @@ import static com.android.SdkConstants.FN_RES_BASE;
 import static com.android.SdkConstants.RES_QUALIFIER_SEP;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ATOM_RESOURCE_PKG;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_IDS_DECLARATION;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.MANIFEST;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.SYMBOL_LIST;
@@ -28,7 +27,6 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 import static com.android.build.gradle.options.BooleanOption.BUILD_ONLY_TARGET_ABI;
 import static com.android.build.gradle.options.BooleanOption.ENABLE_NEW_RESOURCE_PROCESSING;
 
-import android.databinding.tool.util.StringUtils;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -86,7 +84,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -164,8 +161,6 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     private InstantRunBuildContext buildContext;
 
-    private FileCollection atomResourcePackages;
-
     private List<LibraryInfo> computedLibraryInfo;
 
     private String originalApplicationId;
@@ -187,8 +182,6 @@ public class ProcessAndroidResources extends IncrementalTask {
     public String getProjectBaseName() {
         return projectBaseName;
     }
-
-    private File libInfoFile;
 
     private VariantScope variantScope;
 
@@ -296,9 +289,6 @@ public class ProcessAndroidResources extends IncrementalTask {
 
         for (ApkData apkData : splitsToGenerate) {
             if (apkData.requiresAapt()) {
-                // get the atom res package up front in the normal thread since it's resolving
-                // dependencies and we cannot do this in the executor threads.
-                Set<File> atomResourcePackageFiles = atomResourcePackages.getFiles();
                 executor.execute(
                         () -> {
                             boolean codeGen =
@@ -312,7 +302,6 @@ public class ProcessAndroidResources extends IncrementalTask {
                             }
                             invokeAaptForSplit(
                                     manifestsOutputs,
-                                    atomResourcePackageFiles,
                                     packageIdFileSet,
                                     apkData,
                                     codeGen);
@@ -398,7 +387,6 @@ public class ProcessAndroidResources extends IncrementalTask {
     @Nullable
     File invokeAaptForSplit(
             Collection<BuildOutput> manifestsOutputs,
-            @NonNull Set<File> atomResourcePackageFiles,
             @Nullable Set<File> packageIdFileSet,
             ApkData apkData,
             boolean generateCode)
@@ -423,28 +411,14 @@ public class ProcessAndroidResources extends IncrementalTask {
                         new ToolOutputParser(new AaptOutputParser(), getILogger()),
                         mergingLogRewriter);
 
-        // Find the base atom package, if it exists.
-        @Nullable File baseAtomPackage = null;
-        for (File atomPackage : atomResourcePackageFiles) {
-            Collection<BuildOutput> splitOutputs =
-                    BuildOutputs.load(VariantScope.TaskOutputType.PROCESSED_RES, atomPackage);
-            if (!splitOutputs.isEmpty()) {
-                baseAtomPackage = splitOutputs.iterator().next().getOutputFile();
-                break;
-            }
-        }
-
-        // For atoms, the output package must only be set for the base atom.
         @Nullable File resOutBaseNameFile = null;
-        if (getType() != VariantType.ATOM || baseAtomPackage == null) {
-            resOutBaseNameFile =
-                    new File(
-                            resPackageOutputFolder,
-                            FN_RES_BASE
-                                    + RES_QUALIFIER_SEP
-                                    + apkData.getBaseName()
-                                    + SdkConstants.DOT_RES);
-        }
+        resOutBaseNameFile =
+                new File(
+                        resPackageOutputFolder,
+                        FN_RES_BASE
+                                + RES_QUALIFIER_SEP
+                                + apkData.getBaseName()
+                                + SdkConstants.DOT_RES);
 
         // FIX MEy : there should be a better way to always get the manifest file to merge.
         // for instance, should the library task also output the .gson ?
@@ -539,40 +513,12 @@ public class ProcessAndroidResources extends IncrementalTask {
                                 .setResourceConfigs(
                                         splitList.getFilters(SplitList.RESOURCE_CONFIGS))
                                 .setSplits(getSplits())
-                                .setPreferredDensity(preferredDensity)
-                                .setBaseFeature(baseAtomPackage);
+                                .setPreferredDensity(preferredDensity);
 
                 builder.processResources(aapt, config,
                         generateCode && getEnforceUniquePackageName());
                 if (resOutBaseNameFile != null && LOG.isInfoEnabled()) {
                     LOG.info("Aapt output file {}", resOutBaseNameFile.getAbsolutePath());
-                }
-            }
-
-            // Output the library information for non-base atoms.
-            File libInfoFile = getLibInfoFile();
-            if (libInfoFile != null && getType() == VariantType.ATOM && baseAtomPackage != null) {
-                String buffer = "";
-
-                for (LibraryInfo libraryInfo : getLibraryInfoList()) {
-                    File symbolFile = libraryInfo.getSymbolFile();
-                    if (symbolFile == null || !symbolFile.exists()) {
-                        continue;
-                    }
-
-                    File libraryManifest = libraryInfo.getManifest();
-                    buffer +=
-                            libraryManifest.getPath()
-                                    + File.pathSeparator
-                                    + symbolFile.getPath()
-                                    + StringUtils.LINE_SEPARATOR;
-                }
-
-                if (!buffer.isEmpty()) {
-                    try (FileOutputStream fos = new FileOutputStream(libInfoFile)) {
-                        fos.write(buffer.getBytes());
-                        fos.close();
-                    }
                 }
             }
 
@@ -827,10 +773,6 @@ public class ProcessAndroidResources extends IncrementalTask {
 
             processResources.buildContext = variantScope.getInstantRunBuildContext();
 
-            processResources.setAtomResourcePackages(
-                    variantScope.getArtifactFileCollection(COMPILE_CLASSPATH, MODULE, ATOM_RESOURCE_PKG));
-
-            processResources.libInfoFile = variantScope.getLibInfoFile();
             processResources.projectBaseName = baseName;
             processResources.buildTargetAbi =
                     projectOptions.get(BUILD_ONLY_TARGET_ABI)
@@ -1074,16 +1016,6 @@ public class ProcessAndroidResources extends IncrementalTask {
         this.mergeBlameLogFolder = mergeBlameLogFolder;
     }
 
-    @InputFiles
-    @NonNull
-    public FileCollection getAtomResourcePackages() {
-        return atomResourcePackages;
-    }
-
-    public void setAtomResourcePackages(FileCollection atomResourcePackages) {
-        this.atomResourcePackages = atomResourcePackages;
-    }
-
     @Input
     public SplitHandlingPolicy getSplitHandlingPolicy() {
         return splitHandlingPolicy;
@@ -1109,17 +1041,6 @@ public class ProcessAndroidResources extends IncrementalTask {
     @NonNull
     File getResPackageOutputFolder() {
         return resPackageOutputFolder;
-    }
-
-    @org.gradle.api.tasks.OutputFile
-    @Optional
-    @Nullable
-    public File getLibInfoFile() {
-        return libInfoFile;
-    }
-
-    public void setLibInfoFile(File libInfoFile) {
-        this.libInfoFile = libInfoFile;
     }
 
     @Input

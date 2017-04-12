@@ -27,9 +27,7 @@ import com.google.wireless.android.sdk.stats.GradleBuildVariant;
  */
 public enum VariantType {
     DEFAULT(false, GradleBuildVariant.VariantType.APPLICATION),
-    INSTANTAPP(false, GradleBuildVariant.VariantType.INSTANTAPP),
     LIBRARY(true, GradleBuildVariant.VariantType.LIBRARY),
-    ATOM(true, GradleBuildVariant.VariantType.ATOM),
     FEATURE(true, GradleBuildVariant.VariantType.FEATURE),
     ANDROID_TEST(
             "androidTest",
@@ -66,8 +64,9 @@ public enum VariantType {
     private final boolean exportsDataBindingClassList;
     private final GradleBuildVariant.VariantType mAnalyticsVariantType;
 
-    /** App, Library or Atom variant. */
-    VariantType(boolean exportsDataBindingClassList,
+    /** App, Library variant. */
+    VariantType(
+            boolean exportsDataBindingClassList,
             GradleBuildVariant.VariantType analyticsVariantType) {
         this.mIsForTesting = false;
         this.mPrefix = "";

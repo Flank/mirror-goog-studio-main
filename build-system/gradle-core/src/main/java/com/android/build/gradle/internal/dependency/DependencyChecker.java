@@ -216,7 +216,6 @@ public class DependencyChecker implements SyncIssueHandler {
                 MavenCoordinates resolvedCoordinates = compileLib.getCoordinates();
 
                 if (variantType != VariantType.LIBRARY
-                        && variantType != VariantType.ATOM
                         && (testedVariantType != VariantType.LIBRARY || !variantType.isForTesting())) {
                     handleIssue(
                             resolvedCoordinates.toString(),

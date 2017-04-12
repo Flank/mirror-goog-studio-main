@@ -38,7 +38,6 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.dependency.MavenCoordinatesImpl;
 import com.android.builder.dependency.level2.JavaDependency;
-import com.android.builder.model.AndroidAtom;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Dependencies;
@@ -370,13 +369,8 @@ public class ArtifactDependencyGraph {
             }
         }
 
-        // FIXME: Get atom libraries.
         return new DependenciesImpl(
-                ImmutableList.of(), /* atoms */
-                androidLibraries.build(),
-                javaLibrary.build(),
-                projects.build(),
-                null); /* baseAtom */
+                androidLibraries.build(), javaLibrary.build(), projects.build());
     }
 
     @NonNull
@@ -387,13 +381,11 @@ public class ArtifactDependencyGraph {
 
         // these items are already ready for serializable, all we need to clone is
         // the Dependencies instance.
-        List<AndroidAtom> atoms = Collections.emptyList();
         List<AndroidLibrary> libraries = Collections.emptyList();
         List<JavaLibrary> javaLibraries = Lists.newArrayList(dependencies.getJavaLibraries());
         List<String> projects = Collections.emptyList();
 
-        return new DependenciesImpl(
-                atoms, libraries, javaLibraries, projects, dependencies.getBaseAtom());
+        return new DependenciesImpl(libraries, javaLibraries, projects);
     }
 
     public static DependencyGraphs clone(

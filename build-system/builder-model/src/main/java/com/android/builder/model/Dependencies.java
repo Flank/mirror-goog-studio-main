@@ -28,15 +28,19 @@ public interface Dependencies {
     /**
      * The list of Android atom dependencies.
      *
-     * The list contains direct dependencies only, which themselves contain their transitive
+     * <p>The list contains direct dependencies only, which themselves contain their transitive
      * dependencies.
      *
-     * Atoms can not be external dependencies, so {@link Library#getProject()} never returns null.
+     * <p>This is only valid for versions 2.3 and 2.4. On version 2.5+ this is empty.
+     *
+     * <p>Atoms can not be external dependencies, so {@link Library#getProject()} never returns
+     * null.
      *
      * @return the list of atoms.
      * @since 2.3
      */
     @NonNull
+    @Deprecated
     Collection<AndroidAtom> getAtoms();
 
     /**
@@ -89,10 +93,14 @@ public interface Dependencies {
 
     /**
      * Returns the base atom, if applicable.
+     *
+     * <p>This is only valid for versions 2.3 and 2.4. On version 2.5+ this is null.
+     *
      * @return the base atom. Or null if this artifact is the base atom or there is no base atom,
-     *         this will be the case when the module is not part of an instant app.
+     *     this will be the case when the module is not part of an instant app.
      * @since 2.3
      */
     @Nullable
+    @Deprecated
     AndroidAtom getBaseAtom();
 }

@@ -33,7 +33,6 @@ import com.android.builder.model.SyncIssue;
 import com.android.builder.model.Variant;
 import com.android.testutils.apk.Aar;
 import com.android.testutils.apk.Apk;
-import com.android.testutils.apk.AtomBundle;
 import com.android.testutils.apk.SplitApks;
 import com.android.testutils.incremental.FileRecord;
 import com.android.testutils.truth.FileRecordSubject;
@@ -150,11 +149,6 @@ public class TruthHelper {
 
     public static AarSubject assertThatAar(@NonNull Aar aar) {
         return assert_().about(AarSubject.FACTORY).that(aar);
-    }
-
-    @NonNull
-    public static AtomBundleSubject assertThat(@NonNull AtomBundle atombundle) {
-        return assert_().about(AtomBundleSubject.FACTORY).that(atombundle);
     }
 
     @NonNull

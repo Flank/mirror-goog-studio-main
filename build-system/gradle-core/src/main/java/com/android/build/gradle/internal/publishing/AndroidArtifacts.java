@@ -52,7 +52,7 @@ public class AndroidArtifacts {
     public static final String TYPE_AAR = "aar";
     private static final String TYPE_APK = "apk";
 
-    // types for AAR/ATOM content
+    // types for AAR content
     private static final String TYPE_MANIFEST = "android-manifest";
     private static final String TYPE_MANIFEST_METADATA = "android-manifest-metadata";
     private static final String TYPE_ANDROID_RES = "android-res";
@@ -69,16 +69,6 @@ public class AndroidArtifacts {
     private static final String TYPE_ANNOTATION_JAR = "android-annotation-jar";
     private static final String TYPE_EXPLODED_AAR = "android-exploded-aar";
     private static final String TYPE_JAR = "jar";
-
-    // types for ATOM content.
-    private static final String TYPE_ATOM_RESOURCE_PKG = "android-atom-res-ap_";
-    private static final String TYPE_ATOM_MANIFEST = "android-atom-manifest";
-    private static final String TYPE_ATOM_ANDROID_RES = "android-atom-res";
-    private static final String TYPE_ATOM_DEX = "android-atom-dex";
-    private static final String TYPE_ATOM_JAVA_RES = "android-atom-java-res";
-    private static final String TYPE_ATOM_JNI = "android-atom-jni";
-    private static final String TYPE_ATOM_ASSETS = "android-atom-assets";
-    private static final String TYPE_ATOM_LIB_INFO = "android-atom-lib-info";
 
     // types for additional artifacts to go with APK
     private static final String TYPE_MAPPING = "android-mapping";
@@ -161,16 +151,6 @@ public class AndroidArtifacts {
         APK_MAPPING(TYPE_MAPPING, API_ELEMENTS_ONLY),
         APK_METADATA(TYPE_METADATA, API_ELEMENTS_ONLY),
         APK(TYPE_APK, RUNTIME_ELEMENTS_ONLY),
-
-        ATOM_RESOURCE_PKG(TYPE_ATOM_RESOURCE_PKG, API_ELEMENTS_ONLY),
-        ATOM_MANIFEST(TYPE_ATOM_MANIFEST, API_ELEMENTS_ONLY),
-        ATOM_ANDROID_RES(TYPE_ATOM_ANDROID_RES, API_ELEMENTS_ONLY),
-        ATOM_DEX(TYPE_ATOM_DEX, API_ELEMENTS_ONLY),
-        ATOM_JAVA_RES(TYPE_ATOM_JAVA_RES, API_ELEMENTS_ONLY),
-        ATOM_JNI(TYPE_ATOM_JNI, API_ELEMENTS_ONLY),
-        ATOM_ASSETS(TYPE_ATOM_ASSETS, API_ELEMENTS_ONLY),
-        ATOM_LIB_INFO(TYPE_ATOM_LIB_INFO, API_ELEMENTS_ONLY),
-        ATOM_CLASSES(JavaPlugin.CLASS_DIRECTORY, API_ELEMENTS_ONLY),
 
         // types for querying only. Not publishable.
         // FIXME once we only support level 2 sync, then this can be not publishable

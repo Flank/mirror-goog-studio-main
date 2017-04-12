@@ -829,9 +829,6 @@ public class AndroidBuilder {
             boolean finalIds = true;
             if (aaptConfig.getVariantType() == VariantType.LIBRARY) {
                 finalIds = false;
-            } else if (aaptConfig.getVariantType() == VariantType.ATOM
-                    && aaptConfig.getBaseFeature() != null) {
-                finalIds = false;
             }
 
             // Generate manifest_keep.txt for main dex when using AAPT2 (until the flag is added).

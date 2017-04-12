@@ -16,11 +16,9 @@
 
 package com.android.build.gradle.internal.scope;
 
-import static com.android.SdkConstants.DOT_ZIP;
 import static com.android.SdkConstants.FD_MERGED;
 import static com.android.SdkConstants.FD_RES;
 import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML;
-import static com.android.build.gradle.internal.TaskManager.DIR_ATOMBUNDLES;
 import static com.android.build.gradle.internal.TaskManager.DIR_BUNDLES;
 import static com.android.build.gradle.internal.dsl.BuildType.PostprocessingConfiguration.OLD_DSL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE;
@@ -980,14 +978,11 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     @NonNull
     public File getDefaultMergeResourcesOutputDir() {
-        if (getVariantData().getType() == VariantType.ATOM) {
-            return FileUtils.join(getBaseBundleDir(), FD_RES);
-        } else {
-            return FileUtils.join(getGlobalScope().getIntermediatesDir(),
-                    FD_RES,
-                    FD_MERGED,
-                    getVariantConfiguration().getDirName());
-        }
+        return FileUtils.join(
+                getGlobalScope().getIntermediatesDir(),
+                FD_RES,
+                FD_MERGED,
+                getVariantConfiguration().getDirName());
     }
 
     @Override
@@ -1371,7 +1366,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     public File getManifestOutputDirectory() {
         switch (getVariantConfiguration().getType()) {
             case DEFAULT:
-            case INSTANTAPP:
             case FEATURE:
                 return FileUtils.join(
                         getGlobalScope().getIntermediatesDir(),
@@ -1381,8 +1375,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             case LIBRARY:
                 // FIXME: this does not seem right.
                 return getBaseBundleDir();
-            case ATOM:
-                return new File(getBaseBundleDir(), "manifests");
             case ANDROID_TEST:
                 return FileUtils.join(
                         getGlobalScope().getIntermediatesDir(),
@@ -1392,17 +1384,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 throw new RuntimeException(
                         "getManifestOutputFile called for an unexpected variant.");
         }
-    }
-
-    @NonNull
-    @Override
-    public File getInstantAppPackage() {
-        return new File(
-                getGlobalScope().getApkLocation(),
-                getGlobalScope().getProjectBaseName()
-                        + "-"
-                        + getVariantConfiguration().getBaseName()
-                        + DOT_ZIP);
     }
 
     private AndroidTask<? extends ManifestProcessorTask> manifestProcessorTask;
@@ -1431,26 +1412,21 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         // classifier.
         return FileUtils.join(
                 globalScope.getIntermediatesDir(),
-                getVariantConfiguration().getType() == VariantType.ATOM ?
-                        DIR_ATOMBUNDLES : DIR_BUNDLES,
+                DIR_BUNDLES,
                 getVariantConfiguration().getFullName());
     }
 
     @NonNull
     @Override
     public File getOutputBundleFile() {
-        String extension =
-                getVariantConfiguration().getType() == VariantType.ATOM
-                        ? BuilderConstants.EXT_ATOMBUNDLE_ARCHIVE
-                        : BuilderConstants.EXT_LIB_ARCHIVE;
         return FileUtils.join(
                 globalScope.getOutputsDir(),
-                extension,
+                BuilderConstants.EXT_LIB_ARCHIVE,
                 globalScope.getProjectBaseName()
                         + "-"
                         + getVariantConfiguration().getBaseName()
                         + "."
-                        + extension);
+                        + BuilderConstants.EXT_LIB_ARCHIVE);
     }
 
     @NonNull
@@ -1466,20 +1442,11 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     @NonNull
     public File getMainJarOutputDir() {
-        if (getVariantConfiguration().getType() == VariantType.ATOM)
-            return getBaseBundleDir();
-        else
-            return FileUtils.join(globalScope.getIntermediatesDir(),
-                    "packaged",
-                    getVariantConfiguration().getDirName());
+        return FileUtils.join(
+                globalScope.getIntermediatesDir(),
+                "packaged",
+                getVariantConfiguration().getDirName());
     }
-
-    @NonNull
-    @Override
-    public File getLibInfoFile() {
-        return new File(getBaseBundleDir(), "libinfo.txt");
-    }
-
     // Tasks getters/setters.
 
     @Override

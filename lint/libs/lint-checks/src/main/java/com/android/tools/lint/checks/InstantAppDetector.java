@@ -71,7 +71,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 /**
- * Checks related to instant apps
+ * Checks related to instant apps. FIXME: This needs to be refactored to support the feature plugin.
  */
 public class InstantAppDetector extends ResourceXmlDetector implements UastScanner {
 
