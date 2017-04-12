@@ -30,7 +30,7 @@ class TryBlocksEncoder : public Visitor {
   virtual bool Visit(TryBlockEnd* try_end) override;
 
  public:
-  TryBlocksEncoder(const InstructionsList& instructions)
+  explicit TryBlocksEncoder(const InstructionsList& instructions)
     : instructions_(instructions) {
   }
 

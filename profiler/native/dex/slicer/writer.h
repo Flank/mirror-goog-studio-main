@@ -167,7 +167,7 @@ class Writer {
     Section map_list;
   };
 
-public:
+ public:
   // interface for allocating the final in-memory image
   struct Allocator {
     virtual void* Allocate(size_t size) = 0;
@@ -181,7 +181,6 @@ public:
   Writer(const Writer&) = delete;
   Writer& operator=(const Writer&) = delete;
 
- public:
   // .dex image creation
   dex::u1* CreateImage(Allocator* allocator, size_t* new_image_size);
 

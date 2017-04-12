@@ -57,7 +57,7 @@ class PrintCodeIrVisitor : public lir::Visitor {
 // A .dex bytecode dissasembler using lir::CodeIr
 class DexDissasembler {
  public:
-  DexDissasembler(std::shared_ptr<ir::DexFile> dex_ir) : dex_ir_(dex_ir) {}
+  explicit DexDissasembler(std::shared_ptr<ir::DexFile> dex_ir) : dex_ir_(dex_ir) {}
 
   DexDissasembler(const DexDissasembler&) = delete;
   DexDissasembler& operator=(const DexDissasembler&) = delete;

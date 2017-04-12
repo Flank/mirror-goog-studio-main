@@ -40,6 +40,10 @@ bool DebugInfoEncoder::Visit(DbgInfoAnnotation* dbg_annotation) {
   // encode the annotation itself
   switch (dbg_annotation->dbg_opcode) {
     case dex::DBG_ADVANCE_LINE: {
+      // DBG_ANDVANCE_LINE is used a bit differently in the code IR
+      // vs the .dex image: the code IR uses it exclusively for source
+      // location (the .line directive) while .dex format uses it to
+      // advance the "line" register without emitting a "position entry"
       int line = dbg_annotation->CastOperand<LineNumber>(0)->line;
       if (line_start_ == 0) {
         // it's not perfectly clear from the .dex specification
@@ -49,8 +53,17 @@ bool DebugInfoEncoder::Visit(DbgInfoAnnotation* dbg_annotation) {
         line_start_ = line;
       } else {
         WEAK_CHECK(line > 0);
-        dbginfo_.Push<dex::u1>(dex::DBG_ADVANCE_LINE);
-        dbginfo_.PushSLeb128(line - last_line_);
+        int delta = line - last_line_;
+        int adj_opcode = delta - dex::DBG_LINE_BASE;
+        // out of range for special opcode?
+        if (adj_opcode < 0 || adj_opcode >= dex::DBG_LINE_RANGE) {
+          dbginfo_.Push<dex::u1>(dex::DBG_ADVANCE_LINE);
+          dbginfo_.PushSLeb128(delta);
+          adj_opcode = -dex::DBG_LINE_BASE;
+        }
+        assert(adj_opcode >= 0 && dex::DBG_FIRST_SPECIAL + adj_opcode < 256);
+        dex::u1 special_opcode = dex::DBG_FIRST_SPECIAL + adj_opcode;
+        dbginfo_.Push<dex::u1>(special_opcode);
       }
       last_line_ = line;
     } break;

@@ -33,7 +33,7 @@ class DebugInfoEncoder : public Visitor {
   virtual bool Visit(DbgInfoAnnotation* dbg_annotation) override;
 
  public:
-  DebugInfoEncoder(const InstructionsList& instructions)
+  explicit DebugInfoEncoder(const InstructionsList& instructions)
     : instructions_(instructions) {
   }
 
