@@ -1,6 +1,4 @@
 
-Running experiment 'test_method_instrumenter' ... 
-
 method Base.<init>() : void
 {
 	.src "entryHooks.java"

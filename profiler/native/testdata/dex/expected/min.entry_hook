@@ -1,6 +1,4 @@
 
-Running experiment 'stress_entry_hook' ... 
-
 method Minimal.<init>() : void
 {
 	.src "min.java"

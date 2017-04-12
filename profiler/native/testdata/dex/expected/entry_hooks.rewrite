@@ -1,6 +1,4 @@
 
-Running experiment 'full_rewrite' ... 
-
 method Base.<init>() : void
 {
 	.src "entryHooks.java"

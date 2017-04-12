@@ -1,6 +1,4 @@
 
-Running experiment 'full_rewrite' ... 
-
 method A.<init>() : void
 {
 	.src "tryCatch.java"

@@ -1,6 +1,4 @@
 
-Running experiment 'stress_exit_hook' ... 
-
 method A.<init>() : void
 {
 	.src "tryCatch.java"
