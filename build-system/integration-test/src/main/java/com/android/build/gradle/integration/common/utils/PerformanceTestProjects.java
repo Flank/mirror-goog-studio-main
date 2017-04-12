@@ -126,6 +126,11 @@ public class PerformanceTestProjects {
                 "<item name=\"attr/",
                 "<item type=\"att\" name=\""
         );
+
+        TestFileUtils.searchAndReplace(
+                project.file("app/build.gradle"),
+                ",\\s*commit: \"git rev-parse --short HEAD\".execute\\(\\).text\\]",
+                "]");
     }
 
 
