@@ -62,8 +62,11 @@ public final class VmStatsSampler extends Thread {
                 }
                 int freedCount = Debug.getGlobalFreedCount() - mPreviousThreadLocalAllocCount;
                 int allocatedCount = Debug.getGlobalAllocCount() - threadAllocatedCount;
-                sendVmStats(allocatedCount, freedCount, gcCount - mPreviousGcCount);
-                mPreviousGcCount = gcCount;
+                logAllocStats(allocatedCount, freedCount);
+                if (gcCount - mPreviousGcCount > 0) {
+                    logGcStats();
+                    mPreviousGcCount = gcCount;
+                }
 
                 long deltaNs = System.nanoTime() - startTimeNs;
                 if (SLEEP_TIME_NS > deltaNs) {
@@ -97,5 +100,6 @@ public final class VmStatsSampler extends Thread {
         return gcCount;
     }
 
-    public static native void sendVmStats(int allocCount, int freeCount, int gcCount);
+    public static native void logAllocStats(int allocCount, int freeCount);
+    public static native void logGcStats();
 }

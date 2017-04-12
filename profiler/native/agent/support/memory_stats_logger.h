@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,25 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-syntax = "proto3";
+#ifndef MEMORY_STATS_LOGGER_H
+#define MEMORY_STATS_LOGGER_H
 
-package profiler.proto;
+#include <unistd.h>
+#include <cstdint>
 
-import "memory.proto";
+namespace profiler {
 
-service InternalMemoryService {
-  rpc RecordGcStats(GcStatsRequest) returns (EmptyMemoryReply) {}
-  rpc RecordAllocStats(AllocStatsRequest) returns (EmptyMemoryReply) {}
-}
+// Queues allocation stats to be sent to perfd.
+void EnqueueAllocStats(int32_t alloc_count, int32_t free_count);
 
-message AllocStatsRequest {
-  int32 process_id = 1;
-  MemoryData.AllocStatsSample alloc_stats_sample = 2;
-}
+// Queues garbage collection stats to be sent to perfd.
+// TODO: add count+bytes freed information.
+void EnqueueGcStats(int64_t start_time, int64_t end_time);
 
-message GcStatsRequest {
-  int32 process_id = 1;
-  MemoryData.GcStatsSample gc_stats_sample = 2;
-}
+}  // end of namespace profiler
 
-message EmptyMemoryReply {}
+#endif  // MEMORY_STATS_LOGGER_H

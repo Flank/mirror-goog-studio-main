@@ -3,6 +3,8 @@ cc_binary(
     srcs = [
         "jvmti_helper.cc",
         "jvmti_helper.h",
+        "memory/memory_agent.cc",
+        "memory/memory_agent.h",
         "perfa.cc",
         "scoped_local_ref.h",
     ],

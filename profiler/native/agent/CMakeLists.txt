@@ -2,7 +2,7 @@ set(AGENT_SOURCE
     support/event_passthrough.cc
     support/event_manager.cc
     support/http_tracker.cc
-    support/vm_stats_sampler.cc
+    support/memory_stats_logger.cc
     agent.cc)
 
 add_library(supportjni SHARED

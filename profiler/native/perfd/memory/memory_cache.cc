@@ -34,7 +34,8 @@ MemoryCache::MemoryCache(const Clock& clock, FileCache* file_cache,
     : clock_(clock),
       file_cache_(file_cache),
       memory_samples_(samples_capacity),
-      vm_stats_samples_(samples_capacity),
+      alloc_stats_samples_(samples_capacity),
+      gc_stats_samples_(samples_capacity),
       heap_dump_infos_(samples_capacity),
       allocations_info_(samples_capacity),
       has_unfinished_heap_dump_(false),
@@ -45,9 +46,15 @@ void MemoryCache::SaveMemorySample(const MemoryData::MemorySample& sample) {
   memory_samples_.Add(sample)->set_timestamp(clock_.GetCurrentTime());
 }
 
-void MemoryCache::SaveVmStatsSample(const MemoryData::VmStatsSample& sample) {
-  std::lock_guard<std::mutex> lock(vm_stats_samples_mutex_);
-  vm_stats_samples_.Add(sample);
+void MemoryCache::SaveAllocStatsSample(
+    const MemoryData::AllocStatsSample& sample) {
+  std::lock_guard<std::mutex> lock(alloc_stats_samples_mutex_);
+  alloc_stats_samples_.Add(sample);
+}
+
+void MemoryCache::SaveGcStatsSample(const MemoryData::GcStatsSample& sample) {
+  std::lock_guard<std::mutex> lock(gc_stats_samples_mutex_);
+  gc_stats_samples_.Add(sample);
 }
 
 bool MemoryCache::StartHeapDump(const std::string& dump_file_name,
@@ -131,7 +138,8 @@ void MemoryCache::TrackAllocations(bool enabled, bool legacy,
 void MemoryCache::LoadMemoryData(int64_t start_time_exl, int64_t end_time_inc,
                                  MemoryData* response) {
   std::lock_guard<std::mutex> memory_lock(memory_samples_mutex_);
-  std::lock_guard<std::mutex> vm_stats_lock(vm_stats_samples_mutex_);
+  std::lock_guard<std::mutex> alloc_stats_lock(alloc_stats_samples_mutex_);
+  std::lock_guard<std::mutex> gc_stats_lock(gc_stats_samples_mutex_);
   std::lock_guard<std::mutex> heap_dump_lock(heap_dump_infos_mutex_);
   std::lock_guard<std::mutex> allocations_info_lock(allocations_info_mutex_);
 
@@ -147,12 +155,24 @@ void MemoryCache::LoadMemoryData(int64_t start_time_exl, int64_t end_time_inc,
     }
   }
 
-  for (size_t i = 0; i < vm_stats_samples_.size(); ++i) {
-    const proto::MemoryData::VmStatsSample& sample = vm_stats_samples_.Get(i);
+  for (size_t i = 0; i < alloc_stats_samples_.size(); ++i) {
+    const proto::MemoryData::AllocStatsSample& sample =
+        alloc_stats_samples_.Get(i);
     int64_t timestamp = sample.timestamp();
     if (timestamp > start_time_exl && timestamp <= end_time_inc) {
-      response->add_vm_stats_samples()->CopyFrom(sample);
+      response->add_alloc_stats_samples()->CopyFrom(sample);
       end_timestamp = std::max(timestamp, end_timestamp);
+    }
+  }
+
+  for (size_t i = 0; i < gc_stats_samples_.size(); ++i) {
+    const proto::MemoryData::GcStatsSample& sample = gc_stats_samples_.Get(i);
+    int64_t start_time = sample.start_time();
+    int64_t end_time = sample.end_time();
+    if ((start_time > start_time_exl && start_time <= end_time_inc) ||
+        (end_time > start_time_exl && end_time <= end_time_inc)) {
+      response->add_gc_stats_samples()->CopyFrom(sample);
+      end_timestamp = std::max(end_time, end_timestamp);
     }
   }
 

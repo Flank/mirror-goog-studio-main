@@ -25,6 +25,13 @@
 namespace profiler {
 
 /**
+ * Returns a jvmtiEnv pointer. Note that it is the responsibility of the caller
+ * to ensure that the thread is attached.
+ * See JavaVM->AttachCurrentThread(...), and also GetThreadLocalJNI(JavaVM* vm)
+ */
+jvmtiEnv* CreateJvmtiEnv(JavaVM* vm);
+
+/**
  * Checks against the err_num.
  * Returns true if there is an error, false otherwise.
  */
@@ -33,7 +40,7 @@ bool CheckJvmtiError(jvmtiEnv* jvmti, jvmtiError err_num);
 /**
  * Sets all available capabilities on the given JVMTI environment.
  */
-void SetAllCapabilities(jvmtiEnv *jvmti);
+void SetAllCapabilities(jvmtiEnv* jvmti);
 
 /**
  * Helper to enable/disable an event via the SetEventNotificationMode API.
