@@ -146,7 +146,9 @@ public class DataBindingExportBuildInfoTask extends DefaultTask {
             task.setXmlOutFolder(variantScope.getLayoutInfoOutputForDataBinding());
 
             task.compilerClasspath =
-                    () -> variantScope.getJavaClasspath(AndroidArtifacts.ArtifactType.CLASSES);
+                    () ->
+                            variantScope.getJavaCompileClasspath(
+                                    AndroidArtifacts.ArtifactType.CLASSES, true);
 
             task.compilerSources =
                     () -> variantData.getJavaSources().stream()

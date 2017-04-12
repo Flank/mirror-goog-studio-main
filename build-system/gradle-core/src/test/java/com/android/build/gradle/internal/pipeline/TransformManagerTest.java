@@ -55,12 +55,13 @@ public class TransformManagerTest extends TaskTestUtils {
     @Test
     public void simpleTransform() {
         // create a stream and add it to the pipeline
-        TransformStream projectClass = OriginalStream.builder(project)
-                .addContentType(DefaultContentType.CLASSES)
-                .addScope(Scope.PROJECT)
-                .setFolder(new File("my file"))
-                .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
-                .build();
+        TransformStream projectClass =
+                OriginalStream.builder(project, "")
+                        .addContentType(DefaultContentType.CLASSES)
+                        .addScope(Scope.PROJECT)
+                        .setFolder(new File("my file"))
+                        .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
+                        .build();
         transformManager.addStream(projectClass);
 
         // add a new transform
@@ -100,12 +101,13 @@ public class TransformManagerTest extends TaskTestUtils {
     @Test
     public void missingStreams() {
         // create a stream and add it to the pipeline
-        TransformStream projectClass = OriginalStream.builder(project)
-                .addContentType(DefaultContentType.CLASSES)
-                .addScope(Scope.PROJECT)
-                .setFolder(new File("my file"))
-                .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
-                .build();
+        TransformStream projectClass =
+                OriginalStream.builder(project, "")
+                        .addContentType(DefaultContentType.CLASSES)
+                        .addScope(Scope.PROJECT)
+                        .setFolder(new File("my file"))
+                        .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
+                        .build();
         transformManager.addStream(projectClass);
 
         // add a new transform
@@ -129,28 +131,31 @@ public class TransformManagerTest extends TaskTestUtils {
     @Test
     public void referencedScope() {
         // create streams and add them to the pipeline
-        TransformStream projectClass = OriginalStream.builder(project)
-                .addContentType(DefaultContentType.CLASSES)
-                .addScope(Scope.PROJECT)
-                .setFolder(new File("my file"))
-                .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
-                .build();
+        TransformStream projectClass =
+                OriginalStream.builder(project, "")
+                        .addContentType(DefaultContentType.CLASSES)
+                        .addScope(Scope.PROJECT)
+                        .setFolder(new File("my file"))
+                        .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
+                        .build();
         transformManager.addStream(projectClass);
 
-        TransformStream libClasses = OriginalStream.builder(project)
-                .addContentType(DefaultContentType.CLASSES)
-                .addScope(Scope.EXTERNAL_LIBRARIES)
-                .setFolder(new File("my file"))
-                .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
-                .build();
+        TransformStream libClasses =
+                OriginalStream.builder(project, "")
+                        .addContentType(DefaultContentType.CLASSES)
+                        .addScope(Scope.EXTERNAL_LIBRARIES)
+                        .setFolder(new File("my file"))
+                        .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
+                        .build();
         transformManager.addStream(libClasses);
 
-        TransformStream modulesClasses = OriginalStream.builder(project)
-                .addContentType(DefaultContentType.CLASSES)
-                .addScope(Scope.SUB_PROJECTS)
-                .setFolder(new File("my file"))
-                .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
-                .build();
+        TransformStream modulesClasses =
+                OriginalStream.builder(project, "")
+                        .addContentType(DefaultContentType.CLASSES)
+                        .addScope(Scope.SUB_PROJECTS)
+                        .setFolder(new File("my file"))
+                        .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
+                        .build();
         transformManager.addStream(modulesClasses);
 
         // add a new transform
@@ -191,12 +196,13 @@ public class TransformManagerTest extends TaskTestUtils {
         project.getTasks().create(MY_FAKE_DEPENDENCY_TASK_NAME, DefaultTask.class);
 
         // create streams and add them to the pipeline
-        OriginalStream projectClassAndResources = OriginalStream.builder(project)
-                .addContentTypes(DefaultContentType.CLASSES, DefaultContentType.RESOURCES)
-                .addScope(Scope.PROJECT)
-                .setFolder(new File("my file"))
-                .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
-                .build();
+        OriginalStream projectClassAndResources =
+                OriginalStream.builder(project, "")
+                        .addContentTypes(DefaultContentType.CLASSES, DefaultContentType.RESOURCES)
+                        .addScope(Scope.PROJECT)
+                        .setFolder(new File("my file"))
+                        .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
+                        .build();
         transformManager.addStream(projectClassAndResources);
 
         // add a new transform
@@ -256,7 +262,7 @@ public class TransformManagerTest extends TaskTestUtils {
 
         // create streams and add them to the pipeline
         IntermediateStream projectAndLibsClasses =
-                IntermediateStream.builder(project)
+                IntermediateStream.builder(project, "")
                         .addContentTypes(DefaultContentType.CLASSES, DefaultContentType.RESOURCES)
                         .addScopes(Scope.PROJECT, Scope.EXTERNAL_LIBRARIES)
                         .setRootLocation(temporaryFolder.newFolder("folder"))
@@ -326,20 +332,22 @@ public class TransformManagerTest extends TaskTestUtils {
         // transform processes classes.
         // There's a (class, res) stream in a scope that's referenced. This stream should not
         // be split in two since it's not consumed.
-        TransformStream projectClass = OriginalStream.builder(project)
-                .addContentTypes(DefaultContentType.CLASSES)
-                .addScope(Scope.PROJECT)
-                .setJar(temporaryFolder.newFile("my file"))
-                .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
-                .build();
+        TransformStream projectClass =
+                OriginalStream.builder(project, "")
+                        .addContentTypes(DefaultContentType.CLASSES)
+                        .addScope(Scope.PROJECT)
+                        .setJar(temporaryFolder.newFile("my file"))
+                        .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
+                        .build();
         transformManager.addStream(projectClass);
 
-        TransformStream libClassAndResources = OriginalStream.builder(project)
-                .addContentTypes(DefaultContentType.CLASSES, DefaultContentType.RESOURCES)
-                .addScope(Scope.EXTERNAL_LIBRARIES)
-                .setJar(new File("my file"))
-                .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
-                .build();
+        TransformStream libClassAndResources =
+                OriginalStream.builder(project, "")
+                        .addContentTypes(DefaultContentType.CLASSES, DefaultContentType.RESOURCES)
+                        .addScope(Scope.EXTERNAL_LIBRARIES)
+                        .setJar(new File("my file"))
+                        .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
+                        .build();
         transformManager.addStream(libClassAndResources);
 
         // add a new transform
@@ -366,12 +374,13 @@ public class TransformManagerTest extends TaskTestUtils {
         project.getTasks().create(MY_FAKE_DEPENDENCY_TASK_NAME, DefaultTask.class);
 
         // create streams and add them to the pipeline
-        IntermediateStream projectAndLibsClasses = IntermediateStream.builder(project)
-                .addContentTypes(DefaultContentType.CLASSES)
-                .addScopes(Scope.PROJECT, Scope.EXTERNAL_LIBRARIES)
-                .setRootLocation(temporaryFolder.newFolder("folder"))
-                .setTaskName(MY_FAKE_DEPENDENCY_TASK_NAME)
-                .build();
+        IntermediateStream projectAndLibsClasses =
+                IntermediateStream.builder(project, "")
+                        .addContentTypes(DefaultContentType.CLASSES)
+                        .addScopes(Scope.PROJECT, Scope.EXTERNAL_LIBRARIES)
+                        .setRootLocation(temporaryFolder.newFolder("folder"))
+                        .setTaskName(MY_FAKE_DEPENDENCY_TASK_NAME)
+                        .build();
 
         transformManager.addStream(projectAndLibsClasses);
 
@@ -426,20 +435,22 @@ public class TransformManagerTest extends TaskTestUtils {
     @Test
     public void combinedScopes() throws Exception {
         // create streams and add them to the pipeline
-        TransformStream projectClass = OriginalStream.builder(project)
-                .addContentType(DefaultContentType.CLASSES)
-                .addScope(Scope.PROJECT)
-                .setJar(new File("my file"))
-                .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
-                .build();
+        TransformStream projectClass =
+                OriginalStream.builder(project, "")
+                        .addContentType(DefaultContentType.CLASSES)
+                        .addScope(Scope.PROJECT)
+                        .setJar(new File("my file"))
+                        .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
+                        .build();
         transformManager.addStream(projectClass);
 
-        TransformStream libClasses = OriginalStream.builder(project)
-                .addContentType(DefaultContentType.CLASSES)
-                .addScope(Scope.EXTERNAL_LIBRARIES)
-                .setJar(new File("my file"))
-                .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
-                .build();
+        TransformStream libClasses =
+                OriginalStream.builder(project, "")
+                        .addContentType(DefaultContentType.CLASSES)
+                        .addScope(Scope.EXTERNAL_LIBRARIES)
+                        .setJar(new File("my file"))
+                        .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
+                        .build();
         transformManager.addStream(libClasses);
 
         // add a new transform
@@ -480,12 +491,13 @@ public class TransformManagerTest extends TaskTestUtils {
     @Test
     public void noOpTransform() throws Exception {
         // create stream and add them to the pipeline
-        TransformStream projectClass = OriginalStream.builder(project)
-                .addContentType(DefaultContentType.CLASSES)
-                .addScope(Scope.PROJECT)
-                .setJar(new File("my file"))
-                .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
-                .build();
+        TransformStream projectClass =
+                OriginalStream.builder(project, "")
+                        .addContentType(DefaultContentType.CLASSES)
+                        .addScope(Scope.PROJECT)
+                        .setJar(new File("my file"))
+                        .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
+                        .build();
         transformManager.addStream(projectClass);
 
         // add a new transform
@@ -514,20 +526,22 @@ public class TransformManagerTest extends TaskTestUtils {
     @Test
     public void combinedTypes() {
         // create streams and add them to the pipeline
-        TransformStream projectClass = OriginalStream.builder(project)
-                .addContentType(DefaultContentType.CLASSES)
-                .addScope(Scope.PROJECT)
-                .setJar(new File("my file"))
-                .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
-                .build();
+        TransformStream projectClass =
+                OriginalStream.builder(project, "")
+                        .addContentType(DefaultContentType.CLASSES)
+                        .addScope(Scope.PROJECT)
+                        .setJar(new File("my file"))
+                        .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
+                        .build();
         transformManager.addStream(projectClass);
 
-        TransformStream libClasses = OriginalStream.builder(project)
-                .addContentType(DefaultContentType.RESOURCES)
-                .addScope(Scope.PROJECT)
-                .setJar(new File("my file"))
-                .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
-                .build();
+        TransformStream libClasses =
+                OriginalStream.builder(project, "")
+                        .addContentType(DefaultContentType.RESOURCES)
+                        .addScope(Scope.PROJECT)
+                        .setJar(new File("my file"))
+                        .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
+                        .build();
         transformManager.addStream(libClasses);
 
         // add a new transform
@@ -571,12 +585,13 @@ public class TransformManagerTest extends TaskTestUtils {
         // (class) -[class]-> (class) + (dex)
 
         // create streams and add them to the pipeline
-        TransformStream projectClass = OriginalStream.builder(project)
-                .addContentTypes(DefaultContentType.CLASSES)
-                .addScope(Scope.PROJECT)
-                .setJar(new File("my file"))
-                .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
-                .build();
+        TransformStream projectClass =
+                OriginalStream.builder(project, "")
+                        .addContentTypes(DefaultContentType.CLASSES)
+                        .addScope(Scope.PROJECT)
+                        .setJar(new File("my file"))
+                        .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
+                        .build();
         transformManager.addStream(projectClass);
 
         // add a new transform
@@ -619,20 +634,22 @@ public class TransformManagerTest extends TaskTestUtils {
         // (class) -[class]-> (class) + (dex)
 
         // create streams and add them to the pipeline
-        TransformStream projectClass = OriginalStream.builder(project)
-                .addContentTypes(DefaultContentType.CLASSES)
-                .addScope(Scope.PROJECT)
-                .setJar(new File("my file"))
-                .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
-                .build();
+        TransformStream projectClass =
+                OriginalStream.builder(project, "")
+                        .addContentTypes(DefaultContentType.CLASSES)
+                        .addScope(Scope.PROJECT)
+                        .setJar(new File("my file"))
+                        .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
+                        .build();
         transformManager.addStream(projectClass);
 
-        TransformStream libClass = OriginalStream.builder(project)
-                .addContentTypes(DefaultContentType.CLASSES)
-                .addScope(Scope.SUB_PROJECTS)
-                .setJar(new File("my file"))
-                .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
-                .build();
+        TransformStream libClass =
+                OriginalStream.builder(project, "")
+                        .addContentTypes(DefaultContentType.CLASSES)
+                        .addScope(Scope.SUB_PROJECTS)
+                        .setJar(new File("my file"))
+                        .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
+                        .build();
         transformManager.addStream(libClass);
 
         // add a new transform
@@ -678,12 +695,13 @@ public class TransformManagerTest extends TaskTestUtils {
         // (class+res) -[class]-> (res, untouched) + (class, transformed) +(dex, transformed)
 
         // create streams and add them to the pipeline
-        TransformStream projectClass = OriginalStream.builder(project)
-                .addContentTypes(DefaultContentType.CLASSES, DefaultContentType.RESOURCES)
-                .addScope(Scope.PROJECT)
-                .setJar(new File("my file"))
-                .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
-                .build();
+        TransformStream projectClass =
+                OriginalStream.builder(project, "")
+                        .addContentTypes(DefaultContentType.CLASSES, DefaultContentType.RESOURCES)
+                        .addScope(Scope.PROJECT)
+                        .setJar(new File("my file"))
+                        .setDependency(MY_FAKE_DEPENDENCY_TASK_NAME)
+                        .build();
         transformManager.addStream(projectClass);
 
         // add a new transform

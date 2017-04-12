@@ -33,7 +33,6 @@ import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.utils.FileUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
@@ -97,28 +96,32 @@ public class JacocoTransform extends Transform {
         checkNotNull(invocation.getOutputProvider(),
                 "Missing output object for transform " + getName());
 
-        TransformInput input = Iterables.getOnlyElement(invocation.getInputs());
+        for (TransformInput input : invocation.getInputs()) {
+            // we don't want jar inputs.
+            Preconditions.checkState(input.getJarInputs().isEmpty());
 
-        // we don't want jar inputs.
-        Preconditions.checkState(input.getJarInputs().isEmpty());
-        DirectoryInput directoryInput = Iterables.getOnlyElement(input.getDirectoryInputs());
-        File inputDir = directoryInput.getFile();
+            for (DirectoryInput directoryInput : input.getDirectoryInputs()) {
+                File inputDir = directoryInput.getFile();
 
-        File outputDir =
-                invocation
-                        .getOutputProvider()
-                        .getContentLocation(
-                                directoryInput.getName(),
-                                getOutputTypes(),
-                                getScopes(),
-                                Format.DIRECTORY);
-        FileUtils.mkdirs(outputDir);
+                File outputDir =
+                        invocation
+                                .getOutputProvider()
+                                .getContentLocation(
+                                        directoryInput.getName(),
+                                        getOutputTypes(),
+                                        getScopes(),
+                                        Format.DIRECTORY);
+                FileUtils.mkdirs(outputDir);
 
-        Instrumenter instrumenter = new Instrumenter(new OfflineInstrumentationAccessGenerator());
-        if (invocation.isIncremental()) {
-            instrumentFilesIncremental(instrumenter, inputDir, outputDir, directoryInput.getChangedFiles());
-        } else {
-            instrumentFilesFullRun(instrumenter, inputDir, outputDir);
+                Instrumenter instrumenter =
+                        new Instrumenter(new OfflineInstrumentationAccessGenerator());
+                if (invocation.isIncremental()) {
+                    instrumentFilesIncremental(
+                            instrumenter, inputDir, outputDir, directoryInput.getChangedFiles());
+                } else {
+                    instrumentFilesFullRun(instrumenter, inputDir, outputDir);
+                }
+            }
         }
     }
 
@@ -143,6 +146,10 @@ public class JacocoTransform extends Transform {
                     // fall through
                 case CHANGED:
                     instrumentFile(instrumenter, inputFile, outputFile);
+                    break;
+                case NOTCHANGED:
+                    // do nothing
+                    break;
             }
         }
     }

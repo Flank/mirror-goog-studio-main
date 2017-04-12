@@ -68,12 +68,13 @@ public class OriginalStream extends TransformStream {
 
     @Nullable private final ArtifactCollection artifactCollection;
 
-    public static Builder builder(Project project) {
-        return new Builder(project);
+    public static Builder builder(@NonNull Project project, @NonNull String name) {
+        return new Builder(project, name);
     }
 
     public static final class Builder {
-        private final Project project;
+        @NonNull private final Project project;
+        @NonNull private final String name;
         private Set<ContentType> contentTypes = Sets.newHashSet();
         private QualifiedContent.ScopeType scope;
         private FileCollection fileCollection;
@@ -82,8 +83,9 @@ public class OriginalStream extends TransformStream {
         private ImmutableList<? extends Object> dependencies;
         private ArtifactCollection artifactCollection;
 
-        public Builder(Project project) {
+        public Builder(@NonNull Project project, @NonNull String name) {
             this.project = project;
+            this.name = name;
         }
 
         public OriginalStream build() {
@@ -126,7 +128,7 @@ public class OriginalStream extends TransformStream {
             }
 
             return new OriginalStream(
-                    ImmutableSet.copyOf(contentTypes), scope, artifactCollection, fc);
+                    name, ImmutableSet.copyOf(contentTypes), scope, artifactCollection, fc);
         }
 
         public Builder addContentTypes(@NonNull Set<ContentType> types) {
@@ -233,11 +235,12 @@ public class OriginalStream extends TransformStream {
     }
 
     private OriginalStream(
+            @NonNull String name,
             @NonNull Set<ContentType> contentTypes,
             @NonNull QualifiedContent.ScopeType scope,
             @Nullable ArtifactCollection artifactCollection,
             @NonNull FileCollection files) {
-        super(contentTypes, ImmutableSet.of(scope), files);
+        super(name, contentTypes, ImmutableSet.of(scope), files);
         this.artifactCollection = artifactCollection;
     }
 
@@ -449,6 +452,7 @@ public class OriginalStream extends TransformStream {
             throw new UnsupportedOperationException("Cannot do a scope-restricted OriginalStream");
         }
         return new OriginalStream(
+                getName() + "-restricted-copy",
                 types,
                 (QualifiedContent.ScopeType) Iterables.getOnlyElement(scopes),
                 artifactCollection,
@@ -458,6 +462,7 @@ public class OriginalStream extends TransformStream {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
+                .add("name", getName())
                 .add("scopes", getScopes())
                 .add("contentTypes", getContentTypes())
                 .add("fileCollection", getFileCollection())

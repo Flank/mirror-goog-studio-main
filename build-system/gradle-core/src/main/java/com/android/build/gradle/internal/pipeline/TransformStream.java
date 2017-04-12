@@ -45,19 +45,35 @@ import org.gradle.api.file.FileCollection;
 @Immutable
 public abstract class TransformStream {
 
-    @NonNull
-    private final Set<ContentType> contentTypes;
-    @NonNull
-    private final Set<? super Scope> scopes;
+    @NonNull private final String name;
+    @NonNull private final Set<ContentType> contentTypes;
+    @NonNull private final Set<? super Scope> scopes;
     @NonNull private final FileCollection fileCollection;
 
+    /**
+     * Creates the stream
+     *
+     * @param name the name of the string. This is used only for debugging purpose in order to more
+     *     easily identify streams when debugging transforms. There is no restrictions on what the
+     *     name can be.
+     * @param contentTypes the content type(s) of the stream
+     * @param scopes the scope(s) of the stream
+     * @param fileCollection the file collection that makes up the content of the stream
+     */
     protected TransformStream(
+            @NonNull String name,
             @NonNull Set<ContentType> contentTypes,
             @NonNull Set<? super Scope> scopes,
             @NonNull FileCollection fileCollection) {
+        this.name = name;
         this.contentTypes = contentTypes;
         this.scopes = scopes;
         this.fileCollection = fileCollection;
+    }
+
+    @NonNull
+    public String getName() {
+        return name;
     }
 
     /**

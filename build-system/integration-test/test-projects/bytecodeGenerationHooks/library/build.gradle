@@ -1,0 +1,11 @@
+apply plugin: 'com.android.library'
+apply plugin: 'com.example.compiler'
+
+android {
+    compileSdkVersion rootProject.latestCompileSdk
+    buildToolsVersion = rootProject.buildToolsVersion
+}
+
+dependencies {
+    testCompile 'junit:junit:4.12'
+}

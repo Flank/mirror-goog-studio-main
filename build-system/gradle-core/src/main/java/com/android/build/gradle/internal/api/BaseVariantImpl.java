@@ -20,6 +20,8 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
+import com.android.build.gradle.internal.publishing.AndroidArtifacts;
+import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.build.gradle.tasks.AidlCompile;
@@ -140,19 +142,19 @@ public abstract class BaseVariantImpl implements BaseVariant {
 
     @NonNull
     @Override
-    public Configuration getCompileClasspath() {
+    public Configuration getCompileConfiguration() {
         return getVariantData().getVariantDependency().getCompileClasspath();
     }
 
     @NonNull
     @Override
-    public Configuration getRuntimeClasspath() {
+    public Configuration getRuntimeConfiguration() {
         return getVariantData().getVariantDependency().getRuntimeClasspath();
     }
 
     @NonNull
     @Override
-    public Configuration getAnnotationProcessorClasspath() {
+    public Configuration getAnnotationProcessorConfiguration() {
         return getVariantData().getVariantDependency().getAnnotationProcessorConfiguration();
     }
 
@@ -286,8 +288,20 @@ public abstract class BaseVariantImpl implements BaseVariant {
     }
 
     @Override
-    public void buildConfigField(@NonNull String type, @NonNull String name,
-            @NonNull String value) {
+    public void registerGeneratedBytecode(@NonNull FileCollection fileCollection) {
+        getVariantData().registerGeneratedBytecode(fileCollection);
+    }
+
+    @NonNull
+    @Override
+    public FileCollection getCompileClasspath() {
+        final VariantScope scope = getVariantData().getScope();
+        return scope.getJavaCompileClasspath(AndroidArtifacts.ArtifactType.CLASSES, false);
+    }
+
+    @Override
+    public void buildConfigField(
+            @NonNull String type, @NonNull String name, @NonNull String value) {
         getVariantData().getVariantConfiguration().addBuildConfigField(type, name, value);
     }
 
