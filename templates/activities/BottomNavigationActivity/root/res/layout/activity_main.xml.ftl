@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<#-- TODO: Switch Instant Apps back to ConstraintLayout once library dependency bugs are resolved -->
-<#if isInstantApp><LinearLayout
-<#else><android.support.constraint.ConstraintLayout</#if>
+<android.support.constraint.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -18,9 +16,8 @@
         android:layout_marginLeft="@dimen/activity_horizontal_margin"
         android:layout_marginTop="@dimen/activity_vertical_margin"
         android:text="@string/title_home"
-        <#-- TODO: Switch Instant Apps back to ConstraintLayout once library dependency bugs are resolved -->
-        <#if !isInstantApp>app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toTopOf="parent" </#if>/>
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <android.support.design.widget.BottomNavigationView
         android:id="@+id/navigation"
@@ -29,11 +26,9 @@
         android:layout_marginEnd="0dp"
         android:layout_marginStart="0dp"
         android:background="?android:attr/windowBackground"
-        <#-- TODO: Switch Instant Apps back to ConstraintLayout once library dependency bugs are resolved -->
-        <#if !isInstantApp>app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"</#if>
+        app:layout_constraintRight_toRightOf="parent"
         app:menu="@menu/navigation" />
 
-<#if isInstantApp></LinearLayout>
-<#else></android.support.constraint.ConstraintLayout></#if>
+</android.support.constraint.ConstraintLayout>
