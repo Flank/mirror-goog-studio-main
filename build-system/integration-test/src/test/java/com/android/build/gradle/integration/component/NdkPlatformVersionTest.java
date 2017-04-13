@@ -8,10 +8,16 @@ import com.android.build.gradle.integration.common.utils.NativeModelHelper;
 import com.android.build.gradle.integration.common.utils.NdkHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.core.Abi;
+import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.builder.model.NativeAndroidProject;
 import com.android.builder.model.NativeArtifact;
+import com.android.repository.Revision;
+import com.android.sdklib.AndroidTargetHash;
+import com.android.sdklib.AndroidVersion;
 import com.android.testutils.apk.Apk;
+import com.android.utils.FileUtils;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import org.junit.Before;
 import org.junit.Rule;
@@ -75,7 +81,16 @@ public class NdkPlatformVersionTest {
             List<String> flags = NativeModelHelper.getFlatCFlags(model, artifact);
             Optional<String> sysrootFlag = flags.stream().filter(f -> f.contains("sysroot")).findFirst();
             assertThat(sysrootFlag.isPresent()).isTrue();
-            assertThat(sysrootFlag.get()).contains("android-19");
+
+            if (getNdkMajorVersion() > 14) {
+                // unified headers are on by default
+                assertThat(sysrootFlag.get())
+                        .contains(
+                                FileUtils.join(
+                                        GradleTestProject.ANDROID_NDK_HOME.getPath(), "sysroot"));
+            } else {
+                assertThat(sysrootFlag.get()).contains("android-19");
+            }
         }
     }
 
@@ -100,15 +115,27 @@ public class NdkPlatformVersionTest {
             List<String> flags = NativeModelHelper.getFlatCFlags(model, artifact);
             Optional<String> sysrootFlag = flags.stream().filter(f -> f.contains("sysroot")).findFirst();
             assertThat(sysrootFlag.isPresent()).isTrue();
-            if (artifact.getName().endsWith("x86")) {
-                assertThat(sysrootFlag.get()).contains("android-19");
+
+            String expected;
+            if (getNdkMajorVersion() > 14) {
+                // unified headers are on by default
+                expected = FileUtils.join(GradleTestProject.ANDROID_NDK_HOME.getPath(), "sysroot");
+            } else if (artifact.getName().endsWith("x86")) {
+                expected = "android-19";
             } else {
-                String expected =
+                AndroidVersion selectedVersion =
                         NdkHelper.getPlatformSupported(
                                 GradleTestProject.ANDROID_NDK_HOME,
                                 GradleTestProject.getCompileSdkHash());
-                assertThat(sysrootFlag.get()).contains(expected);
+                expected = AndroidTargetHash.getPlatformHashString(selectedVersion);
             }
+            //noinspection OptionalGetWithoutIsPresent
+            assertThat(sysrootFlag.get()).contains(expected);
         }
+    }
+
+    private static int getNdkMajorVersion() {
+        Revision ndkVersion = NdkHandler.findRevision(GradleTestProject.ANDROID_NDK_HOME);
+        return Objects.requireNonNull(ndkVersion).getMajor();
     }
 }
