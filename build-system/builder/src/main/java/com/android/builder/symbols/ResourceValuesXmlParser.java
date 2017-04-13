@@ -292,6 +292,9 @@ public final class ResourceValuesXmlParser {
             String attrName =
                     SymbolUtils.canonicalizeValueResourceName(
                             getMandatoryAttr(attrElement, "name"));
+
+            parseAttr(attrElement, idProvider, attrName, builder);
+
             String attrValue = Integer.toString(idProvider.next());
 
             Symbol newStyleable =
@@ -304,18 +307,6 @@ public final class ResourceValuesXmlParser {
             builder.add(newStyleable);
             attrValues.add(attrValue);
 
-            // AAPT not only adds those elements as styleable but also as attr, so users can still
-            // refer to them through R.attr.attrName.
-            Symbol newAttr =
-                    Symbol.createSymbol(
-                            ResourceType.ATTR,
-                            attrName,
-                            SymbolJavaType.INT,
-                            Integer.toString(idProvider.next()));
-
-            if (!builder.contains(newAttr)) {
-                builder.add(newAttr);
-            }
             attrNode = attrNode.getNextSibling();
         }
         builder.add(
@@ -374,12 +365,17 @@ public final class ResourceValuesXmlParser {
             }
             enumNode = enumNode.getNextSibling();
         }
-        builder.add(
+
+        Symbol newAttr =
                 Symbol.createSymbol(
                         ResourceType.ATTR,
                         name,
                         SymbolJavaType.INT,
-                        Integer.toString(idProvider.next())));
+                        Integer.toString(idProvider.next()));
+
+        if (!builder.contains(newAttr)) {
+            builder.add(newAttr);
+        }
     }
 
     /**

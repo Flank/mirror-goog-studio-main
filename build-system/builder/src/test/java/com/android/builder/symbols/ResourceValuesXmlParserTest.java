@@ -126,20 +126,22 @@ public class ResourceValuesXmlParserTest {
         SymbolTable expected =
                 SymbolTable.builder()
                         .add(SymbolTestUtils.createSymbol("styleable", "empty", "int[]", "{}"))
-                        .add(SymbolTestUtils.createSymbol("styleable", "oneattr_enums", "int", "1"))
-                        .add(SymbolTestUtils.createSymbol("attr", "enums", "int", "2"))
-                        .add(SymbolTestUtils.createSymbol("styleable", "oneattr", "int[]", "{1}"))
+                        .add(SymbolTestUtils.createSymbol("id", "e1", "int", "1"))
+                        .add(SymbolTestUtils.createSymbol("id", "e2", "int", "2"))
+                        .add(SymbolTestUtils.createSymbol("attr", "enums", "int", "3"))
+                        .add(SymbolTestUtils.createSymbol("styleable", "oneattr_enums", "int", "4"))
+                        .add(SymbolTestUtils.createSymbol("styleable", "oneattr", "int[]", "{4}"))
+                        .add(SymbolTestUtils.createSymbol("attr", "flags", "int", "5"))
                         .add(
                                 SymbolTestUtils.createSymbol(
-                                        "styleable", "twoattrs_flags", "int", "3"))
-                        .add(SymbolTestUtils.createSymbol("attr", "flags", "int", "4"))
+                                        "styleable", "twoattrs_flags", "int", "6"))
+                        .add(SymbolTestUtils.createSymbol("attr", "nothing", "int", "7"))
                         .add(
                                 SymbolTestUtils.createSymbol(
-                                        "styleable", "twoattrs_nothing", "int", "5"))
-                        .add(SymbolTestUtils.createSymbol("attr", "nothing", "int", "6"))
+                                        "styleable", "twoattrs_nothing", "int", "8"))
                         .add(
                                 SymbolTestUtils.createSymbol(
-                                        "styleable", "twoattrs", "int[]", "{3,5}"))
+                                        "styleable", "twoattrs", "int[]", "{6,8}"))
                         .build();
 
         assertThat(table).isEqualTo(expected);
@@ -382,17 +384,19 @@ public class ResourceValuesXmlParserTest {
 
         SymbolTable expected =
                 SymbolTable.builder()
+                        .add(SymbolTestUtils.createSymbol("attr", "showText", "int", "1"))
                         .add(
                                 SymbolTestUtils.createSymbol(
-                                        "styleable", "PieChart", "int[]", "{1,3}"))
+                                        "styleable", "PieChart_showText", "int", "2"))
+                        .add(SymbolTestUtils.createSymbol("id", "left", "int", "3"))
+                        .add(SymbolTestUtils.createSymbol("id", "right", "int", "4"))
+                        .add(SymbolTestUtils.createSymbol("attr", "labelPosition", "int", "5"))
                         .add(
                                 SymbolTestUtils.createSymbol(
-                                        "styleable", "PieChart_showText", "int", "1"))
-                        .add(SymbolTestUtils.createSymbol("attr", "showText", "int", "2"))
+                                        "styleable", "PieChart_labelPosition", "int", "6"))
                         .add(
                                 SymbolTestUtils.createSymbol(
-                                        "styleable", "PieChart_labelPosition", "int", "3"))
-                        .add(SymbolTestUtils.createSymbol("attr", "labelPosition", "int", "4"))
+                                        "styleable", "PieChart", "int[]", "{2,6}"))
                         .build();
 
         assertThat(itemTable).isEqualTo(expected);
