@@ -62,11 +62,7 @@ public class AntennaPodSmokeTest {
                                 + "language features. To try the support built into"
                                 + " the Android plugin, remove the following from "
                                 + "your build.gradle:\n"
-                                + "    apply plugin: '<plugin_name>'\n"
-                                + "or\n"
-                                + "    plugin {\n"
-                                + "        id '<plugin_name>' version '<version>'\n"
-                                + "    }\n\n"
+                                + "    apply plugin: 'me.tatarka.retrolambda'\n"
                                 + "To learn more, go to https://d.android.com/r/"
                                 + "tools/java-8-support-message.html\n");
 

@@ -65,7 +65,7 @@ public class AbstractCompilesUtilTest {
                 chooseDefaultJavaVersion(
                         "android-24",
                         CURRENT_JDK_VERSION,
-                        VariantScope.Java8LangSupport.EXTERNAL_PLUGIN));
+                        VariantScope.Java8LangSupport.RETROLAMBDA));
         Assert.assertEquals(
                 JavaVersion.VERSION_1_8,
                 chooseDefaultJavaVersion(

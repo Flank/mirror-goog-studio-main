@@ -511,7 +511,8 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
         NONE,
         DESUGAR,
         JACK,
-        EXTERNAL_PLUGIN
+        RETROLAMBDA,
+        DEXGUARD,
     }
 
     @NonNull

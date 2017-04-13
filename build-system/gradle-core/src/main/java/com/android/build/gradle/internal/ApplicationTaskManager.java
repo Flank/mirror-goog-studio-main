@@ -275,23 +275,29 @@ public class ApplicationTaskManager extends TaskManager {
 
                 if (java8LangSupport != VariantScope.Java8LangSupport.DESUGAR) {
                     // Only warn for users of retrolambda and dexguard
-                    if (java8LangSupport == VariantScope.Java8LangSupport.EXTERNAL_PLUGIN) {
-                        androidBuilder
-                                .getErrorReporter()
-                                .handleSyncWarning(
-                                        null,
-                                        SyncIssue.TYPE_GENERIC,
+                    if (java8LangSupport == VariantScope.Java8LangSupport.DEXGUARD
+                            || java8LangSupport == VariantScope.Java8LangSupport.RETROLAMBDA) {
+                        String pluginName;
+                        if (java8LangSupport == VariantScope.Java8LangSupport.DEXGUARD) {
+                            pluginName = "dexguard";
+                        } else {
+                            pluginName = "me.tatarka.retrolambda";
+                        }
+
+                        String warningMsg =
+                                String.format(
                                         "One of the plugins you are using supports Java 8 "
                                                 + "language features. To try the support built into"
                                                 + " the Android plugin, remove the following from "
                                                 + "your build.gradle:\n"
-                                                + "    apply plugin: '<plugin_name>'\n"
-                                                + "or\n"
-                                                + "    plugin {\n"
-                                                + "        id '<plugin_name>' version '<version>'\n"
-                                                + "    }\n\n"
+                                                + "    apply plugin: '%s'\n"
                                                 + "To learn more, go to https://d.android.com/r/"
-                                                + "tools/java-8-support-message.html\n");
+                                                + "tools/java-8-support-message.html\n",
+                                        pluginName);
+
+                        androidBuilder
+                                .getErrorReporter()
+                                .handleSyncWarning(null, SyncIssue.TYPE_GENERIC, warningMsg);
                     } else {
                         androidBuilder
                                 .getErrorReporter()

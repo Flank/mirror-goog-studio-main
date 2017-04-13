@@ -73,6 +73,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
+import com.google.wireless.android.sdk.stats.GradleBuildVariant;
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
@@ -1049,7 +1050,10 @@ public class VariantManager implements VariantModel {
                         .setMinifyEnabled(variantScope.getCodeShrinker() != null)
                         .setUseMultidex(variantConfig.isMultiDexEnabled())
                         .setUseLegacyMultidex(variantConfig.isLegacyMultiDexMode())
-                        .setVariantType(variantData.getType().getAnalyticsVariantType());
+                        .setVariantType(variantData.getType().getAnalyticsVariantType())
+                        .setJava8LangSupport(
+                                getJava8LangSupportForAnalytics(
+                                        variantData.getScope().getJava8LangSupportType()));
 
                 if (variantFactory.hasTestScope()) {
                     TestVariantData unitTestVariantData =
@@ -1119,5 +1123,22 @@ public class VariantManager implements VariantModel {
     @NonNull
     private ManifestAttributeSupplier getParser(@NonNull File file) {
         return manifestParserMap.computeIfAbsent(file, DefaultManifestParser::new);
+    }
+
+    @NonNull
+    private static GradleBuildVariant.Java8LangSupport getJava8LangSupportForAnalytics(
+            @NonNull VariantScope.Java8LangSupport type) {
+        switch (type) {
+            case JACK:
+                return GradleBuildVariant.Java8LangSupport.JACK;
+            case RETROLAMBDA:
+                return GradleBuildVariant.Java8LangSupport.RETROLAMBDA;
+            case DEXGUARD:
+                return GradleBuildVariant.Java8LangSupport.DEXGUARD;
+            case DESUGAR:
+                return GradleBuildVariant.Java8LangSupport.INTERNAL;
+            default:
+                throw new AssertionError("Unrecognized type");
+        }
     }
 }
