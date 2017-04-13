@@ -27,6 +27,9 @@ service InternalMemoryService {
 
   rpc RecordGcStats(GcStatsRequest) returns (EmptyMemoryReply) {}
   rpc RecordAllocStats(AllocStatsRequest) returns (EmptyMemoryReply) {}
+
+  rpc RecordAllocationEvents(RecordAllocationEventsRequest)
+    returns (EmptyMemoryReply) {}
 }
 
 message RegisterMemoryAgentRequest {
@@ -52,6 +55,12 @@ message AllocStatsRequest {
 message GcStatsRequest {
   int32 process_id = 1;
   MemoryData.GcStatsSample gc_stats_sample = 2;
+}
+
+message RecordAllocationEventsRequest {
+  int32 process_id = 1;
+  int64 timestamp = 2;
+  repeated AllocationEvent events = 3;
 }
 
 message EmptyMemoryReply {}

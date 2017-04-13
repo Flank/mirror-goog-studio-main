@@ -20,6 +20,7 @@
 
 #include "agent/agent.h"
 #include "utils/clock.h"
+#include "utils/log.h"
 
 using grpc::ClientContext;
 using profiler::SteadyClock;
@@ -80,6 +81,18 @@ void EnqueueGcStats(int64_t start_time, int64_t end_time) {
         stats->set_end_time(end_time);
         mem_stub.RecordGcStats(&context, gc_stats_request, &reply);
       });
+}
+
+void EnqueueAllocationEvents(
+    const proto::RecordAllocationEventsRequest& request) {
+  Log::V("Enqueuing allocation events. Event Count = %d",
+         request.events_size());
+  Agent::Instance().background_queue()->EnqueueTask([request]() {
+    auto mem_stub = Agent::Instance().memory_component()->service_stub();
+    ClientContext context;
+    EmptyMemoryReply reply;
+    mem_stub.RecordAllocationEvents(&context, request, &reply);
+  });
 }
 
 }  // namespace profiler

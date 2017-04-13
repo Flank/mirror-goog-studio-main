@@ -48,6 +48,11 @@ class InternalMemoryServiceImpl final
                              const proto::GcStatsRequest *request,
                              proto::EmptyMemoryReply *reply) override;
 
+  grpc::Status RecordAllocationEvents(
+      grpc::ServerContext *context,
+      const proto::RecordAllocationEventsRequest *request,
+      proto::EmptyMemoryReply *reply) override;
+
   /**
    * Sends a MemoryControlRequest to the profiling agent.
    * Returns true if the signal is sent, false otherwise (if the agent

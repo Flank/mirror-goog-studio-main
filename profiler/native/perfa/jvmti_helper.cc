@@ -15,6 +15,7 @@
  */
 #include "jvmti_helper.h"
 
+#include "scoped_local_ref.h"
 #include "stdlib.h"
 #include "utils/log.h"
 

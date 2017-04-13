@@ -304,6 +304,45 @@ message AllocationStack {
   repeated StackFrame stackFrames = 2;
 }
 
+// Proto format for handling O+ allocation data.
+message AllocationEvent {
+  // Special case for java/lang/Class object allocations.
+  // Note that a Klass event is expected to precede
+  // any Allocation which references its class via
+  // the class_tag field.
+  message Klass {
+    int64 tag = 1;
+    string name = 2;
+  }
+
+  message Allocation {
+    int64 tag = 1;
+    int64 class_tag = 2;
+    int64 size = 3;
+    // Legnth for array objects. For non-arrays, set to -1.
+    int32 length = 4;
+    // TODO - thread, stack info.
+  }
+
+  message Deallocation {
+    int64 tag = 1;
+  }
+
+  // associates an event with a particular tracking session.
+  int64 tracking_start_time = 1;
+
+  // If it is an allocation event, this marks the exact time 
+  // when the alloc happens. If it is a deallocation event, this
+  // should match the last gc end time.
+  int64 timestamp = 2;
+
+  oneof event {
+    Klass class_data = 3;
+    Allocation alloc_data = 4;
+    Deallocation free_data = 5;
+  }
+}
+
 message ForceGarbageCollectionRequest {
   int32 process_id = 1;
   Session session = 2;

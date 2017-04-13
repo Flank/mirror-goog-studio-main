@@ -155,10 +155,11 @@ message Device {
   string model = 2;
   string serial = 3;
   string version = 4;
-  string api = 5;
-  string boot_id = 6;
-  bool is_emulator = 7;
-  State state = 8;
+  int32 api_level = 5;
+  int32 feature_level = 6;
+  string boot_id = 7;
+  bool is_emulator = 8;
+  State state = 9;
 }
 
 message Process {

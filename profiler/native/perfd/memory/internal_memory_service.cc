@@ -90,6 +90,20 @@ Status InternalMemoryServiceImpl::RecordGcStats(
   return Status::OK;
 }
 
+grpc::Status InternalMemoryServiceImpl::RecordAllocationEvents(
+    grpc::ServerContext *context,
+    const proto::RecordAllocationEventsRequest *request,
+    proto::EmptyMemoryReply *reply) {
+  auto result = collectors_.find(request->process_id());
+  if (result == collectors_.end()) {
+    return ::grpc::Status(
+        ::grpc::StatusCode::NOT_FOUND,
+        "The memory collector for the specified pid has not been started yet.");
+  }
+
+  return Status::OK;
+}
+
 bool InternalMemoryServiceImpl::SendRequestToAgent(
     const proto::MemoryControlRequest &request) {
   // Protect this method from being called from multiple threads,
