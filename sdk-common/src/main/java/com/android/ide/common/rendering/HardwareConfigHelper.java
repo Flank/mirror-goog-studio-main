@@ -303,7 +303,8 @@ public class HardwareConfigHelper {
      * Whether the given device is a wear device
      */
     public static boolean isWear(@Nullable Device device) {
-        return device != null && "android-wear".equals(device.getTagId());
+        return device != null && device.getTagId() != null &&
+                device.getTagId().startsWith("android-wear"); // for example, adroid-wear-cn
     }
 
     /**
