@@ -23,6 +23,17 @@
 
 namespace profiler {
 
+jvmtiEnv* CreateJvmtiEnv(JavaVM* vm) {
+  jvmtiEnv* jvmti_env;
+  jint result = vm->GetEnv((void**)&jvmti_env, JVMTI_VERSION_1_2);
+  if (result != JNI_OK) {
+    Log::E("Error creating jvmti environment.");
+    return nullptr;
+  }
+
+  return jvmti_env;
+}
+
 bool CheckJvmtiError(jvmtiEnv* jvmti, jvmtiError err_num) {
   if (err_num == JVMTI_ERROR_NONE) {
     return false;
@@ -76,7 +87,7 @@ void* Allocate(jvmtiEnv* jvmti, jlong size) {
   unsigned char* alloc = nullptr;
   jvmtiError err = jvmti->Allocate(size, &alloc);
   CheckJvmtiError(jvmti, err);
-  return (void*)alloc;  
+  return (void*)alloc;
 }
 
 void Deallocate(jvmtiEnv* jvmti, void* ptr) {

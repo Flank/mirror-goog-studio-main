@@ -17,7 +17,8 @@ cc_library(
         "support/event_passthrough.cc",
         "support/http_tracker.cc",
         "support/jni_wrappers.h",
-        "support/vm_stats_sampler.cc",
+        "support/memory_stats_logger.cc",
+        "support/memory_stats_logger.h"
     ],
     copts = [
         "-Itools/base/profiler/native",

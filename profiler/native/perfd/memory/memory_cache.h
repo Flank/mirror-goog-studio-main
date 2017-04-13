@@ -37,7 +37,8 @@ class MemoryCache {
                        int32_t samples_capacity);
 
   void SaveMemorySample(const proto::MemoryData::MemorySample& sample);
-  void SaveVmStatsSample(const proto::MemoryData::VmStatsSample& sample);
+  void SaveAllocStatsSample(const proto::MemoryData::AllocStatsSample& sample);
+  void SaveGcStatsSample(const proto::MemoryData::GcStatsSample& sample);
   // Saves a new HeapDumpInfo sample based on the dump_file_name and
   // request_time parameters. This method returns false if a heap dump
   // is still in progress (e.g. a matching EndHeapDump has not been
@@ -65,11 +66,13 @@ class MemoryCache {
   FileCache* file_cache_;
 
   CircularBuffer<proto::MemoryData::MemorySample> memory_samples_;
-  CircularBuffer<proto::MemoryData::VmStatsSample> vm_stats_samples_;
+  CircularBuffer<proto::MemoryData::AllocStatsSample> alloc_stats_samples_;
+  CircularBuffer<proto::MemoryData::GcStatsSample> gc_stats_samples_;
   CircularBuffer<proto::HeapDumpInfo> heap_dump_infos_;
   CircularBuffer<proto::AllocationsInfo> allocations_info_;
   std::mutex memory_samples_mutex_;
-  std::mutex vm_stats_samples_mutex_;
+  std::mutex alloc_stats_samples_mutex_;
+  std::mutex gc_stats_samples_mutex_;
   std::mutex heap_dump_infos_mutex_;
   std::mutex allocations_info_mutex_;
 

@@ -114,19 +114,25 @@ message MemoryData {
     int64 total_mem = 8;
   }
 
-  message VmStatsSample {
+  message AllocStatsSample {
     int64 timestamp = 1;
     int32 java_allocation_count = 2;
     int32 java_free_count = 3;
-    int32 gc_count = 4;
+  }
+
+  message GcStatsSample {
+    int64 start_time = 1;
+    int64 end_time = 2;
+    // TODO add deallocation stats
   }
 
   // end timestamp after which values are yet to be queried for
   int64 end_timestamp = 1;
   repeated MemorySample mem_samples = 2;
-  repeated VmStatsSample vm_stats_samples = 3;
-  repeated HeapDumpInfo heap_dump_infos = 4;
-  repeated AllocationsInfo allocations_info = 5;
+  repeated AllocStatsSample alloc_stats_samples = 3;
+  repeated GcStatsSample gc_stats_samples = 4;
+  repeated HeapDumpInfo heap_dump_infos = 5;
+  repeated AllocationsInfo allocations_info = 6;
 }
 
 message ListDumpInfosRequest {
