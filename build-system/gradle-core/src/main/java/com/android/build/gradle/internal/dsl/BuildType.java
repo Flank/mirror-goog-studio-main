@@ -475,6 +475,11 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
         return super.setMinifyEnabled(enabled);
     }
 
+    /**
+     * Whether removal of unused java code is enabled.
+     *
+     * <p>Default is false.
+     */
     @Override
     public boolean isMinifyEnabled() {
         // Try to return a sensible value for the model and third party plugins inspecting the DSL.
