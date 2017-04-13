@@ -59,20 +59,46 @@ public final class ProjectOptions {
         enumOptions = EnumOptions.load(readOptions(EnumOptions.EnumOption.values(), properties));
     }
 
+    /**
+     * Constructor used to obtain Project Options from the project's properties.
+     *
+     * @param project the project containing the properties
+     */
     public ProjectOptions(@NonNull Project project) {
         this(copyProperties(project));
     }
 
+    /**
+     * Constructor used to obtain Project Options from the project's properties and modify them by
+     * applying all the flags from the given map.
+     *
+     * @param project the project containing the properties
+     * @param overwrites a map of flags overwriting project properties' values
+     */
+    public ProjectOptions(
+            @NonNull Project project, @NonNull ImmutableMap<String, Object> overwrites) {
+        this(copyAndModifyProperties(project, overwrites));
+    }
+
     @NonNull
     private static ImmutableMap<String, Object> copyProperties(@NonNull Project project) {
-        ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
+        return copyAndModifyProperties(project, ImmutableMap.of());
+    }
+
+    @NonNull
+    private static ImmutableMap<String, Object> copyAndModifyProperties(
+            @NonNull Project project, @NonNull ImmutableMap<String, Object> overwrites) {
+        ImmutableMap.Builder<String, Object> optionsBuilder = ImmutableMap.builder();
         for (Map.Entry<String, ?> entry : project.getProperties().entrySet()) {
             Object value = entry.getValue();
-            if (value != null) {
-                builder.put(entry.getKey(), value);
+            if (value != null && !overwrites.containsKey(entry.getKey())) {
+                optionsBuilder.put(entry.getKey(), value);
             }
         }
-        return builder.build();
+        for (Map.Entry<String, ?> overwrite : overwrites.entrySet()) {
+            optionsBuilder.put(overwrite.getKey(), overwrite.getValue());
+        }
+        return optionsBuilder.build();
     }
 
     @NonNull
