@@ -58,7 +58,7 @@ class StringsLookup {
 
   class HashTable {
    public:
-    HashTable(Index size);
+    explicit HashTable(Index size);
     bool Insert(String* string);
     String* Lookup(const char* cstr, uint32_t hash_value) const;
     Index HashBuckets() const { return hash_buckets_; }
