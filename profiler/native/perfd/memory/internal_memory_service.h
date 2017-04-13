@@ -32,8 +32,12 @@ class InternalMemoryServiceImpl final
       : collectors_(*collectors) {}
   virtual ~InternalMemoryServiceImpl() = default;
 
-  grpc::Status RecordVmStats(grpc::ServerContext *context,
-                             const proto::VmStatsRequest *request,
+  grpc::Status RecordAllocStats(grpc::ServerContext *context,
+                                const proto::AllocStatsRequest *request,
+                                proto::EmptyMemoryReply *reply) override;
+
+  grpc::Status RecordGcStats(grpc::ServerContext *context,
+                             const proto::GcStatsRequest *request,
                              proto::EmptyMemoryReply *reply) override;
 
  private:

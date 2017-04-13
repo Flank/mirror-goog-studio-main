@@ -22,18 +22,20 @@
 
 #include "agent/agent.h"
 #include "jvmti_helper.h"
+#include "memory/memory_agent.h"
 #include "scoped_local_ref.h"
 #include "utils/log.h"
 
 #include "dex/slicer/code_ir.h"
 #include "dex/slicer/dex_ir.h"
 #include "dex/slicer/dex_ir_builder.h"
+#include "dex/slicer/instrumentation.h"
 #include "dex/slicer/reader.h"
 #include "dex/slicer/writer.h"
-#include "dex/slicer/instrumentation.h"
 
 using profiler::Log;
 using profiler::Agent;
+using profiler::MemoryAgent;
 using profiler::ScopedLocalRef;
 
 namespace profiler {
@@ -84,8 +86,8 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
       ir::MethodId("LBase;", "foo", "(ILjava/lang/String;)I"),
       ir::MethodId("LTracer;", "wrapFoo"));
 
-  if (!mi.InstrumentMethod(
-          ir::MethodId(desc.c_str(), "openConnection", "()Ljava/net/URLConnection;"))) {
+  if (!mi.InstrumentMethod(ir::MethodId(desc.c_str(), "openConnection",
+                                        "()Ljava/net/URLConnection;"))) {
     Log::E("Error instrumenting URL.openConnection");
   }
 
@@ -113,14 +115,12 @@ void LoadDex(jvmtiEnv* jvmti) {
 
 extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
                                                  void* reserved) {
-  jvmtiEnv* jvmti_env;
+  jvmtiEnv* jvmti_env = CreateJvmtiEnv(vm);
+  if (jvmti_env == nullptr) {
+    return JNI_ERR;
+  }
 
   Log::V("StudioProfilers agent attached.");
-  jint result = vm->GetEnv((void**)&jvmti_env, JVMTI_VERSION_1_2);
-  if (result != JNI_OK) {
-    Log::E("Error creating jvmti environment.");
-    return result;
-  }
 
   LoadDex(jvmti_env);
 
@@ -141,11 +141,9 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
   CheckJvmtiError(jvmti_env, jvmti_env->RetransformClasses(1, classes));
 
   Agent::Instance();
-  return result;
-}
+  MemoryAgent::Instance(vm);
 
-extern "C" JNIEXPORT void JNICALL Agent_OnUnload(JavaVM* vm) {
-  Log::V("StudioProfilers agent unloaded.");
+  return JNI_OK;
 }
 
 }  // namespace profiler

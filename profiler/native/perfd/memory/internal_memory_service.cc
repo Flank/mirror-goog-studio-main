@@ -23,8 +23,8 @@ namespace profiler {
 using grpc::ServerContext;
 using grpc::Status;
 
-Status InternalMemoryServiceImpl::RecordVmStats(
-    ServerContext *context, const proto::VmStatsRequest *request,
+Status InternalMemoryServiceImpl::RecordAllocStats(
+    ServerContext *context, const proto::AllocStatsRequest *request,
     proto::EmptyMemoryReply *reply) {
   auto result = collectors_.find(request->process_id());
   if (result == collectors_.end()) {
@@ -33,7 +33,23 @@ Status InternalMemoryServiceImpl::RecordVmStats(
         "The memory collector for the specified pid has not been started yet.");
   }
 
-  result->second.memory_cache()->SaveVmStatsSample(request->vm_stats_sample());
+  result->second.memory_cache()->SaveAllocStatsSample(
+      request->alloc_stats_sample());
+
+  return Status::OK;
+}
+
+Status InternalMemoryServiceImpl::RecordGcStats(
+    ServerContext *context, const proto::GcStatsRequest *request,
+    proto::EmptyMemoryReply *reply) {
+  auto result = collectors_.find(request->process_id());
+  if (result == collectors_.end()) {
+    return ::grpc::Status(
+        ::grpc::StatusCode::NOT_FOUND,
+        "The memory collector for the specified pid has not been started yet.");
+  }
+
+  result->second.memory_cache()->SaveGcStatsSample(request->gc_stats_sample());
 
   return Status::OK;
 }
