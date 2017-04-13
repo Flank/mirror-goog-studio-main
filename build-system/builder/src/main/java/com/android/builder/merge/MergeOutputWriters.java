@@ -98,10 +98,8 @@ public final class MergeOutputWriters {
                 Preconditions.checkState(isOpen, "Writer closed");
 
                 File f = toFile(path);
-                try {
-                    FileUtils.deletePath(f);
-                } catch (IOException e) {
-                    throw new UncheckedIOException(e);
+                if (!f.delete()) {
+                    throw new UncheckedIOException("Cannot delete file " + f, null);
                 }
 
                 for (
