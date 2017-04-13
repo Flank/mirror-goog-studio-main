@@ -18,126 +18,48 @@ package com.android.build.gradle;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.annotations.NonNull;
-import com.android.build.gradle.api.ApkVariant;
-import com.android.build.gradle.api.ApkVariantOutput;
-import com.android.build.gradle.api.ApplicationVariant;
-import com.android.build.gradle.api.BaseVariantOutput;
-import com.android.build.gradle.api.TestVariant;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.PostprocessingOptions;
+import com.android.build.gradle.internal.fixture.TestConstants;
+import com.android.build.gradle.internal.fixture.TestProjects;
+import com.android.build.gradle.internal.fixture.VariantChecker;
+import com.android.build.gradle.internal.fixture.VariantCheckers;
 import com.android.build.gradle.tasks.MergeResources;
 import groovy.util.Eval;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Set;
-import org.codehaus.groovy.runtime.DefaultGroovyMethods;
-import org.gradle.api.DomainObjectSet;
+import org.gradle.api.Project;
 import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 /** Tests for the public DSL of the App plugin ("android") */
-public class AppPluginDslTest
-        extends AbstractAppPluginDslTest<AppPlugin, AppExtension, ApplicationVariant> {
+public class AppPluginDslTest {
 
-    private static void checkTasks(@NonNull ApkVariant variant) {
-        boolean isTestVariant = variant instanceof TestVariant;
+    @Rule public TemporaryFolder projectDirectory = new TemporaryFolder();
 
-        assertNotNull(variant.getAidlCompile());
-        assertNotNull(variant.getMergeResources());
-        assertNotNull(variant.getMergeAssets());
-        assertNotNull(variant.getGenerateBuildConfig());
-        assertNotNull(variant.getJavaCompiler());
-        assertNotNull(variant.getProcessJavaResources());
-        assertNotNull(variant.getAssemble());
-        assertNotNull(variant.getUninstall());
+    protected AppPlugin plugin;
+    protected AppExtension android;
+    protected Project project;
+    protected VariantChecker checker;
 
-        for (BaseVariantOutput baseVariantOutput : variant.getOutputs()) {
-            Assert.assertTrue(baseVariantOutput instanceof ApkVariantOutput);
-            ApkVariantOutput apkVariantOutput = (ApkVariantOutput) baseVariantOutput;
-            assertNotNull(apkVariantOutput.getProcessManifest());
-            assertNotNull(apkVariantOutput.getProcessResources());
-            assertNotNull(apkVariantOutput.getPackageApplication());
-        }
+    @Before
+    public void setUp() throws Exception {
+        TestProjects.Plugin myPlugin = TestProjects.Plugin.APP;
+        project =
+                TestProjects.builder(projectDirectory.newFolder("project").toPath())
+                        .withPlugin(myPlugin)
+                        .build();
 
-        if (variant.isSigningReady()) {
-            assertNotNull(variant.getInstall());
-
-            for (BaseVariantOutput baseVariantOutput : variant.getOutputs()) {
-                ApkVariantOutput apkVariantOutput = (ApkVariantOutput) baseVariantOutput;
-
-                // Check if we did the right thing, depending on the default value of the flag.
-                Assert.assertNotNull(apkVariantOutput.getZipAlign());
-            }
-
-        } else {
-            Assert.assertNull(variant.getInstall());
-        }
-
-        if (isTestVariant) {
-            TestVariant testVariant = DefaultGroovyMethods.asType(variant, TestVariant.class);
-            assertNotNull(testVariant.getConnectedInstrumentTest());
-            assertNotNull(testVariant.getTestedVariant());
-        }
+        android = (AppExtension) project.getExtensions().getByType(myPlugin.getExtensionClass());
+        android.setCompileSdkVersion(TestConstants.COMPILE_SDK_VERSION);
+        android.setBuildToolsVersion(TestConstants.BUILD_TOOL_VERSION);
+        plugin = (AppPlugin) project.getPlugins().getPlugin(myPlugin.getPluginClass());
+        checker = VariantCheckers.createAppChecker(android);
     }
 
-    @Override
-    @NonNull
-    protected DomainObjectSet<TestVariant> getTestVariants() {
-        return android.getTestVariants();
-    }
-
-    @NonNull
-    @Override
-    protected DomainObjectSet<ApplicationVariant> getVariants() {
-        return android.getApplicationVariants();
-    }
-
-    @Override
-    @NonNull
-    protected Class<AppPlugin> getPluginClass() {
-        return AppPlugin.class;
-    }
-
-    @Override
-    @NonNull
-    protected Class<AppExtension> getExtensionClass() {
-        return AppExtension.class;
-    }
-
-    @Override
-    protected void checkTestedVariant(
-            @NonNull String variantName,
-            @NonNull String testedVariantName,
-            @NonNull Collection<ApplicationVariant> variants,
-            @NonNull Set<TestVariant> testVariants) {
-        ApplicationVariant variant = findVariant(variants, variantName);
-        assertNotNull(variant.getTestVariant());
-        assertEquals(testedVariantName, variant.getTestVariant().getName());
-        assertEquals(variant.getTestVariant(), findVariantMaybe(testVariants, testedVariantName));
-        checkTasks(variant);
-        checkTasks(variant.getTestVariant());
-    }
-
-    @Override
-    protected void checkNonTestedVariant(
-            @NonNull String variantName, @NonNull Set<ApplicationVariant> variants) {
-        ApplicationVariant variant = findVariant(variants, variantName);
-        Assert.assertNull(variant.getTestVariant());
-        checkTasks(variant);
-    }
-
-    @Override
-    @NonNull
-    protected String getPluginName() {
-        return "com.android.application";
-    }
-
-    @Override
-    @NonNull
-    protected String getReleaseJavacTaskName() {
-        return "compileReleaseJavaWithJavac";
-    }
-
+    @Test
     public void testGeneratedDensities() throws Exception {
         Eval.me(
                 "project",
@@ -179,6 +101,7 @@ public class AppPluginDslTest
         checkGeneratedDensities("mergeOldSyntaxDebugResources", "ldpi");
     }
 
+    @Test
     public void testUseSupportLibrary_default() throws Exception {
         plugin.createAndroidTasks(false);
 
@@ -186,6 +109,7 @@ public class AppPluginDslTest
                 .isFalse();
     }
 
+    @Test
     public void testUseSupportLibrary_flavors() throws Exception {
 
         Eval.me(
@@ -228,12 +152,7 @@ public class AppPluginDslTest
                 .isFalse();
     }
 
-    private void checkGeneratedDensities(String taskName, String... densities) {
-        MergeResources mergeResources = getTask(taskName, MergeResources.class);
-        assertThat(mergeResources.getGeneratedDensities())
-                .containsExactlyElementsIn(Arrays.asList(densities));
-    }
-
+    @Test
     public void testPostprocessingBlock_noActions() throws Exception {
         BuildType release = android.getBuildTypes().getByName("release");
         release.getPostprocessing().setCodeShrinker("proguard");
@@ -244,6 +163,7 @@ public class AppPluginDslTest
                 .doesNotContain("transformClassesAndResourcesWithProguardForRelease");
     }
 
+    @Test
     public void testPostprocessingBlock_proguard() throws Exception {
         BuildType release = android.getBuildTypes().getByName("release");
         release.getPostprocessing().setRemoveUnusedCode(true);
@@ -254,6 +174,7 @@ public class AppPluginDslTest
                 .contains("transformClassesAndResourcesWithProguardForRelease");
     }
 
+    @Test
     public void testPostprocessingBlock_justObfuscate() throws Exception {
         BuildType release = android.getBuildTypes().getByName("release");
         release.getPostprocessing().setObfuscate(true);
@@ -264,6 +185,7 @@ public class AppPluginDslTest
                 .contains("transformClassesAndResourcesWithProguardForRelease");
     }
 
+    @Test
     public void testPostprocessingBlock_builtInShrinker() throws Exception {
         PostprocessingOptions postprocessing =
                 android.getBuildTypes().getByName("release").getPostprocessing();
@@ -278,6 +200,7 @@ public class AppPluginDslTest
                 .contains("transformClassesWithAndroidGradleClassShrinkerForRelease");
     }
 
+    @Test
     public void testPostprocessingBlock_mixingDsls_newOld() throws Exception {
         BuildType release = android.getBuildTypes().getByName("release");
         release.getPostprocessing().setCodeShrinker("android_gradle");
@@ -290,6 +213,7 @@ public class AppPluginDslTest
         }
     }
 
+    @Test
     public void testPostprocessingBlock_mixingDsls_oldNew() throws Exception {
         BuildType release = android.getBuildTypes().getByName("release");
         release.setMinifyEnabled(true);
@@ -302,6 +226,7 @@ public class AppPluginDslTest
         }
     }
 
+    @Test
     public void testPostprocessingBlock_validating() throws Exception {
         PostprocessingOptions postprocessing =
                 android.getBuildTypes().getByName("release").getPostprocessing();
@@ -317,6 +242,7 @@ public class AppPluginDslTest
         }
     }
 
+    @Test
     public void testPostprocessingBlock_resourceShrinker() throws Exception {
         PostprocessingOptions postprocessing =
                 android.getBuildTypes().getByName("release").getPostprocessing();
@@ -332,6 +258,7 @@ public class AppPluginDslTest
                         "transformClassesWithShrinkResForRelease");
     }
 
+    @Test
     public void testPostprocessingBlock_noCodeShrinking() throws Exception {
         PostprocessingOptions postprocessing =
                 android.getBuildTypes().getByName("release").getPostprocessing();
@@ -346,6 +273,7 @@ public class AppPluginDslTest
         }
     }
 
+    @Test
     public void testPostprocessingBlock_noCodeShrinking_oldDsl() throws Exception {
         BuildType release = android.getBuildTypes().getByName("release");
         release.setShrinkResources(true);
@@ -357,6 +285,7 @@ public class AppPluginDslTest
         }
     }
 
+    @Test
     public void testPostprocessingBlock_initWith() throws Exception {
         BuildType debug = android.getBuildTypes().getByName("debug");
         BuildType release = android.getBuildTypes().getByName("release");
@@ -369,5 +298,16 @@ public class AppPluginDslTest
 
         BuildType releaseCopy = android.getBuildTypes().create("releaseCopy");
         releaseCopy.initWith(release);
+    }
+
+    private void checkGeneratedDensities(String taskName, String... densities) {
+        MergeResources mergeResources = getTask(taskName, MergeResources.class);
+        assertThat(mergeResources.getGeneratedDensities())
+                .containsExactlyElementsIn(Arrays.asList(densities));
+    }
+
+    protected <T> T getTask(String name, @SuppressWarnings("unused") Class<T> klass) {
+        //noinspection unchecked
+        return (T) project.getTasks().getByName(name);
     }
 }
