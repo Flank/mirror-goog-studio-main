@@ -74,6 +74,7 @@ public class JarContentsTest {
                 "mac64/libaapt2_jni.dylib",
                 "mac64/libc++.dylib",
                 "win32/libaapt2_jni.dll",
+                "win32/libwinpthread-1.dll",
                 "win64/libaapt2_jni.dll",
                 "win64/libwinpthread-1.dll");
         expected.putAll(

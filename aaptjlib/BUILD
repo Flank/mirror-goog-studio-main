@@ -24,6 +24,7 @@ fileset(
         "//prebuilts/tools/common/aapt/jni:mac64/libc++.dylib",
         "//prebuilts/tools/common/aapt/jni:win32/libaapt2_jni.dll",
         "//prebuilts/tools/common/aapt/jni:win64/libaapt2_jni.dll",
+        "//prebuilts/tools/common/aapt/jni:win32/libwinpthread-1.dll",
         "//prebuilts/tools/common/aapt/jni:win64/libwinpthread-1.dll",
     ],
     mappings = {
