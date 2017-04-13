@@ -58,7 +58,6 @@ method TryCatch.foo(int) : int
 Label_1:
 	.line 34
 	.end_local v0
-	.line 29
 	   10| return v0
 Label_2:
 	.line 29
@@ -79,7 +78,6 @@ Label_3:
 	   28| throw v1
 Label_4:
 	.line 34
-	.line 28
 	   29| const/4 v1, #+0 (0x00000000 | 0.00000)
 	   30| move v0, v1
 	   31| goto Label_1
@@ -119,7 +117,6 @@ Label_1:
 Label_2:
 	.line 23
 	.line 24
-	.line 16
 	   17| return-void
 Label_3:
 	.line 16

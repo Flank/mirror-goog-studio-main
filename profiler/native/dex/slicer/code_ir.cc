@@ -157,8 +157,6 @@ void CodeIr::DissasembleDebugInfo(const ir::DebugInfo* ir_debug_info) {
         // line_diff
         line += dex::ReadSLeb128(&ptr);
         WEAK_CHECK(line > 0);
-        annotation = Alloc<DbgInfoAnnotation>(opcode);
-        annotation->operands.push_back(Alloc<LineNumber>(line));
         break;
 
       case dex::DBG_START_LOCAL: {
