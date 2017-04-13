@@ -120,6 +120,30 @@ public class MergeOutputWritersTests {
     }
 
     @Test
+    public void directoryWriterRemoveDirectory() throws Exception {
+        File dir = temporaryFolder.newFolder();
+
+        File a = new File(dir, "a");
+        FileUtils.mkdirs(a);
+
+        File b = new File(a, "b");
+        FileUtils.mkdirs(b);
+
+        File c = new File(b, "c");
+        Files.write(new byte[] { 1, 0, 0, 1 }, c);
+
+        MergeOutputWriter w = MergeOutputWriters.toDirectory(dir);
+        w.open();
+        w.remove("a/b");
+        w.close();
+
+        assertFalse(c.exists());
+        assertFalse(b.exists());
+        assertFalse(a.exists());
+        assertTrue(dir.exists());
+    }
+
+    @Test
     public void directoryWriterUpdateFile() throws Exception {
         File dir = temporaryFolder.newFolder();
 
