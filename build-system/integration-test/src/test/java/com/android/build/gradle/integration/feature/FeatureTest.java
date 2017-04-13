@@ -16,14 +16,20 @@
 
 package com.android.build.gradle.integration.feature;
 
+import static com.android.SdkConstants.FD_RES_CLASS;
+import static com.android.SdkConstants.FD_SOURCE_GEN;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.testutils.truth.MoreTruth.assertThatZip;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.truth.ApkSubject;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclaration;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitPackageIds;
-import com.android.testutils.apk.Zip;
+import com.android.builder.model.AndroidProject;
+import com.android.testutils.truth.ZipFileSubject;
+import com.android.utils.FileUtils;
 import java.io.File;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -86,6 +92,37 @@ public class FeatureTest {
         assertThat(featureManifest).doesNotContain("android:name=\"library\"");
         assertThat(featureManifest).doesNotContain("android:value=\"42\"");
 
+        // Check the R.java file builds with the right IDs.
+        File featureResFile =
+                featureProject.file(
+                        FileUtils.join(
+                                "build",
+                                AndroidProject.FD_GENERATED,
+                                FD_SOURCE_GEN,
+                                FD_RES_CLASS,
+                                "feature",
+                                "debug",
+                                "com",
+                                "example",
+                                "android",
+                                "multiproject",
+                                "feature",
+                                "R.java"));
+        assertThat(featureResFile).isFile();
+        assertThat(featureResFile).containsAllOf("public static final int feature_value=0x80");
+
+        // Check the feature APK contains the expected classes.
+        try (ApkSubject featureApk =
+                assertThatApk(featureProject.getFeatureApk(GradleTestProject.ApkType.DEBUG))) {
+            featureApk.exists();
+            featureApk.containsClass("Lcom/example/android/multiproject/feature/R;");
+            featureApk.containsClass("Lcom/example/android/multiproject/feature/MainActivity;");
+            featureApk.doesNotContainClass("Lcom/example/android/multiproject/R;");
+            featureApk.doesNotContainClass("Lcom/example/android/multiproject/library/R;");
+            featureApk.doesNotContainClass("Lcom/example/android/multiproject/library/PersonView;");
+            featureApk.doesNotContainClass("Lcom/example/android/multiproject/base/PersonView2;");
+        }
+
         // check the base feature declared the list of features and their associated IDs.
         GradleTestProject baseProject = sProject.getSubproject(":baseFeature");
         File idsList =
@@ -114,10 +151,21 @@ public class FeatureTest {
         assertThat(baseFeatureManifest).doesNotContain("featureSplit");
 
         // Check that the base feature resource package is built properly.
-        try (Zip baseFeatureResources =
-                new Zip(baseProject.getIntermediateFile("res/feature/debug/resources-debug.ap_"))) {
-            assertThatZip(baseFeatureResources).contains("AndroidManifest.xml");
-            assertThatZip(baseFeatureResources).contains("resources.arsc");
+        try (ZipFileSubject baseFeatureResources =
+                assertThatZip(
+                        baseProject.getIntermediateFile("res/feature/debug/resources-debug.ap_"))) {
+            baseFeatureResources.contains("AndroidManifest.xml");
+            baseFeatureResources.contains("resources.arsc");
+        }
+
+        // Check the feature APK contains the expected classes.
+        try (ApkSubject baseFeatureApk =
+                assertThatApk(baseProject.getFeatureApk(GradleTestProject.ApkType.DEBUG))) {
+            baseFeatureApk.exists();
+            baseFeatureApk.containsClass("Lcom/example/android/multiproject/R;");
+            baseFeatureApk.containsClass("Lcom/example/android/multiproject/library/R;");
+            baseFeatureApk.containsClass("Lcom/example/android/multiproject/library/PersonView;");
+            baseFeatureApk.containsClass("Lcom/example/android/multiproject/base/PersonView2;");
         }
     }
 }
