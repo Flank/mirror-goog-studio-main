@@ -61,8 +61,6 @@ method TryCatch.foo(int) : int
 Label_1:
 	.line 34
 	.end_local v0
-	.line 29
-	.line 29
 	   10| invoke-static/range {v0..v0}, Tracer.OnExit
 	   13| move-result v0
 	   14| return v0
@@ -85,8 +83,6 @@ Label_3:
 	   32| throw v1
 Label_4:
 	.line 34
-	.line 28
-	.line 28
 	   33| const/4 v1, #+0 (0x00000000 | 0.00000)
 	   34| move v0, v1
 	   35| goto/16 Label_1
@@ -127,8 +123,6 @@ Label_1:
 Label_2:
 	.line 23
 	.line 24
-	.line 16
-	.line 16
 	   17| invoke-static/range {}, Tracer.OnExit
 	   20| return-void
 Label_3:
