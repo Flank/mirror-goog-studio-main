@@ -37,6 +37,7 @@ import static com.android.tools.lint.checks.GradleDetector.getOldValue;
 import static com.android.tools.lint.detector.api.TextFormat.TEXT;
 import static org.mockito.Mockito.when;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.Dependencies;
@@ -531,6 +532,9 @@ public class GradleDetectorTest extends AbstractCheckTest {
     }
 
     public void testPaths() throws Exception {
+        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
+            return;
+        }
         String expected = ""
                 + "build.gradle:4: Warning: Do not use Windows file separators in .gradle files; use / instead [GradlePath]\n"
                 + "    compile files('my\\\\libs\\\\http.jar')\n"

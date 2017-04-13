@@ -19,6 +19,7 @@ package com.android.tools.lint.checks;
 import static com.android.tools.lint.checks.GradleDetectorTest.createSdkPaths;
 import static com.android.tools.lint.checks.infrastructure.ProjectDescription.Type.LIBRARY;
 
+import com.android.SdkConstants;
 import com.android.testutils.TestUtils;
 import com.android.tools.lint.checks.infrastructure.ProjectDescription;
 import com.android.tools.lint.detector.api.Detector;
@@ -588,6 +589,9 @@ public class ManifestDetectorTest extends AbstractCheckTest {
 
     public void testDuplicatePermissionsMultiProject() {
 
+        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
+            return;
+        }
         //noinspection all // Sample code
         ProjectDescription library = project(
                 manifest(""
@@ -648,6 +652,9 @@ public class ManifestDetectorTest extends AbstractCheckTest {
     }
 
     public void testUniquePermissionsPrunedViaManifestRemove() {
+        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
+            return;
+        }
         // Actually checks 4 separate things:
         // (1) The unique permission check looks across multiple projects via the
         //     manifest merge (in an incremental way)

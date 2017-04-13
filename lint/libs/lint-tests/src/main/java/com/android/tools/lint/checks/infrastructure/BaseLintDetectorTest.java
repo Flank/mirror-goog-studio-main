@@ -17,6 +17,7 @@ package com.android.tools.lint.checks.infrastructure;
 
 import com.android.SdkConstants;
 import com.android.testutils.TestUtils;
+import com.android.utils.SdkUtils;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
@@ -331,6 +332,7 @@ public abstract class BaseLintDetectorTest extends TestCase implements TestResou
             result = result.replace(File.separatorChar, '/');
         }
 
+        result = result.replace(SdkUtils.getLineSeparator(), "\n");
         return result;
     }
 

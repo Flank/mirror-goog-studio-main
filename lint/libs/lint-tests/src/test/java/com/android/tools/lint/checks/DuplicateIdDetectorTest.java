@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks;
 
+import com.android.SdkConstants;
 import com.android.tools.lint.detector.api.Detector;
 
 @SuppressWarnings("javadoc")
@@ -45,6 +46,10 @@ public class DuplicateIdDetectorTest extends AbstractCheckTest {
     }
 
     public void testDuplicateChains() throws Exception {
+        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
+            return;
+        }
+
         //noinspection all // Sample code
         assertEquals(""
                 + "res/layout/layout1.xml:7: Warning: Duplicate id @+id/button1, defined or included multiple times in layout/layout1.xml: [layout/layout1.xml defines @+id/button1, layout/layout1.xml => layout/layout2.xml => layout/layout3.xml defines @+id/button1, layout/layout1.xml => layout/layout2.xml => layout/layout4.xml defines @+id/button1] [DuplicateIncludedIds]\n"
@@ -105,6 +110,9 @@ public class DuplicateIdDetectorTest extends AbstractCheckTest {
     }
 
     public void testSuppress() throws Exception {
+        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
+            return;
+        }
         //noinspection all // Sample code
         assertEquals(""
                 + "res/layout/layout2.xml:18: Warning: Duplicate id @+id/button1, defined or included multiple times in layout/layout2.xml: [layout/layout2.xml => layout/layout3.xml defines @+id/button1, layout/layout2.xml => layout/layout4.xml defines @+id/button1] [DuplicateIncludedIds]\n"

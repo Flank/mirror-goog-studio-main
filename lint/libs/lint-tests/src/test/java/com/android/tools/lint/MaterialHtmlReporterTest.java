@@ -459,7 +459,7 @@ public class MaterialHtmlReporterTest  extends AbstractCheckTest {
                             + "</div>\n"
                             + "</body>\n"
                             + "</html>",
-                    report);
+                    report.replace(File.separatorChar, '/'));
         } finally {
             deleteFile(projectDir);
         }
