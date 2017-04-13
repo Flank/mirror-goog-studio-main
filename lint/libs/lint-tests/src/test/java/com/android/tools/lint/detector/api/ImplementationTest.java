@@ -36,6 +36,24 @@ import java.util.EnumSet;
 import junit.framework.TestCase;
 
 public class ImplementationTest extends TestCase {
+    /** Copy of ApiDetector#UNSUPPORTED but including CLASS_FILE scope; ApiDetector
+     * no longer uses it but it was used in this test to check scope handling */
+    private static final Issue OLD_UNSUPPORTED = Issue.create(
+            "NewApi2",
+            "not used",
+            "not used",
+            Category.CORRECTNESS,
+            6,
+            Severity.ERROR,
+            new Implementation(
+                    ApiDetector.class,
+                    EnumSet.of(Scope.CLASS_FILE, Scope.JAVA_FILE, Scope.RESOURCE_FILE, Scope.MANIFEST),
+                    Scope.CLASS_FILE_SCOPE,
+                    Scope.JAVA_FILE_SCOPE,
+                    Scope.RESOURCE_FILE_SCOPE,
+                    Scope.MANIFEST_SCOPE));
+
+
     @SuppressWarnings("unchecked")
     public void testIsAdequate() throws Exception {
         Implementation implementation = new Implementation(Detector.class, ALL_RESOURCES_SCOPE);
@@ -71,9 +89,9 @@ public class ImplementationTest extends TestCase {
         assertTrue(implementation.isAdequate(ALL));
 
         assertFalse(FieldGetterDetector.ISSUE.getImplementation().isAdequate(JAVA_FILE_SCOPE));
-        assertTrue(ApiDetector.UNSUPPORTED.getImplementation().isAdequate(CLASS_FILE_SCOPE));
-        assertTrue(ApiDetector.UNSUPPORTED.getImplementation().isAdequate(RESOURCE_FILE_SCOPE));
-        assertTrue(ApiDetector.UNSUPPORTED.getImplementation().isAdequate(MANIFEST_SCOPE));
+        assertTrue(OLD_UNSUPPORTED.getImplementation().isAdequate(CLASS_FILE_SCOPE));
+        assertTrue(OLD_UNSUPPORTED.getImplementation().isAdequate(RESOURCE_FILE_SCOPE));
+        assertTrue(OLD_UNSUPPORTED.getImplementation().isAdequate(MANIFEST_SCOPE));
         assertTrue(DetectMissingPrefix.MISSING_NAMESPACE.getImplementation().isAdequate(
                 RESOURCE_FILE_SCOPE));
         assertTrue(DetectMissingPrefix.MISSING_NAMESPACE.getImplementation().isAdequate(

@@ -39,6 +39,7 @@ import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.utils.Pair;
 import com.android.utils.XmlUtils;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -52,11 +53,15 @@ import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 import java.io.StringWriter;
 import java.lang.reflect.Modifier;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 import java.util.jar.JarInputStream;
 import java.util.zip.ZipEntry;
 import org.objectweb.asm.ClassReader;
@@ -364,20 +369,6 @@ public class ApiLookupTest extends AbstractCheckTest {
         assertEquals(14, mDb.getFieldVersion("android/provider/ContactsContract$Settings", "DATA_SET"));
     }
 
-    public void testIssue196925() {
-        if (ApiLookup.DEBUG_FORCE_REGENERATE_BINARY) {
-            // This test doesn't work when regenerating binaries: it's tied to data
-            // not included in api-versions.xml
-            return;
-        }
-        //196925: Incorrect Lint NewApi error on FloatingActionButton#setBackgroundTintList()
-        assertEquals(9, mDb.getClassVersion("android/support/design/widget/FloatingActionButton"));
-        assertEquals(9, mDb.getCallVersion("android/support/design/widget/FloatingActionButton",
-                "getBackgroundTintList", "()"));
-        assertEquals(9, mDb.getCallVersion("android/support/design/widget/FloatingActionButton",
-                "setBackgroundTintList", "(Landroid/content/res/ColorStateList;)"));
-    }
-
     private final class LookupTestClient extends ToolsBaseTestLintClient {
         @SuppressWarnings("ResultOfMethodCallIgnored")
         @Override
@@ -430,7 +421,7 @@ public class ApiLookupTest extends AbstractCheckTest {
         }
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "UnusedAssignment"})
     private void generateSupportLibraryFile() throws Exception {
         //noinspection PointlessBooleanExpression
         if (!ApiLookup.DEBUG_FORCE_REGENERATE_BINARY) {
@@ -450,39 +441,21 @@ public class ApiLookupTest extends AbstractCheckTest {
             return;
         }
 
-        @SuppressWarnings("SpellCheckingInspection")
-        String[] artifacts = new String[] {
-                "animated-vector-drawable",
-                "appcompat-v7",
-                "cardview-v7",
-                "constraint",
-                "customtabs",
-                "design",
-                "gridlayout-v7",
-                "leanback-v17",
-                "mediarouter-v7",
-                "multidex",
-                "multidex-instrumentation",
-                "palette-v7",
-                "percent",
-                "preference-leanback-v17",
-                "preference-v14",
-                "preference-v7",
-                "recommendation",
-                "recyclerview-v7",
-                "support-annotations",
-                "support-compat",
-                "support-core-ui",
-                "support-core-utils",
-                "support-fragment",
-                "support-media-compat",
-                "support-v13",
-                "support-v4",
-                "support-vector-drawable",
-                //"test",
-                "transition"
-        };
         String groupId = "com.android.support";
+
+        Set<String> skip = ImmutableSet.of("test", "support-annotations", "multidex",
+                "multidex-instrumentation");
+        File dir = new File(sdkHome, "extras/android/m2repository/com/android/support");
+        List<String> artifacts = Lists.newArrayList();
+        for (File artifactDir : dir.listFiles()) {
+            if (artifactDir.isDirectory() && new File(artifactDir, "maven-metadata.xml").isFile()) {
+                String name = artifactDir.getName();
+                if (!skip.contains(name)) {
+                    artifacts.add(name);
+                }
+            }
+        }
+        Collections.sort(artifacts);
 
         Map<String, ClassNode> classes = Maps.newHashMapWithExpectedSize(1000);
         Map<String, Integer> minSdkMap = Maps.newHashMapWithExpectedSize(1000);
@@ -510,7 +483,7 @@ public class ApiLookupTest extends AbstractCheckTest {
             byte[] bytes = Files.toByteArray(file);
             String path = file.getPath();
             if (path.endsWith(DOT_AAR)) {
-                analyzeAar(bytes, classes, minSdkMap);
+                analyzeAar(file, bytes, classes, minSdkMap);
             } else {
                 assertTrue(path, path.endsWith(DOT_JAR));
                 analyzeJar(bytes, classes, minSdkMap, -1);
@@ -518,7 +491,7 @@ public class ApiLookupTest extends AbstractCheckTest {
         }
 
         System.out.println("Found " + classes.size() + " classes (including innerclasses)");
-        File file = createClient().findResource("platform-tools/api/api-versions.xml");
+        File file = createClient().findResource(ApiLookup.XML_FILE_PATH);
         if (file == null || !file.exists()) {
             System.out.println("No API versions xml file found.");
             return;
@@ -526,10 +499,11 @@ public class ApiLookupTest extends AbstractCheckTest {
 
         Api api = Api.parseApi(file);
 
+        int year = Calendar.getInstance().get(Calendar.YEAR);
         Document document = XmlUtils.parseDocument(""
                 + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                 + "<!--\n"
-                + "  ~ Copyright (C) 2015 The Android Open Source Project\n"
+                + "  ~ Copyright (C) " + year + " The Android Open Source Project\n"
                 + "  ~\n"
                 + "  ~ Licensed under the Apache License, Version 2.0 (the \"License\");\n"
                 + "  ~ you may not use this file except in compliance with the License.\n"
@@ -652,7 +626,7 @@ public class ApiLookupTest extends AbstractCheckTest {
     @NonNull
     private static List<MethodNode> sorted(List<MethodNode> methods) {
         List<MethodNode> sorted = Lists.newArrayList(methods);
-        Collections.sort(sorted, (node1, node2) -> {
+        sorted.sort((node1, node2) -> {
             int delta = node1.name.compareTo(node2.name);
             if (delta != 0) {
                 return delta;
@@ -665,7 +639,7 @@ public class ApiLookupTest extends AbstractCheckTest {
     @NonNull
     private static List<ClassNode> sorted(Collection<ClassNode> classes) {
         List<ClassNode> sorted = Lists.newArrayList(classes);
-        Collections.sort(sorted, (node1, node2) -> node1.name.compareTo(node2.name));
+        sorted.sort(Comparator.comparing(node -> node.name));
         return sorted;
     }
 
@@ -682,7 +656,8 @@ public class ApiLookupTest extends AbstractCheckTest {
             }
         }
 
-        return 7;
+        // Current default minSdkVersion in the support library
+        return 14;
     }
 
     @Nullable
@@ -716,51 +691,42 @@ public class ApiLookupTest extends AbstractCheckTest {
         return null;
     }
 
-    private static void analyzeAar(@NonNull byte[] bytes, @NonNull Map<String, ClassNode> classes,
+    private static void analyzeAar(File file, @NonNull byte[] bytes,
+            @NonNull Map<String, ClassNode> classes,
             @NonNull Map<String, Integer> minSdkMap) throws Exception {
-        JarInputStream zis = null;
-        try {
-            InputStream fis = new ByteArrayInputStream(bytes);
-            try {
-                zis = new JarInputStream(fis);
-                ZipEntry entry = zis.getNextEntry();
-                int minSdk = -1;
-                while (entry != null) {
-                    String name = entry.getName();
-                    if (name.equals(ANDROID_MANIFEST_XML)) {
-                        byte[] b = ByteStreams.toByteArray(zis);
-                        assertNotNull(b);
-                        String xml = new String(b, UTF_8);
-                        Document document = XmlUtils.parseDocumentSilently(xml, true);
-                        assertNotNull(document);
-                        assertNotNull(document.getDocumentElement());
-                        for (Element element : XmlUtils.getSubTags(document.getDocumentElement())) {
-                            if (element.getTagName().equals(TAG_USES_SDK)) {
-                                String min = element.getAttributeNS(ANDROID_URI,
-                                        ATTR_MIN_SDK_VERSION);
-                                if (!min.isEmpty()) {
-                                    try {
-                                        minSdk = Integer.parseInt(min);
-                                    } catch (NumberFormatException e) {
-                                        fail(e.toString());
-                                    }
-                                }
+        // Two passes: first compute minSdkVersion, then process the jar
+        //try (JarInputStream zis = new JarInputStream(new Byte))
+        int minSdk = -1;
+        try (JarFile jarFile = new JarFile(file)) {
+            JarEntry manifestEntry = jarFile.getJarEntry(ANDROID_MANIFEST_XML);
+            if (manifestEntry != null) {
+                byte[] b = ByteStreams.toByteArray(jarFile.getInputStream(manifestEntry));
+                assertNotNull(b);
+                String xml = new String(b, UTF_8);
+                Document document = XmlUtils.parseDocumentSilently(xml, true);
+                assertNotNull(document);
+                assertNotNull(document.getDocumentElement());
+                for (Element element : XmlUtils.getSubTags(document.getDocumentElement())) {
+                    if (element.getTagName().equals(TAG_USES_SDK)) {
+                        String min = element.getAttributeNS(ANDROID_URI,
+                                ATTR_MIN_SDK_VERSION);
+                        if (!min.isEmpty()) {
+                            try {
+                                minSdk = Integer.parseInt(min);
+                            } catch (NumberFormatException e) {
+                                fail(e.toString());
                             }
                         }
-                    } else if (name.equals(FN_CLASSES_JAR)) {
-                        // Bingo!
-                        byte[] b = ByteStreams.toByteArray(zis);
-                        assertNotNull(b);
-                        analyzeJar(b, classes, minSdkMap, minSdk);
-                        break;
                     }
-                    entry = zis.getNextEntry();
                 }
-            } finally {
-                Closeables.close(fis, true);
             }
-        } finally {
-            Closeables.close(zis, false);
+
+            JarEntry classJarEntry = jarFile.getJarEntry(FN_CLASSES_JAR);
+            if (classJarEntry != null) {
+                byte[] b = ByteStreams.toByteArray(jarFile.getInputStream(classJarEntry));
+                assertNotNull(b);
+                analyzeJar(b, classes, minSdkMap, minSdk);
+            }
         }
     }
 
