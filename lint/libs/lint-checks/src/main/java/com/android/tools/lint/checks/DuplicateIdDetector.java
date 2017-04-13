@@ -251,6 +251,16 @@ public class DuplicateIdDetector extends LayoutDetector {
         if (context.getPhase() == 1) {
             if (attribute.getOwnerElement() != null) {
                 String ownerName = attribute.getOwnerElement().getTagName();
+                if (ownerName != null && ownerName.equals(SdkConstants.CLASS_CONSTRAINT_LAYOUT_REFERENCE)) {
+                    Node parentNode = attribute.getOwnerElement().getParentNode();
+                    if (parentNode != null) {
+                        String parentName = parentNode.getNodeName();
+                        if (parentName != null && parentName.equals(
+                          SdkConstants.CLASS_CONSTRAINT_LAYOUT_CONSTRAINTS)) {
+                            return;
+                        }
+                    }
+                }
                 if (ownerName != null && ownerName.equals(SdkConstants.TAG)) {
                     Node parentNode = attribute.getOwnerElement().getParentNode();
                     if (parentNode != null) {
@@ -260,7 +270,10 @@ public class DuplicateIdDetector extends LayoutDetector {
                                         || parentName.equals(
                                                 SdkConstants.CLASS_CONSTRAINT_LAYOUT_CHAIN)
                                         || parentName.equals(
-                                                SdkConstants.CLASS_CONSTRAINT_LAYOUT_LAYER))) {
+                                                SdkConstants.CLASS_CONSTRAINT_LAYOUT_LAYER)
+                                        || parentName.equals(
+                                                SdkConstants.CLASS_CONSTRAINT_LAYOUT_GROUP)
+                                    )) {
                             return;
                         }
                     }

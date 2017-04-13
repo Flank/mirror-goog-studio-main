@@ -764,6 +764,8 @@ public final class SdkConstants {
             "android.support.constraint.ConstraintHelper"; //$NON-NLS-1$
     public static final String CLASS_CONSTRAINT_LAYOUT_BARRIER =
             "android.support.constraint.Barrier"; //$NON-NLS-1$
+    public static final String CLASS_CONSTRAINT_LAYOUT_GROUP =
+      "android.support.constraint.Group"; //$NON-NLS-1$
     public static final String CLASS_CONSTRAINT_LAYOUT_CHAIN =
             "android.support.constraint.Chain"; //$NON-NLS-1$
     public static final String CLASS_CONSTRAINT_LAYOUT_LAYER =
