@@ -62,8 +62,11 @@ public class ProguardUsageMapTest {
                 parser.hasMethod("com.example.wkal.emptyapk.MyAbstractClas", "void someMethod()"));
         assertFalse(parser.hasMethod("someClass", "void abstractMethod(int,java.lang.String)"));
 
-        assertTrue(parser.hasField("com.example.wkal.emptyapk.MyClass", "privateString"));
-        assertFalse(parser.hasField("com.example.wkal.emptyapk.MyClass", "someField"));
-        assertFalse(parser.hasField("someClass", "privateString"));
+        assertTrue(
+                parser.hasField(
+                        "com.example.wkal.emptyapk.MyClass", "java.lang.String privateString"));
+        assertFalse(
+                parser.hasField("com.example.wkal.emptyapk.MyClass", "java.lang.String someField"));
+        assertFalse(parser.hasField("someClass", "java.lang.String privateString"));
     }
 }

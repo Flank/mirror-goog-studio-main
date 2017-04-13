@@ -147,7 +147,17 @@ public class ProguardUsagesMap {
 
     @NonNull
     private static String getFieldName(@NonNull String line) throws IOException {
+        //the fields can have any number of modifiers and always have a type and name:
+        //org.type.MyType fieldName
+        //private int fieldName
+        //public static org.type.MyType fieldName
+
+        //get index of fieldName
         int i = line.lastIndexOf(' ');
+        //get index of field type
+        int j = line.lastIndexOf(' ', i - 1);
+        //if there are no modifiers, there is no ' ' (space) before field type, assume 0
+        i = (j >= 0) ? j : 0;
         if (i < 0 || i == line.length() - 1) {
             String message = "Unexpected field specification in proguard usages map: " + line;
             throw new IOException(message);
