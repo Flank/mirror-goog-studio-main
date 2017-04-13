@@ -31,6 +31,7 @@ import com.android.resources.ResourceType;
 import com.android.testutils.TestResources;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Table;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -47,21 +48,21 @@ public class ResourceRepositoryTest extends BaseTestCase {
     public void testMergeByCount() throws Exception {
         ResourceRepository repo = getResourceRepository();
 
-        Map<ResourceType, ListMultimap<String, ResourceItem>> items = repo.getItems();
+        ResourceTable items = repo.getItems();
 
-        assertEquals(6, items.get(ResourceType.DRAWABLE).size());
-        assertEquals(1, items.get(ResourceType.RAW).size());
-        assertEquals(4, items.get(ResourceType.LAYOUT).size());
-        assertEquals(1, items.get(ResourceType.COLOR).size());
-        assertEquals(7, items.get(ResourceType.STRING).size());
-        assertEquals(1, items.get(ResourceType.STYLE).size());
-        assertEquals(3, items.get(ResourceType.ARRAY).size());
-        assertEquals(7, items.get(ResourceType.ATTR).size());
-        assertEquals(1, items.get(ResourceType.DECLARE_STYLEABLE).size());
-        assertEquals(2, items.get(ResourceType.DIMEN).size());
-        assertEquals(1, items.get(ResourceType.ID).size());
-        assertEquals(1, items.get(ResourceType.INTEGER).size());
-        assertEquals(2, items.get(ResourceType.PLURALS).size());
+        assertEquals(6, items.get(null, ResourceType.DRAWABLE).size());
+        assertEquals(1, items.get(null, ResourceType.RAW).size());
+        assertEquals(4, items.get(null, ResourceType.LAYOUT).size());
+        assertEquals(1, items.get(null, ResourceType.COLOR).size());
+        assertEquals(7, items.get(null, ResourceType.STRING).size());
+        assertEquals(1, items.get(null, ResourceType.STYLE).size());
+        assertEquals(3, items.get(null, ResourceType.ARRAY).size());
+        assertEquals(7, items.get(null, ResourceType.ATTR).size());
+        assertEquals(1, items.get(null, ResourceType.DECLARE_STYLEABLE).size());
+        assertEquals(2, items.get(null, ResourceType.DIMEN).size());
+        assertEquals(1, items.get(null, ResourceType.ID).size());
+        assertEquals(1, items.get(null, ResourceType.INTEGER).size());
+        assertEquals(2, items.get(null, ResourceType.PLURALS).size());
     }
 
     @Test
@@ -259,12 +260,12 @@ public class ResourceRepositoryTest extends BaseTestCase {
         assertEquals(2, sets.size());
 
         // write the content in a repo.
-        ResourceRepository repo = new ResourceRepository(false);
-        resourceMerger.mergeData(repo.createMergeConsumer(), true /*doCleanUp*/);
+        ResourceRepository repo = new ResourceRepository();
+        repo.getItems().update(resourceMerger);
 
         // checks the initial state of the repo
-        Map<ResourceType, ListMultimap<String, ResourceItem>> items = repo.getItems();
-        ListMultimap<String, ResourceItem> drawables = items.get(ResourceType.DRAWABLE);
+        ResourceTable items = repo.getItems();
+        ListMultimap<String, ResourceItem> drawables = items.get(null, ResourceType.DRAWABLE);
         assertNotNull("Drawable null check", drawables);
         assertEquals("Drawable size check", 6, drawables.size());
         verifyResourceExists(repo,
@@ -323,9 +324,9 @@ public class ResourceRepositoryTest extends BaseTestCase {
         resourceMerger.validateDataSets();
 
         // check the new content.
-        resourceMerger.mergeData(repo.createMergeConsumer(), true /*doCleanUp*/);
+        repo.getItems().update(resourceMerger);
 
-        drawables = items.get(ResourceType.DRAWABLE);
+        drawables = items.get(null, ResourceType.DRAWABLE);
         assertNotNull("Drawable null check", drawables);
         assertEquals("Drawable size check", 5, drawables.size());
         verifyResourceExists(repo,
@@ -349,12 +350,12 @@ public class ResourceRepositoryTest extends BaseTestCase {
         assertEquals(2, sets.size());
 
         // write the content in a repo.
-        ResourceRepository repo = new ResourceRepository(false);
-        resourceMerger.mergeData(repo.createMergeConsumer(), true /*doCleanUp*/);
+        ResourceRepository repo = new ResourceRepository();
+        repo.getItems().update(resourceMerger);
 
         // checks the initial state of the repo
-        Map<ResourceType, ListMultimap<String, ResourceItem>> items = repo.getItems();
-        ListMultimap<String, ResourceItem> strings = items.get(ResourceType.STRING);
+        ResourceTable items = repo.getItems();
+        ListMultimap<String, ResourceItem> strings = items.get(null, ResourceType.STRING);
         assertNotNull("String null check", strings);
         assertEquals("String size check", 5, strings.size());
         verifyResourceExists(repo,
@@ -404,9 +405,9 @@ public class ResourceRepositoryTest extends BaseTestCase {
         resourceMerger.validateDataSets();
 
         // check the new content.
-        resourceMerger.mergeData(repo.createMergeConsumer(), true /*doCleanUp*/);
+        repo.getItems().update(resourceMerger);
 
-        strings = items.get(ResourceType.STRING);
+        strings = items.get(null, ResourceType.STRING);
         assertNotNull("String null check", strings);
         assertEquals("String size check", 4, strings.size());
         verifyResourceExists(repo,
@@ -429,12 +430,12 @@ public class ResourceRepositoryTest extends BaseTestCase {
         assertEquals(2, sets.size());
 
         // write the content in a repo.
-        ResourceRepository repo = new ResourceRepository(false);
-        resourceMerger.mergeData(repo.createMergeConsumer(), true /*doCleanUp*/);
+        ResourceRepository repo = new ResourceRepository();
+        repo.getItems().update(resourceMerger);
 
         // checks the initial state of the repo
-        Map<ResourceType, ListMultimap<String, ResourceItem>> items = repo.getItems();
-        ListMultimap<String, ResourceItem> strings = items.get(ResourceType.STRING);
+        ResourceTable items = repo.getItems();
+        ListMultimap<String, ResourceItem> strings = items.get(null, ResourceType.STRING);
         assertNotNull("String null check", strings);
         assertEquals("String size check", 2, strings.size());
         verifyResourceExists(repo,
@@ -462,9 +463,9 @@ public class ResourceRepositoryTest extends BaseTestCase {
         resourceMerger.validateDataSets();
 
         // check the new content.
-        resourceMerger.mergeData(repo.createMergeConsumer(), true /*doCleanUp*/);
+        repo.getItems().update(resourceMerger);
 
-        strings = items.get(ResourceType.STRING);
+        strings = items.get(null, ResourceType.STRING);
         assertNotNull("String null check", strings);
         assertEquals("String size check", 2, strings.size());
         verifyResourceExists(repo,
@@ -485,12 +486,12 @@ public class ResourceRepositoryTest extends BaseTestCase {
         assertEquals(1, sets.size());
 
         // write the content in a repo.
-        ResourceRepository repo = new ResourceRepository(false);
-        resourceMerger.mergeData(repo.createMergeConsumer(), true /*doCleanUp*/);
+        ResourceRepository repo = new ResourceRepository();
+        repo.getItems().update(resourceMerger);
 
         // checks the initial state of the repo
-        Map<ResourceType, ListMultimap<String, ResourceItem>> items = repo.getItems();
-        ListMultimap<String, ResourceItem> layouts = items.get(ResourceType.LAYOUT);
+        ResourceTable items = repo.getItems();
+        ListMultimap<String, ResourceItem> layouts = items.get(null, ResourceType.LAYOUT);
         assertNotNull("String null check", layouts);
         assertEquals("String size check", 3, layouts.size());
         verifyResourceExists(repo,
@@ -527,9 +528,9 @@ public class ResourceRepositoryTest extends BaseTestCase {
         resourceMerger.validateDataSets();
 
         // check the new content.
-        resourceMerger.mergeData(repo.createMergeConsumer(), true /*doCleanUp*/);
+        repo.getItems().update(resourceMerger);
 
-        layouts = items.get(ResourceType.LAYOUT);
+        layouts = items.get(null, ResourceType.LAYOUT);
         assertNotNull("String null check", layouts);
         assertEquals("String size check", 3, layouts.size());
         verifyResourceExists(repo,
@@ -629,9 +630,9 @@ public class ResourceRepositoryTest extends BaseTestCase {
             throws MergingException, IOException {
         ResourceMerger merger = getBaseResourceMerger();
 
-        ResourceRepository repo = new ResourceRepository(false);
+        ResourceRepository repo = new ResourceRepository();
 
-        merger.mergeData(repo.createMergeConsumer(), true /*doCleanUp*/);
+        repo.getItems().update(merger);
         return repo;
     }
 
@@ -644,7 +645,7 @@ public class ResourceRepositoryTest extends BaseTestCase {
 
     private static void verifyResourceExists(ResourceRepository repository,
             String... dataItemKeys) {
-        Map<ResourceType, ListMultimap<String, ResourceItem>> items = repository.getItems();
+        ResourceTable items = repository.getItems();
 
         for (String resKey : dataItemKeys) {
             String type, name, qualifier = "";
@@ -668,7 +669,7 @@ public class ResourceRepositoryTest extends BaseTestCase {
             ResourceType resourceType = ResourceType.getEnum(type);
             assertNotNull("Type check for " + resKey, resourceType);
 
-            Multimap<String, ResourceItem> map = items.get(resourceType);
+            Multimap<String, ResourceItem> map = items.get(null, resourceType);
             assertNotNull("Map check for " + resKey, map);
 
             Collection<ResourceItem> list = map.get(name);
@@ -692,24 +693,22 @@ public class ResourceRepositoryTest extends BaseTestCase {
     // so keeping it for future potential use, but in unit test code so no runtime overhead
     @SuppressWarnings({"deprecation", "ConstantConditions"})
     public static String dumpRepository(ResourceRepository repository) {
-        Map<ResourceType, ListMultimap<String, ResourceItem>> mItems = repository.getMap();
-        Comparator<ResourceItem> comparator = new Comparator<ResourceItem>() {
-            @Override
-            public int compare(ResourceItem item1, ResourceItem item2) {
-                assert item1.getType() == item2.getType();
-                String qualifiers = item2.getSource().getQualifiers();
-                return item1.getSource().getQualifiers().compareTo(qualifiers);
-            }
-        };
+        ResourceTable table = repository.getItems();
+        Comparator<ResourceItem> comparator =
+                (item1, item2) -> {
+                    assert item1.getType() == item2.getType();
+                    String qualifiers = item2.getSource().getQualifiers();
+                    return item1.getSource().getQualifiers().compareTo(qualifiers);
+                };
 
         StringBuilder sb = new StringBuilder(5000);
         sb.append("Resource Map Dump For Repository ").append(repository)
                 .append("\n------------------------------------------------\n");
-        for (ResourceType type : ResourceType.values()) {
-            ListMultimap<String, ResourceItem> map = mItems.get(type);
-            if (map == null) {
-                continue;
-            }
+        for (Table.Cell<String, ResourceType, ListMultimap<String, ResourceItem>> cell :
+                table.cellSet()) {
+            ResourceType type = cell.getColumnKey();
+            ListMultimap<String, ResourceItem> map = cell.getValue();
+
             sb.append(type.getName()).append(':').append('\n');
 
             List<String> keys = new ArrayList<String>(map.keySet());

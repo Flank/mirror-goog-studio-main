@@ -21,32 +21,32 @@ import com.android.annotations.Nullable;
 import com.android.resources.ResourceType;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Maps;
+import java.util.Set;
 
-import java.util.Map;
+public final class ResourceRepository extends AbstractResourceRepository {
+    private final ResourceTable resourceTable = new ResourceTable();
 
-public class ResourceRepository extends AbstractResourceRepository {
-    public ResourceRepository(boolean isFramework) {
-        super(isFramework);
-    }
-
-    protected final Map<ResourceType, ListMultimap<String, ResourceItem>> mItems = Maps.newEnumMap(
-            ResourceType.class);
-
-    @Override
     @NonNull
-    protected Map<ResourceType, ListMultimap<String, ResourceItem>> getMap() {
-        return mItems;
+    @Override
+    protected ResourceTable getFullTable() {
+        return resourceTable;
     }
 
-    @Override
     @Nullable
-    protected ListMultimap<String, ResourceItem> getMap(ResourceType type, boolean create) {
-        ListMultimap<String, ResourceItem> multimap = mItems.get(type);
+    @Override
+    protected ListMultimap<String, ResourceItem> getMap(
+            @Nullable String namespace, @NonNull ResourceType type, boolean create) {
+        ListMultimap<String, ResourceItem> multimap = resourceTable.get(namespace, type);
         if (multimap == null && create) {
             multimap = ArrayListMultimap.create();
-            mItems.put(type, multimap);
+            resourceTable.put(namespace, type, multimap);
         }
         return multimap;
+    }
+
+    @NonNull
+    @Override
+    public Set<String> getNamespaces() {
+        return resourceTable.rowKeySet();
     }
 }

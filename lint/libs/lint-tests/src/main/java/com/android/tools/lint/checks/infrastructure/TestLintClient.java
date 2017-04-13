@@ -821,7 +821,7 @@ public class TestLintClient extends LintCliClient {
             return null;
         }
 
-        ResourceRepository repository = new ResourceRepository(false);
+        ResourceRepository repository = new ResourceRepository();
         ILogger logger = new StdLogger(StdLogger.Level.INFO);
         ResourceMerger merger = new ResourceMerger(0);
 
@@ -839,50 +839,23 @@ public class TestLintClient extends LintCliClient {
         if (size == 1) {
             resourceSet.addSource(project.getResourceFolders().get(0));
         }
+
         try {
             resourceSet.loadFromFiles(logger);
             merger.addDataSet(resourceSet);
-            merger.mergeData(repository.createMergeConsumer(), true);
+            repository.getItems().update(merger);
 
             // Make tests stable: sort the item lists!
-            Map<ResourceType, ListMultimap<String, ResourceItem>> map = repository.getItems();
-            for (Map.Entry<ResourceType, ListMultimap<String, ResourceItem>> entry : map.entrySet()) {
-                Map<String, List<ResourceItem>> m = Maps.newHashMap();
-                ListMultimap<String, ResourceItem> value = entry.getValue();
-                List<List<ResourceItem>> lists = Lists.newArrayList();
-                for (Map.Entry<String, ResourceItem> e : value.entries()) {
-                    String key = e.getKey();
-                    ResourceItem item = e.getValue();
-
-                    List<ResourceItem> list = m.get(key);
-                    if (list == null) {
-                        list = Lists.newArrayList();
-                        lists.add(list);
-                        m.put(key, list);
-                    }
-                    list.add(item);
-                }
-
-                for (List<ResourceItem> list : lists) {
-                    list.sort((o1, o2) -> o1.getKey().compareTo(o2.getKey()));
-                }
-
-                // Store back in list multi map in new sorted order
-                value.clear();
-                for (Map.Entry<String, List<ResourceItem>> e : m.entrySet()) {
-                    String key = e.getKey();
-                    List<ResourceItem> list = e.getValue();
-                    for (ResourceItem item : list) {
-                        value.put(key, item);
-                    }
-                }
+            for (ListMultimap<String, ResourceItem> multimap : repository.getItems().values()) {
+                ResourceRepositories.sortItemLists(multimap);
             }
 
             // Workaround: The repository does not insert ids from layouts! We need
             // to do that here.
-            Map<ResourceType,ListMultimap<String,ResourceItem>> items = repository.getItems();
-            ListMultimap<String, ResourceItem> layouts = items
-                    .get(ResourceType.LAYOUT);
+            // TODO: namespaces
+            Map<ResourceType, ListMultimap<String, ResourceItem>> items =
+                    repository.getItems().row(null);
+            ListMultimap<String, ResourceItem> layouts = items.get(ResourceType.LAYOUT);
             if (layouts != null) {
                 for (ResourceItem item : layouts.values()) {
                     ResourceFile source = item.getSource();

@@ -16,10 +16,7 @@
 
 package com.android.ide.common.res2;
 
-import static com.android.SdkConstants.ATTR_REF_PREFIX;
-import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
-import static com.android.SdkConstants.PREFIX_THEME_REF;
-import static com.android.SdkConstants.RESOURCE_CLZ_ATTR;
+import static com.android.SdkConstants.*;
 import static com.android.ide.common.resources.ResourceResolver.MAX_RESOURCE_INDIRECTION;
 
 import com.android.annotations.NonNull;
@@ -30,96 +27,79 @@ import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.resources.configuration.LocaleQualifier;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
-import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
-import javax.xml.parsers.DocumentBuilderFactory;
+import com.google.common.collect.*;
+import java.util.*;
 
+/**
+ * Wrapper around a {@link ResourceTable} that:
+ *
+ * <ul>
+ *   <li>May compute cells in the table on-demand.
+ *   <li>May change in the background, if underlying files or other sources of data have changed.
+ *       Because of that access should be synchronized on the {@code ITEM_MAP_LOCK} object.
+ * </ul>
+ */
 public abstract class AbstractResourceRepository {
 
-    private final boolean mFramework;
+    public AbstractResourceRepository() {}
 
-    private class RepositoryMerger implements MergeConsumer<ResourceItem> {
-
-        @Override
-        public void start(@NonNull DocumentBuilderFactory factory)
-                throws ConsumerException {
-        }
-
-        @Override
-        public void end() throws ConsumerException {
-        }
-
-        @Override
-        public void addItem(@NonNull ResourceItem item) throws ConsumerException {
-            if (item.isTouched()) {
-                AbstractResourceRepository.this.addItem(item);
-            }
-        }
-
-        @Override
-        public void removeItem(@NonNull ResourceItem removedItem, @Nullable ResourceItem replacedBy)
-                throws ConsumerException {
-            AbstractResourceRepository.this.removeItem(removedItem);
-        }
-
-        @Override
-        public boolean ignoreItemInMerge(ResourceItem item) {
-            // we never ignore any item.
-            return false;
-        }
-    }
-
-    public AbstractResourceRepository(boolean isFramework) {
-        mFramework = isFramework;
-    }
-
-    public boolean isFramework() {
-        return mFramework;
+    /**
+     * For now we don't use {@link AbstractResourceRepository} for framework resources, but
+     * eventually we will start at which point a single repository may contain both framework and
+     * app resources. The "truth" lies in the namespace of the {@link ResourceItem}s. Soon we'll get
+     * rid of this method.
+     */
+    @Deprecated
+    public final boolean isFramework() {
+        return false;
     }
 
     @NonNull
-    public MergeConsumer<ResourceItem> createMergeConsumer() {
-        return new RepositoryMerger();
-    }
-
-    @NonNull
-    protected abstract Map<ResourceType, ListMultimap<String, ResourceItem>> getMap();
+    protected abstract ResourceTable getFullTable();
 
     @Nullable
-    protected abstract ListMultimap<String, ResourceItem> getMap(ResourceType type, boolean create);
+    protected abstract ListMultimap<String, ResourceItem> getMap(
+            @Nullable String namespace, @NonNull ResourceType type, boolean create);
 
     @NonNull
-    protected ListMultimap<String, ResourceItem> getMap(ResourceType type) {
-        //noinspection ConstantConditions
-        return getMap(type, true); // Won't return null if create is false
+    public abstract Set<String> getNamespaces();
+
+    @NonNull
+    protected final ListMultimap<String, ResourceItem> getMap(
+            @Nullable String namespace, @NonNull ResourceType type) {
+        //noinspection ConstantConditions - won't return null if create is false.
+        return getMap(namespace, type, true);
     }
 
     @NonNull
-    public Map<ResourceType, ListMultimap<String, ResourceItem>> getItems() {
-        return getMap();
+    public ResourceTable getItems() {
+        return getFullTable();
     }
 
     /** Lock used to protect map access */
     protected static final Object ITEM_MAP_LOCK = new Object();
 
-    // TODO: Rename to getResourceItemList?
-    @Nullable
-    public List<ResourceItem> getResourceItem(@NonNull ResourceType resourceType,
-            @NonNull String resourceName) {
+    @NonNull
+    public final List<ResourceItem> getAllResourceItems() {
         synchronized (ITEM_MAP_LOCK) {
-            ListMultimap<String, ResourceItem> map = getMap(resourceType, false);
+            ResourceTable table = getFullTable();
+            List<ResourceItem> result = new ArrayList<>(table.size());
+
+            for (ListMultimap<String, ResourceItem> multimap : table.values()) {
+                result.addAll(multimap.values());
+            }
+
+            return result;
+        }
+    }
+
+    // TODO: Rename to getResourceItemList?
+    // TODO: namespaces
+    @Nullable
+    public List<ResourceItem> getResourceItem(
+            @NonNull ResourceType resourceType, @NonNull String resourceName) {
+        synchronized (ITEM_MAP_LOCK) {
+            ListMultimap<String, ResourceItem> map = getMap(null, resourceType, false);
 
             if (map != null) {
                 return map.get(resourceName);
@@ -130,9 +110,10 @@ public abstract class AbstractResourceRepository {
     }
 
     @NonNull
+    // TODO: namespaces
     public Collection<String> getItemsOfType(@NonNull ResourceType type) {
         synchronized (ITEM_MAP_LOCK) {
-            Multimap<String, ResourceItem> map = getMap(type, false);
+            Multimap<String, ResourceItem> map = getMap(null, type, false);
             if (map == null) {
                 return Collections.emptyList();
             }
@@ -202,17 +183,17 @@ public abstract class AbstractResourceRepository {
     }
 
     /**
-     * Returns true if this resource repository contains a resource of the given
-     * name.
+     * Returns true if this resource repository contains a resource of the given name.
      *
      * @param resourceType the type of resource to look up
      * @param resourceName the name of the resource
      * @return true if the resource is known
      */
-    public boolean hasResourceItem(@NonNull ResourceType resourceType,
-            @NonNull String resourceName) {
+    // TODO: namespaces
+    public boolean hasResourceItem(
+            @NonNull ResourceType resourceType, @NonNull String resourceName) {
         synchronized (ITEM_MAP_LOCK) {
-            ListMultimap<String, ResourceItem> map = getMap(resourceType, false);
+            ListMultimap<String, ResourceItem> map = getMap(null, resourceType, false);
 
             if (map != null) {
                 List<ResourceItem> itemList = map.get(resourceName);
@@ -225,20 +206,23 @@ public abstract class AbstractResourceRepository {
 
     /**
      * Returns whether the repository has resources of a given {@link ResourceType}.
+     *
      * @param resourceType the type of resource to check.
      * @return true if the repository contains resources of the given type, false otherwise.
      */
+    // TODO: namespaces
     public boolean hasResourcesOfType(@NonNull ResourceType resourceType) {
         synchronized (ITEM_MAP_LOCK) {
-            ListMultimap<String, ResourceItem> map = getMap(resourceType, false);
+            ListMultimap<String, ResourceItem> map = getMap(null, resourceType, false);
             return map != null && !map.isEmpty();
         }
     }
 
     @NonNull
+    // TODO: namespaces
     public List<ResourceType> getAvailableResourceTypes() {
         synchronized (ITEM_MAP_LOCK) {
-            return Lists.newArrayList(getMap().keySet());
+            return Lists.newArrayList(getFullTable().row(null).keySet());
         }
     }
 
@@ -281,10 +265,11 @@ public abstract class AbstractResourceRepository {
             @NonNull String name,
             @NonNull ResourceType type,
             @NonNull FolderConfiguration config) {
-        return getMatchingFiles(name, type, config, new HashSet<String>(), 0);
+        return getMatchingFiles(name, type, config, new HashSet<>(), 0);
     }
 
     @NonNull
+    // TODO: namespaces
     private List<ResourceFile> getMatchingFiles(
             @NonNull String name,
             @NonNull ResourceType type,
@@ -297,12 +282,12 @@ public abstract class AbstractResourceRepository {
         }
         List<ResourceFile> output;
         synchronized (ITEM_MAP_LOCK) {
-            ListMultimap<String, ResourceItem> typeItems = getMap(type, false);
+            ListMultimap<String, ResourceItem> typeItems = getMap(null, type, false);
             if (typeItems == null) {
                 return Collections.emptyList();
             }
             seenNames.add(name);
-            output = new ArrayList<ResourceFile>();
+            output = new ArrayList<>();
             List<ResourceItem> matchingItems = typeItems.get(name);
             List<ResourceItem> matches = config.findMatchingConfigurables(matchingItems);
             for (ResourceItem match : matches) {
@@ -337,15 +322,15 @@ public abstract class AbstractResourceRepository {
      * @return a map with guaranteed to contain an entry for each {@link ResourceType}
      */
     @NonNull
+    // TODO: namespaces
     public Map<ResourceType, ResourceValueMap> getConfiguredResources(
             @NonNull FolderConfiguration referenceConfig) {
         Map<ResourceType, ResourceValueMap> map = Maps.newEnumMap(ResourceType.class);
 
         synchronized (ITEM_MAP_LOCK) {
-            Map<ResourceType, ListMultimap<String, ResourceItem>> itemMap = getMap();
             for (ResourceType key : ResourceType.values()) {
                 // get the local results and put them in the map
-                map.put(key, getConfiguredResources(itemMap, key, referenceConfig));
+                map.put(key, getConfiguredResources(key, referenceConfig));
             }
         }
 
@@ -354,25 +339,19 @@ public abstract class AbstractResourceRepository {
 
     /**
      * Returns a map of (resource name, resource value) for the given {@link ResourceType}.
-     * <p>The values returned are taken from the resource files best matching a given
-     * {@link FolderConfiguration}.
+     *
+     * <p>The values returned are taken from the resource files best matching a given {@link
+     * FolderConfiguration}.
+     *
      * @param type the type of the resources.
      * @param referenceConfig the configuration to best match.
      */
     @NonNull
+    // TODO: namespaces
     public ResourceValueMap getConfiguredResources(
-            @NonNull ResourceType type,
-            @NonNull FolderConfiguration referenceConfig) {
-        return getConfiguredResources(getMap(), type, referenceConfig);
-    }
-
-    @NonNull
-    public ResourceValueMap getConfiguredResources(
-            @NonNull Map<ResourceType, ListMultimap<String, ResourceItem>> itemMap,
-            @NonNull ResourceType type,
-            @NonNull FolderConfiguration referenceConfig) {
+            @NonNull ResourceType type, @NonNull FolderConfiguration referenceConfig) {
         // get the resource item for the given type
-        ListMultimap<String, ResourceItem> items = itemMap.get(type);
+        ListMultimap<String, ResourceItem> items = getFullTable().get(null, type);
         if (items == null) {
             return ResourceValueMap.create();
         }
@@ -389,7 +368,7 @@ public abstract class AbstractResourceRepository {
             // the match has to be of type ResourceFile since that's what the input list contains
             ResourceItem match = (ResourceItem) referenceConfig.findMatchingConfigurable(keyItems);
             if (match != null) {
-                ResourceValue value = match.getResourceValue(mFramework);
+                ResourceValue value = match.getResourceValue(isFramework());
                 if (value != null) {
                     map.put(match.getName(), value);
                 }
@@ -400,12 +379,13 @@ public abstract class AbstractResourceRepository {
     }
 
     @Nullable
+    // TODO: namespaces
     public ResourceValue getConfiguredValue(
             @NonNull ResourceType type,
             @NonNull String name,
             @NonNull FolderConfiguration referenceConfig) {
         // get the resource item for the given type
-        ListMultimap<String, ResourceItem> items = getMap(type, false);
+        ListMultimap<String, ResourceItem> items = getMap(null, type, false);
         if (items == null) {
             return null;
         }
@@ -418,33 +398,14 @@ public abstract class AbstractResourceRepository {
         // look for the best match for the given configuration
         // the match has to be of type ResourceFile since that's what the input list contains
         ResourceItem match = (ResourceItem) referenceConfig.findMatchingConfigurable(keyItems);
-        return match != null ? match.getResourceValue(mFramework) : null;
+        return match != null ? match.getResourceValue(isFramework()) : null;
     }
 
-    private void addItem(@NonNull ResourceItem item) {
-        synchronized (ITEM_MAP_LOCK) {
-            ListMultimap<String, ResourceItem> map = getMap(item.getType());
-            if (!map.containsEntry(item.getName(), item)) {
-                map.put(item.getName(), item);
-            }
-        }
-    }
-
-    private void removeItem(@NonNull ResourceItem removedItem) {
-        synchronized (ITEM_MAP_LOCK) {
-            Multimap<String, ResourceItem> map = getMap(removedItem.getType(), false);
-            if (map != null) {
-                map.remove(removedItem.getName(), removedItem);
-            }
-        }
-    }
-
-    /**
-     * Returns the sorted list of languages used in the resources.
-     */
+    /** Returns the sorted list of languages used in the resources. */
     @NonNull
+    // TODO: namespaces
     public SortedSet<String> getLanguages() {
-        SortedSet<String> set = new TreeSet<String>();
+        SortedSet<String> set = new TreeSet<>();
 
         // As an optimization we could just look for values since that's typically where
         // the languages are defined -- not on layouts, menus, etc -- especially if there
@@ -452,7 +413,7 @@ public abstract class AbstractResourceRepository {
         Set<String> qualifiers = Sets.newHashSet();
 
         synchronized (ITEM_MAP_LOCK) {
-            for (ListMultimap<String, ResourceItem> map : getMap().values()) {
+            for (ListMultimap<String, ResourceItem> map : getFullTable().values()) {
                 for (ResourceItem item : map.values()) {
                     qualifiers.add(item.getQualifiers());
                 }
@@ -472,12 +433,11 @@ public abstract class AbstractResourceRepository {
         return set;
     }
 
-    /**
-     * Returns the sorted list of languages used in the resources.
-     */
+    /** Returns the sorted list of languages used in the resources. */
     @NonNull
+    // TODO: namespaces
     public SortedSet<LocaleQualifier> getLocales() {
-        SortedSet<LocaleQualifier> set = new TreeSet<LocaleQualifier>();
+        SortedSet<LocaleQualifier> set = new TreeSet<>();
 
         // As an optimization we could just look for values since that's typically where
         // the languages are defined -- not on layouts, menus, etc -- especially if there
@@ -485,7 +445,7 @@ public abstract class AbstractResourceRepository {
         Set<String> qualifiers = Sets.newHashSet();
 
         synchronized (ITEM_MAP_LOCK) {
-            for (ListMultimap<String, ResourceItem> map : getMap().values()) {
+            for (ListMultimap<String, ResourceItem> map : getFullTable().values()) {
                 for (ResourceItem item : map.values()) {
                     qualifiers.add(item.getQualifiers());
                 }
@@ -507,18 +467,20 @@ public abstract class AbstractResourceRepository {
 
     /**
      * Returns the sorted list of regions used in the resources with the given language.
+     *
      * @param currentLanguage the current language the region must be associated with.
      */
     @NonNull
+    // TODO: namespaces
     public SortedSet<String> getRegions(@NonNull String currentLanguage) {
-        SortedSet<String> set = new TreeSet<String>();
+        SortedSet<String> set = new TreeSet<>();
 
         // As an optimization we could just look for values since that's typically where
         // the languages are defined -- not on layouts, menus, etc -- especially if there
         // are no translations for it
         Set<String> qualifiers = Sets.newHashSet();
         synchronized (ITEM_MAP_LOCK) {
-            for (ListMultimap<String, ResourceItem> map : getMap().values()) {
+            for (ListMultimap<String, ResourceItem> map : getFullTable().values()) {
                 for (ResourceItem item : map.values()) {
                     qualifiers.add(item.getQualifiers());
                 }
@@ -537,9 +499,5 @@ public abstract class AbstractResourceRepository {
         }
 
         return set;
-    }
-
-    public void clear() {
-        getMap().clear();
     }
 }
