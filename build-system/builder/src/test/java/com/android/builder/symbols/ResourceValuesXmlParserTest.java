@@ -125,14 +125,16 @@ public class ResourceValuesXmlParserTest {
         SymbolTable expected =
                 SymbolTable.builder()
                         .add(new Symbol("styleable", "empty", "int[]", "{}"))
-                        .add(new Symbol("styleable", "oneattr_enums", "int", "1"))
-                        .add(new Symbol("attr", "enums", "int", "2"))
-                        .add(new Symbol("styleable", "oneattr", "int[]", "{1}"))
-                        .add(new Symbol("styleable", "twoattrs_flags", "int", "3"))
-                        .add(new Symbol("attr", "flags", "int", "4"))
-                        .add(new Symbol("styleable", "twoattrs_nothing", "int", "5"))
-                        .add(new Symbol("attr", "nothing", "int", "6"))
-                        .add(new Symbol("styleable", "twoattrs", "int[]", "{3,5}"))
+                        .add(new Symbol("id", "e1", "int", "1"))
+                        .add(new Symbol("id", "e2", "int", "2"))
+                        .add(new Symbol("attr", "enums", "int", "3"))
+                        .add(new Symbol("styleable", "oneattr_enums", "int", "4"))
+                        .add(new Symbol("styleable", "oneattr", "int[]", "{4}"))
+                        .add(new Symbol("attr", "flags", "int", "5"))
+                        .add(new Symbol("styleable", "twoattrs_flags", "int", "6"))
+                        .add(new Symbol("attr", "nothing", "int", "7"))
+                        .add(new Symbol("styleable", "twoattrs_nothing", "int", "8"))
+                        .add(new Symbol("styleable", "twoattrs", "int[]", "{6,8}"))
                         .build();
 
         assertEquals(expected, table);
@@ -365,11 +367,13 @@ public class ResourceValuesXmlParserTest {
 
         SymbolTable expected =
                 SymbolTable.builder()
-                        .add(new Symbol("styleable", "PieChart", "int[]", "{1,3}"))
-                        .add(new Symbol("styleable", "PieChart_showText", "int", "1"))
-                        .add(new Symbol("attr", "showText", "int", "2"))
-                        .add(new Symbol("styleable", "PieChart_labelPosition", "int", "3"))
-                        .add(new Symbol("attr", "labelPosition", "int", "4"))
+                        .add(new Symbol("attr", "showText", "int", "1"))
+                        .add(new Symbol("styleable", "PieChart_showText", "int", "2"))
+                        .add(new Symbol("id", "left", "int", "3"))
+                        .add(new Symbol("id", "right", "int", "4"))
+                        .add(new Symbol("attr", "labelPosition", "int", "5"))
+                        .add(new Symbol("styleable", "PieChart_labelPosition", "int", "6"))
+                        .add(new Symbol("styleable", "PieChart", "int[]", "{2,6}"))
                         .build();
 
         assertEquals(expected, itemTable);
