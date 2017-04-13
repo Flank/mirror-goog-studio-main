@@ -125,6 +125,8 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
 
     @Nullable private final File resourceShrinkerOutputFolder;
 
+    private final boolean pseudoLocalesEnabled;
+
     /**
      * Maps resource files to their compiled files. Used to compiled resources that no longer
      * exist.
@@ -158,7 +160,8 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
             @NonNull File temporaryDirectory,
             @Nullable SingleFileProcessor dataBindingExpressionRemover,
             @Nullable File dataBindingLayoutOutputFolder,
-            @Nullable File resourceShrinkerOutputFolder) {
+            @Nullable File resourceShrinkerOutputFolder,
+            boolean pseudoLocalesEnabled) {
         super(rootFolder);
         Preconditions.checkState(
                 (dataBindingExpressionRemover == null) == (dataBindingLayoutOutputFolder == null),
@@ -174,6 +177,7 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
         this.dataBindingExpressionRemover = dataBindingExpressionRemover;
         this.dataBindingLayoutOutputFolder = dataBindingLayoutOutputFolder;
         this.resourceShrinkerOutputFolder = resourceShrinkerOutputFolder;
+        this.pseudoLocalesEnabled = pseudoLocalesEnabled;
 
         mCompiledFileMapFile = new File(temporaryDirectory, "compile-file-map.properties");
         mCompiledFileMap = new Properties();
@@ -208,7 +212,8 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
                 temporaryDirectory,
                 null,
                 null,
-                null);
+                null,
+                false);
     }
 
     @Override
@@ -298,7 +303,8 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
                                     new CompileResourceRequest(
                                             fileToCompile,
                                             request.getOutput(),
-                                            request.getFolderName()));
+                                            request.getFolderName(),
+                                            pseudoLocalesEnabled));
 
                     // adding to the mCompiling seems unnecessary at this point, the end() call will
                     // take care of waiting for all requests to be processed.
@@ -558,7 +564,11 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
                     Future<File> f =
                             mResourceCompiler.compile(
                                     new CompileResourceRequest(
-                                            outFile, getRootFolder(), folderName));
+                                            outFile,
+                                            getRootFolder(),
+                                            folderName,
+                                            pseudoLocalesEnabled));
+
                     File copyOutput = f.get();
 
                     if (blame != null) {

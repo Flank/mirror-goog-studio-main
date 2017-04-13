@@ -51,15 +51,19 @@ public final class AaptV2CommandBuilder {
      * Creates the command line used to compile a resource. See {@link
      * com.android.builder.internal.aapt.Aapt#compile(CompileResourceRequest)}.
      *
-     * @param file see above
-     * @param output see above
      * @return the command line arguments
      */
-    public static ImmutableList<String> makeCompile(@NonNull File file, @NonNull File output) {
-        return ImmutableList.of(
-                "-o",
-                output.getAbsolutePath(),
-                file.getAbsolutePath());
+    public static ImmutableList<String> makeCompile(@NonNull CompileResourceRequest request) {
+        ImmutableList.Builder<String> parameters = new ImmutableList.Builder();
+
+        if (request.isPseudoLocalize()) {
+            parameters.add("--pseudo-localize");
+        }
+
+        parameters.add("-o", request.getOutput().getAbsolutePath());
+        parameters.add(request.getInput().getAbsolutePath());
+
+        return parameters.build();
     }
 
     /**

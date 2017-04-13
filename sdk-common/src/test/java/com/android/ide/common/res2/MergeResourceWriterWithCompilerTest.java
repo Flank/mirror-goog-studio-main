@@ -150,7 +150,8 @@ public class MergeResourceWriterWithCompilerTest {
                         tmpFolder,
                         null,
                         null,
-                        null);
+                        null,
+                        false);
 
         /*
          * Add the file.
@@ -179,7 +180,8 @@ public class MergeResourceWriterWithCompilerTest {
                         tmpFolder,
                         null,
                         null,
-                        null);
+                        null,
+                        false);
 
         mResourceItems.get(name).setRemoved();
         writer.start(DocumentBuilderFactory.newInstance());

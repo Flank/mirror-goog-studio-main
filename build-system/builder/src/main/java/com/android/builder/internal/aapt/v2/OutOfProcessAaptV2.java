@@ -98,9 +98,7 @@ public class OutOfProcessAaptV2 extends AbstractProcessExecutionAapt {
                 new ProcessInfoBuilder()
                         .setExecutable(getAapt2ExecutablePath())
                         .addArgs("compile")
-                        .addArgs(
-                                AaptV2CommandBuilder.makeCompile(
-                                        request.getInput(), request.getOutput())),
+                        .addArgs(AaptV2CommandBuilder.makeCompile(request)),
                 new File(
                         request.getOutput(),
                         Aapt2RenamingConventions.compilationRename(request.getInput())));

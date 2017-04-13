@@ -24,11 +24,21 @@ public class CompileResourceRequest {
     private final File in;
     private final File out;
     private final String folderName;
+    private final boolean pseudoLocalize;
 
     public CompileResourceRequest(@NonNull File in, @NonNull File out, @NonNull String folderName) {
+        this(in, out, folderName, false);
+    }
+
+    public CompileResourceRequest(
+            @NonNull File in,
+            @NonNull File out,
+            @NonNull String folderName,
+            boolean pseudoLocalize) {
         this.in = in;
         this.out = out;
         this.folderName = folderName;
+        this.pseudoLocalize = pseudoLocalize;
     }
 
     public File getInput() {
@@ -41,5 +51,9 @@ public class CompileResourceRequest {
 
     public String getFolderName() {
         return folderName;
+    }
+
+    public boolean isPseudoLocalize() {
+        return pseudoLocalize;
     }
 }
