@@ -206,17 +206,18 @@ public final class IncrementalRelativeFileSets {
 
             for (StoredEntry entry : oldZipReader.entries()) {
                 String path = entry.getCentralDirectoryHeader().getName();
-                File file = new File(zip, FileUtils.toSystemDependentPath(path));
-                RelativeFile oldRelative = new RelativeFile(zip, file);
+                if (entry.getType() == StoredEntryType.FILE) {
+                    File file = new File(zip, FileUtils.toSystemDependentPath(path));
+                    RelativeFile oldRelative = new RelativeFile(zip, file);
 
-                StoredEntry newEntry = newZipReader.get(path);
-                if (newEntry == null || newEntry.getType() != StoredEntryType.FILE) {
-                    /*
-                     * File does not exist in new. It has been deleted.
-                     */
-                    result.put(oldRelative, FileStatus.REMOVED);
+                    StoredEntry newEntry = newZipReader.get(path);
+                    if (newEntry == null || newEntry.getType() != StoredEntryType.FILE) {
+                        /*
+                         * File does not exist in new. It has been deleted.
+                         */
+                        result.put(oldRelative, FileStatus.REMOVED);
+                    }
                 }
-
             }
         } catch (Throwable t) {
             throw closer.rethrow(t, IOException.class);
