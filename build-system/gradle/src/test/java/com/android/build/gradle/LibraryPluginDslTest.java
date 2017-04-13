@@ -17,130 +17,94 @@
 package com.android.build.gradle;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
-import com.android.annotations.NonNull;
-import com.android.build.gradle.api.LibraryVariant;
 import com.android.build.gradle.api.TestVariant;
+import com.android.build.gradle.internal.fixture.BaseTestedVariant;
+import com.android.build.gradle.internal.fixture.TestConstants;
+import com.android.build.gradle.internal.fixture.TestProjects;
+import com.android.build.gradle.internal.fixture.VariantChecker;
+import com.android.build.gradle.internal.fixture.VariantCheckers;
 import com.android.builder.model.SigningConfig;
-import com.google.common.collect.ImmutableMap;
 import java.util.Set;
+import org.gradle.api.Project;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 /** Tests for the public DSL of the Lib plugin ('com.android.library') */
-public class LibraryPluginDslTest extends BaseDslTest {
+public class LibraryPluginDslTest {
+    @Rule public TemporaryFolder projectDirectory = new TemporaryFolder();
     private LibraryPlugin plugin;
     private LibraryExtension android;
+    private VariantChecker checker;
 
-    private static void checkTestedVariant(
-            @NonNull String variantName,
-            @NonNull String testedVariantName,
-            @NonNull Set<LibraryVariant> variants,
-            @NonNull Set<TestVariant> testVariants) {
-        LibraryVariant variant = findVariant(variants, variantName);
-        assertNotNull(variant);
-        assertNotNull(variant.getTestVariant());
-        assertEquals(testedVariantName, variant.getTestVariant().getName());
-        assertEquals(variant.getTestVariant(), findVariant(testVariants, testedVariantName));
-        checkLibraryTasks(variant);
-        checkTestTasks(variant.getTestVariant());
-    }
-
-    private static void checkNonTestedVariant(
-            @NonNull String variantName, @NonNull Set<LibraryVariant> variants) {
-        LibraryVariant variant = findVariant(variants, variantName);
-        assertNotNull(variant);
-        assertNull(variant.getTestVariant());
-        checkLibraryTasks(variant);
-    }
-
-    private static void checkTestTasks(@NonNull TestVariant variant) {
-        assertNotNull(variant.getAidlCompile());
-        assertNotNull(variant.getMergeResources());
-        assertNotNull(variant.getMergeAssets());
-        assertNotNull(variant.getMergeResources());
-        assertNotNull(variant.getGenerateBuildConfig());
-        assertNotNull(variant.getJavaCompile());
-        assertNotNull(variant.getProcessJavaResources());
-
-        assertNotNull(variant.getAssemble());
-        assertNotNull(variant.getUninstall());
-
-        if (variant.isSigningReady()) {
-            assertNotNull(variant.getInstall());
-        } else {
-            assertNull(variant.getInstall());
-        }
-
-        assertNotNull(variant.getConnectedInstrumentTest());
-    }
-
-    private static void checkLibraryTasks(@NonNull LibraryVariant variant) {
-        assertNotNull(variant.getCheckManifest());
-        assertNotNull(variant.getAidlCompile());
-        assertNotNull(variant.getMergeResources());
-        assertNotNull(variant.getGenerateBuildConfig());
-        assertNotNull(variant.getJavaCompile());
-        assertNotNull(variant.getProcessJavaResources());
-        assertNotNull(variant.getAssemble());
-    }
-
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-
-        project.apply(ImmutableMap.of("plugin", "com.android.library"));
+    @Before
+    public void setUp() throws Exception {
+        Project project =
+                TestProjects.builder(projectDirectory.newFolder("project").toPath())
+                        .withPlugin(TestProjects.Plugin.LIBRARY)
+                        .build();
         android = project.getExtensions().getByType(LibraryExtension.class);
-        android.setCompileSdkVersion(COMPILE_SDK_VERSION);
-        android.setBuildToolsVersion(BUILD_TOOL_VERSION);
+        android.setCompileSdkVersion(TestConstants.COMPILE_SDK_VERSION);
+        android.setBuildToolsVersion(TestConstants.BUILD_TOOL_VERSION);
         plugin = project.getPlugins().getPlugin(LibraryPlugin.class);
+        checker = VariantCheckers.createLibraryChecker(android);
     }
 
+    @Test
     public void testBasic() {
         plugin.createAndroidTasks(false);
 
-        Set<LibraryVariant> variants = android.getLibraryVariants();
+        Set<BaseTestedVariant> variants = checker.getVariants();
         assertThat(variants).hasSize(2);
 
         Set<TestVariant> testVariants = android.getTestVariants();
         assertThat(testVariants).hasSize(1);
 
-        checkTestedVariant("debug", "debugAndroidTest", variants, testVariants);
-        checkNonTestedVariant("release", variants);
+        checker.checkTestedVariant("debug", "debugAndroidTest", variants, testVariants);
+        checker.checkNonTestedVariant("release", variants);
     }
 
+    @Test
     public void testNewBuildType() {
         android.getBuildTypes().create("custom");
         plugin.createAndroidTasks(false);
 
-        Set<LibraryVariant> variants = android.getLibraryVariants();
+        Set<BaseTestedVariant> variants = checker.getVariants();
         assertThat(variants).hasSize(3);
 
         Set<TestVariant> testVariants = android.getTestVariants();
         assertThat(testVariants).hasSize(1);
 
-        checkTestedVariant("debug", "debugAndroidTest", variants, testVariants);
-        checkNonTestedVariant("release", variants);
-        checkNonTestedVariant("custom", variants);
+        checker.checkTestedVariant("debug", "debugAndroidTest", variants, testVariants);
+        checker.checkNonTestedVariant("release", variants);
+        checker.checkNonTestedVariant("custom", variants);
     }
 
+    @Test
     public void testNewBuildType_testBuildType() {
         android.getBuildTypes().create("custom");
         android.setTestBuildType("custom");
         plugin.createAndroidTasks(false);
 
-        Set<LibraryVariant> variants = android.getLibraryVariants();
+        Set<BaseTestedVariant> variants = checker.getVariants();
         assertThat(variants).hasSize(3);
 
         Set<TestVariant> testVariants = android.getTestVariants();
         assertThat(testVariants).hasSize(1);
 
-        checkTestedVariant("custom", "customAndroidTest", variants, testVariants);
-        checkNonTestedVariant("release", variants);
-        checkNonTestedVariant("debug", variants);
+        checker.checkTestedVariant("custom", "customAndroidTest", variants, testVariants);
+        checker.checkNonTestedVariant("release", variants);
+        checker.checkNonTestedVariant("debug", variants);
     }
 
     /**
      * test that debug build type maps to the SigningConfig object as the signingConfig container
      */
+    @Test
     public void testDebugSigningConfig() throws Exception {
         android.getSigningConfigs().getByName("debug", debug -> debug.setStorePassword("foo"));
 
