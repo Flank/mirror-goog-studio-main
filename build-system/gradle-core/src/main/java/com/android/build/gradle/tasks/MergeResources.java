@@ -127,6 +127,8 @@ public class MergeResources extends IncrementalTask {
 
     @Nullable private File dataBindingLayoutOutputFolder;
 
+    @Nullable private File resourceShrinkerOutputFolder;
+
     @Input
     public String getBuildToolsVersion() {
         return getBuildTools().getRevision().toString();
@@ -178,7 +180,8 @@ public class MergeResources extends IncrementalTask {
                             resourceCompiler,
                             getIncrementalFolder(),
                             dataBindingExpressionRemover,
-                            dataBindingLayoutOutputFolder);
+                            dataBindingLayoutOutputFolder,
+                            resourceShrinkerOutputFolder);
 
             merger.mergeData(writer, false /*doCleanUp*/);
 
@@ -264,7 +267,9 @@ public class MergeResources extends IncrementalTask {
                             resourceCompiler,
                             getIncrementalFolder(),
                             dataBindingExpressionRemover,
-                            dataBindingLayoutOutputFolder);
+                            dataBindingLayoutOutputFolder,
+                            resourceShrinkerOutputFolder);
+
             merger.mergeData(writer, false /*doCleanUp*/);
             // No exception? Write the known state.
             merger.writeBlobTo(getIncrementalFolder(), writer, false);
@@ -508,6 +513,12 @@ public class MergeResources extends IncrementalTask {
         return dataBindingLayoutOutputFolder;
     }
 
+    @OutputDirectory
+    @Optional
+    public File getResourceShrinkerOutputFolder() {
+        return resourceShrinkerOutputFolder;
+    }
+
     /**
      * Compute the list of resource set to be used during execution based all the inputs.
      */
@@ -693,6 +704,9 @@ public class MergeResources extends IncrementalTask {
                 mergeResourcesTask.dataBindingLayoutOutputFolder =
                         scope.getLayoutInputFolderForDataBinding();
             }
+
+            mergeResourcesTask.resourceShrinkerOutputFolder =
+                    scope.getResourceShrinkerInputFolder();
         }
     }
 }

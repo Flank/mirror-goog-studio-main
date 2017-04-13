@@ -123,6 +123,8 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
 
     @Nullable private final File dataBindingLayoutOutputFolder;
 
+    @Nullable private final File resourceShrinkerOutputFolder;
+
     /**
      * Maps resource files to their compiled files. Used to compiled resources that no longer
      * exist.
@@ -155,7 +157,8 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
             @NonNull QueueableResourceCompiler resourceCompiler,
             @NonNull File temporaryDirectory,
             @Nullable SingleFileProcessor dataBindingExpressionRemover,
-            @Nullable File dataBindingLayoutOutputFolder) {
+            @Nullable File dataBindingLayoutOutputFolder,
+            @Nullable File resourceShrinkerOutputFolder) {
         super(rootFolder);
         Preconditions.checkState(
                 (dataBindingExpressionRemover == null) == (dataBindingLayoutOutputFolder == null),
@@ -170,6 +173,7 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
         mTemporaryDirectory = temporaryDirectory;
         this.dataBindingExpressionRemover = dataBindingExpressionRemover;
         this.dataBindingLayoutOutputFolder = dataBindingLayoutOutputFolder;
+        this.resourceShrinkerOutputFolder = resourceShrinkerOutputFolder;
 
         mCompiledFileMapFile = new File(temporaryDirectory, "compile-file-map.properties");
         mCompiledFileMap = new Properties();
@@ -203,6 +207,7 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
                 QueueableResourceCompiler.NONE,
                 temporaryDirectory,
                 null,
+                null,
                 null);
     }
 
@@ -232,11 +237,14 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
                 CompileResourceRequest request = mCompileResourceRequests.poll();
                 try {
                     ListenableFuture<File> result;
+                    File fileToCompile = request.getInput();
 
                     if (mMergingLog != null) {
                         mMergingLog.logCopy(
                                 request.getInput(), mResourceCompiler.compileOutputFor(request));
                     }
+
+
 
                     if (dataBindingExpressionRemover != null
                             && request.getFolderName().startsWith("layout")
@@ -272,18 +280,25 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
                                                 request.getInput().getName()));
                             }
 
-                            result =
-                                    mResourceCompiler.compile(
-                                            new CompileResourceRequest(
-                                                    strippedLayout,
-                                                    request.getOutput(),
-                                                    request.getFolderName()));
-                        } else {
-                            result = mResourceCompiler.compile(request);
+                            fileToCompile = strippedLayout;
                         }
-                    } else {
-                        result = mResourceCompiler.compile(request);
                     }
+
+                    // If we are going to shrink resources, the resource shrinker needs to have the
+                    // final merged uncompiled file.
+                    if (resourceShrinkerOutputFolder != null) {
+                        File typeDir =
+                                new File(resourceShrinkerOutputFolder, request.getFolderName());
+                        FileUtils.mkdirs(typeDir);
+                        FileUtils.copyFileToDirectory(fileToCompile, typeDir);
+                    }
+
+                    result =
+                            mResourceCompiler.compile(
+                                    new CompileResourceRequest(
+                                            fileToCompile,
+                                            request.getOutput(),
+                                            request.getFolderName()));
 
                     // adding to the mCompiling seems unnecessary at this point, the end() call will
                     // take care of waiting for all requests to be processed.

@@ -448,6 +448,18 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @Nullable
     @Override
+    public File getResourceShrinkerInputFolder() {
+        if (!useResourceShrinker()) {
+            return null;
+        }
+        return new File(
+                globalScope.getIntermediatesDir()
+                        + "/resource-shrinker-in/"
+                        + getVariantConfiguration().getDirName());
+    }
+
+    @Nullable
+    @Override
     public CodeShrinker getCodeShrinker() {
         //noinspection ConstantConditions - getType() will not return null for a testing variant.
         if (getVariantConfiguration().getType().isForTesting()
