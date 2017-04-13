@@ -34,6 +34,7 @@ import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitPackageI
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitPackageIdsWriterTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.FeatureVariantData;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.MergeManifests;
@@ -85,7 +86,10 @@ public class FeatureTaskManager extends TaskManager {
         createAnchorTasks(tasks, variantScope);
         createCheckManifestTask(tasks, variantScope);
 
-        // TODO : we need a better way to determine if we are dealing with a base split or not.
+        // Create all current streams (dependencies mostly at this point)
+        createDependencyStreams(tasks, variantScope);
+
+        // TODO: we need a better way to determine if we are dealing with a base split or not.
         if (variantScope.getVariantDependencies().getManifestSplitConfiguration() != null) {
             // Non-base feature specific tasks.
             createFeatureDeclarationTasks(tasks, variantScope);
@@ -97,6 +101,37 @@ public class FeatureTaskManager extends TaskManager {
 
         // Add a task to process the manifest(s)
         createMergeApkManifestsTask(tasks, variantScope);
+
+        // Add a task to create the res values
+        createGenerateResValuesTask(tasks, variantScope);
+
+        // Add a task to merge the resource folders
+        createMergeResourcesTask(tasks, variantScope);
+
+        // Add a task to process the Android Resources and generate source files
+        AndroidTask<ProcessAndroidResources> processAndroidResourcesTask =
+                createProcessResTask(
+                        tasks,
+                        variantScope,
+                        () ->
+                                FileUtils.join(
+                                        globalScope.getIntermediatesDir(),
+                                        "symbols",
+                                        variantScope
+                                                .getVariantData()
+                                                .getVariantConfiguration()
+                                                .getDirName()),
+                        variantScope.getProcessResourcePackageOutputDirectory(),
+                        MergeType.MERGE,
+                        variantScope.getGlobalScope().getProjectBaseName());
+
+        variantScope.publishIntermediateArtifact(
+                variantScope.getProcessResourcePackageOutputDirectory(),
+                processAndroidResourcesTask.getName(),
+                AndroidArtifacts.ArtifactType.FEATURE_RESOURCE_PKG);
+
+        // TODO: remove once we generate APKs.
+        variantScope.getAssembleTask().dependsOn(tasks, processAndroidResourcesTask);
     }
 
     /**
@@ -165,9 +200,6 @@ public class FeatureTaskManager extends TaskManager {
                 FeatureSplitPackageIds.getOutputFile(featureIdsOutputDirectory),
                 writeTask.getName(),
                 AndroidArtifacts.ArtifactType.FEATURE_IDS_DECLARATION);
-
-        // TODO: Remove this once the feature plugin is functional.
-        variantScope.getAssembleTask().dependsOn(tasks, writeTask.getName());
     }
 
     /** Creates the merge manifests task. */
@@ -182,9 +214,18 @@ public class FeatureTaskManager extends TaskManager {
         }
 
         AndroidTask<? extends ManifestProcessorTask> mergeManifestsAndroidTask;
-        // TODO : we need a better way to determine if we are dealing with a base split or not.
+        // TODO: we need a better way to determine if we are dealing with a base split or not.
         if (variantScope.getVariantDependencies().getManifestSplitConfiguration() != null) {
+            // Non-base split. Publish the feature manifest.
             optionalFeatures.add(ManifestMerger2.Invoker.Feature.ADD_FEATURE_SPLIT_INFO);
+            if (variantScope
+                    .getGlobalScope()
+                    .getProjectOptions()
+                    .get(BooleanOption.ENABLE_FEATURE_SPLIT_TRANSITIONAL_ATTRIBUTES)) {
+                optionalFeatures.add(
+                        ManifestMerger2.Invoker.Feature.TRANSITIONAL_FEATURE_SPLIT_ATTRIBUTES);
+            }
+
             mergeManifestsAndroidTask =
                     androidTasks.create(
                             tasks,
@@ -196,6 +237,7 @@ public class FeatureTaskManager extends TaskManager {
                     mergeManifestsAndroidTask.getName(),
                     AndroidArtifacts.ArtifactType.FEATURE_SPLIT_MANIFEST);
         } else {
+            // Base split. Merge all the dependent libraries and the other splits.
             mergeManifestsAndroidTask =
                     androidTasks.create(
                             tasks,
@@ -208,9 +250,6 @@ public class FeatureTaskManager extends TaskManager {
                 variantScope.getInstantRunManifestOutputDirectory(),
                 mergeManifestsAndroidTask.getName());
 
-        // TODO: Remove this once the feature plugin is functional.
-        variantScope.getAssembleTask().dependsOn(tasks, mergeManifestsAndroidTask.getName());
-
         return mergeManifestsAndroidTask;
     }
 
@@ -221,7 +260,6 @@ public class FeatureTaskManager extends TaskManager {
         return TransformManager.SCOPE_FULL_PROJECT;
     }
 
-    // so far this is no called as the LibraryTaskManager sets up the processAndroidResources.
     @Override
     protected ProcessAndroidResources.ConfigAction createProcessAndroidResourcesConfigAction(
             @NonNull VariantScope scope,
@@ -230,13 +268,25 @@ public class FeatureTaskManager extends TaskManager {
             boolean useAaptToGenerateLegacyMultidexMainDexProguardRules,
             @NonNull MergeType mergeType,
             @NonNull String baseName) {
-
-        return new ProcessAndroidResources.FeatureSplitConfigAction(
-                scope,
-                symbolLocation,
-                resPackageOutputFolder,
-                useAaptToGenerateLegacyMultidexMainDexProguardRules,
-                mergeType,
-                baseName);
+        // TODO: we need a better way to determine if we are dealing with a base split or not.
+        if (scope.getVariantDependencies().getManifestSplitConfiguration() != null) {
+            // Non-base feature split.
+            return new ProcessAndroidResources.FeatureSplitConfigAction(
+                    scope,
+                    symbolLocation,
+                    resPackageOutputFolder,
+                    useAaptToGenerateLegacyMultidexMainDexProguardRules,
+                    mergeType,
+                    baseName);
+        } else {
+            // Base feature split.
+            return super.createProcessAndroidResourcesConfigAction(
+                    scope,
+                    symbolLocation,
+                    resPackageOutputFolder,
+                    useAaptToGenerateLegacyMultidexMainDexProguardRules,
+                    mergeType,
+                    baseName);
+        }
     }
 }

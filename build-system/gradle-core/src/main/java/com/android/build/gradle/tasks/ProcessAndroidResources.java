@@ -20,6 +20,7 @@ import static com.android.SdkConstants.RES_QUALIFIER_SEP;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_IDS_DECLARATION;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_RESOURCE_PKG;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.MANIFEST;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.SYMBOL_LIST;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
@@ -39,7 +40,6 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.scope.BuildOutput;
-import com.android.build.gradle.internal.scope.BuildOutputProperty;
 import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.build.gradle.internal.scope.SplitFactory;
 import com.android.build.gradle.internal.scope.SplitList;
@@ -160,6 +160,8 @@ public class ProcessAndroidResources extends IncrementalTask {
     private File mergeBlameLogFolder;
 
     private InstantRunBuildContext buildContext;
+
+    private FileCollection featureResourcePackages;
 
     private List<LibraryInfo> computedLibraryInfo;
 
@@ -384,8 +386,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                 resPackageOutputFolder);
     }
 
-    @Nullable
-    File invokeAaptForSplit(
+    void invokeAaptForSplit(
             Collection<BuildOutput> manifestsOutputs,
             @Nullable Set<File> packageIdFileSet,
             ApkData apkData,
@@ -411,8 +412,16 @@ public class ProcessAndroidResources extends IncrementalTask {
                         new ToolOutputParser(new AaptOutputParser(), getILogger()),
                         mergingLogRewriter);
 
-        @Nullable File resOutBaseNameFile = null;
-        resOutBaseNameFile =
+        ImmutableList.Builder<File> featurePackagesBuilder = ImmutableList.builder();
+        for (File featurePackage : featureResourcePackages) {
+            Collection<BuildOutput> splitOutputs =
+                    BuildOutputs.load(VariantScope.TaskOutputType.PROCESSED_RES, featurePackage);
+            if (!splitOutputs.isEmpty()) {
+                featurePackagesBuilder.add(Iterables.getOnlyElement(splitOutputs).getOutputFile());
+            }
+        }
+
+        File resOutBaseNameFile =
                 new File(
                         resPackageOutputFolder,
                         FN_RES_BASE
@@ -431,12 +440,7 @@ public class ProcessAndroidResources extends IncrementalTask {
         String packageForR = null;
         File srcOut = null;
         if (generateCode) {
-
-            String splitName = manifestOutput.getProperties().get(BuildOutputProperty.SPLIT);
-            packageForR =
-                    Strings.isNullOrEmpty(splitName)
-                            ? originalApplicationId
-                            : originalApplicationId + "." + splitName;
+            packageForR = originalApplicationId;
 
             // we have to clean the source folder output in case the package name changed.
             srcOut = getSourceOutputDir();
@@ -454,13 +458,12 @@ public class ProcessAndroidResources extends IncrementalTask {
                                 ? buildTargetDensity
                                 : null;
 
-        // TODO : use this information to pass to aapt2.
+        Integer packageId = null;
         if (packageIdFileSet != null
                 && FeatureSplitPackageIds.getOutputFile(packageIdFileSet) != null) {
             FeatureSplitPackageIds featurePackageIds =
                     FeatureSplitPackageIds.load(packageIdFileSet);
-            Integer idFor = featurePackageIds.getIdFor(getProject().getPath());
-            System.out.println("ID For " + getProject().getPath() + " is " + idFor);
+            packageId = featurePackageIds.getIdFor(getProject().getPath());
         }
 
         try {
@@ -513,11 +516,13 @@ public class ProcessAndroidResources extends IncrementalTask {
                                 .setResourceConfigs(
                                         splitList.getFilters(SplitList.RESOURCE_CONFIGS))
                                 .setSplits(getSplits())
-                                .setPreferredDensity(preferredDensity);
+                                .setPreferredDensity(preferredDensity)
+                                .setPackageId(packageId)
+                                .setDependentFeatures(featurePackagesBuilder.build());
 
                 builder.processResources(aapt, config,
                         generateCode && getEnforceUniquePackageName());
-                if (resOutBaseNameFile != null && LOG.isInfoEnabled()) {
+                if (LOG.isInfoEnabled()) {
                     LOG.info("Aapt output file {}", resOutBaseNameFile.getAbsolutePath());
                 }
             }
@@ -527,9 +532,6 @@ public class ProcessAndroidResources extends IncrementalTask {
                     apkData,
                     resOutBaseNameFile,
                     manifestOutput.getProperties());
-
-            return resOutBaseNameFile;
-
         } catch (InterruptedException | ProcessException e) {
             getLogger().error(e.getMessage(), e);
             throw new BuildException(e.getMessage(), e);
@@ -773,6 +775,10 @@ public class ProcessAndroidResources extends IncrementalTask {
 
             processResources.buildContext = variantScope.getInstantRunBuildContext();
 
+            processResources.featureResourcePackages =
+                    variantScope.getArtifactFileCollection(
+                            COMPILE_CLASSPATH, MODULE, FEATURE_RESOURCE_PKG);
+
             processResources.projectBaseName = baseName;
             processResources.buildTargetAbi =
                     projectOptions.get(BUILD_ONLY_TARGET_ABI)
@@ -785,12 +791,6 @@ public class ProcessAndroidResources extends IncrementalTask {
                             ? projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI)
                             : null;
             processResources.supportedAbis = config.getSupportedAbis();
-
-            // TODO : REMOVE once we have a processAndroidResources task for FEATURE/.
-            // sets the packageIds list.
-            processResources.packageIdsFiles =
-                    variantScope.getArtifactCollection(
-                            COMPILE_CLASSPATH, ALL, FEATURE_IDS_DECLARATION);
         }
     }
 
@@ -847,10 +847,6 @@ public class ProcessAndroidResources extends IncrementalTask {
     @InputFiles
     public FileCollection getPackageIdsFiles() {
         return packageIdsFiles != null ? packageIdsFiles.getArtifactFiles() : null;
-    }
-
-    public void setPackageIdsFiles(ArtifactCollection packageIdsFiles) {
-        this.packageIdsFiles = packageIdsFiles;
     }
 
     /**
@@ -1014,6 +1010,12 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     public void setMergeBlameLogFolder(File mergeBlameLogFolder) {
         this.mergeBlameLogFolder = mergeBlameLogFolder;
+    }
+
+    @InputFiles
+    @NonNull
+    public FileCollection getFeatureResourcePackages() {
+        return featureResourcePackages;
     }
 
     @Input

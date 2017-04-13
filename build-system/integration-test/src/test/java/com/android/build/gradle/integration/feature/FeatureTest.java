@@ -17,10 +17,13 @@
 package com.android.build.gradle.integration.feature;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.testutils.truth.MoreTruth.assertThatZip;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclaration;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitPackageIds;
+import com.android.testutils.apk.Zip;
 import java.io.File;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -47,7 +50,10 @@ public class FeatureTest {
     @Test
     public void build() throws Exception {
         // just run test for now.
-        sProject.execute("assemble");
+        sProject.executor()
+                .with(AaptGeneration.AAPT_V2_JNI)
+                .withEnabledFeatureSplitTransitionalAttributes(true)
+                .run("assemble");
 
         // check the feature declaration file presence.
         GradleTestProject featureProject = sProject.getSubproject(":feature");
@@ -69,14 +75,14 @@ public class FeatureTest {
                 .containsAllOf(
                         "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"",
                         "package=\"com.example.android.multiproject\"",
-                        "featureSplit=\"feature\"",
+                        "split=\"feature\"",
                         "<meta-data",
                         "android:name=\"feature\"",
                         "android:value=\"84\" />",
                         "<activity",
                         "android:name=\"com.example.android.multiproject.feature.MainActivity\"",
                         "android:label=\"@string/app_name\"",
-                        "android:splitName=\"feature\" >");
+                        "split=\"feature\" >");
         assertThat(featureManifest).doesNotContain("android:name=\"library\"");
         assertThat(featureManifest).doesNotContain("android:value=\"42\"");
 
@@ -103,8 +109,15 @@ public class FeatureTest {
                         "android:value=\"42\" />",
                         "<activity",
                         "android:name=\"com.example.android.multiproject.feature.MainActivity\"",
-                        "android:label=\"@string/app_name\"",
-                        "android:splitName=\"feature\" >");
+                        "split=\"feature\"",
+                        "android:label=\"@string/app_name\" >");
         assertThat(baseFeatureManifest).doesNotContain("featureSplit");
+
+        // Check that the base feature resource package is built properly.
+        try (Zip baseFeatureResources =
+                new Zip(baseProject.getIntermediateFile("res/feature/debug/resources-debug.ap_"))) {
+            assertThatZip(baseFeatureResources).contains("AndroidManifest.xml");
+            assertThatZip(baseFeatureResources).contains("resources.arsc");
+        }
     }
 }

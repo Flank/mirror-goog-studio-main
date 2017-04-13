@@ -6,7 +6,7 @@ android {
 
     defaultConfig {
         minSdkVersion 8
-        applicationId "com.example.android.multiproject"
+        applicationId 'com.example.android.multiproject'
     }
 }
 

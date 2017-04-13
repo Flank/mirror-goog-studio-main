@@ -252,6 +252,14 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
         return this;
     }
 
+    public RunGradleTasks withEnabledFeatureSplitTransitionalAttributes(
+            boolean enableFeatureSplitTransitionalAttributes) {
+        with(
+                BooleanOption.ENABLE_FEATURE_SPLIT_TRANSITIONAL_ATTRIBUTES,
+                enableFeatureSplitTransitionalAttributes);
+        return this;
+    }
+
     private static class WaitingResultHandler implements ResultHandler<Void> {
 
         private final BooleanLatch latch = new BooleanLatch();

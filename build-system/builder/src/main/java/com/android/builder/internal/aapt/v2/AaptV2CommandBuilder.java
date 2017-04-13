@@ -236,6 +236,15 @@ public final class AaptV2CommandBuilder {
 //                    config.getSymbolOutputDir().getAbsolutePath());
         }
 
+        if (config.getPackageId() != null) {
+            builder.add("--package-id", "0x" + Integer.toHexString(config.getPackageId()));
+            for (File dependentFeature : config.getDependentFeatures()) {
+                builder.add("-I", dependentFeature.getAbsolutePath());
+            }
+        } else if (!config.getDependentFeatures().isEmpty()) {
+            throw new AaptException("Dependent features configured but no package ID was set.");
+        }
+
         builder.add("--no-version-vectors");
 
         if (config.getBaseFeature() != null) {
