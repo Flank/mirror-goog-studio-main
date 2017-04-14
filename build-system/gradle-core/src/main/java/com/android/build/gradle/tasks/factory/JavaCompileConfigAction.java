@@ -4,6 +4,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JAR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.ANNOTATION_PROCESSOR;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.CompileOptions;
@@ -76,7 +77,7 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
                                                     .getBootClasspathAsStrings(false)));
         }
 
-        FileCollection classpath = scope.getJavaCompileClasspath(CLASSES, true);
+        FileCollection classpath = scope.getJavaClasspath(COMPILE_CLASSPATH, CLASSES);
         if (keepDefaultBootstrap) {
             classpath =
                     classpath.plus(
@@ -109,7 +110,7 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
                 scope.getArtifactFileCollection(ANNOTATION_PROCESSOR, ALL, JAR);
         if (Boolean.TRUE.equals(includeCompileClasspath)) {
             // We need the jar files because annotation processors require the resources.
-            processorPath = processorPath.plus(scope.getJavaCompileClasspath(JAR, true));
+            processorPath = processorPath.plus(scope.getJavaClasspath(COMPILE_CLASSPATH, JAR));
         }
 
         javacTask.getOptions().setAnnotationProcessorPath(processorPath);

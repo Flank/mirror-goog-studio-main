@@ -172,9 +172,9 @@ public class AndroidUnitTest extends Test {
             // - the java runtime classpath for this scope (which includes the tested code)
             // - the test compilation output
             collection.from(scope.getOutputs(JAVAC));
-            collection.from(scope.getVariantData().getGeneratedBytecodeCollection());
+            collection.from(scope.getVariantData().getAllGeneratedBytecode());
             collection.from(testedScope.getOutputs(JAVAC));
-            collection.from(testedVariantData.getGeneratedBytecodeCollection());
+            collection.from(testedVariantData.getAllGeneratedBytecode());
 
             // - the test and tested java resources
             collection.from(scope.getOutputs(TaskOutputType.JAVA_RES));

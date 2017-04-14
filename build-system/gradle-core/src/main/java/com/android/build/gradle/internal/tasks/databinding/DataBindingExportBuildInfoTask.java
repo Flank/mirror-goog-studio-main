@@ -16,10 +16,12 @@
 
 package com.android.build.gradle.internal.tasks.databinding;
 
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
+
 import android.databinding.tool.LayoutXmlProcessor;
 import android.databinding.tool.processing.Scope;
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -146,9 +148,7 @@ public class DataBindingExportBuildInfoTask extends DefaultTask {
             task.setXmlOutFolder(variantScope.getLayoutInfoOutputForDataBinding());
 
             task.compilerClasspath =
-                    () ->
-                            variantScope.getJavaCompileClasspath(
-                                    AndroidArtifacts.ArtifactType.CLASSES, true);
+                    () -> variantScope.getJavaClasspath(COMPILE_CLASSPATH, CLASSES);
 
             task.compilerSources =
                     () -> variantData.getJavaSources().stream()

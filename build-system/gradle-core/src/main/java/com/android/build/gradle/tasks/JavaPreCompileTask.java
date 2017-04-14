@@ -20,6 +20,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JAR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.ANNOTATION_PROCESSOR;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
@@ -43,7 +44,6 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.TaskAction;
-
 
 /**
  * Tasks to perform necessary action before a JavaCompile.
@@ -164,7 +164,7 @@ public class JavaPreCompileTask extends BaseTask {
                             .getAnnotationProcessorOptions();
             task.annotationProcessorConfiguration =
                     scope.getArtifactFileCollection(ANNOTATION_PROCESSOR, ALL, JAR);
-            task.compileClasspaths = scope.getJavaCompileClasspath(CLASSES, true);
+            task.compileClasspaths = scope.getJavaClasspath(COMPILE_CLASSPATH, CLASSES);
         }
     }
 }
