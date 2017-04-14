@@ -62,11 +62,11 @@ class CountDownLatch {
   // operation is a no-op.
   void Await() const {
     std::unique_lock<std::mutex> lock(mutex_);
-    if (count_ == 0) {
-      return;
+    while (count_ != 0) {
+      // Conditional variables can be woken up sporadically, so we check count
+      // to verify the wakeup was triggered by |CountDown|.
+      count_down_complete_.wait(lock);
     }
-
-    count_down_complete_.wait(lock);
   }
 
   // Resets the latch back to the count it was initialized with.
