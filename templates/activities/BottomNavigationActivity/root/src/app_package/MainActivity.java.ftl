@@ -16,7 +16,7 @@ public class ${activityClass} extends AppCompatActivity {
 
         @Override
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-<#if isLibraryProject>
+<#if isLibraryProject!false>
             int id = item.getItemId();
             if (id == R.id.navigation_home) {
                 mTextMessage.setText(R.string.title_home);
