@@ -233,6 +233,7 @@ public class LintCliClient extends LintClient {
         driver.setAbbreviating(!flags.isShowEverything());
         driver.setCheckTestSources(flags.isCheckTestSources());
         driver.setCheckGeneratedSources(flags.isCheckGeneratedSources());
+        driver.setFatalOnlyMode(flags.isFatalOnly());
 
         File baselineFile = flags.getBaselineFile();
         if (baselineFile != null) {

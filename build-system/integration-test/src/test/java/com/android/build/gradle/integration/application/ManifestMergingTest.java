@@ -100,7 +100,7 @@ public class ManifestMergingTest {
         TestFileUtils.appendToFile(
                 appProject.getBuildFile(),
                 "android{\n"
-                        + "    compileSdkVersion 23\n"
+                        + "    compileSdkVersion 24\n"
                         + "    defaultConfig{\n"
                         + "        minSdkVersion 15\n"
                         + "        targetSdkVersion 'N'\n"
@@ -122,7 +122,7 @@ public class ManifestMergingTest {
         TestFileUtils.appendToFile(
                 appProject.getBuildFile(),
                 "android{\n"
-                        + "    compileSdkVersion 23\n"
+                        + "    compileSdkVersion 24\n"
                         + "    defaultConfig{\n"
                         + "        minSdkVersion 'N'\n"
                         + "        targetSdkVersion 15\n"

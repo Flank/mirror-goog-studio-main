@@ -601,7 +601,7 @@ public class JavaContext extends Context {
         if (scope != null && driver.isSuppressed(this, issue, scope)) {
             return;
         }
-        super.report(issue, location, message, quickfixData);
+        super.doReport(issue, location, message, quickfixData);
     }
 
     /**

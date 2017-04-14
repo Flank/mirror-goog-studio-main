@@ -35,6 +35,7 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import org.jetbrains.uast.UElement;
 import org.w3c.dom.Node;
 
 /**
@@ -307,8 +308,19 @@ public class Context {
             if (driver.isSuppressed(null, issue, element)) {
                 return;
             }
+        } else if (source instanceof UElement) {
+            PsiElement element = ((UElement) source).getPsi();
+            if (element != null && this instanceof JavaContext) {
+                JavaContext javaContext = (JavaContext) this;
+                if (Objects.equals(element.getContainingFile(), javaContext.getPsiFile())) {
+                    javaContext.report(issue, element, location, message, quickfixData);
+                    return;
+                }
+            }
+            if (driver.isSuppressed(null, issue, element)) {
+                return;
+            }
         }
-        // TODO: Uast nods
 
         doReport(issue, location, message, quickfixData);
     }

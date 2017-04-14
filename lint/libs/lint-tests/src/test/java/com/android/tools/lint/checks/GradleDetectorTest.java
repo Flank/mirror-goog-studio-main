@@ -196,7 +196,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
         assertNull(getOldValue(DEPENDENCY, "Bogus", TEXT));
         assertNull(getOldValue(DEPENDENCY, "bogus", TEXT));
         // targetSdkVersion 20, compileSdkVersion 19: Should replace targetVersion 20 with 19
-        assertEquals("20", getOldValue(DEPENDENCY,
+        assertEquals("20", getOldValue(COMPATIBILITY,
                 "The targetSdkVersion (20) should not be higher than the compileSdkVersion (19)",
                 TEXT));
         assertEquals("'19'", getOldValue(STRING_INTEGER,
@@ -221,7 +221,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 "A newer version of com.google.guava:guava than 11.0.2 is available", TEXT));
         assertNull(getNewValue(DEPENDENCY, "bogus", TEXT));
         // targetSdkVersion 20, compileSdkVersion 19: Should replace targetVersion 20 with 19
-        assertEquals("19", getNewValue(DEPENDENCY,
+        assertEquals("19", getNewValue(COMPATIBILITY,
                 "The targetSdkVersion (20) should not be higher than the compileSdkVersion (19)",
                 TEXT));
         assertEquals("19", getNewValue(STRING_INTEGER,
@@ -279,10 +279,13 @@ public class GradleDetectorTest extends AbstractCheckTest {
 
     public void testCompatibility() throws Exception {
         String expected = ""
+                + "build.gradle:4: Error: The targetSdkVersion (19) should not be higher than the compileSdkVersion (18) [GradleCompatible]\n"
+                + "    compileSdkVersion 18\n"
+                + "    ~~~~~~~~~~~~~~~~~~~~\n"
                 + "build.gradle:16: Error: This support library should not use a lower version (18) than the targetSdkVersion (19) [GradleCompatible]\n"
                 + "    compile 'com.android.support:support-v4:18.0.0'\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "1 errors, 0 warnings\n";
+                + "2 errors, 0 warnings\n";
 
         lint().files(
                 gradle(""
@@ -943,7 +946,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
 
     public void testPlayServiceConsistency() {
         String expected = ""
-                + "build.gradle:4: Error: All com.google.android.gms libraries must use the exact same version specification (mixing versions can lead to runtime crashes). Found versions 7.5.0, 7.3.0. Examples include com.google.android.gms:play-services-wearable:7.5.0 and com.google.android.gms:play-services-location:7.3.0 [GradleCompatible]\n"
+                + "build.gradle:4: Error: All gms/firebase libraries must use the exact same version specification (mixing versions can lead to runtime crashes). Found versions 7.5.0, 7.3.0. Examples include com.google.android.gms:play-services-wearable:7.5.0 and com.google.android.gms:play-services-location:7.3.0 [GradleCompatible]\n"
                 + "    compile 'com.google.android.gms:play-services-wearable:7.5.0'\n"
                 + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "1 errors, 0 warnings\n";
@@ -1142,9 +1145,30 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
+    public void testSupportLibraryNotFatal() throws Exception {
+        // In fatal-only issue mode should not be reporting these
+        lint().files(
+                gradle(""
+                        + "apply plugin: 'android'\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    compile \"com.android.support:appcompat-v7:24.2\"\n"
+                        + "    compile \"com.android.support:support-v13:24.1\"\n"
+                        + "    compile \"com.android.support:preference-v7:25.0-SNAPSHOT\"\n"
+                        + "    compile \"com.android.support:cardview-v7:24.2\"\n"
+                        + "    compile \"com.android.support:multidex:1.0.1\"\n"
+                        + "    compile \"com.android.support:support-annotations:25.0.0\"\n"
+                        + "}\n"))
+                .issues(COMPATIBILITY)
+                .vital(true)
+                .sdkHome(getMockSupportLibraryInstallation())
+                .run()
+                .expectClean();
+    }
+
     public void testPlayServiceConsistencyNonIncremental() throws Exception {
         String expected = ""
-                + "build.gradle:4: Error: All com.google.android.gms libraries must use the exact same version specification (mixing versions can lead to runtime crashes). Found versions 7.5.0, 7.3.0. Examples include com.google.android.gms:play-services-wearable:7.5.0 and com.google.android.gms:play-services-location:7.3.0 [GradleCompatible]\n"
+                + "build.gradle:4: Error: All gms/firebase libraries must use the exact same version specification (mixing versions can lead to runtime crashes). Found versions 7.5.0, 7.3.0. Examples include com.google.android.gms:play-services-wearable:7.5.0 and com.google.android.gms:play-services-location:7.3.0 [GradleCompatible]\n"
                 + "    compile 'com.google.android.gms:play-services-wearable:7.5.0'\n"
                 + "             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "    build.gradle:5: <No location-specific message\n"
@@ -1428,6 +1452,103 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 .sdkHome(getMockSupportLibraryInstallation())
                 .run()
                 .expect(expected);
+    }
+
+    public void testORequirements() {
+        String expected = ""
+                + "build.gradle:14: Error: Version must be at least 10.2.1 when targeting O [GradleCompatible]\n"
+                + "    compile 'com.google.android.gms:play-services-gcm:10.2.0'\n"
+                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "build.gradle:15: Error: Version must be at least 10.2.1 when targeting O [GradleCompatible]\n"
+                + "    compile 'com.google.firebase:firebase-messaging:10.2.0'\n"
+                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "build.gradle:16: Error: Version must be at least 0.6.0 when targeting O [GradleCompatible]\n"
+                + "    compile 'com.google.firebase:firebase-jobdispatcher:0.5.0'\n"
+                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "build.gradle:17: Error: Version must be at least 0.6.0 when targeting O [GradleCompatible]\n"
+                + "    compile 'com.google.firebase:firebase-jobdispatcher-with-gcm-dep:0.5.0'\n"
+                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "4 errors, 0 warnings\n";
+        lint().files(
+                gradle(""
+                        + "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    compileSdkVersion \"android-O\"\n"
+                        + "    buildToolsVersion \"26.0.0 rc1\"\n"
+                        + "\n"
+                        + "    defaultConfig {\n"
+                        + "        minSdkVersion 15\n"
+                        + "        targetSdkVersion \"O\"\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    compile 'com.google.android.gms:play-services-gcm:10.2.0'\n"
+                        + "    compile 'com.google.firebase:firebase-messaging:10.2.0'\n"
+                        + "    compile 'com.google.firebase:firebase-jobdispatcher:0.5.0'\n"
+                        + "    compile 'com.google.firebase:firebase-jobdispatcher-with-gcm-dep:0.5.0'\n"
+                        + "}\n"))
+                .issues(COMPATIBILITY)
+                .incremental()
+                .run()
+                .expect(expected);
+    }
+
+    public void testORequirementsNotApplicable() {
+        // targetSdkVersion < O: No check
+        lint().files(
+                gradle(""
+                        + "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    compileSdkVersion \"android-O\"\n"
+                        + "    buildToolsVersion \"26.0.0 rc1\"\n"
+                        + "\n"
+                        + "    defaultConfig {\n"
+                        + "        minSdkVersion 15\n"
+                        + "        targetSdkVersion 25\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    compile 'com.google.android.gms:play-services-gcm:10.2.0'\n"
+                        + "    compile 'com.google.firebase:firebase-messaging:10.2.0'\n"
+                        + "    compile 'com.google.firebase:firebase-jobdispatcher:0.5.0'\n"
+                        + "    compile 'com.google.firebase:firebase-jobdispatcher-with-gcm-dep:0.5.0'\n"
+                        + "}\n"))
+                .issues(COMPATIBILITY)
+                .incremental()
+                .run()
+                .expectClean();
+    }
+
+    public void testORequirementsSatisfied() {
+        // Versions > threshold: No problem
+        lint().files(
+                gradle(""
+                        + "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    compileSdkVersion \"android-O\"\n"
+                        + "    buildToolsVersion \"26.0.0 rc1\"\n"
+                        + "\n"
+                        + "    defaultConfig {\n"
+                        + "        minSdkVersion 15\n"
+                        + "        targetSdkVersion \"O\"\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    compile 'com.google.android.gms:play-services-gcm:10.2.1'\n"
+                        + "    compile 'com.google.firebase:firebase-messaging:10.2.1'\n"
+                        + "    compile 'com.google.firebase:firebase-jobdispatcher:0.6.0'\n"
+                        + "    compile 'com.google.firebase:firebase-jobdispatcher-with-gcm-dep:0.6.0'\n"
+                        + "}\n"))
+                .issues(COMPATIBILITY)
+                .incremental()
+                .run()
+                .expectClean();
     }
 
     // -------------------------------------------------------------------------------------------

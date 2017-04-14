@@ -98,6 +98,7 @@ public class TestLintTask {
     boolean allowMissingSdk;
     boolean requireCompileSdk;
     boolean runCompatChecks = true;
+    boolean vital;
 
     /** Creates a new lint test task */
     public TestLintTask() {
@@ -443,6 +444,18 @@ public class TestLintTask {
     public TestLintTask variant(String variantName) {
         ensurePreRun();
         this.variantName = variantName;
+        return this;
+    }
+
+    /**
+     * Tells lint whether it's running in "vital" (fatal-severity-only) mode
+     *
+     * @param vital whether we're checking vital only issues
+     * @return this, for constructor chaining
+     */
+    public TestLintTask vital(boolean vital) {
+        ensurePreRun();
+        this.vital = vital;
         return this;
     }
 
