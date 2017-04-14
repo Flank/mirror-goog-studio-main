@@ -21,12 +21,12 @@ namespace profiler {
 
 void SpeedConverter::Add(int64_t timestamp_ns, int64_t bytes) {
   if (timestamp_ns <= last_timestamp_ns_ || bytes < last_bytes_) {
-    return; // Ignore as this is invalid input and should never happen
+    return;  // Ignore as this is invalid input and should never happen
   }
 
   int64_t delta_bytes = bytes - last_bytes_;
-  Convert(last_timestamp_ns_, timestamp_ns, speed_, delta_bytes,
-    &speed_, &speed_time_ns_);
+  Convert(last_timestamp_ns_, timestamp_ns, speed_, delta_bytes, &speed_,
+          &speed_time_ns_);
 
   last_timestamp_ns_ = timestamp_ns;
   last_bytes_ = bytes;
@@ -39,21 +39,21 @@ void SpeedConverter::Add(int64_t timestamp_ns, int64_t bytes) {
 //      /|--
 //     / |  \--
 //    /  |     |-----|
-//   /   |     |     |\
-//  /    |     |     | \
+//   /   |     |     |\.
+//  /    |     |     | \.
 // t₀    t₁    t₂    t₃    t₄
 //
 // where the height at each time represents a speed value that makes sense of
 // the current bytes level (keeping in mind that the area under the curve
 // represents bytes transferred).
 void SpeedConverter::Convert(int64_t prev_time_ns, int64_t curr_time_ns,
-  int64_t prev_speed, int64_t bytes, int64_t* speed, int64_t* speed_time_ns) {
-
+                             int64_t prev_speed, int64_t bytes, int64_t* speed,
+                             int64_t* speed_time_ns) {
   // To visualize what's happening here:
   //
-  // |\
-  // |  \
-  // |    \
+  // |\.
+  // |  \.
+  // |    \.
   // |h₀   |h₁
   // |     |
   // t₀----t₁
@@ -74,11 +74,11 @@ void SpeedConverter::Convert(int64_t prev_time_ns, int64_t curr_time_ns,
     // Special case - |bytes| is so small, that we need to drop our speed to 0
     // at some point *before* t₁. We can simplify this case to a triangle:
     //
-    // |\
-    // | \
-    // h  \
-    // |   \
-    // |    \
+    // |\.
+    // | \.
+    // h  \.
+    // |   \.
+    // |    \.
     // t₀---t?-----t₁   // and from t? to t₁, speed is 0
     //
     // Since "A = 1/2(t?-t₀)h",
@@ -87,6 +87,5 @@ void SpeedConverter::Convert(int64_t prev_time_ns, int64_t curr_time_ns,
     *speed_time_ns = (int64_t)(2.0 * bytes / prev_speed_ns + prev_time_ns);
   }
 }
-
 
 }  // namespace profiler

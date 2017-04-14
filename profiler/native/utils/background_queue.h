@@ -41,6 +41,9 @@ class BackgroundQueue {
   // Otherwise, the number of simultaneously enqueued background tasks will be
   // limited, with older tasks removed to make way for newly enqueued ones. The
   // task that is currently running does not count against this length.
+  //
+  // Note that a max length of 0 is not supported and treated as an error. This
+  // should either be set to a positive integer or left unset.
   explicit BackgroundQueue(std::string thread_name, int32_t max_length = -1);
   ~BackgroundQueue();
 
