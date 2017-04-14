@@ -1445,9 +1445,7 @@ public abstract class TaskManager {
                                 @Override
                                 public void execute(@NonNull Jar task) {
                                     task.from(fileCollection);
-                                    task.from(
-                                            scope.getVariantData()
-                                                    .getGeneratedBytecodeCollection());
+                                    task.from(scope.getVariantData().getAllGeneratedBytecode());
                                     task.setDestinationDir(dest);
                                     task.setArchiveName("classes.jar");
                                 }
@@ -1481,8 +1479,7 @@ public abstract class TaskManager {
                         OriginalStream.builder(project, "generated-bytecode")
                                 .addContentType(DefaultContentType.CLASSES)
                                 .addScope(Scope.PROJECT)
-                                .setFileCollection(
-                                        scope.getVariantData().getGeneratedBytecodeCollection())
+                                .setFileCollection(scope.getVariantData().getAllGeneratedBytecode())
                                 .build());
     }
 

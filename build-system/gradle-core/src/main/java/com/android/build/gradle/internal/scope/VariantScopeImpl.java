@@ -684,30 +684,20 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @Override
     @NonNull
-    public FileCollection getJavaCompileClasspath(
-            @NonNull ArtifactType classesType, boolean includeGeneratedBytecode) {
-        FileCollection mainCollection =
-                getArtifactFileCollection(COMPILE_CLASSPATH, ALL, classesType);
-
-        if (includeGeneratedBytecode) {
-            mainCollection = mainCollection.plus(getVariantData().getGeneratedBytecodeCollection());
-        }
-
-        return mainCollection;
+    public FileCollection getJavaClasspath(
+            @NonNull ConsumedConfigType configType, @NonNull ArtifactType classesType) {
+        return getJavaClasspath(configType, classesType, null);
     }
 
     @Override
     @NonNull
-    public FileCollection getJavaRuntimeClasspath(
-            @NonNull ArtifactType classesType, boolean includeGeneratedBytecode) {
-        FileCollection mainCollection =
-                getArtifactFileCollection(RUNTIME_CLASSPATH, ALL, classesType);
+    public FileCollection getJavaClasspath(
+            @NonNull ConsumedConfigType configType,
+            @NonNull ArtifactType classesType,
+            @Nullable Object generatedBytecodeKey) {
+        FileCollection mainCollection = getArtifactFileCollection(configType, ALL, classesType);
 
-        if (includeGeneratedBytecode) {
-            mainCollection = mainCollection.plus(getVariantData().getGeneratedBytecodeCollection());
-        }
-
-        return mainCollection;
+        return mainCollection.plus(getVariantData().getGeneratedBytecode(generatedBytecodeKey));
     }
 
     @Override
@@ -1896,7 +1886,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                         // code from the tested variant manually.
                         ConfigurableFileCollection fc = getProject().files();
                         fc.from(testedVariantData.getScope().getOutputs(TaskOutputType.JAVAC));
-                        fc.from(testedVariantData.getGeneratedBytecodeCollection());
+                        fc.from(testedVariantData.getAllGeneratedBytecode());
                         testedFC = fc;
                     } else {
                         testedFC = testedVariantData.getScope().getInternalArtifact(artifactType);

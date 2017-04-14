@@ -21,7 +21,6 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
-import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.build.gradle.tasks.AidlCompile;
@@ -288,15 +287,19 @@ public abstract class BaseVariantImpl implements BaseVariant {
     }
 
     @Override
-    public void registerGeneratedBytecode(@NonNull FileCollection fileCollection) {
-        getVariantData().registerGeneratedBytecode(fileCollection);
+    public Object registerGeneratedBytecode(@NonNull FileCollection fileCollection) {
+        return getVariantData().registerGeneratedBytecode(fileCollection);
     }
 
     @NonNull
     @Override
-    public FileCollection getCompileClasspath() {
-        final VariantScope scope = getVariantData().getScope();
-        return scope.getJavaCompileClasspath(AndroidArtifacts.ArtifactType.CLASSES, false);
+    public FileCollection getCompileClasspath(@Nullable Object generatorKey) {
+        return getVariantData()
+                .getScope()
+                .getJavaClasspath(
+                        AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
+                        AndroidArtifacts.ArtifactType.CLASSES,
+                        generatorKey);
     }
 
     @Override
