@@ -90,7 +90,7 @@ public class TestLintTask {
     EnumSet<Scope> customScope;
     public boolean forceSymbolResolutionErrors;
     TestLintClient client;
-    boolean skipExtraTokenChecks;
+    boolean skipExtraTokenChecks = true;
     Detector detector;
     File[] customRules;
     boolean ignoreUnknownGradleConstructs;
