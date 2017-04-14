@@ -7,7 +7,6 @@ import com.android.build.gradle.internal.dsl.CoreAnnotationProcessorOptions;
 import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.model.SyncIssue;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
@@ -45,7 +44,6 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
 
     @Override
     public void execute(@NonNull final AndroidJavaCompile javacTask) {
-        final BaseVariantData testedVariantData = scope.getTestedVariantData();
         scope.getVariantData().javacTask = javacTask;
         javacTask.compileSdkVersion = scope.getGlobalScope().getExtension().getCompileSdkVersion();
         javacTask.mBuildContext = scope.getInstantRunBuildContext();
@@ -73,7 +71,7 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
                 "classpath",
                 () ->
                         scope.getPreJavacClasspath()
-                                .plus(scope.getVariantData().getGeneratedBytecodeCollection()));
+                                .plus(scope.getVariantData().getAllGeneratedBytecode()));
 
         javacTask.setDestinationDir(scope.getJavaOutputDir());
 

@@ -80,7 +80,14 @@ public class CompilerPlugin implements Plugin<Project> {
                                             + "/generated/bytecode/"
                                             + variant.getDirName());
 
-                    // create the task.
+                    // create the file collection that contains the result. We'll add the task
+                    // dependency later when we have it
+                    ConfigurableFileCollection fc = project.files(outputDir);
+
+                    // and register it with the variant, getting the key in return
+                    Object key = variant.registerGeneratedBytecode(fc);
+
+                    // create the task, querying the classpath with the provided key.
                     BytecodeGeneratingTask t =
                             project.getTasks()
                                     .create(
@@ -89,18 +96,14 @@ public class CompilerPlugin implements Plugin<Project> {
                                             task -> {
                                                 task.setSourceJar(sourceJar);
                                                 task.setOutputDir(outputDir);
-                                                task.setClasspath(variant.getCompileClasspath());
+                                                task.setClasspath(variant.getCompileClasspath(key));
                                             });
+
+                    // add the task dependency
+                    fc.builtBy(t);
 
                     // make the task run after the variant's prebuild task
                     t.dependsOn(variant.getPreBuild());
-
-                    // now create the file collection that contains the result, with
-                    // the task dependency
-                    ConfigurableFileCollection fc = project.files(outputDir).builtBy(t);
-
-                    // and register it with the variant
-                    variant.registerGeneratedBytecode(fc);
                 });
     }
 }

@@ -23,6 +23,8 @@ import com.android.build.gradle.internal.dsl.CoreAnnotationProcessorOptions;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.BaseTask;
+import com.android.build.gradle.internal.variant.BaseVariantData;
+import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.tasks.factory.AbstractCompilesUtil;
 import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
@@ -174,17 +176,14 @@ public class JavaPreCompileTask extends BaseTask {
                     scope.getVariantConfiguration()
                             .getJavaCompileOptions()
                             .getAnnotationProcessorOptions();
+            BaseVariantData<? extends BaseVariantOutputData> variantData = scope.getVariantData();
             task.annotationProcessorConfiguration =
-                    scope.getVariantData()
-                            .getVariantDependency()
-                            .getAnnotationProcessorConfiguration();
+                    variantData.getVariantDependency().getAnnotationProcessorConfiguration();
             task.compileClasspaths =
                     InputSupplier.from(
                             () ->
                                     scope.getPreJavacClasspath()
-                                            .plus(
-                                                    scope.getVariantData()
-                                                            .getGeneratedBytecodeCollection()));
+                                            .plus(variantData.getAllGeneratedBytecode()));
         }
     }
 }

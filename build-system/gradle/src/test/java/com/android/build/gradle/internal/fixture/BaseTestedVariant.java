@@ -183,8 +183,8 @@ public interface BaseTestedVariant extends BaseVariant, TestedVariant {
 
         @NonNull
         @Override
-        public FileCollection getCompileClasspath() {
-            return variant.getCompileClasspath();
+        public FileCollection getCompileClasspath(Object key) {
+            return variant.getCompileClasspath(key);
         }
 
         @NonNull
@@ -260,8 +260,8 @@ public interface BaseTestedVariant extends BaseVariant, TestedVariant {
         }
 
         @Override
-        public void registerGeneratedBytecode(@NonNull FileCollection fileCollection) {
-            variant.registerGeneratedBytecode(fileCollection);
+        public Object registerGeneratedBytecode(@NonNull FileCollection fileCollection) {
+            return variant.registerGeneratedBytecode(fileCollection);
         }
 
         @Override

@@ -1317,8 +1317,7 @@ public abstract class TaskManager {
                         OriginalStream.builder(project, "generated-bytecode")
                                 .addContentType(DefaultContentType.CLASSES)
                                 .addScope(Scope.PROJECT)
-                                .setFileCollection(
-                                        scope.getVariantData().getGeneratedBytecodeCollection())
+                                .setFileCollection(scope.getVariantData().getAllGeneratedBytecode())
                                 .build());
     }
 

@@ -38,6 +38,7 @@ import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
+import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Sync;
@@ -264,17 +265,28 @@ abstract class BaseVariantImpl implements BaseVariant {
     }
 
     @Override
-    public void registerGeneratedBytecode(@NonNull FileCollection fileCollection) {
-        getVariantData().registerGeneratedBytecode(fileCollection);
+    public Object registerGeneratedBytecode(@NonNull FileCollection fileCollection) {
+        return getVariantData().registerGeneratedBytecode(fileCollection);
     }
 
     @NonNull
     @Override
-    public FileCollection getCompileClasspath() {
+    public FileCollection getCompileClasspath(@Nullable Object key) {
+        // this needs to be dynamic since not everything is setup when this is called
         final VariantScope scope = getVariantData().getScope();
-        return scope.getGlobalScope()
-                .getProject()
-                .files((Callable<FileCollection>) () -> scope.getPreJavacClasspath());
+        final Project project = scope.getGlobalScope().getProject();
+        return project.files(
+                (Callable<FileCollection>)
+                        () -> {
+                            FileCollection preJavac = scope.getPreJavacClasspath();
+
+                            if (key != null) {
+                                return preJavac.plus(
+                                        getVariantData().getGeneratedBytecodeUpTo(key));
+                            }
+
+                            return preJavac.plus(getVariantData().getAllGeneratedBytecode());
+                        });
     }
 
     @Override
