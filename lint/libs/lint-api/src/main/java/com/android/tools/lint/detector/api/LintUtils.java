@@ -334,12 +334,18 @@ public class LintUtils {
      * @param errorCount   the count of errors
      * @param warningCount the count of warnings
      * @param comma        if true, use a comma to separate messages, otherwise "and"
+     * @param capitalize
      * @return a description string
      */
     @NonNull
-    public static String describeCounts(int errorCount, int warningCount, boolean comma) {
+    public static String describeCounts(int errorCount, int warningCount, boolean comma,
+            boolean capitalize) {
         if (errorCount == 0 && warningCount == 0) {
-            return "No errors or warnings";
+            if (capitalize) {
+                return "No errors or warnings";
+            } else {
+                return "no errors or warnings";
+            }
         }
         String errors = pluralize(errorCount, "error");
         String warnings = pluralize(warningCount, "warning");

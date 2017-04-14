@@ -130,7 +130,7 @@ public class LintBaseline {
             // Keep in sync with isFilteredMessage() below
             String message = String.format("%1$s were filtered out because "
                             + "they were listed in the baseline file, %2$s",
-                    LintUtils.describeCounts(foundErrorCount, foundWarningCount, false),
+                    LintUtils.describeCounts(foundErrorCount, foundWarningCount, false, true),
                     getDisplayPath(project, baselineFile));
             client.report(new Context(driver, project, project, baselineFile),
                     IssueRegistry.BASELINE,

@@ -257,7 +257,8 @@ public class Lint extends BaseTask {
             if (baselineErrorCount > 0 || baselineWarningCount > 0) {
                 System.out.println(String.format("%1$s were filtered out because "
                                 + "they were listed in the baseline file, %2$s\n",
-                        LintUtils.describeCounts(baselineErrorCount, baselineWarningCount, false),
+                        LintUtils.describeCounts(baselineErrorCount, baselineWarningCount, false,
+                                true),
                         baselineFile));
             }
             if (fixedCount > 0) {

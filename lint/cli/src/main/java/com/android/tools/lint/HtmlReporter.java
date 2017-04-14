@@ -143,12 +143,13 @@ public class HtmlReporter extends Reporter {
                 new Date().toString()));
         writer.write("<br/>\n");
         writer.write(String.format("%1$s found",
-                describeCounts(stats.errorCount, stats.warningCount, false)));
+                describeCounts(stats.errorCount, stats.warningCount, false, true)));
         if (stats.baselineErrorCount > 0 || stats.baselineWarningCount > 0) {
             File baselineFile = flags.getBaselineFile();
             assert baselineFile != null;
             writer.write(String.format(" (%1$s filtered by baseline %2$s)",
-                    describeCounts(stats.baselineErrorCount, stats.baselineWarningCount, false),
+                    describeCounts(stats.baselineErrorCount, stats.baselineWarningCount, false,
+                            true),
                     baselineFile.getName()));
         }
         writer.write(":");
@@ -814,13 +815,14 @@ public class HtmlReporter extends Reporter {
                 new Date().toString()));
         writer.write("<br/>\n");
         appendEscapedText(String.format("%1$s found",
-                describeCounts(stats.errorCount, stats.warningCount, false)));
+                describeCounts(stats.errorCount, stats.warningCount, false, true)));
         if (stats.baselineErrorCount > 0 || stats.baselineWarningCount > 0) {
             File baselineFile = flags.getBaselineFile();
             assert baselineFile != null;
             appendEscapedText(String.format(" (%1$ss filtered by "
                             + "baseline %2$s)",
-                    describeCounts(stats.baselineErrorCount, stats.baselineWarningCount, false),
+                    describeCounts(stats.baselineErrorCount, stats.baselineWarningCount, false,
+                            true),
                     baselineFile.getName()));
         }
         writer.write(":\n<br/><br/>\n");

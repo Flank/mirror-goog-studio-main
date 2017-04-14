@@ -821,7 +821,7 @@ public class MaterialHtmlReporter extends Reporter {
                 + "  <header class=\"mdl-layout__header\">\n"
                 + "    <div class=\"mdl-layout__header-row\">\n"
                 + "      <span class=\"mdl-layout-title\">" + title + ": "
-                + LintUtils.describeCounts(stats.errorCount, stats.warningCount, false)
+                + LintUtils.describeCounts(stats.errorCount, stats.warningCount, false, true)
                 + "</span>\n"
                 + "      <div class=\"mdl-layout-spacer\"></div>\n"
                 + "      <nav class=\"mdl-navigation mdl-layout--large-screen-only\">\n");
