@@ -298,16 +298,19 @@ public class ServiceCastDetector extends Detector implements UastScanner {
 
         String message = "The WIFI_SERVICE must be looked up on the "
                 + "Application context or memory will leak on devices < Android N. ";
+        String[] extraObject;
         if (call.getReceiver() != null) {
             String qualifier = call.getReceiver().asSourceString();
             message += String.format("Try changing `%1$s` to `%1$s.getApplicationContext()`",
                     qualifier);
+            extraObject = new String[] {qualifier, qualifier + ".getApplicationContext()"};
         } else {
             String qualifier =  call.getMethodName();
             message += String.format("Try changing `%1$s` to `getApplicationContext().%1$s`",
                     qualifier);
+            extraObject = new String[] {qualifier, "getApplicationContext()." + qualifier};
         }
-        context.report(issue, call, context.getLocation(call), message);
+        context.report(issue, call, context.getLocation(call), message, extraObject);
     }
 
     private static boolean isClipboard(@NonNull String cls) {
