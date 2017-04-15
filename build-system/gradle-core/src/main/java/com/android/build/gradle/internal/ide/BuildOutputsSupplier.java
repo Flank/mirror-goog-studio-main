@@ -93,7 +93,8 @@ public class BuildOutputsSupplier implements BuildOutputSupplier<Collection<Buil
             VariantOutput.OutputType fileOutputType =
                     taskOutputType == TaskOutputHolder.TaskOutputType.AAR
                                     || taskOutputType == TaskOutputHolder.TaskOutputType.APK
-                                    || taskOutputType == TaskOutputHolder.TaskOutputType.APKB
+                                    || taskOutputType
+                                            == TaskOutputHolder.TaskOutputType.INSTANTAPP_BUNDLE
                             ? VariantOutput.OutputType.MAIN
                             : VariantOutput.OutputType.SPLIT;
             outputs.add(

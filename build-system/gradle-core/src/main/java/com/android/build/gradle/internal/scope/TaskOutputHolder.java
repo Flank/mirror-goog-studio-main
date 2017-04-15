@@ -55,7 +55,7 @@ public interface TaskOutputHolder {
         FULL_APK,
         APK,
         AAR,
-        APKB,
+        INSTANTAPP_BUNDLE,
         SPLIT_LIST
     }
 

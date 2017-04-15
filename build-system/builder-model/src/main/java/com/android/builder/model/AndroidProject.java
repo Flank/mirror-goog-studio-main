@@ -131,7 +131,7 @@ public interface AndroidProject {
     int PROJECT_TYPE_LIBRARY = 1;
     int PROJECT_TYPE_TEST = 2;
     @Deprecated int PROJECT_TYPE_ATOM = 3;
-    @Deprecated int PROJECT_TYPE_INSTANTAPP = 4;
+    int PROJECT_TYPE_INSTANTAPP = 4;
     int PROJECT_TYPE_FEATURE = 5;
 
     /**

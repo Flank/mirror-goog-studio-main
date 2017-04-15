@@ -73,6 +73,9 @@ public class ApiObjectFactory {
         BaseVariantImpl variantApi =
                 variantFactory.createVariantApi(
                         instantiator, androidBuilder, variantData, readOnlyObjectProvider);
+        if (variantApi == null) {
+            return null;
+        }
 
         if (variantFactory.hasTestScope()) {
             TestVariantData androidTestVariantData =

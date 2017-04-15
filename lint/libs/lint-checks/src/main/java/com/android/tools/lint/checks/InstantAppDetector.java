@@ -129,17 +129,14 @@ public class InstantAppDetector extends ResourceXmlDetector implements UastScann
         return project != mainProject && isInstantApp(project);
     }
 
-    /**
-     * Checks whether the the given project is an instant app (or atom) module
-     */
+    /** Checks whether the the given project is an instant app module */
     private static boolean isInstantApp(@NonNull Project project) {
         AndroidProject model = project.getGradleProjectModel();
         if (model == null) {
             return false;
         }
         int type = model.getProjectType();
-        return type == AndroidProject.PROJECT_TYPE_ATOM ||
-                type == AndroidProject.PROJECT_TYPE_INSTANTAPP;
+        return type == AndroidProject.PROJECT_TYPE_INSTANTAPP;
     }
 
     @Override

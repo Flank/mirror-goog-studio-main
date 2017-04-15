@@ -29,6 +29,7 @@ public enum VariantType {
     DEFAULT(false, GradleBuildVariant.VariantType.APPLICATION),
     LIBRARY(true, GradleBuildVariant.VariantType.LIBRARY),
     FEATURE(true, GradleBuildVariant.VariantType.FEATURE),
+    INSTANTAPP(false, GradleBuildVariant.VariantType.INSTANTAPP),
     ANDROID_TEST(
             "androidTest",
             "AndroidTest",

@@ -558,7 +558,13 @@ public class ModelBuilder implements ToolingModelBuilder {
                                 new File(
                                         variantData.getScope().getGlobalScope().getApkLocation(),
                                         variantData.getVariantConfiguration().getDirName())));
-
+            case INSTANTAPP:
+                return new BuildOutputsSupplier(
+                        ImmutableList.of(VariantScope.TaskOutputType.INSTANTAPP_BUNDLE),
+                        ImmutableList.of(
+                                new File(
+                                        variantData.getScope().getGlobalScope().getApkLocation(),
+                                        variantData.getVariantConfiguration().getDirName())));
             case LIBRARY:
                 ApkInfo mainApkInfo =
                         ApkInfo.of(VariantOutput.OutputType.MAIN, ImmutableList.of(), 0);
@@ -601,6 +607,8 @@ public class ModelBuilder implements ToolingModelBuilder {
                                         new File(
                                                 variantData.getScope().getManifestOutputDirectory(),
                                                 SdkConstants.ANDROID_MANIFEST_XML))));
+            case INSTANTAPP:
+                return new BuildOutputsSupplier(ImmutableList.of(), ImmutableList.of());
             default:
                 throw new RuntimeException("Unhandled build type " + variantData.getType());
         }
