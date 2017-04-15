@@ -177,11 +177,11 @@ public class LintCliClient extends LintClient {
 
         if (!flags.isQuiet() && !hasConsoleOutput) {
             System.out.print(String.format("Lint found %1$s",
-                    LintUtils.describeCounts(errorCount, warningCount, true)));
+                    LintUtils.describeCounts(errorCount, warningCount, true, false)));
             if (baselineErrorCount > 0 || baselineWarningCount > 0) {
                 System.out.print(String.format(" (%1$s filtered by baseline %2$s)",
                         LintUtils.describeCounts(stats.baselineErrorCount,
-                                stats.baselineWarningCount, true),
+                                stats.baselineWarningCount, true, true),
                         flags.getBaselineFile().getName()));
             }
             System.out.println();

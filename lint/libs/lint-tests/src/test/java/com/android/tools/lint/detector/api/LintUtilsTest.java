@@ -118,17 +118,18 @@ public class LintUtilsTest extends TestCase {
     }
 
     public void testDescribeCounts() throws Exception {
-        assertThat(LintUtils.describeCounts(0, 0, true)).isEqualTo("No errors or warnings");
-        assertThat(LintUtils.describeCounts(0, 1, true)).isEqualTo("1 warning");
-        assertThat(LintUtils.describeCounts(1, 0, true)).isEqualTo("1 error");
-        assertThat(LintUtils.describeCounts(0, 2, true)).isEqualTo("2 warnings");
-        assertThat(LintUtils.describeCounts(2, 0, true)).isEqualTo("2 errors");
-        assertThat(LintUtils.describeCounts(2, 1, false)).isEqualTo("2 errors and 1 warning");
-        assertThat(LintUtils.describeCounts(1, 2, false)).isEqualTo("1 error and 2 warnings");
-        assertThat(LintUtils.describeCounts(5, 4, false)).isEqualTo("5 errors and 4 warnings");
-        assertThat(LintUtils.describeCounts(2, 1, true)).isEqualTo("2 errors, 1 warning");
-        assertThat(LintUtils.describeCounts(1, 2, true)).isEqualTo("1 error, 2 warnings");
-        assertThat(LintUtils.describeCounts(5, 4, true)).isEqualTo("5 errors, 4 warnings");
+        assertThat(LintUtils.describeCounts(0, 0, true, true)).isEqualTo("No errors or warnings");
+        assertThat(LintUtils.describeCounts(0, 0, true, false)).isEqualTo("no errors or warnings");
+        assertThat(LintUtils.describeCounts(0, 1, true, true)).isEqualTo("1 warning");
+        assertThat(LintUtils.describeCounts(1, 0, true, true)).isEqualTo("1 error");
+        assertThat(LintUtils.describeCounts(0, 2, true, true)).isEqualTo("2 warnings");
+        assertThat(LintUtils.describeCounts(2, 0, true, true)).isEqualTo("2 errors");
+        assertThat(LintUtils.describeCounts(2, 1, false, true)).isEqualTo("2 errors and 1 warning");
+        assertThat(LintUtils.describeCounts(1, 2, false, true)).isEqualTo("1 error and 2 warnings");
+        assertThat(LintUtils.describeCounts(5, 4, false, true)).isEqualTo("5 errors and 4 warnings");
+        assertThat(LintUtils.describeCounts(2, 1, true, true)).isEqualTo("2 errors, 1 warning");
+        assertThat(LintUtils.describeCounts(1, 2, true, true)).isEqualTo("1 error, 2 warnings");
+        assertThat(LintUtils.describeCounts(5, 4, true, true)).isEqualTo("5 errors, 4 warnings");
     }
 
     public void testEndsWith() throws Exception {
