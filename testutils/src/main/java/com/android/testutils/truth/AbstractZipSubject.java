@@ -137,6 +137,7 @@ public abstract class AbstractZipSubject<S extends Subject<S, T>, T extends Zip>
         }
     }
 
+    @Override
     public final void close() {
         try {
             getSubject().close();
