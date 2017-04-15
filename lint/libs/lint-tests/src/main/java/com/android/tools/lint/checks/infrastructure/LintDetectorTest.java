@@ -67,6 +67,7 @@ import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
@@ -403,7 +404,6 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
     // TODO: Configure whether to show text summary or HTML;
     // make a result object so you can assert which output format to use,
     // which isssues to include
-
 
     /**
      * Run lint on the given files when constructed as a separate project
@@ -903,7 +903,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                 @NonNull Location location,
                 @NonNull String message,
                 @NonNull TextFormat format,
-                @Nullable Object quickfixData) {
+                @Nullable LintFix fix) {
             assertNotNull(location);
 
             if (ignoreSystemErrors() && issue == IssueRegistry.LINT_ERROR) {
@@ -936,7 +936,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                 }
             }
 
-            super.report(context, issue, severity, location, message, format, quickfixData);
+            super.report(context, issue, severity, location, message, format, fix);
 
             // Make sure errors are unique!
             Warning prev = null;

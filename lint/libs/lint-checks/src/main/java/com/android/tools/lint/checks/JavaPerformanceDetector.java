@@ -37,6 +37,7 @@ import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -231,8 +232,15 @@ public class JavaPerformanceDetector extends Detector implements Detector.UastSc
                         //&& node.astTypeReference().astParts().size() == 1
                         && node.getValueArgumentCount() == 1) {
                     String argument = node.getValueArguments().get(0).asSourceString();
+
+                    String replacedType = typeName.substring(typeName.lastIndexOf('.') + 1);
+                    LintFix fix = fix()
+                            .name("Replace with valueOf()").replace()
+                            .pattern("(new\\s+" + replacedType + ")")
+                            .with(replacedType + ".valueOf")
+                            .build();
                     mContext.report(USE_VALUE_OF, node, mContext.getLocation(node),
-                            getUseValueOfErrorMessage(typeName, argument));
+                            getUseValueOfErrorMessage(typeName, argument), fix);
                 }
             }
 

@@ -24,6 +24,7 @@ import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
@@ -128,8 +129,6 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
     private static final String ATTR_CLEARTEXT_TRAFFIC_PERMITTED =
             "cleartextTrafficPermitted";
 
-    private static final String INVALID_DIGEST_ALGORITHM =
-            "Invalid digest algorithm. Supported digests: `%1$s`";
     private static final String PIN_DIGEST_ALGORITHM = "SHA-256";
     // SHA 256 bit = 32 bytes
     private static final int PIN_DECODED_DIGEST_LEN_SHA_256 = 32;
@@ -335,8 +334,16 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
                     Attr digestAttr = child.getAttributeNode(ATTR_DIGEST);
                     if (!PIN_DIGEST_ALGORITHM.equalsIgnoreCase(digestAttr.getValue())) {
                         String values = LintUtils.formatList(getSupportedPinDigestAlgorithms(), 2);
+                        LintFix.GroupBuilder fixBuilder = fix().group();
+                        for (String algorithm : getSupportedPinDigestAlgorithms()) {
+                            fixBuilder.add(fix()
+                                    .name(String.format("Set digest to \"%1$s\"", algorithm))
+                                    .replace().all().with(algorithm).build());
+                        }
+                        LintFix fix = fixBuilder.build();
+
                         context.report(ISSUE, digestAttr, context.getValueLocation(digestAttr),
-                                String.format(INVALID_DIGEST_ALGORITHM, values));
+                                String.format("Invalid digest algorithm. Supported digests: `%1$s`", values), fix);
                     }
                 } else {
                     checkForTyposInAttributes(context, child, ATTR_DIGEST, true);
@@ -595,10 +602,5 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
      */
     public static List<String> getSupportedPinDigestAlgorithms() {
         return Collections.singletonList(PIN_DIGEST_ALGORITHM);
-    }
-
-    @SuppressWarnings("unused")
-    public static boolean isInvalidDigestAlgorithmMessage(String message) {
-        return message.startsWith("Invalid digest algorithm");
     }
 }

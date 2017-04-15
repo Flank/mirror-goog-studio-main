@@ -125,7 +125,7 @@ public class Location {
      * <p>
      * This attribute is ignored for the primary location for an issue (e.g. the location
      * passed to
-     * {@link LintClient#report(Context, Issue, Severity, Location, String, TextFormat, Object)},
+     * {@link LintClient#report(Context, Issue, Severity, Location, String, TextFormat, LintFix)},
      * and it applies for all the secondary locations linked from that location.
      *
      * @return whether this secondary location should be shown on its own in the editor.

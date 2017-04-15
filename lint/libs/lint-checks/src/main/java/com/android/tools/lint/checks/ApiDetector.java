@@ -88,7 +88,6 @@ import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
-import com.android.tools.lint.detector.api.QuickfixData;
 import com.android.tools.lint.detector.api.ResourceContext;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
@@ -2159,7 +2158,7 @@ public class ApiDetector extends ResourceXmlDetector
             if (isConditional != null) {
                 String message = (isConditional ? "Unnecessary; SDK_INT is always >= " : "Unnecessary; SDK_INT is never < ") + minSdk;
                 context.report(OBSOLETE_SDK, binary, context.getLocation(binary),
-                        message, isConditional);
+                        message, fix().map(isConditional).build());
             }
         }
     }
@@ -2180,7 +2179,7 @@ public class ApiDetector extends ResourceXmlDetector
                             + "`minSdkVersion` is %2$s. Merge all the resources in this folder "
                             + "into `%3$s`.",
                             folderVersion, minSdkVersion.getApiString(), newFolderName),
-                    QuickfixData.create(context.file, newFolderName, minSdkVersion));
+                    fix().map(context.file, newFolderName, minSdkVersion).build());
         }
     }
 

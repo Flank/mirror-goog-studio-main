@@ -26,7 +26,7 @@ public class CommentDetectorTest extends AbstractCheckTest {
         return new CommentDetector();
     }
 
-    public void test() throws Exception {
+    public void testJava() throws Exception {
         if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
             return;
         }
@@ -62,7 +62,16 @@ public class CommentDetectorTest extends AbstractCheckTest {
                         + "    String x = \"STOPSHIP\"; // OK\n"
                         + "}\n"))
                 .run()
-                .expect(expected);
+                .expect(expected)
+                .expectFixDiffs(""
+                        + "Fix for src/test/pkg/Hidden.java line 10: Remove STOPSHIP:\n"
+                        + "@@ -11 +11\n"
+                        + "-     // STOPSHIP\n"
+                        + "+     // \n"
+                        + "Fix for src/test/pkg/Hidden.java line 11: Remove STOPSHIP:\n"
+                        + "@@ -12 +12\n"
+                        + "-     /* We must STOPSHIP! */\n"
+                        + "+     /* We must ! */\n");
     }
 
     public void test2() throws Exception {
@@ -126,6 +135,11 @@ public class CommentDetectorTest extends AbstractCheckTest {
                         + "    android:layout_height=\"0dip\"\n"
                         + "    android:visibility=\"gone\" />"))
                 .run()
-                .expect(expected);
+                .expect(expected)
+                .expectFixDiffs(""
+                        + "Fix for res/layout/foo.xml line 0: Remove STOPSHIP:\n"
+                        + "@@ -1 +1\n"
+                        + "- <!-- STOPSHIP implement this first -->\n"
+                        + "+ <!-- implement this first -->\n");
     }
 }

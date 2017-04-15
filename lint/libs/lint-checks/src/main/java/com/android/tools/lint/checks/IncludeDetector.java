@@ -27,13 +27,12 @@ import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
@@ -106,17 +105,15 @@ public class IncludeDetector extends LayoutDetector {
                             "Layout parameter `%1$s` ignored unless %2$s on `<include>` tag",
                             name, condition);
 
-                    // Ror quickfix in the IDE
-                    List<String> missing;
-                    if (!hasWidth && !hasHeight) {
-                        missing = Arrays.asList(ATTR_LAYOUT_WIDTH, ATTR_LAYOUT_HEIGHT);
-                    } else if (!hasWidth) {
-                        missing = Collections.singletonList(ATTR_LAYOUT_WIDTH);
-                    } else {
-                        missing = Collections.singletonList(ATTR_LAYOUT_HEIGHT);
+                    LintFix.GroupBuilder fixes = fix().group();
+                    if (!hasWidth) {
+                        fixes.add(fix().set(ANDROID_URI, ATTR_LAYOUT_WIDTH, "").build());
+                    }
+                    if (!hasHeight) {
+                        fixes.add(fix().set(ANDROID_URI, ATTR_LAYOUT_HEIGHT, "").build());
                     }
                     context.report(ISSUE, element, context.getLocation(attribute),
-                            message, missing);
+                            message, fixes.build());
                 }
             }
         }

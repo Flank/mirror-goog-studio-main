@@ -24,6 +24,7 @@ import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -100,8 +101,9 @@ public class ReadParcelableDetector extends Detector implements UastScanner {
                             + "will not work if you are restoring your own classes. Consider "
                             + "using for example `%1$s(getClass().getClassLoader())` instead.",
                     node.getMethodName());
+            LintFix fix = createQuickfixData(")");
             Location location = context.getCallLocation(node, false, true);
-            context.report(ISSUE, node, location, message);
+            context.report(ISSUE, node, location, message, fix);
         } else if (argumentCount == 1) {
             UExpression parameter = expressions.get(0);
             if (UastLiteralUtils.isNullLiteral(parameter)) {
@@ -109,8 +111,17 @@ public class ReadParcelableDetector extends Detector implements UastScanner {
                         + "will not work if you are restoring your own classes. Consider "
                         + "using for example `getClass().getClassLoader()` instead.";
                 Location location = context.getCallLocation(node, false, true);
-                context.report(ISSUE, node, location, message);
+                LintFix fix = createQuickfixData("null)");
+                context.report(ISSUE, node, location, message, fix);
             }
         }
+    }
+
+    @NonNull
+    private static LintFix createQuickfixData(String parameter) {
+        return fix()
+                .name("Use getClass().getClassLoader()").replace().text(parameter)
+                .with("getClass().getClassLoader())")
+                .build();
     }
 }

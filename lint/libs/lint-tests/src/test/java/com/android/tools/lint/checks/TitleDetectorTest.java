@@ -26,19 +26,35 @@ public class TitleDetectorTest extends AbstractCheckTest {
     }
 
     public void test() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(""
+        String expected = ""
                 + "res/menu/titles.xml:3: Error: Menu items should specify a title [MenuTitle]\n"
                 + "    <item android:id=\"@+id/action_bar_progress_spinner\"\n"
                 + "    ^\n"
                 + "res/menu/titles.xml:12: Error: Menu items should specify a title [MenuTitle]\n"
                 + "    <item android:id=\"@+id/menu_plus_one\"\n"
                 + "    ^\n"
-                + "2 errors, 0 warnings\n",
-
-            lintProject(
+                + "2 errors, 0 warnings\n";
+        //noinspection all // Sample code
+        lint().files(
                     manifest().minSdk(14),
-                    mTitles));
+                    mTitles)
+                .run()
+                .expect(expected)
+                .verifyFixes().window(1).expectFixDiffs(""
+                + "Fix for res/menu/titles.xml line 2: Set title:\n"
+                + "@@ -9 +9\n"
+                + "          android:selectableItemBackground=\"@null\"\n"
+                + "-         android:showAsAction=\"always\"/>\n"
+                + "+         android:showAsAction=\"always\"\n"
+                + "+         android:title=\"|\"/>\n"
+                + "      <item\n"
+                + "Fix for res/menu/titles.xml line 11: Set title:\n"
+                + "@@ -18 +18\n"
+                + "          android:icon=\"@drawable/ic_menu_plus1\"\n"
+                + "-         android:showAsAction=\"always\"/>\n"
+                + "+         android:showAsAction=\"always\"\n"
+                + "+         android:title=\"|\"/>\n"
+                + "  \n");
     }
 
     public void testOk() throws Exception {

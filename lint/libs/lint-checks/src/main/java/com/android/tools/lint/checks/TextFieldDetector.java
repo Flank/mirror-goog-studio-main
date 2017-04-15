@@ -36,6 +36,7 @@ import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
@@ -135,8 +136,9 @@ public class TextFieldDetector extends LayoutDetector {
                 return;
             }
 
+            LintFix fix = fix().set(ANDROID_URI, ATTR_INPUT_TYPE, "").caretBegin().build();
             context.report(ISSUE, element, context.getLocation(element),
-                    "This text field does not specify an `inputType` or a `hint`");
+                    "This text field does not specify an `inputType` or a `hint`", fix);
             return;
         }
 

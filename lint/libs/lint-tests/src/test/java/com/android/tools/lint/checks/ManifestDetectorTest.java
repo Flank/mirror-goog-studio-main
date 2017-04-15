@@ -190,39 +190,46 @@ public class ManifestDetectorTest extends AbstractCheckTest {
     }
 
     public void testOldTargetSdk() throws Exception {
-        mEnabled = Collections.singleton(ManifestDetector.TARGET_NEWER);
-        //noinspection all // Sample code
-        assertEquals(""
+        String expected = ""
                 + "AndroidManifest.xml:7: Warning: Not targeting the latest versions of Android; compatibility modes apply. Consider testing and updating this version. Consult the android.os.Build.VERSION_CODES javadoc for details. [OldTargetApi]\n"
                 + "    <uses-sdk android:minSdkVersion=\"10\" android:targetSdkVersion=\"14\" />\n"
                 + "                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "0 errors, 1 warnings\n",
-            lintProject(
-                    xml("AndroidManifest.xml", ""
-                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                            + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                            + "    package=\"test.bytecode\"\n"
-                            + "    android:versionCode=\"1\"\n"
-                            + "    android:versionName=\"1.0\" >\n"
-                            + "\n"
-                            + "    <uses-sdk android:minSdkVersion=\"10\" android:targetSdkVersion=\"14\" />\n"
-                            + "\n"
-                            + "    <application\n"
-                            + "        android:icon=\"@drawable/ic_launcher\"\n"
-                            + "        android:label=\"@string/app_name\" >\n"
-                            + "        <activity\n"
-                            + "            android:name=\".BytecodeTestsActivity\"\n"
-                            + "            android:label=\"@string/app_name\" >\n"
-                            + "            <intent-filter>\n"
-                            + "                <action android:name=\"android.intent.action.MAIN\" />\n"
-                            + "\n"
-                            + "                <category android:name=\"android.intent.category.LAUNCHER\" />\n"
-                            + "            </intent-filter>\n"
-                            + "        </activity>\n"
-                            + "    </application>\n"
-                            + "\n"
-                            + "</manifest>\n"),
-                    mStrings));
+                + "0 errors, 1 warnings\n";
+        //noinspection all // Sample code
+        lint().files(
+                manifest(""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    package=\"test.bytecode\"\n"
+                        + "    android:versionCode=\"1\"\n"
+                        + "    android:versionName=\"1.0\" >\n"
+                        + "\n"
+                        + "    <uses-sdk android:minSdkVersion=\"10\" android:targetSdkVersion=\"14\" />\n"
+                        + "\n"
+                        + "    <application\n"
+                        + "        android:icon=\"@drawable/ic_launcher\"\n"
+                        + "        android:label=\"@string/app_name\" >\n"
+                        + "        <activity\n"
+                        + "            android:name=\".BytecodeTestsActivity\"\n"
+                        + "            android:label=\"@string/app_name\" >\n"
+                        + "            <intent-filter>\n"
+                        + "                <action android:name=\"android.intent.action.MAIN\" />\n"
+                        + "\n"
+                        + "                <category android:name=\"android.intent.category.LAUNCHER\" />\n"
+                        + "            </intent-filter>\n"
+                        + "        </activity>\n"
+                        + "    </application>\n"
+                        + "\n"
+                        + "</manifest>\n"),
+                mStrings)
+                .issues(ManifestDetector.TARGET_NEWER)
+                .run()
+                .expect(expected)
+                .expectFixDiffs(""
+                        + "Fix for AndroidManifest.xml line 6: Update targetSdkVersion to 25:\n"
+                        + "@@ -7 +7\n"
+                        + "-     <uses-sdk android:minSdkVersion=\"10\" android:targetSdkVersion=\"14\" />\n"
+                        + "+     <uses-sdk android:minSdkVersion=\"10\" android:targetSdkVersion=\"25\" />\n");
     }
 
     public void testMultipleSdk() throws Exception {
@@ -713,16 +720,34 @@ public class ManifestDetectorTest extends AbstractCheckTest {
     }
 
     public void testMissingVersion() throws Exception {
-        mEnabled = Collections.singleton(ManifestDetector.SET_VERSION);
-        assertEquals(""
+        String expected = ""
                 + "AndroidManifest.xml:2: Warning: Should set android:versionCode to specify the application version [MissingVersion]\n"
                 + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                 + "^\n"
                 + "AndroidManifest.xml:2: Warning: Should set android:versionName to specify the application version [MissingVersion]\n"
                 + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                 + "^\n"
-                + "0 errors, 2 warnings\n",
-            lintProject(mNo_version));
+                + "0 errors, 2 warnings\n";
+        lint().files(
+                mNo_version)
+                .issues(ManifestDetector.SET_VERSION)
+                .run()
+                .expect(expected)
+                .verifyFixes().window(1).expectFixDiffs(""
+                + "Fix for AndroidManifest.xml line 1: Set versionCode:\n"
+                + "@@ -3 +3\n"
+                + "  <manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                + "-     package=\"foo.bar2\" >\n"
+                + "+     package=\"foo.bar2\"\n"
+                + "+     android:versionCode=\"|\" >\n"
+                + "  \n"
+                + "Fix for AndroidManifest.xml line 1: Set versionName:\n"
+                + "@@ -3 +3\n"
+                + "  <manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                + "-     package=\"foo.bar2\" >\n"
+                + "+     package=\"foo.bar2\"\n"
+                + "+     android:versionName=\"|\" >\n"
+                + "  \n");
     }
 
     public void testVersionNotMissingInGradleProjects() throws Exception {
@@ -833,15 +858,26 @@ public class ManifestDetectorTest extends AbstractCheckTest {
     }
 
     public void testMissingApplicationIcon() throws Exception {
-        mEnabled = Collections.singleton(ManifestDetector.APPLICATION_ICON);
-        assertEquals(""
+        String expected = ""
                 + "AndroidManifest.xml:9: Warning: Should explicitly set android:icon, there is no default [MissingApplicationIcon]\n"
                 + "    <application\n"
                 + "    ^\n"
-                + "0 errors, 1 warnings\n",
-            lintProject(
+                + "0 errors, 1 warnings\n";
+        lint().files(
                 mMissing_application_icon,
-                mStrings));
+                mStrings)
+                .issues(ManifestDetector.APPLICATION_ICON)
+                .run()
+                .expect(expected)
+                .verifyFixes().window(1).expectFixDiffs(""
+                + "Fix for AndroidManifest.xml line 8: Set icon:\n"
+                + "@@ -9 +9\n"
+                + "  \n"
+                + "-     <application android:label=\"@string/app_name\" >\n"
+                + "+     <application\n"
+                + "+         android:icon=\"@mipmap/|\"\n"
+                + "+         android:label=\"@string/app_name\" >\n"
+                + "          <activity\n");
     }
 
     public void testMissingApplicationIconInLibrary() throws Exception {

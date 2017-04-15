@@ -29,6 +29,7 @@ public class NetworkSecurityConfigDetectorTest extends AbstractCheckTest {
 
 
     public void testInvalidElementAndMissingDomain() throws Exception {
+        //noinspection all // Sample code
         assertEquals(""
                 + "res/xml/network_config.xml:4: Error: Unexpected element <include> [NetworkSecurityConfig]\n"
                 + "     <include domain=\"file\"/>\n"
@@ -58,6 +59,7 @@ public class NetworkSecurityConfigDetectorTest extends AbstractCheckTest {
     }
 
     public void testTrustAnchors() throws Exception {
+        //noinspection all // Sample code
         assertEquals(""
                 + "res/xml/network_config.xml:7: Error: Unknown certificates src attribute. Expecting system, user or an @resource value [NetworkSecurityConfig]\n"
                 + "            <certificates src=\"raw/extras\"/>\n"
@@ -89,7 +91,7 @@ public class NetworkSecurityConfigDetectorTest extends AbstractCheckTest {
                 .plusDays(5)
                 .format(DateTimeFormatter.ISO_LOCAL_DATE);
 
-        assertEquals(String.format(
+        String expected = String.format(
                 "res/xml/network_config.xml:6: Warning: pin-set is expiring soon [PinSetExpiry]\n"
                         + "        <pin-set expiration=\"%1$s\">\n"
                         + "                             ~~~~~~~~~~\n"
@@ -99,8 +101,10 @@ public class NetworkSecurityConfigDetectorTest extends AbstractCheckTest {
                         + "res/xml/network_config.xml:10: Error: Decoded digest length 30 does not match expected length for SHA-256 of 32 [NetworkSecurityConfig]\n"
                         + "            <pin digest=\"SHA-256\">aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d</pin>\n"
                         + "                                  ^\n"
-                        + "2 errors, 1 warnings\n", fiveDaysFromNow),
-                lintProject(xml("res/xml/network_config.xml", ""
+                        + "2 errors, 1 warnings\n", fiveDaysFromNow);
+        //noinspection all // Sample code
+        lint().files(
+                xml("res/xml/network_config.xml", ""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                         + "<network-security-config>\n"
                         + "    <domain-config>\n"
@@ -113,10 +117,18 @@ public class NetworkSecurityConfigDetectorTest extends AbstractCheckTest {
                         + "            <pin digest=\"SHA-256\">aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d</pin>\n"
                         + "        </pin-set>\n"
                         + "    </domain-config>\n"
-                        + "</network-security-config>")));
+                        + "</network-security-config>"))
+                .run()
+                .expect(expected)
+                .expectFixDiffs(""
+                        + "Fix for res/xml/network_config.xml line 7: Set digest to \"SHA-256\":\n"
+                        + "@@ -8 +8\n"
+                        + "-             <pin digest=\"SHA-1\">7HIpactkIAq2Y49orFOOQKurWxmmSFZhBCoQYcRhJ3Y=</pin>\n"
+                        + "+             <pin digest=\"SHA-256\">7HIpactkIAq2Y49orFOOQKurWxmmSFZhBCoQYcRhJ3Y=</pin>\n");
     }
 
     public void testMissingBackupPin() throws Exception {
+        //noinspection all // Sample code
         assertEquals(""
                 + "res/xml/network_config.xml:5: Warning: A backup <pin> declaration is highly recommended [MissingBackupPin]\n"
                 + "        <pin-set>\n"
@@ -136,6 +148,7 @@ public class NetworkSecurityConfigDetectorTest extends AbstractCheckTest {
     }
 
     public void testInvalidMultiplePinSetElements() throws Exception {
+        //noinspection all // Sample code
         assertEquals(""
                 + "res/xml/network_config.xml:10: Error: Multiple <pin-set> elements are not allowed [NetworkSecurityConfig]\n"
                 + "        <pin-set>\n"
@@ -160,6 +173,7 @@ public class NetworkSecurityConfigDetectorTest extends AbstractCheckTest {
     }
 
     public void testNestedDomainConfigsWithDuplicateDomains() throws Exception {
+        //noinspection all // Sample code
         assertEquals(""
                 + "res/xml/network_config.xml:6: Error: Duplicate domain names are not allowed [NetworkSecurityConfig]\n"
                 + "        <domain includeSubdomains=\"true\">www.Example.com</domain>\n"
@@ -191,6 +205,7 @@ public class NetworkSecurityConfigDetectorTest extends AbstractCheckTest {
     }
 
     public void testTrustAnchorsWithMissingCAResource() throws Exception {
+        //noinspection all // Sample code
         assertEquals(""
                 + "res/xml/network_config.xml:6: Error: Missing src resource. [NetworkSecurityConfig]\n"
                 + "            <certificates src=\"@raw/my_ca\"/>\n"
@@ -219,6 +234,7 @@ public class NetworkSecurityConfigDetectorTest extends AbstractCheckTest {
     }
 
     public void testTrustAnchorsWithValidCAResource() throws Exception {
+        //noinspection all // Sample code
         assertEquals(
                 "No warnings.",
                 lintProjectIncrementally(
@@ -241,6 +257,7 @@ public class NetworkSecurityConfigDetectorTest extends AbstractCheckTest {
     }
 
     public void testTyposInBaseTags() throws Exception {
+        //noinspection all // Sample code
         assertEquals(""
                 + "res/xml/network_config.xml:3: Error: Unexpected element <include> [NetworkSecurityConfig]\n"
                 + "     <include domain=\"file\"/>\n"
@@ -313,6 +330,7 @@ public class NetworkSecurityConfigDetectorTest extends AbstractCheckTest {
     }
 
     public void testConfigDuplicatesMessage() throws Exception {
+        //noinspection all // Sample code
         // Note that the _debug.xml resource can contain only <debug-overrides> elements
         assertEquals(""
                 + "res/xml/network_config.xml:5: Error: Expecting at most 1 <base-config> [NetworkSecurityConfig]\n"

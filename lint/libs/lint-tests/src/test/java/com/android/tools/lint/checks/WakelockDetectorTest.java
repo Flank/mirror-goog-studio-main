@@ -675,7 +675,12 @@ public class WakelockDetectorTest extends AbstractCheckTest {
                         + "src/test/pkg/WakelockTest.java:11: Warning: Provide a timeout when requesting a wakelock with PowerManager.Wakelock.acquire(long timeout). This will ensure the OS will cleanup any wakelocks that last longer than you intend, and will save your user's battery. [WakelockTimeout]\n"
                         + "        wakeLock.acquire(); // ERROR\n"
                         + "        ~~~~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 1 warnings\n");
+                        + "0 errors, 1 warnings\n")
+                .expectFixDiffs(""
+                        + "Fix for src/test/pkg/WakelockTest.java line 10: Set timeout to 10 minutes:\n"
+                        + "@@ -11 +11\n"
+                        + "-         wakeLock.acquire(); // ERROR\n"
+                        + "+         wakeLock.acquire(10*60*1000L /*10 minutes*/); // ERROR\n");
     }
 
     @SuppressWarnings("all") // Sample code

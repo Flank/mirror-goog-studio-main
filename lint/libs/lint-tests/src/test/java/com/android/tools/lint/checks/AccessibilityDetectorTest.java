@@ -60,7 +60,36 @@ public class AccessibilityDetectorTest extends AbstractCheckTest {
                         + "    <ImageButton android:id=\"@+id/summary3\" android:contentDescription=\"TODO\" />\n"
                         + "</LinearLayout>\n"))
                 .run()
-                .expect(expected);
+                .expect(expected)
+                .verifyFixes().window(1).expectFixDiffs(""
+                + "Fix for res/layout/accessibility.xml line 3: Set contentDescription:\n"
+                + "@@ -21 +21\n"
+                + "          android:clickable=\"false\"\n"
+                + "+         android:contentDescription=\"[TODO]|\"\n"
+                + "          android:focusable=\"false\"\n"
+                + "Fix for res/layout/accessibility.xml line 4: Set contentDescription:\n"
+                + "@@ -30 +30\n"
+                + "          android:clickable=\"false\"\n"
+                + "+         android:contentDescription=\"[TODO]|\"\n"
+                + "          android:focusable=\"false\"\n"
+                + "Fix for res/layout/accessibility.xml line 11: Set contentDescription:\n"
+                + "@@ -70 +70\n"
+                + "          android:id=\"@+android:id/summary\"\n"
+                + "-         android:contentDescription=\"TODO\" />\n"
+                + "+         android:contentDescription=\"[TODO]|\" />\n"
+                + "  \n"
+                + "Fix for res/layout/accessibility.xml line 12: Set contentDescription:\n"
+                + "@@ -74 +74\n"
+                + "          android:id=\"@+id/summary2\"\n"
+                + "-         android:contentDescription=\"\" />\n"
+                + "+         android:contentDescription=\"[TODO]|\" />\n"
+                + "  \n"
+                + "Fix for res/layout/accessibility.xml line 13: Set contentDescription:\n"
+                + "@@ -78 +78\n"
+                + "          android:id=\"@+id/summary3\"\n"
+                + "-         android:contentDescription=\"TODO\" />\n"
+                + "+         android:contentDescription=\"[TODO]|\" />\n"
+                + "  \n");
     }
 
     @Override

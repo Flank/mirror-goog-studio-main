@@ -60,9 +60,9 @@ import com.android.tools.lint.detector.api.CharSequences;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
-import com.android.tools.lint.detector.api.QuickfixData;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
@@ -136,7 +136,7 @@ public class AppLinksValidDetector extends Detector implements Detector.XmlScann
     }
 
     private static void reportUrlError(@NonNull XmlContext context, @NonNull Node node,
-            @NonNull Location location, @NonNull String message, @Nullable Object quickfixData) {
+            @NonNull Location location, @NonNull String message, @Nullable LintFix quickfixData) {
         // Validation errors were reported here before
         if (context.getDriver().isSuppressed(context, OLD_ISSUE_URL, node)) {
             return;
@@ -422,15 +422,15 @@ public class AppLinksValidDetector extends Detector implements Detector.XmlScann
             // At least one scheme must be specified
             boolean hasScheme = schemes != null;
             if (!hasScheme && (hosts != null || paths != null || ports != null)) {
+                LintFix fix = fix().set(ANDROID_URI, ATTR_SCHEME, "http").build();
                 reportUrlError(context, firstData, context.getLocation(firstData),
-                        "At least one `scheme` must be specified",
-                        new QuickfixData.SetAttribute(ANDROID_URI, ATTR_SCHEME, "http"));
+                        "At least one `scheme` must be specified", fix);
             }
 
             if (hosts == null && (paths != null || ports != null)) {
+                LintFix fix = fix().set(ANDROID_URI, ATTR_HOST, "").build();
                 reportUrlError(context, firstData, context.getLocation(firstData),
-                        "At least one `host` must be specified",
-                        new QuickfixData.SetAttribute(ANDROID_URI, ATTR_HOST, null));
+                        "At least one `host` must be specified", fix);
             }
 
             // If this activity is an ACTION_VIEW action, has a http URL but doesn't have
@@ -441,9 +441,9 @@ public class AppLinksValidDetector extends Detector implements Detector.XmlScann
             }
 
             if (actionView && (!hasScheme || implicitSchemes)) {
+                LintFix fix = fix().set(ANDROID_URI, ATTR_SCHEME, "http").build();
                 reportUrlError(context, intent, context.getLocation(intent),
-                        "Missing URL",
-                        new QuickfixData.SetAttribute(ANDROID_URI, ATTR_SCHEME, "http"));
+                        "Missing URL", fix);
             }
         }
 
@@ -642,10 +642,11 @@ public class AppLinksValidDetector extends Detector implements Detector.XmlScann
                     // Only enforce / for path and prefix; for pattern it seems to
                     // work without
                     && !attributeName.equals(ATTR_PATH_PATTERN)) {
+                LintFix fix = fix().replace().text(attribute.getValue())
+                        .with("/" + value).build();
                 reportUrlError(context, attribute, context.getValueLocation(attribute),
                         String.format("`%1$s` attribute should start with `/`, but it is `"
-                                + value + "`", attribute.getName()),
-                        new QuickfixData.ReplaceString(attribute.getValue(), null, "/" + value));
+                                + value + "`", attribute.getName()), fix);
             }
         }
 

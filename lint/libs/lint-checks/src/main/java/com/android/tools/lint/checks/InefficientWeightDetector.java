@@ -26,7 +26,9 @@ import static com.android.SdkConstants.ATTR_ORIENTATION;
 import static com.android.SdkConstants.ATTR_STYLE;
 import static com.android.SdkConstants.LINEAR_LAYOUT;
 import static com.android.SdkConstants.RADIO_GROUP;
+import static com.android.SdkConstants.VALUE_FALSE;
 import static com.android.SdkConstants.VALUE_FILL_PARENT;
+import static com.android.SdkConstants.VALUE_HORIZONTAL;
 import static com.android.SdkConstants.VALUE_MATCH_PARENT;
 import static com.android.SdkConstants.VALUE_VERTICAL;
 import static com.android.SdkConstants.VIEW;
@@ -41,6 +43,7 @@ import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -217,7 +220,8 @@ public class InefficientWeightDetector extends LayoutDetector {
                 String message = "Wrong orientation? No orientation specified, and the default "
                         + "is horizontal, yet this layout has multiple children where at "
                         + "least one has `layout_width=\"match_parent\"`";
-                context.report(ORIENTATION, element, context.getLocation(element), message);
+                context.report(ORIENTATION, element, context.getLocation(element), message,
+                        createOrientationFixes());
             }
         } else if (children.isEmpty() && (orientation == null || orientation.isEmpty())
                 && context.isEnabled(ORIENTATION)
@@ -238,7 +242,8 @@ public class InefficientWeightDetector extends LayoutDetector {
             if (!ignore) {
                 String message = "No orientation specified, and the default is horizontal. "
                         + "This is a common source of bugs when children are added dynamically.";
-                context.report(ORIENTATION, element, context.getLocation(element), message);
+                context.report(ORIENTATION, element, context.getLocation(element), message,
+                        createOrientationFixes());
             }
         }
 
@@ -261,10 +266,13 @@ public class InefficientWeightDetector extends LayoutDetector {
                 }
             }
             if (allChildrenAreLayouts) {
+                LintFix fix = fix()
+                        .set(ANDROID_URI, ATTR_BASELINE_ALIGNED, VALUE_FALSE).build();
                 context.report(BASELINE_WEIGHTS,
                         element,
                         context.getLocation(element),
-                        "Set `android:baselineAligned=\"false\"` on this element for better performance");
+                        "Set `android:baselineAligned=\"false\"` on this element for better performance",
+                        fix);
             }
         }
 
@@ -308,6 +316,19 @@ public class InefficientWeightDetector extends LayoutDetector {
         if (context.isEnabled(WRONG_0DP)) {
             checkWrong0Dp(context, element, children);
         }
+    }
+
+    @NonNull
+    private static LintFix createOrientationFixes() {
+        LintFix horizontal = fix()
+                .name("Set orientation=\"horizontal\" (default)")
+                .set(ANDROID_URI, ATTR_ORIENTATION, VALUE_HORIZONTAL)
+                .build();
+        LintFix vertical = fix()
+                .name("Set orientation=\"vertical\" (changes layout)")
+                .set(ANDROID_URI, ATTR_ORIENTATION, VALUE_VERTICAL)
+                .build();
+        return fix().group(horizontal, vertical);
     }
 
     private static void checkWrong0Dp(XmlContext context, Element element,

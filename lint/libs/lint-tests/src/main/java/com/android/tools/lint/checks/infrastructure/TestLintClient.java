@@ -70,11 +70,11 @@ import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.Project;
-import com.android.tools.lint.detector.api.QuickfixData;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
@@ -671,7 +671,7 @@ public class TestLintClient extends LintCliClient {
             @NonNull Location location,
             @NonNull String message,
             @NonNull TextFormat format,
-            @Nullable Object quickfixData) {
+            @Nullable LintFix fix) {
         assertNotNull(location);
 
         if (issue == IssueRegistry.LINT_ERROR) {
@@ -714,7 +714,7 @@ public class TestLintClient extends LintCliClient {
             }
         }
 
-        super.report(context, issue, severity, location, message, format, quickfixData);
+        super.report(context, issue, severity, location, message, format, fix);
 
         // Make sure errors are unique!
         Warning prev = null;
@@ -724,8 +724,8 @@ public class TestLintClient extends LintCliClient {
             prev = warning;
         }
 
-        if (quickfixData instanceof QuickfixData.ReplaceString) {
-            QuickfixData.ReplaceString replaceFix = (QuickfixData.ReplaceString) quickfixData;
+        if (fix instanceof LintFix.ReplaceString) {
+            LintFix.ReplaceString replaceFix = (LintFix.ReplaceString) fix;
             String oldPattern = replaceFix.oldPattern;
             String oldString = replaceFix.oldString;
             String contents = readFile(location.getFile()).toString();
@@ -736,17 +736,17 @@ public class TestLintClient extends LintCliClient {
             String locationRange = contents.substring(start.getOffset(), end.getOffset());
 
             if (oldString != null) {
-                assertTrue("Did not find \"" + oldString + "\" in \"" + locationRange
-                                + "\" as suggested in the quickfix for issue " + issue,
-                        locationRange.contains(oldString));
+                int startIndex = contents.indexOf(oldString, start.getOffset());
+                if (startIndex == -1 || startIndex > end.getOffset()) {
+                    fail("Did not find \"" + oldString + "\" in \"" + locationRange
+                            + "\" as suggested in the quickfix for issue " + issue);
+                }
             } else if (oldPattern != null) {
                 Pattern pattern = Pattern.compile(oldPattern);
                 if (!pattern.matcher(locationRange).find()) {
                     fail("Did not match pattern \"" + oldPattern + "\" in \"" + locationRange
                                     + "\" as suggested in the quickfix for issue " + issue);
                 }
-            } else {
-                fail("Either oldString or oldPattern should be set in the replace quickfix.");
             }
         }
     }

@@ -72,7 +72,14 @@ public class UnpackedNativeCodeDetectorTest extends AbstractCheckTest {
                         + "    compileSdkVersion 23\n"
                         + "}"))
                 .run()
-                .expect(expected);
+                .expect(expected)
+                .expectFixDiffs(""
+                        + "Fix for src/main/AndroidManifest.xml line 3: Set extractNativeLibs=\"false\":\n"
+                        + "@@ -5 +5\n"
+                        + "-     <application android:allowBackup=\"true\" >\n"
+                        + "+     <application\n"
+                        + "+         android:allowBackup=\"true\"\n"
+                        + "+         android:extractNativeLibs=\"false\" >\n");
     }
 
     /**
@@ -115,7 +122,12 @@ public class UnpackedNativeCodeDetectorTest extends AbstractCheckTest {
                         + "    compileSdkVersion 23\n"
                         + "}"))
                 .run()
-                .expect(expected);
+                .expect(expected)
+                .expectFixDiffs(""
+                        + "Fix for src/main/AndroidManifest.xml line 3: Set extractNativeLibs=\"false\":\n"
+                        + "@@ -5 +5\n"
+                        + "-     <application>\n"
+                        + "+     <application android:extractNativeLibs=\"false\" >\n");
     }
 
     /**

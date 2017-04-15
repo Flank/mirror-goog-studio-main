@@ -29,10 +29,9 @@ import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
-import com.android.tools.lint.detector.api.LintUtils;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.TextFormat;
 import com.intellij.psi.PsiMethod;
 import java.util.Arrays;
 import java.util.List;
@@ -110,41 +109,12 @@ public class WrongCallDetector extends Detector implements UastScanner {
         String name = method.getName();
         String suggestion = Character.toLowerCase(name.charAt(2)) + name.substring(3);
         String message = String.format(
-                // Keep in sync with {@link #getOldValue} and {@link #getNewValue} below!
                 "Suspicious method call; should probably call \"`%1$s`\" rather than \"`%2$s`\"",
                 suggestion, name);
-        context.report(ISSUE, node, context.getNameLocation(node), message);
-    }
-
-    /**
-     * Given an error message produced by this lint detector for the given issue type,
-     * returns the old value to be replaced in the source code.
-     * <p>
-     * Intended for IDE quickfix implementations.
-     *
-     * @param errorMessage the error message associated with the error
-     * @param format the format of the error message
-     * @return the corresponding old value, or null if not recognized
-     */
-    @Nullable
-    public static String getOldValue(@NonNull String errorMessage, @NonNull TextFormat format) {
-        errorMessage = format.toText(errorMessage);
-        return LintUtils.findSubstring(errorMessage, "than \"", "\"");
-    }
-
-    /**
-     * Given an error message produced by this lint detector for the given issue type,
-     * returns the new value to be put into the source code.
-     * <p>
-     * Intended for IDE quickfix implementations.
-     *
-     * @param errorMessage the error message associated with the error
-     * @param format the format of the error message
-     * @return the corresponding new value, or null if not recognized
-     */
-    @Nullable
-    public static String getNewValue(@NonNull String errorMessage, @NonNull TextFormat format) {
-        errorMessage = format.toText(errorMessage);
-        return LintUtils.findSubstring(errorMessage, "call \"", "\"");
+        LintFix fix = fix()
+                .name("Replace call with " + suggestion + "()").replace().text(name)
+                .with(suggestion)
+                .build();
+        context.report(ISSUE, node, context.getNameLocation(node), message, fix);
     }
 }

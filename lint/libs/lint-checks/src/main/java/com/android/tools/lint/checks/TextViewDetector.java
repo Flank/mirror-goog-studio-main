@@ -54,6 +54,7 @@ import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -141,9 +142,10 @@ public class TextViewDetector extends LayoutDetector {
                     && !element.hasAttributeNS(ANDROID_URI, ATTR_ON_CLICK)
                     && context.getMainProject().getTargetSdk() >= 11
                     && context.isEnabled(SELECTABLE)) {
+                LintFix fix = fix().set(ANDROID_URI, ATTR_TEXT_IS_SELECTABLE, VALUE_TRUE).build();
                 context.report(SELECTABLE, element, context.getLocation(element),
                         "Consider making the text value selectable by specifying " +
-                        "`android:textIsSelectable=\"true\"`");
+                        "`android:textIsSelectable=\"true\"`", fix);
             }
         }
 

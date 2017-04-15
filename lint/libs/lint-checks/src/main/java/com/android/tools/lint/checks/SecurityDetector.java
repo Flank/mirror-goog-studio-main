@@ -33,6 +33,7 @@ import static com.android.SdkConstants.TAG_PATH_PERMISSION;
 import static com.android.SdkConstants.TAG_PROVIDER;
 import static com.android.SdkConstants.TAG_RECEIVER;
 import static com.android.SdkConstants.TAG_SERVICE;
+import static com.android.SdkConstants.VALUE_FALSE;
 import static com.android.xml.AndroidManifest.NODE_ACTION;
 
 import com.android.annotations.NonNull;
@@ -46,6 +47,7 @@ import com.android.tools.lint.detector.api.Detector.XmlScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -315,8 +317,9 @@ public class SecurityDetector extends Detector implements XmlScanner, UastScanne
         if (getExported(element) && isUnprotectedByPermission(element) &&
                 !isStandardReceiver(element)) {
             // No declared permission for this exported receiver: complain
+            LintFix fix = fix().set(ANDROID_URI, ATTR_PERMISSION, "").build();
             context.report(EXPORTED_RECEIVER, element, context.getLocation(element),
-                           "Exported receiver does not require permission");
+                           "Exported receiver does not require permission", fix);
         }
     }
 
@@ -324,8 +327,9 @@ public class SecurityDetector extends Detector implements XmlScanner, UastScanne
         if (getExported(element) && isUnprotectedByPermission(element)
                 && !isWearableListenerServiceAction(element)) {
             // No declared permission for this exported service: complain
+            LintFix fix = fix().set(ANDROID_URI, ATTR_PERMISSION, "").build();
             context.report(EXPORTED_SERVICE, element, context.getLocation(element),
-                           "Exported service does not require permission");
+                           "Exported service does not require permission", fix);
         }
     }
 
@@ -379,10 +383,12 @@ public class SecurityDetector extends Detector implements XmlScanner, UastScanne
                         }
 
                         if (!hasPermission) {
+                            LintFix fix = fix()
+                                    .set(ANDROID_URI, ATTR_EXPORTED, VALUE_FALSE).build();
                             context.report(EXPORTED_PROVIDER, element,
                                     context.getLocation(element),
                                     "Exported content providers can provide access to " +
-                                            "potentially sensitive data");
+                                            "potentially sensitive data", fix);
                         }
                     }
                 }

@@ -271,14 +271,23 @@ public class TestUtils {
 
     @NonNull
     public static String getDiff(@NonNull String before, @NonNull  String after) {
-        return getDiff(before.split("\n"), after.split("\n"));
+        return getDiff(before, after, 0);
+    }
+
+    @NonNull
+    public static String getDiff(@NonNull String before, @NonNull  String after, int windowSize) {
+        return getDiff(before.split("\n"), after.split("\n"), windowSize);
     }
 
     @NonNull
     public static String getDiff(@NonNull String[] before, @NonNull String[] after) {
+        return getDiff(before, after, 0);
+    }
+
+    public static String getDiff(@NonNull String[] before, @NonNull String[] after,
+            int windowSize) {
         // Based on the LCS section in http://introcs.cs.princeton.edu/java/96optimization/
         StringBuilder sb = new StringBuilder();
-
         int n = before.length;
         int m = after.length;
 
@@ -306,6 +315,15 @@ public class TestUtils {
                 sb.append(" +");
                 sb.append(Integer.toString(j + 1));
                 sb.append('\n');
+
+                if (windowSize > 0) {
+                    for (int context = Math.max(0, i - windowSize); context < i; context++) {
+                        sb.append("  ");
+                        sb.append(before[context]);
+                        sb.append("\n");
+                    }
+                }
+
                 while (i < n && j < m && !before[i].equals(after[j])) {
                     if (lcs[i + 1][j] >= lcs[i][j + 1]) {
                         sb.append('-');
@@ -323,6 +341,14 @@ public class TestUtils {
                         sb.append(after[j]);
                         sb.append('\n');
                         j++;
+                    }
+                }
+
+                if (windowSize > 0) {
+                    for (int context = i; context < Math.min(n, i + windowSize); context++) {
+                        sb.append("  ");
+                        sb.append(before[context]);
+                        sb.append("\n");
                     }
                 }
             }

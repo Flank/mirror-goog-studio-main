@@ -382,6 +382,7 @@ public class TestLintResult {
      * @param severities    the severities to count
      * @return this
      */
+    @NonNull
     public TestLintResult expectCount(int expectedCount, Severity... severities) {
         int count = 0;
         for (Warning warning : warnings) {
@@ -396,6 +397,38 @@ public class TestLintResult {
                     expectedCount, count);
         }
 
+        return this;
+    }
+
+    /** Verify quick fixes */
+    public LintFixVerifier verifyFixes() {
+        return new LintFixVerifier(task, warnings);
+    }
+
+    /**
+     * Checks what happens with the given fix in this result as applied to the given
+     * test file, and making sure that the result is the new contents
+     *
+     * @param fix   the fix description, or null to pick the first one
+     * @param after the file after applying the fix
+     * @return this
+     */
+    public TestLintResult checkFix(@Nullable String fix, @NonNull TestFile after) {
+        verifyFixes().checkFix(fix, after);
+        return this;
+    }
+
+    /**
+     * Applies the fixes and provides diffs to all the files.
+     * Convenience wrapper around {@link #verifyFixes()} and
+     * {@link LintFixVerifier#expectFixDiffs(String)} if you don't want to configure
+     * any diff options.
+     *
+     * @param expected the diff description resulting from applying the diffs
+     * @return this
+     */
+    public TestLintResult expectFixDiffs(@NonNull String expected) {
+        verifyFixes().expectFixDiffs(expected);
         return this;
     }
 

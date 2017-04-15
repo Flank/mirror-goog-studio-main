@@ -32,6 +32,7 @@ import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -696,7 +697,9 @@ public class CleanupDetector extends Detector implements Detector.UastScanner {
                         + "its data to persistent storage immediately, whereas "
                         + "`apply` will handle it in the background";
                 Location location = context.getLocation(node);
-                context.report(APPLY_SHARED_PREF, node, location, message);
+                LintFix fix = fix().name("Replace commit() with apply()").replace()
+                        .pattern("(commit)\\s*\\(").with("apply").build();
+                context.report(APPLY_SHARED_PREF, node, location, message, fix);
             }
         }
     }

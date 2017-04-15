@@ -268,15 +268,13 @@ public class Context {
      * @param issue        the issue to report
      * @param location     the location of the issue
      * @param message      the message for this warning
-     * @param quickfixData parameterized data for IDE quickfixes. If you're passing in
-     *                     multiple parameters, consider using {@link QuickfixData} instead
-     *                     of using for example {@link com.android.utils.Pair} or {@link Map}
+     * @param quickfixData parameterized data for IDE quickfixes
      */
     public void report(
             @NonNull Issue issue,
             @NonNull Location location,
             @NonNull String message,
-            @Nullable Object quickfixData) {
+            @Nullable LintFix quickfixData) {
         // See if we actually have an associated source for this location, and if so
         // check to see if the warning might be suppressed.
         Object source = location.getSource();
@@ -325,6 +323,19 @@ public class Context {
         doReport(issue, location, message, quickfixData);
     }
 
+    /**
+     * @deprecated Here for temporary compatibility; the new typed quickfix data parameter
+     * should be used instead
+     */
+    @Deprecated
+    public void report(
+            @NonNull Issue issue,
+            @NonNull Location location,
+            @NonNull String message,
+            @SuppressWarnings("unused") @Nullable Object quickfixData) {
+        report(issue, location, message);
+    }
+
     // Method not callable outside of the lint infrastructure: perform the actual reporting.
     // This is a separate method instead of just having Context#report() do this work,
     // since Context#report() will possibly redirect to the XmlContext or JavaContext reporting
@@ -333,7 +344,7 @@ public class Context {
             @NonNull Issue issue,
             @NonNull Location location,
             @NonNull String message,
-            @Nullable Object quickfixData) {
+            @Nullable LintFix quickfixData) {
         //noinspection ConstantConditions
         if (location == null) {
             // Misbehaving third-party lint detectors

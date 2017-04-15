@@ -27,6 +27,7 @@ import com.android.tools.lint.detector.api.Detector.ClassScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
@@ -470,10 +471,14 @@ public class WakelockDetector extends Detector implements ClassScanner, Detector
         }
 
         Location location = context.getLocation(call);
+        LintFix fix = fix().name("Set timeout to 10 minutes").replace()
+                .pattern("acquire\\(()\\)")
+                .with("10*60*1000L /*10 minutes*/").build();
+
         context.report(TIMEOUT, call, location, ""
                 + "Provide a timeout when requesting a wakelock with "
                 + "`PowerManager.Wakelock.acquire(long timeout)`. This will ensure the OS will "
                 + "cleanup any wakelocks that last longer than you intend, and will save your "
-                + "user's battery.");
+                + "user's battery.", fix);
     }
 }

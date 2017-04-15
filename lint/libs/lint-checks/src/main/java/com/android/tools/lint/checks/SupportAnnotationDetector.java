@@ -92,6 +92,7 @@ import com.android.tools.lint.detector.api.ExternalReferenceExpression;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.ResourceEvaluator;
@@ -389,7 +390,7 @@ public class SupportAnnotationDetector extends Detector implements UastScanner {
             @Nullable UElement scope,
             @NonNull Location location,
             @NonNull String message,
-            @Nullable Object quickfixData) {
+            @Nullable LintFix quickfixData) {
         // In the IDE historically (until 2.0) many checks were covered by the
         // ResourceTypeInspection, and when suppressed, these would all be suppressed with the
         // id "ResourceType".
@@ -703,10 +704,8 @@ public class SupportAnnotationDetector extends Detector implements UastScanner {
                 Location location = context.getLocation(node);
                 report(context, MISSING_PERMISSION, node, location, message,
                         // Pass data to IDE quickfix: names to add, and max applicable API version
-                        new Object[]{
-                                requirement.getMissingPermissions(permissions),
-                                requirement.getLastApplicableApi()
-                        });
+                        fix().map(requirement.getMissingPermissions(permissions),
+                                requirement.getLastApplicableApi()).build());
             }
         } else if (requirement.isRevocable(permissions) &&
                 context.getMainProject().getTargetSdkVersion().getFeatureLevel() >= 23 &&
@@ -733,10 +732,8 @@ public class SupportAnnotationDetector extends Detector implements UastScanner {
                 Location location = context.getLocation(node);
                 report(context, MISSING_PERMISSION, node, location, message,
                         // Pass data to IDE quickfix: revocable names, and permission requirement
-                        new Object[]{
-                                requirement.getRevocablePermissions(permissions),
-                                requirement
-                        });
+                        fix().map(requirement.getRevocablePermissions(permissions),
+                                requirement).build());
             }
         }
     }
@@ -983,8 +980,7 @@ public class SupportAnnotationDetector extends Detector implements UastScanner {
             }
 
             Location location = context.getLocation(node);
-            report(context, issue, node, location, message,
-                    suggested);
+            report(context, issue, node, location, message, fix().map(suggested).build());
         }
     }
 

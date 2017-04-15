@@ -20,6 +20,7 @@ import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.TAG_USES_FEATURE;
 import static com.android.SdkConstants.TAG_USES_PERMISSION;
+import static com.android.SdkConstants.VALUE_FALSE;
 import static com.android.tools.lint.detector.api.TextFormat.RAW;
 import static com.android.xml.AndroidManifest.ATTRIBUTE_REQUIRED;
 import static com.android.xml.AndroidManifest.NODE_ACTIVITY;
@@ -37,6 +38,7 @@ import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
@@ -298,10 +300,11 @@ public class AndroidTvDetector extends Detector implements Detector.XmlScanner {
                     && xmlContext.isEnabled(MISSING_BANNER)) {
                 Node applicationElement = getApplicationElement(xmlContext.document);
                 if (applicationElement != null) {
+                    LintFix fix = fix().set().todo(ANDROID_URI, "banner").build();
                     xmlContext.report(MISSING_BANNER, applicationElement,
                             xmlContext.getLocation(applicationElement),
                             "Expecting `android:banner` with the `<application>` tag or each "
-                                    + "Leanback launcher activity.");
+                                    + "Leanback launcher activity.", fix);
                 }
             }
 
@@ -315,10 +318,11 @@ public class AndroidTvDetector extends Detector implements Detector.XmlScanner {
                 for (Element element : usesFeatureElements) {
                     Attr attrRequired = element.getAttributeNodeNS(ANDROID_URI, ATTRIBUTE_REQUIRED);
                     Node location = attrRequired == null ? element : attrRequired;
+                    LintFix fix = fix().set(ANDROID_URI, ATTRIBUTE_REQUIRED, VALUE_FALSE).build();
                     xmlContext.report(UNSUPPORTED_TV_HARDWARE, location,
                             xmlContext.getLocation(location),
                             "Expecting `android:required=\"false\"` for this hardware "
-                                    + "feature that may not be supported by all Android TVs.");
+                                    + "feature that may not be supported by all Android TVs.", fix);
                 }
             }
 

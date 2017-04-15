@@ -19,7 +19,7 @@ package com.android.tools.lint.checks;
 import com.android.tools.lint.detector.api.Detector;
 
 @SuppressWarnings("javadoc")
-public class TooManyViewsDetectorTest extends AbstractCheckTest {
+public class TooLintFixGroupViewsDetectorTest extends AbstractCheckTest {
     @Override
     protected Detector getDetector() {
         return new TooManyViewsDetector();

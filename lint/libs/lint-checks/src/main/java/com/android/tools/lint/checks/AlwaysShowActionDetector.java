@@ -29,6 +29,7 @@ import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
@@ -154,8 +155,10 @@ public class AlwaysShowActionDetector extends ResourceXmlDetector implements
                         }
                     }
                     if (location != null) {
+                        LintFix fix = fix().replace().pattern("(always)")
+                                .with("ifRoom").build();
                         context.report(ISSUE, location,
-                                "Prefer \"`ifRoom`\" instead of \"`always`\"");
+                                "Prefer \"`ifRoom`\" instead of \"`always`\"", fix);
                     }
                 }
             }

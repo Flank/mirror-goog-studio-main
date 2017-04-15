@@ -19,15 +19,10 @@ package com.android.tools.lint.checks;
 import static com.android.tools.lint.checks.MissingClassDetector.INNERCLASS;
 import static com.android.tools.lint.checks.MissingClassDetector.INSTANTIATABLE;
 import static com.android.tools.lint.checks.MissingClassDetector.MISSING;
-import static com.android.tools.lint.detector.api.TextFormat.TEXT;
 
-import com.android.annotations.NonNull;
-import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
-import com.android.tools.lint.detector.api.Severity;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.util.Arrays;
@@ -490,50 +485,55 @@ public class MissingClassDetectorTest extends AbstractCheckTest {
             ));
     }
 
-    public void testWrongSeparator2() throws Exception {
+    public void testWrongSeparator2() {
         mScopes = null;
-        mEnabled = Sets.newHashSet(MISSING, INSTANTIATABLE, INNERCLASS);
-        //noinspection all // Sample code
-        assertEquals(""
+        String expected = ""
                 + "AndroidManifest.xml:14: Error: Class referenced in the manifest, test.pkg.Foo.Bar, was not found in the project or the libraries [MissingRegistered]\n"
                 + "        <activity\n"
                 + "        ^\n"
                 + "AndroidManifest.xml:15: Warning: Use '$' instead of '.' for inner classes (or use only lowercase letters in package names); replace \".Foo.Bar\" with \".Foo$Bar\" [InnerclassSeparator]\n"
                 + "            android:name=\".Foo.Bar\"\n"
                 + "            ~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "1 errors, 1 warnings\n",
-
-            lintProject(
+                + "1 errors, 1 warnings\n";
+        //noinspection all // Sample code
+        lint().files(
                 xml("AndroidManifest.xml", ""
-                            + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                            + "    package=\"test.pkg\"\n"
-                            + "    android:versionCode=\"1\"\n"
-                            + "    android:versionName=\"1.0\" >\n"
-                            + "\n"
-                            + "    <uses-sdk\n"
-                            + "        android:minSdkVersion=\"8\"\n"
-                            + "        android:targetSdkVersion=\"16\" />\n"
-                            + "\n"
-                            + "    <application\n"
-                            + "        android:icon=\"@drawable/ic_launcher\"\n"
-                            + "        android:label=\"@string/app_name\"\n"
-                            + "        android:theme=\"@style/AppTheme\" >\n"
-                            + "        <activity\n"
-                            + "            android:name=\".Foo.Bar\"\n"
-                            + "            android:label=\"@string/app_name\" >\n"
-                            + "            <intent-filter>\n"
-                            + "                <action android:name=\"android.intent.action.MAIN\" />\n"
-                            + "\n"
-                            + "                <category android:name=\"android.intent.category.LAUNCHER\" />\n"
-                            + "            </intent-filter>\n"
-                            + "        </activity>\n"
-                            + "    </application>\n"
-                            + "\n"
-                            + "</manifest>\n"),
+                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    package=\"test.pkg\"\n"
+                        + "    android:versionCode=\"1\"\n"
+                        + "    android:versionName=\"1.0\" >\n"
+                        + "\n"
+                        + "    <uses-sdk\n"
+                        + "        android:minSdkVersion=\"8\"\n"
+                        + "        android:targetSdkVersion=\"16\" />\n"
+                        + "\n"
+                        + "    <application\n"
+                        + "        android:icon=\"@drawable/ic_launcher\"\n"
+                        + "        android:label=\"@string/app_name\"\n"
+                        + "        android:theme=\"@style/AppTheme\" >\n"
+                        + "        <activity\n"
+                        + "            android:name=\".Foo.Bar\"\n"
+                        + "            android:label=\"@string/app_name\" >\n"
+                        + "            <intent-filter>\n"
+                        + "                <action android:name=\"android.intent.action.MAIN\" />\n"
+                        + "\n"
+                        + "                <category android:name=\"android.intent.category.LAUNCHER\" />\n"
+                        + "            </intent-filter>\n"
+                        + "        </activity>\n"
+                        + "    </application>\n"
+                        + "\n"
+                        + "</manifest>\n"),
                 classpath(),
                 mApiCallTest,
-                mBar
-            ));
+                mBar)
+                .issues(MISSING, INSTANTIATABLE, INNERCLASS)
+                .run()
+                .expect(expected)
+                .expectFixDiffs(""
+                        + "Fix for AndroidManifest.xml line 14: Replace with .Foo$Bar:\n"
+                        + "@@ -15 +15\n"
+                        + "-             android:name=\".Foo.Bar\"\n"
+                        + "+             android:name=\".Foo$Bar\"\n");
     }
 
     public void testNoClassesWithLibraries() throws Exception {
@@ -904,28 +904,6 @@ public class MissingClassDetectorTest extends AbstractCheckTest {
                             + "<header android:fragment=\"test.pkg.FragmentTest$Fragment1\" />\n"
                             + "<header android:fragment=\"test.pkg.FragmentTest.Fragment1\" />\n"
                             + "</preference-headers>\n")));
-    }
-
-
-    public void testGetOldValue() {
-        assertEquals(".Foo.Bar", MissingClassDetector.getOldValue(INNERCLASS,
-                "Use '$' instead of '.' for inner classes (or use only lowercase letters in package names); replace \".Foo.Bar\" with \".Foo$Bar\" [InnerclassSeparator]",
-                TEXT));
-    }
-
-    public void testGetNewValue() {
-        assertEquals(".Foo$Bar", MissingClassDetector.getNewValue(INNERCLASS,
-                "Use '$' instead of '.' for inner classes (or use only lowercase letters in package names); replace \".Foo.Bar\" with \".Foo$Bar\" [InnerclassSeparator]",
-                TEXT));
-    }
-
-    @Override
-    protected void checkReportedError(@NonNull Context context, @NonNull Issue issue,
-            @NonNull Severity severity, @NonNull Location location, @NonNull String message) {
-        if (issue == INNERCLASS) {
-            assertNotNull(message, MissingClassDetector.getOldValue(issue, message, TEXT));
-            assertNotNull(message, MissingClassDetector.getNewValue(issue, message, TEXT));
-        }
     }
 
     @SuppressWarnings("all") // Sample code

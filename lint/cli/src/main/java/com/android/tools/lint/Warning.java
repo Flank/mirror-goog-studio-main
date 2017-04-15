@@ -21,6 +21,7 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
@@ -56,6 +57,7 @@ public class Warning implements Comparable<Warning> {
     public String errorLine;
     public CharSequence fileContents;
     public Set<Variant> variants;
+    public LintFix quickfixData;
 
     public Warning(Issue issue, String message, Severity severity, Project project) {
         this.issue = issue;

@@ -18,17 +18,18 @@ package com.android.tools.lint.detector.api;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.tools.lint.detector.api.QuickfixData.ReplaceString;
-import com.android.tools.lint.detector.api.QuickfixData.SetAttribute;
+import com.android.tools.lint.detector.api.LintFix.ReplaceString;
+import com.android.tools.lint.detector.api.LintFix.SetAttribute;
 import java.math.BigDecimal;
 import junit.framework.TestCase;
 
-public class QuickfixDataTest extends TestCase {
+public class LintFixTest extends TestCase {
     public void test() {
-        QuickfixData quickfixData = QuickfixData.create("foo", 3, new BigDecimal(50));
-        quickfixData.put("name1", "Name1");
-        quickfixData.put("name2", "Name2");
-        quickfixData.put(null); // no-op
+        LintFix.FixMapBuilder builder = LintFix.create().map("foo", 3, new BigDecimal(50));
+        builder.put("name1", "Name1");
+        builder.put("name2", "Name2");
+        builder.put(null); // no-op
+        LintFix.DataMap quickfixData = (LintFix.DataMap) builder.build();
         assertThat(quickfixData.get(Float.class)).isNull();
         assertThat(quickfixData.get(String.class)).isEqualTo("foo");
         assertThat(quickfixData.get(Integer.class)).isEqualTo(3);
@@ -54,21 +55,29 @@ public class QuickfixDataTest extends TestCase {
     }
 
     public void testSetAttribute() {
-        SetAttribute fixData = new SetAttribute("namespace",
-                "attribute", "value");
+        SetAttribute fixData = (SetAttribute) LintFix.create().set().namespace("namespace")
+                .attribute("attribute").value("value").build();
         assertThat(fixData.namespace).isEqualTo("namespace");
         assertThat(fixData.attribute).isEqualTo("attribute");
         assertThat(fixData.value).isEqualTo("value");
     }
 
     public void testReplaceString() {
-        ReplaceString fixData = new ReplaceString("old", null, "new");
+        ReplaceString fixData = (ReplaceString) LintFix.create().replace().text("old")
+                .with("new").build();
         assertThat(fixData.oldString).isEqualTo("old");
         assertThat(fixData.replacement).isEqualTo("new");
         assertThat(fixData.oldPattern).isNull();
 
-        fixData = new ReplaceString(null, "oldPattern", "new");
-        assertThat(fixData.oldPattern).isEqualTo("oldPattern");
+        fixData = (ReplaceString) LintFix.create().replace().pattern("(oldPattern)")
+                .with("new").build();
+        assertThat(fixData.oldPattern).isEqualTo("(oldPattern)");
+        assertThat(fixData.replacement).isEqualTo("new");
+        assertThat(fixData.oldString).isNull();
+
+        fixData = (ReplaceString) LintFix.create().replace().pattern("oldPattern").with("new")
+                .build();
+        assertThat(fixData.oldPattern).isEqualTo("(oldPattern)");
         assertThat(fixData.replacement).isEqualTo("new");
         assertThat(fixData.oldString).isNull();
     }

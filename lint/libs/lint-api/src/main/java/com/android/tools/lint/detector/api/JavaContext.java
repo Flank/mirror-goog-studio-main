@@ -28,7 +28,6 @@ import com.android.tools.lint.client.api.JavaParser.ResolvedClass;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.UastParser;
 import com.android.tools.lint.detector.api.Detector.UastScanner;
-import com.android.utils.Pair;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiAnonymousClass;
@@ -52,7 +51,6 @@ import com.intellij.psi.util.PsiTreeUtil;
 import java.io.File;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.Map;
 import lombok.ast.AnnotationElement;
 import lombok.ast.AnnotationMethodDeclaration;
 import lombok.ast.ClassDeclaration;
@@ -542,20 +540,32 @@ public class JavaContext extends Context {
      *                     client.
      * @param location     the location of the issue, or null if not known
      * @param message      the message for this warning
-     * @param quickfixData optional data to pass to the IDE for use by a quickfix.  If you're
-     *                     passing in multiple parameters, consider using {@link QuickfixData}
-     *                     instead of using for example {@link Pair} or {@link Map}
+     * @param quickfixData optional data to pass to the IDE for use by a quickfix.
      */
     public void report(
             @NonNull Issue issue,
             @Nullable PsiElement scope,
             @NonNull Location location,
             @NonNull String message,
-            @Nullable Object quickfixData) {
+            @Nullable LintFix quickfixData) {
         if (scope != null && driver.isSuppressed(this, issue, scope)) {
             return;
         }
         super.doReport(issue, location, message, quickfixData);
+    }
+
+    /**
+     * @deprecated Here for temporary compatibility; the new typed quickfix data parameter
+     * should be used instead
+     */
+    @Deprecated
+    public void report(
+            @NonNull Issue issue,
+            @Nullable PsiElement scope,
+            @NonNull Location location,
+            @NonNull String message,
+            @SuppressWarnings("unused") @Nullable Object quickfixData) {
+        report(issue, scope, location, message);
     }
 
     /**
@@ -589,20 +599,32 @@ public class JavaContext extends Context {
      *                     client.
      * @param location     the location of the issue, or null if not known
      * @param message      the message for this warning
-     * @param quickfixData optional data to pass to the IDE for use by a quickfix.  If you're
-     *                     passing in multiple parameters, consider using {@link QuickfixData}
-     *                     instead of using for example {@link Pair} or {@link Map}
+     * @param quickfixData optional data to pass to the IDE for use by a quickfix.
      */
     public void report(
             @NonNull Issue issue,
             @Nullable UElement scope,
             @NonNull Location location,
             @NonNull String message,
-            @Nullable Object quickfixData) {
+            @Nullable LintFix quickfixData) {
         if (scope != null && driver.isSuppressed(this, issue, scope)) {
             return;
         }
         super.doReport(issue, location, message, quickfixData);
+    }
+
+    /**
+     * @deprecated Here for temporary compatibility; the new typed quickfix data parameter
+     * should be used instead
+     */
+    @Deprecated
+    public void report(
+            @NonNull Issue issue,
+            @Nullable UElement scope,
+            @NonNull Location location,
+            @NonNull String message,
+            @SuppressWarnings("unused") @Nullable Object quickfixData) {
+        report(issue, scope, location, message);
     }
 
     /**
@@ -619,6 +641,20 @@ public class JavaContext extends Context {
     }
 
     /**
+     * {@link UClass} is both a {@link PsiElement} and a {@link UElement} so this method
+     * is here to make calling report(..., UClass, ...) easier without having to make
+     * an explicit cast.
+     */
+    public void report(
+            @NonNull Issue issue,
+            @Nullable UClass scopeClass,
+            @NonNull Location location,
+            @NonNull String message,
+            @Nullable LintFix quickfixData) {
+        report(issue, (UElement)scopeClass, location, message, quickfixData);
+    }
+
+    /**
      * {@link UMethod} is both a {@link PsiElement} and a {@link UElement} so this method
      * is here to make calling report(..., UFieUMethodld, ...) easier without having to make
      * an explicit cast.
@@ -626,6 +662,33 @@ public class JavaContext extends Context {
     public void report(
             @NonNull Issue issue,
             @Nullable UMethod scopeClass,
+            @NonNull Location location,
+            @NonNull String message) {
+        report(issue, (UElement)scopeClass, location, message);
+    }
+
+    /**
+     * {@link UMethod} is both a {@link PsiElement} and a {@link UElement} so this method
+     * is here to make calling report(..., UFieUMethodld, ...) easier without having to make
+     * an explicit cast.
+     */
+    public void report(
+            @NonNull Issue issue,
+            @Nullable UMethod scopeClass,
+            @NonNull Location location,
+            @NonNull String message,
+            @Nullable LintFix quickfixData) {
+        report(issue, (UElement)scopeClass, location, message, quickfixData);
+    }
+
+    /**
+     * {@link UField} is both a {@link PsiElement} and a {@link UElement} so this method
+     * is here to make calling report(..., UField, ...) easier without having to make
+     * an explicit cast.
+     */
+    public void report(
+            @NonNull Issue issue,
+            @Nullable UField scopeClass,
             @NonNull Location location,
             @NonNull String message) {
         report(issue, (UElement)scopeClass, location, message);
@@ -640,8 +703,9 @@ public class JavaContext extends Context {
             @NonNull Issue issue,
             @Nullable UField scopeClass,
             @NonNull Location location,
-            @NonNull String message) {
-        report(issue, (UElement)scopeClass, location, message);
+            @NonNull String message,
+            @Nullable LintFix quickfixData) {
+        report(issue, (UElement)scopeClass, location, message, quickfixData);
     }
 
     /**

@@ -32,9 +32,6 @@ import static com.android.tools.lint.checks.GradleDetector.PLUS;
 import static com.android.tools.lint.checks.GradleDetector.REMOTE_VERSION;
 import static com.android.tools.lint.checks.GradleDetector.STRING_INTEGER;
 import static com.android.tools.lint.checks.GradleDetector.getNamedDependency;
-import static com.android.tools.lint.checks.GradleDetector.getNewValue;
-import static com.android.tools.lint.checks.GradleDetector.getOldValue;
-import static com.android.tools.lint.detector.api.TextFormat.TEXT;
 import static org.mockito.Mockito.when;
 
 import com.android.SdkConstants;
@@ -52,7 +49,6 @@ import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
-import com.android.tools.lint.detector.api.Severity;
 import com.android.utils.Pair;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -189,55 +185,6 @@ public class GradleDetectorTest extends AbstractCheckTest {
         }
     }
 
-    public void testGetOldValue() {
-        assertEquals("11.0.2", getOldValue(DEPENDENCY,
-                "A newer version of com.google.guava:guava than 11.0.2 is available: 17.0.0",
-                TEXT));
-        assertNull(getOldValue(DEPENDENCY, "Bogus", TEXT));
-        assertNull(getOldValue(DEPENDENCY, "bogus", TEXT));
-        // targetSdkVersion 20, compileSdkVersion 19: Should replace targetVersion 20 with 19
-        assertEquals("20", getOldValue(COMPATIBILITY,
-                "The targetSdkVersion (20) should not be higher than the compileSdkVersion (19)",
-                TEXT));
-        assertEquals("'19'", getOldValue(STRING_INTEGER,
-                "Use an integer rather than a string here (replace '19' with just 19)", TEXT));
-        assertEquals("android", getOldValue(DEPRECATED,
-                "'android' is deprecated; use 'com.android.application' instead", TEXT));
-        assertEquals("android-library", getOldValue(DEPRECATED,
-                "'android-library' is deprecated; use 'com.android.library' instead", TEXT));
-        assertEquals("packageName", getOldValue(DEPRECATED,
-                "Deprecated: Replace 'packageName' with 'applicationId'", TEXT));
-        assertEquals("packageNameSuffix", getOldValue(DEPRECATED,
-                "Deprecated: Replace 'packageNameSuffix' with 'applicationIdSuffix'", TEXT));
-        assertEquals("18.0.0", getOldValue(DEPENDENCY,
-                "Old buildToolsVersion 18.0.0; recommended version is 19.1 or later", TEXT));
-    }
-
-    public void testGetNewValue() {
-        assertEquals("17.0.0", getNewValue(DEPENDENCY,
-                "A newer version of com.google.guava:guava than 11.0.2 is available: 17.0.0",
-                TEXT));
-        assertNull(getNewValue(DEPENDENCY,
-                "A newer version of com.google.guava:guava than 11.0.2 is available", TEXT));
-        assertNull(getNewValue(DEPENDENCY, "bogus", TEXT));
-        // targetSdkVersion 20, compileSdkVersion 19: Should replace targetVersion 20 with 19
-        assertEquals("19", getNewValue(COMPATIBILITY,
-                "The targetSdkVersion (20) should not be higher than the compileSdkVersion (19)",
-                TEXT));
-        assertEquals("19", getNewValue(STRING_INTEGER,
-                "Use an integer rather than a string here (replace '19' with just 19)", TEXT));
-        assertEquals("com.android.application", getNewValue(DEPRECATED,
-                "'android' is deprecated; use 'com.android.application' instead", TEXT));
-        assertEquals("com.android.library", getNewValue(DEPRECATED,
-                "'android-library' is deprecated; use 'com.android.library' instead", TEXT));
-        assertEquals("applicationId", getNewValue(DEPRECATED,
-                "Deprecated: Replace 'packageName' with 'applicationId'", TEXT));
-        assertEquals("applicationIdSuffix", getNewValue(DEPRECATED,
-                "Deprecated: Replace 'packageNameSuffix' with 'applicationIdSuffix'", TEXT));
-        assertEquals("19.1", getNewValue(DEPENDENCY,
-                "Old buildToolsVersion 18.0.0; recommended version is 19.1 or later", TEXT));
-    }
-
     public void test() throws Exception {
         String expected = ""
                 + "build.gradle:25: Error: This support library should not use a different version (13) than the compileSdkVersion (19) [GradleCompatible]\n"
@@ -274,7 +221,36 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 .issues(COMPATIBILITY, DEPRECATED, DEPENDENCY, PLUS)
                 .sdkHome(getMockSupportLibraryInstallation())
                 .run()
-                .expect(expected);
+                .expect(expected)
+                .expectFixDiffs(""
+                        + "Fix for build.gradle line 0: Replace with com.android.application:\n"
+                        + "@@ -1 +1\n"
+                        + "- apply plugin: 'android'\n"
+                        + "+ apply plugin: 'com.android.application'\n"
+                        + "Fix for build.gradle line 4: Change to 19.1:\n"
+                        + "@@ -5 +5\n"
+                        + "-     buildToolsVersion \"19.0.0\"\n"
+                        + "+     buildToolsVersion \"19.1\"\n"
+                        + "Fix for build.gradle line 23: Change to 21.0:\n"
+                        + "@@ -24 +24\n"
+                        + "-     freeCompile 'com.google.guava:guava:11.0.2'\n"
+                        + "+     freeCompile 'com.google.guava:guava:21.0'\n"
+                        + "Fix for build.gradle line 24: Change to 21.0.2:\n"
+                        + "@@ -25 +25\n"
+                        + "-     compile 'com.android.support:appcompat-v7:13.0.0'\n"
+                        + "+     compile 'com.android.support:appcompat-v7:21.0.2'\n"
+                        + "Fix for build.gradle line 25: Change to 1.3.0:\n"
+                        + "@@ -26 +26\n"
+                        + "-     compile 'com.google.android.support:wearable:1.2.0'\n"
+                        + "+     compile 'com.google.android.support:wearable:1.3.0'\n"
+                        + "Fix for build.gradle line 26: Change to 1.0.1:\n"
+                        + "@@ -27 +27\n"
+                        + "-     compile 'com.android.support:multidex:1.0.0'\n"
+                        + "+     compile 'com.android.support:multidex:1.0.1'\n"
+                        + "Fix for build.gradle line 28: Change to 0.5:\n"
+                        + "@@ -29 +29\n"
+                        + "-     androidTestCompile 'com.android.support.test:runner:0.3'\n"
+                        + "+     androidTestCompile 'com.android.support.test:runner:0.5'\n");
     }
 
     public void testCompatibility() throws Exception {
@@ -316,7 +292,12 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 .issues(COMPATIBILITY)
                 .sdkHome(getMockSupportLibraryInstallation())
                 .run()
-                .expect(expected);
+                .expect(expected)
+                .expectFixDiffs(""
+                        + "Fix for build.gradle line 3: Set compileSdkVersion to 19:\n"
+                        + "@@ -4 +4\n"
+                        + "-     compileSdkVersion 18\n"
+                        + "+     compileSdkVersion 19\n");
     }
 
     public void testIncompatiblePlugin() throws Exception {
@@ -616,7 +597,16 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 .issues(DEPRECATED)
                 .sdkHome(getMockSupportLibraryInstallation())
                 .run()
-                .expect(expected);
+                .expect(expected)
+                .expectFixDiffs(""
+                        + "Fix for build.gradle line 4: Replace with applicationId:\n"
+                        + "@@ -5 +5\n"
+                        + "-         packageName 'my.pkg'\n"
+                        + "+         applicationId 'my.pkg'\n"
+                        + "Fix for build.gradle line 8: Replace with applicationIdSuffix:\n"
+                        + "@@ -9 +9\n"
+                        + "-             packageNameSuffix \".debug\"\n"
+                        + "+             applicationIdSuffix \".debug\"\n");
     }
 
     public void testPlus() throws Exception {
@@ -662,8 +652,8 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 + "build.gradle:7: Error: Use an integer rather than a string here (replace '8' with just 8) [StringShouldBeInt]\n"
                 + "        minSdkVersion '8'\n"
                 + "        ~~~~~~~~~~~~~~~~~\n"
-                + "build.gradle:8: Error: Use an integer rather than a string here (replace '16' with just 16) [StringShouldBeInt]\n"
-                + "        targetSdkVersion '16'\n"
+                + "build.gradle:8: Error: Use an integer rather than a string here (replace \"16\" with just 16) [StringShouldBeInt]\n"
+                + "        targetSdkVersion \"16\"\n"
                 + "        ~~~~~~~~~~~~~~~~~~~~~\n"
                 + "3 errors, 0 warnings\n";
 
@@ -677,13 +667,26 @@ public class GradleDetectorTest extends AbstractCheckTest {
                         + "    buildToolsVersion \"19.0.1\"\n"
                         + "    defaultConfig {\n"
                         + "        minSdkVersion '8'\n"
-                        + "        targetSdkVersion '16'\n"
+                        + "        targetSdkVersion \"16\"\n"
                         + "    }\n"
                         + "}\n"))
                 .issues(STRING_INTEGER)
                 .sdkHome(getMockSupportLibraryInstallation())
                 .run()
-                .expect(expected);
+                .expect(expected)
+                .expectFixDiffs(""
+                        + "Fix for build.gradle line 3: Replace with integer:\n"
+                        + "@@ -4 +4\n"
+                        + "-     compileSdkVersion '19'\n"
+                        + "+     compileSdkVersion 19\n"
+                        + "Fix for build.gradle line 6: Replace with integer:\n"
+                        + "@@ -7 +7\n"
+                        + "-         minSdkVersion '8'\n"
+                        + "+         minSdkVersion 8\n"
+                        + "Fix for build.gradle line 7: Replace with integer:\n"
+                        + "@@ -8 +8\n"
+                        + "-         targetSdkVersion \"16\"\n"
+                        + "+         targetSdkVersion 16\n");
     }
 
     public void testSuppressLine2() throws Exception {
@@ -725,7 +728,16 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 .sdkHome(getMockSupportLibraryInstallation())
                 .ignoreUnknownGradleConstructs()
                 .run()
-                .expect(expected);
+                .expect(expected)
+                .expectFixDiffs(""
+                        + "Fix for build.gradle line 3: Replace with com.android.application:\n"
+                        + "@@ -4 +4\n"
+                        + "- apply plugin: 'android'\n"
+                        + "+ apply plugin: 'com.android.application'\n"
+                        + "Fix for build.gradle line 4: Replace with com.android.library:\n"
+                        + "@@ -5 +5\n"
+                        + "- apply plugin: 'android-library'\n"
+                        + "+ apply plugin: 'com.android.library'\n");
     }
 
     public void testIgnoresGStringsInDependencies() throws Exception {
@@ -797,7 +809,12 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 .issues(COMPATIBILITY)
                 .sdkHome(getMockSupportLibraryInstallation())
                 .run()
-                .expect(expected);
+                .expect(expected)
+                .expectFixDiffs(""
+                        + "Fix for build.gradle line 4: Change to 6.1.71:\n"
+                        + "@@ -5 +5\n"
+                        + "-     compile 'com.google.android.gms:play-services:5.2.08'\n"
+                        + "+     compile 'com.google.android.gms:play-services:6.1.71'\n");
     }
 
     public void testRemoteVersions() throws Exception {
@@ -1208,7 +1225,12 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 .sdkHome(getMockSupportLibraryInstallation())
                 .ignoreUnknownGradleConstructs()
                 .run()
-                .expect(expected);
+                .expect(expected)
+                .expectFixDiffs(""
+                        + "Fix for build.gradle line 4: Replace single quotes with double quotes:\n"
+                        + "@@ -5 +5\n"
+                        + "-     compile 'com.android.support:design:${supportLibVersion}'\n"
+                        + "+     compile \"com.android.support:design:${supportLibVersion}\"\n");
     }
 
     public void testOldFabric() throws Exception {
@@ -1239,7 +1261,20 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 .issues(DEPENDENCY)
                 .sdkHome(getMockSupportLibraryInstallation())
                 .run()
-                .expect(expected);
+                .expect(expected)
+                .expectFixDiffs(""
+                        + "Fix for build.gradle line 2: Change to 1.22.1:\n"
+                        + "@@ -3 +3\n"
+                        + "-     classpath 'io.fabric.tools:gradle:1.21.2'\n"
+                        + "+     classpath 'io.fabric.tools:gradle:1.22.1'\n"
+                        + "Fix for build.gradle line 3: Change to 1.22.1:\n"
+                        + "@@ -4 +4\n"
+                        + "-     classpath 'io.fabric.tools:gradle:1.20.0'\n"
+                        + "+     classpath 'io.fabric.tools:gradle:1.22.1'\n"
+                        + "Fix for build.gradle line 4: Change to 1.22.1:\n"
+                        + "@@ -5 +5\n"
+                        + "-     classpath 'io.fabric.tools:gradle:1.22.0'\n"
+                        + "+     classpath 'io.fabric.tools:gradle:1.22.1'\n");
     }
 
     public void testOldBugSnag() throws Exception {
@@ -1273,8 +1308,24 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 .issues(DEPENDENCY)
                 .sdkHome(getMockSupportLibraryInstallation())
                 .run()
-                .expect(expected);
-
+                .expect(expected)
+                .expectFixDiffs(""
+                        + "Fix for build.gradle line 2: Change to 2.4.1:\n"
+                        + "@@ -3 +3\n"
+                        + "-     classpath 'com.bugsnag:bugsnag-android-gradle-plugin:2.1.0'\n"
+                        + "+     classpath 'com.bugsnag:bugsnag-android-gradle-plugin:2.4.1'\n"
+                        + "Fix for build.gradle line 3: Change to 2.4.1:\n"
+                        + "@@ -4 +4\n"
+                        + "-     classpath 'com.bugsnag:bugsnag-android-gradle-plugin:2.1.1'\n"
+                        + "+     classpath 'com.bugsnag:bugsnag-android-gradle-plugin:2.4.1'\n"
+                        + "Fix for build.gradle line 4: Change to 2.4.1:\n"
+                        + "@@ -5 +5\n"
+                        + "-     classpath 'com.bugsnag:bugsnag-android-gradle-plugin:2.1.2'\n"
+                        + "+     classpath 'com.bugsnag:bugsnag-android-gradle-plugin:2.4.1'\n"
+                        + "Fix for build.gradle line 5: Change to 2.4.1:\n"
+                        + "@@ -6 +6\n"
+                        + "-     classpath 'com.bugsnag:bugsnag-android-gradle-plugin:2.2'\n"
+                        + "+     classpath 'com.bugsnag:bugsnag-android-gradle-plugin:2.4.1'\n");
     }
 
     public void testDeprecatedAppIndexingDependency() throws Exception {
@@ -1299,7 +1350,12 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 .issues(DEPRECATED)
                 .sdkHome(getMockSupportLibraryInstallation())
                 .run()
-                .expect(expected);
+                .expect(expected)
+                .expectFixDiffs(""
+                        + "Fix for build.gradle line 8: Replace with Firebase:\n"
+                        + "@@ -9 +9\n"
+                        + "- compile 'com.google.android.gms:play-services-appindexing:9.8.0'\n"
+                        + "+ compile 'com.google.firebase:firebase-appindexing:10.2.1'\n");
     }
 
     public void testBadBuildTools() throws Exception {
@@ -1328,38 +1384,6 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 .sdkHome(getMockSupportLibraryInstallation())
                 .run()
                 .expect(expected);
-    }
-
-    @Override
-    protected void checkReportedError(@NonNull Context context, @NonNull Issue issue,
-            @NonNull Severity severity, @NonNull Location location, @NonNull String message) {
-        if (issue == DEPENDENCY && message.startsWith("Using the appcompat library when ")) {
-            // No data embedded in this specific message
-            return;
-        }
-
-        // Issues we're supporting getOldFrom
-        if (issue == DEPENDENCY
-                || issue == STRING_INTEGER
-                || issue == DEPRECATED
-                || issue == PLUS) {
-            assertNotNull("Could not extract message tokens from " + message,
-                    GradleDetector.getOldValue(issue, message, TEXT));
-        }
-
-        if (issue == DEPENDENCY
-                || issue == STRING_INTEGER
-                || issue == DEPRECATED) {
-            assertNotNull("Could not extract message tokens from " + message,
-                    GradleDetector.getNewValue(issue, message, TEXT));
-        }
-
-        if (issue == COMPATIBILITY) {
-            if (message.startsWith("Version ")) {
-                assertNotNull("Could not extract message tokens from " + message,
-                        GradleDetector.getNewValue(issue, message, TEXT));
-            }
-        }
     }
 
     public void testGetNamedDependency() {

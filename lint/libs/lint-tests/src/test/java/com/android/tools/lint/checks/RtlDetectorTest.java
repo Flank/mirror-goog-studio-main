@@ -261,9 +261,8 @@ public class RtlDetectorTest extends AbstractCheckTest {
     }
 
     public void testRelativeLayoutCompat() throws Exception {
-        mEnabled = Collections.singleton(RtlDetector.COMPAT);
         //noinspection all // Sample code
-        assertEquals(""
+        String expected = ""
                 + "res/layout/relative.xml:10: Error: To support older versions than API 17 (project specifies 5) you should also add android:layout_alignParentLeft=\"true\" [RtlCompat]\n"
                 + "        android:layout_alignParentStart=\"true\"\n"
                 + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
@@ -291,67 +290,112 @@ public class RtlDetectorTest extends AbstractCheckTest {
                 + "res/layout/relative.xml:48: Error: To support older versions than API 17 (project specifies 5) you should also add android:layout_alignRight=\"@id/cancel\" [RtlCompat]\n"
                 + "        android:layout_alignEnd=\"@id/cancel\"\n"
                 + "        ~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "9 errors, 0 warnings\n",
-
-                lintProject(
-                        projectProperties().compileSdk(17),
-                        manifest().minSdk(5).targetSdk(17),
-                        xml("res/layout/relative.xml", ""
-                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                            + "<RelativeLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                            + "    android:layout_width=\"wrap_content\"\n"
-                            + "    android:layout_height=\"wrap_content\" >\n"
-                            + "\n"
-                            + "    <ProgressBar\n"
-                            + "        android:id=\"@+id/loading_progress\"\n"
-                            + "        android:layout_width=\"wrap_content\"\n"
-                            + "        android:layout_height=\"wrap_content\"\n"
-                            + "        android:layout_alignParentStart=\"true\"\n"
-                            + "        android:layout_alignParentTop=\"true\"\n"
-                            + "        android:layout_marginBottom=\"60dip\"\n"
-                            + "        android:layout_marginStart=\"40dip\"\n"
-                            + "        android:layout_marginTop=\"40dip\"\n"
-                            + "        android:max=\"10000\" />\n"
-                            + "\n"
-                            + "    <TextView\n"
-                            + "        android:id=\"@+id/text\"\n"
-                            + "        android:layout_width=\"wrap_content\"\n"
-                            + "        android:layout_height=\"wrap_content\"\n"
-                            + "        android:layout_alignParentTop=\"true\"\n"
-                            + "        android:layout_alignWithParentIfMissing=\"true\"\n"
-                            + "        android:layout_marginBottom=\"60dip\"\n"
-                            + "        android:layout_marginStart=\"40dip\"\n"
-                            + "        android:layout_marginTop=\"40dip\"\n"
-                            + "        android:layout_toEndOf=\"@id/loading_progress\"\n"
-                            + "        android:ellipsize=\"end\"\n"
-                            + "        android:maxLines=\"3\"\n"
-                            + "        android:paddingEnd=\"120dip\"\n"
-                            + "        android:text=\"@string/creating_instant_mix\"\n"
-                            + "        android:textAppearance=\"?android:attr/textAppearanceMedium\" />\n"
-                            + "\n"
-                            + "    <Button\n"
-                            + "        android:id=\"@+id/cancel\"\n"
-                            + "        android:layout_width=\"wrap_content\"\n"
-                            + "        android:layout_height=\"wrap_content\"\n"
-                            + "        android:layout_alignParentStart=\"true\"\n"
-                            + "        android:layout_alignEnd=\"@id/text\"\n"
-                            + "        android:layout_below=\"@id/text\"\n"
-                            + "        android:background=\"@null\"\n"
-                            + "        android:text=\"@string/cancel\" />\n"
-                            + "\n"
-                            + "    <ImageView\n"
-                            + "        android:layout_width=\"wrap_content\"\n"
-                            + "        android:layout_height=\"wrap_content\"\n"
-                            + "        android:layout_above=\"@id/cancel\"\n"
-                            + "        android:layout_alignStart=\"@id/cancel\"\n"
-                            + "        android:layout_alignEnd=\"@id/cancel\"\n"
-                            + "        android:scaleType=\"fitXY\"\n"
-                            + "        android:src=\"@drawable/menu_list_divider\" />\n"
-                            + "\n"
-                            + "</RelativeLayout>\n")
-                ));
+                + "9 errors, 0 warnings\n";
+        lint().files(
+                projectProperties().compileSdk(17),
+                manifest().minSdk(5).targetSdk(17),
+                xml("res/layout/relative.xml", ""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<RelativeLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    android:layout_width=\"wrap_content\"\n"
+                        + "    android:layout_height=\"wrap_content\" >\n"
+                        + "\n"
+                        + "    <ProgressBar\n"
+                        + "        android:id=\"@+id/loading_progress\"\n"
+                        + "        android:layout_width=\"wrap_content\"\n"
+                        + "        android:layout_height=\"wrap_content\"\n"
+                        + "        android:layout_alignParentStart=\"true\"\n"
+                        + "        android:layout_alignParentTop=\"true\"\n"
+                        + "        android:layout_marginBottom=\"60dip\"\n"
+                        + "        android:layout_marginStart=\"40dip\"\n"
+                        + "        android:layout_marginTop=\"40dip\"\n"
+                        + "        android:max=\"10000\" />\n"
+                        + "\n"
+                        + "    <TextView\n"
+                        + "        android:id=\"@+id/text\"\n"
+                        + "        android:layout_width=\"wrap_content\"\n"
+                        + "        android:layout_height=\"wrap_content\"\n"
+                        + "        android:layout_alignParentTop=\"true\"\n"
+                        + "        android:layout_alignWithParentIfMissing=\"true\"\n"
+                        + "        android:layout_marginBottom=\"60dip\"\n"
+                        + "        android:layout_marginStart=\"40dip\"\n"
+                        + "        android:layout_marginTop=\"40dip\"\n"
+                        + "        android:layout_toEndOf=\"@id/loading_progress\"\n"
+                        + "        android:ellipsize=\"end\"\n"
+                        + "        android:maxLines=\"3\"\n"
+                        + "        android:paddingEnd=\"120dip\"\n"
+                        + "        android:text=\"@string/creating_instant_mix\"\n"
+                        + "        android:textAppearance=\"?android:attr/textAppearanceMedium\" />\n"
+                        + "\n"
+                        + "    <Button\n"
+                        + "        android:id=\"@+id/cancel\"\n"
+                        + "        android:layout_width=\"wrap_content\"\n"
+                        + "        android:layout_height=\"wrap_content\"\n"
+                        + "        android:layout_alignParentStart=\"true\"\n"
+                        + "        android:layout_alignEnd=\"@id/text\"\n"
+                        + "        android:layout_below=\"@id/text\"\n"
+                        + "        android:background=\"@null\"\n"
+                        + "        android:text=\"@string/cancel\" />\n"
+                        + "\n"
+                        + "    <ImageView\n"
+                        + "        android:layout_width=\"wrap_content\"\n"
+                        + "        android:layout_height=\"wrap_content\"\n"
+                        + "        android:layout_above=\"@id/cancel\"\n"
+                        + "        android:layout_alignStart=\"@id/cancel\"\n"
+                        + "        android:layout_alignEnd=\"@id/cancel\"\n"
+                        + "        android:scaleType=\"fitXY\"\n"
+                        + "        android:src=\"@drawable/menu_list_divider\" />\n"
+                        + "\n"
+                        + "</RelativeLayout>\n"))
+                .issues(RtlDetector.COMPAT)
+                .run()
+                .expect(expected)
+                .verifyFixes().window(1).expectFixDiffs("Fix for res/layout/relative.xml line 9: Set layout_alignParentLeft=\"true\":\n"
+                + "@@ -10 +10\n"
+                + "          android:layout_height=\"wrap_content\"\n"
+                + "+         android:layout_alignParentLeft=\"true\"\n"
+                + "          android:layout_alignParentStart=\"true\"\n"
+                + "Fix for res/layout/relative.xml line 12: Set layout_marginLeft=\"40dip\":\n"
+                + "@@ -13 +13\n"
+                + "          android:layout_marginBottom=\"60dip\"\n"
+                + "+         android:layout_marginLeft=\"40dip\"\n"
+                + "          android:layout_marginStart=\"40dip\"\n"
+                + "Fix for res/layout/relative.xml line 23: Set layout_marginLeft=\"40dip\":\n"
+                + "@@ -24 +24\n"
+                + "          android:layout_marginBottom=\"60dip\"\n"
+                + "+         android:layout_marginLeft=\"40dip\"\n"
+                + "          android:layout_marginStart=\"40dip\"\n"
+                + "Fix for res/layout/relative.xml line 25: Set layout_toRightOf=\"@id/loading_progress\":\n"
+                + "@@ -27 +27\n"
+                + "          android:layout_toEndOf=\"@id/loading_progress\"\n"
+                + "+         android:layout_toRightOf=\"@id/loading_progress\"\n"
+                + "          android:ellipsize=\"end\"\n"
+                + "Fix for res/layout/relative.xml line 28: Set paddingRight=\"120dip\":\n"
+                + "@@ -30 +30\n"
+                + "          android:paddingEnd=\"120dip\"\n"
+                + "+         android:paddingRight=\"120dip\"\n"
+                + "          android:text=\"@string/creating_instant_mix\"\n"
+                + "Fix for res/layout/relative.xml line 36: Set layout_alignParentLeft=\"true\":\n"
+                + "@@ -38 +38\n"
+                + "          android:layout_alignEnd=\"@id/text\"\n"
+                + "+         android:layout_alignParentLeft=\"true\"\n"
+                + "          android:layout_alignParentStart=\"true\"\n"
+                + "Fix for res/layout/relative.xml line 37: Set layout_alignRight=\"@id/text\":\n"
+                + "@@ -39 +39\n"
+                + "          android:layout_alignParentStart=\"true\"\n"
+                + "+         android:layout_alignRight=\"@id/text\"\n"
+                + "          android:layout_below=\"@id/text\"\n"
+                + "Fix for res/layout/relative.xml line 46: Set layout_alignLeft=\"@id/cancel\":\n"
+                + "@@ -48 +48\n"
+                + "          android:layout_alignEnd=\"@id/cancel\"\n"
+                + "+         android:layout_alignLeft=\"@id/cancel\"\n"
+                + "          android:layout_alignStart=\"@id/cancel\"\n"
+                + "Fix for res/layout/relative.xml line 47: Set layout_alignRight=\"@id/cancel\":\n"
+                + "@@ -48 +48\n"
+                + "          android:layout_alignEnd=\"@id/cancel\"\n"
+                + "+         android:layout_alignRight=\"@id/cancel\"\n"
+                + "          android:layout_alignStart=\"@id/cancel\"\n");
     }
-
 
     public void testRelativeCompatOk() throws Exception {
         mEnabled = ALL;
@@ -578,31 +622,37 @@ public class RtlDetectorTest extends AbstractCheckTest {
         // compatibility version of it for the compatibility attribute, e.g. if the
         // attribute for paddingEnd is ?listPreferredItemPaddingEnd, when we suggest
         // also setting paddingRight we suggest ?listPreferredItemPaddingRight
-        mEnabled = Collections.singleton(RtlDetector.COMPAT);
-        //noinspection all // Sample code
-        assertEquals(""
+        String expected = ""
                 + "res/layout/symmetry.xml:8: Error: To support older versions than API 17 (project specifies 5) you should also add android:paddingRight=\"?android:listPreferredItemPaddingRight\" [RtlCompat]\n"
                 + "        android:paddingEnd=\"?android:listPreferredItemPaddingEnd\"\n"
                 + "        ~~~~~~~~~~~~~~~~~~\n"
-                + "1 errors, 0 warnings\n",
-
-                lintProject(
-                        projectProperties().compileSdk(17),
-                        manifest().minSdk(5).targetSdk(17),
-                        xml("res/layout/symmetry.xml", ""
-                            + "<RelativeLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                            + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
-                            + "    android:layout_width=\"match_parent\"\n"
-                            + "    android:layout_height=\"match_parent\">\n"
-                            + "\n"
-                            + "    <TextView\n"
-                            + "        android:text=\"@string/hello_world\"\n"
-                            + "        android:paddingEnd=\"?android:listPreferredItemPaddingEnd\"\n"
-                            + "        android:layout_width=\"wrap_content\"\n"
-                            + "        android:layout_height=\"wrap_content\" />\n"
-                            + "\n"
-                            + "</RelativeLayout>\n")
-                ));
+                + "1 errors, 0 warnings\n";
+        //noinspection all // Sample code
+        lint().files(
+                projectProperties().compileSdk(17),
+                manifest().minSdk(5).targetSdk(17),
+                xml("res/layout/symmetry.xml", ""
+                        + "<RelativeLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                        + "    android:layout_width=\"match_parent\"\n"
+                        + "    android:layout_height=\"match_parent\">\n"
+                        + "\n"
+                        + "    <TextView\n"
+                        + "        android:text=\"@string/hello_world\"\n"
+                        + "        android:paddingEnd=\"?android:listPreferredItemPaddingEnd\"\n"
+                        + "        android:layout_width=\"wrap_content\"\n"
+                        + "        android:layout_height=\"wrap_content\" />\n"
+                        + "\n"
+                        + "</RelativeLayout>\n"))
+                .issues(RtlDetector.COMPAT)
+                .run()
+                .expect(expected)
+                .verifyFixes().window(1).expectFixDiffs(""
+                + "Fix for res/layout/symmetry.xml line 7: Set paddingRight=\"?android:listPreferredItemPaddingRight\":\n"
+                + "@@ -11 +11\n"
+                + "          android:paddingEnd=\"?android:listPreferredItemPaddingEnd\"\n"
+                + "+         android:paddingRight=\"?android:listPreferredItemPaddingRight\"\n"
+                + "          android:text=\"@string/hello_world\" />\n");
     }
 
     public void testTextAlignment() throws Exception {

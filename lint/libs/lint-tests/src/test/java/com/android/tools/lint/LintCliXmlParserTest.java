@@ -23,6 +23,7 @@ import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Location.Handle;
 import com.android.tools.lint.detector.api.Position;
@@ -201,7 +202,7 @@ public class LintCliXmlParserTest extends TestCase {
                 @NonNull Location location,
                 @NonNull String message,
                 @NonNull TextFormat format,
-                @Nullable Object quickfixData) {
+                @Nullable LintFix fix) {
             System.out.println(location + ":" + message);
         }
     }
