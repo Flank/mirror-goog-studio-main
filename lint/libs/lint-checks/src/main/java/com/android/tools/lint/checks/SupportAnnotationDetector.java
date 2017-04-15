@@ -403,11 +403,7 @@ public class SupportAnnotationDetector extends Detector implements UastScanner {
             }
         }
 
-        if (scope != null && driver.isSuppressed(context, issue, scope)) {
-            return;
-        }
-
-        context.report(issue, location, message, quickfixData);
+        context.report(issue, scope, location, message, quickfixData);
     }
 
     private void checkContextAnnotations(@NonNull JavaContext context, @Nullable PsiMethod method,

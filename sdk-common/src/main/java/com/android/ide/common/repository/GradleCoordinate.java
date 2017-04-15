@@ -529,6 +529,16 @@ public class GradleCoordinate {
         return revision.toString();
     }
 
+    /**
+     * Returns the version of this coordinate
+     *
+     * @return the version
+     */
+    @Nullable
+    public GradleVersion getVersion() {
+        return GradleVersion.tryParse(getRevision());
+    }
+
     public boolean isPreview() {
         return !mRevisions.isEmpty() && mRevisions.get(mRevisions.size() - 1).isPreview();
     }

@@ -181,6 +181,8 @@ public class LintDriver {
     private boolean checkTestSources;
     /** Whether we should include generated sources in the analysis */
     private boolean checkGeneratedSources;
+    /** Whether we're only analyzing fatal-severity issues */
+    private boolean fatalOnlyMode;
     private LintBaseline baseline;
 
     /**
@@ -359,6 +361,16 @@ public class LintDriver {
         }
 
         return null;
+    }
+
+    /** Whether we're only analyzing fatal-severity issues */
+    public boolean isFatalOnlyMode() {
+        return fatalOnlyMode;
+    }
+
+    /** Sets whether we're only analyzing fatal-severity issues */
+    public void setFatalOnlyMode(boolean fatalOnlyMode) {
+        this.fatalOnlyMode = fatalOnlyMode;
     }
 
     @Nullable
