@@ -52,16 +52,6 @@ public class Api {
             ApiParser apiParser = new ApiParser();
             parser.parse(inputStream, apiParser);
             inputStream.close();
-
-            // Also read in API (unless regenerating the map for newer libraries)
-            //noinspection PointlessBooleanExpression,TestOnlyProblems
-            if (!ApiLookup.DEBUG_FORCE_REGENERATE_BINARY) {
-                inputStream = Api.class.getResourceAsStream("api-versions-support-library.xml");
-                if (inputStream != null) {
-                    parser.parse(inputStream, apiParser);
-                }
-            }
-
             return new Api(apiParser.getClasses(), apiParser.getPackages());
         } catch (ParserConfigurationException e) {
             e.printStackTrace();

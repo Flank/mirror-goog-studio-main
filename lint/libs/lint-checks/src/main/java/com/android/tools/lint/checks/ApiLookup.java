@@ -77,13 +77,11 @@ import java.util.Set;
  * </ul>
  */
 public class ApiLookup {
-    /** Relative path to the api-versions.xml database file within the Lint installation */
-    public static final String OLD_XML_FILE_PATH = "platform-tools/api/api-versions.xml";
     public static final String XML_FILE_PATH = "api-versions.xml"; // relative to the SDK data/ dir
     /** Database moved from platform-tools to SDK in API level 26 */
     public static final int SDK_DATABASE_MIN_VERSION = 26;
     private static final String FILE_HEADER = "API database used by Android lint\000";
-    private static final int BINARY_FORMAT_VERSION = 9;
+    private static final int BINARY_FORMAT_VERSION = 10;
     private static final boolean DEBUG_SEARCH = false;
     private static final boolean WRITE_STATS = false;
 
