@@ -126,7 +126,7 @@ public class BuildOutputsTest {
         assertThat(buildOutput.getType()).isEqualTo(TaskOutputType.MERGED_MANIFESTS);
         assertThat(buildOutput.getFilters()).isEmpty();
         assertThat(buildOutput.getOutputFile().getAbsolutePath())
-                .isEqualTo("/foo/bar/AndroidManifest.xml");
+                .isEqualTo(new File("/foo/bar/AndroidManifest.xml").getAbsolutePath());
         assertThat(buildOutput.getApkInfo().getType()).isEqualTo(VariantOutput.OutputType.MAIN);
         assertThat(buildOutput.getApkInfo().getFilters()).isEmpty();
     }

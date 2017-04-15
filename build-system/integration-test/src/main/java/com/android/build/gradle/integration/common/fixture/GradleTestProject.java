@@ -729,6 +729,17 @@ public final class GradleTestProject implements TestRule {
                                 + "/"
                                 + Joiner.on("-").join(dimensionList)
                                 + SdkConstants.DOT_ANDROID_PACKAGE);
+        return _getApk(apkFile);
+    }
+
+    /**
+     * Internal Apk construction facility that will copy the file first on Windows to avoid locking
+     * the underlying file.
+     * @param apkFile the file handle to create the APK from.
+     * @return the Apk object.
+     * @throws IOException
+     */
+    private Apk _getApk(File apkFile) throws IOException {
         Apk apk;
         if (OsType.getHostOs() == OsType.WINDOWS && apkFile.exists()) {
             File copy = File.createTempFile("tmp", ".apk");
@@ -842,8 +853,7 @@ public final class GradleTestProject implements TestRule {
     @NonNull
     public Apk getApk(@Nullable String filterName, ApkType apkType, String... dimensions)
             throws IOException {
-        return new Apk(
-                getOutputFile(
+        return _getApk(getOutputFile(
                         "apk"
                                 + (apkType.getTestName() != null ? "/" + apkType.getTestName() : "")
                                 + "/"
@@ -876,8 +886,7 @@ public final class GradleTestProject implements TestRule {
     @NonNull
     public Apk getFeatureApk(@Nullable String filterName, ApkType apkType, String... dimensions)
             throws IOException {
-        return new Apk(
-                getOutputFile(
+        return _getApk(getOutputFile(
                         "apk"
                                 + (apkType.getTestName() != null ? "/" + apkType.getTestName() : "")
                                 + "/feature/"
