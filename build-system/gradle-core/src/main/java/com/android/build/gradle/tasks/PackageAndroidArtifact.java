@@ -347,22 +347,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
         ImmutableMap<RelativeFile, FileStatus> updatedDex =
                 IncrementalRelativeFileSets.fromZipsAndDirectories(getDexFolders());
-        ImmutableMap.Builder<RelativeFile, FileStatus> updatedJavaResourcesBuilder =
-                ImmutableMap.builder();
-        for (File javaResourceFile : getJavaResourceFiles()) {
-            try {
-                updatedJavaResourcesBuilder.putAll(
-                        javaResourceFile.isFile()
-                                ? IncrementalRelativeFileSets.fromZip(javaResourceFile)
-                                : IncrementalRelativeFileSets.fromDirectory(javaResourceFile));
-            } catch (Zip64NotSupportedException e) {
-                updatedJavaResourcesBuilder.putAll(
-                        IncrementalRelativeFileSets.fromZip(
-                                copyJavaResourcesOnly(getIncrementalFolder(), javaResourceFile)));
-            }
-        }
-        ImmutableMap<RelativeFile, FileStatus> updatedJavaResources =
-                updatedJavaResourcesBuilder.build();
+        ImmutableMap<RelativeFile, FileStatus> updatedJavaResources = getJavaResourcesChanges();
         ImmutableMap<RelativeFile, FileStatus> updatedAssets =
                 IncrementalRelativeFileSets.fromZipsAndDirectories(assets.getFiles());
         ImmutableMap<RelativeFile, FileStatus> updatedAndroidResources =
@@ -437,6 +422,25 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
             }
         }
         return copiedZip;
+    }
+
+    ImmutableMap<RelativeFile, FileStatus> getJavaResourcesChanges() throws IOException {
+
+        ImmutableMap.Builder<RelativeFile, FileStatus> updatedJavaResourcesBuilder =
+                ImmutableMap.builder();
+        for (File javaResourceFile : getJavaResourceFiles()) {
+            try {
+                updatedJavaResourcesBuilder.putAll(
+                        javaResourceFile.isFile()
+                                ? IncrementalRelativeFileSets.fromZip(javaResourceFile)
+                                : IncrementalRelativeFileSets.fromDirectory(javaResourceFile));
+            } catch (Zip64NotSupportedException e) {
+                updatedJavaResourcesBuilder.putAll(
+                        IncrementalRelativeFileSets.fromZip(
+                                copyJavaResourcesOnly(getIncrementalFolder(), javaResourceFile)));
+            }
+        }
+        return updatedJavaResourcesBuilder.build();
     }
 
     /**
@@ -601,14 +605,33 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                         cacheByPath,
                         cacheUpdates);
 
-        ImmutableMap<RelativeFile, FileStatus> changedJavaResources =
-                KnownFilesSaveData.getChangedInputs(
-                        changedInputs,
-                        saveData,
-                        InputSet.JAVA_RESOURCE,
-                        getJavaResourceFiles().getFiles(),
-                        cacheByPath,
-                        cacheUpdates);
+        ImmutableMap<RelativeFile, FileStatus> changedJavaResources;
+        try {
+            changedJavaResources =
+                    KnownFilesSaveData.getChangedInputs(
+                            changedInputs,
+                            saveData,
+                            InputSet.JAVA_RESOURCE,
+                            getJavaResourceFiles().getFiles(),
+                            cacheByPath,
+                            cacheUpdates);
+        } catch (Zip64NotSupportedException e) {
+            // copy all changedInputs into a smaller jar and rerun.
+            ImmutableMap.Builder<File, FileStatus> copiedInputs = ImmutableMap.builder();
+            for (Map.Entry<File, FileStatus> fileFileStatusEntry : changedInputs.entrySet()) {
+                copiedInputs.put(
+                        copyJavaResourcesOnly(getIncrementalFolder(), fileFileStatusEntry.getKey()),
+                        fileFileStatusEntry.getValue());
+            }
+            changedJavaResources =
+                    KnownFilesSaveData.getChangedInputs(
+                            copiedInputs.build(),
+                            saveData,
+                            InputSet.JAVA_RESOURCE,
+                            getJavaResourceFiles().getFiles(),
+                            cacheByPath,
+                            cacheUpdates);
+        }
 
         ImmutableMap<RelativeFile, FileStatus> changedAssets =
                 KnownFilesSaveData.getChangedInputs(
