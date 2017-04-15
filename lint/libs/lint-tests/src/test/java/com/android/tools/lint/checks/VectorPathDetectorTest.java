@@ -178,7 +178,7 @@ public class VectorPathDetectorTest extends AbstractCheckTest {
                 .incremental("res/drawable/my_vector.xml")
                 .run()
                 .expect(""
-                        + "res/drawable/my_vector.xml:7: Error: Avoid scientific notation (1.05e-4) in vector paths because it can lead to crashes on some devices [InvalidVectorPath]\n"
+                        + "res/drawable/my_vector.xml:7: Error: Avoid scientific notation (1.05e-4) in vector paths because it can lead to crashes on some devices. Use 0.000105 instead. [InvalidVectorPath]\n"
                         + "    android:pathData=\"m 1.05e-4,2.75448\" />\n"
                         + "                        ~~~~~~~\n"
                         + "1 errors, 0 warnings\n");
@@ -202,9 +202,69 @@ public class VectorPathDetectorTest extends AbstractCheckTest {
                 .incremental("res/drawable/my_vector.xml")
                 .run()
                 .expect(""
-                        + "res/drawable/my_vector.xml:7: Error: Avoid scientific notation (1.05e-4) in vector paths because it can lead to crashes on some devices [InvalidVectorPath]\n"
+                        + "res/drawable/my_vector.xml:7: Error: Avoid scientific notation (1.05e-4) in vector paths because it can lead to crashes on some devices. Use 0.000105 instead. [InvalidVectorPath]\n"
                         + "    android:pathData=\"@string/my_vector_path\" />\n"
                         + "                      ~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings\n");
+    }
+
+    public void testInvalidFloatPattern() {
+        // Regression test for https://issuetracker.google.com/issues/27515021
+        lint().files(
+                xml("res/drawable/my_vector.xml", ""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<vector xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    android:width=\"24dp\"\n"
+                        + "    android:height=\"24dp\"\n"
+                        + "    android:viewportHeight=\"24.0\"\n"
+                        + "    android:viewportWidth=\"24.0\">\n"
+                        + "    <path\n"
+                        + "        android:fillColor=\"#000000\"\n"
+                        + "        android:pathData=\"M18 8c0-3.31-2.69-6-6-6s-6 2.69-6 6c0 4.5 6 11 6 11s6-6.5 6-11zm-8 0c0-1.1.9-2 2-2s2 .9 2 2-.89 2-2 2c-1.1 0-2-.9-2-2zm-5 12v2h14v-2h-14z\" />\n"
+                        + "\n"
+                        + "    <path\n"
+                        + "        android:pathData=\"M0 0h24v24h-24z\" />\n"
+                        + "\n"
+                        + "</vector>"))
+                .incremental("res/drawable/my_vector.xml")
+                .run()
+                .expect(""
+                        + "res/drawable/my_vector.xml:9: Error: Use -0.89 instead of -.89 to avoid crashes on some devices [InvalidVectorPath]\n"
+                        + "        android:pathData=\"M18 8c0-3.31-2.69-6-6-6s-6 2.69-6 6c0 4.5 6 11 6 11s6-6.5 6-11zm-8 0c0-1.1.9-2 2-2s2 .9 2 2-.89 2-2 2c-1.1 0-2-.9-2-2zm-5 12v2h14v-2h-14z\" />\n"
+                        + "                                                                                                                     ~~~~\n"
+                        + "res/drawable/my_vector.xml:9: Error: Use -0.9 instead of -.9 to avoid crashes on some devices [InvalidVectorPath]\n"
+                        + "        android:pathData=\"M18 8c0-3.31-2.69-6-6-6s-6 2.69-6 6c0 4.5 6 11 6 11s6-6.5 6-11zm-8 0c0-1.1.9-2 2-2s2 .9 2 2-.89 2-2 2c-1.1 0-2-.9-2-2zm-5 12v2h14v-2h-14z\" />\n"
+                        + "                                                                                                                                        ~~~\n"
+                        + "res/drawable/my_vector.xml:9: Error: Use 0.9 instead of .9 to avoid crashes on some devices [InvalidVectorPath]\n"
+                        + "        android:pathData=\"M18 8c0-3.31-2.69-6-6-6s-6 2.69-6 6c0 4.5 6 11 6 11s6-6.5 6-11zm-8 0c0-1.1.9-2 2-2s2 .9 2 2-.89 2-2 2c-1.1 0-2-.9-2-2zm-5 12v2h14v-2h-14z\" />\n"
+                        + "                                                                                                    ~~\n"
+                        + "res/drawable/my_vector.xml:9: Error: Use 0.9 instead of .9 to avoid crashes on some devices [InvalidVectorPath]\n"
+                        + "        android:pathData=\"M18 8c0-3.31-2.69-6-6-6s-6 2.69-6 6c0 4.5 6 11 6 11s6-6.5 6-11zm-8 0c0-1.1.9-2 2-2s2 .9 2 2-.89 2-2 2c-1.1 0-2-.9-2-2zm-5 12v2h14v-2h-14z\" />\n"
+                        + "                                                                                                               ~~\n"
+                        + "4 errors, 0 warnings\n");
+    }
+
+    public void testValidFloatPattern() {
+        // Regression test for https://issuetracker.google.com/issues/27515021
+        // (testing valid data)
+        lint().files(
+                xml("res/drawable/my_vector.xml", ""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<vector xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    android:width=\"24dp\"\n"
+                        + "    android:height=\"24dp\"\n"
+                        + "    android:viewportWidth=\"24\"\n"
+                        + "    android:viewportHeight=\"24\">\n"
+                        + "\n"
+                        + "    <path\n"
+                        + "        android:fillColor=\"#000000\"\n"
+                        + "        android:pathData=\"M12 2c-3.87 0-7 3.13-7 7 0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0\n"
+                        + "9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z\" />\n"
+                        + "    <path\n"
+                        + "        android:pathData=\"M0 0h24v24h-24z\" />\n"
+                        + "</vector>"))
+                .incremental("res/drawable/my_vector.xml")
+                .run()
+                .expectClean();
     }
 }

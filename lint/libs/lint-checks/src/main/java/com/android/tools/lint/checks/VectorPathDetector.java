@@ -19,7 +19,6 @@ package com.android.tools.lint.checks;
 import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
 import static com.android.SdkConstants.TAG_VECTOR;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.res2.AbstractResourceRepository;
@@ -36,9 +35,12 @@ import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 
@@ -164,32 +166,32 @@ public class VectorPathDetector extends ResourceXmlDetector {
         return project.isGradleProject();
     }
 
-    private static void validatePath(XmlContext context, Attr attribute, String value) {
-        if (context.getMainProject().getMinSdkVersion().getFeatureLevel() >= 21) {
+    private static void validatePath(@NonNull XmlContext context, Attr attribute, String value) {
+        if (context.getMainProject().getMinSdkVersion().getFeatureLevel() >= 23) {
             // Fixed in lollipop
             return;
         }
         try {
-            checkPathData(value);
+            checkPathData(context, attribute, value);
         } catch (NumberFormatException t) {
-            String s = t.getMessage();
+            String number = t.getMessage();
             Location location = context.getValueLocation(attribute);
-            Position start = location.getStart();
-            assert start != null;
-            int index = value.indexOf(s);
-            if (index != -1 && attribute.getValue().contains(s)) {
+            Position startPos = location.getStart();
+            assert startPos != null;
+            int index = value.indexOf(number);
+            if (index != -1 && attribute.getValue().contains(number)) {
                 location = Location.create(context.file, context.getContents(),
-                        start.getOffset() + index,
-                        start.getOffset() + index + s.length());
+                        startPos.getOffset() + index,
+                        startPos.getOffset() + index + number.length());
             }
 
-            QuickfixData quickfixData = QuickfixData.create(s);
+            QuickfixData quickfixData = QuickfixData.create(number);
             if (attribute.getValue().startsWith(PREFIX_RESOURCE_REF)) {
                 quickfixData.put(ResourceUrl.parse(attribute.getValue()));
             }
             context.report(PATH_VALID, attribute, location,
                     String.format("Avoid scientific notation (`%1$s`) in vector paths because "
-                            + "it can lead to crashes on some devices", s), quickfixData);
+                            + "it can lead to crashes on some devices", number), quickfixData);
         }
     }
 
@@ -203,7 +205,10 @@ public class VectorPathDetector extends ResourceXmlDetector {
      * Check the given path data and throw a number format exception (containing the
      * exact invalid string) if it finds a problem
      */
-    public static void checkPathData(@NonNull String path) throws NumberFormatException {
+    public static void checkPathData(
+            @NonNull XmlContext context,
+            @NonNull Attr attribute,
+            @NonNull String path) {
         int start = 0;
         int end = 1;
         while (end < path.length()) {
@@ -217,15 +222,16 @@ public class VectorPathDetector extends ResourceXmlDetector {
                 trimEnd--;
             }
             if (trimEnd > trimStart) {
-                checkFloats(path, trimStart, trimEnd);
+                checkFloats(context, attribute, path, trimStart, trimEnd);
             }
             start = end;
             end++;
         }
     }
 
-    private static void checkFloats(String s, int start, int end) throws NumberFormatException {
-        if (s.charAt(0) == 'z' || s.charAt(0) == 'Z') {
+    private static void checkFloats(@NonNull XmlContext context, @NonNull Attr attribute,
+            @NonNull String s, int start, int end) {
+        if (s.charAt(start) == 'z' || s.charAt(start) == 'Z') {
             return;
         }
         int startPosition = start + 1;
@@ -269,9 +275,45 @@ public class VectorPathDetector extends ResourceXmlDetector {
                 }
             }
 
-            if (hasExponential && startPosition < currentIndex) {
-                String expNumber = s.substring(startPosition, currentIndex);
-                throw new NumberFormatException(expNumber);
+            // Scientific notation not supported everywhere
+            if (hasExponential && startPosition < currentIndex
+                    // This was fixed in Lollipop
+                    && context.getMainProject().getMinSdkVersion().getFeatureLevel() < 21) {
+                String number = s.substring(startPosition, currentIndex);
+
+                String converted = null;
+                try {
+                    // See http://stackoverflow.com/questions/16098046/
+                    //    how-to-print-double-value-without-scientific-notation-using-java
+                    // for an explanation for why we do this big workaround
+                    DecimalFormat df = new DecimalFormat("0",
+                            DecimalFormatSymbols.getInstance(Locale.ENGLISH));
+                    // DecimalFormat.DOUBLE_FRACTION_DIGITS = 340 but is package private
+                    df.setMaximumFractionDigits(340);
+                    converted = df.format(Double.parseDouble(number));
+                } catch (NumberFormatException ignore) {
+                }
+
+                String message = String.format("Avoid scientific notation (`%1$s`) in vector "
+                        + "paths because it can lead to crashes on some devices.", number);
+                if (converted != null) {
+                    message += " Use `" + converted + "` instead.";
+                }
+                reportInvalidPathData(context, attribute, s, startPosition, currentIndex, number,
+                        converted, message);
+            }
+
+            if ((s.startsWith(".", startPosition)
+                    || s.startsWith("-.", startPosition)
+                    // This was fixed in Marshmallow
+                    && context.getMainProject().getMinSdkVersion().getFeatureLevel() < 23)) {
+                String number = s.substring(startPosition, currentIndex);
+                String replace = number.startsWith(".")
+                        ? ("0" + number) : ("-0." + number.substring(2));
+                String message = String.format("Use %1$s instead of %2$s to avoid crashes "
+                        + "on some devices", replace, number);
+                reportInvalidPathData(context, attribute, s, startPosition, currentIndex, number,
+                        replace, message);
             }
 
             int endPosition = currentIndex;
@@ -282,6 +324,28 @@ public class VectorPathDetector extends ResourceXmlDetector {
                 startPosition = endPosition + 1;
             }
         }
+    }
+
+    private static void reportInvalidPathData(@NonNull XmlContext context, @NonNull Attr attribute,
+            @NonNull String s, int startPosition, int currentIndex, @NonNull String number,
+            @Nullable String replace, @NonNull String message) {
+        Location location = context.getValueLocation(attribute);
+        Position startPos = location.getStart();
+        assert startPos != null;
+
+        // If the attribute contains the literal value (not a resource
+        // reference) point to the specific location
+        QuickfixData quickfixData = null;
+        if (s.equals(attribute.getValue())) {
+            location = Location.create(context.file, context.getContents(),
+                    startPos.getOffset() + startPosition,
+                    startPos.getOffset() + currentIndex);
+            if (replace != null) {
+                quickfixData = new QuickfixData.ReplaceString(number, null, replace);
+            }
+        }
+
+        context.report(PATH_VALID, attribute, location, message, quickfixData);
     }
 
     private static int findNextStart(String s, int end) {

@@ -72,7 +72,9 @@ import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
+import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.Project;
+import com.android.tools.lint.detector.api.QuickfixData;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
@@ -99,6 +101,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.internal.compiler.ast.CompilationUnitDeclaration;
@@ -717,6 +720,32 @@ public class TestLintClient extends LintCliClient {
             assertNotSame(warning, prev);
             assert prev == null || !warning.equals(prev) : "Warning (message, location) reported more than once: " + warning;
             prev = warning;
+        }
+
+        if (quickfixData instanceof QuickfixData.ReplaceString) {
+            QuickfixData.ReplaceString replaceFix = (QuickfixData.ReplaceString) quickfixData;
+            String oldPattern = replaceFix.oldPattern;
+            String oldString = replaceFix.oldString;
+            String contents = readFile(location.getFile()).toString();
+            Position start = location.getStart();
+            Position end = location.getEnd();
+            assert start != null;
+            assert end != null;
+            String locationRange = contents.substring(start.getOffset(), end.getOffset());
+
+            if (oldString != null) {
+                assertTrue("Did not find \"" + oldString + "\" in \"" + locationRange
+                                + "\" as suggested in the quickfix for issue " + issue,
+                        locationRange.contains(oldString));
+            } else if (oldPattern != null) {
+                Pattern pattern = Pattern.compile(oldPattern);
+                if (!pattern.matcher(locationRange).find()) {
+                    fail("Did not match pattern \"" + oldPattern + "\" in \"" + locationRange
+                                    + "\" as suggested in the quickfix for issue " + issue);
+                }
+            } else {
+                fail("Either oldString or oldPattern should be set in the replace quickfix.");
+            }
         }
     }
 
