@@ -90,11 +90,17 @@ public class DeprecationDetector extends LayoutDetector {
                 ATTR_INPUT_METHOD,
                 ATTR_AUTO_TEXT,
                 ATTR_CAPITALIZE,
-                ATTR_SINGLE_LINE,
 
                 ATTR_NUMERIC,
                 ATTR_PHONE_NUMBER,
                 ATTR_PASSWORD
+
+                // ATTR_SINGLE_LINE is marked deprecated, but (a) it's used a lot everywhere,
+                // including in our own apps, and (b) replacing it with the suggested replacement
+                // can lead to crashes; see issue 37137344
+
+                // ATTR_ENABLED  is marked deprecated in android.R.attr but apparently
+                // using the suggested replacement of state_enabled doesn't work, see issue 27613
 
                 // These attributes are also deprecated; not yet enabled until we
                 // know the API level to apply the deprecation for:
@@ -108,7 +114,6 @@ public class DeprecationDetector extends LayoutDetector {
                 // "This will create a non-standard UI appearance, because the search bar UI is
                 // changing to use only icons for its buttons."
                 //"searchButtonText",
-
         );
     }
 
