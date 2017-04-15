@@ -92,7 +92,7 @@ public class TextReporter extends Reporter {
                     assert baselineFile != null;
                     writer.write(String.format(" (%1$s filtered by baseline %2$s)",
                             describeCounts(stats.baselineErrorCount, stats.baselineWarningCount,
-                                    true),
+                                    true, true),
                             baselineFile.getName()));
                 }
                 writer.write('.');
@@ -237,7 +237,8 @@ public class TextReporter extends Reporter {
                 File baselineFile = flags.getBaselineFile();
                 assert baselineFile != null;
                 writer.write(String.format(" (%1$s filtered by baseline %2$s)",
-                        describeCounts(stats.baselineErrorCount, stats.baselineWarningCount, true),
+                        describeCounts(stats.baselineErrorCount, stats.baselineWarningCount, true,
+                                true),
                         baselineFile.getName()));
             }
             writer.write('\n');
