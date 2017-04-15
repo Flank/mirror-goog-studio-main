@@ -166,9 +166,6 @@ public class JarContentsTest {
                 "com/android/tools/lint/lint-error.png",
                 "com/android/tools/lint/hololike.css");
         expected.putAll(
-                "com/android/tools/lint/lint-checks/",
-                "com/android/tools/lint/checks/api-versions-support-library.xml");
-        expected.putAll(
                 "com/android/tools/repository/",
                 "com/android/repository/api/common.xjb",
                 "com/android/repository/api/generic.xjb",
