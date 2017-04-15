@@ -369,7 +369,7 @@ public class TestLintClient extends LintCliClient {
     @SuppressWarnings("StringBufferField")
     private StringBuilder output = null;
 
-    private static void syncLintOptionsToFlags(
+    private void syncLintOptionsToFlags(
             @NonNull LintOptions options,
             @NonNull LintCliFlags flags) {
         flags.getSuppressedIds().addAll(options.getDisable());
@@ -390,6 +390,7 @@ public class TestLintClient extends LintCliClient {
         flags.setDefaultConfiguration(options.getLintConfig());
         flags.setExplainIssues(options.isExplainIssues());
         flags.setBaselineFile(options.getBaselineFile());
+        flags.setFatalOnly(task.vital);
 
         Map<String, Integer> severityOverrides = options.getSeverityOverrides();
         if (severityOverrides != null) {
@@ -522,6 +523,7 @@ public class TestLintClient extends LintCliClient {
         LintDriver driver = super.createDriver(registry);
         // 3rd party lint unit tests may need this for a while
         driver.setRunCompatChecks(task.runCompatChecks, task.runCompatChecks);
+        driver.setFatalOnlyMode(task.vital);
         return driver;
     }
 

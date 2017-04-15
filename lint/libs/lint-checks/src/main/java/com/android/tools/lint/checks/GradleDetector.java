@@ -42,6 +42,9 @@ import com.android.ide.common.repository.MavenRepositories;
 import com.android.ide.common.repository.SdkMavenRepository;
 import com.android.repository.Revision;
 import com.android.repository.io.FileOpUtils;
+import com.android.sdklib.AndroidTargetHash;
+import com.android.sdklib.AndroidVersion;
+import com.android.sdklib.SdkVersionInfo;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
@@ -195,7 +198,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
 
             Category.CORRECTNESS,
             8,
-            Severity.ERROR,
+            Severity.FATAL,
             IMPLEMENTATION);
 
     /** Using a string where an integer is expected */
@@ -305,6 +308,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
 
     /** Group ID for GMS */
     public static final String GMS_GROUP_ID = "com.google.android.gms";
+    public static final String FIREBASE_GROUP_ID = "com.google.firebase";
     public static final String GOOGLE_SUPPORT_GROUP_ID = "com.google.android.support";
     public static final String ANDROID_WEAR_GROUP_ID = "com.google.android.wearable";
     private static final String WEARABLE_ARTIFACT_ID = "wearable";
@@ -313,6 +317,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
     @NonNull
     private static final GradleCoordinate PLAY_SERVICES_V650 = GradleCoordinate
             .parseCoordinateString(GMS_GROUP_ID + ":play-services:6.5.0");
+
     /**
      * Threshold to consider a versionCode very high and issue a warning.
      * https://developer.android.com/studio/publish/versioning.html indicates
@@ -320,9 +325,9 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
      */
     private static final int VERSION_CODE_HIGH_THRESHOLD = 2000000000;
 
-    private int mMinSdkVersion;
-    private int mCompileSdkVersion;
-    private int mTargetSdkVersion;
+    private int minSdkVersion;
+    private int compileSdkVersion;
+    private int targetSdkVersion;
 
     // ---- Implements Detector.GradleScanner ----
 
@@ -398,7 +403,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
         @NonNull Object statementCookie) {
         if (parent.equals("defaultConfig")) {
             if (property.equals("targetSdkVersion")) {
-                int version = getIntLiteralValue(value, -1);
+                int version = getSdkVersion(value);
                 if (version > 0 && version < context.getClient().getHighestKnownApiLevel()) {
                     String message =
                             "Not targeting the latest versions of Android; compatibility " +
@@ -407,15 +412,15 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                     report(context, valueCookie, TARGET_NEWER, message);
                 }
                 if (version > 0) {
-                    mTargetSdkVersion = version;
+                    targetSdkVersion = version;
                     checkTargetCompatibility(context, valueCookie);
                 } else {
                     checkIntegerAsString(context, value, valueCookie);
                 }
             } else if (property.equals("minSdkVersion")) {
-              int version = getIntLiteralValue(value, -1);
+              int version = getSdkVersion(value);
               if (version > 0) {
-                mMinSdkVersion = version;
+                minSdkVersion = version;
               } else {
                 checkIntegerAsString(context, value, valueCookie);
               }
@@ -454,9 +459,21 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                 }
             }
         } else if (property.equals("compileSdkVersion") && parent.equals("android")) {
-            int version = getIntLiteralValue(value, -1);
+            int version = -1;
+            if (isStringLiteral(value)) {
+                // Try to resolve values like "android-O"
+                String hash = getStringLiteralValue(value);
+                if (hash != null && !isNumberString(hash)) {
+                    AndroidVersion platformVersion = AndroidTargetHash.getPlatformVersion(hash);
+                    if (platformVersion != null) {
+                        version = platformVersion.getFeatureLevel();
+                    }
+                }
+            } else {
+                version = getIntLiteralValue(value, -1);
+            }
             if (version > 0) {
-                mCompileSdkVersion = version;
+                compileSdkVersion = version;
                 checkTargetCompatibility(context, valueCookie);
             } else {
                 checkIntegerAsString(context, value, valueCookie);
@@ -489,7 +506,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                         String message = String.format("Build Tools `23.0.0` should not be used; "
                                 + "it has some known serious bugs. Use version `%1$s` "
                                 + "instead.", recommended);
-                        report(context, valueCookie, COMPATIBILITY, message);
+                        reportFatalCompatibilityIssue(context, valueCookie, message);
                     }
                 }
             }
@@ -551,6 +568,26 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                 report(context, valueCookie, PATH, message);
             }
         }
+    }
+
+    private static int getSdkVersion(@NonNull String value) {
+        int version = 0;
+        if (isStringLiteral(value)) {
+            String codeName = getStringLiteralValue(value);
+            if (codeName != null) {
+                if (isNumberString(codeName)) {
+                    // Don't access numbered strings; should be literal numbers (lint will warn)
+                    return -1;
+                }
+                AndroidVersion androidVersion = SdkVersionInfo.getVersion(codeName, null);
+                if (androidVersion != null) {
+                    version = androidVersion.getFeatureLevel();
+                }
+            }
+        } else {
+            version = getIntLiteralValue(value, -1);
+        }
+        return version;
     }
 
     @Nullable
@@ -681,9 +718,6 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                     errorMessage.startsWith("Use BugSnag ")) {
                 return findSubstring(errorMessage, "(was ", ")");
             }
-
-            // "The targetSdkVersion (20) should not be higher than the compileSdkVersion (19)"
-            return findSubstring(errorMessage, "targetSdkVersion (", ")");
         } else if (issue == STRING_INTEGER) {
             return findSubstring(errorMessage, "replace ", " with ");
         } else if (issue == DEPRECATED) {
@@ -702,6 +736,9 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             if (errorMessage.startsWith("Version 5.2.08")) {
                 return "5.2.08";
             }
+
+            // "The targetSdkVersion (20) should not be higher than the compileSdkVersion (19)"
+            return findSubstring(errorMessage, "targetSdkVersion (", ")");
         }
 
         return null;
@@ -737,9 +774,6 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             if (errorMessage.startsWith("Use BugSnag ")) {
                 return "2.1.2";
             }
-
-            // "The targetSdkVersion (20) should not be higher than the compileSdkVersion (19)"
-            return findSubstring(errorMessage, "compileSdkVersion (", ")");
         } else if (issue == STRING_INTEGER) {
             return findSubstring(errorMessage, " just ", ")");
         } else if (issue == DEPRECATED) {
@@ -756,6 +790,9 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             if (errorMessage.startsWith("Version 5.2.08")) {
                 return findSubstring(errorMessage, "Use version ", " ");
             }
+
+            // "The targetSdkVersion (20) should not be higher than the compileSdkVersion (19)"
+            return findSubstring(errorMessage, "compileSdkVersion (", ")");
         }
 
         return null;
@@ -869,13 +906,13 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
     }
 
     private void checkTargetCompatibility(Context context, Object cookie) {
-        if (mCompileSdkVersion > 0 && mTargetSdkVersion > 0
-                && mTargetSdkVersion > mCompileSdkVersion) {
+        if (compileSdkVersion > 0 && targetSdkVersion > 0
+                && targetSdkVersion > compileSdkVersion) {
             // NOTE: Keep this in sync with {@link #getOldValue} and {@link #getNewValue}
-            String message = "The targetSdkVersion (" + mTargetSdkVersion
+            String message = "The targetSdkVersion (" + targetSdkVersion
                     + ") should not be higher than the compileSdkVersion ("
-                    + mCompileSdkVersion + ")";
-            report(context, cookie, DEPENDENCY, message);
+                    + compileSdkVersion + ")";
+            reportNonFatalCompatibilityIssue(context, cookie, message);
         }
     }
 
@@ -910,44 +947,48 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             @NonNull Context context,
             @NonNull GradleCoordinate dependency,
             @NonNull Object cookie) {
-        if (dependency.getGroupId() != null && dependency.getGroupId().startsWith(SUPPORT_LIB_GROUP_ID)) {
+        String groupId = dependency.getGroupId();
+        String artifactId = dependency.getArtifactId();
+        GradleVersion version = dependency.getVersion();
+
+        if (groupId != null && groupId.startsWith(SUPPORT_LIB_GROUP_ID)) {
             checkSupportLibraries(context, dependency, cookie);
-            if (mMinSdkVersion >= 14 && "appcompat-v7".equals(dependency.getArtifactId())
-                  && mCompileSdkVersion >= 1 && mCompileSdkVersion < 21) {
+            if (minSdkVersion >= 14 && "appcompat-v7".equals(artifactId)
+                  && compileSdkVersion >= 1 && compileSdkVersion < 21) {
                 report(context, cookie, DEPENDENCY,
                     "Using the appcompat library when minSdkVersion >= 14 and "
                             + "compileSdkVersion < 21 is not necessary");
             }
             return;
-        } else if ((GMS_GROUP_ID.equals(dependency.getGroupId())
-                || GOOGLE_SUPPORT_GROUP_ID.equals(dependency.getGroupId())
-                || ANDROID_WEAR_GROUP_ID.equals(dependency.getGroupId()))
-                && dependency.getArtifactId() != null) {
+        } else if ((GMS_GROUP_ID.equals(groupId)
+                || FIREBASE_GROUP_ID.equals(groupId)
+                || GOOGLE_SUPPORT_GROUP_ID.equals(groupId)
+                || ANDROID_WEAR_GROUP_ID.equals(groupId))
+                && artifactId != null) {
 
             // 5.2.08 is not supported; special case and warn about this
             if ("5.2.08".equals(dependency.getRevision()) && context.isEnabled(COMPATIBILITY)) {
                 // This specific version is actually a preview version which should
                 // not be used (https://code.google.com/p/android/issues/detail?id=75292)
-                String version = "6.1.11";
+                String maxVersion = "6.1.11";
                 // Try to find a more recent available version, if one is available
                 File sdkHome = context.getClient().getSdkHome();
                 File repository = SdkMavenRepository.GOOGLE.getRepositoryLocation(sdkHome, true,
                         FileOpUtils.create());
                 if (repository != null) {
                     GradleCoordinate max = MavenRepositories.getHighestInstalledVersion(
-                            dependency.getGroupId(), dependency.getArtifactId(), repository,
+                            groupId, artifactId, repository,
                             null, false, FileOpUtils.create());
                     if (max != null) {
                         if (COMPARE_PLUS_HIGHER.compare(dependency, max) < 0) {
-                            version = max.getRevision();
+                            maxVersion = max.getRevision();
                         }
                     }
                 }
                 String message = String.format("Version `5.2.08` should not be used; the app "
                         + "can not be published with this version. Use version `%1$s` "
-                        + "instead.", version);
-                report(context, cookie, COMPATIBILITY, message);
-
+                        + "instead.", maxVersion);
+                reportFatalCompatibilityIssue(context, cookie, message);
             } else if (context.isEnabled(BUNDLED_GMS)
                   && PLAY_SERVICES_V650.isSameArtifact(dependency)
                   && COMPARE_PLUS_HIGHER.compare(dependency, PLAY_SERVICES_V650) >= 0) {
@@ -956,8 +997,8 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                 String message = "Avoid using bundled version of Google Play services SDK.";
                 report(context, cookie, BUNDLED_GMS, message);
 
-            } else if (GMS_GROUP_ID.equals(dependency.getGroupId())
-                  && "play-services-appindexing".equals(dependency.getArtifactId())) {
+            } else if (GMS_GROUP_ID.equals(groupId)
+                  && "play-services-appindexing".equals(artifactId)) {
                 String message = "Deprecated: Replace '" + GMS_GROUP_ID
                         + ":play-services-appindexing:" + dependency.getRevision()
                         + "' with 'com.google.firebase:firebase-appindexing:10.0.0' or above. "
@@ -965,40 +1006,56 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                 report(context, cookie, DEPRECATED, message);
             }
 
+            if (targetSdkVersion >= 26 && version != null) {
+                // When targeting O the following libraries must be using at least version 10.2.1
+                // (or 0.6.0 of the jobdispatcher API)
+                //com.google.android.gms:play-services-gcm:V
+                //com.google.firebase:firebase-messaging:V
+                if (GMS_GROUP_ID.equals(groupId)
+                        && "play-services-gcm".equals(artifactId)) {
+                    ensureTargetingOVersion(context, dependency, version, cookie, 10, 2, 1);
+                } else if (FIREBASE_GROUP_ID.equals(groupId)
+                            && "firebase-messaging".equals(artifactId)) {
+                    ensureTargetingOVersion(context, dependency, version, cookie, 10, 2, 1);
+                } else if ("firebase-jobdispatcher".equals(artifactId)
+                        || "firebase-jobdispatcher-with-gcm-dep".equals(artifactId)) {
+                    ensureTargetingOVersion(context, dependency, version, cookie, 0, 6, 0);
+                }
+            }
+
             checkPlayServices(context, dependency, cookie);
             return;
         }
 
-        Revision version = null;
+        Revision newerVersion = null;
         Issue issue = DEPENDENCY;
-        if ("com.android.tools.build".equals(dependency.getGroupId()) &&
-                "gradle".equals(dependency.getArtifactId())) {
+        if ("com.android.tools.build".equals(groupId) &&
+                "gradle".equals(artifactId)) {
             try {
-                Revision v =
-                        Revision.parseRevision(GRADLE_PLUGIN_RECOMMENDED_VERSION);
+                Revision v = Revision.parseRevision(GRADLE_PLUGIN_RECOMMENDED_VERSION);
                 if (!v.isPreview()) {
-                    version = getNewerRevision(dependency, v);
+                    newerVersion = getNewerRevision(dependency, v);
                 }
             } catch (NumberFormatException e) {
                 context.log(e, null);
             }
-        } else if ("com.google.guava".equals(dependency.getGroupId()) &&
-                "guava".equals(dependency.getArtifactId())) {
-            version = getNewerRevision(dependency, new Revision(21, 0));
-        } else if ("com.google.code.gson".equals(dependency.getGroupId()) &&
-                "gson".equals(dependency.getArtifactId())) {
-            version = getNewerRevision(dependency, new Revision(2, 8, 0));
-        } else if ("org.apache.httpcomponents".equals(dependency.getGroupId()) &&
-                "httpclient".equals(dependency.getArtifactId())) {
-            version = getNewerRevision(dependency, new Revision(4, 3, 5));
-        } else if ("com.squareup.okhttp3".equals(dependency.getGroupId()) &&
-                "okhttp".equals(dependency.getArtifactId())) {
-            version = getNewerRevision(dependency, new Revision(3, 6, 0));
-        } else if ("com.github.bumptech.glide".equals(dependency.getGroupId()) &&
-                "glide".equals(dependency.getArtifactId())) {
-            version = getNewerRevision(dependency, new Revision(3, 7, 0));
-        } else if ("io.fabric.tools".equals(dependency.getGroupId()) &&
-                "gradle".equals(dependency.getArtifactId())) {
+        } else if ("com.google.guava".equals(groupId) &&
+                "guava".equals(artifactId)) {
+            newerVersion = getNewerRevision(dependency, new Revision(21, 0));
+        } else if ("com.google.code.gson".equals(groupId) &&
+                "gson".equals(artifactId)) {
+            newerVersion = getNewerRevision(dependency, new Revision(2, 8, 0));
+        } else if ("org.apache.httpcomponents".equals(groupId) &&
+                "httpclient".equals(artifactId)) {
+            newerVersion = getNewerRevision(dependency, new Revision(4, 3, 5));
+        } else if ("com.squareup.okhttp3".equals(groupId) &&
+                "okhttp".equals(artifactId)) {
+            newerVersion = getNewerRevision(dependency, new Revision(3, 6, 0));
+        } else if ("com.github.bumptech.glide".equals(groupId) &&
+                "glide".equals(artifactId)) {
+            newerVersion = getNewerRevision(dependency, new Revision(3, 7, 0));
+        } else if ("io.fabric.tools".equals(groupId) &&
+                "gradle".equals(artifactId)) {
             GradleVersion parsed = GradleVersion.tryParse(dependency.getRevision());
             if (parsed != null && parsed.compareTo("1.21.6") < 0) {
                 report(context, cookie, DEPENDENCY, "Use Fabric Gradle plugin version 1.21.6 or "
@@ -1006,17 +1063,17 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                         dependency.getRevision() + ")");
             } else {
                 // From https://s3.amazonaws.com/fabric-artifacts/public/io/fabric/tools/gradle/maven-metadata.xml
-                version = getNewerRevision(dependency, new Revision(1, 22, 1));
+                newerVersion = getNewerRevision(dependency, new Revision(1, 22, 1));
             }
-        } else if ("com.bugsnag".equals(dependency.getGroupId()) &&
-                "bugsnag-android-gradle-plugin".equals(dependency.getArtifactId())) {
+        } else if ("com.bugsnag".equals(groupId) &&
+                "bugsnag-android-gradle-plugin".equals(artifactId)) {
             GradleVersion parsed = GradleVersion.tryParse(dependency.getRevision());
             if (parsed != null && parsed.compareTo("2.1.2") < 0) {
                 report(context, cookie, DEPENDENCY, "Use BugSnag Gradle plugin version 2.1.2 or "
                         + "later to improve Instant Run performance (was " +
                         dependency.getRevision() + ")");
             } else {
-                version = getNewerRevision(dependency, new Revision(2, 4, 1));
+                newerVersion = getNewerRevision(dependency, new Revision(2, 4, 1));
             }
         }
 
@@ -1026,14 +1083,31 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                     dependency.isPreview());
             if (latest != null && isOlderThan(dependency, latest.getMajor(), latest.getMinor(),
                     latest.getMicro())) {
-                version = latest;
+                newerVersion = latest;
                 issue = REMOTE_VERSION;
             }
         }
 
-        if (version != null) {
-            String message = getNewerVersionAvailableMessage(dependency, version);
+        if (newerVersion != null) {
+            String message = getNewerVersionAvailableMessage(dependency, newerVersion);
             report(context, cookie, issue, message);
+        }
+    }
+
+    private void ensureTargetingOVersion(@NonNull Context context,
+            @NonNull GradleCoordinate dependency, @Nullable GradleVersion version,
+            @NonNull Object cookie, int major, int minor, int micro) {
+        if (version != null && !version.isAtLeast(major, minor, micro)) {
+            Revision revision = new Revision(major, minor, micro);
+            Revision newest = getNewerRevision(dependency, revision);
+            if (newest != null) {
+                revision = newest;
+            }
+
+            String message = String.format("Version must be at least %1$s when "
+                    + "targeting O", revision);
+
+            reportFatalCompatibilityIssue(context, cookie, message);
         }
     }
 
@@ -1224,22 +1298,22 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                 && !artifactId.startsWith("multidex")
                 // Support annotation libraries work with any compileSdkVersion
                 && !artifactId.equals("support-annotations")) {
-            if (mCompileSdkVersion >= 18
-                    && dependency.getMajorVersion() != mCompileSdkVersion
+            if (compileSdkVersion >= 18
+                    && dependency.getMajorVersion() != compileSdkVersion
                     && dependency.getMajorVersion() != GradleCoordinate.PLUS_REV_VALUE
                     && context.isEnabled(COMPATIBILITY)) {
                 String message = "This support library should not use a different version ("
                         + dependency.getMajorVersion() + ") than the `compileSdkVersion` ("
-                        + mCompileSdkVersion + ")";
-                report(context, cookie, COMPATIBILITY, message);
-            } else if (mTargetSdkVersion > 0
-                    && dependency.getMajorVersion() < mTargetSdkVersion
+                        + compileSdkVersion + ")";
+                reportNonFatalCompatibilityIssue(context, cookie, message);
+            } else if (targetSdkVersion > 0
+                    && dependency.getMajorVersion() < targetSdkVersion
                     && dependency.getMajorVersion() != GradleCoordinate.PLUS_REV_VALUE
                     && context.isEnabled(COMPATIBILITY)) {
                 String message = "This support library should not use a lower version ("
                         + dependency.getMajorVersion() + ") than the `targetSdkVersion` ("
-                        + mTargetSdkVersion + ")";
-                report(context, cookie, COMPATIBILITY, message);
+                        + targetSdkVersion + ")";
+                reportNonFatalCompatibilityIssue(context, cookie, message);
             }
         }
 
@@ -1306,7 +1380,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                     repository);
         }
 
-        if (GMS_GROUP_ID.equals(dependency.getGroupId())) {
+        if (GMS_GROUP_ID.equals(groupId) || FIREBASE_GROUP_ID.equals(groupId)) {
             if (!mCheckedGms) {
                 mCheckedGms = true;
                 // Incremental analysis only? If so, tie the check to
@@ -1333,12 +1407,12 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
 
     private void checkConsistentSupportLibraries(@NonNull Context context,
             @Nullable Object cookie) {
-        checkConsistentLibraries(context, cookie, SUPPORT_LIB_GROUP_ID);
+        checkConsistentLibraries(context, cookie, SUPPORT_LIB_GROUP_ID, null);
     }
 
     private void checkConsistentPlayServices(@NonNull Context context,
             @Nullable Object cookie) {
-        checkConsistentLibraries(context, cookie, GMS_GROUP_ID);
+        checkConsistentLibraries(context, cookie, GMS_GROUP_ID, FIREBASE_GROUP_ID);
     }
 
     private void checkConsistentWearableLibraries(@NonNull Context context,
@@ -1374,13 +1448,14 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                         String message = "This dependency should be marked as "
                                         + "`provided`, not `compile`";
 
-                        report(context, cookie, COMPATIBILITY, message);
+                        reportFatalCompatibilityIssue(context, cookie, message);
                     } else {
                         String message = String.format("The %1$s:%2$s dependency should be "
                                         + "marked as `provided`, not `compile`",
                                 ANDROID_WEAR_GROUP_ID,
                                 WEARABLE_ARTIFACT_ID);
-                        context.report(COMPATIBILITY, guessGradleLocation(context.getProject()),
+                        reportFatalCompatibilityIssue(context,
+                                guessGradleLocation(context.getProject()),
                                 message);
                     }
                 }
@@ -1401,9 +1476,10 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                         WEARABLE_ARTIFACT_ID,
                         first);
                 if (cookie != null) {
-                    report(context, cookie, COMPATIBILITY, message);
+                    reportFatalCompatibilityIssue(context, cookie, message);
                 } else {
-                    context.report(COMPATIBILITY, guessGradleLocation(context.getProject()),
+                    reportFatalCompatibilityIssue(context,
+                            guessGradleLocation(context.getProject()),
                             message);
                 }
             } else {
@@ -1423,9 +1499,10 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                             supportedWearableVersions.size() == 1 ? supportedWearableVersions.get(0)
                                     : supportedWearableVersions.toString());
                     if (cookie != null) {
-                        report(context, cookie, COMPATIBILITY, message);
+                        reportFatalCompatibilityIssue(context, cookie, message);
                     } else {
-                        context.report(COMPATIBILITY, guessGradleLocation(context.getProject()),
+                        reportFatalCompatibilityIssue(context,
+                                guessGradleLocation(context.getProject()),
                                 message);
                     }
                 }
@@ -1434,7 +1511,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
     }
 
     private void checkConsistentLibraries(@NonNull Context context,
-            @Nullable Object cookie, @NonNull String groupId) {
+            @Nullable Object cookie, @NonNull String groupId, @Nullable String groupId2) {
         // Make sure we're using a consistent version across all play services libraries
         // (b/22709708)
 
@@ -1445,11 +1522,15 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             MavenCoordinates coordinates = library.getResolvedCoordinates();
             // Claims to be non-null but may not be after a failed gradle sync
             //noinspection ConstantConditions
-            if (coordinates != null && coordinates.getGroupId().equals(groupId)
+            if (coordinates != null && (coordinates.getGroupId().equals(groupId)
+                     || (coordinates.getGroupId().equals(groupId2)))
                     // Historically the multidex library ended up in the support package but
                     // decided to do its own numbering (and isn't tied to the rest in terms
                     // of implementation dependencies)
-                    && !coordinates.getArtifactId().startsWith("multidex")) {
+                    && !coordinates.getArtifactId().startsWith("multidex")
+                    // Similarly firebase job dispatcher doesn't follow normal firebase version
+                    // numbering
+                    && !coordinates.getArtifactId().startsWith("firebase-jobdispatcher")) {
                 versionToCoordinate.put(coordinates.getVersion(), coordinates);
             }
         }
@@ -1458,7 +1539,8 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             MavenCoordinates coordinates = library.getResolvedCoordinates();
             // Claims to be non-null but may not be after a failed gradle sync
             //noinspection ConstantConditions
-            if (coordinates != null && coordinates.getGroupId().equals(groupId)
+            if (coordinates != null && (coordinates.getGroupId().equals(groupId)
+                    || (coordinates.getGroupId().equals(groupId2)))
                     // The Android annotations library is decoupled from the rest and doesn't
                     // need to be matched to the other exact support library versions
                     && !coordinates.getArtifactId().equals("support-annotations")) {
@@ -1475,7 +1557,8 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             // Not using toString because in the IDE, these are model proxies which display garbage output
             String example1 = c1.getGroupId() + ":" + c1.getArtifactId() + ":" + c1 .getVersion();
             String example2 = c2.getGroupId() + ":" + c2.getArtifactId() + ":" + c2 .getVersion();
-            String message = "All " + groupId + " libraries must use the exact same "
+            String groupDesc = GMS_GROUP_ID.equals(groupId) ? "gms/firebase" : groupId;
+            String message = "All " + groupDesc + " libraries must use the exact same "
                     + "version specification (mixing versions can lead to runtime crashes). "
                     + "Found versions " + Joiner.on(", ").join(sortedVersions) + ". "
                     + "Examples include `" + example1 + "` and `" + example2 + "`";
@@ -1514,7 +1597,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             }
 
             if (cookie != null) {
-                report(context, cookie, COMPATIBILITY, message);
+                reportNonFatalCompatibilityIssue(context, cookie, message);
             } else {
                 File projectDir = context.getProject().getDir();
                 Location location1 = guessGradleLocation(context.getClient(), projectDir, example1);
@@ -1537,7 +1620,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                         location1 = location2;
                     }
                 }
-                context.report(COMPATIBILITY, location1, message);
+                reportNonFatalCompatibilityIssue(context, location1, message);
             }
         }
     }
@@ -1663,6 +1746,62 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
 
             context.report(issue, createLocation(context, cookie), message);
         }
+    }
+
+    /**
+     * Normally, all warnings reported for a given issue will have the same severity, so
+     * it isn't possible to have some of them reported as errors and others as warnings.
+     * And this is intentional, since users should get to designate whether an issue is
+     * an error or a warning (or ignored for that matter).
+     * <p>
+     * However, for {@link #COMPATIBILITY} we want to treat some issues as fatal (breaking
+     * the build) but not others. To achieve this we tweak things a little bit.
+     * All compatibility issues are now marked as fatal, and if we're *not* in the
+     * "fatal only" mode, all issues are reported as before (with severity fatal, which has
+     * the same visual appearance in the IDE as the previous severity, "error".)
+     * However, if we're in a "fatal-only" build, then we'll stop reporting the issues
+     * that aren't meant to be treated as fatal. That's what this method does; issues
+     * reported to it should always be reported as fatal. There is a corresponding method,
+     * {@link #reportNonFatalCompatibilityIssue(Context, Object, String)} which can be used
+     * to report errors that shouldn't break the build; those are ignored in fatal-only
+     * mode.
+     */
+    private void reportFatalCompatibilityIssue(
+            @NonNull Context context,
+            @NonNull Object cookie,
+            @NonNull String message) {
+        report(context, cookie, COMPATIBILITY, message);
+    }
+
+    private static void reportFatalCompatibilityIssue(
+            @NonNull Context context,
+            @NonNull Location location,
+            @NonNull String message) {
+        context.report(COMPATIBILITY, location, message);
+    }
+
+    /** See {@link #reportFatalCompatibilityIssue(Context, Object, String)} for an explanation. */
+    private void reportNonFatalCompatibilityIssue(
+            @NonNull Context context,
+            @NonNull Object cookie,
+            @NonNull String message) {
+        if (context.getDriver().isFatalOnlyMode()) {
+            return;
+        }
+
+        report(context, cookie, COMPATIBILITY, message);
+    }
+
+    /** See {@link #reportFatalCompatibilityIssue(Context, Object, String)} for an explanation. */
+    private void reportNonFatalCompatibilityIssue(
+            @NonNull Context context,
+            @NonNull Location location,
+            @NonNull String message) {
+        if (context.getDriver().isFatalOnlyMode()) {
+            return;
+        }
+
+        context.report(COMPATIBILITY, location, message);
     }
 
     @SuppressWarnings("MethodMayBeStatic")
