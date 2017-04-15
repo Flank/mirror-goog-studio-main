@@ -55,7 +55,7 @@ java_library(
 
 java_import(
     name = "gradle-api",
-    jars = ["//tools/external/gradle:gradle-api-3.4.1"],
+    jars = ["//tools/external/gradle:gradle-api-3.4.1-jar"],
     visibility = ["//visibility:public"],
 )
 

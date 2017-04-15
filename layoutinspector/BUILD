@@ -4,14 +4,14 @@ iml_module(
     name = "studio.layoutinspector",
     srcs = ["src/main/java"],
     tags = ["managed"],
-    test_resources = ["src/test/resources"],
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
+    exports = ["//tools/base/common:studio.common"],
     # do not sort: must match IML order
     deps = [
-        "//tools/base/common:studio.common",
-        "//tools/base/annotations:studio.android-annotations",
-        "//tools/base/ddmlib:studio.ddmlib",
+        "//tools/base/common:studio.common[module]",
+        "//tools/base/annotations:studio.android-annotations[module]",
+        "//tools/base/ddmlib:studio.ddmlib[module]",
         "//tools/idea/.idea/libraries:gson",
         "//tools/idea/.idea/libraries:JUnit4[test]",
     ],
