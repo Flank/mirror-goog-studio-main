@@ -27,6 +27,8 @@ import static com.android.SdkConstants.ATTR_PORT;
 import static com.android.SdkConstants.ATTR_SCHEME;
 import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
 import static com.android.SdkConstants.PREFIX_THEME_REF;
+import static com.android.SdkConstants.TAG_ACTIVITY;
+import static com.android.SdkConstants.TAG_ACTIVITY_ALIAS;
 import static com.android.SdkConstants.TAG_DATA;
 import static com.android.SdkConstants.TAG_INTENT_FILTER;
 import static com.android.SdkConstants.TOOLS_URI;
@@ -35,9 +37,7 @@ import static com.android.tools.lint.checks.AndroidPatternMatcher.PATTERN_LITERA
 import static com.android.tools.lint.checks.AndroidPatternMatcher.PATTERN_PREFIX;
 import static com.android.tools.lint.checks.AndroidPatternMatcher.PATTERN_SIMPLE_GLOB;
 import static com.android.tools.lint.detector.api.LintUtils.isDataBindingExpression;
-import static com.android.utils.XmlUtils.getFirstSubTag;
 import static com.android.utils.XmlUtils.getFirstSubTagTagByName;
-import static com.android.utils.XmlUtils.getNextTag;
 import static com.android.utils.XmlUtils.getNextTagByName;
 import static com.android.utils.XmlUtils.getPreviousTagByName;
 import static com.android.utils.XmlUtils.getSubTagsByName;
@@ -69,8 +69,8 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 import org.w3c.dom.Attr;
@@ -116,6 +116,8 @@ public class AppLinksValidDetector extends Detector implements Detector.XmlScann
             "GoogleAppIndexingUrlError", "?","?",
             Category.USABILITY, 5, Severity.ERROR, IMPLEMENTATION);
 
+    private static final String TAG_VALIDATION = "validation";
+
     /** Constructs a new {@link AppLinksValidDetector} check */
     public AppLinksValidDetector() {
     }
@@ -124,7 +126,7 @@ public class AppLinksValidDetector extends Detector implements Detector.XmlScann
 
     @Override
     public Collection<String> getApplicableElements() {
-        return Collections.singleton(TAG_INTENT_FILTER);
+        return Arrays.asList(TAG_ACTIVITY, TAG_ACTIVITY_ALIAS);
     }
 
     private static void reportUrlError(@NonNull XmlContext context, @NonNull Node node,
@@ -148,28 +150,210 @@ public class AppLinksValidDetector extends Detector implements Detector.XmlScann
     }
 
     @Override
-    public void visitElement(@NonNull XmlContext context, @NonNull Element intent) {
+    public void visitElement(@NonNull XmlContext context, @NonNull Element activity) {
+        List<UriInfo> infos = createUriInfos(activity, context);
+
+        Element current = getFirstSubTagTagByName(activity, TAG_VALIDATION);
+        while (current != null) {
+            if (TOOLS_URI.equals(current.getNamespaceURI())) {
+                Attr testUrlAttr = current.getAttributeNode("testUrl");
+                if (testUrlAttr == null) {
+                    String message = "Expected `testUrl` attribute";
+                    reportUrlError(context, current, context.getLocation(current), message);
+                } else {
+                    String testUrlString = testUrlAttr.getValue();
+                    try {
+                        URL testUrl = new URL(testUrlString);
+                        String reason = testElement(testUrl, infos);
+                        if (reason != null) {
+                            reportTestUrlFailure(context, testUrlAttr,
+                                    context.getValueLocation(testUrlAttr),
+                                    reason);
+                        }
+                    } catch (MalformedURLException e) {
+                        String message = "Invalid test URL: " + e.getLocalizedMessage();
+                        reportTestUrlFailure(context, testUrlAttr,
+                                context.getValueLocation(testUrlAttr),
+                                message);
+                    }
+                }
+            } else {
+                reportTestUrlFailure(context, current, context.getNameLocation(current),
+                        "Validation nodes should be in the `tools:` namespace to "
+                                + "ensure they are removed from the manifest at build time");
+            }
+            current = getNextTagByName(current, TAG_VALIDATION);
+        }
+    }
+
+    /**
+     * Given an activity (or activity alias) element, looks up the intent filters
+     * that contain URIs and creates a list of {@link UriInfo} objects for these
+     *
+     * @param activity the activity
+     * @param context an <b>optional</b> lint context to pass in; if provided,
+     *                lint will validate the activity attributes and report link-related
+     *                problems (such as unknown scheme, wrong port number etc)
+     * @return a list of URI infos, if any
+     */
+    @NonNull
+    public static List<UriInfo> createUriInfos(
+            @NonNull Element activity,
+            @Nullable XmlContext context) {
+        Element intent = getFirstSubTagTagByName(activity, TAG_INTENT_FILTER);
+        List<AppLinksValidDetector.UriInfo> infos = Lists.newArrayList();
+        while (intent != null) {
+            UriInfo uriInfo = checkIntent(context, intent, activity);
+            if (uriInfo != null) {
+                infos.add(uriInfo);
+            }
+            intent = getNextTagByName(intent, TAG_INTENT_FILTER);
+        }
+
+        return infos;
+    }
+
+    /**
+     * Given a test URL and a list of URI infos (previously returned from
+     * {@link #createUriInfos(Element, XmlContext)}) this method checks whether
+     * the URL matches, and if so returns null, otherwise returning the reason
+     * for the mismatch.
+     *
+     * @param testUrl the URL to test
+     * @param infos   the URL information
+     * @return null for a match, otherwise the failure reason
+     */
+    @Nullable
+    public static String testElement(
+            @NonNull URL testUrl,
+            @NonNull List<UriInfo> infos) {
+        List<String> reasons = null;
+        for (UriInfo info : infos) {
+            String reason = info.match(testUrl);
+            if (reason == null) {
+                return null; // found a match
+            }
+            if (reasons == null) {
+                reasons = Lists.newArrayList();
+            }
+            if (!reasons.contains(reason)) {
+                reasons.add(reason);
+            }
+        }
+
+        if (reasons != null) {
+            return "Test URL " + Joiner.on(" or ").join(reasons);
+        } else {
+            return null;
+        }
+    }
+
+    /** URL information from an intent filter */
+    public static class UriInfo {
+        private final List<String> schemes;
+        private final List<String> hosts;
+        private final List<String> ports;
+        private final List<AndroidPatternMatcher> paths;
+
+        public UriInfo(List<String> schemes, List<String> hosts, List<String> ports,
+                List<AndroidPatternMatcher> paths) {
+            this.schemes = schemes;
+            this.hosts = hosts;
+            this.ports = ports;
+            this.paths = paths;
+        }
+
+        /**
+         * Matches a URL against this info, and returns null if successful or the failure reason
+         * if not a match
+         *
+         * @param testUrl the URL to match
+         * @return null for a successful match or the failure reason
+         */
+        @Nullable
+        public String match(@NonNull URL testUrl) {
+
+            // Check schemes
+            if (schemes != null) {
+                boolean schemeOk = schemes.stream().anyMatch(scheme ->
+                        scheme.equals(testUrl.getProtocol()) || isDataBindingExpression(scheme));
+                if (!schemeOk) {
+                    return String.format("did not match scheme %1$s",
+                                    Joiner.on(", ").join(schemes));
+                }
+            }
+
+            if (hosts != null) {
+                boolean hostOk = hosts.stream().anyMatch(host ->
+                    matchesHost(testUrl.getHost(), host) || isDataBindingExpression(host));
+                if (!hostOk) {
+                    return String.format("did not match host %1$s",
+                            Joiner.on(", ").join(hosts));
+                }
+            }
+
+            // Port matching:
+            boolean portOk = false;
+            if (testUrl.getPort() != -1) {
+                String testPort = Integer.toString(testUrl.getPort());
+                if (ports != null) {
+                    portOk = ports.stream().anyMatch(port ->
+                                    testPort.equals(port) || isDataBindingExpression(port));
+                }
+            } else if (ports == null) {
+                portOk = true;
+            }
+            if (!portOk) {
+                String portList = ports == null ? "none" : Joiner.on(", ").join(ports);
+                return String.format("did not match port %1$s", portList);
+            }
+
+            if (paths != null) {
+                String testPath = testUrl.getPath();
+                boolean pathOk = paths.stream().anyMatch(matcher ->
+                        isDataBindingExpression(matcher.getPath()) || matcher.match(testPath));
+                if (!pathOk) {
+                    StringBuilder sb = new StringBuilder();
+                    paths.forEach(matcher ->
+                            sb.append("path ").append(matcher.toString()).append(", "));
+                    if (CharSequences.endsWith(sb, ", ", true)) {
+                        sb.setLength(sb.length() - 2);
+                    }
+
+                    String message = String.format("did not match %1$s", sb.toString());
+
+                    if (containsUpperCase(paths) || CharSequences.containsUpperCase(testPath)) {
+                        message += " Note that matching is case sensitive.";
+                    }
+
+                    return message;
+                }
+            }
+            return null; // OK
+        }
+    }
+
+    @Nullable
+    private static UriInfo checkIntent(@Nullable XmlContext context,
+            @NonNull Element intent,
+            @NonNull Element activity) {
         Element firstData = getFirstSubTagTagByName(intent, TAG_DATA);
         boolean actionView = hasActionView(intent);
         boolean browsable = isBrowsable(intent);
 
-        if (actionView) {
-            Node parentNode = intent.getParentNode();
-            if (parentNode instanceof Element) {
-                Element activity = (Element) parentNode;
-                ensureExported(context, activity, intent);
-            }
+        if (actionView && context != null) {
+            ensureExported(context, activity, intent);
         }
 
         if (firstData == null) {
-            if (actionView && browsable) {
+            if (actionView && browsable && context != null) {
                 // If this activity is an ACTION_VIEW action with category BROWSABLE, but doesn't
                 // have data node, it's a likely mistake
                 reportUrlError(context, intent, context.getLocation(intent),
                         "Missing data element");
             }
 
-            return;
+            return null;
         }
 
         List<String> schemes = null;
@@ -185,7 +369,7 @@ public class AppLinksValidDetector extends Detector implements Detector.XmlScann
             Attr mimeType = data.getAttributeNodeNS(ANDROID_URI, ATTR_MIME_TYPE);
             if (mimeType != null) {
                 hasMimeType = true;
-                if (CharSequences.containsUpperCase(mimeType.getValue())) {
+                if (context != null && CharSequences.containsUpperCase(mimeType.getValue())) {
                     reportUrlError(context, mimeType, context.getValueLocation(mimeType),
                             "Mime-type matching is case sensitive and should only "
                                     + "use lower-case characters");
@@ -203,7 +387,7 @@ public class AppLinksValidDetector extends Detector implements Detector.XmlScann
             //  doesn't seem exposed to developers
         }
 
-        if (actionView && browsable && schemes == null && !hasMimeType) {
+        if (actionView && browsable && schemes == null && !hasMimeType && context != null) {
             // If this activity is an action view, is browsable, but has neither a
             // URL nor mimeType, it may be a mistake and we will report error.
             reportUrlError(context, firstData, context.getLocation(firstData),
@@ -232,34 +416,37 @@ public class AppLinksValidDetector extends Detector implements Detector.XmlScann
             }
         }
 
-        // At least one scheme must be specified
-        boolean hasScheme = schemes != null;
-        if (!hasScheme && (hosts != null || paths != null || ports != null)) {
-            reportUrlError(context, firstData, context.getLocation(firstData),
-                    "At least one `scheme` must be specified",
-                    new QuickfixData.SetAttribute(ANDROID_URI, ATTR_SCHEME, "http"));
+        // Validation
+        if (context != null) {
+            // At least one scheme must be specified
+            boolean hasScheme = schemes != null;
+            if (!hasScheme && (hosts != null || paths != null || ports != null)) {
+                reportUrlError(context, firstData, context.getLocation(firstData),
+                        "At least one `scheme` must be specified",
+                        new QuickfixData.SetAttribute(ANDROID_URI, ATTR_SCHEME, "http"));
+            }
+
+            if (hosts == null && (paths != null || ports != null)) {
+                reportUrlError(context, firstData, context.getLocation(firstData),
+                        "At least one `host` must be specified",
+                        new QuickfixData.SetAttribute(ANDROID_URI, ATTR_HOST, null));
+            }
+
+            // If this activity is an ACTION_VIEW action, has a http URL but doesn't have
+            // BROWSABLE, it may be a mistake and and we will report warning.
+            if (actionView && isHttp && !browsable) {
+                reportUrlError(context, intent, context.getLocation(intent),
+                        "Activity supporting ACTION_VIEW is not set as BROWSABLE");
+            }
+
+            if (actionView && (!hasScheme || implicitSchemes)) {
+                reportUrlError(context, intent, context.getLocation(intent),
+                        "Missing URL",
+                        new QuickfixData.SetAttribute(ANDROID_URI, ATTR_SCHEME, "http"));
+            }
         }
 
-        if (hosts == null && (paths != null || ports != null)) {
-            reportUrlError(context, firstData, context.getLocation(firstData),
-                    "At least one `host` must be specified",
-                    new QuickfixData.SetAttribute(ANDROID_URI, ATTR_HOST, null));
-        }
-
-        // If this activity is an ACTION_VIEW action, has a http URL but doesn't have
-        // BROWSABLE, it may be a mistake and and we will report warning.
-        if (actionView && isHttp && !browsable) {
-            reportUrlError(context, intent, context.getLocation(intent),
-                    "Activity supporting ACTION_VIEW is not set as BROWSABLE");
-        }
-
-        if (actionView && (!hasScheme || implicitSchemes)) {
-            reportUrlError(context, intent, context.getLocation(intent),
-                    "Missing URL",
-                    new QuickfixData.SetAttribute(ANDROID_URI, ATTR_SCHEME, "http"));
-        }
-
-        testElements(context, intent, schemes, hosts, ports, paths);
+        return new UriInfo(schemes, hosts, ports, paths);
     }
 
     private static void ensureExported(
@@ -326,155 +513,14 @@ public class AppLinksValidDetector extends Detector implements Detector.XmlScann
         return false;
     }
 
-    /** Looks for validation nodes in the intent filter and checks them */
-    private static void testElements(
-            @NonNull XmlContext context,
-            @NonNull Element intentFilter,
-            @Nullable List<String> schemes,
-            @Nullable List<String> hosts,
-            @Nullable List<String> ports,
-            @Nullable List<AndroidPatternMatcher> paths) {
-        Element current = getFirstSubTag(intentFilter);
-        while (current != null) {
-            if ("validation".equals(current.getLocalName())) {
-                if (TOOLS_URI.equals(current.getNamespaceURI())) {
-                    testElement(context, current, schemes, hosts, ports, paths);
-                } else {
-                    reportTestUrlFailure(context, current, context.getNameLocation(current),
-                            "Validation nodes should be in the `tools:` namespace to "
-                                    + "ensure they are removed from the manifest at build time");
-                }
-            }
-            current = getNextTag(current);
-        }
-    }
-
-    private static void testElement(
-            @NonNull XmlContext context,
-            @NonNull Element element,
-            @Nullable List<String> schemes,
-            @Nullable List<String> hosts,
-            @Nullable List<String> ports,
-            @Nullable List<AndroidPatternMatcher> paths) {
-        Attr testUrlAttr = element.getAttributeNode("testUrl");
-        if (testUrlAttr == null) {
-            String message = "Expected `testUrl` attribute";
-            reportUrlError(context, element, context.getLocation(element), message);
-            return;
-        }
-        String testUrlString = testUrlAttr.getValue();
-        URL testUrl;
-        try {
-            testUrl = new URL(testUrlString);
-        } catch (MalformedURLException e) {
-            String message = "Invalid test URL: " + e.getLocalizedMessage();
-            reportTestUrlFailure(context, testUrlAttr, context.getValueLocation(testUrlAttr),
-                    message);
-            return;
-        }
-
-        // Check schemes
-        if (schemes != null) {
-            boolean schemeOk = false;
-            for (String scheme : schemes) {
-                if (scheme.equals(testUrl.getProtocol()) || isDataBindingExpression(scheme)) {
-                    schemeOk = true;
-                    break;
-                }
-            }
-            if (!schemeOk) {
-                reportTestUrlFailure(context, testUrlAttr, context.getValueLocation(testUrlAttr),
-                        String.format("Test URL did not match scheme %1$s",
-                                Joiner.on(", ").join(schemes)));
-                return;
-            }
-        }
-
-        if (hosts != null) {
-            boolean hostOk = false;
-            for (String host : hosts) {
-                if (matchesHost(testUrl.getHost(), host) || isDataBindingExpression(host)) {
-                    hostOk = true;
-                    break;
-                }
-            }
-            if (!hostOk) {
-                reportTestUrlFailure(context, testUrlAttr, context.getValueLocation(testUrlAttr),
-                        String.format("Test URL did not match host %1$s",
-                                Joiner.on(", ").join(hosts)));
-                return;
-            }
-        }
-
-        // Port matching:
-        boolean portOk = false;
-        if (testUrl.getPort() != -1) {
-            String testPort = Integer.toString(testUrl.getPort());
-            if (ports != null) {
-                for (String port : ports) {
-                    if (testPort.equals(port) || isDataBindingExpression(port)) {
-                        portOk = true;
-                        break;
-                    }
-                }
-            }
-        } else if (ports == null) {
-            portOk = true;
-        }
-        if (!portOk) {
-            String portList = ports == null ? "(empty)" : Joiner.on(", ").join(ports);
-            reportTestUrlFailure(context, testUrlAttr, context.getValueLocation(testUrlAttr),
-                    String.format("Test URL did not match port %1$s", portList));
-            return;
-        }
-
-        if (paths != null) {
-            String testPath = testUrl.getPath();
-            boolean pathOk = false;
-            for (AndroidPatternMatcher matcher : paths) {
-                if (isDataBindingExpression(matcher.getPath()) || matcher.match(testPath)) {
-                    pathOk = true;
-                    break;
-                }
-            }
-
-            if (!pathOk) {
-                StringBuilder sb = new StringBuilder();
-                for (AndroidPatternMatcher matcher : paths) {
-                    sb.append("path ").append(matcher.toString()).append(", ");
-                }
-
-                if (CharSequences.endsWith(sb, ", ", true)) {
-                    sb.setLength(sb.length() - 2);
-                }
-
-                String message = String.format("Test URL did not match %1$s", sb.toString());
-
-                if (containsUpperCase(paths) || CharSequences.containsUpperCase(testPath)) {
-                    message += " Note that matching is case sensitive.";
-                }
-
-                reportTestUrlFailure(context, testUrlAttr, context.getValueLocation(testUrlAttr),
-                        message);
-            }
-        }
-    }
-
     private static boolean containsUpperCase(@Nullable List<AndroidPatternMatcher> matchers) {
-        if (matchers != null) {
-            for (AndroidPatternMatcher matcher : matchers) {
-                if (CharSequences.containsUpperCase(matcher.getPath())) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
+        return matchers != null && matchers.stream()
+                .anyMatch(m -> CharSequences.containsUpperCase(m.getPath()));
     }
 
     @Nullable
     private static List<String> addAttribute(
-            @NonNull XmlContext context,
+            @Nullable XmlContext context,
             @NonNull String attributeName,
             @Nullable List<String> current,
             Element data) {
@@ -495,69 +541,77 @@ public class AppLinksValidDetector extends Detector implements Detector.XmlScann
             }
             current.add(value);
 
-            if (isDataBindingExpression(value)) {
+            if (isDataBindingExpression(value) || value.startsWith(PREFIX_RESOURCE_REF)
+                    || value.startsWith(PREFIX_THEME_REF)) { // already checked but can be nested
                 return current;
             }
 
             // Validation
-            // See https://developer.android.com/guide/topics/manifest/data-element.html
-            switch (attributeName) {
-                case ATTR_SCHEME: {
-                    if (value.endsWith(":")) {
-                        reportUrlError(context, attribute, context.getValueLocation(attribute),
-                            "Don't include trailing colon in the `scheme` declaration");
-                    } else if (CharSequences.containsUpperCase(value)) {
-                        reportUrlError(context, attribute, context.getValueLocation(attribute),
-                                "Scheme matching is case sensitive and should only "
-                                        + "use lower-case characters");
-                    }
-
-                    break;
-                }
-                case ATTR_HOST: {
-                    if (value.lastIndexOf('*') > 0) {
-                        reportUrlError(context, attribute, context.getValueLocation(attribute),
-                                "The host wildcard (`*`) can only be the first "
-                                        + "character");
-                    } else if (CharSequences.containsUpperCase(value)) {
-                        reportUrlError(context, attribute, context.getValueLocation(attribute),
-                                "Host matching is case sensitive and should only "
-                                        + "use lower-case characters");
-                    }
-                    break;
-                }
-
-                case ATTR_PORT: {
-                    try {
-                        int port = Integer.parseInt(value); // might also throw number exc
-                        if (port < 1 || port > 65535) {
-                            throw new NumberFormatException();
-                        }
-                    } catch (NumberFormatException e) {
-                        reportUrlError(context, attribute, context.getValueLocation(attribute),
-                                "not a valid port number");
-                    }
-
-                    // The port *only* takes effect if it's specified on the *same* XML
-                    // element as the host (this isn't true for the other attributes,
-                    // which can be spread out across separate <data> elements)
-                    if (!data.hasAttributeNS(ANDROID_URI, ATTR_HOST)) {
-                        reportUrlError(context, attribute, context.getValueLocation(attribute),
-                                "The port must be specified in the same `<data>` "
-                                        + "element as the `host`");
-                    }
-
-                    break;
-                }
+            if (context != null) {
+                validateAttribute(context, attributeName, data, attribute, value);
             }
         }
 
         return current;
     }
 
+    private static void validateAttribute(@NonNull XmlContext context,
+            @NonNull String attributeName, Element data, Attr attribute, String value) {
+        // See https://developer.android.com/guide/topics/manifest/data-element.html
+        switch (attributeName) {
+            case ATTR_SCHEME: {
+                if (value.endsWith(":")) {
+                    reportUrlError(context, attribute, context.getValueLocation(attribute),
+                        "Don't include trailing colon in the `scheme` declaration");
+                } else if (CharSequences.containsUpperCase(value)) {
+                    reportUrlError(context, attribute, context.getValueLocation(attribute),
+                            "Scheme matching is case sensitive and should only "
+                                    + "use lower-case characters");
+                }
+
+                break;
+            }
+            case ATTR_HOST: {
+                if (value.lastIndexOf('*') > 0) {
+                    reportUrlError(context, attribute, context.getValueLocation(attribute),
+                            "The host wildcard (`*`) can only be the first "
+                                    + "character");
+                } else if (CharSequences.containsUpperCase(value)) {
+                    reportUrlError(context, attribute, context.getValueLocation(attribute),
+                            "Host matching is case sensitive and should only "
+                                    + "use lower-case characters");
+                }
+                break;
+            }
+
+            case ATTR_PORT: {
+                try {
+                    int port = Integer.parseInt(value); // might also throw number exc
+                    if (port < 1 || port > 65535) {
+                        throw new NumberFormatException();
+                    }
+                } catch (NumberFormatException e) {
+                    reportUrlError(context, attribute, context.getValueLocation(attribute),
+                            "not a valid port number");
+                }
+
+                // The port *only* takes effect if it's specified on the *same* XML
+                // element as the host (this isn't true for the other attributes,
+                // which can be spread out across separate <data> elements)
+                if (!data.hasAttributeNS(ANDROID_URI, ATTR_HOST)) {
+                    reportUrlError(context, attribute, context.getValueLocation(attribute),
+                            "The port must be specified in the same `<data>` "
+                                    + "element as the `host`");
+                }
+
+                break;
+            }
+        }
+    }
+
     @Nullable
     private static List<AndroidPatternMatcher> addMatcher(
-            @NonNull XmlContext context,
+            @Nullable XmlContext context,
             @NonNull String attributeName,
             int type,
             @Nullable List<AndroidPatternMatcher> current,
@@ -581,7 +635,9 @@ public class AppLinksValidDetector extends Detector implements Detector.XmlScann
             AndroidPatternMatcher matcher = new AndroidPatternMatcher(value, type);
             current.add(matcher);
 
-            if (!value.startsWith("/") && !value.startsWith(SdkConstants.PREFIX_RESOURCE_REF)
+            if (context != null
+                    && !value.startsWith("/")
+                    && !value.startsWith(SdkConstants.PREFIX_RESOURCE_REF)
                     // Only enforce / for path and prefix; for pattern it seems to
                     // work without
                     && !attributeName.equals(ATTR_PATH_PATTERN)) {
@@ -595,9 +651,9 @@ public class AppLinksValidDetector extends Detector implements Detector.XmlScann
         return current;
     }
 
-    private static boolean requireNonEmpty(@NonNull XmlContext context,
+    private static boolean requireNonEmpty(@Nullable XmlContext context,
             @NonNull Attr attribute, @Nullable String value) {
-        if (value == null || value.isEmpty()) {
+        if (context != null && (value == null || value.isEmpty())) {
             reportUrlError(context, attribute, context.getLocation(attribute),
                     String.format("`%1$s` cannot be empty", attribute.getName()));
             return true;
@@ -605,8 +661,13 @@ public class AppLinksValidDetector extends Detector implements Detector.XmlScann
         return false;
     }
 
-    private static String replaceUrlWithValue(@NonNull XmlContext context,
+    @NonNull
+    private static String replaceUrlWithValue(
+            @Nullable XmlContext context,
             @NonNull String str) {
+        if (context == null) {
+            return str;
+        }
         LintClient client = context.getClient();
         if (!client.supportsProjectResources()) {
             return str;
@@ -640,7 +701,7 @@ public class AppLinksValidDetector extends Detector implements Detector.XmlScann
      * @param hostPattern  The criteria host, which could contain a '*'.
      * @return Whether the actualHost matches the hostRegex
      */
-    public static boolean matchesHost(@NonNull String actualHost, @NonNull String hostPattern) {
+    private static boolean matchesHost(@NonNull String actualHost, @NonNull String hostPattern) {
         // Per https://developer.android.com/guide/topics/manifest/data-element.html
         // the asterisk must be the first character
         if (!hostPattern.startsWith("*")) {

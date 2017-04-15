@@ -16,7 +16,19 @@
 
 package com.android.tools.lint.checks;
 
+import static com.google.common.truth.Truth.assertThat;
+
+import com.android.tools.lint.checks.AppLinksValidDetector.UriInfo;
 import com.android.tools.lint.detector.api.Detector;
+import com.android.utils.XmlUtils;
+import com.google.common.truth.Truth;
+import java.io.IOException;
+import java.net.URL;
+import java.util.List;
+import javax.xml.parsers.ParserConfigurationException;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.xml.sax.SAXException;
 
 @SuppressWarnings("javadoc")
 public class AppLinksValidDetectorTest extends AbstractCheckTest {
@@ -27,9 +39,9 @@ public class AppLinksValidDetectorTest extends AbstractCheckTest {
 
     public void testWrongNamespace() {
         String expected = ""
-                + "AndroidManifest.xml:11: Error: Validation nodes should be in the tools: namespace to ensure they are removed from the manifest at build time [TestAppLink]\n"
-                + "                <validation />\n"
-                + "                 ~~~~~~~~~~\n"
+                + "AndroidManifest.xml:12: Error: Validation nodes should be in the tools: namespace to ensure they are removed from the manifest at build time [TestAppLink]\n"
+                + "            <validation />\n"
+                + "             ~~~~~~~~~~\n"
                 + "1 errors, 0 warnings\n";
         lint().files(
                 xml("AndroidManifest.xml", ""
@@ -44,8 +56,8 @@ public class AppLinksValidDetectorTest extends AbstractCheckTest {
                         + "                <data android:scheme=\"http\"\n"
                         + "                    android:host=\"example.com\"\n"
                         + "                    android:pathPrefix=\"/gizmos\" />\n"
-                        + "                <validation />\n"
                         + "            </intent-filter>\n"
+                        + "            <validation />\n"
                         + "        </activity>\n"
                         + "    </application>\n"
                         + "\n"
@@ -56,9 +68,9 @@ public class AppLinksValidDetectorTest extends AbstractCheckTest {
 
     public void testMissingTestUrl() {
         String expected = ""
-                + "AndroidManifest.xml:11: Error: Expected testUrl attribute [AppLinkUrlError]\n"
-                + "                <tools:validation />\n"
-                + "                ~~~~~~~~~~~~~~~~~~~~\n"
+                + "AndroidManifest.xml:12: Error: Expected testUrl attribute [AppLinkUrlError]\n"
+                + "            <tools:validation />\n"
+                + "            ~~~~~~~~~~~~~~~~~~~~\n"
                 + "1 errors, 0 warnings\n";
         lint().files(
                 xml("AndroidManifest.xml", ""
@@ -73,8 +85,8 @@ public class AppLinksValidDetectorTest extends AbstractCheckTest {
                         + "                <data android:scheme=\"http\"\n"
                         + "                    android:host=\"example.com\"\n"
                         + "                    android:pathPrefix=\"/gizmos\" />\n"
-                        + "                <tools:validation />\n"
                         + "            </intent-filter>\n"
+                        + "            <tools:validation />\n"
                         + "        </activity>\n"
                         + "    </application>\n"
                         + "\n"
@@ -85,15 +97,15 @@ public class AppLinksValidDetectorTest extends AbstractCheckTest {
 
     public void testBadTestUrl() {
         String expected = ""
-                + "AndroidManifest.xml:11: Error: Invalid test URL: no protocol: no-protocol [TestAppLink]\n"
-                + "                <tools:validation testUrl=\"no-protocol\"/>\n"
-                + "                                           ~~~~~~~~~~~\n"
-                + "AndroidManifest.xml:12: Error: Invalid test URL: unknown protocol: unknown-protocol [TestAppLink]\n"
-                + "                <tools:validation testUrl=\"unknown-protocol://example.com/gizmos/foo/bar\"/>\n"
-                + "                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "AndroidManifest.xml:13: Error: Invalid test URL: Invalid host: [FEDC:BA98:7654:3210:GEDC:BA98:7654:3210] [TestAppLink]\n"
-                + "                <tools:validation testUrl=\"http://[FEDC:BA98:7654:3210:GEDC:BA98:7654:3210]:80/index.html\"/>\n"
-                + "                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "AndroidManifest.xml:12: Error: Invalid test URL: no protocol: no-protocol [TestAppLink]\n"
+                + "            <tools:validation testUrl=\"no-protocol\"/>\n"
+                + "                                       ~~~~~~~~~~~\n"
+                + "AndroidManifest.xml:13: Error: Invalid test URL: unknown protocol: unknown-protocol [TestAppLink]\n"
+                + "            <tools:validation testUrl=\"unknown-protocol://example.com/gizmos/foo/bar\"/>\n"
+                + "                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "AndroidManifest.xml:14: Error: Invalid test URL: Invalid host: [FEDC:BA98:7654:3210:GEDC:BA98:7654:3210] [TestAppLink]\n"
+                + "            <tools:validation testUrl=\"http://[FEDC:BA98:7654:3210:GEDC:BA98:7654:3210]:80/index.html\"/>\n"
+                + "                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "3 errors, 0 warnings\n";
         lint().files(
                 xml("AndroidManifest.xml", ""
@@ -108,10 +120,10 @@ public class AppLinksValidDetectorTest extends AbstractCheckTest {
                         + "                <data android:scheme=\"http\"\n"
                         + "                    android:host=\"example.com\"\n"
                         + "                    android:pathPrefix=\"/gizmos\" />\n"
-                        + "                <tools:validation testUrl=\"no-protocol\"/>\n"
-                        + "                <tools:validation testUrl=\"unknown-protocol://example.com/gizmos/foo/bar\"/>\n"
-                        + "                <tools:validation testUrl=\"http://[FEDC:BA98:7654:3210:GEDC:BA98:7654:3210]:80/index.html\"/>\n"
                         + "            </intent-filter>\n"
+                        + "            <tools:validation testUrl=\"no-protocol\"/>\n"
+                        + "            <tools:validation testUrl=\"unknown-protocol://example.com/gizmos/foo/bar\"/>\n"
+                        + "            <tools:validation testUrl=\"http://[FEDC:BA98:7654:3210:GEDC:BA98:7654:3210]:80/index.html\"/>\n"
                         + "        </activity>\n"
                         + "    </application>\n"
                         + "\n"
@@ -122,15 +134,15 @@ public class AppLinksValidDetectorTest extends AbstractCheckTest {
 
     public void testValidation1() {
         String expected = ""
-                + "AndroidManifest.xml:13: Error: Test URL did not match path prefix /gizmos, path literal /literal/path [TestAppLink]\n"
-                + "                <tools:validation testUrl=\"http://example.com/notmatch/foo/bar\"/>\n"
-                + "                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "AndroidManifest.xml:14: Error: Test URL did not match host example.com [TestAppLink]\n"
-                + "                <tools:validation testUrl=\"http://notmatch.com/gizmos/foo/bar\"/>\n"
-                + "                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "AndroidManifest.xml:15: Error: Test URL did not match scheme http [TestAppLink]\n"
-                + "                <tools:validation testUrl=\"https://example.com/gizmos/foo/bar\"/>\n"
-                + "                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "AndroidManifest.xml:14: Error: Test URL did not match path prefix /gizmos, path literal /literal/path [TestAppLink]\n"
+                + "            <tools:validation testUrl=\"http://example.com/notmatch/foo/bar\"/>\n"
+                + "                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "AndroidManifest.xml:15: Error: Test URL did not match host example.com [TestAppLink]\n"
+                + "            <tools:validation testUrl=\"http://notmatch.com/gizmos/foo/bar\"/>\n"
+                + "                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "AndroidManifest.xml:16: Error: Test URL did not match scheme http [TestAppLink]\n"
+                + "            <tools:validation testUrl=\"https://example.com/gizmos/foo/bar\"/>\n"
+                + "                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "3 errors, 0 warnings\n";
         lint().files(
                 xml("AndroidManifest.xml", ""
@@ -146,12 +158,12 @@ public class AppLinksValidDetectorTest extends AbstractCheckTest {
                         + "                    android:host=\"example.com\"\n"
                         + "                    android:pathPrefix=\"/gizmos\" />\n"
                         + "                <data android:path=\"/literal/path\" />\n"
-                        + "                <tools:validation testUrl=\"http://example.com/gizmos/foo/bar\"/>\n"
-                        + "                <tools:validation testUrl=\"http://example.com/notmatch/foo/bar\"/>\n"
-                        + "                <tools:validation testUrl=\"http://notmatch.com/gizmos/foo/bar\"/>\n"
-                        + "                <tools:validation testUrl=\"https://example.com/gizmos/foo/bar\"/>\n"
-                        + "                <tools:validation testUrl=\"http://example.com/literal/path\"/>\n"
                         + "            </intent-filter>\n"
+                        + "            <tools:validation testUrl=\"http://example.com/gizmos/foo/bar\"/>\n"
+                        + "            <tools:validation testUrl=\"http://example.com/notmatch/foo/bar\"/>\n"
+                        + "            <tools:validation testUrl=\"http://notmatch.com/gizmos/foo/bar\"/>\n"
+                        + "            <tools:validation testUrl=\"https://example.com/gizmos/foo/bar\"/>\n"
+                        + "            <tools:validation testUrl=\"http://example.com/literal/path\"/>\n"
                         + "        </activity>\n"
                         + "    </application>\n"
                         + "\n"
@@ -183,9 +195,9 @@ public class AppLinksValidDetectorTest extends AbstractCheckTest {
                         + "                <data android:host=\"*.twitter.com\" />\n"
                         + "                <data android:host=\"*twitter.com\" />\n"
                         + "                <data android:pathPattern=\"/vioside/.*\" />\n"
-                        + "                <tools:validation testUrl=\"https://twitter.com/vioside/status/761453456683069440\" />\n"
-                        + "                <tools:validation testUrl=\"https://www.twitter.com/vioside/status/761453456683069440\" />\n"
                         + "            </intent-filter>\n"
+                        + "            <tools:validation testUrl=\"https://twitter.com/vioside/status/761453456683069440\" />\n"
+                        + "            <tools:validation testUrl=\"https://www.twitter.com/vioside/status/761453456683069440\" />\n"
                         + "        </activity>\n"
                         + "    </application>\n"
                         + "\n"
@@ -196,9 +208,9 @@ public class AppLinksValidDetectorTest extends AbstractCheckTest {
 
     public void testHostWildcardMatching() {
         String expected = ""
-                + "AndroidManifest.xml:11: Error: Test URL did not match host *.example.com [TestAppLink]\n"
-                + "                <tools:validation testUrl=\"http://example.com/path/foo/bar\"/>\n"
-                + "                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "AndroidManifest.xml:12: Error: Test URL did not match host *.example.com [TestAppLink]\n"
+                + "            <tools:validation testUrl=\"http://example.com/path/foo/bar\"/>\n"
+                + "                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "1 errors, 0 warnings\n";
         lint().files(
                 xml("AndroidManifest.xml", ""
@@ -213,12 +225,12 @@ public class AppLinksValidDetectorTest extends AbstractCheckTest {
                         + "                <data android:scheme=\"http\"\n"
                         + "                    android:host=\"*.example.com\"\n"
                         + "                    android:pathPrefix=\"/path\" />\n"
-                        // Not a match - missing "."
-                        + "                <tools:validation testUrl=\"http://example.com/path/foo/bar\"/>\n"
-                        // OK:
-                        + "                <tools:validation testUrl=\"http://.example.com/path/foo/bar\"/>\n"
-                        + "                <tools:validation testUrl=\"http://www.example.com/path/foo/bar\"/>\n"
                         + "            </intent-filter>\n"
+                        // Not a match - missing "."
+                        + "            <tools:validation testUrl=\"http://example.com/path/foo/bar\"/>\n"
+                        // OK:
+                        + "            <tools:validation testUrl=\"http://.example.com/path/foo/bar\"/>\n"
+                        + "            <tools:validation testUrl=\"http://www.example.com/path/foo/bar\"/>\n"
                         + "        </activity>\n"
                         + "    </application>\n"
                         + "\n"
@@ -229,12 +241,12 @@ public class AppLinksValidDetectorTest extends AbstractCheckTest {
 
     public void testPortMatching() {
         String expected = ""
-                + "AndroidManifest.xml:12: Error: Test URL did not match port (empty) [TestAppLink]\n"
-                + "                <tools:validation testUrl=\"http://example.com:80/path/foo/bar\"/>\n"
-                + "                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "AndroidManifest.xml:19: Error: Test URL did not match port 85 [TestAppLink]\n"
-                + "                <tools:validation testUrl=\"http://example.com/path/foo/bar\"/>\n"
-                + "                                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "AndroidManifest.xml:25: Error: Test URL did not match port none or did not match port 85 or did not match host android.com [TestAppLink]\n"
+                + "            <tools:validation testUrl=\"http://example.com:80/path/foo/bar\"/>\n"
+                + "                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "AndroidManifest.xml:29: Error: Test URL did not match host example.com or did not match port 86 [TestAppLink]\n"
+                + "            <tools:validation testUrl=\"http://android.com/path/foo/bar\"/>\n"
+                + "                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "2 errors, 0 warnings\n";
         lint().files(
                 xml("AndroidManifest.xml", ""
@@ -249,17 +261,25 @@ public class AppLinksValidDetectorTest extends AbstractCheckTest {
                         + "                <data android:scheme=\"http\"\n"
                         + "                      android:host=\"example.com\"\n"
                         + "                      android:pathPrefix=\"/path\" />\n"
-                        + "                <tools:validation testUrl=\"http://example.com/path/foo/bar\"/>\n"
-                        + "                <tools:validation testUrl=\"http://example.com:80/path/foo/bar\"/>\n"
                         + "            </intent-filter>\n"
                         + "            <intent-filter android:autoVerify=\"true\">\n"
                         + "                <data android:scheme=\"http\"\n"
                         + "                      android:host=\"example.com\"\n"
                         + "                      android:port=\"85\"\n"
                         + "                      android:pathPrefix=\"/path\" />\n"
-                        + "                <tools:validation testUrl=\"http://example.com/path/foo/bar\"/>\n"
-                        + "                <tools:validation testUrl=\"http://example.com:85/path/foo/bar\"/>\n"
                         + "            </intent-filter>\n"
+                        + "            <intent-filter android:autoVerify=\"true\">\n"
+                        + "                <data android:scheme=\"http\"\n"
+                        + "                      android:host=\"android.com\"\n"
+                        + "                      android:port=\"86\"\n"
+                        + "                      android:pathPrefix=\"/path\" />\n"
+                        + "            </intent-filter>\n"
+                        + "            <tools:validation testUrl=\"http://example.com/path/foo/bar\"/>\n"
+                        + "            <tools:validation testUrl=\"http://example.com:80/path/foo/bar\"/>\n"
+                        + "            <tools:validation testUrl=\"http://example.com/path/foo/bar\"/>\n"
+                        + "            <tools:validation testUrl=\"http://example.com:85/path/foo/bar\"/>\n"
+                        + "            <tools:validation testUrl=\"http://android.com:86/path/foo/bar\"/>\n"
+                        + "            <tools:validation testUrl=\"http://android.com/path/foo/bar\"/>\n"
                         + "        </activity>\n"
                         + "    </application>\n"
                         + "\n"
@@ -1121,13 +1141,67 @@ public class AppLinksValidDetectorTest extends AbstractCheckTest {
                         + "                <data android:scheme=\"@={Schemes.default}\"\n"
                         + "                    android:host=\"@{Hosts.lookup}\"\n"
                         + "                    android:pathPrefix=\"@{Prefixes.lookup}\" />\n"
-                        + "                <tools:validation testUrl=\"http://example.com/gizmos/foo/bar\"/>\n"
                         + "            </intent-filter>\n"
+                        + "            <tools:validation testUrl=\"http://example.com/gizmos/foo/bar\"/>\n"
                         + "        </activity>\n"
                         + "    </application>\n"
                         + "\n"
                         + "</manifest>\n"))
                 .run()
                 .expectClean();
+    }
+
+    public void testStaticValidation()
+            throws IOException, SAXException, ParserConfigurationException {
+        // Usage outside of lint
+        Document document = XmlUtils.parseDocument(""
+                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                + "    package=\"test.pkg\" >\n"
+                + "\n"
+                + "    <application>\n"
+                + "        <activity>\n"
+                + "            <intent-filter android:autoVerify=\"true\">\n"
+                + "                <data android:scheme=\"http\"\n"
+                + "                    android:host=\"example.com\"\n"
+                + "                    android:pathPrefix=\"/gizmos\" />\n"
+                + "                <data android:path=\"/literal/path\" />\n"
+                + "            </intent-filter>\n"
+                + "            <tools:validation testUrl=\"http://example.com/gizmos/foo/bar\"/>\n"
+                + "            <tools:validation testUrl=\"http://example.com/notmatch/foo/bar\"/>\n"
+                + "            <tools:validation testUrl=\"http://notmatch.com/gizmos/foo/bar\"/>\n"
+                + "            <tools:validation testUrl=\"https://example.com/gizmos/foo/bar\"/>\n"
+                + "            <tools:validation testUrl=\"http://example.com/literal/path\"/>\n"
+                + "        </activity>\n"
+                + "    </application>\n"
+                + "\n"
+                + "</manifest>\n", true);
+        Element root = document.getDocumentElement();
+        Element application = XmlUtils.getFirstSubTag(root);
+        Element activity = XmlUtils.getFirstSubTag(application);
+        assertThat(activity).isNotNull();
+
+        List<UriInfo> infos = AppLinksValidDetector.createUriInfos(activity, null);
+
+        assertThat(AppLinksValidDetector.testElement(
+                new URL("http://example.com/literal/path"), infos))
+                .isNull(); // success
+
+        assertThat(AppLinksValidDetector.testElement(
+                new URL("http://example.com/gizmos/foo/bar"), infos))
+                .isNull(); // success
+
+        assertThat(AppLinksValidDetector.testElement(
+                new URL("https://example.com/gizmos/foo/bar"), infos))
+                .isEqualTo("Test URL did not match scheme http");
+
+        assertThat(AppLinksValidDetector.testElement(
+                new URL("http://example.com/notmatch/foo/bar"), infos))
+                .isEqualTo("Test URL did not match path prefix /gizmos, path literal /literal/path");
+
+        assertThat(AppLinksValidDetector.testElement(
+                new URL("http://notmatch.com/gizmos/foo/bar"), infos))
+                .isEqualTo("Test URL did not match host example.com");
     }
 }
