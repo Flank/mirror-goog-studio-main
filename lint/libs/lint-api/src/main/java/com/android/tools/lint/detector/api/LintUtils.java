@@ -31,6 +31,7 @@ import static com.android.SdkConstants.DOT_WEBP;
 import static com.android.SdkConstants.DOT_XML;
 import static com.android.SdkConstants.FN_BUILD_GRADLE;
 import static com.android.SdkConstants.ID_PREFIX;
+import static com.android.SdkConstants.MANIFEST_PLACEHOLDER_PREFIX;
 import static com.android.SdkConstants.NEW_ID_PREFIX;
 import static com.android.SdkConstants.PREFIX_BINDING_EXPR;
 import static com.android.SdkConstants.PREFIX_TWOWAY_BINDING_EXPR;
@@ -726,6 +727,11 @@ public class LintUtils {
     public static boolean isDataBindingExpression(@NonNull String expression) {
         return (expression.startsWith(PREFIX_BINDING_EXPR) ||
                 expression.startsWith(PREFIX_TWOWAY_BINDING_EXPR));
+    }
+
+    /** Returns true if the given resource value is a manifest place holder expression */
+    public static boolean isManifestPlaceHolderExpression(@NonNull String expression) {
+        return expression.contains(MANIFEST_PLACEHOLDER_PREFIX);
     }
 
     /**
