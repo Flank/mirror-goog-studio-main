@@ -21,7 +21,6 @@ import static com.google.common.truth.Truth.assertThat;
 import com.android.tools.lint.checks.AppLinksValidDetector.UriInfo;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.utils.XmlUtils;
-import com.google.common.truth.Truth;
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
@@ -1143,6 +1142,34 @@ public class AppLinksValidDetectorTest extends AbstractCheckTest {
                         + "                    android:pathPrefix=\"@{Prefixes.lookup}\" />\n"
                         + "            </intent-filter>\n"
                         + "            <tools:validation testUrl=\"http://example.com/gizmos/foo/bar\"/>\n"
+                        + "        </activity>\n"
+                        + "    </application>\n"
+                        + "\n"
+                        + "</manifest>\n"))
+                .run()
+                .expectClean();
+    }
+
+    public void test37343746() {
+        // Regression test for https://issuetracker.google.com/issues/37343746
+
+        //noinspection all // Sample code
+        lint().files(
+                xml("AndroidManifest.xml", ""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    xmlns:tools=\"http://schemas.android.com/tools\""
+                        + "    package=\"test.pkg\" >\n"
+                        + "\n"
+                        + "    <application>\n"
+                        + "        <activity>\n"
+                        + "            <intent-filter>\n"
+                        + "                 <action android:name=\"android.intent.action.PROVIDER_CHANGED\"/>\n"
+                        + "                 <data android:scheme=\"content\"/>\n"
+                        + "                 <data android:host=\"${applicationId}.provider\"/>\n"
+                        + "                 <data android:path=\"/beep/boop\"/>\n"
+                        + "                 <data android:mimeType=\"*/*\"/>\n"
+                        + "             </intent-filter>\n"
                         + "        </activity>\n"
                         + "    </application>\n"
                         + "\n"

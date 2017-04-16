@@ -37,6 +37,7 @@ import static com.android.tools.lint.checks.AndroidPatternMatcher.PATTERN_LITERA
 import static com.android.tools.lint.checks.AndroidPatternMatcher.PATTERN_PREFIX;
 import static com.android.tools.lint.checks.AndroidPatternMatcher.PATTERN_SIMPLE_GLOB;
 import static com.android.tools.lint.detector.api.LintUtils.isDataBindingExpression;
+import static com.android.tools.lint.detector.api.LintUtils.isManifestPlaceHolderExpression;
 import static com.android.utils.XmlUtils.getFirstSubTagTagByName;
 import static com.android.utils.XmlUtils.getNextTagByName;
 import static com.android.utils.XmlUtils.getPreviousTagByName;
@@ -276,7 +277,7 @@ public class AppLinksValidDetector extends Detector implements Detector.XmlScann
             // Check schemes
             if (schemes != null) {
                 boolean schemeOk = schemes.stream().anyMatch(scheme ->
-                        scheme.equals(testUrl.getProtocol()) || isDataBindingExpression(scheme));
+                        scheme.equals(testUrl.getProtocol()) || isSubstituted(scheme));
                 if (!schemeOk) {
                     return String.format("did not match scheme %1$s",
                                     Joiner.on(", ").join(schemes));
@@ -285,7 +286,7 @@ public class AppLinksValidDetector extends Detector implements Detector.XmlScann
 
             if (hosts != null) {
                 boolean hostOk = hosts.stream().anyMatch(host ->
-                    matchesHost(testUrl.getHost(), host) || isDataBindingExpression(host));
+                    matchesHost(testUrl.getHost(), host) || isSubstituted(host));
                 if (!hostOk) {
                     return String.format("did not match host %1$s",
                             Joiner.on(", ").join(hosts));
@@ -298,7 +299,7 @@ public class AppLinksValidDetector extends Detector implements Detector.XmlScann
                 String testPort = Integer.toString(testUrl.getPort());
                 if (ports != null) {
                     portOk = ports.stream().anyMatch(port ->
-                                    testPort.equals(port) || isDataBindingExpression(port));
+                                    testPort.equals(port) || isSubstituted(port));
                 }
             } else if (ports == null) {
                 portOk = true;
@@ -311,7 +312,7 @@ public class AppLinksValidDetector extends Detector implements Detector.XmlScann
             if (paths != null) {
                 String testPath = testUrl.getPath();
                 boolean pathOk = paths.stream().anyMatch(matcher ->
-                        isDataBindingExpression(matcher.getPath()) || matcher.match(testPath));
+                        isSubstituted(matcher.getPath()) || matcher.match(testPath));
                 if (!pathOk) {
                     StringBuilder sb = new StringBuilder();
                     paths.forEach(matcher ->
@@ -541,7 +542,7 @@ public class AppLinksValidDetector extends Detector implements Detector.XmlScann
             }
             current.add(value);
 
-            if (isDataBindingExpression(value) || value.startsWith(PREFIX_RESOURCE_REF)
+            if (isSubstituted(value) || value.startsWith(PREFIX_RESOURCE_REF)
                     || value.startsWith(PREFIX_THEME_REF)) { // already checked but can be nested
                 return current;
             }
@@ -716,5 +717,9 @@ public class AppLinksValidDetector extends Detector implements Detector.XmlScann
             // above this really shouldn't happen
             return false;
         }
+    }
+
+    private static boolean isSubstituted(@NonNull String expression) {
+        return isDataBindingExpression(expression) || isManifestPlaceHolderExpression(expression);
     }
 }
