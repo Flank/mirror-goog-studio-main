@@ -18,36 +18,29 @@ package com.android.build.gradle.internal.scope;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.api.ApkOutputFile;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
+import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.builder.core.AndroidBuilder;
-import com.android.builder.core.VariantType;
 import com.android.builder.model.AaptOptions;
 import com.android.builder.model.ApiVersion;
+import com.android.ide.common.build.ApkData;
 import java.io.File;
 import java.util.Set;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.file.FileCollection;
 
-/**
- * Data needed by the packaging tasks.
- */
-public interface PackagingScope {
+/** Data needed by the packaging tasks. */
+public interface PackagingScope extends TaskOutputHolder {
 
     /**
      * The {@link AndroidBuilder} to use.
      */
     @NonNull
     AndroidBuilder getAndroidBuilder();
-
-    /**
-     * Location of the *.ap_ file with processed resources.
-     */
-    @NonNull
-    File getFinalResourcesFile();
 
     /**
      * Full name of the variant.
@@ -83,9 +76,6 @@ public interface PackagingScope {
     FileCollection getJavaResources();
 
     @NonNull
-    File getAssetsDir();
-
-    @NonNull
     FileCollection getJniFolders();
 
     @NonNull
@@ -93,9 +83,6 @@ public interface PackagingScope {
 
     @NonNull
     Set<String> getAbiFilters();
-
-    @NonNull
-    ApkOutputFile getMainOutputFile();
 
     @Nullable
     Set<String> getSupportedAbis();
@@ -119,17 +106,12 @@ public interface PackagingScope {
     @NonNull
     Project getProject();
 
-    /**
-     * Returns the output package file.
-     */
+    /** Returns the output package file. */
     @NonNull
-    File getOutputPackage();
+    File getOutputPackageFile(File destinationDir, String projectBaseName, ApkData apkData);
 
-    /**
-     * Returns the intermediate APK file.
-     */
-    @NonNull
-    File getIntermediateApk();
+    /** Returns the project base name */
+    String getProjectBaseName();
 
     @NonNull
     File getInstantRunSplitApkOutputFolder();
@@ -145,9 +127,7 @@ public interface PackagingScope {
     @NonNull
     AaptOptions getAaptOptions();
 
-    @NonNull
-    VariantType getVariantType();
+    SplitScope getSplitScope();
 
-    @NonNull
-    File getManifestFile();
+    void addTask(TaskContainer.TaskKind taskKind, Task task);
 }

@@ -22,7 +22,6 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.integration.common.utils.DeviceHelper
 import com.android.builder.core.BuilderConstants
-import com.android.builder.model.AndroidProject
 import com.android.testutils.apk.Apk
 import groovy.transform.CompileStatic
 import org.junit.AfterClass
@@ -65,13 +64,16 @@ model {
         productFlavors {
             create("x86") {
                 ndk.abiFilters.add("x86")
+                dimension "abi"
             }
             create("arm") {
                 ndk.abiFilters.add("armeabi-v7a")
                 ndk.abiFilters.add("armeabi")
+                dimension "abi"
             }
             create("mips") {
                 ndk.abiFilters.add("mips")
+                dimension "abi"
             }
         }
         abis {
@@ -109,7 +111,7 @@ model {
         project.execute("assembleX86Debug")
 
         // Verify .so are built for all platform.
-        Apk apk = project.getApk("x86", "debug")
+        Apk apk = project.getApk(null,  GradleTestProject.ApkType.DEBUG,"x86")
         assertThat(apk).contains("lib/x86/libhello-jni.so")
         assertThat(apk).doesNotContain("lib/mips/libhello-jni.so")
         assertThat(apk).doesNotContain("lib/armeabi/libhello-jni.so")
@@ -121,7 +123,7 @@ model {
         project.execute("assembleArmDebug")
 
         // Verify .so are built for all platform.
-        Apk apk = project.getApk("arm", "debug")
+        Apk apk = project.getApk(null,  GradleTestProject.ApkType.DEBUG, "arm")
         assertThat(apk).doesNotContain("lib/x86/libhello-jni.so")
         assertThat(apk).doesNotContain("lib/mips/libhello-jni.so")
         assertThat(apk).contains("lib/armeabi/libhello-jni.so")
@@ -133,7 +135,7 @@ model {
         project.execute("assembleMipsDebug")
 
         // Verify .so are built for all platform.
-        Apk apk = project.getApk("mips", "debug")
+        Apk apk = project.getApk(null,  GradleTestProject.ApkType.DEBUG, "mips")
         assertThat(apk).doesNotContain("lib/x86/libhello-jni.so")
         assertThat(apk).contains("lib/mips/libhello-jni.so")
         assertThat(apk).doesNotContain("lib/armeabi/libhello-jni.so")
@@ -144,7 +146,7 @@ model {
     public void "check release build"() {
         project.execute("assembleArmRelease")
 
-        Apk apk = project.getApk("arm", "release", "unsigned")
+        Apk apk = project.getApk(null,  GradleTestProject.ApkType.RELEASE, "arm")
         assertThat(apk).contains("lib/armeabi/libhello-jni.so")
         assertThat(apk).contains("lib/armeabi-v7a/libhello-jni.so")
     }
@@ -163,16 +165,5 @@ model {
         } else {
             project.execute(GradleTestProject.DEVICE_PROVIDER_NAME + "X86DebugAndroidTest")
         }
-    }
-
-    // http://b.android.com/233421
-    @Test
-    void testBuildWithSpecificAbi() {
-        project.executor()
-                .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "x86")
-                .run("assembleDebug")
-
-        Apk apk = project.getApk("x86", "debug")
-        assertThat(apk).contains("lib/x86/libhello-jni.so")
     }
 }

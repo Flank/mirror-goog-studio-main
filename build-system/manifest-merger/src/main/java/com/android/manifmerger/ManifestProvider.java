@@ -35,5 +35,4 @@ public interface ManifestProvider {
      */
     @Nullable
     String getName();
-
 }

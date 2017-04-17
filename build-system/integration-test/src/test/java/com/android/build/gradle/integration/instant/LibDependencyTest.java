@@ -39,7 +39,6 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import java.io.File;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -57,7 +56,6 @@ public class LibDependencyTest {
 
     @Before
     public void activityClass() throws Exception {
-        Assume.assumeFalse("Disabled until instant run supports Jack", GradleTestProject.USE_JACK);
         createLibraryClass("Before");
     }
 

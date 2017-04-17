@@ -157,9 +157,7 @@ public final class ApkSubject extends AbstractDexAndroidSubject<ApkSubject, Apk>
         }
     }
 
-    /**
-     * Returns {@code true} if this APK contains an APK Signing Block.
-     */
+    /** Returns {@code true} if this APK contains an APK Signing Block. */
     private boolean hasApkSigningBlock() {
         // IMPLEMENTATION NOTE: To avoid having to implement too much parsing, this method does not
         // parse the APK to locate the APK Signing Block. Instead, it simply scans the file for the

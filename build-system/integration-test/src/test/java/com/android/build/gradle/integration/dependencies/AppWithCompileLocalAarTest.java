@@ -17,16 +17,22 @@
 package com.android.build.gradle.integration.dependencies;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.ANDROID;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
+import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidProject;
-import com.android.builder.model.SyncIssue;
-import java.io.File;
+import com.android.builder.model.Variant;
+import com.android.builder.model.level2.DependencyGraphs;
+import com.android.builder.model.level2.Library;
+import com.google.common.truth.Truth;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -55,7 +61,7 @@ public class AppWithCompileLocalAarTest {
                 "    compile files(\"libs/baseLib-1.0.aar\")\n" +
                 "}\n");
 
-        modelContainer = project.model().ignoreSyncIssues().getSingle();
+        modelContainer = project.model().getSingle();
     }
 
     @AfterClass
@@ -64,11 +70,24 @@ public class AppWithCompileLocalAarTest {
         modelContainer = null;
     }
 
+    @Ignore
     @Test
-    public void checkModelFailedToLoad() throws Exception {
-        SyncIssue issue = assertThat(modelContainer.getOnlyModel()).hasSingleIssue(
-                SyncIssue.SEVERITY_ERROR,
-                SyncIssue.TYPE_NON_JAR_LOCAL_DEP);
-        assertThat(new File(issue.getData()).getName()).isEqualTo("baseLib-1.0.aar");
+    public void checkModelContainsLocalAar() throws Exception {
+        LibraryGraphHelper helper = new LibraryGraphHelper(modelContainer);
+
+        AndroidProject model = modelContainer.getOnlyModel();
+
+        Variant debug = ModelHelper.getVariant(model.getVariants(), "debug");
+        Truth.assertThat(debug).isNotNull();
+
+        DependencyGraphs dependencyGraph = debug.getMainArtifact().getDependencyGraphs();
+
+        final LibraryGraphHelper.Items androidItems = helper.on(dependencyGraph).withType(ANDROID);
+        assertThat(androidItems.asList())
+                .named("compileClasspath with Android filter")
+                .hasSize(1);
+
+        Library library = androidItems.asSingleLibrary();
+        assertThat(library.getArtifactAddress()).startsWith("__local_aars__:");
     }
 }

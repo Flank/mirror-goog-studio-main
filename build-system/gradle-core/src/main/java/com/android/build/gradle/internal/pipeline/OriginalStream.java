@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
 import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.JarInput;
@@ -34,18 +35,25 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.hash.Hashing;
-import groovy.lang.Closure;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.ArtifactCollection;
+import org.gradle.api.artifacts.component.ComponentIdentifier;
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
+import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
+import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 
@@ -55,6 +63,11 @@ import org.gradle.api.file.FileCollection;
 @Immutable
 public class OriginalStream extends TransformStream {
 
+    /** group id for local jars, including the ':' separating the groupId from artifactId */
+    public static final String LOCAL_JAR_GROUPID = "android.local.jars:";
+
+    @Nullable private final ArtifactCollection artifactCollection;
+
     public static Builder builder(@NonNull Project project, @NonNull String name) {
         return new Builder(project, name);
     }
@@ -63,11 +76,12 @@ public class OriginalStream extends TransformStream {
         @NonNull private final Project project;
         @NonNull private final String name;
         private Set<ContentType> contentTypes = Sets.newHashSet();
-        private FileCollection fileCollection;
         private QualifiedContent.ScopeType scope;
+        private FileCollection fileCollection;
         private Supplier<Collection<File>> jarFiles;
         private Supplier<Collection<File>> folders;
         private ImmutableList<? extends Object> dependencies;
+        private ArtifactCollection artifactCollection;
 
         public Builder(@NonNull Project project, @NonNull String name) {
             this.project = project;
@@ -78,35 +92,43 @@ public class OriginalStream extends TransformStream {
             checkNotNull(scope);
             checkState(!contentTypes.isEmpty());
 
-            if (fileCollection == null) {
+            FileCollection fc;
+
+            if (fileCollection != null) {
+                fc = fileCollection;
+
+            } else if (artifactCollection != null) {
+                fc = artifactCollection.getArtifactFiles();
+            } else {
                 // create a file collection with the files and the dependencies.
-                fileCollection = project.files(
-                        (Callable<Object>) () -> {
-                            if (jarFiles != null && folders != null) {
-                                return ImmutableList.of(jarFiles.get(), folders.get());
-                            }
-                            if (jarFiles != null) {
-                                return jarFiles.get();
-                            }
+                ConfigurableFileCollection fc2 =
+                        project.files(
+                                (Callable<Object>)
+                                        () -> {
+                                            if (jarFiles != null && folders != null) {
+                                                return ImmutableList.of(
+                                                        jarFiles.get(), folders.get());
+                                            }
+                                            if (jarFiles != null) {
+                                                return jarFiles.get();
+                                            }
 
-                            if (folders != null) {
-                                return folders.get();
-                            }
+                                            if (folders != null) {
+                                                return folders.get();
+                                            }
 
-                            return ImmutableList.of();
-                        },
-                        new Closure(project) {
-                            public Object doCall(ConfigurableFileCollection fileCollection) {
-                                if (dependencies != null) {
-                                    fileCollection.builtBy(dependencies.toArray());
-                                }
-                                return null;
-                            }
-                        });
+                                            return ImmutableList.of();
+                                        });
+
+                if (dependencies != null) {
+                    fc2.builtBy(dependencies.toArray());
+                }
+
+                fc = fc2;
             }
 
             return new OriginalStream(
-                    name, ImmutableSet.copyOf(contentTypes), scope, fileCollection);
+                    name, ImmutableSet.copyOf(contentTypes), scope, artifactCollection, fc);
         }
 
         public Builder addContentTypes(@NonNull Set<ContentType> types) {
@@ -129,46 +151,85 @@ public class OriginalStream extends TransformStream {
             return this;
         }
 
+        /** @Deprecated use {@link #setFileCollection(FileCollection)} */
+        @Deprecated
         public Builder setJar(@NonNull final File jarFile) {
-            Preconditions.checkState(fileCollection == null, "Cannot set both file collection and jars/folders");
+            Preconditions.checkState(
+                    fileCollection == null && artifactCollection == null,
+                    "Cannot set file collection, artifact collection and jars/folders at the same time");
             this.jarFiles = () -> ImmutableList.of(jarFile);
             return this;
         }
 
+        /** @Deprecated use {@link #setFileCollection(FileCollection)} */
+        @Deprecated
         public Builder setJars(@NonNull Supplier<Collection<File>> jarSupplier) {
-            Preconditions.checkState(fileCollection == null, "Cannot set both file collection and jars/folders");
+            Preconditions.checkState(
+                    fileCollection == null && artifactCollection == null,
+                    "Cannot set file collection, artifact collection and jars/folders at the same time");
             this.jarFiles = jarSupplier;
             return this;
         }
 
+        /** @Deprecated use {@link #setFileCollection(FileCollection)} */
+        @Deprecated
         public Builder setFolder(@NonNull final File folder) {
-            Preconditions.checkState(fileCollection == null, "Cannot set both file collection and jars/folders");
+            Preconditions.checkState(
+                    fileCollection == null && artifactCollection == null,
+                    "Cannot set file collection, artifact collection and jars/folders at the same time");
             this.folders = () -> ImmutableList.of(folder);
             return this;
         }
 
+        /** @Deprecated use {@link #setFileCollection(FileCollection)} */
+        @Deprecated
         public Builder setFolders(@NonNull Supplier<Collection<File>> folderSupplier) {
-            Preconditions.checkState(fileCollection == null, "Cannot set both file collection and jars/folders");
+            Preconditions.checkState(
+                    fileCollection == null && artifactCollection == null,
+                    "Cannot set file collection, artifact collection and jars/folders at the same time");
             this.folders = folderSupplier;
             return this;
         }
 
+        /** @Deprecated use {@link #setFileCollection(FileCollection)} */
+        @Deprecated
         public Builder setDependencies(@NonNull List<? extends Object> dependencies) {
-            Preconditions.checkState(fileCollection == null, "Cannot set both file collection and jars/folders");
+            Preconditions.checkState(
+                    fileCollection == null && artifactCollection == null,
+                    "Cannot set dependency when file collection or artifact collection is used");
             this.dependencies = ImmutableList.copyOf(dependencies);
             return this;
         }
 
+        /** @Deprecated use {@link #setFileCollection(FileCollection)} */
+        @Deprecated
         public Builder setDependency(@NonNull Object dependency) {
-            Preconditions.checkState(fileCollection == null, "Cannot set both file collection and jars/folders");
+            Preconditions.checkState(
+                    fileCollection == null && artifactCollection == null,
+                    "Cannot set dependency when file collection or artifact collection is used");
             this.dependencies = ImmutableList.of(dependency);
             return this;
         }
 
         public Builder setFileCollection(@NonNull FileCollection fileCollection) {
-            Preconditions.checkState(jarFiles == null && folders == null && dependencies == null,
-                    "Cannot set both file collection and jars/folders");
+            Preconditions.checkState(
+                    jarFiles == null
+                            && folders == null
+                            && dependencies == null
+                            && artifactCollection == null,
+                    "Cannot set file collection, artifact collection and jars/folders at the same time");
             this.fileCollection = fileCollection;
+            return this;
+        }
+
+        public Builder setArtifactCollection(@NonNull ArtifactCollection artifactCollection) {
+            Preconditions.checkState(
+                    jarFiles == null
+                            && folders == null
+                            && dependencies == null
+                            && fileCollection == null,
+                    "Cannot set file collection, artifact collection and jars/folders at the same time");
+            this.artifactCollection = artifactCollection;
             return this;
         }
     }
@@ -177,8 +238,10 @@ public class OriginalStream extends TransformStream {
             @NonNull String name,
             @NonNull Set<ContentType> contentTypes,
             @NonNull QualifiedContent.ScopeType scope,
+            @Nullable ArtifactCollection artifactCollection,
             @NonNull FileCollection files) {
         super(name, contentTypes, ImmutableSet.of(scope), files);
+        this.artifactCollection = artifactCollection;
     }
 
     private static class OriginalTransformInput extends IncrementalTransformInput {
@@ -210,26 +273,62 @@ public class OriginalStream extends TransformStream {
         Set<ContentType> contentTypes = getContentTypes();
         Set<? super Scope> scopes = getScopes();
 
-        Set<File> files = getFiles().getFiles();
+        List<JarInput> jarInputs;
+        List<DirectoryInput> directoryInputs;
 
-        List<JarInput> jarInputs = files.stream()
-                .filter(File::isFile)
-                .map(file -> new ImmutableJarInput(
-                        getUniqueInputName(file),
-                        file,
-                        Status.NOTCHANGED,
-                        contentTypes,
-                        scopes))
-                .collect(Collectors.toList());
+        if (artifactCollection != null) {
+            jarInputs = Lists.newArrayList();
+            directoryInputs = Lists.newArrayList();
 
-        List<DirectoryInput> directoryInputs = files.stream()
-                .filter(File::isDirectory)
-                .map(file -> new ImmutableDirectoryInput(
-                        getUniqueInputName(file),
-                        file,
-                        contentTypes,
-                        scopes))
-                .collect(Collectors.toList());
+            Map<ComponentIdentifier, Integer> duplicates = Maps.newHashMap();
+            for (ResolvedArtifactResult result : artifactCollection.getArtifacts()) {
+                File artifactFile = result.getFile();
+
+                if (artifactFile.isFile()) {
+                    jarInputs.add(
+                            new ImmutableJarInput(
+                                    getArtifactName(result, duplicates),
+                                    artifactFile,
+                                    Status.NOTCHANGED,
+                                    contentTypes,
+                                    scopes));
+                } else {
+                    directoryInputs.add(
+                            new ImmutableDirectoryInput(
+                                    getArtifactName(result, duplicates),
+                                    artifactFile,
+                                    contentTypes,
+                                    scopes));
+                }
+            }
+        } else {
+            Set<File> files = getFileCollection().getFiles();
+
+            jarInputs =
+                    files.stream()
+                            .filter(File::isFile)
+                            .map(
+                                    file ->
+                                            new ImmutableJarInput(
+                                                    getUniqueInputName(file),
+                                                    file,
+                                                    Status.NOTCHANGED,
+                                                    contentTypes,
+                                                    scopes))
+                            .collect(Collectors.toList());
+
+            directoryInputs =
+                    files.stream()
+                            .filter(File::isDirectory)
+                            .map(
+                                    file ->
+                                            new ImmutableDirectoryInput(
+                                                    getUniqueInputName(file),
+                                                    file,
+                                                    contentTypes,
+                                                    scopes))
+                            .collect(Collectors.toList());
+        }
 
         return new ImmutableTransformInput(jarInputs, directoryInputs, null);
     }
@@ -242,23 +341,98 @@ public class OriginalStream extends TransformStream {
         Set<ContentType> contentTypes = getContentTypes();
         Set<? super Scope> scopes = getScopes();
 
-        getFiles().getFiles().forEach(file -> {
-            if (file.isDirectory()) {
-                input.addFolderInput(new MutableDirectoryInput(
-                        getUniqueInputName(file),
-                        file,
-                        contentTypes,
-                        scopes));
-            } else if (file.isFile()) {
-                input.addJarInput(new QualifiedContentImpl(
-                        getUniqueInputName(file),
-                        file,
-                        contentTypes,
-                        scopes));
+        if (artifactCollection != null) {
+            Map<ComponentIdentifier, Integer> duplicates = Maps.newHashMap();
+            for (ResolvedArtifactResult result : artifactCollection.getArtifacts()) {
+                File artifactFile = result.getFile();
+
+                if (artifactFile.isDirectory()) {
+                    input.addFolderInput(
+                            new MutableDirectoryInput(
+                                    getArtifactName(result, duplicates),
+                                    artifactFile,
+                                    contentTypes,
+                                    scopes));
+                } else if (artifactFile.isFile()) {
+                    input.addJarInput(
+                            new QualifiedContentImpl(
+                                    getArtifactName(result, duplicates),
+                                    artifactFile,
+                                    contentTypes,
+                                    scopes));
+                }
             }
-        });
+
+        } else {
+            getFileCollection()
+                    .getFiles()
+                    .forEach(
+                            file -> {
+                                if (file.isDirectory()) {
+                                    input.addFolderInput(
+                                            new MutableDirectoryInput(
+                                                    getUniqueInputName(file),
+                                                    file,
+                                                    contentTypes,
+                                                    scopes));
+                                } else if (file.isFile()) {
+                                    input.addJarInput(
+                                            new QualifiedContentImpl(
+                                                    getUniqueInputName(file),
+                                                    file,
+                                                    contentTypes,
+                                                    scopes));
+                                }
+                            });
+        }
 
         return input;
+    }
+
+    @NonNull
+    private static String getArtifactName(
+            @NonNull ResolvedArtifactResult artifactResult,
+            @NonNull Map<ComponentIdentifier, Integer> deduplicationMap) {
+        ComponentIdentifier id = artifactResult.getId().getComponentIdentifier();
+
+        String baseName;
+
+        if (id instanceof ProjectComponentIdentifier) {
+            baseName = ((ProjectComponentIdentifier) id).getProjectPath();
+        } else if (id instanceof ModuleComponentIdentifier) {
+            baseName = id.getDisplayName();
+        } else {
+            // this is a local jar
+            File artifactFile = artifactResult.getFile();
+
+            baseName =
+                    LOCAL_JAR_GROUPID
+                            + artifactFile.getName()
+                            + ":"
+                            + Hashing.sha1()
+                                    .hashString(artifactFile.getPath(), Charsets.UTF_16LE)
+                                    .toString();
+        }
+
+        // check if a previous artifact use the same name. This can happen for instance in case
+        // of an AAR with local Jars.
+        // In that case happen an index to the name.
+        final Integer zero = 0;
+        Integer i =
+                deduplicationMap.compute(
+                        id,
+                        (componentIdentifier, value) -> {
+                            if (value == null) {
+                                return zero;
+                            }
+
+                            return value + 1;
+                        });
+        if (!zero.equals(i)) {
+            return baseName + "::" + i;
+        }
+
+        return baseName;
     }
 
     @NonNull
@@ -281,7 +455,8 @@ public class OriginalStream extends TransformStream {
                 getName() + "-restricted-copy",
                 types,
                 (QualifiedContent.ScopeType) Iterables.getOnlyElement(scopes),
-                getFiles());
+                artifactCollection,
+                getFileCollection());
     }
 
     @Override
@@ -290,7 +465,7 @@ public class OriginalStream extends TransformStream {
                 .add("name", getName())
                 .add("scopes", getScopes())
                 .add("contentTypes", getContentTypes())
-                .add("fileCollection", getFiles())
+                .add("fileCollection", getFileCollection())
                 .toString();
     }
 }

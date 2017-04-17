@@ -189,11 +189,11 @@ public class TaskStateList {
         ImmutableSet.Builder<String> result = ImmutableSet.builder();
         Matcher matcher = INPUT_CHANGED_PATTERN.matcher(gradleOutput);
         while (matcher.find()) {
-            String candiate = matcher.group(1);
-            if (!notUpToDateTasks.contains(candiate)) {
-                throw new RuntimeException("Found unexpected input changed task" + candiate);
+            String candidate = matcher.group(1);
+            if (!notUpToDateTasks.contains(candidate)) {
+                throw new RuntimeException("Found unexpected input changed task " + candidate);
             }
-            result.add(candiate);
+            result.add(candidate);
         }
         return result.build();
     }

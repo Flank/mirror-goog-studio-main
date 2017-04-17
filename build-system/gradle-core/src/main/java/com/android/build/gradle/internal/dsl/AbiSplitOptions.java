@@ -28,7 +28,8 @@ import java.util.Set;
 /**
  * DSL object for configuring per-abi splits options.
  *
- * <p>See <a href="https://developer.android.com/studio/build/configure-apk-splits.html">APK Splits</a>.
+ * <p>See <a href="https://developer.android.com/studio/build/configure-apk-splits.html">FULL_APK
+ * Splits</a>.
  */
 public class AbiSplitOptions extends SplitOptions {
 
@@ -52,9 +53,7 @@ public class AbiSplitOptions extends SplitOptions {
         return builder.build();
     }
 
-    /**
-     * Whether to create an APK with all available ABIs.
-     */
+    /** Whether to create an FULL_APK with all available ABIs. */
     public boolean isUniversalApk() {
         return universalApk;
     }

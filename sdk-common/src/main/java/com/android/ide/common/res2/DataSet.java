@@ -32,6 +32,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -615,11 +616,13 @@ abstract class DataSet<I extends DataItem<F>, F extends DataFile<I>> implements 
             patterns = "!.svn:!.git:!.ds_store:!*.scc:.*:<dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~";
         }
 
-        sIgnoredPatterns = Splitter.on(':').split(patterns);
+        setIgnoredPatterns(patterns);
     }
 
     public void setIgnoredPatterns(String aaptStylePattern) {
-        sIgnoredPatterns = Splitter.on(':').split(aaptStylePattern);
+        // don't keep the result of split and put it in a new list instead.
+        // This is because the custom iterable returned by Splitter does not implement equals.
+        sIgnoredPatterns = Lists.newArrayList(Splitter.on(':').split(aaptStylePattern));
     }
 
     /**
@@ -692,5 +695,32 @@ abstract class DataSet<I extends DataItem<F>, F extends DataFile<I>> implements 
 
     protected boolean getValidateEnabled() {
         return mValidateEnabled;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        DataSet<?, ?> dataSet = (DataSet<?, ?>) o;
+        return mValidateEnabled == dataSet.mValidateEnabled &&
+                Objects.equals(mConfigName, dataSet.mConfigName) &&
+                Objects.equals(mSourceFiles, dataSet.mSourceFiles) &&
+                Objects.equals(mItems, dataSet.mItems) &&
+                Objects.equals(mSourceFileToDataFilesMap, dataSet.mSourceFileToDataFilesMap)
+                &&
+                Objects.equals(mDataFileMap, dataSet.mDataFileMap) &&
+                Objects.equals(sIgnoredPatterns, dataSet.sIgnoredPatterns);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects
+                .hash(mConfigName, mValidateEnabled, mSourceFiles, mItems,
+                        mSourceFileToDataFilesMap,
+                        mDataFileMap, sIgnoredPatterns);
     }
 }

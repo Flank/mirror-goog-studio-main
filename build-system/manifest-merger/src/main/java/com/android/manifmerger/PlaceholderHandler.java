@@ -32,6 +32,7 @@ public class PlaceholderHandler {
     public static final String INSTRUMENTATION_RUNNER = "instrumentationRunner";
     public static final String PACKAGE_NAME = "packageName";
     public static final String APPLICATION_ID = "applicationId";
+    public static final String FEATURE_NAME = "featureName";
 
     // regular expression to recognize placeholders like ${name}, potentially surrounded by a
     // prefix and suffix string. this will split in 3 groups, the prefix, the placeholder name, and

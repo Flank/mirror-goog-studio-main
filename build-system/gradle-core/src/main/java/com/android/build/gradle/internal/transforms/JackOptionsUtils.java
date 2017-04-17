@@ -81,13 +81,13 @@ public class JackOptionsUtils {
                 .setDexOptimize(true);
 
         final GradleVariantConfiguration config = scope.getVariantData().getVariantConfiguration();
-        builder.setMinified(config.isMinifyEnabled())
+        builder.setMinified(scope.getCodeShrinker() != null)
                 .setMultiDex(config.isMultiDexEnabled())
                 .setMinSdkVersion(config.getMinSdkVersion());
 
         /* Dex generation only for non-minified, native multidex, w/o JarJar. */
         builder.setGenerateDex(
-                !config.isMinifyEnabled()
+                !(scope.getCodeShrinker() != null)
                         && config.isMultiDexEnabled()
                         && !DefaultApiVersion.isLegacyMultidex(config.getMinSdkVersion())
                         && config.getJarJarRuleFiles().isEmpty());
@@ -147,7 +147,7 @@ public class JackOptionsUtils {
         /* Incremental setup - disabled for: test coverage. */
         Project project = scope.getGlobalScope().getProject();
         Configuration annotationConfig =
-                scope.getVariantData().getVariantDependency().getAnnotationProcessorConfiguration();
+                scope.getVariantDependencies().getAnnotationProcessorConfiguration();
         boolean incremental =
                 AbstractCompilesUtil.isIncremental(
                                 project, scope, compileOptions, annotationConfig, logger);
@@ -180,7 +180,7 @@ public class JackOptionsUtils {
         final GradleVariantConfiguration config = scope.getVariantData().getVariantConfiguration();
         Project project = scope.getGlobalScope().getProject();
         /* Minification setup. */
-        if (config.isMinifyEnabled()) {
+        if (scope.getCodeShrinker() != null) {
             // since all the output use the same resources, we can use the first output
             // to query for a proguard file.
             File sdkDir = scope.getGlobalScope().getSdkHandler().getAndCheckSdkFolder();
@@ -190,8 +190,7 @@ public class JackOptionsUtils {
                             TaskManager.DEFAULT_PROGUARD_CONFIG_FILE, project);
 
             Set<File> proguardFiles =
-                    config.getProguardFiles(
-                            true /*includeLibs*/, ImmutableList.of(defaultProguardFile));
+                    config.getProguardFiles(ImmutableList.of(defaultProguardFile));
             File proguardResFile = scope.getProcessAndroidResourcesProguardOutputFile();
             proguardFiles.add(proguardResFile);
             // for tested app, we only care about their aapt config since the base

@@ -25,6 +25,7 @@ import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
+import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
@@ -43,7 +44,7 @@ import org.gradle.api.logging.Logger;
  * Transform to generate the dependencies APK when deploying instant-run enabled application in
  * multi-apk mode.
  *
- * In this context, the transform will consume all external dependencies and package them in a
+ * <p>In this context, the transform will consume all external dependencies and package them in a
  * single split apk file.
  */
 public class InstantRunDependenciesApkBuilder extends InstantRunSplitApkBuilder {
@@ -53,15 +54,25 @@ public class InstantRunDependenciesApkBuilder extends InstantRunSplitApkBuilder 
     public InstantRunDependenciesApkBuilder(
             @NonNull Logger logger,
             @NonNull Project project,
-            @NonNull InstantRunBuildContext instantRunBuildContext,
+            @NonNull InstantRunBuildContext buildContext,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull PackagingScope packagingScope,
             @Nullable CoreSigningConfig signingConf,
+            @NonNull AaptGeneration aaptGeneration,
             @NonNull AaptOptions aaptOptions,
             @NonNull File outputDirectory,
             @NonNull File supportDirectory) {
-        super(logger, project, instantRunBuildContext, androidBuilder, packagingScope, signingConf,
-                aaptOptions, outputDirectory, supportDirectory);
+        super(
+                logger,
+                project,
+                buildContext,
+                androidBuilder,
+                packagingScope,
+                signingConf,
+                aaptGeneration,
+                aaptOptions,
+                outputDirectory,
+                supportDirectory);
     }
 
     @NonNull
@@ -79,9 +90,7 @@ public class InstantRunDependenciesApkBuilder extends InstantRunSplitApkBuilder 
     @NonNull
     @Override
     public Set<QualifiedContent.Scope> getScopes() {
-        return Sets.immutableEnumSet(QualifiedContent.Scope.EXTERNAL_LIBRARIES,
-                QualifiedContent.Scope.PROJECT_LOCAL_DEPS,
-                QualifiedContent.Scope.SUB_PROJECTS_LOCAL_DEPS);
+        return Sets.immutableEnumSet(QualifiedContent.Scope.EXTERNAL_LIBRARIES);
     }
 
     @Override

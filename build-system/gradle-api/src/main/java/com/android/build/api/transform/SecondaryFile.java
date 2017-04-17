@@ -145,8 +145,11 @@ public class SecondaryFile {
      */
     @Deprecated
     public File getFile() {
+        //noinspection VariableNotUsedInsideIf
         if (secondaryInputFileCollection != null) {
-            return secondaryInputFileCollection.getSingleFile();
+            throw new RuntimeException(
+                    "Calling #getFile() on a FileCollection-based SecondaryFile."
+                            + " Use #getFileCollection() instead");
         }
 
         return secondaryInputFile;

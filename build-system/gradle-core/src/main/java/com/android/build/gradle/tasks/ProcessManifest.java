@@ -16,21 +16,33 @@
 
 package com.android.build.gradle.tasks;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
-import com.android.build.gradle.internal.scope.ConventionMappingHelper;
+import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
+import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.variant.BaseVariantOutputData;
+import com.android.build.gradle.internal.tasks.TaskInputHelper;
+import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.model.ProductFlavor;
 import com.android.manifmerger.ManifestMerger2;
+import com.android.manifmerger.MergingReport;
+import com.android.manifmerger.XmlDocument;
+import com.android.utils.FileUtils;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import java.io.File;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Supplier;
+import org.apache.tools.ant.BuildException;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
@@ -43,69 +55,113 @@ import org.gradle.api.tasks.ParallelizableTask;
 @ParallelizableTask
 public class ProcessManifest extends ManifestProcessorTask {
 
-    private String minSdkVersion;
-
-    private String targetSdkVersion;
-
-    private Integer maxSdkVersion;
+    private Supplier<String> minSdkVersion;
+    private Supplier<String> targetSdkVersion;
+    private Supplier<Integer> maxSdkVersion;
 
     private VariantConfiguration<CoreBuildType, CoreProductFlavor, CoreProductFlavor>
             variantConfiguration;
+    private SplitScope splitScope;
 
     private File reportFile;
 
     @Override
     protected void doFullTaskAction() {
-        File aaptManifestFile = getAaptFriendlyManifestOutputFile();
-        String aaptFriendlyManifestOutputFilePath =
-                aaptManifestFile == null ? null : aaptManifestFile.getAbsolutePath();
-        getBuilder().mergeManifestsForApplication(
-                getMainManifest(),
-                getManifestOverlays(),
-                Collections.emptyList(),
-                getPackageOverride(),
-                getVersionCode(),
-                getVersionName(),
-                getMinSdkVersion(),
-                getTargetSdkVersion(),
-                getMaxSdkVersion(),
-                getManifestOutputFile().getAbsolutePath(),
-                aaptFriendlyManifestOutputFilePath,
-                null /* outInstantRunManifestLocation */,
-                ManifestMerger2.MergeType.LIBRARY,
-                variantConfiguration.getManifestPlaceholders(),
-                Collections.emptyList(),
-                getReportFile());
+        File outputManifestFile = getManifestOutputFile();
+        File aaptFriendlyManifestOutputFile = getAaptFriendlyManifestOutputFile();
+        MergingReport mergingReport =
+                getBuilder()
+                        .mergeManifestsForApplication(
+                                getMainManifest(),
+                                getManifestOverlays(),
+                                Collections.emptyList(),
+                                getPackageOverride(),
+                                getVersionCode(),
+                                getVersionName(),
+                                getMinSdkVersion(),
+                                getTargetSdkVersion(),
+                                getMaxSdkVersion(),
+                                outputManifestFile.getAbsolutePath(),
+                                aaptFriendlyManifestOutputFile.getAbsolutePath(),
+                                null /* outInstantRunManifestLocation */,
+                                ManifestMerger2.MergeType.LIBRARY,
+                                variantConfiguration.getManifestPlaceholders(),
+                                Collections.emptyList(),
+                                getReportFile());
+
+        XmlDocument mergedXmlDocument =
+                mergingReport.getMergedXmlDocument(MergingReport.MergedManifestKind.MERGED);
+
+        ImmutableMap<String, String> properties =
+                mergedXmlDocument != null
+                        ? ImmutableMap.of(
+                                "packageId", mergedXmlDocument.getPackageName(),
+                                "split", mergedXmlDocument.getSplitName())
+                        : ImmutableMap.of();
+
+        splitScope.addOutputForSplit(
+                TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS,
+                splitScope.getMainSplit(),
+                outputManifestFile,
+                properties);
+        splitScope.addOutputForSplit(
+                TaskOutputHolder.TaskOutputType.AAPT_FRIENDLY_MERGED_MANIFESTS,
+                splitScope.getMainSplit(),
+                aaptFriendlyManifestOutputFile,
+                properties);
+        try {
+            splitScope.save(
+                    TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS, getManifestOutputDirectory());
+            splitScope.save(
+                    TaskOutputHolder.TaskOutputType.AAPT_FRIENDLY_MERGED_MANIFESTS,
+                    getAaptFriendlyManifestOutputDirectory());
+        } catch (IOException e) {
+            throw new BuildException("Exception while saving build metadata : ", e);
+        }
+    }
+
+    @NonNull
+    @Override
+    public File getManifestOutputFile() {
+        Preconditions.checkNotNull(splitScope.getMainSplit());
+        return FileUtils.join(
+                getManifestOutputDirectory(),
+                splitScope.getMainSplit().getDirName(),
+                SdkConstants.ANDROID_MANIFEST_XML);
+    }
+
+    @Nullable
+    @Override
+    public File getInstantRunManifestOutputFile() {
+        return null;
+    }
+
+    @Nullable
+    @Override
+    public File getAaptFriendlyManifestOutputFile() {
+        Preconditions.checkNotNull(splitScope.getMainSplit());
+        return FileUtils.join(
+                getAaptFriendlyManifestOutputDirectory(),
+                splitScope.getMainSplit().getDirName(),
+                SdkConstants.ANDROID_MANIFEST_XML);
     }
 
     @Input
     @Optional
     public String getMinSdkVersion() {
-        return minSdkVersion;
-    }
-
-    public void setMinSdkVersion(String minSdkVersion) {
-        this.minSdkVersion = minSdkVersion;
+        return minSdkVersion.get();
     }
 
     @Input
     @Optional
     public String getTargetSdkVersion() {
-        return targetSdkVersion;
-    }
-
-    public void setTargetSdkVersion(String targetSdkVersion) {
-        this.targetSdkVersion = targetSdkVersion;
+        return targetSdkVersion.get();
     }
 
     @Input
     @Optional
     public Integer getMaxSdkVersion() {
-        return maxSdkVersion;
-    }
-
-    public void setMaxSdkVersion(Integer maxSdkVersion) {
-        this.maxSdkVersion = maxSdkVersion;
+        return maxSdkVersion.get();
     }
 
     public VariantConfiguration<CoreBuildType, CoreProductFlavor, CoreProductFlavor> getVariantConfiguration() {
@@ -192,10 +248,6 @@ public class ProcessManifest extends ManifestProcessorTask {
                     scope.getVariantConfiguration();
             final AndroidBuilder androidBuilder = scope.getGlobalScope().getAndroidBuilder();
 
-            // get single output for now.
-            BaseVariantOutputData variantOutputData = scope.getVariantData().getMainOutput();
-
-            variantOutputData.manifestProcessorTask = processManifest;
             processManifest.setAndroidBuilder(androidBuilder);
             processManifest.setVariantName(config.getFullName());
 
@@ -203,31 +255,36 @@ public class ProcessManifest extends ManifestProcessorTask {
 
             final ProductFlavor mergedFlavor = config.getMergedFlavor();
 
-            ConventionMappingHelper.map(processManifest, "minSdkVersion", () -> {
-                ApiVersion minSdkVersion1 = mergedFlavor.getMinSdkVersion();
-                if (minSdkVersion1 == null) {
-                    return null;
-                }
-                return minSdkVersion1.getApiString();
-            });
+            processManifest.minSdkVersion =
+                    TaskInputHelper.memoize(
+                            () -> {
+                                ApiVersion minSdkVersion1 = mergedFlavor.getMinSdkVersion();
+                                if (minSdkVersion1 == null) {
+                                    return null;
+                                }
+                                return minSdkVersion1.getApiString();
+                            });
 
-            ConventionMappingHelper.map(processManifest, "targetSdkVersion", () -> {
-                        ApiVersion targetSdkVersion = mergedFlavor.getTargetSdkVersion();
-                        if (targetSdkVersion == null) {
-                            return null;
-                        }
-                        return targetSdkVersion.getApiString();
-                    });
+            processManifest.targetSdkVersion =
+                    TaskInputHelper.memoize(
+                            () -> {
+                                ApiVersion targetSdkVersion = mergedFlavor.getTargetSdkVersion();
+                                if (targetSdkVersion == null) {
+                                    return null;
+                                }
+                                return targetSdkVersion.getApiString();
+                            });
 
-            ConventionMappingHelper.map(
-                    processManifest, "maxSdkVersion", mergedFlavor::getMaxSdkVersion);
+            processManifest.maxSdkVersion = TaskInputHelper.memoize(mergedFlavor::getMaxSdkVersion);
 
-            processManifest.setManifestOutputFile(
-                    variantOutputData.getScope().getManifestOutputFile());
+            processManifest.setManifestOutputDirectory(scope.getManifestOutputDirectory());
 
-            processManifest.setAaptFriendlyManifestOutputFile(
-                    scope.getAaptFriendlyManifestOutputFile());
+            processManifest.setAaptFriendlyManifestOutputDirectory(
+                    scope.getAaptFriendlyManifestOutputDirectory());
+            processManifest.splitScope = scope.getSplitScope();
 
+            scope.getVariantData()
+                    .addTask(TaskContainer.TaskKind.PROCESS_MANIFEST, processManifest);
         }
     }
 }

@@ -88,9 +88,7 @@ public class NdkSanAngelesTest {
 
         assertEquals(3, debugOutputs.size());
         for (AndroidArtifactOutput output : debugOutputs) {
-            Collection<? extends OutputFile> outputFiles = output.getOutputs();
-            assertEquals(1, outputFiles.size());
-            for (FilterData filterData : outputFiles.iterator().next().getFilters()) {
+            for (FilterData filterData : output.getFilters()) {
                 if (filterData.getFilterType().equals(OutputFile.ABI)) {
                     String abiFilter = filterData.getIdentifier();
                     Integer value = expected.get(abiFilter);

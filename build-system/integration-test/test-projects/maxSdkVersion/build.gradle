@@ -33,6 +33,7 @@ android {
         maxSdkVersion 19
     }
 
+    flavorDimensions 'foo'
     productFlavors {
         f1 {
             maxSdkVersion 21

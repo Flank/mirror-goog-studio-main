@@ -18,6 +18,7 @@ android {
 
     buildTypes.debug.jniDebuggable true
 
+    flavorDimensions 'abi'
     productFlavors {
         x86 {
             ndk {

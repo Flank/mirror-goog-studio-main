@@ -52,16 +52,8 @@ applicationVariants.all { variant ->
     // Custom APK names (do not do this for 'dev' build type)
     println variant.buildType.name
     def baseFileName = "project-\${variant.flavorName}-\${variant.versionCode}-\${variant.buildType.name}"
-    variant.outputs.each { output ->
-      // Unaligned (name it 'unsigned' because we remove the signature from the apk later)
-      def unalignedFileName = "\${baseFileName}-unsigned.apk"
-      println "renaming from \${output.packageApplication.outputFile} to \${unalignedFileName}"
-      File parent = output.packageApplication.outputFile.parentFile
-      output.packageApplication.outputFile = new File(parent, unalignedFileName)
-      // Signed
-      def signedFileName = "\${baseFileName}-signed.apk"
-      parent = output.outputFile.parentFile
-      output.outputFile = new File(parent, signedFileName)
+    variant.outputs.all { output ->
+      output.outputFileName = "\${baseFileName}-signed.apk"
     }
   }
         }"""

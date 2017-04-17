@@ -20,6 +20,7 @@ import com.android.build.gradle.internal.BadPluginException;
 import com.android.build.gradle.internal.fixture.TestConstants;
 import com.android.build.gradle.internal.fixture.TestProjects;
 import com.android.build.gradle.internal.fixture.VariantCheckers;
+import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.DefaultBuildType;
@@ -66,7 +67,7 @@ public class AppPluginInternalTest {
                 plugin.getVariantManager().getBuildTypes().get(BuilderConstants.RELEASE));
         TestCase.assertEquals(0, plugin.getVariantManager().getProductFlavors().size());
 
-        List<BaseVariantData<?>> variants = plugin.getVariantManager().getVariantDataList();
+        List<VariantScope> variants = plugin.getVariantManager().getVariantScopes();
         VariantCheckers.checkDefaultVariants(variants);
 
         VariantCheckers.findVariantData(variants, "debug");
@@ -145,7 +146,7 @@ public class AppPluginInternalTest {
 
         TestCase.assertEquals(3, plugin.getVariantManager().getBuildTypes().size());
 
-        List<BaseVariantData<?>> variants = plugin.getVariantManager().getVariantDataList();
+        List<VariantScope> variants = plugin.getVariantManager().getVariantScopes();
         LinkedHashMap<String, Integer> map = new LinkedHashMap<>(3);
         map.put("appVariants", 3);
         map.put("unitTests", 3);
@@ -170,6 +171,7 @@ public class AppPluginInternalTest {
                 project,
                 "\n"
                         + "project.android {\n"
+                        + "    flavorDimensions 'foo'\n"
                         + "    productFlavors {\n"
                         + "        flavor1 {\n"
                         + "\n"
@@ -185,7 +187,7 @@ public class AppPluginInternalTest {
 
         TestCase.assertEquals(2, plugin.getVariantManager().getProductFlavors().size());
 
-        List<BaseVariantData<?>> variants = plugin.getVariantManager().getVariantDataList();
+        List<VariantScope> variants = plugin.getVariantManager().getVariantScopes();
         LinkedHashMap<String, Integer> map = new LinkedHashMap<>(3);
         map.put("appVariants", 4);
         map.put("unitTests", 4);
@@ -241,7 +243,7 @@ public class AppPluginInternalTest {
 
         TestCase.assertEquals(5, plugin.getVariantManager().getProductFlavors().size());
 
-        List<BaseVariantData<?>> variants = plugin.getVariantManager().getVariantDataList();
+        List<VariantScope> variants = plugin.getVariantManager().getVariantScopes();
         LinkedHashMap<String, Integer> map = new LinkedHashMap<>(3);
         map.put("appVariants", 12);
         map.put("unitTests", 12);
@@ -320,6 +322,7 @@ public class AppPluginInternalTest {
                         + "        }\n"
                         + "    }\n"
                         + "\n"
+                        + "    flavorDimensions 'foo'\n"
                         + "    productFlavors {\n"
                         + "        flavor1 {\n"
                         + "        }\n"
@@ -333,7 +336,7 @@ public class AppPluginInternalTest {
         AppPlugin plugin = project.getPlugins().getPlugin(AppPlugin.class);
         plugin.createAndroidTasks(true);
 
-        List<BaseVariantData<?>> variants = plugin.getVariantManager().getVariantDataList();
+        List<VariantScope> variants = plugin.getVariantManager().getVariantScopes();
         LinkedHashMap<String, Integer> map = new LinkedHashMap<>(3);
         map.put("appVariants", 6);
         map.put("unitTests", 6);

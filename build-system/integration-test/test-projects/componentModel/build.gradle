@@ -25,9 +25,14 @@ model {
         compileSdkVersion = rootProject.latestCompileSdk
         buildToolsVersion = rootProject.buildToolsVersion
     }
+
     android.productFlavors {
-        create("f1")
-        create("f2")
+        create("f1") {
+            dimension 'foo'
+        }
+        create("f2") {
+            dimension 'foo'
+        }
     }
 
     android.sources {

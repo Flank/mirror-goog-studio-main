@@ -21,26 +21,23 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.Format;
 import com.android.build.api.transform.JarInput;
-import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.ContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformInput;
-import com.android.build.gradle.internal.InternalScope;
-import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.tasks.incremental.InputFileDetails;
 
@@ -49,26 +46,47 @@ import org.gradle.api.tasks.incremental.InputFileDetails;
  */
 public class IntermediateFolderUtils {
 
-    public static final String FOLDERS = "folders";
-    public static final String JARS = "jars";
+    @NonNull private final File rootFolder;
+    private final Set<ContentType> types;
+    private final Set<? super Scope> scopes;
+    // current list of outputs.
+    private List<SubStream> subStreams;
+    // list of outputs that were found in the list, but that are already marked as removed.
+    private List<SubStream> removedSubStreams;
+    private List<SubStream> outOfScopeStreams;
+    private int nextIndex = 0;
+
+    public IntermediateFolderUtils(
+            @NonNull File rootFolder,
+            @NonNull Set<ContentType> types,
+            @NonNull Set<? super Scope> scopes) {
+        this.rootFolder = rootFolder;
+        this.types = types;
+        this.scopes = scopes;
+        updateLists(makeRestrictedCopies(SubStream.loadSubStreams(rootFolder)));
+    }
+
+    @NonNull
+    public File getRootFolder() {
+        return rootFolder;
+    }
 
     /**
-     * Returns the location of content for a given set of Scopes, Content Types, and format.
+     * Returns the location of content for a given set of name, Scopes, Content Types, and format.
      *
-     * If the format is {@link Format#DIRECTORY} then the result is the file location of the folder.
-     * If the format is {@link Format#JAR} then the result is a file representing the jar to create.
+     * <p>If the format is {@link Format#DIRECTORY} then the result is the file location of the
+     * folder. If the format is {@link Format#JAR} then the result is a file representing the jar to
+     * create.
      *
-     * @param rootLocation the root location from which to create the content.
-     * @param name a unique name for the content. For a given set of scopes/types/format it must
-     *             be unique.
+     * @param name a unique name for the content. For a given set of scopes/types/format it must be
+     *     unique.
      * @param types the content types associated with this content.
      * @param scopes the scopes associated with this content.
      * @param format the format of the content.
      * @return the location of the content.
      */
     @NonNull
-    public static File getContentLocation(
-            @NonNull File rootLocation,
+    public synchronized File getContentLocation(
             @NonNull String name,
             @NonNull Set<ContentType> types,
             @NonNull Set<? super Scope> scopes,
@@ -82,93 +100,66 @@ public class IntermediateFolderUtils {
         checkState(!types.isEmpty());
         checkState(!scopes.isEmpty());
 
-        switch (format) {
-            case DIRECTORY: {
-                File location = FileUtils.join(rootLocation,
-                        FOLDERS,
-                        typesToString(types),
-                        scopesToString(scopes),
-                        name);
-                return location;
+        // search for an existing matching substream.
+        for (SubStream subStream : subStreams) {
+            // look for an existing match. This means same name, types, scopes, and format.
+            if (name.equals(subStream.getName())
+                    && types.equals(subStream.getTypes())
+                    && scopes.equals(subStream.getScopes())
+                    && format == subStream.getFormat()) {
+                return new File(rootFolder, subStream.getFilename());
             }
-            case JAR: {
-                File location = FileUtils.join(rootLocation,
-                        JARS,
-                        typesToString(types),
-                        scopesToString(scopes),
-                        name + DOT_JAR);
-                return location;
-            }
-            default:
-                throw new RuntimeException("Unexpected Format: " + format);
         }
+
+        // didn't find a matching output. create the new output
+        SubStream newSubStream = new SubStream(name, nextIndex++, scopes, types, format, true);
+
+        subStreams.add(newSubStream);
+
+        return new File(rootFolder, newSubStream.getFilename());
     }
 
     @NonNull
-    public static TransformInput computeNonIncrementalInputFromFolder(
-            @NonNull File folder,
-            @NonNull Set<ContentType> requiredTypes,
-            @NonNull Set<? super Scope> requiredScopes) {
+    public TransformInput computeNonIncrementalInputFromFolder() {
         final List<JarInput> jarInputs = Lists.newArrayList();
         final List<DirectoryInput> directoryInputs = Lists.newArrayList();
 
-        File jarsFolder = new File(folder, JARS);
-        if (jarsFolder.isDirectory()) {
-            parseTypeLevelFolders(
-                    jarsFolder,
-                    requiredTypes,
-                    requiredScopes,
-                    new InputGenerator() {
-                        @Override
-                        public boolean accept(@NonNull File file) {
-                            return file.isFile() && file.getName().endsWith(DOT_JAR);
-                        }
+        for (SubStream subStream : subStreams) {
+            if (subStream.getFormat() == Format.DIRECTORY) {
+                directoryInputs.add(
+                        new ImmutableDirectoryInput(
+                                subStream.getName(),
+                                new File(rootFolder, subStream.getFilename()),
+                                subStream.getTypes(),
+                                subStream.getScopes()));
 
-                        @Override
-                        public void generate(
-                                @NonNull File file,
-                                @NonNull Set<ContentType> types,
-                                @NonNull Set<QualifiedContent.ScopeType> scopes) {
-                            jarInputs.add(new ImmutableJarInput(
-                                    file.getName().substring(0,
-                                            file.getName().length() - DOT_JAR.length()),
-                                    file,
-                                    Status.NOTCHANGED,
-                                    types,
-                                    scopes));
-
-                        }
-                    });
+            } else {
+                jarInputs.add(
+                        new ImmutableJarInput(
+                                subStream.getName(),
+                                new File(rootFolder, subStream.getFilename()),
+                                Status.NOTCHANGED,
+                                subStream.getTypes(),
+                                subStream.getScopes()));
+            }
         }
 
-        File foldersFolder = new File(folder, FOLDERS);
-        if (foldersFolder.isDirectory()) {
-            parseTypeLevelFolders(
-                    foldersFolder,
-                    requiredTypes,
-                    requiredScopes,
-                    new InputGenerator() {
-                        @Override
-                        public boolean accept(@NonNull File file) {
-                            return file.isDirectory();
-                        }
-
-                        @Override
-                        public void generate(@NonNull File file, @NonNull Set<ContentType> types,
-                                @NonNull Set<QualifiedContent.ScopeType> scopes) {
-                            directoryInputs.add(new ImmutableDirectoryInput(
-                                    file.getName(),
-                                    file,
-                                    types,
-                                    scopes));
-                        }
-                    });
-        }
-
-        return new ImmutableTransformInput(jarInputs, directoryInputs, folder);
+        return new ImmutableTransformInput(jarInputs, directoryInputs, rootFolder);
     }
 
-    static class IntermediateTransformInput extends IncrementalTransformInput {
+    @NonNull
+    public Collection<File> getFiles(@NonNull StreamFilter streamFilter) {
+        List<File> files = Lists.newArrayListWithExpectedSize(subStreams.size());
+        for (SubStream stream : subStreams) {
+            if (streamFilter.accept(stream.getTypes(), stream.getScopes())) {
+                files.add(new File(rootFolder, stream.getFilename()));
+            }
+        }
+
+        return files;
+    }
+
+    class IntermediateTransformInput extends IncrementalTransformInput {
 
         @NonNull
         private final File inputRoot;
@@ -188,59 +179,82 @@ public class IntermediateFolderUtils {
                 return false;
             }
 
-            // there must be at least 5 additional segments (4 to the root of the folder and 1 for
+            // there must be at least 2 additional segments (1 to the root of the folder and 1 for
             // the file inside.
-            if (fileSegments.size() <= rootLocationSegments.size() + 4) {
+            if (fileSegments.size() < rootLocationSegments.size() + 2) {
                 return false;
             }
 
             // now check that the segments after the root are what we expect.
             int index = rootLocationSegments.size();
-            if (!fileSegments.get(index++).equals(FOLDERS)) {
-                return false;
+            String foldername = fileSegments.get(index);
+
+            // First loop on sub-streams we care about and on match, create a new Input
+            for (SubStream subStream : subStreams) {
+                if (subStream.getFilename().equals(foldername)
+                        && subStream.getFormat() == Format.DIRECTORY) {
+
+                    // create the mutable folder for it?
+                    MutableDirectoryInput folder =
+                            new MutableDirectoryInput(
+                                    subStream.getName(),
+                                    new File(rootFolder, foldername),
+                                    subStream.getTypes(),
+                                    subStream.getScopes());
+                    // add this file to it.
+                    Logging.getLogger(TransformManager.class)
+                            .info("Tagged" + file.getAbsolutePath() + " as removed");
+                    folder.addChangedFile(file, Status.REMOVED);
+
+                    // add it to the list.
+                    addFolderInput(folder);
+
+                    return true;
+                }
             }
 
-            // get the types.
-            Set<ContentType> types = stringToTypes(fileSegments.get(index++));
-            if (types == null) {
-                return false;
+            // now loop on removed sub-streams. These can contain matching and non matching-streams
+            // so we may create an input or not.
+            for (SubStream subStream : removedSubStreams) {
+                if (subStream.getFilename().equals(foldername)
+                        && subStream.getFormat() == Format.DIRECTORY) {
+                    // we need to check if the type/scope of this file matches this stream,
+                    // as we could be using a sub-stream.
+                    if (!Sets.intersection(transformInputTypes, subStream.getTypes()).isEmpty()
+                            && !Sets.intersection(transformScopes, subStream.getScopes())
+                                    .isEmpty()) {
+                        // create the mutable folder for it?
+                        MutableDirectoryInput folder =
+                                new MutableDirectoryInput(
+                                        subStream.getName(),
+                                        new File(rootFolder, foldername),
+                                        subStream.getTypes(),
+                                        subStream.getScopes());
+                        // add this file to it.
+                        Logging.getLogger(TransformManager.class)
+                                .info("Tagged" + file.getAbsolutePath() + " as removed");
+                        folder.addChangedFile(file, Status.REMOVED);
+
+                        // add it to the list.
+                        addFolderInput(folder);
+                    }
+
+                    // return true whether the sub-stream is a scope/type match, to mention
+                    // we know about the file.
+                    return true;
+                }
             }
 
-            // if the transform is not interested in this folder type, we don't care about those
-            // changes
-            if (Sets.intersection(transformInputTypes, types).isEmpty()) {
-                return true;
+            // then loop on the out of scope/type sub-streams and just acknowledge the file
+            // is part of the stream if it's a name match.
+            for (SubStream subStream : outOfScopeStreams) {
+                if (subStream.getFilename().equals(foldername)
+                        && subStream.getFormat() == Format.DIRECTORY) {
+                    return true;
+                }
             }
 
-            // get the scopes.
-            Set<QualifiedContent.ScopeType> scopes = stringToScopes(fileSegments.get(index++));
-            if (scopes == null) {
-                return false;
-            }
-
-            // if the scopes do not match the transform scope, we don't care about those changes.
-            if (Sets.intersection(transformScopes, scopes).isEmpty()) {
-                return true;
-            }
-
-            String name = fileSegments.get(index);
-
-            // create the folder input. a mutable one so that it can be directly used
-            // for other removed files from the same folder.
-            // The root location of this folder is fileSegments, up to rootLocation + 4 (as the
-            // rest is the changed file.
-            File root = new File(FileUtils.join(
-                    fileSegments.subList(0, rootLocationSegments.size() + 4)));
-            MutableDirectoryInput folder = new MutableDirectoryInput(name, root, types, scopes);
-            // add this file to it.
-            Logging.getLogger(TransformManager.class).info(
-                    "Tagged" + file.getAbsolutePath() + " as removed");
-            folder.addChangedFile(file, Status.REMOVED);
-
-            // add it to the list.
-            addFolderInput(folder);
-
-            return true;
+            return false;
         }
 
         @Override
@@ -253,50 +267,69 @@ public class IntermediateFolderUtils {
                 return false;
             }
 
-            // there must be only 4 additional segments.
-            if (fileSegments.size() != rootLocationSegments.size() + 4) {
+            // there must be only 1 additional segments.
+            if (fileSegments.size() != rootLocationSegments.size() + 1) {
                 return false;
             }
+
+            String filename = file.getName();
 
             // last segment must end in .jar
-            if (!file.getPath().endsWith(DOT_JAR)) {
+            if (!filename.endsWith(DOT_JAR)) {
                 return false;
             }
 
-            // now check that the segments after the root are what we expect.
-            int index = rootLocationSegments.size();
-            if (!fileSegments.get(index++).equals(JARS)) {
-                return false;
+            // First loop on sub-streams we care about and on match, create a new Input
+            for (SubStream subStream : subStreams) {
+                if (subStream.getFilename().equals(filename)
+                        && subStream.getFormat() == Format.JAR) {
+                    // create the jar input
+                    addImmutableJar(
+                            new ImmutableJarInput(
+                                    subStream.getName(),
+                                    file,
+                                    Status.REMOVED,
+                                    subStream.getTypes(),
+                                    subStream.getScopes()));
+                    return true;
+                }
             }
 
-            // get the types.
-            Set<ContentType> types = stringToTypes(fileSegments.get(index++));
-            if (types == null) {
-                return false;
+            // now loop on removed sub-streams. These can contain matching and non matching-streams
+            // so we may create an input or not.
+            for (SubStream subStream : removedSubStreams) {
+                if (subStream.getFilename().equals(filename)
+                        && subStream.getFormat() == Format.JAR) {
+                    // we need to check if the type/scope of this file matches this stream,
+                    // as we could be using a sub-stream.
+                    if (!Sets.intersection(transformInputTypes, subStream.getTypes()).isEmpty()
+                            && !Sets.intersection(transformScopes, subStream.getScopes())
+                                    .isEmpty()) {
+                        addImmutableJar(
+                                new ImmutableJarInput(
+                                        subStream.getName(),
+                                        file,
+                                        Status.REMOVED,
+                                        subStream.getTypes(),
+                                        subStream.getScopes()));
+                    }
+
+                    // return true whether the sub-stream is a scope/type match, to mention
+                    // we know about the file.
+                    return true;
+                }
             }
-            // if the transform is not interested in this jar type, we don't care about those
-            // changes
-            if (Sets.intersection(transformInputTypes, types).isEmpty()) {
-                return true;
+
+            // then loop on the out of scope/type sub-streams and just acknowledge the file
+            // is part of the stream if it's a name match.
+            for (SubStream subStream : outOfScopeStreams) {
+                if (subStream.getFilename().equals(filename)
+                        && subStream.getFormat() == Format.JAR) {
+                    return true;
+                }
             }
 
-            // get the scopes.
-            Set<QualifiedContent.ScopeType> scopes = stringToScopes(fileSegments.get(index++));
-            if (scopes == null) {
-                return false;
-            }
-
-            // if the scopes do not match the transform scope, we don't care about those changes.
-            if (Sets.intersection(transformScopes, scopes).isEmpty()) {
-                return true;
-            }
-
-            String name = fileSegments.get(index);
-
-            // create the jar input
-            addImmutableJar(new ImmutableJarInput(name, file, Status.REMOVED, types, scopes));
-
-            return true;
+            return false;
         }
 
         private boolean checkRootSegments(@NonNull List<String> fileSegments) {
@@ -323,231 +356,29 @@ public class IntermediateFolderUtils {
     }
 
     @NonNull
-    public static IncrementalTransformInput computeIncrementalInputFromFolder(
-            @NonNull File rootLocation,
-            @NonNull Set<ContentType> requiredTypes,
-            @NonNull Set<? super Scope> requiredScopes) {
-        final IncrementalTransformInput input = new IntermediateTransformInput(rootLocation);
+    public IncrementalTransformInput computeIncrementalInputFromFolder() {
+        final IncrementalTransformInput input = new IntermediateTransformInput(rootFolder);
 
-        File jarsFolder = new File(rootLocation, JARS);
-        if (jarsFolder.isDirectory()) {
-            parseTypeLevelFolders(
-                    jarsFolder,
-                    requiredTypes,
-                    requiredScopes,
-                    new InputGenerator() {
-                        @Override
-                        public boolean accept(@NonNull File file) {
-                            return file.isFile() && file.getName().endsWith(DOT_JAR);
-                        }
+        for (SubStream subStream : subStreams) {
+            if (subStream.getFormat() == Format.DIRECTORY) {
+                input.addFolderInput(
+                        new MutableDirectoryInput(
+                                subStream.getName(),
+                                new File(rootFolder, subStream.getFilename()),
+                                subStream.getTypes(),
+                                subStream.getScopes()));
 
-                        @Override
-                        public void generate(
-                                @NonNull File file,
-                                @NonNull Set<ContentType> types,
-                                @NonNull Set<QualifiedContent.ScopeType> scopes) {
-                            input.addJarInput(new QualifiedContentImpl(
-                                    file.getName().substring(0,
-                                            file.getName().length() - DOT_JAR.length()),
-                                    file,
-                                    types,
-                                    scopes) {
-                            });
-
-                        }
-                    });
-        }
-
-        File foldersFolder = new File(rootLocation, FOLDERS);
-        if (foldersFolder.isDirectory()) {
-            parseTypeLevelFolders(
-                    foldersFolder,
-                    requiredTypes,
-                    requiredScopes,
-                    new InputGenerator() {
-                        @Override
-                        public boolean accept(@NonNull File file) {
-                            return file.isDirectory();
-                        }
-
-                        @Override
-                        public void generate(@NonNull File file, @NonNull Set<ContentType> types,
-                                @NonNull Set<QualifiedContent.ScopeType> scopes) {
-                            input.addFolderInput(new MutableDirectoryInput(
-                                    file.getName(),
-                                    file,
-                                    types,
-                                    scopes));
-                        }
-                    });
+            } else {
+                input.addJarInput(
+                        new QualifiedContentImpl(
+                                subStream.getName(),
+                                new File(rootFolder, subStream.getFilename()),
+                                subStream.getTypes(),
+                                subStream.getScopes()));
+            }
         }
 
         return input;
-    }
-
-    private interface InputGenerator {
-        boolean accept(@NonNull File file);
-        void generate(
-                @NonNull File file,
-                @NonNull Set<ContentType> types,
-                @NonNull Set<QualifiedContent.ScopeType> scopes);
-    }
-
-    private static void parseTypeLevelFolders(
-            @NonNull File rootFolder,
-            @NonNull Set<ContentType> requiredTypes,
-            @NonNull Set<? super Scope> requiredScopes,
-            @NonNull InputGenerator generator) {
-        File[] files = rootFolder.listFiles(File::isDirectory);
-
-        if (files != null && files.length > 0) {
-            for (File file : files) {
-                Set<ContentType> types = stringToTypes(file.getName());
-                if (types != null) {
-                    // check these are types we care about and only pass down types we care about.
-                    // In this case we can safely return the content with a limited type,
-                    // as file extension allows for differentiation.
-                    Set<ContentType> limitedTypes = Sets.intersection(requiredTypes, types);
-                    if (!limitedTypes.isEmpty()) {
-                        parseScopeLevelFolders(file, limitedTypes, requiredScopes, generator);
-                    }
-                }
-            }
-        }
-    }
-
-    private static void parseScopeLevelFolders(
-            @NonNull File rootFolder,
-            @NonNull Set<ContentType> types,
-            @NonNull Set<? super Scope> requiredScopes,
-            @NonNull InputGenerator generator) {
-        File[] files = rootFolder.listFiles(File::isDirectory);
-
-        if (files != null && files.length > 0) {
-            for (File file : files) {
-                Set<QualifiedContent.ScopeType> scopes = stringToScopes(file.getName());
-                if (scopes != null) {
-                    // we need up to the requiredScopes, but no more.
-                    // content that only contains unwanted Scope can be safely dropped, however
-                    // content that is both in and out of Scope will trigger a runtime error.
-                    // check these are the scope we want, and only pass down scopes we care about.
-                    Set<QualifiedContent.ScopeType> limitedScopes = Sets.newHashSetWithExpectedSize(requiredScopes.size());
-                    boolean foundUnwanted = false;
-                    for (QualifiedContent.ScopeType scope : scopes) {
-                        if (requiredScopes.contains(scope)) {
-                            limitedScopes.add(scope);
-                        } else {
-                            foundUnwanted = true;
-                        }
-                    }
-                    if (!limitedScopes.isEmpty()) {
-                        if (foundUnwanted) {
-                            throw new RuntimeException(
-                                    "Unexpected scopes found. Required: "
-                                            + Joiner.on(", ").join(requiredScopes)
-                                            + ". Found: "
-                                            + Joiner.on(", ").join(scopes));
-                        }
-                        parseContentLevelFolders(file, types, limitedScopes,
-                                generator);
-                    }
-                }
-            }
-        }
-    }
-
-    private static void parseContentLevelFolders(
-            @NonNull File rootFolder,
-            @NonNull Set<ContentType> types,
-            @NonNull Set<QualifiedContent.ScopeType> scopes,
-            @NonNull final InputGenerator generator) {
-
-        File[] files = rootFolder.listFiles(generator::accept);
-
-        if (files != null && files.length > 0) {
-            for (File file : files) {
-                generator.generate(file, types, scopes);
-            }
-        }
-    }
-
-    @Nullable
-    private static Set<ContentType> stringToTypes(String folderName) {
-        int value;
-        try {
-            value = Integer.parseInt(folderName, 16);
-        } catch (NumberFormatException e) {
-            return null;
-        }
-
-        ImmutableSet.Builder<ContentType> typesBuilder = ImmutableSet.builder();
-
-        for (ContentType type : ExtendedContentType.getAllContentTypes()) {
-            if ((type.getValue() & value) != 0) {
-                typesBuilder.add(type);
-            }
-        }
-
-        Set<ContentType> types = typesBuilder.build();
-        if (types.isEmpty()) {
-            return null;
-        }
-
-        return types;
-    }
-
-    private static String typesToString(@NonNull Set<ContentType> types) {
-        int value = 0;
-        for (ContentType type : types) {
-            value += type.getValue();
-        }
-
-        return String.format("%x", value);
-    }
-
-    @Nullable
-    private static Set<QualifiedContent.ScopeType> stringToScopes(String folderName) {
-        int value;
-        try {
-            value = Integer.parseInt(folderName, 16);
-        } catch (NumberFormatException e) {
-            return null;
-        }
-
-        ImmutableSet.Builder<QualifiedContent.ScopeType> scopesBuilder = ImmutableSet.builder();
-
-        for (QualifiedContent.ScopeType scope : allScopes()) {
-            if ((scope.getValue() & value) != 0) {
-                scopesBuilder.add(scope);
-            }
-        }
-        ImmutableSet<QualifiedContent.ScopeType> scopes = scopesBuilder.build();
-
-        if (scopes.isEmpty()) {
-            return null;
-        }
-
-        return scopes;
-    }
-
-    private static List<QualifiedContent.ScopeType> allScopes() {
-        ImmutableList.Builder<QualifiedContent.ScopeType> scopeTypes = ImmutableList.builder();
-        for (QualifiedContent.ScopeType scopeType : Scope.values()) {
-            scopeTypes.add(scopeType);
-        }
-        for (QualifiedContent.ScopeType scopeType : InternalScope.values()) {
-            scopeTypes.add(scopeType);
-        }
-        return scopeTypes.build();
-    }
-
-    private static String scopesToString(@NonNull Set<? super Scope> scopes) {
-        int value = 0;
-        for (QualifiedContent.ScopeType scope : (Set<QualifiedContent.ScopeType>) scopes) {
-            value += scope.getValue();
-        }
-
-        return String.format("%x", value);
     }
 
     @NonNull
@@ -556,5 +387,134 @@ public class IntermediateFolderUtils {
         if (inputFileDetails.isModified()) return Status.CHANGED;
         if (inputFileDetails.isRemoved()) return Status.REMOVED;
         return Status.NOTCHANGED;
+    }
+
+    public void save() throws IOException {
+        // create a copy list with a new present flag based on whether the output actually
+        // exists.
+        // Don't process the removedSubStreams as they were removed in a previous run.
+        List<SubStream> copyList = Lists.newArrayListWithCapacity(subStreams.size());
+        for (SubStream subStream : subStreams) {
+            copyList.add(
+                    subStream.duplicateWithPresent(
+                            new File(rootFolder, subStream.getFilename()).exists()));
+        }
+
+        // save that list.
+        SubStream.save(copyList, rootFolder);
+
+        // and use to to re-fill the normal and removed list for the next transform in case
+        // it's happening in the same graph execution.
+        updateLists(copyList);
+    }
+
+    @NonNull
+    private Collection<SubStream> makeRestrictedCopies(@NonNull Collection<SubStream> streams) {
+        List<SubStream> list = Lists.newArrayListWithCapacity(streams.size());
+        outOfScopeStreams = Lists.newArrayList();
+
+        for (SubStream subStream : streams) {
+            if (subStream.getIndex() >= nextIndex) {
+                nextIndex = subStream.getIndex() + 1;
+            }
+
+            if (subStream.isPresent()) {
+                // check these are types we care about and only pass down types we care about.
+                // In this case we can safely return the content with a limited type,
+                // as file extension allows for differentiation.
+                Set<ContentType> limitedTypes = Sets.intersection(types, subStream.getTypes());
+                if (!limitedTypes.isEmpty()) {
+                    // We consider compatible sub-stream to:
+                    // - contains 1+ of the main stream scopes
+                    // - and not contain any other scopes.
+                    // SubStream that only contains unwanted scopes are fine
+                    // SubStream that contains some required scope and some other scope generate
+                    // an exception.
+                    boolean foundUnwanted = false;
+                    boolean foundMatch = false;
+                    for (Object scope : subStream.getScopes()) {
+                        //noinspection SuspiciousMethodCalls
+                        if (scopes.contains(scope)) {
+                            foundMatch = true;
+                        } else {
+                            foundUnwanted = true;
+                        }
+                    }
+
+                    if (foundMatch && foundUnwanted) {
+                        // Sort the names, so the error message is stable.
+                        List<String> foundScopes =
+                                subStream
+                                        .getScopes()
+                                        .stream()
+                                        .map(Object::toString)
+                                        .sorted()
+                                        .collect(Collectors.toList());
+
+                        throw new RuntimeException(
+                                String.format(
+                                        "Unexpected scopes found in folder '%s'. Required: %s. Found: %s",
+                                        rootFolder,
+                                        Joiner.on(", ").join(scopes),
+                                        Joiner.on(", ").join(foundScopes)));
+                    } else if (foundMatch) {
+                        // if the types are an exact match, then just get the substream
+                        if (limitedTypes.size() == subStream.getTypes().size()) {
+                            list.add(subStream);
+                        } else {
+                            // make a restricted copy.
+                            list.add(
+                                    new SubStream(
+                                            subStream.getName(),
+                                            subStream.getIndex(),
+                                            subStream.getScopes(),
+                                            limitedTypes,
+                                            subStream.getFormat(),
+                                            subStream.isPresent()));
+
+                            // and keep the rest around, as out of scope to detect (and ignore)
+                            // changed files. Because we only take streams with a subset only of
+                            // required scopes, we know there's no need to get the
+                            outOfScopeStreams.add(
+                                    new SubStream(
+                                            subStream.getName(),
+                                            subStream.getIndex(),
+                                            subStream.getScopes(),
+                                            minus(subStream.getTypes(), limitedTypes),
+                                            subStream.getFormat(),
+                                            subStream.isPresent()));
+                        }
+
+                    } else {
+                        // no match at all, add to output of scope streams.
+                        outOfScopeStreams.add(subStream);
+                    }
+                } else {
+                    // no match at all, add to output of scope streams.
+                    outOfScopeStreams.add(subStream);
+                }
+            } else {
+                // don't do filtering for removed streams.
+                list.add(subStream);
+            }
+        }
+
+        return list;
+    }
+
+    private static <T> Set<T> minus(Set<T> main, Set<T> minus) {
+        Set<T> result = Sets.newHashSet(main);
+        result.removeAll(minus);
+        return result;
+    }
+
+    private void updateLists(@NonNull Collection<SubStream> subStreamList) {
+        subStreams =
+                subStreamList.stream().filter(SubStream::isPresent).collect(Collectors.toList());
+        removedSubStreams =
+                subStreamList
+                        .stream()
+                        .filter(subStream -> !subStream.isPresent())
+                        .collect(Collectors.toList());
     }
 }

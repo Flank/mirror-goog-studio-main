@@ -23,7 +23,6 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
-import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.InstantRun;
@@ -67,12 +66,6 @@ public class InstantRunAddLibraryTest {
         TestFileUtils.appendToFile(project.getBuildFile(), "\n"
                 + "android.packagingOptions.exclude 'META-INF/maven/com.google.guava/guava/pom.xml'\n"
                 + "android.packagingOptions.exclude 'META-INF/maven/com.google.guava/guava/pom.properties'\n");
-    }
-
-    @Before
-    public void skipOnJack() throws Exception {
-        // IR currently does not work with Jack - http://b.android.com/224374
-        AssumeUtil.assumeNotUsingJack();
     }
 
     @Test

@@ -8,7 +8,7 @@ android {
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
 
-    testBuildType "proguard"
+    testBuildType "release"
 
     defaultConfig {
         versionCode 12
@@ -18,8 +18,10 @@ android {
     }
 
     buildTypes {
-        proguard.initWith(buildTypes.debug)
-        proguard {
+        release {
+            debuggable true
+            signingConfig signingConfigs.debug
+
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'config.pro'
         }

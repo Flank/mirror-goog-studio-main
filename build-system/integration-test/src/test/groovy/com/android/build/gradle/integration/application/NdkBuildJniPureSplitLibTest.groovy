@@ -15,6 +15,8 @@
  */
 
 package com.android.build.gradle.integration.application
+
+import com.android.build.VariantOutput
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.integration.common.utils.AssumeUtil
@@ -66,18 +68,19 @@ android {
     @Test
     void "check version code"() {
         GradleTestProject app = project.getSubproject("app")
-        assertThat(app.getApk("free", "debug_armeabi-v7a")).hasVersionCode(123)
-        assertThat(app.getApk("free", "debug_mips")).hasVersionCode(123)
-        assertThat(app.getApk("free", "debug_x86")).hasVersionCode(123)
-        assertThat(app.getApk("paid", "debug_armeabi-v7a")).hasVersionCode(123)
-        assertThat(app.getApk("paid", "debug_mips")).hasVersionCode(123)
-        assertThat(app.getApk("paid", "debug_x86")).hasVersionCode(123)
+        assertThat(app.getApk("armeabi-v7a", GradleTestProject.ApkType.DEBUG, "free")).hasVersionCode(123)
+        assertThat(app.getApk("mips", GradleTestProject.ApkType.DEBUG, "free")).hasVersionCode(123)
+
+        assertThat(app.getApk("x86", GradleTestProject.ApkType.DEBUG, "free")).hasVersionCode(123)
+        assertThat(app.getApk("armeabi-v7a", GradleTestProject.ApkType.DEBUG, "paid")).hasVersionCode(123)
+        assertThat(app.getApk("mips", GradleTestProject.ApkType.DEBUG, "paid")).hasVersionCode(123)
+        assertThat(app.getApk("x86", GradleTestProject.ApkType.DEBUG, "paid")).hasVersionCode(123)
     }
 
     @Test
     void "check so"() {
         GradleTestProject app = project.getSubproject("app")
-        assertThat(app.getApk("free", "debug_armeabi-v7a")).contains("lib/armeabi-v7a/libhello-jni.so");
-        assertThat(app.getApk("paid", "debug_mips")).contains("lib/mips/libhello-jni.so");
+        assertThat(app.getApk("armeabi-v7a", GradleTestProject.ApkType.DEBUG, "free")).contains("lib/armeabi-v7a/libhello-jni.so");
+        assertThat(app.getApk("mips", GradleTestProject.ApkType.DEBUG, "paid")).contains("lib/mips/libhello-jni.so");
     }
 }

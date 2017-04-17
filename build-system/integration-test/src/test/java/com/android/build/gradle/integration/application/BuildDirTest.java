@@ -71,8 +71,8 @@ public class BuildDirTest {
 
         project.executor().withUseDexArchive(true).run("assembleDebug");
 
-        assertThat(buildDir.toPath().resolve("intermediates/project-cache")).isDirectory();
         assertThat(project.file("build")).doesNotExist();
+        assertThat(buildDir.toPath().resolve("intermediates/project-cache")).isDirectory();
     }
 
     @NonNull
@@ -83,7 +83,8 @@ public class BuildDirTest {
 
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
-                String.format("project.buildDir = '%s'",
+                String.format(
+                        "project.buildDir = '%s'",
                         buildDir.getAbsolutePath().replace(File.separatorChar, '/')));
         return buildDir;
     }

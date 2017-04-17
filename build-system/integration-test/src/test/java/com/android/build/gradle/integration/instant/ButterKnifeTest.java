@@ -41,7 +41,6 @@ import com.android.tools.fd.client.InstantRunArtifact;
 import com.google.common.collect.Iterables;
 import java.io.File;
 import java.util.List;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -63,7 +62,6 @@ public class ButterKnifeTest {
 
     @Before
     public void setUp() throws Exception {
-        Assume.assumeFalse("Disabled until instant run supports Jack", GradleTestProject.USE_JACK);
         mActiv = project.file("src/main/java/com/example/bk/Activ.java");
     }
 

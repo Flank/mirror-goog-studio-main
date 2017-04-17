@@ -22,7 +22,7 @@ import static org.gradle.internal.logging.text.StyledTextOutput.Style.Identifier
 import static org.gradle.internal.logging.text.StyledTextOutput.Style.Normal;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.variant.BaseVariantData;
+import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.model.SigningConfig;
 import com.android.ide.common.signing.CertificateInfo;
 import com.android.ide.common.signing.KeystoreHelper;
@@ -51,7 +51,7 @@ import org.gradle.internal.logging.text.StyledTextOutputFactory;
  */
 public class SigningReportTask extends DefaultTask {
 
-    private Set<BaseVariantData> variants = Sets.newHashSet();
+    private Set<VariantScope> variants = Sets.newHashSet();
 
     @TaskAction
     public void generate() throws IOException {
@@ -61,9 +61,9 @@ public class SigningReportTask extends DefaultTask {
 
         Map<SigningConfig, SigningInfo> cache = Maps.newHashMap();
 
-        for (BaseVariantData variant : variants) {
+        for (VariantScope variant : variants) {
             textOutput.withStyle(Identifier).text("Variant: ");
-            textOutput.withStyle(Description).text(variant.getName());
+            textOutput.withStyle(Description).text(variant.getFullVariantName());
             textOutput.println();
 
             // get the data
@@ -115,10 +115,8 @@ public class SigningReportTask extends DefaultTask {
         }
     }
 
-    /**
-     * Sets the configurations to generate the report for.
-     */
-    public void setVariants(@NonNull Collection<? extends BaseVariantData> variants) {
+    /** Sets the configurations to generate the report for. */
+    public void setVariants(@NonNull Collection<VariantScope> variants) {
         this.variants.addAll(variants);
     }
 
@@ -132,15 +130,18 @@ public class SigningReportTask extends DefaultTask {
 
             if (signingConfig.isSigningReady()) {
                 try {
-                    CertificateInfo certificateInfo = KeystoreHelper.getCertificateInfo(
-                            signingConfig.getStoreType(), signingConfig.getStoreFile(),
-                            signingConfig.getStorePassword(), signingConfig.getKeyPassword(),
-                            signingConfig.getKeyAlias());
-                    if (certificateInfo != null) {
-                        signingInfo.md5 = getFingerprint(certificateInfo.getCertificate(), "MD5");
-                        signingInfo.sha1 = getFingerprint(certificateInfo.getCertificate(), "SHA1");
-                        signingInfo.notAfter = certificateInfo.getCertificate().getNotAfter();
-                    }
+                    @SuppressWarnings(
+                            "ConstantConditions") // Called isSigningReady() above, so these will not be null.
+                    CertificateInfo certificateInfo =
+                            KeystoreHelper.getCertificateInfo(
+                                    signingConfig.getStoreType(),
+                                    signingConfig.getStoreFile(),
+                                    signingConfig.getStorePassword(),
+                                    signingConfig.getKeyPassword(),
+                                    signingConfig.getKeyAlias());
+                    signingInfo.md5 = getFingerprint(certificateInfo.getCertificate(), "MD5");
+                    signingInfo.sha1 = getFingerprint(certificateInfo.getCertificate(), "SHA1");
+                    signingInfo.notAfter = certificateInfo.getCertificate().getNotAfter();
                 } catch (KeytoolException e) {
                     signingInfo.error = e.getMessage();
                 } catch (FileNotFoundException e) {
@@ -175,9 +176,7 @@ public class SigningReportTask extends DefaultTask {
         try {
             MessageDigest digest = MessageDigest.getInstance(hashAlgorithm);
             return toHexadecimalString(digest.digest(cert.getEncoded()));
-        } catch(NoSuchAlgorithmException e) {
-            // ignore
-        } catch(CertificateEncodingException e) {
+        } catch (NoSuchAlgorithmException | CertificateEncodingException e) {
             // ignore
         }
         return null;

@@ -21,6 +21,7 @@ import com.android.builder.model.AndroidProject
 import com.android.builder.model.SyncIssue
 import groovy.transform.CompileStatic
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 
@@ -48,6 +49,7 @@ android {
 """
     }
 
+    @Ignore("b.android.com/234484")
     @Test
     public void unresolvedDependencies() {
         project.getBuildFile() << """

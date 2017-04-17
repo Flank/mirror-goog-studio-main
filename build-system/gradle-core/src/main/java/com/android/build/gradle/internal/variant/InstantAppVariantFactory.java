@@ -20,52 +20,34 @@ import static com.android.builder.core.BuilderConstants.DEBUG;
 import static com.android.builder.core.BuilderConstants.RELEASE;
 
 import com.android.annotations.NonNull;
-import com.android.build.FilterData;
-import com.android.build.OutputFile;
+import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidConfig;
-import com.android.build.gradle.api.BaseVariantOutput;
-import com.android.build.gradle.api.InstantAppVariant;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantModel;
-import com.android.build.gradle.internal.api.InstantAppVariantImpl;
-import com.android.build.gradle.internal.api.InstantAppVariantOutputImpl;
-import com.android.build.gradle.internal.api.ReadOnlyObjectProvider;
+import com.android.build.gradle.internal.api.BaseVariantImpl;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
+import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.profile.Recorder;
-import com.google.common.collect.Lists;
-import java.util.Collections;
-import java.util.List;
+import com.google.common.collect.ImmutableList;
+import java.util.Collection;
 import org.gradle.api.NamedDomainObjectContainer;
-import org.gradle.api.Project;
 import org.gradle.internal.reflect.Instantiator;
 
-/**
- * An implementation of VariantFactory for a project that generates IAPKs.
- */
-
-public class InstantAppVariantFactory implements VariantFactory {
-
-    @NonNull
-    private Instantiator instantiator;
-    @NonNull
-    private final AndroidConfig extension;
-    @NonNull
-    private final AndroidBuilder androidBuilder;
+/** An implementation of VariantFactory for a project that generates AppBundles. */
+public class InstantAppVariantFactory extends BaseVariantFactory {
 
     public InstantAppVariantFactory(
+            @NonNull GlobalScope globalScope,
             @NonNull Instantiator instantiator,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull AndroidConfig extension) {
-        this.instantiator = instantiator;
-        this.androidBuilder = androidBuilder;
-        this.extension = extension;
+        super(globalScope, androidBuilder, instantiator, extension);
     }
-
 
     @NonNull
     @Override
@@ -75,46 +57,27 @@ public class InstantAppVariantFactory implements VariantFactory {
             @NonNull Recorder recorder) {
         InstantAppVariantData variant =
                 new InstantAppVariantData(
+                        globalScope,
                         extension,
                         taskManager,
                         variantConfiguration,
                         androidBuilder.getErrorReporter(),
                         recorder);
-        variant.createOutput(OutputFile.OutputType.MAIN,
-                Collections.<FilterData>emptyList());
+        variant.getSplitFactory().addMainApk();
         return variant;
+    }
+
+    @Override
+    @Nullable
+    public Class<? extends BaseVariantImpl> getVariantImplementationClass(
+            @NonNull BaseVariantData variantData) {
+        return null;
     }
 
     @NonNull
     @Override
-    public InstantAppVariant createVariantApi(
-            @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData,
-            @NonNull ReadOnlyObjectProvider readOnlyObjectProvider) {
-        InstantAppVariantImpl variant = instantiator.newInstance(
-                InstantAppVariantImpl.class, variantData, androidBuilder, readOnlyObjectProvider);
-
-        // now create the output objects
-        List<? extends BaseVariantOutputData> outputList = variantData.getOutputs();
-        List<BaseVariantOutput> apiOutputList = Lists.newArrayListWithCapacity(outputList.size());
-
-        for (BaseVariantOutputData variantOutputData : outputList) {
-            InstantAppVariantOutputData instantAppOutput = (InstantAppVariantOutputData) variantOutputData;
-
-            InstantAppVariantOutputImpl output = instantiator.newInstance(
-                    InstantAppVariantOutputImpl.class, instantAppOutput);
-
-            apiOutputList.add(output);
-        }
-
-        variant.addOutputs(apiOutputList);
-
-        return variant;
-    }
-
-    @NonNull
-    @Override
-    public VariantType getVariantConfigurationType() {
-        return VariantType.INSTANTAPP;
+    public Collection<VariantType> getVariantConfigurationTypes() {
+        return ImmutableList.of(VariantType.INSTANTAPP);
     }
 
     @Override
@@ -128,12 +91,10 @@ public class InstantAppVariantFactory implements VariantFactory {
     }
 
     @Override
-    public void createDefaultComponents(@NonNull NamedDomainObjectContainer<BuildType> buildTypes,
+    public void createDefaultComponents(
+            @NonNull NamedDomainObjectContainer<BuildType> buildTypes,
             @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavors,
             @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigs) {
-        // must create signing config first so that build type 'debug' can be initialized
-        // with the debug signing config.
-        signingConfigs.create(DEBUG);
         buildTypes.create(DEBUG);
         buildTypes.create(RELEASE);
     }

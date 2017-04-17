@@ -146,7 +146,7 @@ class Overlay3Test {
             assertThat(new File(resOutput, "drawable_free_normal_overlay.png.flat")).exists()
         }
 
-        Apk apk = project.getApk("free", "beta", "debug")
+        Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG, "free", "beta")
         assertThat(apk).isNotNull()
         // First image should remain unchanged, all images in free beta variants should be overlaid
         // with the first image (first pixel turns from red to green). Others should not be changed
@@ -159,7 +159,7 @@ class Overlay3Test {
         ImageHelper.checkImageColor(apk.getResource("drawable/free_beta_debug_overlay.png"), GREEN)
         ImageHelper.checkImageColor(apk.getResource("drawable/free_normal_overlay.png"), RED)
 
-        apk = project.getApk("free", "normal", "debug")
+        apk = project.getApk(GradleTestProject.ApkType.DEBUG, "free", "normal")
         assertThat(apk).isNotNull()
         // First image should remain unchanged, all images in free normal variants should be
         // overlaid with the first image (first pixel turns from red to green). Others should not be
@@ -172,7 +172,7 @@ class Overlay3Test {
         ImageHelper.checkImageColor(apk.getResource("drawable/free_beta_debug_overlay.png"), RED)
         ImageHelper.checkImageColor(apk.getResource("drawable/free_normal_overlay.png"), GREEN)
 
-        apk = project.getApk("paid", "beta", "debug")
+        apk = project.getApk(GradleTestProject.ApkType.DEBUG, "paid", "beta")
         assertThat(apk).isNotNull()
         // First image should remain unchanged, all images in paid beta variants should be overlaid
         // with the first image (first pixel turns from red to green). Others should not be changed

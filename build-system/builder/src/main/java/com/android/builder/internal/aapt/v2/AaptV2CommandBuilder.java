@@ -22,7 +22,9 @@ import com.android.builder.internal.aapt.AaptException;
 import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.builder.internal.aapt.AaptUtils;
 import com.android.builder.model.AaptOptions;
-import com.android.sdklib.BuildToolInfo;
+import com.android.builder.symbols.SymbolUtils;
+import com.android.ide.common.xml.AndroidManifestParser;
+import com.android.io.FileWrapper;
 import com.android.sdklib.IAndroidTarget;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
@@ -57,7 +59,6 @@ public final class AaptV2CommandBuilder {
      */
     public static ImmutableList<String> makeCompile(@NonNull File file, @NonNull File output) {
         return ImmutableList.of(
-                "compile",
                 "-o",
                 output.getAbsolutePath(),
                 file.getAbsolutePath());
@@ -65,21 +66,17 @@ public final class AaptV2CommandBuilder {
 
     /**
      * Creates the command line used to link the package.
-     * See {@link com.android.builder.internal.aapt.Aapt#link(AaptPackageConfig)}.
+     *
+     * <p>See {@link com.android.builder.internal.aapt.Aapt#link(AaptPackageConfig)}.
      *
      * @param config see above
      * @param intermediateDir a directory for intermediate files
-     * @param buildToolInfo build tools
      * @return the command line arguments
      * @throws AaptException failed to build the command line
      */
     public static ImmutableList<String> makeLink(
-            @NonNull AaptPackageConfig config,
-            @NonNull File intermediateDir,
-            @NonNull BuildToolInfo buildToolInfo) throws AaptException {
+            @NonNull AaptPackageConfig config, @NonNull File intermediateDir) throws AaptException {
         ImmutableList.Builder<String> builder = ImmutableList.builder();
-
-        builder.add("link");
 
         if (config.isVerbose()) {
             builder.add("-v");
@@ -153,16 +150,9 @@ public final class AaptV2CommandBuilder {
             builder.add("--custom-package", config.getCustomPackageForR());
         }
 
-        if (config.isPseudoLocalize()) {
-            Preconditions.checkState(buildToolInfo.getRevision().getMajor() >= 21);
-//            builder.addArgs("--pseudo-localize");
-        }
-
         // bundle specific options
         boolean generateFinalIds = true;
         if (config.getVariantType() == VariantType.LIBRARY) {
-            generateFinalIds = false;
-        } else if (config.getVariantType() == VariantType.ATOM && config.getBaseFeature() != null) {
             generateFinalIds = false;
         }
         if (!generateFinalIds) {
@@ -178,7 +168,6 @@ public final class AaptV2CommandBuilder {
         }
 
         if (config.getOptions().getFailOnMissingConfigEntry()) {
-            Preconditions.checkState(buildToolInfo.getRevision().getMajor() > 20);
 //            builder.addArgs("--error-on-missing-config-entry");
         }
 
@@ -246,11 +235,55 @@ public final class AaptV2CommandBuilder {
 
         if (config.getSymbolOutputDir() != null && (config.getVariantType() == VariantType.LIBRARY
                 || !config.getLibraries().isEmpty())) {
-//            builder.addArgs("--output-text-symbols",
-//                    config.getSymbolOutputDir().getAbsolutePath());
+            // Until R.txt generation is added back, for now just generate a copy of the R.java in
+            // the libraries' packages
+            String mainPackageName = config.getCustomPackageForR();
+            if (mainPackageName == null) {
+                try {
+                    mainPackageName =
+                            SymbolUtils.getPackageNameFromManifest(config.getManifestFile());
+                } catch (IOException e) {
+                    throw new AaptException("Could not retrieve the package of the module", e);
+                }
+            }
+
+            List<String> libs = new ArrayList();
+            for (AaptPackageConfig.LibraryInfo libraryInfo : config.getLibraries()) {
+                try {
+                    String libPackage =
+                            AndroidManifestParser.parse(new FileWrapper(libraryInfo.getManifest()))
+                                    .getPackage();
+
+                    // No need to generate R.java for libraries that have the same package as the
+                    // main module. More info: {@link RGeneration#generateRForLibraries}.
+                    if (!libPackage.equals(mainPackageName)) {
+                        libs.add(libPackage);
+                    }
+                } catch (Exception e) {
+                    throw new AaptException("Could not retrieve the package of a library", e);
+                }
+            }
+
+            Joiner joiner = Joiner.on(":");
+            builder.add("--extra-packages", joiner.join(libs));
+        }
+
+        if (config.getPackageId() != null) {
+            builder.add("--package-id", "0x" + Integer.toHexString(config.getPackageId()));
+            for (File dependentFeature : config.getDependentFeatures()) {
+                builder.add("-I", dependentFeature.getAbsolutePath());
+            }
+        } else if (!config.getDependentFeatures().isEmpty()) {
+            throw new AaptException("Dependent features configured but no package ID was set.");
         }
 
         builder.add("--no-version-vectors");
+
+        if (config.getBaseFeature() != null) {
+            throw new AaptException(
+                    "Feature-splits are not supported in AAPT2 yet. "
+                            + "Use -Pandroid.enableAapt2=false flag to use AAPT1 instead.");
+        }
 
         return builder.build();
     }

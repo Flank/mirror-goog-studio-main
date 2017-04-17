@@ -124,7 +124,7 @@ public class PreDexTransform extends Transform {
     @NonNull
     @Override
     public Set<? super Scope> getScopes() {
-        return TransformManager.SCOPE_FULL_INSTANT_RUN_PROJECT;
+        return TransformManager.SCOPE_FULL_WITH_IR_FOR_DEXING;
     }
 
     @NonNull
@@ -325,22 +325,9 @@ public class PreDexTransform extends Transform {
     @NonNull
     private File getPreDexFile(
             @NonNull TransformOutputProvider output, @NonNull QualifiedContent qualifiedContent) {
-        // In InstantRun mode, all files are guaranteed to have a unique name due to the slicer
-        // transform. adding sha1 to the name can lead to cleaning issues in device, it's much
-        // easier if the slices always have the same names, irrespective of the current variant,
-        // last version wins.
-        String name;
-        if (instantRunMode
-                && (qualifiedContent.getScopes().contains(Scope.PROJECT)
-                || qualifiedContent.getScopes().contains(Scope.SUB_PROJECTS))) {
-            name = getInstantRunFileName(qualifiedContent.getFile());
-        } else {
-            name = getFilename(qualifiedContent.getFile(), dexingMode);
-        }
-
         File contentLocation =
                 output.getContentLocation(
-                        name,
+                        qualifiedContent.getName(),
                         TransformManager.CONTENT_DEX,
                         qualifiedContent.getScopes(),
                         dexingMode.isMultiDex() ? Format.DIRECTORY : Format.JAR);

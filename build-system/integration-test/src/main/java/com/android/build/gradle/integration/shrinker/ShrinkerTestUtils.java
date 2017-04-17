@@ -20,6 +20,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import java.io.File;
 import java.io.IOException;
 
 /**
@@ -28,7 +29,11 @@ import java.io.IOException;
 public class ShrinkerTestUtils {
     public static void checkShrinkerWasUsed(GradleTestProject project) {
         // Sanity check, to make sure we're testing the right thing.
-        assertThat(project.file("build/intermediates/transforms/newClassShrinker")).exists();
+        assertThat(getShrinkerOutputDir(project)).exists();
+    }
+
+    public static File getShrinkerOutputDir(GradleTestProject project) {
+        return project.file("build/intermediates/transforms/androidGradleClassShrinker");
     }
 
     public static void enableShrinker(GradleTestProject project, String buildType)

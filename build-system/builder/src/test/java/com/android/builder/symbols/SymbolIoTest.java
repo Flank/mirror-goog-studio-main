@@ -45,7 +45,9 @@ public class SymbolIoTest {
 
         SymbolTable expected =
                 SymbolTable.builder()
-                        .add(new Symbol("xml", "authenticator", "int", "0x7f040000"))
+                        .add(
+                                SymbolTestUtils.createSymbol(
+                                        "xml", "authenticator", "int", "0x7f040000"))
                         .build();
         assertEquals(table, expected);
     }
@@ -65,25 +67,27 @@ public class SymbolIoTest {
         SymbolTable expected =
                 SymbolTable.builder()
                         .add(
-                                new Symbol(
+                                SymbolTestUtils.createSymbol(
                                         "styleable",
                                         "LimitedSizeLinearLayout",
                                         "int[]",
                                         "{ 0x7f010000, 0x7f010001 }"))
                         .add(
-                                new Symbol(
+                                SymbolTestUtils.createSymbol(
                                         "styleable",
                                         "LimitedSizeLinearLayout_max_height",
                                         "int",
                                         "1"))
                         .add(
-                                new Symbol(
+                                SymbolTestUtils.createSymbol(
                                         "styleable",
                                         "LimitedSizeLinearLayout_max_width",
                                         "int",
                                         "0"))
-                        .add(new Symbol("xml", "authenticator", "int", "0x7f040000"))
-                .build();
+                        .add(
+                                SymbolTestUtils.createSymbol(
+                                        "xml", "authenticator", "int", "0x7f040000"))
+                        .build();
         assertEquals(table, expected);
     }
 
@@ -91,8 +95,8 @@ public class SymbolIoTest {
     public void writeReadSymbolFile() throws Exception {
         SymbolTable original =
                 SymbolTable.builder()
-                        .add(new Symbol("attr", "b", "c", "d"))
-                        .add(new Symbol("string", "f", "g", "h"))
+                        .add(SymbolTestUtils.createSymbol("attr", "b", "int[]", "d"))
+                        .add(SymbolTestUtils.createSymbol("string", "f", "int", "h"))
                         .build();
 
         File f = mTemporaryFolder.newFile();
@@ -128,7 +132,9 @@ public class SymbolIoTest {
         SymbolTable table =
                 SymbolTable.builder()
                         .tablePackage("test.pkg")
-                        .add(new Symbol("xml", "authenticator", "int", "0x7f040000"))
+                        .add(
+                                SymbolTestUtils.createSymbol(
+                                        "xml", "authenticator", "int", "0x7f040000"))
                         .build();
 
         checkRGeneration(
@@ -157,12 +163,20 @@ public class SymbolIoTest {
         SymbolTable table =
                 SymbolTable.builder()
                         .tablePackage("test.pkg")
-                        .add(new Symbol("string", "app_name", "int", "0x7f030000"))
-                        .add(new Symbol("string", "lib1", "int", "0x7f030001"))
-                        .add(new Symbol("style", "AppBaseTheme", "int", "0x7f040000"))
-                        .add(new Symbol("style", "AppTheme", "int", "0x7f040001"))
-                        .add(new Symbol("drawable", "foobar", "int", "0x7f020000"))
-                        .add(new Symbol("drawable", "ic_launcher", "int", "0x7f020001"))
+                        .add(
+                                SymbolTestUtils.createSymbol(
+                                        "string", "app_name", "int", "0x7f030000"))
+                        .add(SymbolTestUtils.createSymbol("string", "lib1", "int", "0x7f030001"))
+                        .add(
+                                SymbolTestUtils.createSymbol(
+                                        "style", "AppBaseTheme", "int", "0x7f040000"))
+                        .add(SymbolTestUtils.createSymbol("style", "AppTheme", "int", "0x7f040001"))
+                        .add(
+                                SymbolTestUtils.createSymbol(
+                                        "drawable", "foobar", "int", "0x7f020000"))
+                        .add(
+                                SymbolTestUtils.createSymbol(
+                                        "drawable", "ic_launcher", "int", "0x7f020001"))
                         .build();
 
         checkRGeneration(
@@ -200,12 +214,20 @@ public class SymbolIoTest {
         SymbolTable table =
                 SymbolTable.builder()
                         .tablePackage("test.pkg")
-                        .add(new Symbol("string", "app_name", "int", "0x7f030000"))
-                        .add(new Symbol("string", "lib1", "int", "0x7f030001"))
-                        .add(new Symbol("style", "AppBaseTheme", "int", "0x7f040000"))
-                        .add(new Symbol("style", "AppTheme", "int", "0x7f040001"))
-                        .add(new Symbol("drawable", "foobar", "int", "0x7f020000"))
-                        .add(new Symbol("drawable", "ic_launcher", "int", "0x7f020001"))
+                        .add(
+                                SymbolTestUtils.createSymbol(
+                                        "string", "app_name", "int", "0x7f030000"))
+                        .add(SymbolTestUtils.createSymbol("string", "lib1", "int", "0x7f030001"))
+                        .add(
+                                SymbolTestUtils.createSymbol(
+                                        "style", "AppBaseTheme", "int", "0x7f040000"))
+                        .add(SymbolTestUtils.createSymbol("style", "AppTheme", "int", "0x7f040001"))
+                        .add(
+                                SymbolTestUtils.createSymbol(
+                                        "drawable", "foobar", "int", "0x7f020000"))
+                        .add(
+                                SymbolTestUtils.createSymbol(
+                                        "drawable", "ic_launcher", "int", "0x7f020001"))
                         .build();
 
         checkRGeneration(
@@ -243,17 +265,27 @@ public class SymbolIoTest {
         SymbolTable table =
                 SymbolTable.builder()
                         .add(
-                                new Symbol(
+                                SymbolTestUtils.createSymbol(
                                         "styleable",
                                         "TiledView",
                                         "int[]",
                                         "{ 0x7f010000, 0x7f010001, 0x7f010002, "
                                                 + "0x7f010003, 0x7f010004 }"))
-                        .add(new Symbol("styleable", "TiledView_tileName", "int", "2"))
-                        .add(new Symbol("styleable", "TiledView_tilingEnum", "int", "4"))
-                        .add(new Symbol("styleable", "TiledView_tilingMode", "int", "3"))
-                        .add(new Symbol("styleable", "TiledView_tilingProperty", "int", "0"))
-                        .add(new Symbol("styleable", "TiledView_tilingResource", "int", "1"))
+                        .add(
+                                SymbolTestUtils.createSymbol(
+                                        "styleable", "TiledView_tileName", "int", "2"))
+                        .add(
+                                SymbolTestUtils.createSymbol(
+                                        "styleable", "TiledView_tilingEnum", "int", "4"))
+                        .add(
+                                SymbolTestUtils.createSymbol(
+                                        "styleable", "TiledView_tilingMode", "int", "3"))
+                        .add(
+                                SymbolTestUtils.createSymbol(
+                                        "styleable", "TiledView_tilingProperty", "int", "0"))
+                        .add(
+                                SymbolTestUtils.createSymbol(
+                                        "styleable", "TiledView_tilingResource", "int", "1"))
                         .build();
 
         checkRGeneration(
@@ -287,24 +319,26 @@ public class SymbolIoTest {
                 SymbolTable.builder()
                         .tablePackage("test.pkg")
                         .add(
-                                new Symbol(
+                                SymbolTestUtils.createSymbol(
                                         "styleable",
                                         "LimitedSizeLinearLayout",
                                         "int[]",
                                         "{ 0x7f010000, 0x7f010001 }"))
                         .add(
-                                new Symbol(
+                                SymbolTestUtils.createSymbol(
                                         "styleable",
                                         "LimitedSizeLinearLayout_max_height",
                                         "int",
                                         "1"))
                         .add(
-                                new Symbol(
+                                SymbolTestUtils.createSymbol(
                                         "styleable",
                                         "LimitedSizeLinearLayout_max_width",
                                         "int",
                                         "0"))
-                        .add(new Symbol("xml", "authenticator", "int", "0x7f040000"))
+                        .add(
+                                SymbolTestUtils.createSymbol(
+                                        "xml", "authenticator", "int", "0x7f040000"))
                         .build();
 
         checkRGeneration(

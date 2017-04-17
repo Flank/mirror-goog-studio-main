@@ -506,11 +506,14 @@ public class VectorDrawableTest {
     public void model() throws Exception {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
-                "android.productFlavors { "
-                        + "pngs\n"
-                        + "vectors { vectorDrawables.useSupportLibrary = true }\n"
-                        + "hdpiOnly { vectorDrawables.generatedDensities = ['hdpi'] }\n"
-                        + "}");
+                "android {\n"
+                        + "  flavorDimensions 'foo'\n"
+                        + "  productFlavors {\n"
+                        + "    pngs\n"
+                        + "    vectors { vectorDrawables.useSupportLibrary = true }\n"
+                        + "    hdpiOnly { vectorDrawables.generatedDensities = ['hdpi'] }\n"
+                        + "  }\n"
+                        + "}\n");
 
         AndroidProject model = project.model().getSingle().getOnlyModel();
 

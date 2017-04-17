@@ -6,6 +6,7 @@ apply plugin: 'com.android.application'
 android {
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
+    flavorDimensions 'foo'
     productFlavors {
         flavor1
     }

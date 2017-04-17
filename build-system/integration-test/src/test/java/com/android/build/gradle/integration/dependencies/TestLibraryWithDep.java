@@ -36,7 +36,7 @@ public class TestLibraryWithDep {
 
     @Test
     public void checkLibDependencyJarIsPackaged() throws Exception {
-        TruthHelper.assertThat(project.getTestApk("debug"))
+        TruthHelper.assertThat(project.getTestApk())
                 .containsClass("Lcom/google/common/base/Splitter;");
     }
 }

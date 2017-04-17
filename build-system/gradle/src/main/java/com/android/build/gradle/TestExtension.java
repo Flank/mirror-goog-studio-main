@@ -3,11 +3,13 @@ package com.android.build.gradle;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.api.ApplicationVariant;
 import com.android.build.gradle.api.BaseVariant;
+import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
@@ -24,25 +26,27 @@ public class TestExtension extends BaseExtension implements TestAndroidConfig {
 
     private String targetProjectPath = null;
 
-    private String targetVariant = "debug";
-
     public TestExtension(
             @NonNull Project project,
+            @NonNull ProjectOptions projectOptions,
             @NonNull Instantiator instantiator,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull SdkHandler sdkHandler,
             @NonNull NamedDomainObjectContainer<BuildType> buildTypes,
             @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavors,
             @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigs,
+            @NonNull NamedDomainObjectContainer<BaseVariantOutput> buildOutputs,
             @NonNull ExtraModelInfo extraModelInfo) {
         super(
                 project,
+                projectOptions,
                 instantiator,
                 androidBuilder,
                 sdkHandler,
                 buildTypes,
                 productFlavors,
                 signingConfigs,
+                buildOutputs,
                 extraModelInfo,
                 false);
     }
@@ -83,13 +87,15 @@ public class TestExtension extends BaseExtension implements TestAndroidConfig {
      * Default is 'debug'
      */
     @Override
+    @Deprecated
     public String getTargetVariant() {
-        return targetVariant;
+        return "";
     }
 
+    @Deprecated
     public void setTargetVariant(String targetVariant) {
         checkWritability();
-        this.targetVariant = targetVariant;
+        System.err.println("android.targetVariant is deprecated, all variants are now tested.");
     }
 
     public void targetVariant(String targetVariant) {

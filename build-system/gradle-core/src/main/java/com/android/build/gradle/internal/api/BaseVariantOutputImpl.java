@@ -18,14 +18,16 @@ package com.android.build.gradle.internal.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.FilterData;
 import com.android.build.OutputFile;
-import com.android.build.gradle.api.ApkOutputFile;
 import com.android.build.gradle.api.BaseVariantOutput;
-import com.android.build.gradle.internal.variant.BaseVariantOutputData;
+import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
+import com.android.ide.common.build.ApkData;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
+import java.util.Collection;
 import org.gradle.api.Task;
 
 /**
@@ -37,75 +39,89 @@ import org.gradle.api.Task;
  */
 public abstract class BaseVariantOutputImpl implements BaseVariantOutput {
 
-    @NonNull
-    protected abstract BaseVariantOutputData getVariantOutputData();
+    @NonNull protected final TaskContainer taskContainer;
 
-    @Override
-    public void setOutputFile(@NonNull File file) {
-        getVariantOutputData().setOutputFile(file);
-    }
-
-    @NonNull
-    @Override
-    public File getOutputFile() {
-        return getVariantOutputData().getOutputFile();
+    protected BaseVariantOutputImpl(@NonNull TaskContainer taskContainer) {
+        this.taskContainer = taskContainer;
     }
 
     @NonNull
     @Override
     public OutputFile getMainOutputFile() {
-        return getVariantOutputData().getMainOutputFile();
+        return getApkData().getMainOutputFile();
+    }
+
+    @NonNull
+    protected abstract ApkData getApkData();
+
+    @NonNull
+    @Override
+    public File getOutputFile() {
+        return getApkData().getMainOutputFile().getOutputFile();
     }
 
     @NonNull
     @Override
     public ImmutableList<OutputFile> getOutputs() {
-        ImmutableList.Builder<OutputFile> outputFileBuilder = ImmutableList.builder();
-        for (ApkOutputFile apkOutputFile : getVariantOutputData().getOutputs()) {
-            outputFileBuilder.add(apkOutputFile);
-        }
-        return outputFileBuilder.build();
+        return ImmutableList.of(this);
     }
 
-    @NonNull
+    @Nullable
     @Override
     public ProcessAndroidResources getProcessResources() {
-        return getVariantOutputData().processResourcesTask;
+        return taskContainer.getTaskByType(ProcessAndroidResources.class);
     }
 
-    @NonNull
     @Override
+    @Nullable
     public ManifestProcessorTask getProcessManifest() {
-        return getVariantOutputData().manifestProcessorTask;
+        return taskContainer.getTaskByType(ManifestProcessorTask.class);
     }
 
     @Nullable
     @Override
     public Task getAssemble() {
-        return getVariantOutputData().assembleTask;
+        return taskContainer.getTaskByKind(TaskContainer.TaskKind.ASSEMBLE);
     }
 
     @NonNull
     @Override
     public String getName() {
-        return getVariantOutputData().getFullName();
+        return getApkData().getBaseName();
     }
 
     @NonNull
     @Override
     public String getBaseName() {
-        return getVariantOutputData().getBaseName();
+        return getApkData().getBaseName();
     }
 
     @NonNull
     @Override
     public String getDirName() {
-        return getVariantOutputData().getDirName();
+        return getApkData().getDirName();
     }
 
     @NonNull
     @Override
-    public File getSplitFolder() {
-        return getOutputFile().getParentFile();
+    public String getOutputType() {
+        return getApkData().getOutputType();
+    }
+
+    @NonNull
+    @Override
+    public Collection<String> getFilterTypes() {
+        return getApkData().getFilterTypes();
+    }
+
+    @NonNull
+    @Override
+    public Collection<FilterData> getFilters() {
+        return getApkData().getFilters();
+    }
+
+    @Nullable
+    public String getFilter(String filterType) {
+        return getApkData().getFilter(filterType);
     }
 }

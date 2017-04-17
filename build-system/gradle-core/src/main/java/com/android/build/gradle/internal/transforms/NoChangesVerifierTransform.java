@@ -41,12 +41,10 @@ public class NoChangesVerifierTransform extends Transform {
 
     @NonNull
     private final String transformName;
-    @NonNull
-    private final InstantRunBuildContext buildContext;
+    @NonNull private final InstantRunBuildContext buildContext;
     @NonNull
     private final Set<ContentType> inputTypes;
-    @NonNull
-    private final Set<Scope> mergeScopes;
+    @NonNull private final Set<? super Scope> mergeScopes;
     @NonNull
     private final InstantRunVerifierStatus failureStatus;
 
@@ -54,7 +52,7 @@ public class NoChangesVerifierTransform extends Transform {
             @NonNull String transformName,
             @NonNull InstantRunBuildContext buildContext,
             @NonNull Set<ContentType> inputTypes,
-            @NonNull Set<Scope> mergeScopes,
+            @NonNull Set<? super Scope> mergeScopes,
             @NonNull InstantRunVerifierStatus failureStatus) {
         this.transformName = transformName;
         this.buildContext = buildContext;
@@ -83,7 +81,7 @@ public class NoChangesVerifierTransform extends Transform {
 
     @NonNull
     @Override
-    public Set<Scope> getReferencedScopes() {
+    public Set<? super Scope> getReferencedScopes() {
         return mergeScopes;
     }
 

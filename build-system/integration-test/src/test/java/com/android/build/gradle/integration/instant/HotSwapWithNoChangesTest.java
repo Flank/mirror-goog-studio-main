@@ -33,7 +33,6 @@ import com.google.common.io.Files;
 import com.google.common.truth.Expect;
 import java.io.File;
 import java.io.IOException;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -64,7 +63,6 @@ public class HotSwapWithNoChangesTest {
 
     @Before
     public void activityClass() throws Exception {
-        Assume.assumeFalse("Disabled until instant run supports Jack", GradleTestProject.USE_JACK);
         createActivityClass("Original");
     }
 
@@ -124,11 +122,11 @@ public class HotSwapWithNoChangesTest {
         // now run again the incremental build.
         project.executor().withInstantRun(VERSION_UNDER_TEST).run("assembleDebug");
 
-        InstantRunBuildContext instantRunBuildContext =
+        InstantRunBuildContext buildContext =
                 InstantRunTestUtils.loadBuildContext(VERSION_UNDER_TEST, instantRunModel);
 
-        assertThat(instantRunBuildContext.getLastBuild().getArtifacts()).hasSize(0);
-        assertThat(instantRunBuildContext.getLastBuild().getVerifierStatus())
+        assertThat(buildContext.getLastBuild().getArtifacts()).hasSize(0);
+        assertThat(buildContext.getLastBuild().getVerifierStatus())
                 .isEqualTo(InstantRunVerifierStatus.NO_CHANGES);
     }
 

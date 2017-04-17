@@ -89,9 +89,7 @@ public class JavaPreCompileTaskTest {
 
     @Test
     public void checkSuccessForNormalJar() throws IOException {
-        InputSupplier<FileCollection> compileClasspath =
-                InputSupplier.from(() -> project.files(jar, nonJarFile, directory));
-        compileClasspath.get();
+        FileCollection compileClasspath = project.files(jar, nonJarFile, directory);
         task.init(out, processorConfiguration, compileClasspath, new AnnotationProcessorOptions());
         task.preCompile();
     }
@@ -103,26 +101,16 @@ public class JavaPreCompileTaskTest {
                         "annotationProcessor",
                         project.files(
                                 jarWithAnnotationProcessor, directoryWithAnnotationProcessor));
-        InputSupplier<FileCollection> compileClasspath =
-                InputSupplier.from(
-                        () ->
-                                project.files(
-                                        jarWithAnnotationProcessor,
-                                        directoryWithAnnotationProcessor));
-        compileClasspath.get();
+        FileCollection compileClasspath =
+                project.files(jarWithAnnotationProcessor, directoryWithAnnotationProcessor);
         task.init(out, processorConfiguration, compileClasspath, new AnnotationProcessorOptions());
         task.preCompile();
     }
 
     @Test
     public void checkErrorIsThrownForAnnotationProcessor() throws IOException {
-        InputSupplier<FileCollection> compileClasspath =
-                InputSupplier.from(
-                        () ->
-                                project.files(
-                                        jarWithAnnotationProcessor,
-                                        directoryWithAnnotationProcessor));
-        compileClasspath.get();
+        FileCollection compileClasspath =
+                project.files(jarWithAnnotationProcessor, directoryWithAnnotationProcessor);
         task.init(out, processorConfiguration, compileClasspath, new AnnotationProcessorOptions());
         try {
             task.preCompile();
@@ -135,9 +123,7 @@ public class JavaPreCompileTaskTest {
 
     @Test
     public void checkSettingIncludeClasspathFalseDisableError() throws IOException {
-        InputSupplier<FileCollection> compileClasspath =
-                InputSupplier.from(() -> project.files(jarWithAnnotationProcessor));
-        compileClasspath.get();
+        FileCollection compileClasspath = project.files(jarWithAnnotationProcessor);
         AnnotationProcessorOptions options = new AnnotationProcessorOptions();
         options.setIncludeCompileClasspath(false);
         task.init(out, processorConfiguration, compileClasspath, options);
@@ -146,9 +132,7 @@ public class JavaPreCompileTaskTest {
 
     @Test
     public void checkSettingIncludeClasspathTrueDisableError() throws IOException {
-        InputSupplier<FileCollection> compileClasspath =
-                InputSupplier.from(() -> project.files(jarWithAnnotationProcessor));
-        compileClasspath.get();
+        FileCollection compileClasspath = project.files(jarWithAnnotationProcessor);
         AnnotationProcessorOptions options = new AnnotationProcessorOptions();
         options.setIncludeCompileClasspath(true);
         task.init(out, processorConfiguration, compileClasspath, options);

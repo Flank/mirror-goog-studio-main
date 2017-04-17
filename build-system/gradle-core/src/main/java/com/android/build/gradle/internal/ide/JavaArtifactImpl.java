@@ -16,9 +16,6 @@
 
 package com.android.build.gradle.internal.ide;
 
-import static com.android.build.gradle.internal.ide.DependenciesConverter.cloneDependenciesForJavaArtifacts;
-import static com.android.build.gradle.internal.ide.DependenciesLevel2Converter.cloneGraphForJavaArtifacts;
-
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
@@ -45,7 +42,8 @@ public final class JavaArtifactImpl extends BaseArtifactImpl implements JavaArti
     @Nullable
     private final File mockablePlatformJar;
 
-    public static JavaArtifactImpl clone(@NonNull JavaArtifact javaArtifact) {
+    public static JavaArtifactImpl clone(
+            @NonNull JavaArtifact javaArtifact, int modelLevel, boolean modelWithFullDependency) {
         SourceProvider variantSP = javaArtifact.getVariantSourceProvider();
         SourceProvider flavorsSP = javaArtifact.getMultiFlavorSourceProvider();
 
@@ -58,8 +56,9 @@ public final class JavaArtifactImpl extends BaseArtifactImpl implements JavaArti
                 javaArtifact.getClassesFolder(),
                 javaArtifact.getJavaResourcesFolder(),
                 javaArtifact.getMockablePlatformJar(),
-                cloneDependenciesForJavaArtifacts(javaArtifact.getDependencies()),
-                cloneGraphForJavaArtifacts(javaArtifact.getDependencyGraphs()),
+                ArtifactDependencyGraph.clone(javaArtifact.getDependencies(), modelLevel),
+                ArtifactDependencyGraph.clone(
+                        javaArtifact.getDependencyGraphs(), modelLevel, modelWithFullDependency),
                 variantSP != null ? new SourceProviderImpl(variantSP) : null,
                 flavorsSP != null ? new SourceProviderImpl(flavorsSP) : null);
     }

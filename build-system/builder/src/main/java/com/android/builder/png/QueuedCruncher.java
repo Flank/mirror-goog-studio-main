@@ -42,6 +42,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class QueuedCruncher implements PngCruncher {
 
+    private static final boolean VERBOSE_LOGGING = false;
     /**
      * Number of concurrent cruncher processes to launch.
      */
@@ -70,7 +71,7 @@ public class QueuedCruncher implements PngCruncher {
                 @NonNull ILogger logger,
                 int cruncherProcesses) {
             synchronized (sLock) {
-                logger.verbose("QueuedCruncher is using %1$s", aaptLocation);
+                logger.verbose("QueuedCruncher is using %1$s%n", aaptLocation);
                 if (!sInstances.containsKey(aaptLocation)) {
                     QueuedCruncher queuedCruncher =
                             new QueuedCruncher(aaptLocation, logger, cruncherProcesses);
@@ -105,74 +106,94 @@ public class QueuedCruncher implements PngCruncher {
             int cruncherProcesses) {
         mAaptLocation = aaptLocation;
         mLogger = iLogger;
-        QueueThreadContext<AaptProcess> queueThreadContext = new QueueThreadContext<AaptProcess>() {
+        QueueThreadContext<AaptProcess> queueThreadContext =
+                new QueueThreadContext<AaptProcess>() {
 
-            // move this to a TLS, but do not store instances of AaptProcess in it.
-            @NonNull private final Map<String, AaptProcess> mAaptProcesses =
-                    new ConcurrentHashMap<>();
+                    // move this to a TLS, but do not store instances of AaptProcess in it.
+                    @NonNull
+                    private final Map<String, AaptProcess> mAaptProcesses =
+                            new ConcurrentHashMap<>();
 
-            @Override
-            public void creation(@NonNull Thread t) throws IOException {
-                try {
-                    AaptProcess aaptProcess = new AaptProcess.Builder(mAaptLocation, mLogger).start();
-                    assert aaptProcess != null;
-                    mLogger.verbose("Thread(%1$s): created aapt slave, Process(%2$s)",
-                            Thread.currentThread().getName(), aaptProcess.hashCode());
-                    aaptProcess.waitForReady();
-                    mAaptProcesses.put(t.getName(), aaptProcess);
-                } catch (InterruptedException e) {
-                    mLogger.error(e, "Cannot start slave process");
-                    e.printStackTrace();
-                }
-            }
-
-            @Override
-            public void runTask(@NonNull Job<AaptProcess> job) throws Exception {
-                job.runTask(new JobContext<>(mAaptProcesses.get(Thread.currentThread().getName())));
-                mOutstandingJobs.get(((QueuedJob) job).key).remove(job);
-                ConcurrentLinkedQueue<Job<AaptProcess>> jobs = mDoneJobs.get(((QueuedJob) job).key);
-                synchronized (mDoneJobs) {
-                    if (jobs == null) {
-                        jobs = new ConcurrentLinkedQueue<>();
-                        mDoneJobs.put(((QueuedJob) job).key, jobs);
-                    }
-                }
-                jobs.add(job);
-            }
-
-            @Override
-            public void destruction(@NonNull Thread t) throws IOException, InterruptedException {
-
-                AaptProcess aaptProcess = mAaptProcesses.get(Thread.currentThread().getName());
-                if (aaptProcess != null) {
-                    mLogger.verbose("Thread(%1$s): notify aapt slave shutdown, Process(%2$s)",
-                            Thread.currentThread().getName(), aaptProcess.hashCode());
-                    aaptProcess.shutdown();
-                    mAaptProcesses.remove(t.getName());
-                    mLogger.verbose("Thread(%1$s): Process(%2$d), after shutdown queue_size=%3$d",
-                            Thread.currentThread().getName(),
-                            aaptProcess.hashCode(),
-                            mAaptProcesses.size());
-                }
-            }
-
-            @Override
-            public void shutdown() {
-                if (!mAaptProcesses.isEmpty()) {
-                    mLogger.warning("Process list not empty");
-                    for (Map.Entry<String, AaptProcess> aaptProcessEntry : mAaptProcesses
-                            .entrySet()) {
-                        mLogger.warning("Thread(%1$s): queue not cleaned", aaptProcessEntry.getKey());
+                    @Override
+                    public void creation(@NonNull Thread t) throws IOException {
                         try {
-                            aaptProcessEntry.getValue().shutdown();
-                        } catch (Exception e) {
-                            mLogger.error(e, "while shutting down" + aaptProcessEntry.getKey());
+                            AaptProcess aaptProcess =
+                                    new AaptProcess.Builder(mAaptLocation, mLogger).start();
+                            assert aaptProcess != null;
+                            if (VERBOSE_LOGGING) {
+                                mLogger.verbose(
+                                        "Thread(%1$s): created aapt slave, Process(%2$s)",
+                                        Thread.currentThread().getName(), aaptProcess.hashCode());
+                            }
+                            aaptProcess.waitForReady();
+                            mAaptProcesses.put(t.getName(), aaptProcess);
+                        } catch (InterruptedException e) {
+                            mLogger.error(e, "Cannot start slave process");
+                            e.printStackTrace();
                         }
                     }
-                }
-                mAaptProcesses.clear();
-            }
-        };
+
+                    @Override
+                    public void runTask(@NonNull Job<AaptProcess> job) throws Exception {
+                        job.runTask(
+                                new JobContext<>(
+                                        mAaptProcesses.get(Thread.currentThread().getName())));
+                        mOutstandingJobs.get(((QueuedJob) job).key).remove(job);
+                        ConcurrentLinkedQueue<Job<AaptProcess>> jobs =
+                                mDoneJobs.get(((QueuedJob) job).key);
+                        synchronized (mDoneJobs) {
+                            if (jobs == null) {
+                                jobs = new ConcurrentLinkedQueue<>();
+                                mDoneJobs.put(((QueuedJob) job).key, jobs);
+                            }
+                        }
+                        jobs.add(job);
+                    }
+
+                    @Override
+                    public void destruction(@NonNull Thread t)
+                            throws IOException, InterruptedException {
+
+                        AaptProcess aaptProcess =
+                                mAaptProcesses.get(Thread.currentThread().getName());
+                        if (aaptProcess != null) {
+                            if (VERBOSE_LOGGING) {
+                                mLogger.verbose(
+                                        "Thread(%1$s): notify aapt slave shutdown, Process(%2$s)",
+                                        Thread.currentThread().getName(), aaptProcess.hashCode());
+                            }
+                            aaptProcess.shutdown();
+                            mAaptProcesses.remove(t.getName());
+                            if (VERBOSE_LOGGING) {
+                                mLogger.verbose(
+                                        "Thread(%1$s): Process(%2$d), after shutdown queue_size=%3$d",
+                                        Thread.currentThread().getName(),
+                                        aaptProcess.hashCode(),
+                                        mAaptProcesses.size());
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void shutdown() {
+                        if (!mAaptProcesses.isEmpty()) {
+                            mLogger.warning("Process list not empty");
+                            for (Map.Entry<String, AaptProcess> aaptProcessEntry :
+                                    mAaptProcesses.entrySet()) {
+                                mLogger.warning(
+                                        "Thread(%1$s): queue not cleaned",
+                                        aaptProcessEntry.getKey());
+                                try {
+                                    aaptProcessEntry.getValue().shutdown();
+                                } catch (Exception e) {
+                                    mLogger.error(
+                                            e, "while shutting down" + aaptProcessEntry.getKey());
+                                }
+                            }
+                        }
+                        mAaptProcesses.clear();
+                    }
+                };
 
         int cruncherProcessToUse;
         if (cruncherProcesses > 0) {
@@ -204,47 +225,59 @@ public class QueuedCruncher implements PngCruncher {
             throws PngException {
         SettableFuture<File> result = SettableFuture.create();
         try {
-            final Job<AaptProcess> aaptProcessJob = new QueuedJob(
-                    key,
-                    "Cruncher " + from.getName(),
-                    new Task<AaptProcess>() {
-                        @Override
-                        public void run(@NonNull Job<AaptProcess> job,
-                                @NonNull JobContext<AaptProcess> context) throws IOException {
-                            AaptProcess aapt = context.getPayload();
-                            if (aapt == null) {
-                                mLogger.error(null /* throwable */,
-                                        "Thread(%1$s) has a null payload",
-                                        Thread.currentThread().getName());
-                                return;
-                            }
-                            mLogger.verbose("Thread(%1$s): submitting job %2$s to %3$d",
-                                    Thread.currentThread().getName(),
-                                    job.getJobTitle(),
-                                    aapt.hashCode());
-                            aapt.crunch(from, to, job);
-                            mLogger.verbose("Thread(%1$s): submitted job %2$s",
-                                    Thread.currentThread().getName(), job.getJobTitle());
-                        }
+            final Job<AaptProcess> aaptProcessJob =
+                    new QueuedJob(
+                            key,
+                            "Cruncher " + from.getName(),
+                            new Task<AaptProcess>() {
+                                @Override
+                                public void run(
+                                        @NonNull Job<AaptProcess> job,
+                                        @NonNull JobContext<AaptProcess> context)
+                                        throws IOException {
+                                    AaptProcess aapt = context.getPayload();
+                                    if (aapt == null) {
+                                        mLogger.error(
+                                                null /* throwable */,
+                                                "Thread(%1$s) has a null payload",
+                                                Thread.currentThread().getName());
+                                        return;
+                                    }
+                                    if (VERBOSE_LOGGING) {
+                                        mLogger.verbose(
+                                                "Thread(%1$s): submitting job %2$s to %3$d",
+                                                Thread.currentThread().getName(),
+                                                job.getJobTitle(),
+                                                aapt.hashCode());
+                                    }
+                                    aapt.crunch(from, to, job);
+                                    if (VERBOSE_LOGGING) {
+                                        mLogger.verbose(
+                                                "Thread(%1$s): submitted job %2$s",
+                                                Thread.currentThread().getName(),
+                                                job.getJobTitle());
+                                    }
+                                }
 
-                        @Override
-                        public void finished() {
-                            result.set(to);
-                        }
+                                @Override
+                                public void finished() {
+                                    result.set(to);
+                                }
 
-                        @Override
-                        public void error(Exception e) {
-                            result.setException(e);
-                        }
+                                @Override
+                                public void error(Exception e) {
+                                    result.setException(e);
+                                }
 
-                        @Override
-                        public String toString() {
-                            return MoreObjects.toStringHelper(this)
-                                    .add("from", from.getAbsolutePath())
-                                    .add("to", to.getAbsolutePath())
-                                    .toString();
-                        }
-                    }, result);
+                                @Override
+                                public String toString() {
+                                    return MoreObjects.toStringHelper(this)
+                                            .add("from", from.getAbsolutePath())
+                                            .add("to", to.getAbsolutePath())
+                                            .toString();
+                                }
+                            },
+                            result);
             ConcurrentLinkedQueue<Job<AaptProcess>> jobs = mOutstandingJobs.get(key);
             synchronized (mOutstandingJobs) {
                 if (jobs == null) {
@@ -262,7 +295,9 @@ public class QueuedCruncher implements PngCruncher {
     }
 
     private void waitForAll(int key) throws InterruptedException {
-        mLogger.verbose("Thread(%1$s): begin waitForAll", Thread.currentThread().getName());
+        if (VERBOSE_LOGGING) {
+            mLogger.verbose("Thread(%1$s): begin waitForAll", Thread.currentThread().getName());
+        }
         ConcurrentLinkedQueue<Job<AaptProcess>> jobs = mOutstandingJobs.get(key);
         Job<AaptProcess> aaptProcessJob = jobs.poll();
         boolean hasExceptions = false;
@@ -292,7 +327,9 @@ public class QueuedCruncher implements PngCruncher {
         if (hasExceptions) {
             throw new RuntimeException("Some file crunching failed, see logs for details");
         }
-        mLogger.verbose("Thread(%1$s): end waitForAll", Thread.currentThread().getName());
+        if (VERBOSE_LOGGING) {
+            mLogger.verbose("Thread(%1$s): end waitForAll", Thread.currentThread().getName());
+        }
     }
 
     @Override
@@ -313,7 +350,9 @@ public class QueuedCruncher implements PngCruncher {
         try {
             waitForAll(key);
             mOutstandingJobs.get(key).clear();
-            mLogger.verbose("Job finished in %1$d", System.currentTimeMillis() - startTime);
+            if (VERBOSE_LOGGING) {
+                mLogger.verbose("Job finished in %1$d", System.currentTimeMillis() - startTime);
+            }
         } finally {
             // even if we have failures, we need to shutdown property the sub processes.
             if (refCount.decrementAndGet() == 0) {
@@ -324,8 +363,8 @@ public class QueuedCruncher implements PngCruncher {
                     mLogger.warning("Error while shutting down crunching queue : %s",
                             e.getMessage());
                 }
-                mLogger.verbose("Shutdown finished in %1$d",
-                        System.currentTimeMillis() - startTime);
+                mLogger.verbose(
+                        "Shutdown finished in %1$dms", System.currentTimeMillis() - startTime);
             }
         }
     }

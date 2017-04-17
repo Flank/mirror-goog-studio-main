@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.application
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.builder.model.AndroidArtifact
+import com.android.builder.model.AndroidArtifactOutput
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.Variant
 import com.android.testutils.apk.Apk
@@ -69,32 +70,35 @@ class AutoDensitySplitTest {
             if (!variant.getBuildType().equalsIgnoreCase("Debug")) {
                 continue
             }
+            for (AndroidArtifactOutput output : mainArtifact.getOutputs()) {
+                System.out.println(output)
+            }
             assertEquals(5, mainArtifact.getOutputs().size())
 
-            Apk mdpiApk = project.getApk("mdpi", "debug")
+            Apk mdpiApk = project.getApk("mdpi", GradleTestProject.ApkType.DEBUG)
             assertThat(mdpiApk).contains("res/drawable-mdpi-v4/other.png")
         }
     }
 
     @Test
     void "check version code in apk"() {
-        Apk universalApk = project.getApk("universal", "debug")
+        Apk universalApk = project.getApk("universal", GradleTestProject.ApkType.DEBUG)
         assertThat(universalApk).hasVersionCode(112)
         assertThat(universalApk).hasVersionName("version 112")
 
-        Apk mdpiApk = project.getApk("mdpi", "debug")
+        Apk mdpiApk = project.getApk("mdpi", GradleTestProject.ApkType.DEBUG)
         assertThat(mdpiApk).hasVersionCode(212)
         assertThat(mdpiApk).hasVersionName("version 212")
 
-        Apk hdpiApk = project.getApk("hdpi", "debug")
+        Apk hdpiApk = project.getApk("hdpi", GradleTestProject.ApkType.DEBUG)
         assertThat(hdpiApk).hasVersionCode(312)
         assertThat(hdpiApk).hasVersionName("version 312")
 
-        Apk xhdpiApk = project.getApk("xhdpi", "debug")
+        Apk xhdpiApk = project.getApk("xhdpi", GradleTestProject.ApkType.DEBUG)
         assertThat(xhdpiApk).hasVersionCode(412)
         assertThat(xhdpiApk).hasVersionName("version 412")
 
-        Apk xxhdiApk = project.getApk("xxhdpi", "debug")
+        Apk xxhdiApk = project.getApk("xxhdpi", GradleTestProject.ApkType.DEBUG)
         assertThat(xxhdiApk).hasVersionCode(512)
         assertThat(xxhdiApk).hasVersionName("version 512")
     }

@@ -16,7 +16,11 @@
 
 package com.android.build.gradle.internal;
 
+import static com.android.build.gradle.AndroidConfig.CONFIG_DESC;
+import static com.android.build.gradle.AndroidConfig.CONFIG_DESC_OLD;
+
 import com.android.annotations.NonNull;
+import com.android.build.gradle.AndroidConfig.DeprecatedConfigurationAction;
 import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.internal.coverage.JacocoOptions;
 import com.android.build.gradle.internal.dsl.AaptOptions;
@@ -30,10 +34,9 @@ import com.android.build.gradle.internal.dsl.TestOptions;
 import com.android.build.gradle.managed.AndroidConfig;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
-import com.android.builder.core.LibraryRequest;
-import com.android.builder.testing.api.DeviceProvider;
-import com.android.builder.testing.api.TestServer;
 import com.google.common.collect.Lists;
+import java.util.ArrayList;
+import java.util.HashMap;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
@@ -49,10 +52,9 @@ public class AndroidConfigHelper {
             @NonNull ExtraModelInfo extraModelInfo,
             @NonNull Instantiator instantiator) {
         model.setDefaultPublishConfig(BuilderConstants.RELEASE);
-        model.setPublishNonDefault(false);
         model.setGeneratePureSplits(false);
-        model.setDeviceProviders(Lists.<DeviceProvider>newArrayList());
-        model.setTestServers(Lists.<TestServer>newArrayList());
+        model.setDeviceProviders(Lists.newArrayList());
+        model.setTestServers(Lists.newArrayList());
         model.setAaptOptions(instantiator.newInstance(AaptOptions.class));
         model.setDexOptions(instantiator.newInstance(DexOptions.class, extraModelInfo));
         model.setLintOptions(instantiator.newInstance(LintOptions.class));
@@ -62,7 +64,8 @@ public class AndroidConfigHelper {
         model.setJacoco(instantiator.newInstance(JacocoOptions.class));
         model.setAdbOptions(instantiator.newInstance(AdbOptions.class));
         model.setSplits(instantiator.newInstance(Splits.class, instantiator));
-        model.setLibraryRequests(Lists.<LibraryRequest>newArrayList());
+        model.setLibraryRequests(new ArrayList<>());
+        model.setFlavorSelection(new HashMap<>());
         model.setBuildToolsRevision(AndroidBuilder.DEFAULT_BUILD_TOOLS_REVISION);
     }
 
@@ -80,41 +83,82 @@ public class AndroidConfigHelper {
                 sourceSet -> {
                     ConfigurationContainer configurations = project.getConfigurations();
 
-                    createConfiguration(
+                    final String implementationName = sourceSet.getImplementationConfigurationName();
+                    final String runtimeOnlyName = sourceSet.getRuntimeOnlyConfigurationName();
+                    final String compileOnlyName = sourceSet.getCompileOnlyConfigurationName();
+
+                    // deprecated configurations first.
+                    final String compileName = sourceSet.getCompileConfigurationName();
+                    // due to compatibility with other plugins and with Gradle sync,
+                    // we have to keep 'compile' as resolvable.
+                    // TODO Fix this in gradle sync.
+                    Configuration compile = createConfiguration(
                             configurations,
-                            sourceSet.getCompileConfigurationName(),
-                            "Classpath for compiling the " + sourceSet.getName() + " sources.");
+                            compileName,
+                            String.format(CONFIG_DESC_OLD, "Compile", sourceSet.getName(), implementationName),
+                            "compile".equals(compileName) || "testCompile".equals(compileName) /*canBeResolved*/);
+                    compile.getAllDependencies().whenObjectAdded(
+                            new DeprecatedConfigurationAction(project, compile, implementationName));
 
                     String packageConfigDescription;
                     if (publishPackage) {
-                        packageConfigDescription =
-                                "Classpath only used when publishing '"
-                                        + sourceSet.getName()
-                                        + "'.";
+                        packageConfigDescription = String.format(CONFIG_DESC_OLD, "Publish", sourceSet.getName(), runtimeOnlyName);
                     } else {
-                        packageConfigDescription =
-                                "Classpath packaged with the compiled '"
-                                        + sourceSet.getName()
-                                        + "' classes.";
+                        packageConfigDescription = String.format(CONFIG_DESC_OLD, "Apk", sourceSet.getName(), runtimeOnlyName);
                     }
-                    createConfiguration(
+
+                    Configuration apk = createConfiguration(
                             configurations,
                             sourceSet.getPackageConfigurationName(),
                             packageConfigDescription);
+                    apk.getAllDependencies().whenObjectAdded(
+                            new DeprecatedConfigurationAction(project, apk, runtimeOnlyName));
 
-                    createConfiguration(
+                    Configuration provided = createConfiguration(
                             configurations,
                             sourceSet.getProvidedConfigurationName(),
-                            "Classpath for only compiling the "
-                                    + sourceSet.getName()
-                                    + " sources.");
+                            String.format(CONFIG_DESC_OLD, "Provided", sourceSet.getName(), compileOnlyName));
+                    provided.getAllDependencies().whenObjectAdded(
+                            new DeprecatedConfigurationAction(project, provided, compileOnlyName));
 
-                    createConfiguration(
+                    // then the new configurations.
+                    String apiName = sourceSet.getApiConfigurationName();
+                    Configuration api = null;
+                    if (apiName != null) {
+                        api = createConfiguration(
+                                configurations,
+                                apiName,
+                                String.format(CONFIG_DESC, "API", sourceSet.getName()));
+                        api.extendsFrom(compile);
+                    }
+
+                    Configuration implementation = createConfiguration(
+                            configurations,
+                            implementationName,
+                            String.format(CONFIG_DESC, "Implementation only", sourceSet.getName()));
+                    if (api != null) {
+                        implementation.extendsFrom(api);
+                    }
+
+                    Configuration runtimeOnly = createConfiguration(
+                            configurations,
+                            runtimeOnlyName,
+                            String.format(CONFIG_DESC, "Runtime only", sourceSet.getName()));
+                    runtimeOnly.extendsFrom(apk);
+
+                    Configuration compileOnly = createConfiguration(
+                            configurations,
+                            compileOnlyName,
+                            String.format(CONFIG_DESC, "Compile only", sourceSet.getName()));
+                    compileOnly.extendsFrom(provided);
+
+                    // then the secondary configurations.
+                    Configuration wearConfig = createConfiguration(
                             configurations,
                             sourceSet.getWearAppConfigurationName(),
                             "Link to a wear app to embed for object '"
                                     + sourceSet.getName()
-                                    + "}'.");
+                                    + "'.");
 
                     createConfiguration(
                             configurations,
@@ -125,33 +169,62 @@ public class AndroidConfigHelper {
 
                     createConfiguration(
                             configurations,
-                            sourceSet.getWearAppConfigurationName(),
-                            "Link to a wear app to embed for object '${sourceSet.name}'.");
-
-                    createConfiguration(
-                            configurations,
                             sourceSet.getJackPluginConfigurationName(),
                             String.format(
-                                    "Classpath for the '%s' Jack plugins.", sourceSet.getName()));
-
+                                    "Classpath for the '%s' Jack plugins.",
+                                    sourceSet.getName()));
                     sourceSet.setRoot(String.format("src/%s", sourceSet.getName()));
                 });
         return sourceSetsContainer;
     }
 
-    private static void createConfiguration(
+    /**
+     * Creates a Configuration for a given source set.
+     *
+     * The configuration cannot be resolved
+     *
+     * @param configurations the configuration container to create the new configuration
+     * @param name the name of the configuration to create.
+     * @param description the configuration description.
+     * @return the configuration
+     *
+     * @see Configuration#isCanBeResolved()
+     */
+    private static Configuration createConfiguration(
             @NonNull ConfigurationContainer configurations,
-            @NonNull String configurationName,
-            @NonNull String configurationDescription) {
-        Configuration configuration = configurations.findByName(configurationName);
-        if (configuration == null) {
-            configuration = configurations.create(configurationName);
-        }
+            @NonNull String name,
+            @NonNull String description) {
+        return createConfiguration(configurations, name, description, false);
+    }
 
+    /**
+     * Creates a Configuration for a given source set.
+     *
+     * @param configurations the configuration container to create the new configuration
+     * @param name the name of the configuration to create.
+     * @param description the configuration description.
+     * @param canBeResolved Whether the configuration can be resolved directly.
+     * @return the configuration
+     *
+     * @see Configuration#isCanBeResolved()
+     */
+    private static Configuration createConfiguration(
+            @NonNull ConfigurationContainer configurations,
+            @NonNull String name,
+            @NonNull String description,
+            boolean canBeResolved) {
+        Configuration configuration = configurations.findByName(name);
+        if (configuration == null) {
+            configuration = configurations.create(name);
+        }
         // Disable modification to configurations as this causes issues when accessed through the
         // tooling-api.  Check that it works with Studio's ImportProjectAction before re-enabling
         // them.
         //configuration.setVisible(false);
-        //configuration.setDescription(configurationDescription);
+        //configuration.setDescription(description);
+        configuration.setCanBeConsumed(false);
+        configuration.setCanBeResolved(canBeResolved);
+
+        return configuration;
     }
 }

@@ -31,13 +31,9 @@ import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.utils.FileUtils;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
-import com.google.common.hash.HashCode;
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hashing;
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
 import java.io.File;
@@ -111,8 +107,7 @@ public class JacocoTransform extends Transform {
                         invocation
                                 .getOutputProvider()
                                 .getContentLocation(
-                                        // FIXME this should be changed when the transform input have unique names.
-                                        getOutputName(inputDir),
+                                        directoryInput.getName(),
                                         getOutputTypes(),
                                         getScopes(),
                                         Format.DIRECTORY);
@@ -128,14 +123,6 @@ public class JacocoTransform extends Transform {
                 }
             }
         }
-    }
-
-    @NonNull
-    private static String getOutputName(@NonNull File directory) {
-        // add a hash of the original file path.
-        HashFunction hashFunction = Hashing.sha1();
-        HashCode hashCode = hashFunction.hashString(directory.getAbsolutePath(), Charsets.UTF_16LE);
-        return Files.getNameWithoutExtension(directory.getName()) + "_" + hashCode.toString();
     }
 
     private static void instrumentFilesIncremental(
@@ -159,6 +146,10 @@ public class JacocoTransform extends Transform {
                     // fall through
                 case CHANGED:
                     instrumentFile(instrumenter, inputFile, outputFile);
+                    break;
+                case NOTCHANGED:
+                    // do nothing
+                    break;
             }
         }
     }

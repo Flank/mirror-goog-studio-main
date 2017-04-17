@@ -239,9 +239,7 @@ public class JackCompileTransform extends Transform {
     @Override
     public Set<QualifiedContent.Scope> getReferencedScopes() {
         return Sets.immutableEnumSet(
-                QualifiedContent.Scope.PROJECT_LOCAL_DEPS,
                 QualifiedContent.Scope.SUB_PROJECTS,
-                QualifiedContent.Scope.PROJECT_LOCAL_DEPS,
                 QualifiedContent.Scope.PROVIDED_ONLY,
                 QualifiedContent.Scope.EXTERNAL_LIBRARIES,
                 QualifiedContent.Scope.TESTED_CODE);

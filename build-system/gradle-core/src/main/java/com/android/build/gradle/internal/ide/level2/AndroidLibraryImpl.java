@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.ide.level2;
 
 import static com.android.SdkConstants.FD_AIDL;
 import static com.android.SdkConstants.FD_ASSETS;
+import static com.android.SdkConstants.FD_JARS;
 import static com.android.SdkConstants.FD_JNI;
 import static com.android.SdkConstants.FD_RENDERSCRIPT;
 import static com.android.SdkConstants.FD_RES;
@@ -32,7 +33,6 @@ import static com.android.utils.FileUtils.relativePossiblyNonExistingPath;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.dependency.level2.AndroidDependency;
 import com.android.builder.model.level2.Library;
 import com.google.common.collect.Lists;
 import java.io.File;
@@ -49,27 +49,20 @@ public final class AndroidLibraryImpl implements Library, Serializable {
 
     @NonNull
     private final String address;
-    @NonNull
-    private final File artifactFile;
+    @Nullable private final File artifactFile;
     @NonNull
     private final File folder;
-    @NonNull
-    private final String jarsRootFolder;
     @NonNull
     private final List<String> localJarPath;
 
     public AndroidLibraryImpl(
-            @NonNull AndroidDependency androidDependency,
+            @NonNull String address,
+            @Nullable File artifactFile,
+            @NonNull File folder,
             @NonNull Collection<File> localJarOverride) {
-        this.address = androidDependency.getAddress().toString();
-        this.artifactFile = androidDependency.getArtifactFile();
-        this.folder = androidDependency.getExtractedFolder();
-
-        // compute relate jars folder
-        jarsRootFolder =
-                relativePossiblyNonExistingPath(
-                        androidDependency.getJarFile().getParentFile(), folder).intern();
-
+        this.address = address;
+        this.artifactFile = artifactFile;
+        this.folder = folder;
         // TODO Fix me once we are always extracting AARs during sync.
         localJarPath = Lists.newArrayListWithCapacity(localJarOverride.size());
         for (File localJar : localJarOverride) {
@@ -91,6 +84,10 @@ public final class AndroidLibraryImpl implements Library, Serializable {
     @NonNull
     @Override
     public File getArtifact() {
+        if (artifactFile == null) {
+            throw new UnsupportedOperationException(
+                    "getArtifact() cannot be called when getType() returns ANDROID_LIBRARY");
+        }
         return artifactFile;
     }
 
@@ -109,7 +106,7 @@ public final class AndroidLibraryImpl implements Library, Serializable {
     @NonNull
     @Override
     public String getJarFile() {
-        return jarsRootFolder + File.separatorChar + FN_CLASSES_JAR;
+        return FD_JARS + File.separatorChar + FN_CLASSES_JAR;
     }
 
     @NonNull
@@ -157,13 +154,13 @@ public final class AndroidLibraryImpl implements Library, Serializable {
     @NonNull
     @Override
     public String getLintJar() {
-        return jarsRootFolder + File.separatorChar + FN_LINT_JAR;
+        return FD_JARS + File.separatorChar + FN_LINT_JAR;
     }
 
     @NonNull
     @Override
     public String getExternalAnnotations() {
-        return jarsRootFolder + File.separatorChar + FN_ANNOTATIONS_ZIP;
+        return FD_JARS + File.separatorChar + FN_ANNOTATIONS_ZIP;
     }
 
     @NonNull
@@ -204,12 +201,11 @@ public final class AndroidLibraryImpl implements Library, Serializable {
         return Objects.equals(address, that.address) &&
                 Objects.equals(artifactFile, that.artifactFile) &&
                 Objects.equals(folder, that.folder) &&
-                Objects.equals(jarsRootFolder, that.jarsRootFolder) &&
                 Objects.equals(localJarPath, that.localJarPath);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(address, artifactFile, folder, jarsRootFolder, localJarPath);
+        return Objects.hash(address, artifactFile, folder, localJarPath);
     }
 }

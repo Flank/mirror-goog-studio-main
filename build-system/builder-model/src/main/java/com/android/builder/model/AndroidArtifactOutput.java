@@ -17,14 +17,14 @@
 package com.android.builder.model;
 
 import com.android.annotations.NonNull;
-import com.android.build.VariantOutput;
+import com.android.build.OutputFile;
 import java.io.File;
 
 /**
- * The Actual output for a {@link AndroidArtifact}, which can be one file at the minimum or
- * several APKs in case of pure splits configuration.
+ * The Actual output for a {@link AndroidArtifact}, which can be one file at the minimum or several
+ * APKs in case of pure splits configuration.
  */
-public interface AndroidArtifactOutput extends VariantOutput {
+public interface AndroidArtifactOutput extends OutputFile {
 
     /**
      * Returns the name of the task used to generate this artifact output.
@@ -32,6 +32,7 @@ public interface AndroidArtifactOutput extends VariantOutput {
      * @return the name of the task.
      */
     @NonNull
+    @Deprecated
     String getAssembleTaskName();
 
     /**

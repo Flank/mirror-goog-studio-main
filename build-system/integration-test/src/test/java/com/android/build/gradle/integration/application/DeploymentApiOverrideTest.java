@@ -21,7 +21,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.AssumeUtil;
-import com.android.builder.model.AndroidProject;
+import com.android.build.gradle.options.IntegerOption;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -39,7 +39,6 @@ public class DeploymentApiOverrideTest {
 
     @BeforeClass
     public static void checkBuildTools() {
-        AssumeUtil.assumeNotUsingJack();
         AssumeUtil.assumeBuildToolsAtLeast(21);
     }
 
@@ -53,9 +52,10 @@ public class DeploymentApiOverrideTest {
 
     @Test
     public void testMultiDexOnPost21Build() throws Exception {
-        GradleBuildResult lastBuild = project.executor()
-                .withProperty(AndroidProject.PROPERTY_BUILD_API, 21)
-                .run("clean", "assembleIcsDebug");
+        GradleBuildResult lastBuild =
+                project.executor()
+                        .with(IntegerOption.IDE_TARGET_DEVICE_API, 21)
+                        .run("clean", "assembleIcsDebug");
         assertThat(lastBuild).isNotNull();
         assertThat(lastBuild.getStdout()).doesNotContain("Multidexlist");
 
@@ -63,9 +63,10 @@ public class DeploymentApiOverrideTest {
 
     @Test
     public void testMultiDexOnReleaseBuild() throws Exception {
-        GradleBuildResult lastBuild = project.executor()
-                .withProperty(AndroidProject.PROPERTY_BUILD_API, 21)
-                .run("clean", "assembleIcsRelease");
+        GradleBuildResult lastBuild =
+                project.executor()
+                        .with(IntegerOption.IDE_TARGET_DEVICE_API, 21)
+                        .run("clean", "assembleIcsRelease");
         assertThat(lastBuild).isNotNull();
         assertThat(lastBuild.getStdout()).contains("Multidexlist");
 

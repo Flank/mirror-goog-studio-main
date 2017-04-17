@@ -95,6 +95,7 @@ public class BuildTypeTest {
 
                     // Manually call getters that don't need to be copied.
                     original.getUseJack();
+                    original.getPostprocessingConfiguration();
                 });
     }
 

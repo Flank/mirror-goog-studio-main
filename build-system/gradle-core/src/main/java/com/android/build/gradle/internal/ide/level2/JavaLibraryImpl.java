@@ -35,9 +35,13 @@ public final class JavaLibraryImpl implements Library, Serializable {
     @NonNull
     private final File artifactFile;
 
+    public JavaLibraryImpl(@NonNull String address, @NonNull File artifactFile) {
+        this.address = address;
+        this.artifactFile = artifactFile;
+    }
+
     public JavaLibraryImpl(@NonNull JavaDependency javaDependency) {
-        this.address = javaDependency.getAddress().toString();
-        this.artifactFile = javaDependency.getArtifactFile();
+        this(javaDependency.getAddress().toString(), javaDependency.getArtifactFile());
     }
 
     @Override

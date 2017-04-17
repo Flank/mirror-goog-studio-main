@@ -20,8 +20,9 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
+import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.IntegerOption;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.NativeAndroidProject;
 import com.android.builder.model.SyncIssue;
@@ -29,7 +30,6 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
@@ -55,19 +55,19 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
 
     public enum Feature {
         /** full dependencies, including package graph, and provided and skipped properties. */
-        FULL_DEPENDENCIES(AndroidProject.PROPERTY_BUILD_MODEL_FEATURE_FULL_DEPENDENCIES);
+        FULL_DEPENDENCIES(BooleanOption.IDE_BUILD_MODEL_FEATURE_FULL_DEPENDENCIES),
+        ;
 
-        private String featureName;
+        private BooleanOption option;
 
-        Feature(String featureName) {
-            this.featureName = featureName;
+        Feature(BooleanOption option) {
+            this.option = option;
         }
     }
 
-    private boolean mAssertNoSyncIssues = true;
+    private int mMaxSyncIssueSeverityLevel = 0;
 
     private int modelLevel = AndroidProject.MODEL_LEVEL_LATEST;
-    private final List<String> modelFeatures = Lists.newArrayList();
 
     BuildModel(@NonNull GradleTestProject project, @NonNull ProjectConnection projectConnection) {
         super(
@@ -79,19 +79,31 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
                 project.getProfileDirectory(),
                 project.isImprovedDependencyEnabled(),
                 project.getHeapSize());
+        with(
+                BooleanOption.ENABLE_IMPROVED_DEPENDENCY_RESOLUTION,
+                project.isImprovedDependencyEnabled());
     }
 
     /** Do not fail if there are sync issues */
     public BuildModel ignoreSyncIssues() {
         Preconditions.checkState(modelLevel != AndroidProject.MODEL_LEVEL_0_ORIGINAL,
                 "Studio 1 was not aware of sync issues.");
-        mAssertNoSyncIssues = false;
+        mMaxSyncIssueSeverityLevel = SyncIssue.SEVERITY_ERROR;
+        return this;
+    }
+
+    public BuildModel ignoreSyncIssueWarnings() {
+        Preconditions.checkState(
+                modelLevel != AndroidProject.MODEL_LEVEL_0_ORIGINAL,
+                "Studio 1 was not aware of sync issues.");
+        mMaxSyncIssueSeverityLevel = SyncIssue.SEVERITY_WARNING;
         return this;
     }
 
     /** Fetch the model as studio 1.0 would. */
     public BuildModel asStudio1() {
-        Preconditions.checkState(mAssertNoSyncIssues, "Studio 1 was not aware of sync issues.");
+        Preconditions.checkState(
+                mMaxSyncIssueSeverityLevel == 0, "Studio 1 was not aware of sync issues.");
         return level(AndroidProject.MODEL_LEVEL_0_ORIGINAL);
     }
 
@@ -106,7 +118,7 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
     }
 
     public BuildModel withFeature(Feature feature) {
-        modelFeatures.add(feature.featureName);
+        with(feature.option, true);
         return this;
     }
 
@@ -117,7 +129,7 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
      */
     public ModelContainer<AndroidProject> getSingle() throws IOException {
         ModelContainer<AndroidProject> container = getSingleModel(AndroidProject.class);
-        if (mAssertNoSyncIssues) {
+        if (mMaxSyncIssueSeverityLevel > 0) {
             AndroidProject project = Iterables.getOnlyElement(container.getModelMap().values());
             assertNoSyncIssues(project.getName(), project);
         }
@@ -161,8 +173,8 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
     /** Returns a project model for each sub-project. */
     public ModelContainer<AndroidProject> getMulti() throws IOException {
         ModelContainer<AndroidProject> container = getMultiContainer(AndroidProject.class);
-        if (mAssertNoSyncIssues) {
-            container.getModelMap().forEach(BuildModel::assertNoSyncIssues);
+        if (mMaxSyncIssueSeverityLevel > 0) {
+            container.getModelMap().forEach(this::assertNoSyncIssues);
         }
         return container;
     }
@@ -194,10 +206,7 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
     @NonNull
     public List<String> getTaskList() throws IOException {
         GradleProject project =
-                projectConnection
-                        .model(GradleProject.class)
-                        .withArguments(getCommonArguments())
-                        .get();
+                projectConnection.model(GradleProject.class).withArguments(getArguments()).get();
 
         return project.getTasks().stream().map(GradleTask::getName).collect(Collectors.toList());
     }
@@ -213,33 +222,23 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
             @NonNull BuildAction<ModelContainer<T>> action, int modelLevel) throws IOException {
         BuildActionExecuter<ModelContainer<T>> executor = this.projectConnection.action(action);
 
-        List<String> arguments = Lists.newArrayListWithCapacity(5);
-        arguments.addAll(getCommonArguments());
-        arguments.add("-P" + AndroidProject.PROPERTY_BUILD_MODEL_ONLY + "=true");
-        arguments.add("-P" + AndroidProject.PROPERTY_INVOKED_FROM_IDE + "=true");
-        arguments.add("-P" + AndroidGradleOptions.PROPERTY_BUILD_CACHE_DIR + "=" + getBuildCacheDir());
+        with(BooleanOption.IDE_BUILD_MODEL_ONLY, true);
+        with(BooleanOption.IDE_INVOKED_FROM_IDE, true);
+
 
         switch (modelLevel) {
             case AndroidProject.MODEL_LEVEL_0_ORIGINAL:
                 // nothing.
                 break;
             case AndroidProject.MODEL_LEVEL_2_DONT_USE:
-                arguments.add("-P" + AndroidProject.PROPERTY_BUILD_MODEL_ONLY_VERSIONED + "="
-                        + modelLevel);
+                with(IntegerOption.IDE_BUILD_MODEL_ONLY_VERSION, modelLevel);
                 // intended fall-through
             case AndroidProject.MODEL_LEVEL_1_SYNC_ISSUE:
-                arguments.add("-P" + AndroidProject.PROPERTY_BUILD_MODEL_ONLY_ADVANCED + "=true");
+                with(BooleanOption.IDE_BUILD_MODEL_ONLY_ADVANCED, true);
                 break;
             default:
                 throw new RuntimeException("Unsupported ModelLevel");
         }
-
-        // model feature
-        for (String feature : modelFeatures) {
-            arguments.add("-P" + feature + "=true");
-        }
-
-        arguments.addAll(super.arguments);
 
         setJvmArguments(executor);
 
@@ -252,7 +251,7 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
         // See ProfileCapturer javadoc for explanation.
         try (Closeable ignored =
                 new ProfileCapturer(benchmarkRecorder, benchmarkMode, profilesDirectory)) {
-            return executor.withArguments(arguments).run();
+            return executor.withArguments(getArguments()).run();
         } catch (GradleConnectionException e) {
             exception = e;
             throw e;
@@ -262,11 +261,17 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
         }
     }
 
-    private static void assertNoSyncIssues(@NonNull String name, @NonNull AndroidProject project) {
-        if (!project.getSyncIssues().isEmpty()) {
+    private void assertNoSyncIssues(@NonNull String name, @NonNull AndroidProject project) {
+        List<SyncIssue> filteredIssues =
+                project.getSyncIssues()
+                        .stream()
+                        .filter(syncIssue -> syncIssue.getSeverity() > mMaxSyncIssueSeverityLevel)
+                        .collect(Collectors.toList());
+
+        if (!filteredIssues.isEmpty()) {
             StringBuilder msg = new StringBuilder();
             msg.append("Project ").append(name).append(" had sync issues :\n");
-            for (SyncIssue syncIssue : project.getSyncIssues()) {
+            for (SyncIssue syncIssue : filteredIssues) {
                 msg.append(
                         MoreObjects.toStringHelper(SyncIssue.class)
                                 .add(

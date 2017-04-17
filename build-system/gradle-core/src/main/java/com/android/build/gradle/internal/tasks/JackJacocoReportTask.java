@@ -22,7 +22,6 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.TestVariantData;
-import com.android.build.gradle.tasks.InputFilesSupplier;
 import com.android.ide.common.process.ProcessException;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -30,6 +29,7 @@ import com.google.common.io.Files;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Supplier;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.InputFile;
@@ -47,7 +47,7 @@ public class JackJacocoReportTask extends BaseTask {
 
     private File reportDir;
 
-    private InputFilesSupplier sourceDir;
+    private Supplier<Collection<File>> sourceDir;
 
     private String reportName;
 
@@ -114,7 +114,7 @@ public class JackJacocoReportTask extends BaseTask {
         getBuilder().createJacocoReportWithJackReporter(
                 Iterables.getOnlyElement(coverageFiles),
                 getReportDir(),
-                sourceDir.getLastValue(),
+                sourceDir.get(),
                 getReportName(),
                 getMetadataFile());
     }
@@ -158,7 +158,7 @@ public class JackJacocoReportTask extends BaseTask {
             task.coverageDirectory =
                     ((TestVariantData) scope.getVariantData()).connectedTestTask.getCoverageDir();
 
-            task.sourceDir = InputFilesSupplier.from(() ->
+            task.sourceDir = TaskInputHelper.bypassFileSupplier(() ->
                             testedScope.getVariantData().getJavaSourceFoldersForCoverage());
 
             task.setReportDir(testedScope.getCoverageReportDir());

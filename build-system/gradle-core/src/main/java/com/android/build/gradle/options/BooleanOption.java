@@ -21,21 +21,24 @@ import com.android.builder.model.AndroidProject;
 
 public enum BooleanOption implements Option<Boolean> {
     ENABLE_AAPT2("android.enableAapt2"),
+    ENABLE_IN_PROCESS_AAPT2("android.enableAapt2jni", true),
     ENABLE_BUILD_CACHE("android.enableBuildCache", true),
     ENABLE_PROFILE_JSON("android.enableProfileJson", true),
     ENABLE_SDK_DOWNLOAD("android.builder.sdkDownload", true),
     ENABLE_TEST_SHARDING("android.androidTest.shardBetweenDevices"),
     ENABLE_DEX_ARCHIVE("android.useDexArchive", true),
     ENABLE_NEW_RESOURCE_PROCESSING("android.enableNewResourceProcessing", true),
+    ENABLE_IMPROVED_DEPENDENCY_RESOLUTION("android.enableImprovedDependenciesResolution", true),
     ENABLE_INTERMEDIATE_ARTIFACTS_CACHE("android.enableIntermediateArtifactsCache", true),
     VERSION_CHECK_OVERRIDE_PROPERTY("android.overrideVersionCheck"),
     VERSION_CHECK_OVERRIDE_PROPERTY_OLD("com.android.build.gradle.overrideVersionCheck"),
     OVERRIDE_PATH_CHECK_PROPERTY("android.overridePathCheck"),
     OVERRIDE_PATH_CHECK_PROPERTY_OLD("com.android.build.gradle.overridePathCheck"),
     ENABLE_DESUGAR("android.enableDesugar", true),
+    ENABLE_FEATURE_SPLIT_TRANSITIONAL_ATTRIBUTES(
+            "android.enableFeatureSplitTransitionalAttributes", true),
 
     ENABLE_DEPRECATED_NDK("android.useDeprecatedNdk"),
-    ENABLE_IMPROVED_DEPENDENCY_RESOLUTION("android.enableImprovedDependenciesResolution", true),
     DISABLE_RESOURCE_VALIDATION("android.disableResourceValidation"),
 
     /** Set to true to build native .so libraries only for the device it will be run on. */

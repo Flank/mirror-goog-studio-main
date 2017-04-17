@@ -21,6 +21,8 @@ import static com.google.common.truth.Truth.assert_;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.fixture.Logcat;
+import com.android.build.gradle.integration.common.fixture.app.TransformOutputContent;
+import com.android.build.gradle.internal.pipeline.SubStream;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Dependencies;
@@ -31,7 +33,6 @@ import com.android.builder.model.SyncIssue;
 import com.android.builder.model.Variant;
 import com.android.testutils.apk.Aar;
 import com.android.testutils.apk.Apk;
-import com.android.testutils.apk.AtomBundle;
 import com.android.testutils.apk.SplitApks;
 import com.android.testutils.incremental.FileRecord;
 import com.android.testutils.truth.FileRecordSubject;
@@ -151,11 +152,6 @@ public class TruthHelper {
     }
 
     @NonNull
-    public static AtomBundleSubject assertThat(@NonNull AtomBundle atombundle) {
-        return assert_().about(AtomBundleSubject.FACTORY).that(atombundle);
-    }
-
-    @NonNull
     public static ModelSubject assertThat(@Nullable AndroidProject androidProject) {
         return assert_().about(ModelSubject.Factory.get()).that(androidProject);
     }
@@ -216,6 +212,16 @@ public class TruthHelper {
     @NonNull
     public static NativeAndroidProjectSubject assertThat(@Nullable NativeAndroidProject project) {
         return assert_().about(NativeAndroidProjectSubject.Factory.get()).that(project);
+    }
+
+    @NonNull
+    public static TransformOutputSubject assertThat(@Nullable TransformOutputContent content) {
+        return assert_().about(TransformOutputSubject.Factory.get()).that(content);
+    }
+
+    @NonNull
+    public static SubStreamSubject assertThat(@Nullable SubStream stream) {
+        return assert_().about(SubStreamSubject.Factory.get()).that(stream);
     }
 
     // ---- helper method from com.google.common.truth.Truth

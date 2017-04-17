@@ -44,11 +44,6 @@ public class FlavoredTest {
     }
 
     @Test
-    public void testBuild() {
-        // need a test so that non connected tests do run this build.
-    }
-
-    @Test
     @Category(DeviceTests.class)
     public void connectedCheck() throws Exception {
         project.executeConnectedCheck();

@@ -1,4 +1,4 @@
-import com.android.build.OutputFile;
+import com.android.build.OutputFile
 
 apply from: "../commonHeader.gradle"
 buildscript { apply from: "../commonBuildScript.gradle" }
@@ -35,11 +35,15 @@ android {
 ext.versionCodes = [all:1, mdpi:2, hdpi:3, xhdpi:4, xxhdpi:5]
 
 android.applicationVariants.all { variant ->
-  // assign different version code for each output
-  variant.outputs.each { output ->
+  variant.outputs.all { output ->
+    println("Customizing " + output)
     def key = output.getFilter(OutputFile.DENSITY) == null ? "all" : output.getFilter(OutputFile.DENSITY)
     def code = project.ext.versionCodes.get(key) * 100 + android.defaultConfig.versionCode
-    output.versionCodeOverride = code
-    output.versionNameOverride = "version ${code}"
+    println "Setting " + output + " version to " + code
+    output.setVersionCodeOverride(code)
+    output.setVersionNameOverride("version ${code}")
+    println("Done with " + output)
   }
 }
+
+

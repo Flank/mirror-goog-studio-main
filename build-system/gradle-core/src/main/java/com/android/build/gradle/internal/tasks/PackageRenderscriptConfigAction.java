@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.tasks;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -27,9 +26,13 @@ import org.gradle.api.tasks.Sync;
 public class PackageRenderscriptConfigAction implements TaskConfigAction<Sync> {
 
     @NonNull private VariantScope variantScope;
+    private File destDir;
 
-    public PackageRenderscriptConfigAction(@NonNull VariantScope variantScope) {
+    public PackageRenderscriptConfigAction(
+            @NonNull VariantScope variantScope,
+            @NonNull File destDir) {
         this.variantScope = variantScope;
+        this.destDir = destDir;
     }
 
     @NonNull
@@ -50,7 +53,6 @@ public class PackageRenderscriptConfigAction implements TaskConfigAction<Sync> {
         packageRenderscript
                 .from(variantScope.getVariantConfiguration().getRenderscriptSourceList())
                 .include("**/*.rsh");
-        packageRenderscript.into(
-                new File(variantScope.getBaseBundleDir(), SdkConstants.FD_RENDERSCRIPT));
+        packageRenderscript.into(destDir);
     }
 }

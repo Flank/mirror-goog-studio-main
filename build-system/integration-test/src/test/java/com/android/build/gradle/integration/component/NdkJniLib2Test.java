@@ -28,7 +28,6 @@ import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestPr
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.common.utils.ZipHelper;
-import com.android.testutils.apk.Aar;
 import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableMap;
@@ -112,15 +111,10 @@ public class NdkJniLib2Test {
     public void checkSoAreIncludedInBothAppAndLibrary() throws Exception {
         project.execute("clean", ":app:assembleDebug");
 
-        Aar releaseAar = project.getSubproject("lib").getAar("release");
-        assertThat(releaseAar).contains("jni/x86/libhello-jni.so");
-
         Apk app = project.getSubproject("app").getApk("debug");
         assertThat(app).contains("lib/x86/libhello-jni.so");
 
-        File lib = ZipHelper.extractFile(releaseAar, "jni/x86/libhello-jni.so");
-        assertThatNativeLib(lib).isStripped();
-        lib = ZipHelper.extractFile(app, "lib/x86/libhello-jni.so");
+        File lib = ZipHelper.extractFile(app, "lib/x86/libhello-jni.so");
         assertThatNativeLib(lib).isStripped();
     }
 
@@ -144,7 +138,5 @@ public class NdkJniLib2Test {
                 .run(":app:assembleDebug");
         assertThat(result.getTask(":app:linkEmptyArmeabiDebugSharedLibrary"))
                 .wasExecuted();
-        assertThat(result.getTask(":app:linkEmptyArmeabiDebugSharedLibrary"))
-                .ranAfter(":app:prepareDebugDependencies");
     }
 }

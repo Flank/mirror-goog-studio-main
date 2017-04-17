@@ -16,30 +16,53 @@
 
 package com.android.build.gradle.integration.application;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import org.junit.Rule;
+import org.junit.AfterClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 /** Assemble tests for dependencyChecker. */
 public class DependencyCheckerTest {
 
-    @Rule
-    public GradleTestProject project = GradleTestProject.builder()
-            .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
-            .create();
+    @ClassRule
+    public static GradleTestProject project =
+            GradleTestProject.builder()
+                    .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
+                    .create();
+
+    @AfterClass
+    public static void tearDown() {
+        project = null;
+    }
 
     @Test
-    public void httpComponents() throws Exception {
-        TestFileUtils.appendToFile(project.getBuildFile(), "\n"
-                + "dependencies.compile 'org.apache.httpcomponents:httpclient:4.1.1'\n");
+    public void checkHttpComponentsisRemoved() throws Exception {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n" + "dependencies.compile 'org.apache.httpcomponents:httpclient:4.1.1'\n");
 
-        GradleBuildResult result = project.executor().run("clean", "assembleDebug");
-        assertThat(result.getStdout())
-                .contains("Dependency org.apache.httpcomponents:httpclient:4.1.1 is ignored");
+        GradleBuildResult result = project.executor().expectFailure().run("assembleDebug");
+
+        // TODO: this error message seems broken as it doesn't include the reason if the rejection.
+        assertThat(result.getFailureMessage())
+                .isEqualTo(
+                        "Could not resolve all dependencies for configuration ':debugCompileClasspath'.");
+
+        // FIXME we should also check the model, but due to lack of leniency, it's not possible right now.
+        //
+        //ModelContainer<AndroidProject> modelContainer = project.model().getSingle();
+        //
+        //LibraryGraphHelper helper = new LibraryGraphHelper(modelContainer);
+        //
+        //Variant appDebug = ModelHelper.getVariant(modelContainer.getOnlyModel().getVariants(), "debug");
+        //
+        //DependencyGraphs compileGraph = appDebug.getMainArtifact().getDependencyGraphs();
+        //
+        //assertThat(helper.on(compileGraph).withType(JAVA).mapTo(COORDINATES)).isEmpty();
     }
 }

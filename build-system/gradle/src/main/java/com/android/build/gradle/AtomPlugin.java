@@ -16,117 +16,17 @@
 
 package com.android.build.gradle;
 
-import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.AtomTaskManager;
-import com.android.build.gradle.internal.DependencyManager;
-import com.android.build.gradle.internal.ExtraModelInfo;
-import com.android.build.gradle.internal.SdkHandler;
-import com.android.build.gradle.internal.TaskManager;
-import com.android.build.gradle.internal.dsl.BuildType;
-import com.android.build.gradle.internal.dsl.ProductFlavor;
-import com.android.build.gradle.internal.dsl.SigningConfig;
-import com.android.build.gradle.internal.ndk.NdkHandler;
-import com.android.build.gradle.internal.variant.AtomVariantFactory;
-import com.android.build.gradle.internal.variant.VariantFactory;
-import com.android.build.gradle.options.ProjectOptions;
-import com.android.builder.core.AndroidBuilder;
-import com.android.builder.model.AndroidProject;
-import com.android.builder.profile.Recorder;
-import com.google.wireless.android.sdk.stats.GradleBuildProject;
-import javax.inject.Inject;
-import org.gradle.api.NamedDomainObjectContainer;
+import org.gradle.api.GradleException;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.internal.reflect.Instantiator;
-import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
-/**
- * Gradle plugin class for 'atom' projects.
- */
-public class AtomPlugin extends BasePlugin implements Plugin<Project> {
-
-    @Inject
-    public AtomPlugin(Instantiator instantiator, ToolingModelBuilderRegistry registry) {
-        super(instantiator, registry);
-    }
-
-    @NonNull
-    @Override
-    protected BaseExtension createExtension(
-            @NonNull Project project,
-            @NonNull Instantiator instantiator,
-            @NonNull AndroidBuilder androidBuilder,
-            @NonNull SdkHandler sdkHandler,
-            @NonNull NamedDomainObjectContainer<BuildType> buildTypeContainer,
-            @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavorContainer,
-            @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigContainer,
-            @NonNull ExtraModelInfo extraModelInfo) {
-        return project.getExtensions()
-                .create(
-                        "android",
-                        AtomExtension.class,
-                        project,
-                        instantiator,
-                        androidBuilder,
-                        sdkHandler,
-                        buildTypeContainer,
-                        productFlavorContainer,
-                        signingConfigContainer,
-                        extraModelInfo);
-    }
-
-    @NonNull
-    @Override
-    protected GradleBuildProject.PluginType getAnalyticsPluginType() {
-        return GradleBuildProject.PluginType.ATOM;
-    }
-
-    @NonNull
-    @Override
-    protected VariantFactory createVariantFactory(
-            @NonNull Instantiator instantiator,
-            @NonNull AndroidBuilder androidBuilder,
-            @NonNull AndroidConfig androidConfig) {
-        return new AtomVariantFactory(instantiator, androidBuilder, androidConfig);
-    }
-
-    @Override
-    protected int getProjectType() {
-        return AndroidProject.PROJECT_TYPE_ATOM;
-    }
-
-    @NonNull
-    @Override
-    protected TaskManager createTaskManager(
-            @NonNull Project project,
-            @NonNull ProjectOptions projectOptions,
-            @NonNull AndroidBuilder androidBuilder,
-            @NonNull DataBindingBuilder dataBindingBuilder,
-            @NonNull AndroidConfig androidConfig,
-            @NonNull SdkHandler sdkHandler,
-            @NonNull NdkHandler ndkHandler,
-            @NonNull DependencyManager dependencyManager,
-            @NonNull ToolingModelBuilderRegistry toolingRegistry,
-            @NonNull Recorder threadRecorder) {
-        return new AtomTaskManager(
-                project,
-                projectOptions,
-                androidBuilder,
-                dataBindingBuilder,
-                androidConfig,
-                sdkHandler,
-                ndkHandler,
-                dependencyManager,
-                toolingRegistry,
-                threadRecorder);
-    }
+/** Gradle plugin class for 'atom' projects. */
+public class AtomPlugin implements Plugin<Project> {
 
     @Override
     public void apply(@NonNull Project project) {
-        super.apply(project);
-        // Default assemble task for the default-published artifact.
-        // This is needed for the prepare task on the consuming project.
-        project.getTasks().create("assembleDefaultAtom");
+        throw new GradleException(
+                "com.android.atom has been deprecated. Use com.android.feature instead.");
     }
 }

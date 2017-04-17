@@ -105,13 +105,13 @@ public interface SyncIssue {
     int TYPE_DEPENDENCY_WEAR_APK_WITH_UNBUNDLED = 20;
 
     /** Data is dependency coordinate/path. */
-    int TYPE_JAR_DEPEND_ON_ATOM = 21;
+    @Deprecated int TYPE_JAR_DEPEND_ON_ATOM = 21;
 
     /** Data is dependency coordinate/path. */
-    int TYPE_AAR_DEPEND_ON_ATOM = 22;
+    @Deprecated int TYPE_AAR_DEPEND_ON_ATOM = 22;
 
     /** Data is dependency coordinate/path. */
-    int TYPE_ATOM_DEPENDENCY_PROVIDED = 23;
+    @Deprecated int TYPE_ATOM_DEPENDENCY_PROVIDED = 23;
 
     /**
      * Indicates that a required SDK package was not installed. The data field contains the sdklib

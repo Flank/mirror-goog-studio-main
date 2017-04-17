@@ -124,7 +124,7 @@ public abstract class AbstractShrinker<T> {
                 if (classFilePath.startsWith(file.getAbsolutePath())) {
                     File outputDir =
                             output.getContentLocation(
-                                    FileUtils.getDirectoryNameForJar(file),
+                                    directoryOrJar.getName(),
                                     directoryOrJar.getContentTypes(),
                                     directoryOrJar.getScopes(),
                                     Format.DIRECTORY);

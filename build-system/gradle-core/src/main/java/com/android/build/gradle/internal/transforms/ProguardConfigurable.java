@@ -22,13 +22,10 @@ import com.android.build.api.transform.Transform;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.core.VariantType;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import java.io.File;
-import java.util.Collection;
-import java.util.List;
 import java.util.Set;
-import java.util.function.Supplier;
+import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.file.FileCollection;
 
 /**
  * Base class for transforms that consume ProGuard configuration files.
@@ -37,32 +34,28 @@ import java.util.function.Supplier;
  * code.
  */
 public abstract class ProguardConfigurable extends Transform {
-    private final List<Supplier<Collection<File>>> configurationFiles =
-            Lists.newArrayListWithExpectedSize(3);
+    private final ConfigurableFileCollection configurationFiles;
 
     private final VariantType variantType;
 
     ProguardConfigurable(@NonNull VariantScope scope) {
+        configurationFiles = scope.getGlobalScope().getProject().files();
         this.variantType = scope.getVariantData().getType();
     }
 
-    public void setConfigurationFiles(Supplier<Collection<File>> configFiles) {
-        configurationFiles.add(configFiles);
+    public void setConfigurationFiles(FileCollection configFiles) {
+        configurationFiles.from(configFiles);
     }
 
-    List<File> getAllConfigurationFiles() {
-        List<File> files = Lists.newArrayList();
-        for (Supplier<Collection<File>> supplier : configurationFiles) {
-            files.addAll(supplier.get());
-        }
-        return files;
+    FileCollection getAllConfigurationFiles() {
+        return configurationFiles;
     }
 
     @NonNull
     @Override
-    public Set<Scope> getScopes() {
+    public Set<? super Scope> getScopes() {
         if (variantType == VariantType.LIBRARY) {
-            return Sets.immutableEnumSet(Scope.PROJECT, Scope.PROJECT_LOCAL_DEPS);
+            return TransformManager.SCOPE_FULL_LIBRARY_WITH_LOCAL_JARS;
         }
 
         return TransformManager.SCOPE_FULL_PROJECT;
@@ -74,7 +67,6 @@ public abstract class ProguardConfigurable extends Transform {
         Set<Scope> set = Sets.newHashSetWithExpectedSize(5);
         if (variantType == VariantType.LIBRARY) {
             set.add(Scope.SUB_PROJECTS);
-            set.add(Scope.SUB_PROJECTS_LOCAL_DEPS);
             set.add(Scope.EXTERNAL_LIBRARIES);
         }
 

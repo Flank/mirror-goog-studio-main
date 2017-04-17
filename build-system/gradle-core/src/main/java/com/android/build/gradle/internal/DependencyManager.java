@@ -19,9 +19,7 @@ package com.android.build.gradle.internal;
 import static com.android.SdkConstants.DOT_JAR;
 import static com.android.SdkConstants.EXT_ANDROID_PACKAGE;
 import static com.android.SdkConstants.EXT_JAR;
-import static com.android.build.gradle.internal.TaskManager.DIR_ATOMBUNDLES;
 import static com.android.build.gradle.internal.TaskManager.DIR_BUNDLES;
-import static com.android.builder.core.BuilderConstants.EXT_ATOMBUNDLE_ARCHIVE;
 import static com.android.builder.core.BuilderConstants.EXT_LIB_ARCHIVE;
 import static com.android.builder.core.ErrorReporter.EvaluationMode.STANDARD;
 import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
@@ -30,17 +28,11 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidGradleOptions;
-import com.android.build.gradle.internal.dependency.DependencyGraph;
 import com.android.build.gradle.internal.dependency.MutableDependencyDataMap;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
-import com.android.build.gradle.internal.scope.AndroidTask;
-import com.android.build.gradle.internal.tasks.PrepareDependenciesTask;
 import com.android.build.gradle.internal.tasks.PrepareLibraryTask;
-import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.builder.dependency.MavenCoordinatesImpl;
 import com.android.builder.dependency.level2.AndroidDependency;
-import com.android.builder.dependency.level2.AtomDependency;
 import com.android.builder.dependency.level2.Dependency;
 import com.android.builder.dependency.level2.DependencyNode;
 import com.android.builder.dependency.level2.DependencyNode.NodeType;
@@ -54,7 +46,6 @@ import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -66,7 +57,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import org.gradle.api.CircularReferenceException;
-import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
@@ -110,42 +100,6 @@ public class DependencyManager {
         this.extraModelInfo = extraModelInfo;
         this.sdkHandler = sdkHandler;
         logger = new LoggerWrapper(Logging.getLogger(DependencyManager.class));
-    }
-
-    public void addDependenciesToPrepareTask(
-            @NonNull TaskFactory tasks,
-            @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData,
-            @NonNull AndroidTask<PrepareDependenciesTask> prepareDependenciesTask) {
-        VariantDependencies variantDeps = variantData.getVariantDependency();
-
-        final AndroidTask<DefaultTask> preBuildTask = variantData.getScope().getPreBuildTask();
-
-        final ImmutableList<AndroidDependency> compileLibraries = variantDeps
-                .getCompileDependencies().getAllAndroidDependencies();
-        final ImmutableList<AndroidDependency> packageLibraries = variantDeps
-                .getPackageDependencies().getAllAndroidDependencies();
-
-
-        // gather all the libraries first, then make the task depend on the list in a single
-        // pass.
-        List<PrepareLibraryTask> prepareLibraryTasks = Lists
-                .newArrayListWithCapacity(compileLibraries.size() + packageLibraries.size());
-
-        for (AndroidDependency dependency : Iterables.concat(compileLibraries, packageLibraries)) {
-            // skip sub-module since we don't extract them anymore.
-            if (dependency.getProjectPath() == null) {
-                PrepareLibraryTask prepareLibTask = prepareLibTaskMap
-                        .get(dependency.getCoordinates().toString());
-                if (prepareLibTask != null) {
-                    prepareLibraryTasks.add(prepareLibTask);
-                    prepareLibTask.dependsOn(preBuildTask.getName());
-                }
-            }
-        }
-
-        if (!prepareLibraryTasks.isEmpty()) {
-            prepareDependenciesTask.dependsOn(tasks, prepareLibraryTasks.toArray());
-        }
     }
 
     public Set<AndroidDependency> resolveDependencies(
@@ -243,8 +197,8 @@ public class DependencyManager {
             }
         }
 
-        Configuration compileClasspath = variantDeps.getCompileConfiguration();
-        Configuration packageClasspath = variantDeps.getPackageConfiguration();
+        Configuration compileClasspath = variantDeps.getCompileClasspath();
+        Configuration packageClasspath = variantDeps.getRuntimeClasspath();
 
         if (DEBUG_DEPENDENCY) {
             System.out.println(">>>>>>>>>>");
@@ -260,21 +214,18 @@ public class DependencyManager {
         Set<String> artifactSet = Sets.newHashSet();
 
         // start with package dependencies, record the artifacts
-        DependencyGraph packagedGraph;
         if (needPackageScope) {
-            packagedGraph =
-                    resolveConfiguration(
-                            packageClasspath,
-                            variantDeps,
-                            libsToExplodeOut,
-                            currentUnresolvedDependencies,
-                            testedProjectPath,
-                            artifactSet,
-                            ScopeType.PACKAGE,
-                            buildCache,
-                            projectLevelCache);
-        } else {
-            packagedGraph = DependencyGraph.getEmpty();
+            // packageGraph=
+            resolveConfiguration(
+                    packageClasspath,
+                    variantDeps,
+                    libsToExplodeOut,
+                    currentUnresolvedDependencies,
+                    testedProjectPath,
+                    artifactSet,
+                    ScopeType.PACKAGE,
+                    buildCache,
+                    projectLevelCache);
         }
 
         // then the compile dependencies, comparing against the record package dependencies
@@ -283,17 +234,17 @@ public class DependencyManager {
         // provided bits. This disables the checks on impossible provided libs (provided aar in
         // apk project).
         ScopeType scopeType = needPackageScope ? ScopeType.COMPILE : ScopeType.COMPILE_ONLY;
-        DependencyGraph compileDependencies =
-                resolveConfiguration(
-                        compileClasspath,
-                        variantDeps,
-                        libsToExplodeOut,
-                        currentUnresolvedDependencies,
-                        testedProjectPath,
-                        artifactSet,
-                        scopeType,
-                        buildCache,
-                        projectLevelCache);
+        //DependencyGraph compileDependencies =
+        resolveConfiguration(
+                compileClasspath,
+                variantDeps,
+                libsToExplodeOut,
+                currentUnresolvedDependencies,
+                testedProjectPath,
+                artifactSet,
+                scopeType,
+                buildCache,
+                projectLevelCache);
 
         if (extraModelInfo.getMode() != STANDARD &&
                 compileClasspath.getResolvedConfiguration().hasError()) {
@@ -306,8 +257,6 @@ public class DependencyManager {
                                 dependency));
             }
         }
-
-        variantDeps.setDependencies(compileDependencies, packagedGraph, needPackageScope);
 
         // Resolve annotationProcessorConfiguration.
         Configuration annotationProcessorConfiguration =
@@ -346,9 +295,7 @@ public class DependencyManager {
             for (AndroidLibrary lib : compileDependencies.getAndroidDependencies()) {
                 System.out.println("LIB: " + lib);
             }
-            for (AndroidAtom atom : compileDependencies.getAtomDependencies()) {
-                System.out.println("ATOM: " + atom);
-            }
+
             for (JavaLibrary jar : compileDependencies.getJarDependencies()) {
                 System.out.println("JAR: " + jar);
             }
@@ -379,7 +326,7 @@ public class DependencyManager {
     }
 
     @NonNull
-    private DependencyGraph resolveConfiguration(
+    private void resolveConfiguration(
             @NonNull Configuration configuration,
             @NonNull final VariantDependencies variantDeps,
             @NonNull Set<AndroidDependency> libsToExplodeOut,
@@ -410,7 +357,7 @@ public class DependencyManager {
         // create a container for all the dependency related mutable data, only when creating
         // the package dependencies for a test project.
         MutableDependencyDataMap mutableDependencyContainer = MutableDependencyDataMap.newInstance();
-                //scopeType == ScopeType.PACKAGE
+                //scopeType == ScopeType.RUNTIME
                 //    ? MutableDependencyDataMap.newInstance()
                 //    : MutableDependencyDataMap.EMPTY;
 
@@ -494,11 +441,11 @@ public class DependencyManager {
                 }
             }
         }
-
-        return new DependencyGraph(
-                dependencyMap,
-                dependencies,
-                mutableDependencyContainer);
+        //
+        //return new DependencyGraph(
+        //        dependencyMap,
+        //        dependencies,
+        //        mutableDependencyContainer);
     }
 
     /**
@@ -653,7 +600,7 @@ public class DependencyManager {
             if (DEBUG_DEPENDENCY) {
                 printIndent(indent, "NOT FOUND: " + moduleVersion.getName());
             }
-            // new dependency artifact! Might be a jar, an atom or a library
+            // new dependency artifact! Might be a jar, or a library
 
             // get the associated gradlepath
             ComponentIdentifier id = resolvedComponentResult.getId();
@@ -746,8 +693,6 @@ public class DependencyManager {
                             nodeType = NodeType.ANDROID;
                         } else if (alreadyCreatedDependency instanceof JavaDependency) {
                             nodeType = NodeType.JAVA;
-                        } else if (alreadyCreatedDependency instanceof AtomDependency) {
-                            nodeType = NodeType.ATOM;
                         } else {
                             throw new RuntimeException("Unknown type of Dependency");
                         }
@@ -801,12 +746,14 @@ public class DependencyManager {
                                 // artifact has a classifier that is the variant Name).
                                 // Otherwise the subproject only outputs a single artifact
                                 // and the location was set to default.
-                                String pathLeaf = variantName != null ? variantName : "default";
-
+                                if (variantName == null) {
+                                    throw new RuntimeException(
+                                            "Expected variantName in Android sub-project's classifier (" + project.getPath() + ")");
+                                }
                                 File stagingDir = FileUtils.join(
                                         subProject.getBuildDir(),
                                         FD_INTERMEDIATES, DIR_BUNDLES,
-                                        pathLeaf);
+                                        variantName);
 
                                 androidDependency = AndroidDependency.createStagedAarLibrary(
                                         artifact.getFile(),
@@ -868,81 +815,6 @@ public class DependencyManager {
                             if (!isSubProject) {
                                 libsToExplodeOut.add(androidDependency);
                             }
-
-                            // check this aar does not have a dependency on an atom, as this would
-                            // not work.
-                            if (containsDirectDependency(transitiveDependencies, NodeType.ATOM)) {
-                                configDependencies.getChecker()
-                                        .handleIssue(
-                                                createMavenCoordinates(artifact).toString(),
-                                                SyncIssue.TYPE_AAR_DEPEND_ON_ATOM,
-                                                SyncIssue.SEVERITY_ERROR,
-                                                String.format(
-                                                        "Module '%s' depends on one or more Android Atoms but is a library",
-                                                        moduleVersion));
-                            }
-                        } else if (EXT_ATOMBUNDLE_ARCHIVE.equals(artifact.getExtension())) {
-                            if (provided) {
-                                configDependencies.getChecker()
-                                        .handleIssue(
-                                                createMavenCoordinates(artifact).toString(),
-                                                SyncIssue.TYPE_ATOM_DEPENDENCY_PROVIDED,
-                                                SyncIssue.SEVERITY_ERROR,
-                                                String.format(
-                                                        "Module '%s' is an Atom, which cannot be a provided dependency",
-                                                        moduleVersion));
-                            }
-                            if (DEBUG_DEPENDENCY) {
-                                printIndent(indent, "TYPE: ATOM");
-                            }
-
-                            // if this is a package scope, then skip the dependencies.
-                            if (scopeType == ScopeType.PACKAGE) {
-                                recursiveSkip(
-                                        mutableDependencyDataMap,
-                                        transitiveDependencies,
-                                        outDependencyMap,
-                                        true /*skipAndroidDep*/,
-                                        true /*skipJavaDep*/);
-                            }
-
-                            String path = computeArtifactPath(moduleVersion, artifact);
-                            String name = computeArtifactName(moduleVersion, artifact);
-
-                            if (DEBUG_DEPENDENCY) {
-                                printIndent(indent, "NAME: " + name);
-                                printIndent(indent, "PATH: " + path);
-                            }
-
-                            final String variantName = artifact.getClassifier();
-
-                            // if there is a variant name then we use it for the leaf
-                            // (this means the subproject is publishing all its variants and each
-                            // artifact has a classifier that is the variant Name).
-                            // Otherwise the subproject only outputs a single artifact
-                            // and the location was set to default.
-                            String pathLeaf = variantName != null ? variantName : "default";
-
-                            Project subProject = project.findProject(gradlePath);
-                            File stagingDir = FileUtils.join(
-                                    subProject.getBuildDir(),
-                                    FD_INTERMEDIATES, DIR_ATOMBUNDLES,
-                                    pathLeaf);
-
-                            AtomDependency atomDependency = new AtomDependency(
-                                    artifact.getFile(),
-                                    mavenCoordinates,
-                                    name,
-                                    gradlePath,
-                                    stagingDir,
-                                    moduleVersion.getName() /* atomName */,
-                                    variantName);
-
-                            alreadyCreatedDependency = atomDependency;
-                            nodeType = NodeType.ATOM;
-
-                            outDependencyMap.put(atomDependency.getAddress(), atomDependency);
-
                         } else if (EXT_JAR.equals(artifact.getExtension())) {
                             if (DEBUG_DEPENDENCY) {
                                 printIndent(indent, "TYPE: JAR");
@@ -950,7 +822,8 @@ public class DependencyManager {
                             boolean isRootOfSeparateTestedApp = testedProjectPath != null
                                     && testedProjectPath.equals(gradlePath);
                             // check this jar does not have a dependency on an library, as this would not work.
-                            if (containsDirectDependency(transitiveDependencies, NodeType.ANDROID)) {
+                            // TODO reenable this. This is because we're seeing all the intermediate artifacts through this.
+                            if (false) {//containsDirectDependency(transitiveDependencies, NodeType.ANDROID))
                                 // there is one case where it's ok to have a jar depend on aars:
                                 // when a test project tests a separate app project, the code of the
                                 // app is published as a jar, but it brings in the dependencies
@@ -967,18 +840,6 @@ public class DependencyManager {
                                                             "Module '%s' depends on one or more Android Libraries but is a jar",
                                                             moduleVersion));
                                 }
-                            }
-
-                            // check this jar does not have a dependency on an atom, as this would not work.
-                            if (containsDirectDependency(transitiveDependencies, NodeType.ATOM)) {
-                                configDependencies.getChecker()
-                                        .handleIssue(
-                                                createMavenCoordinates(artifact).toString(),
-                                                SyncIssue.TYPE_JAR_DEPEND_ON_ATOM,
-                                                SyncIssue.SEVERITY_ERROR,
-                                                String.format(
-                                                        "Module '%s' depends on one or more Android Atoms but is a jar",
-                                                        moduleVersion));
                             }
 
                             JavaDependency javaDependency = new JavaDependency(
@@ -1024,15 +885,16 @@ public class DependencyManager {
                         } else if (EXT_ANDROID_PACKAGE.equals(artifact.getExtension())) {
                             String name = computeArtifactName(moduleVersion, artifact);
 
-                            configDependencies.getChecker().handleIssue(
-                                    name,
-                                    SyncIssue.TYPE_DEPENDENCY_IS_APK,
-                                    SyncIssue.SEVERITY_ERROR,
-                                    String.format(
-                                            "Dependency %s on project %s resolves to an APK archive "
-                                                    +
-                                                    "which is not supported as a compilation dependency. File: %s",
-                                            name, project.getName(), artifact.getFile()));
+                            configDependencies
+                                    .getChecker()
+                                    .handleIssue(
+                                            name,
+                                            SyncIssue.TYPE_DEPENDENCY_IS_APK,
+                                            SyncIssue.SEVERITY_ERROR,
+                                            String.format(
+                                                    "Dependency %s on project %s resolves to an APK archive "
+                                                            + "which is not supported as a compilation dependency. File: %s",
+                                                    name, project.getName(), artifact.getFile()));
                         } else if ("apklib".equals(artifact.getExtension())) {
                             String name = computeArtifactName(moduleVersion, artifact);
 

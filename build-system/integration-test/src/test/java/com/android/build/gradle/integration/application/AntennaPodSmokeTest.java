@@ -23,6 +23,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.PerformanceTestProjects;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
 import java.io.IOException;
@@ -72,7 +73,7 @@ public class AntennaPodSmokeTest {
         project.executor().run("clean");
 
         project.executor()
-                .withArgument("-Pandroid.injected.generateSourcesOnly=true")
+                .with(BooleanOption.IDE_GENERATE_SOURCES_ONLY, true)
                 .run(ModelHelper.getDebugGenerateSourcesCommands(models));
 
         project.executor().run(":app:assembleDebug");

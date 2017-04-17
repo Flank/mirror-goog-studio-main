@@ -17,7 +17,6 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static org.junit.Assume.assumeFalse;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -40,8 +39,6 @@ public class MinifyLibAndAppKeepRules {
 
     @Test
     public void testReleaseClassesPackaging() throws Exception {
-        assumeFalse("Ignore until Jack fixed proguard confusion", GradleTestProject.USE_JACK);
-
         File noPackage =
                 FileUtils.join(project.getSubproject("lib").getMainSrcDir(), "NoPackage.java");
         Files.write("public class NoPackage{}", noPackage, Charsets.UTF_8);

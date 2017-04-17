@@ -23,6 +23,7 @@ import com.android.builder.model.AndroidArtifactOutput
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.SyncIssue
 import com.android.builder.model.Variant
+import com.google.common.collect.Iterables
 import com.google.common.collect.Iterators
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
@@ -37,6 +38,8 @@ import org.objectweb.asm.tree.ClassNode
 import org.objectweb.asm.tree.MethodNode
 import org.objectweb.asm.tree.TypeInsnNode
 
+import java.util.function.Predicate
+import java.util.stream.Collectors
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 
@@ -45,6 +48,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.builder.core.BuilderConstants.DEBUG
 import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertNotNull
+
 /**
  * Test for the jarjar integration.
  */
@@ -122,9 +126,31 @@ android {
 
         AndroidProject model = project.model().ignoreSyncIssues().getSingle().getOnlyModel();
 
-        assertThat(model).hasSingleIssue(
-                SyncIssue.SEVERITY_ERROR,
-                SyncIssue.TYPE_GENERIC)
+        Collection<SyncIssue> issues = model.getSyncIssues();
+        assertThat(issues).hasSize(2);
+
+        Collection<SyncIssue> errors = issues.stream().filter(new Predicate<SyncIssue>() {
+            @Override
+            boolean test(SyncIssue syncIssue) {
+                return syncIssue.severity == SyncIssue.SEVERITY_ERROR;
+            }
+        }).collect(Collectors.toList())
+        assertThat(errors).hasSize(1);
+        SyncIssue error = Iterables.getOnlyElement(errors)
+        assertThat(error.type).isEqualTo(SyncIssue.TYPE_GENERIC);
+        assertThat(error.message).isEqualTo("Transforms with scopes '[SUB_PROJECTS, EXTERNAL_LIBRARIES, PROJECT_LOCAL_DEPS, SUB_PROJECTS_LOCAL_DEPS]' cannot be applied to library projects.");
+
+        Collection<SyncIssue> warnings = issues.stream().filter(new Predicate<SyncIssue>() {
+            @Override
+            boolean test(SyncIssue syncIssue) {
+                return syncIssue.severity == SyncIssue.SEVERITY_WARNING;
+            }
+        }).collect(Collectors.toList())
+        assertThat(warnings).hasSize(1);
+        SyncIssue warning = Iterables.getOnlyElement(warnings)
+        assertThat(warning.type).isEqualTo(SyncIssue.TYPE_GENERIC);
+        assertThat(warning.message).isEqualTo("Transform 'jarjar' uses scope SUB_PROJECTS_LOCAL_DEPS which is deprecated and replaced with EXTERNAL");
+
     }
 
     @CompileDynamic

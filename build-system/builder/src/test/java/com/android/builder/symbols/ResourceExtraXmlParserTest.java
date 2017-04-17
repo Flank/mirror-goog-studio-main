@@ -69,8 +69,8 @@ public class ResourceExtraXmlParserTest {
 
         SymbolTable expected =
                 SymbolTable.builder()
-                        .add(new Symbol("id", "toolbar", "int", "1"))
-                        .add(new Symbol("id", "fab", "int", "2"))
+                        .add(SymbolTestUtils.createSymbol("id", "toolbar", "int", "1"))
+                        .add(SymbolTestUtils.createSymbol("id", "fab", "int", "2"))
                         .build();
 
         Truth.assertThat(table).isEqualTo(expected);

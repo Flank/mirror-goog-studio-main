@@ -53,4 +53,13 @@ public class Aapt2RenamingConventionsTest {
         String renamed = Aapt2RenamingConventions.compilationRename(strings);
         assertEquals("values_strings.arsc.flat", renamed);
     }
+
+    @Test
+    public void testRenameValues() throws Exception {
+        File values = temporaryFolder.newFolder("values");
+        File strings = new File(values, "values.xml");
+
+        String renamed = Aapt2RenamingConventions.compilationRename(strings);
+        assertEquals("values_values.arsc.flat", renamed);
+    }
 }

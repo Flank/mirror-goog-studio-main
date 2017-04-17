@@ -32,6 +32,7 @@ import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.dependency.NativeDependencyResolveResult;
 import com.android.build.gradle.internal.ide.ModelBuilder;
 import com.android.build.gradle.internal.ndk.NdkHandler;
+import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.managed.NdkAbiOptions;
 import com.android.build.gradle.model.internal.AndroidBinaryInternal;
 import com.android.build.gradle.model.internal.AndroidComponentSpecInternal;
@@ -125,10 +126,12 @@ public class ComponentModelBuilder implements ToolingModelBuilder {
         Multimap<String, NativeDependencyResolveResult> jniLibsDependencies = registry.realize(
                 new ModelPath(ModelConstants.JNILIBS_DEPENDENCIES),
                 multimapModelType(String.class, NativeDependencyResolveResult.class));
+        GlobalScope globalScope = registry.realize(ModelConstants.GLOBAL_SCOPE, GlobalScope.class);
 
         int projectType = isApplication ? AndroidProject.PROJECT_TYPE_APP
                 : AndroidProject.PROJECT_TYPE_LIBRARY;
         return new ModelBuilder(
+                globalScope,
                 androidBuilder,
                 variantManager,
                 taskManager,

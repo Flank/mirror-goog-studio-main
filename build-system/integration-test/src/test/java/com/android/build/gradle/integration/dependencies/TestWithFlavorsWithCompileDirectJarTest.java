@@ -57,6 +57,7 @@ public class TestWithFlavorsWithCompileDirectJarTest {
         appendToFile(project.getSubproject("app").getBuildFile(),
                 "\n" +
                         "android {\n" +
+                        "    flavorDimensions 'foo'\n" +
                         "    productFlavors {\n" +
                         "      pro { }\n" +
                         "      free { }\n" +
@@ -77,7 +78,7 @@ public class TestWithFlavorsWithCompileDirectJarTest {
 
     @Test
     public void checkCompiledJarIsPackaged() throws Exception {
-        assertThat(project.getSubproject("app").getTestApk("free", "debug"))
+        assertThat(project.getSubproject("app").getTestApk("free"))
                 .containsClass("Lcom/example/android/multiproject/person/People;");
     }
 

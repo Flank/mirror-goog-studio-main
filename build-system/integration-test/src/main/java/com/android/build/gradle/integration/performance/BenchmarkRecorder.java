@@ -120,6 +120,8 @@ public final class BenchmarkRecorder {
             }
         }
 
+        flags.setBranch(GradleBenchmarkResult.Flags.Branch.STUDIO_UPCOMING_GRADLE_BRANCH);
+
         benchmarkResult.setFlags(flags);
         benchmarkResult.setBenchmark(benchmark);
         benchmarkResults.add(benchmarkResult);

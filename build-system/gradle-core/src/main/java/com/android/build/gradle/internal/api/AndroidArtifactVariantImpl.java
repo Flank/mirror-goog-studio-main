@@ -19,10 +19,12 @@ package com.android.build.gradle.internal.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.api.AndroidArtifactVariant;
+import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.variant.AndroidArtifactVariantData;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.SigningConfig;
 import java.util.Set;
+import org.gradle.api.NamedDomainObjectContainer;
 
 /**
  * Implementation of the {@link AndroidArtifactVariant} interface around a
@@ -30,23 +32,26 @@ import java.util.Set;
  */
 public abstract class AndroidArtifactVariantImpl extends BaseVariantImpl implements AndroidArtifactVariant {
 
-    protected AndroidArtifactVariantImpl(@NonNull AndroidBuilder androidBuilder,
-            @NonNull ReadOnlyObjectProvider immutableObjectProvider) {
-        super(androidBuilder, immutableObjectProvider);
+    protected AndroidArtifactVariantImpl(
+            @NonNull AndroidBuilder androidBuilder,
+            @NonNull ReadOnlyObjectProvider immutableObjectProvider,
+            @NonNull NamedDomainObjectContainer<BaseVariantOutput> outputs) {
+        super(androidBuilder, immutableObjectProvider, outputs);
     }
 
     @NonNull
-    protected abstract AndroidArtifactVariantData<?> getAndroidArtifactVariantData();
+    @Override
+    protected abstract AndroidArtifactVariantData getVariantData();
 
     @Override
     public SigningConfig getSigningConfig() {
         return readOnlyObjectProvider.getSigningConfig(
-                getAndroidArtifactVariantData().getVariantConfiguration().getSigningConfig());
+                getVariantData().getVariantConfiguration().getSigningConfig());
     }
 
     @Override
     public boolean isSigningReady() {
-        return getAndroidArtifactVariantData().isSigned();
+        return getVariantData().isSigned();
     }
 
     @Nullable
@@ -63,6 +68,6 @@ public abstract class AndroidArtifactVariantImpl extends BaseVariantImpl impleme
     @NonNull
     @Override
     public Set<String> getCompatibleScreens() {
-        return getAndroidArtifactVariantData().getCompatibleScreens();
+        return getVariantData().getCompatibleScreens();
     }
 }

@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.model.BuildType;
 
 /**
@@ -40,7 +41,11 @@ public interface CoreBuildType extends BuildType {
     @NonNull
     CoreShaderOptions getShaders();
 
+    /** @deprecated Use {@link VariantScope#useResourceShrinker()} instead. */
+    @Deprecated
     boolean isShrinkResources();
 
+    /** @deprecated Use {@link VariantScope#getCodeShrinker()} instead. */
+    @Deprecated
     boolean isUseProguard();
 }

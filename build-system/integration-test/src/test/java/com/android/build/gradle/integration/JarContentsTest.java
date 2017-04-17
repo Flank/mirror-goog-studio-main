@@ -69,12 +69,12 @@ public class JarContentsTest {
                 "com/android/builder/version.properties",
                 "com/android/builder/internal/AndroidManifest.template",
                 "desugar_deploy.jar",
-                "linux32/libaapt2_jni.so",
                 "linux64/libaapt2_jni.so",
                 "linux64/libc++.so",
                 "mac64/libaapt2_jni.dylib",
                 "mac64/libc++.dylib",
                 "win32/libaapt2_jni.dll",
+                "win32/libwinpthread-1.dll",
                 "win64/libaapt2_jni.dll",
                 "win64/libwinpthread-1.dll");
         expected.putAll(
@@ -91,7 +91,8 @@ public class JarContentsTest {
                 "META-INF/gradle-plugins/com.android.test.properties",
                 "META-INF/gradle-plugins/com.android.external.build.properties",
                 "META-INF/gradle-plugins/com.android.instantapp.properties",
-                "META-INF/gradle-plugins/com.android.atom.properties");
+                "META-INF/gradle-plugins/com.android.atom.properties",
+                "META-INF/gradle-plugins/com.android.feature.properties");
         expected.putAll(
                 "com/android/tools/build/gradle-core/",
                 "com/android/build/gradle/internal/test/report/base-style.css",

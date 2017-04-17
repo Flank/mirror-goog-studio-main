@@ -47,6 +47,7 @@ public class AssetPackagingTest {
     @Rule
     public GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("projectWithModules")
+            .withDependencyChecker(false)
             .create();
 
     private GradleTestProject appProject;
@@ -607,7 +608,7 @@ public class AssetPackagingTest {
     private static void checkTestApk(
             @NonNull GradleTestProject project, @NonNull String filename, @Nullable String content)
             throws Exception {
-        check(TruthHelper.assertThat(project.getTestApk("debug")), filename, content);
+        check(TruthHelper.assertThat(project.getTestApk()), filename, content);
     }
 
     /**

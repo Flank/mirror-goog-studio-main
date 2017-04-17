@@ -19,11 +19,9 @@ package com.android.build.gradle.internal.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.api.ApkVariant;
-import com.android.build.gradle.internal.variant.ApkVariantData;
-import com.android.build.gradle.internal.variant.InstallableVariantData;
+import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.builder.core.AndroidBuilder;
-import java.io.File;
-import java.util.Collection;
+import org.gradle.api.NamedDomainObjectContainer;
 
 /**
  * Implementation of the apk-generating variant.
@@ -33,18 +31,11 @@ import java.util.Collection;
  */
 public abstract class ApkVariantImpl extends InstallableVariantImpl implements ApkVariant {
 
-    protected ApkVariantImpl(@NonNull AndroidBuilder androidBuilder,
-            @NonNull ReadOnlyObjectProvider immutableObjectProvider) {
-        super(androidBuilder, immutableObjectProvider);
-    }
-
-    @NonNull
-    protected abstract ApkVariantData getApkVariantData();
-
-    @NonNull
-    @Override
-    protected InstallableVariantData getInstallableVariantData() {
-        return getApkVariantData();
+    protected ApkVariantImpl(
+            @NonNull AndroidBuilder androidBuilder,
+            @NonNull ReadOnlyObjectProvider immutableObjectProvider,
+            @NonNull NamedDomainObjectContainer<BaseVariantOutput> outputs) {
+        super(androidBuilder, immutableObjectProvider, outputs);
     }
 
     @Nullable
@@ -53,18 +44,5 @@ public abstract class ApkVariantImpl extends InstallableVariantImpl implements A
         throw new RuntimeException("Access to the dex task is now impossible, starting with 1.4.0\n"
                 + "1.4.0 introduces a new Transform API allowing manipulation of the .class files.\n"
                 + "See more information: https://developer.android.com/studio/plugins/index.html");
-    }
-
-    @Override
-    @NonNull
-    public Collection<File> getCompileLibraries() {
-        return androidBuilder.getCompileClasspath(
-                getVariantData().getVariantConfiguration());
-    }
-
-    @Override
-    @NonNull
-    public Collection<File> getApkLibraries() {
-        return androidBuilder.getAllPackagedJars(getVariantData().getVariantConfiguration());
     }
 }

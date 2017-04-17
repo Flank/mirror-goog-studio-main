@@ -16,10 +16,7 @@
 
 package com.android.build.gradle.api;
 
-import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import java.io.File;
-import java.util.Collection;
 
 /**
  * A Build variant and all its public data.
@@ -37,16 +34,4 @@ public interface ApkVariant extends BaseVariant, InstallableVariant, AndroidArti
     @Nullable
     Object getDex();
 
-    /**
-     * Returns the list of jar files that are on the compile classpath. This does not include
-     * the runtime.
-     */
-    @NonNull
-    Collection<File> getCompileLibraries();
-
-    /**
-     * Returns the list of jar files that are packaged in the APK.
-     */
-    @NonNull
-    Collection<File> getApkLibraries();
 }

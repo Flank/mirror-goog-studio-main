@@ -31,7 +31,6 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.test.report.ReportType;
 import com.android.build.gradle.internal.test.report.TestReport;
 import com.android.build.gradle.internal.variant.TestVariantData;
-import com.android.build.gradle.tasks.InputSupplier;
 import com.android.builder.internal.testing.SimpleTestCallable;
 import com.android.builder.sdk.TargetInfo;
 import com.android.builder.testing.ConnectedDeviceProvider;
@@ -48,13 +47,18 @@ import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.function.Supplier;
+import javax.xml.parsers.ParserConfigurationException;
 import org.gradle.api.GradleException;
 import org.gradle.api.Nullable;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.tasks.InputFile;
+import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.internal.logging.ConsoleRenderer;
+import org.xml.sax.SAXException;
 
 /**
  * Run instrumentation tests for a given variant
@@ -74,7 +78,7 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
     private TestData testData;
 
     @Nullable
-    private InputSupplier<File> splitSelectExec;
+    private Supplier<File> splitSelectExec;
     private ProcessExecutor processExecutor;
 
     private boolean ignoreFailures;
@@ -84,15 +88,23 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
     @Nullable
     private Integer numShards;
 
+    @Nullable private FileCollection testTargetManifests;
+
     @TaskAction
     protected void runTests() throws DeviceException, IOException, InterruptedException,
-            TestRunner.NoAuthorizedDeviceFoundException, TestException {
+            TestRunner.NoAuthorizedDeviceFoundException, TestException,
+            ParserConfigurationException, SAXException {
 
         File resultsOutDir = getResultsDir();
         FileUtils.cleanOutputDir(resultsOutDir);
 
         File coverageOutDir = getCoverageDir();
         FileUtils.cleanOutputDir(coverageOutDir);
+
+        // populate the TestData from the tested variant build output.
+        if (!testTargetManifests.isEmpty()) {
+            testData.loadFromMetadataFile(testTargetManifests.getSingleFile());
+        }
 
         boolean success = false;
         // If there are tests to run, and the test runner returns with no results, we fail (since
@@ -109,7 +121,7 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
 
             final TestRunner testRunner;
             testRunner = new SimpleTestRunner(
-                    splitSelectExec.getLastValue(),
+                    splitSelectExec.get(),
                     getProcessExecutor(),
                     enableSharding,
                     numShards);
@@ -264,6 +276,17 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
         return testFailed;
     }
 
+    /**
+     * Indirectly used through the TestData, declare it as a dependency so the wiring is done
+     * correctly.
+     *
+     * @return tested variant metadata file.
+     */
+    @InputFiles
+    FileCollection getTestTargetManifests() {
+        return testTargetManifests;
+    }
+
     public static class ConfigAction implements TaskConfigAction<DeviceProviderInstrumentTestTask> {
 
         @NonNull
@@ -272,14 +295,17 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
         private final DeviceProvider deviceProvider;
         @NonNull
         private final TestData testData;
+        @NonNull private final FileCollection testTargetManifests;
 
         public ConfigAction(
                 @NonNull VariantScope scope,
                 @NonNull DeviceProvider deviceProvider,
-                @NonNull TestData testData) {
+                @NonNull TestData testData,
+                @NonNull FileCollection testTargetManifests) {
             this.scope = scope;
             this.deviceProvider = deviceProvider;
             this.testData = testData;
+            this.testTargetManifests = testTargetManifests;
         }
 
         @NonNull
@@ -313,6 +339,7 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
             task.setTestData(testData);
             task.setFlavorName(testData.getFlavorName());
             task.setDeviceProvider(deviceProvider);
+            task.testTargetManifests = testTargetManifests;
             task.setInstallOptions(
                     scope.getGlobalScope().getExtension().getAdbOptions().getInstallOptions());
             task.setProcessExecutor(
@@ -331,7 +358,7 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
             String providerFolder = connected ? CONNECTED : DEVICE + "/" + deviceProvider.getName();
             final String subFolder = "/" + providerFolder + "/" + flavorFolder;
 
-            task.splitSelectExec = InputSupplier.from(() -> {
+            task.splitSelectExec = TaskInputHelper.memoize(() -> {
                 // SDK is loaded somewhat dynamically, plus we don't want to do all this logic
                 // if the task is not going to run, so use a supplier.
                 final TargetInfo info = scope.getGlobalScope().getAndroidBuilder()

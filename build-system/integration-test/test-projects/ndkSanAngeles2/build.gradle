@@ -26,6 +26,7 @@ model {
 
         productFlavors {
             create("x86") {
+                dimension "abi"
                 ndk.abiFilters.add("x86")
                 // this is the flavor part of the version code.
                 // It must be higher than the arm one for devices supporting
@@ -33,14 +34,17 @@ model {
                 versionCode 3
             }
             create("arm") {
+                dimension "abi"
                 ndk.abiFilters.add("armeabi-v7a")
                 versionCode 2
             }
             create("mips") {
+                dimension "abi"
                 ndk.abiFilters.add("mips")
                 versionCode 1
             }
             create("fat") {
+                dimension "abi"
                 // fat binary, lowest version code to be
                 // the last option
                 versionCode 0

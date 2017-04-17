@@ -16,35 +16,24 @@
 package com.android.build.gradle.internal.variant;
 
 import com.android.annotations.NonNull;
-import com.android.build.FilterData;
-import com.android.build.OutputFile;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.builder.core.ErrorReporter;
 import com.android.builder.profile.Recorder;
-import java.util.Collection;
 
-/**
- * Base data about a variant that generates an APK file.
- */
-public abstract class ApkVariantData extends InstallableVariantData<ApkVariantOutputData> {
+/** Base data about a variant that generates an APK file. */
+public abstract class ApkVariantData extends InstallableVariantData {
 
     protected ApkVariantData(
+            @NonNull GlobalScope globalScope,
             @NonNull AndroidConfig androidConfig,
             @NonNull TaskManager taskManager,
             @NonNull GradleVariantConfiguration config,
             @NonNull ErrorReporter errorReporter,
             @NonNull Recorder recorder) {
-        super(androidConfig, taskManager, config, errorReporter, recorder);
-    }
-
-    @Override
-    @NonNull
-    protected ApkVariantOutputData doCreateOutput(
-            OutputFile.OutputType outputType,
-            Collection<FilterData> filters) {
-        return new ApkVariantOutputData(outputType, filters, this, taskManager);
+        super(globalScope, androidConfig, taskManager, config, errorReporter, recorder);
     }
 
     @Override
@@ -57,9 +46,5 @@ public abstract class ApkVariantData extends InstallableVariantData<ApkVariantOu
         } else {
             return String.format("%s build", getCapitalizedBuildTypeName());
         }
-    }
-
-    public boolean getZipAlignEnabled() {
-        return getVariantConfiguration().getBuildType().isZipAlignEnabled();
     }
 }

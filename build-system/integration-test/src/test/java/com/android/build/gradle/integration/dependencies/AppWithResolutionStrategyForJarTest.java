@@ -19,8 +19,6 @@ package com.android.build.gradle.integration.dependencies;
 import static com.android.build.gradle.integration.common.fixture.BuildModel.Feature.FULL_DEPENDENCIES;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.COORDINATES;
-import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
-import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
 import com.android.annotations.NonNull;
@@ -71,9 +69,9 @@ public class AppWithResolutionStrategyForJarTest {
                         + "    compile project(\":library\")\n"
                         + "}\n"
                         + "\n"
-                        + "configurations { _debugCompile }\n"
+                        + "configurations { debugCompileClasspath }\n"
                         + "\n"
-                        + "configurations._debugCompile {\n"
+                        + "configurations.debugCompileClasspath {\n"
                         + "  resolutionStrategy {\n"
                         + "    eachDependency { DependencyResolveDetails details ->\n"
                         + "      if (details.requested.name == \"guava\") {\n"
@@ -127,16 +125,10 @@ public class AppWithResolutionStrategyForJarTest {
             @NonNull String jarVersion,
             @NonNull String variantName) {
 
-        Items subModuleItems = items.withType(MODULE);
-        assertThat(subModuleItems.mapTo(COORDINATES))
+        assertThat(items.mapTo(COORDINATES))
                 .named("Direct modules of " + variantName)
-                .containsExactly(":library");
-
-        // get the transitive
-        Items libraryDeps = subModuleItems.getTransitiveFromSingleItem();
-
-        assertThat(libraryDeps.withType(JAVA).mapTo(COORDINATES))
-                .named("transitive java libs of " + variantName)
-                .containsExactly("com.google.guava:guava:" + jarVersion + "@jar");
+                .containsExactly(
+                        ":library::" + variantName,
+                        "com.google.guava:guava:" + jarVersion + "@jar");
     }
 }

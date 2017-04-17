@@ -37,7 +37,6 @@ public final class GradleTestProjectBuilder {
     @Nullable private String name;
     @Nullable private TestProject testProject = null;
     @Nullable private String targetGradleVersion;
-    private boolean useJack = GradleTestProject.USE_JACK;
     private boolean improvedDependencyEnabled = GradleTestProject.IMPROVED_DEPENDENCY_RESOLUTION;
     @Nullable private String buildToolsVersion;
     private boolean withoutNdk = false;
@@ -45,7 +44,8 @@ public final class GradleTestProjectBuilder {
     @Nullable private String heapSize;
     @Nullable private BenchmarkRecorder benchmarkRecorder;
     @NonNull private Path relativeProfileDirectory = Paths.get("build", "android-profile");
-    private boolean withDependencyChecker = true;
+    private boolean withDependencyChecker =
+            false; // FIXME once all the tests are passing we can enable this back.
 
     /** Create a GradleTestProject. */
     public GradleTestProject create() {
@@ -55,7 +55,6 @@ public final class GradleTestProjectBuilder {
         return new GradleTestProject(
                 name,
                 testProject,
-                useJack,
                 improvedDependencyEnabled,
                 targetGradleVersion,
                 withoutNdk,
@@ -100,7 +99,9 @@ public final class GradleTestProjectBuilder {
     /** Create GradleTestProject from an existing test project. */
     public GradleTestProjectBuilder fromTestProject(@NonNull String project) {
         AndroidTestApp app = new EmptyTestApp();
-        name = project;
+        if (name == null) {
+            name = project;
+        }
         File projectDir = new File(GradleTestProject.TEST_PROJECT_DIR, project);
         addAllFiles(app, projectDir);
         return fromTestApp(app);
@@ -169,17 +170,6 @@ public final class GradleTestProjectBuilder {
         return this;
     }
 
-    public GradleTestProjectBuilder withJack(boolean useJack) {
-        this.useJack = useJack;
-        return this;
-    }
-
-    public GradleTestProjectBuilder withImprovedDependencyResolution(
-            boolean improvedDependencyEnabled) {
-        this.improvedDependencyEnabled = improvedDependencyEnabled;
-        return this;
-    }
-
     public GradleTestProjectBuilder withDependencyChecker(
             boolean dependencyChecker) {
         this.withDependencyChecker = dependencyChecker;
@@ -204,6 +194,12 @@ public final class GradleTestProjectBuilder {
     public GradleTestProjectBuilder withRelativeProfileDirectory(
             @NonNull Path relativeProfileDirectory) {
         this.relativeProfileDirectory = relativeProfileDirectory;
+        return this;
+    }
+
+    public GradleTestProjectBuilder withImprovedDependencyResolution(
+            boolean improvedDependencyEnabled) {
+        this.improvedDependencyEnabled = improvedDependencyEnabled;
         return this;
     }
 

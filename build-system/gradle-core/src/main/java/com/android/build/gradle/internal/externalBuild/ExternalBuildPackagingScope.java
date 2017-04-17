@@ -26,18 +26,22 @@ import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.pipeline.StreamFilter;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.PackagingScope;
+import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
+import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.DefaultApiVersion;
-import com.android.builder.core.VariantType;
 import com.android.builder.model.AaptOptions;
 import com.android.builder.model.ApiVersion;
+import com.android.ide.common.build.ApkData;
 import com.android.utils.StringHelper;
 import com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest;
 import java.io.File;
 import java.util.Collections;
 import java.util.Set;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
+import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 
 /**
@@ -52,8 +56,7 @@ public class ExternalBuildPackagingScope implements PackagingScope {
     private final ExternalBuildVariantScope mVariantScope;
     @NonNull
     private final TransformManager mTransformManager;
-    private InstantRunBuildContext
-            mInstantRunBuildContext;
+    @NonNull private InstantRunBuildContext mInstantRunBuildContext;
     @Nullable
     private final SigningConfig mSigningConfig;
 
@@ -80,10 +83,14 @@ public class ExternalBuildPackagingScope implements PackagingScope {
 
     @NonNull
     @Override
-    public File getFinalResourcesFile() {
-        return new File(
-                mExternalBuildContext.getExecutionRoot(),
-                mBuildManifest.getResourceApk().getExecRootPath());
+    public File getOutputPackageFile(File destinationDir, String projectBaseName, ApkData apkData) {
+        return getMainOutputFile().getOutputFile();
+    }
+
+    @Override
+    public String getProjectBaseName() {
+        // FIX ME !
+        return mExternalBuildContext.getExecutionRoot().getName();
     }
 
     @NonNull
@@ -150,8 +157,7 @@ public class ExternalBuildPackagingScope implements PackagingScope {
     }
 
     @NonNull
-    @Override
-    public ApkOutputFile getMainOutputFile() {
+    private ApkOutputFile getMainOutputFile() {
         return mVariantScope.getMainOutputFile();
     }
 
@@ -203,24 +209,6 @@ public class ExternalBuildPackagingScope implements PackagingScope {
 
     @NonNull
     @Override
-    public File getOutputPackage() {
-        return getMainOutputFile().getOutputFile();
-    }
-
-    @NonNull
-    @Override
-    public File getIntermediateApk() {
-        return mVariantScope.getIntermediateApk();
-    }
-
-    @NonNull
-    @Override
-    public File getAssetsDir() {
-        return mVariantScope.getAssetsDir();
-    }
-
-    @NonNull
-    @Override
     public File getInstantRunSplitApkOutputFolder() {
         return mVariantScope.getInstantRunSplitApkOutputFolder();
     }
@@ -248,17 +236,56 @@ public class ExternalBuildPackagingScope implements PackagingScope {
         return mVariantScope.getAaptOptions();
     }
 
+    @Override
+    public SplitScope getSplitScope() {
+        return mVariantScope.getSplitScope();
+    }
+
+    // TaskOutputHolder
+
     @NonNull
     @Override
-    public VariantType getVariantType() {
-        return VariantType.DEFAULT;
+    public FileCollection getOutputs(@NonNull OutputType outputType) {
+        return mVariantScope.getOutputs(outputType);
+    }
+
+    @Override
+    public boolean hasOutput(@NonNull OutputType outputType) {
+        return mVariantScope.hasOutput(outputType);
+    }
+
+    @Override
+    public ConfigurableFileCollection addTaskOutput(
+            @NonNull TaskOutputType outputType, @NonNull File file, @NonNull String taskName) {
+        return mVariantScope.addTaskOutput(outputType, file, taskName);
+    }
+
+    @Override
+    public void addTaskOutput(
+            @NonNull TaskOutputType outputType, @NonNull FileCollection fileCollection) {
+        mVariantScope.addTaskOutput(outputType, fileCollection);
     }
 
     @NonNull
     @Override
-    public File getManifestFile() {
-        return new File(
-                mExternalBuildContext.getExecutionRoot(),
-                mBuildManifest.getAndroidManifest().getExecRootPath());
+    public FileCollection createAnchorOutput(@NonNull AnchorOutputType outputType) {
+        return mVariantScope.createAnchorOutput(outputType);
+    }
+
+    @Override
+    public void addToAnchorOutput(
+            @NonNull AnchorOutputType outputType, @NonNull File file, @NonNull String taskName) {
+        mVariantScope.addToAnchorOutput(outputType, file, taskName);
+    }
+
+    @Override
+    public void addToAnchorOutput(
+            @NonNull AnchorOutputType outputType, @NonNull FileCollection fileCollection) {
+        mVariantScope.addToAnchorOutput(outputType, fileCollection);
+    }
+
+    @Override
+    public void addTask(TaskContainer.TaskKind taskKind, Task task) {
+        // not needed as customization not allowed in external build system.
     }
 }

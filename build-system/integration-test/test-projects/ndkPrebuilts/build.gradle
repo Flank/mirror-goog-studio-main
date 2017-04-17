@@ -8,6 +8,7 @@ android {
     compileSdkVersion 19
     buildToolsVersion = rootProject.buildToolsVersion
 
+    flavorDimensions 'abi'
     productFlavors {
         x86 {
             ndk {

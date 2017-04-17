@@ -23,11 +23,6 @@ import static com.google.common.base.Preconditions.checkState;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.dependency.level2.AndroidDependency;
-import com.android.builder.dependency.level2.AtomDependency;
-import com.android.builder.dependency.level2.Dependency;
-import com.android.builder.dependency.level2.DependencyContainer;
-import com.android.builder.dependency.level2.EmptyContainer;
-import com.android.builder.dependency.level2.JavaDependency;
 import com.android.builder.internal.ClassFieldImpl;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.ApiVersion;
@@ -38,7 +33,6 @@ import com.android.builder.model.SigningConfig;
 import com.android.builder.model.SourceProvider;
 import com.android.ide.common.res2.AssetSet;
 import com.android.ide.common.res2.ResourceSet;
-import com.android.manifmerger.ManifestProvider;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.utils.StringHelper;
 import com.google.common.base.Strings;
@@ -68,8 +62,6 @@ import java.util.Set;
  * @param <F> the type used for the product flavors.
  */
 public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, F extends ProductFlavor> {
-
-    private static final DependencyContainer UNRESOLVED_CONTAINER = EmptyContainer.get();
 
     /**
      * Full, unique name of the variant in camel case, including BuildType and Flavors (and Test)
@@ -135,10 +127,6 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
 
     @NonNull
     private ProductFlavor mMergedFlavor;
-
-    private boolean isDependenciesResolved = false;
-    private DependencyContainer compileDependencies;
-    private DependencyContainer packageDependencies;
 
     /**
      * Variant-specific build Config fields.
@@ -244,7 +232,12 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     @NonNull
     public String getFullName() {
         if (mFullName == null) {
-            mFullName = computeFullName(getFlavorName(), mBuildType, mType);
+            mFullName =
+                    computeFullName(
+                            getFlavorName(),
+                            mBuildType,
+                            mType,
+                            mTestedConfig == null ? null : mTestedConfig.getType());
         }
 
         return mFullName;
@@ -257,15 +250,16 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      * @param flavorName the flavor name, as computed by {@link #computeFlavorName(List)}
      * @param buildType the build type
      * @param type the variant type
-     *
      * @return the name of the variant
      */
     @NonNull
     public static <B extends BuildType> String computeFullName(
             @NonNull String flavorName,
             @NonNull B buildType,
-            @NonNull VariantType type) {
+            @NonNull VariantType type,
+            @Nullable VariantType testedType) {
         StringBuilder sb = new StringBuilder();
+
         if (!flavorName.isEmpty()) {
             sb.append(flavorName);
             sb.append(StringHelper.capitalize(buildType.getName()));
@@ -273,7 +267,14 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
             sb.append(buildType.getName());
         }
 
+        if (type == VariantType.FEATURE) {
+            sb.append("Feature");
+        }
+
         if (type.isForTesting()) {
+            if (testedType == VariantType.FEATURE) {
+                sb.append("Feature");
+            }
             sb.append(type.getSuffix());
         }
         return sb.toString();
@@ -409,6 +410,9 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     public String getDirName() {
         if (mDirName == null) {
             StringBuilder sb = new StringBuilder();
+            if (mType == VariantType.FEATURE) {
+                sb.append("feature/");
+            }
 
             if (mType.isForTesting()) {
                 sb.append(mType.getPrefix()).append("/");
@@ -444,6 +448,10 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     public Collection<String> getDirectorySegments() {
         if (mDirSegments == null) {
             ImmutableList.Builder<String> builder = ImmutableList.builder();
+
+            if (mType == VariantType.FEATURE) {
+                builder.add("feature");
+            }
 
             if (mType.isForTesting()) {
                 builder.add(mType.getPrefix());
@@ -598,32 +606,6 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     }
 
     /**
-     * Sets the dependencies
-     *
-     * @param compileDependencies the compile dependencies
-     * @param packageDependencies the package dependencies
-     * @return the config object
-     */
-    @NonNull
-    public VariantConfiguration setResolvedDependencies(
-            @NonNull DependencyContainer compileDependencies,
-            @NonNull DependencyContainer packageDependencies) {
-        this.compileDependencies = compileDependencies;
-        this.packageDependencies = packageDependencies;
-        isDependenciesResolved = true;
-
-        return this;
-    }
-
-    public DependencyContainer getCompileDependencies() {
-        return isDependenciesResolved ? compileDependencies : UNRESOLVED_CONTAINER;
-    }
-
-    public DependencyContainer getPackageDependencies() {
-        return isDependenciesResolved ? packageDependencies : UNRESOLVED_CONTAINER;
-    }
-
-    /**
      * Sets the output of this variant. This is required when the variant is a library so that
      * the variant that tests this library can properly include the tested library in its own
      * package.
@@ -702,45 +684,6 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         return mFlavorSourceProviders;
     }
 
-    /**
-     * Returns all the compile Android library dependencies, direct and transitive in a single
-     * flat list.
-     */
-    @NonNull
-    public ImmutableList<AndroidDependency> getFlatCompileAndroidLibraries() {
-        return getCompileDependencies().getAllAndroidDependencies();
-    }
-
-    /**
-     * Returns all the Android atom dependencies, direct and transitive in a single flat list.
-     * Since atoms can never be provided dependencies, the compile and package dependencies are the
-     * same for atoms.
-     */
-    @NonNull
-    public ImmutableList<AtomDependency> getFlatAndroidAtomsDependencies() {
-        return getPackageDependencies().getAllAtomDependencies();
-    }
-
-    /**
-     * Returns all the package library dependencies, direct and transitive in a single flat list.
-     */
-    @NonNull
-    public ImmutableList<AndroidDependency> getFlatPackageAndroidLibraries() {
-        return getPackageDependencies().getAllAndroidDependencies();
-    }
-
-    /**
-     * Returns all the package dependencies that provide a manifest.
-     */
-    @NonNull
-    public ImmutableList<? extends ManifestProvider> getPackageManifestProviders() {
-        if (getType() == VariantType.INSTANTAPP) {
-            return getFlatAndroidAtomsDependencies();
-        } else {
-            return getFlatPackageAndroidLibraries();
-        }
-    }
-
     @NonNull
     public VariantType getType() {
         return mType;
@@ -774,8 +717,8 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      */
     @NonNull
     public String getApplicationId() {
-        // instantApp modules do not need a manifest.
         if (mType == VariantType.INSTANTAPP) {
+            // FIXME: Stop sending a dummy value just for IDE sync purposes.
             return "unused";
         }
 
@@ -1082,8 +1025,8 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         ApiVersion minSdkVersion = mMergedFlavor.getMinSdkVersion();
         if (minSdkVersion == null) {
             // read it from the main manifest
-            minSdkVersion = DefaultApiVersion.create(
-                    getManifestAttributeSupplier().getMinSdkVersion());
+            minSdkVersion =
+                    DefaultApiVersion.create(getManifestAttributeSupplier().getMinSdkVersion());
         }
 
         return minSdkVersion;
@@ -1102,8 +1045,9 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     /**
      * Return the targetSdkVersion for this variant.
      *
-     * This uses both the value from the manifest (if present), and the override coming
-     * from the flavor(s) (if present).
+     * <p>This uses both the value from the manifest (if present), and the override coming from the
+     * flavor(s) (if present).
+     *
      * @return the targetSdkVersion
      */
     @NonNull
@@ -1219,56 +1163,6 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     }
 
     /**
-     * returns all the resource folders from all the dependencies.
-     * @return
-     */
-    @NonNull
-    public Set<File> getResourceFoldersForDependencies() {
-        Set<File> files = Sets.newHashSet();
-        for (AndroidDependency dependency : getPackageDependencies().getAllAndroidDependencies()) {
-            File resFolder = dependency.getResFolder();
-            if (resFolder.isDirectory()) {
-                files.add(resFolder);
-            }
-        }
-
-        return files;
-    }
-
-    /**
-     * Returns the dynamic list of {@link ResourceSet} for the dependencies only.
-     *
-     * The list is ordered in ascending order of importance, meaning the first set is meant to be
-     * overridden by the 2nd one and so on. This is meant to facilitate usage of the list in a
-     * {@link com.android.ide.common.res2.ResourceMerger}.
-     *
-     * @return a list ResourceSet.
-     */
-    @NonNull
-    public List<ResourceSet> getResourceSetsForDependencies(boolean validateEnabled) {
-        List<ResourceSet> resourceSets = Lists.newArrayList();
-
-        // the list of dependency must be reversed to use the right overlay order.
-        // use the package one to ignore the optional libs.
-        for (AndroidDependency dependency : getPackageDependencies().getAllAndroidDependencies().reverse()) {
-            File resFolder = dependency.getResFolder();
-            if (resFolder.isDirectory()) {
-                ResourceSet resourceSet =
-                        new ResourceSet(
-                                dependency.getExtractedFolder().getName(),
-                                null,
-                                dependency.getName(),
-                                validateEnabled);
-                resourceSet.addSource(resFolder);
-                resourceSet.setFromDependency(true);
-                resourceSets.add(resourceSet);
-            }
-        }
-
-        return resourceSets;
-    }
-
-    /**
      * Returns the dynamic list of {@link ResourceSet} for the source folders only.
      *
      * The list is ordered in ascending order of importance, meaning the first set is meant to be
@@ -1280,7 +1174,6 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     @NonNull
     public List<ResourceSet> getResourceSets(boolean validateEnabled) {
         List<ResourceSet> resourceSets = Lists.newArrayList();
-
         Collection<File> mainResDirs = mDefaultSourceProvider.getResDirectories();
 
         // the main + generated res folders are in the same ResourceSet
@@ -1328,23 +1221,6 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         return resourceSets;
     }
 
-    @NonNull
-    public List<AssetSet> getAssetSetsForDependencies() {
-        List<AssetSet> assetSets = Lists.newArrayList();
-
-        // use the package one to ignore the optional libs.
-        for (AndroidDependency dependency : getPackageDependencies().getAllAndroidDependencies().reverse()) {
-            File assetFolder = dependency.getAssetsFolder();
-            if (assetFolder.isDirectory()) {
-                AssetSet assetSet = new AssetSet(dependency.getExtractedFolder().getName());
-                assetSet.addSource(assetFolder);
-                assetSets.add(assetSet);
-            }
-        }
-
-        return assetSets;
-    }
-
     /**
      * Returns the dynamic list of {@link AssetSet} based on the configuration, its dependencies,
      * as well as tested config if applicable (test of a library).
@@ -1357,6 +1233,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      */
     @NonNull
     public List<AssetSet> getAssetSets() {
+        // TODO FIXME FOR test of a library, need to include tested lib (same for all the other code)
         List<AssetSet> assetSets = Lists.newArrayList();
 
         Collection<File> mainResDirs = mDefaultSourceProvider.getAssetsDirectories();
@@ -1536,24 +1413,6 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     }
 
     /**
-     * Returns all the renderscript import folder that are outside of the current project.
-     */
-    @NonNull
-    public List<File> getRenderscriptImports() {
-        List<File> list = Lists.newArrayList();
-
-        // use the package one to ignore the optional libs.
-        for (AndroidDependency lib : getPackageDependencies().getAllAndroidDependencies()) {
-            File rsLib = lib.getRenderscriptFolder();
-            if (rsLib.isDirectory()) {
-                list.add(rsLib);
-            }
-        }
-
-        return list;
-    }
-
-    /**
      * Returns all the renderscript source folder from the main config, the flavors and the
      * build type.
      *
@@ -1570,24 +1429,6 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         }
 
         return sourceList;
-    }
-
-    /**
-     * Returns all the aidl import folder that are outside of the current project.
-     */
-    @NonNull
-    public List<File> getAidlImports() {
-        List<File> list = Lists.newArrayList();
-
-        // use the package one to ignore the optional libs.
-        for (AndroidDependency lib : getPackageDependencies().getAllAndroidDependencies()) {
-            File aidlLib = lib.getAidlFolder();
-            if (aidlLib.isDirectory()) {
-                list.add(aidlLib);
-            }
-        }
-
-        return list;
     }
 
     @NonNull
@@ -1614,299 +1455,6 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         }
 
         return sourceList;
-    }
-
-    /**
-     * Returns the compile classpath for this config. If the config tests a library, this
-     * will include the classpath of the tested config
-     *
-     * @return a non null, but possibly empty set.
-     */
-    @NonNull
-    public Set<File> getCompileClasspath() {
-        DependencyContainer compileDep = getCompileDependencies();
-
-        Set<File> classpath = Sets.newLinkedHashSetWithExpectedSize(
-                compileDep.getAllDependencies().size());
-
-        for (Dependency dependency : compileDep.getAllDependencies()) {
-            classpath.add(dependency.getClasspathFile());
-            List<File> additionalFiles = dependency.getAdditionalClasspath();
-            if (additionalFiles != null) {
-                classpath.addAll(additionalFiles);
-            }
-        }
-
-        return classpath;
-    }
-
-    /**
-     * Returns the list of packaged jars for this config. If the config tests a library, this
-     * will include the jars of the tested config
-     *
-     * @return a non null, but possibly empty list.
-     */
-    @NonNull
-    public Set<File> getAllPackagedJars() {
-        final DependencyContainer packageDeps = getPackageDependencies();
-
-        Set<File> jars = Sets.newLinkedHashSetWithExpectedSize(
-                packageDeps.getAllDependencies().size());
-
-        for (Dependency dependency : packageDeps.getAllPackagedDependencies()) {
-            File jarFile = dependency.getClasspathFile();
-            if (jarFile.isFile()) {
-                jars.add(jarFile);
-            }
-            List<File> additionalJarFiles = dependency.getAdditionalClasspath();
-            if (additionalJarFiles != null) {
-                for (File jar : additionalJarFiles) {
-                    if (jar.isFile()) {
-                        jars.add(jar);
-                    }
-                }
-            }
-        }
-
-        return jars;
-    }
-
-    /**
-     * Returns the list of packaged jars for this config that is not coming from subprojects..
-     *
-     * If the config tests a library, this will include the jars of the tested config
-     *
-     * @return a non null, but possibly empty list.
-     */
-    @NonNull
-    public Set<File> getExternalPackagedJars() {
-        final DependencyContainer packageDeps = getPackageDependencies();
-        Set<File> jars = Sets.newLinkedHashSetWithExpectedSize(
-                packageDeps.getAllDependencies().size());
-
-        for (Dependency dependency : packageDeps.getAllPackagedDependencies()) {
-            if (dependency.getProjectPath() != null || dependency.isLocal()) {
-                continue;
-            }
-
-            File jarFile = dependency.getClasspathFile();
-            if (jarFile.isFile()) {
-                jars.add(jarFile);
-            }
-            List<File> additionalJarFiles = dependency.getAdditionalClasspath();
-            if (additionalJarFiles != null) {
-                for (File jar : additionalJarFiles) {
-                    if (jar.isFile()) {
-                        jars.add(jar);
-                    }
-                }
-            }
-        }
-
-        return jars;
-    }
-
-    /**
-     * Returns the list of external packaged jars for this config.
-     *
-     * @return a non null, but possibly empty list.
-     */
-    @NonNull
-    public Set<File> getExternalPackagedJniJars() {
-        final DependencyContainer packageDeps = getPackageDependencies();
-        Set<File> jars = Sets.newLinkedHashSetWithExpectedSize(
-                packageDeps.getAllJavaDependencies().size());
-
-        for (JavaDependency javaDependency : packageDeps.getAllJavaDependencies()) {
-            if (javaDependency.getProjectPath() == null && !javaDependency.isLocal()) {
-                File jarFile = javaDependency.getArtifactFile();
-                if (jarFile.isFile()) {
-                    jars.add(jarFile);
-                }
-            }
-        }
-
-        return jars;
-    }
-
-    /**
-     * Returns the packaged local Jars
-     *
-     * @return a non null, but possibly empty set.
-     */
-    @NonNull
-    public Set<File> getLocalPackagedJars() {
-        final DependencyContainer packageDeps = getPackageDependencies();
-        Set<File> jars = Sets.newLinkedHashSetWithExpectedSize(
-                packageDeps.getAllJavaDependencies().size());
-
-        for (JavaDependency javaDependency : packageDeps.getAllJavaDependencies()) {
-            if (javaDependency.isLocal()) {
-                File jarFile = javaDependency.getClasspathFile();
-                if (jarFile.isFile()) {
-                    jars.add(jarFile);
-                }
-            }
-        }
-
-        return jars;
-    }
-
-    /**
-     * Returns the packaged sub-project Jars, coming from Android or Java modules.
-     *
-     * @return a non null, but possibly empty set.
-     */
-    @NonNull
-    public Set<File> getSubProjectPackagedJars() {
-        final DependencyContainer packageDeps = getPackageDependencies();
-        Set<File> jars = Sets.newLinkedHashSetWithExpectedSize(
-                packageDeps.getAllPackagedDependencies().size());
-
-        for (Dependency dependency : packageDeps.getAllPackagedDependencies()) {
-            // only take the sub-project dependencies
-            if (dependency.getProjectPath() != null) {
-                File libJar = dependency.getClasspathFile();
-                if (libJar.isFile()) {
-                    jars.add(libJar);
-                }
-            }
-        }
-
-        return jars;
-    }
-
-    /**
-     * Returns the packaged sub-project local Jars
-     *
-     * @return a non null, but possibly empty immutable set.
-     */
-    @NonNull
-    public Set<File> getSubProjectLocalPackagedJars() {
-        final DependencyContainer packageDeps = getPackageDependencies();
-        Set<File> jars = Sets.newLinkedHashSetWithExpectedSize(
-                packageDeps.getAllAndroidDependencies().size());
-
-        for (AndroidDependency dependency : packageDeps.getAllAndroidDependencies()) {
-            // only take the sub-project android libraries.
-            if (dependency.getProjectPath() != null) {
-                for (File jarFile : dependency.getLocalJars()) {
-                    if (jarFile.isFile()) {
-                        jars.add(jarFile);
-                    }
-                }
-            }
-        }
-
-        return jars;
-    }
-
-    /**
-     * Returns the sub-project jni libs
-     *
-     * @return a non null, but possibly empty immutable set.
-     */
-    @NonNull
-    public Set<File> getSubProjectJniLibFolders() {
-        final DependencyContainer packageDeps = getPackageDependencies();
-        Set<File> jniDirectories = Sets.newLinkedHashSetWithExpectedSize(
-                packageDeps.getAllAndroidDependencies().size());
-
-        for (AndroidDependency dependency : packageDeps.getAllAndroidDependencies()) {
-            // only take the sub-project android libraries.
-            if (dependency.getProjectPath() != null) {
-                File jniDir = dependency.getJniFolder();
-                if (jniDir.isDirectory()) {
-                    jniDirectories.add(jniDir);
-                }
-            }
-        }
-
-        return jniDirectories;
-    }
-
-    /**
-     * Returns the list of sub-project packaged jars for this config.
-     *
-     * @return a non null, but possibly empty list.
-     */
-    @NonNull
-    public Set<File> getSubProjectPackagedJniJars() {
-        final DependencyContainer packageDeps = getPackageDependencies();
-        Set<File> jars = Sets.newLinkedHashSetWithExpectedSize(
-                packageDeps.getAllJavaDependencies().size());
-
-        for (JavaDependency javaDependency : packageDeps.getAllJavaDependencies()) {
-            if (javaDependency.getProjectPath() != null) {
-                File jarFile = javaDependency.getArtifactFile();
-                if (jarFile.isFile()) {
-                    jars.add(jarFile);
-                }
-            }
-        }
-
-        return jars;
-    }
-
-    /**
-     * Returns the external jni lib folders
-     *
-     * @return a non null, but possibly empty immutable set.
-     */
-    @NonNull
-    public Set<File> getExternalAarJniLibFolders() {
-        final DependencyContainer packageDeps = getPackageDependencies();
-        Set<File> jniDirectories = Sets.newLinkedHashSetWithExpectedSize(
-                packageDeps.getAllAndroidDependencies().size());
-
-        for (AndroidDependency dependency : packageDeps.getAllAndroidDependencies()) {
-            // only take the external android libraries.
-            if (dependency.getProjectPath() == null) {
-                File jniDir = dependency.getJniFolder();
-                if (jniDir.isDirectory()) {
-                    jniDirectories.add(jniDir);
-                }
-            }
-        }
-
-        return jniDirectories;
-    }
-
-    /**
-     * Returns the list of provided-only jars for this config.
-     *
-     * @return a non null, but possibly empty list.
-     */
-    @NonNull
-    public List<File> getProvidedOnlyJars() {
-        if (!isDependenciesResolved) {
-            return ImmutableList.of();
-        }
-
-        List<Dependency> dependencies = compileDependencies.getAllDependencies();
-        Set<File> jars = Sets.newLinkedHashSetWithExpectedSize(dependencies.size());
-
-        for (Dependency dependency : dependencies) {
-            if (!compileDependencies.isProvided(dependency)) {
-                continue;
-            }
-
-            final File classpathFile = dependency.getClasspathFile();
-            if (classpathFile.isFile()) {
-                jars.add(classpathFile);
-            }
-
-            List<File> otherJars = dependency.getAdditionalClasspath();
-            if (otherJars != null) {
-                for (File otherJar : otherJars) {
-                    if (otherJar.isFile()) {
-                        jars.add(otherJar);
-                    }
-                }
-            }
-        }
-
-        return ImmutableList.copyOf(jars);
     }
 
     /**
@@ -2114,16 +1662,14 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     }
 
     /**
-     * Returns the proguard config files coming from the project but also from the dependencies.
+     * Returns the proguard config files coming from the project.
      *
-     * Note that if the method is set to include config files coming from libraries, they will
-     * only be included if the aars have already been unzipped.
+     * Does not include proguard config from dependencies.
      *
-     * @param includeLibraries whether to include the library dependencies.
      * @return a non null list of proguard files.
      */
     @NonNull
-    public Set<File> getProguardFiles(boolean includeLibraries, List<File> defaultProguardConfig) {
+    public Set<File> getProguardFiles(List<File> defaultProguardConfig) {
         Set<File> fullList = Sets.newLinkedHashSet();
 
         // add the config files from the build type, main config and flavors
@@ -2136,16 +1682,6 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
 
         if (fullList.isEmpty()) {
             fullList.addAll(defaultProguardConfig);
-        }
-
-        // now add the one coming from the library dependencies
-        if (includeLibraries && isDependenciesResolved) {
-            for (AndroidDependency androidDependency : packageDependencies.getAllAndroidDependencies()) {
-                File proguardRules = androidDependency.getProguardRules();
-                if (proguardRules.isFile()) {
-                    fullList.add(proguardRules);
-                }
-            }
         }
 
         return fullList;
@@ -2299,7 +1835,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      * Returns true if the variant output is a bundle.
      */
     public boolean isBundled() {
-        return mType == VariantType.LIBRARY || mType == VariantType.ATOM;
+        return mType == VariantType.LIBRARY;
     }
 
     @NonNull

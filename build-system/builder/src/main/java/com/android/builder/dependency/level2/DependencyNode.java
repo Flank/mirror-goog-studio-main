@@ -37,7 +37,8 @@ import java.util.Objects;
 public final class DependencyNode {
 
     public enum NodeType {
-        ANDROID, JAVA, ATOM
+        ANDROID,
+        JAVA
     }
 
     @NonNull

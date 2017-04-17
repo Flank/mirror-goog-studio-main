@@ -18,11 +18,14 @@ package com.android.build.gradle.internal.tasks;
 
 import static com.android.SdkConstants.DOT_ANDROID_PACKAGE;
 import static com.android.SdkConstants.FD_RES_RAW;
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.APK;
 import static com.android.builder.core.BuilderConstants.ANDROID_WEAR_MICRO_APK;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.scope.BuildOutput;
+import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.ApkVariantData;
@@ -33,8 +36,9 @@ import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Set;
-import org.gradle.api.artifacts.Configuration;
+import java.util.stream.Collectors;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
@@ -50,8 +54,7 @@ import org.gradle.api.tasks.TaskAction;
 @ParallelizableTask
 public class GenerateApkDataTask extends BaseTask {
 
-    @Nullable
-    private FileCollection apkFile;
+    @Nullable private FileCollection apkDirectoryFileCollection;
 
     private File resOutputDir;
 
@@ -71,16 +74,24 @@ public class GenerateApkDataTask extends BaseTask {
     @TaskAction
     void generate() throws IOException, ProcessException, InterruptedException {
         // if the FileCollection contains no file, then there's nothing to do just abort.
-        File apk = null;
-        if (apkFile != null) {
-            Set<File> files = apkFile.getFiles();
+        File apkDirectory = null;
+        if (apkDirectoryFileCollection != null) {
+            Set<File> files = apkDirectoryFileCollection.getFiles();
             if (files.isEmpty()) {
                 return;
             }
+
             if (files.size() > 1) {
-                throw new IllegalStateException("Wear App dependency resolve to more than one APK: " + files);
+                throw new IllegalStateException(
+                        "Wear App dependency resolve to more than one file: " + files);
             }
-            apk = Iterables.getOnlyElement(files);
+
+            apkDirectory = Iterables.getOnlyElement(files);
+
+            if (!apkDirectory.isDirectory()) {
+                throw new IllegalStateException(
+                        "Wear App dependency does not resolve to a directory: " + files);
+            }
         }
 
         AndroidBuilder builder = getBuilder();
@@ -89,7 +100,23 @@ public class GenerateApkDataTask extends BaseTask {
         File outDir = getResOutputDir();
         FileUtils.cleanOutputDir(outDir);
 
-        if (apk != null) {
+        if (apkDirectory != null) {
+            Collection<BuildOutput> apks = BuildOutputs.load(APK, apkDirectory);
+
+            if (apks.isEmpty()) {
+                throw new IllegalStateException("Wear App dependency resolve to zero APK");
+            }
+
+            if (apks.size() > 1) {
+                throw new IllegalStateException(
+                        "Wear App dependency resolve to more than one APK: "
+                                + apks.stream()
+                                        .map(BuildOutput::getOutputFile)
+                                        .collect(Collectors.toList()));
+            }
+
+            File apk = Iterables.getOnlyElement(apks).getOutputFile();
+
             // copy the file into the destination, by sanitizing the name first.
             File rawDir = new File(outDir, FD_RES_RAW);
             FileUtils.mkdirs(rawDir);
@@ -120,7 +147,7 @@ public class GenerateApkDataTask extends BaseTask {
     @InputFiles
     @Optional
     public FileCollection getApkFileCollection() {
-        return apkFile;
+        return apkDirectoryFileCollection;
     }
 
     @Input
@@ -156,12 +183,12 @@ public class GenerateApkDataTask extends BaseTask {
         @NonNull
         VariantScope scope;
 
-        @Nullable
-        Configuration config;
+        @Nullable FileCollection apkFileCollection;
 
-        public ConfigAction(@NonNull VariantScope scope, @Nullable Configuration config) {
+        public ConfigAction(
+                @NonNull VariantScope scope, @Nullable FileCollection apkFileCollection) {
             this.scope = scope;
-            this.config = config;
+            this.apkFileCollection = apkFileCollection;
         }
 
         @Override
@@ -189,7 +216,7 @@ public class GenerateApkDataTask extends BaseTask {
 
             task.setResOutputDir(scope.getMicroApkResDirectory());
 
-            task.apkFile = config;
+            task.apkDirectoryFileCollection = apkFileCollection;
 
             task.manifestFile = scope.getMicroApkManifestFile();
             task.mainPkgName = variantConfiguration.getApplicationId();

@@ -1,3 +1,4 @@
+
 apply from: "../commonHeader.gradle"
 buildscript { apply from: "../commonBuildScript.gradle" }
 apply from: "../commonLocalRepo.gradle"
@@ -116,9 +117,13 @@ android {
 
     // Override the versionCode of the release version
     applicationVariants.all { variant ->
+        print variant
         if (variant.buildType.name == "release") {
-            assert variant.outputs.size() == 1 : "There must be exactly one output"
-            variant.outputs.get(0).versionCodeOverride = 13
+            variant.outputs.all {
+                print("Customizing " + this)
+                setVersionCodeOverride(13)
+                print("Done with " + this)
+            }
         }
     }
 }

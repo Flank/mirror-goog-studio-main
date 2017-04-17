@@ -22,7 +22,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.BooleanOption;
-import com.android.builder.model.AndroidProject;
+import com.android.build.gradle.options.StringOption;
 import com.android.testutils.apk.Apk;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -59,7 +59,7 @@ public class NdkInjectedAbiTest {
     @Test
     public void checkSingleBuildAbi() throws Exception {
         sProject.executor()
-                .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "armeabi")
+                .with(StringOption.IDE_BUILD_TARGET_ABI, "armeabi")
                 .run("clean", "assembleDebug");
         Apk debug = sProject.getApk("debug");
         assertThat(debug).contains("lib/armeabi/libhello-jni.so");
@@ -70,7 +70,7 @@ public class NdkInjectedAbiTest {
     @Test
     public void checkOnlyTheFirstAbiIsPackaged() throws Exception {
         sProject.executor()
-                .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "armeabi,x86")
+                .with(StringOption.IDE_BUILD_TARGET_ABI, "armeabi,x86")
                 .run("clean", "assembleDebug");
         Apk debug = sProject.getApk("debug");
         assertThat(debug).contains("lib/armeabi/libhello-jni.so");
@@ -81,7 +81,7 @@ public class NdkInjectedAbiTest {
     @Test
     public void checkEmptyListDoNotFilter() throws Exception {
         sProject.executor()
-                .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "")
+                .with(StringOption.IDE_BUILD_TARGET_ABI, "")
                 .run("clean", "assembleDebug");
         Apk debug = sProject.getApk("debug");
         assertThat(debug).contains("lib/armeabi/libhello-jni.so");
@@ -92,8 +92,8 @@ public class NdkInjectedAbiTest {
     @Test
     public void checkBuildOnlyTargetAbiCanBeDisabled() throws Exception {
         sProject.executor()
-                .withProperty(BooleanOption.BUILD_ONLY_TARGET_ABI.getPropertyName(), "false")
-                .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "armeabi")
+                .with(BooleanOption.BUILD_ONLY_TARGET_ABI, false)
+                .with(StringOption.IDE_BUILD_TARGET_ABI, "armeabi")
                 .run("clean", "assembleDebug");
         Apk debug = sProject.getApk("debug");
         assertThat(debug).contains("lib/armeabi/libhello-jni.so");

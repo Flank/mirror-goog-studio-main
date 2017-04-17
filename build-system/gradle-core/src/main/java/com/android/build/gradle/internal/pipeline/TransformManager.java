@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.pipeline;
 import static com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES;
 import static com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES;
 import static com.android.build.gradle.internal.pipeline.ExtendedContentType.JACK;
+import static com.android.build.gradle.internal.pipeline.ExtendedContentType.NATIVE_LIBS;
 import static com.android.utils.StringHelper.capitalize;
 
 import com.android.annotations.NonNull;
@@ -27,6 +28,7 @@ import com.android.annotations.VisibleForTesting;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.ContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
+import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.api.transform.Transform;
 import com.android.build.gradle.internal.InternalScope;
 import com.android.build.gradle.internal.TaskFactory;
@@ -73,26 +75,30 @@ public class TransformManager extends FilterableStreamCollection {
     public static final Set<ContentType> CONTENT_CLASS = ImmutableSet.of(CLASSES);
     public static final Set<ContentType> CONTENT_JARS = ImmutableSet.of(CLASSES, RESOURCES);
     public static final Set<ContentType> CONTENT_RESOURCES = ImmutableSet.of(RESOURCES);
+    public static final Set<ContentType> CONTENT_FULL_JAR = ImmutableSet.of(CLASSES, RESOURCES, NATIVE_LIBS);
     public static final Set<ContentType> CONTENT_NATIVE_LIBS =
-            ImmutableSet.of(ExtendedContentType.NATIVE_LIBS);
+            ImmutableSet.of(NATIVE_LIBS);
     public static final Set<ContentType> CONTENT_DEX = ImmutableSet.of(ExtendedContentType.DEX);
     public static final Set<ContentType> CONTENT_JACK = ImmutableSet.of(JACK);
     public static final Set<ContentType> DATA_BINDING_ARTIFACT =
-            ImmutableSet.of(ExtendedContentType.DATA_BINDING, CLASSES);
+            ImmutableSet.of(ExtendedContentType.DATA_BINDING);
+    public static final Set<ScopeType> PROJECT_ONLY = ImmutableSet.of(Scope.PROJECT);
     public static final Set<Scope> SCOPE_FULL_PROJECT =
             Sets.immutableEnumSet(
                     Scope.PROJECT,
-                    Scope.PROJECT_LOCAL_DEPS,
                     Scope.SUB_PROJECTS,
-                    Scope.SUB_PROJECTS_LOCAL_DEPS,
                     Scope.EXTERNAL_LIBRARIES);
-    public static final Set<QualifiedContent.ScopeType> SCOPE_FULL_INSTANT_RUN_PROJECT =
-            new ImmutableSet.Builder<QualifiedContent.ScopeType>()
+    // this scope is only for dexing where we need to make sure we get every scope, including
+    // the deprecated ones.
+    public static final Set<ScopeType> SCOPE_FULL_WITH_IR_FOR_DEXING =
+            new ImmutableSet.Builder<ScopeType>()
                     .addAll(SCOPE_FULL_PROJECT)
                     .add(InternalScope.MAIN_SPLIT)
+                    .add(Scope.PROJECT_LOCAL_DEPS)
+                    .add(Scope.SUB_PROJECTS_LOCAL_DEPS)
                     .build();
-    public static final Set<Scope> SCOPE_FULL_LIBRARY =
-            Sets.immutableEnumSet(Scope.PROJECT, Scope.PROJECT_LOCAL_DEPS);
+    public static final Set<ScopeType> SCOPE_FULL_LIBRARY_WITH_LOCAL_JARS =
+            ImmutableSet.of(Scope.PROJECT, InternalScope.LOCAL_DEPS);
 
     @NonNull
     private final Project project;
@@ -102,6 +108,8 @@ public class TransformManager extends FilterableStreamCollection {
     private final ErrorReporter errorReporter;
     @NonNull
     private final Logger logger;
+    @NonNull
+    private final Recorder recorder;
 
     /**
      * These are the streams that are available for new Transforms to consume.
@@ -117,7 +125,6 @@ public class TransformManager extends FilterableStreamCollection {
     @NonNull private final List<TransformStream> streams = Lists.newArrayList();
     @NonNull
     private final List<Transform> transforms = Lists.newArrayList();
-    @NonNull private final Recorder recorder;
 
     public TransformManager(
             @NonNull Project project,
@@ -129,7 +136,6 @@ public class TransformManager extends FilterableStreamCollection {
         this.errorReporter = errorReporter;
         this.recorder = recorder;
         this.logger = Logging.getLogger(TransformManager.class);
-
     }
 
     @NonNull
@@ -453,8 +459,43 @@ public class TransformManager extends FilterableStreamCollection {
 
         }
 
+        if (!transform
+                .getClass()
+                .getCanonicalName()
+                .startsWith("com.android.build.gradle.internal.transforms")) {
+            checkScopeDeprecation(transform.getScopes(), transform.getName());
+            checkScopeDeprecation(transform.getReferencedScopes(), transform.getName());
+        }
 
         return true;
+    }
+
+    @SuppressWarnings("deprecation")
+    private void checkScopeDeprecation(
+            @NonNull Set<? super Scope> scopes, @NonNull String transformName) {
+        if (scopes.contains(Scope.PROJECT_LOCAL_DEPS)) {
+            final String message =
+                    String.format(
+                            "Transform '%1$s' uses scope PROJECT_LOCAL_DEPS which is deprecated and replaced with EXTERNAL",
+                            transformName);
+            if (!scopes.contains(Scope.EXTERNAL_LIBRARIES)) {
+                errorReporter.handleSyncError(null, SyncIssue.TYPE_GENERIC, message);
+            } else {
+                errorReporter.handleSyncWarning(null, SyncIssue.TYPE_GENERIC, message);
+            }
+        }
+
+        if (scopes.contains(Scope.SUB_PROJECTS_LOCAL_DEPS)) {
+            final String message =
+                    String.format(
+                            "Transform '%1$s' uses scope SUB_PROJECTS_LOCAL_DEPS which is deprecated and replaced with EXTERNAL",
+                            transformName);
+            if (!scopes.contains(Scope.EXTERNAL_LIBRARIES)) {
+                errorReporter.handleSyncError(null, SyncIssue.TYPE_GENERIC, message);
+            } else {
+                errorReporter.handleSyncWarning(null, SyncIssue.TYPE_GENERIC, message);
+            }
+        }
     }
 
     private boolean checkContentTypes(

@@ -35,11 +35,11 @@ import org.gradle.api.tasks.TaskAction;
  *
  * <p>The next time they run they will pick up all intermediate changes.
  *
- * <p>With multi apk (N or above device) resources are packaged in the main split APK. However when a warm swap is possible, it is
- * not necessary to produce immediately the new main SPLIT since the runtime use directly the
- * resources.ap_ file. However, as soon as an incompatible change forcing a cold swap is
- * triggered, the main APK must be rebuilt (even if the resources were changed in a previous
- * build).
+ * <p>With multi apk (N or above device) resources are packaged in the main split APK. However when
+ * a warm swap is possible, it is not necessary to produce immediately the new main SPLIT since the
+ * runtime use directly the resources.ap_ file. However, as soon as an incompatible change forcing a
+ * cold swap is triggered, the main APK must be rebuilt (even if the resources were changed in a
+ * previous build).
  */
 public class PreColdSwapTask extends DefaultAndroidTask {
 

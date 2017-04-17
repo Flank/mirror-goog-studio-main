@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.api;
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import groovy.lang.Closure;
 
 /**
@@ -75,21 +76,54 @@ public interface AndroidSourceSet {
 
     /**
      * Returns the name of the compile configuration for this source set.
+     *
+     * @deprecated use {@link #getImplementationConfigurationName()}
      */
     @NonNull
+    @Deprecated
     String getCompileConfigurationName();
 
     /**
      * Returns the name of the runtime configuration for this source set.
+     *
+     * @deprecated use {@link #getRuntimeOnlyConfigurationName()}
      */
     @NonNull
+    @Deprecated
     String getPackageConfigurationName();
 
     /**
      * Returns the name of the compiled-only configuration for this source set.
+     *
+     * @deprecated use {@link #getCompileOnlyConfigurationName()}
      */
     @NonNull
+    @Deprecated
     String getProvidedConfigurationName();
+
+    /**
+     * Returns the name of the api configuration for this source set.
+     */
+    @Nullable
+    String getApiConfigurationName();
+
+    /**
+     * Returns the name of the compileOnly configuration for this source set.
+     */
+    @NonNull
+    String getCompileOnlyConfigurationName();
+
+    /**
+     * Returns the name of the implemenation configuration for this source set.
+     */
+    @NonNull
+    String getImplementationConfigurationName();
+
+    /**
+     * Returns the name of the implemenation configuration for this source set.
+     */
+    @NonNull
+    String getRuntimeOnlyConfigurationName();
 
     /**
      * Returns the name of the wearApp configuration for this source set.

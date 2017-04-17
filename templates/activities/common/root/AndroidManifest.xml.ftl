@@ -17,9 +17,6 @@
             </#if>
             <#if buildApi gte 16 && parentActivityClass != "">
                 android:parentActivityName="${parentActivityClass}"
-            </#if>
-            <#if isFeatureSplit>
-                split="${instantAppSplitName}"
             </#if>>
             <#if parentActivityClass != "">
                 <meta-data android:name="android.support.PARENT_ACTIVITY"

@@ -17,7 +17,6 @@
 package com.android.build.gradle.integration.dependencies;
 
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
-import static com.google.common.truth.TruthJUnit.assume;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp;
@@ -41,7 +40,6 @@ public class TestWithSameDepAsAppWithProguard {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        assume().that(GradleTestProject.USE_JACK).isFalse();
         appendToFile(project.getBuildFile(),
                 "\n" +
                 "apply plugin: \"com.android.application\"\n" +

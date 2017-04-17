@@ -9,6 +9,11 @@ android {
         versionCode 42
         versionName "custom"
     }
+
+    buildTypes {
+        custom.initWith(release)
+    }
+
 }
 
 dependencies {

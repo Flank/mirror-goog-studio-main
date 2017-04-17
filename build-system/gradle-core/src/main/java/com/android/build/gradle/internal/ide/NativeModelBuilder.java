@@ -24,8 +24,6 @@ import com.android.build.gradle.external.gson.NativeBuildConfigValue;
 import com.android.build.gradle.external.gson.NativeLibraryValue;
 import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.ndk.internal.NativeCompilerArgsUtil;
 import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
 import com.android.builder.model.NativeAndroidProject;
@@ -97,9 +95,7 @@ public class NativeModelBuilder implements ToolingModelBuilder {
             NativeAndroidProjectBuilder info = new NativeAndroidProjectBuilder();
 
             Set<String> buildSystems = Sets.newHashSet();
-            for (BaseVariantData<? extends BaseVariantOutputData> variantData
-                    : variantManager.getVariantDataList()) {
-                VariantScope scope = variantData.getScope();
+            for (VariantScope scope : variantManager.getVariantScopes()) {
                 ExternalNativeJsonGenerator generator = scope.getExternalNativeJsonGenerator();
                 if (generator != null) {
                     buildSystems.add(generator.getNativeBuildSystem().getName());

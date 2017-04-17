@@ -19,12 +19,6 @@ package com.android.build.gradle.integration.application;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.builder.core.BuilderConstants.DEBUG;
 import static com.android.builder.core.BuilderConstants.RELEASE;
-import static com.android.builder.model.AndroidProject.PROPERTY_SIGNING_KEY_ALIAS;
-import static com.android.builder.model.AndroidProject.PROPERTY_SIGNING_KEY_PASSWORD;
-import static com.android.builder.model.AndroidProject.PROPERTY_SIGNING_STORE_FILE;
-import static com.android.builder.model.AndroidProject.PROPERTY_SIGNING_STORE_PASSWORD;
-import static com.android.builder.model.AndroidProject.PROPERTY_SIGNING_V1_ENABLED;
-import static com.android.builder.model.AndroidProject.PROPERTY_SIGNING_V2_ENABLED;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -43,6 +37,8 @@ import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.SigningConfigHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.options.OptionalBooleanOption;
+import com.android.build.gradle.options.StringOption;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SigningConfig;
@@ -50,7 +46,6 @@ import com.android.builder.model.Variant;
 import com.android.ddmlib.IDevice;
 import com.android.testutils.TestUtils;
 import com.android.testutils.apk.Apk;
-import com.google.common.collect.ImmutableList;
 import com.google.common.io.Resources;
 import java.io.File;
 import java.nio.file.Files;
@@ -235,14 +230,12 @@ public class SigningTest {
     @Test
     public void assembleWithInjectedSigningConfig() throws Exception {
         // add prop args for signing override.
-        List<String> args =
-                ImmutableList.of(
-                        "-P" + PROPERTY_SIGNING_STORE_FILE + "=" + keystore.getPath(),
-                        "-P" + PROPERTY_SIGNING_STORE_PASSWORD + "=" + STORE_PASSWORD,
-                        "-P" + PROPERTY_SIGNING_KEY_ALIAS + "=" + ALIAS_NAME,
-                        "-P" + PROPERTY_SIGNING_KEY_PASSWORD + "=" + KEY_PASSWORD);
-
-        project.executor().withArguments(args).run("assembleRelease");
+        project.executor()
+                .with(StringOption.IDE_SIGNING_STORE_FILE, keystore.getPath())
+                .with(StringOption.IDE_SIGNING_STORE_PASSWORD, STORE_PASSWORD)
+                .with(StringOption.IDE_SIGNING_KEY_ALIAS, ALIAS_NAME)
+                .with(StringOption.IDE_SIGNING_KEY_PASSWORD, KEY_PASSWORD)
+                .run("assembleRelease");
         Apk apk = project.getApk("release");
 
         // Check for signing file inside the archive.
@@ -510,15 +503,14 @@ public class SigningTest {
     @Test
     public void assembleWithInjectedV1ConfigOnly() throws Exception {
         // add prop args for signing override.
-        List<String> args = ImmutableList.of(
-                "-P" + PROPERTY_SIGNING_STORE_FILE + "=" + keystore.getPath(),
-                "-P" + PROPERTY_SIGNING_STORE_PASSWORD + "=" + STORE_PASSWORD,
-                "-P" + PROPERTY_SIGNING_KEY_ALIAS + "=" + ALIAS_NAME,
-                "-P" + PROPERTY_SIGNING_KEY_PASSWORD + "=" + KEY_PASSWORD,
-                "-P" + PROPERTY_SIGNING_V1_ENABLED + "=true",
-                "-P" + PROPERTY_SIGNING_V2_ENABLED + "=false");
-
-        project.executor().withArguments(args).run("assembleRelease");
+        project.executor()
+                .with(StringOption.IDE_SIGNING_STORE_FILE, keystore.getPath())
+                .with(StringOption.IDE_SIGNING_STORE_PASSWORD, STORE_PASSWORD)
+                .with(StringOption.IDE_SIGNING_KEY_ALIAS, ALIAS_NAME)
+                .with(StringOption.IDE_SIGNING_KEY_PASSWORD, KEY_PASSWORD)
+                .with(OptionalBooleanOption.SIGNING_V1_ENABLED, true)
+                .with(OptionalBooleanOption.SIGNING_V2_ENABLED, false)
+                .run("assembleRelease");
         Apk apk = project.getApk("release");
 
         assertThat(apk).contains("META-INF/" + certEntryName);
@@ -532,15 +524,14 @@ public class SigningTest {
     @Test
     public void assembleWithInjectedV2ConfigOnly() throws Exception {
         // add prop args for signing override.
-        List<String> args = ImmutableList.of(
-                "-P" + PROPERTY_SIGNING_STORE_FILE + "=" + keystore.getPath(),
-                "-P" + PROPERTY_SIGNING_STORE_PASSWORD + "=" + STORE_PASSWORD,
-                "-P" + PROPERTY_SIGNING_KEY_ALIAS + "=" + ALIAS_NAME,
-                "-P" + PROPERTY_SIGNING_KEY_PASSWORD + "=" + KEY_PASSWORD,
-                "-P" + PROPERTY_SIGNING_V1_ENABLED + "=false",
-                "-P" + PROPERTY_SIGNING_V2_ENABLED + "=true");
-
-        project.executor().withArguments(args).run("assembleRelease");
+        project.executor()
+                .with(StringOption.IDE_SIGNING_STORE_FILE, keystore.getPath())
+                .with(StringOption.IDE_SIGNING_STORE_PASSWORD, STORE_PASSWORD)
+                .with(StringOption.IDE_SIGNING_KEY_ALIAS, ALIAS_NAME)
+                .with(StringOption.IDE_SIGNING_KEY_PASSWORD, KEY_PASSWORD)
+                .with(OptionalBooleanOption.SIGNING_V1_ENABLED, false)
+                .with(OptionalBooleanOption.SIGNING_V2_ENABLED, true)
+                .run("assembleRelease");
         Apk apk = project.getApk("release");
 
         assertThat(apk).doesNotContain("META-INF/" + certEntryName);

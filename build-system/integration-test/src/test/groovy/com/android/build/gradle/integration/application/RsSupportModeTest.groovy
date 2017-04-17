@@ -26,6 +26,7 @@ import com.android.builder.model.AndroidProject
 import com.android.builder.model.Variant
 import com.android.builder.model.level2.Library
 import com.android.builder.model.level2.DependencyGraphs
+import com.google.common.truth.Truth
 import groovy.transform.CompileStatic
 import org.junit.AfterClass
 import org.junit.BeforeClass
@@ -34,6 +35,7 @@ import org.junit.Test
 
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA
 import static org.junit.Assert.assertFalse
+import static org.junit.Assert.assertThat
 import static org.junit.Assert.assertTrue
 
 /**
@@ -71,7 +73,7 @@ class RsSupportModeTest {
         DependencyGraphs graph = mainArtifact.getDependencyGraphs()
 
         List<Library> libraries = helper.on(graph).withType(JAVA).asLibraries();
-        assertFalse(libraries.isEmpty())
+        Truth.assertThat(libraries).isNotEmpty();
 
         boolean foundSupportJar = false
         for (Library lib : libraries) {

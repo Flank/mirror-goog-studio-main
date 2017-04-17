@@ -34,6 +34,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -121,10 +122,15 @@ public class PerformanceTestProjects {
                 "abc_ic_ab_back_material");
 
         TestFileUtils.searchAndReplace(
+                mainProject.file("AntennaPod/core/src/main/res/values/styles.xml"),
+                "<item name=\"attr/",
+                "<item type=\"att\" name=\""
+        );
+
+        TestFileUtils.searchAndReplace(
                 project.file("app/build.gradle"),
                 ",\\s*commit: \"git rev-parse --short HEAD\".execute\\(\\).text\\]",
-                "]"
-        );
+                "]");
     }
 
 
@@ -148,7 +154,8 @@ public class PerformanceTestProjects {
                                 + "        classpath 'com.android.tools.build:gradle:%2$s'\n"
                                 + "    }\n"
                                 + "}\n",
-                        localRepositoriesSnippet, GradleTestProject.ANDROID_GRADLE_PLUGIN_VERSION));
+                        localRepositoriesSnippet,
+                        GradleTestProject.ANDROID_GRADLE_PLUGIN_VERSION));
 
         List<Path> buildGradleFiles =
                 Stream.of(
@@ -165,13 +172,59 @@ public class PerformanceTestProjects {
                 project.file("WordPress/build.gradle"),
                 "maven \\{ url (('.*')|(\".*\")) \\}",
                 "");
+        TestFileUtils.searchAndReplace(
+                project.file("WordPress/build.gradle"),
+                "productFlavors \\{",
+                "flavorDimensions 'version'\n"
+                        + "productFlavors {");
+
+        // replace manual variant aware dependency with automatic one.
+        // remove one line and edit the other for each dependency.
+        TestFileUtils.searchAndReplace(
+                project.file("WordPress/build.gradle"),
+                Pattern.quote("releaseCompile project(path:':libs:utils:WordPressUtils', configuration: 'release')"),
+                "compile project(path:':libs:utils:WordPressUtils') // replaced by test\n");
+        TestFileUtils.searchAndReplace(
+                project.file("WordPress/build.gradle"),
+                Pattern.quote("debugCompile project(path:':libs:utils:WordPressUtils', configuration: 'debug')"),
+                "");
+
+        TestFileUtils.searchAndReplace(
+                project.file("WordPress/build.gradle"),
+                Pattern.quote("releaseCompile project(path:':libs:networking:WordPressNetworking', configuration: 'release')"),
+                "compile project(path:':libs:networking:WordPressNetworking') // replaced by test\n");
+        TestFileUtils.searchAndReplace(
+                project.file("WordPress/build.gradle"),
+                Pattern.quote("debugCompile project(path:':libs:networking:WordPressNetworking', configuration: 'debug')"),
+                "");
+
+        TestFileUtils.searchAndReplace(
+                project.file("WordPress/build.gradle"),
+                Pattern.quote("releaseCompile project(path:':libs:analytics:WordPressAnalytics', configuration: 'release')"),
+                "compile project(path:':libs:analytics:WordPressAnalytics') // replaced by test\n");
+        TestFileUtils.searchAndReplace(
+                project.file("WordPress/build.gradle"),
+                Pattern.quote("debugCompile project(path:':libs:analytics:WordPressAnalytics', configuration: 'debug')"),
+                "");
+
+        TestFileUtils.searchAndReplace(
+                project.file("WordPress/build.gradle"),
+                Pattern.quote("releaseCompile project(path:':libs:editor:WordPressEditor', configuration: 'release')"),
+                "compile project(path:':libs:editor:WordPressEditor') // replaced by test\n");
+        TestFileUtils.searchAndReplace(
+                project.file("WordPress/build.gradle"),
+                Pattern.quote("debugCompile project(path:':libs:editor:WordPressEditor', configuration: 'debug')"),
+                "");
+
 
         for (Path file : buildGradleFiles) {
             TestFileUtils.searchAndReplace(
                     file, "classpath 'com\\.android\\.tools\\.build:gradle:\\d+.\\d+.\\d+'", "");
 
             TestFileUtils.searchAndReplace(
-                    file, "jcenter\\(\\)", localRepositoriesSnippet.replace("\\", "\\\\"));
+                    file,
+                    "jcenter\\(\\)",
+                    localRepositoriesSnippet.replace("\\", "\\\\"));
 
             TestFileUtils.searchAndReplace(
                     file,
@@ -275,10 +328,7 @@ public class PerformanceTestProjects {
             TestFileUtils.searchAndReplace(
                     path,
                     "compile 'org\\.wordpress:utils:1\\.11\\.0'",
-                    "releaseCompile "
-                            + "project(path:':libs:utils:WordPressUtils', configuration: 'release')\n"
-                            + "    debugCompile "
-                            + "project(path:':libs:utils:WordPressUtils', configuration: 'debug')\n");
+                    "compile project(':libs:utils:WordPressUtils')\n");
         }
 
         // There is an extraneous BOM in the values-ja/strings.xml
@@ -311,7 +361,10 @@ public class PerformanceTestProjects {
                 "androidTestCompile 'com.squareup.okhttp:mockwebserver:2.7.5'",
                 "androidTestCompile 'com.squareup.okhttp:mockwebserver:2.7.4'");
 
-
+        TestFileUtils.searchAndReplace(
+                project.file("WordPress/src/main/AndroidManifest.xml"),
+                "<action android:name=\"com\\.google\\.android\\.c2dm\\.intent\\.REGISTRATION\" />",
+                "");
 
     }
 

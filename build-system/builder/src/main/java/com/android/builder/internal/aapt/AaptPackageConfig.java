@@ -19,7 +19,6 @@ package com.android.builder.internal.aapt;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.core.VariantType;
-import com.android.builder.dependency.level2.AndroidDependency;
 import com.android.builder.model.AaptOptions;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
@@ -41,6 +40,28 @@ import java.util.Set;
  * <p>To create a packaging configuration, use the provided builder, {@link Builder}.
  */
 public class AaptPackageConfig implements Cloneable {
+
+    public static class LibraryInfo {
+        @NonNull
+        private final File manifest;
+        @Nullable
+        private final File symbolFile;
+
+        public LibraryInfo(@NonNull File manifest, @Nullable File symbolFile) {
+            this.manifest = manifest;
+            this.symbolFile = symbolFile;
+        }
+
+        @NonNull
+        public File getManifest() {
+            return manifest;
+        }
+
+        @Nullable
+        public File getSymbolFile() {
+            return symbolFile;
+        }
+    }
 
     /**
      * The manifest file (see {@link Builder#setManifestFile(File)}).
@@ -72,7 +93,7 @@ public class AaptPackageConfig implements Cloneable {
      * All libraries added (see {@link Builder#setLibraries(List)}).
      */
     @NonNull
-    private ImmutableList<AndroidDependency> mLibraries;
+    private ImmutableList<LibraryInfo> mLibraries;
 
     /**
      * Symbol output directory (see {@link Builder#setSymbolOutputDir(File)}).
@@ -172,14 +193,19 @@ public class AaptPackageConfig implements Cloneable {
     @NonNull
     private ImmutableSet<File> mPreviousFeatures;
 
-    /**
-     * Creates a new instance of the the package configuration with default values.
-     */
+    /** Package ID for the feature split. */
+    @Nullable private Integer mPackageId;
+
+    /** Dependent feature APK files, including the base feature. */
+    @NonNull private ImmutableSet<File> mDependentFeatures;
+
+    /** Creates a new instance of the the package configuration with default values. */
     private AaptPackageConfig() {
         mLibraries = ImmutableList.of();
         mVerbose = false;
         mResourceConfigs = ImmutableSet.of();
         mPreviousFeatures = ImmutableSet.of();
+        mDependentFeatures = ImmutableSet.of();
     }
 
     @Override
@@ -242,8 +268,8 @@ public class AaptPackageConfig implements Cloneable {
      * @return all libraries; returns an empty list if no libraries were added
      */
     @NonNull
-    public List<AndroidDependency> getLibraries() {
-        return Collections.unmodifiableList(mLibraries);
+    public List<LibraryInfo> getLibraries() {
+        return mLibraries;
     }
 
     /**
@@ -418,8 +444,26 @@ public class AaptPackageConfig implements Cloneable {
     }
 
     /**
-     * Builder used to create a {@link AaptPackageConfig}.
+     * Obtains the package ID for the feature split.
+     *
+     * @return the package ID for the feature split
      */
+    @Nullable
+    public Integer getPackageId() {
+        return mPackageId;
+    }
+
+    /**
+     * Obtains the dependent feature APK files.
+     *
+     * @return the dependent feature APK files
+     */
+    @NonNull
+    public Set<File> getDependentFeatures() {
+        return mDependentFeatures;
+    }
+
+    /** Builder used to create a {@link AaptPackageConfig}. */
     public static class Builder {
 
         /**
@@ -512,7 +556,7 @@ public class AaptPackageConfig implements Cloneable {
          * @return {@code this}
          */
         @NonNull
-        public Builder setLibraries(@Nullable List<AndroidDependency> libraries) {
+        public Builder setLibraries(@Nullable List<LibraryInfo> libraries) {
             if (libraries == null) {
                 mConfig.mLibraries = ImmutableList.of();
             } else {
@@ -750,6 +794,30 @@ public class AaptPackageConfig implements Cloneable {
         @NonNull
         public Builder setPreviousFeatures(@NonNull Collection<File> previousFeatures) {
             mConfig.mPreviousFeatures = ImmutableSet.copyOf(previousFeatures);
+            return this;
+        }
+
+        /**
+         * Sets the package ID for the feature split.
+         *
+         * @param packageId the package ID for the feature split.
+         * @return {@code this}
+         */
+        @NonNull
+        public Builder setPackageId(@Nullable Integer packageId) {
+            mConfig.mPackageId = packageId;
+            return this;
+        }
+
+        /**
+         * Sets the dependent feature APK files.
+         *
+         * @param dependentFeatures the dependent feature APK files.
+         * @return {@code this}
+         */
+        @NonNull
+        public Builder setDependentFeatures(@NonNull Collection<File> dependentFeatures) {
+            mConfig.mDependentFeatures = ImmutableSet.copyOf(dependentFeatures);
             return this;
         }
     }

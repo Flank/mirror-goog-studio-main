@@ -16,11 +16,12 @@
 
 package com.android.build.gradle.integration.nativebuild
 
-import com.android.build.gradle.AndroidGradleOptions
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.build.gradle.integration.common.utils.ZipHelper
+import com.android.build.gradle.options.BooleanOption
+import com.android.build.gradle.options.StringOption
 import com.android.build.gradle.tasks.NativeBuildSystem
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.NativeAndroidProject
@@ -150,7 +151,7 @@ android {
     @Test
     void "check apk content with injected ABI"() {
         project.executor()
-                .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "x86")
+                .with(StringOption.IDE_BUILD_TARGET_ABI, "x86")
                 .run("clean", "assembleDebug")
         Apk apk = project.getApk("debug");
         assertThatApk(apk).doesNotContain("lib/armeabi-v7a/libhello-jni.so");

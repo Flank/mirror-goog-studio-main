@@ -18,13 +18,13 @@ package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.category.DeviceTests
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.utils.AssumeUtil
+import com.android.build.gradle.integration.common.fixture.app.TransformOutputContent
 import com.android.build.gradle.integration.common.utils.ZipHelper
 import com.android.builder.Version
 import com.android.builder.model.AndroidProject
 import com.android.testutils.truth.ZipFileSubject
+import com.android.utils.FileUtils
 import groovy.transform.CompileStatic
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.experimental.categories.Category
@@ -33,6 +33,7 @@ import org.objectweb.asm.tree.FieldNode
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import static com.android.testutils.truth.MoreTruth.assertThatZip
+
 /**
  * Assemble tests for minify.
  */
@@ -41,11 +42,6 @@ class MinifyTest {
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder().fromTestProject("minify").create()
-
-    @Before
-    void skipUnderJack() throws Exception {
-        AssumeUtil.assumeNotUsingJack()
-    }
 
     @Test
     @Category(DeviceTests.class)
@@ -56,13 +52,10 @@ class MinifyTest {
     @Test
     void 'App APK is minified'() throws Exception {
         project.execute("assembleMinified")
-        File jarFile = project.file(
-                "build/" +
-                        "$AndroidProject.FD_INTERMEDIATES/" +
-                        "transforms/" +
-                        "proguard/" +
-                        "minified/" +
-                        "jars/3/1f/main.jar")
+
+        File outputDir= FileUtils.join(project.getIntermediatesDir(), "transforms", "proguard", "minified");
+        TransformOutputContent content = new TransformOutputContent(outputDir);
+        File jarFile = content.getLocation(content.getSingleStream());
 
         Set<String> minifiedList = ZipHelper.getZipEntries(jarFile);
 
@@ -99,14 +92,10 @@ class MinifyTest {
         // Run just a single task, to make sure task dependencies are correct.
         project.execute("assembleMinifiedAndroidTest")
 
-        File jarFile = project.file(
-                "build/" +
-                        "$AndroidProject.FD_INTERMEDIATES/" +
-                        "transforms/" +
-                        "proguard/" +
-                        "androidTest/" +
-                        "minified/" +
-                        "jars/3/1f/main.jar")
+        File outputDir= FileUtils.join(project.getIntermediatesDir(), "transforms", "proguard", "androidTest", "minified");
+        TransformOutputContent content = new TransformOutputContent(outputDir);
+        File jarFile = content.getLocation(content.getSingleStream());
+
         Set<String> minifiedList = ZipHelper.getZipEntries(jarFile)
 
         def testClassFiles = minifiedList.findAll { !it.startsWith("org/hamcrest") }

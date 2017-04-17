@@ -9,6 +9,7 @@ import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.model.SourceProvider;
 import com.android.utils.FileUtils;
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import org.gradle.api.tasks.Sync;
@@ -18,9 +19,11 @@ import org.gradle.api.tasks.Sync;
  */
 public class ProcessJavaResConfigAction implements TaskConfigAction<Sync> {
     private VariantScope scope;
+    private final File destinationDir;
 
-    public ProcessJavaResConfigAction(VariantScope scope) {
+    public ProcessJavaResConfigAction(VariantScope scope, File destinationDir) {
         this.scope = scope;
+        this.destinationDir = destinationDir;
     }
 
     @NonNull
@@ -76,8 +79,6 @@ public class ProcessJavaResConfigAction implements TaskConfigAction<Sync> {
 
         processResources.from(scope.getGeneratedJavaResourcesDir());
 
-        processResources.setDestinationDir(scope.getSourceFoldersJavaResDestinationDir());
-
         if (processResources.getInputs().getFiles().getFiles().isEmpty()) {
             try {
                 FileUtils.deletePath(scope.getSourceFoldersJavaResDestinationDir());
@@ -85,5 +86,7 @@ public class ProcessJavaResConfigAction implements TaskConfigAction<Sync> {
                 throw new RuntimeException("Cannot delete merged source resource folder", e);
             }
         }
+
+        processResources.setDestinationDir(destinationDir);
     }
 }

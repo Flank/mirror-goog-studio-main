@@ -30,16 +30,15 @@ import java.util.Set;
  */
 class TransformOutputProviderImpl implements TransformOutputProvider {
 
-    @NonNull
-    private final File rootLocation;
+    @NonNull private final IntermediateFolderUtils folderUtils;
 
-    TransformOutputProviderImpl(@NonNull File rootLocation) {
-        this.rootLocation = rootLocation;
+    TransformOutputProviderImpl(@NonNull IntermediateFolderUtils folderUtils) {
+        this.folderUtils = folderUtils;
     }
 
     @Override
     public void deleteAll() throws IOException {
-        FileUtils.cleanOutputDir(rootLocation);
+        FileUtils.cleanOutputDir(folderUtils.getRootFolder());
     }
 
     @NonNull
@@ -49,6 +48,6 @@ class TransformOutputProviderImpl implements TransformOutputProvider {
             @NonNull Set<QualifiedContent.ContentType> types,
             @NonNull Set<? super QualifiedContent.Scope> scopes,
             @NonNull Format format) {
-        return IntermediateFolderUtils.getContentLocation(rootLocation, name, types, scopes, format);
+        return folderUtils.getContentLocation(name, types, scopes, format);
     }
 }

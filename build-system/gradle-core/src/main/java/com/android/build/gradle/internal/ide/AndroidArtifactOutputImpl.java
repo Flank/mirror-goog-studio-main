@@ -17,12 +17,18 @@
 package com.android.build.gradle.internal.ide;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
+import com.android.build.FilterData;
 import com.android.build.OutputFile;
+import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.builder.model.AndroidArtifactOutput;
+import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -32,67 +38,81 @@ import java.util.Objects;
 final class AndroidArtifactOutputImpl implements AndroidArtifactOutput, Serializable {
     private static final long serialVersionUID = 1L;
 
-    @NonNull
-    private final File generatedManifest;
-    @NonNull
-    private final String assembleTaskName;
-    private final int versionCode;
-    private final Collection<OutputFile> outputFiles;
-    private final OutputFile mainOutputFile;
+    private final BuildOutput buildOutput;
+    // even if we have pure splits, only one manifest file really matters.
+    private final BuildOutput manifestOutput;
+    private final Collection<BuildOutput> splitApksOutputs;
 
-    AndroidArtifactOutputImpl(
-            @NonNull Collection<OutputFile> outputFiles,
-            @NonNull String assembleTaskName,
-            @NonNull File generatedManifest,
-            int versionCode) {
-        this.generatedManifest = generatedManifest;
-        this.assembleTaskName = assembleTaskName;
-        this.versionCode = versionCode;
-        this.outputFiles = outputFiles;
-        // check that we have the a main output file.
-        for (OutputFile outputFile : outputFiles) {
-            if (outputFile.getOutputType().equals(OutputFile.MAIN)
-                    || outputFile.getOutputType().equals(OutputFile.FULL_SPLIT)) {
-                mainOutputFile = outputFile;
-                return;
-            }
-        }
-        throw new IllegalStateException("No main output file for variant");
+    public AndroidArtifactOutputImpl(BuildOutput buildOutput, BuildOutput manifestOutput) {
+        this(buildOutput, manifestOutput, ImmutableList.of());
+    }
+
+    public AndroidArtifactOutputImpl(
+            BuildOutput mainApk, BuildOutput manifestOutput, List<BuildOutput> splitApksOutputs) {
+        this.buildOutput = mainApk;
+        this.manifestOutput = manifestOutput;
+        this.splitApksOutputs = splitApksOutputs;
+    }
+
+    @NonNull
+    @Override
+    public File getOutputFile() {
+        return getMainOutputFile().getOutputFile();
     }
 
     @NonNull
     @Override
     public OutputFile getMainOutputFile() {
-        return mainOutputFile;
+        return buildOutput;
     }
 
     @NonNull
     @Override
     public Collection<OutputFile> getOutputs() {
-        return outputFiles;
+        ImmutableList.Builder<OutputFile> outputFileBuilder = ImmutableList.builder();
+        outputFileBuilder.add(buildOutput);
+        splitApksOutputs.forEach(outputFileBuilder::add);
+        return outputFileBuilder.build();
     }
 
     @NonNull
     @Override
     public String getAssembleTaskName() {
-        return assembleTaskName;
+        throw new RuntimeException("Deprecated.");
+    }
+
+    @NonNull
+    @Override
+    public String getOutputType() {
+        return buildOutput.getOutputType();
+    }
+
+    @NonNull
+    @Override
+    public Collection<String> getFilterTypes() {
+        return buildOutput.getFilterTypes();
+    }
+
+    @Nullable
+    public String getFilter(String filterType) {
+        return buildOutput.getFilter(filterType);
+    }
+
+    @NonNull
+    @Override
+    public Collection<FilterData> getFilters() {
+        return buildOutput.getFilters();
     }
 
     @NonNull
     @Override
     public File getGeneratedManifest() {
-        return generatedManifest;
+        return manifestOutput.getOutputFile();
     }
 
     @Override
     public int getVersionCode() {
-        return versionCode;
-    }
-
-    @NonNull
-    @Override
-    public File getSplitFolder() {
-        return getMainOutputFile().getOutputFile().getParentFile();
+        return buildOutput.getApkInfo().getVersionCode();
     }
 
     @Override
@@ -104,17 +124,22 @@ final class AndroidArtifactOutputImpl implements AndroidArtifactOutput, Serializ
             return false;
         }
         AndroidArtifactOutputImpl that = (AndroidArtifactOutputImpl) o;
-        return versionCode == that.versionCode &&
-                Objects.equals(generatedManifest, that.generatedManifest) &&
-                Objects.equals(assembleTaskName, that.assembleTaskName) &&
-                Objects.equals(outputFiles, that.outputFiles) &&
-                Objects.equals(mainOutputFile, that.mainOutputFile);
+        return Objects.equals(buildOutput, that.buildOutput)
+                && Objects.equals(manifestOutput, that.manifestOutput)
+                && Objects.equals(splitApksOutputs, that.splitApksOutputs);
     }
 
     @Override
     public int hashCode() {
-        return Objects
-                .hash(generatedManifest, assembleTaskName, versionCode, outputFiles,
-                        mainOutputFile);
+        return Objects.hash(splitApksOutputs, manifestOutput, buildOutput);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("output", buildOutput)
+                .add("manifest", manifestOutput)
+                .add("pure splits", splitApksOutputs)
+                .toString();
     }
 }

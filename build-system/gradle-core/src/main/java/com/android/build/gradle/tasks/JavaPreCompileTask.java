@@ -16,15 +16,18 @@
 
 package com.android.build.gradle.tasks;
 
-import com.android.SdkConstants;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JAR;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.ANNOTATION_PROCESSOR;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.internal.dsl.CoreAnnotationProcessorOptions;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.BaseTask;
-import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.tasks.factory.AbstractCompilesUtil;
 import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
@@ -37,14 +40,10 @@ import java.nio.file.Files;
 import java.nio.file.ProviderNotFoundException;
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
-import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.ResolvedConfiguration;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.TaskAction;
-
 
 /**
  * Tasks to perform necessary action before a JavaCompile.
@@ -56,17 +55,17 @@ public class JavaPreCompileTask extends BaseTask {
 
     private File annotationProcessorOutputFolder;
 
-    private Configuration annotationProcessorConfiguration;
+    private FileCollection annotationProcessorConfiguration;
 
-    private InputSupplier<FileCollection> compileClasspaths;
+    private FileCollection compileClasspaths;
 
     private CoreAnnotationProcessorOptions annotationProcessorOptions;
 
     @VisibleForTesting
     public void init(
             @NonNull File annotationProcessorOutputFolder,
-            @NonNull Configuration annotationProcessorConfiguration,
-            @NonNull InputSupplier<FileCollection> compileClasspaths,
+            @NonNull FileCollection annotationProcessorConfiguration,
+            @NonNull FileCollection compileClasspaths,
             @NonNull CoreAnnotationProcessorOptions annotationProcessorOptions) {
         this.annotationProcessorOutputFolder = annotationProcessorOutputFolder;
         this.annotationProcessorConfiguration = annotationProcessorConfiguration;
@@ -80,13 +79,13 @@ public class JavaPreCompileTask extends BaseTask {
     }
 
     @InputFiles
-    public Configuration getAnnotationProcessorConfiguration() {
+    public FileCollection getAnnotationProcessorConfiguration() {
         return annotationProcessorConfiguration;
     }
 
     @InputFiles
     public FileCollection getCompileClasspaths() {
-        return compileClasspaths.get();
+        return compileClasspaths;
     }
 
     @TaskAction
@@ -94,25 +93,13 @@ public class JavaPreCompileTask extends BaseTask {
         // Create directory for output of annotation processor.
         FileUtils.mkdirs(annotationProcessorOutputFolder);
 
-        // Resolve configuration.
-        ResolvedConfiguration resolvedConfiguration =
-                annotationProcessorConfiguration.getResolvedConfiguration();
-        if (resolvedConfiguration.hasError()) {
-            resolvedConfiguration.rethrowFailure();
-        }
-        Collection<File> processorPath =
-                annotationProcessorConfiguration
-                        .getFiles()
-                        .stream()
-                        .filter(file -> !file.getPath().endsWith(SdkConstants.DOT_AAR))
-                        .collect(Collectors.toSet());
-
         if (annotationProcessorOptions.getIncludeCompileClasspath() == null
                 && !getProject()
                         .getPlugins()
                         .hasPlugin(AbstractCompilesUtil.ANDROID_APT_PLUGIN_NAME)) {
             List<String> processors = Lists.newArrayList();
-            for (File file : compileClasspaths.getLastValue()) {
+            Collection<File> processorPath = annotationProcessorConfiguration.getFiles();
+            for (File file : compileClasspaths) {
                 if (!file.exists() || processorPath.contains(file)) {
                     continue;
                 }
@@ -145,7 +132,6 @@ public class JavaPreCompileTask extends BaseTask {
                                 + "for more details.");
             }
         }
-
     }
 
     public static class ConfigAction implements TaskConfigAction<JavaPreCompileTask> {
@@ -176,14 +162,9 @@ public class JavaPreCompileTask extends BaseTask {
                     scope.getVariantConfiguration()
                             .getJavaCompileOptions()
                             .getAnnotationProcessorOptions();
-            BaseVariantData<? extends BaseVariantOutputData> variantData = scope.getVariantData();
             task.annotationProcessorConfiguration =
-                    variantData.getVariantDependency().getAnnotationProcessorConfiguration();
-            task.compileClasspaths =
-                    InputSupplier.from(
-                            () ->
-                                    scope.getPreJavacClasspath()
-                                            .plus(variantData.getAllGeneratedBytecode()));
+                    scope.getArtifactFileCollection(ANNOTATION_PROCESSOR, ALL, JAR);
+            task.compileClasspaths = scope.getJavaClasspath(COMPILE_CLASSPATH, CLASSES);
         }
     }
 }

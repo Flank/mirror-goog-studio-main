@@ -101,7 +101,7 @@ public class TransformTaskTest extends TaskTestUtils {
         transformTask.transform(inputBuilder().build());
 
         // check that was passed to the transform.
-        assertThat(t.isIncremental()).isFalse();
+        assertThat(t.isIncrementalInputs()).isFalse();
         assertThat(t.getReferencedInputs()).isEmpty();
 
         Collection<TransformInput> inputs = t.getInputs();
@@ -116,8 +116,8 @@ public class TransformTaskTest extends TaskTestUtils {
         assertThat(directoryInputs).isEmpty();
 
         JarInput singleJarInput = Iterables.getOnlyElement(jarInputs);
-        assertThat(singleJarInput.getFile()).isEqualTo(
-                Iterables.getOnlyElement(projectClass.getFiles()));
+        assertThat(singleJarInput.getFile())
+                .isEqualTo(Iterables.getOnlyElement(projectClass.getFileCollection()));
         assertThat(singleJarInput.getContentTypes()).containsExactlyElementsIn(
                 projectClass.getContentTypes());
         assertThat(singleJarInput.getScopes()).containsExactlyElementsIn(projectClass.getScopes());
@@ -145,6 +145,10 @@ public class TransformTaskTest extends TaskTestUtils {
                 projectClass.getScopes(), Format.JAR);
         mkdirs(jarFile.getParentFile());
         Files.write("foo", jarFile, Charsets.UTF_8);
+
+        // we need to simulate a save from a previous transform to ensure the state of the stream
+        // is correct
+        projectClass.save();
 
         // create the transform
         TestTransform t = TestTransform.builder()
@@ -242,8 +246,8 @@ public class TransformTaskTest extends TaskTestUtils {
         assertThat(directoryInputs).isEmpty();
 
         JarInput singleJarInput = Iterables.getOnlyElement(jarInputs);
-        assertThat(singleJarInput.getFile()).isEqualTo(
-                Iterables.getOnlyElement(projectClass.getFiles()));
+        assertThat(singleJarInput.getFile())
+                .isEqualTo(Iterables.getOnlyElement(projectClass.getFileCollection()));
         assertThat(singleJarInput.getContentTypes()).containsExactlyElementsIn(
                 projectClass.getContentTypes());
         assertThat(singleJarInput.getScopes()).containsExactlyElementsIn(projectClass.getScopes());
@@ -271,6 +275,10 @@ public class TransformTaskTest extends TaskTestUtils {
                 projectClass.getScopes(), Format.JAR);
         mkdirs(jarFile.getParentFile());
         Files.write("foo", jarFile, Charsets.UTF_8);
+
+        // we need to simulate a save from a previous transform to ensure the state of the stream
+        // is correct
+        projectClass.save();
 
         // create the transform
         TestTransform t = TestTransform.builder()
@@ -368,8 +376,8 @@ public class TransformTaskTest extends TaskTestUtils {
         assertThat(directoryInputs).hasSize(1);
 
         DirectoryInput singleDirectoryInput = Iterables.getOnlyElement(directoryInputs);
-        assertThat(singleDirectoryInput.getFile()).isEqualTo(
-                Iterables.getOnlyElement(projectClass.getFiles()));
+        assertThat(singleDirectoryInput.getFile())
+                .isEqualTo(Iterables.getOnlyElement(projectClass.getFileCollection()));
         assertThat(singleDirectoryInput.getContentTypes()).containsExactlyElementsIn(
                 projectClass.getContentTypes());
         assertThat(singleDirectoryInput.getScopes()).containsExactlyElementsIn(projectClass.getScopes());
@@ -396,6 +404,10 @@ public class TransformTaskTest extends TaskTestUtils {
         File outputFolder = output.getContentLocation("foo", projectClass.getContentTypes(),
                 projectClass.getScopes(), Format.DIRECTORY);
         mkdirs(outputFolder);
+
+        // we need to simulate a save from a previous transform to ensure the state of the stream
+        // is correct
+        projectClass.save();
 
         // create the transform
         TestTransform t = TestTransform.builder()
@@ -493,8 +505,8 @@ public class TransformTaskTest extends TaskTestUtils {
         assertThat(directoryInputs).hasSize(1);
 
         DirectoryInput singleDirectoryInput = Iterables.getOnlyElement(directoryInputs);
-        assertThat(singleDirectoryInput.getFile()).isEqualTo(
-                Iterables.getOnlyElement(projectClass.getFiles()));
+        assertThat(singleDirectoryInput.getFile())
+                .isEqualTo(Iterables.getOnlyElement(projectClass.getFileCollection()));
         assertThat(singleDirectoryInput.getContentTypes()).containsExactlyElementsIn(
                 projectClass.getContentTypes());
         assertThat(singleDirectoryInput.getScopes()).containsExactlyElementsIn(projectClass.getScopes());
@@ -521,6 +533,10 @@ public class TransformTaskTest extends TaskTestUtils {
         File outputFolder = output.getContentLocation("foo", projectClass.getContentTypes(),
                 projectClass.getScopes(), Format.DIRECTORY);
         mkdirs(outputFolder);
+
+        // we need to simulate a save from a previous transform to ensure the state of the stream
+        // is correct
+        projectClass.save();
 
         // create the transform
         TestTransform t = TestTransform.builder()
@@ -646,6 +662,10 @@ public class TransformTaskTest extends TaskTestUtils {
         mkdirs(jarFile.getParentFile());
         Files.write("foo", jarFile, Charsets.UTF_8);
 
+        // we need to simulate a save from a previous transform to ensure the state of the stream
+        // is correct
+        projectClass.save();
+
         // create the transform
         TestTransform t = TestTransform.builder()
                 .setInputTypes(DefaultContentType.CLASSES)
@@ -769,6 +789,10 @@ public class TransformTaskTest extends TaskTestUtils {
         File outputFolder = output.getContentLocation("foo", projectClass.getContentTypes(),
                 projectClass.getScopes(), Format.DIRECTORY);
         mkdirs(outputFolder);
+
+        // we need to simulate a save from a previous transform to ensure the state of the stream
+        // is correct
+        projectClass.save();
 
         // create the transform
         TestTransform t = TestTransform.builder()
@@ -914,6 +938,10 @@ public class TransformTaskTest extends TaskTestUtils {
                 addedJar, Status.ADDED,
                 changedJar, Status.CHANGED);
 
+        // we need to simulate a save from a previous transform to ensure the state of the stream
+        // is correct
+        projectClass.save();
+
         // create the transform
         TestTransform t = TestTransform.builder()
                 .setIncremental(true)
@@ -991,24 +1019,37 @@ public class TransformTaskTest extends TaskTestUtils {
 
         // create the other input changes.
         // use the output version of this stream to create some content.
-        File enhancedAddedJar = output.getContentLocation("added",
-                ImmutableSet.of(ExtendedContentType.CLASSES_ENHANCED),
-                projectClass.getScopes(), Format.JAR);
-        mkdirs(addedJar.getParentFile());
-        Files.write("foo", addedJar, Charsets.UTF_8);
-        File enhancedChangedJar = output.getContentLocation("changed",
-                ImmutableSet.of(ExtendedContentType.CLASSES_ENHANCED),
-                projectClass.getScopes(), Format.JAR);
-        mkdirs(changedJar.getParentFile());
-        Files.write("foo", changedJar, Charsets.UTF_8);
-        File enhancedRemovedJar = output.getContentLocation("removed",
-                ImmutableSet.of(ExtendedContentType.CLASSES_ENHANCED),
-                projectClass.getScopes(), Format.JAR);
+        File enhancedAddedJar =
+                output.getContentLocation(
+                        "enhancedAdded",
+                        ImmutableSet.of(ExtendedContentType.CLASSES_ENHANCED),
+                        projectClass.getScopes(),
+                        Format.JAR);
+        mkdirs(enhancedAddedJar.getParentFile());
+        Files.write("foo", enhancedAddedJar, Charsets.UTF_8);
+        File enhancedChangedJar =
+                output.getContentLocation(
+                        "enhancedChanged",
+                        ImmutableSet.of(ExtendedContentType.CLASSES_ENHANCED),
+                        projectClass.getScopes(),
+                        Format.JAR);
+        mkdirs(enhancedChangedJar.getParentFile());
+        Files.write("foo", enhancedChangedJar, Charsets.UTF_8);
+        File enhancedRemovedJar =
+                output.getContentLocation(
+                        "enhancedRemoved",
+                        ImmutableSet.of(ExtendedContentType.CLASSES_ENHANCED),
+                        projectClass.getScopes(),
+                        Format.JAR);
 
         // no need to create a deleted jar. It's handled by a separate test.
         final ImmutableMap<File, Status> jarMap = ImmutableMap.of(
                 addedJar, Status.ADDED,
                 changedJar, Status.CHANGED);
+
+        // we need to simulate a save from a previous transform to ensure the state of the stream
+        // is correct
+        projectClass.save();
 
         // create the transforms
         TestTransform classesTransform = TestTransform.builder()
@@ -1090,24 +1131,37 @@ public class TransformTaskTest extends TaskTestUtils {
 
         // create the other input changes.
         // use the output version of this stream to create some content.
-        File enhancedAddedJar = output.getContentLocation("added",
-                ImmutableSet.of(DefaultContentType.CLASSES),
-                ImmutableSet.of(Scope.SUB_PROJECTS), Format.JAR);
+        File enhancedAddedJar =
+                output.getContentLocation(
+                        "enhancedAdded",
+                        ImmutableSet.of(DefaultContentType.CLASSES),
+                        ImmutableSet.of(Scope.SUB_PROJECTS),
+                        Format.JAR);
         mkdirs(addedJar.getParentFile());
         Files.write("foo", addedJar, Charsets.UTF_8);
-        File enhancedChangedJar = output.getContentLocation("changed",
-                ImmutableSet.of(DefaultContentType.CLASSES),
-                ImmutableSet.of(Scope.SUB_PROJECTS), Format.JAR);
+        File enhancedChangedJar =
+                output.getContentLocation(
+                        "enhancedChanged",
+                        ImmutableSet.of(DefaultContentType.CLASSES),
+                        ImmutableSet.of(Scope.SUB_PROJECTS),
+                        Format.JAR);
         mkdirs(changedJar.getParentFile());
         Files.write("foo", changedJar, Charsets.UTF_8);
-        File enhancedRemovedJar = output.getContentLocation("removed",
-                ImmutableSet.of(DefaultContentType.CLASSES),
-                ImmutableSet.of(Scope.SUB_PROJECTS), Format.JAR);
+        File enhancedRemovedJar =
+                output.getContentLocation(
+                        "enhancedRemoved",
+                        ImmutableSet.of(DefaultContentType.CLASSES),
+                        ImmutableSet.of(Scope.SUB_PROJECTS),
+                        Format.JAR);
 
         // no need to create a deleted jar. It's handled by a separate test.
         final ImmutableMap<File, Status> jarMap = ImmutableMap.of(
                 addedJar, Status.ADDED,
                 changedJar, Status.CHANGED);
+
+        // we need to simulate a save from a previous transform to ensure the state of the stream
+        // is correct
+        projectClass.save();
 
         // create the transforms
         TestTransform classesTransform = TestTransform.builder()
@@ -1247,6 +1301,10 @@ public class TransformTaskTest extends TaskTestUtils {
                 projectClass.getScopes(), Format.DIRECTORY);
         mkdirs(outputFolder);
 
+        // we need to simulate a save from a previous transform to ensure the state of the stream
+        // is correct
+        projectClass.save();
+
         // create the transform
         TestTransform t = TestTransform.builder()
                 .setIncremental(true)
@@ -1329,6 +1387,11 @@ public class TransformTaskTest extends TaskTestUtils {
         File enhancedClassesOutput = output.getContentLocation("enhanced",
                 ImmutableSet.of(ExtendedContentType.CLASSES_ENHANCED),
                 projectClass.getScopes(), Format.DIRECTORY);
+        mkdirs(enhancedClassesOutput);
+
+        // we need to simulate a save from a previous transform to ensure the state of the stream
+        // is correct
+        projectClass.save();
 
         // create the transform
         TestTransform t = TestTransform.builder()
@@ -1425,6 +1488,10 @@ public class TransformTaskTest extends TaskTestUtils {
                 ImmutableSet.of(DefaultContentType.CLASSES),
                 ImmutableSet.of(Scope.SUB_PROJECTS),
                 Format.DIRECTORY);
+
+        // we need to simulate a save from a previous transform to ensure the state of the stream
+        // is correct
+        projectClass.save();
 
         // create the transform
         TestTransform t = TestTransform.builder()
@@ -1573,6 +1640,10 @@ public class TransformTaskTest extends TaskTestUtils {
         File deletedJarFile = output.getContentLocation("deleted", projectClass.getContentTypes(),
                 projectClass.getScopes(), Format.JAR);
 
+        // we need to simulate a save from a previous transform to ensure the state of the stream
+        // is correct
+        projectClass.save();
+
         // create the transform
         TestTransform t = TestTransform.builder()
                 .setIncremental(true)
@@ -1707,6 +1778,10 @@ public class TransformTaskTest extends TaskTestUtils {
         File deletedOutputFolder = output.getContentLocation("foo2", projectClass.getContentTypes(),
                 projectClass.getScopes(), Format.DIRECTORY);
 
+        // we need to simulate a save from a previous transform to ensure the state of the stream
+        // is correct
+        projectClass.save();
+
         // create the transform
         TestTransform t = TestTransform.builder()
                 .setIncremental(true)
@@ -1803,6 +1878,10 @@ public class TransformTaskTest extends TaskTestUtils {
         File scope2Jar = output2.getContentLocation("foo2", scope2.getContentTypes(),
                 scope2.getScopes(), Format.JAR);
 
+        // we need to simulate a save from a previous transform to ensure the state of the stream
+        // is correct
+        scope2.save();
+
         OriginalStream scope3 =
                 OriginalStream.builder(project, "")
                         .addContentType(DefaultContentType.CLASSES)
@@ -1832,6 +1911,9 @@ public class TransformTaskTest extends TaskTestUtils {
         File scope4Jar = output4.getContentLocation("foo2", scope4.getContentTypes(),
                 scope4.getScopes(), Format.JAR);
 
+        // we need to simulate a save from a previous transform to ensure the state of the stream
+        // is correct
+        scope4.save();
 
         final ImmutableMap<File, Status> inputJarMap1 = ImmutableMap.of(
                 scope1Jar, Status.ADDED,
@@ -2077,7 +2159,7 @@ public class TransformTaskTest extends TaskTestUtils {
         transformManager.addStream(projectClass);
 
         // create the transform, with a 2ndary file.
-        File secondaryFile = new File("secondary file");
+        File secondaryFile = new File("/secondary/file");
         TestTransform t = TestTransform.builder()
                 .setIncremental(true)
                 .setInputTypes(DefaultContentType.CLASSES)
@@ -2140,7 +2222,7 @@ public class TransformTaskTest extends TaskTestUtils {
         transformManager.addStream(projectClass);
 
         // create the transform, with a 2ndary file.
-        File secondaryFile = new File("secondary file");
+        File secondaryFile = new File("/secondary/file");
         TestTransform t = TestTransform.builder()
                 .setIncremental(true)
                 .setInputTypes(DefaultContentType.CLASSES)
@@ -2191,7 +2273,7 @@ public class TransformTaskTest extends TaskTestUtils {
         transformManager.addStream(projectClass);
 
         // create the transform, with a 2ndary file.
-        File secondaryFile = new File("secondary file");
+        File secondaryFile = new File("/secondary/file");
         TestTransform t = TestTransform.builder()
                 .setIncremental(true)
                 .setInputTypes(DefaultContentType.CLASSES)
@@ -2326,6 +2408,10 @@ public class TransformTaskTest extends TaskTestUtils {
                 stream.getScopes(), Format.DIRECTORY);
         mkdirs(outputFolder);
 
+        // we need to simulate a save from a previous transform to ensure the state of the stream
+        // is correct
+        stream.save();
+
         // create the transform
         TestTransform t = TestTransform.builder()
                 .setInputTypes(DefaultContentType.CLASSES)
@@ -2348,7 +2434,9 @@ public class TransformTaskTest extends TaskTestUtils {
         // expect an exception at runtime.
         exception.expect(RuntimeException.class);
         exception.expectMessage(
-                "Unexpected scopes found. Required: PROJECT. Found: PROJECT, EXTERNAL_LIBRARIES");
+                String.format(
+                        "Unexpected scopes found in folder '%s'. Required: PROJECT. Found: EXTERNAL_LIBRARIES, PROJECT",
+                        rootFolder));
         transformTask.transform(inputBuilder().build());
     }
 
@@ -2483,5 +2571,4 @@ public class TransformTaskTest extends TaskTestUtils {
             };
         }
     }
-
 }

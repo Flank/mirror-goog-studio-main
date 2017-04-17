@@ -52,6 +52,13 @@ public class ModelSubject extends Subject<ModelSubject, AndroidProject> {
         super(failureStrategy, subject);
     }
 
+    public void hasIssueSize(int size) {
+        Collection<SyncIssue> issues = getSubject().getSyncIssues();
+
+        check().that(issues)
+                .named("Issue count for project " + getSubject().getName())
+                .hasSize(size);
+    }
 
     /**
      * Asserts that the issue collection has only a single element with the given properties.

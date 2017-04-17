@@ -15,26 +15,43 @@
  */
 package com.android.build.gradle.tasks;
 
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.MANIFEST;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
+
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.VariantOutput;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
-import com.android.build.gradle.internal.scope.ConventionMappingHelper;
+import com.android.build.gradle.internal.publishing.AndroidArtifacts;
+import com.android.build.gradle.internal.scope.BuildOutput;
+import com.android.build.gradle.internal.scope.BuildOutputProperty;
+import com.android.build.gradle.internal.scope.BuildOutputs;
+import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
+import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.FileSupplier;
-import com.android.build.gradle.internal.variant.BaseVariantOutputData;
+import com.android.build.gradle.internal.tasks.TaskInputHelper;
+import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.builder.core.VariantConfiguration;
-import com.android.io.FileWrapper;
+import com.android.ide.common.build.ApkData;
 import com.android.manifmerger.ManifestProvider;
-import com.android.xml.AndroidManifest;
-import com.google.common.collect.ImmutableList;
+import com.android.utils.FileUtils;
+import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import org.gradle.api.artifacts.Configuration;
+import java.util.Set;
+import java.util.function.Supplier;
+import org.gradle.api.artifacts.ArtifactCollection;
+import org.gradle.api.artifacts.result.ResolvedArtifactResult;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
@@ -49,45 +66,119 @@ import org.gradle.api.tasks.ParallelizableTask;
  *
  * <p>Tests in androidTest get that info form the
  * {@link VariantConfiguration#getTestedApplicationId()}, while the test modules get the info from
- * the {@link com.android.build.gradle.internal.publishing.AndroidArtifacts#buildManifestArtifact(String, FileSupplier)}
+ * the published intermediate manifest with type {@link AndroidArtifacts#TYPE_METADATA}
  * of the tested app.</p>
  */
 @ParallelizableTask
 public class ProcessTestManifest extends ManifestProcessorTask {
 
     @Nullable
+    private FileCollection testTargetMetadata;
+
+    @Nullable
     private File testManifestFile;
 
     private File tmpDir;
     private String testApplicationId;
-    private String minSdkVersion;
-    private String targetSdkVersion;
-    private String testedApplicationId;
-    private String instrumentationRunner;
-    private Boolean handleProfiling;
-    private Boolean functionalTest;
-    private Map<String, Object> placeholdersValues;
-    private List<ManifestProvider> providers;
+    private Supplier<String> minSdkVersion;
+    private Supplier<String> targetSdkVersion;
+    private Supplier<String> instrumentationRunner;
+    private Supplier<Boolean> handleProfiling;
+    private Supplier<Boolean> functionalTest;
+    private Supplier<Map<String, Object>> placeholdersValues;
 
-    @Nullable
-    private String testLabel;
+    private ArtifactCollection manifests;
+
+    private Supplier<String> testLabel;
+
+    private SplitScope splitScope;
+
+    public SplitScope getSplitScope() {
+        return splitScope;
+    }
 
     @Override
     protected void doFullTaskAction() throws IOException {
-        getBuilder().mergeManifestsForTestVariant(
-                getTestApplicationId(),
-                getMinSdkVersion(),
-                getTargetSdkVersion(),
-                getTestedApplicationId(),
-                getInstrumentationRunner(),
-                getHandleProfiling(),
-                getFunctionalTest(),
-                getTestLabel(),
-                getTestManifestFile(),
-                getProviders(),
-                getPlaceholdersValues(),
-                getManifestOutputFile(),
-                getTmpDir());
+        if (testApplicationId == null && testTargetMetadata == null) {
+            throw new RuntimeException("testApplicationId and testTargetMetadata are null");
+        }
+        String testedApplicationId = this.testApplicationId;
+        if (testTargetMetadata != null) {
+            Collection<BuildOutput> manifestOutputs =
+                    BuildOutputs.load(
+                            TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS, testTargetMetadata);
+            java.util.Optional<BuildOutput> mainSplit =
+                    manifestOutputs
+                            .stream()
+                            .filter(
+                                    output ->
+                                            output.getApkInfo().getType()
+                                                    != VariantOutput.OutputType.SPLIT)
+                            .findFirst();
+
+            if (mainSplit.isPresent()) {
+                testedApplicationId =
+                        mainSplit.get().getProperties().get(BuildOutputProperty.PACKAGE_ID);
+            } else {
+                throw new RuntimeException("cannot find main APK");
+            }
+        }
+        List<ApkData> apkDatas = splitScope.getApkDatas();
+        if (apkDatas.isEmpty()) {
+            throw new RuntimeException("No output defined for test module, please file a bug");
+        }
+        if (apkDatas.size() > 1) {
+            throw new RuntimeException(
+                    "Test modules only support a single split, this one defines"
+                            + Joiner.on(",").join(apkDatas));
+        }
+        ApkData mainApkData = apkDatas.get(0);
+
+        File manifestOutputFolder =
+                new File(getManifestOutputDirectory(), mainApkData.getDirName());
+        FileUtils.mkdirs(manifestOutputFolder);
+        File manifestOutputFile = new File(manifestOutputFolder, SdkConstants.ANDROID_MANIFEST_XML);
+
+        getBuilder()
+                .mergeManifestsForTestVariant(
+                        getTestApplicationId(),
+                        getMinSdkVersion(),
+                        getTargetSdkVersion(),
+                        testedApplicationId,
+                        getInstrumentationRunner(),
+                        getHandleProfiling(),
+                        getFunctionalTest(),
+                        getTestLabel(),
+                        getTestManifestFile(),
+                        computeProviders(),
+                        getPlaceholdersValues(),
+                        manifestOutputFile,
+                        getTmpDir());
+        splitScope.addOutputForSplit(
+                VariantScope.TaskOutputType.MERGED_MANIFESTS, mainApkData, manifestOutputFile);
+        splitScope.save(VariantScope.TaskOutputType.MERGED_MANIFESTS, getManifestOutputDirectory());
+    }
+
+    @NonNull
+    @Override
+    public File getManifestOutputFile() {
+        Preconditions.checkState(!splitScope.getApkDatas().isEmpty());
+        return FileUtils.join(
+                getManifestOutputDirectory(),
+                splitScope.getApkDatas().get(0).getDirName(),
+                SdkConstants.ANDROID_MANIFEST_XML);
+    }
+
+    @Nullable
+    @Override
+    public File getInstantRunManifestOutputFile() {
+        return null;
+    }
+
+    @Nullable
+    @Override
+    public File getAaptFriendlyManifestOutputFile() {
+        return null;
     }
 
     @InputFile
@@ -119,100 +210,75 @@ public class ProcessTestManifest extends ManifestProcessorTask {
 
     @Input
     public String getMinSdkVersion() {
-        return minSdkVersion;
+        return minSdkVersion.get();
     }
 
     public void setMinSdkVersion(String minSdkVersion) {
-        this.minSdkVersion = minSdkVersion;
+        this.minSdkVersion = () -> minSdkVersion;
     }
 
     @Input
     public String getTargetSdkVersion() {
-        return targetSdkVersion;
+        return targetSdkVersion.get();
     }
 
     public void setTargetSdkVersion(String targetSdkVersion) {
-        this.targetSdkVersion = targetSdkVersion;
-    }
-
-    @Input
-    public String getTestedApplicationId() {
-        return testedApplicationId;
-    }
-
-    public void setTestedApplicationId(String testedApplicationId) {
-        this.testedApplicationId = testedApplicationId;
+        this.targetSdkVersion = () -> targetSdkVersion;
     }
 
     @Input
     public String getInstrumentationRunner() {
-        return instrumentationRunner;
-    }
-
-    public void setInstrumentationRunner(String instrumentationRunner) {
-        this.instrumentationRunner = instrumentationRunner;
+        return instrumentationRunner.get();
     }
 
     @Input
     public Boolean getHandleProfiling() {
-        return handleProfiling;
-    }
-
-    public void setHandleProfiling(Boolean handleProfiling) {
-        this.handleProfiling = handleProfiling;
+        return handleProfiling.get();
     }
 
     @Input
     public Boolean getFunctionalTest() {
-        return functionalTest;
-    }
-
-    public void setFunctionalTest(Boolean functionalTest) {
-        this.functionalTest = functionalTest;
+        return functionalTest.get();
     }
 
     @Input
     @Optional
     public String getTestLabel() {
-        return testLabel;
-    }
-
-    public void setTestLabel(String testLabel) {
-        this.testLabel = testLabel;
+        return testLabel.get();
     }
 
     @Input
     public Map<String, Object> getPlaceholdersValues() {
-        return placeholdersValues;
+        return placeholdersValues.get();
     }
 
-    public void setPlaceholdersValues(
-            Map<String, Object> placeholdersValues) {
-        this.placeholdersValues = placeholdersValues;
-    }
-
-    public List<ManifestProvider> getProviders() {
-        return providers;
-    }
-
-    public void setProviders(List<ManifestProvider> providers) {
-        this.providers = providers;
+    @InputFiles
+    @Optional
+    @Nullable
+    public FileCollection getTestTargetMetadata() {
+        return testTargetMetadata;
     }
 
     /**
-     * A synthetic input to allow gradle up-to-date checks to work.
-     *
-     * Since {@code List<ManifestProvider>} can't be used directly, as @Nested doesn't work on lists,
-     * this method gathers and returns the underlying manifest files.
+     * Compute the final list of providers based on the manifest file collection.
+     * @return the list of providers.
      */
-    @InputFiles
-    public List<File> getLibraryManifests() {
-        List<ManifestProvider> manifestProviders = getProviders();
-        if (manifestProviders == null || manifestProviders.isEmpty()) {
-            return ImmutableList.of();
+    public List<ManifestProvider> computeProviders() {
+        final Set<ResolvedArtifactResult> artifacts = manifests.getArtifacts();
+        List<ManifestProvider> providers = Lists.newArrayListWithCapacity(artifacts.size());
+
+        for (ResolvedArtifactResult artifact : artifacts) {
+            providers.add(new MergeManifests.ConfigAction.ManifestProviderImpl(
+                    artifact.getFile(),
+                    MergeManifests.getArtifactName(artifact)));
         }
 
-        return manifestProviders.stream().map(ManifestProvider::getManifest).collect(Collectors.toList());
+        return providers;
+    }
+
+    @InputFiles
+    public FileCollection getManifests() {
+        return manifests.getArtifactFiles();
     }
 
     public static class ConfigAction implements TaskConfigAction<ProcessTestManifest> {
@@ -221,16 +287,13 @@ public class ProcessTestManifest extends ManifestProcessorTask {
         private final VariantScope scope;
 
         @Nullable
-        private final Configuration targetManifestConfiguration;
-
-        public ConfigAction(@NonNull VariantScope scope) {
-            this(scope, null);
-        }
+        private final FileCollection testTargetMetadata;
 
         public ConfigAction(
-                @NonNull VariantScope scope, @Nullable Configuration targetManifestConfiguration){
+                @NonNull VariantScope scope,
+                @Nullable FileCollection testTargetMetadata){
             this.scope = scope;
-            this.targetManifestConfiguration = targetManifestConfiguration;
+            this.testTargetMetadata = testTargetMetadata;
         }
 
         @NonNull
@@ -252,64 +315,45 @@ public class ProcessTestManifest extends ManifestProcessorTask {
                     scope.getVariantConfiguration();
 
             processTestManifestTask.setTestManifestFile(config.getMainManifest());
+            processTestManifestTask.splitScope = scope.getSplitScope();
 
-            processTestManifestTask.setTmpDir(
-                    new File(scope.getGlobalScope().getIntermediatesDir(), "manifest/tmp"));
-
-            // get single output for now.
-            final BaseVariantOutputData variantOutputData = scope.getVariantData().getMainOutput();
-
-            variantOutputData.manifestProcessorTask = processTestManifestTask;
+            processTestManifestTask.setTmpDir(FileUtils.join(
+                    scope.getGlobalScope().getIntermediatesDir(),
+                    "tmp",
+                    "manifest",
+                    scope.getDirName()));
 
             processTestManifestTask.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
             processTestManifestTask.setVariantName(config.getFullName());
+            // will only be used if testTargetMetadata is null.
             processTestManifestTask.setTestApplicationId(config.getTestApplicationId());
 
-            ConventionMappingHelper.map(
-                    processTestManifestTask,
-                    "minSdkVersion",
-                    config.getMinSdkVersion()::getApiString);
+            processTestManifestTask.minSdkVersion =
+                    TaskInputHelper.memoize(config.getMinSdkVersion()::getApiString);
 
-            ConventionMappingHelper.map(
-                    processTestManifestTask,
-                    "targetSdkVersion",
-                    config.getTargetSdkVersion()::getApiString);
+            processTestManifestTask.targetSdkVersion =
+                    TaskInputHelper.memoize(config.getTargetSdkVersion()::getApiString);
 
-            if (targetManifestConfiguration != null){
-                // it is a task for the test module, get the tested application id from its manifest
-                ConventionMappingHelper.map(processTestManifestTask, "testedApplicationId", () ->
-                        AndroidManifest.getPackage(
-                                new FileWrapper(
-                                        targetManifestConfiguration
-                                                .getSingleFile().getAbsolutePath())));
-            }
-            else {
-                ConventionMappingHelper.map(
-                        processTestManifestTask, "testedApplicationId", () ->{
-                            String testedApp = config.getTestedApplicationId();
-                            // we should not be null, although the above method is @Nullable
-                            assert testedApp != null;
-                            return testedApp;
-                        });
-            }
+            processTestManifestTask.testTargetMetadata = testTargetMetadata;
 
-            ConventionMappingHelper.map(
-                    processTestManifestTask, "instrumentationRunner",
-                    config::getInstrumentationRunner);
-            ConventionMappingHelper.map(
-                    processTestManifestTask, "handleProfiling", config::getHandleProfiling);
-            ConventionMappingHelper.map(
-                    processTestManifestTask, "functionalTest", config::getFunctionalTest);
-            ConventionMappingHelper.map(
-                    processTestManifestTask, "testLabel", config::getTestLabel);
-            ConventionMappingHelper.map(
-                    processTestManifestTask, "providers", config::getFlatPackageAndroidLibraries);
+            processTestManifestTask.instrumentationRunner =
+                    TaskInputHelper.memoize(config::getInstrumentationRunner);
+            processTestManifestTask.handleProfiling =
+                    TaskInputHelper.memoize(config::getHandleProfiling);
+            processTestManifestTask.functionalTest =
+                    TaskInputHelper.memoize(config::getFunctionalTest);
+            processTestManifestTask.testLabel = TaskInputHelper.memoize(config::getTestLabel);
 
-            processTestManifestTask.setManifestOutputFile(
-                    variantOutputData.getScope().getManifestOutputFile());
+            processTestManifestTask.manifests = scope.getArtifactCollection(
+                    RUNTIME_CLASSPATH, ALL, MANIFEST);
 
-            ConventionMappingHelper.map(
-                    processTestManifestTask, "placeholdersValues", config::getManifestPlaceholders);
+            processTestManifestTask.setManifestOutputDirectory(scope.getManifestOutputDirectory());
+
+            processTestManifestTask.placeholdersValues =
+                    TaskInputHelper.memoize(config::getManifestPlaceholders);
+
+            scope.getVariantData()
+                    .addTask(TaskContainer.TaskKind.PROCESS_MANIFEST, processTestManifestTask);
         }
     }
 }

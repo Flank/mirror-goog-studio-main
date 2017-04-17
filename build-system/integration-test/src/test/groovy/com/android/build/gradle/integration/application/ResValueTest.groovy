@@ -74,6 +74,7 @@ class ResValueTest {
                     }
                 }
 
+                flavorDimensions 'foo'
                 productFlavors {
                     flavor1 {
                         resValue "string", "VALUE_DEBUG",   "10"

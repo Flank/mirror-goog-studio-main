@@ -21,6 +21,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.MavenCoordinates;
+import com.google.common.base.Preconditions;
 import java.io.File;
 import java.util.List;
 import java.util.Objects;
@@ -33,8 +34,7 @@ import java.util.Objects;
 @Immutable
 public abstract class Dependency {
 
-    @NonNull
-    private final File artifactFile;
+    @Nullable private final File artifactFile;
     @NonNull
     private final MavenCoordinates coordinates;
     @NonNull
@@ -47,7 +47,7 @@ public abstract class Dependency {
 
 
     public Dependency(
-            @NonNull File artifactFile,
+            @Nullable File artifactFile,
             @NonNull MavenCoordinates coordinates,
             @NonNull String name,
             @Nullable String projectPath) {
@@ -70,6 +70,7 @@ public abstract class Dependency {
      */
     @NonNull
     public File getArtifactFile() {
+        Preconditions.checkNotNull(artifactFile, "artifactFile should not be null.");
         return artifactFile;
     }
 

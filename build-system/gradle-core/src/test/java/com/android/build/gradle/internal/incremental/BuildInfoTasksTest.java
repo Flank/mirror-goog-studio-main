@@ -96,26 +96,22 @@ public class BuildInfoTasksTest {
         assertThat(context.getLastBuild().getArtifactForType(FileType.RESOURCES)).isNotNull();
     }
 
-    private void runLoaderTask(
-            @NonNull Project project,
-            @NonNull InstantRunBuildContext context) {
+    private void runLoaderTask(@NonNull Project project, @NonNull InstantRunBuildContext context) {
         BuildInfoLoaderTask loader = project.getTasks().create("loader", BuildInfoLoaderTask.class);
         loader.buildInfoFile = buildInfoFile;
         loader.tmpBuildInfoFile = tmpBuildInfoFile;
         loader.pastBuildsFolder = pastBuildsDirectory;
-        loader.instantRunBuildContext = context;
+        loader.buildContext = context;
         loader.logger = logger;
         loader.execute();
     }
 
-    private void runWriterTask(
-            @NonNull Project project,
-            @NonNull InstantRunBuildContext context) {
+    private void runWriterTask(@NonNull Project project, @NonNull InstantRunBuildContext context) {
         BuildInfoWriterTask writer = project.getTasks().create("writer", BuildInfoWriterTask.class);
         writer.buildInfoFile = buildInfoFile;
         writer.tmpBuildInfoFile = tmpBuildInfoFile;
         writer.logger = logger;
-        writer.instantRunBuildContext = context;
+        writer.buildContext = context;
         writer.execute();
     }
 

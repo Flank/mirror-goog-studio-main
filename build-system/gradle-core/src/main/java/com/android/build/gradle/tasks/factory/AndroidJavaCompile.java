@@ -30,7 +30,7 @@ public class AndroidJavaCompile extends JavaCompile {
 
     String compileSdkVersion;
 
-    InstantRunBuildContext mBuildContext;
+    InstantRunBuildContext mInstantRunBuildContext;
 
     @Override
     protected void compile(IncrementalTaskInputs inputs) {
@@ -45,9 +45,9 @@ public class AndroidJavaCompile extends JavaCompile {
             }
         }
 
-        mBuildContext.startRecording(InstantRunBuildContext.TaskType.JAVAC);
+        mInstantRunBuildContext.startRecording(InstantRunBuildContext.TaskType.JAVAC);
         super.compile(inputs);
-        mBuildContext.stopRecording(InstantRunBuildContext.TaskType.JAVAC);
+        mInstantRunBuildContext.stopRecording(InstantRunBuildContext.TaskType.JAVAC);
     }
 
     private boolean isPostN() {

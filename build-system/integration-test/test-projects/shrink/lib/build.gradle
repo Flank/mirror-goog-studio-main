@@ -9,4 +9,7 @@ android {
     minSdkVersion 16
     targetSdkVersion 20
   }
+  buildTypes {
+    minifyDontShrink.initWith(debug)
+  }
 }

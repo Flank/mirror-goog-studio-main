@@ -124,8 +124,6 @@ public class InstantRunTransform extends Transform {
     @Override
     public Set<Scope> getReferencedScopes() {
         return Sets.immutableEnumSet(Scope.EXTERNAL_LIBRARIES,
-                Scope.PROJECT_LOCAL_DEPS,
-                Scope.SUB_PROJECTS_LOCAL_DEPS,
                 Scope.PROVIDED_ONLY);
     }
 
@@ -140,8 +138,13 @@ public class InstantRunTransform extends Transform {
         // Force the instant run transform to re-run when the dex patching policy changes,
         // as the slicer will re-run.
         return transformScope.getInstantRunBuildContext().getPatchingPolicy() != null
-                ? ImmutableMap.of("dex patching policy", transformScope.getInstantRunBuildContext()
-                        .getPatchingPolicy().getDexPatchingPolicy().toString())
+                ? ImmutableMap.of(
+                        "dex patching policy",
+                        transformScope
+                                .getInstantRunBuildContext()
+                                .getPatchingPolicy()
+                                .getDexPatchingPolicy()
+                                .toString())
                 : ImmutableMap.of();
 
     }
@@ -161,44 +164,46 @@ public class InstantRunTransform extends Transform {
     @Override
     public void transform(@NonNull TransformInvocation invocation)
             throws IOException, TransformException, InterruptedException {
-        InstantRunBuildContext instantRunBuildContext = transformScope.getInstantRunBuildContext();
-        instantRunBuildContext.startRecording(
-                InstantRunBuildContext.TaskType.INSTANT_RUN_TRANSFORM);
+        InstantRunBuildContext buildContext = transformScope.getInstantRunBuildContext();
+        buildContext.startRecording(InstantRunBuildContext.TaskType.INSTANT_RUN_TRANSFORM);
         try {
             doTransform(invocation);
         } finally {
-            instantRunBuildContext.stopRecording(
-                    InstantRunBuildContext.TaskType.INSTANT_RUN_TRANSFORM);
+            buildContext.stopRecording(InstantRunBuildContext.TaskType.INSTANT_RUN_TRANSFORM);
         }
 
     }
 
     public void doTransform(@NonNull TransformInvocation invocation)
             throws IOException, TransformException, InterruptedException {
-        InstantRunBuildContext instantRunBuildContext = transformScope.getInstantRunBuildContext();
+        InstantRunBuildContext buildContext = transformScope.getInstantRunBuildContext();
 
         // if we do not run in incremental mode, we should automatically switch to COLD swap.
         if (!invocation.isIncremental()) {
-            instantRunBuildContext.setVerifierStatus(
+            buildContext.setVerifierStatus(
                     InstantRunVerifierStatus.BUILD_NOT_INCREMENTAL);
         }
 
         // If this is not a HOT_WARM build, clean up the enhanced classes and don't generate new
         // ones during this build.
         boolean inHotSwapMode =
-                instantRunBuildContext.getBuildMode() == InstantRunBuildMode.HOT_WARM;
+                buildContext.getBuildMode() == InstantRunBuildMode.HOT_WARM;
 
         TransformOutputProvider outputProvider = invocation.getOutputProvider();
         if (outputProvider == null) {
             throw new IllegalStateException("InstantRunTransform called with null output");
         }
 
-        File classesTwoOutput = outputProvider.getContentLocation("main",
-                TransformManager.CONTENT_CLASS, getScopes(), Format.DIRECTORY);
+        File classesTwoOutput =
+                outputProvider.getContentLocation(
+                        "classes", TransformManager.CONTENT_CLASS, getScopes(), Format.DIRECTORY);
 
-        File classesThreeOutput = outputProvider.getContentLocation("enhanced",
-                ImmutableSet.of(ExtendedContentType.CLASSES_ENHANCED),
-                getScopes(), Format.DIRECTORY);
+        File classesThreeOutput =
+                outputProvider.getContentLocation(
+                        "enhanced_classes",
+                        ImmutableSet.of(ExtendedContentType.CLASSES_ENHANCED),
+                        getScopes(),
+                        Format.DIRECTORY);
 
         List<WorkItem> workItems = new ArrayList<>();
         for (TransformInput input : invocation.getInputs()) {
@@ -298,7 +303,7 @@ public class InstantRunTransform extends Transform {
 
         // If our classes.2 transformations indicated that a cold swap was necessary,
         // clean up the classes.3 output folder as some new files may have been generated.
-        if (instantRunBuildContext.getBuildMode() != InstantRunBuildMode.HOT_WARM) {
+        if (buildContext.getBuildMode() != InstantRunBuildMode.HOT_WARM) {
             FileUtils.cleanOutputDir(classesThreeOutput);
         }
 
@@ -317,7 +322,9 @@ public class InstantRunTransform extends Transform {
         // otherwise, generate the patch file and add it to the list of files to process next.
         ImmutableList<String> generatedClassNames = generatedClasses3Names.build();
         if (!generatedClassNames.isEmpty()) {
-            writePatchFileContents(generatedClassNames, classes3Folder,
+            writePatchFileContents(
+                    generatedClassNames,
+                    classes3Folder,
                     transformScope.getInstantRunBuildContext().getBuildId());
         }
     }
@@ -439,8 +446,9 @@ public class InstantRunTransform extends Transform {
         // that it was disabled for InstantRun, we don't add it to our collection of generated
         // classes and it will not be part of the Patch class that apply changes.
         if (outputFile == null) {
-            transformScope.getInstantRunBuildContext().setVerifierStatus(
-                    InstantRunVerifierStatus.INSTANT_RUN_DISABLED);
+            transformScope
+                    .getInstantRunBuildContext()
+                    .setVerifierStatus(InstantRunVerifierStatus.INSTANT_RUN_DISABLED);
             LOGGER.info("Class %s cannot be hot swapped.", inputFile);
             return null;
         }

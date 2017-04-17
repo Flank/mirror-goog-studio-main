@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.core;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidConfig;
@@ -37,17 +36,14 @@ import com.android.builder.core.DefaultApiVersion;
 import com.android.builder.core.ManifestAttributeSupplier;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.core.VariantType;
-import com.android.builder.dependency.level2.AndroidDependency;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.SourceProvider;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.OptionalInt;
@@ -65,8 +61,7 @@ import java.util.function.Function;
 public class GradleVariantConfiguration
         extends VariantConfiguration<CoreBuildType, CoreProductFlavor, CoreProductFlavor> {
 
-    @NonNull
-    private final ProjectOptions projectOptions;
+    @NonNull private final ProjectOptions projectOptions;
     @NonNull
     private OptionalInt instantRunSupportStatusOverride = OptionalInt.empty();
     @NonNull
@@ -134,7 +129,7 @@ public class GradleVariantConfiguration
     @Override
     @NonNull
     public ApiVersion getMinSdkVersion() {
-        Integer targetApiLevel = projectOptions.get(IntegerOption.IDE_TARGET_API_LEVEL);
+        Integer targetApiLevel = projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API);
         if (targetApiLevel != null && getBuildType().isDebuggable()) {
             // Consider runtime API passed from the IDE only if the app is debuggable.
             int minVersion =
@@ -350,17 +345,6 @@ public class GradleVariantConfiguration
     @Nullable
     public Set<String> getSupportedAbis() {
         return mergedNdkConfig.getAbiFilters();
-    }
-
-    /**
-     * Returns whether the configuration has minification enabled.
-     */
-    public boolean isMinifyEnabled() {
-        VariantType type = getType();
-        // if type == test then getTestedConfig always returns non-null
-        //noinspection ConstantConditions
-        return getBuildType().isMinifyEnabled() &&
-                (!type.isForTesting() || (getTestedConfig().getType() != VariantType.LIBRARY));
     }
 
     public CoreJackOptions getJackOptions() {
@@ -583,18 +567,5 @@ public class GradleVariantConfiguration
         } else {
             return super.getVersionCode();
         }
-    }
-
-    @NonNull
-    public ImmutableSet<File> getSubProjectDataBindingArtifactFolders() {
-        ImmutableSet.Builder<File> builder = ImmutableSet.builder();
-        for (AndroidDependency dependency : getFlatPackageAndroidLibraries()) {
-            File dataBindingDir = new File(dependency.getExtractedFolder(),
-                    DataBindingBuilder.DATA_BINDING_ROOT_FOLDER_IN_AAR);
-            if (dataBindingDir.exists()) {
-                builder.add(dataBindingDir);
-            }
-        }
-        return builder.build();
     }
 }

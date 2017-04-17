@@ -20,9 +20,10 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.AndroidGradleOptions;
+import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.options.BooleanOption;
-import com.android.builder.model.AndroidProject;
+import com.android.build.gradle.options.IntegerOption;
+import com.android.build.gradle.options.StringOption;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.builder.tasks.BooleanLatch;
 import com.android.ddmlib.IDevice;
@@ -36,8 +37,12 @@ import com.google.common.collect.Lists;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.stream.Collectors;
 import org.gradle.tooling.BuildLauncher;
 import org.gradle.tooling.GradleConnectionException;
 import org.gradle.tooling.ProjectConnection;
@@ -49,14 +54,9 @@ import org.gradle.tooling.events.ProgressListener;
 /** A Gradle tooling api build builder. */
 public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
 
-    private final boolean isUseJack;
     @Nullable private final String buildToolsVersion;
 
     private boolean isExpectingFailure = false;
-    private boolean isSdkAutoDownload = false;
-    private Boolean useDexArchive = true;
-    private Boolean useNewResourceProcessing = true;
-    private Boolean enableAapt2 = false;
 
     RunGradleTasks(
             @NonNull GradleTestProject gradleTestProject,
@@ -70,7 +70,6 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
                 gradleTestProject.getProfileDirectory(),
                 gradleTestProject.isImprovedDependencyEnabled(),
                 gradleTestProject.getHeapSize());
-        isUseJack = gradleTestProject.isUseJack();
         buildToolsVersion = gradleTestProject.getBuildToolsVersion();
     }
 
@@ -111,8 +110,7 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
     }
 
     public RunGradleTasks withSdkAutoDownload() {
-        this.isSdkAutoDownload = true;
-        return this;
+        return with(BooleanOption.ENABLE_SDK_DOWNLOAD, true);
     }
 
     /**
@@ -137,63 +135,22 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
         TestUtils.waitForFileSystemTick();
 
         List<String> args = Lists.newArrayList();
-        args.addAll(getCommonArguments());
+        args.addAll(getArguments());
 
-        args.add("-u"); // -u, --no-search-upward  Don't search in parent folders for a
-        // settings.gradle file.
-        args.add("-P" + AndroidGradleOptions.PROPERTY_BUILD_CACHE_DIR + "=" + getBuildCacheDir());
-        args.add(
-                "-Pcom.android.build.gradle.integrationTest.useJack="
-                        + Boolean.toString(isUseJack));
-        if (GradleTestProject.IMPROVED_DEPENDENCY_RESOLUTION) {
-            args.add(
-                    "-P"
-                            + AndroidGradleOptions.PROPERTY_ENABLE_IMPROVED_DEPENDENCY_RESOLUTION
-                            + "=true");
-        }
         if (buildToolsVersion != null) {
             args.add("-PCUSTOM_BUILDTOOLS=" + buildToolsVersion);
         }
 
-        if (!isSdkAutoDownload) {
-            args.add(
-                    String.format(
-                            "-P%s=%s", AndroidGradleOptions.PROPERTY_USE_SDK_DOWNLOAD, "false"));
-        }
-
-        if (useDexArchive != null) {
-            args.add(
-                    String.format(
-                            "-P%s=%s",
-                            AndroidGradleOptions.PROPERTY_USE_DEX_ARCHIVE,
-                            Boolean.toString(useDexArchive)));
-        }
-
-        if (useNewResourceProcessing != null) {
-            args.add(
-                    String.format(
-                            "-P%s=%s",
-                            BooleanOption.ENABLE_NEW_RESOURCE_PROCESSING.getPropertyName(),
-                            Boolean.toString(useNewResourceProcessing)));
-        }
-
-        if (enableAapt2 != null) {
-            args.add(
-                    String.format(
-                            "-P%s=%s",
-                            BooleanOption.ENABLE_AAPT2.getPropertyName(),
-                            Boolean.toString(enableAapt2)));
-        }
-
-        args.addAll(arguments);
-
         ByteArrayOutputStream stdout = new ByteArrayOutputStream();
         ByteArrayOutputStream stderr = new ByteArrayOutputStream();
         String message =
-                "[GradleTestProject] Executing tasks: gradle "
+                "[GradleTestProject "
+                        + projectDirectory
+                        + "] Executing tasks: \ngradle "
                         + Joiner.on(' ').join(args)
                         + " "
-                        + Joiner.on(' ').join(tasksList);
+                        + Joiner.on(' ').join(tasksList)
+                        + "\n\n";
         stdout.write(message.getBytes());
 
         BuildLauncher launcher =
@@ -246,12 +203,12 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
     }
 
     public RunGradleTasks withUseDexArchive(boolean useDexArchive) {
-        this.useDexArchive = useDexArchive;
+        with(BooleanOption.ENABLE_DEX_ARCHIVE, useDexArchive);
         return this;
     }
 
     public RunGradleTasks withNewResourceProcessing(boolean useNewResourceProcessing) {
-        this.useNewResourceProcessing = useNewResourceProcessing;
+        with(BooleanOption.ENABLE_NEW_RESOURCE_PROCESSING, useNewResourceProcessing);
         return this;
     }
 
@@ -263,8 +220,43 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
      * {@link #withNewResourceProcessing(boolean)} with the {@code false} parameter.
      */
     public RunGradleTasks withEnabledAapt2(boolean enableAapt2) {
-        this.enableAapt2 = enableAapt2;
-        this.useNewResourceProcessing = enableAapt2 ? true : useNewResourceProcessing;
+        with(enableAapt2 ? AaptGeneration.AAPT_V2_JNI : AaptGeneration.AAPT_V1);
+        return this;
+    }
+
+    /**
+     * Makes the project execute with AAPT2 flag set to {@param enableAapt2}.
+     *
+     * <p>If param is {@code true} it will also trigger setting the new resource processing flag to
+     * {@code true}. To run AAPT2 without new resource processing, after this method also call
+     * {@link #withNewResourceProcessing(boolean)} with the {@code false} parameter.
+     */
+    public RunGradleTasks with(@NonNull AaptGeneration aaptGeneration) {
+        switch (aaptGeneration) {
+            case AAPT_V1:
+                with(BooleanOption.ENABLE_AAPT2, false);
+                break;
+            case AAPT_V2:
+                with(BooleanOption.ENABLE_AAPT2, true);
+                with(BooleanOption.ENABLE_NEW_RESOURCE_PROCESSING, true);
+                with(BooleanOption.ENABLE_IN_PROCESS_AAPT2, false);
+                break;
+            case AAPT_V2_JNI:
+                with(BooleanOption.ENABLE_AAPT2, true);
+                with(BooleanOption.ENABLE_NEW_RESOURCE_PROCESSING, true);
+                with(BooleanOption.ENABLE_IN_PROCESS_AAPT2, true);
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown AAPT Generation");
+        }
+        return this;
+    }
+
+    public RunGradleTasks withEnabledFeatureSplitTransitionalAttributes(
+            boolean enableFeatureSplitTransitionalAttributes) {
+        with(
+                BooleanOption.ENABLE_FEATURE_SPLIT_TRANSITIONAL_ATTRIBUTES,
+                enableFeatureSplitTransitionalAttributes);
         return this;
     }
 
@@ -301,26 +293,21 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
             @Nullable Density density,
             @NonNull OptionalCompilationStep[] flags) {
         if (androidVersion != null) {
-            withProperty(AndroidProject.PROPERTY_BUILD_API, androidVersion.getApiLevel());
+            with(IntegerOption.IDE_TARGET_DEVICE_API, androidVersion.getApiLevel());
             if (androidVersion.getCodename() != null) {
-                withProperty(
-                        AndroidProject.PROPERTY_BUILD_API_CODENAME, androidVersion.getCodename());
+                with(StringOption.IDE_TARGET_DEVICE_CODENAME, androidVersion.getCodename());
             }
         }
 
         if (density != null) {
-            withProperty(AndroidProject.PROPERTY_BUILD_DENSITY, density.getResourceValue());
+            with(StringOption.IDE_BUILD_TARGET_DENISTY, density.getResourceValue());
         }
 
-        StringBuilder optionalSteps =
-                new StringBuilder()
-                        .append("-P")
-                        .append("android.optional.compilation")
-                        .append('=')
-                        .append("INSTANT_DEV");
-        for (OptionalCompilationStep step : flags) {
-            optionalSteps.append(',').append(step);
-        }
-        arguments.add(optionalSteps.toString());
+        Set<OptionalCompilationStep> steps = EnumSet.of(OptionalCompilationStep.INSTANT_DEV);
+        steps.addAll(Arrays.asList(flags));
+
+        with(
+                StringOption.IDE_OPTIONAL_COMPILATION_STEPS,
+                steps.stream().map(OptionalCompilationStep::name).collect(Collectors.joining(",")));
     }
 }

@@ -60,9 +60,12 @@ class RenamedApkTest {
         Collection<Variant> variants = model.getVariants()
         assertEquals("Variant Count", 2 , variants.size())
 
-        File buildDir = new File(projectDir, "build")
+        File buildDir = new File(projectDir, "build/outputs/apk/debug")
 
         for (Variant variant : variants) {
+            if (!variant.getName().equals("debug")) {
+                continue;
+            }
             AndroidArtifact mainInfo = variant.getMainArtifact()
             assertNotNull(
                     "Null-check on mainArtifactInfo for " + variant.getDisplayName(),
@@ -78,7 +81,7 @@ class RenamedApkTest {
 
     @Test
     void "check renamed apk"() {
-        File debugApk = project.file("build/debug.apk")
+        File debugApk = project.file("build/outputs/apk/debug/debug.apk")
         assertTrue("Check output file: " + debugApk, debugApk.isFile())
     }
 }

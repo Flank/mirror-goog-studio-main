@@ -32,14 +32,12 @@ import com.android.build.gradle.integration.common.runner.FilterableParameterize
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
-import com.android.builder.model.SyncIssue;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -139,50 +137,43 @@ public class AnnotationProcessorTest {
 
     @Before
     public void setUp() throws Exception {
-        String buildScript =
-                new BuildScriptGenerator(
-                                "\n"
-                                        + "apply from: \"../../commonHeader.gradle\"\n"
-                                        + "buildscript { apply from: \"../../commonBuildScript.gradle\" }\n"
-                                        + "apply from: \"../../commonLocalRepo.gradle\"\n"
-                                        + "\n"
-                                        + "apply plugin: '${application_plugin}'\n"
-                                        + "\n"
-                                        + "${model_start}"
-                                        + "android {\n"
-                                        + "    compileSdkVersion "
-                                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-                                        + "\n"
-                                        + "    buildToolsVersion '"
-                                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
-                                        + "'\n"
-                                        + "    defaultConfig {\n"
-                                        + "        javaCompileOptions {\n"
-                                        + "            annotationProcessorOptions {\n"
-                                        + "                ${argument}\n"
-                                        + "            }\n"
-                                        + "        }\n"
-                                        + "    }\n"
-                                        + "}\n"
-                                        + "${model_end}\n")
-                        .addPattern(
-                                "argument",
-                                "argument \"value\", \"Hello\"",
-                                "arguments { create(\"value\") { value \"Hello\" }\n }")
-                        .build(forComponentPlugin);
+        String buildScript = new BuildScriptGenerator(
+                "\n"
+                        + "apply from: \"../../commonHeader.gradle\"\n"
+                        + "buildscript { apply from: \"../../commonBuildScript.gradle\" }\n"
+                        + "apply from: \"../../commonLocalRepo.gradle\"\n"
+                        + "\n"
+                        + "apply plugin: '${application_plugin}'\n"
+                        + "\n"
+                        + "${model_start}"
+                        + "android {\n"
+                        + "    compileSdkVersion " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n"
+                        + "    buildToolsVersion '" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "'\n"
+                        + "    defaultConfig {\n"
+                        + "        javaCompileOptions {\n"
+                        + "            annotationProcessorOptions {\n"
+                        + "                ${argument}\n"
+                        + "            }\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "${model_end}\n")
+                .addPattern(
+                        "argument",
+                        "argument \"value\", \"Hello\"",
+                        "arguments { create(\"value\") { value \"Hello\" }\n }")
+                .build(forComponentPlugin);
         Files.write(buildScript, project.getSubproject(":app").file("build.gradle"), Charsets.UTF_8);
     }
 
     @Test
     public void normalBuild() throws Exception {
-        Files.append(
-                "\n"
-                        + "dependencies {\n"
-                        + "    annotationProcessor project(':lib-compiler')\n"
-                        + "    compile project(':lib')\n"
-                        + "}\n",
+        TestFileUtils.appendToFile(
                 project.getSubproject(":app").getBuildFile(),
-                Charsets.UTF_8);
+                "dependencies {\n"
+                        + "    compile project(':lib')\n"
+                        + "    annotationProcessor project(':lib-compiler')\n"
+                        + "}\n");
 
         project.execute("assembleDebug");
         File aptOutputFolder = project.getSubproject(":app").file("build/generated/source/apt/debug");
@@ -227,32 +218,12 @@ public class AnnotationProcessorTest {
     @Test
     @Category(DeviceTests.class)
     public void connectedCheck() throws Exception {
-        project.executeConnectedCheck();
-    }
-
-    @Test
-    public void checkWarningWhenAptAndAnnotationProcessor() throws Exception {
-        // this warning is shown only for the javac toolchain and non-component plugin
-        Assume.assumeTrue(!forComponentPlugin);
         TestFileUtils.appendToFile(
-                project.getSubproject("app").getBuildFile(),
-                "\n "
-                        + "buildscript {\n"
-                        + "    dependencies {\n"
-                        + "        classpath 'com.neenbedankt.gradle.plugins:android-apt:1.8'\n"
-                        + "    }\n"
-                        + "}\n"
-                        + "apply plugin: 'com.neenbedankt.android-apt'\n"
-                        + "dependencies {\n"
-                        + "    annotationProcessor 'com.google.dagger:dagger-compiler:2.6'\n"
-                        + "}");
-        AndroidProject model = project.model().ignoreSyncIssues().getMulti().getModelMap().get(":app");
-        assertThat(model)
-                .hasSingleIssue(
-                        SyncIssue.SEVERITY_WARNING,
-                        SyncIssue.TYPE_GENERIC,
-                        null,
-                        "Using incompatible plugins for the annotation processing: "
-                                + "android-apt. This may result in an unexpected behavior.");
+                project.getSubproject(":app").getBuildFile(),
+                "dependencies {\n"
+                        + "    compile project(':lib')\n"
+                        + "    annotationProcessor project(':lib-compiler')\n"
+                        + "}\n");
+        project.executeConnectedCheck();
     }
 }

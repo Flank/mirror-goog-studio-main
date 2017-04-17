@@ -71,7 +71,11 @@ public class OptionalAarTest {
                 "dependencies {\n" +
                 "    provided project(\":library2\")\n" +
                 "}\n");
-        project.execute("clean", ":app:assembleDebug");
+
+        // build the app and need to build the aar separately since building the app
+        // doesn't build the aar anymore.
+
+        project.execute("clean", ":app:assembleDebug", "library:assembleDebug");
         models = project.model().withFeature(FULL_DEPENDENCIES).getMulti();
         helper = new LibraryGraphHelper(models);
 
@@ -99,8 +103,8 @@ public class OptionalAarTest {
     }
 
     @Test
-    public void checkLIbDoesNotContainProvidedLibsLayout() throws Exception {
-        Aar aar = project.getSubproject("library").getAar("release");
+    public void checkLibDoesNotContainProvidedLibsLayout() throws Exception {
+        Aar aar = project.getSubproject("library").getAar("debug");
 
         assertThatAar(aar).doesNotContainResource("layout/lib2layout.xml");
         assertThatAar(aar).textSymbolFile().contains("int layout liblayout");

@@ -33,7 +33,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 import com.google.common.truth.Expect;
 import java.util.List;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -41,7 +40,8 @@ import org.junit.Test;
 /** Smoke test for cold swap builds of Kotlin apps. */
 public class KotlinColdSwapTest {
 
-    private static InstantRunVerifierStatus EXPECTED_STATUS = InstantRunVerifierStatus.METHOD_ADDED;
+    private static final InstantRunVerifierStatus EXPECTED_STATUS =
+            InstantRunVerifierStatus.METHOD_ADDED;
 
     @Rule
     public GradleTestProject project =
@@ -53,7 +53,6 @@ public class KotlinColdSwapTest {
 
     @Before
     public void activityClass() throws Exception {
-        Assume.assumeFalse("Not supported under Jack", GradleTestProject.USE_JACK);
         createActivityClass("", "");
     }
 

@@ -80,8 +80,7 @@ public class InstantRunSlicerTest {
     @Mock
     InstantRunVariantScope variantScope;
 
-    @Mock
-    InstantRunBuildContext instantRunBuildContext;
+    @Mock InstantRunBuildContext buildContext;
 
     @Rule
     public TemporaryFolder instantRunSupportDir = new TemporaryFolder();
@@ -99,9 +98,9 @@ public class InstantRunSlicerTest {
         MockitoAnnotations.initMocks(this);
         when(variantScope.getInstantRunSupportDir()).thenReturn(instantRunSupportDir.getRoot());
         when(variantScope.getRestartDexOutputFolder()).thenReturn(instantRunSupportDir.getRoot());
-        when(instantRunBuildContext.getPatchingPolicy()).thenReturn(
+        when(buildContext.getPatchingPolicy()).thenReturn(
                 InstantRunPatchingPolicy.MULTI_APK);
-        when(variantScope.getInstantRunBuildContext()).thenReturn(instantRunBuildContext);
+        when(variantScope.getInstantRunBuildContext()).thenReturn(buildContext);
 
         jarOutput = new File(jarOutputDir.getRoot(), "output.jar");
     }

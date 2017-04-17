@@ -34,10 +34,6 @@ public class JacocoOnlySubprojectBuildScriptDependency {
 
     @Test
     public void build() throws Exception {
-        if (GradleTestProject.USE_JACK) {
-            project.execute("transformJackWithJackForDebug");
-        } else {
-            project.execute("transformClassesWithJacocoForDebug");
-        }
+        project.execute("transformClassesWithJacocoForDebug");
     }
 }

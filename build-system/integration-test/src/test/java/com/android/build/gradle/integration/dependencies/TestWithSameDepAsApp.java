@@ -161,12 +161,12 @@ public class TestWithSameDepAsApp {
 
         if (plugin.contains("application")) {
             TruthHelper.assertThat(project.getApk("debug")).containsClass(this.className);
-            TruthHelper.assertThat(project.getTestApk("debug")).doesNotContainClass(this.className);
+            TruthHelper.assertThat(project.getTestApk()).doesNotContainClass(this.className);
         } else {
             // External dependencies are not packaged in AARs.
             TruthHelper.assertThat(project.getAar("debug")).doesNotContainClass(this.className);
             // But should be in the test APK.
-            TruthHelper.assertThat(project.getTestApk("debug")).containsClass(this.className);
+            TruthHelper.assertThat(project.getTestApk()).containsClass(this.className);
         }
     }
 

@@ -4,5 +4,6 @@ apply plugin: 'com.android.application'
 <@shared.androidConfig hasApplicationId=true/>
 
 dependencies {
-    compile project(':${projectName}')
+    implementation project(':${projectName}')
+    implementation project(':${baseLibName}')
 }

@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.application;
 
-import static com.android.builder.model.AndroidProject.PROPERTY_BUILD_DENSITY;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -29,6 +28,7 @@ import com.android.build.gradle.integration.common.category.SmokeTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.options.StringOption;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.JavaCompileOptions;
@@ -158,7 +158,7 @@ public class BasicTest {
     public void checkDensityAndResourceConfigs() throws Exception {
         project.executor()
                 .withInstantRun(new AndroidVersion(23, null), OptionalCompilationStep.RESTART_ONLY)
-                .withProperty(PROPERTY_BUILD_DENSITY, "xxhdpi")
+                .with(StringOption.IDE_BUILD_TARGET_DENISTY, "xxhdpi")
                 .run("assembleDebug");
     }
 

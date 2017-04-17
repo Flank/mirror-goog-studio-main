@@ -22,8 +22,9 @@ import javax.annotation.Nonnull;
 /**
  * Supplier that will cache a computed value and always supply the same value. It can be used to
  * lazily compute data. For example:
- * <pre>
- * CachedSupplier&lt;Integer&gt; value = new CachedSupplier&lt;&gt;(() -> {
+ *
+ * <pre>{@code
+ * CachedSupplier<Integer> value = new CachedSupplier<>(() -> {
  *     Integer result;
  *     // Do some expensive computation.
  *     return result;
@@ -40,7 +41,7 @@ import javax.annotation.Nonnull;
  * }
  *
  * // If neither a nor b are true, we avoid doing the computation at all.
- * </pre>
+ * }</pre>
  */
 public class CachedSupplier<T> {
 

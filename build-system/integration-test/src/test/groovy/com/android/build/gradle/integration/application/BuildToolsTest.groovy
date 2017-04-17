@@ -52,15 +52,6 @@ class BuildToolsTest {
             .add(":transformDexWithDexForRelease")
             .build()
 
-    private static final List<String> JACK_TASKS = ImmutableList.builder().add(COMMON_TASKS)
-            .add(":transformClassesWithPreJackRuntimeLibrariesForDebug")
-            .add(":transformClassesWithPreJackPackagedLibrariesForDebug")
-            .add(":transformJackWithJackForRelease")
-            .add(":transformClassesWithPreJackRuntimeLibrariesForRelease")
-            .add(":transformClassesWithPreJackPackagedLibrariesForRelease")
-            .add(":transformJackWithJackForDebug")
-            .build()
-
     @Rule
     public GradleTestProject project = GradleTestProject.builder()
             .fromTestApp(HelloWorldApp.noBuildFile())
@@ -83,8 +74,7 @@ android {
         project.executor().withUseDexArchive(false).run("assemble")
         GradleBuildResult result = project.executor().withUseDexArchive(false).run("assemble")
 
-        assertThat(result.getUpToDateTasks())
-                .containsAllIn(GradleTestProject.USE_JACK ? JACK_TASKS : JAVAC_TASKS)
+        assertThat(result.getUpToDateTasks()).containsAllIn(JAVAC_TASKS)
     }
 
     @Test
@@ -116,8 +106,7 @@ android {
 
         GradleBuildResult result = project.executor().run("assemble");
 
-        assertThat(result.getInputChangedTasks())
-                .containsAllIn(GradleTestProject.USE_JACK ? JACK_TASKS : JAVAC_TASKS)
+        assertThat(result.getInputChangedTasks()).containsAllIn(JAVAC_TASKS)
     }
 
     @Test

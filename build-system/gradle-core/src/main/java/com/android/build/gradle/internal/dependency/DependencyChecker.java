@@ -21,12 +21,9 @@ import com.android.builder.core.SyncIssueHandler;
 import com.android.builder.core.VariantType;
 import com.android.builder.dependency.level2.AndroidDependency;
 import com.android.builder.dependency.level2.Dependency;
-import com.android.builder.dependency.level2.DependencyContainer;
 import com.android.builder.dependency.level2.JavaDependency;
 import com.android.builder.model.MavenCoordinates;
 import com.android.builder.model.SyncIssue;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.util.Collection;
@@ -88,51 +85,6 @@ public class DependencyChecker implements SyncIssueHandler {
         return variantName;
     }
 
-    /**
-     * Validate the dependencies after they have been fully resolved.
-     *
-     * This will compare the compile/package graphs, as well as the graphs of an optional
-     * tested variant.
-     *
-     * @param flatCompileContainer the compile container
-     * @param flatPackageContainer the package container
-     * @param testedVariantDeps an optional tested dependencies.
-     */
-    public void validate(
-            @NonNull FlatDependencyContainer flatCompileContainer,
-            @NonNull FlatDependencyContainer flatPackageContainer,
-            @Nullable VariantDependencies testedVariantDeps) {
-        // tested map if applicable.
-        Map<String, String> testedMap = collectTestedDependencyMap(testedVariantDeps);
-
-        final ImmutableList<Dependency> compileDependencies = flatCompileContainer
-                .getAllDependencies();
-        Map<String, AndroidDependency> androidCompileMap = Maps.newHashMapWithExpectedSize(
-                compileDependencies.size());
-        Map<String, JavaDependency> javaCompileMap = Maps.newHashMapWithExpectedSize(
-                compileDependencies.size());
-        collectSkippableLibraryMap(compileDependencies, androidCompileMap, javaCompileMap);
-
-        final ImmutableList<Dependency> packageDependencies = flatPackageContainer
-                .getAllDependencies();
-        Map<String, AndroidDependency> androidPackageMap = Maps.newHashMapWithExpectedSize(
-                packageDependencies.size());
-        Map<String, JavaDependency> javaPackageMap = Maps.newHashMapWithExpectedSize(
-                packageDependencies.size());
-        collectSkippableLibraryMap(packageDependencies, androidPackageMap, javaPackageMap);
-
-        compareAndroidDependencies(
-                androidCompileMap,
-                androidPackageMap,
-                flatPackageContainer.getMutableDependencyDataMap(),
-                testedMap);
-
-        compareJavaDependencies(
-                javaCompileMap,
-                javaPackageMap,
-                flatPackageContainer.getMutableDependencyDataMap(),
-                testedMap);
-    }
 
     /**
      * Checks if a given module should just be excluded from the dependency graph.
@@ -264,7 +216,6 @@ public class DependencyChecker implements SyncIssueHandler {
                 MavenCoordinates resolvedCoordinates = compileLib.getCoordinates();
 
                 if (variantType != VariantType.LIBRARY
-                        && variantType != VariantType.ATOM
                         && (testedVariantType != VariantType.LIBRARY || !variantType.isForTesting())) {
                     handleIssue(
                             resolvedCoordinates.toString(),
@@ -352,35 +303,6 @@ public class DependencyChecker implements SyncIssueHandler {
                             testedVersion,
                             coordinates.getVersion()));
         }
-    }
-
-    /**
-     * Returns a map representing the tested dependencies. This represents only the packaged
-     * ones as they are the one that matters when figuring out what to skip in the test
-     * graphs.
-     *
-     * The map represents (dependency key, version) where the key is basically
-     * the coordinates minus the version.
-     *
-     * @return the map
-     */
-    private static Map<String, String> collectTestedDependencyMap(
-            @Nullable VariantDependencies testedVariantDeps) {
-        if (testedVariantDeps == null) {
-            return ImmutableMap.of();
-        }
-
-        DependencyContainer packageDeps = testedVariantDeps.getPackageDependencies();
-
-        Map<String, String> map = Maps
-                .newHashMapWithExpectedSize(packageDeps.getAllDependencies().size());
-
-        for (Dependency dependency : packageDeps.getAllDependencies()) {
-            MavenCoordinates coordinates = dependency.getCoordinates();
-            map.put(coordinates.getVersionlessId(), coordinates.getVersion());
-        }
-
-        return map;
     }
 
     /**

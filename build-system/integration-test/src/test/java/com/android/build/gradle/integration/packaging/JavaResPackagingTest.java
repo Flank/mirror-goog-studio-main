@@ -86,7 +86,6 @@ public class JavaResPackagingTest {
         appendToFile(testProject.getBuildFile(),
                 "android {\n"
                 + "    targetProjectPath ':app'\n"
-                + "    targetVariant 'debug'\n"
                 + "}\n");
 
         // put some default files in the 4 projects, to check non incremental packaging as well,
@@ -529,7 +528,7 @@ public class JavaResPackagingTest {
     private void checkTestApk(
             @NonNull GradleTestProject project, @NonNull String filename, @Nullable String content)
             throws Exception {
-        check(assertThat(project.getTestApk("debug")), filename, content);
+        check(assertThat(project.getTestApk()), filename, content);
     }
 
     /**

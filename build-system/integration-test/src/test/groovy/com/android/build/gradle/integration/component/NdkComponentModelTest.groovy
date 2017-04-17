@@ -181,12 +181,15 @@ model {
     android.productFlavors {
         create("x86") {
             ndk.abiFilters.add("x86")
+            dimension "abi"
         }
         create("arm") {
             ndk.abiFilters.add("armeabi-v7a")
+            dimension "abi"
         }
         create("mips") {
             ndk.abiFilters.add("mips")
+            dimension "abi"
         }
     }
 }
@@ -213,9 +216,11 @@ model {
     android.productFlavors {
         create("f1") {
             ndk.CFlags.add("-DTEST_FLAG_F1")
+            dimension "foo"
         }
         create("f2") {
             ndk.CFlags.add("-DTEST_FLAG_F2")
+            dimension "foo"
         }
     }
 }

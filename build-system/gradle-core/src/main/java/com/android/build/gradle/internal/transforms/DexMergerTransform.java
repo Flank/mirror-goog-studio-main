@@ -69,7 +69,7 @@ import org.gradle.api.file.FileCollection;
  * to final DEX file(s).
  *
  * <p>It consumes all streams having one of the {@link
- * TransformManager#SCOPE_FULL_INSTANT_RUN_PROJECT} scopes, and {@link
+ * TransformManager#SCOPE_FULL_WITH_IR_FOR_DEXING} scopes, and {@link
  * ExtendedContentType#DEX_ARCHIVE} type. Output it produces has {@link
  * TransformManager#CONTENT_DEX} type.
  *
@@ -134,7 +134,7 @@ public class DexMergerTransform extends Transform {
     @NonNull
     @Override
     public Set<? super Scope> getScopes() {
-        return TransformManager.SCOPE_FULL_INSTANT_RUN_PROJECT;
+        return TransformManager.SCOPE_FULL_WITH_IR_FOR_DEXING;
     }
 
     @NonNull
@@ -292,10 +292,7 @@ public class DexMergerTransform extends Transform {
             }
 
             File dexOutput =
-                    getDexOutputLocation(
-                            outputProvider,
-                            FileUtils.getDirectoryNameForJar(jarInput.getFile()),
-                            jarInput.getScopes());
+                    getDexOutputLocation(outputProvider, jarInput.getName(), jarInput.getScopes());
 
             if (!isIncremental || jarInput.getStatus() != Status.NOTCHANGED) {
                 FileUtils.cleanOutputDir(dexOutput);
@@ -320,9 +317,7 @@ public class DexMergerTransform extends Transform {
             Path rootFolder = directoryInput.getFile().toPath();
             File dexOutput =
                     getDexOutputLocation(
-                            outputProvider,
-                            directoryInput.getFile().getName(),
-                            directoryInput.getScopes());
+                            outputProvider, directoryInput.getName(), directoryInput.getScopes());
             // The incremental mode only detect file level changes.
             // It does not handle removed root folders. However the transform
             // task will add the TransformInput right after it's removed so that it

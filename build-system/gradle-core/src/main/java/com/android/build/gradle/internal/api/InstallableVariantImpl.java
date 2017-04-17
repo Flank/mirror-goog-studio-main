@@ -17,38 +17,36 @@
 package com.android.build.gradle.internal.api;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.InstallableVariant;
-import com.android.build.gradle.internal.variant.AndroidArtifactVariantData;
 import com.android.build.gradle.internal.variant.InstallableVariantData;
 import com.android.builder.core.AndroidBuilder;
 import org.gradle.api.DefaultTask;
+import org.gradle.api.NamedDomainObjectContainer;
 
 /**
  * Implementation of an installable variant.
  */
 public abstract class InstallableVariantImpl extends AndroidArtifactVariantImpl implements InstallableVariant {
 
-    protected InstallableVariantImpl(@NonNull AndroidBuilder androidBuilder,
-            @NonNull ReadOnlyObjectProvider immutableObjectProvider) {
-        super(androidBuilder, immutableObjectProvider);
+    protected InstallableVariantImpl(
+            @NonNull AndroidBuilder androidBuilder,
+            @NonNull ReadOnlyObjectProvider immutableObjectProvider,
+            @NonNull NamedDomainObjectContainer<BaseVariantOutput> outputs) {
+        super(androidBuilder, immutableObjectProvider, outputs);
     }
-
-    @NonNull
-    protected abstract InstallableVariantData<?> getInstallableVariantData();
 
     @NonNull
     @Override
-    protected AndroidArtifactVariantData<?> getAndroidArtifactVariantData() {
-        return getInstallableVariantData();
-    }
+    public abstract InstallableVariantData getVariantData();
 
     @Override
     public DefaultTask getInstall() {
-        return getInstallableVariantData().installTask;
+        return getVariantData().installTask;
     }
 
     @Override
     public DefaultTask getUninstall() {
-        return getInstallableVariantData().uninstallTask;
+        return getVariantData().uninstallTask;
     }
 }

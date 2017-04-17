@@ -19,6 +19,7 @@ package com.android.builder.symbols;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.resources.ResourceType;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -111,10 +112,10 @@ public class ResourceExtraXmlParser {
 
             String name = text.substring(SdkConstants.NEW_ID_PREFIX.length(), text.length());
             Symbol newSymbol =
-                    new Symbol(
-                            SdkConstants.ATTR_ID,
+                    Symbol.createSymbol(
+                            ResourceType.ID,
                             SymbolUtils.canonicalizeValueResourceName(name),
-                            "int",
+                            SymbolJavaType.INT,
                             Integer.toString(idProvider.next()));
             if (!builder.contains(newSymbol)) {
                 builder.add(newSymbol);

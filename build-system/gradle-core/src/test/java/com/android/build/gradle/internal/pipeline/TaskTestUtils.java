@@ -312,7 +312,7 @@ public class TaskTestUtils {
 
                 OriginalStream originalStream = (OriginalStream) stream;
                 Set<String> expectedFileNames = jars.stream().map(File::getName).collect(Collectors.toSet());
-                for (File file : originalStream.getFiles().getFiles()) {
+                for (File file : originalStream.getFileCollection().getFiles()) {
                     assertThat(expectedFileNames.contains(file.getName())).isTrue();
                     expectedFileNames.remove(file.getName());
                 }
@@ -325,7 +325,8 @@ public class TaskTestUtils {
                 }
 
                 OriginalStream originalStream = (OriginalStream) stream;
-                assertThat(originalStream.getFiles().getFiles()).containsExactlyElementsIn(folders);
+                assertThat(originalStream.getFileCollection().getFiles())
+                        .containsExactlyElementsIn(folders);
             }
 
             if (rootLocation != null) {

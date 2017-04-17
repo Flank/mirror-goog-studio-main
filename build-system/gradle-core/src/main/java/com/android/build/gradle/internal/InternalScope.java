@@ -25,10 +25,17 @@ import com.android.build.api.transform.QualifiedContent;
 public enum InternalScope implements QualifiedContent.ScopeType {
 
     /**
-     * Scope to package classes.dex files in the main split APK in InstantRun mode.
-     * All other classes.dex will be packaged in other split APKs.
+     * Scope to package classes.dex files in the main split APK in InstantRun mode. All other
+     * classes.dex will be packaged in other split APKs.
      */
-    MAIN_SPLIT(0x10000);
+    MAIN_SPLIT(0x10000),
+
+    /**
+     * Only the project's local dependencies (local jars). This is to be used by the library plugin
+     * only (and only when building the AAR).
+     */
+    LOCAL_DEPS(0x20000),
+    ;
 
     private final int value;
 

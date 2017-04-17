@@ -114,12 +114,14 @@ public class InstantRunVerifierTransform extends Transform {
             throw new RuntimeException("Empty list of referenced inputs");
         }
         try {
-            variantScope.getInstantRunBuildContext().startRecording(
-                    InstantRunBuildContext.TaskType.VERIFIER);
+            variantScope
+                    .getInstantRunBuildContext()
+                    .startRecording(InstantRunBuildContext.TaskType.VERIFIER);
             doTransform(invocation.getReferencedInputs(), invocation.isIncremental());
         } finally {
-            variantScope.getInstantRunBuildContext().stopRecording(
-                    InstantRunBuildContext.TaskType.VERIFIER);
+            variantScope
+                    .getInstantRunBuildContext()
+                    .stopRecording(InstantRunBuildContext.TaskType.VERIFIER);
         }
     }
 

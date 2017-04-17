@@ -22,9 +22,8 @@ import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.variant.TestVariantData;
-import com.android.build.gradle.tasks.InputFilesSupplier;
-import com.android.build.gradle.tasks.InputSupplier;
 import com.android.builder.model.Version;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -38,6 +37,7 @@ import java.io.OutputStream;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
+import java.util.function.Supplier;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
@@ -70,11 +70,9 @@ public class JacocoReportTask extends DefaultTask {
 
     private FileCollection jacocoClasspath;
 
-    private InputSupplier<File> coverageDirectory;
-
-    private InputSupplier<File> classDir;
-
-    private InputFilesSupplier sourceDir;
+    private Supplier<File> coverageDirectory;
+    private Supplier<File> classDir;
+    private Supplier<Collection<File>> sourceDir;
 
     private File coverageFile;
     private File reportDir;
@@ -150,7 +148,7 @@ public class JacocoReportTask extends DefaultTask {
     @TaskAction
     public void generateReport() throws IOException {
         File coverageFile = getCoverageFile();
-        File coverageDir = coverageDirectory.getLastValue();
+        File coverageDir = coverageDirectory.get();
 
 
         List<File> coverageFiles = Lists.newArrayList();
@@ -174,8 +172,8 @@ public class JacocoReportTask extends DefaultTask {
         generateReport(
                 coverageFiles,
                 getReportDir(),
-                classDir.getLastValue(),
-                sourceDir.getLastValue(),
+                classDir.get(),
+                sourceDir.get(),
                 getTabWidth(),
                 getReportName(),
                 getLogger());
@@ -306,12 +304,12 @@ public class JacocoReportTask extends DefaultTask {
             task.jacocoClasspath =
                     project.getConfigurations().getAt(JacocoPlugin.ANT_CONFIGURATION_NAME);
 
-            task.coverageDirectory = InputSupplier.from(
+            task.coverageDirectory = TaskInputHelper.memoize(
                     () -> ((TestVariantData) scope.getVariantData()).connectedTestTask
                                     .getCoverageDir());
-            task.classDir = InputSupplier.from(
+            task.classDir = TaskInputHelper.memoize(
                     () -> testedScope.getVariantData().javacTask.getDestinationDir());
-            task.sourceDir = InputFilesSupplier.from(
+            task.sourceDir = TaskInputHelper.bypassFileSupplier(
                     () -> testedScope.getVariantData().getJavaSourceFoldersForCoverage());
 
             task.setReportDir(testedScope.getCoverageReportDir());

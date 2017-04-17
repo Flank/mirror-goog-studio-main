@@ -101,10 +101,10 @@ public class ResourceDirectoryParserTest {
 
         SymbolTable expected =
                 SymbolTable.builder()
-                        .add(new Symbol("drawable", "bar", "int", "1"))
-                        .add(new Symbol("drawable", "foo", "int", "2"))
-                        .add(new Symbol("raw", "bar", "int", "5"))
-                        .add(new Symbol("raw", "foo", "int", "4"))
+                        .add(SymbolTestUtils.createSymbol("drawable", "bar", "int", "1"))
+                        .add(SymbolTestUtils.createSymbol("drawable", "foo", "int", "2"))
+                        .add(SymbolTestUtils.createSymbol("raw", "bar", "int", "5"))
+                        .add(SymbolTestUtils.createSymbol("raw", "foo", "int", "4"))
                         .build();
 
         assertEquals(expected, parsed);
@@ -135,9 +135,9 @@ public class ResourceDirectoryParserTest {
 
         SymbolTable expected =
                 SymbolTable.builder()
-                        .add(new Symbol("color", "a", "int", "1"))
-                        .add(new Symbol("color", "b", "int", "2"))
-                        .add(new Symbol("color", "c", "int", "4"))
+                        .add(SymbolTestUtils.createSymbol("color", "a", "int", "1"))
+                        .add(SymbolTestUtils.createSymbol("color", "b", "int", "2"))
+                        .add(SymbolTestUtils.createSymbol("color", "c", "int", "4"))
                         .build();
 
         assertEquals(expected, parsed);

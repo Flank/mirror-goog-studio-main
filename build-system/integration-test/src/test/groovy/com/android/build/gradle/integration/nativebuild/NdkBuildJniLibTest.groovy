@@ -84,23 +84,23 @@ android {
     @Test
     void "check version code"() {
         GradleTestProject app = project.getSubproject("app")
-        assertThatApk(app.getApk("gingerbread", "universal", "debug")).hasVersionCode(1000123)
-        assertThatApk(app.getApk("gingerbread", "armeabi-v7a", "debug")).hasVersionCode(1100123)
-        assertThatApk(app.getApk("gingerbread", "mips", "debug")).hasVersionCode(1200123)
-        assertThatApk(app.getApk("gingerbread", "x86", "debug")).hasVersionCode(1300123)
-        assertThatApk(app.getApk("icecreamSandwich", "universal", "debug")).hasVersionCode(2000123)
-        assertThatApk(app.getApk("icecreamSandwich", "armeabi-v7a", "debug")).hasVersionCode(2100123)
-        assertThatApk(app.getApk("icecreamSandwich", "mips", "debug")).hasVersionCode(2200123)
-        assertThatApk(app.getApk("icecreamSandwich", "x86", "debug")).hasVersionCode(2300123)
+        assertThatApk(app.getApk("universal",  GradleTestProject.ApkType.DEBUG, "gingerbread")).hasVersionCode(1000123)
+        assertThatApk(app.getApk("armeabi-v7a",  GradleTestProject.ApkType.DEBUG, "gingerbread")).hasVersionCode(1100123)
+        assertThatApk(app.getApk("mips",  GradleTestProject.ApkType.DEBUG, "gingerbread")).hasVersionCode(1200123)
+        assertThatApk(app.getApk("x86",  GradleTestProject.ApkType.DEBUG, "gingerbread")).hasVersionCode(1300123)
+        assertThatApk(app.getApk("universal",  GradleTestProject.ApkType.DEBUG, "icecreamSandwich")).hasVersionCode(2000123)
+        assertThatApk(app.getApk("armeabi-v7a",  GradleTestProject.ApkType.DEBUG, "icecreamSandwich")).hasVersionCode(2100123)
+        assertThatApk(app.getApk("mips",  GradleTestProject.ApkType.DEBUG, "icecreamSandwich")).hasVersionCode(2200123)
+        assertThatApk(app.getApk("x86",  GradleTestProject.ApkType.DEBUG, "icecreamSandwich")).hasVersionCode(2300123)
     }
 
     @Test
     void "check apk content"() {
         GradleTestProject app = project.getSubproject("app")
 
-        assertThatApk(app.getApk("gingerbread", "universal", "debug")).contains("lib/armeabi-v7a/libhello-jni.so");
-        assertThatApk(app.getApk("icecreamSandwich", "armeabi-v7a", "debug")).contains("lib/armeabi-v7a/libhello-jni.so");
-        assertThatApk(app.getApk("icecreamSandwich", "x86", "debug")).doesNotContain("lib/armeabi-v7a/libhello-jni.so");
+        assertThatApk(app.getApk("universal",  GradleTestProject.ApkType.DEBUG, "gingerbread")).contains("lib/armeabi-v7a/libhello-jni.so");
+        assertThatApk(app.getApk("armeabi-v7a",  GradleTestProject.ApkType.DEBUG,  "icecreamSandwich")).contains("lib/armeabi-v7a/libhello-jni.so");
+        assertThatApk(app.getApk( "x86",  GradleTestProject.ApkType.DEBUG, "icecreamSandwich")).doesNotContain("lib/armeabi-v7a/libhello-jni.so");
     }
 
     @Test

@@ -71,7 +71,7 @@ public class TestWithCompileLibTest {
 
     @Test
     public void checkCompiledLibraryIsPackaged() throws Exception {
-        assertThat(project.getSubproject("app").getTestApk("debug"))
+        assertThat(project.getSubproject("app").getTestApk())
                 .containsClass("Lcom/example/android/multiproject/library/PersonView;");
     }
 

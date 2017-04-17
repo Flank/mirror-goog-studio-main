@@ -56,7 +56,7 @@ public class InjectedPreviewSdkTest {
                         + "\n");
 
         project.executor()
-                .withProperty(IntegerOption.IDE_TARGET_API_LEVEL.getPropertyName(), "25")
+                .with(IntegerOption.IDE_TARGET_DEVICE_API, 25)
                 .run("assembleDebugAndroidTest");
     }
 }

@@ -19,8 +19,8 @@ package com.android.build.gradle.internal.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.api.LibraryVariantOutput;
-import com.android.build.gradle.internal.variant.BaseVariantOutputData;
-import com.android.build.gradle.internal.variant.LibVariantOutputData;
+import com.android.build.gradle.internal.variant.TaskContainer;
+import com.android.ide.common.build.ApkData;
 import org.gradle.api.tasks.bundling.Zip;
 
 /**
@@ -31,22 +31,24 @@ import org.gradle.api.tasks.bundling.Zip;
  */
 public class LibraryVariantOutputImpl extends BaseVariantOutputImpl implements LibraryVariantOutput {
 
-    private final LibVariantOutputData variantOutputData;
+    private final ApkData apkData;
 
-    public LibraryVariantOutputImpl(@NonNull LibVariantOutputData variantOutputData) {
-        this.variantOutputData = variantOutputData;
+    public LibraryVariantOutputImpl(
+            @NonNull TaskContainer taskContainer, @NonNull ApkData apkData) {
+        super(taskContainer);
+        this.apkData = apkData;
     }
 
     @NonNull
-    @Override
-    protected BaseVariantOutputData getVariantOutputData() {
-        return variantOutputData;
+    protected ApkData getApkData() {
+        return apkData;
     }
 
     @Nullable
     @Override
     public Zip getPackageLibrary() {
-        return variantOutputData.packageLibTask;
+        throw new RuntimeException(
+                "packageLibrary is now available directly on the variant since there is always a single output for libraries");
     }
 
     @Override
