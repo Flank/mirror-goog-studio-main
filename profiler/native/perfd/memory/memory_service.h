@@ -73,17 +73,17 @@ class MemoryServiceImpl final
       const ::profiler::proto::TrackAllocationsRequest* request,
       ::profiler::proto::TrackAllocationsResponse* response) override;
 
-  ::grpc::Status GetAllocationEvents(
+  ::grpc::Status GetLegacyAllocationEvents(
       ::grpc::ServerContext* context,
-      const ::profiler::proto::AllocationEventsRequest* request,
-      ::profiler::proto::AllocationEventsResponse* response) override;
+      const ::profiler::proto::LegacyAllocationEventsRequest* request,
+      ::profiler::proto::LegacyAllocationEventsResponse* response) override;
 
-  ::grpc::Status ListAllocationContexts(
+  ::grpc::Status ListLegacyAllocationContexts(
       ::grpc::ServerContext* context,
-      const ::profiler::proto::AllocationContextsRequest* request,
-      ::profiler::proto::AllocationContextsResponse* response) override;
+      const ::profiler::proto::LegacyAllocationContextsRequest* request,
+      ::profiler::proto::LegacyAllocationContextsResponse* response) override;
 
-  ::grpc::Status GetAllocationDump(
+  ::grpc::Status GetLegacyAllocationDump(
       ::grpc::ServerContext* context,
       const ::profiler::proto::DumpDataRequest* request,
       ::profiler::proto::DumpDataResponse* response) override;

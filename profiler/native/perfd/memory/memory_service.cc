@@ -20,28 +20,28 @@
 #include "proto/internal_memory.grpc.pb.h"
 #include "utils/trace.h"
 
-using profiler::proto::AllocationContextsRequest;
-using profiler::proto::AllocationContextsResponse;
-using profiler::proto::TrackAllocationsRequest;
-using profiler::proto::TrackAllocationsResponse;
+using profiler::proto::AllocationsInfo;
 using profiler::proto::DumpDataResponse;
 using profiler::proto::DumpDataRequest;
-using profiler::proto::TriggerHeapDumpRequest;
-using profiler::proto::TriggerHeapDumpResponse;
-using profiler::proto::ListHeapDumpInfosResponse;
-using profiler::proto::ListDumpInfosRequest;
+using profiler::proto::ForceGarbageCollectionRequest;
+using profiler::proto::ForceGarbageCollectionResponse;
 using profiler::proto::MemoryControlRequest;
-using profiler::proto::MemoryData;
-using profiler::proto::MemoryRequest;
 using profiler::proto::MemoryStartRequest;
 using profiler::proto::MemoryStartResponse;
 using profiler::proto::MemoryStopRequest;
 using profiler::proto::MemoryStopResponse;
-using profiler::proto::AllocationsInfo;
-using profiler::proto::AllocationEventsRequest;
-using profiler::proto::AllocationEventsResponse;
-using profiler::proto::ForceGarbageCollectionRequest;
-using profiler::proto::ForceGarbageCollectionResponse;
+using profiler::proto::MemoryRequest;
+using profiler::proto::MemoryData;
+using profiler::proto::LegacyAllocationContextsRequest;
+using profiler::proto::LegacyAllocationContextsResponse;
+using profiler::proto::LegacyAllocationEventsRequest;
+using profiler::proto::LegacyAllocationEventsResponse;
+using profiler::proto::ListHeapDumpInfosResponse;
+using profiler::proto::ListDumpInfosRequest;
+using profiler::proto::TrackAllocationsRequest;
+using profiler::proto::TrackAllocationsResponse;
+using profiler::proto::TriggerHeapDumpRequest;
+using profiler::proto::TriggerHeapDumpResponse;
 
 namespace profiler {
 
@@ -142,13 +142,6 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(
   }
 }
 
-::grpc::Status MemoryServiceImpl::GetAllocationDump(
-    ::grpc::ServerContext* context, const DumpDataRequest* request,
-    DumpDataResponse* response) {
-  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED,
-                        "Not implemented on device");
-}
-
 ::grpc::Status MemoryServiceImpl::ListHeapDumpInfos(
     ::grpc::ServerContext* context, const ListDumpInfosRequest* request,
     ListHeapDumpInfosResponse* response) {
@@ -204,16 +197,25 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(
 
 #undef PROFILER_MEMORY_SERVICE_RETURN_IF_NOT_FOUND
 
-::grpc::Status MemoryServiceImpl::ListAllocationContexts(
-    ::grpc::ServerContext* context, const AllocationContextsRequest* request,
-    AllocationContextsResponse* response) {
+::grpc::Status MemoryServiceImpl::ListLegacyAllocationContexts(
+    ::grpc::ServerContext* context,
+    const LegacyAllocationContextsRequest* request,
+    LegacyAllocationContextsResponse* response) {
   return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED,
-                        "Listing allocation tracking environments is WIP.");
+                        "Not implemented on device");
 }
 
-::grpc::Status MemoryServiceImpl::GetAllocationEvents(
-    ::grpc::ServerContext* context, const AllocationEventsRequest* request,
-    AllocationEventsResponse* response) {
+::grpc::Status MemoryServiceImpl::GetLegacyAllocationEvents(
+    ::grpc::ServerContext* context,
+    const LegacyAllocationEventsRequest* request,
+    LegacyAllocationEventsResponse* response) {
+  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED,
+                        "Not implemented on device");
+}
+
+::grpc::Status MemoryServiceImpl::GetLegacyAllocationDump(
+    ::grpc::ServerContext* context, const DumpDataRequest* request,
+    DumpDataResponse* response) {
   return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED,
                         "Not implemented on device");
 }

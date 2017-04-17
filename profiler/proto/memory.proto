@@ -26,30 +26,39 @@ service MemoryService {
   }
   rpc StopMonitoringApp(MemoryStopRequest) returns (MemoryStopResponse) {
   }
+
+  // Get all sampled memory data for an app within a specified time request.
+  // These include the various memory levels, allocation count + gc events.
   rpc GetData(MemoryRequest) returns (MemoryData) {
   }
   rpc TriggerHeapDump(TriggerHeapDumpRequest) returns (TriggerHeapDumpResponse) {
   }
   rpc GetHeapDump(DumpDataRequest) returns (DumpDataResponse) {
   }
+  // List all heap dump records for an app within a specified time request.
   rpc ListHeapDumpInfos(ListDumpInfosRequest) returns (ListHeapDumpInfosResponse) {
   }
+
+  // Enable or disable an allocation tracking session.
+  // Note that for pre-O, this call is handled on Studio side within the proxy
+  // layer, and allocation records are fetched upon the completion of a tracking
+  // session. For O+, this toggles live allocation tracking within the app,
+  // and allocation data is returned while the session is in progress.
   rpc TrackAllocations(TrackAllocationsRequest)
       returns (TrackAllocationsResponse) {}
+
+  // Pre-O only: Returns all allocation data associated with a tracking session.
+  rpc GetLegacyAllocationEvents(LegacyAllocationEventsRequest)
+      returns (LegacyAllocationEventsResponse) {}
+  // Pre-O only: Returns class names and callstacks info associated with the
+  // ids provided in the request.
+  rpc ListLegacyAllocationContexts(LegacyAllocationContextsRequest)
+      returns (LegacyAllocationContextsResponse) {}
+  // Pre-O only: Used by Studio only for exporting legacy tracking data.
+  rpc GetLegacyAllocationDump(DumpDataRequest) returns (DumpDataResponse) {}
+
   rpc ForceGarbageCollection(ForceGarbageCollectionRequest)
       returns (ForceGarbageCollectionResponse) {}
-
-  // Returns all allocation data associated with a allocation tracking session.
-  // e.g. alloc events, class + stack pool
-  // TODO implement streaming version for jvmti.
-  rpc GetAllocationEvents(AllocationEventsRequest)
-      returns (AllocationEventsResponse) {}
-
-  rpc ListAllocationContexts(AllocationContextsRequest)
-      returns (AllocationContextsResponse) {}
-
-  // Used by perfd-host only for exporting legacy tracking data.
-  rpc GetAllocationDump(DumpDataRequest) returns (DumpDataResponse) {}
 }
 
 message MemoryStartRequest {
@@ -87,21 +96,6 @@ message MemoryRequest {
   int64 end_time = 4;    // inclusive
 }
 
-// A HeapDumpInfo is returned if either the start_time or end_time falls
-// within the MemoryRequest time window.
-// e.g. An info can be returned across multiple requests:
-// 1. When a heap dump is first triggered with start_time specified.
-// 2. When the heap dump completes/fails with end_time specified.
-//
-// It is the responsibility of the requester to dedupe a completed info if
-// there was an unfinished info that was previously sent.
-message HeapDumpInfo {
-  int64 start_time = 1;
-  int64 end_time = 2;
-  string file_name = 3;
-  bool success = 4;
-}
-
 message MemoryData {
   message MemorySample {
     int64 timestamp = 1;
@@ -135,29 +129,20 @@ message MemoryData {
   repeated AllocationsInfo allocations_info = 6;
 }
 
-message ListDumpInfosRequest {
-  int32 process_id = 1;
-  Session session = 2;
-  int64 start_time = 3;  // exclusive
-  int64 end_time = 4;    // inclusive
-}
-
-message DumpDataRequest {
-  int32 process_id = 1;
-  Session session = 2;
-  int64 dump_time = 3;
-}
-
-message DumpDataResponse {
-  enum Status {
-    UNSPECIFIED = 0;
-    SUCCESS = 1;
-    NOT_READY = 2;
-    NOT_FOUND = 3;
-    FAILURE_UNKNOWN = 4;
-  }
-  Status status = 1;
-  bytes data = 2;
+// Proto for describing a heap dump record.
+// A HeapDumpInfo is returned if either the start_time or end_time falls
+// within the requested time window.
+// e.g. An info can be returned across multiple requests:
+// 1. When a heap dump is first triggered with start_time specified.
+// 2. When the heap dump completes/fails with end_time specified.
+//
+// It is the responsibility of the requester to dedupe a completed info if
+// there was an unfinished info that was previously sent.
+message HeapDumpInfo {
+  int64 start_time = 1;
+  int64 end_time = 2;
+  string file_name = 3;
+  bool success = 4;
 }
 
 message TriggerHeapDumpRequest {
@@ -180,10 +165,40 @@ message TriggerHeapDumpResponse {
   HeapDumpInfo info = 2;
 }
 
+message DumpDataRequest {
+  int32 process_id = 1;
+  Session session = 2;
+  int64 dump_time = 3;
+}
+
+message DumpDataResponse {
+  enum Status {
+    UNSPECIFIED = 0;
+    SUCCESS = 1;
+    NOT_READY = 2;
+    NOT_FOUND = 3;
+    FAILURE_UNKNOWN = 4;
+  }
+  Status status = 1;
+  bytes data = 2;
+}
+
+message ListDumpInfosRequest {
+  int32 process_id = 1;
+  Session session = 2;
+  int64 start_time = 3;  // exclusive
+  int64 end_time = 4;    // inclusive
+}
+
 message ListHeapDumpInfosResponse {
   repeated HeapDumpInfo infos = 1;
 }
 
+// Proto for describing an allocation tracking record.
+// Simliar to HeapDumpInfo, an AllocationsInfo is returned if either the
+// start_time or end_time falls within the requested time window.
+// It is the responsibility of the requester to dedupe a completed info if
+// there was an unfinished info that was previously sent.
 message AllocationsInfo {
   enum Status {
     UNSPECIFIED = 0;
@@ -229,14 +244,14 @@ message TrackAllocationsRequest {
   bool legacy = 5;
 }
 
-message AllocationEventsRequest {
+message LegacyAllocationEventsRequest {
   int32 process_id = 1;
   Session session = 2;
   int64 start_time = 3; // exclusive
   int64 end_time = 4;   // inclusive
 }
 
-message AllocationEventsResponse {
+message LegacyAllocationEventsResponse {
   enum Status {
     UNSPECIFIED = 0;
     SUCCESS = 1;
@@ -245,10 +260,10 @@ message AllocationEventsResponse {
     FAILURE_UNKNOWN = 4;
   }
   Status status = 1;
-  repeated AllocationEvent events = 2;
+  repeated LegacyAllocationEvent events = 2;
 }
 
-message AllocationEvent {
+message LegacyAllocationEvent {
   // tracking_start_time associates an event with a
   // particular tracking session.
   // TODO: include endTime for de-allocation tracking
@@ -260,14 +275,14 @@ message AllocationEvent {
   bytes allocationStackId = 6;
 }
 
-message AllocationContextsRequest {
+message LegacyAllocationContextsRequest {
   int32 process_id = 1;
   Session session = 2;
   repeated int32 classIds = 3;
   repeated bytes stackIds = 4;
 }
 
-message AllocationContextsResponse {
+message LegacyAllocationContextsResponse {
   repeated AllocatedClass allocated_classes = 1;
   repeated AllocationStack allocation_stacks = 2;
 }
