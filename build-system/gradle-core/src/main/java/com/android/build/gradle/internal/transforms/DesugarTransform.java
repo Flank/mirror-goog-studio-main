@@ -67,8 +67,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
 import org.gradle.api.file.FileCollection;
+import org.gradle.workers.WorkerExecutor;
 
 /** Desugar all Java 8 bytecode. */
 public class DesugarTransform extends Transform {
@@ -142,6 +144,7 @@ public class DesugarTransform extends Transform {
     @NonNull private FileCollection java8LangSupportJar;
     @NonNull private final WaitableExecutor waitableExecutor;
     private boolean verbose;
+    private final boolean enableGradleWorkers;
 
     @NonNull private Set<InputEntry> cacheMisses = Sets.newConcurrentHashSet();
 
@@ -152,7 +155,8 @@ public class DesugarTransform extends Transform {
             int minSdk,
             @NonNull JavaProcessExecutor executor,
             @NonNull FileCollection java8LangSupportJar,
-            boolean verbose) {
+            boolean verbose,
+            boolean enableGradleWorkers) {
         this.androidJarClasspath = androidJarClasspath;
         this.compilationBootclasspath = splitBootclasspath(compilationBootclasspath);
         this.userCache = userCache;
@@ -161,6 +165,7 @@ public class DesugarTransform extends Transform {
         this.java8LangSupportJar = java8LangSupportJar;
         this.waitableExecutor = WaitableExecutor.useGlobalSharedThreadPool();
         this.verbose = verbose;
+        this.enableGradleWorkers = enableGradleWorkers;
     }
 
     @NonNull
@@ -219,8 +224,14 @@ public class DesugarTransform extends Transform {
             processInputs(transformInvocation);
             waitableExecutor.waitForTasksWithQuickFail(true);
 
-            processNonCachedOnes(getClasspath(transformInvocation));
-            waitableExecutor.waitForTasksWithQuickFail(true);
+            if (enableGradleWorkers) {
+                processNonCachedOnesWithGradleExecutor(
+                        transformInvocation.getContext().getWorkerExecutor(),
+                        getClasspath(transformInvocation));
+            } else {
+                processNonCachedOnes(getClasspath(transformInvocation));
+                waitableExecutor.waitForTasksWithQuickFail(true);
+            }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new TransformException(e);
@@ -316,6 +327,36 @@ public class DesugarTransform extends Transform {
                         return null;
                     };
             waitableExecutor.execute(callable);
+        }
+    }
+
+    private void processNonCachedOnesWithGradleExecutor(
+            WorkerExecutor workerExecutor, List<Path> classpath)
+            throws IOException, ProcessException, ExecutionException {
+
+        for (InputEntry pathPathEntry : cacheMisses) {
+            DesugarWorkerItem workerItem =
+                    new DesugarWorkerItem(
+                            java8LangSupportJar.getSingleFile().toPath(),
+                            Files.createTempDirectory("gradle_lambdas"),
+                            true,
+                            pathPathEntry.getInputPath(),
+                            pathPathEntry.getOutputPath(),
+                            classpath,
+                            this.compilationBootclasspath,
+                            minSdk);
+
+            workerExecutor.submit(DesugarWorkerItem.DesugarAction.class, workerItem::configure);
+        }
+
+        workerExecutor.await();
+
+        for (InputEntry e : cacheMisses) {
+            if (e.getCache() != null && e.getInputs() != null) {
+                e.getCache()
+                        .createFileInCacheIfAbsent(
+                                e.getInputs(), in -> Files.copy(e.getOutputPath(), in.toPath()));
+            }
         }
     }
 

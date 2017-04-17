@@ -3,6 +3,7 @@ com.android.build.api.transform.Context.getLogging: org.gradle.api.logging.Loggi
 com.android.build.api.transform.Context.getPath: java.lang.String ()
 com.android.build.api.transform.Context.getTemporaryDir: java.io.File ()
 com.android.build.api.transform.Context.getVariantName: java.lang.String ()
+com.android.build.api.transform.Context.getWorkerExecutor: org.gradle.workers.WorkerExecutor ()
 com.android.build.api.transform.DirectoryInput
 com.android.build.api.transform.DirectoryInput.getChangedFiles: java.util.Map<java.io.File, com.android.build.api.transform.Status> ()
 com.android.build.api.transform.Format

@@ -20,6 +20,7 @@ package com.android.build.api.transform;
 import com.android.annotations.NonNull;
 import java.io.File;
 import org.gradle.api.logging.LoggingManager;
+import org.gradle.workers.WorkerExecutor;
 
 /**
  * Context for the transform.
@@ -67,4 +68,12 @@ public interface Context {
      */
     @NonNull
     String getVariantName();
+
+    /**
+     * Returns the {@link org.gradle.workers.WorkerExecutor} to enlist runnable pieces of work.
+     *
+     * @return a task level shared instance.
+     */
+    @NonNull
+    WorkerExecutor getWorkerExecutor();
 }

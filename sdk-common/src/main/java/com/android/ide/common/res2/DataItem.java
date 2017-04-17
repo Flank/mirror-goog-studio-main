@@ -91,10 +91,11 @@ abstract class DataItem<F extends DataFile> implements Serializable {
 
     /**
      * Sets the DataFile. The item must not belong to a data file.
+     *
      * @param sourceFile the data file, if null then the item is marked as being removed from the
-     *                   data file
+     *     data file
      */
-    public void setSource(@NonNull F sourceFile) {
+    public void setSource(@Nullable F sourceFile) {
         mSource = sourceFile;
     }
 

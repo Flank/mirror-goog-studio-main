@@ -24,6 +24,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.RunGradleTasks;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.instant.InstantRunTestUtils;
@@ -53,8 +54,11 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 /** Tests use of Java 8 language in the application module. */
+@RunWith(Parameterized.class)
 public class DesugarAppTest {
 
     private static final ImmutableList<String> TRY_WITH_RESOURCES_RUNTIME =
@@ -65,15 +69,28 @@ public class DesugarAppTest {
                     "Lcom/google/devtools/build/android/desugar/runtime/ThrowableExtension$NullDesugaringStrategy;",
                     "Lcom/google/devtools/build/android/desugar/runtime/ThrowableExtension$ReuseDesugaringStrategy;");
 
+
+    @NonNull private final Boolean enableGradleWorkers;
+
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
                     .create();
 
+    @Parameterized.Parameters(name = "enableGradleWorkers={0}")
+    public static Boolean[] getParameters() {
+        return new Boolean[] {Boolean.TRUE, Boolean.FALSE};
+    }
+
+    public DesugarAppTest(@NonNull Boolean enableGradleWorkers) {
+        this.enableGradleWorkers = enableGradleWorkers;
+    }
+
+
     @Test
     public void noTaskIfNoJava8Set() throws IOException, InterruptedException {
-        GradleBuildResult result = project.executor().run("assembleDebug");
+        GradleBuildResult result = getProjectExecutor().run("assembleDebug");
         assertThat(result.getNotUpToDateTasks())
                 .doesNotContain(":transformClassesWithDesugarForDebug");
 
@@ -83,7 +100,7 @@ public class DesugarAppTest {
     @Test
     public void taskRunsIfJava8Set() throws IOException, InterruptedException {
         enableDesugar();
-        GradleBuildResult result = project.executor().run("assembleDebug");
+        GradleBuildResult result = getProjectExecutor().run("assembleDebug");
         assertThat(result.getNotUpToDateTasks()).contains(":transformClassesWithDesugarForDebug");
         assertThat(result.getNotUpToDateTasks()).contains(":extractJava8LangSupportJar");
     }
@@ -125,7 +142,7 @@ public class DesugarAppTest {
                         "    }",
                         "}"));
 
-        GradleBuildResult result = project.executor().run("assembleDebug");
+        GradleBuildResult result = getProjectExecutor().run("assembleDebug");
         assertThat(result.getNotUpToDateTasks()).contains(":transformClassesWithDesugarForDebug");
         assertThatApk(project.getApk(GradleTestProject.ApkType.DEBUG))
                 .containsClass("Lcom/example/helloworld/Data;");
@@ -141,7 +158,7 @@ public class DesugarAppTest {
                         + "    compile fileTree(dir: 'libs', include: ['*.jar'])\n"
                         + "}");
         List<String> classes = createLibToDesugarAndGetClasses();
-        project.executor().run("assembleDebug");
+        getProjectExecutor().run("assembleDebug");
         Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
         for (String klass : Iterables.concat(classes, TRY_WITH_RESOURCES_RUNTIME)) {
             assertThat(apk).containsClass(klass);
@@ -157,7 +174,7 @@ public class DesugarAppTest {
                 FileUtils.join(project.getMainSrcDir(), "com/example/helloworld/HelloWorld.java"),
                 "Runnable r = () -> { };");
 
-        project.executor().run("assembleDebug");
+        getProjectExecutor().run("assembleDebug");
     }
 
     @Test
@@ -177,8 +194,8 @@ public class DesugarAppTest {
                         GradleTestProject.SUPPORT_LIB_MIN_SDK,
                         GradleTestProject.SUPPORT_LIB_VERSION));
 
-        project.executor().run("assembleDebug");
-        project.executor().run("clean", "assembleDebug");
+        getProjectExecutor().run("assembleDebug");
+        getProjectExecutor().run("clean", "assembleDebug");
         assertThat(project.getApk(GradleTestProject.ApkType.DEBUG))
                 .containsClass("Landroid/support/v4/app/ActivityCompat;");
     }
@@ -201,7 +218,7 @@ public class DesugarAppTest {
                         "    }",
                         "}"));
 
-        project.executor().withUseDexArchive(false).run("assembleDebug");
+        getProjectExecutor().withUseDexArchive(false).run("assembleDebug");
         assertThat(project.getApk(GradleTestProject.ApkType.DEBUG))
                 .containsClass("Lcom/example/helloworld/Data;");
     }
@@ -231,7 +248,7 @@ public class DesugarAppTest {
                         "    }",
                         "}"));
 
-        project.executor().withUseDexArchive(false).run("assembleDebug");
+        getProjectExecutor().withUseDexArchive(false).run("assembleDebug");
         assertThat(project.getApk(GradleTestProject.ApkType.DEBUG))
                 .containsClass("Lcom/example/helloworld/Data;");
     }
@@ -259,7 +276,7 @@ public class DesugarAppTest {
                         GradleTestProject.SUPPORT_LIB_MIN_SDK,
                         GradleTestProject.SUPPORT_LIB_VERSION));
 
-        project.executor().run("assembleDebug");
+        getProjectExecutor().run("assembleDebug");
     }
 
     @Test
@@ -400,5 +417,9 @@ public class DesugarAppTest {
                         "        }",
                         "    }",
                         "}"));
+    }
+
+    private RunGradleTasks getProjectExecutor() {
+        return project.executor().with(BooleanOption.ENABLE_GRADLE_WORKERS, enableGradleWorkers);
     }
 }
