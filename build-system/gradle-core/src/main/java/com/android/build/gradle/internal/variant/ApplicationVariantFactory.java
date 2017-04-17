@@ -16,68 +16,46 @@
 
 package com.android.build.gradle.internal.variant;
 
-import static com.android.build.OutputFile.NO_FILTER;
 import static com.android.builder.core.BuilderConstants.DEBUG;
 import static com.android.builder.core.BuilderConstants.RELEASE;
 
 import com.android.annotations.NonNull;
-import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.gradle.AndroidConfig;
-import com.android.build.gradle.AndroidGradleOptions;
-import com.android.build.gradle.api.ApplicationVariant;
-import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantModel;
-import com.android.build.gradle.internal.api.ApkVariantImpl;
-import com.android.build.gradle.internal.api.ApkVariantOutputImpl;
 import com.android.build.gradle.internal.api.ApplicationVariantImpl;
-import com.android.build.gradle.internal.api.ReadOnlyObjectProvider;
+import com.android.build.gradle.internal.api.BaseVariantImpl;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
-import com.android.build.gradle.internal.ide.FilterDataImpl;
+import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.SplitFactory;
+import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.profile.Recorder;
-import com.android.ide.common.build.SplitOutputMatcher;
-import com.android.resources.Density;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
+import com.android.utils.Pair;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.Collection;
 import java.util.Set;
 import org.gradle.api.NamedDomainObjectContainer;
-import org.gradle.api.Project;
 import org.gradle.internal.reflect.Instantiator;
 
 /**
  * An implementation of VariantFactory for a project that generates APKs.
  *
- * This can be an app project, or a test-only project, though the default
- * behavior is app.
+ * <p>This can be an app project, or a test-only project, though the default behavior is app.
  */
-public class ApplicationVariantFactory implements VariantFactory {
-
-    Instantiator instantiator;
-    @NonNull
-    protected final AndroidConfig extension;
-    @NonNull
-    private final AndroidBuilder androidBuilder;
+public class ApplicationVariantFactory extends BaseVariantFactory implements VariantFactory {
 
     public ApplicationVariantFactory(
+            @NonNull GlobalScope globalScope,
             @NonNull Instantiator instantiator,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull AndroidConfig extension) {
-        this.instantiator = instantiator;
-        this.androidBuilder = androidBuilder;
-        this.extension = extension;
+        super(globalScope, androidBuilder, instantiator, extension);
     }
 
     @Override
@@ -88,6 +66,7 @@ public class ApplicationVariantFactory implements VariantFactory {
             @NonNull Recorder recorder) {
         ApplicationVariantData variant =
                 new ApplicationVariantData(
+                        globalScope,
                         extension,
                         variantConfiguration,
                         taskManager,
@@ -104,75 +83,49 @@ public class ApplicationVariantFactory implements VariantFactory {
                     .getCompatibleScreens());
         }
 
-        // create its outputs
-        if (variant.getSplitHandlingPolicy() ==
-                SplitHandlingPolicy.PRE_21_POLICY) {
+        SplitScope splitScope = variant.getSplitScope();
+        SplitFactory splitFactory = variant.getSplitFactory();
 
-            // Always dd an entry with no filter for universal and add it FIRST,
-            // since code assume that the first variant output will be the universal one.
-            List<String> orderedDensities = new ArrayList<String>();
-            orderedDensities.add(NO_FILTER);
-            orderedDensities.addAll(densities);
+        // create its output
+        if (splitScope.getSplitHandlingPolicy() == SplitHandlingPolicy.PRE_21_POLICY) {
 
-            List<String> orderedAbis = new ArrayList<String>();
-            // if the abi list is empty or we must generate a universal apk, add a NO_FILTER
-            if (abis.isEmpty() || (extension.getSplits().getAbi().isEnable() &&
-                    extension.getSplits().getAbi().isUniversalApk())) {
-                orderedAbis.add(NO_FILTER);
+            // if the abi list is not empty and we must generate a universal apk, add it.
+            if (abis.isEmpty()) {
+                // create the main APK or universal APK depending on whether or not we are going
+                // to produce full splits.
+                if (densities.isEmpty()) {
+                    splitFactory.addMainApk();
+                } else {
+                    splitFactory.addUniversalApk();
+                }
+            } else {
+                if (extension.getSplits().getAbi().isEnable()
+                        && extension.getSplits().getAbi().isUniversalApk()) {
+                    splitFactory.addUniversalApk();
+                }
+                // for each ABI, create a specific split that will contain all densities.
+                abis.forEach(
+                        abi ->
+                                splitFactory.addFullSplit(
+                                        ImmutableList.of(Pair.of(OutputFile.FilterType.ABI, abi))));
             }
-            orderedAbis.addAll(abis);
 
             // create its outputs
-            for (String density : orderedDensities) {
-                for (String abi : orderedAbis) {
-                    ImmutableList.Builder<FilterData> builder = ImmutableList.builder();
-                    if (density != null) {
-                        builder.add(FilterDataImpl.build(OutputFile.DENSITY, density));
+            for (String density : densities) {
+                if (!abis.isEmpty()) {
+                    for (String abi : abis) {
+                        splitFactory.addFullSplit(
+                                ImmutableList.of(
+                                        Pair.of(OutputFile.FilterType.ABI, abi),
+                                        Pair.of(OutputFile.FilterType.DENSITY, density)));
                     }
-                    if (abi != null) {
-                        builder.add(FilterDataImpl.build(OutputFile.ABI, abi));
-                    }
-                    variant.createOutput(
-                            OutputFile.OutputType.FULL_SPLIT,
-                            builder.build());
+                } else {
+                    splitFactory.addFullSplit(
+                            ImmutableList.of(Pair.of(OutputFile.FilterType.DENSITY, density)));
                 }
-            }
-
-            // If ABI is specified (and there are more than one output), set the main output as the
-            // one corresponding to the given ABI
-            List<ApkVariantOutputData> outputDataList = variant.getOutputs();
-            Project project = variant.getScope().getGlobalScope().getProject();
-            String abiString = Strings.nullToEmpty(AndroidGradleOptions.getBuildTargetAbi(project));
-            if (!abiString.isEmpty() && outputDataList.size() > 1) {
-                List<String> abiList = Arrays.asList(abiString.split(","));
-                String densityString =
-                        Strings.nullToEmpty(AndroidGradleOptions.getBuildTargetDensity(project));
-                Density density = Density.getEnum(densityString);
-
-                List<OutputFile> outputFiles =
-                        SplitOutputMatcher.computeBestOutput(
-                                outputDataList,
-                                variantConfiguration.getSupportedAbis(),
-                                density == null ? -1 : density.getDpiValue(),
-                                abiList);
-
-                Preconditions.checkState(
-                        !outputFiles.isEmpty(),
-                        "Unable to find a suitable output for ABI(s) '" + abiString + "'");
-                OutputFile bestOutput = outputFiles.get(0);
-
-                ApkVariantOutputData mainOutput = null;
-                for (ApkVariantOutputData outputData : outputDataList) {
-                    if (outputData.getMainOutputFile() == bestOutput) {
-                        mainOutput = outputData;
-                        break;
-                    }
-                }
-                Objects.requireNonNull(mainOutput);
-                variant.setMainOutput(mainOutput);
             }
         } else {
-            variant.createOutput(OutputFile.OutputType.MAIN, Collections.emptyList());
+            splitFactory.addMainApk();
         }
 
         return variant;
@@ -180,45 +133,15 @@ public class ApplicationVariantFactory implements VariantFactory {
 
     @Override
     @NonNull
-    public ApplicationVariant createVariantApi(
-            @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData,
-            @NonNull ReadOnlyObjectProvider readOnlyObjectProvider) {
-        // create the base variant object.
-        ApplicationVariantImpl variant = instantiator.newInstance(
-                ApplicationVariantImpl.class,
-                variantData,
-                androidBuilder,
-                readOnlyObjectProvider);
-
-        // now create the output objects
-        createApkOutputApiObjects(instantiator, variantData, variant);
-
-        return variant;
-    }
-
-    public static void createApkOutputApiObjects(
-            @NonNull Instantiator instantiator,
-            @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData,
-            @NonNull ApkVariantImpl variant) {
-        List<? extends BaseVariantOutputData> outputList = variantData.getOutputs();
-        List<BaseVariantOutput> apiOutputList = Lists.newArrayListWithCapacity(outputList.size());
-
-        for (BaseVariantOutputData variantOutputData : outputList) {
-            ApkVariantOutputData apkOutput = (ApkVariantOutputData) variantOutputData;
-
-            ApkVariantOutputImpl output = instantiator.newInstance(
-                    ApkVariantOutputImpl.class, apkOutput);
-
-            apiOutputList.add(output);
-        }
-
-        variant.addOutputs(apiOutputList);
+    public Class<? extends BaseVariantImpl> getVariantImplementationClass(
+            @NonNull BaseVariantData variantData) {
+        return ApplicationVariantImpl.class;
     }
 
     @NonNull
     @Override
-    public VariantType getVariantConfigurationType() {
-        return VariantType.DEFAULT;
+    public Collection<VariantType> getVariantConfigurationTypes() {
+        return ImmutableList.of(VariantType.DEFAULT);
     }
 
     @Override

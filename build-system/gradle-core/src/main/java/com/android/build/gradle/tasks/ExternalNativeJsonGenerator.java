@@ -32,7 +32,6 @@ import com.android.build.gradle.internal.dsl.CoreExternalNativeNdkBuildOptions;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.ErrorReporter;
 import com.android.builder.model.ApiVersion;
@@ -540,8 +539,7 @@ public abstract class ExternalNativeJsonGenerator {
                             "Download it with SDK manager.",
                     ndkFolder== null ? "" : ndkFolder));
         }
-        final BaseVariantData<? extends BaseVariantOutputData> variantData =
-                scope.getVariantData();
+        final BaseVariantData variantData = scope.getVariantData();
         final GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
         File intermediates = FileUtils.join(
                 scope.getGlobalScope().getIntermediatesDir(),

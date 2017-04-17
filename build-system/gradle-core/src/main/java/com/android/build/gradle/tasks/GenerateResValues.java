@@ -17,10 +17,10 @@ package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.BaseTask;
+import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.builder.compiling.ResValueGenerator;
 import com.android.builder.model.ClassField;
 import com.android.utils.FileUtils;
@@ -28,7 +28,7 @@ import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.Callable;
+import java.util.function.Supplier;
 import javax.xml.parsers.ParserConfigurationException;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.OutputDirectory;
@@ -54,14 +54,14 @@ public class GenerateResValues extends BaseTask {
     // ----- PRIVATE TASK API -----
 
     public List<Object> getItems() {
-        return items;
+        return items.get();
     }
 
     public void setItems(List<Object> items) {
-        this.items = items;
+        this.items = () -> items;
     }
 
-    private List<Object> items;
+    private Supplier<List<Object>> items;
 
     @Input
     public List<String> getItemValues() {
@@ -129,8 +129,8 @@ public class GenerateResValues extends BaseTask {
             generateResValuesTask.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
             generateResValuesTask.setVariantName(variantConfiguration.getFullName());
 
-            ConventionMappingHelper.map(generateResValuesTask, "items",
-                    (Callable<List<Object>>) variantConfiguration::getResValues);
+            generateResValuesTask.items =
+                    TaskInputHelper.memoize(variantConfiguration::getResValues);
 
             generateResValuesTask.setResOutputDir(scope.getGeneratedResOutputDir());
         }

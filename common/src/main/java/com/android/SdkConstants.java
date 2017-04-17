@@ -85,6 +85,12 @@ public final class SdkConstants {
     /** Dex filename inside the APK. i.e. "classes.dex" */
     public static final String FN_APK_CLASSES_N_DEX = "classes%d.dex"; //$NON-NLS-1$
 
+    /** intermediate publishing between projects */
+    public static final String FN_INTERMEDIATE_RES_JAR = "res.jar";                   //$NON-NLS-1$
+
+    /** list of splits for a variant */
+    public static final String FN_SPLIT_LIST = "split-list.gson";                     //$NON-NLS-1$
+
     /** An SDK Project's build.xml file */
     public static final String FN_BUILD_XML = "build.xml"; //$NON-NLS-1$
     /** An SDK Project's build.gradle file */
@@ -331,7 +337,11 @@ public final class SdkConstants {
     public static final String FD_AIDL = "aidl"; //$NON-NLS-1$
     /** aar libs folder */
     public static final String FD_AAR_LIBS = "libs"; //$NON-NLS-1$
-    /** atoms output folder for atom files */
+    /** symbols output folder */
+    public static final String FD_SYMBOLS = "symbols"; //$NON-NLS-1$
+    /** resource blame output folder */
+    public static final String FD_BLAME = "blame"; //$NON-NLS-1$
+    /** atom files output folder */
     public static final String FD_ATOMS = "atoms"; //$NON-NLS-1$
 
     /** rs Libs output folder for support mode */
@@ -1146,6 +1156,8 @@ public final class SdkConstants {
     public static final String ATTR_HANDLE_PROFILING = "handleProfiling";
     public static final String ATTR_TARGET_PACKAGE = "targetPackage";
     public static final String ATTR_EXTRACT_NATIVE_LIBS = "extractNativeLibs";
+    public static final String ATTR_SPLIT_NAME = "splitName";
+    public static final String ATTR_FEATURE_SPLIT = "featureSplit";
 
     // Attributes: Resources
     public static final String ATTR_ATTR = "attr";
@@ -2097,8 +2109,8 @@ public final class SdkConstants {
     public static final String GRADLE_PLUGIN_NAME = "com.android.tools.build:gradle:";
     public static final String GRADLE_EXPERIMENTAL_PLUGIN_NAME =
             "com.android.tools.build:gradle-experimental:";
-    public static final String GRADLE_MINIMUM_VERSION = "3.4.1";
-    public static final String GRADLE_LATEST_VERSION = GRADLE_MINIMUM_VERSION;
+    public static final String GRADLE_MINIMUM_VERSION = "4.0";
+    public static final String GRADLE_LATEST_VERSION = "4.0-20170406000015+0000";
     public static final String GRADLE_PLUGIN_MINIMUM_VERSION = "1.0.0";
     // Always update GRADLE_PLUGIN_RECOMMENDED_VERSION and GRADLE_EXPERIMENTAL_PLUGIN_RECOMMENDED_VERSION together.
     public static final String GRADLE_PLUGIN_RECOMMENDED_VERSION = "2.2.0";

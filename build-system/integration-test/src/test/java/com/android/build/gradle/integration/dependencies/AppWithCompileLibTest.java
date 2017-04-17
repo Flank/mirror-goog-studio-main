@@ -18,6 +18,8 @@ package com.android.build.gradle.integration.dependencies;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.COORDINATES;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.GRADLE_PATH;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.VARIANT;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
@@ -82,8 +84,19 @@ public class AppWithCompileLibTest {
 
         DependencyGraphs graph = variant.getMainArtifact().getDependencyGraphs();
 
-        assertThat(helper.on(graph).withType(MODULE).mapTo(COORDINATES))
-                .named("app compile dependencies sub-modules")
+        LibraryGraphHelper.Items subModuleItems = helper.on(graph).withType(MODULE);
+
+        assertThat(subModuleItems.mapTo(COORDINATES))
+                .named("app compile dependencies sub-modules coordinates")
+                .containsExactly(":library::debug");
+
+        assertThat(subModuleItems.mapTo(GRADLE_PATH))
+                .named("app compile dependencies sub-modules gradle-paths")
                 .containsExactly(":library");
+
+        assertThat(subModuleItems.mapTo(VARIANT))
+                .named("app compile dependencies sub-modules variants")
+                .containsExactly("debug");
+
     }
 }

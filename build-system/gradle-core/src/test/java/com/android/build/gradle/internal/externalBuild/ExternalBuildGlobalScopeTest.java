@@ -75,7 +75,8 @@ public class ExternalBuildGlobalScopeTest {
                         new ProjectOptions(
                                 ImmutableMap.of(
                                         StringOption.BUILD_CACHE_DIR.getPropertyName(),
-                                        buildCacheDir.toString())));
+                                        buildCacheDir.toString())),
+                        null);
         assertThat(scope.getBuildDir().getPath()).isEqualTo(
                 "/tmp/out/folder".replace('/', File.separatorChar));
     }
@@ -91,7 +92,8 @@ public class ExternalBuildGlobalScopeTest {
                                         StringOption.BUILD_CACHE_DIR.getPropertyName(),
                                         buildCacheDir.toString(),
                                         AndroidProject.PROPERTY_OPTIONAL_COMPILATION_STEPS,
-                                        "INSTANT_DEV")));
+                                        "INSTANT_DEV")),
+                        null);
 
         assertThat(scope.isActive(OptionalCompilationStep.INSTANT_DEV)).isTrue();
         assertThat(scope.isActive(OptionalCompilationStep.RESTART_ONLY)).isFalse();

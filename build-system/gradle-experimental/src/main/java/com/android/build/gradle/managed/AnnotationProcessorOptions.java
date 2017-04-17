@@ -32,6 +32,5 @@ public interface AnnotationProcessorOptions {
 
     @NonNull
     Boolean getIncludeCompileClasspath();
-
     void setIncludeCompileClasspath(Boolean includeClasspath);
 }

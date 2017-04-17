@@ -19,7 +19,7 @@ package com.android.builder.symbols;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.dependency.level2.AndroidDependency;
+import com.android.builder.internal.aapt.AaptPackageConfig.LibraryInfo;
 import com.android.ide.common.xml.AndroidManifestParser;
 import com.android.ide.common.xml.ManifestData;
 import com.android.io.FileWrapper;
@@ -55,7 +55,7 @@ public class SymbolUtils {
      */
     public static void processLibraryMainSymbolTable(
             @NonNull SymbolTable mainSymbolTable,
-            @NonNull List<AndroidDependency> libraries,
+            @NonNull List<LibraryInfo> libraries,
             boolean enforceUniquePackageName,
             @Nullable String mainPackageName,
             @NonNull File manifestFile,
@@ -106,13 +106,14 @@ public class SymbolUtils {
      */
     @NonNull
     public static Set<SymbolTable> loadDependenciesSymbolTables(
-            @NonNull List<AndroidDependency> libraries,
+            @NonNull List<LibraryInfo> libraries,
             boolean enforceUniquePackageName,
-            @NonNull String mainPackageName) {
+            @NonNull String mainPackageName)
+            throws IOException {
 
         // For each dependency, load its symbol file.
         Set<SymbolTable> depSymbolTables = new HashSet<>();
-        for (AndroidDependency dependency : libraries) {
+        for (LibraryInfo dependency : libraries) {
             File depMan = dependency.getManifest();
             String depPackageName;
 
@@ -132,7 +133,9 @@ public class SymbolUtils {
 
             File rFile = dependency.getSymbolFile();
             SymbolTable depSymbols =
-                    rFile.exists() ? SymbolIo.read(rFile) : SymbolTable.builder().build();
+                    (rFile != null && rFile.exists())
+                            ? SymbolIo.read(rFile)
+                            : SymbolTable.builder().build();
             depSymbols = depSymbols.rename(depPackageName);
             depSymbolTables.add(depSymbols);
         }

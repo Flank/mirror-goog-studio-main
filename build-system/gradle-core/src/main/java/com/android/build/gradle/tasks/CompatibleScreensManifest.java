@@ -16,18 +16,25 @@
 
 package com.android.build.gradle.tasks;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
-import com.android.build.gradle.internal.scope.VariantOutputScope;
+import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.DefaultAndroidTask;
+import com.android.ide.common.build.ApkData;
 import com.android.resources.Density;
+import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Set;
 import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.OutputFile;
+import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.api.tasks.TaskAction;
 
@@ -39,20 +46,9 @@ import org.gradle.api.tasks.TaskAction;
 @ParallelizableTask
 public class CompatibleScreensManifest extends DefaultAndroidTask {
 
-    private String screenDensity;
-
     private Set<String> screenSizes;
-
-    private File manifestFile;
-
-    @Input
-    public String getScreenDensity() {
-        return screenDensity;
-    }
-
-    public void setScreenDensity(String screenDensity) {
-        this.screenDensity = screenDensity;
-    }
+    private File outputFolder;
+    private SplitScope splitScope;
 
     @Input
     public Set<String> getScreenSizes() {
@@ -63,25 +59,44 @@ public class CompatibleScreensManifest extends DefaultAndroidTask {
         this.screenSizes = screenSizes;
     }
 
-    @OutputFile
-    public File getManifestFile() {
-        return manifestFile;
+    @Input
+    List<ApkData> getSplits() {
+        return splitScope.getApkDatas();
     }
 
-    public void setManifestFile(File manifestFile) {
-        this.manifestFile = manifestFile;
+    @OutputDirectory
+    File getOutputFolder() {
+        return outputFolder;
+    }
+
+    void setOutputFolder(File outputFolder) {
+        this.outputFolder = outputFolder;
     }
 
     @TaskAction
-    public void generate() throws IOException {
+    public void generateAll() throws IOException {
+        // process all outputs.
+        splitScope.parallelForEach(
+                VariantScope.TaskOutputType.COMPATIBLE_SCREEN_MANIFEST, this::generate);
+        // now write the metadata file.
+        splitScope.save(
+                ImmutableList.of(VariantScope.TaskOutputType.COMPATIBLE_SCREEN_MANIFEST),
+                outputFolder);
+    }
+
+    @Nullable
+    public File generate(ApkData apkData) throws IOException {
+        String density = apkData.getFilter(com.android.build.OutputFile.FilterType.DENSITY);
+        if (density == null) {
+            return null;
+        }
+
         StringBuilder content = new StringBuilder(
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
                 "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
                 "    package=\"\">\n" +
                 "\n" +
                 "    <compatible-screens>\n");
-
-        String density = getScreenDensity();
 
         // convert unsupported values to numbers.
         density = convert(density, Density.XXHIGH, Density.XXXHIGH);
@@ -96,7 +111,13 @@ public class CompatibleScreensManifest extends DefaultAndroidTask {
                 "    </compatible-screens>\n" +
                 "</manifest>");
 
-        Files.write(content.toString(), getManifestFile(), Charsets.UTF_8);
+
+        File splitFolder = new File(outputFolder, apkData.getDirName());
+        FileUtils.mkdirs(splitFolder);
+        File manifestFile = new File(splitFolder, SdkConstants.ANDROID_MANIFEST_XML);
+
+        Files.write(content.toString(), manifestFile, Charsets.UTF_8);
+        return manifestFile;
     }
 
     private static String convert(@NonNull String density, @NonNull Density... densitiesToConvert) {
@@ -105,20 +126,16 @@ public class CompatibleScreensManifest extends DefaultAndroidTask {
                 return Integer.toString(densityToConvert.getDpiValue());
             }
         }
-
         return density;
     }
 
     public static class ConfigAction implements TaskConfigAction<CompatibleScreensManifest> {
 
-        @NonNull
-        private final VariantOutputScope scope;
+        @NonNull private final VariantScope scope;
         @NonNull
         private final Set<String> screenSizes;
 
-        public ConfigAction(
-                @NonNull VariantOutputScope scope,
-                @NonNull Set<String> screenSizes) {
+        public ConfigAction(@NonNull VariantScope scope, @NonNull Set<String> screenSizes) {
             this.scope = scope;
             this.screenSizes = screenSizes;
         }
@@ -126,7 +143,7 @@ public class CompatibleScreensManifest extends DefaultAndroidTask {
         @NonNull
         @Override
         public String getName() {
-            return scope.getTaskName("create", "CompatibleScreenManifest");
+            return scope.getTaskName("create", "CompatibleScreenManifests");
         }
 
         @NonNull
@@ -137,13 +154,10 @@ public class CompatibleScreensManifest extends DefaultAndroidTask {
 
         @Override
         public void execute(@NonNull CompatibleScreensManifest csmTask) {
-            csmTask.setVariantName(scope.getVariantScope().getVariantConfiguration().getFullName());
-
-            csmTask.setScreenDensity(scope.getVariantOutputData().getMainOutputFile()
-                    .getFilter(com.android.build.OutputFile.DENSITY));
+            csmTask.splitScope = scope.getVariantData().getSplitScope();
+            csmTask.setVariantName(scope.getFullVariantName());
             csmTask.setScreenSizes(screenSizes);
-
-            csmTask.setManifestFile(scope.getCompatibleScreensManifestFile());
+            csmTask.setOutputFolder(scope.getCompatibleScreensManifestDirectory());
         }
     }
 }

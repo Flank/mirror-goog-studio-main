@@ -20,7 +20,9 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.COORDINATES;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
 import static com.android.builder.model.AndroidProject.ARTIFACT_ANDROID_TEST;
+import static org.junit.Assert.fail;
 
+import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
@@ -31,6 +33,7 @@ import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.Library;
 import java.io.File;
+import java.util.List;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -87,13 +90,35 @@ public class AppWithClassifierDepTest {
         DependencyGraphs graph = androidTestArtifact.getDependencyGraphs();
 
         LibraryGraphHelper.Items javaItems = helper.on(graph).withType(JAVA);
-        assertThat(javaItems.mapTo(COORDINATES)).containsExactly("com.foo:sample:1.0:testlib@jar");
+        assertThat(javaItems.mapTo(COORDINATES))
+                .containsExactly("com.foo:sample:1.0:testlib@jar", "com.foo:sample:1.0@jar");
 
-        Library library = javaItems.asSingleLibrary();
+        List<Library> libraries = javaItems.asLibraries();
+
+        Library library = getLibraryByCoordinate(libraries, "com.foo:sample:1.0:testlib@jar");
         assertThat(library.getArtifact())
                 .named("jar location")
                 .isEqualTo(new File(
                         project.getTestDir(),
                         "repo/com/foo/sample/1.0/sample-1.0-testlib.jar"));
+
+        library = getLibraryByCoordinate(libraries, "com.foo:sample:1.0@jar");
+        assertThat(library.getArtifact())
+                .named("jar location")
+                .isEqualTo(
+                        new File(project.getTestDir(), "repo/com/foo/sample/1.0/sample-1.0.jar"));
+    }
+
+    @NonNull
+    private static Library getLibraryByCoordinate(
+            @NonNull List<Library> libraries, @NonNull String coordinates) {
+        for (Library library : libraries) {
+            if (library.getArtifactAddress().equals(coordinates)) {
+                return library;
+            }
+        }
+
+        fail("Failed to find library matching: " + coordinates);
+        return null;
     }
 }

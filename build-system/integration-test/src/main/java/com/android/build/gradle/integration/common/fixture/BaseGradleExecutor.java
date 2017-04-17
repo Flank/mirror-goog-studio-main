@@ -18,10 +18,12 @@ package com.android.build.gradle.integration.common.fixture;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.integration.common.utils.JacocoAgent;
 import com.android.build.gradle.integration.performance.BenchmarkRecorder;
 import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.IntegerOption;
+import com.android.build.gradle.options.OptionalBooleanOption;
+import com.android.build.gradle.options.StringOption;
 import com.android.prefs.AndroidLocation;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -55,7 +57,8 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
     final ProjectConnection projectConnection;
     @NonNull final Consumer<GradleBuildResult> lastBuildResultConsumer;
     @Nullable final BenchmarkRecorder benchmarkRecorder;
-    @NonNull final List<String> arguments = Lists.newArrayList();
+    @NonNull private final List<String> arguments = Lists.newArrayList();
+    @NonNull private final ProjectOptionsBuilder options = new ProjectOptionsBuilder();
     @NonNull final Path profilesDirectory;
     @NonNull final Path projectDirectory;
     @Nullable private final String heapSize;
@@ -63,8 +66,6 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
     @NonNull private LoggingLevel loggingLevel = LoggingLevel.INFO;
     private boolean offline = true;
     private boolean localAndroidSdkHome = false;
-    private boolean enablePreDexBuildCache = true;
-    private boolean enableAaptV2 = true;
 
 
     BaseGradleExecutor(
@@ -93,24 +94,17 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
                         + dependencyResolutionAtExecution);
         this.profilesDirectory = profilesDirectory;
         this.heapSize = heapSize;
+        with(StringOption.BUILD_CACHE_DIR, getBuildCacheDir().getAbsolutePath());
     }
 
-    private static String propertyArg(@NonNull String name, @NonNull String value) {
-        return "-P" + name + "=" + value;
-    }
 
-    /**
-     * Return the default build cache location for a project.
-     */
-    public File getBuildCacheDir() {
+    /** Return the default build cache location for a project. */
+    public final File getBuildCacheDir() {
         return new File(projectDirectory.toFile(), ".buildCache");
     }
 
-    /**
-     * Upload this builds detailed profile as a benchmark.
-     */
-    public T recordBenchmark(
-            @NonNull Logging.BenchmarkMode benchmarkMode) {
+    /** Upload this builds detailed profile as a benchmark. */
+    public final T recordBenchmark(@NonNull Logging.BenchmarkMode benchmarkMode) {
         Preconditions.checkState(
                 benchmarkRecorder != null,
                 "BenchmarkRecorder must be set for this GradleTestProject when it is created in "
@@ -120,39 +114,47 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         return (T) this;
     }
 
-    public T disablePreDexBuildCache() {
-        enablePreDexBuildCache = false;
+    public final T with(@NonNull BooleanOption option, boolean value) {
+        options.booleans.put(option, value);
         return (T) this;
     }
 
-    public T disableAaptV2() {
-        enableAaptV2 = false;
+    public final T with(@NonNull OptionalBooleanOption option, boolean value) {
+        options.optionalBooleans.put(option, value);
         return (T) this;
     }
 
-    /**
-     * Add additional build arguments.
-     */
-    public T withArguments(@NonNull List<String> arguments) {
-        this.arguments.addAll(arguments);
+    public final T with(@NonNull IntegerOption option, int value) {
+        options.integers.put(option, value);
         return (T) this;
     }
 
-    /**
-     * Add an additional build argument.
-     */
-    public T withArgument(String argument) {
-        arguments.add(argument);
+    public final T with(@NonNull StringOption option, @NonNull String value) {
+        options.strings.put(option, value);
         return (T) this;
     }
 
+    @Deprecated
+    @NonNull
     public T withProperty(@NonNull String propertyName, @NonNull String value) {
-        withArgument(propertyArg(propertyName, value));
+        withArgument("-P" + propertyName + "=" + value);
         return (T) this;
     }
 
-    public T withProperty(@NonNull String propertyName, int value) {
-        withArgument(propertyArg(propertyName, Integer.toString(value)));
+    /** Add additional build arguments. */
+    public final T withArguments(@NonNull List<String> arguments) {
+        for (String argument : arguments) {
+            withArgument(argument);
+        }
+        return (T) this;
+    }
+
+    /** Add an additional build argument. */
+    public final T withArgument(String argument) {
+        if (argument.startsWith("-Pandroid")) {
+            throw new IllegalArgumentException("Use with(Option, Value) instead.");
+        }
+        arguments.add(argument);
         return (T) this;
     }
 
@@ -165,19 +167,20 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         return (T) this;
     }
 
-    public T withLocalAndroidSdkHome() {
+    public final T withLocalAndroidSdkHome() {
         localAndroidSdkHome = true;
-
         return (T) this;
     }
 
-    public T withoutOfflineFlag() {
+    public final T withoutOfflineFlag() {
         this.offline = false;
         return (T) this;
     }
 
-    protected List<String> getCommonArguments() throws IOException {
+    protected final List<String> getArguments() throws IOException {
         List<String> arguments = new ArrayList<>();
+        arguments.addAll(this.arguments);
+        arguments.addAll(options.getArguments());
 
         if (loggingLevel.getArgument() != null) {
             arguments.add(loggingLevel.getArgument());
@@ -185,6 +188,9 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
 
         arguments.add("-Dfile.encoding=" + System.getProperty("file.encoding"));
         arguments.add("-Dsun.jnu.encoding=" + System.getProperty("sun.jnu.encoding"));
+
+        // Don't search in parent folders for a settings.gradle file.
+        arguments.add("--no-search-upward");
 
         if (offline) {
             arguments.add("--offline");
@@ -195,15 +201,6 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
             androidSdkHome = projectDirectory.getParent().resolve("android_sdk_home");
         } else {
             androidSdkHome = GradleTestProject.ANDROID_SDK_HOME.toPath();
-        }
-
-        if (!enableAaptV2) {
-            arguments.add(propertyArg(AndroidGradleOptions.PROPERTY_ENABLE_AAPT2, "false"));
-        }
-
-        if (!enablePreDexBuildCache) {
-            arguments.add(
-                    propertyArg(AndroidGradleOptions.ENABLE_INTERMEDIATE_ARTIFACTS_CACHE, "false"));
         }
 
         Files.createDirectories(androidSdkHome);
@@ -217,13 +214,12 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         return arguments;
     }
 
-    protected void setJvmArguments(@NonNull LongRunningOperation launcher) {
+    protected final void setJvmArguments(@NonNull LongRunningOperation launcher) {
         List<String> jvmArguments = new ArrayList<>();
 
         if (!Strings.isNullOrEmpty(heapSize)) {
             jvmArguments.add("-Xmx" + heapSize);
         }
-
         jvmArguments.add("-XX:MaxPermSize=1024m");
 
         String debugIntegrationTest = System.getenv("DEBUG_INNER_TEST");

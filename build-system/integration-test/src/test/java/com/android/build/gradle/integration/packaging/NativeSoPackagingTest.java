@@ -521,7 +521,7 @@ public class NativeSoPackagingTest {
     private void checkTestApk(
             @NonNull GradleTestProject project, @NonNull String filename, @Nullable String content)
             throws Exception {
-        check(TruthHelper.assertThat(project.getTestApk("debug")), "lib", filename, content);
+        check(TruthHelper.assertThat(project.getTestApk()), "lib", filename, content);
     }
 
     /**

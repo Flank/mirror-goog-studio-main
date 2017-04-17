@@ -80,13 +80,8 @@ public class DexLimitTest {
     @Test
     public void checkDexErrorMessage() throws Exception {
         GradleBuildResult result = mProject.executor().expectFailure().run("assembleDebug");
-        if (GradleTestProject.USE_JACK) {
-            assertThat(result.getStderr()).contains(
-                    "Dex writing phase: classes.dex has too many IDs.");
-        } else {
-            assertThat(result.getStderr()).contains(
-                    "https://developer.android.com/tools/building/multidex.html");
-        }
+        assertThat(result.getStderr())
+                .contains("https://developer.android.com/tools/building/multidex.html");
 
         // Check that when dexing in-process, we don't keep bad state after a failure
         if (mDexInProcess) {

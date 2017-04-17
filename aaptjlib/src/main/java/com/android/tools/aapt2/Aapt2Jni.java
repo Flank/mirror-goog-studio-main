@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -229,8 +230,9 @@ public final class Aapt2Jni {
      *
      * @param arguments arguments for compilation (see {@code Compile.cpp})
      */
-    public static void compile(@Nonnull List<String> arguments) {
-        nativeCompile(arguments);
+    @CheckReturnValue
+    public static int compile(@Nonnull List<String> arguments) {
+        return nativeCompile(arguments);
     }
 
     /**
@@ -238,8 +240,9 @@ public final class Aapt2Jni {
      *
      * @param arguments arguments for linking (see {@code Link.cpp})
      */
-    public static void link(@Nonnull List<String> arguments) {
-        nativeLink(arguments);
+    @CheckReturnValue
+    public static int link(@Nonnull List<String> arguments) {
+        return nativeLink(arguments);
     }
 
     /**
@@ -257,12 +260,12 @@ public final class Aapt2Jni {
      *
      * @param arguments arguments for compilation (see {@code Compile.cpp})
      */
-    private static native void nativeCompile(@Nonnull List<String> arguments);
+    private static native int nativeCompile(@Nonnull List<String> arguments);
 
     /**
      * JNI call.
      *
      * @param arguments arguments for linking (see {@code Link.cpp})
      */
-    private static native void nativeLink(@Nonnull List<String> arguments);
+    private static native int nativeLink(@Nonnull List<String> arguments);
 }

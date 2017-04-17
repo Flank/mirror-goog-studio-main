@@ -39,7 +39,6 @@ import com.android.testutils.OsType;
 import com.android.testutils.TestUtils;
 import com.android.testutils.apk.Aar;
 import com.android.testutils.apk.Apk;
-import com.android.testutils.apk.AtomBundle;
 import com.android.testutils.apk.Zip;
 import com.android.utils.FileUtils;
 import com.android.utils.Pair;
@@ -50,13 +49,11 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -69,6 +66,8 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import org.gradle.internal.impldep.org.codehaus.plexus.util.StringUtils;
 import org.gradle.tooling.GradleConnectionException;
 import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.ProjectConnection;
@@ -115,7 +114,6 @@ public final class GradleTestProject implements TestRule {
     @NonNull public static final File ANDROID_HOME;
     @NonNull public static final File ANDROID_NDK_HOME;
 
-    public static final boolean USE_JACK;
     public static final boolean IMPROVED_DEPENDENCY_RESOLUTION;
 
     public static final String DEVICE_TEST_TASK = "deviceCheck";
@@ -128,10 +126,9 @@ public final class GradleTestProject implements TestRule {
     public static final File ANDROID_SDK_HOME;
 
     /**
-     * List of Apk file reference that should be closed and deleted once the TestRule is done.
-     * This is useful on Windows when Apk will lock the underlying file and most test code
-     * do not use try-with-resources nor explicitly call close().
-     *
+     * List of Apk file reference that should be closed and deleted once the TestRule is done. This
+     * is useful on Windows when Apk will lock the underlying file and most test code do not use
+     * try-with-resources nor explicitly call close().
      */
     private static final List<Apk> tmpApkFiles = new ArrayList<>();
 
@@ -158,7 +155,7 @@ public final class GradleTestProject implements TestRule {
 
             boolean useNightly =
                     Boolean.parseBoolean(
-                            System.getenv().getOrDefault("USE_GRADLE_NIGHTLY", "false"));
+                            System.getenv().getOrDefault("USE_GRADLE_NIGHTLY", "true"));
 
             String nightlyVersion = getLatestGradleCheckedIn();
             if (useNightly) {
@@ -183,9 +180,6 @@ public final class GradleTestProject implements TestRule {
             String envVersion = Strings.emptyToNull(System.getenv().get("CUSTOM_PLUGIN_VERSION"));
             ANDROID_GRADLE_PLUGIN_VERSION =
                     MoreObjects.firstNonNull(envVersion, Version.ANDROID_GRADLE_PLUGIN_VERSION);
-
-            String envJack = System.getenv().get("CUSTOM_JACK");
-            USE_JACK = !Strings.isNullOrEmpty(envJack);
 
             IMPROVED_DEPENDENCY_RESOLUTION =
                     Strings.isNullOrEmpty(
@@ -247,7 +241,6 @@ public final class GradleTestProject implements TestRule {
 
     private final String targetGradleVersion;
 
-    private final boolean useJack;
     private final boolean improvedDependencyEnabled;
     @Nullable private final String buildToolsVersion;
 
@@ -264,7 +257,6 @@ public final class GradleTestProject implements TestRule {
     GradleTestProject(
             @Nullable String name,
             @Nullable TestProject testProject,
-            boolean useJack,
             boolean improvedDependencyEnabled,
             @Nullable String targetGradleVersion,
             boolean withoutNdk,
@@ -278,7 +270,6 @@ public final class GradleTestProject implements TestRule {
         this.buildFile = sourceDir = null;
         this.name = (name == null) ? DEFAULT_TEST_PROJECT_NAME : name;
         this.improvedDependencyEnabled = improvedDependencyEnabled;
-        this.useJack = useJack;
         this.targetGradleVersion = targetGradleVersion;
         this.testProject = testProject;
         this.withoutNdk = withoutNdk;
@@ -311,7 +302,6 @@ public final class GradleTestProject implements TestRule {
         gradleProperties = ImmutableList.of();
         testProject = null;
         targetGradleVersion = rootProject.getTargetGradleVersion();
-        useJack = false;
         improvedDependencyEnabled = rootProject.isImprovedDependencyEnabled();
         openConnections = null;
         buildToolsVersion = null;
@@ -399,13 +389,13 @@ public final class GradleTestProject implements TestRule {
                     for (Apk tmpApkFile : tmpApkFiles) {
                         try {
                             tmpApkFile.close();
-                        } catch(Exception e) {
+                        } catch (Exception e) {
                             System.err.println("Error while closing APK file : " + e.getMessage());
                         }
                         File tmpFile = tmpApkFile.getFile().toFile();
                         if (tmpFile.exists() && !tmpFile.delete()) {
-                            System.err.println("Cannot delete temporary file "
-                                    + tmpApkFile.getFile());
+                            System.err.println(
+                                    "Cannot delete temporary file " + tmpApkFile.getFile());
                         }
                     }
                     openConnections.forEach(ProjectConnection::close);
@@ -533,7 +523,7 @@ public final class GradleTestProject implements TestRule {
                                 + "",
                         DEFAULT_BUILD_TOOL_VERSION,
                         DEFAULT_COMPILE_SDK_VERSION,
-                        useJack,
+                        false,
                         DEFAULT_KOTLIN_PLUGIN_VERSION);
         if (withDependencyChecker) {
             result = result
@@ -555,7 +545,6 @@ public final class GradleTestProject implements TestRule {
                     + "    void beforeResolve(ResolvableDependencies resolvableDependencies) {\n"
                     + "        if (!isTaskGraphReady\n"
                     + "                && !resolvableDependencies.getName().equals('classpath')\n"  // classpath is resolved to find the plugin.
-                    + "                && !resolvableDependencies.getName().startsWith('testTarget')\n"  // TODO: Fix for test plugin.
                     + "                && project.findProperty(\"" + AndroidProject.PROPERTY_BUILD_MODEL_ONLY + "\")?.toBoolean() != true) {\n"
                     + "            throw new RuntimeException(\n"
                     + "                    \"Dependency '$resolvableDependencies.name' was resolved during configuration\")\n"
@@ -718,15 +707,28 @@ public final class GradleTestProject implements TestRule {
      *
      * <p>Expected dimensions orders are: - product flavors - build type - other modifiers (e.g.
      * "unsigned", "aligned")
+     *
+     * @deprecated Use {@link #getApk(ApkType, String...)} or {@link #getApk(String, ApkType,
+     *     String...)}
      */
     @NonNull
+    @Deprecated
     public Apk getApk(String... dimensions) throws IOException {
         List<String> dimensionList = Lists.newArrayListWithExpectedSize(1 + dimensions.length);
         dimensionList.add(getName());
         dimensionList.addAll(Arrays.asList(dimensions));
+        // FIX ME : "debug" should be an explicit variant name rather than mixed in dimensions.
+        List<String> flavorDimensionList =
+                Arrays.stream(dimensions)
+                        .filter(dimension -> !dimension.equals("unsigned"))
+                        .collect(Collectors.toList());
         File apkFile =
-                getOutputFile("apk/" + Joiner.on("-").join(dimensionList)
-                        + SdkConstants.DOT_ANDROID_PACKAGE);
+                getOutputFile(
+                        "apk/"
+                                + Joiner.on("/").join(flavorDimensionList)
+                                + "/"
+                                + Joiner.on("-").join(dimensionList)
+                                + SdkConstants.DOT_ANDROID_PACKAGE);
         Apk apk;
         if (OsType.getHostOs() == OsType.WINDOWS && apkFile.exists()) {
             File copy = File.createTempFile("tmp", ".apk");
@@ -745,11 +747,189 @@ public final class GradleTestProject implements TestRule {
         return apk;
     }
 
+    public interface ApkType {
+        ApkType DEBUG = of("debug", true);
+        ApkType RELEASE = of("release", false);
+        ApkType ANDROIDTEST_DEBUG = of("debug", "androidTest", true);
+
+        @NonNull
+        String getBuildType();
+
+        @Nullable
+        String getTestName();
+        boolean isSigned();
+
+        static ApkType of(String name, boolean isSigned) {
+            return new ApkType() {
+
+                @NonNull
+                @Override
+                public String getBuildType() {
+                    return name;
+                }
+
+                @Override
+                public String getTestName() {
+                    return null;
+                }
+
+                @Override
+                public boolean isSigned() {
+                    return isSigned;
+                }
+
+                @Override
+                public String toString() {
+                    return MoreObjects.toStringHelper(this)
+                            .add("getBuildType", getBuildType())
+                            .add("getTestName", getTestName())
+                            .add("isSigned", isSigned())
+                            .toString();
+                }
+            };
+        }
+
+        static ApkType of(String name, String testName, boolean isSigned) {
+            return new ApkType() {
+
+                @NonNull
+                @Override
+                public String getBuildType() {
+                    return name;
+                }
+
+                @Nullable
+                @Override
+                public String getTestName() {
+                    return testName;
+                }
+
+                @Override
+                public boolean isSigned() {
+                    return isSigned;
+                }
+
+                @Override
+                public String toString() {
+                    return MoreObjects.toStringHelper(this)
+                            .add("getBuildType", getBuildType())
+                            .add("getTestName", getTestName())
+                            .add("isSigned", isSigned())
+                            .toString();
+                }
+            };
+        }
+
+
+
+    }
+
+    /**
+     * Return the output apk File from the application plugin for the given dimension.
+     *
+     * <p>Expected dimensions orders are: - product flavors -
+     */
+    @NonNull
+    public Apk getApk(ApkType apk, String... dimensions) throws IOException {
+        return getApk(null /* filterName */, apk, dimensions);
+    }
+
+    /**
+     * Return the output full split apk File from the application plugin for the given dimension.
+     *
+     * <p>Expected dimensions orders are: - product flavors -
+     */
+    @NonNull
+    public Apk getApk(@Nullable String filterName, ApkType apkType, String... dimensions)
+            throws IOException {
+        return new Apk(
+                getOutputFile(
+                        "apk"
+                                + (apkType.getTestName() != null ? "/" + apkType.getTestName() : "")
+                                + "/"
+                                + mangleDimensions(dimensions)
+                                + "/"
+                                + apkType.getBuildType()
+                                + "/"
+                                + mangleApkName(
+                                        apkType, filterName, ImmutableList.copyOf(dimensions))
+                                + (apkType.isSigned()
+                                        ? SdkConstants.DOT_ANDROID_PACKAGE
+                                        : "-unsigned" + SdkConstants.DOT_ANDROID_PACKAGE)));
+    }
+
+    /**
+     * Return the output apk File from the feature plugin for the given dimension.
+     *
+     * <p>Expected dimensions orders are: - product flavors -
+     */
+    @NonNull
+    public Apk getFeatureApk(ApkType apk, String... dimensions) throws IOException {
+        return getFeatureApk(null /* filterName */, apk, dimensions);
+    }
+
+    /**
+     * Return the output full split apk File from the feature plugin for the given dimension.
+     *
+     * <p>Expected dimensions orders are: - product flavors -
+     */
+    @NonNull
+    public Apk getFeatureApk(@Nullable String filterName, ApkType apkType, String... dimensions)
+            throws IOException {
+        return new Apk(
+                getOutputFile(
+                        "apk"
+                                + (apkType.getTestName() != null ? "/" + apkType.getTestName() : "")
+                                + "/feature/"
+                                + mangleDimensions(dimensions)
+                                + "/"
+                                + apkType.getBuildType()
+                                + "/"
+                                + mangleApkName(
+                                        apkType, filterName, ImmutableList.copyOf(dimensions))
+                                + (apkType.isSigned()
+                                        ? SdkConstants.DOT_ANDROID_PACKAGE
+                                        : "-unsigned" + SdkConstants.DOT_ANDROID_PACKAGE)));
+    }
+
+    private String mangleApkName(
+            @NonNull ApkType apkType, @Nullable String filterName, List<String> dimensions) {
+        List<String> dimensionList = Lists.newArrayListWithExpectedSize(1 + dimensions.size());
+        dimensionList.add(getName());
+        dimensionList.addAll(dimensions);
+        if (!Strings.isNullOrEmpty(filterName)) {
+            dimensionList.add(filterName);
+        }
+        if (!Strings.isNullOrEmpty(apkType.getBuildType())) {
+            dimensionList.add(apkType.getBuildType());
+        }
+        if (!Strings.isNullOrEmpty(apkType.getTestName())) {
+            dimensionList.add(apkType.getTestName());
+        }
+        return Joiner.on("-").join(dimensionList);
+    }
+
+    private static String mangleDimensions(String... dimensions) {
+        StringBuilder sb = new StringBuilder();
+        Arrays.stream(dimensions)
+                .forEach(
+                        dimension -> {
+                            sb.append(
+                                    sb.length() == 0
+                                            ? dimension
+                                            : StringUtils.capitalise(dimension));
+                        });
+        return sb.toString();
+    }
+
+    @NonNull
+    public Apk getTestApk() throws IOException {
+        return getApk(ApkType.ANDROIDTEST_DEBUG);
+    }
+
     @NonNull
     public Apk getTestApk(String... dimensions) throws IOException {
-        List<String> dimensionList = Lists.newArrayList(dimensions);
-        dimensionList.add("androidTest");
-        return getApk(Iterables.toArray(dimensionList, String.class));
+        return getApk(ApkType.ANDROIDTEST_DEBUG, dimensions);
     }
 
     /**
@@ -767,59 +947,20 @@ public final class GradleTestProject implements TestRule {
     }
 
     /**
-     * Return the output atombundle file from the atom plugin for the given dimension.
+     * Returns the output bundle file from the instantapp plugin for the given dimension.
      *
-     * <p>Expected dimensions orders are: - product flavors - build type - other modifiers (e.g.
-     * "unsigned", "aligned")
+     * <p>Expected dimensions orders are: - product flavors - build type
      */
-    public AtomBundle getAtomBundle(String... dimensions) {
+    public Zip getInstantAppBundle(String... dimensions) throws IOException {
         List<String> dimensionList = Lists.newArrayListWithExpectedSize(1 + dimensions.length);
         dimensionList.add(getName());
         dimensionList.addAll(Arrays.asList(dimensions));
-        try {
-            return new AtomBundle(getOutputFile(
-                    FileUtils.join(
-                            "atombundle",
-                            Joiner.on("-").join(dimensionList) + SdkConstants.DOT_ATOMBUNDLE)));
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-    }
-
-    /**
-     * Return the output atom file from the instantApp plugin for the given atom name and dimension.
-     *
-     * <p>Expected dimensions orders are: - product flavors - build type - other modifiers (e.g.
-     * "unsigned", "aligned")
-     */
-    public Apk getAtom(String atomName, String... dimensions) throws IOException {
-            return new Apk(
-                    getIntermediateFile(
-                            FileUtils.join(
-                                    "atoms",
-                                    Joiner.on("-").join(dimensions),
-                                    atomName + SdkConstants.DOT_ANDROID_PACKAGE)));
-    }
-
-    /**
-     * Returns the output instantApp bundle file from the instantApp plugin for the given dimension.
-     *
-     * <p>Expected dimensions orders are: - product flavors - build type - other modifiers (e.g.
-     * "unsigned", "aligned")
-     */
-    public Zip getInstantAppBundle(String... dimensions) {
-        List<String> dimensionList = Lists.newArrayListWithExpectedSize(1 + dimensions.length);
-        dimensionList.add(getName());
-        dimensionList.addAll(Arrays.asList(dimensions));
-        File zipFile =
+        return new Zip(
                 getOutputFile(
                         FileUtils.join(
-                                "apk", Joiner.on("-").join(dimensionList) + SdkConstants.DOT_ZIP));
-        try {
-            return new Zip(zipFile);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+                                "apk",
+                                mangleDimensions(dimensions),
+                                Joiner.on("-").join(dimensionList) + SdkConstants.DOT_ZIP)));
     }
 
     /** Returns a string that contains the gradle buildscript content */
@@ -1027,10 +1168,6 @@ public final class GradleTestProject implements TestRule {
     @Nullable
     String getHeapSize() {
         return heapSize;
-    }
-
-    boolean isUseJack() {
-        return useJack;
     }
 
     public boolean isImprovedDependencyEnabled() {

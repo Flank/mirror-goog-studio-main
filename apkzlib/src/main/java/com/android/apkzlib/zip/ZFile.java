@@ -25,6 +25,7 @@ import com.android.apkzlib.zip.utils.CloseableByteSource;
 import com.android.apkzlib.zip.utils.LittleEndianUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
+import com.google.common.base.VerifyException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -457,6 +458,10 @@ public class ZFile implements Closeable {
             throw e;
         } catch (IOException e) {
             throw new IOException("Failed to read zip file '" + file.getAbsolutePath() + "'.", e);
+        } catch (IllegalStateException | IllegalArgumentException | VerifyException e) {
+            throw new RuntimeException(
+                    "Internal error when trying to read zip file '" + file.getAbsolutePath() + "'.",
+                    e);
         }
     }
 

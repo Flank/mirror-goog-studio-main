@@ -22,8 +22,9 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.GuardedBy;
-import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.ndk.NdkHandler;
+import com.android.build.gradle.options.ProjectOptions;
+import com.android.build.gradle.options.SyncOptions;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.ErrorReporter;
 import com.android.builder.core.LibraryRequest;
@@ -87,12 +88,14 @@ public class SdkHandler {
      * Returns true if we should use a cached SDK, false if we should force the re-parsing of the
      * SDK components.
      */
-    public static boolean useCachedSdk(Project project) {
+    public static boolean useCachedSdk(ProjectOptions projectOptions) {
         // only used cached version of the sdk when in instant run mode but not
         // syncing.
-        return AndroidGradleOptions.getOptionalCompilationSteps(project).contains(
-                OptionalCompilationStep.INSTANT_DEV)
-                && !AndroidGradleOptions.buildModelOnlyAdvanced(project);
+        return projectOptions
+                        .getOptionalCompilationSteps()
+                        .contains(OptionalCompilationStep.INSTANT_DEV)
+                && SyncOptions.getModelQueryMode(projectOptions)
+                        == ErrorReporter.EvaluationMode.STANDARD;
     }
 
     public SdkHandler(@NonNull Project project,

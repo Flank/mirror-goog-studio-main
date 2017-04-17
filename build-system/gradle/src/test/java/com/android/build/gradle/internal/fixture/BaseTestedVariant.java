@@ -37,6 +37,7 @@ import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import org.gradle.api.Task;
+import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.AbstractCopyTask;
 import org.gradle.api.tasks.compile.JavaCompile;
@@ -93,7 +94,7 @@ public interface BaseTestedVariant extends BaseVariant, TestedVariant {
 
         @NonNull
         @Override
-        public List<BaseVariantOutput> getOutputs() {
+        public Collection<BaseVariantOutput> getOutputs() {
             return variant.getOutputs();
         }
 
@@ -119,6 +120,24 @@ public interface BaseTestedVariant extends BaseVariant, TestedVariant {
         @Override
         public List<SourceProvider> getSourceSets() {
             return variant.getSourceSets();
+        }
+
+        @NonNull
+        @Override
+        public Configuration getCompileConfiguration() {
+            return variant.getCompileConfiguration();
+        }
+
+        @NonNull
+        @Override
+        public Configuration getAnnotationProcessorConfiguration() {
+            return variant.getAnnotationProcessorConfiguration();
+        }
+
+        @NonNull
+        @Override
+        public Configuration getRuntimeConfiguration() {
+            return variant.getRuntimeConfiguration();
         }
 
         @NonNull

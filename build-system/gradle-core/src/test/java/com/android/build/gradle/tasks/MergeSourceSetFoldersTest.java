@@ -21,6 +21,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.builder.core.BuilderConstants;
 import com.android.ide.common.res2.AssetSet;
 import com.google.common.collect.ImmutableSet;
@@ -28,10 +29,16 @@ import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.ArtifactCollection;
+import org.gradle.api.artifacts.component.ComponentArtifactIdentifier;
+import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
+import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.FileCollection;
 import org.gradle.testfixtures.ProjectBuilder;
 import org.junit.After;
@@ -56,7 +63,7 @@ public class MergeSourceSetFoldersTest {
         task = project.getTasks().create("test", MergeSourceSetFolders.class);
 
         folderSets = Lists.newArrayList();
-        task.setAssetSetSupplier(InputSupplier.from(() -> folderSets));
+        task.setAssetSetSupplier(() -> folderSets);
     }
 
     @After
@@ -101,15 +108,12 @@ public class MergeSourceSetFoldersTest {
         File file = new File("src/main");
         AssetSet mainSet = createAssetSet(folderSets, BuilderConstants.MAIN, file);
 
-        List<AssetSet> dependencySets = Lists.newArrayList();
-        task.setDependencySetSupplier(InputSupplier.from(() -> dependencySets));
-
         File file2 = new File("foo/bar/1.0");
-        AssetSet librarySet = createAssetSet(dependencySets, "foo:bar:1.0", file2);
+        List<AssetSet> librarySets = setupLibraryDependencies(file2, ":path");
 
         assertThat(task.getSourceFolderInputs()).containsExactly(file);
-        assertThat(task.getDependencyInputs()).containsExactly(file2);
-        assertThat(task.computeAssetSetList()).containsExactly(librarySet, mainSet).inOrder();
+        assertThat(task.getLibraries().getFiles()).containsExactly(file2);
+        assertThat(task.computeAssetSetList()).containsExactly(librarySets.get(0), mainSet).inOrder();
     }
 
     @Test
@@ -149,14 +153,17 @@ public class MergeSourceSetFoldersTest {
         File debugFile = new File("src/debug");
         AssetSet debugSet = createAssetSet(folderSets, "debug", debugFile);
 
-        List<AssetSet> dependencySets = Lists.newArrayList();
-        task.setDependencySetSupplier(InputSupplier.from(() -> dependencySets));
-
         File libFile = new File("foo/bar/1.0");
-        AssetSet librarySet = createAssetSet(dependencySets, "foo:bar:1.0", libFile);
-
         File libFile2 = new File("foo/bar/2.0");
-        AssetSet librarySet2 = createAssetSet(dependencySets, "foo:bar:2.0", libFile2);
+
+        // the order returned by the dependency is meant to be in the wrong order (consumer first,
+        // when we want dependent first for the merger), so the order in the asset set should be
+        // the opposite order.
+        List<AssetSet> librarySets = setupLibraryDependencies(
+                libFile, "foo:bar:1.0",
+                libFile2, "foo:bar:2.0");
+        AssetSet librarySet = librarySets.get(0);
+        AssetSet librarySet2 = librarySets.get(1);
 
         File shaderFile = new File("shader");
         setFileCollection(task::setShadersOutputDir, shaderFile);
@@ -165,9 +172,9 @@ public class MergeSourceSetFoldersTest {
         setFileCollection(task::setCopyApk, copyApkFile);
 
         assertThat(task.getSourceFolderInputs()).containsExactly(file, file2, debugFile);
-        assertThat(task.getDependencyInputs()).containsExactly(libFile, libFile2);
+        assertThat(task.getLibraries().getFiles()).containsExactly(libFile, libFile2);
         assertThat(task.computeAssetSetList())
-                .containsExactly(librarySet, librarySet2, mainSet, debugSet)
+                .containsExactly(librarySet2, librarySet, mainSet, debugSet)
                 .inOrder();
         // generated files should have been added to the main resource sets.
         assertThat(mainSet.getSourceFiles())
@@ -176,10 +183,14 @@ public class MergeSourceSetFoldersTest {
 
     @NonNull
     private static AssetSet createAssetSet(
-            List<AssetSet> folderSets, String name, File... files) {
+            @Nullable List<AssetSet> folderSets,
+            @NonNull String name,
+            @NonNull File... files) {
         AssetSet mainSet = new AssetSet(name);
         mainSet.addSources(Arrays.asList(files));
-        folderSets.add(mainSet);
+        if (folderSets != null) {
+            folderSets.add(mainSet);
+        }
         return mainSet;
     }
 
@@ -188,5 +199,50 @@ public class MergeSourceSetFoldersTest {
         Set<File> fileSet = ImmutableSet.copyOf(Arrays.asList(files));
         when(fileCollection.getFiles()).thenReturn(fileSet);
         setter.accept(fileCollection);
+    }
+
+    @NonNull
+    private List<AssetSet> setupLibraryDependencies(Object... objects) {
+        ArtifactCollection libraries = mock(ArtifactCollection.class);
+
+        Set<ResolvedArtifactResult> artifacts = new LinkedHashSet<>();
+        Set<File> files = new HashSet<>();
+        List<AssetSet> assetSets = Lists.newArrayListWithCapacity(objects.length/2);
+
+        for (int i = 0, count = objects.length; i < count ; i+=2) {
+            assertThat(objects[i]).isInstanceOf(File.class);
+            assertThat(objects[i+1]).isInstanceOf(String.class);
+
+            File file = (File) objects[i];
+            String path = (String) objects[i+1];
+
+            files.add(file);
+
+            ResolvedArtifactResult artifact = mock(ResolvedArtifactResult.class);
+            artifacts.add(artifact);
+
+            ComponentArtifactIdentifier artifactId = mock(ComponentArtifactIdentifier.class);
+            ProjectComponentIdentifier id = mock(ProjectComponentIdentifier.class);
+
+            when(id.getProjectPath()).thenReturn(path);
+            when(artifactId.getComponentIdentifier()).thenReturn(id);
+            when(artifact.getFile()).thenReturn(file);
+            when(artifact.getId()).thenReturn(artifactId);
+
+            // create a resource set that must match the one returned by the computation
+            AssetSet set = new AssetSet(path);
+            set.addSource(file);
+            assetSets.add(set);
+        }
+
+        FileCollection fileCollection = mock(FileCollection.class);
+        when(fileCollection.getFiles()).thenReturn(files);
+
+        when(libraries.getArtifacts()).thenReturn(artifacts);
+        when(libraries.getArtifactFiles()).thenReturn(fileCollection);
+
+        task.setLibraries(libraries);
+
+        return assetSets;
     }
 }

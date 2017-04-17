@@ -22,14 +22,15 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.builder.model.AndroidProject;
+import com.android.build.gradle.internal.aapt.AaptGeneration;
+import com.android.build.gradle.options.IntegerOption;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.Zip;
 import com.android.utils.FileUtils;
 import java.io.File;
 import java.nio.file.Files;
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.EnumSet;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -38,16 +39,12 @@ import org.junit.runners.Parameterized;
 @RunWith(Parameterized.class)
 public class MergeResourcesTest {
 
-    @Parameterized.Parameters(name = "enableAAPT2=\"{0}\"")
-    public static Collection<Object[]> expected() {
-        return Arrays.asList(
-                new Object[][] {
-                    //{ use AAPT2}
-                    {false}, {true}
-                });
+    @Parameterized.Parameters(name = "aaptGeneration=\"{0}\"")
+    public static Collection<AaptGeneration> expected() {
+        return EnumSet.allOf(AaptGeneration.class);
     }
 
-    @Parameterized.Parameter public boolean useAapt2;
+    @Parameterized.Parameter public AaptGeneration aaptGeneration;
 
     @Rule
     public GradleTestProject project = GradleTestProject.builder()
@@ -75,13 +72,13 @@ public class MergeResourcesTest {
         FileUtils.mkdirs(libraryRaw);
         Files.write(new File(libraryRaw, "me.raw").toPath(), new byte[] { 0, 1, 2 });
 
-        project.executor().withEnabledAapt2(useAapt2).run(":app:assembleDebug");
+        project.executor().with(aaptGeneration).run(":app:assembleDebug");
 
         assertThat(project.getSubproject("app").getApk("debug"))
                 .containsFileWithContent("res/raw/me.raw", new byte[] { 0, 1, 2 });
 
         File inIntermediate = null;
-        if (!useAapt2) {
+        if (aaptGeneration == AaptGeneration.AAPT_V1) {
             inIntermediate =
                     FileUtils.join(
                             project.getSubproject("app").getTestDir(),
@@ -117,11 +114,11 @@ public class MergeResourcesTest {
         FileUtils.mkdirs(appRaw);
         Files.write(new File(appRaw, "me.raw").toPath(), new byte[] { 3 });
 
-        project.executor().withEnabledAapt2(useAapt2).run(":app:assembleDebug");
+        project.executor().with(aaptGeneration).run(":app:assembleDebug");
 
         assertThat(project.getSubproject("app").getApk("debug"))
                 .containsFileWithContent("res/raw/me.raw", new byte[] { 3 });
-        if (!useAapt2) {
+        if (aaptGeneration == AaptGeneration.AAPT_V1) {
             assertThat(inIntermediate).contains(new byte[] {3});
         } else {
             assertThat(inIntermediate).exists();
@@ -136,8 +133,10 @@ public class MergeResourcesTest {
                         "build",
                         "intermediates",
                         "res",
+                        "debug",
                         "resources-debug.ap_");
 
+        assertThat(apUnderscore).exists();
         File apk = project.getSubproject("app").getApk("debug").getFile().toFile();
 
         // Remember all the old timestamps
@@ -147,7 +146,7 @@ public class MergeResourcesTest {
 
         Files.write(new File(libraryRaw, "me.raw").toPath(), new byte[] { 0, 1, 2, 4 });
 
-        project.executor().withEnabledAapt2(useAapt2).run(":app:assembleDebug");
+        project.executor().with(aaptGeneration).run(":app:assembleDebug");
 
         assertThat(project.getSubproject("app").getApk("debug"))
                 .containsFileWithContent("res/raw/me.raw", new byte[] { 3 });
@@ -165,13 +164,13 @@ public class MergeResourcesTest {
         File raw = FileUtils.join(project.getTestDir(), "app", "src", "main", "res", "raw");
         FileUtils.mkdirs(raw);
         Files.write(new File(raw, "me.raw").toPath(), new byte[] { 0, 1, 2 });
-        project.executor().withEnabledAapt2(useAapt2).run(":app:assembleDebug");
+        project.executor().with(aaptGeneration).run(":app:assembleDebug");
 
         /*
          * Check that the file is merged and in the apk.
          */
         File inIntermediate = null;
-        if (!useAapt2) {
+        if (aaptGeneration == AaptGeneration.AAPT_V1) {
             inIntermediate =
                     FileUtils.join(
                             project.getSubproject("app").getTestDir(),
@@ -200,17 +199,19 @@ public class MergeResourcesTest {
                 "build",
                 "intermediates",
                 "res",
+                "debug",
                 "resources-debug.ap_");
 
-        try (Zip zip = new Zip(apUnderscore)){
-            assertThatZip(zip).containsFileWithContent("res/raw/me.raw", new byte[]{0, 1, 2});
+        assertThat(apUnderscore).exists();
+        try (Zip zip = new Zip(apUnderscore)) {
+            assertThatZip(zip).containsFileWithContent("res/raw/me.raw", new byte[] {0, 1, 2});
         }
 
         /*
          * Remove the resource from the project and build the project incrementally.
          */
         assertTrue(new File(raw, "me.raw").delete());
-        project.executor().withEnabledAapt2(useAapt2).run(":app:assembleDebug");
+        project.executor().with(aaptGeneration).run(":app:assembleDebug");
 
         /*
          * Check that the file has been removed from the intermediates and from the apk.
@@ -229,13 +230,13 @@ public class MergeResourcesTest {
         File raw = FileUtils.join(project.getTestDir(), "app", "src", "main", "res", "raw");
         FileUtils.mkdirs(raw);
         Files.write(new File(raw, "me.raw").toPath(), new byte[] { 0, 1, 2 });
-        project.executor().withEnabledAapt2(useAapt2).run(":app:assembleDebug");
+        project.executor().with(aaptGeneration).run(":app:assembleDebug");
 
         /*
          * Check that the file is merged and in the apk.
          */
-        File inIntermediate = null;
-        if (!useAapt2) {
+        File inIntermediate;
+        if (aaptGeneration == AaptGeneration.AAPT_V1) {
             inIntermediate =
                     FileUtils.join(
                             project.getSubproject("app").getTestDir(),
@@ -264,29 +265,30 @@ public class MergeResourcesTest {
                 "build",
                 "intermediates",
                 "res",
+                "debug",
                 "resources-debug.ap_");
 
+        assertThat(apUnderscore).exists();
         try (Apk apk = new Apk(apUnderscore)) {
-            assertThat(apk)
-                    .containsFileWithContent("res/raw/me.raw", new byte[]{0, 1, 2});
+            assertThat(apk).containsFileWithContent("res/raw/me.raw", new byte[] {0, 1, 2});
         }
+
         /*
          * Change the resource file from the project and build the project incrementally.
          */
         Files.write(new File(raw, "me.raw").toPath(), new byte[] { 1, 2, 3, 4 });
-        project.executor().withEnabledAapt2(useAapt2).run(":app:assembleDebug");
+        project.executor().with(aaptGeneration).run(":app:assembleDebug");
 
         /*
          * Check that the file has been updated in the intermediates directory and in the project.
          */
-        if (!useAapt2) {
+        if (aaptGeneration == AaptGeneration.AAPT_V1) {
             assertThat(inIntermediate).contains(new byte[] {1, 2, 3, 4});
         } else {
             assertThat(inIntermediate).exists();
         }
         try (Apk apk = new Apk(apUnderscore)) {
-            assertThat(apk)
-                    .containsFileWithContent("res/raw/me.raw", new byte[]{1, 2, 3, 4});
+            assertThat(apk).containsFileWithContent("res/raw/me.raw", new byte[] {1, 2, 3, 4});
         }
     }
 
@@ -298,13 +300,13 @@ public class MergeResourcesTest {
         File raw = FileUtils.join(project.getTestDir(), "app", "src", "main", "res", "raw");
         FileUtils.mkdirs(raw);
         Files.write(new File(raw, "me.raw").toPath(), new byte[] { 0, 1, 2 });
-        project.executor().withEnabledAapt2(useAapt2).run(":app:assembleDebug");
+        project.executor().with(aaptGeneration).run(":app:assembleDebug");
 
         /*
          * Check that the file is merged and in the apk.
          */
-        File inIntermediate = null;
-        if (!useAapt2) {
+        File inIntermediate;
+        if (aaptGeneration == AaptGeneration.AAPT_V1) {
             inIntermediate =
                     FileUtils.join(
                             project.getSubproject("app").getTestDir(),
@@ -333,11 +335,12 @@ public class MergeResourcesTest {
                 "build",
                 "intermediates",
                 "res",
+                "debug",
                 "resources-debug.ap_");
 
+        assertThat(apUnderscore).exists();
         try (Apk apk = new Apk(apUnderscore)) {
-            assertThat(apk)
-                    .containsFileWithContent("res/raw/me.raw", new byte[]{0, 1, 2});
+            assertThat(apk).containsFileWithContent("res/raw/me.raw", new byte[] {0, 1, 2});
         }
 
         /*
@@ -346,13 +349,13 @@ public class MergeResourcesTest {
          */
         assertTrue(new File(raw, "me.raw").delete());
         Files.write(new File(raw, "me.war").toPath(), new byte[] { 1, 2, 3, 4 });
-        project.executor().withEnabledAapt2(useAapt2).run(":app:assembleDebug");
+        project.executor().with(aaptGeneration).run(":app:assembleDebug");
 
         /*
          * Check that the file has been updated in the intermediates directory and in the project.
          */
         assertThat(inIntermediate).doesNotExist();
-        if (!useAapt2) {
+        if (aaptGeneration == AaptGeneration.AAPT_V1) {
             assertThat(new File(inIntermediate.getParent(), "me.war"))
                     .contains(new byte[] {1, 2, 3, 4});
         } else {
@@ -360,8 +363,7 @@ public class MergeResourcesTest {
         }
         assertThat(apUnderscore).doesNotContain("res/raw/me.raw");
         try (Apk apk = new Apk(apUnderscore)) {
-            assertThat(apk)
-                    .containsFileWithContent("res/raw/me.war", new byte[]{1, 2, 3, 4});
+            assertThat(apk).containsFileWithContent("res/raw/me.war", new byte[] {1, 2, 3, 4});
         }
     }
 
@@ -385,8 +387,6 @@ public class MergeResourcesTest {
                 appProject.file("src/main/java/com/example/android/multiproject/MainActivity.java"),
                 "public int useFoo() { return R.id.foo; }");
 
-        project.executor()
-                .withProperty(AndroidProject.PROPERTY_BUILD_API, 23)
-                .run(":app:assembleDebug");
+        project.executor().with(IntegerOption.IDE_TARGET_DEVICE_API, 23).run(":app:assembleDebug");
     }
 }

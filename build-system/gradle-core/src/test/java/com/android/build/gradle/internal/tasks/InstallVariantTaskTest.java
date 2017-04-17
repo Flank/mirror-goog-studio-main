@@ -27,12 +27,13 @@ import static org.mockito.Mockito.when;
 
 import com.android.annotations.NonNull;
 import com.android.build.OutputFile;
-import com.android.build.gradle.api.ApkOutputFile;
-import com.android.build.gradle.internal.variant.ApkVariantOutputData;
+import com.android.build.gradle.internal.scope.BuildOutput;
+import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.core.DefaultApiVersion;
 import com.android.builder.testing.api.DeviceConnector;
 import com.android.builder.testing.api.DeviceException;
 import com.android.builder.testing.api.DeviceProvider;
+import com.android.ide.common.build.ApkInfo;
 import com.android.ide.common.process.DefaultProcessExecutor;
 import com.android.ide.common.process.ProcessExecutor;
 import com.android.utils.StdLogger;
@@ -60,15 +61,11 @@ public class InstallVariantTaskTest {
             new DefaultProcessExecutor(new StdLogger(StdLogger.Level.INFO));
 
     @NonNull
-    private static ApkVariantOutputData createSingleMainApkOutput(@NonNull File mainOutputFileApk) {
-        ApkVariantOutputData mainApk = mock(ApkVariantOutputData.class);
-        ApkOutputFile mainOutputFile =
-                new ApkOutputFile(
-                        OutputFile.OutputType.MAIN, ImmutableList.of(), () -> mainOutputFileApk);
+    private static BuildOutput createSingleMainApkOutput(@NonNull File mainOutputFileApk) {
 
-        when(mainApk.getOutputs()).thenReturn(ImmutableList.of(mainOutputFile));
-        when(mainApk.getMainOutputFile()).thenReturn(mainOutputFile);
-        return mainApk;
+        ApkInfo apkInfo = mock(ApkInfo.class);
+        when(apkInfo.getType()).thenReturn(OutputFile.OutputType.MAIN);
+        return new BuildOutput(VariantScope.TaskOutputType.APK, apkInfo, mainOutputFileApk);
     }
 
     @Before

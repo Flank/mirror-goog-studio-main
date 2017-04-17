@@ -73,13 +73,9 @@ class MinifyLibTest {
     public void shrinkingTheLibrary() throws Exception {
         enableLibShrinking()
 
-        project.execute(":app:assembleDebug")
+        project.execute(":app:assembleRelease")
 
-        Aar aar = project.getSubproject(":lib").getAar("release")
-        assertThat(aar).containsClass("Lcom/android/tests/basic/StringProvider;")
-        assertThat(aar).doesNotContainClass("Lcom/android/tests/basic/UnusedClass;")
-
-        Apk apk = project.getSubproject(":app").getApk("debug")
+        Apk apk = project.getSubproject(":app").getApk("release")
         assertThat(apk).containsClass("Lcom/android/tests/basic/StringProvider;")
         assertThat(apk).doesNotContainClass("Lcom/android/tests/basic/UnusedClass;")
     }

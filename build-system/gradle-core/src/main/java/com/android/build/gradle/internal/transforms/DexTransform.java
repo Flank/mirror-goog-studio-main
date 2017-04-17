@@ -126,7 +126,7 @@ public class DexTransform extends Transform {
     @NonNull
     @Override
     public Set<? super Scope> getScopes() {
-        return TransformManager.SCOPE_FULL_INSTANT_RUN_PROJECT;
+        return TransformManager.SCOPE_FULL_WITH_IR_FOR_DEXING;
     }
 
     @NonNull

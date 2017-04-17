@@ -21,12 +21,14 @@ import com.android.build.api.transform.Transform;
 import com.android.build.api.variant.VariantFilter;
 import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.api.BaseVariant;
+import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.CompileOptions;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.LoggingUtil;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.SourceSetSourceProviderWrapper;
 import com.android.build.gradle.internal.coverage.JacocoOptions;
+import com.android.build.gradle.internal.dependency.ProductFlavorAttr;
 import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.dsl.AdbOptions;
 import com.android.build.gradle.internal.dsl.AndroidSourceSetFactory;
@@ -40,6 +42,7 @@ import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.dsl.Splits;
 import com.android.build.gradle.internal.dsl.TestOptions;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.LibraryRequest;
@@ -50,12 +53,15 @@ import com.android.builder.testing.api.TestServer;
 import com.android.repository.Revision;
 import com.android.resources.Density;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.gradle.api.Action;
 import org.gradle.api.GradleException;
@@ -63,6 +69,7 @@ import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationContainer;
+import org.gradle.api.attributes.Attribute;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.tasks.SourceSet;
@@ -77,8 +84,6 @@ import org.gradle.internal.reflect.Instantiator;
  * <li>Plugin <code>com.android.application</code> uses {@link AppExtension}
  * <li>Plugin <code>com.android.library</code> uses {@link LibraryExtension}
  * <li>Plugin <code>com.android.test</code> uses {@link TestExtension}
- * <li>Plugin <code>com.android.atom</code> uses {@link AtomExtension}
- * <li>Plugin <code>com.android.instantapp</code> uses {@link InstantAppExtension}
  * </ul>
  */
 // All the public methods are meant to be exposed in the DSL.
@@ -86,6 +91,7 @@ import org.gradle.internal.reflect.Instantiator;
 // them.
 @SuppressWarnings({"UnnecessaryInheritDoc", "WeakerAccess", "unused", "Convert2Lambda"})
 public abstract class BaseExtension implements AndroidConfig {
+
     /** Secondary dependencies for the custom transform. */
     private final List<List<Object>> transformDependencies = Lists.newArrayList();
 
@@ -121,6 +127,8 @@ public abstract class BaseExtension implements AndroidConfig {
 
     private final NamedDomainObjectContainer<SigningConfig> signingConfigs;
 
+    private final NamedDomainObjectContainer<BaseVariantOutput> buildOutputs;
+
     private final List<DeviceProvider> deviceProviderList = Lists.newArrayList();
 
     private final List<TestServer> testServerList = Lists.newArrayList();
@@ -144,8 +152,7 @@ public abstract class BaseExtension implements AndroidConfig {
     private ExtraModelInfo extraModelInfo;
 
     private String defaultPublishConfig = "release";
-
-    private boolean publishNonDefault = false;
+    private Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> flavorSelection;
 
     private Action<VariantFilter> variantFilter;
 
@@ -155,24 +162,30 @@ public abstract class BaseExtension implements AndroidConfig {
 
     protected Project project;
 
+    private final ProjectOptions projectOptions;
+
     BaseExtension(
             @NonNull final Project project,
+            @NonNull final ProjectOptions projectOptions,
             @NonNull Instantiator instantiator,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull SdkHandler sdkHandler,
             @NonNull NamedDomainObjectContainer<BuildType> buildTypes,
             @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavors,
             @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigs,
+            @NonNull NamedDomainObjectContainer<BaseVariantOutput> buildOutputs,
             @NonNull ExtraModelInfo extraModelInfo,
             final boolean publishPackage) {
         this.androidBuilder = androidBuilder;
         this.sdkHandler = sdkHandler;
         this.buildTypes = buildTypes;
         //noinspection unchecked
-        this.productFlavors = (NamedDomainObjectContainer) productFlavors;
+        this.productFlavors = productFlavors;
         this.signingConfigs = signingConfigs;
         this.extraModelInfo = extraModelInfo;
+        this.buildOutputs = buildOutputs;
         this.project = project;
+        this.projectOptions = projectOptions;
 
         logger = Logging.getLogger(this.getClass());
 
@@ -203,36 +216,77 @@ public abstract class BaseExtension implements AndroidConfig {
                     public void execute(AndroidSourceSet sourceSet) {
                         ConfigurationContainer configurations = project.getConfigurations();
 
-                        createConfiguration(
+                        final String implementationName = sourceSet.getImplementationConfigurationName();
+                        final String runtimeOnlyName = sourceSet.getRuntimeOnlyConfigurationName();
+                        final String compileOnlyName = sourceSet.getCompileOnlyConfigurationName();
+
+                        // deprecated configurations first.
+                        final String compileName = sourceSet.getCompileConfigurationName();
+                        // due to compatibility with other plugins and with Gradle sync,
+                        // we have to keep 'compile' as resolvable.
+                        // TODO Fix this in gradle sync.
+                        Configuration compile = createConfiguration(
                                 configurations,
-                                sourceSet.getCompileConfigurationName(),
-                                "Classpath for compiling the " + sourceSet.getName() + " sources.");
+                                compileName,
+                                String.format(CONFIG_DESC_OLD, "Compile", sourceSet.getName(), implementationName),
+                                "compile".equals(compileName) || "testCompile".equals(compileName) /*canBeResolved*/);
+                        compile.getAllDependencies().whenObjectAdded(
+                                new DeprecatedConfigurationAction(project, compile, implementationName));
 
                         String packageConfigDescription;
                         if (publishPackage) {
-                            packageConfigDescription =
-                                    "Classpath only used when publishing '"
-                                            + sourceSet.getName()
-                                            + "'.";
+                            packageConfigDescription = String.format(CONFIG_DESC_OLD, "Publish", sourceSet.getName(), runtimeOnlyName);
                         } else {
-                            packageConfigDescription =
-                                    "Classpath packaged with the compiled '"
-                                            + sourceSet.getName()
-                                            + "' classes.";
+                            packageConfigDescription = String.format(CONFIG_DESC_OLD, "Apk", sourceSet.getName(), runtimeOnlyName);
                         }
-                        createConfiguration(
+
+                        Configuration apk = createConfiguration(
                                 configurations,
                                 sourceSet.getPackageConfigurationName(),
                                 packageConfigDescription);
+                        apk.getAllDependencies().whenObjectAdded(
+                                new DeprecatedConfigurationAction(project, apk, runtimeOnlyName));
 
-                        createConfiguration(
+                        Configuration provided = createConfiguration(
                                 configurations,
                                 sourceSet.getProvidedConfigurationName(),
-                                "Classpath for only compiling the "
-                                        + sourceSet.getName()
-                                        + " sources.");
+                                String.format(CONFIG_DESC_OLD, "Provided", sourceSet.getName(), compileOnlyName));
+                        provided.getAllDependencies().whenObjectAdded(
+                                new DeprecatedConfigurationAction(project, provided, compileOnlyName));
 
-                        createConfiguration(
+                        // then the new configurations.
+                        String apiName = sourceSet.getApiConfigurationName();
+                        Configuration api = null;
+                        if (apiName != null) {
+                            api = createConfiguration(
+                                    configurations,
+                                    apiName,
+                                    String.format(CONFIG_DESC, "API", sourceSet.getName()));
+                            api.extendsFrom(compile);
+                        }
+
+                        Configuration implementation = createConfiguration(
+                                configurations,
+                                implementationName,
+                                String.format(CONFIG_DESC, "Implementation only", sourceSet.getName()));
+                        if (api != null) {
+                            implementation.extendsFrom(api);
+                        }
+
+                        Configuration runtimeOnly = createConfiguration(
+                                configurations,
+                                runtimeOnlyName,
+                                String.format(CONFIG_DESC, "Runtime only", sourceSet.getName()));
+                        runtimeOnly.extendsFrom(apk);
+
+                        Configuration compileOnly = createConfiguration(
+                                configurations,
+                                compileOnlyName,
+                                String.format(CONFIG_DESC, "Compile only", sourceSet.getName()));
+                        compileOnly.extendsFrom(provided);
+
+                        // then the secondary configurations.
+                        Configuration wearConfig = createConfiguration(
                                 configurations,
                                 sourceSet.getWearAppConfigurationName(),
                                 "Link to a wear app to embed for object '"
@@ -290,18 +344,53 @@ public abstract class BaseExtension implements AndroidConfig {
         }
     }
 
-    protected void createConfiguration(
+    /**
+     * Creates a Configuration for a given source set.
+     *
+     * The configuration cannot be resolved
+     *
+     * @param configurations the configuration container to create the new configuration
+     * @param name the name of the configuration to create.
+     * @param description the configuration description.
+     * @return the configuration
+     *
+     * @see Configuration#isCanBeResolved()
+     */
+    private Configuration createConfiguration(
             @NonNull ConfigurationContainer configurations,
-            @NonNull String configurationName,
-            @NonNull String configurationDescription) {
-        logger.info("Creating configuration {}", configurationName);
+            @NonNull String name,
+            @NonNull String description) {
+        return createConfiguration(configurations, name, description, false);
+    }
 
-        Configuration configuration = configurations.findByName(configurationName);
+    /**
+     * Creates a Configuration for a given source set.
+     *
+     * @param configurations the configuration container to create the new configuration
+     * @param name the name of the configuration to create.
+     * @param description the configuration description.
+     * @param canBeResolved Whether the configuration can be resolved directly.
+     * @return the configuration
+     *
+     * @see Configuration#isCanBeResolved()
+     */
+    private Configuration createConfiguration(
+            @NonNull ConfigurationContainer configurations,
+            @NonNull String name,
+            @NonNull String description,
+            boolean canBeResolved) {
+        logger.info("Creating configuration {}", name);
+
+        Configuration configuration = configurations.findByName(name);
         if (configuration == null) {
-            configuration = configurations.create(configurationName);
+            configuration = configurations.create(name);
         }
         configuration.setVisible(false);
-        configuration.setDescription(configurationDescription);
+        configuration.setDescription(description);
+        configuration.setCanBeConsumed(false);
+        configuration.setCanBeResolved(canBeResolved);
+
+        return configuration;
     }
 
     /**
@@ -439,8 +528,16 @@ public abstract class BaseExtension implements AndroidConfig {
     }
 
     /**
-     * The default configuration, inherited by all product flavors (if any are defined).
+     * All build outputs for all variants, can be used by users to customize a build output.
+     *
+     * @return a container for build outputs.
      */
+    @Override
+    public NamedDomainObjectContainer<BaseVariantOutput> getBuildOutputs() {
+        return buildOutputs;
+    }
+
+    /** The default configuration, inherited by all product flavors (if any are defined). */
     public void defaultConfig(Action<ProductFlavor> action) {
         checkWritability();
         action.execute(defaultConfig);
@@ -600,7 +697,8 @@ public abstract class BaseExtension implements AndroidConfig {
     }
 
     /**
-     * Name of the configuration used to build the default artifact of this project.
+     * Name of the configuration used to build the default artifact of this project, used for
+     * publishing to Maven
      *
      * <p>See <a href="https://developer.android.com/studio/build/dependencies.html">
      * Add Build Dependencies</a>
@@ -614,19 +712,28 @@ public abstract class BaseExtension implements AndroidConfig {
         defaultPublishConfig = value;
     }
 
-    /**
-     * Whether to publish artifacts for all configurations, not just the default one.
-     *
-     * <p>See <a href="https://developer.android.com/studio/build/dependencies.html">
-     * Add Build Dependencies</a>
-     */
-    @Override
-    public boolean getPublishNonDefault() {
-        return publishNonDefault;
+    public void setPublishNonDefault(boolean publishNonDefault) {
+        logger.warn("publishNonDefault is deprecated and has no effect anymore. All variants are now published.");
     }
 
-    public void setPublishNonDefault(boolean publishNonDefault) {
-        this.publishNonDefault = publishNonDefault;
+    public void flavorSelection(String name, String value) {
+        if (flavorSelection == null) {
+            flavorSelection = Maps.newHashMap();
+        }
+
+        flavorSelection.put(
+                Attribute.of(name, ProductFlavorAttr.class), ProductFlavorAttr.of(value));
+    }
+
+    /** Map of (flavor dimension, flavor value) for flavor matching strategy. */
+    @Override
+    @NonNull
+    public Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> getFlavorSelection() {
+        if (flavorSelection == null) {
+            return ImmutableMap.of();
+        }
+
+        return flavorSelection;
     }
 
     public void variantFilter(Action<VariantFilter> filter) {
@@ -897,7 +1004,7 @@ public abstract class BaseExtension implements AndroidConfig {
                     buildToolsRevision,
                     libraryRequests,
                     androidBuilder,
-                    SdkHandler.useCachedSdk(project));
+                    SdkHandler.useCachedSdk(projectOptions));
         }
     }
 

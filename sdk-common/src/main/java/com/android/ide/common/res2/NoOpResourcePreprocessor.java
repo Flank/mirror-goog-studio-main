@@ -23,7 +23,7 @@ import java.util.Collection;
 /**
  * A {@link ResourcePreprocessor} used when no other preprocessor is enabled.
  */
-public class NoOpResourcePreprocessor implements ResourcePreprocessor {
+public final class NoOpResourcePreprocessor implements ResourcePreprocessor {
 
     public static final NoOpResourcePreprocessor INSTANCE = new NoOpResourcePreprocessor();
 

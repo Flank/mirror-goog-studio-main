@@ -27,14 +27,14 @@ public class InstantRunAnalyticsHelper {
     /** Generate a scrubbed proto of the instant run build context for analytics. */
     @NonNull
     public static InstantRunStatus generateAnalyticsProto(
-            @NonNull InstantRunBuildContext instantRunBuildContext) {
+            @NonNull InstantRunBuildContext buildContext) {
         InstantRunStatus.Builder builder = InstantRunStatus.newBuilder();
 
-        builder.setBuildMode(convert(instantRunBuildContext.getBuildMode()));
-        builder.setPatchingPolicy(convert(instantRunBuildContext.getPatchingPolicy()));
-        builder.setVerifierStatus(convert(instantRunBuildContext.getVerifierResult()));
+        builder.setBuildMode(convert(buildContext.getBuildMode()));
+        builder.setPatchingPolicy(convert(buildContext.getPatchingPolicy()));
+        builder.setVerifierStatus(convert(buildContext.getVerifierResult()));
 
-        InstantRunBuildContext.Build last = instantRunBuildContext.getLastBuild();
+        InstantRunBuildContext.Build last = buildContext.getLastBuild();
         if (last != null) {
             for (InstantRunBuildContext.Artifact artifact : last.getArtifacts()) {
                 builder.addArtifact(
@@ -100,6 +100,8 @@ public class InstantRunAnalyticsHelper {
                 return InstantRunArtifact.Type.SPLIT;
             case RESOURCES:
                 return InstantRunArtifact.Type.RESOURCES;
+            case FULL_SPLIT:
+                return InstantRunArtifact.Type.FULL_SPLIT;
             default:
                 throw new RuntimeException("Cannot convert " + type);
         }

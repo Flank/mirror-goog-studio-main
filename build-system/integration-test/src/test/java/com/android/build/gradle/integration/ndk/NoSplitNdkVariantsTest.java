@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNull;
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.ddmlib.IDevice;
@@ -74,6 +75,7 @@ public class NoSplitNdkVariantsTest {
                         + "            jniDebuggable true\n"
                         + "        }\n"
                         + "    }\n"
+                        + "    flavorDimensions 'abi'\n"
                         + "    productFlavors {\n"
                         + "        x86 {\n"
                         + "            ndk {\n"
@@ -101,7 +103,6 @@ public class NoSplitNdkVariantsTest {
                         + "LOCAL_SRC_FILES := src/main/jni/hello-jni.c\n"
                         + "\n"
                         + "include $(BUILD_SHARED_LIBRARY)");
-
     }
 
     @AfterClass
@@ -114,7 +115,7 @@ public class NoSplitNdkVariantsTest {
         project.execute("assembleX86Release");
 
         // Verify .so are built for all platform.
-        Apk apk = project.getApk("x86", "release", "unsigned");
+        Apk apk = project.getApk(null, ApkType.RELEASE, "x86");
         assertNotNull(apk.getEntry("lib/x86/libhello-jni.so"));
         assertNull(apk.getEntry("lib/mips/libhello-jni.so"));
         assertNull(apk.getEntry("lib/armeabi/libhello-jni.so"));
@@ -126,7 +127,7 @@ public class NoSplitNdkVariantsTest {
         project.execute("assembleArmRelease");
 
         // Verify .so are built for all platform.
-        Apk apk = project.getApk("arm", "release", "unsigned");
+        Apk apk = project.getApk(null, ApkType.RELEASE, "arm");
         assertNull(apk.getEntry("lib/x86/libhello-jni.so"));
         assertNull(apk.getEntry("lib/mips/libhello-jni.so"));
         assertNotNull(apk.getEntry("lib/armeabi/libhello-jni.so"));
@@ -139,7 +140,7 @@ public class NoSplitNdkVariantsTest {
         project.execute("assembleMipsRelease");
 
         // Verify .so are built for all platform.
-        Apk apk = project.getApk("mips", "release", "unsigned");
+        Apk apk = project.getApk(null, ApkType.RELEASE, "mips");
         assertNull(apk.getEntry("lib/x86/libhello-jni.so"));
         assertNotNull(apk.getEntry("lib/mips/libhello-jni.so"));
         assertNull(apk.getEntry("lib/armeabi/libhello-jni.so"));

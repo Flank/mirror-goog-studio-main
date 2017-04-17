@@ -23,8 +23,6 @@ import org.junit.BeforeClass
 import org.junit.ClassRule
 import org.junit.Test
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
-
 /**
  * Integration test for uploadAchives with multiple projects.
  */
@@ -76,14 +74,5 @@ class RepoTest {
         baseLibrary.execute("clean", "uploadArchives")
         library.execute("clean", "uploadArchives")
         app.execute("clean", "assembleDebug")
-        File explodedSnapshot = app.getIntermediateFile("project-cache");
-        assertThat(explodedSnapshot).isDirectory();
-        assertThat(explodedSnapshot.list().toList()).hasSize(1)
-
-        File explodedDir = new File(explodedSnapshot, explodedSnapshot.list()[0]);
-        long modifiedTime = explodedDir.lastModified();
-
-        app.execute("assembleDebug")
-        assertThat(explodedDir).wasModifiedAt(modifiedTime);
     }
 }

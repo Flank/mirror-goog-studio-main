@@ -50,8 +50,6 @@ public class PackageJarArtifactConfigAction implements TaskConfigAction<Jar> {
 
     @Override
     public void execute(@NonNull Jar jar) {
-        scope.getVariantData().classesJarTask = jar;
-
         // add the class files directly from the javac output as we do not want the manipulated
         // versions. For instance we would not want the obfuscated version.
         // (test module also receives the obfuscated mapping to obfuscate the test code the same
@@ -60,10 +58,11 @@ public class PackageJarArtifactConfigAction implements TaskConfigAction<Jar> {
         // Also had bytecode generated through other compilers.
         jar.from(scope.getVariantData().getAllGeneratedBytecode());
 
-        jar.setDestinationDir(new File(
-                scope.getGlobalScope().getIntermediatesDir(),
-                "classes-jar/" +
-                        scope.getVariantData().getVariantConfiguration().getDirName()));
+        jar.setDestinationDir(
+                new File(
+                        scope.getGlobalScope().getIntermediatesDir(),
+                        "classes-jar/"
+                                + scope.getVariantData().getVariantConfiguration().getDirName()));
         jar.setArchiveName("classes.jar");
     }
 }

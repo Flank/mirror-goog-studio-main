@@ -17,8 +17,6 @@
 package com.android.builder.symbols;
 
 
-import static com.android.resources.ResourceType.*;
-
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.resources.ResourceType;
@@ -133,9 +131,6 @@ import org.w3c.dom.Node;
  */
 public final class ResourceValuesXmlParser {
 
-    private static final String INT_TYPE = "int";
-    private static final String INT_LIST_TYPE = "int[]";
-
     private ResourceValuesXmlParser() {}
 
 
@@ -197,10 +192,10 @@ public final class ResourceValuesXmlParser {
 
         // Strip the type name of prefixes.
         if (type.contains(":")) {
-            type = type.substring(type.lastIndexOf(":") + 1, type.length());
+            type = type.substring(type.lastIndexOf(':') + 1, type.length());
         }
 
-        ResourceType resourceType = getEnum(type);
+        ResourceType resourceType = ResourceType.getEnum(type);
 
         if (resourceType == null) {
             throw new ResourceValuesXmlParseException(
@@ -230,10 +225,10 @@ public final class ResourceValuesXmlParser {
             case TRANSITION:
             case XML:
                 builder.add(
-                        new Symbol(
-                                resourceType.getName(),
+                        Symbol.createSymbol(
+                                resourceType,
                                 name,
-                                INT_TYPE,
+                                SymbolJavaType.INT,
                                 Integer.toString(idProvider.next())));
                 break;
             case DECLARE_STYLEABLE:
@@ -285,7 +280,8 @@ public final class ResourceValuesXmlParser {
                 tagName = attrElement.getAttribute(SdkConstants.ATTR_TYPE);
             }
 
-            if (!tagName.equals(ATTR.getName()) || attrElement.getNamespaceURI() != null) {
+            if (!tagName.equals(ResourceType.ATTR.getName())
+                    || attrElement.getNamespaceURI() != null) {
                 throw new ResourceValuesXmlParseException(
                         String.format(
                                 "Illegal type under declare-styleable:"
@@ -302,7 +298,11 @@ public final class ResourceValuesXmlParser {
             String attrValue = Integer.toString(idProvider.next());
 
             Symbol newStyleable =
-                    new Symbol(STYLEABLE.getName(), name + "_" + attrName, INT_TYPE, attrValue);
+                    Symbol.createSymbol(
+                            ResourceType.STYLEABLE,
+                            name + "_" + attrName,
+                            SymbolJavaType.INT,
+                            attrValue);
 
             builder.add(newStyleable);
             attrValues.add(attrValue);
@@ -310,10 +310,10 @@ public final class ResourceValuesXmlParser {
             attrNode = attrNode.getNextSibling();
         }
         builder.add(
-                new Symbol(
-                        STYLEABLE.getName(),
+                Symbol.createSymbol(
+                        ResourceType.STYLEABLE,
                         name,
-                        INT_LIST_TYPE,
+                        SymbolJavaType.INT_LIST,
                         "{" + Joiner.on(',').join(attrValues) + "}"));
     }
 
@@ -353,11 +353,11 @@ public final class ResourceValuesXmlParser {
             }
 
             Symbol newEnum =
-                    new Symbol(
-                            ID.getName(),
+                    Symbol.createSymbol(
+                            ResourceType.ID,
                             SymbolUtils.canonicalizeValueResourceName(
                                     getMandatoryAttr(enumElement, "name")),
-                            INT_TYPE,
+                            SymbolJavaType.INT,
                             Integer.toString(idProvider.next()));
 
             if (!builder.contains(newEnum)) {
@@ -365,8 +365,13 @@ public final class ResourceValuesXmlParser {
             }
             enumNode = enumNode.getNextSibling();
         }
+
         Symbol newAttr =
-                new Symbol(ATTR.getName(), name, INT_TYPE, Integer.toString(idProvider.next()));
+                Symbol.createSymbol(
+                        ResourceType.ATTR,
+                        name,
+                        SymbolJavaType.INT,
+                        Integer.toString(idProvider.next()));
 
         if (!builder.contains(newAttr)) {
             builder.add(newAttr);

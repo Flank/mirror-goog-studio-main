@@ -22,10 +22,13 @@ import com.android.build.gradle.api.ApkOutputFile;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.scope.GenericVariantScopeImpl;
 import com.android.build.gradle.internal.scope.InstantRunVariantScope;
+import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TransformGlobalScope;
 import com.android.build.gradle.internal.scope.TransformVariantScope;
+import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
 import com.android.builder.core.ManifestAttributeSupplier;
 import com.android.builder.model.AaptOptions;
+import com.android.ide.common.build.ApkData;
 import com.android.sdklib.IAndroidTarget;
 import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
@@ -33,6 +36,7 @@ import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
+import org.gradle.api.Project;
 
 /**
  * Implementation of the {@link TransformVariantScope} for external build system integration.
@@ -46,24 +50,38 @@ import java.util.Collections;
     private final InstantRunBuildContext mInstantRunBuildContext = new InstantRunBuildContext();
     private final AaptOptions aaptOptions;
     private final ManifestAttributeSupplier manifestAttributeSupplier;
+    private final SplitScope splitScope;
 
     ExternalBuildVariantScope(
             @NonNull TransformGlobalScope globalScope,
             @NonNull File outputRootFolder,
             @NonNull ExternalBuildContext externalBuildContext,
             @NonNull AaptOptions aaptOptions,
-            @NonNull ManifestAttributeSupplier manifestAttributeSupplier) {
+            @NonNull ManifestAttributeSupplier manifestAttributeSupplier,
+            @NonNull Collection<ApkData> apkDatas) {
         this.globalScope = globalScope;
         this.outputRootFolder = outputRootFolder;
         this.externalBuildContext = externalBuildContext;
         this.aaptOptions = aaptOptions;
         this.manifestAttributeSupplier = manifestAttributeSupplier;
+        this.splitScope = new SplitScope(SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY, apkDatas);
+    }
+
+    @NonNull
+    @Override
+    public SplitScope getSplitScope() {
+        return splitScope;
     }
 
     @NonNull
     @Override
     public TransformGlobalScope getGlobalScope() {
         return globalScope;
+    }
+
+    @Override
+    protected Project getProject() {
+        return globalScope.getProject();
     }
 
     @NonNull
@@ -111,6 +129,12 @@ import java.util.Collections;
 
     @NonNull
     @Override
+    public File getBuildInfoOutputFolder() {
+        return new File(outputRootFolder, "/build-info/debug");
+    }
+
+    @NonNull
+    @Override
     public File getReloadDexOutputFolder() {
         return new File(outputRootFolder, "/reload-dex/debug");
     }
@@ -134,7 +158,6 @@ import java.util.Collections;
     }
 
     @NonNull
-    @Override
     public InstantRunBuildContext getInstantRunBuildContext() {
         return mInstantRunBuildContext;
     }
@@ -181,15 +204,8 @@ import java.util.Collections;
         return new ApkOutputFile(
                 OutputFile.OutputType.MAIN,
                 Collections.emptySet(),
-                () -> new File(outputRootFolder, "/outputs/apk/debug.apk"));
-    }
-
-    public File getIntermediateApk() {
-        return new File(outputRootFolder, "/outputs/apk/debug-unaligned.apk");
-    }
-
-    public File getPreDexOutputDir() {
-        return FileUtils.join(outputRootFolder, "intermediates", "pre-dexed");
+                () -> new File(outputRootFolder, "/outputs/apk/debug.apk"),
+                getVersionCode());
     }
 
     public File getIncrementalDir(String name) {
@@ -214,9 +230,5 @@ import java.util.Collections;
 
     public String getVersionName() {
         return manifestAttributeSupplier.getVersionName();
-    }
-
-    public File getAssetsDir() {
-        return new File(outputRootFolder, "assets");
     }
 }

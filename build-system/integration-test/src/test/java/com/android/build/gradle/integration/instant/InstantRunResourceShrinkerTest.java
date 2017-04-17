@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.instant;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.sdklib.AndroidVersion;
@@ -38,8 +37,6 @@ public class InstantRunResourceShrinkerTest {
 
     @Before
     public void enableResourceShrinking() throws Exception {
-        // IR currently does not work with Jack - http://b.android.com/224374
-        AssumeUtil.assumeNotUsingJack();
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "\nandroid.buildTypes.debug.shrinkResources = true\n"

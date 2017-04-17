@@ -17,11 +17,10 @@ package com.android.build.gradle.internal.variant;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.FilterData;
-import com.android.build.OutputFile;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.tasks.ExtractAnnotations;
 import com.android.builder.core.ErrorReporter;
 import com.android.builder.core.VariantType;
@@ -29,40 +28,32 @@ import com.android.builder.profile.Recorder;
 import com.google.common.collect.Maps;
 import java.io.File;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Map;
 import org.gradle.api.Task;
+import org.gradle.api.tasks.bundling.Zip;
 
-/**
- * Data about a variant that produce a Library bundle (.aar)
- */
-public class LibraryVariantData extends BaseVariantData<LibVariantOutputData> implements TestedVariantData {
+/** Data about a variant that produce a Library bundle (.aar) */
+public class LibraryVariantData extends BaseVariantData implements TestedVariantData {
 
     private final Map<VariantType, TestVariantData> testVariants;
+
+    public Zip packageLibTask;
 
     @Nullable
     public ExtractAnnotations generateAnnotationsTask = null;
 
     public LibraryVariantData(
+            @NonNull GlobalScope globalScope,
             @NonNull AndroidConfig androidConfig,
             @NonNull TaskManager taskManager,
             @NonNull GradleVariantConfiguration config,
             @NonNull ErrorReporter errorReporter,
             @NonNull Recorder recorder) {
-        super(androidConfig, taskManager, config, errorReporter, recorder);
+        super(globalScope, androidConfig, taskManager, config, errorReporter, recorder);
         testVariants = Maps.newEnumMap(VariantType.class);
 
         // create default output
-        createOutput(OutputFile.OutputType.MAIN,
-                Collections.<FilterData>emptyList());
-    }
-
-    @NonNull
-    @Override
-    protected LibVariantOutputData doCreateOutput(
-            OutputFile.OutputType splitOutput,
-            Collection<FilterData> filters) {
-        return new LibVariantOutputData(splitOutput, filters, this);
+        getSplitFactory().addMainApk();
     }
 
     @Override
@@ -85,8 +76,7 @@ public class LibraryVariantData extends BaseVariantData<LibVariantOutputData> im
 
     @Override
     public void setTestVariantData(
-            @NonNull TestVariantData testVariantData,
-            VariantType type) {
+            @NonNull TestVariantData testVariantData, @NonNull VariantType type) {
         testVariants.put(type, testVariantData);
     }
 

@@ -19,9 +19,12 @@ package com.android.build.gradle.integration.application;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
 import com.android.annotations.NonNull;
+import com.android.build.api.transform.Format;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
+import com.android.build.gradle.integration.common.fixture.app.TransformOutputContent;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.internal.pipeline.SubStream;
 import com.android.testutils.TestUtils;
 import com.android.testutils.apk.Dex;
 import com.android.testutils.truth.MoreTruth;
@@ -127,15 +130,30 @@ public class DexArchivesTest {
     }
 
     private void checkIntermediaryDexArchives(@NonNull Collection<String> dexEntryNames) {
+        TransformOutputContent content = new TransformOutputContent(builderDir());
+        assertThat(content).hasSize(1);
+
+        SubStream stream = content.getSingleStream();
+        assertThat(stream).hasFormat(Format.DIRECTORY);
+        // some checks on stream?
+
         ImmutableList<String> produced =
-                FileUtils.getAllFiles(builderDir()).transform(File::getName).toList();
+                FileUtils.getAllFiles(content.getLocation(stream))
+                        .transform(File::getName)
+                        .toList();
 
         assertThat(produced).containsExactlyElementsIn(dexEntryNames);
     }
 
     private void checkIntermediaryDexFiles(@NonNull Collection<String> expectedNames) {
+        TransformOutputContent content = new TransformOutputContent(mergerDir());
+        assertThat(content).hasSize(1);
+
+        SubStream stream = content.getSingleStream();
+        assertThat(stream).hasFormat(Format.DIRECTORY);
+
         List<String> dexFiles =
-                FileUtils.find(mergerDir(), Pattern.compile(".*\\.dex"))
+                FileUtils.find(content.getLocation(stream), Pattern.compile(".*\\.dex"))
                         .stream()
                         .map(File::getName)
                         .collect(Collectors.toList());
@@ -171,11 +189,11 @@ public class DexArchivesTest {
 
     @NonNull
     private File builderDir() {
-        return project.getIntermediateFile("transforms/dexBuilder");
+        return project.getIntermediateFile("transforms/dexBuilder/debug");
     }
 
     @NonNull
     private File mergerDir() {
-        return project.getIntermediateFile("transforms/dexMerger");
+        return project.getIntermediateFile("transforms/dexMerger/debug");
     }
 }

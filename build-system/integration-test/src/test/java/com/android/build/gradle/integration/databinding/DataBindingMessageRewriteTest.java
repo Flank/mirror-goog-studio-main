@@ -21,20 +21,15 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TemporaryProjectModification;
-import com.android.builder.model.AndroidProject;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.utils.FileUtils;
 import com.android.utils.SdkUtils;
-import java.util.Collections;
-import java.util.List;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
 public class DataBindingMessageRewriteTest {
-
-    private static final List<String> INVOKED_FROM_IDE_ARGS =
-            Collections.singletonList("-P" + AndroidProject.PROPERTY_INVOKED_FROM_IDE + "=true");
 
     @ClassRule
     public static GradleTestProject project =
@@ -62,7 +57,7 @@ public class DataBindingMessageRewriteTest {
 
                     GradleBuildResult result =
                             project.executor()
-                                    .withArguments(INVOKED_FROM_IDE_ARGS)
+                                    .with(BooleanOption.IDE_INVOKED_FROM_IDE, true)
                                     .expectFailure()
                                     .run("assembleDebug");
                     assertThat(result.getStderr())

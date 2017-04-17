@@ -16,8 +16,22 @@ srcjar(
 
 fileset(
     name = "resources",
-    srcs = glob(["src/main/resources/**"]),
-    visibility = ["//tools/base/build-system/builder:__pkg__"],
+    srcs = [
+        # TODO: figure out how to include all resources from aaptjlib automatically.
+        "//prebuilts/tools/common/aapt/jni:linux64/libaapt2_jni.so",
+        "//prebuilts/tools/common/aapt/jni:linux64/libc++.so",
+        "//prebuilts/tools/common/aapt/jni:mac64/libaapt2_jni.dylib",
+        "//prebuilts/tools/common/aapt/jni:mac64/libc++.dylib",
+        "//prebuilts/tools/common/aapt/jni:win32/libaapt2_jni.dll",
+        "//prebuilts/tools/common/aapt/jni:win64/libaapt2_jni.dll",
+        "//prebuilts/tools/common/aapt/jni:win32/libwinpthread-1.dll",
+        "//prebuilts/tools/common/aapt/jni:win64/libwinpthread-1.dll",
+    ],
+    mappings = {
+        # This is an (ab)use of the bazel heuristic: see
+        # https://bazel.build/versions/master/docs/be/java.html#java_binary.resources
+        "//prebuilts/tools/common/aapt/jni:": "src/main/resources/",
+    },
 )
 
 java_library(

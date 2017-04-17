@@ -27,6 +27,7 @@ import com.android.ide.common.process.ProcessInfoBuilder;
 import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.repository.Revision;
 import com.android.sdklib.BuildToolInfo;
+import com.android.tools.aapt2.Aapt2RenamingConventions;
 import com.android.utils.ILogger;
 import com.google.common.base.Preconditions;
 import java.io.File;
@@ -73,8 +74,10 @@ public class OutOfProcessAaptV2 extends AbstractProcessExecutionAapt {
         super(processExecutor, processOutputHandler);
 
         Preconditions.checkArgument(
-                intermediateDir.isDirectory(),
-                "!intermediateDir.isDirectory()");
+                BuildToolInfo.PathId.AAPT2.isPresentIn(buildToolInfo.getRevision()),
+                "Aapt2 requires newer build tools");
+        Preconditions.checkArgument(
+                intermediateDir.isDirectory(), "!intermediateDir.isDirectory()");
 
         mBuildToolInfo = buildToolInfo;
         mIntermediateDir = intermediateDir;
@@ -90,6 +93,7 @@ public class OutOfProcessAaptV2 extends AbstractProcessExecutionAapt {
         return new CompileInvocation(
                 new ProcessInfoBuilder()
                         .setExecutable(getAapt2ExecutablePath())
+                        .addArgs("compile")
                         .addArgs(AaptV2CommandBuilder.makeCompile(file, output)),
                 new File(output, Aapt2RenamingConventions.compilationRename(file)));
     }
@@ -98,12 +102,10 @@ public class OutOfProcessAaptV2 extends AbstractProcessExecutionAapt {
     @Override
     protected ProcessInfoBuilder makePackageProcessBuilder(@NonNull AaptPackageConfig config)
             throws AaptException {
-        ProcessInfoBuilder builder = new ProcessInfoBuilder();
-
-        builder.setExecutable(getAapt2ExecutablePath());
-        builder.addArgs(AaptV2CommandBuilder.makeLink(config, mIntermediateDir, mBuildToolInfo));
-
-        return builder;
+        return new ProcessInfoBuilder()
+                .setExecutable(getAapt2ExecutablePath())
+                .addArgs("link")
+                .addArgs(AaptV2CommandBuilder.makeLink(config, mIntermediateDir));
     }
 
     /**

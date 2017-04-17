@@ -26,6 +26,7 @@ import com.android.build.gradle.integration.common.runner.FilterableParameterize
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.PerformanceTestProjects;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.AndroidProject;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableSet;
@@ -144,7 +145,7 @@ public class MediumGradleProjectPerformanceMatrixTest {
                                                     : "debug");
                     executor()
                             .recordBenchmark(benchmarkMode)
-                            .withArgument("-Pandroid.injected.generateSourcesOnly=true")
+                            .with(BooleanOption.IDE_GENERATE_SOURCES_ONLY, true)
                             .run(generateSourcesCommands);
                     break;
                 case NO_OP:
@@ -212,8 +213,8 @@ public class MediumGradleProjectPerformanceMatrixTest {
     private RunGradleTasks executor() {
         return project.executor()
                 .withEnableInfoLogging(false)
-                .disablePreDexBuildCache()
-                .disableAaptV2()
+                .with(BooleanOption.ENABLE_INTERMEDIATE_ARTIFACTS_CACHE, false)
+                .with(BooleanOption.ENABLE_AAPT2, false)
                 .withUseDexArchive(projectScenario.useDexArchive());
     }
 }

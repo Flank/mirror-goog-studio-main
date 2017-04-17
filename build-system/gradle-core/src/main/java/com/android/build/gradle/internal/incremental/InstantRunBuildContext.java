@@ -40,6 +40,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import org.gradle.api.logging.Logger;
@@ -51,7 +52,22 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-/** Context object for all InstantRun related information. */
+/**
+ * Context object for all build related information that will be persisted at the completion
+ *
+ * <p>Information persisted will have the following purposes :
+ *
+ * <ul>
+ *   For all types of builds, the list of produced artifacts will contain the filters used when
+ *   producing pure or full splits. This can be used to determine which artifact should be
+ *   installed.
+ * </ul>
+ *
+ * <ul>
+ *   In Instant Run mode, on top of the list of artifacts produced, the verifier status etc. It is
+ *   also read in subsequent builds to keep artifacts history.
+ * </ul>
+ */
 public class InstantRunBuildContext {
 
     private static final Logger LOG = Logging.getLogger(InstantRunBuildContext.class);
@@ -182,6 +198,11 @@ public class InstantRunBuildContext {
         }
 
         @NonNull
+        public Stream<Artifact> getArtifactsForType(@NonNull FileType type) {
+            return artifacts.stream().filter(artifact -> artifact.getType().equals(type));
+        }
+
+        @NonNull
         public InstantRunVerifierStatus getVerifierStatus() {
             return verifierStatus;
         }
@@ -199,8 +220,8 @@ public class InstantRunBuildContext {
 
     /** A build artifact defined by its type and location. */
     public static class Artifact {
-        private final FileType fileType;
-        private File location;
+        @NonNull private final FileType fileType;
+        @NonNull private File location;
 
         public Artifact(@NonNull FileType fileType, @NonNull File location) {
             this.fileType = fileType;
@@ -417,11 +438,8 @@ public class InstantRunBuildContext {
         return currentBuild.buildMode;
     }
 
-    public synchronized void addChangedFile(@NonNull FileType fileType, @NonNull File file)
-            throws IOException {
-        if (patchingPolicy == null) {
-            return;
-        }
+    public synchronized void addChangedFile(@NonNull FileType fileType, @NonNull File file) {
+
         if (currentBuild.getVerifierStatus() == InstantRunVerifierStatus.NO_CHANGES) {
             currentBuild.verifierStatus = InstantRunVerifierStatus.COMPATIBLE;
         }
@@ -435,7 +453,8 @@ public class InstantRunBuildContext {
 
         // validate the patching policy and the received file type to record the file or not.
         // RELOAD and MAIN are always record.
-        if (fileType != FileType.RELOAD_DEX
+        if (patchingPolicy != null &&
+                fileType != FileType.RELOAD_DEX
                 && fileType != FileType.MAIN
                 && fileType != FileType.RESOURCES) {
             switch (patchingPolicy) {
@@ -454,14 +473,14 @@ public class InstantRunBuildContext {
                 fileType = FileType.SPLIT_MAIN;
             }
 
-            // because of signing/aligning, we can be notified several times of the main APK
+            // because of signing/aligning, we can be notified several times of the main FULL_APK
             // construction, last one wins.
             Artifact previousArtifact = currentBuild.getArtifactForType(fileType);
             if (previousArtifact != null) {
                 currentBuild.artifacts.remove(previousArtifact);
             }
 
-            // since the main APK is produced, no need to keep the RESOURCES record around.
+            // since the main FULL_APK is produced, no need to keep the RESOURCES record around.
             Artifact resourcesApFile = currentBuild.getArtifactForType(FileType.RESOURCES);
             while (resourcesApFile != null) {
                 currentBuild.artifacts.remove(resourcesApFile);
@@ -488,6 +507,7 @@ public class InstantRunBuildContext {
     public Collection<Build> getPreviousBuilds() {
         return previousBuilds.values();
     }
+
 
     /**
      * Remove all unwanted changes :
@@ -875,15 +895,21 @@ public class InstantRunBuildContext {
             instantRun.appendChild(taskTypeNode);
         }
 
+        //noinspection VariableNotUsedInsideIf
+        if (patchingPolicy != null) {
+            instantRun.setAttribute(ATTR_API_LEVEL, String.valueOf(getAndroidVersion()));
+            if (density != null) {
+                instantRun.setAttribute(ATTR_DENSITY, density);
+            }
+            if (abi != null) {
+                instantRun.setAttribute(ATTR_ABI, abi);
+            }
+            instantRun.setAttribute(ATTR_TOKEN, token.toString());
+        } else {
+            currentBuild.buildMode = InstantRunBuildMode.FULL;
+            currentBuild.verifierStatus = InstantRunVerifierStatus.NOT_RUN;
+        }
         currentBuild.toXml(document, instantRun);
-        instantRun.setAttribute(ATTR_API_LEVEL, String.valueOf(getAndroidVersion()));
-        if (density != null) {
-            instantRun.setAttribute(ATTR_DENSITY, density);
-        }
-        if (abi != null) {
-            instantRun.setAttribute(ATTR_ABI, abi);
-        }
-        instantRun.setAttribute(ATTR_TOKEN, token.toString());
         instantRun.setAttribute(ATTR_FORMAT, CURRENT_FORMAT);
         instantRun.setAttribute(ATTR_PLUGIN_VERSION, Version.ANDROID_GRADLE_PLUGIN_VERSION);
 

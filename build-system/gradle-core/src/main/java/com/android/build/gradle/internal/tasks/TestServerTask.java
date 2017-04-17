@@ -17,11 +17,19 @@
 package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.scope.BuildOutput;
+import com.android.build.gradle.internal.scope.BuildOutputs;
+import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.builder.testing.api.TestServer;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import java.io.File;
+import java.util.List;
+import java.util.stream.Collectors;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputFile;
+import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.api.tasks.TaskAction;
@@ -32,33 +40,48 @@ import org.gradle.api.tasks.TaskAction;
 @ParallelizableTask
 public class TestServerTask extends DefaultAndroidTask {
 
-    private File testApk;
+    private FileCollection testApks;
 
-    File testedApk;
+    @Nullable private FileCollection testedApks;
 
     TestServer testServer;
 
     @TaskAction
     public void sendToServer() {
-        testServer.uploadApks(getVariantName(), getTestApk(), getTestedApk());
+
+        List<File> testedApkFiles =
+                testedApks != null
+                        ? BuildOutputs.load(TaskOutputHolder.TaskOutputType.APK, testedApks)
+                                .stream()
+                                .map(BuildOutput::getOutputFile)
+                                .collect(Collectors.toList())
+                        : ImmutableList.of();
+
+        if (testedApkFiles.size() > 1) {
+            throw new RuntimeException("Cannot handle split APKs");
+        }
+        File testedApkFile = testedApkFiles.isEmpty() ? null : testedApkFiles.get(0);
+        List<File> testApkFiles =
+                BuildOutputs.load(TaskOutputHolder.TaskOutputType.APK, testApks)
+                        .stream()
+                        .map(BuildOutput::getOutputFile)
+                        .collect(Collectors.toList());
+        if (testApkFiles.size() > 1) {
+            throw new RuntimeException("Cannot handle split APKs in test APKs");
+        }
+        testServer.uploadApks(getVariantName(), testApkFiles.get(0), testedApkFile);
     }
 
-    @InputFile
-    public File getTestApk() {
-        return testApk;
+    @InputFiles
+    public FileCollection getTestApks() {
+        return testApks;
     }
 
-    public void setTestApk(File testApk) {
-        this.testApk = testApk;
-    }
-
-    @InputFile @Optional
-    public File getTestedApk() {
-        return testedApk;
-    }
-
-    public void setTestedApk(File testedApk) {
-        this.testedApk = testedApk;
+    @InputFiles
+    @Optional
+    @Nullable
+    public FileCollection getTestedApks() {
+        return testedApks;
     }
 
     @NonNull
@@ -75,5 +98,13 @@ public class TestServerTask extends DefaultAndroidTask {
 
     public void setTestServer(TestServer testServer) {
         this.testServer = testServer;
+    }
+
+    public void setTestApks(FileCollection testApks) {
+        this.testApks = testApks;
+    }
+
+    public void setTestedApks(FileCollection testedApks) {
+        this.testedApks = testedApks;
     }
 }

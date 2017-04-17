@@ -28,6 +28,7 @@ public interface IOExceptionRunnable {
 
     /**
      * Runs the runnable.
+     *
      * @throws IOException failed to run
      */
     void run() throws IOException;

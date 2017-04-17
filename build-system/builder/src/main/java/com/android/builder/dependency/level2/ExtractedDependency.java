@@ -45,14 +45,14 @@ public abstract class ExtractedDependency extends Dependency implements Manifest
     /**
      * Creates the mBundle dependency with an optional mName.
      *
-     * @param artifactFile    the dependency's artifact file.
-     * @param coordinates     the maven coordinates of the artifact
-     * @param name            the dependency's user friendly name
-     * @param projectPath     an optional project path.
+     * @param artifactFile the dependency's artifact file.
+     * @param coordinates the maven coordinates of the artifact
+     * @param name the dependency's user friendly name
+     * @param projectPath an optional project path.
      * @param extractedFolder the folder containing the unarchived library content.
      */
     public ExtractedDependency(
-            @NonNull File artifactFile,
+            @Nullable File artifactFile,
             @NonNull MavenCoordinates coordinates,
             @NonNull String name,
             @Nullable String projectPath,

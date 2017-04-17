@@ -18,6 +18,8 @@ package com.android.build.gradle;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.build.gradle.internal.dsl.BuildType;
+import com.android.build.gradle.internal.dsl.PostprocessingOptions;
 import com.android.build.gradle.internal.fixture.TestConstants;
 import com.android.build.gradle.internal.fixture.TestProjects;
 import com.android.build.gradle.internal.fixture.VariantChecker;
@@ -26,6 +28,7 @@ import com.android.build.gradle.tasks.MergeResources;
 import groovy.util.Eval;
 import java.util.Arrays;
 import org.gradle.api.Project;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -63,6 +66,7 @@ public class AppPluginDslTest {
                 project,
                 "\n"
                         + "project.android {\n"
+                        + "    flavorDimensions 'foo'\n"
                         + "    productFlavors {\n"
                         + "        f1 {\n"
                         + "        }\n"
@@ -114,7 +118,7 @@ public class AppPluginDslTest {
                 "\n"
                         + "project.android {\n"
                         + "\n"
-                        + "\n"
+                        + "    flavorDimensions 'foo'\n"
                         + "    productFlavors {\n"
                         + "        f1 {\n"
                         + "        }\n"
@@ -146,6 +150,154 @@ public class AppPluginDslTest {
                         getTask("mergeF3DebugResources", MergeResources.class)
                                 .isDisableVectorDrawables())
                 .isFalse();
+    }
+
+    @Test
+    public void testPostprocessingBlock_noActions() throws Exception {
+        BuildType release = android.getBuildTypes().getByName("release");
+        release.getPostprocessing().setCodeShrinker("proguard");
+
+        plugin.createAndroidTasks(false);
+
+        assertThat(project.getTasks().getNames())
+                .doesNotContain("transformClassesAndResourcesWithProguardForRelease");
+    }
+
+    @Test
+    public void testPostprocessingBlock_proguard() throws Exception {
+        BuildType release = android.getBuildTypes().getByName("release");
+        release.getPostprocessing().setRemoveUnusedCode(true);
+
+        plugin.createAndroidTasks(false);
+
+        assertThat(project.getTasks().getNames())
+                .contains("transformClassesAndResourcesWithProguardForRelease");
+    }
+
+    @Test
+    public void testPostprocessingBlock_justObfuscate() throws Exception {
+        BuildType release = android.getBuildTypes().getByName("release");
+        release.getPostprocessing().setObfuscate(true);
+
+        plugin.createAndroidTasks(false);
+
+        assertThat(project.getTasks().getNames())
+                .contains("transformClassesAndResourcesWithProguardForRelease");
+    }
+
+    @Test
+    public void testPostprocessingBlock_builtInShrinker() throws Exception {
+        PostprocessingOptions postprocessing =
+                android.getBuildTypes().getByName("release").getPostprocessing();
+        postprocessing.setRemoveUnusedCode(true);
+        postprocessing.setCodeShrinker("android_gradle");
+
+        assertThat(postprocessing.getCodeShrinker()).isEqualTo("android_gradle");
+
+        plugin.createAndroidTasks(false);
+
+        assertThat(project.getTasks().getNames())
+                .contains("transformClassesWithAndroidGradleClassShrinkerForRelease");
+    }
+
+    @Test
+    public void testPostprocessingBlock_mixingDsls_newOld() throws Exception {
+        BuildType release = android.getBuildTypes().getByName("release");
+        release.getPostprocessing().setCodeShrinker("android_gradle");
+
+        try {
+            release.setMinifyEnabled(true);
+            Assert.fail();
+        } catch (Exception e) {
+            assertThat(e.getMessage()).contains("setMinifyEnabled");
+        }
+    }
+
+    @Test
+    public void testPostprocessingBlock_mixingDsls_oldNew() throws Exception {
+        BuildType release = android.getBuildTypes().getByName("release");
+        release.setMinifyEnabled(true);
+
+        try {
+            release.getPostprocessing().setCodeShrinker("android_gradle");
+            Assert.fail();
+        } catch (Exception e) {
+            assertThat(e.getMessage()).contains("setMinifyEnabled");
+        }
+    }
+
+    @Test
+    public void testPostprocessingBlock_validating() throws Exception {
+        PostprocessingOptions postprocessing =
+                android.getBuildTypes().getByName("release").getPostprocessing();
+        postprocessing.setCodeShrinker("android_gradle");
+        postprocessing.setRemoveUnusedCode(true);
+        postprocessing.setObfuscate(true);
+
+        try {
+            plugin.createAndroidTasks(false);
+            Assert.fail();
+        } catch (Exception e) {
+            assertThat(e.getMessage()).contains("does not support obfuscating");
+        }
+    }
+
+    @Test
+    public void testPostprocessingBlock_resourceShrinker() throws Exception {
+        PostprocessingOptions postprocessing =
+                android.getBuildTypes().getByName("release").getPostprocessing();
+        postprocessing.setCodeShrinker("android_gradle");
+        postprocessing.setRemoveUnusedCode(true);
+        postprocessing.setRemoveUnusedResources(true);
+
+        plugin.createAndroidTasks(false);
+
+        assertThat(project.getTasks().getNames())
+                .containsAllOf(
+                        "transformClassesWithAndroidGradleClassShrinkerForRelease",
+                        "transformClassesWithShrinkResForRelease");
+    }
+
+    @Test
+    public void testPostprocessingBlock_noCodeShrinking() throws Exception {
+        PostprocessingOptions postprocessing =
+                android.getBuildTypes().getByName("release").getPostprocessing();
+        postprocessing.setCodeShrinker("android_gradle");
+        postprocessing.setRemoveUnusedCode(false);
+        postprocessing.setRemoveUnusedResources(true);
+
+        try {
+            plugin.createAndroidTasks(false);
+        } catch (Exception e) {
+            assertThat(e.getMessage()).contains("requires unused code shrinking");
+        }
+    }
+
+    @Test
+    public void testPostprocessingBlock_noCodeShrinking_oldDsl() throws Exception {
+        BuildType release = android.getBuildTypes().getByName("release");
+        release.setShrinkResources(true);
+
+        try {
+            plugin.createAndroidTasks(false);
+        } catch (Exception e) {
+            assertThat(e.getMessage()).contains("requires unused code shrinking");
+        }
+    }
+
+    @Test
+    public void testPostprocessingBlock_initWith() throws Exception {
+        BuildType debug = android.getBuildTypes().getByName("debug");
+        BuildType release = android.getBuildTypes().getByName("release");
+
+        debug.setMinifyEnabled(true);
+        release.getPostprocessing().setRemoveUnusedCode(true);
+
+        BuildType debugCopy = android.getBuildTypes().create("debugCopy");
+        debugCopy.initWith(debug);
+
+        BuildType releaseCopy = android.getBuildTypes().create("releaseCopy");
+        releaseCopy.initWith(release);
     }
 
     private void checkGeneratedDensities(String taskName, String... densities) {

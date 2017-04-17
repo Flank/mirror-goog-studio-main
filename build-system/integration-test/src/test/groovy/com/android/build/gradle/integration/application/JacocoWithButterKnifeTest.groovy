@@ -44,13 +44,7 @@ class JacocoWithButterKnifeTest {
 
     @Test
     void build() {
-        if (GradleTestProject.USE_JACK) {
-            // have to run it out of process - http://b.android.com/220939
-            project.buildFile << "\nandroid.defaultConfig.jackOptions.jackInProcess = false"
-            project.execute("transformJackWithJackForDebug")
-        } else {
-            project.execute("transformClassesWithJacocoForDebug")
-        }
+        project.execute("transformClassesWithJacocoForDebug")
 
         File javaFile =
                 FileUtils.join(

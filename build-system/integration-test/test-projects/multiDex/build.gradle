@@ -13,6 +13,7 @@ android {
         multiDexEnabled = true
     }
 
+    flavorDimensions 'foo'
     productFlavors {
         ics {
             minSdkVersion 14
@@ -20,7 +21,7 @@ android {
         lollipop {
             minSdkVersion 21
         }
-    }
+  }
 
     buildTypes {
         debug {

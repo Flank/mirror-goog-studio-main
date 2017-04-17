@@ -22,8 +22,10 @@ import com.android.build.api.variant.VariantFilter;
 import com.android.build.gradle.api.AndroidSourceDirectorySet;
 import com.android.build.gradle.api.AndroidSourceFile;
 import com.android.build.gradle.api.AndroidSourceSet;
+import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.CompileOptions;
 import com.android.build.gradle.internal.coverage.JacocoOptions;
+import com.android.build.gradle.internal.dependency.ProductFlavorAttr;
 import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.dsl.AdbOptions;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
@@ -45,12 +47,17 @@ import com.android.repository.Revision;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Iterators;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.gradle.api.Action;
 import org.gradle.api.NamedDomainObjectContainer;
+import org.gradle.api.attributes.Attribute;
 import org.gradle.api.file.SourceDirectorySet;
 import org.gradle.language.base.FunctionalSourceSet;
 import org.gradle.language.base.LanguageSourceSet;
@@ -127,11 +134,6 @@ public class AndroidConfigAdaptor implements com.android.build.gradle.AndroidCon
     }
 
     @Override
-    public boolean getPublishNonDefault() {
-        return model.getPublishNonDefault();
-    }
-
-    @Override
     public Action<VariantFilter> getVariantFilter() {
         return model.getVariantFilter();
     }
@@ -143,7 +145,12 @@ public class AndroidConfigAdaptor implements com.android.build.gradle.AndroidCon
 
     @Override
     public List<String> getFlavorDimensionList() {
-        return null;
+        return getProductFlavors().stream()
+                .filter(flavor -> flavor.getDimension() != null)
+                .map(CoreProductFlavor::getDimension)
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -240,6 +247,25 @@ public class AndroidConfigAdaptor implements com.android.build.gradle.AndroidCon
     @Override
     public DataBindingOptions getDataBinding() {
         return new DataBindingOptionsAdapter(model.getDataBinding());
+    }
+
+    @Override
+    public Collection<BaseVariantOutput> getBuildOutputs() {
+        ArrayList<BaseVariantOutput> buildOutputs = new ArrayList<>();
+        Iterators.addAll(buildOutputs, model.getBuildOutputs().iterator());
+        return buildOutputs;
+    }
+
+    @NonNull
+    @Override
+    public Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> getFlavorSelection() {
+        return model.getFlavorSelection()
+                .entrySet()
+                .stream()
+                .collect(
+                        Collectors.toMap(
+                                entry -> Attribute.of(entry.getKey(), ProductFlavorAttr.class),
+                                entry -> ProductFlavorAttr.of(entry.getValue())));
     }
 
     @Override

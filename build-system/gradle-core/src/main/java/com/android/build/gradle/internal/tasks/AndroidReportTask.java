@@ -28,7 +28,6 @@ import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.test.report.ReportType;
 import com.android.build.gradle.internal.test.report.TestReport;
-import com.android.build.gradle.tasks.InputSupplier;
 import com.android.utils.FileUtils;
 import com.google.common.collect.Lists;
 import java.io.File;
@@ -59,8 +58,8 @@ public class AndroidReportTask extends DefaultTask implements AndroidTestTask {
 
     private boolean testFailed;
 
-    private InputSupplier<File> reportsDir;
-    private InputSupplier<File> resultsDir;
+    private Supplier<File> reportsDir;
+    private Supplier<File> resultsDir;
 
     @OutputDirectory
     public File getReportsDir() {
@@ -68,11 +67,7 @@ public class AndroidReportTask extends DefaultTask implements AndroidTestTask {
     }
 
     public void setReportsDir(@NonNull Supplier<File> reportsDir) {
-        if (reportsDir instanceof InputSupplier) {
-            this.reportsDir = (InputSupplier<File>) reportsDir;
-        } else {
-            this.reportsDir = InputSupplier.from(reportsDir);
-        }
+        this.reportsDir = TaskInputHelper.memoize(reportsDir);
     }
 
     @Override
@@ -82,11 +77,7 @@ public class AndroidReportTask extends DefaultTask implements AndroidTestTask {
     }
 
     public void setResultsDir(@NonNull Supplier<File> resultsDir) {
-        if (resultsDir instanceof InputSupplier) {
-            this.resultsDir = (InputSupplier<File>) resultsDir;
-        } else {
-            this.resultsDir = InputSupplier.from(resultsDir);
-        }
+        this.resultsDir = TaskInputHelper.memoize(resultsDir);
     }
 
     @Override
@@ -134,8 +125,8 @@ public class AndroidReportTask extends DefaultTask implements AndroidTestTask {
 
     @TaskAction
     public void createReport() throws IOException {
-        File resultsOutDir = resultsDir.getLastValue();
-        File reportOutDir = reportsDir.getLastValue();
+        File resultsOutDir = resultsDir.get();
+        File reportOutDir = reportsDir.get();
 
         // empty the folders
         FileUtils.cleanOutputDir(resultsOutDir);
@@ -220,7 +211,7 @@ public class AndroidReportTask extends DefaultTask implements AndroidTestTask {
             final String subfolderName =
                     taskKind == TaskKind.CONNECTED ? "/connected/" : "/devices/";
 
-            task.resultsDir = InputSupplier.from(() -> {
+            task.resultsDir = TaskInputHelper.memoize(() -> {
                         String dir = scope.getExtension().getTestOptions().getResultsDir();
                         String rootLocation = dir != null && !dir.isEmpty() ?
                                 dir : defaultResultsDir;
@@ -228,7 +219,7 @@ public class AndroidReportTask extends DefaultTask implements AndroidTestTask {
                                 rootLocation + subfolderName + FD_FLAVORS_ALL);
                     });
 
-            task.reportsDir = InputSupplier.from(() -> {
+            task.reportsDir = TaskInputHelper.memoize(() -> {
                 String dir = scope.getExtension().getTestOptions().getReportDir();
                 String rootLocation = dir != null && !dir.isEmpty() ? dir : defaultReportsDir;
                 return scope.getProject()

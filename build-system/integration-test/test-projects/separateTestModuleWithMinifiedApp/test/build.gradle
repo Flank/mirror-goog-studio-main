@@ -23,5 +23,16 @@ android {
     buildToolsVersion = rootProject.buildToolsVersion
 
     targetProjectPath ':app'
-    targetVariant 'minified'
+
+    // create a minified build type
+    buildTypes {
+        minified.initWith(buildTypes.debug)
+    }
+
+    // and don't do the debug one.
+    variantFilter { variant ->
+        if (variant.buildType.name.equals('debug')) {
+            variant.setIgnore(true);
+        }
+    }
 }

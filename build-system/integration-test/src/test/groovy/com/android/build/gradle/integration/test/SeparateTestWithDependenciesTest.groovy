@@ -34,6 +34,7 @@ public class SeparateTestWithDependenciesTest {
     @ClassRule
     public static GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("separateTestModuleWithDependencies")
+            .withDependencyChecker(false)  // TODO: Fix for test plugin.
             .create()
 
     @BeforeClass

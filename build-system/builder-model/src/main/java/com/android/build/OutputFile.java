@@ -18,65 +18,9 @@ package com.android.build;
 
 import com.android.annotations.NonNull;
 import java.io.File;
-import java.util.Collection;
 
-/**
- * An output with an associated set of filters.
- */
-public interface OutputFile {
-
-    /**
-     * An object representing the lack of filter.
-     */
-    String NO_FILTER = null;
-
-    /**
-     * Type of package file, either the main APK or a pure split APK file containing resources for
-     * a particular split dimension.
-     */
-    enum OutputType {
-        MAIN, FULL_SPLIT, SPLIT
-    }
-
-    /**
-     * String representation of the OutputType enum which can be used for remote-able interfaces.
-     */
-    String MAIN = OutputType.MAIN.name();
-    String FULL_SPLIT = OutputType.FULL_SPLIT.name();
-    String SPLIT = OutputType.SPLIT.name();
-
-    /**
-     * Split dimension type
-     */
-    enum FilterType {
-        DENSITY, ABI, LANGUAGE
-    }
-
-    /**
-     * String representations of the FilterType enum which can be used for remote-able interfaces.
-     */
-    String DENSITY = FilterType.DENSITY.name();
-    String ABI = FilterType.ABI.name();
-    String LANGUAGE = FilterType.LANGUAGE.name();
-
-    /**
-     * Returns the output type of the referenced APK.
-     */
-    @NonNull
-    String getOutputType();
-
-    /**
-     * Returns the split dimensions the referenced APK was created with. Each collection's value
-     * is the string representation of an element of the {@link FilterType} enum.
-     */
-    @NonNull
-    Collection<String> getFilterTypes();
-
-    /**
-     * Returns all the split information used to create the APK.
-     */
-    @NonNull
-    Collection<FilterData> getFilters();
+/** An output with an associated set of filters. */
+public interface OutputFile extends VariantOutput {
 
     /**
      * Returns the output file for this artifact's output.

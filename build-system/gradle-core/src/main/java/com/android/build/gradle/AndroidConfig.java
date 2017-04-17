@@ -20,8 +20,10 @@ import com.android.annotations.NonNull;
 import com.android.build.api.transform.Transform;
 import com.android.build.api.variant.VariantFilter;
 import com.android.build.gradle.api.AndroidSourceSet;
+import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.CompileOptions;
 import com.android.build.gradle.internal.coverage.JacocoOptions;
+import com.android.build.gradle.internal.dependency.ProductFlavorAttr;
 import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.dsl.AdbOptions;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
@@ -40,13 +42,22 @@ import com.android.builder.testing.api.TestServer;
 import com.android.repository.Revision;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import org.gradle.api.Action;
 import org.gradle.api.NamedDomainObjectContainer;
+import org.gradle.api.Project;
+import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.Dependency;
+import org.gradle.api.attributes.Attribute;
 
 /**
  * User configuration settings for all android plugins.
  */
 public interface AndroidConfig {
+
+    String CONFIG_DESC = "%s dependencies for '%s' sources.";
+    String CONFIG_DESC_OLD = "%s dependencies for '%s' sources (deprecated: use '%s' instead).";
+    String DEPRECATED_CONFIG_WARNING = "Configuration '%s' in project '%s' is deprecated. Use '%s' instead.";
 
     /** Build tools version. */
     String getBuildToolsVersion();
@@ -59,9 +70,6 @@ public interface AndroidConfig {
 
     /** Name of the variant to publish. */
     String getDefaultPublishConfig();
-
-    /** Whether to also publish non-default variants. */
-    boolean getPublishNonDefault();
 
     /** Filter to determine which variants to build. */
     Action<VariantFilter> getVariantFilter();
@@ -140,6 +148,9 @@ public interface AndroidConfig {
     /** Source sets for all variants. */
     NamedDomainObjectContainer<AndroidSourceSet> getSourceSets();
 
+    /** build outputs for all variants */
+    Collection<BaseVariantOutput> getBuildOutputs();
+
     /** Whether to package build config class file. */
     Boolean getPackageBuildConfig();
 
@@ -150,4 +161,39 @@ public interface AndroidConfig {
 
     /** Data Binding options. */
     DataBindingOptions getDataBinding();
+
+    @NonNull
+    Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> getFlavorSelection();
+
+    final class DeprecatedConfigurationAction implements Action<Dependency> {
+
+        @NonNull
+        private final Project project;
+        @NonNull
+        private final Configuration configuration;
+        @NonNull
+        private final String replacement;
+        private boolean warningPrintedAlready = false;
+
+        public DeprecatedConfigurationAction(
+                @NonNull Project project,
+                @NonNull Configuration configuration,
+                @NonNull String replacement) {
+            this.project = project;
+            this.configuration = configuration;
+            this.replacement = replacement;
+        }
+
+        @Override
+        public void execute(Dependency dependency) {
+            if (!warningPrintedAlready) {
+                warningPrintedAlready = true;
+                System.out.println(String.format(
+                        DEPRECATED_CONFIG_WARNING,
+                        configuration.getName(),
+                        project.getPath(),
+                        replacement));
+            }
+        }
+    }
 }

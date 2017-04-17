@@ -159,9 +159,7 @@ public class JackPreDexTransform extends Transform {
     public Set<QualifiedContent.Scope> getScopes() {
         if (inputType == InputType.PACKAGED_LIBRARY) {
             return Sets.immutableEnumSet(
-                    QualifiedContent.Scope.PROJECT_LOCAL_DEPS,
                     QualifiedContent.Scope.SUB_PROJECTS,
-                    QualifiedContent.Scope.SUB_PROJECTS_LOCAL_DEPS,
                     QualifiedContent.Scope.EXTERNAL_LIBRARIES);
         } else {
             return Sets.immutableEnumSet(

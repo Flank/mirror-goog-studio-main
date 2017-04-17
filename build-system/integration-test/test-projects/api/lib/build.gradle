@@ -17,10 +17,7 @@ android.libraryVariants.all { variant ->
         destinationDir file("${buildDir}/bundles/${variant.dirName}")
     }
 
-    // now make the package task depend on it
-    // only one output for libraries
-    assert variant.outputs.size() == 1 : "There must be exactly one output"
-    variant.outputs.get(0).packageLibrary.dependsOn copyBlahTask
+    variant.packageLibrary.dependsOn copyBlahTask
 }
 
 project.afterEvaluate {

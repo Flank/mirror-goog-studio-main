@@ -21,46 +21,35 @@ import static com.android.builder.core.BuilderConstants.RELEASE;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.AndroidConfig;
-import com.android.build.gradle.api.BaseVariantOutput;
-import com.android.build.gradle.api.LibraryVariant;
 import com.android.build.gradle.internal.BuildTypeData;
 import com.android.build.gradle.internal.ProductFlavorData;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantModel;
+import com.android.build.gradle.internal.api.BaseVariantImpl;
 import com.android.build.gradle.internal.api.LibraryVariantImpl;
-import com.android.build.gradle.internal.api.LibraryVariantOutputImpl;
-import com.android.build.gradle.internal.api.ReadOnlyObjectProvider;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
+import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.ErrorReporter;
 import com.android.builder.core.VariantType;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.profile.Recorder;
-import com.google.common.collect.Lists;
-import java.util.List;
+import com.google.common.collect.ImmutableList;
+import java.util.Collection;
 import org.gradle.api.NamedDomainObjectContainer;
-import org.gradle.api.Project;
 import org.gradle.internal.reflect.Instantiator;
 
-public class LibraryVariantFactory implements VariantFactory {
-
-    @NonNull
-    private Instantiator instantiator;
-    @NonNull
-    private final AndroidConfig extension;
-    @NonNull
-    private final AndroidBuilder androidBuilder;
+public class LibraryVariantFactory extends BaseVariantFactory {
 
     public LibraryVariantFactory(
-            @NonNull Instantiator instantiator,
+            @NonNull GlobalScope globalScope,
             @NonNull AndroidBuilder androidBuilder,
+            @NonNull Instantiator instantiator,
             @NonNull AndroidConfig extension) {
-        this.instantiator = instantiator;
-        this.androidBuilder = androidBuilder;
-        this.extension = extension;
+        super(globalScope, androidBuilder, instantiator, extension);
     }
 
     @Override
@@ -70,6 +59,7 @@ public class LibraryVariantFactory implements VariantFactory {
             @NonNull TaskManager taskManager,
             @NonNull Recorder recorder) {
         return new LibraryVariantData(
+                globalScope,
                 extension,
                 taskManager,
                 variantConfiguration,
@@ -79,34 +69,15 @@ public class LibraryVariantFactory implements VariantFactory {
 
     @Override
     @NonNull
-    public LibraryVariant createVariantApi(
-            @NonNull BaseVariantData<? extends BaseVariantOutputData> variantData,
-            @NonNull ReadOnlyObjectProvider readOnlyObjectProvider) {
-        LibraryVariantImpl variant = instantiator.newInstance(
-                LibraryVariantImpl.class, variantData, androidBuilder, readOnlyObjectProvider);
-
-        // now create the output objects
-        List<? extends BaseVariantOutputData> outputList = variantData.getOutputs();
-        List<BaseVariantOutput> apiOutputList = Lists.newArrayListWithCapacity(outputList.size());
-
-        for (BaseVariantOutputData variantOutputData : outputList) {
-            LibVariantOutputData libOutput = (LibVariantOutputData) variantOutputData;
-
-            LibraryVariantOutputImpl output = instantiator.newInstance(
-                    LibraryVariantOutputImpl.class, libOutput);
-
-            apiOutputList.add(output);
-        }
-
-        variant.addOutputs(apiOutputList);
-
-        return variant;
+    public Class<? extends BaseVariantImpl> getVariantImplementationClass(
+            @NonNull BaseVariantData variantData) {
+        return LibraryVariantImpl.class;
     }
 
     @NonNull
     @Override
-    public VariantType getVariantConfigurationType() {
-        return VariantType.LIBRARY;
+    public Collection<VariantType> getVariantConfigurationTypes() {
+        return ImmutableList.of(VariantType.LIBRARY);
     }
 
     @Override

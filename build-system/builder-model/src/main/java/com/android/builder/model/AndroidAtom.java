@@ -24,6 +24,7 @@ import java.util.List;
  * Represents an Android Atombundle dependency, its content and its own dependencies. The atombundle
  * file contains the dex, resources, manifest and other files necessary to build the final atom.
  */
+@Deprecated
 public interface AndroidAtom extends AndroidBundle {
 
     /**

@@ -24,6 +24,7 @@ import com.android.build.gradle.integration.common.fixture.TemporaryProjectModif
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
+import com.android.build.gradle.options.StringOption;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
 import com.android.sdklib.AndroidVersion;
@@ -83,7 +84,7 @@ public class CmakeInstantRunTest {
     public void checkHotSwapBuild() throws Exception {
         sProject.executor()
                 .withInstantRun(new AndroidVersion(23, null))
-                .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "x86")
+                .with(StringOption.IDE_BUILD_TARGET_ABI, "x86")
                 .run("clean", "assembleDebug");
 
         AndroidProject model = sProject.model().getSingle().getOnlyModel();
@@ -102,7 +103,7 @@ public class CmakeInstantRunTest {
 
                     sProject.executor()
                             .withInstantRun(new AndroidVersion(23, null))
-                            .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "x86")
+                            .with(StringOption.IDE_BUILD_TARGET_ABI, "x86")
                             .run("assembleDebug");
                     InstantRunBuildInfo context = InstantRunTestUtils.loadContext(instantRunModel);
                     assertThat(context.getVerifierStatus())
@@ -114,7 +115,7 @@ public class CmakeInstantRunTest {
     public void checkFullBuildIsTriggered() throws Exception {
         sProject.executor()
                 .withInstantRun(new AndroidVersion(23, null))
-                .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "x86")
+                .with(StringOption.IDE_BUILD_TARGET_ABI, "x86")
                 .run("clean", "assembleDebug");
 
         AndroidProject model = sProject.model().getSingle().getOnlyModel();
@@ -126,7 +127,7 @@ public class CmakeInstantRunTest {
 
         sProject.executor()
                 .withInstantRun(new AndroidVersion(23, null))
-                .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "x86")
+                .with(StringOption.IDE_BUILD_TARGET_ABI, "x86")
                 .run("assembleDebug");
         InstantRunBuildInfo context = InstantRunTestUtils.loadContext(instantRunModel);
         assertThat(context.getVerifierStatus()).isEqualTo(

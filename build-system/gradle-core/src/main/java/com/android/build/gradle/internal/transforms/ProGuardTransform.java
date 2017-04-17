@@ -50,7 +50,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
+import org.gradle.api.file.FileCollection;
 import proguard.ClassPath;
 
 /**
@@ -69,7 +69,7 @@ public class ProGuardTransform extends BaseProguardAction {
     private final ImmutableList<File> secondaryFileOutputs;
 
     private File testedMappingFile = null;
-    private org.gradle.api.artifacts.Configuration testMappingConfiguration = null;
+    private FileCollection testMappingConfiguration = null;
 
     public ProGuardTransform(@NonNull VariantScope variantScope) {
         super(variantScope);
@@ -98,8 +98,7 @@ public class ProGuardTransform extends BaseProguardAction {
         this.testedMappingFile = testedMappingFile;
     }
 
-    public void applyTestedMapping(
-            @Nullable org.gradle.api.artifacts.Configuration testMappingConfiguration) {
+    public void applyTestedMapping(@Nullable FileCollection testMappingConfiguration) {
         this.testMappingConfiguration = testMappingConfiguration;
     }
 
@@ -127,9 +126,7 @@ public class ProGuardTransform extends BaseProguardAction {
         }
 
         // the config files
-        files.addAll(getAllConfigurationFiles().stream()
-                .map(SecondaryFile::nonIncremental)
-                .collect(Collectors.toList()));
+        files.add(SecondaryFile.nonIncremental(getAllConfigurationFiles()));
 
         return files;
     }
@@ -188,14 +185,17 @@ public class ProGuardTransform extends BaseProguardAction {
     private void doMinification(
             @NonNull Collection<TransformInput> inputs,
             @NonNull Collection<TransformInput> referencedInputs,
-            @Nullable TransformOutputProvider output) throws IOException {
-        checkNotNull(output, "Missing output object for transform " + getName());
-        Set<ContentType> outputTypes = getOutputTypes();
-        Set<Scope> scopes = getScopes();
-        File outFile = output.getContentLocation("main", outputTypes, scopes, Format.JAR);
-        mkdirs(outFile.getParentFile());
-
+            @Nullable TransformOutputProvider output)
+            throws IOException {
         try {
+            checkNotNull(output, "Missing output object for transform " + getName());
+            Set<ContentType> outputTypes = getOutputTypes();
+            Set<? super Scope> scopes = getScopes();
+            File outFile =
+                    output.getContentLocation(
+                            "combined_res_and_classes", outputTypes, scopes, Format.JAR);
+            mkdirs(outFile.getParentFile());
+
             GlobalScope globalScope = variantScope.getGlobalScope();
 
             // set the mapping file if there is one.
@@ -265,7 +265,7 @@ public class ProGuardTransform extends BaseProguardAction {
         }
     }
 
-    private static void handleQualifiedContent(
+    private void handleQualifiedContent(
             @NonNull ClassPath classPath,
             @NonNull QualifiedContent content,
             @Nullable List<String> baseFilter) {

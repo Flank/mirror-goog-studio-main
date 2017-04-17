@@ -19,12 +19,13 @@ package com.android.build.gradle.internal.api;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.api.ApplicationVariant;
+import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.TestVariant;
 import com.android.build.gradle.api.UnitTestVariant;
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.internal.variant.ApplicationVariantData;
-import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.core.AndroidBuilder;
+import org.gradle.api.NamedDomainObjectContainer;
 
 /**
  * implementation of the {@link ApplicationVariant} interface around an
@@ -47,20 +48,15 @@ public class ApplicationVariantImpl extends ApkVariantImpl implements Applicatio
     public ApplicationVariantImpl(
             @NonNull ApplicationVariantData variantData,
             @NonNull AndroidBuilder androidBuilder,
-            @NonNull ReadOnlyObjectProvider readOnlyObjectProvider) {
-        super(androidBuilder, readOnlyObjectProvider);
+            @NonNull ReadOnlyObjectProvider readOnlyObjectProvider,
+            @NonNull NamedDomainObjectContainer<BaseVariantOutput> outputs) {
+        super(androidBuilder, readOnlyObjectProvider, outputs);
         this.variantData = variantData;
     }
 
     @Override
     @NonNull
-    protected BaseVariantData<?> getVariantData() {
-        return variantData;
-    }
-
-    @Override
-    @NonNull
-    protected ApkVariantData getApkVariantData() {
+    public ApkVariantData getVariantData() {
         return variantData;
     }
 

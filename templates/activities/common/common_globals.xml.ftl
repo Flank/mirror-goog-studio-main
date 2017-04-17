@@ -25,14 +25,11 @@
     <global id="testSupportLib" type="boolean" value="${testSupportLib?string}" />
 
     <global id="isInstantApp" type="boolean" value="false" />
-    <global id="isFeatureSplit" type="boolean" value="${((isInstantApp!false) && !(isBaseSplit!false))?string}" />
-    <global id="instantAppSplitName" type="string" value="${splitName!'splitProjectContext'}" />
     <global id="instantAppActivityOrder" type="string" value="1" />
     <global id="instantAppActivityHost" type="string" value="instantapp.example.com" />
     <global id="instantAppActivityRoute" type="string" value="" />
 
     <global id="manifestOut" value="${manifestDir}" />
-    <global id="baseSplitManifestOut" value="undefined" />
     <global id="buildVersion" value="${buildApi}" />
 
 <#if !appCompat>

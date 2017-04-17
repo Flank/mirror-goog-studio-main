@@ -18,13 +18,13 @@ package com.android.build.gradle.internal.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.OutputFile;
+import com.android.build.VariantOutput;
 import com.android.build.gradle.api.ApkVariantOutput;
-import com.android.build.gradle.internal.variant.ApkVariantOutputData;
-import com.android.build.gradle.internal.variant.BaseVariantOutputData;
+import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.build.gradle.tasks.PackageAndroidArtifact;
-import com.android.build.gradle.tasks.ZipAlign;
-import java.io.File;
+import com.android.ide.common.build.ApkData;
+import com.google.common.base.MoreObjects;
+import org.gradle.api.Task;
 
 /**
  * Implementation of variant output for apk-generating variants.
@@ -34,64 +34,69 @@ import java.io.File;
  */
 public class ApkVariantOutputImpl extends BaseVariantOutputImpl implements ApkVariantOutput {
 
-    private final ApkVariantOutputData variantOutputData;
+    private final ApkData apkData;
 
-    public ApkVariantOutputImpl(@NonNull ApkVariantOutputData variantOutputData) {
-        this.variantOutputData = variantOutputData;
+    public ApkVariantOutputImpl(@NonNull ApkData apkData, @NonNull TaskContainer taskContainer) {
+
+        super(taskContainer);
+        this.apkData = apkData;
     }
 
     @Override
     @NonNull
-    protected BaseVariantOutputData getVariantOutputData() {
-        return variantOutputData;
+    protected ApkData getApkData() {
+        return apkData;
     }
 
     @Nullable
     @Override
     public PackageAndroidArtifact getPackageApplication() {
-        return variantOutputData.packageAndroidArtifactTask;
+        return taskContainer.getTaskByType(PackageAndroidArtifact.class);
     }
 
     @Nullable
     @Override
-    public ZipAlign getZipAlign() {
-        return variantOutputData.zipAlignTask;
-    }
-
-    @NonNull
-    @Override
-    public ZipAlign createZipAlignTask(@NonNull String taskName, @NonNull File inputFile,
-            @NonNull File outputFile) {
-        return variantOutputData.createZipAlignTask(taskName, inputFile, outputFile);
+    public Task getZipAlign() {
+        return getPackageApplication();
     }
 
     @Override
     public void setVersionCodeOverride(int versionCodeOverride) {
-        variantOutputData.setVersionCodeOverride(versionCodeOverride);
+        apkData.setVersionCode(versionCodeOverride);
     }
 
     @Override
     public int getVersionCodeOverride() {
-        return variantOutputData.getVersionCodeOverride();
+        return apkData.getVersionCode();
     }
 
     @Override
     public void setVersionNameOverride(String versionNameOverride) {
-        variantOutputData.setVersionNameOverride(versionNameOverride);
+        apkData.setVersionName(versionNameOverride);
     }
 
     @Override
     public String getVersionNameOverride() {
-        return variantOutputData.getVersionNameOverride();
+        return apkData.getVersionName();
     }
 
     @Override
     public int getVersionCode() {
-        return variantOutputData.getVersionCode();
+        return apkData.getVersionCode();
     }
 
     @Override
-    public String getFilter(OutputFile.FilterType filterType) {
-        return variantOutputData.getMainOutputFile().getFilter(filterType.name());
+    public String getFilter(VariantOutput.FilterType filterType) {
+        return apkData.getFilter(filterType);
+    }
+
+    @Override
+    public void setOutputFileName(String outputFileName) {
+        apkData.setOutputFileName(outputFileName);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this).add("apkData", apkData).toString();
     }
 }

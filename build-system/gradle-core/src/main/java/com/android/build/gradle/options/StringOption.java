@@ -42,9 +42,11 @@ public enum StringOption implements Option<String> {
     IDE_OPTIONAL_COMPILATION_STEPS(AndroidProject.PROPERTY_OPTIONAL_COMPILATION_STEPS),
     IDE_COLD_SWAP_MODE(AndroidProject.PROPERTY_SIGNING_COLDSWAP_MODE),
     IDE_VERSION_NAME_OVERRIDE(AndroidProject.PROPERTY_VERSION_NAME),
+    
+    IDE_TARGET_DEVICE_CODENAME(AndroidProject.PROPERTY_BUILD_API_CODENAME),
 
     // Profiler plugin
-    IDE_ANDROID_CUSTOM_CLASS_TRANSFORMS("android.custom.class.transforms"),
+    IDE_ANDROID_CUSTOM_CLASS_TRANSFORMS("android.advanced.profiling.transforms"),
     ;
 
     @NonNull private final String propertyName;

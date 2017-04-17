@@ -16,8 +16,7 @@
 
 package com.android.builder.symbols;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
 import com.android.utils.XmlUtils;
@@ -48,14 +47,14 @@ public class ResourceValuesXmlParserTest {
         // into an "id" Symbol.
         SymbolTable expected =
                 SymbolTable.builder()
-                        .add(new Symbol("attr", "a0", "int", "1"))
-                        .add(new Symbol("attr", "a1", "int", "2"))
-                        .add(new Symbol("id", "e0", "int", "3"))
-                        .add(new Symbol("id", "e1", "int", "4"))
-                        .add(new Symbol("attr", "a2", "int", "5"))
+                        .add(SymbolTestUtils.createSymbol("attr", "a0", "int", "1"))
+                        .add(SymbolTestUtils.createSymbol("attr", "a1", "int", "2"))
+                        .add(SymbolTestUtils.createSymbol("id", "e0", "int", "3"))
+                        .add(SymbolTestUtils.createSymbol("id", "e1", "int", "4"))
+                        .add(SymbolTestUtils.createSymbol("attr", "a2", "int", "5"))
                         .build();
 
-        assertEquals(expected, table);
+        assertThat(table).isEqualTo(expected);
     }
 
     @Test
@@ -70,12 +69,13 @@ public class ResourceValuesXmlParserTest {
                 ResourceValuesXmlParser.parse(
                         XmlUtils.parseDocument(xml, false), IdProvider.sequential());
 
-        SymbolTable expected = SymbolTable.builder()
-                .add(new Symbol("bool", "a", "int", "1"))
-                .add(new Symbol("bool", "b", "int", "2"))
-                .build();
+        SymbolTable expected =
+                SymbolTable.builder()
+                        .add(SymbolTestUtils.createSymbol("bool", "a", "int", "1"))
+                        .add(SymbolTestUtils.createSymbol("bool", "b", "int", "2"))
+                        .build();
 
-        assertEquals(expected, table);
+        assertThat(table).isEqualTo(expected);
     }
 
     @Test
@@ -90,12 +90,13 @@ public class ResourceValuesXmlParserTest {
                 ResourceValuesXmlParser.parse(
                         XmlUtils.parseDocument(xml, false), IdProvider.sequential());
 
-        SymbolTable expected = SymbolTable.builder()
-                .add(new Symbol("color", "a", "int", "1"))
-                .add(new Symbol("color", "b", "int", "2"))
-                .build();
+        SymbolTable expected =
+                SymbolTable.builder()
+                        .add(SymbolTestUtils.createSymbol("color", "a", "int", "1"))
+                        .add(SymbolTestUtils.createSymbol("color", "b", "int", "2"))
+                        .build();
 
-        assertEquals(expected, table);
+        assertThat(table).isEqualTo(expected);
     }
 
     @Test
@@ -124,20 +125,26 @@ public class ResourceValuesXmlParserTest {
 
         SymbolTable expected =
                 SymbolTable.builder()
-                        .add(new Symbol("styleable", "empty", "int[]", "{}"))
-                        .add(new Symbol("id", "e1", "int", "1"))
-                        .add(new Symbol("id", "e2", "int", "2"))
-                        .add(new Symbol("attr", "enums", "int", "3"))
-                        .add(new Symbol("styleable", "oneattr_enums", "int", "4"))
-                        .add(new Symbol("styleable", "oneattr", "int[]", "{4}"))
-                        .add(new Symbol("attr", "flags", "int", "5"))
-                        .add(new Symbol("styleable", "twoattrs_flags", "int", "6"))
-                        .add(new Symbol("attr", "nothing", "int", "7"))
-                        .add(new Symbol("styleable", "twoattrs_nothing", "int", "8"))
-                        .add(new Symbol("styleable", "twoattrs", "int[]", "{6,8}"))
+                        .add(SymbolTestUtils.createSymbol("styleable", "empty", "int[]", "{}"))
+                        .add(SymbolTestUtils.createSymbol("id", "e1", "int", "1"))
+                        .add(SymbolTestUtils.createSymbol("id", "e2", "int", "2"))
+                        .add(SymbolTestUtils.createSymbol("attr", "enums", "int", "3"))
+                        .add(SymbolTestUtils.createSymbol("styleable", "oneattr_enums", "int", "4"))
+                        .add(SymbolTestUtils.createSymbol("styleable", "oneattr", "int[]", "{4}"))
+                        .add(SymbolTestUtils.createSymbol("attr", "flags", "int", "5"))
+                        .add(
+                                SymbolTestUtils.createSymbol(
+                                        "styleable", "twoattrs_flags", "int", "6"))
+                        .add(SymbolTestUtils.createSymbol("attr", "nothing", "int", "7"))
+                        .add(
+                                SymbolTestUtils.createSymbol(
+                                        "styleable", "twoattrs_nothing", "int", "8"))
+                        .add(
+                                SymbolTestUtils.createSymbol(
+                                        "styleable", "twoattrs", "int[]", "{6,8}"))
                         .build();
 
-        assertEquals(expected, table);
+        assertThat(table).isEqualTo(expected);
     }
 
     @Test
@@ -153,13 +160,14 @@ public class ResourceValuesXmlParserTest {
                 ResourceValuesXmlParser.parse(
                         XmlUtils.parseDocument(xml, false), IdProvider.sequential());
 
-        SymbolTable expected = SymbolTable.builder()
-                .add(new Symbol("dimen", "a", "int", "1"))
-                .add(new Symbol("dimen", "b", "int", "2"))
-                .add(new Symbol("dimen", "c", "int", "3"))
-                .build();
+        SymbolTable expected =
+                SymbolTable.builder()
+                        .add(SymbolTestUtils.createSymbol("dimen", "a", "int", "1"))
+                        .add(SymbolTestUtils.createSymbol("dimen", "b", "int", "2"))
+                        .add(SymbolTestUtils.createSymbol("dimen", "c", "int", "3"))
+                        .build();
 
-        assertEquals(expected, table);
+        assertThat(table).isEqualTo(expected);
     }
 
     @Test
@@ -169,11 +177,12 @@ public class ResourceValuesXmlParserTest {
                 ResourceValuesXmlParser.parse(
                         XmlUtils.parseDocument(xml, false), IdProvider.sequential());
 
-        SymbolTable expected = SymbolTable.builder()
-                .add(new Symbol("drawable", "foo", "int", "1"))
-                .build();
+        SymbolTable expected =
+                SymbolTable.builder()
+                        .add(SymbolTestUtils.createSymbol("drawable", "foo", "int", "1"))
+                        .build();
 
-        assertEquals(expected, table);
+        assertThat(table).isEqualTo(expected);
     }
 
     @Test
@@ -183,11 +192,12 @@ public class ResourceValuesXmlParserTest {
                 ResourceValuesXmlParser.parse(
                         XmlUtils.parseDocument(xml, false), IdProvider.sequential());
 
-        SymbolTable expected = SymbolTable.builder()
-                .add(new Symbol("id", "foo", "int", "1"))
-                .build();
+        SymbolTable expected =
+                SymbolTable.builder()
+                        .add(SymbolTestUtils.createSymbol("id", "foo", "int", "1"))
+                        .build();
 
-        assertEquals(expected, table);
+        assertThat(table).isEqualTo(expected);
     }
 
     @Test
@@ -197,11 +207,12 @@ public class ResourceValuesXmlParserTest {
                 ResourceValuesXmlParser.parse(
                         XmlUtils.parseDocument(xml, false), IdProvider.sequential());
 
-        SymbolTable expected = SymbolTable.builder()
-                .add(new Symbol("integer", "a", "int", "1"))
-                .build();
+        SymbolTable expected =
+                SymbolTable.builder()
+                        .add(SymbolTestUtils.createSymbol("integer", "a", "int", "1"))
+                        .build();
 
-        assertEquals(expected, table);
+        assertThat(table).isEqualTo(expected);
     }
 
     @Test
@@ -218,11 +229,12 @@ public class ResourceValuesXmlParserTest {
                 ResourceValuesXmlParser.parse(
                         XmlUtils.parseDocument(xml, false), IdProvider.sequential());
 
-        SymbolTable expected = SymbolTable.builder()
-                .add(new Symbol("array", "ints", "int", "1"))
-                .build();
+        SymbolTable expected =
+                SymbolTable.builder()
+                        .add(SymbolTestUtils.createSymbol("array", "ints", "int", "1"))
+                        .build();
 
-        assertEquals(expected, table);
+        assertThat(table).isEqualTo(expected);
     }
 
     @Test
@@ -240,11 +252,12 @@ public class ResourceValuesXmlParserTest {
                 ResourceValuesXmlParser.parse(
                         XmlUtils.parseDocument(xml, false), IdProvider.sequential());
 
-        SymbolTable expected = SymbolTable.builder()
-                .add(new Symbol("plurals", "plu", "int", "1"))
-                .build();
+        SymbolTable expected =
+                SymbolTable.builder()
+                        .add(SymbolTestUtils.createSymbol("plurals", "plu", "int", "1"))
+                        .build();
 
-        assertEquals(expected, table);
+        assertThat(table).isEqualTo(expected);
     }
 
     @Test
@@ -254,11 +267,12 @@ public class ResourceValuesXmlParserTest {
                 ResourceValuesXmlParser.parse(
                         XmlUtils.parseDocument(xml, false), IdProvider.sequential());
 
-        SymbolTable expected = SymbolTable.builder()
-                .add(new Symbol("string", "a", "int", "1"))
-                .build();
+        SymbolTable expected =
+                SymbolTable.builder()
+                        .add(SymbolTestUtils.createSymbol("string", "a", "int", "1"))
+                        .build();
 
-        assertEquals(expected, table);
+        assertThat(table).isEqualTo(expected);
     }
 
     @Test
@@ -275,11 +289,12 @@ public class ResourceValuesXmlParserTest {
                 ResourceValuesXmlParser.parse(
                         XmlUtils.parseDocument(xml, false), IdProvider.sequential());
 
-        SymbolTable expected = SymbolTable.builder()
-                .add(new Symbol("array", "strings", "int", "1"))
-                .build();
+        SymbolTable expected =
+                SymbolTable.builder()
+                        .add(SymbolTestUtils.createSymbol("array", "strings", "int", "1"))
+                        .build();
 
-        assertEquals(expected, table);
+        assertThat(table).isEqualTo(expected);
     }
 
     @Test
@@ -296,12 +311,13 @@ public class ResourceValuesXmlParserTest {
                 ResourceValuesXmlParser.parse(
                         XmlUtils.parseDocument(xml, false), IdProvider.sequential());
 
-        SymbolTable expected = SymbolTable.builder()
-                .add(new Symbol("style", "empty", "int", "1"))
-                .add(new Symbol("style", "s0", "int", "2"))
-                .build();
+        SymbolTable expected =
+                SymbolTable.builder()
+                        .add(SymbolTestUtils.createSymbol("style", "empty", "int", "1"))
+                        .add(SymbolTestUtils.createSymbol("style", "s0", "int", "2"))
+                        .build();
 
-        assertEquals(expected, table);
+        assertThat(table).isEqualTo(expected);
     }
 
     @Test
@@ -324,12 +340,13 @@ public class ResourceValuesXmlParserTest {
                 ResourceValuesXmlParser.parse(
                         XmlUtils.parseDocument(xml, false), IdProvider.sequential());
 
-        SymbolTable expected = SymbolTable.builder()
-                .add(new Symbol("array", "string_refs", "int", "1"))
-                .add(new Symbol("array", "colors", "int", "2"))
-                .build();
+        SymbolTable expected =
+                SymbolTable.builder()
+                        .add(SymbolTestUtils.createSymbol("array", "string_refs", "int", "1"))
+                        .add(SymbolTestUtils.createSymbol("array", "colors", "int", "2"))
+                        .build();
 
-        assertEquals(expected, table);
+        assertThat(table).isEqualTo(expected);
     }
 
     @Test
@@ -367,17 +384,23 @@ public class ResourceValuesXmlParserTest {
 
         SymbolTable expected =
                 SymbolTable.builder()
-                        .add(new Symbol("attr", "showText", "int", "1"))
-                        .add(new Symbol("styleable", "PieChart_showText", "int", "2"))
-                        .add(new Symbol("id", "left", "int", "3"))
-                        .add(new Symbol("id", "right", "int", "4"))
-                        .add(new Symbol("attr", "labelPosition", "int", "5"))
-                        .add(new Symbol("styleable", "PieChart_labelPosition", "int", "6"))
-                        .add(new Symbol("styleable", "PieChart", "int[]", "{2,6}"))
+                        .add(SymbolTestUtils.createSymbol("attr", "showText", "int", "1"))
+                        .add(
+                                SymbolTestUtils.createSymbol(
+                                        "styleable", "PieChart_showText", "int", "2"))
+                        .add(SymbolTestUtils.createSymbol("id", "left", "int", "3"))
+                        .add(SymbolTestUtils.createSymbol("id", "right", "int", "4"))
+                        .add(SymbolTestUtils.createSymbol("attr", "labelPosition", "int", "5"))
+                        .add(
+                                SymbolTestUtils.createSymbol(
+                                        "styleable", "PieChart_labelPosition", "int", "6"))
+                        .add(
+                                SymbolTestUtils.createSymbol(
+                                        "styleable", "PieChart", "int[]", "{2,6}"))
                         .build();
 
-        assertEquals(expected, itemTable);
-        assertEquals(itemTable, noItemTable);
+        assertThat(itemTable).isEqualTo(expected);
+        assertThat(noItemTable).isEqualTo(itemTable);
     }
 
     @Test
@@ -398,11 +421,10 @@ public class ResourceValuesXmlParserTest {
             fail();
         } catch (ResourceValuesXmlParseException e) {
             // expected
-            assertTrue(
-                    e.getMessage()
-                            .contains(
-                                    "Illegal type under declare-styleable:"
-                                            + " was <enum>, only accepted is <attr>"));
+            assertThat(e.getMessage())
+                    .contains(
+                            "Illegal type under declare-styleable:"
+                                    + " was <enum>, only accepted is <attr>");
         }
     }
 
@@ -416,7 +438,7 @@ public class ResourceValuesXmlParserTest {
             fail();
         } catch (ResourceValuesXmlParseException e) {
             // expected
-            assertTrue(e.getMessage().contains("Unknown resource value XML element 'myType'"));
+            assertThat(e.getMessage()).contains("Unknown resource value XML element 'myType'");
         }
     }
 
@@ -449,23 +471,27 @@ public class ResourceValuesXmlParserTest {
 
         SymbolTable expected =
                 SymbolTable.builder()
-                        .add(new Symbol("color", "colorPrimary", "int", "1"))
-                        .add(new Symbol("color", "colorPrimaryDark", "int", "2"))
-                        .add(new Symbol("color", "colorAccent", "int", "3"))
-                        .add(new Symbol("styleable", "foo_declare_styleable", "int[]", "{}"))
-                        .add(new Symbol("anim", "foo_anim", "int", "4"))
-                        .add(new Symbol("animator", "foo_animator", "int", "5"))
-                        .add(new Symbol("drawable", "foo_drawable", "int", "6"))
-                        .add(new Symbol("fraction", "foo_fraction", "int", "7"))
-                        .add(new Symbol("integer", "foo_integer", "int", "8"))
-                        .add(new Symbol("menu", "foo_menu", "int", "9"))
-                        .add(new Symbol("mipmap", "foo_mipmap", "int", "10"))
-                        .add(new Symbol("raw", "foo_raw", "int", "11"))
-                        .add(new Symbol("style", "foo_style", "int", "12"))
-                        .add(new Symbol("transition", "foo_transition", "int", "13"))
-                        .add(new Symbol("xml", "foo_xml", "int", "14"))
+                        .add(SymbolTestUtils.createSymbol("color", "colorPrimary", "int", "1"))
+                        .add(SymbolTestUtils.createSymbol("color", "colorPrimaryDark", "int", "2"))
+                        .add(SymbolTestUtils.createSymbol("color", "colorAccent", "int", "3"))
+                        .add(
+                                SymbolTestUtils.createSymbol(
+                                        "styleable", "foo_declare_styleable", "int[]", "{}"))
+                        .add(SymbolTestUtils.createSymbol("anim", "foo_anim", "int", "4"))
+                        .add(SymbolTestUtils.createSymbol("animator", "foo_animator", "int", "5"))
+                        .add(SymbolTestUtils.createSymbol("drawable", "foo_drawable", "int", "6"))
+                        .add(SymbolTestUtils.createSymbol("fraction", "foo_fraction", "int", "7"))
+                        .add(SymbolTestUtils.createSymbol("integer", "foo_integer", "int", "8"))
+                        .add(SymbolTestUtils.createSymbol("menu", "foo_menu", "int", "9"))
+                        .add(SymbolTestUtils.createSymbol("mipmap", "foo_mipmap", "int", "10"))
+                        .add(SymbolTestUtils.createSymbol("raw", "foo_raw", "int", "11"))
+                        .add(SymbolTestUtils.createSymbol("style", "foo_style", "int", "12"))
+                        .add(
+                                SymbolTestUtils.createSymbol(
+                                        "transition", "foo_transition", "int", "13"))
+                        .add(SymbolTestUtils.createSymbol("xml", "foo_xml", "int", "14"))
                         .build();
 
-        assertEquals(expected, actual);
+        assertThat(actual).isEqualTo(expected);
     }
 }

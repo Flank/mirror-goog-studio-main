@@ -67,13 +67,13 @@ public class TestModuleProGuardTask extends ProGuardTask {
     public void proguard() throws ParseException, IOException {
         if (logger.isEnabled(LogLevel.INFO)) {
             logger.info("test module mapping file " + mappingConfiguration.getSingleFile());
-            for (Object file : variantConfiguration.getAllPackagedJars()) {
-                logger.info("test module proguard input " + file);
-
-            }
-            for (Object file : variantConfiguration.getProvidedOnlyJars()) {
-                logger.info("test module proguard library " + file);
-            }
+            //for (Object file : variantConfiguration.getAllPackagedJars()) {
+            //    logger.info("test module proguard input " + file);
+            //
+            //}
+            //for (Object file : variantConfiguration.getProvidedOnlyJars()) {
+            //    logger.info("test module proguard library " + file);
+            //}
         }
 
         if (mappingConfiguration.getSingleFile().isFile()) {

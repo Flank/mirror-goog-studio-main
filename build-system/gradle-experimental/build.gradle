@@ -6,25 +6,8 @@ apply plugin: 'clone-artifacts'
 apply plugin: 'idea'
 apply plugin: 'jacoco-tools-base'
 
-// Ordinarily, we depend on an old version of Gradle and let projects
-// like gradle-core link against it.  This way, we maintain backward
-// compatibility for gradle-core.  This project, however, uses newer
-// Gradle features, so we link against Gradle version $gradleVersion
-// instead.  This linking override works by prepending the extracted
-// $gradleVersion jar to our classpath when compiling this project.
-// The extraction happens via the top-level `init' task, which we do
-// *not* run automatically.
-
-// If you try to compile this project and see errors about
-// non-existent Gradle APIs, you haven't run top-level `init'
-// recently enough.
-
-String gradleVersion = "3.3"
-File gradleApi = rootProject.file('external/gradle/gradle-api-' + gradleVersion + '.jar')
-assert gradleApi.exists()
 dependencies {
-    compileOnly files(gradleApi)
-    compile libs.groovy
+    compile gradleApi()
     compile project(':base:gradle-core')
 
     testCompile libs.junit

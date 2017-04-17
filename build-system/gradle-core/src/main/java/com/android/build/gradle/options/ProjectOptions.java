@@ -16,8 +16,10 @@
 
 package com.android.build.gradle.options;
 
+import android.databinding.tool.util.Preconditions;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.OptionalCompilationStep;
 import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;
@@ -31,39 +33,72 @@ import java.util.stream.Collectors;
 import org.gradle.api.Project;
 
 /** Determines if various options, triggered from the command line or environment, are set. */
+@Immutable
 public final class ProjectOptions {
 
     public static final String PROPERTY_TEST_RUNNER_ARGS =
             "android.testInstrumentationRunnerArguments.";
 
+    private final ImmutableMap<DeprecatedOptions, String> deprecatedOptions;
     private final ImmutableMap<BooleanOption, Boolean> booleanOptions;
     private final ImmutableMap<OptionalBooleanOption, Boolean> optionalBooleanOptions;
     private final ImmutableMap<IntegerOption, Integer> integerOptions;
+    private final ImmutableMap<LongOption, Long> longOptions;
     private final ImmutableMap<StringOption, String> stringOptions;
     private final ImmutableMap<String, String> testRunnerArgs;
+    private final EnumOptions enumOptions;
 
     public ProjectOptions(@NonNull ImmutableMap<String, Object> properties) {
+        deprecatedOptions = readOptions(DeprecatedOptions.values(), properties);
         booleanOptions = readOptions(BooleanOption.values(), properties);
         optionalBooleanOptions = readOptions(OptionalBooleanOption.values(), properties);
         integerOptions = readOptions(IntegerOption.values(), properties);
+        longOptions = readOptions(LongOption.values(), properties);
         stringOptions = readOptions(StringOption.values(), properties);
         testRunnerArgs = readTestRunnerArgs(properties);
+        enumOptions = EnumOptions.load(readOptions(EnumOptions.EnumOption.values(), properties));
     }
 
+    /**
+     * Constructor used to obtain Project Options from the project's properties.
+     *
+     * @param project the project containing the properties
+     */
     public ProjectOptions(@NonNull Project project) {
         this(copyProperties(project));
     }
 
+    /**
+     * Constructor used to obtain Project Options from the project's properties and modify them by
+     * applying all the flags from the given map.
+     *
+     * @param project the project containing the properties
+     * @param overwrites a map of flags overwriting project properties' values
+     */
+    public ProjectOptions(
+            @NonNull Project project, @NonNull ImmutableMap<String, Object> overwrites) {
+        this(copyAndModifyProperties(project, overwrites));
+    }
+
     @NonNull
     private static ImmutableMap<String, Object> copyProperties(@NonNull Project project) {
-        ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
+        return copyAndModifyProperties(project, ImmutableMap.of());
+    }
+
+    @NonNull
+    private static ImmutableMap<String, Object> copyAndModifyProperties(
+            @NonNull Project project, @NonNull ImmutableMap<String, Object> overwrites) {
+        ImmutableMap.Builder<String, Object> optionsBuilder = ImmutableMap.builder();
         for (Map.Entry<String, ?> entry : project.getProperties().entrySet()) {
             Object value = entry.getValue();
-            if (value != null) {
-                builder.put(entry.getKey(), value);
+            if (value != null && !overwrites.containsKey(entry.getKey())) {
+                optionsBuilder.put(entry.getKey(), value);
             }
         }
-        return builder.build();
+        for (Map.Entry<String, ?> overwrite : overwrites.entrySet()) {
+            optionsBuilder.put(overwrite.getKey(), overwrite.getValue());
+        }
+        return optionsBuilder.build();
     }
 
     @NonNull
@@ -112,6 +147,11 @@ public final class ProjectOptions {
     }
 
     @Nullable
+    public Long get(LongOption option) {
+        return longOptions.getOrDefault(option, option.getDefaultValue());
+    }
+
+    @Nullable
     public String get(StringOption option) {
         return stringOptions.getOrDefault(option, option.getDefaultValue());
     }
@@ -133,5 +173,31 @@ public final class ProjectOptions {
             return EnumSet.copyOf(optionalCompilationSteps);
         }
         return EnumSet.noneOf(OptionalCompilationStep.class);
+    }
+
+    public EnumOptions getEnumOptions() {
+        return enumOptions;
+    }
+
+
+    public boolean hasDeprecatedOptions() {
+        return !deprecatedOptions.isEmpty();
+    }
+
+    @NonNull
+    public String getDeprecatedOptionsErrorMessage() {
+        Preconditions.check(
+                hasDeprecatedOptions(),
+                "Has deprecated options should be checked before calling this method.");
+        StringBuilder builder =
+                new StringBuilder("The following project options are deprecated: \n");
+        deprecatedOptions.forEach(
+                (option, errorMessage) -> {
+                    builder.append(option.getPropertyName())
+                            .append("\n")
+                            .append(errorMessage)
+                            .append("\n\n");
+                });
+        return builder.toString();
     }
 }

@@ -88,7 +88,7 @@ public class SwitchMultidexTest {
 
     private void legacyMultidex() throws Exception {
         project.executor()
-                .withProperty("inject.minsdk", 19)
+                .withProperty("inject.minsdk", "19")
                 .withProperty("inject.multidex", "true")
                 .run("assembleDebug");
         Apk debug = project.getApk("debug");
@@ -128,7 +128,7 @@ public class SwitchMultidexTest {
 
     private void nativeMultidex() throws IOException, InterruptedException {
         project.executor()
-                .withProperty("inject.minsdk", 21)
+                .withProperty("inject.minsdk", "21")
                 .withProperty("inject.multidex", "true")
                 .run("assembleDebug");
         Apk debug = project.getApk("debug");

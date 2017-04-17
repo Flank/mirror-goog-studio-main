@@ -21,15 +21,17 @@ import static com.android.build.gradle.integration.common.fixture.GradleTestProj
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
-import com.android.builder.model.SyncIssue;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
+import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -62,10 +64,27 @@ public class AppWithProvidedLibTest {
     }
 
     @Test
+    public void checkBuildFailure() throws IOException, InterruptedException {
+        GradleBuildResult result = project.executor().expectFailure().run("app:assemble");
+
+        assertThat(result.getFailureMessage())
+                .isEqualTo(
+                        "Android dependency 'project :library' is set to compileOnly/provided which is not supported");
+    }
+
+    @Test
+    @Ignore
     public void checkModelFailedToLoad() throws Exception {
-        assertThat(modelContainer.getModelMap().get(":app")).hasSingleIssue(
-                SyncIssue.SEVERITY_ERROR,
-                SyncIssue.TYPE_NON_JAR_PROVIDED_DEP,
-                "projectWithModules:library:unspecified@aar");
+        // TODO: full dependency should show us broken provided only dependency.
+        //final AndroidProject androidProject = modelContainer.getModelMap().get(":app");
+        //assertThat(androidProject).hasIssueSize(2);
+        //assertThat(androidProject).hasIssue(
+        //        SyncIssue.SEVERITY_ERROR,
+        //        SyncIssue.TYPE_NON_JAR_PROVIDED_DEP,
+        //        "projectWithModules:library:unspecified:debug@aar");
+        //assertThat(androidProject).hasIssue(
+        //        SyncIssue.SEVERITY_ERROR,
+        //        SyncIssue.TYPE_NON_JAR_PROVIDED_DEP,
+        //        "projectWithModules:library:unspecified:release@aar");
     }
 }

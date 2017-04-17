@@ -24,6 +24,7 @@ import com.android.build.gradle.managed.NdkOptions;
 import com.android.build.gradle.managed.ProductFlavor;
 import com.android.build.gradle.model.NdkConfigImpl;
 import com.google.common.collect.Lists;
+import java.util.Collection;
 import java.util.List;
 import org.gradle.nativeplatform.NativeLibraryBinarySpec;
 import org.gradle.platform.base.binary.BaseBinarySpec;
@@ -39,7 +40,7 @@ public class DefaultAndroidBinary extends BaseBinarySpec implements AndroidBinar
 
     private NdkConfig mergedNdkConfig = new NdkConfigImpl();
 
-    private BaseVariantData variantData;
+    private Collection<BaseVariantData> variantDataList;
 
     private List<NativeLibraryBinarySpec> nativeBinaries = Lists.newArrayList();
 
@@ -71,13 +72,13 @@ public class DefaultAndroidBinary extends BaseBinarySpec implements AndroidBinar
     }
 
     @Override
-    public BaseVariantData getVariantData() {
-        return variantData;
+    public Collection<BaseVariantData> getVariantData() {
+        return variantDataList;
     }
 
     @Override
-    public void setVariantData(BaseVariantData variantData) {
-        this.variantData = variantData;
+    public void setVariantData(Collection<BaseVariantData> variantDataList) {
+        this.variantDataList = variantDataList;
     }
 
     @Override

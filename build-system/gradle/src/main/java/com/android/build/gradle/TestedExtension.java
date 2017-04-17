@@ -4,6 +4,7 @@ import static com.android.builder.core.VariantType.ANDROID_TEST;
 import static com.android.builder.core.VariantType.UNIT_TEST;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.TestVariant;
 import com.android.build.gradle.api.UnitTestVariant;
 import com.android.build.gradle.internal.ExtraModelInfo;
@@ -11,6 +12,7 @@ import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
 import org.gradle.api.DomainObjectSet;
 import org.gradle.api.NamedDomainObjectContainer;
@@ -33,22 +35,26 @@ public abstract class TestedExtension extends BaseExtension implements TestedAnd
 
     public TestedExtension(
             @NonNull Project project,
+            @NonNull ProjectOptions projectOptions,
             @NonNull Instantiator instantiator,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull SdkHandler sdkHandler,
             @NonNull NamedDomainObjectContainer<BuildType> buildTypes,
             @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavors,
             @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigs,
+            @NonNull NamedDomainObjectContainer<BaseVariantOutput> buildOutputs,
             @NonNull ExtraModelInfo extraModelInfo,
             boolean isDependency) {
         super(
                 project,
+                projectOptions,
                 instantiator,
                 androidBuilder,
                 sdkHandler,
                 buildTypes,
                 productFlavors,
                 signingConfigs,
+                buildOutputs,
                 extraModelInfo,
                 isDependency);
 

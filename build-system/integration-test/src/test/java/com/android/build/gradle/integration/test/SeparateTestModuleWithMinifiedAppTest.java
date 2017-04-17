@@ -21,8 +21,9 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.app.TransformOutputContent;
 import com.android.build.gradle.integration.common.utils.ZipHelper;
-import com.android.builder.model.AndroidProject;
+import com.android.utils.FileUtils;
 import java.io.File;
 import org.junit.Before;
 import org.junit.Rule;
@@ -39,6 +40,7 @@ public class SeparateTestModuleWithMinifiedAppTest {
     @Rule
     public GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("separateTestModuleWithMinifiedApp")
+            .withDependencyChecker(false)  // TODO: Fix for test plugin.
             .create();
 
     @Rule
@@ -46,19 +48,18 @@ public class SeparateTestModuleWithMinifiedAppTest {
 
     @Before
     public void buildProject() throws Exception {
-        project.execute("clean", ":test:assembleDebug");
+        project.execute("clean", ":test:assembleMinified");
     }
 
     @Test
     public void checkMappingsApplied() throws Exception {
         GradleTestProject testProject = project.getSubproject("test");
-        File jarFile = testProject.file(
-                "build/" +
-                        AndroidProject.FD_INTERMEDIATES +
-                        "/transforms/" +
-                        "proguard/" +
-                        "debug/" +
-                        "jars/3/1f/main.jar");
+
+        File outputDir =
+                FileUtils.join(
+                        testProject.getIntermediatesDir(), "transforms", "proguard", "minified");
+        TransformOutputContent content = new TransformOutputContent(outputDir);
+        File jarFile = content.getLocation(content.getSingleStream());
 
         FieldNode stringProviderField = ZipHelper.checkClassFile(
                 jarFile, "com/android/tests/basic/MainTest.class", "mUtility");

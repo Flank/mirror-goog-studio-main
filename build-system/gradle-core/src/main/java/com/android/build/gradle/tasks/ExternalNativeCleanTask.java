@@ -27,7 +27,6 @@ import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.BaseTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessInfoBuilder;
@@ -168,8 +167,7 @@ public class ExternalNativeCleanTask extends BaseTask {
 
         @Override
         public void execute(@NonNull ExternalNativeCleanTask task) {
-            final BaseVariantData<? extends BaseVariantOutputData> variantData =
-                    scope.getVariantData();
+            final BaseVariantData variantData = scope.getVariantData();
             task.setVariantName(variantData.getName());
 
             // Attempt to clean every possible ABI even those that aren't currently built.

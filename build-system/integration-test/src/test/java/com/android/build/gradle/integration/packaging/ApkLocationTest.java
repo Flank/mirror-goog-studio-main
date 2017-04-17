@@ -21,8 +21,9 @@ import static org.junit.Assert.assertNotNull;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.builder.model.AndroidProject;
+import com.android.build.gradle.options.StringOption;
 import java.io.File;
+import java.util.Arrays;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -40,21 +41,26 @@ public class ApkLocationTest {
     @Test
     public void outputToInjectedLocation() throws Exception {
         project.executor()
-                .withProperty(
-                        AndroidProject.PROPERTY_APK_LOCATION,
-                        mTemporaryFolder.getRoot().getAbsolutePath())
+                .with(StringOption.IDE_APK_LOCATION, mTemporaryFolder.getRoot().getAbsolutePath())
                 .run("assembleDebug");
 
-        File[] files = mTemporaryFolder.getRoot().listFiles();
+        File debugApkLocation = new File(mTemporaryFolder.getRoot(), "debug");
+        File[] files = debugApkLocation.listFiles();
         assertNotNull(files);
 
-        // There can be one or two APKs in the directory, depending on whether we use old or new
-        // packaging.
-        assertThat(files).hasLength(1);
+        assertThat(
+                        Arrays.stream(files)
+                                .filter(file -> file.isFile() && file.getName().endsWith(".apk"))
+                                .count())
+                .isEqualTo(1);
 
-        for (File file : files) {
-            assertThat(file).isFile();
-            assertThat(file.getName()).endsWith(".apk");
-        }
+        assertThat(
+                        Arrays.stream(files)
+                                .filter(
+                                        file ->
+                                                file.isFile()
+                                                        && file.getName().equals("output.json"))
+                                .count())
+                .isEqualTo(1);
     }
 }

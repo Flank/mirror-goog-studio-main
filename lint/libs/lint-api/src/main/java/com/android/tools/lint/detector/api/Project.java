@@ -40,7 +40,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.FilterData;
-import com.android.build.OutputFile;
+import com.android.build.VariantOutput;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidArtifactOutput;
 import com.android.builder.model.AndroidLibrary;
@@ -1419,13 +1419,11 @@ public class Project {
                     AndroidArtifact mainArtifact = variant.getMainArtifact();
                     Collection<AndroidArtifactOutput> outputs = mainArtifact.getOutputs();
                     for (AndroidArtifactOutput output : outputs) {
-                        for (OutputFile file : output.getOutputs()) {
-                            final String DENSITY_NAME = OutputFile.FilterType.DENSITY.name();
-                            if (file.getFilterTypes().contains(DENSITY_NAME)) {
-                                for (FilterData data : file.getFilters()) {
-                                    if (DENSITY_NAME.equals(data.getFilterType())) {
-                                        relevantDensities.add(data.getIdentifier());
-                                    }
+                        final String DENSITY_NAME = VariantOutput.FilterType.DENSITY.name();
+                        if (output.getFilterTypes().contains(DENSITY_NAME)) {
+                            for (FilterData data : output.getFilters()) {
+                                if (DENSITY_NAME.equals(data.getFilterType())) {
+                                    relevantDensities.add(data.getIdentifier());
                                 }
                             }
                         }

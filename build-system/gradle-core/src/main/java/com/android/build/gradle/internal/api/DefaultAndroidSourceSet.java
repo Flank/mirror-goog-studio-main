@@ -16,8 +16,32 @@
 
 package com.android.build.gradle.internal.api;
 
+import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_ANNOTATION_PROCESSOR;
+import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_API;
+import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_APK;
+import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_COMPILE;
+import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_COMPILE_ONLY;
+import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_IMPLEMENTATION;
+import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_JACK_PLUGIN;
+import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_PROVIDED;
+import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_PUBLISH;
+import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_RUNTIME_ONLY;
+import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_S_ANNOTATION_PROCESSOR;
+import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_S_API;
+import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_S_APK;
+import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_S_COMPILE;
+import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_S_COMPILE_ONLY;
+import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_S_IMPLEMENTATION;
+import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_S_JACK_PLUGIN;
+import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_S_PROVIDED;
+import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_S_PUBLISH;
+import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_S_RUNTIME_ONLY;
+import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_S_WEAR_APP;
+import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_WEAR_APP;
+
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.gradle.api.AndroidSourceDirectorySet;
 import com.android.build.gradle.api.AndroidSourceFile;
 import com.android.build.gradle.api.AndroidSourceSet;
@@ -35,6 +59,7 @@ import org.gradle.util.GUtil;
 /**
  */
 public class DefaultAndroidSourceSet implements AndroidSourceSet, SourceProvider {
+
     @NonNull
     private final String name;
     private final boolean publishPackage;
@@ -106,13 +131,53 @@ public class DefaultAndroidSourceSet implements AndroidSourceSet, SourceProvider
         return displayName;
     }
 
+    @Nullable
+    @Override
+    public String getApiConfigurationName() {
+        if (name.equals(SourceSet.MAIN_SOURCE_SET_NAME)) {
+            return CONFIG_NAME_API;
+        } else {
+            return String.format(CONFIG_NAME_S_API, name);
+        }
+    }
+
+    @NonNull
+    @Override
+    public String getCompileOnlyConfigurationName() {
+        if (name.equals(SourceSet.MAIN_SOURCE_SET_NAME)) {
+            return CONFIG_NAME_COMPILE_ONLY;
+        } else {
+            return String.format(CONFIG_NAME_S_COMPILE_ONLY, name);
+        }
+    }
+
+    @NonNull
+    @Override
+    public String getImplementationConfigurationName() {
+        if (name.equals(SourceSet.MAIN_SOURCE_SET_NAME)) {
+            return CONFIG_NAME_IMPLEMENTATION;
+        } else {
+            return String.format(CONFIG_NAME_S_IMPLEMENTATION, name);
+        }
+    }
+
+    @NonNull
+    @Override
+    public String getRuntimeOnlyConfigurationName() {
+        if (name.equals(SourceSet.MAIN_SOURCE_SET_NAME)) {
+            return CONFIG_NAME_RUNTIME_ONLY;
+        } else {
+            return String.format(CONFIG_NAME_S_RUNTIME_ONLY, name);
+        }
+    }
+
     @Override
     @NonNull
     public String getCompileConfigurationName() {
         if (name.equals(SourceSet.MAIN_SOURCE_SET_NAME)) {
-            return "compile";
+            return CONFIG_NAME_COMPILE;
         } else {
-            return String.format("%sCompile", name);
+            return String.format(CONFIG_NAME_S_COMPILE, name);
         }
     }
 
@@ -121,16 +186,16 @@ public class DefaultAndroidSourceSet implements AndroidSourceSet, SourceProvider
     public String getPackageConfigurationName() {
         if (publishPackage) {
             if (name.equals(SourceSet.MAIN_SOURCE_SET_NAME)) {
-                return "publish";
+                return CONFIG_NAME_PUBLISH;
             } else {
-                return String.format("%sPublish", name);
+                return String.format(CONFIG_NAME_S_PUBLISH, name);
             }
         }
 
         if (name.equals(SourceSet.MAIN_SOURCE_SET_NAME)) {
-            return "apk";
+            return CONFIG_NAME_APK;
         } else {
-            return String.format("%sApk", name);
+            return String.format(CONFIG_NAME_S_APK, name);
         }
     }
 
@@ -138,9 +203,9 @@ public class DefaultAndroidSourceSet implements AndroidSourceSet, SourceProvider
     @NonNull
     public String getProvidedConfigurationName() {
         if (name.equals(SourceSet.MAIN_SOURCE_SET_NAME)) {
-            return "provided";
+            return CONFIG_NAME_PROVIDED;
         } else {
-            return String.format("%sProvided", name);
+            return String.format(CONFIG_NAME_S_PROVIDED, name);
         }
     }
 
@@ -148,9 +213,9 @@ public class DefaultAndroidSourceSet implements AndroidSourceSet, SourceProvider
     @Override
     public String getWearAppConfigurationName() {
         if (name.equals(SourceSet.MAIN_SOURCE_SET_NAME)) {
-            return "wearApp";
+            return CONFIG_NAME_WEAR_APP;
         } else {
-            return String.format("%sWearApp", name);
+            return String.format(CONFIG_NAME_S_WEAR_APP, name);
         }
     }
 
@@ -158,9 +223,9 @@ public class DefaultAndroidSourceSet implements AndroidSourceSet, SourceProvider
     @Override
     public String getAnnotationProcessorConfigurationName() {
         if (name.equals(SourceSet.MAIN_SOURCE_SET_NAME)) {
-            return "annotationProcessor";
+            return CONFIG_NAME_ANNOTATION_PROCESSOR;
         } else {
-            return String.format("%sAnnotationProcessor", name);
+            return String.format(CONFIG_NAME_S_ANNOTATION_PROCESSOR, name);
         }
     }
 
@@ -168,9 +233,9 @@ public class DefaultAndroidSourceSet implements AndroidSourceSet, SourceProvider
     @Override
     public String getJackPluginConfigurationName() {
         if (name.equals(SourceSet.MAIN_SOURCE_SET_NAME)) {
-            return "jackPlugin";
+            return CONFIG_NAME_JACK_PLUGIN;
         } else {
-            return String.format("%sJackPlugin", name);
+            return String.format(CONFIG_NAME_S_JACK_PLUGIN, name);
         }
     }
 

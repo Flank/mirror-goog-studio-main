@@ -18,13 +18,11 @@ package com.android.builder.symbols;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.annotations.concurrency.Immutable;
-import com.android.builder.dependency.HashCodeUtils;
 import com.android.ide.common.res2.MergingException;
 import com.android.ide.common.res2.ValueResourceNameValidator;
 import com.android.resources.ResourceType;
+import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
-import java.util.Objects;
 
 /**
  * A symbol is a 4-tuple containing a resource type, a name, a java type and a value. Symbols are
@@ -56,47 +54,8 @@ import java.util.Objects;
  * <p>In practice, symbols do not exist by themselves. They are usually part of a symbol table, but
  * this class is independent of any use.
  */
-@Immutable
-public class Symbol {
-
-    /** The sanitized name of the symbol. */
-    @NonNull private final String name;
-
-    /** The java type of the symbol. */
-    @NonNull private final String javaType;
-
-    /** The value of the symbol. */
-    @NonNull private final String value;
-
-    /** The type of resource. */
-    @NonNull private final ResourceType resourceType;
-
-    /**
-     * Creates a new symbol. The {@code name} of the symbol needs to be a valid sanitized resource
-     * name. See {@link SymbolUtils#canonicalizeValueResourceName} method and apply it beforehand
-     * when necessary.
-     *
-     * <p>The parameter {@code resourceType} needs to correspond to a valid {@link ResourceType}.
-     *
-     * @param resourceType the resource type of the symbol
-     * @param name the sanitized name of the symbol
-     * @param javaType the java type of the symbol
-     * @param value the value of the symbol
-     */
-    public Symbol(
-            @NonNull String resourceType,
-            @NonNull String name,
-            @NonNull String javaType,
-            @NonNull String value) {
-        this(
-                Preconditions.checkNotNull(
-                        ResourceType.getEnum(resourceType),
-                        "Invalid resource type %s",
-                        resourceType),
-                name,
-                javaType,
-                value);
-    }
+@AutoValue
+public abstract class Symbol {
 
     /**
      * Creates a new symbol. The {@code name} of the symbol needs to be a valid sanitized resource
@@ -108,18 +67,14 @@ public class Symbol {
      * @param javaType the java type of the symbol
      * @param value the value of the symbol
      */
-    public Symbol(
+    public static Symbol createSymbol(
             @NonNull ResourceType resourceType,
             @NonNull String name,
-            @NonNull String javaType,
+            @NonNull SymbolJavaType javaType,
             @NonNull String value) {
 
-        this.resourceType = resourceType;
-        this.name = name;
-        this.javaType = javaType;
-        this.value = value;
-
         validateSymbol(name, resourceType);
+        return new AutoValue_Symbol(resourceType, value, name, javaType);
     }
 
     /**
@@ -139,25 +94,13 @@ public class Symbol {
         }
     }
 
-    /**
-     * Obtains the resource type.
-     *
-     * @return the resource type
-     */
+    /** Obtains the resource type. */
     @NonNull
-    public String getResourceType() {
-        return resourceType.getName();
-    }
+    public abstract ResourceType getResourceType();
 
-    /**
-     * Obtains the value of the symbol.
-     *
-     * @return the value
-     */
+    /** Obtains the value of the symbol. */
     @NonNull
-    public String getValue() {
-        return value;
-    }
+    public abstract String getValue();
 
     /**
      * Obtains the name of the symbol.
@@ -165,9 +108,7 @@ public class Symbol {
      * @return the name
      */
     @NonNull
-    public String getName() {
-        return name;
-    }
+    public abstract String getName();
 
     /**
      * Obtains the java type of the symbol.
@@ -175,29 +116,5 @@ public class Symbol {
      * @return the java type
      */
     @NonNull
-    public String getJavaType() {
-        return javaType;
-    }
-
-    @Override
-    public int hashCode() {
-        return HashCodeUtils.hashCode(resourceType, name, javaType, value);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == this) {
-            return true;
-        }
-
-        if (!(obj instanceof Symbol)) {
-            return false;
-        }
-
-        Symbol other = (Symbol) obj;
-        return Objects.equals(resourceType, other.resourceType)
-                && Objects.equals(name, other.name)
-                && Objects.equals(javaType, other.javaType)
-                && Objects.equals(value, other.value);
-    }
+    public abstract SymbolJavaType getJavaType();
 }

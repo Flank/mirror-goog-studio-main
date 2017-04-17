@@ -78,43 +78,51 @@ public class LibraryComponentPluginTest {
 
     @Test
     public void checkMultiFlavorDependencies() throws Exception {
-        appendToFile(project.getSubproject("app").getBuildFile(),
+        appendToFile(
+                project.getSubproject("app").getBuildFile(),
                 "apply plugin: \"com.android.model.application\"\n"
-                + "\n"
-                + "dependencies {\n"
-                + "    compile project(path: \":lib\", configuration: \"freeDebug\")\n"
-                + "}\n"
-                + "\n"
-                + "model {\n"
-                + "    android {\n"
-                + "        compileSdkVersion " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n"
-                + "        buildToolsVersion \"" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "\"\n"
-                + "    }\n"
-                + "}\n");
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    compile project(path: \":lib\")\n"
+                        + "}\n"
+                        + "\n"
+                        + "model {\n"
+                        + "    android {\n"
+                        + "        compileSdkVersion "
+                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "        buildToolsVersion \""
+                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
+                        + "\"\n"
+                        + "        flavorSelection[\"pricing\"] = \"free\"\n"
+                        + "    }\n"
+                        + "}\n");
 
         GradleTestProject lib = project.getSubproject("lib");
         appendToFile(lib.getBuildFile(),
                 "apply plugin: \"com.android.model.library\"\n"
-                + "\n"
-                + "configurations {\n"
-                + "    freeDebug\n"
-                + "}\n"
-                + "\n"
-                + "model {\n"
-                + "    android {\n"
-                + "        compileSdkVersion " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n"
-                + "        buildToolsVersion \"" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "\"\n"
-                + "        publishNonDefault true\n"
-                + "\n"
-                + "        productFlavors {\n"
-                + "            create(\"free\")\n"
-                + "            create(\"premium\")\n"
-                + "        }\n"
-                + "    }\n"
-                + "}\n");
+                        + "\n"
+                        + "configurations {\n"
+                        + "    freeDebug\n"
+                        + "}\n"
+                        + "\n"
+                        + "model {\n"
+                        + "    android {\n"
+                        + "        compileSdkVersion " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n"
+                        + "        buildToolsVersion \"" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "\"\n"
+                        + "\n"
+                        + "        productFlavors {\n"
+                        + "            create(\"free\") {\n"
+                        + "                dimension \"pricing\"\n"
+                        + "            }\n"
+                        + "            create(\"premium\") {\n"
+                        + "                dimension \"pricing\"\n"
+                        + "            }\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}\n");
 
         project.execute(":app:assembleDebug");
-        assertThat(lib.file("build/intermediates/bundles/freeDebug"))
-                .isDirectory();
+        assertThat(lib.file("build/intermediates/bundles/freeDebug")).isDirectory();
     }
 }

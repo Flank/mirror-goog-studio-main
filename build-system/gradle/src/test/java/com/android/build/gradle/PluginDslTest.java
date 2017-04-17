@@ -30,9 +30,8 @@ import com.android.build.gradle.internal.fixture.TestConstants;
 import com.android.build.gradle.internal.fixture.TestProjects;
 import com.android.build.gradle.internal.fixture.VariantChecker;
 import com.android.build.gradle.internal.fixture.VariantCheckers;
+import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.MockableAndroidJarTask;
-import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.build.gradle.tasks.factory.AndroidJavaCompile;
 import com.android.utils.StringHelper;
 import com.google.common.collect.ImmutableList;
@@ -70,9 +69,7 @@ public class PluginDslTest {
 
     @Parameterized.Parameters
     public static Collection<TestProjects.Plugin[]> generateStates() {
-        return ImmutableList.of(
-                new TestProjects.Plugin[] {TestProjects.Plugin.APP},
-                new TestProjects.Plugin[] {TestProjects.Plugin.ATOM});
+        return ImmutableList.of(new TestProjects.Plugin[] {TestProjects.Plugin.APP});
     }
 
     public PluginDslTest(TestProjects.Plugin pluginType) {
@@ -94,10 +91,6 @@ public class PluginDslTest {
         if (pluginType == TestProjects.Plugin.APP) {
             plugin = (AppPlugin) project.getPlugins().getPlugin(pluginType.getPluginClass());
             checker = VariantCheckers.createAppChecker((AppExtension) android);
-        } else if (pluginType == TestProjects.Plugin.ATOM) {
-            android.getDefaultConfig().setVersionName("1.0");
-            plugin = (AtomPlugin) project.getPlugins().getPlugin(pluginType.getPluginClass());
-            checker = VariantCheckers.createAtomChecker((AtomExtension) android);
         } else {
             throw new AssertionError("Unsupported plugin type");
         }
@@ -106,7 +99,7 @@ public class PluginDslTest {
     @Test
     public void testBasic() {
         plugin.createAndroidTasks(false);
-        VariantCheckers.checkDefaultVariants(plugin.getVariantManager().getVariantDataList());
+        VariantCheckers.checkDefaultVariants(plugin.getVariantManager().getVariantScopes());
 
         // we can now call this since the variants/tasks have been created
         Set<BaseTestedVariant> variants = checker.getVariants();
@@ -123,7 +116,7 @@ public class PluginDslTest {
     @Test
     public void testBasic2() {
         plugin.createAndroidTasks(false);
-        VariantCheckers.checkDefaultVariants(plugin.getVariantManager().getVariantDataList());
+        VariantCheckers.checkDefaultVariants(plugin.getVariantManager().getVariantScopes());
 
         // we can now call this since the variants/tasks have been created
         Set<BaseTestedVariant> variants = checker.getVariants();
@@ -146,7 +139,7 @@ public class PluginDslTest {
                         + "'\n        }\n");
 
         plugin.createAndroidTasks(false);
-        VariantCheckers.checkDefaultVariants(plugin.getVariantManager().getVariantDataList());
+        VariantCheckers.checkDefaultVariants(plugin.getVariantManager().getVariantScopes());
 
         // we can now call this since the variants/tasks have been created
         Set<BaseTestedVariant> variants = checker.getVariants();
@@ -202,7 +195,7 @@ public class PluginDslTest {
         map.put("androidTests", 1);
         assertEquals(
                 VariantCheckers.countVariants(map),
-                plugin.getVariantManager().getVariantDataList().size());
+                plugin.getVariantManager().getVariantScopes().size());
 
         // we can now call this since the variants/tasks have been created
 
@@ -226,6 +219,7 @@ public class PluginDslTest {
                 project,
                 "\n"
                         + "project.android {\n"
+                        + "    flavorDimensions 'foo'\n"
                         + "    productFlavors {\n"
                         + "        flavor1 {\n"
                         + "\n"
@@ -243,7 +237,7 @@ public class PluginDslTest {
         map.put("androidTests", 2);
         assertEquals(
                 VariantCheckers.countVariants(map),
-                plugin.getVariantManager().getVariantDataList().size());
+                plugin.getVariantManager().getVariantScopes().size());
 
         // we can now call this since the variants/tasks have been created
 
@@ -373,7 +367,7 @@ public class PluginDslTest {
                         + "}\n");
 
         plugin.createAndroidTasks(false);
-        VariantCheckers.checkDefaultVariants(plugin.getVariantManager().getVariantDataList());
+        VariantCheckers.checkDefaultVariants(plugin.getVariantManager().getVariantScopes());
 
         // we can now call this since the variants/tasks have been created
 
@@ -410,6 +404,7 @@ public class PluginDslTest {
                         + "        }\n"
                         + "    }\n"
                         + "\n"
+                        + "    flavorDimensions 'foo'\n"
                         + "    productFlavors {\n"
                         + "        f1 {\n"
                         + "            proguardFile 'file2.1'\n"
@@ -443,7 +438,7 @@ public class PluginDslTest {
     }
 
     @Test
-    public void testSettingLanguageLevelFromCompileSdk_dontOverride() {
+    public void testSettingLanguageLevelFromCompileSdk_doNotOverride() {
         Eval.me(
                 "project",
                 project,
@@ -481,7 +476,7 @@ public class PluginDslTest {
             assertFalse(mockableJarFile.getAbsolutePath().contains(":"));
         }
 
-        assertEquals("mockable-Google-Inc.-Google-APIs-24.jar", mockableJarFile.getName());
+        assertEquals("mockable-Google-Inc.-Google-APIs-24.v2.jar", mockableJarFile.getName());
     }
 
     @Test
@@ -516,6 +511,7 @@ public class PluginDslTest {
                         + "        testInstrumentationRunnerArguments(value: 'default', size: 'small')\n"
                         + "    }\n"
                         + "\n"
+                        + "    flavorDimensions 'foo'\n"
                         + "    productFlavors {\n"
                         + "        f1 {\n"
                         + "        }\n"
@@ -596,7 +592,7 @@ public class PluginDslTest {
                     Set<File> proguardFiles =
                             variantMap
                                     .get(variantName)
-                                    .getProguardFiles(false, Collections.emptyList());
+                                    .getProguardFiles(Collections.emptyList());
                     Set<File> expectedFiles =
                             expectedFileNames
                                     .stream()
@@ -609,13 +605,10 @@ public class PluginDslTest {
     }
 
     public Map<String, GradleVariantConfiguration> getVariantMap() {
-        List<BaseVariantData<? extends BaseVariantOutputData>> variantsData =
-                plugin.getVariantManager().getVariantDataList();
-        return variantsData
-                .stream()
-                .collect(
-                        Collectors.toMap(
-                                BaseVariantData::getName,
-                                BaseVariantData::getVariantConfiguration));
+        Map<String, GradleVariantConfiguration> result = new HashMap<>();
+        for (VariantScope variantScope : plugin.getVariantManager().getVariantScopes()) {
+            result.put(variantScope.getFullVariantName(), variantScope.getVariantConfiguration());
+        }
+        return result;
     }
 }

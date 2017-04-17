@@ -54,7 +54,7 @@ class LibMinifyLibDepTest {
 
     @Test
     void "check proguard"() {
-        File mapping = project.getSubproject("lib").file("build/outputs/mapping/release/mapping.txt");
+        File mapping = project.getSubproject("lib").file("build/outputs/mapping/debug/mapping.txt");
         // Check classes are obfuscated unless it is kept by the proguard configuration.
         assertThat(mapping).containsAllOf(
                 "com.android.tests.basic.StringGetter -> com.android.tests.basic.StringGetter",

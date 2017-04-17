@@ -256,8 +256,6 @@ public class AaptV1 extends AbstractProcessExecutionAapt implements QueueableRes
         boolean generateFinalIds = true;
         if (config.getVariantType() == VariantType.LIBRARY) {
             generateFinalIds = false;
-        } else if (config.getVariantType() == VariantType.ATOM && config.getBaseFeature() != null) {
-            generateFinalIds = false;
         }
         if (!generateFinalIds) {
             builder.addArgs("--non-constant-id");

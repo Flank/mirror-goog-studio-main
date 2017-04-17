@@ -21,7 +21,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.build.gradle.integration.common.utils.AssumeUtil;
+import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
@@ -40,7 +40,6 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -76,27 +75,25 @@ public class InstantRunChangeDeviceTest {
     @Rule
     public Expect expect = Expect.createAndEnableStackTrace();
 
-    @Before
-    public void checkEnvironment() throws Exception {
-        // IR currently does not work with Jack - http://b.android.com/224374
-        AssumeUtil.assumeNotUsingJack();
-    }
-
     @Test
     public void switchScenario() throws Exception {
         AndroidProject model = mProject.model().getSingle().getOnlyModel();
-        File apk = model.getVariants().stream()
-                .filter(variant -> variant.getName().equals("debug")).iterator().next()
-                .getMainArtifact()
-                .getOutputs().iterator().next()
-                .getOutputs().iterator().next()
-                .getOutputFile();
+
+        AndroidArtifact debug =
+                model.getVariants()
+                        .stream()
+                        .filter(variant -> variant.getName().equals("debug"))
+                        .iterator()
+                        .next()
+                        .getMainArtifact();
         InstantRun instantRunModel = InstantRunTestUtils.getInstantRunModel(model);
         String startBuildId;
         mProject.execute("clean");
 
         if (firstBuild == BuildTarget.NO_INSTANT_RUN) {
             mProject.executor().run("assembleDebug");
+            File apk = (debug.getOutputs().iterator().next()).getMainOutputFile().getOutputFile();
+
             checkNormalApk(apk);
             startBuildId = null;
         } else {
@@ -113,6 +110,7 @@ public class InstantRunChangeDeviceTest {
 
         if (secondBuild == BuildTarget.NO_INSTANT_RUN) {
             mProject.executor().run("assembleDebug");
+            File apk = debug.getOutputs().iterator().next().getMainOutputFile().getOutputFile();
             checkNormalApk(apk);
         } else {
             mProject.executor()
@@ -142,7 +140,7 @@ public class InstantRunChangeDeviceTest {
     }
 
     private static void checkNormalApk(@NonNull File apkFile) throws Exception {
-        try(Apk apk = new Apk(apkFile)) {
+        try (Apk apk = new Apk(apkFile)) {
             assertThat(apk)
                     .hasMainClass("Lcom/example/helloworld/HelloWorld;")
                     .that()

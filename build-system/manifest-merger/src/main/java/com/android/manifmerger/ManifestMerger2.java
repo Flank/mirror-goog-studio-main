@@ -77,8 +77,8 @@ public class ManifestMerger2 {
     private final XmlDocument.Type mDocumentType;
     @NonNull
     private final Optional<File> mReportFile;
-    @NonNull
-    private final FileStreamProvider mFileStreamProvider;
+    @NonNull private final String mFeatureName;
+    @NonNull private final FileStreamProvider mFileStreamProvider;
 
     private ManifestMerger2(
             @NonNull ILogger logger,
@@ -91,6 +91,7 @@ public class ManifestMerger2 {
             @NonNull MergeType mergeType,
             @NonNull XmlDocument.Type documentType,
             @NonNull Optional<File> reportFile,
+            @NonNull String featureName,
             @NonNull FileStreamProvider fileStreamProvider) {
         this.mSystemPropertyResolver = systemPropertiesResolver;
         this.mPlaceHolderValues = placeHolderValues;
@@ -102,6 +103,7 @@ public class ManifestMerger2 {
         this.mMergeType = mergeType;
         this.mDocumentType = documentType;
         this.mReportFile = reportFile;
+        this.mFeatureName = featureName;
         this.mFileStreamProvider = fileStreamProvider;
     }
 
@@ -282,6 +284,7 @@ public class ManifestMerger2 {
         // finally optional features handling.
         processOptionalFeatures(finalMergedDocument, mergingReportBuilder);
 
+        mergingReportBuilder.setFinalPackageName(finalMergedDocument.getPackageName());
         MergingReport mergingReport = mergingReportBuilder.build();
 
         if (mReportFile.isPresent()) {
@@ -349,6 +352,16 @@ public class ManifestMerger2 {
                         MergingReport.MergedManifestKind.INSTANT_RUN,
                         instantRunReplacement(document).prettyPrint());
             }
+
+            if (mOptionalFeatures.contains(Invoker.Feature.ADD_FEATURE_SPLIT_INFO)) {
+                boolean transitionalAttributes =
+                        mOptionalFeatures.contains(
+                                Invoker.Feature.TRANSITIONAL_FEATURE_SPLIT_ATTRIBUTES);
+                mergingReport.setMergedDocument(
+                        MergingReport.MergedManifestKind.MERGED,
+                        addFeatureSplitAttributes(document, mFeatureName, transitionalAttributes)
+                                .prettyPrint());
+            }
         }
     }
 
@@ -366,6 +379,64 @@ public class ManifestMerger2 {
                                 SdkConstants.VALUE_TRUE);
         }
         return document.reparse();
+    }
+
+    /**
+     * Set android:splitName attribute to <code>featureName</code> for every activity, service and
+     * provider elements. Set featureSplit attribute to <code>featureName</code> for the manifest
+     * element.
+     */
+    @NonNull
+    private static XmlDocument addFeatureSplitAttributes(
+            XmlDocument document, String featureName, boolean transitionalAttributes) {
+        Optional<XmlElement> applicationOptional =
+                document.getByTypeAndKey(ManifestModel.NodeTypes.APPLICATION, null /* keyValue */);
+        if (applicationOptional.isPresent()) {
+            addFeatureSplitAttributes(
+                    applicationOptional.get(),
+                    featureName,
+                    ManifestModel.NodeTypes.ACTIVITY,
+                    transitionalAttributes);
+            addFeatureSplitAttributes(
+                    applicationOptional.get(),
+                    featureName,
+                    ManifestModel.NodeTypes.SERVICE,
+                    transitionalAttributes);
+            addFeatureSplitAttributes(
+                    applicationOptional.get(),
+                    featureName,
+                    ManifestModel.NodeTypes.PROVIDER,
+                    transitionalAttributes);
+        }
+
+        if (transitionalAttributes) {
+            document.getRootNode().getXml().setAttribute(SdkConstants.ATTR_SPLIT, featureName);
+        } else {
+            document.getRootNode()
+                    .getXml()
+                    .setAttribute(SdkConstants.ATTR_FEATURE_SPLIT, featureName);
+        }
+
+        return document.reparse();
+    }
+
+    /**
+     * Set android:splitName attribute to <code>featureName</code> for every element of type <code>
+     * nodeType</code> under the <code>applicationElement</code> element.
+     */
+    private static void addFeatureSplitAttributes(
+            XmlElement applicationElement,
+            String featureName,
+            ManifestModel.NodeTypes nodeType,
+            boolean transitionalAttributes) {
+        ImmutableList<XmlElement> nodeElements = applicationElement.getAllNodesByType(nodeType);
+        for (XmlElement xmlElement : nodeElements) {
+            if (transitionalAttributes) {
+                xmlElement.getXml().setAttribute(SdkConstants.ATTR_SPLIT, featureName);
+            } else {
+                setAndroidAttribute(xmlElement.getXml(), SdkConstants.ATTR_SPLIT_NAME, featureName);
+            }
+        }
     }
 
     @NonNull
@@ -892,6 +963,8 @@ public class ManifestMerger2 {
         @Nullable
         private FileStreamProvider mFileStreamProvider;
 
+        @NonNull private String mFeatureName;
+
         /**
          * Sets a value for a {@link ManifestSystemProperty}
          * @param override the property to set
@@ -990,6 +1063,12 @@ public class ManifestMerger2 {
 
             /** Perform Studio advanced profiling manifest modifications */
             ADVANCED_PROFILING,
+
+            /** Add feature split information */
+            ADD_FEATURE_SPLIT_INFO,
+
+            /** Set transitional feature split attributes */
+            TRANSITIONAL_FEATURE_SPLIT_ATTRIBUTES
         }
 
         /**
@@ -1006,6 +1085,7 @@ public class ManifestMerger2 {
             this.mLogger = logger;
             this.mMergeType = mergeType;
             this.mDocumentType = documentType;
+            this.mFeatureName = "";
         }
 
         /**
@@ -1145,9 +1225,22 @@ public class ManifestMerger2 {
         }
 
         /**
-         * Specify if the file being merged is an overlay (flavor). If not called,
-         * the merging process will assume a master manifest merge. The master manifest needs
-         * to have a package and some other mandatory fields like "uses-sdk", etc.
+         * Specify the feature name for feature merging.
+         *
+         * @param featureName the feature name to use.
+         * @return itself.
+         */
+        @NonNull
+        public Invoker setFeatureName(@NonNull String featureName) {
+            mFeatureName = featureName.replaceAll("[^a-zA-Z]", "");
+            return thisAsT();
+        }
+
+        /**
+         * Specify if the file being merged is an overlay (flavor). If not called, the merging
+         * process will assume a master manifest merge. The master manifest needs to have a package
+         * and some other mandatory fields like "uses-sdk", etc.
+         *
          * @return itself.
          */
         @NonNull
@@ -1193,10 +1286,12 @@ public class ManifestMerger2 {
                             mFlavorsAndBuildTypeFiles.build(),
                             mFeaturesBuilder.build(),
                             mPlaceholders.build(),
-                            new MapBasedKeyBasedValueResolver<ManifestSystemProperty>(systemProperties),
+                            new MapBasedKeyBasedValueResolver<ManifestSystemProperty>(
+                                    systemProperties),
                             mMergeType,
                             mDocumentType,
                             Optional.fromNullable(mReportFile),
+                            mFeatureName,
                             fileStreamProvider);
             return manifestMerger.merge();
         }

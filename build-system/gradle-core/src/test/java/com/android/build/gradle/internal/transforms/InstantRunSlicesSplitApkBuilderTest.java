@@ -33,6 +33,7 @@ import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
+import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
@@ -72,7 +73,7 @@ public class InstantRunSlicesSplitApkBuilderTest {
 
     @Mock Logger logger;
     @Mock Project project;
-    @Mock InstantRunBuildContext instantRunBuildContext;
+    @Mock InstantRunBuildContext buildContext;
     @Mock AndroidBuilder androidBuilder;
     @Mock PackagingScope packagingScope;
     @Mock CoreSigningConfig coreSigningConfig;
@@ -103,26 +104,27 @@ public class InstantRunSlicesSplitApkBuilderTest {
 
     @Before
     public void setup() {
-        instantRunSliceSplitApkBuilder = new InstantRunSliceSplitApkBuilder(
-                logger,
-                project,
-                instantRunBuildContext,
-                androidBuilder,
-                packagingScope,
-                coreSigningConfig,
-                aaptOptions,
-                outputDirectory.getRoot(),
-                supportDirectory.getRoot()
-        ) {
-            @Override
-            @NonNull
-            protected File generateSplitApk(@NonNull DexFiles dexFiles)
-                    throws IOException, KeytoolException, PackagerException, InterruptedException,
-                    ProcessException, TransformException {
-                dexFilesList.add(dexFiles);
-                return new File("/dev/null");
-            }
-        };
+        instantRunSliceSplitApkBuilder =
+                new InstantRunSliceSplitApkBuilder(
+                        logger,
+                        project,
+                        buildContext,
+                        androidBuilder,
+                        packagingScope,
+                        coreSigningConfig,
+                        AaptGeneration.AAPT_V2,
+                        aaptOptions,
+                        outputDirectory.getRoot(),
+                        supportDirectory.getRoot()) {
+                    @Override
+                    @NonNull
+                    protected File generateSplitApk(@NonNull DexFiles dexFiles)
+                            throws IOException, KeytoolException, PackagerException,
+                                    InterruptedException, ProcessException, TransformException {
+                        dexFilesList.add(dexFiles);
+                        return new File("/dev/null");
+                    }
+                };
     }
 
     @Test

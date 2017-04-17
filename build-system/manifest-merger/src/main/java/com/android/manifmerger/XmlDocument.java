@@ -266,8 +266,18 @@ public class XmlDocument {
     }
 
     /**
-     * Returns the package name to use to expand the attributes values with the
-     * document's package name
+     * Returns the split name if this manifest file has one.
+     *
+     * @return the split name or empty string.
+     */
+    public String getSplitName() {
+        return mRootElement.getAttribute("split");
+    }
+
+    /**
+     * Returns the package name to use to expand the attributes values with the document's package
+     * name
+     *
      * @return the package name to use for attribute expansion.
      */
     public String getPackageNameForAttributeExpansion() {

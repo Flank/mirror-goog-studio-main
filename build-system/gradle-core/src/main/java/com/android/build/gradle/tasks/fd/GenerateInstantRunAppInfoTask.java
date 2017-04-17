@@ -16,16 +16,11 @@
 
 package com.android.build.gradle.tasks.fd;
 
-import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.ATTR_PACKAGE;
-import static com.android.SdkConstants.TAG_APPLICATION;
 import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
 import static org.objectweb.asm.Opcodes.ACC_STATIC;
 import static org.objectweb.asm.Opcodes.ACC_SUPER;
-import static org.objectweb.asm.Opcodes.ACONST_NULL;
 import static org.objectweb.asm.Opcodes.ALOAD;
-import static org.objectweb.asm.Opcodes.ICONST_0;
-import static org.objectweb.asm.Opcodes.ICONST_1;
 import static org.objectweb.asm.Opcodes.INVOKESPECIAL;
 import static org.objectweb.asm.Opcodes.LCONST_0;
 import static org.objectweb.asm.Opcodes.PUTSTATIC;
@@ -33,13 +28,15 @@ import static org.objectweb.asm.Opcodes.RETURN;
 import static org.objectweb.asm.Opcodes.V1_6;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
+import com.android.build.VariantOutput;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
-import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
-import com.android.build.gradle.internal.scope.ConventionMappingHelper;
+import com.android.build.gradle.internal.scope.BuildOutput;
+import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.build.gradle.internal.scope.InstantRunVariantScope;
+import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TransformVariantScope;
+import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.BaseTask;
 import com.android.build.gradle.tasks.PackageAndroidArtifact;
 import com.android.utils.XmlUtils;
@@ -47,12 +44,13 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.function.Supplier;
+import java.util.Optional;
 import java.util.jar.JarOutputStream;
 import java.util.zip.ZipEntry;
 import javax.xml.parsers.ParserConfigurationException;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputFile;
+import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.tooling.BuildException;
@@ -62,8 +60,6 @@ import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 /**
@@ -73,76 +69,58 @@ import org.xml.sax.SAXException;
 public class GenerateInstantRunAppInfoTask extends BaseTask {
 
     private File outputFile;
-    private File mergedManifest;
+    private FileCollection mergedManifests;
+    private InstantRunBuildContext buildcontext;
+    private SplitScope splitScope;
 
     @OutputFile
     public File getOutputFile() {
         return outputFile;
     }
 
-    @InputFile
-    public File getMergedManifest() {
-        return mergedManifest;
-    }
-
-    @Input
-    boolean isUsingMultiApks() {
-        return usingMultiApks;
+    @InputFiles
+    public FileCollection getMergedManifests() {
+        return mergedManifests;
     }
 
     @Input
     public long getSecretToken() {
-        return instantRunBuildcontext.getSecretToken();
+        return buildcontext.getSecretToken();
     }
-
-    boolean usingMultiApks;
-    InstantRunBuildContext instantRunBuildcontext;
 
     @TaskAction
     public void generateInfoTask() throws IOException {
-        // Grab the application id and application class stashes away in the Android
-        // manifest (not in the Android namespace) and generate an AppInfo class.
-        // (Earlier, I did all the processing here - read the manifest, rewrite it by
-        // generating the AppInfo class and rewriting the manifest on the fly to have
-        // the new bootstrapping application, but we
-        //  (1) need for this task to be done after manifest merging, and
-        //  (2) need for it to be done before packaging
-        // but when combined with the current task dependencies (e.g. compilation
-        // depending on resource merging, such that R classes exist) this led to
-        // circular task dependencies. So for now, this is split into two parts:
+        BuildOutputs.load(VariantScope.TaskOutputType.MERGED_MANIFESTS, mergedManifests);
+        Optional<BuildOutput> mainSplitOutput =
+                splitScope
+                        .getOutputs(VariantScope.TaskOutputType.MERGED_MANIFESTS)
+                        .stream()
+                        .filter(
+                                splitOutput ->
+                                        splitOutput.getApkInfo().getType()
+                                                        == VariantOutput.OutputType.FULL_SPLIT
+                                                || splitOutput.getApkInfo().getType()
+                                                        == VariantOutput.OutputType.MAIN)
+                        .findFirst();
+
+        if (!mainSplitOutput.isPresent()) {
+            throw new RuntimeException("Cannot find main merged manifest.");
+        }
+
+        File manifestFile = mainSplitOutput.get().getOutputFile();
+
         // In manifest merging we stash away and replace the application id/class, and
         // here in a packaging task we inject runtime libraries.
-        if (getMergedManifest().exists()) {
+        if (manifestFile.exists()) {
             try {
-                Document document = XmlUtils.parseUtfXmlFile(getMergedManifest(), true);
+                // FIX ME : get the package from somewhere else.
+                Document document = XmlUtils.parseUtfXmlFile(manifestFile, true);
                 Element root = document.getDocumentElement();
                 if (root != null) {
                     String applicationId = root.getAttribute(ATTR_PACKAGE);
-                    String applicationClass = null;
-                    NodeList children = root.getChildNodes();
-                    for (int i = 0; i < children.getLength(); i++) {
-                        Node node = children.item(i);
-                        if (node.getNodeType() == Node.ELEMENT_NODE &&
-                                node.getNodeName().equals(TAG_APPLICATION)) {
-                            String applicationClass1 = null;
-
-                            Element element = (Element) node;
-                            if (element.hasAttribute(ATTR_NAME)) {
-                                String name = element.getAttribute(ATTR_NAME);
-                                assert !name.startsWith(".") : name;
-                                if (!name.isEmpty()) {
-                                    applicationClass1 = name;
-                                }
-                            }
-
-                            applicationClass = applicationClass1;
-                            break;
-                        }
-                    }
-
                     if (!applicationId.isEmpty()) {
                         // Must be *after* extractLibrary() to replace dummy version
-                        writeAppInfoClass(applicationId, applicationClass, getSecretToken());
+                        writeAppInfoClass(applicationId, getSecretToken());
                     }
                 }
             } catch (ParserConfigurationException | IOException | SAXException e) {
@@ -153,7 +131,6 @@ public class GenerateInstantRunAppInfoTask extends BaseTask {
 
     void writeAppInfoClass(
             @NonNull String applicationId,
-            @Nullable String applicationClass,
             long token)
             throws IOException {
         ClassWriter cw = new ClassWriter(0);
@@ -165,11 +142,7 @@ public class GenerateInstantRunAppInfoTask extends BaseTask {
 
         fv = cw.visitField(ACC_PUBLIC + ACC_STATIC, "applicationId", "Ljava/lang/String;", null, null);
         fv.visitEnd();
-        fv = cw.visitField(ACC_PUBLIC + ACC_STATIC, "applicationClass", "Ljava/lang/String;", null, null);
-        fv.visitEnd();
         fv = cw.visitField(ACC_PUBLIC + ACC_STATIC, "token", "J", null, null);
-        fv.visitEnd();
-        fv = cw.visitField(ACC_PUBLIC + ACC_STATIC, "usingApkSplits", "Z", null, null);
         fv.visitEnd();
         mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
         mv.visitCode();
@@ -187,24 +160,12 @@ public class GenerateInstantRunAppInfoTask extends BaseTask {
         mv.visitCode();
         mv.visitLdcInsn(applicationId);
         mv.visitFieldInsn(PUTSTATIC, appInfoOwner, "applicationId", "Ljava/lang/String;");
-        if (applicationClass != null) {
-            mv.visitLdcInsn(applicationClass);
-        } else {
-            mv.visitInsn(ACONST_NULL);
-        }
-        mv.visitFieldInsn(PUTSTATIC, appInfoOwner, "applicationClass", "Ljava/lang/String;");
         if (token != 0L) {
             mv.visitLdcInsn(token);
         } else {
             mv.visitInsn(LCONST_0);
         }
         mv.visitFieldInsn(PUTSTATIC, appInfoOwner, "token", "J");
-        if (isUsingMultiApks()) {
-            mv.visitInsn(ICONST_1);
-        } else {
-            mv.visitInsn(ICONST_0);
-        }
-        mv.visitFieldInsn(PUTSTATIC, appInfoOwner, "usingApkSplits", "Z");
 
         mv.visitInsn(RETURN);
         mv.visitMaxs(2, 0);
@@ -226,16 +187,15 @@ public class GenerateInstantRunAppInfoTask extends BaseTask {
         private final InstantRunVariantScope variantScope;
         @NonNull
         private final TransformVariantScope transformVariantScope;
-        @NonNull
-        private final Supplier<File> instantRunManifestOutputFile;
+        @NonNull private final FileCollection manifests;
 
         public ConfigAction(
                 @NonNull TransformVariantScope transformVariantScope,
                 @NonNull InstantRunVariantScope variantScope,
-                @NonNull Supplier<File> instantRunManifestOutputFile) {
+                @NonNull FileCollection manifests) {
             this.transformVariantScope = transformVariantScope;
             this.variantScope = variantScope;
-            this.instantRunManifestOutputFile = instantRunManifestOutputFile;
+            this.manifests = manifests;
         }
 
         @NonNull
@@ -253,15 +213,13 @@ public class GenerateInstantRunAppInfoTask extends BaseTask {
         @Override
         public void execute(@NonNull GenerateInstantRunAppInfoTask task) {
             task.setVariantName(variantScope.getFullVariantName());
-            task.instantRunBuildcontext = variantScope.getInstantRunBuildContext();
+            task.splitScope = transformVariantScope.getSplitScope();
+            task.buildcontext = variantScope.getInstantRunBuildContext();
             task.outputFile =
                     new File(variantScope.getIncrementalApplicationSupportDir(),
                             PackageAndroidArtifact.INSTANT_RUN_PACKAGES_PREFIX + "-bootstrap.jar");
 
-            task.mergedManifest = instantRunManifestOutputFile.get();
-            ConventionMappingHelper.map(task, "usingMultiApks",
-                    () -> variantScope.getInstantRunBuildContext().getPatchingPolicy()
-                                    == InstantRunPatchingPolicy.MULTI_APK);
+            task.mergedManifests = manifests;
 
         }
     }

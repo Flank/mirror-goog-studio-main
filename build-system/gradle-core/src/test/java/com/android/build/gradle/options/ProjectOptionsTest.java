@@ -37,7 +37,7 @@ public class ProjectOptionsTest {
 
     private static Integer parseInteger(@NonNull Object input) {
         return new ProjectOptions(ImmutableMap.of("android.injected.build.api", input))
-                .get(IntegerOption.IDE_TARGET_API_LEVEL);
+                .get(IntegerOption.IDE_TARGET_DEVICE_API);
     }
 
     private static Object asGroovyString(@NonNull Object input) {
@@ -72,8 +72,8 @@ public class ProjectOptionsTest {
 
     @Test
     public void integerSanity() {
-        assertThat(IntegerOption.IDE_TARGET_API_LEVEL.getDefaultValue()).isNull();
-        assertThat(new ProjectOptions(ImmutableMap.of()).get(IntegerOption.IDE_TARGET_API_LEVEL))
+        assertThat(IntegerOption.IDE_TARGET_DEVICE_API.getDefaultValue()).isNull();
+        assertThat(new ProjectOptions(ImmutableMap.of()).get(IntegerOption.IDE_TARGET_DEVICE_API))
                 .isNull();
 
         assertThat(parseInteger("20")).isEqualTo(20);
@@ -114,13 +114,25 @@ public class ProjectOptionsTest {
     }
 
     @Test
+    public void deprecatedOptionUse() {
+        ProjectOptions projectOptions =
+                new ProjectOptions(ImmutableMap.of("android.incrementalJavaCompile", ""));
+
+        assertThat(projectOptions.hasDeprecatedOptions()).isTrue();
+
+        assertThat(projectOptions.getDeprecatedOptionsErrorMessage())
+                .contains("android.incrementalJavaCompile");
+    }
+
+    @Test
     public void ensureUniqueness() {
         List<String> optionsNames =
                 Stream.of(
                                 BooleanOption.values(),
                                 OptionalBooleanOption.values(),
                                 IntegerOption.values(),
-                                StringOption.values())
+                                StringOption.values(),
+                                EnumOptions.EnumOption.values())
                         .flatMap(Arrays::stream)
                         .map(option -> option.getPropertyName())
                         .collect(Collectors.toList());

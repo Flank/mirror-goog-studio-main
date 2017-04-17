@@ -6,6 +6,6 @@
         <conf name="master" visibility="public" description=""/>
     </configurations>
     <publications>
-        <artifact name="sample" type="bundle" ext="jar" conf="master"/>
+        <artifact name="sample" type="jar" ext="jar" conf="master"/>
     </publications>
 </ivy-module>

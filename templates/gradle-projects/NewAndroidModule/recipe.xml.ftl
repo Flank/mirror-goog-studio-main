@@ -72,16 +72,6 @@
         <copy from="root/module_ignore"
                 to="${baseLibOut}/.gitignore" />
     </#if>
-
-    <mkdir at="${baseSplitOut}" />
-    <instantiate from="root/baseSplit-AndroidManifest.xml.ftl"
-                   to="${baseSplitOut}/src/main/AndroidManifest.xml" />
-    <instantiate from="root/baseSplit-build.gradle.ftl"
-                   to="${baseSplitOut}/build.gradle" />
-    <#if makeIgnore>
-        <copy from="root/module_ignore"
-                to="${baseSplitOut}/.gitignore" />
-    </#if>
 </#if>
 
 <#macro copyIconCommands destination>
@@ -144,18 +134,6 @@
                    to="${escapeXmlAttribute(projectOut)}/CMakeLists.txt" />
     <instantiate from="root/native-lib.cpp.ftl"
                    to="${escapeXmlAttribute(nativeSrcOut)}/native-lib.cpp" />
-</#if>
-
-<#if hasSplitWrapper>
-    <mkdir at="${splitOut}" />
-    <instantiate from="root/instantAppSplit-AndroidManifest.xml.ftl"
-                   to="${splitOut}/src/main/AndroidManifest.xml" />
-    <instantiate from="root/instantAppSplit-build.gradle.ftl"
-                   to="${splitOut}/build.gradle" />
-    <#if makeIgnore>
-        <copy from="root/module_ignore"
-                to="${splitOut}/.gitignore" />
-    </#if>
 </#if>
 
 </recipe>

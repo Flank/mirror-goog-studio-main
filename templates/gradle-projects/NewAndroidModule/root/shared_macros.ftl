@@ -1,9 +1,8 @@
 <#-- Some common elements used in multiple files -->
-<#macro generateManifest packageName hasApplicationBlock=false isInstantApp=false splitName="">
+<#macro generateManifest packageName hasApplicationBlock=false isInstantApp=false>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" <#if isInstantApp>
     xmlns:instant="http://schemas.android.com/instantapps"</#if>
-    package="${packageName}"<#if splitName?has_content>
-    split="${splitName}"</#if><#if !hasApplicationBlock>/</#if>><#if hasApplicationBlock>
+    package="${packageName}"<#if !hasApplicationBlock>/</#if>><#if hasApplicationBlock>
     <application <#if minApiLevel gte 4 && buildApi gte 4>android:allowBackup="true"</#if>
         android:label="@string/app_name"<#if copyIcons>
         android:icon="@mipmap/ic_launcher"<#if buildApi gte 25 && targetApi gte 25>
@@ -13,7 +12,6 @@
         android:theme="@style/AppTheme"/>
 </manifest></#if>
 </#macro>
-
 
 <#macro androidConfig hasApplicationId=false hasTests=false canHaveCpp=false>
 android {

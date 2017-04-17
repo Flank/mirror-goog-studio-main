@@ -72,7 +72,7 @@ public class AndroidComponentModelPlugin implements Plugin<Project> {
      */
     public static final String COMPONENT_NAME = "android";
 
-    public static final String GRADLE_ACCEPTABLE_VERSION = "3.4";
+    public static final String GRADLE_ACCEPTABLE_VERSION = "4.0";
 
     private static final String GRADLE_VERSION_CHECK_OVERRIDE_PROPERTY =
             "com.android.build.gradle.overrideVersionCheck";
@@ -155,11 +155,6 @@ public class AndroidComponentModelPlugin implements Plugin<Project> {
         public void android(AndroidConfig androidModel) {
         }
 
-        @Model
-        public static ProjectOptions createProjectOptions(Project project) {
-            return new ProjectOptions(project);
-        }
-
         @Finalize
         public static void finalizeAndroidModel(AndroidConfig androidModel) {
             if (androidModel.getBuildToolsRevision() == null
@@ -179,6 +174,11 @@ public class AndroidComponentModelPlugin implements Plugin<Project> {
                 androidModel.setCompileSdkVersion("android-" + androidModel.getCompileSdkVersion());
             }
 
+        }
+
+        @Model
+        public static ProjectOptions createProjectOptions(Project project) {
+            return new ProjectOptions(project);
         }
 
         @Defaults

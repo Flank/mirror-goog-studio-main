@@ -49,7 +49,7 @@ class AndroidManifestInTestTest {
 
     @Test
     public void testUserProvidedTestAndroidManifest() throws Exception {
-        Apk testApk = project.getTestApk("debug")
+        Apk testApk = project.getTestApk()
 
         ProcessInfoBuilder builder = new ProcessInfoBuilder()
         builder.setExecutable(SdkHelper.getAapt())

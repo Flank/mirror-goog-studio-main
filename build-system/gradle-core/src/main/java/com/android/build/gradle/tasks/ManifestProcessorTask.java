@@ -15,6 +15,8 @@
  */
 package com.android.build.gradle.tasks;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
@@ -22,55 +24,69 @@ import com.google.common.collect.Ordering;
 import java.io.File;
 import java.util.Map;
 import org.gradle.api.tasks.Optional;
-import org.gradle.api.tasks.OutputFile;
+import org.gradle.api.tasks.OutputDirectory;
 
 /**
  * A task that processes the manifest
  */
 public abstract class ManifestProcessorTask extends IncrementalTask {
 
-    private File manifestOutputFile;
+    private File manifestOutputDirectory;
 
-    private File aaptFriendlyManifestOutputFile;
+    private File aaptFriendlyManifestOutputDirectory;
 
-    private File instantRunManifestOutputFile;
+    private File instantRunManifestOutputDirectory;
+
+    /** The processed Manifest. */
+    @NonNull
+    public abstract File getManifestOutputFile();
+
+    @Nullable
+    public abstract File getInstantRunManifestOutputFile();
 
     /**
-     * The processed Manifest.
+     * The aapt friendly processed Manifest. In case we are processing a library manifest, some
+     * placeholders may not have been resolved (and will be when the library is merged into the
+     * importing application). However, such placeholders keys are not friendly to aapt which flags
+     * some illegal characters. Such characters are replaced/encoded in this version.
      */
-    @OutputFile
-    public File getManifestOutputFile() {
-        return manifestOutputFile;
+    @Nullable
+    public abstract File getAaptFriendlyManifestOutputFile();
+
+    /** The processed Manifest. */
+    @OutputDirectory
+    public File getManifestOutputDirectory() {
+        return manifestOutputDirectory;
     }
 
-    public void setManifestOutputFile(File manifestOutputFile) {
-        this.manifestOutputFile = manifestOutputFile;
+    public void setManifestOutputDirectory(File manifestOutputFolder) {
+        this.manifestOutputDirectory = manifestOutputFolder;
     }
 
-    @OutputFile
+    @OutputDirectory
     @Optional
-    public File getInstantRunManifestOutputFile() {
-        return instantRunManifestOutputFile;
+    public File getInstantRunManifestOutputDirectory() {
+        return instantRunManifestOutputDirectory;
     }
 
-    public void setInstantRunManifestOutputFile(File instantRunManifestOutputFile) {
-        this.instantRunManifestOutputFile = instantRunManifestOutputFile;
+    public void setInstantRunManifestOutputDirectory(File instantRunManifestOutputDirectory) {
+        this.instantRunManifestOutputDirectory = instantRunManifestOutputDirectory;
     }
 
     /**
      * The aapt friendly processed Manifest. In case we are processing a library manifest, some
      * placeholders may not have been resolved (and will be when the library is merged into the
-     * importing application). However, such placeholders keys are not friendly to aapt which
-     * flags some illegal characters. Such characters are replaced/encoded in this version.
+     * importing application). However, such placeholders keys are not friendly to aapt which flags
+     * some illegal characters. Such characters are replaced/encoded in this version.
      */
-    @OutputFile
+    @OutputDirectory
     @Optional
-    public File getAaptFriendlyManifestOutputFile() {
-        return aaptFriendlyManifestOutputFile;
+    public File getAaptFriendlyManifestOutputDirectory() {
+        return aaptFriendlyManifestOutputDirectory;
     }
 
-    public void setAaptFriendlyManifestOutputFile(File aaptFriendlyManifestOutputFile) {
-        this.aaptFriendlyManifestOutputFile = aaptFriendlyManifestOutputFile;
+    public void setAaptFriendlyManifestOutputDirectory(File aaptFriendlyManifestOutputDirectory) {
+        this.aaptFriendlyManifestOutputDirectory = aaptFriendlyManifestOutputDirectory;
     }
 
 
@@ -88,14 +104,4 @@ public abstract class ManifestProcessorTask extends IncrementalTask {
                         mapToSerialize.entrySet(),
                         (input) -> keyValueJoiner.join(input.getKey(), input.getValue()))));
     }
-
-    /**
-     * Returns the manifest processing output file. if an aapt friendly version was requested,
-     * return that otherwise return the actual output of the manifest merger tool directly.
-     */
-    public File getOutputFile() {
-        File aaptFriendlyManifest = getAaptFriendlyManifestOutputFile();
-        return aaptFriendlyManifest != null ? aaptFriendlyManifest : getManifestOutputFile();
-    }
-
 }

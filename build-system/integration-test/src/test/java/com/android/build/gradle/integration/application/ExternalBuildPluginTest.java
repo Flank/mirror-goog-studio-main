@@ -198,7 +198,7 @@ public class ExternalBuildPluginTest {
     @NonNull
     private InstantRunBuildInfo loadBuildInfo() throws Exception {
         File buildInfoFile =
-                new File(mProject.getTestDir(), "build/reload-dex/debug/build-info.xml");
+                new File(mProject.getTestDir(), "build/build-info/debug/build-info.xml");
         TruthHelper.assertThat(buildInfoFile).exists();
         InstantRunBuildInfo buildInfo =
                 InstantRunBuildInfo.get(Files.toString(buildInfoFile, Charsets.UTF_8));

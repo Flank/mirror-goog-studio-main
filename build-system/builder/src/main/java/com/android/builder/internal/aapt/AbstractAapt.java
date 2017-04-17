@@ -34,7 +34,7 @@ public abstract class AbstractAapt implements Aapt {
 
     @Override
     @NonNull
-    public ListenableFuture<Void> link(@NonNull AaptPackageConfig config)
+    public final ListenableFuture<Void> link(@NonNull AaptPackageConfig config)
             throws AaptException {
         validatePackageConfig(config);
         return makeValidatedPackage(config);

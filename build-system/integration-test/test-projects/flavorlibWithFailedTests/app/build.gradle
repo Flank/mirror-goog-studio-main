@@ -4,6 +4,7 @@ android {
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
 
+    flavorDimensions 'foo'
     productFlavors {
         flavor1 {
             applicationId = "com.android.tests.flavorlib.app.flavor1"

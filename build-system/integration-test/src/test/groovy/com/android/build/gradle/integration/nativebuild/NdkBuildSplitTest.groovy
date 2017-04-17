@@ -64,6 +64,7 @@ android {
       }
     }
 
+    flavorDimensions "androidVersion"
     productFlavors {
         gingerbread {
             minSdkVersion 10
@@ -94,10 +95,9 @@ android {
 
         // assign a composite version code for each output, based on the flavor above
         // and the density component.
-        variant.outputs.each { output ->
+        variant.outputs.all { output ->
             // get the key for the abi component
             def key = output.getFilter(OutputFile.ABI) == null ? "all" : output.getFilter(OutputFile.ABI)
-
             // set the versionCode on the output.
             output.versionCodeOverride = apiVersion * 1000000 + project.ext.versionCodes.get(key) * 100000 + defaultConfig.versionCode
         }
@@ -115,14 +115,14 @@ android {
 
     @Test
     void "check apk content"() {
-        assertThatApk(project.getApk("current", "debug_armeabi-v7a")).hasVersionCode(3000123);
-        assertThatApk(project.getApk("current", "debug_armeabi-v7a")).contains("lib/armeabi-v7a/libhello-jni.so");
-        assertThatApk(project.getApk("current", "debug_mips64")).hasVersionCode(3000123);
-        assertThatApk(project.getApk("current", "debug_mips64")).contains("lib/mips64/libhello-jni.so");
+        assertThatApk(project.getApk("armeabi-v7a", GradleTestProject.ApkType.DEBUG, "current")).hasVersionCode(3100123);
+        assertThatApk(project.getApk("armeabi-v7a", GradleTestProject.ApkType.DEBUG, "current")).contains("lib/armeabi-v7a/libhello-jni.so");
+        assertThatApk(project.getApk("mips64", GradleTestProject.ApkType.DEBUG, "current")).hasVersionCode(3400123);
+        assertThatApk(project.getApk("mips64", GradleTestProject.ApkType.DEBUG, "current")).contains("lib/mips64/libhello-jni.so");
     }
 
     @Test
-    public void checkModel() {
+    void checkModel() {
         project.model().getSingle(); // Make sure we can get the AndroidProject
         NativeAndroidProject model = project.model().getSingle(NativeAndroidProject.class);
         assertThat(model.buildFiles).hasSize(1);

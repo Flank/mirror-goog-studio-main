@@ -31,11 +31,12 @@ import org.gradle.api.logging.Logger;
 import org.gradle.api.tasks.TaskAction;
 
 /**
- * Instant run task to finalize and write the {@code build-info.xml}.
+ * Task to finalize and write the {@code build-info.xml}.
  *
- * If the build has failed, it writes a tmp build info instead, which is loaded in the next build.
+ * <p>If the build has failed, it writes a tmp build info instead, which is loaded in the next
+ * build.
  *
- * See {@link InstantRunBuildContext}.
+ * <p>See {@link InstantRunBuildContext}.
  */
 public class BuildInfoWriterTask extends BaseTask {
 
@@ -49,14 +50,14 @@ public class BuildInfoWriterTask extends BaseTask {
 
     Logger logger;
 
-    InstantRunBuildContext instantRunBuildContext;
+    InstantRunBuildContext buildContext;
 
     @TaskAction
     public void executeAction() {
 
-        if (instantRunBuildContext.getBuildHasFailed()) {
+        if (buildContext.getBuildHasFailed()) {
             try {
-                instantRunBuildContext.writeTmpBuildInfo(tmpBuildInfoFile);
+                buildContext.writeTmpBuildInfo(tmpBuildInfoFile);
             } catch (ParserConfigurationException | IOException e) {
                 throw new RuntimeException("Exception while saving temp-build-info.xml", e);
             }
@@ -64,13 +65,13 @@ public class BuildInfoWriterTask extends BaseTask {
         }
 
         // done with the instant run context.
-        instantRunBuildContext.close();
+        buildContext.close();
 
         try {
-            String xml = instantRunBuildContext.toXml();
+            String xml = buildContext.toXml();
             if (logger.isEnabled(LogLevel.DEBUG)) {
                 logger.debug("build-id $1$l, build-info.xml : %2$s",
-                        instantRunBuildContext.getBuildId(), xml);
+                        buildContext.getBuildId(), xml);
             }
             Files.createParentDirs(buildInfoFile);
             Files.write(xml, buildInfoFile, Charsets.UTF_8);
@@ -81,17 +82,17 @@ public class BuildInfoWriterTask extends BaseTask {
         // Record instant run status in analytics for this build
         ProcessProfileWriter.getGlobalProperties()
                 .setInstantRunStatus(
-                        InstantRunAnalyticsHelper.generateAnalyticsProto(instantRunBuildContext));
+                        InstantRunAnalyticsHelper.generateAnalyticsProto(buildContext));
     }
 
     public static class ConfigAction implements TaskConfigAction<BuildInfoWriterTask> {
 
         public static File getBuildInfoFile(@NonNull InstantRunVariantScope scope) {
-            return new File(scope.getRestartDexOutputFolder(), "build-info.xml");
+            return new File(scope.getBuildInfoOutputFolder(), "build-info.xml");
         }
 
         public static File getTmpBuildInfoFile(@NonNull InstantRunVariantScope scope) {
-            return new File(scope.getRestartDexOutputFolder(), "tmp-build-info.xml");
+            return new File(scope.getBuildInfoOutputFolder(), "tmp-build-info.xml");
         }
 
 
@@ -124,7 +125,7 @@ public class BuildInfoWriterTask extends BaseTask {
             task.setVariantName(variantScope.getFullVariantName());
             task.buildInfoFile = getBuildInfoFile(variantScope);
             task.tmpBuildInfoFile = getTmpBuildInfoFile(variantScope);
-            task.instantRunBuildContext = variantScope.getInstantRunBuildContext();
+            task.buildContext = variantScope.getInstantRunBuildContext();
             task.logger = logger;
         }
     }

@@ -20,8 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AppExtension;
 import com.android.build.gradle.AppPlugin;
-import com.android.build.gradle.AtomExtension;
-import com.android.build.gradle.AtomPlugin;
 import com.android.build.gradle.BaseExtension;
 import com.android.build.gradle.LibraryExtension;
 import com.android.build.gradle.LibraryPlugin;
@@ -42,7 +40,6 @@ public class TestProjects {
     public enum Plugin {
         APP("com.android.application", AppPlugin.class, AppExtension.class),
         LIBRARY("com.android.library", LibraryPlugin.class, LibraryExtension.class),
-        ATOM("com.android.atom", AtomPlugin.class, AtomExtension.class),
         ;
 
         @NonNull private final String pluginName;

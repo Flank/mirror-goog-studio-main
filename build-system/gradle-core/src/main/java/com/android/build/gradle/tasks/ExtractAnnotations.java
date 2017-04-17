@@ -18,6 +18,9 @@ package com.android.build.gradle.tasks;
 
 import static com.android.SdkConstants.DOT_JAVA;
 import static com.android.SdkConstants.UTF_8;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.EXTERNAL;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -42,10 +45,12 @@ import com.intellij.psi.PsiJavaFile;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.Set;
-import java.util.concurrent.Callable;
-import org.gradle.api.Project;
+import org.gradle.api.artifacts.ArtifactCollection;
+import org.gradle.api.artifacts.component.ComponentIdentifier;
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
+import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.EmptyFileVisitor;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileVisitDetails;
 import org.gradle.api.file.RelativePath;
 import org.gradle.api.logging.LogLevel;
@@ -53,6 +58,7 @@ import org.gradle.api.plugins.BasePlugin;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.InputFile;
+import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.ParallelizableTask;
@@ -96,6 +102,8 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
 
     private boolean allowErrors = false;
 
+    private ArtifactCollection libraries;
+
     public BaseVariantData getVariant() {
         return variant;
     }
@@ -113,6 +121,11 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
 
     public void setBootClasspath(List<String> bootClasspath) {
         this.bootClasspath = bootClasspath;
+    }
+
+    @InputFiles
+    public FileCollection getLibraries() {
+        return libraries.getArtifactFiles();
     }
 
     /** The output .zip file to write the annotations database to, if any */
@@ -279,7 +292,23 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
 
     @Input
     public boolean hasAndroidAnnotations() {
-        return variant.getVariantDependency().isAnnotationsPresent();
+        for (ResolvedArtifactResult artifact : libraries.getArtifacts()) {
+            ComponentIdentifier id = artifact.getId()
+                    .getComponentIdentifier();
+            // because we only ask for external dependencies, we should be able to cast
+            // this always
+            if (id instanceof ModuleComponentIdentifier) {
+                ModuleComponentIdentifier moduleId = (ModuleComponentIdentifier) id;
+
+                if (moduleId.getModule().equals("support-annotations") &&
+                        moduleId.getGroup().equals("com.android.support")) {
+                    return true;
+                }
+            }
+
+        }
+
+        return false;
     }
 
     @NonNull
@@ -307,15 +336,12 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
 
     public static class ConfigAction implements TaskConfigAction<ExtractAnnotations> {
 
-        @NonNull private Project project;
         @NonNull private AndroidConfig extension;
         @NonNull private VariantScope variantScope;
 
         public ConfigAction(
-                @NonNull Project project,
                 @NonNull AndroidConfig extension,
                 @NonNull VariantScope variantScope) {
-            this.project = project;
             this.extension = extension;
             this.variantScope = variantScope;
         }
@@ -354,9 +380,10 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
             task.setEncoding(extension.getCompileOptions().getEncoding());
             task.setSourceCompatibility(
                     extension.getCompileOptions().getSourceCompatibility().toString());
+            task.setClasspath(variantScope.getJavaClasspath(COMPILE_CLASSPATH, CLASSES));
 
-            task.setClasspath(project.files((Callable<Set<File>>) () ->
-                    androidBuilder.getCompileClasspath(variantConfig)));
+            task.libraries = variantScope.getArtifactCollection(
+                    COMPILE_CLASSPATH, EXTERNAL, CLASSES);
 
             // Setup the boot classpath just before the task actually runs since this will
             // force the sdk to be parsed. (Same as in compileTask)

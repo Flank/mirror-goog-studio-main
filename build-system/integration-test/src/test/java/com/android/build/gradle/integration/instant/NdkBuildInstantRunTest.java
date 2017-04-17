@@ -28,6 +28,7 @@ import com.android.build.gradle.integration.common.fixture.TemporaryProjectModif
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
+import com.android.build.gradle.options.StringOption;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
@@ -94,7 +95,7 @@ public class NdkBuildInstantRunTest {
     public void checkHotSwapBuild() throws Exception {
         project.executor()
                 .withInstantRun(new AndroidVersion(23, null))
-                .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "x86")
+                .with(StringOption.IDE_BUILD_TARGET_ABI, "x86")
                 .run("clean", "assembleDebug");
 
         AndroidProject model = project.model().getSingle().getOnlyModel();
@@ -112,7 +113,7 @@ public class NdkBuildInstantRunTest {
 
                     project.executor()
                             .withInstantRun(new AndroidVersion(23, null))
-                            .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "x86")
+                            .with(StringOption.IDE_BUILD_TARGET_ABI, "x86")
                             .run("assembleDebug");
                     InstantRunBuildInfo context = InstantRunTestUtils.loadContext(instantRunModel);
                     assertThat(context.getVerifierStatus())
@@ -124,7 +125,7 @@ public class NdkBuildInstantRunTest {
     public void checkFullBuildIsTriggered() throws Exception {
         project.executor()
                 .withInstantRun(new AndroidVersion(23, null))
-                .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "x86")
+                .with(StringOption.IDE_BUILD_TARGET_ABI, "x86")
                 .run("clean", "assembleDebug");
 
         AndroidProject model = project.model().getSingle().getOnlyModel();
@@ -137,7 +138,7 @@ public class NdkBuildInstantRunTest {
 
         project.executor()
                 .withInstantRun(new AndroidVersion(23, null))
-                .withProperty(AndroidProject.PROPERTY_BUILD_ABI, "x86")
+                .with(StringOption.IDE_BUILD_TARGET_ABI, "x86")
                 .run("assembleDebug");
         InstantRunBuildInfo context = InstantRunTestUtils.loadContext(instantRunModel);
         assertThat(context.getVerifierStatus())

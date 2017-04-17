@@ -13,6 +13,7 @@ android {
     defaultConfig {
     }
 
+    flavorDimensions 'foo'
     productFlavors {
         f1 {
             applicationId = "com.android.tests.flavored.f1"

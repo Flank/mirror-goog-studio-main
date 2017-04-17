@@ -17,8 +17,8 @@
 package com.android.builder.symbols;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.concurrency.Immutable;
-import com.android.builder.dependency.HashCodeUtils;
+import com.android.resources.ResourceType;
+import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
@@ -27,20 +27,19 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import javax.lang.model.SourceVersion;
 
 /**
- * List of symbols identifying resources in an Android application. Symbol tables do not only
- * exist for applications: they can be used for other building blocks for applications, such as
- * libraries or atoms.
+ * List of symbols identifying resources in an Android application. Symbol tables do not only exist
+ * for applications: they can be used for other building blocks for applications, such as libraries
+ * or atoms.
  *
- * <p>A symbol table keeps a list of instances of {@link Symbol}, each one with a unique pair
- * class / name. Tables have one main attribute: a package name. This should be unique and
- * are used to generate the {@code R.java} file.
+ * <p>A symbol table keeps a list of instances of {@link Symbol}, each one with a unique pair class
+ * / name. Tables have one main attribute: a package name. This should be unique and are used to
+ * generate the {@code R.java} file.
  */
-@Immutable
-public class SymbolTable {
+@AutoValue
+public abstract class SymbolTable {
 
     /**
      * Name of {@code R} class.
@@ -48,26 +47,14 @@ public class SymbolTable {
     static final String R_CLASS_NAME = "R";
 
     /**
-     * All symbols mapped by IDs (see {@link #key(Symbol)}.
-     */
-    @NonNull
-    private final ImmutableMap<String, Symbol> symbols;
-
-    /**
-     * The table package. An empty package means the default package.
-     */
-    @NonNull
-    private final String tablePackage;
-
-    /**
      * Creates a new symbol table.
      *
      * @param tablePackage the table package
      * @param symbols the table symbol mapped by {@link #key(Symbol)}
      */
-    private SymbolTable(@NonNull String tablePackage, @NonNull Map<String, Symbol> symbols) {
-        this.symbols = ImmutableMap.copyOf(symbols);
-        this.tablePackage = tablePackage;
+    private static SymbolTable createSymbolTable(
+            @NonNull String tablePackage, @NonNull Map<String, Symbol> symbols) {
+        return new AutoValue_SymbolTable(tablePackage, ImmutableMap.copyOf(symbols));
     }
 
     /**
@@ -76,10 +63,9 @@ public class SymbolTable {
      * @return the table package
      */
     @NonNull
-    public String getTablePackage() {
-        return tablePackage;
-    }
+    public abstract String getTablePackage();
 
+    public abstract ImmutableMap<String, Symbol> getSymbols();
     /**
      * Obtains a unique key for a symbol.
      *
@@ -99,8 +85,8 @@ public class SymbolTable {
      * @return the unique ID
      */
     @NonNull
-    private static String key(@NonNull String resourceType, @NonNull String name) {
-        return resourceType + " " + name;
+    private static String key(@NonNull ResourceType resourceType, @NonNull String name) {
+        return resourceType.name() + " " + name;
     }
 
     /**
@@ -110,8 +96,8 @@ public class SymbolTable {
      * @param name the name
      * @return does the table contain a symbol with the given resource type / name?
      */
-    public boolean contains(@NonNull String resourceType, @NonNull String name) {
-        return symbols.containsKey(key(resourceType, name));
+    public boolean contains(@NonNull ResourceType resourceType, @NonNull String name) {
+        return getSymbols().containsKey(key(resourceType, name));
     }
 
     /**
@@ -121,27 +107,7 @@ public class SymbolTable {
      */
     @NonNull
     public ImmutableCollection<Symbol> allSymbols() {
-        return symbols.values();
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == this) {
-            return true;
-        }
-
-        if (!(obj instanceof SymbolTable)) {
-            return false;
-        }
-
-        SymbolTable other = (SymbolTable) obj;
-        return Objects.equals(symbols, other.symbols)
-                && Objects.equals(tablePackage, other.tablePackage);
-    }
-
-    @Override
-    public int hashCode() {
-        return HashCodeUtils.hashCode(symbols, tablePackage);
+        return getSymbols().values();
     }
 
     /**
@@ -156,10 +122,10 @@ public class SymbolTable {
     @NonNull
     public SymbolTable filter(@NonNull SymbolTable table) {
         SymbolTable.Builder stb = builder();
-        stb.tablePackage(tablePackage);
+        stb.tablePackage(getTablePackage());
 
-        for (Map.Entry<String, Symbol> e : symbols.entrySet()) {
-            if (table.symbols.containsKey(e.getKey())) {
+        for (Map.Entry<String, Symbol> e : getSymbols().entrySet()) {
+            if (table.getSymbols().containsKey(e.getKey())) {
                 stb.symbols.put(e.getKey(), e.getValue());
             }
         }
@@ -234,10 +200,8 @@ public class SymbolTable {
         return new Builder();
     }
 
-    /**
-     * Builder that creates a symbol table.
-     */
-    public static class Builder {
+    /** Builder that creates a symbol table. */
+    public static final class Builder {
 
         /**
          * Current table package.
@@ -328,7 +292,7 @@ public class SymbolTable {
          */
         @NonNull
         public SymbolTable build() {
-            return new SymbolTable(tablePackage, symbols);
+            return createSymbolTable(tablePackage, symbols);
         }
     }
 }

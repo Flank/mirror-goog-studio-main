@@ -18,6 +18,7 @@
             <tr><td>dexOptions</td></tr>
             <tr><td>externalNativeBuild</td></tr>
             <tr><td>flavorDimensionList</td></tr>
+            <tr><td>flavorSelection</td></tr>
             <tr><td>generatePureSplits</td></tr>
             <tr><td>jacoco</td></tr>
             <tr><td>dataBinding</td></tr>
@@ -25,7 +26,6 @@
             <tr><td>ndkDirectory</td></tr>
             <tr><td>packagingOptions</td></tr>
             <tr><td>productFlavors</td></tr>
-            <tr><td>publishNonDefault</td></tr>
             <tr><td>resourcePrefix</td></tr>
             <tr><td>sdkDirectory</td></tr>
             <tr><td>signingConfigs</td></tr>

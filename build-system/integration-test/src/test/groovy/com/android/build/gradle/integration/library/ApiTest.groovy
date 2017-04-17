@@ -65,6 +65,6 @@ class ApiTest {
         assertThat(TestFileUtils.sha1NormalizedLineEndings(project.file("app/build.gradle")))
                 .isEqualTo("73f4266bf1cf99d3257112d4f46da19060079163")
         assertThat(TestFileUtils.sha1NormalizedLineEndings(project.file("lib/build.gradle")))
-                .isEqualTo("f908668309ebe8e45fdf1f2eefb15803db6e844e")
+                .isEqualTo("446a4840e3d4542e039a25267cd9a6ed726e3529")
     }
 }

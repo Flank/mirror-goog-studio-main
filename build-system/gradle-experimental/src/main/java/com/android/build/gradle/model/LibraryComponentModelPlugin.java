@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.profile.ProfilerInitializer;
+import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.variant.LibraryVariantFactory;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.options.ProjectOptions;
@@ -71,6 +72,7 @@ public class LibraryComponentModelPlugin implements Plugin<Project> {
 
         @Model(TASK_MANAGER)
         public static TaskManager createTaskManager(
+                GlobalScope globalScope,
                 AndroidConfig androidExtension,
                 Project project,
                 ProjectOptions projectOptions,
@@ -86,25 +88,27 @@ public class LibraryComponentModelPlugin implements Plugin<Project> {
                     sdkHandler);
 
             return new LibraryComponentTaskManager(
+                    globalScope,
                     project,
                     projectOptions,
                     androidBuilder,
                     dataBindingBuilder,
                     androidExtension,
                     sdkHandler,
-                    ndkHandler,
                     dependencyManager,
                     toolingRegistry,
-                    ThreadRecorder.get());
+                    ThreadRecorder.get(),
+                    globalScope.getBuildCache());
         }
 
         @Model
         public static VariantFactory createVariantFactory(
+                GlobalScope globalScope,
                 ServiceRegistry serviceRegistry,
                 AndroidBuilder androidBuilder,
                 AndroidConfig extension) {
             Instantiator instantiator = serviceRegistry.get(Instantiator.class);
-            return new LibraryVariantFactory(instantiator, androidBuilder, extension);
+            return new LibraryVariantFactory(globalScope, androidBuilder, instantiator, extension);
         }
     }
 }

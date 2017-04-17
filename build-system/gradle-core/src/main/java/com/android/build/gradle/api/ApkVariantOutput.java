@@ -16,12 +16,10 @@
 
 package com.android.build.gradle.api;
 
-import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.OutputFile;
 import com.android.build.gradle.tasks.PackageAndroidArtifact;
-import com.android.build.gradle.tasks.ZipAlign;
-import java.io.File;
+import org.gradle.api.Task;
 
 /**
  * A variant output for apk-generating variants.
@@ -34,14 +32,9 @@ public interface ApkVariantOutput extends BaseVariantOutput {
     @Nullable
     PackageAndroidArtifact getPackageApplication();
 
-    /**
-     * Returns the Zip align task.
-     */
+    /** Returns the Zip align task. */
     @Nullable
-    ZipAlign getZipAlign();
-
-    @NonNull
-    ZipAlign createZipAlignTask(@NonNull String taskName, @NonNull File inputFile, @NonNull File outputFile);
+    Task getZipAlign();
 
     /**
      * Sets the version code override. This version code will only affect this output.
@@ -90,4 +83,11 @@ public interface ApkVariantOutput extends BaseVariantOutput {
      * @return the filter value.
      */
     String getFilter(OutputFile.FilterType filterType);
+
+    /**
+     * Sets the output file name for this variant output.
+     *
+     * @param outputFileName the new file name.
+     */
+    void setOutputFileName(String outputFileName);
 }

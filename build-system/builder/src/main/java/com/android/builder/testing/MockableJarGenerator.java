@@ -80,11 +80,10 @@ public class MockableJarGenerator {
                 "Output file [%s] already exists.",
                 output.getAbsolutePath());
 
-        JarFile androidJar = null;
-        JarOutputStream outputStream = null;
-        try {
-            androidJar = new JarFile(input);
-            outputStream = new JarOutputStream(new BufferedOutputStream(new FileOutputStream(output)));
+        try (JarFile androidJar = new JarFile(input);
+                JarOutputStream outputStream =
+                        new JarOutputStream(
+                                new BufferedOutputStream(new FileOutputStream(output)))) {
 
             for (JarEntry entry : Collections.list(androidJar.entries())) {
                 InputStream inputStream = androidJar.getInputStream(entry);
@@ -93,21 +92,23 @@ public class MockableJarGenerator {
                     if (!skipClass(entry.getName().replace("/", "."))) {
                         rewriteClass(entry, inputStream, outputStream);
                     }
-                } else {
+                } else if (!skipEntry(entry)) {
                     outputStream.putNextEntry(entry);
                     ByteStreams.copy(inputStream, outputStream);
                 }
 
                 inputStream.close();
             }
-        } finally {
-            if (androidJar != null) {
-                androidJar.close();
-            }
-            if (outputStream != null) {
-                outputStream.close();
-            }
         }
+    }
+
+    private static boolean skipEntry(JarEntry entry) {
+        String name = entry.getName();
+        return name.endsWith("/")
+                || name.startsWith("res/")
+                || name.startsWith("assets/")
+                || name.equals("AndroidManifest.xml")
+                || name.equals("resources.arsc");
     }
 
     private boolean skipClass(String className) {

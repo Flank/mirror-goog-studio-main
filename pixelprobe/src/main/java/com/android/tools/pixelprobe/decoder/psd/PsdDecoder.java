@@ -16,20 +16,18 @@
 
 package com.android.tools.pixelprobe.decoder.psd;
 
+import static com.android.tools.pixelprobe.decoder.psd.PsdFile.Header;
+
 import com.android.tools.chunkio.ChunkIO;
 import com.android.tools.pixelprobe.Image;
 import com.android.tools.pixelprobe.decoder.Decoder;
-
 import java.io.IOException;
 import java.io.InputStream;
 
-import static com.android.tools.pixelprobe.decoder.psd.PsdFile.Header;
-
 /**
- * Decodes PSD (Adobe Photoshop) streams. Accepts the "psd" and "photoshop"
- * format strings. The PSB variant of the Photoshop format, used to store
- * large images (> 30,000 pixels in either dimension), is currently not
- * supported.
+ * Decodes PSD (Adobe Photoshop) streams. Accepts the "psd" and "photoshop" format strings. The PSB
+ * variant of the Photoshop format, used to store large images (&gt; 30,000 pixels in either
+ * dimension), is currently not supported.
  */
 public final class PsdDecoder extends Decoder {
     /**

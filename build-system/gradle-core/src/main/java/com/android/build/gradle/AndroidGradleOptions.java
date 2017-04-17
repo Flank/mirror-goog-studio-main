@@ -18,17 +18,15 @@ package com.android.build.gradle;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.repository.api.Channel;
 import com.android.sdklib.AndroidVersion;
-import com.google.common.collect.Maps;
 import java.io.File;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Map;
 import java.util.StringTokenizer;
 import org.gradle.api.Project;
 
@@ -40,30 +38,9 @@ import org.gradle.api.Project;
 @Deprecated
 public class AndroidGradleOptions {
 
-    private static final boolean DEFAULT_ENABLE_AAPT2 = false;
-
-    public static final String PROPERTY_TEST_RUNNER_ARGS =
-            "android.testInstrumentationRunnerArguments.";
-
-    public static final String PROPERTY_THREAD_POOL_SIZE = "android.threadPoolSize";
-    public static final String PROPERTY_THREAD_POOL_SIZE_OLD = "com.android.build.threadPoolSize";
-
     public static final String USE_DEPRECATED_NDK = "android.useDeprecatedNdk";
 
-    public static final String PROPERTY_DISABLE_RESOURCE_VALIDATION =
-            "android.disableResourceValidation";
-
-    public static final String PROPERTY_INCREMENTAL_JAVA_COMPILE =
-            "android.incrementalJavaCompile";
-
-    public static final String DEPRECATED_NDK_COMPILE_LEASE = "android.deprecatedNdkCompileLease";
-    public static final long DEPRECATED_NDK_COMPILE_LEASE_DAYS = 60;
-    public static final long DEPRECATED_NDK_COMPILE_LEASE_MILLIS =
-            DEPRECATED_NDK_COMPILE_LEASE_DAYS * 24 * 60 * 60 * 1000;
-
     public static final String PROPERTY_KEEP_TIMESTAMPS_IN_APK = "android.keepTimestampsInApk";
-
-    public static final String PROPERTY_ENABLE_AAPT2 = "android.enableAapt2";
 
     public static final String ANDROID_ADVANCED_PROFILING_TRANSFORMS =
             "android.advanced.profiling.transforms";
@@ -78,23 +55,6 @@ public class AndroidGradleOptions {
     public static  final String PROPERTY_USE_SDK_DOWNLOAD =
             "android.builder.sdkDownload";
 
-    public static final String PROPERTY_BUILD_CACHE_DIR = "android.buildCacheDir";
-
-    public static final String PROPERTY_USE_DEX_ARCHIVE = "android.useDexArchive";
-
-    /**
-     * Build cache is used for dependency resolution, and for keeping the intermediate artifacts,
-     * such as pre-dexed libraries. Setting this property to {@code false} disables it, which is
-     * useful for e.g. performance benchmarks.
-     */
-    public static final String ENABLE_INTERMEDIATE_ARTIFACTS_CACHE =
-            "android.enableIntermediateArtifactsCache";
-
-    /**
-     * Set to true to delay dependency resolution to task execution.
-     */
-    public static final String PROPERTY_ENABLE_IMPROVED_DEPENDENCY_RESOLUTION =
-            "android.enableImprovedDependenciesResolution";
 
     public static final String GRADLE_VERSION_CHECK_OVERRIDE_PROPERTY =
             "android.overrideVersionCheck";
@@ -109,21 +69,6 @@ public class AndroidGradleOptions {
 
     public static boolean getUseSdkDownload(@NonNull Project project) {
         return getBoolean(project, PROPERTY_USE_SDK_DOWNLOAD, true) && !invokedFromIde(project);
-    }
-
-    @NonNull
-    public static Map<String, String> getExtraInstrumentationTestRunnerArgs(@NonNull Project project) {
-        Map<String, String> argsMap = Maps.newHashMap();
-        for (Map.Entry<String, ?> entry : project.getProperties().entrySet()) {
-            if (entry.getKey().startsWith(PROPERTY_TEST_RUNNER_ARGS)) {
-                String argName = entry.getKey().substring(PROPERTY_TEST_RUNNER_ARGS.length());
-                String argValue = entry.getValue().toString();
-
-                argsMap.put(argName, argValue);
-            }
-        }
-
-        return argsMap;
     }
 
     public static boolean getShardAndroidTestsBetweenDevices(@NonNull Project project) {
@@ -151,16 +96,8 @@ public class AndroidGradleOptions {
         return getBoolean(project, AndroidProject.PROPERTY_BUILD_MODEL_ONLY_ADVANCED);
     }
 
-    public static boolean generateSourcesOnly(@NonNull Project project) {
-        return getBoolean(project, AndroidProject.PROPERTY_GENERATE_SOURCES_ONLY);
-    }
-
     public static boolean keepTimestampsInApk(@NonNull Project project) {
         return getBoolean(project, PROPERTY_KEEP_TIMESTAMPS_IN_APK);
-    }
-
-    public static boolean isAapt2Enabled(@NonNull Project project) {
-        return getBoolean(project, PROPERTY_ENABLE_AAPT2, DEFAULT_ENABLE_AAPT2);
     }
 
     public static boolean getTestOnly(@NonNull Project project) {
@@ -255,69 +192,6 @@ public class AndroidGradleOptions {
         return getBoolean(project, USE_DEPRECATED_NDK);
     }
 
-    public static long getFreshDeprecatedNdkCompileLease() {
-        return Instant.now().toEpochMilli();
-    }
-
-    public static boolean isDeprecatedNdkCompileLeaseExpired(@NonNull Project project) {
-        Long leaseDate = getLong(project, DEPRECATED_NDK_COMPILE_LEASE);
-        if (leaseDate == null) {
-            // There is no lease so it is expired by definition
-            return true;
-        }
-        long freshLease = getFreshDeprecatedNdkCompileLease();
-        if (freshLease - leaseDate > DEPRECATED_NDK_COMPILE_LEASE_MILLIS) {
-            // There is a lease but it expired
-            return true;
-        }
-        if (leaseDate > freshLease) {
-            // The lease date is set too far in the future so it is expired by definition
-            return true;
-        }
-        return false;
-    }
-
-    @Nullable
-    public static Integer getThreadPoolSize(@NonNull Project project) {
-        Integer size = getInteger(project, PROPERTY_THREAD_POOL_SIZE);
-        if (size == null) {
-            size = getInteger(project, PROPERTY_THREAD_POOL_SIZE_OLD);
-        }
-
-        return size;
-    }
-
-    @Nullable
-    public static SigningOptions getSigningOptions(@NonNull Project project) {
-        String signingStoreFile =
-                getString(project, AndroidProject.PROPERTY_SIGNING_STORE_FILE);
-        String signingStorePassword =
-                getString(project, AndroidProject.PROPERTY_SIGNING_STORE_PASSWORD);
-        String signingKeyAlias =
-                getString(project, AndroidProject.PROPERTY_SIGNING_KEY_ALIAS);
-        String signingKeyPassword =
-                getString(project, AndroidProject.PROPERTY_SIGNING_KEY_PASSWORD);
-
-        if (signingStoreFile != null
-                && signingStorePassword != null
-                && signingKeyAlias != null
-                && signingKeyPassword != null) {
-            String signingStoreType =
-                    getString(project, AndroidProject.PROPERTY_SIGNING_STORE_TYPE);
-
-            return new SigningOptions(
-                    signingStoreFile,
-                    signingStorePassword,
-                    signingKeyAlias,
-                    signingKeyPassword,
-                    signingStoreType,
-                    getOptionalBoolean(project, AndroidProject.PROPERTY_SIGNING_V1_ENABLED),
-                    getOptionalBoolean(project, AndroidProject.PROPERTY_SIGNING_V2_ENABLED));
-        }
-
-        return null;
-    }
-
     @NonNull
     public static EnumSet<OptionalCompilationStep> getOptionalCompilationSteps(
             @NonNull Project project) {
@@ -334,26 +208,11 @@ public class AndroidGradleOptions {
         return EnumSet.noneOf(OptionalCompilationStep.class);
     }
 
-    public static boolean isResourceValidationEnabled(@NonNull Project project) {
-        return !getBoolean(project, PROPERTY_DISABLE_RESOURCE_VALIDATION);
-    }
-
-    @Nullable
-    public static Integer getVersionCodeOverride(@NonNull Project project) {
-        return getInteger(project, AndroidProject.PROPERTY_VERSION_CODE);
-    }
-
-    @Nullable
-    public static String getVersionNameOverride(@NonNull Project project) {
-        return getString(project, AndroidProject.PROPERTY_VERSION_NAME);
-    }
-
     public static boolean isImprovedDependencyResolutionEnabled(@NonNull Project project) {
-        return getBoolean(project, PROPERTY_ENABLE_IMPROVED_DEPENDENCY_RESOLUTION, true);
-    }
-
-    public static boolean isIntermediateArtifactsCacheEnabled(@NonNull Project project) {
-        return getBoolean(project, ENABLE_INTERMEDIATE_ARTIFACTS_CACHE, true);
+        return getBoolean(
+                project,
+                BooleanOption.ENABLE_IMPROVED_DEPENDENCY_RESOLUTION.getPropertyName(),
+                BooleanOption.ENABLE_IMPROVED_DEPENDENCY_RESOLUTION.getDefaultValue());
     }
 
     @Nullable
@@ -393,17 +252,6 @@ public class AndroidGradleOptions {
         return getBoolean(project, propertyName, false /*defaultValue*/);
     }
 
-    @Nullable
-    private static Boolean getOptionalBoolean(
-            @NonNull Project project,
-            @NonNull String propertyName) {
-        if (project.hasProperty(propertyName)) {
-            return getBoolean(project, propertyName);
-        } else {
-            return null;
-        }
-    }
-
     private static boolean getBoolean(
             @NonNull Project project,
             @NonNull String propertyName,
@@ -418,10 +266,6 @@ public class AndroidGradleOptions {
         }
 
         return defaultValue;
-    }
-
-    public static boolean isJavaCompileIncrementalPropertySet(@NonNull Project project) {
-        return project.hasProperty(PROPERTY_INCREMENTAL_JAVA_COMPILE);
     }
 
     @NonNull
@@ -467,30 +311,4 @@ public class AndroidGradleOptions {
         }
     }
 
-    public static class SigningOptions {
-        @NonNull public final String storeFile;
-        @NonNull public final String storePassword;
-        @NonNull public final String keyAlias;
-        @NonNull public final String keyPassword;
-        @Nullable public final String storeType;
-        @Nullable public final Boolean v1Enabled;
-        @Nullable public final Boolean v2Enabled;
-
-        SigningOptions(
-                @NonNull String storeFile,
-                @NonNull String storePassword,
-                @NonNull String keyAlias,
-                @NonNull String keyPassword,
-                @Nullable String storeType,
-                @Nullable Boolean v1Enabled,
-                @Nullable Boolean v2Enabled) {
-            this.storeFile = storeFile;
-            this.storeType = storeType;
-            this.storePassword = storePassword;
-            this.keyAlias = keyAlias;
-            this.keyPassword = keyPassword;
-            this.v1Enabled = v1Enabled;
-            this.v2Enabled = v2Enabled;
-        }
-    }
 }

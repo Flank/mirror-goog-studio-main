@@ -67,15 +67,9 @@ public class GenerateSourcesOnlyTest {
 
         GradleBuildResult result =
                 project.executor()
-                        .withArgument("-Pandroid.injected.generateSourcesOnly=true")
                         .run(generateSources);
 
         assertThat(result.getStdout()).doesNotContain("compileDebugJava");
         assertThat(result.getStdout()).doesNotContain("compileReleaseJava");
-
-        GradleBuildResult resultWithout = project.executor()
-                .run(generateSources);
-
-        assertThat(resultWithout.getStdout()).contains("compileReleaseJava");
     }
 }

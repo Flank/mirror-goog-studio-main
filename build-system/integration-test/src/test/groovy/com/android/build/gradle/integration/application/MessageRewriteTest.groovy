@@ -17,27 +17,22 @@
 package com.android.build.gradle.integration.application
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult
+import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.TemporaryProjectModification
-import com.android.builder.model.AndroidProject
+import com.android.build.gradle.options.BooleanOption
 import com.android.utils.FileUtils
 import com.android.utils.SdkUtils
-
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
-
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import groovy.transform.CompileStatic
 import org.junit.BeforeClass
 import org.junit.ClassRule
 import org.junit.Test
 
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 /**
  * Tests the error message rewriting logic.
  */
 @CompileStatic
 class MessageRewriteTest {
-
-    private static List<String> INVOKED_FROM_IDE_ARGS =
-            Collections.singletonList("-P" + AndroidProject.PROPERTY_INVOKED_FROM_IDE + "=true")
 
     @ClassRule
     static public GradleTestProject project = GradleTestProject.builder()
@@ -54,8 +49,11 @@ class MessageRewriteTest {
     public void "invalid layout file"() {
         TemporaryProjectModification.doTest(project) {
             it.replaceInFile("src/main/res/layout/main.xml", "</LinearLayout>", "");
-            GradleBuildResult result = project.executor().withArguments(INVOKED_FROM_IDE_ARGS)
-                    .expectFailure().run('assembleF1Debug')
+            GradleBuildResult result =
+                    project.executor()
+                            .with(BooleanOption.IDE_INVOKED_FROM_IDE, true)
+                            .expectFailure()
+                            .run("assembleF1Debug")
             assertThat(result.getStderr()).contains(SdkUtils.escapePropertyValue(FileUtils.join(
                     "src", "main", "res", "layout", "main.xml")))
         }

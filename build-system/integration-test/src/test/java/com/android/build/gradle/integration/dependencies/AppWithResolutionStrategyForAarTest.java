@@ -18,16 +18,12 @@ package com.android.build.gradle.integration.dependencies;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.COORDINATES;
-import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.GRADLE_PATH;
-import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.ANDROID;
-import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
-import com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Items;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidArtifact;
@@ -60,38 +56,34 @@ public class AppWithResolutionStrategyForAarTest {
                 "subprojects {\n" +
                 "    apply from: \"$rootDir/../commonLocalRepo.gradle\"\n" +
                 "}\n");
-        appendToFile(project.getSubproject("app").getBuildFile(),
-                "\n" +
-                "\n" +
-                "dependencies {\n" +
-                "    debugCompile project(\":library\")\n" +
-                "    releaseCompile project(\":library\")\n" +
-                "}\n" +
-                "\n" +
-                "configurations {\n" +
-                "  _debugCompile\n" +
-                "  _debugApk\n" +
-                "}\n" +
-                "\n" +
-                "configurations._debugCompile {\n" +
-                "  resolutionStrategy {\n" +
-                "    eachDependency { DependencyResolveDetails details ->\n" +
-                "      if (details.requested.name == \"jdeferred-android-aar\") {\n" +
-                "        details.useVersion \"1.2.2\"\n" +
-                "      }\n" +
-                "    }\n" +
-                "  }\n" +
-                "}\n" +
-                "configurations._debugApk {\n" +
-                "  resolutionStrategy {\n" +
-                "    eachDependency { DependencyResolveDetails details ->\n" +
-                "      if (details.requested.name == \"jdeferred-android-aar\") {\n" +
-                "        details.useVersion \"1.2.2\"\n" +
-                "      }\n" +
-                "    }\n" +
-                "  }\n" +
-                "}\n" +
-                "\n");
+        appendToFile(
+                project.getSubproject("app").getBuildFile(),
+                "\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    debugCompile project(\":library\")\n"
+                        + "    releaseCompile project(\":library\")\n"
+                        + "}\n"
+                        + "\n"
+                        + "android.applicationVariants.all { variant ->\n"
+                        + "  if (variant.buildType.name == \"debug\") {\n"
+                        + "    variant.getCompileConfiguration().resolutionStrategy {\n"
+                        + "      eachDependency { DependencyResolveDetails details ->\n"
+                        + "        if (details.requested.name == \"jdeferred-android-aar\") {\n"
+                        + "          details.useVersion \"1.2.2\"\n"
+                        + "        }\n"
+                        + "      }\n"
+                        + "    }\n"
+                        + "    variant.getRuntimeConfiguration().resolutionStrategy {\n"
+                        + "      eachDependency { DependencyResolveDetails details ->\n"
+                        + "        if (details.requested.name == \"jdeferred-android-aar\") {\n"
+                        + "          details.useVersion \"1.2.2\"\n"
+                        + "        }\n"
+                        + "      }\n"
+                        + "    }\n"
+                        + "  }\n"
+                        + "}\n"
+                        + "\n");
 
         TestFileUtils.appendToFile(project.getSubproject("library").getBuildFile(),
                 "\n" +
@@ -130,15 +122,8 @@ public class AppWithResolutionStrategyForAarTest {
 
         DependencyGraphs artifactCompileGraph = appArtifact.getDependencyGraphs();
 
-        Items moduleDeps = helper.on(artifactCompileGraph).withType(MODULE);
-        assertThat(moduleDeps.mapTo(GRADLE_PATH))
+        assertThat(helper.on(artifactCompileGraph).mapTo(COORDINATES))
                 .named("module dependencies of " + variantName)
-                .containsExactly(":library");
-
-        Items transitiveLibs = moduleDeps.getTransitiveFromSingleItem();
-
-        assertThat(transitiveLibs.withType(ANDROID).mapTo(COORDINATES))
-                .named("transitive libs of single direct module of " + variantName)
-                .containsExactly(aarCoodinate);
+                .containsAllOf(":library::" + variantName, aarCoodinate);
     }
 }

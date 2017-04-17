@@ -26,25 +26,27 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
- * A cache for file contents. The cache allows closing a file and saving in memory its contents
- * (or some related information). It can then be used to check if the contents are still valid
- * at some later time. Typical usage flow is:
+ * A cache for file contents. The cache allows closing a file and saving in memory its contents (or
+ * some related information). It can then be used to check if the contents are still valid at some
+ * later time. Typical usage flow is:
  *
  * <p>
- * <pre>
- *    Object fileRepresentation = // ...
- *    File toWrite = // ...
- *    // Write file contents and update in memory representation
- *    CachedFileContents<Object> contents = new CachedFileContents<Object>(toWrite);
- *    contents.closed(fileRepresentation);
  *
- *    // Later, when data is needed:
- *    if (contents.isValid()) {
- *        fileRepresentation = contents.getCache();
- *    } else {
- *        // Re-read the file and recreate the file representation
- *    }
- * </pre>
+ * <pre>{@code
+ * Object fileRepresentation = // ...
+ * File toWrite = // ...
+ * // Write file contents and update in memory representation
+ * CachedFileContents<Object> contents = new CachedFileContents<Object>(toWrite);
+ * contents.closed(fileRepresentation);
+ *
+ * // Later, when data is needed:
+ * if (contents.isValid()) {
+ *     fileRepresentation = contents.getCache();
+ * } else {
+ *     // Re-read the file and recreate the file representation
+ * }
+ * }</pre>
+ *
  * @param <T> the type of cached contents
  */
 public class CachedFileContents<T> {

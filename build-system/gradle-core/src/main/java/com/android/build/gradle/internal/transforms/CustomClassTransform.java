@@ -30,15 +30,12 @@ import com.android.build.api.transform.Status;
 import com.android.build.api.transform.Transform;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
+import com.android.build.api.transform.TransformOutputProvider;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.utils.FileUtils;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.google.common.hash.HashCode;
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 import java.io.File;
@@ -126,22 +123,16 @@ public class CustomClassTransform extends Transform {
         return true;
     }
 
-    private String getOutputName(File input) {
-        // TODO: Not using FileUtils, because it currently mangles classes.jar names
-        HashFunction hashFunction = Hashing.sha1();
-        HashCode hashCode = hashFunction.hashString(input.getAbsolutePath(), Charsets.UTF_16LE);
-        return hashCode.toString();
-    }
-
     @Override
     public void transform(@NonNull TransformInvocation invocation)
             throws InterruptedException, IOException {
-        assert invocation.getOutputProvider() != null;
+        final TransformOutputProvider outputProvider = invocation.getOutputProvider();
+        assert outputProvider != null;
 
         // Output the resources, we only do this if this is not incremental,
         // as the secondary file is will trigger a full build if modified.
         if (!invocation.isIncremental()) {
-            invocation.getOutputProvider().deleteAll();
+            outputProvider.deleteAll();
 
             // To avoid https://bugs.openjdk.java.net/browse/JDK-7183373
             // we extract the resources directly as a zip file.
@@ -153,10 +144,8 @@ public class CustomClassTransform extends Transform {
                     if (matcher.matches()) {
                         String name = matcher.group(1);
                         File outputJar =
-                                invocation
-                                        .getOutputProvider()
-                                        .getContentLocation(
-                                                name, getOutputTypes(), SCOPE_EXTERNAL, Format.JAR);
+                                outputProvider.getContentLocation(
+                                        name, getOutputTypes(), SCOPE_EXTERNAL, Format.JAR);
                         Files.createParentDirs(outputJar);
                         try (FileOutputStream fos = new FileOutputStream(outputJar)) {
                             ByteStreams.copy(zis, fos);
@@ -174,15 +163,12 @@ public class CustomClassTransform extends Transform {
             for (TransformInput ti : invocation.getInputs()) {
                 for (JarInput jarInput : ti.getJarInputs()) {
                     File inputJar = jarInput.getFile();
-                    String name = getOutputName(inputJar);
                     File outputJar =
-                            invocation
-                                    .getOutputProvider()
-                                    .getContentLocation(
-                                            name,
-                                            jarInput.getContentTypes(),
-                                            jarInput.getScopes(),
-                                            Format.JAR);
+                            outputProvider.getContentLocation(
+                                    jarInput.getName(),
+                                    jarInput.getContentTypes(),
+                                    jarInput.getScopes(),
+                                    Format.JAR);
 
                     if (invocation.isIncremental()) {
                         switch (jarInput.getStatus()) {
@@ -202,16 +188,12 @@ public class CustomClassTransform extends Transform {
                 }
                 for (DirectoryInput di : ti.getDirectoryInputs()) {
                     File inputDir = di.getFile();
-                    String name = getOutputName(inputDir);
                     File outputDir =
-                            invocation
-                                    .getOutputProvider()
-                                    .getContentLocation(
-                                            name,
-                                            di.getContentTypes(),
-                                            di.getScopes(),
-                                            Format.DIRECTORY);
-
+                            outputProvider.getContentLocation(
+                                    di.getName(),
+                                    di.getContentTypes(),
+                                    di.getScopes(),
+                                    Format.DIRECTORY);
                     if (invocation.isIncremental()) {
                         for (Map.Entry<File, Status> entry : di.getChangedFiles().entrySet()) {
                             File inputFile = entry.getKey();
@@ -221,9 +203,8 @@ public class CustomClassTransform extends Transform {
                                 case ADDED:
                                 case CHANGED:
                                     if (!inputFile.isDirectory()
-                                            && inputFile
-                                                    .getName()
-                                                    .endsWith(SdkConstants.DOT_CLASS)) {
+                                            && inputFile.getName()
+                                            .endsWith(SdkConstants.DOT_CLASS)) {
                                         File out = toOutputFile(outputDir, inputDir, inputFile);
                                         transformFile(function, inputFile, out);
                                     }

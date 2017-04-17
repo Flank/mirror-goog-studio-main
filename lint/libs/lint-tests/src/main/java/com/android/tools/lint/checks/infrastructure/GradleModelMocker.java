@@ -28,7 +28,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.FilterData;
-import com.android.build.OutputFile;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidArtifactOutput;
 import com.android.builder.model.AndroidLibrary;
@@ -590,12 +589,6 @@ public class GradleModelMocker {
             when(project.isLibrary()).thenReturn(false);
             when(project.getProjectType()).thenReturn(AndroidProject.PROJECT_TYPE_APP);
             return;
-        } else if (line.equals("apply plugin: 'com.android.atom'")) {
-            when(project.getProjectType()).thenReturn(AndroidProject.PROJECT_TYPE_ATOM);
-            return;
-        } else if (line.equals("apply plugin: 'com.android.instantapp'")) {
-            when(project.getProjectType()).thenReturn(AndroidProject.PROJECT_TYPE_INSTANTAPP);
-            return;
         } else if (line.equals("apply plugin: 'java'")) {
             warn("Can't apply java plugin: There is no builder-model for Java currently");
             return;
@@ -1133,31 +1126,18 @@ public class GradleModelMocker {
         AndroidArtifactOutput artifactOutput = mock(
                 AndroidArtifactOutput.class);
 
-        OutputFile outputFile = mock(OutputFile.class);
         if (filterType.isEmpty()) {
-            when(outputFile.getFilterTypes())
-                    .thenReturn(Collections.emptyList());
-            when(outputFile.getFilters())
-                    .thenReturn(Collections.emptyList());
+            when(artifactOutput.getFilterTypes()).thenReturn(Collections.emptyList());
+            when(artifactOutput.getFilters()).thenReturn(Collections.emptyList());
         } else {
-            when(outputFile.getFilterTypes())
-                    .thenReturn(Collections.singletonList(filterType));
+            when(artifactOutput.getFilterTypes()).thenReturn(Collections.singletonList(filterType));
             List<FilterData> filters = Lists.newArrayList();
             FilterData filter = mock(FilterData.class);
             when(filter.getFilterType()).thenReturn(filterType);
             when(filter.getIdentifier()).thenReturn(identifier);
             filters.add(filter);
-            when(outputFile.getFilters()).thenReturn(filters);
+            when(artifactOutput.getFilters()).thenReturn(filters);
         }
-
-        // Work around wildcard capture
-        //when(artifactOutput.getOutputs()).thenReturn(outputFiles);
-        List<OutputFile> outputFiles = Collections.singletonList(outputFile);
-        OngoingStubbing<? extends Collection<? extends OutputFile>> when = when(
-                artifactOutput.getOutputs());
-        //noinspection unchecked,RedundantCast
-        ((OngoingStubbing<Collection<? extends OutputFile>>) (OngoingStubbing<?>) when)
-                .thenReturn(outputFiles);
 
         return artifactOutput;
     }

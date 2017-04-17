@@ -54,6 +54,8 @@ android {
             applicationIdSuffix ".debug"
         }
     }
+
+    flavorDimensions 'foo'
     productFlavors {
         f1 {
             applicationIdSuffix "f1"
@@ -66,9 +68,9 @@ android {
     @Test
     public void "check application id"() {
         project.execute("assembleF1");
-        assertThat(project.getApk("f1", "debug"))
+        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG, "f1"))
                 .hasPackageName("com.example.applicationidtest.default.f1.debug")
-        assertThat(project.getApk("f1", "release", "unsigned"))
+        assertThat(project.getApk(GradleTestProject.ApkType.RELEASE, "f1"))
                 .hasPackageName("com.example.applicationidtest.default.f1")
 
         searchAndReplace(
@@ -78,9 +80,9 @@ android {
 
         project.execute("assembleF1");
 
-        assertThat(project.getApk("f1", "debug"))
+        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG, "f1"))
                 .hasPackageName("com.example.applicationidtest.default.f1.foo")
-        assertThat(project.getApk("f1", "release", "unsigned"))
+        assertThat(project.getApk(GradleTestProject.ApkType.RELEASE, "f1"))
                 .hasPackageName("com.example.applicationidtest.default.f1")
     }
 

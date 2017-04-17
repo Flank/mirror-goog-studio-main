@@ -31,10 +31,8 @@ import org.mockito.MockitoAnnotations;
 
 public class InstantRunAnalyticsHelperTest {
 
-    @Mock
-    public InstantRunBuildContext mInstantRunBuildContext;
-    @Mock
-    public InstantRunBuildContext.Build mBuild;
+    @Mock public InstantRunBuildContext mInstantRunBuildContext;
+    @Mock public InstantRunBuildContext.Build mBuild;
 
     @Before
     public void initMocks() {
@@ -49,12 +47,13 @@ public class InstantRunAnalyticsHelperTest {
                 .thenReturn(InstantRunPatchingPolicy.MULTI_APK);
         when(mInstantRunBuildContext.getVerifierResult())
                 .thenReturn(InstantRunVerifierStatus.COMPATIBLE);
-        when(mBuild.getArtifacts()).thenReturn(ImmutableList.of(
-                new InstantRunBuildContext.Artifact(FileType.RESOURCES,
-                        new File("resources.ap_")),
-                new InstantRunBuildContext.Artifact(FileType.RELOAD_DEX,
-                        new File("reload.dex"))
-        ));
+        when(mBuild.getArtifacts())
+                .thenReturn(
+                        ImmutableList.of(
+                                new InstantRunBuildContext.Artifact(
+                                        FileType.RESOURCES, new File("resources.ap_")),
+                                new InstantRunBuildContext.Artifact(
+                                        FileType.RELOAD_DEX, new File("reload.dex"))));
 
         InstantRunStatus proto =
                 InstantRunAnalyticsHelper.generateAnalyticsProto(mInstantRunBuildContext);

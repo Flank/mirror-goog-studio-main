@@ -69,6 +69,9 @@ public interface AndroidProject {
     //   2) Generate build metadata JSON files
     String PROPERTY_INVOKED_FROM_IDE = "android.injected.invoked.from.ide";
 
+    // deprecated. Kept here so that newew Studio can still inject it for older plugin
+    // but newer plugin don't do anything different based on this property.
+    @SuppressWarnings("unused")
     String PROPERTY_GENERATE_SOURCES_ONLY = "android.injected.generateSourcesOnly";
 
     String PROPERTY_RESTRICT_VARIANT_PROJECT = "android.injected.restrict.variant.project";
@@ -127,8 +130,9 @@ public interface AndroidProject {
     int PROJECT_TYPE_APP = 0;
     int PROJECT_TYPE_LIBRARY = 1;
     int PROJECT_TYPE_TEST = 2;
-    int PROJECT_TYPE_ATOM = 3;
+    @Deprecated int PROJECT_TYPE_ATOM = 3;
     int PROJECT_TYPE_INSTANTAPP = 4;
+    int PROJECT_TYPE_FEATURE = 5;
 
     /**
      * Returns the model version. This is a string in the format X.Y.Z
@@ -170,7 +174,7 @@ public interface AndroidProject {
     boolean isLibrary();
 
     /**
-     * Returns the type of project: Android application, library, atom or instantApp.
+     * Returns the type of project: Android application, library.
      *
      * @return the type of project.
      * @since 2.3

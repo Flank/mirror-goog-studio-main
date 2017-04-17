@@ -591,16 +591,16 @@ public class GradleModelMockerTest {
         AndroidArtifactOutput[] outputs = Iterators
                 .toArray(mainArtifact.getOutputs().iterator(), AndroidArtifactOutput.class);
         assertThat(outputs).hasLength(10);
-        assertThat(outputs[0].getOutputs().iterator().next().getFilterTypes()).isEmpty();
-        FilterData filterData = outputs[1].getOutputs().iterator().next().getFilters().iterator().next();
+        assertThat(outputs[0].getFilterTypes()).isEmpty();
+        FilterData filterData = outputs[1].getFilters().iterator().next();
         assertThat(filterData.getFilterType()).isEqualTo("DENSITY");
         assertThat(filterData.getIdentifier()).isEqualTo("mdpi");
 
-        filterData = outputs[3].getOutputs().iterator().next().getFilters().iterator().next();
+        filterData = outputs[3].getFilters().iterator().next();
         assertThat(filterData.getFilterType()).isEqualTo("LANGUAGE");
         assertThat(filterData.getIdentifier()).isEqualTo("fr");
 
-        filterData = outputs[9].getOutputs().iterator().next().getFilters().iterator().next();
+        filterData = outputs[9].getFilters().iterator().next();
         assertThat(filterData.getFilterType()).isEqualTo("ABI");
         assertThat(filterData.getIdentifier()).isEqualTo("armeabi");
     }

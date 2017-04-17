@@ -21,22 +21,27 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.incremental.DexPackagingPolicy;
 import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
-import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.PackagingScope;
+import com.android.build.gradle.internal.scope.SplitScope;
+import com.android.build.gradle.internal.scope.TaskOutputHolder;
+import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.profile.ProcessProfileWriter;
-import com.android.ide.common.res2.FileStatus;
 import com.google.wireless.android.sdk.stats.GradleBuildProjectMetrics;
 import java.io.File;
 import java.io.IOException;
-import java.util.Map;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.ParallelizableTask;
 
-/**
- * Task to package an Android application (APK).
- */
+/** Task to package an Android application (APK). */
 @ParallelizableTask
 public class PackageApplication extends PackageAndroidArtifact {
+
+    TaskOutputHolder.TaskOutputType expectedOutputType;
+
+    @Override
+    protected VariantScope.TaskOutputType getTaskOutputType() {
+        return expectedOutputType;
+    }
 
     @Override
     protected boolean isIncremental() {
@@ -44,27 +49,16 @@ public class PackageApplication extends PackageAndroidArtifact {
     }
 
     @Override
-    protected void doFullTaskAction() throws IOException {
-        super.doFullTaskAction();
-        recordMetrics();
-    }
-
-    @Override
-    protected void doIncrementalTaskAction(Map<File, FileStatus> changedInputs) throws IOException {
-        super.doIncrementalTaskAction(changedInputs);
-        recordMetrics();
-    }
-
-    private void recordMetrics() {
+    void recordMetrics(File apkOutputFile, File resourcesApFile) {
         long metricsStartTime = System.nanoTime();
         GradleBuildProjectMetrics.Builder metrics = GradleBuildProjectMetrics.newBuilder();
 
-        Long apkSize = getSize(getOutputFile());
+        Long apkSize = getSize(apkOutputFile);
         if (apkSize != null) {
             metrics.setApkSize(apkSize);
         }
 
-        Long resourcesApSize = getSize(getResourceFile());
+        Long resourcesApSize = getSize(resourcesApFile);
         if (resourcesApSize != null) {
             metrics.setResourcesApSize(resourcesApSize);
         }
@@ -89,16 +83,34 @@ public class PackageApplication extends PackageAndroidArtifact {
     // ----- ConfigAction -----
 
     /**
-     * Configures the task to perform the "standard" packaging, including all
-     * files that should end up in the APK.
+     * Configures the task to perform the "standard" packaging, including all files that should end
+     * up in the APK.
      */
     public static class StandardConfigAction
             extends PackageAndroidArtifact.ConfigAction<PackageApplication> {
 
+        private final TaskOutputHolder.TaskOutputType expectedOutputType;
+
         public StandardConfigAction(
-                @NonNull PackagingScope scope,
-                @Nullable InstantRunPatchingPolicy patchingPolicy) {
-            super(scope, patchingPolicy);
+                @NonNull PackagingScope packagingScope,
+                @NonNull File outputDirectory,
+                @Nullable InstantRunPatchingPolicy patchingPolicy,
+                @NonNull VariantScope.TaskOutputType inputResourceFilesType,
+                @NonNull FileCollection resourceFiles,
+                @NonNull FileCollection manifests,
+                @NonNull VariantScope.TaskOutputType manifestType,
+                @NonNull SplitScope splitScope,
+                @NonNull TaskOutputHolder.TaskOutputType expectedOutputType) {
+            super(
+                    packagingScope,
+                    outputDirectory,
+                    patchingPolicy,
+                    inputResourceFilesType,
+                    resourceFiles,
+                    manifests,
+                    manifestType,
+                    splitScope);
+            this.expectedOutputType = expectedOutputType;
         }
 
         @NonNull
@@ -114,12 +126,9 @@ public class PackageApplication extends PackageAndroidArtifact {
         }
 
         @Override
-        public void execute(@NonNull final PackageApplication packageApplication) {
-            ConventionMappingHelper.map(
-                    packageApplication,
-                    "outputFile",
-                    packagingScope::getOutputPackage);
-            super.execute(packageApplication);
+        protected void configure(PackageApplication task) {
+            super.configure(task);
+            task.expectedOutputType = expectedOutputType;
         }
     }
 
@@ -135,8 +144,21 @@ public class PackageApplication extends PackageAndroidArtifact {
         public InstantRunResourcesConfigAction(
                 @NonNull File outputFile,
                 @NonNull PackagingScope scope,
-                @Nullable InstantRunPatchingPolicy patchingPolicy) {
-            super(scope, patchingPolicy);
+                @Nullable InstantRunPatchingPolicy patchingPolicy,
+                @NonNull VariantScope.TaskOutputType inputResourceFilesType,
+                @NonNull FileCollection resourceFiles,
+                @NonNull FileCollection manifests,
+                @NonNull VariantScope.TaskOutputType manifestType,
+                @NonNull SplitScope splitScope) {
+            super(
+                    scope,
+                    outputFile.getParentFile(),
+                    patchingPolicy,
+                    inputResourceFilesType,
+                    resourceFiles,
+                    manifests,
+                    manifestType,
+                    splitScope);
             mOutputFile = outputFile;
         }
 
@@ -153,10 +175,9 @@ public class PackageApplication extends PackageAndroidArtifact {
         }
 
         @Override
-        public void execute(@NonNull final PackageApplication packageApplication) {
-            packageApplication.setOutputFile(mOutputFile);
-
-            super.execute(packageApplication);
+        protected void configure(@NonNull PackageApplication packageApplication) {
+            packageApplication.expectedOutputType =
+                    TaskOutputHolder.TaskOutputType.INSTANT_RUN_PACKAGED_RESOURCES;
             packageApplication.instantRunFileType = FileType.RESOURCES;
 
             // Don't try to add any special dex files to this zip.
@@ -171,6 +192,7 @@ public class PackageApplication extends PackageAndroidArtifact {
 
             // Don't sign.
             packageApplication.setSigningConfig(null);
+            packageApplication.outputFileProvider = (split) -> mOutputFile;
         }
     }
 }

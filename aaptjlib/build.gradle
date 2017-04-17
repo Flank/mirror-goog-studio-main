@@ -1,5 +1,10 @@
 apply plugin: 'java'
 
+sourceSets.main.resources {
+    srcDirs = [rootProject.file("../prebuilts/tools/common/aapt/jni")]
+    exclude "BUILD.bazel"
+}
+
 dependencies {
     compile project(':base:annotations')
 

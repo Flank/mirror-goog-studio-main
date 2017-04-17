@@ -21,9 +21,9 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
-import com.android.SdkConstants;
 import com.android.apkzlib.zfile.ApkCreatorFactory;
 import com.android.build.api.transform.TransformException;
+import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.incremental.FileType;
@@ -62,7 +62,7 @@ public class InstantRunSplitApkBuilderTest {
 
     @Mock Logger logger;
     @Mock Project project;
-    @Mock InstantRunBuildContext instantRunBuildContext;
+    @Mock InstantRunBuildContext buildContext;
     @Mock AndroidBuilder androidBuilder;
     @Mock Aapt aapt;
     @Mock PackagingScope packagingScope;
@@ -77,17 +77,11 @@ public class InstantRunSplitApkBuilderTest {
 
     InstantRunSliceSplitApkBuilder instantRunSliceSplitApkBuilder;
 
-    private static final String PATH_TO_ZIP_ALIGN =
-            (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS)
-                    ? "C:\\path\\to\\zip-align"
-                    : "/path/to/zip-align";
-
     @Before
     public void setUpMock() {
         MockitoAnnotations.initMocks(this);
         when(androidBuilder.getTargetInfo()).thenReturn(targetInfo);
         when(targetInfo.getBuildTools()).thenReturn(buildTools);
-        when(buildTools.getPath(BuildToolInfo.PathId.ZIP_ALIGN)).thenReturn(PATH_TO_ZIP_ALIGN);
         when(packagingScope.getApplicationId()).thenReturn("com.foo.test");
         when(packagingScope.getVersionName()).thenReturn("test_version_name");
         when(packagingScope.getVersionCode()).thenReturn(12345);
@@ -95,21 +89,23 @@ public class InstantRunSplitApkBuilderTest {
 
     @Before
     public void setup() {
-        instantRunSliceSplitApkBuilder = new InstantRunSliceSplitApkBuilder(
-                logger,
-                project,
-                instantRunBuildContext,
-                androidBuilder,
-                packagingScope,
-                coreSigningConfig,
-                aaptOptions,
-                outputDirectory.getRoot(),
-                supportDirectory.getRoot()) {
-            @Override
-            protected Aapt getAapt() {
-                return aapt;
-            }
-        };
+        instantRunSliceSplitApkBuilder =
+                new InstantRunSliceSplitApkBuilder(
+                        logger,
+                        project,
+                        buildContext,
+                        androidBuilder,
+                        packagingScope,
+                        coreSigningConfig,
+                        AaptGeneration.AAPT_V2,
+                        aaptOptions,
+                        outputDirectory.getRoot(),
+                        supportDirectory.getRoot()) {
+                    @Override
+                    protected Aapt getAapt() {
+                        return aapt;
+                    }
+                };
     }
 
     @Test
@@ -119,7 +115,6 @@ public class InstantRunSplitApkBuilderTest {
         assertThat(parameterInputs).containsEntry("applicationId", "com.foo.test");
         assertThat(parameterInputs).containsEntry("versionCode", 12345);
         assertThat(parameterInputs).containsEntry("versionName", "test_version_name");
-        assertThat(parameterInputs).containsEntry("zipAlignExe", PATH_TO_ZIP_ALIGN);
         assertThat(parameterInputs).hasSize(4);
     }
 
@@ -202,7 +197,7 @@ public class InstantRunSplitApkBuilderTest {
                 any(ApkCreatorFactory.class));
 
         assertThat(outApkLocation.getValue().getName()).isEqualTo(dexFiles.encodeName() + ".apk");
-        Mockito.verify(instantRunBuildContext).addChangedFile(eq(FileType.SPLIT),
+        Mockito.verify(buildContext).addChangedFile(eq(FileType.SPLIT),
                 eq(outApkLocation.getValue()));
 
     }
@@ -216,20 +211,21 @@ public class InstantRunSplitApkBuilderTest {
 
         InstantRunSliceSplitApkBuilder instantRunSliceSplitApkBuilder =
                 new InstantRunSliceSplitApkBuilder(
-                    logger,
-                    project,
-                    instantRunBuildContext,
-                    androidBuilder,
-                    packagingScope,
-                    coreSigningConfig,
-                    aaptOptions,
-                    outputDirectory.getRoot(),
-                    supportDirectory.getRoot()) {
-            @Override
-            protected Aapt getAapt() {
-                return aapt;
-            }
-        };
+                        logger,
+                        project,
+                        buildContext,
+                        androidBuilder,
+                        packagingScope,
+                        coreSigningConfig,
+                        AaptGeneration.AAPT_V2,
+                        aaptOptions,
+                        outputDirectory.getRoot(),
+                        supportDirectory.getRoot()) {
+                    @Override
+                    protected Aapt getAapt() {
+                        return aapt;
+                    }
+                };
 
         Map<String, Object> parameterInputs = instantRunSliceSplitApkBuilder.getParameterInputs();
         assertThat(parameterInputs).containsEntry("versionCode", -1);

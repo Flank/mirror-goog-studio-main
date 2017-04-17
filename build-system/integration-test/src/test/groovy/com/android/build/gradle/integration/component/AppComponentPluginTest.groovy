@@ -93,8 +93,12 @@ model {
             create("b1")
         }
         productFlavors {
-            create("f1")
-            create("f2")
+            create("f1") {
+                dimension "foo"
+            }
+            create("f2") {
+                dimension "foo"
+            }
         }
     }
 }

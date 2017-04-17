@@ -158,17 +158,19 @@ public class InstantRunDex extends Transform {
         inputFiles.add(classesJar);
 
         try {
-            variantScope.getInstantRunBuildContext().startRecording(
-                    InstantRunBuildContext.TaskType.INSTANT_RUN_DEX);
+            variantScope
+                    .getInstantRunBuildContext()
+                    .startRecording(InstantRunBuildContext.TaskType.INSTANT_RUN_DEX);
             convertByteCode(inputFiles.build(), outputFolder);
-            variantScope.getInstantRunBuildContext().addChangedFile(
-                    FileType.RELOAD_DEX,
-                    new File(outputFolder, "classes.dex"));
+            variantScope
+                    .getInstantRunBuildContext()
+                    .addChangedFile(FileType.RELOAD_DEX, new File(outputFolder, "classes.dex"));
         } catch (ProcessException e) {
             throw new TransformException(e);
         } finally {
-            variantScope.getInstantRunBuildContext().stopRecording(
-                    InstantRunBuildContext.TaskType.INSTANT_RUN_DEX);
+            variantScope
+                    .getInstantRunBuildContext()
+                    .stopRecording(InstantRunBuildContext.TaskType.INSTANT_RUN_DEX);
         }
     }
 

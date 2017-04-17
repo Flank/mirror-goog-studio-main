@@ -2,6 +2,7 @@ package com.android.build.gradle;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.api.BaseVariant;
+import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.LibraryVariant;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.LoggingUtil;
@@ -9,6 +10,7 @@ import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
 import com.google.common.collect.Lists;
 import java.util.Collection;
@@ -32,21 +34,25 @@ public class LibraryExtension extends TestedExtension {
 
     public LibraryExtension(
             @NonNull Project project,
+            @NonNull ProjectOptions projectOptions,
             @NonNull Instantiator instantiator,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull SdkHandler sdkHandler,
             @NonNull NamedDomainObjectContainer<BuildType> buildTypes,
             @NonNull NamedDomainObjectContainer<ProductFlavor> productFlavors,
             @NonNull NamedDomainObjectContainer<SigningConfig> signingConfigs,
+            @NonNull NamedDomainObjectContainer<BaseVariantOutput> buildOutputs,
             @NonNull ExtraModelInfo extraModelInfo) {
         super(
                 project,
+                projectOptions,
                 instantiator,
                 androidBuilder,
                 sdkHandler,
                 buildTypes,
                 productFlavors,
                 signingConfigs,
+                buildOutputs,
                 extraModelInfo,
                 true);
     }

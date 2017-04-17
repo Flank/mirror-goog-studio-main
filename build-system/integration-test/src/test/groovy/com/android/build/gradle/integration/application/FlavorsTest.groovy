@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.application
 
-import com.android.build.gradle.integration.common.category.DeviceTests
 import com.android.build.gradle.integration.common.category.DeviceTestsQuarantine
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.utils.ModelHelper
@@ -91,7 +90,7 @@ class FlavorsTest {
         assertThat(f1faDebugVariant.getProductFlavors()).containsExactly("f1","fa")
         new ProductFlavorHelper(f1faDebugVariant.getMergedFlavor(), "F1faDebug Merged Flavor")
                 .test()
-        new VariantHelper(f1faDebugVariant, projectDir, "flavors-f1-fa-debug.apk").test()
+        new VariantHelper(f1faDebugVariant, projectDir, "/f1Fa/debug/flavors-f1-fa-debug.apk").test()
     }
 
     @Test
@@ -159,12 +158,12 @@ android{
     public void "check version name with buildTypes only suffix"() throws Exception{
         addBuildTypesVersionNameSuffixes()
         project.execute("clean", "assembleDebug", "assembleRelease")
-        assertThat(project.getApk("f1", "fa", "debug")).hasVersionName("1.0-debug")
-        assertThat(project.getApk("f1", "fb", "debug")).hasVersionName("1.0-debug")
+        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG, "f1", "fa")).hasVersionName("1.0-debug")
+        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG, "f1", "fb")).hasVersionName("1.0-debug")
 
-        assertThat(project.getApk("f1", "fa", "release", "unsigned"))
+        assertThat(project.getApk(GradleTestProject.ApkType.RELEASE, "f1", "fa"))
                 .hasVersionName("1.0release")
-        assertThat(project.getApk("f1", "fb", "release", "unsigned"))
+        assertThat(project.getApk(GradleTestProject.ApkType.RELEASE, "f1", "fb"))
                 .hasVersionName("1.0release")
     }
 
@@ -172,12 +171,12 @@ android{
     public void "check version name  with productFlavors only suffix"() throws Exception{
         addProductFlavorsVersionNameSuffixes()
         project.execute("clean", "assembleDebug", "assembleRelease")
-        assertThat(project.getApk("f1", "fb", "debug")).hasVersionName("1.0f1fb")
-        assertThat(project.getApk("f1", "fa", "debug")).hasVersionName("1.0f1-fa")
+        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG, "f1", "fb")).hasVersionName("1.0f1fb")
+        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG, "f1", "fa")).hasVersionName("1.0f1-fa")
 
-        assertThat(project.getApk("f1", "fb", "release", "unsigned"))
+        assertThat(project.getApk(GradleTestProject.ApkType.RELEASE, "f1", "fb"))
                 .hasVersionName("1.0f1fb")
-        assertThat(project.getApk("f1", "fa", "release", "unsigned"))
+        assertThat(project.getApk(GradleTestProject.ApkType.RELEASE, "f1", "fa"))
                 .hasVersionName("1.0f1-fa")
     }
 
@@ -187,14 +186,14 @@ android{
         addProductFlavorsVersionNameSuffixes()
 
         project.execute("clean", "assembleDebug", "assembleRelease")
-        assertThat(project.getApk("f1", "fb", "debug"))
+        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG, "f1", "fb"))
                 .hasVersionName("1.0f1fb-debug")
-        assertThat(project.getApk("f2", "fb", "debug"))
+        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG, "f2", "fb"))
                 .hasVersionName("1.0-f2fb-debug")
 
-        assertThat(project.getApk("f2", "fa", "release", "unsigned"))
+        assertThat(project.getApk(GradleTestProject.ApkType.RELEASE, "f2", "fa"))
                 .hasVersionName("1.0-f2-farelease")
-        assertThat(project.getApk("f1", "fa", "release", "unsigned"))
+        assertThat(project.getApk(GradleTestProject.ApkType.RELEASE, "f1", "fa"))
                 .hasVersionName("1.0f1-farelease")
     }
 }

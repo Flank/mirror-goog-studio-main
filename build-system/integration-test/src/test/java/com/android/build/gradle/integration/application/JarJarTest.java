@@ -16,33 +16,26 @@
 
 package com.android.build.gradle.integration.application;
 
-import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.testutils.apk.Apk;
-import com.google.common.collect.ImmutableList;
-import org.junit.Rule;
+import org.junit.AfterClass;
+import org.junit.ClassRule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /**
  * Test for the jarjar integration.
  */
-@RunWith(FilterableParameterized.class)
 public class JarJarTest {
 
-    @Parameterized.Parameters(name = "{0}")
-    public static Iterable<String> projects() {
-        return ImmutableList.of("jarjarIntegration");
-    }
+    @ClassRule
+    public static GradleTestProject project =
+            GradleTestProject.builder().fromTestProject("jarjarIntegration").create();
 
-    @Rule public GradleTestProject project;
-
-    public JarJarTest(@NonNull String projectName) {
-        project = GradleTestProject.builder().fromTestProject(projectName).create();
+    @AfterClass
+    public static void tearDown() {
+        project = null;
     }
 
     @Test

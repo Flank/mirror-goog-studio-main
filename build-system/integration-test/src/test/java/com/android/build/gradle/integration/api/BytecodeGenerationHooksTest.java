@@ -24,6 +24,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.Dex;
+import com.android.utils.FileUtils;
 import com.android.utils.SdkUtils;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
@@ -33,10 +34,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -69,8 +68,8 @@ public class BytecodeGenerationHooksTest {
                 result,
                 "BytecodeGeneratingTask(:app:generateBytecodeFordebug): ",
                 true,
-                "library/build/intermediates/bundles/default/classes.jar",
-                "jar/build/libs/jar.jar");
+                "library/build/intermediates/intermediate-jars/debug/classes.jar",
+                "jar/build/classes/main");
     }
 
     @Test
@@ -82,10 +81,9 @@ public class BytecodeGenerationHooksTest {
                 result,
                 "BytecodeGeneratingTask(:app:generateBytecodeFordebugAndroidTest): ",
                 true,
-                "app/build/generated/bytecode/debug",
-                "app/build/intermediates/classes/debug",
-                "library/build/intermediates/bundles/default/classes.jar",
-                "jar/build/libs/jar.jar");
+                "app/build/intermediates/classes-jar/debug/classes.jar",
+                "library/build/intermediates/intermediate-jars/debug/classes.jar",
+                "jar/build/classes/main");
     }
 
     @Test
@@ -97,10 +95,9 @@ public class BytecodeGenerationHooksTest {
                 result,
                 "BytecodeGeneratingTask(:app:generateBytecodeFordebugUnitTest): ",
                 false,
-                "app/build/generated/bytecode/debug",
-                "app/build/intermediates/classes/debug",
-                "library/build/intermediates/bundles/default/classes.jar",
-                "jar/build/libs/jar.jar");
+                "app/build/intermediates/classes-jar/debug/classes.jar",
+                "library/build/intermediates/intermediate-jars/debug/classes.jar",
+                "jar/build/classes/main");
     }
 
     @Test
@@ -117,8 +114,7 @@ public class BytecodeGenerationHooksTest {
                 result,
                 "BytecodeGeneratingTask(:library:generateBytecodeFordebugAndroidTest): ",
                 true,
-                "library/build/intermediates/bundles/debug/classes.jar",
-                "library/build/generated/bytecode/debug");
+                "library/build/intermediates/intermediate-jars/debug/classes.jar");
     }
 
     @Test
@@ -136,14 +132,15 @@ public class BytecodeGenerationHooksTest {
                 "BytecodeGeneratingTask(:test:generateBytecodeFordebug): ",
                 true,
                 "app/build/intermediates/classes-jar/debug/classes.jar",
-                "jar/build/libs/jar.jar",
-                "library/build/intermediates/bundles/default/classes.jar");
+                "jar/build/classes/main",
+                "library/build/intermediates/intermediate-jars/debug/classes.jar");
     }
 
     private static void checkDependencies(
             GradleBuildResult result, String prefix, boolean exactly, String... dependencies) {
         String stdout = result.getStdout();
-        Iterable<String> stdoutlines = Splitter.on(SdkUtils.getLineSeparator()).omitEmptyStrings().split(stdout);
+        Iterable<String> stdoutlines =
+                Splitter.on(SdkUtils.getLineSeparator()).omitEmptyStrings().split(stdout);
         List<String> lines = Lists.newArrayList(stdoutlines);
 
         lines =
@@ -158,7 +155,7 @@ public class BytecodeGenerationHooksTest {
                 Arrays.stream(dependencies)
                         .map(
                                 s ->
-                                        new File(projectDir, s.replace('/', File.separatorChar))
+                                        new File(projectDir, FileUtils.toSystemDependentPath(s))
                                                 .getAbsolutePath())
                         .collect(Collectors.toList());
 

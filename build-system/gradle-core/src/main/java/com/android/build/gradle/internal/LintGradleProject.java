@@ -212,8 +212,7 @@ public class LintGradleProject extends Project {
             }
 
         } else if (APPCOMPAT_LIB_ARTIFACT.equals(artifact)) {
-            File bundle = library.getBundle();
-            if (bundle.getName().startsWith("appcompat-v7-")) {
+            if (library.getName() != null && library.getName().startsWith(artifact)) {
                 return true;
             }
         }

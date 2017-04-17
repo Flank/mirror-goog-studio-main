@@ -86,7 +86,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
@@ -380,77 +379,6 @@ public class AndroidBuilder {
     }
 
     /**
-     * Returns the compile classpath for this config. If the config tests a library, this
-     * will include the classpath of the tested config.
-     *
-     * If the SDK was loaded, this may include the renderscript support jar.
-     *
-     * @return a non null, but possibly empty set.
-     */
-    @NonNull
-    public Set<File> getCompileClasspath(@NonNull VariantConfiguration<?,?,?> variantConfiguration) {
-        Set<File> compileClasspath = variantConfiguration.getCompileClasspath();
-
-        if (variantConfiguration.getRenderscriptSupportModeEnabled()) {
-            File renderScriptSupportJar = getRenderScriptSupportJar();
-
-            Set<File> fullJars = Sets.newLinkedHashSetWithExpectedSize(compileClasspath.size() + 1);
-            fullJars.addAll(compileClasspath);
-            if (renderScriptSupportJar != null) {
-                fullJars.add(renderScriptSupportJar);
-            }
-            compileClasspath = fullJars;
-        }
-
-        return compileClasspath;
-    }
-
-    /**
-     * Returns the list of packaged jars for this config. If the config tests a library, this
-     * will include the jars of the tested config
-     *
-     * If the SDK was loaded, this may include the renderscript support jar.
-     *
-     * @return a non null, but possibly empty list.
-     */
-    @NonNull
-    public Set<File> getAllPackagedJars(@NonNull VariantConfiguration<?,?,?> variantConfiguration) {
-        Set<File> packagedJars = Sets.newHashSet(variantConfiguration.getAllPackagedJars());
-
-        if (variantConfiguration.getRenderscriptSupportModeEnabled()) {
-            File renderScriptSupportJar = getRenderScriptSupportJar();
-
-            if (renderScriptSupportJar != null) {
-                packagedJars.add(renderScriptSupportJar);
-            }
-        }
-
-        return packagedJars;
-    }
-
-    /**
-     * Returns the list of packaged jars for this config. If the config tests a library, this
-     * will include the jars of the tested config
-     *
-     * If the SDK was loaded, this may include the renderscript support jar.
-     *
-     * @return a non null, but possibly empty list.
-     */
-    @NonNull
-    public Set<File> getAdditionalPackagedJars(@NonNull VariantConfiguration<?,?,?> variantConfiguration) {
-
-        if (variantConfiguration.getRenderscriptSupportModeEnabled()) {
-            File renderScriptSupportJar = getRenderScriptSupportJar();
-
-            if (renderScriptSupportJar != null) {
-                return ImmutableSet.of(renderScriptSupportJar);
-            }
-        }
-
-        return ImmutableSet.of();
-    }
-
-    /**
      * Returns the native lib folder for the renderscript mode.
      *
      * This may return null if the SDK has not been loaded yet.
@@ -507,7 +435,7 @@ public class AndroidBuilder {
     /**
      * Invoke the Manifest Merger version 2.
      */
-    public void mergeManifestsForApplication(
+    public MergingReport mergeManifestsForApplication(
             @NonNull File mainManifest,
             @NonNull List<File> manifestOverlays,
             @NonNull List<? extends ManifestProvider> dependencies,
@@ -529,13 +457,15 @@ public class AndroidBuilder {
 
             Invoker manifestMergerInvoker =
                     ManifestMerger2.newMerger(mainManifest, mLogger, mergeType)
-                    .setPlaceHolderValues(placeHolders)
-                    .addFlavorAndBuildTypeManifests(
-                            manifestOverlays.toArray(new File[manifestOverlays.size()]))
-                    .addManifestProviders(dependencies)
-                    .withFeatures(optionalFeatures.toArray(
-                            new Invoker.Feature[optionalFeatures.size()]))
-                    .setMergeReportFile(reportFile);
+                            .setPlaceHolderValues(placeHolders)
+                            .addFlavorAndBuildTypeManifests(
+                                    manifestOverlays.toArray(new File[manifestOverlays.size()]))
+                            .addManifestProviders(dependencies)
+                            .withFeatures(
+                                    optionalFeatures.toArray(
+                                            new Invoker.Feature[optionalFeatures.size()]))
+                            .setMergeReportFile(reportFile)
+                            .setFeatureName(mProjectId);
 
             if (mergeType == ManifestMerger2.MergeType.APPLICATION) {
                 manifestMergerInvoker.withFeatures(Invoker.Feature.REMOVE_TOOLS_DECLARATIONS);
@@ -587,6 +517,7 @@ public class AndroidBuilder {
                     throw new RuntimeException("Unhandled result type : "
                             + mergingReport.getResult());
             }
+            return mergingReport;
         } catch (ManifestMerger2.MergeFailureException e) {
             // TODO: unacceptable.
             throw new RuntimeException(e);
@@ -666,7 +597,6 @@ public class AndroidBuilder {
      * @see VariantConfiguration#getHandleProfiling()
      * @see VariantConfiguration#getFunctionalTest()
      * @see VariantConfiguration#getTestLabel()
-     * @see VariantConfiguration#getFlatCompileAndroidLibraries() ()
      */
     public void mergeManifestsForTestVariant(
             @NonNull String testApplicationId,
@@ -878,30 +808,36 @@ public class AndroidBuilder {
 
         File sourceOut = aaptConfig.getSourceOutputDir();
         if (sourceOut != null) {
-            // Figure out what the main symbol file's package is.
-            String mainPackageName = aaptConfig.getCustomPackageForR();
-            if (mainPackageName == null) {
-                mainPackageName =
-                        SymbolUtils.getPackageNameFromManifest(aaptConfig.getManifestFile());
-            }
+            // Until R.txt is added in AAPT2, this part should only be executed for AAPT1.
+            // With AAPT2 we make AAPT2 generate copies of the R.java for the dependencies.
+            if (aapt instanceof AaptV1) {
+                // Figure out what the main symbol file's package is.
+                String mainPackageName = aaptConfig.getCustomPackageForR();
+                if (mainPackageName == null) {
+                    mainPackageName =
+                            SymbolUtils.getPackageNameFromManifest(aaptConfig.getManifestFile());
+                }
 
-            // Load the main symbol file.
-            File mainRTxt = new File(aaptConfig.getSymbolOutputDir(), "R.txt");
-            SymbolTable mainSymbols =
-                    mainRTxt.isFile()? SymbolIo.read(mainRTxt) : SymbolTable.builder().build();
-            mainSymbols = mainSymbols.rename(mainPackageName);
+                // Load the main symbol file.
+                File mainRTxt = new File(aaptConfig.getSymbolOutputDir(), "R.txt");
+                SymbolTable mainSymbols =
+                        mainRTxt.isFile() ? SymbolIo.read(mainRTxt) : SymbolTable.builder().build();
+                mainSymbols = mainSymbols.rename(mainPackageName);
 
-            // For each dependency, load its symbol file.
-            Set<SymbolTable> depSymbolTables =
-                    SymbolUtils.loadDependenciesSymbolTables(
-                            aaptConfig.getLibraries(), enforceUniquePackageName, mainPackageName);
+                // For each dependency, load its symbol file.
+                Set<SymbolTable> depSymbolTables =
+                        SymbolUtils.loadDependenciesSymbolTables(
+                                aaptConfig.getLibraries(),
+                                enforceUniquePackageName,
+                                mainPackageName);
 
-            boolean finalIds = true;
-            if (aaptConfig.getVariantType() == VariantType.LIBRARY) {
-                finalIds = false;
-            } else if (aaptConfig.getVariantType() == VariantType.ATOM
-                    && aaptConfig.getBaseFeature() != null) {
-                finalIds = false;
+                boolean finalIds = true;
+                if (aaptConfig.getVariantType() == VariantType.LIBRARY) {
+                    finalIds = false;
+                }
+
+                RGeneration.generateRForLibraries(
+                        mainSymbols, depSymbolTables, sourceOut, finalIds);
             }
 
             // Generate manifest_keep.txt for main dex when using AAPT2 (until the flag is added).
@@ -912,8 +848,6 @@ public class AndroidBuilder {
                         SymbolUtils.generateMainDexKeepRules(
                                 SymbolUtils.parseManifest(aaptConfig.getManifestFile())));
             }
-
-            RGeneration.generateRForLibraries(mainSymbols, depSymbolTables, sourceOut, finalIds);
         }
     }
 
@@ -1212,7 +1146,7 @@ public class AndroidBuilder {
      * @throws InterruptedException failed
      */
     public void compileAllRenderscriptFiles(
-            @NonNull List<File> sourceFolders,
+            @NonNull Collection<File> sourceFolders,
             @NonNull List<File> importFolders,
             @NonNull File sourceOutputDir,
             @NonNull File resOutputDir,
@@ -1271,11 +1205,11 @@ public class AndroidBuilder {
      */
     @NonNull
     @SafeVarargs
-    public static List<File> getLeafFolders(@NonNull String extension, List<File>... importFolders) {
+    public static List<File> getLeafFolders(@NonNull String extension, Collection<File>... importFolders) {
         List<File> results = Lists.newArrayList();
 
         if (importFolders != null) {
-            for (List<File> folders : importFolders) {
+            for (Collection<File> folders : importFolders) {
                 SourceSearcher searcher = new SourceSearcher(folders, extension);
                 searcher.setUseExecutor(false);
                 LeafFolderGatherer processor = new LeafFolderGatherer();

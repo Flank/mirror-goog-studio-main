@@ -21,7 +21,6 @@ import static com.android.ide.common.blame.parser.JsonEncodedGradleMessageParser
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
-import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.internal.dependency.ConfigurationDependencyGraphs;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
@@ -30,6 +29,8 @@ import com.android.build.gradle.internal.ide.ArtifactMetaDataImpl;
 import com.android.build.gradle.internal.ide.JavaArtifactImpl;
 import com.android.build.gradle.internal.ide.SyncIssueImpl;
 import com.android.build.gradle.internal.variant.DefaultSourceProviderContainer;
+import com.android.build.gradle.options.ProjectOptions;
+import com.android.build.gradle.options.SyncOptions;
 import com.android.builder.core.ErrorReporter;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.ArtifactMetaData;
@@ -56,16 +57,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import org.gradle.api.GradleException;
-import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.logging.Logger;
 
 /**
  * For storing additional model information.
  */
 public class ExtraModelInfo extends ErrorReporter {
 
-    @NonNull
-    private final Project project;
+    @NonNull private final Logger logger;
 
     @NonNull
     private final ErrorFormatMode errorFormatMode;
@@ -83,16 +83,20 @@ public class ExtraModelInfo extends ErrorReporter {
     @Nullable
     private final Gson mGson;
 
-    public ExtraModelInfo(@NonNull Project project) {
-        super(computeModelQueryMode(project));
-        this.project = project;
-        errorFormatMode = computeErrorFormatMode(project);
+    public ExtraModelInfo(@NonNull ProjectOptions projectOptions, @NonNull Logger logger) {
+        super(SyncOptions.getModelQueryMode(projectOptions));
+        this.logger = logger;
+        errorFormatMode = SyncOptions.getErrorFormatMode(projectOptions);
         if (errorFormatMode == ErrorFormatMode.MACHINE_PARSABLE) {
             GsonBuilder gsonBuilder = new GsonBuilder();
             MessageJsonSerializer.registerTypeAdapters(gsonBuilder);
             mGson = gsonBuilder.create();
         } else {
             mGson = null;
+        }
+        if (projectOptions.hasDeprecatedOptions()) {
+            handleSyncError(
+                    "", SyncIssue.TYPE_GENERIC, projectOptions.getDeprecatedOptionsErrorMessage());
         }
     }
 
@@ -123,9 +127,9 @@ public class ExtraModelInfo extends ErrorReporter {
                                     msg,
                                     SourceFilePosition.UNKNOWN,
                                     SourceFilePosition.UNKNOWN);
-                    project.getLogger().warn(machineReadableMessage(message));
+                    logger.warn(machineReadableMessage(message));
                 } else {
-                    project.getLogger().warn("WARNING: " + msg);
+                    logger.warn("WARNING: " + msg);
                 }
                 issue = new SyncIssueImpl(type, severity, data, msg);
                 break;
@@ -171,29 +175,29 @@ public class ExtraModelInfo extends ErrorReporter {
         switch (message.getKind()) {
             case ERROR:
                 if (errorFormatMode == ErrorFormatMode.MACHINE_PARSABLE) {
-                    project.getLogger().error(machineReadableMessage(message));
+                    logger.error(machineReadableMessage(message));
                 } else {
-                    project.getLogger().error(humanReadableMessage(message));
+                    logger.error(humanReadableMessage(message));
                 }
                 break;
             case WARNING:
                 if (errorFormatMode == ErrorFormatMode.MACHINE_PARSABLE) {
-                    project.getLogger().warn(machineReadableMessage(message));
+                    logger.warn(machineReadableMessage(message));
                 } else {
-                    project.getLogger().warn(humanReadableMessage(message));
+                    logger.warn(humanReadableMessage(message));
                 }
                 break;
             case INFO:
-                project.getLogger().info(humanReadableMessage(message));
+                logger.info(humanReadableMessage(message));
                 break;
             case STATISTICS:
-                project.getLogger().trace(humanReadableMessage(message));
+                logger.trace(humanReadableMessage(message));
                 break;
             case UNKNOWN:
-                project.getLogger().debug(humanReadableMessage(message));
+                logger.debug(humanReadableMessage(message));
                 break;
             case SIMPLE:
-                project.getLogger().debug(humanReadableMessage(message));
+                logger.debug(humanReadableMessage(message));
                 break;
         }
     }
@@ -335,31 +339,6 @@ public class ExtraModelInfo extends ErrorReporter {
                 sourceProvider, null);
 
         extraJavaArtifacts.put(variant.getName(), artifact);
-    }
-
-    /**
-     * Returns whether we are just trying to build a model for the IDE instead of building. This
-     * means we will attempt to resolve dependencies even if some are broken/unsupported to avoid
-     * failing the import in the IDE.
-     */
-    private static EvaluationMode computeModelQueryMode(@NonNull Project project) {
-        if (AndroidGradleOptions.buildModelOnlyAdvanced(project)) {
-            return EvaluationMode.IDE;
-        }
-
-        if (AndroidGradleOptions.buildModelOnly(project)) {
-            return EvaluationMode.IDE_LEGACY;
-        }
-
-        return EvaluationMode.STANDARD;
-    }
-
-    private static ErrorFormatMode computeErrorFormatMode(@NonNull Project project) {
-        if (AndroidGradleOptions.invokedFromIde(project)) {
-            return ErrorFormatMode.MACHINE_PARSABLE;
-        } else {
-            return ErrorFormatMode.HUMAN_READABLE;
-        }
     }
 
     @NonNull

@@ -50,7 +50,7 @@ class LibProguardConsumerFilesTest {
     @Test
     void "check proguard.txt has been correctly merged"() {
         File debugFileOutput = project.file("build/" + FD_INTERMEDIATES + "/bundles/debug/proguard.txt")
-        File releaseFileOutput = project.file("build/" + FD_INTERMEDIATES + "/bundles/default/proguard.txt")
+        File releaseFileOutput = project.file("build/" + FD_INTERMEDIATES + "/bundles/release/proguard.txt")
 
         TestFileUtils.checkContent(debugFileOutput, "A")
         TestFileUtils.checkContent(releaseFileOutput, ["A", "B", "C"])

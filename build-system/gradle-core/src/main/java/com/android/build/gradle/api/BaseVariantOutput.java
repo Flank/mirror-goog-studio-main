@@ -18,28 +18,18 @@ package com.android.build.gradle.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.VariantOutput;
+import com.android.build.OutputFile;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
-import java.io.File;
 import org.gradle.api.Task;
+import org.gradle.model.Managed;
 
 /**
  * A Build variant output and all its public data. This is the base class for items common to apps,
  * test apps, and libraries
  */
-public interface BaseVariantOutput extends VariantOutput {
-
-    /**
-     * Returns the output file for this build variants. Depending on the configuration, this could
-     * be an apk (regular and test project) or a bundled library (library project).
-     *
-     * If it's an apk, it could be signed, or not; zip-aligned, or not.
-     */
-    @NonNull
-    File getOutputFile();
-
-    void setOutputFile(@NonNull File outputFile);
+@Managed
+public interface BaseVariantOutput extends OutputFile {
 
     /**
      * Returns the Android Resources processing task.
@@ -47,9 +37,7 @@ public interface BaseVariantOutput extends VariantOutput {
     @NonNull
     ProcessAndroidResources getProcessResources();
 
-    /**
-     * Returns the Manifest processing task.
-     */
+
     @NonNull
     ManifestProcessorTask getProcessManifest();
 

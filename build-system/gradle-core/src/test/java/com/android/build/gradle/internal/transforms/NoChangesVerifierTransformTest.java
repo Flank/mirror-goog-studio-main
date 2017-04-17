@@ -47,8 +47,7 @@ public class NoChangesVerifierTransformTest {
 
     @Mock
     TransformInvocation input;
-    @Mock
-    InstantRunBuildContext buildContext;
+    @Mock InstantRunBuildContext buildContext;
 
     @Test
     public void testNonIncTransformInvocation()

@@ -16,12 +16,11 @@
 
 package com.android.build.gradle.internal.transforms;
 
-import static com.android.sdklib.BuildToolInfo.PathId.ZIP_ALIGN;
-
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.transform.Transform;
 import com.android.build.api.transform.TransformException;
+import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.aapt.AaptGradleFactory;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.incremental.FileType;
@@ -34,7 +33,6 @@ import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.builder.model.AaptOptions;
 import com.android.builder.packaging.PackagerException;
-import com.android.builder.sdk.TargetInfo;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.resources.configuration.VersionQualifier;
 import com.android.ide.common.signing.KeytoolException;
@@ -61,8 +59,8 @@ abstract class InstantRunSplitApkBuilder extends Transform {
     protected final Project project;
     @NonNull
     private final AndroidBuilder androidBuilder;
-    @NonNull
-    private final InstantRunBuildContext instantRunBuildContext;
+    @NonNull private final AaptGeneration aaptGeneration;
+    @NonNull private final InstantRunBuildContext buildContext;
     @NonNull
     protected final File outputDirectory;
     @Nullable
@@ -77,19 +75,21 @@ abstract class InstantRunSplitApkBuilder extends Transform {
     public InstantRunSplitApkBuilder(
             @NonNull Logger logger,
             @NonNull Project project,
-            @NonNull InstantRunBuildContext instantRunBuildContext,
+            @NonNull InstantRunBuildContext buildContext,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull PackagingScope packagingScope,
             @Nullable CoreSigningConfig signingConf,
+            @NonNull AaptGeneration aaptGeneration,
             @NonNull AaptOptions aaptOptions,
             @NonNull File outputDirectory,
             @NonNull File supportDirectory) {
         this.logger = logger;
         this.project = project;
-        this.instantRunBuildContext = instantRunBuildContext;
+        this.buildContext = buildContext;
         this.androidBuilder = androidBuilder;
         this.packagingScope = packagingScope;
         this.signingConf = signingConf;
+        this.aaptGeneration = aaptGeneration;
         this.aaptOptions = aaptOptions;
         this.outputDirectory = outputDirectory;
         this.supportDirectory = supportDirectory;
@@ -97,19 +97,14 @@ abstract class InstantRunSplitApkBuilder extends Transform {
 
     @NonNull
     @Override
-    public Map<String, Object> getParameterInputs() {
-        ImmutableMap.Builder<String, Object> builder = ImmutableMap.<String, Object>builder()
-                .put("applicationId", packagingScope.getApplicationId())
-                .put("versionCode", packagingScope.getVersionCode());
+    public final Map<String, Object> getParameterInputs() {
+        ImmutableMap.Builder<String, Object> builder =
+                ImmutableMap.<String, Object>builder()
+                        .put("applicationId", packagingScope.getApplicationId())
+                        .put("versionCode", packagingScope.getVersionCode())
+                        .put("aaptGeneration", aaptGeneration.name());
         if (packagingScope.getVersionName() != null) {
             builder.put("versionName", packagingScope.getVersionName());
-        }
-        try {
-            File zipAlignExe = getZipAlignExe();
-            builder.put("zipAlignExe", zipAlignExe.getAbsolutePath());
-
-        } catch (TransformException e) {
-            // ignore for now, this is not a big deal for the parameter inputs.
         }
         return builder.build();
     }
@@ -164,24 +159,10 @@ abstract class InstantRunSplitApkBuilder extends Transform {
                 tempDir,
                 ApkCreatorFactories.fromProjectProperties(project, true));
 
-        instantRunBuildContext.addChangedFile(FileType.SPLIT, alignedOutput);
+        buildContext.addChangedFile(FileType.SPLIT, alignedOutput);
         //noinspection ResultOfMethodCallIgnored
         resPackageFile.delete();
         return alignedOutput;
-    }
-
-    @NonNull
-    private File getZipAlignExe() throws TransformException {
-        final TargetInfo info = androidBuilder.getTargetInfo();
-        if (info == null) {
-            throw new TransformException("Cannot find zipAlign executable, no target info set");
-        }
-        String path1 = info.getBuildTools().getPath(ZIP_ALIGN);
-        if (path1 == null) {
-            throw new TransformException("Cannot find zipAlign executable for build tools "
-                    + info.getBuildTools().getLocation());
-        }
-        return new File(path1);
     }
 
     @NonNull
@@ -235,20 +216,23 @@ abstract class InstantRunSplitApkBuilder extends Transform {
     }
 
     protected Aapt getAapt() {
-        return makeAapt(androidBuilder, packagingScope, getClass().getName());
+        return makeAapt(aaptGeneration, androidBuilder, packagingScope);
     }
 
     @NonNull
-    public static Aapt makeAapt(@NonNull AndroidBuilder androidBuilder,
-            @NonNull PackagingScope packagingScope,
-            @NonNull String incrementalDirName) {
+    public static Aapt makeAapt(
+            @NonNull AaptGeneration aaptGeneration,
+            @NonNull AndroidBuilder androidBuilder,
+            @NonNull PackagingScope packagingScope) {
         return AaptGradleFactory.make(
+                aaptGeneration,
                 androidBuilder,
                 true,
-                packagingScope.getProject(),
-                FileUtils.mkdirs(new File(
-                        packagingScope.getIncrementalDir("instantRunDependenciesApkBuilder"),
-                        "aapt-temp")),
+                FileUtils.mkdirs(
+                        new File(
+                                packagingScope.getIncrementalDir(
+                                        "instantRunDependenciesApkBuilder"),
+                                "aapt-temp")),
                 0);
     }
 }

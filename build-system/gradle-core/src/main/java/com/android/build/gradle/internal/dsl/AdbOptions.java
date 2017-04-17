@@ -45,9 +45,7 @@ public class AdbOptions implements com.android.builder.model.AdbOptions {
         setTimeOutInMs(timeOutInMs);
     }
 
-    /**
-     * Returns the list of APK installation options.
-     */
+    /** Returns the list of FULL_APK installation options. */
     @Override
     public Collection<String> getInstallOptions() {
         return installOptions;

@@ -22,7 +22,6 @@ import static com.android.testutils.truth.MoreTruth.assertThatDex;
 import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.Logcat;
-import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.InstantRun;
 import com.android.sdklib.AndroidVersion;
@@ -34,7 +33,6 @@ import com.android.tools.fd.client.InstantRunBuildInfo;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.google.common.truth.Expect;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -57,12 +55,6 @@ public class ConditionalApiUse {
 
     @Rule
     public Expect expect = Expect.createAndEnableStackTrace();
-
-    @Before
-    public void checkEnvironment() throws Exception {
-        // IR currently does not work with Jack - http://b.android.com/224374
-        AssumeUtil.assumeNotUsingJack();
-    }
 
     @Test
     public void buildFor19() throws Exception {

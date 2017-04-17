@@ -31,15 +31,15 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Helper class to help with installation of multi-output variants.
@@ -50,47 +50,36 @@ public class SplitOutputMatcher {
     /**
      * Determines and return the list of APKs to use based on given device density and abis.
      *
-     * if there are pure splits, use the split-select tool otherwise revert to store logic.
+     * <p>if there are pure splits, use the split-select tool otherwise revert to store logic.
      *
      * @param processExecutor an executor to execute native processes.
      * @param splitSelectExe the split select tool optionally.
      * @param deviceConfigProvider the device configuration.
      * @param outputs the tested variant outpts.
      * @param variantAbiFilters a list of abi filters applied to the variant. This is used in place
-     *                          of the outputs, if there is a single output with no abi filters.
-     *                          If the list is null or empty, then the variant does not restrict ABI
-     *                          packaging.
+     *     of the outputs, if there is a single output with no abi filters. If the list is null or
+     *     empty, then the variant does not restrict ABI packaging.
      * @return the list of APK files to install.
-     * @throws ProcessException
+     * @throws ProcessException when the splitSelect executable failed to execute.
      */
     @NonNull
     public static List<File> computeBestOutput(
             @NonNull ProcessExecutor processExecutor,
             @Nullable File splitSelectExe,
             @NonNull DeviceConfigProvider deviceConfigProvider,
-            @NonNull List<? extends VariantOutput> outputs,
-            @Nullable Collection<String> variantAbiFilters) throws ProcessException {
+            @NonNull Collection<OutputFile> outputs,
+            @Nullable Collection<String> variantAbiFilters)
+            throws ProcessException {
 
+        // build the list of pure split APKs.
+        List<String> splitApksPath =
+                outputs.stream()
+                        .filter(outputFile -> outputFile.getOutputType().equals(OutputFile.SPLIT))
+                        .map(outputFile -> outputFile.getOutputFile().getAbsolutePath())
+                        .collect(Collectors.toList());
 
-        // build the list of APKs.
-        List<String> splitApksPath = new ArrayList<String>();
-        OutputFile mainApk = null;
-        for (VariantOutput output : outputs) {
-            for (OutputFile outputFile : output.getOutputs()) {
-                if (!outputFile.getOutputFile().getAbsolutePath().equals(
-                        output.getMainOutputFile().getOutputFile().getAbsolutePath())) {
-
-                    splitApksPath.add(outputFile.getOutputFile().getAbsolutePath());
-                }
-            }
-            mainApk = output.getMainOutputFile();
-        }
-        if (mainApk == null) {
-            throw new RuntimeException(
-                    "Cannot retrieve the main APK from variant outputs");
-        }
         if (splitApksPath.isEmpty()) {
-            List<File> apkFiles = new ArrayList<File>();
+            List<File> apkFiles = new ArrayList<>();
 
             // now look for a matching output file
             List<OutputFile> outputFiles = SplitOutputMatcher.computeBestOutput(
@@ -103,19 +92,32 @@ public class SplitOutputMatcher {
             }
             return apkFiles;
         } else {
+            Optional<? extends OutputFile> mainApk =
+                    outputs.stream()
+                            .filter(
+                                    outputFile ->
+                                            !outputFile.getOutputType().equals(OutputFile.SPLIT))
+                            .findFirst();
+            if (!mainApk.isPresent()) {
+                throw new RuntimeException("Cannot retrieve the main APK from variant outputs");
+            }
             if (splitSelectExe == null) {
                 throw new RuntimeException(
                         "Pure splits installation requires build tools 22 or above");
             }
-            return computeBestOutput(processExecutor, splitSelectExe, deviceConfigProvider,
-                    mainApk.getOutputFile(), splitApksPath);
+            return computeBestOutput(
+                    processExecutor,
+                    splitSelectExe,
+                    deviceConfigProvider,
+                    mainApk.get().getOutputFile(),
+                    splitApksPath);
         }
     }
 
     /**
      * Determines and return the list of APKs to use based on given device density and abis.
      *
-     * if there are pure splits, use the split-select tool otherwise revert to store logic.
+     * <p>if there are pure splits, use the split-select tool otherwise revert to store logic.
      *
      * @param processExecutor an executor to execute native processes.
      * @param splitSelectExe the split select tool optionally.
@@ -123,7 +125,7 @@ public class SplitOutputMatcher {
      * @param mainApk the main apk file.
      * @param splitApksPath the list of split apks path.
      * @return the list of APK files to install.
-     * @throws ProcessException
+     * @throws ProcessException when the splitSelect executable failed to execute.
      */
     @NonNull
     public static List<File> computeBestOutput(
@@ -131,15 +133,16 @@ public class SplitOutputMatcher {
             @NonNull File splitSelectExe,
             @NonNull DeviceConfigProvider deviceConfigProvider,
             @NonNull File mainApk,
-            @NonNull Collection<String> splitApksPath) throws ProcessException {
+            @NonNull Collection<String> splitApksPath)
+            throws ProcessException {
 
         // build the list of APKs.
         if (splitApksPath.isEmpty()) {
             return ImmutableList.of(mainApk);
         } else {
-            List<File> apkFiles = new ArrayList<File>();
+            List<File> apkFiles = new ArrayList<>();
 
-            Set<String> resultApksPath = new HashSet<String>();
+            Set<String> resultApksPath = new HashSet<>();
             for (String abi : deviceConfigProvider.getAbis()) {
                 String deviceConfiguration =
                         prepareConfigFormatMccMnc(deviceConfigProvider.getConfigFor(abi));
@@ -162,22 +165,20 @@ public class SplitOutputMatcher {
     /**
      * Determines and return the list of APKs to use based on given device density and abis.
      *
-     * This uses the same logic as the store, using two passes:
-     * First, find all the compatible outputs.
-     * Then take the one with the highest versionCode.
+     * <p>This uses the same logic as the store, using two passes: First, find all the compatible
+     * outputs. Then take the one with the highest versionCode.
      *
      * @param outputs the outputs to choose from.
      * @param variantAbiFilters a list of abi filters applied to the variant. This is used in place
-     *                          of the outputs, if there is a single output with no abi filters.
-     *                          If the list is null, then the variant does not restrict ABI
-     *                          packaging.
+     *     of the outputs, if there is a single output with no abi filters. If the list is null,
+     *     then the variant does not restrict ABI packaging.
      * @param deviceDensity the density of the device.
      * @param deviceAbis a list of ABIs supported by the device.
      * @return the list of APKs to install or null if none are compatible.
      */
     @NonNull
-    public static List<OutputFile> computeBestOutput(
-            @NonNull List<? extends VariantOutput> outputs,
+    public static <T extends VariantOutput> List<T> computeBestOutput(
+            @NonNull Collection<? extends T> outputs,
             @Nullable Collection<String> variantAbiFilters,
             int deviceDensity,
             @NonNull List<String> deviceAbis) {
@@ -191,44 +192,42 @@ public class SplitOutputMatcher {
         }
 
         // gather all compatible matches.
-        List<VariantOutput> matches = Lists.newArrayList();
+        List<T> matches = Lists.newArrayList();
 
         // find a matching output.
-        for (VariantOutput variantOutput : outputs) {
-            for (OutputFile output : variantOutput.getOutputs()) {
-                String densityFilter = getFilter(output, OutputFile.DENSITY);
-                String abiFilter = getFilter(output, OutputFile.ABI);
+        for (T variantOutput : outputs) {
+            String densityFilter = getFilter(variantOutput, OutputFile.DENSITY);
+            String abiFilter = getFilter(variantOutput, OutputFile.ABI);
 
-                if (densityFilter != null && !densityFilter.equals(densityValue)) {
-                    continue;
-                }
-
-                if (abiFilter != null && !deviceAbis.contains(abiFilter)) {
-                    continue;
-                }
-                matches.add(variantOutput);
-                break;
+            if (densityFilter != null && !densityFilter.equals(densityValue)) {
+                continue;
             }
+
+            if (abiFilter != null && !deviceAbis.contains(abiFilter)) {
+                continue;
+            }
+            matches.add(variantOutput);
         }
 
         if (matches.isEmpty()) {
             return ImmutableList.of();
         }
 
-        VariantOutput match = Collections.max(matches,
-                (splitOutput, splitOutput2) -> {
-                    int rc = splitOutput.getVersionCode() - splitOutput2.getVersionCode();
-                    if (rc != 0) {
-                        return rc;
-                    }
-                    int abiOrder1 = getAbiPreferenceOrder(splitOutput, deviceAbis);
-                    int abiOrder2 = getAbiPreferenceOrder(splitOutput2, deviceAbis);
-                    return abiOrder1 - abiOrder2;
-                });
+        T match =
+                Collections.max(
+                        matches,
+                        (splitOutput, splitOutput2) -> {
+                            int rc = splitOutput.getVersionCode() - splitOutput2.getVersionCode();
+                            if (rc != 0) {
+                                return rc;
+                            }
+                            int abiOrder1 = getAbiPreferenceOrder(splitOutput, deviceAbis);
+                            int abiOrder2 = getAbiPreferenceOrder(splitOutput2, deviceAbis);
+                            return abiOrder1 - abiOrder2;
+                        });
 
-        OutputFile mainOutputFile = match.getMainOutputFile();
-        return isMainApkCompatibleWithDevice(mainOutputFile, variantAbiFilters, deviceAbis)
-                ? ImmutableList.of(mainOutputFile)
+        return isMainApkCompatibleWithDevice(match, variantAbiFilters, deviceAbis)
+                ? ImmutableList.of(match)
                 : ImmutableList.of();
     }
 
@@ -239,7 +238,7 @@ public class SplitOutputMatcher {
      * the specified deviceAbi is the same.
      */
     private static int getAbiPreferenceOrder(VariantOutput variantOutput, List<String> deviceAbi) {
-        String abiFilter = getFilter(variantOutput.getMainOutputFile(), OutputFile.ABI);
+        String abiFilter = getFilter(variantOutput, OutputFile.ABI);
         if (Strings.isNullOrEmpty(abiFilter)) {
             // Null or empty imply a universal APK, which would return the second highest score.
             return deviceAbi.size() - 1;
@@ -259,7 +258,7 @@ public class SplitOutputMatcher {
     }
 
     private static boolean isMainApkCompatibleWithDevice(
-            OutputFile mainOutputFile,
+            VariantOutput mainOutputFile,
             Collection<String> variantAbiFilters,
             Collection<String> deviceAbis) {
         // so far, we are not dealing with the pure split files...
@@ -279,8 +278,9 @@ public class SplitOutputMatcher {
     }
 
     @Nullable
-    private static String getFilter(@NonNull OutputFile outputFile, @NonNull String filterType) {
-        for (FilterData filterData : outputFile.getFilters()) {
+    private static String getFilter(
+            @NonNull VariantOutput variantOutput, @NonNull String filterType) {
+        for (FilterData filterData : variantOutput.getFilters()) {
             if (filterData.getFilterType().equals(filterType)) {
                 return filterData.getIdentifier();
             }

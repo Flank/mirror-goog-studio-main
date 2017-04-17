@@ -19,6 +19,9 @@ package com.android.build.gradle.internal.ide;
 import com.android.annotations.NonNull;
 import com.android.annotations.concurrency.Immutable;
 import com.android.build.FilterData;
+import com.android.build.OutputFile;
+import com.android.build.VariantOutput;
+import com.google.common.base.MoreObjects;
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -32,7 +35,15 @@ public final class FilterDataImpl implements FilterData, Serializable {
     private final String filterType;
     private final String identifier;
 
-    FilterDataImpl(String filterType, String identifier) {
+    public static OutputFile.FilterType getType(FilterData filter) {
+        return VariantOutput.FilterType.valueOf(filter.getFilterType());
+    }
+
+    public FilterDataImpl(VariantOutput.FilterType filterType, String identifier) {
+        this(filterType.name(), identifier);
+    }
+
+    public FilterDataImpl(String filterType, String identifier) {
         this.filterType = filterType;
         this.identifier = identifier;
     }
@@ -69,5 +80,13 @@ public final class FilterDataImpl implements FilterData, Serializable {
     @Override
     public int hashCode() {
         return Objects.hash(filterType, identifier);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("type", filterType)
+                .add("value", identifier)
+                .toString();
     }
 }

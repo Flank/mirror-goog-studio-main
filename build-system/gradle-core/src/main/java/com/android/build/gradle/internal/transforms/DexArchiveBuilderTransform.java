@@ -32,6 +32,7 @@ import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
+import com.android.build.gradle.internal.pipeline.OriginalStream;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.builder.core.DefaultDexOptions;
 import com.android.builder.core.DexOptions;
@@ -120,7 +121,7 @@ public class DexArchiveBuilderTransform extends Transform {
     @NonNull
     @Override
     public Set<? super Scope> getScopes() {
-        return TransformManager.SCOPE_FULL_INSTANT_RUN_PROJECT;
+        return TransformManager.SCOPE_FULL_WITH_IR_FOR_DEXING;
     }
 
     @NonNull
@@ -244,7 +245,8 @@ public class DexArchiveBuilderTransform extends Transform {
         return content.getFile().isFile()
                 && content.getScopes().equals(Collections.singleton(Scope.EXTERNAL_LIBRARIES))
                 && content.getContentTypes()
-                        .equals(Collections.singleton(QualifiedContent.DefaultContentType.CLASSES));
+                        .equals(Collections.singleton(QualifiedContent.DefaultContentType.CLASSES))
+                && !content.getName().startsWith(OriginalStream.LOCAL_JAR_GROUPID);
     }
 
     private void processDirectoryInput(
@@ -324,19 +326,6 @@ public class DexArchiveBuilderTransform extends Transform {
     @NonNull
     private File getPreDexFile(
             @NonNull TransformOutputProvider output, @NonNull QualifiedContent qualifiedContent) {
-        // In InstantRun mode, all files are guaranteed to have a unique name due to the slicer
-        // transform. adding sha1 to the name can lead to cleaning issues in device, it's much
-        // easier if the slices always have the same names, irrespective of the current variant,
-        // last version wins.
-        String name;
-        if (instantRunMode
-                && (qualifiedContent.getScopes().contains(Scope.PROJECT)
-                        || qualifiedContent.getScopes().contains(Scope.SUB_PROJECTS))) {
-            name = PreDexTransform.getInstantRunFileName(qualifiedContent.getFile());
-        } else {
-            name = FileUtils.getDirectoryNameForJar(qualifiedContent.getFile());
-        }
-
         Format outputFormat;
         if (qualifiedContent.getFile().isDirectory()) {
             outputFormat = Format.DIRECTORY;
@@ -346,14 +335,15 @@ public class DexArchiveBuilderTransform extends Transform {
 
         File contentLocation =
                 output.getContentLocation(
-                        name,
+                        qualifiedContent.getName(),
                         ImmutableSet.of(ExtendedContentType.DEX_ARCHIVE),
                         qualifiedContent.getScopes(),
                         outputFormat);
 
-        FileUtils.mkdirs(contentLocation.getParentFile());
         if (outputFormat == Format.DIRECTORY) {
             FileUtils.mkdirs(contentLocation);
+        } else {
+            FileUtils.mkdirs(contentLocation.getParentFile());
         }
         return contentLocation;
     }

@@ -17,18 +17,13 @@
 package com.android.build.gradle.tasks.factory;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.scope.ConventionMappingHelper;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
+import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.TestServerTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.BaseVariantOutputData;
-import com.android.build.gradle.internal.variant.LibraryVariantData;
-import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.builder.testing.api.TestServer;
 import com.android.utils.StringHelper;
-import java.io.File;
-import java.util.concurrent.Callable;
 import org.gradle.api.plugins.JavaBasePlugin;
 
 /**
@@ -60,13 +55,8 @@ public class TestServerTaskConfigAction implements TaskConfigAction<TestServerTa
     }
     @Override
     public void execute(@NonNull TestServerTask serverTask) {
-        final BaseVariantData<? extends BaseVariantOutputData> baseVariantData =
-                scope.getTestedVariantData();
-        final TestVariantData testVariantData = (TestVariantData) scope.getVariantData();
 
-        // get single output for now
-        final BaseVariantOutputData variantOutputData = baseVariantData.getMainOutput();
-        final BaseVariantOutputData testVariantOutputData = testVariantData.getMainOutput();
+        final BaseVariantData testedVariantData = scope.getTestedVariantData();
 
         final String variantName = scope.getVariantConfiguration().getFullName();
         serverTask.setDescription(
@@ -79,18 +69,16 @@ public class TestServerTaskConfigAction implements TaskConfigAction<TestServerTa
 
         serverTask.setTestServer(testServer);
 
-        ConventionMappingHelper.map(serverTask, "testApk",
-                (Callable<File>) testVariantOutputData::getOutputFile);
-        if (!(baseVariantData instanceof LibraryVariantData)) {
-            ConventionMappingHelper.map(
-                    serverTask,
-                    "testedApk",
-                    (Callable<File>) variantOutputData::getOutputFile);
+        if (testedVariantData != null
+                && testedVariantData.getScope().hasOutput(TaskOutputHolder.TaskOutputType.APK)) {
+            serverTask.setTestedApks(
+                    testedVariantData.getScope().getOutputs(TaskOutputHolder.TaskOutputType.APK));
         }
+
+        serverTask.setTestApks(scope.getOutputs(TaskOutputHolder.TaskOutputType.APK));
 
         if (!testServer.isConfigured()) {
             serverTask.setEnabled(false);
         }
     }
-
 }

@@ -20,8 +20,9 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
-import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.variant.BaseVariantData;
+import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.build.gradle.tasks.AidlCompile;
 import com.android.build.gradle.tasks.ExternalNativeBuildTask;
 import com.android.build.gradle.tasks.GenerateBuildConfig;
@@ -33,13 +34,12 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.BuildType;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SourceProvider;
-import com.google.common.collect.Lists;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.Callable;
-import org.gradle.api.Project;
+import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Task;
+import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.compile.JavaCompile;
@@ -47,10 +47,10 @@ import org.gradle.api.tasks.compile.JavaCompile;
 /**
  * Base class for variants.
  *
- * This is a wrapper around the internal data model, in order to control what is accessible
+ * <p>This is a wrapper around the internal data model, in order to control what is accessible
  * through the external API.
  */
-abstract class BaseVariantImpl implements BaseVariant {
+public abstract class BaseVariantImpl implements BaseVariant {
 
     @NonNull
     protected AndroidBuilder androidBuilder;
@@ -58,17 +58,19 @@ abstract class BaseVariantImpl implements BaseVariant {
     @NonNull
     protected ReadOnlyObjectProvider readOnlyObjectProvider;
 
-    protected List<BaseVariantOutput> outputs = Lists.newArrayListWithExpectedSize(1);
+    @NonNull protected NamedDomainObjectContainer<BaseVariantOutput> outputs;
 
     BaseVariantImpl(
             @NonNull AndroidBuilder androidBuilder,
-            @NonNull ReadOnlyObjectProvider readOnlyObjectProvider) {
+            @NonNull ReadOnlyObjectProvider readOnlyObjectProvider,
+            @NonNull NamedDomainObjectContainer<BaseVariantOutput> outputs) {
         this.androidBuilder = androidBuilder;
         this.readOnlyObjectProvider = readOnlyObjectProvider;
+        this.outputs = outputs;
     }
 
     @NonNull
-    protected abstract BaseVariantData<?> getVariantData();
+    protected abstract BaseVariantData getVariantData();
 
     public void addOutputs(@NonNull List<BaseVariantOutput> outputs) {
        this.outputs.addAll(outputs);
@@ -106,7 +108,7 @@ abstract class BaseVariantImpl implements BaseVariant {
 
     @NonNull
     @Override
-    public List<BaseVariantOutput> getOutputs() {
+    public Collection<BaseVariantOutput> getOutputs() {
         return outputs;
     }
 
@@ -135,6 +137,24 @@ abstract class BaseVariantImpl implements BaseVariant {
     @Override
     public List<SourceProvider> getSourceSets() {
         return getVariantData().getVariantConfiguration().getSortedSourceProviders();
+    }
+
+    @NonNull
+    @Override
+    public Configuration getCompileConfiguration() {
+        return getVariantData().getVariantDependency().getCompileClasspath();
+    }
+
+    @NonNull
+    @Override
+    public Configuration getRuntimeConfiguration() {
+        return getVariantData().getVariantDependency().getRuntimeClasspath();
+    }
+
+    @NonNull
+    @Override
+    public Configuration getAnnotationProcessorConfiguration() {
+        return getVariantData().getVariantDependency().getAnnotationProcessorConfiguration();
     }
 
     @Override
@@ -226,7 +246,7 @@ abstract class BaseVariantImpl implements BaseVariant {
     @Override
     @Nullable
     public Task getAssemble() {
-        return getVariantData().assembleVariantTask;
+        return getVariantData().getTaskByKind(TaskContainer.TaskKind.ASSEMBLE);
     }
 
     @Override
@@ -255,11 +275,13 @@ abstract class BaseVariantImpl implements BaseVariant {
     }
 
     @Override
+    @Deprecated
     public void registerResGeneratingTask(@NonNull Task task, @NonNull File... generatedResFolders) {
         getVariantData().registerResGeneratingTask(task, generatedResFolders);
     }
 
     @Override
+    @Deprecated
     public void registerResGeneratingTask(@NonNull Task task, @NonNull Collection<File> generatedResFolders) {
         getVariantData().registerResGeneratingTask(task, generatedResFolders);
     }
@@ -271,22 +293,13 @@ abstract class BaseVariantImpl implements BaseVariant {
 
     @NonNull
     @Override
-    public FileCollection getCompileClasspath(@Nullable Object key) {
-        // this needs to be dynamic since not everything is setup when this is called
-        final VariantScope scope = getVariantData().getScope();
-        final Project project = scope.getGlobalScope().getProject();
-        return project.files(
-                (Callable<FileCollection>)
-                        () -> {
-                            FileCollection preJavac = scope.getPreJavacClasspath();
-
-                            if (key != null) {
-                                return preJavac.plus(
-                                        getVariantData().getGeneratedBytecodeUpTo(key));
-                            }
-
-                            return preJavac.plus(getVariantData().getAllGeneratedBytecode());
-                        });
+    public FileCollection getCompileClasspath(@Nullable Object generatorKey) {
+        return getVariantData()
+                .getScope()
+                .getJavaClasspath(
+                        AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
+                        AndroidArtifacts.ArtifactType.CLASSES,
+                        generatorKey);
     }
 
     @Override

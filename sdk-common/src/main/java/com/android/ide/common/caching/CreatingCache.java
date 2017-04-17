@@ -24,7 +24,6 @@ import com.android.annotations.VisibleForTesting;
 import com.android.annotations.concurrency.GuardedBy;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -130,13 +129,21 @@ public class CreatingCache<K, V> {
             case EXISTING_VALUE:
                 return state.getValue();
             case NEW_VALUE:
-                // create the actual value content.
-                V value = mValueFactory.create(key);
+                try {
+                    // create the actual value content.
+                    V value = mValueFactory.create(key);
 
-                // add to cache, and enable other threads to use the value.
-                addNewValue(key, value, state.getLatch());
+                    // add to cache, and enable other threads to use the value.
+                    addNewValue(key, value, state.getLatch());
 
-                return value;
+                    return value;
+                } catch (Throwable t) {
+                    // need to clear the cache state.
+                    clearStateForKey(key, state.getLatch());
+
+                    // rethrow the exception
+                    throw t;
+                }
             case PROCESSED_VALUE:
                 // wait for value to become available
                 try {
@@ -147,7 +154,13 @@ public class CreatingCache<K, V> {
                 }
                 synchronized (this) {
                     // get it from the map cache.
-                    return mCache.get(key);
+                    final V value = mCache.get(key);
+                    if (value == null) {
+                        // previous failure failed, attempt to get it again
+                        return get(key, queryListener);
+                    } else {
+                        return value;
+                    }
                 }
             default:
                 throw new IllegalStateException("unsupported ResultType: " + state.getState());
@@ -258,6 +271,17 @@ public class CreatingCache<K, V> {
             @NonNull V value,
             @NonNull CountDownLatch latch) {
         mCache.put(key, value);
+        clearStateForKey(key, latch);
+    }
+
+    /**
+     * Clears the cache state for a key that is done being processed, successfully or
+     * unsuccessfully.
+     *
+     * @param key the key
+     * @param latch the latch to unblock other consumers
+     */
+    private synchronized void clearStateForKey(@NonNull K key, @NonNull CountDownLatch latch) {
         mProcessedValues.remove(key);
         latch.countDown();
     }

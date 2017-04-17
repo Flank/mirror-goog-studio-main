@@ -16,17 +16,16 @@
 
 package com.android.builder.testing;
 
-import static org.junit.Assert.assertEquals;
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.android.testutils.TestResources;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 import java.io.File;
 import java.util.Collections;
 import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.stream.Collectors;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -49,21 +48,15 @@ public class MockableJarGeneratorTest {
 
         assertTrue(outputJar.exists());
 
-        Set<String> expectedEntries = ImmutableSet.of(
-                "META-INF/",
-                "META-INF/MANIFEST.MF",
-                "NonFinalClass.class",
-                "FinalClass.class");
-
-        Set<String> actualEntries = Sets.newHashSet();
-        JarFile jarFile = new JarFile(outputJar);
-        for (JarEntry entry : Collections.list(jarFile.entries())) {
-            actualEntries.add(entry.getName());
+        try (JarFile jarFile = new JarFile(outputJar)) {
+            Set<String> names =
+                    Collections.list(jarFile.entries())
+                            .stream()
+                            .map(JarEntry::getName)
+                            .collect(Collectors.toSet());
+            assertThat(names)
+                    .containsExactly(
+                            "META-INF/MANIFEST.MF", "NonFinalClass.class", "FinalClass.class");
         }
-
-        assertEquals(expectedEntries, actualEntries);
-        // TODO: Verify bytecode?
-
-        jarFile.close();
     }
 }

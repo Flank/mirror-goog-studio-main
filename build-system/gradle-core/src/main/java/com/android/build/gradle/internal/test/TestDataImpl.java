@@ -16,9 +16,15 @@
 
 package com.android.build.gradle.internal.test;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.OutputFile;
+import com.android.build.VariantOutput;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.scope.BuildOutputs;
+import com.android.build.gradle.internal.scope.TaskOutputHolder;
+import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.TestedVariantData;
@@ -33,7 +39,12 @@ import com.android.ide.common.process.ProcessExecutor;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
+import javax.xml.parsers.ParserConfigurationException;
+import org.xml.sax.SAXException;
 
 /**
  * Implementation of {@link TestData} on top of a {@link TestVariantData}
@@ -51,9 +62,19 @@ public class TestDataImpl extends AbstractTestDataImpl {
         super(testVariantData.getVariantConfiguration());
         this.testVariantData = testVariantData;
         this.testVariantConfig = testVariantData.getVariantConfiguration();
-        if (testVariantData.getOutputs().size() > 1) {
+        if (testVariantData
+                        .getSplitScope()
+                        .getSplitsByType(VariantOutput.OutputType.FULL_SPLIT)
+                        .size()
+                > 1) {
             throw new RuntimeException("Multi-output in test variant not yet supported");
         }
+    }
+
+    @Override
+    public void loadFromMetadataFile(File metadataFile)
+            throws ParserConfigurationException, SAXException, IOException {
+        // do nothing, there is nothing in the metadata file we cannot get from the tested scope.
     }
 
     @NonNull
@@ -71,7 +92,7 @@ public class TestDataImpl extends AbstractTestDataImpl {
     @Override
     public boolean isLibrary() {
         TestedVariantData testedVariantData = testVariantData.getTestedVariantData();
-        BaseVariantData<?> testedVariantData2 = (BaseVariantData) testedVariantData;
+        BaseVariantData testedVariantData2 = (BaseVariantData) testedVariantData;
         return testedVariantData2.getVariantConfiguration().getType() == VariantType.LIBRARY;
     }
 
@@ -82,23 +103,44 @@ public class TestDataImpl extends AbstractTestDataImpl {
             @Nullable File splitSelectExe,
             @NonNull DeviceConfigProvider deviceConfigProvider,
             @NonNull ILogger logger) throws ProcessException {
-        BaseVariantData<?> testedVariantData =
+        BaseVariantData testedVariantData =
                 (BaseVariantData) testVariantData.getTestedVariantData();
 
         ImmutableList.Builder<File> apks = ImmutableList.builder();
-        apks.addAll(SplitOutputMatcher.computeBestOutput(
-                processExecutor,
-                splitSelectExe,
-                deviceConfigProvider,
-                testedVariantData.getOutputs(),
-                testedVariantData.getVariantConfiguration().getSupportedAbis()));
+        // FIX ME : there has to be a better way...
+        Collection<OutputFile> splitOutputs =
+                ImmutableList.copyOf(
+                        BuildOutputs.load(
+                                VariantScope.TaskOutputType.APK,
+                                testedVariantData
+                                        .getScope()
+                                        .getOutputs(VariantScope.TaskOutputType.APK)));
+        apks.addAll(
+                SplitOutputMatcher.computeBestOutput(
+                        processExecutor,
+                        splitSelectExe,
+                        deviceConfigProvider,
+                        splitOutputs,
+                        testedVariantData.getVariantConfiguration().getSupportedAbis()));
         return apks.build();
     }
 
     @NonNull
     @Override
     public File getTestApk() {
-        return testVariantData.getMainOutput().getOutputFile();
+        Optional<File> testApkFile =
+                testVariantData
+                        .getScope()
+                        .getOutputs(TaskOutputHolder.TaskOutputType.APK)
+                        .getAsFileTree()
+                        .getFiles()
+                        .stream()
+                        .filter(file -> file.getName().endsWith(SdkConstants.DOT_ANDROID_PACKAGE))
+                        .findFirst();
+        if (!testApkFile.isPresent()) {
+            throw new RuntimeException("Cannot find test APK file in scope");
+        }
+        return testApkFile.get();
     }
 
     @NonNull

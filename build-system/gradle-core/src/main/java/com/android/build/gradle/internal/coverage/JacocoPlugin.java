@@ -57,11 +57,13 @@ public class JacocoPlugin implements Plugin<Project> {
                 .getConfigurations()
                 .create(
                         AGENT_CONFIGURATION_NAME,
-                        files -> {
-                            files.setVisible(false);
-                            files.setTransitive(true);
-                            files.setDescription("The Jacoco agent to use to get coverage data.");
-                            files.defaultDependencies(
+                        configuration -> {
+                            configuration.setVisible(false);
+                            configuration.setTransitive(true);
+                            configuration.setCanBeConsumed(false);
+                            configuration.setDescription(
+                                    "The Jacoco agent to use to get coverage data.");
+                            configuration.defaultDependencies(
                                     dependencies ->
                                             dependencies.add(
                                                     project.getDependencies()
@@ -73,12 +75,13 @@ public class JacocoPlugin implements Plugin<Project> {
                 .getConfigurations()
                 .create(
                         ANT_CONFIGURATION_NAME,
-                        files -> {
-                            files.setVisible(false);
-                            files.setTransitive(true);
-                            files.setDescription(
+                        configuration -> {
+                            configuration.setVisible(false);
+                            configuration.setTransitive(true);
+                            configuration.setCanBeConsumed(false);
+                            configuration.setDescription(
                                     "The Jacoco ant tasks to use to get execute Gradle tasks.");
-                            files.defaultDependencies(
+                            configuration.defaultDependencies(
                                     dependencies ->
                                             dependencies.add(
                                                     project.getDependencies()

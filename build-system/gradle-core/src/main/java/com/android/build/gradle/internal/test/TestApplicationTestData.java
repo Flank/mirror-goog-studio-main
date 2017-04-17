@@ -18,70 +18,86 @@ package com.android.build.gradle.internal.test;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.api.ApkOutputFile;
+import com.android.build.VariantOutput;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.internal.publishing.FilterDataPersistence;
-import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.BaseVariantOutputData;
-import com.android.builder.core.AndroidBuilder;
-import com.android.builder.core.ApkInfoParser;
+import com.android.build.gradle.internal.scope.BuildOutput;
+import com.android.build.gradle.internal.scope.BuildOutputs;
+import com.android.build.gradle.internal.scope.SplitScope;
+import com.android.build.gradle.internal.scope.TaskOutputHolder;
+import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.testing.TestData;
 import com.android.builder.testing.api.DeviceConfigProvider;
 import com.android.ide.common.build.SplitOutputMatcher;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessExecutor;
-import com.android.sdklib.BuildToolInfo;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
-import org.gradle.api.artifacts.Configuration;
+import java.util.stream.Collectors;
+import javax.xml.parsers.ParserConfigurationException;
+import org.gradle.api.file.FileCollection;
+import org.xml.sax.SAXException;
 
 /**
  * Implementation of {@link TestData} for separate test modules.
  */
 public class TestApplicationTestData extends  AbstractTestDataImpl {
 
-    private final Configuration testedConfiguration;
-    private final Configuration testedMetadata;
-    private final AndroidBuilder androidBuilder;
-    private final BaseVariantData testVariant;
+    private final String testApplicationId;
+    private final Map<String, String> testedProperties;
+    private final FileCollection testApk;
+    private final FileCollection testedApks;
+    private final GradleVariantConfiguration variantConfiguration;
 
     public TestApplicationTestData(
-            BaseVariantData<? extends BaseVariantOutputData>  testVariantData,
-            Configuration testedConfiguration,
-            Configuration testedMetadata,
-            AndroidBuilder androidBuilder) {
-        super(testVariantData.getVariantConfiguration());
-        this.testVariant = testVariantData;
-        this.testedConfiguration = testedConfiguration;
-        this.testedMetadata = testedMetadata;
-        this.androidBuilder = androidBuilder;
+            GradleVariantConfiguration variantConfiguration,
+            String testApplicationId,
+            FileCollection testApk,
+            FileCollection testedApks) {
+        super(variantConfiguration);
+        this.variantConfiguration = variantConfiguration;
+        this.testedProperties = new HashMap<>();
+        this.testApplicationId = testApplicationId;
+        this.testApk = testApk;
+        this.testedApks = testedApks;
+    }
+
+    @Override
+    public void loadFromMetadataFile(File metadataFile)
+            throws ParserConfigurationException, SAXException, IOException {
+        Collection<BuildOutput> testedManifests =
+                BuildOutputs.load(TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS, metadataFile);
+        // all published manifests have the same package so first one will do.
+        Optional<BuildOutput> splitOutput = testedManifests.stream().findFirst();
+
+        if (splitOutput.isPresent()) {
+            testedProperties.putAll(splitOutput.get().getProperties());
+        } else {
+            throw new RuntimeException(
+                    "No merged manifest metadata at " + metadataFile.getAbsolutePath());
+        }
     }
 
     @NonNull
     @Override
     public String getApplicationId() {
-        return testVariant.getApplicationId();
+        return testApplicationId;
     }
 
     @Nullable
     @Override
     public String getTestedApplicationId() {
-        ApkInfoParser.ApkInfo apkInfo = loadTestedApkInfo();
-        return apkInfo.getPackageName();
+        return testedProperties.get("packageId");
     }
 
     @Override
@@ -98,20 +114,22 @@ public class TestApplicationTestData extends  AbstractTestDataImpl {
             @NonNull ILogger logger) throws ProcessException {
 
         // use a Set to remove duplicate entries.
-        ImmutableList.Builder<File> testedApks = ImmutableList.builder();
+        ImmutableList.Builder<File> selectedApks = ImmutableList.builder();
         // retrieve all the published files.
-        Set<File> testedApkFiles = testedConfiguration.getFiles();
+        Set<File> testedApkFiles = this.testedApks.getFiles();
         // if we have more than one, that means pure splits are in the equation.
         if (testedApkFiles.size() > 1 && splitSelectExe != null) {
 
-            List<File> testedSplitApkFiles = getSplitApks();
-            List<String> testedSplitApksPath = Lists.transform(testedSplitApkFiles,
-                    file -> file != null ? file.getAbsolutePath() : null);
-            testedApks.addAll(
-                    SplitOutputMatcher.computeBestOutput(processExecutor,
+            SplitScope testedSplitScope = new SplitScope(SplitHandlingPolicy.PRE_21_POLICY);
+            BuildOutputs.load(VariantScope.TaskOutputType.APK, testedApks);
+
+            List<String> testedSplitApksPath = getSplitApks(testedSplitScope);
+            selectedApks.addAll(
+                    SplitOutputMatcher.computeBestOutput(
+                            processExecutor,
                             splitSelectExe,
                             deviceConfigProvider,
-                            getMainApk(),
+                            getMainApk(testedSplitScope),
                             testedSplitApksPath));
         } else {
             // if we have only one or no split-select tool available, just install them all
@@ -119,17 +137,24 @@ public class TestApplicationTestData extends  AbstractTestDataImpl {
             if (testedApkFiles.size() > 1) {
                 logger.warning("split-select tool unavailable, all split APKs will be installed");
             }
-            testedApks.addAll(testedApkFiles);
+            selectedApks.addAll(testedApkFiles);
         }
-        return testedApks.build();
+        return selectedApks.build();
     }
 
     @NonNull
     @Override
     public File getTestApk() {
-        ImmutableList<ApkOutputFile> outputs = testVariant.getMainOutput().getOutputs();
-        Preconditions.checkState(outputs.size() == 1, "There must be exactly one output");
-        return outputs.get(0).getOutputFile();
+        Collection<BuildOutput> testApkOutputs =
+                BuildOutputs.load(VariantScope.TaskOutputType.APK, testApk);
+        if (testApkOutputs.size() != 1) {
+            throw new RuntimeException(
+                    "Unexpected number of main APKs, expected 1, got  "
+                            + testApkOutputs.size()
+                            + ":"
+                            + Joiner.on(",").join(testApkOutputs));
+        }
+        return testApkOutputs.iterator().next().getOutputFile();
     }
 
     @NonNull
@@ -138,7 +163,6 @@ public class TestApplicationTestData extends  AbstractTestDataImpl {
         // For now we check if there are any test sources. We could inspect the test classes and
         // apply JUnit logic to see if there's something to run, but that would not catch the case
         // where user makes a typo in a test name or forgets to inherit from a JUnit class
-        GradleVariantConfiguration variantConfiguration = testVariant.getVariantConfiguration();
         ImmutableList.Builder<File> javaDirectories = ImmutableList.builder();
         for (SourceProvider sourceProvider : variantConfiguration.getSortedSourceProviders()) {
             javaDirectories.addAll(sourceProvider.getJavaDirectories());
@@ -146,85 +170,42 @@ public class TestApplicationTestData extends  AbstractTestDataImpl {
         return javaDirectories.build();
     }
 
-    private ApkInfoParser.ApkInfo loadTestedApkInfo() {
-
-        File aaptFile = new File(androidBuilder.getTargetInfo().getBuildTools()
-                .getPath(BuildToolInfo.PathId.AAPT));
-        ApkInfoParser apkInfoParser =
-                new ApkInfoParser(aaptFile, androidBuilder.getProcessExecutor());
-        try {
-            return apkInfoParser.parseApk(getMainApk());
-        } catch (ProcessException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     @NonNull
-    public List<File> getSplitApks() {
-        List<File> testedApkFiles = new ArrayList<>(testedConfiguration.getFiles());
-        if (testedApkFiles.size() > 1) {
-            testedApkFiles.remove(getMainApk());
-            return testedApkFiles;
-        } else {
-            return Collections.emptyList();
-        }
+    public static List<String> getSplitApks(SplitScope splitScope) {
+        return splitScope
+                .getOutputs(TaskOutputHolder.TaskOutputType.APK)
+                .stream()
+                .filter(
+                        splitOutput ->
+                                splitOutput.getApkInfo().getType()
+                                        == VariantOutput.OutputType.SPLIT)
+                .map(splitOutput -> splitOutput.getOutputFile().getAbsolutePath())
+                .collect(Collectors.toList());
     }
 
     /**
      * Retrieve the main APK from the list of APKs published by the tested configuration. There can
      * be multiple split APKs along the main APK returned by the configuration.
      *
-     * @return the tested main APK.
+     * @return the tested main APK
      */
     @NonNull
-    public File getMainApk() {
-        Set<File> testedApkFiles = new HashSet<>(testedConfiguration.getFiles());
-        if (testedApkFiles.size() > 1) {
-            // we have splits in the mix, find the right APK.
-            List<FilterDataPersistence.Record> filterDatas = loadMetadata();
-            for (FilterDataPersistence.Record filterData : filterDatas) {
-                File splitFile = findSplitFile(testedApkFiles, filterData.splitFileName);
-                if (splitFile != null) {
-                    testedApkFiles.remove(splitFile);
-                } else {
-                    // this is an error, we cannot find a file which is in the variant metadata
-                    throw new RuntimeException(
-                            String.format("Internal Error : %1$s is not in the list of published files",
-                                    filterData.splitFileName));
-                }
-            }
-            // at this point, only the main APK file should remain.
-            if (testedApkFiles.size() != 1) {
-                // we still have published files we don't know about.
-                throw new RuntimeException(
-                        String.format("Internal Error : %1$s files are not in the variant metadata",
-                                Joiner.on(",").join(testedApkFiles)));
-            }
-        }
-        if (testedApkFiles.isEmpty()) {
-            throw new RuntimeException("Cannot retrieve tested APKs");
-        }
-        return Iterables.getOnlyElement(testedApkFiles);
-    }
+    private static File getMainApk(SplitScope splitScope) {
 
-    private List<FilterDataPersistence.Record> loadMetadata() {
-        File metadataFile = testedMetadata.getSingleFile();
-        FilterDataPersistence persistence = new FilterDataPersistence();
-        List<FilterDataPersistence.Record> filterDatas;
-        try {
-            return persistence.load(new FileReader(metadataFile));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
+        Optional<File> mainApk =
+                splitScope
+                        .getOutputs(TaskOutputHolder.TaskOutputType.APK)
+                        .stream()
+                        .filter(
+                                splitOutput ->
+                                        splitOutput.getApkInfo().getType()
+                                                != VariantOutput.OutputType.SPLIT)
+                        .map(BuildOutput::getOutputFile)
+                        .findFirst();
 
-    @Nullable
-    private static File findSplitFile(Collection<File> splitFiles, String splitFileName) {
-        for (File splitFile : splitFiles) {
-            if (splitFile.getName().equals(splitFileName)) {
-                return splitFile;
-            }
+        if (mainApk.isPresent()) {
+            return mainApk.get();
         }
-        return null;
+        throw new RuntimeException("Cannot retrieve main APK");
     }
 }

@@ -39,7 +39,6 @@ import com.google.common.io.Files;
 import com.google.common.truth.Expect;
 import java.util.ArrayList;
 import java.util.List;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -66,7 +65,6 @@ public class KotlinHotSwapTest {
 
     @Before
     public void activityClass() throws Exception {
-        Assume.assumeFalse("Not relevant for Jack", GradleTestProject.USE_JACK);
         createActivityClass(ORIGINAL_MESSAGE);
     }
 

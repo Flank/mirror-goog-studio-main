@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.dsl.LintOptions;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
+import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.BaseTask;
 import com.android.builder.model.AndroidProject;
@@ -55,9 +56,12 @@ import java.util.Map;
 import java.util.Set;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.plugins.JavaBasePlugin;
+import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.tooling.provider.model.ToolingModelBuilder;
@@ -91,6 +95,16 @@ public class Lint extends BaseTask {
     @Nullable private File reportsDir;
     private File manifestReportFile;
     private File outputsDir;
+
+    private FileCollection manifestsForVariant;
+
+    @InputFiles
+    @Optional
+    public FileCollection getManifestsForVariant() {
+        return manifestsForVariant;
+    }
+
+    private VariantScope variantScope;
 
     public void setLintOptions(@NonNull LintOptions lintOptions) {
         this.lintOptions = lintOptions;
@@ -467,6 +481,8 @@ public class Lint extends BaseTask {
             }
             lint.setAndroidBuilder(globalScope.getAndroidBuilder());
             lint.setVariantName(scope.getVariantConfiguration().getFullName());
+            lint.manifestsForVariant = scope.getOutputs(
+                    TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS);
             lint.setToolingRegistry(globalScope.getToolingRegistry());
             lint.setReportsDir(globalScope.getReportsDir());
             lint.setOutputsDir(scope.getGlobalScope().getOutputsDir());
@@ -507,6 +523,8 @@ public class Lint extends BaseTask {
             task.setSdkHome(checkNotNull(
                     globalScope.getSdkHandler().getSdkFolder(), "SDK not set up."));
             task.setVariantName(variantName);
+            task.manifestsForVariant = scope.getOutputs(
+                    TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS);
             task.setToolingRegistry(globalScope.getToolingRegistry());
             task.setReportsDir(globalScope.getReportsDir());
             task.setOutputsDir(scope.getGlobalScope().getOutputsDir());

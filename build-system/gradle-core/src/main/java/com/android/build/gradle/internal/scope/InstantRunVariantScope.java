@@ -40,6 +40,9 @@ public interface InstantRunVariantScope {
     TransformGlobalScope getGlobalScope();
 
     @NonNull
+    File getBuildInfoOutputFolder();
+
+    @NonNull
     File getReloadDexOutputFolder();
 
     @NonNull

@@ -71,13 +71,16 @@ android {
     @Test
     void "check apk content"() {
         GradleTestProject app = project.getSubproject("app");
-        Apk gingerbreadUniversal = app.getApk("gingerbread", "universal", "debug");
+        Apk gingerbreadUniversal = app.getApk("universal",  GradleTestProject.ApkType.DEBUG, "gingerbread");
         if (!gingerbreadUniversal.exists()) {
             throw new RuntimeException(String.format("Could not find %s", gingerbreadUniversal));
         }
-        assertThatApk(app.getApk("gingerbread", "universal", "debug")).contains("lib/armeabi-v7a/libhello-jni.so");
-        assertThatApk(app.getApk("icecreamSandwich", "armeabi-v7a", "debug")).contains("lib/armeabi-v7a/libhello-jni.so");
-        assertThatApk(app.getApk("icecreamSandwich", "x86", "debug")).doesNotContain("lib/armeabi-v7a/libhello-jni.so");
+        assertThatApk(app.getApk("universal",  GradleTestProject.ApkType.DEBUG, "gingerbread"))
+                .contains("lib/armeabi-v7a/libhello-jni.so");
+        assertThatApk(app.getApk("armeabi-v7a",  GradleTestProject.ApkType.DEBUG, "icecreamSandwich"))
+                .contains("lib/armeabi-v7a/libhello-jni.so");
+        assertThatApk(app.getApk("x86",  GradleTestProject.ApkType.DEBUG, "icecreamSandwich"))
+                .doesNotContain("lib/armeabi-v7a/libhello-jni.so");
     }
 
     @Test

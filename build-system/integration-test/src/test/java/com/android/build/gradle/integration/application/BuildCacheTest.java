@@ -18,22 +18,19 @@ package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
-import static org.junit.Assert.assertNotNull;
 
-import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.RunGradleTasks;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.build.gradle.integration.common.utils.AssumeUtil;
+import com.android.build.gradle.integration.common.fixture.app.TransformOutputContent;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.internal.pipeline.SubStream;
 import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.StringOption;
 import com.android.utils.FileUtils;
-import com.google.common.base.Throwables;
+import com.google.common.truth.Truth;
 import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.attribute.FileTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.junit.Before;
@@ -51,7 +48,6 @@ public class BuildCacheTest {
 
     @Before
     public void setUp() throws Exception {
-        AssumeUtil.assumeNotUsingJack();
         // Add a dependency on an external library (guava)
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
@@ -60,63 +56,66 @@ public class BuildCacheTest {
 
     @Test
     public void testBuildCacheEnabled() throws Exception {
-        Path buildCacheDir = Paths.get(project.getTestDir().getAbsolutePath(), "build-cache");
-        Files.deleteIfExists(buildCacheDir);
+        File buildCacheDir = new File(project.getTestDir(), "build-cache");
+        FileUtils.deletePath(buildCacheDir);
 
         RunGradleTasks executor =
                 project.executor()
                         .withUseDexArchive(false)
-                        .withProperty("android.enableBuildCache", "true")
-                        .withProperty("android.buildCacheDir", buildCacheDir.toString());
+                        .with(BooleanOption.ENABLE_BUILD_CACHE, true)
+                        .with(StringOption.BUILD_CACHE_DIR, buildCacheDir.getAbsolutePath());
         executor.run("clean", "assembleDebug");
 
-        Path preDexDir =
-                Paths.get(project.getIntermediatesDir().getAbsolutePath(), "transforms", "preDex");
-        List<Path> dexFiles =
-                Files.walk(preDexDir).filter(Files::isRegularFile).collect(Collectors.toList());
-        List<Path> cachedEntryDirs =
-                Files.walk(buildCacheDir, 1)
-                        .filter(Files::isDirectory)
-                        .skip(1)
+        File preDexDir =
+                FileUtils.join(project.getIntermediatesDir(), "transforms", "preDex", "debug");
+        TransformOutputContent preDexContent = new TransformOutputContent(preDexDir);
+
+        List<File> cachedEntryDirs =
+                Arrays.stream(buildCacheDir.listFiles())
+                        .filter(File::isDirectory) // Remove the lock files
                         .collect(Collectors.toList());
 
-        assertThat(dexFiles).hasSize(2);
+        assertThat(preDexContent).hasSize(2);
         assertThat(cachedEntryDirs).hasSize(1);
 
         // Check the timestamps of the guava library's pre-dexed file and the cached file to make
         // sure we actually copied one to the other and did not run pre-dexing twice to create the
         // two files
-        Path cachedGuavaDexFile = cachedEntryDirs.get(0).resolve("output");
-        Path guavaDexFile;
-        Path projectDexFile;
-        if (dexFiles.get(0).getFileName().toString().contains("guava")) {
-            guavaDexFile = dexFiles.get(0);
-            projectDexFile = dexFiles.get(1);
-        } else {
-            guavaDexFile = dexFiles.get(1);
-            projectDexFile = dexFiles.get(0);
+        File cachedGuavaDexFile = new File(cachedEntryDirs.get(0), "output");
+        File guavaDexFile = null;
+        File projectDexFile = null;
+        for (SubStream subStream : preDexContent) {
+            if (subStream.getName().contains("guava")) {
+                guavaDexFile = preDexContent.getLocation(subStream);
+            } else {
+                projectDexFile = preDexContent.getLocation(subStream);
+            }
         }
-        FileTime cachedGuavaTimestamp = Files.getLastModifiedTime(cachedGuavaDexFile);
-        FileTime projectTimestamp = Files.getLastModifiedTime(projectDexFile);
 
-        assertThat(Files.getLastModifiedTime(guavaDexFile)).isEqualTo(cachedGuavaTimestamp);
+        Truth.assertThat(guavaDexFile).named("guava dex file from: " + preDexDir).isNotNull();
+        Truth.assertThat(projectDexFile).named("project dex file from: " + preDexDir).isNotNull();
+
+        long cachedGuavaTimestamp = cachedGuavaDexFile.lastModified();
+        long projectTimestamp = projectDexFile.lastModified();
+
+        assertThat(guavaDexFile).wasModifiedAt(cachedGuavaTimestamp);
 
         executor.run("clean", "assembleDebug");
 
-        dexFiles = Files.walk(preDexDir).filter(Files::isRegularFile).collect(Collectors.toList());
         cachedEntryDirs =
-                Files.walk(buildCacheDir, 1)
-                        .filter(Files::isDirectory)
-                        .skip(1)
+                Arrays.stream(buildCacheDir.listFiles())
+                        .filter(File::isDirectory) // Remove the lock files
                         .collect(Collectors.toList());
-        assertThat(dexFiles).hasSize(2);
         assertThat(cachedEntryDirs).hasSize(1);
+
+        preDexContent = new TransformOutputContent(preDexDir);
+        assertThat(preDexContent).hasSize(2);
 
         // Assert that the cached file is unchanged and the guava library's pre-dexed file is copied
         // from the cache
-        assertThat(Files.getLastModifiedTime(cachedGuavaDexFile)).isEqualTo(cachedGuavaTimestamp);
-        assertThat(Files.getLastModifiedTime(guavaDexFile)).isEqualTo(cachedGuavaTimestamp);
-        assertThat(Files.getLastModifiedTime(projectDexFile)).isGreaterThan(projectTimestamp);
+        assertThat(cachedGuavaDexFile).wasModifiedAt(cachedGuavaTimestamp);
+        assertThat(guavaDexFile).wasModifiedAt(cachedGuavaTimestamp);
+        assertThat(projectDexFile).isNewerThan(projectTimestamp);
 
         executor.run("cleanBuildCache");
         assertThat(buildCacheDir).doesNotExist();
@@ -135,8 +134,8 @@ public class BuildCacheTest {
 
         RunGradleTasks executor =
                 project.executor()
-                        .withProperty("android.enableBuildCache", "false")
-                        .withProperty("android.buildCacheDir", buildCacheDir.getAbsolutePath());
+                        .with(BooleanOption.ENABLE_BUILD_CACHE, false)
+                        .with(StringOption.BUILD_CACHE_DIR, buildCacheDir.getAbsolutePath());
 
         executor.run("clean", "assembleDebug");
 
@@ -144,33 +143,5 @@ public class BuildCacheTest {
         File cacheDir = FileUtils.join(project.file("build"), FD_INTERMEDIATES, "project-cache");
         assertThat(cacheDir).isDirectory();
         assertThat(buildCacheDir).doesNotExist();
-    }
-
-    @Test
-    public void testBuildCacheDisabled() throws Exception {
-        Path buildCacheDir = Paths.get(project.getTestDir().getAbsolutePath(), "build-cache");
-        Files.deleteIfExists(buildCacheDir);
-
-        // Remove dependencyResolutionChecker.
-        TestFileUtils.appendToFile(
-                project.getBuildFile(),
-                "gradle.removeListener(rootProject.ext.dependencyResolutionChecker)\n");
-
-        RunGradleTasks executor =
-                project.executor()
-                        .withProperty("android.enableBuildCache", "false")
-                        .withProperty("android.buildCacheDir", buildCacheDir.toString());
-
-        // Improved dependency resolution still use project level build cache.
-        executor.withProperty(
-                BooleanOption.ENABLE_IMPROVED_DEPENDENCY_RESOLUTION.getPropertyName(), "false");
-
-        executor.run("clean", "assembleDebug");
-        assertThat(buildCacheDir).doesNotExist();
-
-        GradleBuildResult result = executor.expectFailure().run("cleanBuildCache");
-        assertNotNull(result.getException());
-        assertThat(Throwables.getRootCause(result.getException()).getMessage())
-                .contains("Task 'cleanBuildCache' not found in root project");
     }
 }

@@ -101,6 +101,9 @@ public class CheckAll {
                     "ndkRsHelloCompute",
                     "renderscriptNdk",
 
+                    // feature support is not totally there.
+                    "projectWithFeatures",
+
                     // These are all right:
                     "genFolderApi", // Has a required injectable property
                     "ndkJniPureSplitLib", // Doesn't build until externalNativeBuild {} is added.

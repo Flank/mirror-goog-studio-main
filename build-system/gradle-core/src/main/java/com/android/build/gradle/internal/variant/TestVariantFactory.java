@@ -16,13 +16,15 @@
 
 package com.android.build.gradle.internal.variant;
 
+import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_COMPILE_ONLY;
+
 import com.android.annotations.NonNull;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.TestAndroidConfig;
-import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
+import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
 import com.google.common.collect.ImmutableMap;
@@ -33,16 +35,15 @@ import org.gradle.api.Project;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
 import org.gradle.internal.reflect.Instantiator;
 
-/**
- * Customization of ApplcationVariantFactory for test-only projects.
- */
+/** Customization of {@link ApplicationVariantFactory} for test-only projects. */
 public class TestVariantFactory extends ApplicationVariantFactory {
 
     public TestVariantFactory(
+            @NonNull GlobalScope globalScope,
             @NonNull Instantiator instantiator,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull AndroidConfig extension) {
-        super(instantiator, androidBuilder, extension);
+        super(globalScope, instantiator, androidBuilder, extension);
     }
 
     @Override
@@ -54,7 +55,7 @@ public class TestVariantFactory extends ApplicationVariantFactory {
     public void preVariantWork(final Project project) {
         super.preVariantWork(project);
 
-        final TestAndroidConfig testExtension = (TestAndroidConfig) extension;
+        TestAndroidConfig testExtension = (TestAndroidConfig) extension;
 
         String path = testExtension.getTargetProjectPath();
         if (path == null) {
@@ -62,24 +63,12 @@ public class TestVariantFactory extends ApplicationVariantFactory {
                     "targetProjectPath cannot be null in test project " + project.getName());
         }
 
-        if (testExtension.getTargetVariant() == null) {
-            throw new GradleException(
-                    "targetVariant cannot be null in test project " + project.getName());
-        }
-
-        // While we want this to be provided only, we're still going to set this as compile
-        // (and therefore show up on the apk scope). This is because this can bring in
-        // aar dependencies and this would trigger errors as aars are not supported as
-        // provided dependencies.
-        // Instead we'll automatically detect that these dependencies are coming from the tested
-        // app module and we'll skip them automatically (in the apk scope)
+        // Adding this to provided so that it's part of the compile but not part of the packaging.
         DependencyHandler handler = project.getDependencies();
-        Map<String, String> projectNotation =
-                ImmutableMap.of(
-                        "path", path, "configuration",
-                        testExtension.getTargetVariant()
-                                + VariantDependencies.CONFIGURATION_CLASSES);
-        handler.add("compile", handler.project(projectNotation));
+        Map<String, String> projectNotation = ImmutableMap.of("path", path);
+        // adding it to compileOnly, but it doesn't really matter since we only publish it
+        // to apiElements anyway.
+        handler.add(CONFIG_NAME_COMPILE_ONLY, handler.project(projectNotation));
     }
 
     @Override

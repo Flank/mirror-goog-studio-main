@@ -20,7 +20,9 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
 import com.android.builder.core.VariantType;
+import java.util.function.Supplier;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.ConfigurationContainer;
 
 /**
  * Common parts of build type and product flavor data objects.
@@ -31,10 +33,6 @@ public class VariantDimensionData {
     private final DefaultAndroidSourceSet androidTestSourceSet;
     private final DefaultAndroidSourceSet unitTestSourceSet;
 
-    private final ConfigurationProvider mainProvider;
-    private final ConfigurationProvider androidTestProvider;
-    private final ConfigurationProvider unitTestProvider;
-
     public VariantDimensionData(
             @NonNull DefaultAndroidSourceSet sourceSet,
             @Nullable DefaultAndroidSourceSet androidTestSourceSet,
@@ -44,17 +42,15 @@ public class VariantDimensionData {
         this.androidTestSourceSet = androidTestSourceSet;
         this.unitTestSourceSet = unitTestSourceSet;
 
-        mainProvider = new ConfigurationProviderImpl(project, sourceSet);
+        final ConfigurationContainer configurations = project.getConfigurations();
 
-        androidTestProvider = androidTestSourceSet != null ?
-                new ConfigurationProviderImpl(project, androidTestSourceSet) : null;
-        unitTestProvider = unitTestSourceSet != null ?
-                new ConfigurationProviderImpl(project, unitTestSourceSet) : null;
-    }
+        if (androidTestSourceSet != null) {
+            makeTestExtendMain(sourceSet, androidTestSourceSet, configurations);
+        }
 
-    @NonNull
-    public ConfigurationProvider getMainProvider() {
-        return mainProvider;
+        if (unitTestSourceSet != null) {
+            makeTestExtendMain(sourceSet, unitTestSourceSet, configurations);
+        }
     }
 
     @NonNull
@@ -74,16 +70,29 @@ public class VariantDimensionData {
         }
     }
 
-    @Nullable
-    public ConfigurationProvider getTestConfigurationProvider(@NonNull VariantType type) {
-        switch (type) {
-            case ANDROID_TEST:
-                return androidTestProvider;
-            case UNIT_TEST:
-                return unitTestProvider;
-            default:
-                throw unknownTestType(type);
-        }
+    private static void makeTestExtendMain(
+            @NonNull DefaultAndroidSourceSet mainSourceSet,
+            @NonNull DefaultAndroidSourceSet testSourceSet,
+            @NonNull ConfigurationContainer configurations) {
+        linkConfiguration(
+                configurations,
+                mainSourceSet::getImplementationConfigurationName,
+                testSourceSet::getImplementationConfigurationName);
+        linkConfiguration(
+                configurations,
+                mainSourceSet::getCompileOnlyConfigurationName,
+                testSourceSet::getCompileOnlyConfigurationName);
+        linkConfiguration(
+                configurations,
+                mainSourceSet::getRuntimeOnlyConfigurationName,
+                testSourceSet::getRuntimeOnlyConfigurationName);
+    }
+
+    private static void linkConfiguration(
+            @NonNull ConfigurationContainer configurations,
+            @NonNull Supplier<String> main,
+            @NonNull Supplier<String> test) {
+        configurations.getByName(test.get()).extendsFrom(configurations.getByName(main.get()));
     }
 
     private static RuntimeException unknownTestType(VariantType type) {

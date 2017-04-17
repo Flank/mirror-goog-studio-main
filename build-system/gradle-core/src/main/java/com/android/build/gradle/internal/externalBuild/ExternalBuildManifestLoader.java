@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.process.GradleJavaProcessExecutor;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.sdk.TargetInfo;
 import com.android.repository.Revision;
@@ -46,8 +47,10 @@ public class ExternalBuildManifestLoader {
 
     /**
      * Loads the passed manifest file and populates its information in the passed context object.
+     *
      * @param manifestProtoFile the manifest file, in binary proto format
-     * @param project the porject directory in case the manifest contains relative paths.
+     * @param project the project directory in case the manifest contains relative paths.
+     * @param projectOptions the project options
      * @param externalBuildContext the context to populate.
      * @throws IOException if the file cannot be read correctly
      */
@@ -55,7 +58,9 @@ public class ExternalBuildManifestLoader {
             @NonNull File execRootFile,
             @NonNull File manifestProtoFile,
             @NonNull Project project,
-            @NonNull ExternalBuildContext externalBuildContext) throws IOException {
+            @NonNull ProjectOptions projectOptions,
+            @NonNull ExternalBuildContext externalBuildContext)
+            throws IOException {
         if (!manifestProtoFile.exists()) {
             throw new FileNotFoundException(manifestProtoFile.getAbsolutePath());
         }
@@ -74,13 +79,14 @@ public class ExternalBuildManifestLoader {
         externalBuildContext.setInputJarFiles(jarFiles);
 
         externalBuildContext.setAndroidBuilder(
-                createAndroidBuilder(execRootFile, project, manifest));
+                createAndroidBuilder(execRootFile, project, projectOptions, manifest));
     }
 
     @NonNull
     private static AndroidBuilder createAndroidBuilder(
             @NonNull File executionRoot,
             @NonNull Project project,
+            @NonNull ProjectOptions projectOptions,
             @NonNull ExternalBuildApkManifest.ApkManifest manifest) {
         ExternalBuildApkManifest.AndroidSdk sdk = manifest.getAndroidSdk();
 
@@ -113,7 +119,7 @@ public class ExternalBuildManifestLoader {
                         "Android Studio + external build system",
                         new GradleProcessExecutor(project),
                         new GradleJavaProcessExecutor(project),
-                        new ExtraModelInfo(project),
+                        new ExtraModelInfo(projectOptions, project.getLogger()),
                         new LoggerWrapper(project.getLogger()),
                         false);
 

@@ -15,20 +15,25 @@
  */
 package com.android.build.gradle.internal.variant;
 
+import static com.android.SdkConstants.FN_SPLIT_LIST;
+
 import android.databinding.tool.LayoutXmlProcessor;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.internal.TaskManager;
-import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.Splits;
+import com.android.build.gradle.internal.dsl.VariantOutputFactory;
 import com.android.build.gradle.internal.pipeline.TransformManager;
+import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.SplitFactory;
+import com.android.build.gradle.internal.scope.SplitList;
+import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.scope.VariantScopeImpl;
 import com.android.build.gradle.internal.tasks.CheckManifest;
@@ -41,10 +46,12 @@ import com.android.build.gradle.tasks.BinaryFileProviderTask;
 import com.android.build.gradle.tasks.ExternalNativeBuildTask;
 import com.android.build.gradle.tasks.GenerateBuildConfig;
 import com.android.build.gradle.tasks.GenerateResValues;
+import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.NdkCompile;
-import com.android.build.gradle.tasks.ProcessAndroidResources;
+import com.android.build.gradle.tasks.PackageSplitAbi;
+import com.android.build.gradle.tasks.PackageSplitRes;
 import com.android.build.gradle.tasks.RenderscriptCompile;
 import com.android.build.gradle.tasks.ShaderCompile;
 import com.android.builder.core.ErrorReporter;
@@ -59,7 +66,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import groovy.lang.Closure;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -68,7 +74,9 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.ConfigurableFileCollection;
@@ -77,13 +85,10 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.tasks.Copy;
 import org.gradle.api.tasks.Sync;
-import org.gradle.api.tasks.bundling.Jar;
 import org.gradle.api.tasks.compile.JavaCompile;
 
-/**
- * Base data about a variant.
- */
-public abstract class BaseVariantData<T extends BaseVariantOutputData> {
+/** Base data about a variant. */
+public abstract class BaseVariantData implements TaskContainer {
 
     @NonNull
     protected final TaskManager taskManager;
@@ -98,16 +103,21 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
 
     public Task preBuildTask;
     public PrepareDependenciesTask prepareDependenciesTask;
-    public ProcessAndroidResources generateRClassTask;
 
     public Task sourceGenTask;
     public Task resourceGenTask;
     public Task assetGenTask;
     public CheckManifest checkManifestTask;
+    public AndroidTask<PackageSplitRes> packageSplitResourcesTask;
+    public AndroidTask<PackageSplitAbi> packageSplitAbiTask;
+
+    // FIX ME : move all AndroidTask<> above to Scope and use these here.
+    private Map<TaskKind, Task> registeredTasks = new ConcurrentHashMap<>();
 
     public RenderscriptCompile renderscriptCompileTask;
     public AidlCompile aidlCompileTask;
     public MergeResources mergeResourcesTask;
+    public ManifestProcessorTask processManifest;
     public MergeSourceSetFolders mergeAssetsTask;
     public GenerateBuildConfig generateBuildConfigTask;
     public GenerateResValues generateResValuesTask;
@@ -124,7 +134,6 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
     @NonNull
     public Collection<ExternalNativeBuildTask> externalNativeBuildTasks = Lists.newArrayList();
     @Nullable public JackCompileTransform jackCompileTransform = null;
-    public Jar classesJarTask;
     // empty anchor compile task to set all compilations tasks as dependents.
     public Task compileTask;
 
@@ -134,19 +143,13 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
     // TODO : why is Jack not registered as the obfuscationTask ???
     public Task obfuscationTask;
 
-    // Task to assemble the variant and all its output.
-    public Task assembleVariantTask;
-
     private List<ConfigurableFileTree> javaSources;
 
     private List<File> extraGeneratedSourceFolders;
-    private FileCollection extraGeneratedResFolders;
+    private final ConfigurableFileCollection extraGeneratedResFolders;
     private Map<Object, FileCollection> generatedBytecodeMap;
     private FileCollection generatedBytecodeLatest;
     private final ConfigurableFileCollection allGeneratedBytecode;
-
-    private final List<T> outputs = Lists.newArrayListWithExpectedSize(4);
-    private T mainOutput;
 
     private Set<String> densityFilters;
     private Set<String> languageFilters;
@@ -164,9 +167,13 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
      */
     public boolean outputsAreSigned = false;
 
-    private SplitHandlingPolicy mSplitHandlingPolicy;
+    @NonNull private final SplitScope splitScope;
+
+    @NonNull private final SplitFactory splitFactory;
+    public VariantOutputFactory variantOutputFactory;
 
     public BaseVariantData(
+            @NonNull GlobalScope globalScope,
             @NonNull AndroidConfig androidConfig,
             @NonNull TaskManager taskManager,
             @NonNull GradleVariantConfiguration variantConfiguration,
@@ -176,7 +183,7 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
         this.taskManager = taskManager;
 
         // eventually, this will require a more open ended comparison.
-        mSplitHandlingPolicy =
+        SplitHandlingPolicy splitHandlingPolicy =
                 androidConfig.getGeneratePureSplits()
                                 && variantConfiguration.getMinSdkVersionValue() >= 21
                         ? SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY
@@ -184,30 +191,41 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
 
         // warn the user in case we are forced to ignore the generatePureSplits flag.
         if (androidConfig.getGeneratePureSplits()
-                && mSplitHandlingPolicy != SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY) {
+                && splitHandlingPolicy != SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY) {
             Logging.getLogger(BaseVariantData.class).warn(
                     String.format("Variant %s, MinSdkVersion %s is too low (<21) "
                                     + "to support pure splits, reverting to full APKs",
                             variantConfiguration.getFullName(),
                             variantConfiguration.getMinSdkVersion().getApiLevel()));
         }
-        GlobalScope globalScope = taskManager.getGlobalScope();
-        Project project = globalScope.getProject();
+
+        final Project project = globalScope.getProject();
         scope =
                 new VariantScopeImpl(
                         globalScope,
+                        errorReporter,
                         new TransformManager(
-                                project, taskManager.getAndroidTasks(), errorReporter, recorder),
+                                globalScope.getProject(),
+                                taskManager.getAndroidTasks(),
+                                errorReporter,
+                                recorder),
                         this);
+        splitScope = new SplitScope(splitHandlingPolicy);
+        splitFactory = new SplitFactory(variantConfiguration, splitScope);
+
         taskManager.configureScopeForNdk(scope);
-        generatedBytecodeLatest = project.files();
+
+        // this must be created immediately since the variant API happens after the task that
+        // depends on this are created.
+        extraGeneratedResFolders = globalScope.getProject().files();
+        generatedBytecodeLatest = globalScope.getProject().files();
         allGeneratedBytecode = project.files();
     }
 
     @NonNull
     public LayoutXmlProcessor getLayoutXmlProcessor() {
         if (layoutXmlProcessor == null) {
-            File resourceBlameLogDir = getScope().getResourceBlameLogDir();
+            File resourceBlameLogDir = scope.getResourceBlameLogDir();
             final MergingLog mergingLog = new MergingLog(resourceBlameLogDir);
             layoutXmlProcessor = new LayoutXmlProcessor(
                     getVariantConfiguration().getOriginalApplicationId(),
@@ -225,57 +243,35 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
         return layoutXmlProcessor;
     }
 
-    public SplitHandlingPolicy getSplitHandlingPolicy() {
-        return mSplitHandlingPolicy;
+    @NonNull
+    public SplitScope getSplitScope() {
+        return splitScope;
     }
 
     @NonNull
-    protected abstract T doCreateOutput(
-            OutputFile.OutputType outputType,
-            Collection<FilterData> filters);
-
-    @NonNull
-    public T createOutput(OutputFile.OutputType outputType,
-            Collection<FilterData> filters) {
-        T data = doCreateOutput(outputType, filters);
-
-        // if it's the first time we add an output, mark previous output as part of a multi-output
-        // setup.
-        if (outputs.size() == 1) {
-            outputs.get(0).setMultiOutput(true);
-            data.setMultiOutput(true);
-        } else if (outputs.size() > 1) {
-            data.setMultiOutput(true);
-        }
-
-        outputs.add(data);
-        return data;
+    public SplitFactory getSplitFactory() {
+        return splitFactory;
     }
 
-    @NonNull
-    public List<T> getOutputs() {
-        return outputs;
+    @Override
+    public void addTask(TaskKind taskKind, Task task) {
+        registeredTasks.put(taskKind, task);
     }
 
-    /** Sets the main output among the multiple outputs returned by {@link #getOutputs()}. */
-    public void setMainOutput(@NonNull T mainOutput) {
-        Preconditions.checkState(outputs.contains(mainOutput));
-        this.mainOutput = mainOutput;
+    @Nullable
+    @Override
+    public Task getTaskByKind(TaskKind name) {
+        return registeredTasks.get(name);
     }
 
-    /**
-     * Returns the main output among the multiple outputs returned by {@link #getOutputs()}. If the
-     * main output has not been set by {@link #setMainOutput(BaseVariantOutputData)}, this method
-     * returns the first output.
-     */
-    @NonNull
-    public T getMainOutput() {
-        if (mainOutput != null) {
-            return mainOutput;
-        } else {
-            Preconditions.checkState(!outputs.isEmpty());
-            return outputs.get(0);
-        }
+    @Nullable
+    @Override
+    public <U extends Task> U getTaskByType(Class<U> taskType) {
+        // Using Class::isInstance instead of Class::equal because the tasks are decorated by
+        // Gradle.
+        Optional<Task> requestedTask =
+                registeredTasks.values().stream().filter(taskType::isInstance).findFirst();
+        return requestedTask.isPresent() ? taskType.cast(requestedTask.get()) : null;
     }
 
     @NonNull
@@ -320,6 +316,11 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
         return variantConfiguration.getFullName();
     }
 
+    @NonNull
+    public String getTaskName(@NonNull String prefix, @NonNull String suffix) {
+        return prefix + StringHelper.capitalize(variantConfiguration.getFullName()) + suffix;
+    }
+
     @Nullable
     public List<File> getExtraGeneratedSourceFolders() {
         return extraGeneratedSourceFolders;
@@ -335,8 +336,18 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
         return allGeneratedBytecode;
     }
 
-    public FileCollection getGeneratedBytecodeUpTo(@NonNull Object key) {
-        return generatedBytecodeMap.get(key);
+    @NonNull
+    public FileCollection getGeneratedBytecode(@Nullable Object generatorKey) {
+        if (generatorKey == null) {
+            return allGeneratedBytecode;
+        }
+
+        FileCollection result = generatedBytecodeMap.get(generatorKey);
+        if (result == null) {
+            throw new RuntimeException("Bytecode generator key not found");
+        }
+
+        return result;
     }
 
     public void addJavaSourceFoldersToModel(@NonNull File... generatedSourceFolders) {
@@ -390,16 +401,7 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
     }
 
     public void registerGeneratedResFolders(@NonNull FileCollection folders) {
-        if (extraGeneratedResFolders == null) {
-            extraGeneratedResFolders = folders;
-        } else {
-            extraGeneratedResFolders = extraGeneratedResFolders.plus(folders);
-        }
-
-        // rewrite the task dependency.
-        // This should go away once we move to a non changing file collection on which we
-        // add new ones.
-        sourceGenTask.dependsOn(extraGeneratedResFolders);
+        extraGeneratedResFolders.from(folders);
     }
 
     @Deprecated
@@ -412,13 +414,7 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
         System.out.println("registerResGeneratingTask is deprecated, use registerGeneratedFolders(FileCollection)");
 
         final Project project = scope.getGlobalScope().getProject();
-        registerGeneratedResFolders(project.files(generatedResFolders,
-                new Closure(project) {
-                    public Object doCall(ConfigurableFileCollection fileCollection) {
-                        fileCollection.builtBy(task);
-                        return null;
-                    }
-                }));
+        registerGeneratedResFolders(project.files(generatedResFolders).builtBy(task));
     }
 
     public Object registerGeneratedBytecode(@NonNull FileCollection fileCollection) {
@@ -495,9 +491,9 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
         if (extraGeneratedResFolders != null) {
             generatedResFolders.addAll(extraGeneratedResFolders.getFiles());
         }
-        if (getScope().getMicroApkTask() != null &&
-                getVariantConfiguration().getBuildType().isEmbedMicroApp()) {
-            generatedResFolders.add(getScope().getMicroApkResDirectory());
+        if (scope.getMicroApkTask() != null
+                && getVariantConfiguration().getBuildType().isEmbedMicroApp()) {
+            generatedResFolders.add(scope.getMicroApkResDirectory());
         }
         return generatedResFolders;
     }
@@ -510,16 +506,6 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
                 resourceFolders,
                 DiscoverableFilterType.LANGUAGE.folderPrefix,
                 DiscoverableFilterType.DENSITY.folderPrefix));
-        return resFoldersOnDisk;
-    }
-
-    @NonNull
-    public List<String> discoverListOfResourceConfigsNotDensities() {
-        List<String> resFoldersOnDisk = new ArrayList<String>();
-        Set<File> resourceFolders = variantConfiguration.getResourceFolders();
-        resFoldersOnDisk.addAll(getAllFilters(
-                resourceFolders,
-                DiscoverableFilterType.LANGUAGE.folderPrefix));
         return resFoldersOnDisk;
     }
 
@@ -623,7 +609,7 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
      */
     @NonNull
     private static List<String> getAllFilters(Iterable<File> resourceFolders, String... prefixes) {
-        List<String> providedResFolders = new ArrayList<String>();
+        List<String> providedResFolders = new ArrayList<>();
         for (File resFolder : resourceFolders) {
             File[] subResFolders = resFolder.listFiles();
             if (subResFolders != null) {
@@ -695,7 +681,7 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
         ImmutableList.Builder<ConfigurableFileTree> sourceSets = ImmutableList.builder();
 
         // then all the generated src folders.
-        if (scope.getGenerateRClassTask() != null) {
+        if (scope.getProcessResourcesTask() != null) {
             sourceSets.add(project.fileTree(scope.getRClassSourceOutputDir()));
         }
 
@@ -758,26 +744,6 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
         return sourceFolders;
     }
 
-    /**
-     * Returns a list of configuration name for wear connection, from highest to lowest priority.
-     * @return list of config.
-     */
-    @NonNull
-    public List<String> getWearConfigNames() {
-        List<SourceProvider> providers = variantConfiguration.getSortedSourceProviders();
-
-        // this is the wrong order, so let's reverse it as we gather the names.
-        final int count = providers.size();
-        List<String> names = Lists.newArrayListWithCapacity(count);
-        for (int i = count - 1 ; i >= 0; i--) {
-            DefaultAndroidSourceSet sourceSet = (DefaultAndroidSourceSet) providers.get(i);
-
-            names.add(sourceSet.getWearAppConfigurationName());
-        }
-
-        return names;
-    }
-
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
@@ -805,7 +771,7 @@ public abstract class BaseVariantData<T extends BaseVariantOutputData> {
         if (processJavaResourcesTask != null) {
             return processJavaResourcesTask.getOutputs().getFiles().getSingleFile();
         } else {
-            return getScope().getSourceFoldersJavaResDestinationDir();
+            return scope.getSourceFoldersJavaResDestinationDir();
         }
     }
 

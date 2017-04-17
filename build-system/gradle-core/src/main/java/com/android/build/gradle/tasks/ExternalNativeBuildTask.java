@@ -31,7 +31,6 @@ import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.BaseTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.BaseVariantOutputData;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.SyncIssue;
 import com.android.ide.common.process.BuildCommandException;
@@ -359,8 +358,7 @@ public class ExternalNativeBuildTask extends BaseTask {
 
         @Override
         public void execute(@NonNull ExternalNativeBuildTask task) {
-            final BaseVariantData<? extends BaseVariantOutputData> variantData =
-                    scope.getVariantData();
+            final BaseVariantData variantData = scope.getVariantData();
             final Set<String> targets;
             CoreExternalNativeBuildOptions nativeBuildOptions =
                     variantData.getVariantConfiguration().getExternalNativeBuildOptions();

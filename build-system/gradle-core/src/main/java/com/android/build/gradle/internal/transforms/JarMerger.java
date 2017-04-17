@@ -80,7 +80,7 @@ public class JarMerger {
     /**
      * Sets a list of regex to exclude from the jar.
      */
-    public void setFilter(@NonNull ZipEntryFilter filter) {
+    public void setFilter(@Nullable ZipEntryFilter filter) {
         this.filter = filter;
     }
 

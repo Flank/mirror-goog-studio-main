@@ -42,13 +42,13 @@ import org.gradle.api.tasks.Input;
  *
  * <ol>
  *   <li>If any of the first-pick patterns match the path and that path has not been included in the
- *       APK, add it to the APK.
+ *       FULL_APK, add it to the FULL_APK.
  *   <li>If any of the first-pick patterns match the path and that path has already been included in
- *       the APK, do not include the path in the APK.
+ *       the FULL_APK, do not include the path in the FULL_APK.
  *   <li>If any of the merge patterns match the path and that path has not been included in the APK,
  *       add it to the APK.
  *   <li>If any of the merge patterns match the path and that path has already been included in the
- *       APK, concatenate the contents of the file to the ones already in the APK.
+ *       FULL_APK, concatenate the contents of the file to the ones already in the FULL_APK.
  *   <li>If any of the exclude patterns match the path, do not include it in the APK.
  *   <li>If none of the patterns above match the path and the path has not been included in the APK,
  *       add it to the APK.
@@ -87,7 +87,7 @@ import org.gradle.api.tasks.Input;
  *         <li><code>/META-INF/&#042;.SF</code> (all signature files)
  *         <li><code>/META-INF/&#042;.RSA</code> (all RSA signature files)
  *         <li><code>/META-INF/maven/&#042;&#042;</code> (all files in the {@code maven} meta inf
- *         directory)</li>
+ *             directory)
  *         <li><code>&#042;&#042;/.svn/&#042;&#042;</code> (all {@code .svn} directory contents)
  *         <li><code>&#042;&#042;/CVS/&#042;&#042;</code> (all {@code CVS} directory contents)
  *         <li><code>&#042;&#042;/SCCS/&#042;&#042;</code> (all {@code SCCS} directory contents)

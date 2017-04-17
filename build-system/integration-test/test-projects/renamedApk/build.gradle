@@ -15,5 +15,7 @@ android {
 }
 
 android.applicationVariants.all { variant ->
-    variant.outputs[0].outputFile = file("$project.buildDir/${variant.name}.apk")
+    variant.outputs.all {
+        outputFileName = "${variant.name}.apk"
+    }
 }

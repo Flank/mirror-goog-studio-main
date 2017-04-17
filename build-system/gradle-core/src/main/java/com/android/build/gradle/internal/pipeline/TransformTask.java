@@ -45,6 +45,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.tasks.Input;
@@ -203,6 +204,10 @@ public class TransformTask extends StreamBasedTask implements Context {
                                                         : null)
                                         .setIncrementalMode(isIncremental.getValue())
                                         .build());
+
+                        if (outputStream != null) {
+                            outputStream.save();
+                        }
                         return null;
                     }
                 });
@@ -211,26 +216,28 @@ public class TransformTask extends StreamBasedTask implements Context {
     private Collection<SecondaryInput> gatherSecondaryInputChanges(
             Map<File, Status> changedMap, Set<File> removedFiles) {
 
+        final Project project = getProject();
         ImmutableList.Builder<SecondaryInput> builder = ImmutableList.builder();
         for (final SecondaryFile secondaryFile : getAllSecondaryInputs()) {
-            final File file = secondaryFile.getFile();
-            final Status status = changedMap.containsKey(file)
-                    ? changedMap.get(file)
-                    : removedFiles.contains(file)
-                            ? Status.REMOVED
-                            : Status.NOTCHANGED;
+            for (File file : secondaryFile.getFileCollection(project).getFiles()) {
+                final Status status = changedMap.containsKey(file)
+                        ? changedMap.get(file)
+                        : removedFiles.contains(file)
+                                ? Status.REMOVED
+                                : Status.NOTCHANGED;
 
-            builder.add(new SecondaryInput() {
-                @Override
-                public SecondaryFile getSecondaryInput() {
-                    return secondaryFile;
-                }
+                builder.add(new SecondaryInput() {
+                    @Override
+                    public SecondaryFile getSecondaryInput() {
+                        return secondaryFile;
+                    }
 
-                @Override
-                public Status getStatus() {
-                    return status;
-                }
-            });
+                    @Override
+                    public Status getStatus() {
+                        return status;
+                    }
+                });
+            }
         }
         return builder.build();
     }
@@ -297,9 +304,12 @@ public class TransformTask extends StreamBasedTask implements Context {
             @NonNull Map<File, Status> changedMap,
             @NonNull Set<File> removedFiles) {
 
+        final Project project = getProject();
         for (SecondaryFile secondaryFile : getAllSecondaryInputs()) {
-            File file = secondaryFile.getFile();
-            if ((changedMap.containsKey(file) || removedFiles.contains(file))
+            Set<File> files = secondaryFile.getFileCollection(project).getFiles();
+
+            if ((!Sets.intersection(files, changedMap.keySet()).isEmpty()
+                    || !Sets.intersection(files, removedFiles).isEmpty())
                     && !secondaryFile.supportsIncrementalBuild()) {
                 return false;
             }
@@ -308,8 +318,9 @@ public class TransformTask extends StreamBasedTask implements Context {
     }
 
     private boolean isSecondaryFile(File file) {
+        final Project project = getProject();
         for (SecondaryFile secondaryFile : getAllSecondaryInputs()) {
-            if (secondaryFile.getFile().equals(file)) {
+            if (secondaryFile.getFileCollection(project).contains(file)) {
                 return true;
             }
         }

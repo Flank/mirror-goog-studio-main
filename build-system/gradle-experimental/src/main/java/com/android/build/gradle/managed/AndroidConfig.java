@@ -17,6 +17,7 @@
 package com.android.build.gradle.managed;
 
 import com.android.build.api.variant.VariantFilter;
+import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.CompileOptions;
 import com.android.build.gradle.internal.coverage.JacocoOptions;
 import com.android.build.gradle.internal.dsl.AaptOptions;
@@ -32,6 +33,7 @@ import com.android.builder.testing.api.DeviceProvider;
 import com.android.builder.testing.api.TestServer;
 import com.android.repository.Revision;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Set;
 import org.gradle.api.Action;
 import org.gradle.language.base.FunctionalSourceSet;
@@ -78,10 +80,6 @@ public interface AndroidConfig {
     String getDefaultPublishConfig();
     void setDefaultPublishConfig(String defaultPublishConfig);
 
-    /** Whether to also publish non-default variants */
-    Boolean getPublishNonDefault();
-    void setPublishNonDefault(Boolean publishNonDefault);
-
     /** Filter to determine which variants to build */
     @Unmanaged
     Action<VariantFilter> getVariantFilter();
@@ -106,6 +104,8 @@ public interface AndroidConfig {
 
     /** Android source sets. */
     ModelMap<FunctionalSourceSet> getSources();
+
+    ModelMap<BaseVariantOutput> getBuildOutputs();
 
     NdkConfig getNdk();
 
@@ -164,4 +164,9 @@ public interface AndroidConfig {
     Set<String> getAidlPackageWhitelist();
 
     DataBindingOptions getDataBinding();
+
+    @Unmanaged
+    Map<String, String> getFlavorSelection();
+
+    void setFlavorSelection(Map<String, String> strategy);
 }

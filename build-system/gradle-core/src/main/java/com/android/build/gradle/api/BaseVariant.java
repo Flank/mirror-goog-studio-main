@@ -32,6 +32,7 @@ import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import org.gradle.api.Task;
+import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.AbstractCopyTask;
 import org.gradle.api.tasks.compile.JavaCompile;
@@ -83,10 +84,11 @@ public interface BaseVariant {
 
     /**
      * Returns the variant outputs. There should always be at least one output.
+     *
      * @return a non-null list of variants.
      */
     @NonNull
-    List<BaseVariantOutput> getOutputs();
+    Collection<BaseVariantOutput> getOutputs();
 
     /**
      * Returns the {@link com.android.builder.core.DefaultBuildType} for this build variant.
@@ -118,15 +120,23 @@ public interface BaseVariant {
     @NonNull
     List<SourceProvider> getSourceSets();
 
-    /**
-     * Returns the applicationId of the variant.
-     */
+    /** Returns the configuration object for the compilation */
+    @NonNull
+    Configuration getCompileConfiguration();
+
+    /** Returns the configuration object for the annotation processor. */
+    @NonNull
+    Configuration getAnnotationProcessorConfiguration();
+
+    /** Returns the configuration object for the runtime */
+    @NonNull
+    Configuration getRuntimeConfiguration();
+
+    /** Returns the applicationId of the variant. */
     @NonNull
     String getApplicationId();
 
-    /**
-     * Returns the pre-build anchor task
-     */
+    /** Returns the pre-build anchor task */
     @NonNull
     Task getPreBuild();
 
@@ -374,4 +384,5 @@ public interface BaseVariant {
      * @see #setOutputsAreSigned(boolean)
      */
     boolean getOutputsAreSigned();
+
 }

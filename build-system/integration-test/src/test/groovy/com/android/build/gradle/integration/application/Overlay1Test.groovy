@@ -75,7 +75,7 @@ class Overlay1Test {
         }
 
         //Check if the images in the APK are correct
-        Apk apk = project.getApk("debug")
+        Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG)
         //First image should have no overlay (first pixel remains green), but the second image
         //should have the first picture overlay over it (first pixel goes from red to green).
         ImageHelper.checkImageColor(apk.getResource("drawable/no_overlay.png"), GREEN)

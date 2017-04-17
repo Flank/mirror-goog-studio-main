@@ -95,6 +95,7 @@ class UnitTestingModelTest {
     public void flavors() throws Exception {
         project.getSubproject("app").buildFile << """
 android {
+    flavorDimensions 'foo'
     productFlavors { paid; free }
 }
 """

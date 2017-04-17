@@ -16,154 +16,74 @@
 
 package com.android.build.gradle.internal;
 
-
-
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.gradle.AndroidConfig;
-import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.AndroidTask;
-import com.android.build.gradle.internal.scope.VariantOutputScope;
+import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.BundleInstantAppConfigAction;
-import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.BaseVariantOutputData;
-import com.android.build.gradle.internal.variant.InstantAppVariantData;
 import com.android.build.gradle.options.ProjectOptions;
-import com.android.build.gradle.tasks.JavaCompileAtomResClass;
-import com.android.build.gradle.tasks.MergeDexAtomResClass;
-import com.android.build.gradle.tasks.PackageAtom;
-import com.android.build.gradle.tasks.ProcessAtomsResources;
+import com.android.build.gradle.tasks.BundleInstantApp;
 import com.android.builder.core.AndroidBuilder;
-import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.Recorder;
-import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
+import com.android.utils.FileUtils;
+import java.io.File;
 import java.util.Set;
 import org.gradle.api.Project;
-import org.gradle.api.tasks.bundling.Zip;
+import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
-/**
- * TaskManager for creating tasks in an Android InstantApp project.
- */
+/** TaskManager for creating tasks in an Android InstantApp project. */
 public class InstantAppTaskManager extends TaskManager {
 
     public InstantAppTaskManager(
+            @NonNull GlobalScope globalScope,
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull AndroidConfig extension,
             @NonNull SdkHandler sdkHandler,
-            @NonNull NdkHandler ndkHandler,
             @NonNull DependencyManager dependencyManager,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder threadRecorder) {
         super(
+                globalScope,
                 project,
                 projectOptions,
                 androidBuilder,
                 dataBindingBuilder,
                 extension,
                 sdkHandler,
-                ndkHandler,
                 dependencyManager,
                 toolingRegistry,
                 threadRecorder);
     }
 
     @Override
-    public void createTasksForVariantData(
-            @NonNull final TaskFactory tasks,
-            @NonNull final BaseVariantData<? extends BaseVariantOutputData> variantData) {
-        assert variantData instanceof InstantAppVariantData;
-
-        final String projectPath = project.getPath();
-        final String variantName = variantData.getName();
-
-        final VariantScope variantScope = variantData.getScope();
-
-        ProcessProfileWriter.getProject(projectPath)
-                .setAtoms(
-                        variantData
-                                .getVariantConfiguration()
-                                .getFlatAndroidAtomsDependencies()
-                                .size());
-
-        createAnchorTasks(tasks, variantScope);
-        createCheckManifestTask(tasks, variantScope);
-
-        // Add tasks to package the atoms.
-        AndroidTask<PackageAtom> packageAtoms =
-                recorder.record(
-                        ExecutionType.INSTANTAPP_TASK_MANAGER_CREATE_ATOM_PACKAGING_TASKS,
-                        projectPath,
-                        variantName,
-                        () -> createAtomPackagingTasks(tasks, variantScope));
-
-        // Sanity check.
-        assert packageAtoms != null;
-
-        recorder.record(
-                ExecutionType.INSTANTAPP_TASK_MANAGER_CREATE_PACKAGING_TASK,
-                projectPath,
-                variantName,
-                () -> {
-                    createInstantAppPackagingTasks(tasks, variantScope, packageAtoms);
-                    return null;
-                });
-    }
-
-    @NonNull
-    private AndroidTask<PackageAtom> createAtomPackagingTasks(
-            @NonNull TaskFactory tasks, @NonNull VariantScope variantScope) {
-        // Get the single output.
-        final VariantOutputScope variantOutputScope =
-                variantScope.getVariantData().getMainOutput().getScope();
-
-        // Generate the final resource packages first.
-        AndroidTask<ProcessAtomsResources> processAtomsResources =
+    public void createTasksForVariantScope(
+            @NonNull final TaskFactory tasks, @NonNull final VariantScope variantScope) {
+        // Create the bundling task.
+        File bundleDir =
+                FileUtils.join(
+                        globalScope.getApkLocation(),
+                        variantScope.getVariantConfiguration().getDirName());
+        AndroidTask<BundleInstantApp> bundleTask =
                 getAndroidTasks()
-                        .create(tasks, new ProcessAtomsResources.ConfigAction(variantOutputScope));
-        processAtomsResources.dependsOn(tasks, variantScope.getPrepareDependenciesTask());
+                        .create(tasks, new BundleInstantApp.ConfigAction(variantScope, bundleDir));
+        variantScope.getAssembleTask().dependsOn(tasks, bundleTask);
 
-        // Compile the final R classes.
-        AndroidTask<JavaCompileAtomResClass> javaCompileAtomsResClasses =
-                getAndroidTasks()
-                        .create(
-                                tasks,
-                                new JavaCompileAtomResClass.ConfigAction(variantOutputScope));
-        javaCompileAtomsResClasses.dependsOn(tasks, processAtomsResources);
+        ConfigurableFileCollection bundleFileCollection = project.files(bundleDir);
+        bundleFileCollection.builtBy(bundleTask.getName());
+        variantScope.addTaskOutput(
+                TaskOutputHolder.TaskOutputType.INSTANTAPP_BUNDLE, bundleFileCollection);
 
-        // Merge the atoms dex with their final R classes.
-        AndroidTask<MergeDexAtomResClass> dexAtoms =
-                getAndroidTasks()
-                        .create(tasks, new MergeDexAtomResClass.ConfigAction(variantScope));
-        dexAtoms.dependsOn(tasks, javaCompileAtomsResClasses);
-
-        // Actually package the atoms.
-        AndroidTask<PackageAtom> packageAtoms =
-                getAndroidTasks().create(tasks, new PackageAtom.ConfigAction(variantOutputScope));
-        packageAtoms.dependsOn(tasks, dexAtoms);
-
-        return packageAtoms;
-    }
-
-    private void createInstantAppPackagingTasks(
-            @NonNull TaskFactory tasks,
-            @NonNull final VariantScope variantScope,
-            @NonNull AndroidTask<PackageAtom> packageAtoms) {
-        // Get the single output.
-        final VariantOutputScope variantOutputScope =
-                variantScope.getVariantData().getMainOutput().getScope();
-
-        AndroidTask<Zip> bundle =
-                getAndroidTasks()
-                        .create(tasks, new BundleInstantAppConfigAction(variantOutputScope));
-        bundle.dependsOn(tasks, packageAtoms);
-        variantScope.getAssembleTask().dependsOn(tasks, bundle);
+        // FIXME: Stop creating dummy tasks just to make the IDE sync shut up.
+        tasks.create(variantScope.getTaskName("generate", "Sources"));
+        tasks.create(variantScope.getTaskName("compile", "Sources"));
     }
 
     @NonNull
@@ -171,5 +91,4 @@ public class InstantAppTaskManager extends TaskManager {
     protected Set<QualifiedContent.Scope> getResMergingScopes(@NonNull VariantScope variantScope) {
         return TransformManager.EMPTY_SCOPES;
     }
-
 }

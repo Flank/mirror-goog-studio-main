@@ -22,7 +22,6 @@ import com.android.annotations.concurrency.Immutable;
 import com.google.common.base.Preconditions;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
-import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystem;

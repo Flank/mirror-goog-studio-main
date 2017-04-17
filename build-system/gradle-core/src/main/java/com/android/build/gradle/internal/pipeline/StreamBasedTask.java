@@ -45,8 +45,10 @@ public class StreamBasedTask extends BaseTask {
     @InputFiles
     public Iterable<FileCollection> getStreamInputs() {
         if (allInputs == null) {
-            allInputs = concat(consumedInputStreams.stream(), referencedInputStreams.stream())
-                    .map(TransformStream::getFiles).collect(Collectors.toList());
+            allInputs =
+                    concat(consumedInputStreams.stream(), referencedInputStreams.stream())
+                            .map(TransformStream::getFileCollection)
+                            .collect(Collectors.toList());
         }
 
         return allInputs;

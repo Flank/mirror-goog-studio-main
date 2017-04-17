@@ -81,8 +81,7 @@ public class InstantRunDexTest {
     @Mock
     TransformOutputProvider transformOutputProvider;
 
-    @Mock
-    InstantRunBuildContext instantRunBuildContext;
+    @Mock InstantRunBuildContext buildContext;
 
     @Mock
     DexOptions dexOptions;
@@ -117,7 +116,7 @@ public class InstantRunDexTest {
         File oldRestartFile = new File(restartOutputFolder, "restart.dex");
         assertTrue(oldRestartFile.createNewFile());
 
-        when(variantScope.getInstantRunBuildContext()).thenReturn(instantRunBuildContext);
+        when(variantScope.getInstantRunBuildContext()).thenReturn(buildContext);
         when(variantScope.getRestartDexOutputFolder()).thenReturn(restartOutputFolder);
         when(variantScope.getReloadDexOutputFolder()).thenReturn(reloadOutputFolder);
         when(variantScope.getGlobalScope()).thenReturn(globalScope);
@@ -145,7 +144,7 @@ public class InstantRunDexTest {
     public void testVerifierFlaggedClass()
             throws TransformException, InterruptedException, IOException {
 
-        when(instantRunBuildContext.hasPassedVerification()).thenReturn(Boolean.FALSE);
+        when(buildContext.hasPassedVerification()).thenReturn(Boolean.FALSE);
 
         final List<File> convertedFiles = new ArrayList<>();
         InstantRunDex instantRunDex = getTestedDex(convertedFiles);
@@ -163,7 +162,7 @@ public class InstantRunDexTest {
     @Test
     public void testVerifierPassedClassOnLollipopOrAbove()
             throws TransformException, InterruptedException, IOException {
-        when(instantRunBuildContext.hasPassedVerification()).thenReturn(Boolean.TRUE);
+        when(buildContext.hasPassedVerification()).thenReturn(Boolean.TRUE);
 
         List<File> convertedFiles = new ArrayList<>();
         InstantRunDex instantRunDex = getTestedDex(convertedFiles);
@@ -174,7 +173,7 @@ public class InstantRunDexTest {
                 .build());
 
         assertThat(variantScope.getReloadDexOutputFolder().listFiles()).isNotEmpty();
-        verify(instantRunBuildContext).addChangedFile(
+        verify(buildContext).addChangedFile(
                 eq(FileType.RELOAD_DEX),
                 any(File.class));
     }
@@ -182,7 +181,7 @@ public class InstantRunDexTest {
     @Test
     public void testVerifierPassedClassOnDalvik()
             throws TransformException, InterruptedException, IOException {
-        when(instantRunBuildContext.hasPassedVerification()).thenReturn(Boolean.TRUE);
+        when(buildContext.hasPassedVerification()).thenReturn(Boolean.TRUE);
         when(project.getProperties()).then(
                 invocation -> ImmutableMap.of("android.injected.build.api", "15"));
 
@@ -200,7 +199,7 @@ public class InstantRunDexTest {
 
     @Test
     public void testNoChanges() throws TransformException, InterruptedException, IOException {
-        when(instantRunBuildContext.hasPassedVerification()).thenReturn(Boolean.TRUE);
+        when(buildContext.hasPassedVerification()).thenReturn(Boolean.TRUE);
         when(project.getProperties()).then(
                 invocation -> ImmutableMap.of("android.injected.build.api", "15"));
 

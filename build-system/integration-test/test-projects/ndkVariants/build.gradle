@@ -19,8 +19,12 @@ model {
         }
 
         productFlavors {
-            create("free")
-            create("premium")
+            create("free") {
+                dimension "foo"
+            }
+            create("premium") {
+                dimension "foo"
+            }
         }
     }
 

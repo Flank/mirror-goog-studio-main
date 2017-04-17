@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.shrinker
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import groovy.transform.CompileStatic
-import org.junit.Assume
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -37,11 +36,6 @@ class MinifyProjectShrinkerTest {
             .create()
 
     @Before
-    public void skipOnJack() throws Exception {
-        Assume.assumeFalse(GradleTestProject.USE_JACK)
-    }
-
-    @Before
     public void enableShrinker() throws Exception {
         project.buildFile << """
             android {
@@ -55,7 +49,7 @@ class MinifyProjectShrinkerTest {
     }
 
     @Test
-    public void "APK is correct"() throws Exception {
+    public void "test APK is correct"() throws Exception {
         project.execute("assembleMinified")
         checkShrinkerWasUsed(project)
         assertThatApk(project.getApk("minified")).containsClass("Lcom/android/tests/basic/Main;")

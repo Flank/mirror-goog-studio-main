@@ -19,11 +19,10 @@ package com.android.build.gradle.integration.application;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.builder.model.AndroidProject;
+import com.android.build.gradle.options.OptionalBooleanOption;
 import java.io.File;
 import org.junit.Assume;
 import org.junit.Rule;
@@ -61,9 +60,15 @@ public class ManifestMergingTest {
     public void checkManifestMergingForLibraries() throws Exception {
         libsTest.execute("clean", "build");
         File fileOutput = libsTest.
-                file("libapp/build/" + FD_INTERMEDIATES + "/bundles/default/AndroidManifest.xml");
+                file("libapp/build/" + FD_INTERMEDIATES + "/bundles/debug/AndroidManifest.xml");
 
-        assertTrue(fileOutput.exists());
+        assertThat(fileOutput).isFile();
+
+        fileOutput = libsTest.
+                file("libapp/build/" + FD_INTERMEDIATES + "/bundles/release/AndroidManifest.xml");
+
+        assertThat(fileOutput).isFile();
+
     }
 
     @Test
@@ -86,7 +91,7 @@ public class ManifestMergingTest {
                 .doesNotContain("android:testOnly=\"true\"");
 
         flavors.executor()
-                .withProperty(AndroidProject.PROPERTY_TEST_ONLY, "true")
+                .with(OptionalBooleanOption.IDE_TEST_ONLY, true)
                 .run("clean", "assembleF1FaDebug");
 
         assertThat(flavors.file("build/intermediates/manifests/full/f1Fa/debug/AndroidManifest.xml"))
@@ -107,8 +112,7 @@ public class ManifestMergingTest {
                         + "    }\n"
                         + "}");
         libsTest.execute("clean", ":app:build");
-        assertThat(
-                appProject.file("build/intermediates/manifests/full/debug/AndroidManifest.xml"))
+        assertThat(appProject.file("build/intermediates/manifests/full/debug/AndroidManifest.xml"))
                 .containsAllOf(
                         "android:minSdkVersion=\"15\"",
                         "android:targetSdkVersion=\"N\"",
@@ -129,8 +133,7 @@ public class ManifestMergingTest {
                         + "    }\n"
                         + "}");
         libsTest.execute("clean", ":app:assembleDebug");
-        assertThat(
-                appProject.file("build/intermediates/manifests/full/debug/AndroidManifest.xml"))
+        assertThat(appProject.file("build/intermediates/manifests/full/debug/AndroidManifest.xml"))
                 .containsAllOf(
                         "android:minSdkVersion=\"N\"",
                         "android:targetSdkVersion=\"15\"",

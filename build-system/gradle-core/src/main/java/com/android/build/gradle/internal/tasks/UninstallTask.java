@@ -21,7 +21,6 @@ import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.tasks.InputSupplier;
 import com.android.builder.sdk.SdkInfo;
 import com.android.builder.testing.ConnectedDeviceProvider;
 import com.android.builder.testing.api.DeviceConnector;
@@ -30,6 +29,7 @@ import com.android.builder.testing.api.DeviceProvider;
 import com.android.utils.StringHelper;
 import java.io.File;
 import java.util.List;
+import java.util.function.Supplier;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
@@ -43,7 +43,7 @@ public class UninstallTask extends BaseTask {
 
     private int mTimeOutInMs = 0;
 
-    private InputSupplier<File> adbSupplier = InputSupplier.from(() -> {
+    private Supplier<File> adbSupplier = TaskInputHelper.memoize(() -> {
                 SdkInfo sdkInfo = getBuilder().getSdkInfo();
                 if (sdkInfo == null) {
                     return null;
@@ -67,7 +67,7 @@ public class UninstallTask extends BaseTask {
         logger.info("Uninstalling app: {}", applicationId);
 
         final DeviceProvider deviceProvider = new ConnectedDeviceProvider(
-                adbSupplier.getLastValue(),
+                adbSupplier.get(),
                 getTimeOutInMs(),
                 getILogger());
 
@@ -145,7 +145,7 @@ public class UninstallTask extends BaseTask {
             uninstallTask.setTimeOutInMs(
                     scope.getGlobalScope().getExtension().getAdbOptions().getTimeOutInMs());
 
-            uninstallTask.adbSupplier = InputSupplier.from(() -> {
+            uninstallTask.adbSupplier = TaskInputHelper.memoize(() -> {
                 // SDK is loaded somewhat dynamically, plus we don't want to do all this logic
                 // if the task is not going to run, so use a supplier.
                 final SdkInfo info = scope.getGlobalScope().getSdkHandler().getSdkInfo();

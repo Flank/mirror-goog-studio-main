@@ -16,15 +16,15 @@
 
 package com.android.build.gradle.internal;
 
-import com.android.build.gradle.AndroidGradleOptions;
+import com.android.build.gradle.options.IntegerOption;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.ide.common.internal.ExecutorSingleton;
-import org.gradle.api.Project;
 
 public class ExecutionConfigurationUtil {
 
 
-    public static void setThreadPoolSize(Project project) {
-        Integer size = AndroidGradleOptions.getThreadPoolSize(project);
+    public static void setThreadPoolSize(ProjectOptions projectOptions) {
+        Integer size = projectOptions.get(IntegerOption.THREAD_POOL_SIZE);
         if (size == null) {
             return;
         }
