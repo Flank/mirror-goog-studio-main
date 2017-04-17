@@ -33,6 +33,7 @@ import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiAnonymousClass;
 import com.intellij.psi.PsiClass;
+import com.intellij.psi.PsiCompiledElement;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiEnumConstant;
 import com.intellij.psi.PsiExpression;
@@ -728,6 +729,10 @@ public class JavaContext extends Context {
     }
 
     public boolean isSuppressedWithComment(@NonNull PsiElement scope, @NonNull Issue issue) {
+        if (scope instanceof PsiCompiledElement) {
+            return false;
+        }
+
         // Check whether there is a comment marker
         CharSequence contents = getContents();
         assert contents != null; // otherwise we wouldn't be here
