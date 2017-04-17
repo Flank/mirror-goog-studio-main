@@ -51,7 +51,7 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-/** Test atom project with a dependency on an external library. */
+/** Test a simple project with features with a library dependency. */
 public class FeatureTest {
     @ClassRule
     public static GradleTestProject sProject =
@@ -70,7 +70,7 @@ public class FeatureTest {
 
     @Test
     public void build() throws Exception {
-        // just run test for now.
+        // Build all the things.
         sProject.executor()
                 .with(AaptGeneration.AAPT_V2_JNI)
                 .withEnabledFeatureSplitTransitionalAttributes(true)

@@ -136,6 +136,7 @@ public class VariantDependencies {
         @NonNull private final ErrorReporter errorReporter;
         @NonNull private final GradleVariantConfiguration variantConfiguration;
         private VariantType testedVariantType = null;
+        private boolean baseSplit = false;
         private Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> flavorSelection;
 
         private AndroidTypeAttr consumeType;
@@ -157,7 +158,6 @@ public class VariantDependencies {
                 @NonNull Project project,
                 @NonNull ErrorReporter errorReporter,
                 @NonNull GradleVariantConfiguration variantConfiguration) {
-
             this.project = project;
             this.errorReporter = errorReporter;
             this.variantConfiguration = variantConfiguration;
@@ -189,6 +189,11 @@ public class VariantDependencies {
             for (DefaultAndroidSourceSet sourceSet : sourceSets) {
                 addSourceSet(sourceSet);
             }
+            return this;
+        }
+
+        public Builder setBaseSplit(boolean baseSplit) {
+            this.baseSplit = baseSplit;
             return this;
         }
 
@@ -355,7 +360,7 @@ public class VariantDependencies {
                     // if publish type is FEATURE then include the featureSplit config to consume
                     // the list of featureSplit.
                     if (publishType == AndroidTypeAttr.TYPE_FEATURE) {
-                        if (isBaseSplit()) {
+                        if (baseSplit) {
                             // first the variant-specific configuration that will contain the
                             // the splits. It's per-variant to contain the right attribute.
                             // It'll be used to consume the manifest.
@@ -440,16 +445,6 @@ public class VariantDependencies {
                                 "Configuration with old name %s found. Use new name %s instead.",
                                 oldConfigName, newConfigName));
             }
-        }
-
-        private boolean isBaseSplit() {
-            Configuration config =
-                    project.getConfigurations().findByName(CONFIG_NAME_FEATURE_SPLIT);
-            if (config == null) {
-                return false;
-            }
-
-            return !config.getAllDependencies().isEmpty();
         }
 
         /**
