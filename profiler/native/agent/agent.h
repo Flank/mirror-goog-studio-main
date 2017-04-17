@@ -22,19 +22,19 @@
 
 #include <grpc++/grpc++.h>
 
-#include "proto/internal_event.grpc.pb.h"
-#include "proto/internal_memory.grpc.pb.h"
-#include "proto/internal_network.grpc.pb.h"
 #include "proto/agent_service.grpc.pb.h"
+#include "proto/internal_event.grpc.pb.h"
+#include "proto/internal_network.grpc.pb.h"
 
+#include "memory_component.h"
 #include "utils/background_queue.h"
 #include "utils/clock.h"
 
 namespace profiler {
 
-// Function call back that returns the true/false status if the agent is connected
-// to perfd. Each time the status changes this callback gets called with the new
-// (current) state of the connection.
+// Function call back that returns the true/false status if the agent is
+// connected to perfd. Each time the status changes this callback gets called
+// with the new (current) state of the connection.
 using PerfdStatusChanged = std::function<void(bool)>;
 
 class Agent {
@@ -45,13 +45,11 @@ class Agent {
 
   const proto::InternalEventService::Stub& event_stub() { return *event_stub_; }
 
-  const proto::InternalMemoryService::Stub& memory_stub() {
-    return *memory_stub_;
-  }
-
   const proto::InternalNetworkService::Stub& network_stub() {
     return *network_stub_;
   }
+
+  MemoryComponent* memory_component() { return memory_component_; }
 
   void AddPerfdStatusChangedCallback(PerfdStatusChanged callback);
 
@@ -66,16 +64,23 @@ class Agent {
 
   std::unique_ptr<proto::AgentService::Stub> service_stub_;
   std::unique_ptr<proto::InternalEventService::Stub> event_stub_;
-  std::unique_ptr<proto::InternalMemoryService::Stub> memory_stub_;
   std::unique_ptr<proto::InternalNetworkService::Stub> network_stub_;
 
   std::mutex callback_mutex_;
   std::list<PerfdStatusChanged> perfd_status_changed_callbacks_;
 
+  MemoryComponent* memory_component_;
+
   std::thread heartbeat_thread_;
 
   BackgroundQueue background_queue_;
 
+  /**
+   * A thread that is used to continuously ping perfd at regular intervals
+   * as a signal that perfa is alive. This signal is used by the Studio
+   * Profilers to determine whether certain advanced profiling features
+   * should be enabled.
+   */
   void RunHeartbeatThread();
 };
 

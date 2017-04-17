@@ -12,6 +12,8 @@ cc_library(
         "agent.cc",
         "agent.h",
         "agent_component.h",
+        "memory_component.h",
+        "memory_component.cc",
         "support/event_manager.cc",
         "support/event_manager.h",
         "support/event_passthrough.cc",

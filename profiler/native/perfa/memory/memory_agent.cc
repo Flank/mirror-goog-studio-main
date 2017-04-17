@@ -17,8 +17,12 @@
 
 #include <cstring>
 
+#include "agent/agent.h"
 #include "agent/support/memory_stats_logger.h"
 #include "perfa/jvmti_helper.h"
+#include "utils/log.h"
+
+using profiler::Log;
 
 namespace {
 static JavaVM* vm_;
@@ -60,12 +64,30 @@ void MemoryAgent::Initialize() {
                        JVMTI_EVENT_GARBAGE_COLLECTION_START);
   SetEventNotification(jvmti_, JVMTI_ENABLE,
                        JVMTI_EVENT_GARBAGE_COLLECTION_FINISH);
+
+  auto memory_component = Agent::Instance().memory_component();
+  memory_component->RegisterMemoryControlHandler(std::bind(
+      &MemoryAgent::HandleControlSignal, this, std::placeholders::_1));
+  memory_component->OpenControlStream();
 }
 
 void MemoryAgent::LogGcStart() { last_gc_start_ns_ = clock_.GetCurrentTime(); }
 
 void MemoryAgent::LogGcFinish() {
   profiler::EnqueueGcStats(last_gc_start_ns_, clock_.GetCurrentTime());
+}
+
+void MemoryAgent::HandleControlSignal(const MemoryControlRequest* request) {
+  switch (request->signal()) {
+    case MemoryControlRequest::ENABLE_TRACKING:
+      Log::V("Live memory tracking enabled.");
+      break;
+    case MemoryControlRequest::DISABLE_TRACKING:
+      Log::V("Live memory tracking disabled.");
+      break;
+    default:
+      Log::V("Unknown memory control signal.");
+  }
 }
 
 void MemoryAgent::GCStartCallback(jvmtiEnv* jvmti) { agent_->LogGcStart(); }

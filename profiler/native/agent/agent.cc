@@ -21,7 +21,6 @@
 
 #include <grpc++/support/channel_arguments.h>
 #include "utils/config.h"
-#include "utils/log.h"
 #include "utils/stopwatch.h"
 #include "utils/thread_name.h"
 
@@ -37,12 +36,11 @@ const int32_t kMaxBackgroundTasks = 100000;  // Worst case: ~100MB in memory
 
 namespace profiler {
 
-using proto::HeartBeatResponse;
-using proto::InternalEventService;
-using proto::InternalMemoryService;
-using proto::InternalNetworkService;
 using proto::AgentService;
 using proto::CommonData;
+using proto::HeartBeatResponse;
+using proto::InternalEventService;
+using proto::InternalNetworkService;
 using std::lock_guard;
 
 Agent& Agent::Instance() {
@@ -59,13 +57,13 @@ Agent::Agent(const char* address)
   // experience very much.
   grpc::ChannelArguments channel_args;
   channel_args.SetInt(GRPC_ARG_MAX_RECONNECT_BACKOFF_MS, 1000);
-  auto channel =
-      grpc::CreateCustomChannel(address, grpc::InsecureChannelCredentials(),
-                                channel_args);
+  auto channel = grpc::CreateCustomChannel(
+      address, grpc::InsecureChannelCredentials(), channel_args);
   service_stub_ = AgentService::NewStub(channel);
   event_stub_ = InternalEventService::NewStub(channel);
-  memory_stub_ = InternalMemoryService::NewStub(channel);
   network_stub_ = InternalNetworkService::NewStub(channel);
+
+  memory_component_ = new MemoryComponent(channel);
 
   // Enable the heartbeat.
   heartbeat_thread_ = std::thread(&Agent::RunHeartbeatThread, this);
@@ -89,10 +87,12 @@ void Agent::RunHeartbeatThread() {
     // Set a deadline on the context, so we can get a proper status code if
     // perfd is not connected.
     std::chrono::nanoseconds offset(kHeartBeatIntervalNs * 2);
-    std::chrono::system_clock::time_point deadline = std::chrono::system_clock::now();
+    std::chrono::system_clock::time_point deadline =
+        std::chrono::system_clock::now();
 
-    // Linux and Mac are slightly different with respect to default accuracy of time_point
-    // Linux is nanoseconds, mac is milliseconds so we cater to the lowest common.
+    // Linux and Mac are slightly different with respect to default accuracy of
+    // time_point Linux is nanoseconds, mac is milliseconds so we cater to the
+    // lowest common.
     deadline += std::chrono::duration_cast<std::chrono::milliseconds>(offset);
     context.set_deadline(deadline);
     CommonData data;
