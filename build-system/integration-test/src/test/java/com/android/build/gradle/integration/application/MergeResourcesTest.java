@@ -29,8 +29,8 @@ import com.android.testutils.apk.Zip;
 import com.android.utils.FileUtils;
 import java.io.File;
 import java.nio.file.Files;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.EnumSet;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -41,7 +41,7 @@ public class MergeResourcesTest {
 
     @Parameterized.Parameters(name = "aaptGeneration=\"{0}\"")
     public static Collection<AaptGeneration> expected() {
-        return EnumSet.allOf(AaptGeneration.class);
+        return Arrays.asList(AaptGeneration.AAPT_V1, AaptGeneration.AAPT_V2_JNI);
     }
 
     @Parameterized.Parameter public AaptGeneration aaptGeneration;
@@ -53,7 +53,6 @@ public class MergeResourcesTest {
 
     @Test
     public void mergesRawWithLibraryWithOverride() throws Exception {
-
         /*
          * Set app to depend on library.
          */
