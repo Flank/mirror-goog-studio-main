@@ -100,6 +100,7 @@ public class MergeResources extends IncrementalTask {
 
     // actual inputs
     private Supplier<List<ResourceSet>> sourceFolderInputs;
+    private List<ResourceSet> processedInputs;
 
     private ArtifactCollection libraries;
 
@@ -299,19 +300,25 @@ public class MergeResources extends IncrementalTask {
 
     @NonNull
     private List<ResourceSet> getConfiguredResourceSets(ResourcePreprocessor preprocessor) {
-        List<ResourceSet> resourceSets = computeResourceSetList();
-        List<ResourceSet> generatedSets = Lists.newArrayListWithCapacity(resourceSets.size());
+        // it is possible that this get called twice in case the incremental run fails and reverts
+        // back to full task run. Because the cached ResourceList is modified we don't want
+        // to recompute this twice (plus, why recompute it twice anyway?)
+        if (processedInputs == null) {
+            processedInputs = computeResourceSetList();
+            List<ResourceSet> generatedSets = Lists.newArrayListWithCapacity(processedInputs.size());
 
-        for (ResourceSet resourceSet : resourceSets) {
-            resourceSet.setPreprocessor(preprocessor);
-            ResourceSet generatedSet = new GeneratedResourceSet(resourceSet);
-            resourceSet.setGeneratedSet(generatedSet);
-            generatedSets.add(generatedSet);
+            for (ResourceSet resourceSet : processedInputs) {
+                resourceSet.setPreprocessor(preprocessor);
+                ResourceSet generatedSet = new GeneratedResourceSet(resourceSet);
+                resourceSet.setGeneratedSet(generatedSet);
+                generatedSets.add(generatedSet);
+            }
+
+            // Put all generated sets at the start of the list.
+            processedInputs.addAll(0, generatedSets);
         }
 
-        // Put all generated sets at the start of the list.
-        resourceSets.addAll(0, generatedSets);
-        return resourceSets;
+        return processedInputs;
     }
 
     @InputFiles
@@ -520,7 +527,6 @@ public class MergeResources extends IncrementalTask {
 
         // add the folder based next
         resourceSetList.addAll(sourceFolderSets);
-
 
         // We add the generated folders to the main set
         List<File> generatedResFolders = Lists.newArrayList();
