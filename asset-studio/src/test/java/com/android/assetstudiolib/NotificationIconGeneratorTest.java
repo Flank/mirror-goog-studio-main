@@ -17,12 +17,10 @@
 package com.android.assetstudiolib;
 
 import com.android.assetstudiolib.NotificationIconGenerator.NotificationOptions;
-
+import java.io.IOException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-
-import java.io.IOException;
 
 @RunWith(JUnit4.class)
 public class NotificationIconGeneratorTest {
@@ -36,6 +34,7 @@ public class NotificationIconGeneratorTest {
         BitmapGeneratorTests.checkGraphic(expectedCount, folderName, baseName, generator, options);
     }
 
+    @SuppressWarnings("SameParameterValue")
     private static void checkGraphic(String baseName) throws IOException {
         checkGraphic(baseName, 1, "notification", 12);
     }

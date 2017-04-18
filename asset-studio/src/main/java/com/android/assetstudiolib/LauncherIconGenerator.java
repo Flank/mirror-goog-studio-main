@@ -17,10 +17,10 @@
 package com.android.assetstudiolib;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.util.AssetUtil;
 import com.android.resources.Density;
 import com.android.utils.Pair;
-
 import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -97,16 +97,16 @@ public class LauncherIconGenerator extends GraphicGenerator {
     }
 
     /**
-     * Modifies the value of the option to take into account the dog-ear effect.
-     * This effect only applies to Square, Hrect and Vrect shapes.
-     * @param shape     Shape of the icon before applying dog-ear effect
-     * @return          Shape with dog-ear effect on
+     * Modifies the value of the option to take into account the dog-ear effect. This effect only
+     * applies to Square, Hrect and Vrect shapes.
+     *
+     * @param shape Shape of the icon before applying dog-ear effect
+     * @return Shape with dog-ear effect on
      */
     private static Shape applyDog(Shape shape) {
         if (shape == Shape.SQUARE) {
             return Shape.SQUARE_DOG;
-        }
-        else if (shape == Shape.HRECT) {
+        } else if (shape == Shape.HRECT) {
             return Shape.HRECT_DOG;
         } else if (shape == Shape.VRECT) {
             return Shape.VRECT_DOG;
@@ -115,9 +115,47 @@ public class LauncherIconGenerator extends GraphicGenerator {
         }
     }
 
+    @Nullable
+    public static BufferedImage loadImage(
+            @NonNull GraphicGeneratorContext context,
+            @NonNull Shape shape,
+            @NonNull String density,
+            @NonNull String fileName) {
+        String name =
+                String.format("/images/launcher_stencil/%s/%s/%s.png", shape.id, density, fileName);
+        return context.loadImageResource(name);
+    }
+
+    @Nullable
+    public static BufferedImage loadMaskImage(
+            @NonNull GraphicGeneratorContext context,
+            @NonNull Shape shape,
+            @NonNull String density) {
+        return loadImage(context, shape, density, "mask");
+    }
+
+    @Nullable
+    public static BufferedImage loadBackImage(
+            @NonNull GraphicGeneratorContext context,
+            @NonNull Shape shape,
+            @NonNull String density) {
+        return loadImage(context, shape, density, "back");
+    }
+
+    @Nullable
+    public static BufferedImage loadStyleImage(
+            @NonNull GraphicGeneratorContext context,
+            @NonNull Shape shape,
+            @NonNull String density,
+            @NonNull Style style) {
+        return loadImage(context, shape, density, style.id);
+    }
+
+    @NonNull
     @SuppressWarnings("UseJBColor")
     @Override
-    public BufferedImage generate(GraphicGeneratorContext context, Options options) {
+    public BufferedImage generate(
+            @NonNull GraphicGeneratorContext context, @NonNull Options options) {
         LauncherOptions launcherOptions = (LauncherOptions) options;
 
         String density;
@@ -132,30 +170,31 @@ public class LauncherIconGenerator extends GraphicGenerator {
         }
 
         BufferedImage shapeImageBack = null, shapeImageFore = null, shapeImageMask = null;
-        if (launcherOptions.shape != Shape.NONE && launcherOptions.shape != null) {
-            String shape = launcherOptions.shape.id;
-
-            shapeImageBack = context.loadImageResource("/images/launcher_stencil/"
-                    + shape + "/" + density + "/back.png");
-            shapeImageFore = context.loadImageResource("/images/launcher_stencil/"
-                    + shape + "/" + density + "/" + launcherOptions.style.id + ".png");
-            shapeImageMask = context.loadImageResource("/images/launcher_stencil/"
-                    + shape + "/" + density + "/mask.png");
+        if (launcherOptions.shape != Shape.NONE
+                && launcherOptions.shape != null
+                && launcherOptions.renderShape) {
+            shapeImageBack = loadBackImage(context, launcherOptions.shape, density);
+            shapeImageFore =
+                    loadStyleImage(context, launcherOptions.shape, density, launcherOptions.style);
+            shapeImageMask = loadMaskImage(context, launcherOptions.shape, density);
         }
 
         Rectangle imageRect = IMAGE_SIZE_WEB;
         if (!launcherOptions.isWebGraphic) {
-            imageRect = AssetUtil.scaleRectangle(IMAGE_SIZE_MDPI, GraphicGenerator
-              .getMdpiScaleFactor(launcherOptions.density));
+            imageRect =
+                    AssetUtil.scaleRectangle(
+                            IMAGE_SIZE_MDPI,
+                            GraphicGenerator.getMdpiScaleFactor(launcherOptions.density));
         }
 
         Rectangle targetRect = TARGET_RECTS.get(
                 Pair.of(launcherOptions.shape, launcherOptions.density));
         if (targetRect == null) {
             // Scale up from MDPI if no density-specific target rectangle is defined.
-            targetRect = AssetUtil
-              .scaleRectangle(TARGET_RECTS.get(Pair.of(launcherOptions.shape, Density.MEDIUM)),
-                              GraphicGenerator.getMdpiScaleFactor(launcherOptions.density));
+            targetRect =
+                    AssetUtil.scaleRectangle(
+                            TARGET_RECTS.get(Pair.of(launcherOptions.shape, Density.MEDIUM)),
+                            GraphicGenerator.getMdpiScaleFactor(launcherOptions.density));
         }
 
         // outImage will be our final image. Many intermediate textures will be rendered, in
@@ -179,7 +218,7 @@ public class LauncherIconGenerator extends GraphicGenerator {
         // Render the foreground icon onto an intermediate buffer and then render over the
         // background shape. This lets us override the color of the icon.
         BufferedImage iconImage = AssetUtil.newArgbBufferedImage(imageRect.width, imageRect.height);
-        Graphics2D gIcon = (Graphics2D)iconImage.getGraphics();
+        Graphics2D gIcon = (Graphics2D) iconImage.getGraphics();
         if (launcherOptions.crop) {
             AssetUtil.drawCenterCrop(gIcon, launcherOptions.sourceImage, targetRect);
         } else {
@@ -187,9 +226,10 @@ public class LauncherIconGenerator extends GraphicGenerator {
         }
         AssetUtil.Effect[] effects;
         if (launcherOptions.useForegroundColor) {
-            effects = new AssetUtil.Effect[]{
-              new AssetUtil.FillEffect(new Color(launcherOptions.foregroundColor), 1.0)
-            };
+            effects =
+                    new AssetUtil.Effect[] {
+                        new AssetUtil.FillEffect(new Color(launcherOptions.foregroundColor), 1.0)
+                    };
         } else {
             effects = new AssetUtil.Effect[0];
         }
@@ -227,16 +267,15 @@ public class LauncherIconGenerator extends GraphicGenerator {
             launcherOptions.isWebGraphic = true;
             launcherOptions.density = null;
             BufferedImage image = generate(context, options);
-            if (image != null) {
-                Map<String, BufferedImage> imageMap = new HashMap<>();
-                categoryMap.put("Web", imageMap);
-                imageMap.put(getIconPath(options, name), image);
-            }
+            Map<String, BufferedImage> imageMap = new HashMap<>();
+            categoryMap.put("Web", imageMap);
+            imageMap.put(getIconPath(options, name), image);
         }
     }
 
+    @NonNull
     @Override
-    protected String getIconPath(Options options, String name) {
+    protected String getIconPath(@NonNull Options options, @NonNull String name) {
         if (((LauncherOptions) options).isWebGraphic) {
             return name + "-web.png"; // Store at the root of the project
         }
@@ -247,7 +286,7 @@ public class LauncherIconGenerator extends GraphicGenerator {
     /** Options specific to generating launcher icons */
     public static class LauncherOptions extends GraphicGenerator.Options {
         public LauncherOptions() {
-            mipmap = true;
+            iconFolderKind = IconFolderKind.MIPMAP;
         }
 
         /**
@@ -275,13 +314,17 @@ public class LauncherIconGenerator extends GraphicGenerator {
         public boolean isDogEar = false;
 
         /**
-         * Whether a web graphic should be generated (will ignore normal density
-         * setting). The {@link #generate(GraphicGeneratorContext, Options)}
-         * method will use this to decide whether to generate a normal density
-         * icon or a high res web image. The
-         * {@link GraphicGenerator#generate(String, Map, GraphicGeneratorContext, Options, String)}
-         * method will use this flag to determine whether it should include a
-         * web graphic in its iteration.
+         * Whether to render the background shape. If <code>false</code>, the shape is still used to
+         * scale the image to the target rectangle associated to the shape.
+         */
+        public boolean renderShape = true;
+
+        /**
+         * Whether a web graphic should be generated (will ignore normal density setting). The
+         * {@link #generate(GraphicGeneratorContext, Options)} method will use this to decide
+         * whether to generate a normal density icon or a high res web image. The {@link
+         * GraphicGenerator#generate(String, Map, GraphicGeneratorContext, Options, String)} method
+         * will use this flag to determine whether it should include a web graphic in its iteration.
          */
         public boolean isWebGraphic;
     }

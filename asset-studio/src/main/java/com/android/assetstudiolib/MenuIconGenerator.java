@@ -16,11 +16,11 @@
 
 package com.android.assetstudiolib;
 
+import com.android.annotations.NonNull;
 import com.android.ide.common.util.AssetUtil;
 import com.android.ide.common.util.AssetUtil.Effect;
 import com.android.ide.common.util.AssetUtil.FillEffect;
 import com.android.ide.common.util.AssetUtil.ShadowEffect;
-
 import java.awt.Color;
 import java.awt.GradientPaint;
 import java.awt.Graphics2D;
@@ -35,8 +35,10 @@ public class MenuIconGenerator extends GraphicGenerator {
     public MenuIconGenerator() {
     }
 
+    @NonNull
     @Override
-    public BufferedImage generate(GraphicGeneratorContext context, Options options) {
+    public BufferedImage generate(
+            @NonNull GraphicGeneratorContext context, @NonNull Options options) {
         Rectangle imageSizeHdpi = new Rectangle(0, 0, 48, 48);
         Rectangle targetRectHdpi = new Rectangle(8, 8, 32, 32);
         float scaleFactor = GraphicGenerator.getMdpiScaleFactor(options.density);

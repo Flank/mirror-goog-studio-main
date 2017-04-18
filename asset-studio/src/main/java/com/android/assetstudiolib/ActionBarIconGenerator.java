@@ -15,10 +15,10 @@
  */
 package com.android.assetstudiolib;
 
+import com.android.annotations.NonNull;
 import com.android.ide.common.util.AssetUtil;
 import com.android.ide.common.util.AssetUtil.Effect;
 import com.android.ide.common.util.AssetUtil.FillEffect;
-
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
@@ -33,8 +33,10 @@ public class ActionBarIconGenerator extends GraphicGenerator {
     public ActionBarIconGenerator() {
     }
 
+    @NonNull
     @Override
-    public BufferedImage generate(GraphicGeneratorContext context, Options options) {
+    public BufferedImage generate(
+            @NonNull GraphicGeneratorContext context, @NonNull Options options) {
         ActionBarOptions actionBarOptions = (ActionBarOptions) options;
         Rectangle iconSizeMdpi = new Rectangle(0, 0, 32, 32);
         Rectangle targetRectMdpi = actionBarOptions.sourceIsClipart

@@ -15,11 +15,11 @@
  */
 package com.android.assetstudiolib;
 
+import com.android.annotations.NonNull;
 import com.android.ide.common.util.AssetUtil;
 import com.android.ide.common.util.AssetUtil.Effect;
 import com.android.ide.common.util.AssetUtil.FillEffect;
 import com.android.ide.common.util.AssetUtil.ShadowEffect;
-
 import java.awt.Color;
 import java.awt.GradientPaint;
 import java.awt.Graphics2D;
@@ -35,8 +35,10 @@ public class NotificationIconGenerator extends GraphicGenerator {
     public NotificationIconGenerator() {
     }
 
+    @NonNull
     @Override
-    public BufferedImage generate(GraphicGeneratorContext context, Options options) {
+    public BufferedImage generate(
+            @NonNull GraphicGeneratorContext context, @NonNull Options options) {
         Rectangle iconSizeMdpi;
         Rectangle targetRectMdpi;
         NotificationOptions notificationOptions = (NotificationOptions) options;
@@ -106,8 +108,10 @@ public class NotificationIconGenerator extends GraphicGenerator {
                 categoryMap, context, options, name);
     }
 
+
+    @NonNull
     @Override
-    protected String getIconFolder(Options options) {
+    protected String getIconFolder(@NonNull Options options) {
         String folder = super.getIconFolder(options);
         Version version = ((NotificationOptions) options).version;
         if (version == Version.V11 && options.minSdk < 11) {

@@ -15,6 +15,7 @@
  */
 package com.android.assetstudiolib;
 
+import com.android.annotations.NonNull;
 import java.awt.image.BufferedImage;
 
 /**
@@ -23,11 +24,16 @@ import java.awt.image.BufferedImage;
  * operation on the sourceImage.
  */
 public class VectorIconGenerator extends GraphicGenerator {
+    @NonNull
     @Override
-    public BufferedImage generate(GraphicGeneratorContext context, Options options) {
+    public BufferedImage generate(
+            @NonNull GraphicGeneratorContext context, @NonNull Options options) {
         return options.sourceImage;
     }
 
     public static class VectorIconOptions extends GraphicGenerator.Options {
+        public VectorIconOptions() {
+            iconFolderKind = IconFolderKind.DRAWABLE_NO_DPI;
+        }
     }
 }

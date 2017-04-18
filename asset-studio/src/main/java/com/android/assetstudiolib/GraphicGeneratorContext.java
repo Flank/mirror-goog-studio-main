@@ -16,6 +16,7 @@
 
 package com.android.assetstudiolib;
 
+import com.android.annotations.Nullable;
 import java.awt.image.BufferedImage;
 
 /**
@@ -26,8 +27,9 @@ public interface GraphicGeneratorContext {
      * Loads the given image resource, as requested by the graphic generator.
      *
      * @param path The path to the resource, relative to the general "resources" path, as defined by
-     *             the context implementer.
+     *     the context implementer.
      * @return The loaded image resource, or null if there was an error.
      */
+    @Nullable
     BufferedImage loadImageResource(String path);
 }

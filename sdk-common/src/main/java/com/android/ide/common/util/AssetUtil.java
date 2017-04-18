@@ -16,6 +16,7 @@
 
 package com.android.ide.common.util;
 
+import com.android.annotations.NonNull;
 import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Composite;
@@ -69,14 +70,20 @@ public class AssetUtil {
      * {@link Image#SCALE_SMOOTH} algorithm (generally bicubic resampling or bilinear filtering).
      *
      * @param source The source image.
-     * @param width  The destination width to scale to.
+     * @param width The destination width to scale to.
      * @param height The destination height to scale to.
-     * @return A new, scaled image.
+     * @return A new, scaled image (or the original image if no scaling is needed).
      */
     public static BufferedImage scaledImage(BufferedImage source, int width, int height) {
+        // Common case optimization: scaling to the same (width, height) should be a no-op, but
+        // the source.getScaledInstance call below is actually CPU intensive.
+        if (source.getWidth() == width && source.getHeight() == height) {
+            return source;
+        }
+
         Image scaledImage = source.getScaledInstance(width, height, Image.SCALE_SMOOTH);
-        BufferedImage scaledBufImage = new BufferedImage(width, height,
-                BufferedImage.TYPE_INT_ARGB);
+        BufferedImage scaledBufImage =
+                new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         Graphics g = scaledBufImage.createGraphics();
         g.drawImage(scaledImage, 0, 0, null);
         g.dispose();
@@ -204,6 +211,7 @@ public class AssetUtil {
      * @param source The source image.
      * @return A new, trimmed image, or the source image if no trim is performed.
      */
+    @SuppressWarnings("unused")
     public static BufferedImage trimmedImage(BufferedImage source) {
         final int minAlpha = 1;
         final int srcWidth = source.getWidth();
@@ -247,8 +255,8 @@ public class AssetUtil {
      */
     public static void drawEffects(Graphics2D g, BufferedImage source, int x, int y,
             Effect[] effects) {
-        List<ShadowEffect> shadowEffects = new ArrayList<ShadowEffect>();
-        List<FillEffect> fillEffects = new ArrayList<FillEffect>();
+        List<ShadowEffect> shadowEffects = new ArrayList<>();
+        List<FillEffect> fillEffects = new ArrayList<>();
 
         for (Effect effect : effects) {
             if (effect instanceof ShadowEffect) {
@@ -389,7 +397,8 @@ public class AssetUtil {
             final int scaledWidth = dstRect.width;
             final int scaledHeight = dstRect.width * srcHeight / srcWidth;
             Image scaledImage = scaledImage(source, scaledWidth, scaledHeight);
-            g.drawImage(scaledImage,
+            g.drawImage(
+                    scaledImage,
                     dstRect.x,
                     dstRect.y,
                     dstRect.x + dstRect.width,
@@ -403,15 +412,65 @@ public class AssetUtil {
     }
 
     /**
-     * An effect to apply in
-     * {@link AssetUtil#drawEffects(java.awt.Graphics2D, java.awt.image.BufferedImage, int, int, AssetUtil.Effect[])}
+     * Draws the given {@link BufferedImage} <code>source</code>, centered and with preserved aspect
+     * ratio, to the given destination rectangle <code>destRect</code> inside the canvas <code>g
+     * </code>, so that either the width or height of the image matches the corresponding width or
+     * height of the given reference rectangle <code>scaleRect</code>.
+     *
+     * <p>This method is similar to {@link #drawCenterCrop(Graphics2D, BufferedImage, Rectangle)} in
+     * term of determining the scaling factor, but this method does not crop the resulting scaled
+     * image.
+     *
+     * @param g The destination canvas.
+     * @param source The source image.
+     * @param dstRect The destination rectangle in the destination canvas into which to draw the
+     *     image.
+     * @param scaleRectWidth The width of the rectangle used a reference to scale the source image.
+     * @param scaleRectHeight The height of the rectangle used a reference to scale the source
+     *     image.
      */
-    public abstract static class Effect {
+    public static void drawCenterScaled(
+            @NonNull Graphics2D g,
+            @NonNull BufferedImage source,
+            @NonNull Rectangle dstRect,
+            int scaleRectWidth,
+            int scaleRectHeight) {
+        final int srcWidth = source.getWidth();
+        final int srcHeight = source.getHeight();
+        if (srcWidth * 1.0 / srcHeight > scaleRectWidth * 1.0 / scaleRectHeight) {
+            // Scale vertically
+            final int scaledWidth = srcWidth * scaleRectHeight / srcHeight;
+            final int scaledHeight = srcHeight * scaleRectHeight / srcHeight;
+            Image scaledImage = scaledImage(source, scaledWidth, scaledHeight);
+            g.drawImage(
+                    scaledImage,
+                    dstRect.x + (dstRect.width - scaledWidth) / 2,
+                    dstRect.y + (dstRect.height - scaledHeight) / 2,
+                    scaledWidth,
+                    scaledHeight,
+                    null);
+        } else {
+            // Scale horizontally
+            final int scaledWidth = srcWidth * scaleRectWidth / srcWidth;
+            final int scaledHeight = srcHeight * scaleRectWidth / srcWidth;
+            Image scaledImage = scaledImage(source, scaledWidth, scaledHeight);
+            g.drawImage(
+                    scaledImage,
+                    dstRect.x + (dstRect.width - scaledWidth) / 2,
+                    dstRect.y + (dstRect.height - scaledHeight) / 2,
+                    scaledWidth,
+                    scaledHeight,
+                    null);
+        }
     }
 
     /**
-     * An inner or outer shadow.
+     * An effect to apply in {@link AssetUtil#drawEffects(java.awt.Graphics2D,
+     * java.awt.image.BufferedImage, int, int, AssetUtil.Effect[])}
      */
+    public abstract static class Effect {}
+
+    /** An inner or outer shadow. */
     public static class ShadowEffect extends Effect {
         public double xOffset;
         public double yOffset;
