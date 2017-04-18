@@ -5,6 +5,7 @@ cc_binary(
         "jvmti_helper.h",
         "memory/memory_agent.cc",
         "memory/memory_agent.h",
+        "memory/stats.h",
         "perfa.cc",
         "scoped_local_ref.h",
     ],

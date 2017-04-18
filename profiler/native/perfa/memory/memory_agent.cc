@@ -49,6 +49,22 @@ namespace profiler {
 
 using proto::RecordAllocationEventsRequest;
 
+// STL container memory tracking for Debug only.
+std::atomic<int64_t> g_max_used_[kMemTagCount];
+std::atomic<int64_t> g_total_used_[kMemTagCount];
+const char* MemTagToString(MemTag tag) {
+  switch (tag) {
+    case kClassTagMap:
+      return "ClassTagMap";
+    case kClassGlobalRefs:
+      return "ClassGlobalRefs";
+    case kClassData:
+      return "ClassData";
+    default:
+      return "Unknown";
+  }
+}
+
 MemoryAgent* MemoryAgent::Instance(JavaVM* vm) {
   if (agent_ == nullptr) {
     // Create a stand-alone jvmtiEnv to avoid any callback conflicts
@@ -114,6 +130,7 @@ void MemoryAgent::StartLiveTracking() {
   }
   is_live_tracking_ = true;
   last_tracking_start_ns_ = clock_.GetCurrentTime();
+  event_queue_.Reset();
 
   // Called from grpc so we need to attach.
   JNIEnv* jni = GetThreadLocalJNI(vm_);
@@ -225,11 +242,20 @@ void MemoryAgent::LogGcStart() { last_gc_start_ns_ = clock_.GetCurrentTime(); }
 void MemoryAgent::LogGcFinish() {
   profiler::EnqueueGcStats(last_gc_start_ns_, clock_.GetCurrentTime());
 
+#ifndef NDEBUG
   Log::V(">> [MEM AGENT STATS DUMP BEGIN]");
-  for (int i = 0; i < Stats::kTagCount; i++) {
-    stats_.Print(static_cast<Stats::TimingTag>(i));
+  Log::V(">> Timing(ns)");
+  for (int i = 0; i < TimingStats::kTimingTagCount; i++) {
+    timing_stats_.Print(static_cast<TimingStats::TimingTag>(i));
   }
+  Log::V(">> Memory(bytes)");
+  for (int i = 0; i < kMemTagCount; i++) {
+    Log::V(">> %s: Total=%ld, Max=%ld", MemTagToString((MemTag)i),
+           (long)g_total_used_[i].load(), (long)g_max_used_[i].load());
+  }
+  event_queue_.PrintStats();
   Log::V(">> [MEM AGENT STATS DUMP END]");
+#endif
 }
 
 void MemoryAgent::HandleControlSignal(const MemoryControlRequest* request) {
@@ -329,7 +355,7 @@ void MemoryAgent::ObjectAllocCallback(jvmtiEnv* jvmti, JNIEnv* jni,
     event.set_timestamp(agent_->clock_.GetCurrentTime());
     agent_->event_queue_.Push(event);
   }
-  agent_->stats_.Track(Stats::kAllocate, sw.GetElapsed());
+  agent_->timing_stats_.Track(TimingStats::kAllocate, sw.GetElapsed());
 }
 
 void MemoryAgent::ObjectFreeCallback(jvmtiEnv* jvmti, jlong tag) {
@@ -342,7 +368,7 @@ void MemoryAgent::ObjectFreeCallback(jvmtiEnv* jvmti, jlong tag) {
     event.set_timestamp(agent_->last_gc_start_ns_);
     agent_->event_queue_.Push(event);
   }
-  agent_->stats_.Track(Stats::kFree, sw.GetElapsed());
+  agent_->timing_stats_.Track(TimingStats::kFree, sw.GetElapsed());
 }
 
 void MemoryAgent::GCStartCallback(jvmtiEnv* jvmti) { agent_->LogGcStart(); }
