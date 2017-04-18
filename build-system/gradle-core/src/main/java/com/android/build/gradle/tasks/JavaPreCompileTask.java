@@ -61,6 +61,8 @@ public class JavaPreCompileTask extends BaseTask {
 
     private File processorListFile;
 
+    private String annotationProcessorConfigurationName;
+
     private FileCollection annotationProcessorConfiguration;
 
     private FileCollection compileClasspaths;
@@ -72,11 +74,13 @@ public class JavaPreCompileTask extends BaseTask {
     @VisibleForTesting
     void init(
             @NonNull File processorListFile,
+            @NonNull String annotationProcessorConfigurationName,
             @NonNull FileCollection annotationProcessorConfiguration,
             @NonNull FileCollection compileClasspaths,
             @NonNull AnnotationProcessorOptions annotationProcessorOptions,
             boolean dataBindingEnabled) {
         this.processorListFile = processorListFile;
+        this.annotationProcessorConfigurationName = annotationProcessorConfigurationName;
         this.annotationProcessorConfiguration = annotationProcessorConfiguration;
         this.compileClasspaths = compileClasspaths;
         this.annotationProcessorOptions = annotationProcessorOptions;
@@ -100,7 +104,6 @@ public class JavaPreCompileTask extends BaseTask {
 
     @TaskAction
     public void preCompile() throws IOException {
-        List<String> processors = Lists.newArrayList();
         boolean grandfathered =
                 annotationProcessorOptions.getIncludeCompileClasspath() != null
                         || hasOldAptPlugin();
@@ -185,16 +188,17 @@ public class JavaPreCompileTask extends BaseTask {
         return getProject().getPlugins().hasPlugin(AbstractCompilesUtil.ANDROID_APT_PLUGIN_NAME);
     }
 
-    private static void throwException(List<String> processors) throws RuntimeException {
+    private void throwException(List<String> processors) throws RuntimeException {
         throw new RuntimeException(
-                "Annotation processors must now be declared explicitly.  The following "
-                        + "dependencies in the compile classpath are found to contain "
-                        + "annotation processors.  Please add them to the "
-                        + "annotationProcessor configuration.\n  - "
+                "Annotation processors must be explicitly declared now.  The following "
+                        + "dependencies on the compile classpath are found to contain "
+                        + "annotation processor.  Please add them to the "
+                        + annotationProcessorConfigurationName
+                        + " configuration.\n  - "
                         + Joiner.on("\n  - ").join(processors)
                         + "\nAlternatively, set "
                         + "android.defaultConfig.javaCompileOptions.annotationProcessorOptions.includeCompileClasspath = true "
-                        + "to continue with the previous behavior.  Note that this option "
+                        + "to continue with previous behavior.  Note that this option "
                         + "is deprecated and will be removed in the future.\n"
                         + "See "
                         + "https://developer.android.com/r/tools/annotation-processor-error-message.html "
@@ -227,6 +231,9 @@ public class JavaPreCompileTask extends BaseTask {
         public void execute(@NonNull JavaPreCompileTask task) {
             task.init(
                     processorListFile,
+                    scope.getVariantData().getType().isForTesting()
+                            ? scope.getVariantData().getType().getPrefix() + "AnnotationProcessor"
+                            : "annotationProcessor",
                     scope.getArtifactFileCollection(ANNOTATION_PROCESSOR, ALL, JAR),
                     scope.getJavaClasspath(COMPILE_CLASSPATH, CLASSES),
                     scope.getVariantConfiguration()

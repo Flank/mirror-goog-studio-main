@@ -49,8 +49,32 @@ public class AnnotationProcessorCompileClasspathTest {
 
         GradleBuildResult result = project.executor().expectFailure().run("assembleDebug");
         assertThat(result.getFailureMessage())
-                .contains("Annotation processors must now be declared explicitly");
+                .contains("Annotation processors must be explicitly declared now");
         assertThat(result.getFailureMessage()).contains("butterknife-7.0.1.jar");
+    }
+
+    @Test
+    public void failForAndroidTest() throws IOException, InterruptedException {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "dependencies {\n"
+                        + "    compile 'com.jakewharton:butterknife:7.0.1'\n"
+                        + "    annotationProcessor 'com.jakewharton:butterknife:7.0.1'\n"
+                        + "}\n"
+                        + "android.defaultConfig.javaCompileOptions.annotationProcessorOptions.includeCompileClasspath null");
+
+        GradleBuildResult result =
+                project.executor().expectFailure().run("assembleDebugAndroidTest");
+        String message = result.getFailureMessage();
+        assertThat(message).contains("Annotation processors must be explicitly declared now");
+        assertThat(message).contains("androidTestAnnotationProcessor");
+        assertThat(message).contains("butterknife-7.0.1.jar");
+
+        result = project.executor().expectFailure().run("assembleDebugUnitTest");
+        message = result.getFailureMessage();
+        assertThat(message).contains("Annotation processors must be explicitly declared");
+        assertThat(message).contains("testAnnotationProcessor");
+        assertThat(message).contains("butterknife-7.0.1.jar");
     }
 
     @Test
@@ -61,17 +85,21 @@ public class AnnotationProcessorCompileClasspathTest {
                         + "dependencies {\n"
                         + "    compile 'com.jakewharton:butterknife:7.0.1'\n"
                         + "}\n");
-        project.executor().run("assembleDebug");
+        project.executor()
+                .run("assembleDebug", "assembleDebugAndroidTest", "assembleDebugUnitTest");
     }
 
     @Test
     public void checkSuccessWhenProcessorIsSpecified() throws IOException, InterruptedException {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
-                "dependencies {\n"
+                "android.defaultConfig.javaCompileOptions.annotationProcessorOptions.includeCompileClasspath null\n"
+                        + "dependencies {\n"
                         + "    compile 'com.jakewharton:butterknife:7.0.1'\n"
                         + "    annotationProcessor 'com.jakewharton:butterknife:7.0.1'\n"
+                        + "    testAnnotationProcessor 'com.jakewharton:butterknife:7.0.1'\n"
+                        + "    androidTestAnnotationProcessor 'com.jakewharton:butterknife:7.0.1'\n"
                         + "}\n");
-        project.executor().run("assembleDebug");
+        project.executor().run("assembleDebug", "assembleDebugAndroidTest", "testDebug");
     }
 }
