@@ -318,8 +318,10 @@ public class ResourceResolver extends RenderResources {
             if (parentStyle != null) {
                 if (depth >= MAX_RESOURCE_INDIRECTION) {
                     if (mLogger != null) {
-                        mLogger.error(LayoutLog.TAG_BROKEN,
-                                String.format("Cyclic style parent definitions: %1$s",
+                        mLogger.error(
+                                LayoutLog.TAG_BROKEN,
+                                String.format(
+                                        "Cyclic style parent definitions: %1$s",
                                         computeCyclicStyleChain(style)),
                                 null);
                     }
@@ -430,8 +432,11 @@ public class ResourceResolver extends RenderResources {
         // detect potential loop due to mishandled namespace in attributes
         if (resValue == resolvedResValue || depth >= MAX_RESOURCE_INDIRECTION) {
             if (mLogger != null) {
-                mLogger.error(LayoutLog.TAG_BROKEN,
-                        String.format("Potential stack overflow trying to resolve '%s': cyclic resource definitions? Render may not be accurate.", value),
+                mLogger.error(
+                        LayoutLog.TAG_BROKEN,
+                        String.format(
+                                "Potential stack overflow trying to resolve '%s': cyclic resource definitions? Render may not be accurate.",
+                                value),
                         null);
             }
             return resValue;
@@ -496,6 +501,7 @@ public class ResourceResolver extends RenderResources {
                             + resType
                             + "/"
                             + resName,
+                    null,
                     url.withFramework(isFramework));
         }
         return null;
@@ -646,7 +652,9 @@ public class ResourceResolver extends RenderResources {
         res = styleMap.get(styleName);
         if (res != null) {
             if (!(res instanceof StyleResourceValue) && mLogger != null) {
-                mLogger.error(null, String.format(
+                mLogger.error(
+                        null,
+                        String.format(
                                 "Style %1$s is not of type STYLE (instead %2$s)",
                                 styleName, res.getResourceType().toString()),
                         null);
@@ -711,13 +719,14 @@ public class ResourceResolver extends RenderResources {
 
         // make sure the result is the proper class type and return it.
         if (parent instanceof StyleResourceValue) {
-            return (StyleResourceValue)parent;
+            return (StyleResourceValue) parent;
         }
 
         if (mLogger != null) {
-            mLogger.error(LayoutLog.TAG_RESOURCES_RESOLVE,
+            mLogger.error(
+                    LayoutLog.TAG_RESOURCES_RESOLVE,
                     String.format("Unable to resolve parent style name: %s", parentName),
-                    null /*data*/);
+                    null);
         }
 
         return null;
@@ -754,8 +763,10 @@ public class ResourceResolver extends RenderResources {
             if (parentStyle != null) {
                 if (depth >= MAX_RESOURCE_INDIRECTION) {
                     if (mLogger != null) {
-                        mLogger.error(LayoutLog.TAG_BROKEN,
-                                String.format("Cyclic style parent definitions: %1$s",
+                        mLogger.error(
+                                LayoutLog.TAG_BROKEN,
+                                String.format(
+                                        "Cyclic style parent definitions: %1$s",
                                         computeCyclicStyleChain(srv)),
                                 null);
                     }

@@ -101,7 +101,8 @@ public class ResourceItemResolver extends RenderResources {
         // detect potential loop due to mishandled namespace in attributes
         if (resValue == resolvedResValue || depth >= MAX_RESOURCE_INDIRECTION) {
             if (mLogger != null) {
-                mLogger.error(LayoutLog.TAG_BROKEN,
+                mLogger.error(
+                        LayoutLog.TAG_BROKEN,
                         String.format(
                                 "Potential stack overflow trying to resolve '%s': cyclic resource definitions? Render may not be accurate.",
                                 value),
@@ -198,6 +199,7 @@ public class ResourceItemResolver extends RenderResources {
             mLogger.warning(
                     LayoutLog.TAG_RESOURCES_RESOLVE,
                     "Couldn't resolve resource " + url.withFramework(framework),
+                    null,
                     url.withFramework(framework));
         }
         return null;
