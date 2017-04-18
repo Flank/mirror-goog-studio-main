@@ -21,7 +21,6 @@ import com.android.builder.core.VariantType;
 import com.android.builder.internal.aapt.AaptException;
 import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.builder.internal.aapt.AaptUtils;
-import com.android.builder.model.AaptOptions;
 import com.android.ide.common.res2.CompileResourceRequest;
 import com.android.sdklib.IAndroidTarget;
 import com.android.utils.ILogger;
@@ -115,18 +114,20 @@ public final class AaptV2CommandBuilder {
             builder.add("--java", config.getSourceOutputDir().getAbsolutePath());
         }
 
+        String resourceOutputApk;
         if (config.getResourceOutputApk() != null) {
-            builder.add("-o", config.getResourceOutputApk().getAbsolutePath());
+            resourceOutputApk = config.getResourceOutputApk().getAbsolutePath();
         } else {
             // FIXME: Fix when aapt 2 support not providing -o (http://b.android.com/210026)
             try {
                 File tmpOutput = File.createTempFile("aapt-", "-out");
                 tmpOutput.deleteOnExit();
-                builder.add("-o", tmpOutput.getAbsolutePath());
+                resourceOutputApk = tmpOutput.getAbsolutePath();
             } catch (IOException e) {
                 throw new AaptException("No output apk defined and failed to create tmp file", e);
             }
         }
+        builder.add("-o", resourceOutputApk);
 
         if (config.getProguardOutputFile()!= null) {
             builder.add("--proguard", config.getProguardOutputFile().getAbsolutePath());
@@ -134,8 +135,8 @@ public final class AaptV2CommandBuilder {
 
         if (config.getSplits() != null) {
             for (String split : config.getSplits()) {
-                // FIXME: Fix when --split is supported (http://b.android.com/212372)
-//                builder.addArgs("--split", split);
+                String splitter = File.pathSeparator;
+                builder.add("--split", resourceOutputApk + "_" + split + splitter + split);
             }
         }
 
@@ -159,18 +160,6 @@ public final class AaptV2CommandBuilder {
         }
         if (!generateFinalIds) {
             builder.add("--non-final-ids");
-        }
-
-        // AAPT options
-        AaptOptions options = config.getOptions();
-        Preconditions.checkNotNull(options);
-        String ignoreAssets = options.getIgnoreAssets();
-        if (ignoreAssets != null) {
-//            builder.addArgs("--ignore-assets", ignoreAssets);
-        }
-
-        if (config.getOptions().getFailOnMissingConfigEntry()) {
-//            builder.addArgs("--error-on-missing-config-entry");
         }
 
         /*
