@@ -17,11 +17,13 @@
 
 #include <cassert>
 #include <cstring>
+#include <deque>
 
 #include "agent/agent.h"
 #include "agent/support/memory_stats_logger.h"
 #include "perfa/jvmti_helper.h"
 #include "perfa/scoped_local_ref.h"
+#include "utils/clock.h"
 #include "utils/log.h"
 #include "utils/stopwatch.h"
 
@@ -38,6 +40,9 @@ constexpr long kClassStartTag = 1;
 constexpr long kObjectStartTag = 1e6;
 
 const char* kClassClass = "Ljava/lang/Class;";
+
+// Wait time between sending alloc data to perfd/studio.
+constexpr long kDataTransferIntervalNs = Clock::ms_to_ns(500);
 }
 
 namespace profiler {
@@ -74,12 +79,17 @@ void MemoryAgent::Initialize() {
   // Hook up event callbacks
   jvmtiEventCallbacks callbacks;
   memset(&callbacks, 0, sizeof(callbacks));
+  // Note: we only track ClassPrepare as class information like
+  // fields and methods are not yet available during ClassLoad.
+  callbacks.ClassPrepare = &ClassPrepareCallback;
+  callbacks.VMObjectAlloc = &ObjectAllocCallback;
+  callbacks.ObjectFree = &ObjectFreeCallback;
   callbacks.GarbageCollectionStart = &GCStartCallback;
   callbacks.GarbageCollectionFinish = &GCFinishCallback;
   error = jvmti_->SetEventCallbacks(&callbacks, sizeof(callbacks));
   CheckJvmtiError(jvmti_, error);
 
-  // Enable events
+  // Enable GC events always
   SetEventNotification(jvmti_, JVMTI_ENABLE,
                        JVMTI_EVENT_GARBAGE_COLLECTION_START);
   SetEventNotification(jvmti_, JVMTI_ENABLE,
@@ -116,16 +126,9 @@ void MemoryAgent::StartLiveTracking() {
   error = jvmti_->ForceGarbageCollection();
   CheckJvmtiError(jvmti_, error);
 
-  // Hook up the event callbacks
-  jvmtiEventCallbacks callbacks;
-  memset(&callbacks, 0, sizeof(callbacks));
-  // Note: we only track ClassPrepare as class information like
-  // fields and methods are not yet available during ClassLoad.
-  callbacks.ClassPrepare = &ClassPrepareCallback;
-  callbacks.VMObjectAlloc = &ObjectAllocCallback;
-  callbacks.ObjectFree = &ObjectFreeCallback;
-  error = jvmti_->SetEventCallbacks(&callbacks, sizeof(callbacks));
-  CheckJvmtiError(jvmti_, error);
+  // Enable ClassPrepare before hand, to avoid potential race
+  // between tagging all loaded classes and iterating through the heap
+  // below.
   SetEventNotification(jvmti_, JVMTI_ENABLE, JVMTI_EVENT_CLASS_PREPARE);
 
   // Tag all loaded classes and send to perfd.
@@ -162,6 +165,12 @@ void MemoryAgent::StartLiveTracking() {
   // Enable allocation+deallocation callbacks after initial heap walk.
   SetEventNotification(jvmti_, JVMTI_ENABLE, JVMTI_EVENT_VM_OBJECT_ALLOC);
   SetEventNotification(jvmti_, JVMTI_ENABLE, JVMTI_EVENT_OBJECT_FREE);
+
+  // Start AllocWorkerThread
+  error =
+      jvmti_->RunAgentThread(AllocateJavaThread(jvmti_, jni), &AllocDataWorker,
+                             this, JVMTI_THREAD_MAX_PRIORITY);
+  CheckJvmtiError(jvmti_, error);
 }
 
 /**
@@ -215,6 +224,12 @@ void MemoryAgent::LogGcStart() { last_gc_start_ns_ = clock_.GetCurrentTime(); }
 
 void MemoryAgent::LogGcFinish() {
   profiler::EnqueueGcStats(last_gc_start_ns_, clock_.GetCurrentTime());
+
+  Log::V(">> [MEM AGENT STATS DUMP BEGIN]");
+  for (int i = 0; i < Stats::kTagCount; i++) {
+    stats_.Print(static_cast<Stats::TimingTag>(i));
+  }
+  Log::V(">> [MEM AGENT STATS DUMP END]");
 }
 
 void MemoryAgent::HandleControlSignal(const MemoryControlRequest* request) {
@@ -304,15 +319,71 @@ void MemoryAgent::ObjectAllocCallback(jvmtiEnv* jvmti, JNIEnv* jni,
   error = jvmti->SetTag(object, tag);
   CheckJvmtiError(jvmti, error);
 
-  // TODO add to queue
+  Stopwatch sw;
+  {
+    AllocationEvent event;
+    AllocationEvent::Allocation* alloc_data = event.mutable_alloc_data();
+    alloc_data->set_tag(tag);
+    alloc_data->set_size(size);
+    event.set_tracking_start_time(agent_->last_tracking_start_ns_);
+    event.set_timestamp(agent_->clock_.GetCurrentTime());
+    agent_->event_queue_.Push(event);
+  }
+  agent_->stats_.Track(Stats::kAllocate, sw.GetElapsed());
 }
 
 void MemoryAgent::ObjectFreeCallback(jvmtiEnv* jvmti, jlong tag) {
-  // TODO add to queue
+  Stopwatch sw;
+  {
+    AllocationEvent event;
+    AllocationEvent::Deallocation* free_data = event.mutable_free_data();
+    free_data->set_tag(tag);
+    event.set_tracking_start_time(agent_->last_tracking_start_ns_);
+    event.set_timestamp(agent_->last_gc_start_ns_);
+    agent_->event_queue_.Push(event);
+  }
+  agent_->stats_.Track(Stats::kFree, sw.GetElapsed());
 }
 
 void MemoryAgent::GCStartCallback(jvmtiEnv* jvmti) { agent_->LogGcStart(); }
 
 void MemoryAgent::GCFinishCallback(jvmtiEnv* jvmti) { agent_->LogGcFinish(); }
+
+void MemoryAgent::AllocDataWorker(jvmtiEnv* jvmti, JNIEnv* jni, void* ptr) {
+  Stopwatch stopwatch;
+  MemoryAgent* agent = static_cast<MemoryAgent*>(ptr);
+  assert(agent != nullptr);
+  while (true) {
+    int64_t start_time_ns = stopwatch.GetElapsed();
+
+    RecordAllocationEventsRequest request;
+    request.set_timestamp(agent->last_tracking_start_ns_);
+    request.set_process_id(agent->app_id_);
+
+    // Gather all the data currently in the queue and push to perfd.
+    // TODO: investigate whether we need to set time cap for large amount of
+    // data.
+    std::deque<AllocationEvent> queued_data = agent->event_queue_.Drain();
+    while (!queued_data.empty()) {
+      AllocationEvent* event = request.add_events();
+      event->CopyFrom(queued_data.front());
+      queued_data.pop_front();
+    }
+
+    if (request.events_size() > 0) {
+      profiler::EnqueueAllocationEvents(request);
+    }
+
+    // Sleeps a while before reading from the queue again, so that the agent
+    // don't generate too many rpc requests in places with high allocation
+    // frequency.
+    int64_t elapsed_time_ns = stopwatch.GetElapsed() - start_time_ns;
+    if (kDataTransferIntervalNs > elapsed_time_ns) {
+      int64_t sleep_time_us =
+          Clock::ns_to_us(kDataTransferIntervalNs - elapsed_time_ns);
+      usleep(static_cast<uint64_t>(sleep_time_us));
+    }
+  }
+}
 
 }  // namespace profiler

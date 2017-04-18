@@ -20,7 +20,7 @@
 #include <string>
 #include <thread>
 
-#include "utils/channel.h"
+#include "producer_consumer_queue.h"
 
 namespace profiler {
 
@@ -53,18 +53,12 @@ class BackgroundQueue {
   // removed without ever being run.
   void EnqueueTask(std::function<void()> task);
 
-  // If |true|, no tasks are running or enqueued to run at the moment.
-  bool IsIdle() const;
-
  private:
   // The background method responsible for pulling the next task out of the
   // queue and running it.
   void TaskThread();
 
-  int32_t max_length_;
-  Channel<std::function<void()>> task_channel_;
-  std::atomic_bool is_task_running_;
-
+  ProducerConsumerQueue<std::function<void()>> task_queue_;
   std::thread task_thread_;
   std::string task_thread_name_;
 };

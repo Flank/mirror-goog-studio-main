@@ -64,6 +64,11 @@ void Deallocate(jvmtiEnv* jvmti, void* ptr);
 JNIEnv* GetThreadLocalJNI(JavaVM* vm);
 
 /**
+ * Allocate a Java Thread instance (required for RunAgentThread).
+ */
+jthread AllocateJavaThread(jvmtiEnv* jvmti, JNIEnv* jni);
+
+/**
  * Given a class signature and method name (in mutf8), returns the corresponding
  * mangled native method name according to the JNI spec.
  *

@@ -27,6 +27,8 @@
 #include "proto/internal_memory.grpc.pb.h"
 #include "proto/memory.grpc.pb.h"
 #include "utils/clock.h"
+#include "utils/log.h"
+#include "utils/producer_consumer_queue.h"
 
 using profiler::Clock;
 using profiler::proto::MemoryControlRequest;
@@ -39,6 +41,34 @@ class MemoryAgent {
   static MemoryAgent* Instance(JavaVM* vm);
 
  private:
+  // Auxiliary class for tracking timing data.
+  class Stats {
+   public:
+    enum TimingTag {
+      kAllocate,
+      kFree,
+      kTagCount,
+    };
+
+    explicit Stats() : time_(kTagCount), count_(kTagCount) {}
+
+    void Track(TimingTag tag, long time) {
+      time_[tag] += time;
+      count_[tag]++;
+    }
+
+    void Print(TimingTag tag) {
+      long total = (long)time_[tag].load();
+      int count = count_[tag].load();
+      Log::V("%d: Total=%ld, Count=%d, Average=%ld", tag, total, count,
+             total / count);
+    }
+
+   private:
+    std::vector<std::atomic<long>> time_;
+    std::vector<std::atomic<int>> count_;
+  };
+
   explicit MemoryAgent(jvmtiEnv* jvmti);
 
   // Agent is alive through the app's lifetime, don't bother cleaning up.
@@ -77,7 +107,10 @@ class MemoryAgent {
   // JVMTI Callback for garbage collection end events.
   static void JNICALL GCFinishCallback(jvmtiEnv* jvmti);
 
+  static void JNICALL AllocDataWorker(jvmtiEnv* jvmti, JNIEnv* jni, void* arg);
+
   SteadyClock clock_;
+  Stats stats_;
 
   jvmtiEnv* jvmti_;
   bool is_live_tracking_;
@@ -91,6 +124,7 @@ class MemoryAgent {
   std::unordered_map<std::string, long> class_tag_map_;
   std::vector<jobject> class_global_refs_;
   std::vector<AllocationEvent::Klass> class_data_;
+  ProducerConsumerQueue<AllocationEvent> event_queue_;
 };
 
 }  // namespace profiler
