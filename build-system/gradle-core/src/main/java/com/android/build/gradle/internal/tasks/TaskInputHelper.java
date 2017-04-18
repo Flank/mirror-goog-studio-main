@@ -134,7 +134,9 @@ public class TaskInputHelper {
 
         @Override
         public T get() {
-            lastValue = supplier.get();
+            if (lastValue == null) {
+                lastValue = supplier.get();
+            }
             return lastValue;
         }
 
