@@ -19,7 +19,6 @@ package com.android.build.gradle.internal;
 import static com.android.builder.core.BuilderConstants.LINT;
 import static com.android.builder.core.VariantType.ANDROID_TEST;
 import static com.android.builder.core.VariantType.FEATURE;
-import static com.android.builder.core.VariantType.LIBRARY;
 import static com.android.builder.core.VariantType.UNIT_TEST;
 import static org.gradle.api.internal.artifacts.ArtifactAttributes.ARTIFACT_FORMAT;
 
@@ -761,13 +760,6 @@ public class VariantManager implements VariantModel {
                     InstantRun.STATUS_NOT_SUPPORTED_FOR_EXPERIMENTAL_PLUGIN);
         }
 
-        if (variantType == LIBRARY && variantConfig.isJackEnabled()) {
-            project.getLogger().warn(
-                    "{}, {}: Jack compiler is not supported in library projects, falling back to javac.",
-                    project.getPath(),
-                    variantConfig.getFullName());
-        }
-
         // sourceSetContainer in case we are creating variant specific sourceSets.
         NamedDomainObjectContainer<AndroidSourceSet> sourceSetsContainer = extension
                 .getSourceSets();
@@ -1063,16 +1055,21 @@ public class VariantManager implements VariantModel {
 
                 GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
                 VariantScope variantScope = variantData.getScope();
-                ProcessProfileWriter.getOrCreateVariant(project.getPath(), variantData.getName())
-                        .setIsDebug(variantConfig.getBuildType().isDebuggable())
-                        .setUseJack(variantConfig.isJackEnabled())
-                        .setMinifyEnabled(variantScope.getCodeShrinker() != null)
-                        .setUseMultidex(variantConfig.isMultiDexEnabled())
-                        .setUseLegacyMultidex(variantConfig.isLegacyMultiDexMode())
-                        .setVariantType(variantData.getType().getAnalyticsVariantType())
-                        .setJava8LangSupport(
-                                getJava8LangSupportForAnalytics(
-                                        variantData.getScope().getJava8LangSupportType()));
+                GradleBuildVariant.Builder profileBuilder =
+                        ProcessProfileWriter.getOrCreateVariant(
+                                        project.getPath(), variantData.getName())
+                                .setIsDebug(variantConfig.getBuildType().isDebuggable())
+                                .setMinifyEnabled(variantScope.getCodeShrinker() != null)
+                                .setUseMultidex(variantConfig.isMultiDexEnabled())
+                                .setUseLegacyMultidex(variantConfig.isLegacyMultiDexMode())
+                                .setVariantType(variantData.getType().getAnalyticsVariantType());
+
+                if (variantData.getScope().getJava8LangSupportType()
+                        != VariantScope.Java8LangSupport.NONE) {
+                    profileBuilder.setJava8LangSupport(
+                            getJava8LangSupportForAnalytics(
+                                    variantData.getScope().getJava8LangSupportType()));
+                }
 
                 if (variantFactory.hasTestScope()) {
                     if (buildTypeData == testBuildTypeData) {
@@ -1155,8 +1152,6 @@ public class VariantManager implements VariantModel {
     private static GradleBuildVariant.Java8LangSupport getJava8LangSupportForAnalytics(
             @NonNull VariantScope.Java8LangSupport type) {
         switch (type) {
-            case JACK:
-                return GradleBuildVariant.Java8LangSupport.JACK;
             case RETROLAMBDA:
                 return GradleBuildVariant.Java8LangSupport.RETROLAMBDA;
             case DEXGUARD:

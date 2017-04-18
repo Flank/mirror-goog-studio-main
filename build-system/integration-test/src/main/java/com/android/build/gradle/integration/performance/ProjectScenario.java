@@ -30,23 +30,6 @@ public enum ProjectScenario {
     DEX_OUT_OF_PROCESS(flags -> flags.setDexInProcess(Flags.DexInProcess.DEX_OUT_OF_PROCESS)),
     NATIVE_MULTIDEX(flags -> flags.setMultiDex(Flags.MultiDexMode.NATIVE)),
     LEGACY_MULTIDEX(flags -> flags.setMultiDex(Flags.MultiDexMode.LEGACY)),
-    JACK_ON(flags -> flags.setCompiler(Flags.Compiler.JACK)),
-    JACK_OUT_OF_PROCESS(
-            flags -> {
-                flags.setCompiler(Flags.Compiler.JACK);
-                // Flag will be renamed to "InProcess" once data is migrated.
-                flags.setDexInProcess(Flags.DexInProcess.DEX_OUT_OF_PROCESS);
-            }),
-    JACK_NATIVE_MULTIDEX(
-            flags -> {
-                flags.setCompiler(Flags.Compiler.JACK);
-                flags.setMultiDex(Flags.MultiDexMode.NATIVE);
-            }),
-    JACK_LEGACY_MULTIDEX(
-            flags -> {
-                flags.setCompiler(Flags.Compiler.JACK);
-                flags.setMultiDex(Flags.MultiDexMode.LEGACY);
-            }),
     DEX_ARCHIVE_MONODEX(
             flags -> {
                 flags.setCompiler(Flags.Compiler.DEX_ARCHIVE);
@@ -99,10 +82,6 @@ public enum ProjectScenario {
 
     public Flags getFlags() {
         return flags;
-    }
-
-    public boolean usesJack() {
-        return flags.getCompiler() == Flags.Compiler.JACK;
     }
 
     public boolean useDexArchive() {

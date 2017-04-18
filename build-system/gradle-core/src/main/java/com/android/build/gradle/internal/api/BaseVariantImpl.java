@@ -243,7 +243,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @NonNull
     @Override
     public Task getJavaCompiler() {
-        return getVariantData().javaCompilerTask;
+        return getVariantData().javacTask;
     }
 
     @NonNull

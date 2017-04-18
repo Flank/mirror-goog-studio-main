@@ -82,8 +82,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     @Nullable
     File getResourceShrinkerInputFolder();
 
-    boolean isJackEnabled();
-
     @Override
     @NonNull
     InstantRunBuildContext getInstantRunBuildContext();
@@ -265,15 +263,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     File getIncrementalDir(String name);
 
     @NonNull
-    File getJackEcjOptionsFile();
-
-    @NonNull
-    File getJackClassesZip();
-
-    @NonNull
-    File getJackCoverageMetadataFile();
-
-    @NonNull
     File getCoverageReportDir();
 
     @NonNull
@@ -425,14 +414,9 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     AndroidTask<TransformTask> getMergeJavaResourcesTask();
 
     @Nullable
-    AndroidTask<? extends Task> getJavaCompilerTask();
-
-    @Nullable
     AndroidTask<? extends JavaCompile> getJavacTask();
 
     void setJavacTask(@Nullable AndroidTask<? extends JavaCompile> javacTask);
-
-    void setJavaCompilerTask(@NonNull AndroidTask<? extends Task> javaCompileTask);
 
     AndroidTask<Task> getCompileTask();
     void setCompileTask(AndroidTask<Task> compileTask);
@@ -474,7 +458,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     enum Java8LangSupport {
         NONE,
         DESUGAR,
-        JACK,
         RETROLAMBDA,
         DEXGUARD,
     }

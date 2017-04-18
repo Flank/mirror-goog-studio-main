@@ -1422,47 +1422,6 @@ public class AndroidBuilder {
         return false;
     }
 
-    public void createJacocoReportWithJackReporter(
-            @NonNull File coverageFile,
-            @NonNull File reportDir,
-            @NonNull Collection<File> sourceDirs,
-            @NonNull String reportName,
-            @NonNull File metadataFile) throws ProcessException {
-
-        checkNotNull(coverageFile, "coverageFile cannot be null.");
-        checkNotNull(reportDir, "reportDir cannot be null.");
-        checkNotNull(sourceDirs, "sourceDir cannot be null.");
-        checkNotNull(reportName, "reportName cannot be null.");
-        checkNotNull(metadataFile, "metadataFile cannot be null.");
-
-        ProcessInfoBuilder builder = new ProcessInfoBuilder();
-
-        BuildToolInfo buildToolInfo = mTargetInfo.getBuildTools();
-        String jackLocation = System.getenv("USE_JACK_LOCATION");
-        String reporter = jackLocation != null
-                ? jackLocation + File.separator + SdkConstants.FN_JACK_JACOCO_REPORTER
-                : buildToolInfo.getPath(BuildToolInfo.PathId.JACK_JACOCO_REPORTER);
-        if (reporter == null || !new File(reporter).isFile()) {
-            throw new IllegalStateException("jack-jacoco-reporter.jar is missing: " + reporter);
-        }
-
-        builder.setClasspath(reporter);
-        builder.setMain("com.android.jack.tools.jacoco.Main");
-
-        builder.addArgs("--coverage-file", coverageFile.getAbsolutePath());
-        builder.addArgs("--metadata-file", metadataFile.getAbsolutePath());
-        builder.addArgs("--report-dir", reportDir.getAbsolutePath());
-        builder.addArgs("--report-name", reportName);
-        for (File sourceDir : sourceDirs) {
-            builder.addArgs("--source-dir", sourceDir.getAbsolutePath());
-        }
-        JavaProcessInfo javaProcessInfo = builder.createJavaProcess();
-        ProcessResult result = mJavaProcessExecutor.execute(
-                javaProcessInfo,
-                new LoggedProcessOutputHandler(getLogger()));
-        result.rethrowFailure().assertNormalExitValue();
-    }
-
     /**
      * Creates a new split APK containing only code.
      *

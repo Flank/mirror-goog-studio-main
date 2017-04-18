@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.pipeline;
 
 import static com.android.build.api.transform.QualifiedContent.DefaultContentType.CLASSES;
 import static com.android.build.api.transform.QualifiedContent.DefaultContentType.RESOURCES;
-import static com.android.build.gradle.internal.pipeline.ExtendedContentType.JACK;
 import static com.android.build.gradle.internal.pipeline.ExtendedContentType.NATIVE_LIBS;
 import static com.android.utils.StringHelper.capitalize;
 
@@ -35,7 +34,6 @@ import com.android.build.gradle.internal.TaskFactory;
 import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.AndroidTaskRegistry;
 import com.android.build.gradle.internal.scope.TransformVariantScope;
-import com.android.build.gradle.internal.transforms.JackPreDexTransform;
 import com.android.builder.core.ErrorReporter;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
@@ -79,7 +77,6 @@ public class TransformManager extends FilterableStreamCollection {
     public static final Set<ContentType> CONTENT_NATIVE_LIBS =
             ImmutableSet.of(NATIVE_LIBS);
     public static final Set<ContentType> CONTENT_DEX = ImmutableSet.of(ExtendedContentType.DEX);
-    public static final Set<ContentType> CONTENT_JACK = ImmutableSet.of(JACK);
     public static final Set<ContentType> DATA_BINDING_ARTIFACT =
             ImmutableSet.of(ExtendedContentType.DATA_BINDING);
     public static final Set<ScopeType> PROJECT_ONLY = ImmutableSet.of(Scope.PROJECT);
@@ -444,14 +441,13 @@ public class TransformManager extends FilterableStreamCollection {
 
         // check some scopes are not consumed.
         Set<? super Scope> scopes = transform.getScopes();
-        // Allow Jack transform to consume provided classes as the .jack files are needed.
-        if (scopes.contains(Scope.PROVIDED_ONLY) && !isJackRuntimeLib(transform)) {
+        if (scopes.contains(Scope.PROVIDED_ONLY)) {
             errorReporter.handleSyncError(null, SyncIssue.TYPE_GENERIC,
                     String.format("PROVIDED_ONLY scope cannot be consumed by Transform '%1$s'",
                             transform.getName()));
             return false;
         }
-        if (scopes.contains(Scope.TESTED_CODE) && !isJackRuntimeLib(transform)) {
+        if (scopes.contains(Scope.TESTED_CODE)) {
             errorReporter.handleSyncError(null, SyncIssue.TYPE_GENERIC,
                     String.format("TESTED_CODE scope cannot be consumed by Transform '%1$s'",
                             transform.getName()));
@@ -515,10 +511,5 @@ public class TransformManager extends FilterableStreamCollection {
             }
         }
         return true;
-    }
-
-    private static boolean isJackRuntimeLib(@NonNull Transform transform) {
-        return (transform instanceof JackPreDexTransform)
-                && ((JackPreDexTransform) transform).isForRuntimeLibs();
     }
 }

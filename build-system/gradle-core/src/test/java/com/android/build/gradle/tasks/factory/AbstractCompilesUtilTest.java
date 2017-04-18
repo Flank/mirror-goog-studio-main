@@ -35,17 +35,9 @@ public class AbstractCompilesUtilTest {
                 chooseDefaultJavaVersion(
                         "android-15", CURRENT_JDK_VERSION, VariantScope.Java8LangSupport.NONE));
         Assert.assertEquals(
-                JavaVersion.VERSION_1_6,
-                chooseDefaultJavaVersion(
-                        "android-15", CURRENT_JDK_VERSION, VariantScope.Java8LangSupport.JACK));
-        Assert.assertEquals(
                 JavaVersion.VERSION_1_7,
                 chooseDefaultJavaVersion(
                         "android-21", CURRENT_JDK_VERSION, VariantScope.Java8LangSupport.NONE));
-        Assert.assertEquals(
-                JavaVersion.VERSION_1_7,
-                chooseDefaultJavaVersion(
-                        "android-21", CURRENT_JDK_VERSION, VariantScope.Java8LangSupport.JACK));
         Assert.assertEquals(
                 JavaVersion.VERSION_1_7,
                 chooseDefaultJavaVersion(
@@ -66,9 +58,5 @@ public class AbstractCompilesUtilTest {
                         "android-24",
                         CURRENT_JDK_VERSION,
                         VariantScope.Java8LangSupport.RETROLAMBDA));
-        Assert.assertEquals(
-                JavaVersion.VERSION_1_8,
-                chooseDefaultJavaVersion(
-                        "android-24", CURRENT_JDK_VERSION, VariantScope.Java8LangSupport.JACK));
     }
 }

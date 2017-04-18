@@ -83,32 +83,4 @@ public class JacocoTransformTest {
         assertThat(mProject.file("build/reports/coverage/debug/index.html"))
                 .exists();
     }
-
-    @Ignore("Jack jacoco reporter does not support multiple devices http://b.android.com/226749")
-    @Test
-    @Category(DeviceTests.class)
-    public void connectedCheckWithJackInProcess() throws Exception {
-        adb.exclusiveAccess();
-        Files.append(
-                "\nandroid.defaultConfig.jackOptions.enabled = true",
-                mProject.getBuildFile(),
-                Charsets.UTF_8);
-        mProject.executor().run("connectedCheck");
-        assertThat(mProject.file("build/reports/coverage/debug/index.html")).exists();
-    }
-
-    @Ignore("Jack jacoco reporter does not support multiple devices http://b.android.com/226749")
-    @Test
-    @Category(DeviceTests.class)
-    public void connectedCheckWithJackOutOfProcess() throws Exception {
-        adb.exclusiveAccess();
-        Files.append(
-                "\n"
-                        + "android.defaultConfig.jackOptions.enabled = true\n"
-                        + "android.defaultConfig.jackOptions.jackInProcess = false",
-                mProject.getBuildFile(),
-                Charsets.UTF_8);
-        mProject.executor().run("connectedCheck");
-        assertThat(mProject.file("build/reports/coverage/debug/index.html")).exists();
-    }
 }

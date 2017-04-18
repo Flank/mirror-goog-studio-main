@@ -27,7 +27,6 @@ import com.android.build.gradle.TestAndroidConfig;
 import com.android.build.gradle.api.JavaCompileOptions;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions;
-import com.android.build.gradle.internal.dsl.CoreJackOptions;
 import com.android.build.gradle.internal.dsl.CoreNdkOptions;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
@@ -72,8 +71,6 @@ public class GradleVariantConfiguration
     private OptionalInt instantRunSupportStatusOverride = OptionalInt.empty();
     @NonNull
     private final MergedNdkConfig mergedNdkConfig = new MergedNdkConfig();
-    @NonNull
-    private final MergedJackOptions mergedJackOptions = new MergedJackOptions();
     @NonNull
     private final MergedExternalNativeBuildOptions mergedExternalNativeBuildOptions =
             new MergedExternalNativeBuildOptions();
@@ -274,12 +271,6 @@ public class GradleVariantConfiguration
      */
     private void mergeOptions() {
         computeMergedOptions(
-                mergedJackOptions,
-                CoreProductFlavor::getJackOptions,
-                CoreBuildType::getJackOptions,
-                MergedJackOptions::reset,
-                MergedJackOptions::append);
-        computeMergedOptions(
                 mergedJavaCompileOptions,
                 CoreProductFlavor::getJavaCompileOptions,
                 CoreBuildType::getJavaCompileOptions,
@@ -372,14 +363,6 @@ public class GradleVariantConfiguration
         return mergedNdkConfig.getAbiFilters();
     }
 
-    public CoreJackOptions getJackOptions() {
-        return mergedJackOptions;
-    }
-
-    public boolean isJackEnabled() {
-        return mergedJackOptions.isEnabled();
-    }
-
     @Nullable
     @Override
     public CoreSigningConfig getSigningConfig() {
@@ -454,10 +437,6 @@ public class GradleVariantConfiguration
         if (getType().isForTesting()) {
             return InstantRun.STATUS_NOT_SUPPORTED_VARIANT_USED_FOR_TESTING;
         }
-        if (isJackEnabled()) {
-            return InstantRun.STATUS_NOT_SUPPORTED_FOR_JACK;
-        }
-
         return InstantRun.STATUS_SUPPORTED;
     }
 

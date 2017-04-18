@@ -80,11 +80,7 @@ public class AbstractCompilesUtil {
             } else if (21 <= compileSdkLevel && compileSdkLevel < 24) {
                 javaVersionToUse = JavaVersion.VERSION_1_7;
             } else {
-                if (java8LangSupport == VariantScope.Java8LangSupport.JACK) {
-                    javaVersionToUse = JavaVersion.VERSION_1_8;
-                } else {
-                    javaVersionToUse = JavaVersion.VERSION_1_7;
-                }
+                javaVersionToUse = JavaVersion.VERSION_1_7;
             }
         }
 
