@@ -114,7 +114,7 @@ void CodeIr::DissasembleDebugInfo(const ir::DebugInfo* ir_debug_info) {
   // debug info state machine registers
   dex::u4 address = 0;
   int line = ir_debug_info->line_start;
-  ir::String* source_file = ir_method->parent_class->source_file;
+  ir::String* source_file = ir_method->decl->parent->class_def->source_file;
 
   // header
   if (!ir_debug_info->param_names.empty()) {

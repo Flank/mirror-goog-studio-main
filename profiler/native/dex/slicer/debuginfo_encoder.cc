@@ -129,7 +129,7 @@ void DebugInfoEncoder::Encode(ir::EncodedMethod* ir_method, std::shared_ptr<ir::
   CHECK(source_file_ == nullptr);
 
   // generate new debug info
-  source_file_ = ir_method->parent_class->source_file;
+  source_file_ = ir_method->decl->parent->class_def->source_file;
   for (auto instr : instructions_) {
     instr->Accept(this);
   }

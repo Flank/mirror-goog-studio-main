@@ -247,27 +247,25 @@ ir::Class* Reader::ParseClass(dex::u4 index) {
 
     dex::u4 base_index = dex::kNoIndex;
     for (dex::u4 i = 0; i < static_fields_count; ++i) {
-      ir_class->static_fields.push_back(
-          ParseEncodedField(&class_data, &base_index));
+      auto field = ParseEncodedField(&class_data, &base_index);
+      ir_class->static_fields.push_back(field);
     }
 
     base_index = dex::kNoIndex;
     for (dex::u4 i = 0; i < instance_fields_count; ++i) {
-      ir_class->instance_fields.push_back(
-          ParseEncodedField(&class_data, &base_index));
+      auto field = ParseEncodedField(&class_data, &base_index);
+      ir_class->instance_fields.push_back(field);
     }
 
     base_index = dex::kNoIndex;
     for (dex::u4 i = 0; i < direct_methods_count; ++i) {
       auto method = ParseEncodedMethod(&class_data, &base_index);
-      method->parent_class = ir_class;
       ir_class->direct_methods.push_back(method);
     }
 
     base_index = dex::kNoIndex;
     for (dex::u4 i = 0; i < virtual_methods_count; ++i) {
       auto method = ParseEncodedMethod(&class_data, &base_index);
-      method->parent_class = ir_class;
       ir_class->virtual_methods.push_back(method);
     }
   }
