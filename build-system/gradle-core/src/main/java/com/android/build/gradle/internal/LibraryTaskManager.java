@@ -423,6 +423,7 @@ public class LibraryTaskManager extends TaskManager {
 
                         intermediateTransformTask.ifPresent(
                                 t -> {
+                                    t.optionalDependsOn(tasks, extractAnnotationsTask);
                                     // publish the intermediate classes.jar.
                                     variantScope.addTaskOutput(
                                             TaskOutputType.LIBRARY_CLASSES,
