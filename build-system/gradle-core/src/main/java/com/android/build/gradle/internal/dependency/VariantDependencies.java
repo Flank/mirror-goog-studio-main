@@ -275,7 +275,7 @@ public class VariantDependencies {
             runtimeClasspath.setExtendsFrom(runtimeClasspaths);
             runtimeClasspath.setCanBeConsumed(false);
             runtimeClasspath.getResolutionStrategy().sortArtifacts(ResolutionStrategy.SortOrder.CONSUMER_FIRST);
-            filterOutBadArtifacts(compileClasspath);
+            filterOutBadArtifacts(runtimeClasspath);
             final AttributeContainer runtimeAttributes = runtimeClasspath.getAttributes();
             applyVariantAttributes(runtimeAttributes, buildType, consumptionFlavorMap);
             runtimeAttributes.attribute(Usage.USAGE_ATTRIBUTE, Usage.FOR_RUNTIME);
