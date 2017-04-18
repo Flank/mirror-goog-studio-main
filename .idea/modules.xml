@@ -10,7 +10,6 @@
       <module fileurl="file://$PROJECT_DIR$/../analytics-library/testing/analytics-testing-base.iml" filepath="$PROJECT_DIR$/../analytics-library/testing/analytics-testing-base.iml" group="analytics-library" />
       <module fileurl="file://$PROJECT_DIR$/../analytics-library/tracker/analytics-tracker-base.iml" filepath="$PROJECT_DIR$/../analytics-library/tracker/analytics-tracker-base.iml" group="analytics-library" />
       <module fileurl="file://$PROJECT_DIR$/apkparser/analyzer/analyzer.iml" filepath="$PROJECT_DIR$/apkparser/analyzer/analyzer.iml" group="base/apkanalyzer" />
-      <module fileurl="file://$PROJECT_DIR$/layoutinspector/layoutinspector.iml" filepath="$PROJECT_DIR$/layoutinspector/layoutinspector.iml" group="base/layoutinspector" />
       <module fileurl="file://$PROJECT_DIR$/annotations/android-annotations.iml" filepath="$PROJECT_DIR$/annotations/android-annotations.iml" group="base" />
       <module fileurl="file://$PROJECT_DIR$/../apksig/apksig.iml" filepath="$PROJECT_DIR$/../apksig/apksig.iml" group="build-system" />
       <module fileurl="file://$PROJECT_DIR$/apkzlib/apkzlib.iml" filepath="$PROJECT_DIR$/apkzlib/apkzlib.iml" group="build-system" />
@@ -51,6 +50,7 @@
       <module fileurl="file://$PROJECT_DIR$/build-system/java-lib-plugin/java-lib-model-builder/java-lib-model-builder.iml" filepath="$PROJECT_DIR$/build-system/java-lib-plugin/java-lib-model-builder/java-lib-model-builder.iml" group="build-system/java-lib-plugin" />
       <module fileurl="file://$PROJECT_DIR$/jaxb-inheritance-plugin/jaxb-inheritance-plugin.iml" filepath="$PROJECT_DIR$/jaxb-inheritance-plugin/jaxb-inheritance-plugin.iml" group="base" />
       <module fileurl="file://$PROJECT_DIR$/jack/jill-api/jill-api.iml" filepath="$PROJECT_DIR$/jack/jill-api/jill-api.iml" group="build-system" />
+      <module fileurl="file://$PROJECT_DIR$/layoutinspector/layoutinspector.iml" filepath="$PROJECT_DIR$/layoutinspector/layoutinspector.iml" group="base/layoutinspector" />
       <module fileurl="file://$PROJECT_DIR$/layoutlib-api/layoutlib-api-base.iml" filepath="$PROJECT_DIR$/layoutlib-api/layoutlib-api-base.iml" group="base" />
       <module fileurl="file://$PROJECT_DIR$/lint/libs/lint-api/lint-api-base.iml" filepath="$PROJECT_DIR$/lint/libs/lint-api/lint-api-base.iml" group="lint" />
       <module fileurl="file://$PROJECT_DIR$/lint/libs/lint-checks/lint-checks-base.iml" filepath="$PROJECT_DIR$/lint/libs/lint-checks/lint-checks-base.iml" group="lint" />
