@@ -248,7 +248,6 @@ struct EncodedMethod : public Node {
   MethodDecl* decl;
   Code* code;
   dex::u4 access_flags;
-  Class* parent_class;
 };
 
 struct AnnotationElement : public Node {

@@ -26,7 +26,7 @@ bool EntryHook::Apply(lir::CodeIr* code_ir) {
   // construct the hook method declaration
   std::vector<ir::Type*> param_types;
   if ((ir_method->access_flags & dex::kAccStatic) == 0) {
-    param_types.push_back(ir_method->parent_class->type);
+    param_types.push_back(ir_method->decl->parent);
   }
   if (ir_method->decl->prototype->param_types != nullptr) {
     const auto& orig_param_types = ir_method->decl->prototype->param_types->types;
