@@ -1,7 +1,4 @@
-<#import "./shared_macros.ftl" as shared>
-apply plugin: 'com.android.instantappbundle'
-
-<@shared.androidConfig />
+apply plugin: 'com.android.instantapp'
 
 dependencies {
     implementation project(':${projectName}')
