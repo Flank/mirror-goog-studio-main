@@ -42,6 +42,7 @@ public enum ResourceType {
     LAYOUT("layout", "Layout"), //$NON-NLS-1$
     MENU("menu", "Menu"), //$NON-NLS-1$
     MIPMAP("mipmap", "Mip Map"), //$NON-NLS-1$
+    NAVIGATION("navigation", "Navigation"), //$NON-NLS-1$
     PLURALS("plurals", "Plurals"), //$NON-NLS-1$
     RAW("raw", "Raw"), //$NON-NLS-1$
     STRING("string", "String"), //$NON-NLS-1$

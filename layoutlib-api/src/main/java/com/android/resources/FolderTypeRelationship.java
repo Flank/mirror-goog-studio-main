@@ -71,6 +71,7 @@ public final class FolderTypeRelationship {
         add(ResourceType.ID, ResourceFolderType.TRANSITION);
         add(ResourceType.XML, ResourceFolderType.XML);
         add(ResourceType.ID, ResourceFolderType.XML);
+        add(ResourceType.NAVIGATION, ResourceFolderType.NAVIGATION);
 
         makeSafe();
     }

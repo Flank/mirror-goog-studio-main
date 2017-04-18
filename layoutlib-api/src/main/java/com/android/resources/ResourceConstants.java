@@ -47,6 +47,8 @@ public class ResourceConstants {
     public static final String FD_RES_RAW = "raw"; //$NON-NLS-1$
     /** Default transition resource folder name, i.e. "transition" */
     public static final String FD_RES_TRANSITION = "transition"; //$NON-NLS-1$
+    /** Default navigation resource folder name, i.e. "nav" */
+    public static final String FD_NAVIGATION = "navigation"; //$NON-NLS-1$
 
     /** Separator between the resource folder qualifier. */
     public static final String RES_QUALIFIER_SEP = "-"; //$NON-NLS-1$
