@@ -1,2 +1,3 @@
 include ':${projectName}'
-<#if hasInstantAppWrapper>include ':${monolithicAppProjectName}', ':${baseLibName}' // ':${instantAppProjectName}',</#if>
+<#if hasMonolithicAppWrapper>include ':${monolithicAppProjectName}'</#if>
+<#if hasInstantAppWrapper>include ':${baseLibName}' //, ':${instantAppProjectName}'</#if>

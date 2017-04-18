@@ -17,6 +17,7 @@
     <global id="isInstantAppProject" type="boolean" value="${(!(isInstantApp!false) && !(isLibraryProject!false))?string}" />
 
     <global id="hasInstantAppWrapper" type="boolean" value="${(isInstantApp!false)?string}" />
+    <global id="hasMonolithicAppWrapper" type="boolean" value="${(isInstantApp!false)?string}" />
 
     <global id="baseLibName" type="string" value="base" />
     <global id="instantAppProjectName" type="string" value="instantapp" />

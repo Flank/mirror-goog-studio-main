@@ -44,15 +44,7 @@
                    to="${escapeXmlAttribute(projectOut)}/proguard-rules.pro" />
 </#if>
 
-<#if hasInstantAppWrapper>
-    <mkdir at="${instantAppOut}" />
-    <instantiate from="root/instantApp-build.gradle.ftl"
-                   to="${instantAppOut}/build.gradle" />
-    <#if makeIgnore>
-        <copy from="root/module_ignore"
-                to="${instantAppOut}/.gitignore" />
-    </#if>
-
+<#if hasMonolithicAppWrapper>
     <mkdir at="${monolithicAppOut}" />
     <instantiate from="root/monolithic-AndroidManifest.xml.ftl"
                    to="${monolithicAppOut}/src/main/AndroidManifest.xml" />
@@ -61,6 +53,16 @@
     <#if makeIgnore>
         <copy from="root/module_ignore"
                 to="${monolithicAppOut}/.gitignore" />
+    </#if>
+</#if>
+
+<#if hasInstantAppWrapper>
+    <mkdir at="${instantAppOut}" />
+    <instantiate from="root/instantApp-build.gradle.ftl"
+                   to="${instantAppOut}/build.gradle" />
+    <#if makeIgnore>
+        <copy from="root/module_ignore"
+                to="${instantAppOut}/.gitignore" />
     </#if>
 
     <mkdir at="${baseLibOut}" />
