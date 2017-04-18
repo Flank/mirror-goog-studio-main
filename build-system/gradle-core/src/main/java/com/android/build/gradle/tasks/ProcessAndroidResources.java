@@ -290,6 +290,8 @@ public class ProcessAndroidResources extends IncrementalTask {
                         ? packageIdsFiles.getArtifactFiles().getAsFileTree().getFiles()
                         : null;
 
+        final Set<File> featureResourcePackages = this.featureResourcePackages.getFiles();
+
         SplitList splitList = SplitList.load(splitListInput);
 
         for (ApkData apkData : splitsToGenerate) {
@@ -309,6 +311,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                                     manifestsOutputs,
                                     packageIdFileSet,
                                     splitList,
+                                    featureResourcePackages,
                                     apkData,
                                     codeGen);
                             return null;
@@ -394,6 +397,7 @@ public class ProcessAndroidResources extends IncrementalTask {
             Collection<BuildOutput> manifestsOutputs,
             @Nullable Set<File> packageIdFileSet,
             @NonNull SplitList splitList,
+            @NonNull Set<File> featureResourcePackages,
             ApkData apkData,
             boolean generateCode)
             throws IOException {
