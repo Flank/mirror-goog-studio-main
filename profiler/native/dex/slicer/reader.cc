@@ -782,6 +782,9 @@ ir::EncodedMethod* Reader::ParseEncodedMethod(const dex::u1** pptr, dex::u4* bas
   dex::u4 code_offset = dex::ReadULeb128(pptr);
   ir_encoded_method->code = ExtractCode(code_offset);
 
+  // update the methods lookup table
+  dex_ir_->methods_lookup.Insert(ir_encoded_method);
+
   return ir_encoded_method;
 }
 
@@ -848,6 +851,9 @@ ir::Proto* Reader::ParseProto(dex::u4 index) {
   ir_proto->return_type = GetType(dex_proto.return_type_idx);
   ir_proto->param_types = ExtractTypeList(dex_proto.parameters_off);
   ir_proto->orig_index = index;
+
+  // update the prototypes lookup table
+  dex_ir_->prototypes_lookup.Insert(ir_proto);
 
   return ir_proto;
 }

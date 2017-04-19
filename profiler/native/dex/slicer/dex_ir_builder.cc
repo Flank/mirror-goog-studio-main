@@ -27,8 +27,7 @@ bool MethodId::Match(MethodDecl* method_decl) const {
     && method_decl->prototype->Signature() == signature;
 }
 
-// TODO: index methods, perhaps using the same hashtable used for strings?
-EncodedMethod* Builder::FindMethod(const MethodId& method_id) {
+EncodedMethod* Builder::FindMethod(const MethodId& method_id) const {
   // first, lookup the strings
   auto ir_descriptor = FindAsciiString(method_id.class_descriptor);
   auto ir_method_name = FindAsciiString(method_id.method_name);
@@ -36,25 +35,25 @@ EncodedMethod* Builder::FindMethod(const MethodId& method_id) {
     return nullptr;
   }
 
-  // search for the method definition
-  for (auto& ir_method : dex_ir_->encoded_methods) {
-    auto method_decl = ir_method->decl;
-    if (method_decl->parent->descriptor == ir_descriptor &&
-        method_decl->name == ir_method_name) {
-      // CONSIDER: it would be more efficient to parse the signature,
-      //  extract one descriptor at a time and compare the descriptors.
-      //  (at the same time signature check is only done for "overload resolution"
-      //   so the extra complexity may not be worth it)
-      if (method_decl->prototype->Signature() == method_id.signature) {
-        return ir_method.get();
-      }
-    }
+  // look up the prototype
+  auto ir_prototype = FindPrototype(method_id.signature);
+  if (ir_prototype == nullptr) {
+    return nullptr;
   }
 
-  return nullptr;
+  // look up the method itself
+  ir::MethodKey method_key;
+  method_key.class_descriptor = ir_descriptor;
+  method_key.method_name = ir_method_name;
+  method_key.prototype = ir_prototype;
+  return dex_ir_->methods_lookup.Lookup(method_key);
 }
 
-String* Builder::FindAsciiString(const char* cstr) {
+Proto* Builder::FindPrototype(const char* signature) const {
+  return dex_ir_->prototypes_lookup.Lookup(signature);
+}
+
+String* Builder::FindAsciiString(const char* cstr) const {
     return dex_ir_->strings_lookup.Lookup(cstr);
 }
 
@@ -169,6 +168,9 @@ Proto* Builder::GetProto(Type* return_type, TypeList* param_types) {
   CHECK(ir_node == nullptr);
   ir_node = ir_proto;
   ir_proto->orig_index = new_index;
+
+  // update the prototypes lookup table
+  dex_ir_->prototypes_lookup.Insert(ir_proto);
 
   return ir_proto;
 }

@@ -25,8 +25,54 @@
 #include <memory>
 #include <vector>
 #include <sstream>
+#include <functional>
 
 namespace ir {
+
+// DBJ2a string hash
+static uint32_t HashString(const char* cstr) {
+  uint32_t hash = 5381;  // DBJ2 magic prime value
+  while (*cstr) {
+    hash = ((hash << 5) + hash) ^ *cstr++;
+  }
+  return hash;
+}
+
+uint32_t StringsHasher::Hash(const char* string_key) const {
+  return HashString(string_key);
+}
+
+bool StringsHasher::Compare(const char* string_key, const String* string) const {
+  return dex::Utf8Cmp(string_key, string->c_str()) == 0;
+}
+
+uint32_t ProtosHasher::Hash(const std::string& proto_key) const {
+  return HashString(proto_key.c_str());
+}
+
+bool ProtosHasher::Compare(const std::string& proto_key, const Proto* proto) const {
+  return proto_key == proto->Signature();
+}
+
+MethodKey MethodsHasher::GetKey(const EncodedMethod* method) const {
+  MethodKey method_key;
+  method_key.class_descriptor = method->decl->parent->descriptor;
+  method_key.method_name = method->decl->name;
+  method_key.prototype = method->decl->prototype;
+  return method_key;
+}
+
+uint32_t MethodsHasher::Hash(const MethodKey& method_key) const {
+  return static_cast<uint32_t>(std::hash<void*>{}(method_key.class_descriptor) ^
+                               std::hash<void*>{}(method_key.method_name) ^
+                               std::hash<void*>{}(method_key.prototype));
+}
+
+bool MethodsHasher::Compare(const MethodKey& method_key, const EncodedMethod* method) const {
+  return method_key.class_descriptor == method->decl->parent->descriptor &&
+         method_key.method_name == method->decl->name &&
+         method_key.prototype == method->decl->prototype;
+}
 
 // Human-readable type declaration
 std::string Type::Decl() const {

@@ -23,7 +23,7 @@
 #include "dex_leb128.h"
 #include "buffer.h"
 #include "index_map.h"
-#include "strings_hash_table.h"
+#include "hash_table.h"
 
 #include <stdlib.h>
 #include <map>
@@ -324,6 +324,37 @@ struct Class : public IndexedNode {
   std::vector<EncodedMethod*> virtual_methods;
 };
 
+// ir::String hashing
+struct StringsHasher {
+  const char* GetKey(const String* string) const { return string->c_str(); }
+  uint32_t Hash(const char* string_key) const;
+  bool Compare(const char* string_key, const String* string) const;
+};
+
+// ir::Proto hashing
+struct ProtosHasher {
+  std::string GetKey(const Proto* proto) const { return proto->Signature(); }
+  uint32_t Hash(const std::string& proto_key) const;
+  bool Compare(const std::string& proto_key, const Proto* proto) const;
+};
+
+// ir::EncodedMethod hashing
+struct MethodKey {
+  String* class_descriptor = nullptr;
+  String* method_name = nullptr;
+  Proto* prototype = nullptr;
+};
+
+struct MethodsHasher {
+  MethodKey GetKey(const EncodedMethod* method) const;
+  uint32_t Hash(const MethodKey& method_key) const;
+  bool Compare(const MethodKey& method_key, const EncodedMethod* method) const;
+};
+
+using StringsLookup = slicer::HashTable<const char*, String, StringsHasher>;
+using PrototypesLookup = slicer::HashTable<const std::string&, Proto, ProtosHasher>;
+using MethodsLookup = slicer::HashTable<const MethodKey&, EncodedMethod, MethodsHasher>;
+
 // The main container/root for a .dex IR
 struct DexFile {
   // indexed structures
@@ -375,8 +406,10 @@ struct DexFile {
   IndexMap methods_indexes;
   IndexMap classes_indexes;
 
-  // strings lookup hash table
+  // lookup hash tables
   StringsLookup strings_lookup;
+  MethodsLookup methods_lookup;
+  PrototypesLookup prototypes_lookup;
 
  public:
   DexFile() = default;

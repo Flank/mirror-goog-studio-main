@@ -11,6 +11,5 @@ add_library(slicer
             dex_utf8.cc
             instrumentation.cc
             reader.cc
-            strings_hash_table.cc
             tryblocks_encoder.cc
             writer.cc)

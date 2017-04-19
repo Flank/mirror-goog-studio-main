@@ -40,7 +40,7 @@ test_cases = {
                           'hello.dex', 'hello_nodebug.dex', 'medium.dex' ] },
   'mi'              : { 'args' : '-d -x test_method_instrumenter', 'input' : ['entry_hooks.dex'] },
   'find_method'     : { 'args' : '-x stress_find_method', 'input' : [
-                          'hello.dex', 'entry_hooks.dex', 'medium.dex', 'try_catch.dex' ] },
+                          'hello.dex', 'entry_hooks.dex', 'medium.dex', 'large.dex', 'try_catch.dex' ] },
 }
 
 # run a shell command and returns the stdout content
