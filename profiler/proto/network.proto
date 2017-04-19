@@ -183,8 +183,6 @@ message HttpConnectionData {
   int64 downloading_timestamp = 3;
   // If not 0, time when request was closed. Always > start.
   int64 end_timestamp = 4;
-  // The thread where this connection was connected.
-  JavaThread thread = 5;
 }
 
 message HttpRangeResponse {
@@ -220,6 +218,12 @@ message HttpDetailsRequest {
     // TODO: Can this type be combined with RESPONSE? Will reponse details be
     // available before this is ready, or only at the same time?
     RESPONSE_BODY = 4;
+
+    // Fetch accessed threads of a connection.
+    // This data can be queried as soon as you have a connection ID, however
+    // as a different thread may be added during the lifetime of the connection, it's advised to repeat the request
+    // when its end_timestamp is a non-zero value.
+    ACCESSING_THREADS = 5;
   }
 
   int64 conn_id = 1;
@@ -262,10 +266,17 @@ message HttpDetailsResponse {
     string payload_id = 1;
   }
 
+  message AccessingThreads {
+    // Threads that access a connection.
+    // The first thread is the thread that creates the connection.
+    repeated JavaThread thread = 1;
+  }
+
   oneof details {
     Request request = 1;
     Response response = 2;
     Body request_body = 3;
     Body response_body = 4;
+    AccessingThreads accessing_threads = 5;
   }
 }

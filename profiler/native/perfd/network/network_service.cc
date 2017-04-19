@@ -125,9 +125,6 @@ grpc::Status NetworkServiceImpl::GetHttpRange(grpc::ServerContext *context,
     data->set_start_timestamp(conn.start_timestamp);
     data->set_downloading_timestamp(conn.downloading_timestamp);
     data->set_end_timestamp(conn.end_timestamp);
-    auto thread = data->mutable_thread();
-    thread->set_id(conn.thread.id);
-    thread->set_name(conn.thread.name);
   }
 
   return Status::OK;
@@ -165,6 +162,17 @@ grpc::Status NetworkServiceImpl::GetHttpDetails(
         if (conn->response.payload_id != "") {
           auto body_details = response->mutable_response_body();
           body_details->set_payload_id(conn->response.payload_id);
+        }
+      } break;
+
+      case HttpDetailsRequest::ACCESSING_THREADS: {
+        if (conn->response.payload_id != "") {
+          auto accessing_threads = response->mutable_accessing_threads();
+          for (auto thread: conn->threads) {
+            auto t = accessing_threads->add_thread();
+            t->set_id(thread.id);
+            t->set_name(thread.name);
+          }
         }
       } break;
 

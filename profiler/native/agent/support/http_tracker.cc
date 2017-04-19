@@ -35,6 +35,7 @@ using profiler::proto::HttpEventRequest;
 using profiler::proto::HttpRequestRequest;
 using profiler::proto::HttpResponseRequest;
 using profiler::proto::EmptyNetworkReply;
+using profiler::proto::JavaThreadRequest;
 
 namespace {
 std::atomic_int id_generator_(1);
@@ -80,6 +81,25 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_next
   uid |= local_id;
 
   return uid;
+}
+
+JNIEXPORT void JNICALL
+Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_trackThread(
+    JNIEnv *env, jobject thiz, jlong juid, jstring jthread_name, jlong jthread_id) {
+    JStringWrapper thread_name(env, jthread_name);
+    Agent::Instance().background_queue()->EnqueueTask([juid, thread_name, jthread_id] {
+      auto net_stub = Agent::Instance().network_stub();
+
+      ClientContext ctx;
+      EmptyNetworkReply reply;
+      JavaThreadRequest threadRequest;
+
+      threadRequest.set_conn_id(juid);
+      auto thread = threadRequest.mutable_thread();
+      thread->set_name(thread_name.get());
+      thread->set_id(jthread_id);
+      net_stub.TrackThread(&ctx, threadRequest, &reply);
+    });
 }
 
 JNIEXPORT void JNICALL
@@ -157,13 +177,11 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onRe
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onRequest(
-    JNIEnv *env, jobject thiz, jlong juid, jstring jmethod, jstring jfields,
-    jstring jthread_name, jlong jthread_id) {
+    JNIEnv *env, jobject thiz, jlong juid, jstring jmethod, jstring jfields) {
   JStringWrapper fields(env, jfields);
   JStringWrapper method(env, jmethod);
-  JStringWrapper thread_name(env, jthread_name);
 
-  Agent::Instance().background_queue()->EnqueueTask([fields, juid, method, thread_name, jthread_id] {
+  Agent::Instance().background_queue()->EnqueueTask([fields, juid, method] {
     auto net_stub = Agent::Instance().network_stub();
     ClientContext ctx;
     HttpRequestRequest httpRequest;
@@ -172,9 +190,6 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onRe
     httpRequest.set_conn_id(juid);
     httpRequest.set_fields(fields.get());
     httpRequest.set_method(method.get());
-    auto thread = httpRequest.mutable_thread();
-    thread->set_name(thread_name.get());
-    thread->set_id(jthread_id);
     net_stub.SendHttpRequest(&ctx, httpRequest, &reply);
   });
 }

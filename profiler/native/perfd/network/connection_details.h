@@ -76,6 +76,8 @@ struct ConnectionDetails final {
     // Name of the thread.
     // https://docs.oracle.com/javase/7/docs/api/java/lang/Thread.html#getName().
     std::string name;
+
+    JavaThread(int64_t id, std::string name) : id(id), name(name) {}
   };
 
   // ID that can identify this connection globally across all active apps
@@ -90,8 +92,9 @@ struct ConnectionDetails final {
   // Time when the connection was closed (either completed or aborted). This
   // value will be 0 until then.
   int64_t end_timestamp = 0;
-  // The thread where this connection was connected.
-  JavaThread thread;
+  // The threads where this connection was accessed.
+  // At least one thread will always exist, and the first thread will be the one in which this connection was created.
+  std::vector<JavaThread> threads;
   Request request;
   Response response;
 };
