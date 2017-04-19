@@ -159,6 +159,11 @@ class ApkZFileCreator implements ApkCreator {
     }
 
     @Override
+    public boolean hasPendingChangesWithWait() throws IOException {
+        return zip.hasPendingChangesWithWait();
+    }
+
+    @Override
     public void close() throws IOException {
         if (closed) {
             return;

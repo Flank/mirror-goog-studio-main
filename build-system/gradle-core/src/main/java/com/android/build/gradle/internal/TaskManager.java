@@ -1444,7 +1444,8 @@ public abstract class TaskManager {
         scope.getTransformManager()
                 .addStream(
                         OriginalStream.builder(project, "javac-output")
-                                .addContentType(DefaultContentType.CLASSES)
+                                .addContentTypes(
+                                        DefaultContentType.CLASSES, DefaultContentType.RESOURCES)
                                 .addScope(Scope.PROJECT)
                                 .setFolder(scope.getJavaOutputDir())
                                 .setDependency(scope.getJavacTask().getName())
