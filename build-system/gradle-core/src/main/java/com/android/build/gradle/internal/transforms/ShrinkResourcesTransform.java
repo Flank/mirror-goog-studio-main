@@ -29,24 +29,31 @@ import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.aapt.AaptGradleFactory;
+import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.BuildOutputs;
+import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.SplitList;
 import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
+import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.build.gradle.tasks.ResourceUsageAnalyzer;
 import com.android.builder.core.AndroidBuilder;
+import com.android.builder.core.VariantType;
 import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.ide.common.build.ApkData;
 import com.android.utils.FileUtils;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -57,8 +64,6 @@ import java.util.Set;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
-import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.OutputDirectory;
 
 /**
  * Implementation of Resource Shrinking as a transform.
@@ -86,24 +91,25 @@ public class ShrinkResourcesTransform extends Transform {
      */
     @NonNull private final BaseVariantData variantData;
 
-    @NonNull private final FileCollection uncompressedResources;
-    @NonNull
-    private final File compressedResources;
+    @NonNull private final AndroidBuilder androidBuilder;
+    @NonNull private final Logger logger;
 
-    @NonNull
-    private final AndroidBuilder androidBuilder;
-    @NonNull
-    private final Logger logger;
-
-    @NonNull private final ImmutableList<SecondaryFile> secondaryInputs;
-
-    @NonNull
-    private final File sourceDir;
-    @NonNull
-    private final File resourceDir;
-    @NonNull private final FileCollection mergedManifests;
+    @NonNull private final File sourceDir;
+    @NonNull private final File resourceDir;
     @Nullable private final FileCollection mappingFileSrc;
+    @NonNull private final FileCollection mergedManifests;
+    @NonNull private final FileCollection uncompressedResources;
+    @NonNull private final FileCollection splitListInput;
+
     @NonNull private final AaptGeneration aaptGeneration;
+    @NonNull private final AaptOptions aaptOptions;
+    @NonNull private final VariantType variantType;
+    private final boolean isDebuggableBuildType;
+    private final boolean enforceUniquePackageName;
+    @NonNull private final List<AaptPackageConfig.LibraryInfo> libraryInfoList;
+    @NonNull private final SplitHandlingPolicy splitHandlingPolicy;
+
+    @NonNull private final File compressedResources;
 
     public ShrinkResourcesTransform(
             @NonNull BaseVariantData variantData,
@@ -113,37 +119,33 @@ public class ShrinkResourcesTransform extends Transform {
             @NonNull AaptGeneration aaptGeneration,
             @NonNull FileCollection splitListInput,
             @NonNull Logger logger) {
+        VariantScope variantScope = variantData.getScope();
+        GlobalScope globalScope = variantScope.getGlobalScope();
+        GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
+
         this.variantData = variantData;
-        this.uncompressedResources = uncompressedResources;
-        this.compressedResources = compressedResources;
         this.androidBuilder = androidBuilder;
-        this.aaptGeneration = aaptGeneration;
-        this.splitListInput = splitListInput;
         this.logger = logger;
 
-        final VariantScope scope = variantData.getScope();
-        sourceDir = scope.getRClassSourceOutputDir();
-        resourceDir = scope.getResourceShrinkerInputFolder();
-        mergedManifests = scope.getOutput(TaskOutputType.MERGED_MANIFESTS);
-        mappingFileSrc =
-                scope.hasOutput(TaskOutputType.APK_MAPPING)
-                        ? scope.getOutput(TaskOutputType.APK_MAPPING)
+        this.sourceDir = variantScope.getRClassSourceOutputDir();
+        this.resourceDir = variantScope.getResourceShrinkerInputFolder();
+        this.mappingFileSrc =
+                variantScope.hasOutput(TaskOutputType.APK_MAPPING)
+                        ? variantScope.getOutput(TaskOutputType.APK_MAPPING)
                         : null;
+        this.mergedManifests = variantScope.getOutput(TaskOutputType.MERGED_MANIFESTS);
+        this.uncompressedResources = uncompressedResources;
+        this.splitListInput = splitListInput;
 
-        if (mappingFileSrc != null) {
-            // FIXME use Task output to get FileCollection for sourceDir/resourceDir
-            secondaryInputs =
-                    ImmutableList.of(
-                            SecondaryFile.nonIncremental(sourceDir),
-                            SecondaryFile.nonIncremental(resourceDir),
-                            SecondaryFile.nonIncremental(mappingFileSrc));
-        } else {
-            // FIXME use Task output to get FileCollection for sourceDir/resourceDir
-            secondaryInputs =
-                    ImmutableList.of(
-                            SecondaryFile.nonIncremental(sourceDir),
-                            SecondaryFile.nonIncremental(resourceDir));
-        }
+        this.aaptGeneration = aaptGeneration;
+        this.aaptOptions = globalScope.getExtension().getAaptOptions();
+        this.variantType = variantData.getType();
+        this.isDebuggableBuildType = variantConfig.getBuildType().isDebuggable();
+        this.enforceUniquePackageName = globalScope.getExtension().getEnforceUniquePackageName();
+        this.libraryInfoList = ProcessAndroidResources.computeLibraryInfoList(variantScope);
+        this.splitHandlingPolicy = variantData.getSplitScope().getSplitHandlingPolicy();
+
+        this.compressedResources = compressedResources;
     }
 
     @NonNull
@@ -179,37 +181,57 @@ public class ShrinkResourcesTransform extends Transform {
     @NonNull
     @Override
     public Collection<SecondaryFile> getSecondaryFiles() {
-        return secondaryInputs;
-    }
+        Collection<SecondaryFile> secondaryFiles = Lists.newLinkedList();
 
-    @NonNull
-    @InputFiles
-    public FileCollection getMergedManifests() {
-        return mergedManifests;
-    }
+        // FIXME use Task output to get FileCollection for sourceDir/resourceDir
+        secondaryFiles.add(SecondaryFile.nonIncremental(sourceDir));
+        secondaryFiles.add(SecondaryFile.nonIncremental(resourceDir));
 
-    @NonNull
-    @InputFiles
-    public FileCollection getUncompressedResources() {
-        return uncompressedResources;
-    }
+        if (mappingFileSrc != null) {
+            secondaryFiles.add(SecondaryFile.nonIncremental(mappingFileSrc));
+        }
 
-    @OutputDirectory
-    public File getCompressedResources() {
-        return compressedResources;
+        secondaryFiles.add(SecondaryFile.nonIncremental(mergedManifests));
+        secondaryFiles.add(SecondaryFile.nonIncremental(uncompressedResources));
+        secondaryFiles.add(SecondaryFile.nonIncremental(splitListInput));
+
+        return secondaryFiles;
     }
 
     @NonNull
     @Override
     public Map<String, Object> getParameterInputs() {
-        return ImmutableMap.of("AaptGeneration", aaptGeneration.name());
+        Map<String, Object> params = Maps.newHashMapWithExpectedSize(7);
+        params.put("aaptGeneration", aaptGeneration.name());
+        params.put(
+                "aaptOptions",
+                Joiner.on(";")
+                        .join(
+                                aaptOptions.getIgnoreAssetsPattern() != null
+                                        ? aaptOptions.getIgnoreAssetsPattern()
+                                        : "",
+                                aaptOptions.getNoCompress() != null
+                                        ? Joiner.on(":").join(aaptOptions.getNoCompress())
+                                        : "",
+                                aaptOptions.getCruncherEnabled(),
+                                aaptOptions.getFailOnMissingConfigEntry(),
+                                aaptOptions.getAdditionalParameters() != null
+                                        ? Joiner.on(":").join(aaptOptions.getAdditionalParameters())
+                                        : "",
+                                aaptOptions.getCruncherProcesses()));
+        params.put("variantType", variantType.name());
+        params.put("isDebuggableBuildType", isDebuggableBuildType);
+        params.put("enforceUniquePackageName", enforceUniquePackageName);
+        params.put("libraryInfoList", Joiner.on(";").join(libraryInfoList));
+        params.put("splitHandlingPolicy", splitHandlingPolicy);
+
+        return params;
     }
 
-    FileCollection splitListInput;
-
-    @InputFiles
-    public FileCollection getSplitListResource() {
-        return splitListInput;
+    @NonNull
+    @Override
+    public Collection<File> getSecondaryDirectoryOutputs() {
+        return ImmutableList.of(compressedResources);
     }
 
     @Override
@@ -325,29 +347,26 @@ public class ShrinkResourcesTransform extends Transform {
                                         new File(
                                                 invocation.getContext().getTemporaryDir(),
                                                 "temp-aapt")));
-                // FIX ME !
-                ProcessAndroidResources processResourcesTask =
-                        variantData.getScope().getProcessResourcesTask().get(null);
 
                 AaptPackageConfig.Builder aaptPackageConfig =
                         new AaptPackageConfig.Builder()
                                 .setManifestFile(mergedManifest.getOutputFile())
-                                .setOptions(processResourcesTask.getAaptOptions())
+                                .setOptions(aaptOptions)
                                 .setResourceOutputApk(destination)
-                                .setLibraries(processResourcesTask.getLibraryInfoList())
+                                .setLibraries(libraryInfoList)
                                 // FIX ME : this does not seem to have ever worked.
                                 //.setCustomPackageForR(processResourcesTask.getPackageForR())
-                                .setSourceOutputDir(new File(sourceOutputPath))
-                                .setVariantType(processResourcesTask.getType())
-                                .setDebuggable(processResourcesTask.getDebuggable())
+                                .setSourceOutputDir(
+                                        sourceOutputPath != null
+                                                ? new File(sourceOutputPath)
+                                                : null)
+                                .setVariantType(variantType)
+                                .setDebuggable(isDebuggableBuildType)
                                 .setResourceConfigs(
                                         splitList.getFilters(SplitList.RESOURCE_CONFIGS))
-                                .setSplits(processResourcesTask.getSplits(splitList));
+                                .setSplits(SplitList.getSplits(splitList, splitHandlingPolicy));
 
-                androidBuilder.processResources(
-                        aapt,
-                        aaptPackageConfig,
-                        processResourcesTask.getEnforceUniquePackageName());
+                androidBuilder.processResources(aapt, aaptPackageConfig, enforceUniquePackageName);
             } else {
                 // Just rewrite the .ap_ file to strip out the res/ files for unused resources
                 analyzer.rewriteResourceZip(uncompressedResourceFile, compressedResourceFile);

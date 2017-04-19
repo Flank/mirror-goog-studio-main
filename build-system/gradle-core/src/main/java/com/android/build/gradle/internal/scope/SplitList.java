@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.scope;
 
 import com.android.annotations.NonNull;
 import com.android.build.OutputFile;
+import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.gson.Gson;
@@ -87,6 +88,15 @@ public class SplitList {
         allFilters.addAll(getFilters(OutputFile.FilterType.DENSITY));
         allFilters.addAll(getFilters(OutputFile.FilterType.LANGUAGE));
         return allFilters.build();
+    }
+
+    @NonNull
+    public static Set<String> getSplits(
+            @NonNull SplitList splitList, @NonNull SplitHandlingPolicy splitHandlingPolicy)
+            throws IOException {
+        return splitHandlingPolicy == SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY
+                ? splitList.getResourcesSplit()
+                : ImmutableSet.of();
     }
 
     public static synchronized void save(

@@ -81,7 +81,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import java.io.File;
 import java.io.IOException;
@@ -202,10 +201,9 @@ public class ProcessAndroidResources extends IncrementalTask {
         return supportedAbis;
     }
 
-    public Set<String> getSplits(SplitList splitList) throws IOException {
-        return splitHandlingPolicy == SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY
-                ? splitList.getResourcesSplit()
-                : ImmutableSet.of();
+    @NonNull
+    private Set<String> getSplits(@NonNull SplitList splitList) throws IOException {
+        return SplitList.getSplits(splitList, splitHandlingPolicy);
     }
 
     FileCollection splitListInput;
@@ -602,32 +600,46 @@ public class ProcessAndroidResources extends IncrementalTask {
 
 
     @NonNull
-    public List<LibraryInfo> getLibraryInfoList() {
+    private List<LibraryInfo> getLibraryInfoList() {
         if (computedLibraryInfo == null) {
             if (symbolFiles != null && manifests != null) {
-                // first build a map for the optional symbols.
-                Map<ComponentIdentifier, File> symbolMap = new HashMap<>();
-                for (ResolvedArtifactResult artifactResult : symbolFiles.getArtifacts()) {
-                    symbolMap.put(artifactResult.getId().getComponentIdentifier(),
-                            artifactResult.getFile());
-                }
-
-                // now loop through all the manifests and associate to a symbol file, if applicable.
-                Set<ResolvedArtifactResult> manifestArtifacts = manifests.getArtifacts();
-                computedLibraryInfo = new ArrayList<>(manifestArtifacts.size());
-                for (ResolvedArtifactResult artifactResult : manifestArtifacts) {
-                    computedLibraryInfo.add(new LibraryInfo(
-                            artifactResult.getFile(),
-                            symbolMap.get(artifactResult.getId().getComponentIdentifier())));
-                }
-
-                computedLibraryInfo = ImmutableList.copyOf(computedLibraryInfo);
+                computedLibraryInfo = computeLibraryInfoList(symbolFiles, manifests);
             } else {
                 computedLibraryInfo = ImmutableList.of();
             }
         }
 
         return computedLibraryInfo;
+    }
+
+    @NonNull
+    public static List<LibraryInfo> computeLibraryInfoList(@NonNull VariantScope variantScope) {
+        return computeLibraryInfoList(
+                variantScope.getArtifactCollection(RUNTIME_CLASSPATH, ALL, SYMBOL_LIST),
+                variantScope.getArtifactCollection(RUNTIME_CLASSPATH, ALL, MANIFEST));
+    }
+
+    @NonNull
+    private static List<LibraryInfo> computeLibraryInfoList(
+            @NonNull ArtifactCollection symbolFiles, @NonNull ArtifactCollection manifests) {
+        // first build a map for the optional symbols.
+        Map<ComponentIdentifier, File> symbolMap = new HashMap<>();
+        for (ResolvedArtifactResult artifactResult : symbolFiles.getArtifacts()) {
+            symbolMap.put(
+                    artifactResult.getId().getComponentIdentifier(), artifactResult.getFile());
+        }
+
+        // now loop through all the manifests and associate to a symbol file, if applicable.
+        Set<ResolvedArtifactResult> manifestArtifacts = manifests.getArtifacts();
+        List<LibraryInfo> libraryInfoList = new ArrayList<>(manifestArtifacts.size());
+        for (ResolvedArtifactResult artifactResult : manifestArtifacts) {
+            libraryInfoList.add(
+                    new LibraryInfo(
+                            artifactResult.getFile(),
+                            symbolMap.get(artifactResult.getId().getComponentIdentifier())));
+        }
+
+        return libraryInfoList;
     }
 
     public static class ConfigAction implements TaskConfigAction<ProcessAndroidResources> {
