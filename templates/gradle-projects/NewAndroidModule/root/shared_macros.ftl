@@ -13,14 +13,18 @@
 </manifest></#if>
 </#macro>
 
-<#macro androidConfig hasApplicationId=false hasTests=false canHaveCpp=false>
+<#macro androidConfig hasApplicationId=false applicationId='' hasTests=false canHaveCpp=false isBaseSplit=false>
 android {
     compileSdkVersion <#if buildApiString?matches("^\\d+$")>${buildApiString}<#else>'${buildApiString}'</#if>
     buildToolsVersion "${buildToolsVersion}"
 
+    <#if isBaseSplit>
+    baseSplit true
+    </#if>
+
     defaultConfig {
     <#if hasApplicationId>
-        applicationId "${packageName}"
+        applicationId "${applicationId}"
     </#if>
         minSdkVersion <#if minApi?matches("^\\d+$")>${minApi}<#else>'${minApi}'</#if>
         targetSdkVersion <#if targetApiString?matches("^\\d+$")>${targetApiString}<#else>'${targetApiString}'</#if>

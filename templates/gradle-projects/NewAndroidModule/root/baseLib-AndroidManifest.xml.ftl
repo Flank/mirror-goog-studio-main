@@ -1,2 +1,2 @@
 <#import "./shared_macros.ftl" as shared>
-<@shared.generateManifest packageName=instantAppPackageName hasApplicationBlock=true isInstantApp=true/>
+<@shared.generateManifest packageName=instantAppPackageName isInstantApp=true/>
