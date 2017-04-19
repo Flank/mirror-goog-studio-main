@@ -29,7 +29,10 @@ import org.gradle.api.file.FileCollection;
  * Base Implementation of TaskOutputHolder.
  */
 public abstract class TaskOutputHolderImpl implements TaskOutputHolder {
-    private final Map<OutputType, FileCollection> outputMap = Maps.newHashMap();
+    private static final int OUTPUT_TYPE_SIZE =
+            TaskOutputType.values().length + AnchorOutputType.values().length;
+    private final Map<OutputType, FileCollection> outputMap =
+            Maps.newHashMapWithExpectedSize(OUTPUT_TYPE_SIZE);
 
     protected abstract Project getProject();
 
