@@ -16,8 +16,7 @@
 
 package com.android.build.gradle.integration.common.utils;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static com.google.common.truth.Truth.assertThat;
 
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidArtifactOutput;
@@ -39,22 +38,24 @@ public class VariantHelper {
 
     public void test() {
         AndroidArtifact artifact = variant.getMainArtifact();
-        assertNotNull("Main Artifact null-check", artifact);
+        assertThat(artifact).named("Main Artifact null-check").isNotNull();
 
         String variantName = variant.getName();
         File build = new File(projectDir,  "build");
         File apk = new File(build, "outputs/apk/" + outputFileName);
 
         Collection<File> sourceFolders = artifact.getGeneratedSourceFolders();
-        assertEquals("Gen src Folder count", 5, sourceFolders.size());
+        assertThat(sourceFolders).named("Gen src Folder count").hasSize(5);
 
         Collection<AndroidArtifactOutput> outputs = artifact.getOutputs();
-        assertNotNull(outputs);
-        assertEquals(1, outputs.size());
+        assertThat(outputs).named("artifact output").isNotNull();
+        assertThat(outputs).hasSize(1);
+
         AndroidArtifactOutput output = outputs.iterator().next();
 
-        assertEquals(variantName + " output", apk, output.getOutputFile());
-        File manifest = output.getGeneratedManifest();
-        assertNotNull(manifest);
+        assertThat(output.getOutputFile()).named(variantName + " output").isEqualTo(apk);
+        assertThat(output.getGeneratedManifest())
+                .named("Generated manifest for " + variantName)
+                .isNotNull();
     }
 }
