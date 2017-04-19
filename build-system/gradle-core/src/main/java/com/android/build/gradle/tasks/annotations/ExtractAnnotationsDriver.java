@@ -49,7 +49,7 @@ import java.util.List;
  * android.support.annotations.
  */
 public class ExtractAnnotationsDriver {
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         new ExtractAnnotationsDriver().run(args);
     }
 
@@ -76,7 +76,7 @@ public class ExtractAnnotationsDriver {
     }
 
     @SuppressWarnings("MethodMayBeStatic")
-    public void run(@NonNull String[] args) throws IOException {
+    public void run(@NonNull String[] args) {
         List<File> classpath = Lists.newArrayList();
         List<File> sources = Lists.newArrayList();
         List<File> mergePaths = Lists.newArrayList();

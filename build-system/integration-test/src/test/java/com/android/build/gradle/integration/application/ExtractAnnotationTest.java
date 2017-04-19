@@ -25,9 +25,10 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.tasks.annotations.Extractor;
 import com.android.testutils.apk.Zip;
 import java.io.File;
+import org.junit.AfterClass;
 import org.junit.Assume;
-import org.junit.Before;
-import org.junit.Rule;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 /**
@@ -41,14 +42,18 @@ import org.junit.Test;
  * </pre>
  */
 public class ExtractAnnotationTest {
-
-    @Rule
-    public GradleTestProject project =
+    @ClassRule
+    public static GradleTestProject project =
             GradleTestProject.builder().fromTestProject("extractAnnotations").create();
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeClass
+    public static void setUp() throws Exception {
         project.execute("clean", "assembleDebug");
+    }
+
+    @AfterClass
+    public static void cleanUp() {
+        project = null;
     }
 
     @Test
