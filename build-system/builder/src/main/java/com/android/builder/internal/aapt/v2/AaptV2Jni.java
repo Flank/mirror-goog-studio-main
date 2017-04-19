@@ -22,6 +22,7 @@ import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.builder.internal.aapt.AbstractAapt;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.ide.common.process.ProcessOutputHandler;
+import com.android.ide.common.res2.CompileResourceRequest;
 import com.android.tools.aapt2.Aapt2Jni;
 import com.android.tools.aapt2.Aapt2RenamingConventions;
 import com.google.common.base.Joiner;
@@ -87,19 +88,22 @@ public class AaptV2Jni extends AbstractAapt {
 
     @NonNull
     @Override
-    public ListenableFuture<File> compile(@NonNull File file, @NonNull File output)
+    public ListenableFuture<File> compile(@NonNull CompileResourceRequest request)
             throws Exception {
         SettableFuture<File> result = SettableFuture.create();
         executor.execute(
                 () -> {
                     try {
-                        List<String> args = AaptV2CommandBuilder.makeCompile(file, output);
+                        List<String> args =
+                                AaptV2CommandBuilder.makeCompile(
+                                        request.getInput(), request.getOutput());
                         int returnCode = Aapt2Jni.compile(args);
                         if (returnCode == 0) {
                             result.set(
                                     new File(
-                                            output,
-                                            Aapt2RenamingConventions.compilationRename(file)));
+                                            request.getOutput(),
+                                            Aapt2RenamingConventions.compilationRename(
+                                                    request.getInput())));
                         } else {
                             result.setException(
                                     new AaptException(
@@ -126,5 +130,13 @@ public class AaptV2Jni extends AbstractAapt {
     @Override
     public void end() throws InterruptedException {
         // since we don't batch, we are done.
+    }
+
+    @Override
+    @NonNull
+    public File compileOutputFor(@NonNull CompileResourceRequest request) {
+        return new File(
+                request.getOutput(),
+                Aapt2RenamingConventions.compilationRename(request.getInput()));
     }
 }

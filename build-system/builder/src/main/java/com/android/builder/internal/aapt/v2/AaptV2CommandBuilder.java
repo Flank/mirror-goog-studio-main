@@ -22,6 +22,7 @@ import com.android.builder.internal.aapt.AaptException;
 import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.builder.internal.aapt.AaptUtils;
 import com.android.builder.model.AaptOptions;
+import com.android.ide.common.res2.CompileResourceRequest;
 import com.android.sdklib.IAndroidTarget;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
@@ -47,8 +48,8 @@ public final class AaptV2CommandBuilder {
     private AaptV2CommandBuilder() {}
 
     /**
-     * Creates the command line used to compile a resource.
-     * See {@link com.android.builder.internal.aapt.Aapt#compile(File, File)}.
+     * Creates the command line used to compile a resource. See {@link
+     * com.android.builder.internal.aapt.Aapt#compile(CompileResourceRequest)}.
      *
      * @param file see above
      * @param output see above

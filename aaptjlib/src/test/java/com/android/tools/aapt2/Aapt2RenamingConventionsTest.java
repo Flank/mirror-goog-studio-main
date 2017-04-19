@@ -42,7 +42,7 @@ public class Aapt2RenamingConventionsTest {
         File fooPng = new File(drawables, "foo.png");
 
         String renamed = Aapt2RenamingConventions.compilationRename(fooPng);
-        assertEquals("drawables_xhdpi_v21_foo.png.flat", renamed);
+        assertEquals("drawables-xhdpi-v21_foo.png.flat", renamed);
     }
 
     @Test

@@ -19,6 +19,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ANDROID_RES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 
+import android.databinding.tool.store.LayoutFileParser;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidConfig;
@@ -43,6 +44,7 @@ import com.android.ide.common.res2.QueueableResourceCompiler;
 import com.android.ide.common.res2.ResourceMerger;
 import com.android.ide.common.res2.ResourcePreprocessor;
 import com.android.ide.common.res2.ResourceSet;
+import com.android.ide.common.res2.SingleFileProcessor;
 import com.android.ide.common.vectordrawable.ResourcesNotSupportedException;
 import com.android.resources.Density;
 import com.android.utils.FileUtils;
@@ -121,6 +123,10 @@ public class MergeResources extends IncrementalTask {
 
     private AaptGeneration aaptGeneration;
 
+    @Nullable private SingleFileProcessor dataBindingExpressionRemover;
+
+    @Nullable private File dataBindingLayoutOutputFolder;
+
     @Input
     public String getBuildToolsVersion() {
         return getBuildTools().getRevision().toString();
@@ -163,13 +169,16 @@ public class MergeResources extends IncrementalTask {
             } else {
                 resourceCompiler = QueueableResourceCompiler.NONE;
             }
-            MergedResourceWriter writer = new MergedResourceWriter(
-                    destinationDir,
-                    getPublicFile(),
-                    getBlameLogFolder(),
-                    preprocessor,
-                    resourceCompiler,
-                    getIncrementalFolder());
+            MergedResourceWriter writer =
+                    new MergedResourceWriter(
+                            destinationDir,
+                            getPublicFile(),
+                            getBlameLogFolder(),
+                            preprocessor,
+                            resourceCompiler,
+                            getIncrementalFolder(),
+                            dataBindingExpressionRemover,
+                            dataBindingLayoutOutputFolder);
 
             merger.mergeData(writer, false /*doCleanUp*/);
 
@@ -246,13 +255,16 @@ public class MergeResources extends IncrementalTask {
                 resourceCompiler = QueueableResourceCompiler.NONE;
             }
 
-            MergedResourceWriter writer = new MergedResourceWriter(
-                    getOutputDir(),
-                    getPublicFile(),
-                    getBlameLogFolder(),
-                    preprocessor,
-                    resourceCompiler,
-                    getIncrementalFolder());
+            MergedResourceWriter writer =
+                    new MergedResourceWriter(
+                            getOutputDir(),
+                            getPublicFile(),
+                            getBlameLogFolder(),
+                            preprocessor,
+                            resourceCompiler,
+                            getIncrementalFolder(),
+                            dataBindingExpressionRemover,
+                            dataBindingLayoutOutputFolder);
             merger.mergeData(writer, false /*doCleanUp*/);
             // No exception? Write the known state.
             merger.writeBlobTo(getIncrementalFolder(), writer, false);
@@ -490,6 +502,12 @@ public class MergeResources extends IncrementalTask {
         return aaptGeneration.name();
     }
 
+    @OutputDirectory
+    @Optional
+    public File getDataBindingLayoutOutputFolder() {
+        return dataBindingLayoutOutputFolder;
+    }
+
     /**
      * Compute the list of resource set to be used during execution based all the inputs.
      */
@@ -667,6 +685,14 @@ public class MergeResources extends IncrementalTask {
             mergeResourcesTask.setGeneratedPngsOutputDir(scope.getGeneratedPngsOutputDir());
 
             variantData.mergeResourcesTask = mergeResourcesTask;
+
+            if (scope.getGlobalScope().getExtension().getDataBinding().isEnabled()) {
+                mergeResourcesTask.dataBindingExpressionRemover =
+                        (file, out) -> LayoutFileParser.stripSingleLayoutFile(file, out);
+                // Output for the merge resources task to pass the layouts to data binding tasks.
+                mergeResourcesTask.dataBindingLayoutOutputFolder =
+                        scope.getLayoutInputFolderForDataBinding();
+            }
         }
     }
 }

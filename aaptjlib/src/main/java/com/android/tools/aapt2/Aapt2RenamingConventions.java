@@ -58,12 +58,9 @@ public final class Aapt2RenamingConventions {
          *
          * e.g. values/strings.xml becomes values_strings.arsc.flat and not values_strings.xml.flat.
          */
-        if (parentName.equals("values") && ext.equals(".xml")) {
+        if (parentName.startsWith("values") && ext.equals(".xml")) {
             ext = ".arsc";
         }
-
-        parentName = parentName.replace('-', '_');
-        fileName = fileName.replace('-', '_');
 
         return parentName + "_" + fileName + ext + ".flat";
     }

@@ -155,7 +155,7 @@ public class DataBindingProcessLayoutsTask extends DefaultTask {
             task.setXmlProcessor(variantScope.getVariantData().getLayoutXmlProcessor());
             task.setSdkDir(variantScope.getGlobalScope().getSdkHandler().getSdkFolder());
             task.setMinSdk(variantScope.getVariantConfiguration().getMinSdkVersion().getApiLevel());
-            task.setLayoutInputFolder(variantScope.getMergeResourcesOutputDir());
+            task.setLayoutInputFolder(variantScope.getLayoutInputFolderForDataBinding());
             task.setLayoutOutputFolder(variantScope.getLayoutFolderOutputForDataBinding());
             task.setXmlInfoOutFolder(variantScope.getLayoutInfoOutputForDataBinding());
             variantScope.setResourceOutputDir(variantScope.getLayoutFolderOutputForDataBinding());

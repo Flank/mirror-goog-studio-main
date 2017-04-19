@@ -706,7 +706,6 @@ public class ResourceMergerTest extends BaseTestCase {
 
     /**
      * Tests the path replacement in the merger.xml file loaded from testData/
-     * @throws Exception
      */
     @Test
     public void testLoadingTestPathReplacement() throws Exception {
@@ -836,12 +835,13 @@ public class ResourceMergerTest extends BaseTestCase {
         mergeLogFolder.deleteOnExit();
 
         // write the content of the resource merger.
-        MergedResourceWriter writer = MergedResourceWriter.createWriterWithoutPngCruncher(
-                resFolder,
-                null /*publicFile*/,
-                mergeLogFolder,
-                mPreprocessor,
-                mTemporaryFolder.getRoot());
+        MergedResourceWriter writer =
+                MergedResourceWriter.createWriterWithoutPngCruncher(
+                        resFolder,
+                        null /*publicFile*/,
+                        mergeLogFolder,
+                        mPreprocessor,
+                        mTemporaryFolder.getRoot());
         resourceMerger.mergeData(writer, false /*doCleanUp*/);
 
         // Check the content.
@@ -970,12 +970,13 @@ public class ResourceMergerTest extends BaseTestCase {
         mergeLogFolder.deleteOnExit();
 
         // write the content of the resource merger.
-        MergedResourceWriter writer = MergedResourceWriter.createWriterWithoutPngCruncher(
-                resFolder,
-                null /*publicFile*/,
-                mergeLogFolder,
-                mPreprocessor,
-                mTemporaryFolder.getRoot());
+        MergedResourceWriter writer =
+                MergedResourceWriter.createWriterWithoutPngCruncher(
+                        resFolder,
+                        null /*publicFile*/,
+                        mergeLogFolder,
+                        mPreprocessor,
+                        mTemporaryFolder.getRoot());
         resourceMerger.mergeData(writer, false /*doCleanUp*/);
 
         // Check the content.

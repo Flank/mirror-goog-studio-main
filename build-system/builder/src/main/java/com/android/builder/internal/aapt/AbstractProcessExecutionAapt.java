@@ -23,6 +23,7 @@ import com.android.ide.common.process.ProcessInfo;
 import com.android.ide.common.process.ProcessInfoBuilder;
 import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.ide.common.process.ProcessResult;
+import com.android.ide.common.res2.CompileResourceRequest;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -105,14 +106,14 @@ public abstract class AbstractProcessExecutionAapt extends AbstractAapt {
 
     @NonNull
     @Override
-    public ListenableFuture<File> compile(@NonNull File file, @NonNull File output)
+    public ListenableFuture<File> compile(@NonNull CompileResourceRequest request)
             throws AaptException {
-        Preconditions.checkArgument(file.isFile(), "!file.isFile()");
-        Preconditions.checkArgument(output.isDirectory(), "!output.isDirectory()");
+        Preconditions.checkArgument(request.getInput().isFile(), "!file.isFile()");
+        Preconditions.checkArgument(request.getOutput().isDirectory(), "!output.isDirectory()");
 
         SettableFuture<File> result = SettableFuture.create();
 
-        CompileInvocation compileInvocation = makeCompileProcessBuilder(file, output);
+        CompileInvocation compileInvocation = makeCompileProcessBuilder(request);
         if (compileInvocation == null) {
             result.set(null);
             return result;
@@ -143,17 +144,15 @@ public abstract class AbstractProcessExecutionAapt extends AbstractAapt {
     }
 
     /**
-     * See {@link #compile(File, File)}.
+     * See {@link #compile(CompileResourceRequest)}.
      *
-     * @param file see {@link #compile(File, File)}
-     * @param output see {@link #compile(File, File)}
-     * @return the compilation information to invoke {@code aapt}; returns {@code null} if the
-     * file is not compilable and {@code aapt} should not be invoked
+     * @return the compilation information to invoke {@code aapt}; returns {@code null} if the file
+     *     is not compilable and {@code aapt} should not be invoked
      * @throws AaptException failed to configure the compilation
      */
     @Nullable
-    protected abstract CompileInvocation makeCompileProcessBuilder(@NonNull File file,
-            @NonNull File output) throws AaptException;
+    protected abstract CompileInvocation makeCompileProcessBuilder(
+            @NonNull CompileResourceRequest request) throws AaptException;
 
     /**
      * Build information for a compilation.

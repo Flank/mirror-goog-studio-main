@@ -17,6 +17,7 @@
 package com.android.ide.common.res2;
 
 import com.android.annotations.NonNull;
+import com.android.utils.FileUtils;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.File;
@@ -27,39 +28,59 @@ import java.io.File;
  */
 public interface QueueableResourceCompiler extends ResourceCompiler {
 
-    QueueableResourceCompiler NONE = new QueueableResourceCompiler() {
+    QueueableResourceCompiler NONE =
+            new QueueableResourceCompiler() {
 
-        @NonNull
-        @Override
-        public ListenableFuture<File> compile(@NonNull File file, @NonNull File output)
-                throws Exception {
-            return Futures.immediateFuture(null);
-        }
+                @NonNull
+                @Override
+                public ListenableFuture<File> compile(@NonNull CompileResourceRequest request)
+                        throws Exception {
+                    // Copy file instead of compiling.
+                    File out = compileOutputFor(request);
+                    FileUtils.copyFile(request.getInput(), out);
+                    return Futures.immediateFuture(out);
+                }
 
-        @Override
-        public void start() {
-        }
+                @Override
+                public void start() {}
 
-        @Override
-        public void end() throws InterruptedException {
-        }
-    };
+                @Override
+                public void end() throws InterruptedException {}
+
+                @NonNull
+                @Override
+                public File compileOutputFor(@NonNull CompileResourceRequest request) {
+                    File parentDir = new File(request.getOutput(), request.getFolderName());
+                    FileUtils.mkdirs(parentDir);
+                    return new File(parentDir, request.getInput().getName());
+                }
+            };
 
     /**
-     * Start a new queueing request for compile activities. All calls made to
-     * {@link ResourceCompiler#compile(File, File)} will be part of the same batch of requests.
+     * Start a new queueing request for compile activities. All calls made to {@link
+     * ResourceCompiler#compile(CompileResourceRequest)} will be part of the same batch of requests.
      */
     void start();
 
     /**
      * End the current batch of request. This will wait until requested compilation requested issued
-     * with {@link ResourceCompiler#compile(File, File)} have finished before returning.
+     * with {@link ResourceCompiler#compile(CompileResourceRequest)} have finished before returning.
      *
-     * Each compile request result will be available through the
-     * {@link com.google.common.util.concurrent.ListenableFuture} returned by
-     * {@link ResourceCompiler}.
+     * <p>Each compile request result will be available through the {@link
+     * com.google.common.util.concurrent.ListenableFuture} returned by {@link ResourceCompiler}.
      *
      * @throws InterruptedException
      */
     void end() throws InterruptedException;
+
+    /**
+     * Obtains the file that will receive the compilation output of a given file. This method will
+     * return a unique file in the output directory for each input file.
+     *
+     * <p>This method will also create any parent directories needed to hold the output file.
+     *
+     * @param request the compile resource request containing the input, output and folder name
+     * @return the output file
+     */
+    File compileOutputFor(@NonNull CompileResourceRequest request);
 }

@@ -69,25 +69,28 @@ public class MergeResourceWriterWithCompilerTest {
             }
         };
 
-        mSimpleCompiler = new QueueableResourceCompiler() {
-            @NonNull
-            @Override
-            public ListenableFuture<File> compile(@NonNull File file, @NonNull File output)
-                    throws Exception {
-                File outputPath = new File(output, file.getName() + "-c");
-                Files.copy(file, outputPath);
-                return Futures.immediateFuture(outputPath);            }
+        mSimpleCompiler =
+                new QueueableResourceCompiler() {
+                    @NonNull
+                    @Override
+                    public ListenableFuture<File> compile(@NonNull CompileResourceRequest request)
+                            throws Exception {
+                        File outputPath = compileOutputFor(request);
+                        Files.copy(request.getInput(), outputPath);
+                        return Futures.immediateFuture(outputPath);
+                    }
 
-            @Override
-            public void start() {
+                    @Override
+                    public void start() {}
 
-            }
+                    @Override
+                    public void end() throws InterruptedException {}
 
-            @Override
-            public void end() throws InterruptedException {
-
-            }
-        };
+                    @Override
+                    public File compileOutputFor(@NonNull CompileResourceRequest request) {
+                        return new File(request.getOutput(), request.getInput().getName() + "-c");
+                    }
+                };
 
         createSourceResourcesFiles();
     }
@@ -144,7 +147,9 @@ public class MergeResourceWriterWithCompilerTest {
                         null,
                         mEmptyPreprocessor,
                         mSimpleCompiler,
-                        tmpFolder);
+                        tmpFolder,
+                        null,
+                        null);
 
         /*
          * Add the file.
@@ -170,7 +175,9 @@ public class MergeResourceWriterWithCompilerTest {
                         null,
                         mEmptyPreprocessor,
                         mSimpleCompiler,
-                        tmpFolder);
+                        tmpFolder,
+                        null,
+                        null);
 
         mResourceItems.get(name).setRemoved();
         writer.start(DocumentBuilderFactory.newInstance());

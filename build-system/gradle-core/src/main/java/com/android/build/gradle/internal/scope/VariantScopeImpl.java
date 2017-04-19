@@ -1224,6 +1224,15 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @Override
     @NonNull
+    public File getLayoutInputFolderForDataBinding() {
+        return new File(
+                globalScope.getIntermediatesDir()
+                        + "/data-binding-layout-in/"
+                        + getVariantConfiguration().getDirName());
+    }
+
+    @Override
+    @NonNull
     public File getBuildFolderForDataBindingCompiler() {
         return new File(globalScope.getIntermediatesDir() + "/data-binding-compiler/" +
                 getVariantConfiguration().getDirName());

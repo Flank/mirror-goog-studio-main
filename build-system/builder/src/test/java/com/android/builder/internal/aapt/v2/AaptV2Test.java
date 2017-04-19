@@ -25,6 +25,7 @@ import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptTestUtils;
 import com.android.ide.common.process.DefaultProcessExecutor;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
+import com.android.ide.common.res2.CompileResourceRequest;
 import com.android.repository.Revision;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.sdklib.BuildToolInfo;
@@ -80,8 +81,10 @@ public class AaptV2Test {
         Aapt aapt = makeAapt();
         Future<File> compiledFuture =
                 aapt.compile(
-                        AaptTestUtils.getTestPng(mTemporaryFolder),
-                        AaptTestUtils.getOutputDir(mTemporaryFolder));
+                        new CompileResourceRequest(
+                                AaptTestUtils.getTestPng(mTemporaryFolder),
+                                AaptTestUtils.getOutputDir(mTemporaryFolder),
+                                "test"));
         File compiled = compiledFuture.get();
         assertNotNull(compiled);
         assertTrue(compiled.isFile());
@@ -95,8 +98,10 @@ public class AaptV2Test {
         Aapt aapt = makeAapt();
         Future<File> compiledFuture =
                 aapt.compile(
-                        AaptTestUtils.getTestPngWithLongFileName(mTemporaryFolder),
-                        AaptTestUtils.getOutputDir(mTemporaryFolder));
+                        new CompileResourceRequest(
+                                AaptTestUtils.getTestPngWithLongFileName(mTemporaryFolder),
+                                AaptTestUtils.getOutputDir(mTemporaryFolder),
+                                "test"));
         File compiled = compiledFuture.get();
         assertNotNull(compiled);
         assertTrue(compiled.isFile());
@@ -107,8 +112,10 @@ public class AaptV2Test {
         Aapt aapt = makeAapt();
         Future<File> compiledFuture =
                 aapt.compile(
-                        AaptTestUtils.getTestTxt(mTemporaryFolder),
-                        AaptTestUtils.getOutputDir(mTemporaryFolder));
+                        new CompileResourceRequest(
+                                AaptTestUtils.getTestTxt(mTemporaryFolder),
+                                AaptTestUtils.getOutputDir(mTemporaryFolder),
+                                "test"));
         File compiled = compiledFuture.get();
         assertNotNull(compiled);
         assertTrue(compiled.isFile());

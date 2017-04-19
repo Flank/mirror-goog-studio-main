@@ -28,6 +28,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -102,8 +103,10 @@ public abstract class AbstractZipSubject<S extends Subject<S, T>, T extends Zip>
                 MoreObjects.firstNonNull(
                         internalCustomName(), getSubject().getFile().getFileName().toString());
 
-        check().that(extractContentAsBytes(path))
-                .named(path + " in " + subjectName)
+        byte[] actual = extractContentAsBytes(path);
+
+        check().that(actual)
+                .named(path + " in " + subjectName + " content=" + Arrays.toString(actual))
                 .isEqualTo(content);
     }
 

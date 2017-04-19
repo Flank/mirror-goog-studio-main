@@ -118,9 +118,7 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     private static final Logger LOG = Logging.getLogger(ProcessAndroidResources.class);
 
-    private Supplier<File> resDir;
-
-    private File mergeResourcesOutputDir;
+    private File resDir;
 
     private String buildTargetAbi;
     private Set<String> supportedAbis;
@@ -189,7 +187,7 @@ public class ProcessAndroidResources extends IncrementalTask {
     @NonNull
     @InputDirectory
     public File getResDir() {
-        return resDir.get();
+        return resDir;
     }
 
     @Input
@@ -405,16 +403,9 @@ public class ProcessAndroidResources extends IncrementalTask {
         AndroidBuilder builder = getBuilder();
         MergingLog mergingLog = new MergingLog(getMergeBlameLogFolder());
 
-        File resDir = getResDir();
-        File mergeResourcesOutputDir = getMergeResourcesOutputDir();
-
+        //TODO: get rid of the rewriter
         MergingLogRewriter mergingLogRewriter =
-                new MergingLogRewriter(
-                        resDir.equals(mergeResourcesOutputDir)
-                                ? mergingLog::find
-                                : MergingLogRewriter.rewriteDir(resDir, mergeResourcesOutputDir)
-                                        .andThen(mergingLog::find),
-                        builder.getErrorReporter());
+                new MergingLogRewriter(mergingLog::find, builder.getErrorReporter());
 
         ProcessOutputHandler processOutputHandler =
                 new ParsingProcessOutputHandler(
@@ -767,9 +758,7 @@ public class ProcessAndroidResources extends IncrementalTask {
             // express the dependency on the databinding task through a file collection.
             processResources.mergedResources =
                     variantScope.getOutput(sourceTaskOutputType.getOutputType());
-            processResources.resDir = TaskInputHelper.memoize(variantScope::getFinalResourcesDir);
-
-            processResources.setMergeResourcesOutputDir(variantScope.getMergeResourcesOutputDir());
+            processResources.resDir = variantScope.getMergeResourcesOutputDir();
 
             processResources.setType(config.getType());
             processResources.setDebuggable(config.getBuildType().isDebuggable());
@@ -869,15 +858,6 @@ public class ProcessAndroidResources extends IncrementalTask {
     @Input
     public boolean isInstantRunMode() {
         return this.buildContext.isInInstantRunMode();
-    }
-
-    @Input
-    public File getMergeResourcesOutputDir() {
-        return mergeResourcesOutputDir;
-    }
-
-    public void setMergeResourcesOutputDir(File file) {
-        mergeResourcesOutputDir = file;
     }
 
     private FileCollection mergedResources;

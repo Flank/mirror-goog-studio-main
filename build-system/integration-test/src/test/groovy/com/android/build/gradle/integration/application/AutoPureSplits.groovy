@@ -87,10 +87,10 @@ class AutoPureSplits {
 
         // build a set of expected outputs
         Set<String> expected = Sets.newHashSetWithExpectedSize(5)
-        expected.add("mdpi")
-        expected.add("hdpi")
-        expected.add("xhdpi")
-        expected.add("xxhdpi")
+        expected.add("mdpi-v4")
+        expected.add("hdpi-v4")
+        expected.add("xhdpi-v4")
+        expected.add("xxhdpi-v4")
         expected.add("en")
         expected.add("fr")
         expected.add("fr-rBE")
@@ -99,6 +99,7 @@ class AutoPureSplits {
         assertEquals(1, debugOutputs.size())
         AndroidArtifactOutput output = debugOutputs.iterator().next()
         assertEquals(9, output.getOutputs().size())
+        Set<String> actual = new HashSet()
         for (OutputFile outputFile : output.getOutputs()) {
             String filter = ModelHelper.getFilter(outputFile, OutputFile.DENSITY)
             if (filter == null) {
@@ -110,11 +111,11 @@ class AutoPureSplits {
             // with pure splits, all split have the same version code.
             assertEquals(12, output.getVersionCode())
             if (filter != null) {
-                expected.remove(filter)
+                actual.add(filter)
             }
         }
 
         // this checks we didn't miss any expected output.
-        assertTrue(expected.isEmpty())
+        assertEquals(expected, actual)
     }
 }
