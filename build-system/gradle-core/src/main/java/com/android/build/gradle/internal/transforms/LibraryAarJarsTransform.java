@@ -91,9 +91,6 @@ public class LibraryAarJarsTransform extends LibraryBaseTransform {
         if (localJarsLocation != null) {
             FileUtils.deleteDirectoryContents(localJarsLocation);
         }
-        if (typedefRecipe != null && !typedefRecipe.exists()) {
-            throw new IllegalStateException("Type def recipe not found: " + typedefRecipe);
-        }
 
         List<Pattern> patterns = computeExcludeList();
 

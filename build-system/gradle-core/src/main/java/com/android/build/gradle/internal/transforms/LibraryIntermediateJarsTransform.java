@@ -91,9 +91,6 @@ public class LibraryIntermediateJarsTransform extends LibraryBaseTransform {
     @Override
     public void transform(@NonNull TransformInvocation invocation)
             throws TransformException, InterruptedException, IOException {
-        if (typedefRecipe != null && !typedefRecipe.exists()) {
-            throw new IllegalStateException("Type def recipe not found: " + typedefRecipe);
-        }
         final boolean incrementalDisabled = !invocation.isIncremental();
         List<Pattern> excludePatterns = computeExcludeList();
 
