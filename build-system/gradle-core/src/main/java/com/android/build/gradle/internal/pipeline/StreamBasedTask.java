@@ -24,7 +24,7 @@ import com.android.build.gradle.internal.tasks.BaseTask;
 import java.io.File;
 import java.util.Collection;
 import java.util.stream.Collectors;
-import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.FileTree;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
@@ -39,15 +39,15 @@ public class StreamBasedTask extends BaseTask {
     protected Collection<TransformStream> referencedInputStreams;
     protected IntermediateStream outputStream;
 
-    private Iterable<FileCollection> allInputs;
+    private Iterable<FileTree> allInputs;
 
     @NonNull
     @InputFiles
-    public Iterable<FileCollection> getStreamInputs() {
+    public Iterable<FileTree> getStreamInputs() {
         if (allInputs == null) {
             allInputs =
                     concat(consumedInputStreams.stream(), referencedInputStreams.stream())
-                            .map(TransformStream::getFileCollection)
+                            .map(TransformStream::getAsFileTree)
                             .collect(Collectors.toList());
         }
 

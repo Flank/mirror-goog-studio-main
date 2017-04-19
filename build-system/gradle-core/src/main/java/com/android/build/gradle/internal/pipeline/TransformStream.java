@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.pipeline;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
 import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.JarInput;
@@ -25,9 +26,12 @@ import com.android.build.api.transform.QualifiedContent.ContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformOutputProvider;
+import com.google.common.collect.Iterables;
 import java.util.Set;
 import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.FileTree;
+import org.gradle.api.tasks.util.PatternSet;
 
 /**
  * Representation of a stream for internal usage of the {@link TransformManager} to wire up
@@ -44,6 +48,16 @@ import org.gradle.api.file.FileCollection;
  */
 @Immutable
 public abstract class TransformStream {
+
+    // FIXME These objects are no immutable....
+    private static final PatternSet INCLUDE_CLASSES =
+            new PatternSet().include("**/*.class").include("**/*.jar");
+    private static final PatternSet EXCLUDE_CLASSES = new PatternSet().exclude("**/*.class");
+    private static final PatternSet INCLUDE_SO =
+            new PatternSet().include("**/*.so").include("**/*.jar");
+    private static final PatternSet INCLUDE_DEX =
+            new PatternSet().include("**/*.dex").include("**/*.jar");
+    private static final PatternSet INCLUDE_DATABINDING = new PatternSet();
 
     @NonNull private final String name;
     @NonNull private final Set<ContentType> contentTypes;
@@ -105,9 +119,83 @@ public abstract class TransformStream {
     }
 
     /**
+     * Returns the content of the stream as a file tree.
+     *
+     * <p>This is filtered based on {@link #getContentTypes()} so that this can be used as task
+     * inputs.
+     *
+     * @return the file tree.
+     */
+    @NonNull
+    public FileTree getAsFileTree() {
+        final FileTree fileTree = fileCollection.getAsFileTree();
+
+        PatternSet pattern = getPatternSet();
+        if (pattern != null) {
+            return fileTree.matching(pattern);
+        }
+
+        return fileTree;
+    }
+
+    @Nullable
+    private PatternSet getPatternSet() {
+        if (contentTypes.size() == 1) {
+            return getSingleTypePatternSet(Iterables.getOnlyElement(contentTypes));
+        }
+
+        // else, create a new PatternSet and try to set some valid include/exclude.
+        // It's hard because some items cannot be easily match with just includes.
+        if (contentTypes.size() == 2
+                && contentTypes.contains(ExtendedContentType.NATIVE_LIBS)
+                && contentTypes.contains(QualifiedContent.DefaultContentType.RESOURCES)) {
+            // only res and native so, use an exclude on classes.
+            return EXCLUDE_CLASSES;
+        }
+
+        // TODO more cases?
+
+        return null;
+    }
+
+    @NonNull
+    private static PatternSet getSingleTypePatternSet(@NonNull ContentType type) {
+        if (type instanceof QualifiedContent.DefaultContentType) {
+            switch ((QualifiedContent.DefaultContentType) type) {
+                case CLASSES:
+                    return INCLUDE_CLASSES;
+                case RESOURCES:
+                    // Can't make an include but since we really care about excluding class
+                    // files, use an exclude pattern
+                    return EXCLUDE_CLASSES;
+                default:
+                    throw new RuntimeException("Unsupported DefaultContentType value: " + type);
+            }
+
+        } else if (type instanceof ExtendedContentType) {
+            switch ((ExtendedContentType) type) {
+                case DEX:
+                case DEX_ARCHIVE:
+                    return INCLUDE_DEX;
+                case NATIVE_LIBS:
+                    return INCLUDE_SO;
+                case CLASSES_ENHANCED:
+                    return INCLUDE_CLASSES;
+                case DATA_BINDING:
+                    return INCLUDE_DATABINDING;
+                default:
+                    throw new RuntimeException("Unsupported ExtendedContentType value: " + type);
+            }
+        }
+
+        throw new RuntimeException(
+                "Unsupported ContentType implementation: " + type.getClass().getCanonicalName());
+    }
+
+    /**
      * Returns the transform input for this stream.
      *
-     * All the {@link JarInput} and {@link DirectoryInput} will be in non-incremental mode.
+     * <p>All the {@link JarInput} and {@link DirectoryInput} will be in non-incremental mode.
      *
      * @return the transform input.
      */
