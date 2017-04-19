@@ -53,6 +53,7 @@ import com.android.resources.Density;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
 import com.android.utils.XmlUtils;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import java.nio.file.Paths;
 import org.w3c.dom.Attr;
@@ -108,6 +109,12 @@ public class ResourceItem extends DataItem<ResourceFile>
             @Nullable Node value,
             @Nullable String libraryName) {
         super(name);
+
+        // The only exception is the empty "<public />" tag which means that all resources are
+        // private.
+        Preconditions.checkArgument(
+                type == ResourceType.PUBLIC || !name.isEmpty(), "Resource name cannot be empty.");
+
         mNamespace = namespace;
         mType = type;
         mValue = value;

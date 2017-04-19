@@ -33,6 +33,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 import org.junit.Test;
@@ -220,5 +221,22 @@ public class ValueResourceParser2Test extends BaseTestCase {
         assertEquals("other", items.get(2).getName());
         //noinspection ResultOfMethodCallIgnored
         file.delete();
+    }
+
+    @Test
+    public void testPublicTag() throws Exception {
+        File file = File.createTempFile("testPublicTag", SdkConstants.DOT_XML);
+        String xml =
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<resources><public /></resources>";
+        Files.write(file.toPath(), xml.getBytes());
+
+        ValueResourceParser2 parser = new ValueResourceParser2(file, null, null);
+        List<ResourceItem> items = parser.parseFile();
+        ResourceItem publicTag = Iterables.getOnlyElement(items);
+
+        // Make sure the name is invalid, so it cannot conflict with anything the user would type.
+        assertNotNull(
+                ValueResourceNameValidator.getErrorText(publicTag.getName(), publicTag.getType()));
     }
 }
