@@ -170,16 +170,7 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     File getIntermediateJarOutputFolder();
 
     @NonNull
-    File getPreDexOutputDir();
-
-    @NonNull
-    File getProguardOutputFile();
-
-    @NonNull
     File getProguardComponentsJarFile();
-
-    @NonNull
-    File getJarMergingOutputFile();
 
     @NonNull
     File getManifestKeepListProguardFile();
@@ -192,9 +183,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     @NonNull
     File getRenderscriptLibOutputDir();
-
-    @NonNull
-    File getSymbolLocation();
 
     @NonNull
     File getFinalResourcesDir();
@@ -232,9 +220,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     @NonNull
     File getRenderscriptObjOutputDir();
-
-    @NonNull
-    File getPackagedJarsJavaResDestinationDir();
 
     @NonNull
     File getSourceFoldersJavaResDestinationDir();
@@ -310,11 +295,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     @NonNull
     File getProcessAndroidResourcesProguardOutputFile();
-
-    File getMappingFile();
-
-    @NonNull
-    File getGenerateSplitDensityOrLanguagesResOutputDirectory();
 
     @NonNull
     File getGenerateSplitAbiResOutputDirectory();
@@ -404,10 +384,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     void setAidlCompileTask(AndroidTask<AidlCompile> aidlCompileTask);
 
-    AndroidTask<ShaderCompile> getShaderCompileTask();
-
-    void setShaderCompileTask(AndroidTask<ShaderCompile> shaderCompileTask);
-
     @Nullable
     AndroidTask<MergeResources> getMergeResourcesTask();
 
@@ -418,18 +394,9 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     void setMergeAssetsTask(@Nullable AndroidTask<MergeSourceSetFolders> mergeAssetsTask);
 
-    @Nullable
-    AndroidTask<MergeSourceSetFolders> getMergeJniLibFoldersTask();
-
-    void setMergeJniLibFoldersTask(@Nullable AndroidTask<MergeSourceSetFolders> mergeJniLibsTask);
-
     AndroidTask<GenerateBuildConfig> getGenerateBuildConfigTask();
 
     void setGenerateBuildConfigTask(AndroidTask<GenerateBuildConfig> generateBuildConfigTask);
-
-    AndroidTask<GenerateResValues> getGenerateResValuesTask();
-
-    void setGenerateResValuesTask(AndroidTask<GenerateResValues> generateResValuesTask);
 
     @Nullable
     AndroidTask<DataBindingProcessLayoutsTask> getDataBindingProcessLayoutsTask();
@@ -493,10 +460,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
             AndroidTask<ProcessAndroidResources> processAndroidResourcesAndroidTask);
 
     AndroidTask<ProcessAndroidResources> getProcessResourcesTask();
-
-    AndroidTask<?> getShrinkResourcesTask();
-
-    void setShrinkResourcesTask(AndroidTask<?> shrinkResourcesTask);
 
     @NonNull
     VariantDependencies getVariantDependencies();

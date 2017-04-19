@@ -950,7 +950,6 @@ public abstract class TaskManager {
                 new MergeSourceSetFolders.MergeJniLibFoldersConfigAction(variantScope));
         mergeJniLibFoldersTask.dependsOn(tasks,
                 variantScope.getAssetGenTask());
-        variantScope.setMergeJniLibFoldersTask(mergeJniLibFoldersTask);
 
         // create the stream generated from this task
         variantScope
@@ -1394,7 +1393,6 @@ public abstract class TaskManager {
         // compile the shaders
         AndroidTask<ShaderCompile> shaderCompileTask = androidTasks.create(
                 tasks, new ShaderCompile.ConfigAction(scope));
-        scope.setShaderCompileTask(shaderCompileTask);
         shaderCompileTask.dependsOn(tasks, mergeShadersTask);
 
         scope.getAssetGenTask().dependsOn(tasks, shaderCompileTask);
