@@ -6,8 +6,3 @@ android {
 
     baseSplit true
 }
-
-dependencies {
-    featureSplit project(':feature')
-    implementation project(':library')
-}

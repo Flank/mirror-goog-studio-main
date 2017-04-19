@@ -162,6 +162,9 @@ public interface AndroidConfig {
     /** Data Binding options. */
     DataBindingOptions getDataBinding();
 
+    /** Whether the feature split is the base split. */
+    Boolean getBaseSplit();
+
     @NonNull
     Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> getFlavorSelection();
 

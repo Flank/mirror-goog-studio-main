@@ -97,14 +97,13 @@ public class FeatureTaskManager extends TaskManager {
         // Create all current streams (dependencies mostly at this point)
         createDependencyStreams(tasks, variantScope);
 
-        // TODO: we need a better way to determine if we are dealing with a base split or not.
-        if (variantScope.getVariantDependencies().getManifestSplitConfiguration() != null) {
-            // Non-base feature specific tasks.
-            createFeatureDeclarationTasks(tasks, variantScope);
-        } else {
+        if (variantScope.isBaseSplit()) {
             // Base feature specific tasks.
             createFeatureApplicationIdWriterTask(tasks, variantScope);
             createFeatureIdsWriterTask(tasks, variantScope);
+        } else {
+            // Non-base feature specific tasks.
+            createFeatureDeclarationTasks(tasks, variantScope);
         }
 
         // Add a task to process the manifest(s)
@@ -287,8 +286,14 @@ public class FeatureTaskManager extends TaskManager {
         }
 
         AndroidTask<? extends ManifestProcessorTask> mergeManifestsAndroidTask;
-        // TODO: we need a better way to determine if we are dealing with a base split or not.
-        if (variantScope.getVariantDependencies().getManifestSplitConfiguration() != null) {
+        if (variantScope.isBaseSplit()) {
+            // Base split. Merge all the dependent libraries and the other splits.
+            mergeManifestsAndroidTask =
+                    androidTasks.create(
+                            tasks,
+                            new MergeManifests.BaseFeatureConfigAction(
+                                    variantScope, optionalFeatures.build()));
+        } else {
             // Non-base split. Publish the feature manifest.
             optionalFeatures.add(ManifestMerger2.Invoker.Feature.ADD_FEATURE_SPLIT_INFO);
             if (variantScope
@@ -309,13 +314,6 @@ public class FeatureTaskManager extends TaskManager {
                     TaskOutputHolder.TaskOutputType.FEATURE_SPLIT_MANIFEST,
                     BuildOutputs.getMetadataFile(variantScope.getManifestOutputDirectory()),
                     mergeManifestsAndroidTask.getName());
-        } else {
-            // Base split. Merge all the dependent libraries and the other splits.
-            mergeManifestsAndroidTask =
-                    androidTasks.create(
-                            tasks,
-                            new MergeManifests.BaseFeatureConfigAction(
-                                    variantScope, optionalFeatures.build()));
         }
 
         variantScope.addTaskOutput(
@@ -404,9 +402,9 @@ public class FeatureTaskManager extends TaskManager {
             @NonNull MergeType sourceTaskOutputType,
             @NonNull String baseName) {
         // TODO: we need a better way to determine if we are dealing with a base split or not.
-        if (scope.getVariantDependencies().getManifestSplitConfiguration() != null) {
-            // Non-base feature split.
-            return new ProcessAndroidResources.FeatureSplitConfigAction(
+        if (scope.isBaseSplit()) {
+            // Base feature split.
+            return super.createProcessAndroidResourcesConfigAction(
                     scope,
                     symbolLocation,
                     resPackageOutputFolder,
@@ -414,8 +412,8 @@ public class FeatureTaskManager extends TaskManager {
                     sourceTaskOutputType,
                     baseName);
         } else {
-            // Base feature split.
-            return super.createProcessAndroidResourcesConfigAction(
+            // Non-base feature split.
+            return new ProcessAndroidResources.FeatureSplitConfigAction(
                     scope,
                     symbolLocation,
                     resPackageOutputFolder,

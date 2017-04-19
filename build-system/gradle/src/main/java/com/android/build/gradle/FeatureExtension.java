@@ -39,6 +39,8 @@ public class FeatureExtension extends LibraryExtension {
     private final DefaultDomainObjectSet<FeatureVariant> featureVariantList =
             new DefaultDomainObjectSet<FeatureVariant>(FeatureVariant.class);
 
+    private boolean isBaseSplit = false;
+
     public FeatureExtension(
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
@@ -73,11 +75,24 @@ public class FeatureExtension extends LibraryExtension {
 
     @Override
     public void addVariant(BaseVariant variant) {
-        // FIXME: We should fine a cleaner way of handling this.
+        // FIXME: We should find a cleaner way of handling this.
         if (variant instanceof LibraryVariant) {
             super.addVariant(variant);
         } else {
             featureVariantList.add((FeatureVariant) variant);
         }
+    }
+
+    public void baseSplit(boolean value) {
+        isBaseSplit = value;
+    }
+
+    public void setBaseSplit(boolean value) {
+        baseSplit(value);
+    }
+
+    @Override
+    public Boolean getBaseSplit() {
+        return isBaseSplit;
     }
 }

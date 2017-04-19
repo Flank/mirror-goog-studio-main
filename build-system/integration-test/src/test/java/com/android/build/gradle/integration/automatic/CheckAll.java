@@ -103,6 +103,7 @@ public class CheckAll {
 
                     // feature support is not totally there.
                     "projectWithFeatures",
+                    "singleFeature",
 
                     // These are all right:
                     "genFolderApi", // Has a required injectable property

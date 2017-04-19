@@ -1018,4 +1018,10 @@ public abstract class BaseExtension implements AndroidConfig {
     public Collection<String> getAidlPackageWhiteList() {
         throw new GradleException("aidlPackageWhiteList is not supported.");
     }
+
+    // For compatibility with FeatureExtension.
+    @Override
+    public Boolean getBaseSplit() {
+        throw new GradleException("baseSplit is not supported.");
+    }
 }

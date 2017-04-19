@@ -165,6 +165,10 @@ public interface AndroidConfig {
 
     DataBindingOptions getDataBinding();
 
+    Boolean getBaseSplit();
+
+    void setBaseSplit(Boolean baseSplit);
+
     @Unmanaged
     Map<String, String> getFlavorSelection();
 

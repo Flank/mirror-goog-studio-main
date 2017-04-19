@@ -89,6 +89,8 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     boolean isTestOnly();
 
+    boolean isBaseSplit();
+
     @NonNull
     DexingMode getDexingMode();
 

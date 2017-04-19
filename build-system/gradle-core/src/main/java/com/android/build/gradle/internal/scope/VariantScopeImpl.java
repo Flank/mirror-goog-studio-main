@@ -525,6 +525,16 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 || getVariantConfiguration().getTargetSdkVersion().getCodename() != null;
     }
 
+    /**
+     * Determine if the feature module is the base feature split module.
+     *
+     * @return true if this feature module is the base feature split module. False otherwise.
+     */
+    @Override
+    public boolean isBaseSplit() {
+        return globalScope.getExtension().getBaseSplit();
+    }
+
     @NonNull
     @Override
     public DexingMode getDexingMode() {
