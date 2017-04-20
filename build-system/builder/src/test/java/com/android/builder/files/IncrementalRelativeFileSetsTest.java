@@ -385,14 +385,15 @@ public class IncrementalRelativeFileSetsTest {
 
         File foo = new File(temporaryFolder.getRoot(), "foo");
         try (ZFile zffooz = new ZFile(foo)) {
-            zffooz.add("f0z", new ByteArrayInputStream(new byte[0]));
+            zffooz.add("f0z/", new ByteArrayInputStream(new byte[0]));
+            zffooz.add("f0z/a", new ByteArrayInputStream(new byte[0]));
             zffooz.add("f1z", new ByteArrayInputStream(new byte[0]));
         }
 
         cache.add(foo);
 
         try (ZFile zffooz = new ZFile(foo)) {
-            zffooz.add("f0z", new ByteArrayInputStream(new byte[] { 1, 2, 3 }));
+            zffooz.add("f0z/a", new ByteArrayInputStream(new byte[] {1, 2, 3}));
         }
 
         Set<Runnable> updates = new HashSet<>();
@@ -400,7 +401,7 @@ public class IncrementalRelativeFileSetsTest {
                 IncrementalRelativeFileSets.fromZip(foo, cache, updates);
         assertEquals(1, m.size());
 
-        RelativeFile f0z = new RelativeFile(foo, new File(foo, "f0z"));
+        RelativeFile f0z = new RelativeFile(foo, new File(foo, "f0z/a"));
         assertTrue(m.containsKey(f0z));
         assertEquals(m.get(f0z), FileStatus.CHANGED);
 
