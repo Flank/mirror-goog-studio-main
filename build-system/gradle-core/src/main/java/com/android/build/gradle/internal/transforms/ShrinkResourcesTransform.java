@@ -123,7 +123,7 @@ public class ShrinkResourcesTransform extends Transform {
 
         final VariantScope scope = variantData.getScope();
         sourceDir = scope.getRClassSourceOutputDir();
-        resourceDir = scope.getFinalResourcesDir();
+        resourceDir = scope.getResourceShrinkerInputFolder();
         mergedManifests = scope.getOutput(TaskOutputType.MERGED_MANIFESTS);
         mappingFileSrc =
                 scope.hasOutput(TaskOutputType.APK_MAPPING)

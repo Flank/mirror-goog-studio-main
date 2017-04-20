@@ -81,6 +81,9 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     boolean useResourceShrinker();
 
+    @Nullable
+    File getResourceShrinkerInputFolder();
+
     boolean isJackEnabled();
 
     @Override
