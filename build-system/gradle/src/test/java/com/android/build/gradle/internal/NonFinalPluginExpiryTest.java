@@ -108,6 +108,28 @@ public class NonFinalPluginExpiryTest {
         NonFinalPluginExpiry.verifyRetirementAge(TESTING_NOW.plusDays(1), tooOld, override2);
     }
 
+
+    @Test
+    public void testVersionSpecificOverride() {
+        NonFinalPluginExpiry.verifyRetirementAge(
+                TESTING_NOW,
+                createManifest(
+                        Version.ANDROID_GRADLE_PLUGIN_VERSION, INCEPTION_DATE_FOR_OLD_PLUGIN),
+                String.valueOf(Version.ANDROID_GRADLE_PLUGIN_VERSION.hashCode()));
+    }
+
+    @Test
+    public void testIncorrectVersionSpecificOverride() {
+        try {
+            NonFinalPluginExpiry.verifyRetirementAge(
+                    TESTING_NOW,
+                    createManifest("2.4.0-rc2", INCEPTION_DATE_FOR_OLD_PLUGIN),
+                    String.valueOf("2.4.0-rc3".hashCode()));
+        } catch (NonFinalPluginExpiry.AndroidGradlePluginTooOldException e) {
+            assertThat(e.getMessage()).contains("2.4.0-rc2");
+        }
+    }
+
     private static Manifest createManifest(
             @NonNull String version,
             @NonNull LocalDate inceptionDate) {
