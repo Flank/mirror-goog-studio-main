@@ -1503,7 +1503,14 @@ public class LintUtils {
         if (root != null) {
             String locale = root.getAttributeNS(TOOLS_URI, ATTR_LOCALE);
             if (locale != null && !locale.isEmpty()) {
-                return getLocale(locale);
+                if (locale.indexOf('-') == -1) {
+                    return LocaleQualifier.getQualifier(locale);
+                }
+                FolderConfiguration config = FolderConfiguration.getConfigForQualifierString(
+                        locale);
+                if (config != null) {
+                    return config.getLocaleQualifier();
+                }
             }
         }
 

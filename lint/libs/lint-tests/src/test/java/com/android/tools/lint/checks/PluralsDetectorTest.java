@@ -175,6 +175,52 @@ public class PluralsDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testUnused() throws Exception {
+        lint().files(
+                xml("res/values-en/strings.xml", ""
+                        + "<resources tools:locale=\"en\" xmlns:tools=\"http://schemas.android.com/tools\">\n"
+                        + "    <string name=\"app_name\">My Application</string>\n"
+                        + "    <plurals name=\"plural_test\">\n"
+                        + "        <item quantity=\"zero\">zero %1$d</item>\n"
+                        + "        <item quantity=\"one\">one %1$d</item>\n"
+                        + "        <item quantity=\"two\">two %1$d</item>\n"
+                        + "        <item quantity=\"few\">few %1$d</item>\n"
+                        + "        <item quantity=\"many\">many %1$d</item>\n"
+                        + "        <item quantity=\"other\">other %1$d</item>\n"
+                        + "    </plurals>\n"
+                        + "\n"
+                        + "</resources>\n"))
+                .run()
+                .expect(""
+                        + "res/values-en/strings.xml:3: Warning: For language \"en\" (English) the following quantities are not relevant: few, many, two, zero [UnusedQuantity]\n"
+                        + "    <plurals name=\"plural_test\">\n"
+                        + "    ^\n"
+                        + "0 errors, 1 warnings\n");
+    }
+
+    public void testUnused2() throws Exception {
+        lint().files(
+                xml("res/values-en/strings.xml", ""
+                        + "<resources>\n"
+                        + "    <string name=\"app_name\">My Application</string>\n"
+                        + "    <plurals name=\"plural_test\">\n"
+                        + "        <item quantity=\"zero\">zero %1$d</item>\n"
+                        + "        <item quantity=\"one\">one %1$d</item>\n"
+                        + "        <item quantity=\"two\">two %1$d</item>\n"
+                        + "        <item quantity=\"few\">few %1$d</item>\n"
+                        + "        <item quantity=\"many\">many %1$d</item>\n"
+                        + "        <item quantity=\"other\">other %1$d</item>\n"
+                        + "    </plurals>\n"
+                        + "\n"
+                        + "</resources>\n"))
+                .run()
+                .expect(""
+                        + "res/values-en/strings.xml:3: Warning: For language \"en\" (English) the following quantities are not relevant: few, many, two, zero [UnusedQuantity]\n"
+                        + "    <plurals name=\"plural_test\">\n"
+                        + "    ^\n"
+                        + "0 errors, 1 warnings\n");
+    }
+
     private Set<Issue> mEnabled = new HashSet<>();
 
     @Override
