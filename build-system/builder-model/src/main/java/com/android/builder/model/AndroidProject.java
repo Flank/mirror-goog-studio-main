@@ -344,4 +344,12 @@ public interface AndroidProject {
      * @return the generation value
      */
     int getPluginGeneration();
+
+    /**
+     * Returns true if this is the base feature split.
+     *
+     * @return true if this is the base feature split
+     * @since 2.4
+     */
+    boolean isBaseSplit();
 }

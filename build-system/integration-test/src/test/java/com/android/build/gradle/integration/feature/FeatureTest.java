@@ -225,6 +225,10 @@ public class FeatureTest {
                     assertThat(output.getFilters()).isEmpty();
                 });
         assertThat(expectedVariantNames).isEmpty();
+
+        Map<String, AndroidProject> models = sProject.model().getMulti().getModelMap();
+        assertThat(models.get(":feature").isBaseSplit()).isFalse();
+        assertThat(models.get(":baseFeature").isBaseSplit()).isTrue();
     }
 
     @Test

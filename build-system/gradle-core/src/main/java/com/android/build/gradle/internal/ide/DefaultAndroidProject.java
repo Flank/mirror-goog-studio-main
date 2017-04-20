@@ -64,6 +64,8 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
 
     private final int generation;
 
+    private final boolean baseSplit;
+
     @NonNull
     private final JavaCompileOptions javaCompileOptions;
     @NonNull
@@ -113,7 +115,8 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
             @NonNull String buildToolsVersion,
             int projectType,
             int apiVersion,
-            int generation) {
+            int generation,
+            boolean baseSplit) {
         this.modelVersion = modelVersion;
         this.name = name;
         this.defaultConfig = defaultConfig;
@@ -138,6 +141,7 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
         this.generation = generation;
         this.nativeToolchains = nativeToolchains;
         this.buildToolsVersion = buildToolsVersion;
+        this.baseSplit = baseSplit;
     }
 
     @Override
@@ -287,6 +291,11 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
     }
 
     @Override
+    public boolean isBaseSplit() {
+        return baseSplit;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;
@@ -295,42 +304,60 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
             return false;
         }
         DefaultAndroidProject that = (DefaultAndroidProject) o;
-        return generation == that.generation &&
-                projectType == that.projectType &&
-                apiVersion == that.apiVersion &&
-                Objects.equals(modelVersion, that.modelVersion) &&
-                Objects.equals(name, that.name) &&
-                Objects.equals(compileTarget, that.compileTarget) &&
-                Objects.equals(bootClasspath, that.bootClasspath) &&
-                Objects.equals(frameworkSource, that.frameworkSource) &&
-                Objects.equals(signingConfigs, that.signingConfigs) &&
-                Objects.equals(aaptOptions, that.aaptOptions) &&
-                Objects.equals(extraArtifacts, that.extraArtifacts) &&
-                Objects.equals(unresolvedDependencies, that.unresolvedDependencies) &&
-                Objects.equals(syncIssues, that.syncIssues) &&
-                Objects.equals(javaCompileOptions, that.javaCompileOptions) &&
-                Objects.equals(lintOptions, that.lintOptions) &&
-                Objects.equals(buildFolder, that.buildFolder) &&
-                Objects.equals(buildToolsVersion, that.buildToolsVersion) &&
-                Objects.equals(resourcePrefix, that.resourcePrefix) &&
-                Objects.equals(nativeToolchains, that.nativeToolchains) &&
-                Objects.equals(buildTypes, that.buildTypes) &&
-                Objects.equals(productFlavors, that.productFlavors) &&
-                Objects.equals(variants, that.variants) &&
-                Objects.equals(defaultConfig, that.defaultConfig) &&
-                Objects.equals(flavorDimensions, that.flavorDimensions);
+        return generation == that.generation
+                && projectType == that.projectType
+                && apiVersion == that.apiVersion
+                && Objects.equals(modelVersion, that.modelVersion)
+                && Objects.equals(name, that.name)
+                && Objects.equals(compileTarget, that.compileTarget)
+                && Objects.equals(bootClasspath, that.bootClasspath)
+                && Objects.equals(frameworkSource, that.frameworkSource)
+                && Objects.equals(signingConfigs, that.signingConfigs)
+                && Objects.equals(aaptOptions, that.aaptOptions)
+                && Objects.equals(extraArtifacts, that.extraArtifacts)
+                && Objects.equals(unresolvedDependencies, that.unresolvedDependencies)
+                && Objects.equals(syncIssues, that.syncIssues)
+                && Objects.equals(javaCompileOptions, that.javaCompileOptions)
+                && Objects.equals(lintOptions, that.lintOptions)
+                && Objects.equals(buildFolder, that.buildFolder)
+                && Objects.equals(buildToolsVersion, that.buildToolsVersion)
+                && Objects.equals(resourcePrefix, that.resourcePrefix)
+                && Objects.equals(nativeToolchains, that.nativeToolchains)
+                && Objects.equals(buildTypes, that.buildTypes)
+                && Objects.equals(productFlavors, that.productFlavors)
+                && Objects.equals(variants, that.variants)
+                && Objects.equals(defaultConfig, that.defaultConfig)
+                && Objects.equals(flavorDimensions, that.flavorDimensions)
+                && Objects.equals(baseSplit, that.baseSplit);
     }
 
     @Override
     public int hashCode() {
-        return Objects
-                .hash(modelVersion, name, compileTarget, bootClasspath, frameworkSource,
-                        signingConfigs,
-                        aaptOptions, extraArtifacts, unresolvedDependencies, syncIssues, generation,
-                        javaCompileOptions, lintOptions, buildFolder, buildToolsVersion,
-                        resourcePrefix,
-                        nativeToolchains, projectType, apiVersion, buildTypes, productFlavors,
-                        variants,
-                        defaultConfig, flavorDimensions);
+        return Objects.hash(
+                modelVersion,
+                name,
+                compileTarget,
+                bootClasspath,
+                frameworkSource,
+                signingConfigs,
+                aaptOptions,
+                extraArtifacts,
+                unresolvedDependencies,
+                syncIssues,
+                generation,
+                javaCompileOptions,
+                lintOptions,
+                buildFolder,
+                buildToolsVersion,
+                resourcePrefix,
+                nativeToolchains,
+                projectType,
+                apiVersion,
+                buildTypes,
+                productFlavors,
+                variants,
+                defaultConfig,
+                flavorDimensions,
+                baseSplit);
     }
 }
