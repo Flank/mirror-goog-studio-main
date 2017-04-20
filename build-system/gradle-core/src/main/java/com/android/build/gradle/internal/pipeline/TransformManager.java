@@ -476,8 +476,10 @@ public class TransformManager extends FilterableStreamCollection {
         if (scopes.contains(Scope.PROJECT_LOCAL_DEPS)) {
             final String message =
                     String.format(
-                            "Transform '%1$s' uses scope PROJECT_LOCAL_DEPS which is deprecated and replaced with EXTERNAL",
-                            transformName);
+                            "Transform '%1$s' uses scope %2$s which is deprecated and replaced with %3$s",
+                            transformName,
+                            Scope.PROJECT_LOCAL_DEPS.name(),
+                            Scope.EXTERNAL_LIBRARIES.name());
             if (!scopes.contains(Scope.EXTERNAL_LIBRARIES)) {
                 errorReporter.handleSyncError(null, SyncIssue.TYPE_GENERIC, message);
             } else {
@@ -488,8 +490,10 @@ public class TransformManager extends FilterableStreamCollection {
         if (scopes.contains(Scope.SUB_PROJECTS_LOCAL_DEPS)) {
             final String message =
                     String.format(
-                            "Transform '%1$s' uses scope SUB_PROJECTS_LOCAL_DEPS which is deprecated and replaced with EXTERNAL",
-                            transformName);
+                            "Transform '%1$s' uses scope %2$s which is deprecated and replaced with %3$s",
+                            transformName,
+                            Scope.SUB_PROJECTS_LOCAL_DEPS.name(),
+                            Scope.EXTERNAL_LIBRARIES.name());
             if (!scopes.contains(Scope.EXTERNAL_LIBRARIES)) {
                 errorReporter.handleSyncError(null, SyncIssue.TYPE_GENERIC, message);
             } else {
