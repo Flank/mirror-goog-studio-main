@@ -36,19 +36,21 @@ public class AdaptiveIconGeneratorTest {
             int imageCount,
             @NonNull String baseName,
             @NonNull GraphicGenerator.Shape legacyShape,
-            boolean crop,
+            boolean generateLegacy,
             @Nullable String backgroundImageResourceName,
             int background,
-            boolean isWebGraphic)
+            boolean generateWebIcon)
             throws IOException {
         AdaptiveIconGenerator.AdaptiveIconOptions options =
                 new AdaptiveIconGenerator.AdaptiveIconOptions();
         options.previewShape = AdaptiveIconGenerator.PreviewShape.NONE;
-        options.cropForeground = crop;
+        options.generateLegacyIcon = generateLegacy;
         options.backgroundColor = background;
-        options.isWebGraphic = isWebGraphic;
+        options.generatePreviewIcons = generateWebIcon;
+        options.generateOutputIcons = generateWebIcon;
+        options.generateWebIcon = generateWebIcon;
         options.previewDensity = Density.XHIGH;
-        options.legacyShape = legacyShape;
+        options.legacyIconShape = legacyShape;
         options.foregroundLayerName = baseName + "_fore";
         options.backgroundLayerName = baseName + "_back";
         if (backgroundImageResourceName != null) {
@@ -63,7 +65,12 @@ public class AdaptiveIconGeneratorTest {
 
         AdaptiveIconGenerator generator = new AdaptiveIconGenerator();
         BitmapGeneratorTests.checkGraphic(
-                imageCount, "adaptive" + File.separator + baseName, baseName, generator, options);
+                imageCount,
+                "adaptive" + File.separator + baseName,
+                baseName,
+                generator,
+                options,
+                .6f);
     }
 
     @Test
@@ -72,13 +79,13 @@ public class AdaptiveIconGeneratorTest {
         int DENSITY_COUNT = 5;
         int IMAGES_PER_DENSITY = 3;
         checkGraphic(
-                IMAGES_PER_DENSITY * DENSITY_COUNT + PREVIEW_IMAGE_COUNT,
+                IMAGES_PER_DENSITY * DENSITY_COUNT + PREVIEW_IMAGE_COUNT + 2 /*web*/,
                 "red_simple_circle",
                 GraphicGenerator.Shape.CIRCLE,
                 true,
                 null,
                 0xFF0000,
-                false);
+                true);
     }
 
     @Test
@@ -87,12 +94,12 @@ public class AdaptiveIconGeneratorTest {
         int DENSITY_COUNT = 5;
         int IMAGES_PER_DENSITY = 4;
         checkGraphic(
-                IMAGES_PER_DENSITY * DENSITY_COUNT + PREVIEW_IMAGE_COUNT,
+                IMAGES_PER_DENSITY * DENSITY_COUNT + PREVIEW_IMAGE_COUNT + 2 /*web*/,
                 "simple_background",
-                GraphicGenerator.Shape.VRECT,
+                GraphicGenerator.Shape.SQUARE,
                 true,
                 "testdata/adaptive/input_assets/ic_image_back.png",
                 0xFF0000,
-                false);
+                true);
     }
 }

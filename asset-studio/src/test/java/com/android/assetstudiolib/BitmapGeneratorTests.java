@@ -20,11 +20,14 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static org.junit.Assert.fail;
 
+import com.android.ide.common.util.AssetUtil;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.io.CharStreams;
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -49,7 +52,32 @@ public final class BitmapGeneratorTests {
     static void checkGraphic(int expectedFileCount, String folderName, String baseName,
             GraphicGenerator generator, GraphicGenerator.Options options)
             throws IOException {
+        checkGraphic(expectedFileCount, folderName, baseName, generator, options, 1.0f);
+    }
+
+    static void checkGraphic(
+            int expectedFileCount,
+            String folderName,
+            String baseName,
+            GraphicGenerator generator,
+            GraphicGenerator.Options options,
+            float sourceAssetScale)
+            throws IOException {
         options.sourceImage = GraphicGenerator.getClipartImage("android.png");
+        if (sourceAssetScale != 1.0f) {
+            int width = options.sourceImage.getWidth();
+            int height = options.sourceImage.getHeight();
+            BufferedImage scaledImage =
+                    AssetUtil.scaledImage(
+                            options.sourceImage,
+                            Math.round(width * sourceAssetScale),
+                            Math.round(height * sourceAssetScale));
+            BufferedImage newSource = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g = (Graphics2D) newSource.getGraphics();
+            AssetUtil.drawCentered(g, scaledImage, new Rectangle(0, 0, width, height));
+            g.dispose();
+            options.sourceImage = newSource;
+        }
         GeneratedIcons icons =
                 generator.generateIcons(GRAPHIC_GENERATOR_CONTEXT, options, baseName);
 

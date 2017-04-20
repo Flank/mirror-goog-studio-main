@@ -115,40 +115,88 @@ public class LauncherIconGenerator extends GraphicGenerator {
         }
     }
 
+    /**
+     * Load a pref-defined image file given a {@link Shape}, {@link Density} and fileName.
+     *
+     * <p>Pass a <code>null</code> {@link Density} to get the {@link Rectangle} corresponding to the
+     * "Web" image size.
+     */
     @Nullable
     public static BufferedImage loadImage(
             @NonNull GraphicGeneratorContext context,
             @NonNull Shape shape,
-            @NonNull String density,
+            @Nullable Density density,
             @NonNull String fileName) {
+        String densityValue = (density == null ? "web" : density.getResourceValue());
         String name =
-                String.format("/images/launcher_stencil/%s/%s/%s.png", shape.id, density, fileName);
+                String.format(
+                        "/images/launcher_stencil/%s/%s/%s.png", shape.id, densityValue, fileName);
         return context.loadImageResource(name);
     }
 
+    /**
+     * Load a pref-defined mask image file given a {@link Shape}, {@link Density} and fileName.
+     *
+     * <p>Pass a <code>null</code> {@link Density} to get the {@link Rectangle} corresponding to the
+     * "Web" image size.
+     */
     @Nullable
     public static BufferedImage loadMaskImage(
             @NonNull GraphicGeneratorContext context,
             @NonNull Shape shape,
-            @NonNull String density) {
+            @Nullable Density density) {
         return loadImage(context, shape, density, "mask");
     }
 
+    /**
+     * Load a pref-defined background image file given a {@link Shape}, {@link Density} and
+     * fileName.
+     *
+     * <p>Pass a <code>null</code> {@link Density} to get the {@link Rectangle} corresponding to the
+     * "Web" image size.
+     */
     @Nullable
     public static BufferedImage loadBackImage(
             @NonNull GraphicGeneratorContext context,
             @NonNull Shape shape,
-            @NonNull String density) {
+            @Nullable Density density) {
         return loadImage(context, shape, density, "back");
     }
 
+    /**
+     * Load a pref-defined style image file given a {@link Shape}, {@link Density} and fileName.
+     *
+     * <p>Pass a <code>null</code> {@link Density} to get the {@link Rectangle} corresponding to the
+     * "Web" image size.
+     */
     @Nullable
     public static BufferedImage loadStyleImage(
             @NonNull GraphicGeneratorContext context,
             @NonNull Shape shape,
-            @NonNull String density,
+            @Nullable Density density,
             @NonNull Style style) {
         return loadImage(context, shape, density, style.id);
+    }
+
+    /**
+     * Return the {@link Rectangle} (in pixels) where the foreground image of a legacy icon should
+     * be rendered. The {@link Rectangle} value depends on the {@link Shape} of the background, as
+     * different shapes have different sizes.
+     *
+     * <p>Pass a <code>null</code> {@link Density} to get the {@link Rectangle} corresponding to the
+     * "Web" image size.
+     */
+    @NonNull
+    public static Rectangle getTargetRect(@Nullable Shape shape, @Nullable Density density) {
+        Rectangle targetRect = TARGET_RECTS.get(Pair.of(shape, density));
+        if (targetRect == null) {
+            // Scale up from MDPI if no density-specific target rectangle is defined.
+            targetRect =
+                    AssetUtil.scaleRectangle(
+                            TARGET_RECTS.get(Pair.of(shape, Density.MEDIUM)),
+                            GraphicGenerator.getMdpiScaleFactor(density));
+        }
+        return targetRect;
     }
 
     @NonNull
@@ -158,12 +206,6 @@ public class LauncherIconGenerator extends GraphicGenerator {
             @NonNull GraphicGeneratorContext context, @NonNull Options options) {
         LauncherOptions launcherOptions = (LauncherOptions) options;
 
-        String density;
-        if (launcherOptions.isWebGraphic) {
-            density = "web";
-        } else {
-            density = launcherOptions.density.getResourceValue();
-        }
 
         if (launcherOptions.isDogEar) {
             launcherOptions.shape = applyDog(launcherOptions.shape);
@@ -173,10 +215,16 @@ public class LauncherIconGenerator extends GraphicGenerator {
         if (launcherOptions.shape != Shape.NONE
                 && launcherOptions.shape != null
                 && launcherOptions.renderShape) {
-            shapeImageBack = loadBackImage(context, launcherOptions.shape, density);
+            Density loadImageDensity =
+                    (launcherOptions.isWebGraphic ? null : launcherOptions.density);
+            shapeImageBack = loadBackImage(context, launcherOptions.shape, loadImageDensity);
             shapeImageFore =
-                    loadStyleImage(context, launcherOptions.shape, density, launcherOptions.style);
-            shapeImageMask = loadMaskImage(context, launcherOptions.shape, density);
+                    loadStyleImage(
+                            context,
+                            launcherOptions.shape,
+                            loadImageDensity,
+                            launcherOptions.style);
+            shapeImageMask = loadMaskImage(context, launcherOptions.shape, loadImageDensity);
         }
 
         Rectangle imageRect = IMAGE_SIZE_WEB;
@@ -187,15 +235,7 @@ public class LauncherIconGenerator extends GraphicGenerator {
                             GraphicGenerator.getMdpiScaleFactor(launcherOptions.density));
         }
 
-        Rectangle targetRect = TARGET_RECTS.get(
-                Pair.of(launcherOptions.shape, launcherOptions.density));
-        if (targetRect == null) {
-            // Scale up from MDPI if no density-specific target rectangle is defined.
-            targetRect =
-                    AssetUtil.scaleRectangle(
-                            TARGET_RECTS.get(Pair.of(launcherOptions.shape, Density.MEDIUM)),
-                            GraphicGenerator.getMdpiScaleFactor(launcherOptions.density));
-        }
+        Rectangle targetRect = getTargetRect(launcherOptions.shape, launcherOptions.density);
 
         // outImage will be our final image. Many intermediate textures will be rendered, in
         // layers, onto this image
