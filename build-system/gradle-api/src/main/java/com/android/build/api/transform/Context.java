@@ -17,6 +17,7 @@
 package com.android.build.api.transform;
 
 
+import com.android.annotations.NonNull;
 import java.io.File;
 import org.gradle.api.logging.LoggingManager;
 
@@ -58,4 +59,12 @@ public interface Context {
      * @return the path of the task, which is equal to the path of the project plus the name of the task.
      */
     String getPath();
+
+    /**
+     * Returns the name of the variant.
+     *
+     * @return the name of the variant.
+     */
+    @NonNull
+    String getVariantName();
 }
