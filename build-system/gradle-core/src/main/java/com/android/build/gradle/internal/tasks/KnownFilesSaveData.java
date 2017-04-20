@@ -376,8 +376,9 @@ public class KnownFilesSaveData {
      *   <li>Deleted inputs are filtered through {@link KnownFilesSaveData} to get only those whose
      *       input set matches {@code inputSet}.
      *   <li>Non-deleted inputs are processed through {@link
-     *       IncrementalRelativeFileSets#makeFromBaseFiles(Collection, Map, FileCacheByPath, Set)}
-     *       to obtain the incremental file changes.
+     *       IncrementalRelativeFileSets#makeFromBaseFiles(Collection, Map, FileCacheByPath, Set,
+     *       IncrementalRelativeFileSets.FileDeletionPolicy)} boolean)} to obtain the incremental
+     *       file changes.
      *   <li>The results of processed deleted and non-deleted are merged and returned.
      * </ol>
      *
@@ -414,7 +415,11 @@ public class KnownFilesSaveData {
                         changedInputs, Predicates.not(Predicates.equalTo(FileStatus.REMOVED)));
         Map<RelativeFile, FileStatus> nonDeletedRelativeFiles =
                 IncrementalRelativeFileSets.makeFromBaseFiles(
-                        baseFiles, nonDeletedFiles, cacheByPath, cacheUpdates);
+                        baseFiles,
+                        nonDeletedFiles,
+                        cacheByPath,
+                        cacheUpdates,
+                        IncrementalRelativeFileSets.FileDeletionPolicy.DISALLOW_FILE_DELETIONS);
 
         /*
          * Merge everything.

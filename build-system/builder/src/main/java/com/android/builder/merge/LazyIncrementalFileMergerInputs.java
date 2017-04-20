@@ -110,23 +110,25 @@ public final class LazyIncrementalFileMergerInputs {
     /**
      * Creates an input from a set of directories or zips with incremental information. Because
      * updates to the zips do not tell which files inside the zips are updated, a cache to compare
-     * the zips is used. See
-     * {@link IncrementalRelativeFileSets#makeFromBaseFiles(Collection, Map, FileCacheByPath, Set)}
-     * for more information on the use of the cache.
+     * the zips is used. See {@link IncrementalRelativeFileSets#makeFromBaseFiles(Collection, Map,
+     * FileCacheByPath, Set, IncrementalRelativeFileSets.FileDeletionPolicy)} for more information
+     * on the use of the cache.
      *
      * @param name the input set name
-     * @param base the directories and zips; no files with the same OS-independent paths may
-     * exist when constructing the trees from these elements; because the construction is lazy,
-     * duplicate files may be detected later and failures show up later
+     * @param base the directories and zips; no files with the same OS-independent paths may exist
+     *     when constructing the trees from these elements; because the construction is lazy,
+     *     duplicate files may be detected later and failures show up later
      * @param updates the updates detected
      * @param cache a cache for the zips
+     * @param fileDeletionPolicy the policy for file deletions
      * @return the input
      */
     public static LazyIncrementalFileMergerInput fromUpdates(
             @NonNull String name,
             @NonNull Set<File> base,
             @NonNull Map<File, FileStatus> updates,
-            @NonNull FileCacheByPath cache) {
+            @NonNull FileCacheByPath cache,
+            @NonNull IncrementalRelativeFileSets.FileDeletionPolicy fileDeletionPolicy) {
 
         CachedSupplier<ImmutableSet<RelativeFile>> all = new CachedSupplier<>(() -> load(base));
 
@@ -140,7 +142,8 @@ public final class LazyIncrementalFileMergerInputs {
                                                 base,
                                                 updates,
                                                 cache,
-                                                cacheUpdates);
+                                                cacheUpdates,
+                                                fileDeletionPolicy);
                                 cacheUpdates.forEach(Runnable::run);
                                 return incrementalUpdates;
                             } catch (IOException e) {
