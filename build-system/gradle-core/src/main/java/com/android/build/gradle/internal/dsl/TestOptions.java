@@ -18,6 +18,8 @@ package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Verify;
 import groovy.lang.Closure;
 import org.gradle.api.Action;
 import org.gradle.api.DomainObjectSet;
@@ -29,6 +31,12 @@ import org.gradle.util.ConfigureUtil;
 /** Options for running tests. */
 @SuppressWarnings("unused") // Exposed in the DSL.
 public class TestOptions {
+
+    public enum Execution {
+        HOST,
+        ON_DEVICE_ORCHESTRATOR,
+    }
+
     @Nullable
     private String resultsDir;
 
@@ -36,6 +44,8 @@ public class TestOptions {
     private String reportDir;
 
     private boolean animationsDisabled;
+
+    @NonNull private Execution execution = Execution.HOST;
 
     /**
      * Options for controlling unit tests execution.
@@ -92,6 +102,25 @@ public class TestOptions {
 
     public void setAnimationsDisabled(boolean animationsDisabled) {
         this.animationsDisabled = animationsDisabled;
+    }
+
+    @NonNull
+    public String getExecution() {
+        return Verify.verifyNotNull(
+                StringToEnumConverters.forClass(Execution.class).reverse().convert(execution),
+                "No string representation for enum.");
+    }
+
+    @NonNull
+    public Execution getExecutionEnum() {
+        return execution;
+    }
+
+    public void setExecution(@NonNull String execution) {
+        this.execution =
+                Preconditions.checkNotNull(
+                        StringToEnumConverters.forClass(Execution.class).convert(execution),
+                        "The value of `execution` cannot be null.");
     }
 
     /**
