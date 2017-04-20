@@ -34,15 +34,15 @@ import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.TextFormat;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.android.utils.StringHelper;
 import com.google.common.base.Charsets;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -378,6 +378,7 @@ public class TypoDetector extends ResourceXmlDetector {
         String first = null;
         String message;
 
+        LintFix.GroupBuilder fixBuilder = fix().group();
         boolean isCapitalized = Character.isUpperCase(word.charAt(0));
         StringBuilder sb = new StringBuilder(40);
         for (int i = 1, n = replacements.size(); i < n; i++) {
@@ -389,14 +390,18 @@ public class TypoDetector extends ResourceXmlDetector {
                 sb.append(" or ");
             }
             sb.append('"');
+
             if (isCapitalized) {
-                sb.append(Character.toUpperCase(replacement.charAt(0)));
-                sb.append(replacement.substring(1));
-            } else {
-                sb.append(replacement);
+                replacement = StringHelper.capitalize(replacement);
             }
+            sb.append(replacement);
+            fixBuilder.add(fix().name("Replace with \"" + replacement + "\"")
+                    .replace().text(word)
+                    .with(replacement)
+                    .build());
             sb.append('"');
         }
+        LintFix fix = fixBuilder.build();
 
         if (first != null && first.equalsIgnoreCase(word)) {
             if (first.equals(word)) {
@@ -412,103 +417,29 @@ public class TypoDetector extends ResourceXmlDetector {
         }
 
         int end = begin + word.length();
-        context.report(ISSUE, node, context.getLocation(node, begin, end), message);
+        context.report(ISSUE, node, context.getLocation(node, begin, end), message, fix);
     }
 
     /** Reports a repeated word */
     private static void reportRepeatedWord(XmlContext context, Node node, String text,
             int lastWordBegin,
             int begin, int end) {
+        String word = text.substring(begin, end);
         String message = String.format(
                 "Repeated word \"%1$s\" in message: possible typo",
-                text.substring(begin, end));
+                word);
+
+        String replace;
+        if (lastWordBegin > 1 && text.charAt(lastWordBegin - 1) == ' ') {
+            replace = ' ' + word;
+        } else if (end < text.length() - 1 && text.charAt(end) == ' ') {
+            replace = word + ' ';
+        } else {
+            replace = word;
+        }
+        LintFix fix = fix().name("Delete repeated word").replace().text(replace).with("").build();
+
         Location location = context.getLocation(node, lastWordBegin, end);
-        context.report(ISSUE, node, location, message);
-    }
-
-    /** Simple data holder used to return several values from
-     * {@link #getSuggestions(String, TextFormat)}
-     */
-    public static class TypoSuggestionInfo {
-        @NonNull
-        private final String mOriginal;
-        @NonNull
-        private final List<String> mReplacements;
-
-        public TypoSuggestionInfo(@NonNull String original, @NonNull List<String> replacements) {
-            mOriginal = original;
-            mReplacements = replacements;
-        }
-
-        @NonNull
-        public String getOriginal() {
-            return mOriginal;
-        }
-
-        @NonNull
-        public List<String> getReplacements() {
-            return mReplacements;
-        }
-    }
-
-    /** Returns the suggested replacements and original string, for the given typo.
-     * The error message <b>must</b> be one supplied by lint.
-     *
-     * @param errorMessage the error message
-     * @param format the format of the error message
-     * @return {@link TypoSuggestionInfo}
-     */
-    @NonNull
-    public static TypoSuggestionInfo getSuggestions(@NonNull String errorMessage,
-            @NonNull TextFormat format) {
-        errorMessage = format.toText(errorMessage);
-
-        // The words are all in quotes; the first word is the misspelling,
-        // the other words are the suggested replacements
-        List<String> replacements = new ArrayList<>();
-        // Skip the typo
-        int index = errorMessage.indexOf('"');
-        int originalEndIndex = errorMessage.indexOf('"', index + 1);
-        String original = errorMessage.substring(index + 1, originalEndIndex);
-
-        index = originalEndIndex + 1;
-
-        while (true) {
-            index = errorMessage.indexOf('"', index);
-            if (index == -1) {
-                break;
-            }
-            index++;
-            int start = index;
-            index = errorMessage.indexOf('"', index);
-            if (index == -1) {
-                index = errorMessage.length();
-            }
-            replacements.add(errorMessage.substring(start, index));
-            index++;
-        }
-
-        return new TypoSuggestionInfo(original, replacements);
-    }
-
-    /**
-     * Returns the typo word in the error message from this detector
-     *
-     * @param errorMessage the error message produced earlier by this detector
-     * @param format the format of the error message
-     * @return the typo
-     */
-    @Nullable
-    public static String getTypo(@NonNull String errorMessage, @NonNull TextFormat format) {
-        errorMessage = format.toText(errorMessage);
-        // The words are all in quotes
-        int index = errorMessage.indexOf('"');
-        int start = index + 1;
-        index = errorMessage.indexOf('"', start);
-        if (index != -1) {
-            return errorMessage.substring(start, index);
-        }
-
-        return null;
+        context.report(ISSUE, node, location, message, fix);
     }
 }

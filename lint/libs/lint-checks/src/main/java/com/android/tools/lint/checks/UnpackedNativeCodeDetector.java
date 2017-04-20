@@ -18,6 +18,8 @@ package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.TAG_APPLICATION;
+import static com.android.SdkConstants.VALUE_FALSE;
+import static com.android.xml.AndroidManifest.ATTRIBUTE_EXTRACT_NATIVE_LIBS;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -31,6 +33,7 @@ import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
@@ -200,9 +203,11 @@ public class UnpackedNativeCodeDetector extends ResourceXmlDetector implements D
                 && !context.getMainProject().isLibrary()
                 && mApplicationTagHandle != null) {
             if (!mSuppress && mHasNativeLibs) {
+                LintFix fix = fix().set(ANDROID_URI, ATTRIBUTE_EXTRACT_NATIVE_LIBS, VALUE_FALSE)
+                        .build();
                 context.report(ISSUE, mApplicationTagHandle.resolve(),
                         "Missing attribute android:extractNativeLibs=\"false\"" +
-                                " on the `<application>` tag.");
+                                " on the `<application>` tag.", fix);
             }
         }
     }

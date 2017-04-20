@@ -33,6 +33,7 @@ import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
@@ -78,8 +79,6 @@ public class WearStandaloneAppDetector extends Detector implements Detector.XmlS
 
     // Quickfix extras to identify the kind of error within the WEAR_STANDALONE_APP_ISSUE issue
     // from the Studio side.
-    public static final int QFX_EXTRA_MISSING_VALUE_ATTRIBUTE = 0;
-    public static final int QFX_EXTRA_INVALID_ATTR_VALUE = 1;
     public static final int QFX_EXTRA_MISSING_META_DATA = 2;
 
     /** Constructs a new {@link WearStandaloneAppDetector} check */
@@ -128,17 +127,21 @@ public class WearStandaloneAppDetector extends Detector implements Detector.XmlS
             Attr valueAttr = element.getAttributeNodeNS(ANDROID_URI, ATTR_VALUE);
 
             if (valueAttr == null) {
+                LintFix fix = fix().set(ANDROID_URI, ATTR_VALUE, VALUE_TRUE).build();
                 context.report(WEAR_STANDALONE_APP_ISSUE, element, context.getLocation(element),
-                        "Missing `android:value` attribute", QFX_EXTRA_MISSING_VALUE_ATTRIBUTE);
+                        "Missing `android:value` attribute", fix);
             } else {
                 String value = valueAttr.getValue();
                 if (value == null
                         || (!value.equalsIgnoreCase(VALUE_TRUE)
                         && !value.equalsIgnoreCase(VALUE_FALSE))) {
+                    LintFix fixes = fix().group(
+                            fix().replace().with(VALUE_TRUE).build(),
+                            fix().replace().with(VALUE_FALSE).build());
                     context.report(WEAR_STANDALONE_APP_ISSUE, valueAttr,
                             context.getValueLocation(valueAttr),
                             "Expecting a boolean value for attribute `android:value`",
-                            QFX_EXTRA_INVALID_ATTR_VALUE);
+                            fixes);
                 }
             }
         }
@@ -161,7 +164,7 @@ public class WearStandaloneAppDetector extends Detector implements Detector.XmlS
                         xmlContext.getLocation(application),
                         "Missing `<meta-data android:name="
                                 + "\"com.google.android.wearable.standalone\" ../>` element",
-                        QFX_EXTRA_MISSING_META_DATA);
+                        fix().map(QFX_EXTRA_MISSING_META_DATA).build());
             }
         }
     }

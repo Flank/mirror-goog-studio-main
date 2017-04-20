@@ -24,6 +24,7 @@ import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
@@ -66,7 +67,8 @@ public class SignatureOrSystemDetector extends Detector implements Detector.XmlS
         if (protectionLevel != null
             && protectionLevel.equals(SIGNATURE_OR_SYSTEM)) {
             String message = "`protectionLevel` should probably not be set to `signatureOrSystem`";
-            context.report(ISSUE, attribute, context.getLocation(attribute), message);
+            LintFix fix = fix().replace().text("signatureOrSystem").with("signature").build();
+            context.report(ISSUE, attribute, context.getLocation(attribute), message, fix);
         }
     }
 }

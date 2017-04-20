@@ -16,20 +16,10 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.detector.api.TextFormat.RAW;
-import static com.android.tools.lint.detector.api.TextFormat.TEXT;
-
 import com.android.tools.lint.checks.infrastructure.TestFile.JarTestFile;
-import com.android.tools.lint.checks.infrastructure.TestLintTask.ErrorMessageChecker;
 import com.android.tools.lint.detector.api.Detector;
 
 public class AppCompatCallDetectorTest extends AbstractCheckTest {
-    private static final ErrorMessageChecker ERROR_MESSAGE_CHECKER =
-            (context, issue, severity, location, message) -> {
-        assertNotNull(message, AppCompatCallDetector.getOldCall(message, TEXT));
-        assertNotNull(message, AppCompatCallDetector.getNewCall(message, TEXT));
-    };
-
     public void testArguments() throws Exception {
         String expected = ""
                 + "src/test/pkg/AppCompatTest.java:5: Warning: Should use getSupportActionBar instead of getActionBar name [AppCompatMethod]\n"
@@ -58,9 +48,33 @@ public class AppCompatCallDetectorTest extends AbstractCheckTest {
                 // Stubs just to be able to do type resolution without needing the full appcompat jar
                 mActionBarActivity,
                 mActionMode)
-                .checkMessage(ERROR_MESSAGE_CHECKER)
                 .run()
-                .expect(expected);
+                .expect(expected)
+                .expectFixDiffs(""
+                        + "Fix for src/test/pkg/AppCompatTest.java line 4: Replace with getSupportActionBar():\n"
+                        + "@@ -5 +5\n"
+                        + "-         getActionBar();                                     // ERROR\n"
+                        + "+         getSupportActionBar();                                     // ERROR\n"
+                        + "Fix for src/test/pkg/AppCompatTest.java line 7: Replace with startSupportActionMode():\n"
+                        + "@@ -8 +8\n"
+                        + "-         startActionMode(null);                              // ERROR\n"
+                        + "+         startSupportActionMode(null);                              // ERROR\n"
+                        + "Fix for src/test/pkg/AppCompatTest.java line 10: Replace with supportRequestWindowFeature():\n"
+                        + "@@ -11 +11\n"
+                        + "-         requestWindowFeature(0);                            // ERROR\n"
+                        + "+         supportRequestWindowFeature(0);                            // ERROR\n"
+                        + "Fix for src/test/pkg/AppCompatTest.java line 13: Replace with setSupportProgressBarVisibility():\n"
+                        + "@@ -14 +14\n"
+                        + "-         setProgressBarVisibility(true);                     // ERROR\n"
+                        + "+         setSupportProgressBarVisibility(true);                     // ERROR\n"
+                        + "Fix for src/test/pkg/AppCompatTest.java line 14: Replace with setSupportProgressBarIndeterminate():\n"
+                        + "@@ -15 +15\n"
+                        + "-         setProgressBarIndeterminate(true);                  // ERROR\n"
+                        + "+         setSupportProgressBarIndeterminate(true);                  // ERROR\n"
+                        + "Fix for src/test/pkg/AppCompatTest.java line 15: Replace with setSupportProgressBarIndeterminateVisibility():\n"
+                        + "@@ -16 +16\n"
+                        + "-         setProgressBarIndeterminateVisibility(true);        // ERROR\n"
+                        + "+         setSupportProgressBarIndeterminateVisibility(true);        // ERROR\n");
     }
 
     public void testNoWarningsWithoutAppCompat() throws Exception {
@@ -69,7 +83,6 @@ public class AppCompatCallDetectorTest extends AbstractCheckTest {
                 mIntermediateActivity,
                 mActionBarActivity,
                 mActionMode)
-                .checkMessage(ERROR_MESSAGE_CHECKER)
                 .run()
                 .expectClean();
     }
@@ -99,34 +112,9 @@ public class AppCompatCallDetectorTest extends AbstractCheckTest {
                 // Stubs just to be able to do type resolution without needing the full appcompat jar
                 mActionBarActivity,
                 mActionMode)
-                .checkMessage(ERROR_MESSAGE_CHECKER)
                 .run()
                 .expectClean();
     }
-
-    public void testGetOldCall() throws Exception {
-        assertEquals("setProgressBarVisibility", AppCompatCallDetector.getOldCall(
-            "Should use setSupportProgressBarVisibility instead of setProgressBarVisibility name",
-                TEXT));
-        assertEquals("getActionBar", AppCompatCallDetector.getOldCall(
-                "Should use getSupportActionBar instead of getActionBar name", TEXT));
-        assertNull(AppCompatCallDetector.getOldCall("No match", TEXT));
-        assertEquals("setProgressBarVisibility", AppCompatCallDetector.getOldCall(
-                "Should use `setSupportProgressBarVisibility` instead of `setProgressBarVisibility` name",
-                RAW));
-    }
-
-    public void testGetNewCall() throws Exception {
-        assertEquals("setSupportProgressBarVisibility", AppCompatCallDetector.getNewCall(
-                "Should use setSupportProgressBarVisibility instead of setProgressBarVisibility name",
-                TEXT));
-        assertEquals("getSupportActionBar", AppCompatCallDetector.getNewCall(
-                "Should use getSupportActionBar instead of getActionBar name", TEXT));
-        assertEquals("getSupportActionBar", AppCompatCallDetector.getNewCall(
-                "Should use `getSupportActionBar` instead of `getActionBar` name", RAW));
-        assertNull(AppCompatCallDetector.getNewCall("No match", TEXT));
-    }
-
     @Override
     protected Detector getDetector() {
         return new AppCompatCallDetector();

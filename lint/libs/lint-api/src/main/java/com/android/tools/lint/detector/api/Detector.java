@@ -1527,6 +1527,11 @@ public abstract class Detector {
         return getSpeed();
     }
 
+    /** Creates a lint fix builder */
+    protected static LintFix.Builder fix() {
+        return LintFix.create();
+    }
+
     // ---- Dummy implementations to make implementing XmlScanner easier: ----
 
     @SuppressWarnings({"UnusedParameters", "unused", "javadoc"})

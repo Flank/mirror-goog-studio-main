@@ -100,7 +100,12 @@ public class AlwaysShowActionDetectorTest extends AbstractCheckTest {
                         + "\n"
                         + "</menu>\n"))
                 .run()
-                .expect(expected);
+                .expect(expected)
+                .expectFixDiffs(""
+                        + "Fix for res/menu-land/actions.xml line 5: Replace with ifRoom:\n"
+                        + "@@ -6 +6\n"
+                        + "-         android:showAsAction=\"always|collapseActionView\"\n"
+                        + "+         android:showAsAction=\"ifRoom|collapseActionView\"\n");
     }
 
     public void testXmlMenusWithFlags() throws Exception {

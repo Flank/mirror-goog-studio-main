@@ -31,13 +31,13 @@ import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Location.Handle;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.TextFormat;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.android.utils.Pair;
 import com.google.common.collect.Lists;
@@ -204,11 +204,12 @@ public class DuplicateResourceDetector extends ResourceXmlDetector {
                                 !(type == ResourceType.DRAWABLE
                                         && (url.type == ResourceType.COLOR
                                             || url.type == ResourceType.MIPMAP))) {
+                                LintFix fix = fix().replace().pattern("(@.*/)")
+                                        .with("@" + type + "/").build();
                                 String message = "Unexpected resource reference type; "
                                         + "expected value of type `@" + type + "/`";
-                                context.report(TYPE_MISMATCH, element,
-                                        context.getLocation(child),
-                                        message);
+                                context.report(TYPE_MISMATCH, element, context.getLocation(child),
+                                        message, fix);
                             }
                         }
                         break;
@@ -345,7 +346,12 @@ public class DuplicateResourceDetector extends ResourceXmlDetector {
                     // such that the error is more visually prominent/evident in
                     // the source editor.
                     Location location = context.getLocation(textNode, p, len);
-                    context.report(STRING_ESCAPING, element, location, "Apostrophe not preceded by \\\\");
+                    LintFix fix = fix()
+                            .name("Escape Apostrophe").replace().pattern("[^\\\\]?(')")
+                            .with("\\'")
+                            .build();
+                    context.report(STRING_ESCAPING, element, location,
+                            "Apostrophe not preceded by \\\\", fix);
                     return;
                 }
                 p++;
@@ -407,16 +413,5 @@ public class DuplicateResourceDetector extends ResourceXmlDetector {
                 s = p;
             }
         }
-    }
-
-    /**
-     * Returns the resource type expected for a {@link #TYPE_MISMATCH} error reported by
-     * this lint detector. Intended for IDE quickfix implementations.
-     *
-     * @param message the error message created by this lint detector
-     * @param format the format of the error message
-     */
-    public static String getExpectedType(@NonNull String message, @NonNull TextFormat format) {
-        return LintUtils.findSubstring(format.toText(message), "value of type @", "/");
     }
 }

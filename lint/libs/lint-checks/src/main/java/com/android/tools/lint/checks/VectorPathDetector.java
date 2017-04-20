@@ -27,10 +27,10 @@ import com.android.resources.ResourceUrl;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.Project;
-import com.android.tools.lint.detector.api.QuickfixData;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -166,49 +166,19 @@ public class VectorPathDetector extends ResourceXmlDetector {
         return project.isGradleProject();
     }
 
-    private static void validatePath(@NonNull XmlContext context, Attr attribute, String value) {
-        if (context.getMainProject().getMinSdkVersion().getFeatureLevel() >= 23) {
-            // Fixed in lollipop
-            return;
-        }
-        try {
-            checkPathData(context, attribute, value);
-        } catch (NumberFormatException t) {
-            String number = t.getMessage();
-            Location location = context.getValueLocation(attribute);
-            Position startPos = location.getStart();
-            assert startPos != null;
-            int index = value.indexOf(number);
-            if (index != -1 && attribute.getValue().contains(number)) {
-                location = Location.create(context.file, context.getContents(),
-                        startPos.getOffset() + index,
-                        startPos.getOffset() + index + number.length());
-            }
-
-            QuickfixData quickfixData = QuickfixData.create(number);
-            if (attribute.getValue().startsWith(PREFIX_RESOURCE_REF)) {
-                quickfixData.put(ResourceUrl.parse(attribute.getValue()));
-            }
-            context.report(PATH_VALID, attribute, location,
-                    String.format("Avoid scientific notation (`%1$s`) in vector paths because "
-                            + "it can lead to crashes on some devices", number), quickfixData);
-        }
-    }
-
-    // This code is based on the path parser in the platform. However, it focuses
-    // on just validating the numbers - and since it doesn't have to build up actual
-    // path nodes etc the code was simplified significantly such that it doesn't really
-    // resemble the original code.
-    // (frameworks/support/compat/java/android/support/v4/graphics/PathParser.java)
-
     /**
      * Check the given path data and throw a number format exception (containing the
      * exact invalid string) if it finds a problem
      */
-    public static void checkPathData(
+    public static void validatePath(
             @NonNull XmlContext context,
             @NonNull Attr attribute,
             @NonNull String path) {
+        if (context.getMainProject().getMinSdkVersion().getFeatureLevel() >= 23) {
+            // Fixed in lollipop
+            return;
+        }
+
         int start = 0;
         int end = 1;
         while (end < path.length()) {
@@ -228,6 +198,12 @@ public class VectorPathDetector extends ResourceXmlDetector {
             end++;
         }
     }
+
+    // This code is based on the path parser in the platform. However, it focuses
+    // on just validating the numbers - and since it doesn't have to build up actual
+    // path nodes etc the code was simplified significantly such that it doesn't really
+    // resemble the original code.
+    // (frameworks/support/compat/java/android/support/v4/graphics/PathParser.java)
 
     private static void checkFloats(@NonNull XmlContext context, @NonNull Attr attribute,
             @NonNull String s, int start, int end) {
@@ -335,17 +311,17 @@ public class VectorPathDetector extends ResourceXmlDetector {
 
         // If the attribute contains the literal value (not a resource
         // reference) point to the specific location
-        QuickfixData quickfixData = null;
+        LintFix lintFix = null;
         if (s.equals(attribute.getValue())) {
             location = Location.create(context.file, context.getContents(),
                     startPos.getOffset() + startPosition,
                     startPos.getOffset() + currentIndex);
             if (replace != null) {
-                quickfixData = new QuickfixData.ReplaceString(number, null, replace);
+                lintFix = fix().replace().text(number).with(replace).build();
             }
         }
 
-        context.report(PATH_VALID, attribute, location, message, quickfixData);
+        context.report(PATH_VALID, attribute, location, message, lintFix);
     }
 
     private static int findNextStart(String s, int end) {

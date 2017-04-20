@@ -17,17 +17,15 @@
 package com.android.tools.lint.checks;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.LintUtils;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.TextFormat;
 import com.android.utils.SdkUtils;
 import com.google.common.base.Splitter;
 import java.io.File;
@@ -106,11 +104,12 @@ public class PropertyFileDetector extends Detector {
         if (line.startsWith(prefix)) {
             String https = "https" + line.substring(prefix.length() - 1);
             String message = String.format("Replace HTTP with HTTPS for better security; use %1$s",
-              https.replace("\\", "\\\\"));
+                https.replace("\\", "\\\\"));
             int startOffset = offset + valueStart;
             int endOffset = startOffset + 4; // 4: "http".length()
+            LintFix fix = fix().replace().text("http").with("https").build();
             Location location = Location.create(context.file, contents, startOffset, endOffset);
-            context.report(HTTP, location, message);
+            context.report(HTTP, location, message, fix);
         }
 
         boolean escaped = false;
@@ -151,18 +150,25 @@ public class PropertyFileDetector extends Detector {
         String pathString = path.toString();
         String key = line.substring(0, valueStart);
         if (hadNonPathEscape && key.endsWith(".dir=") || new File(pathString).exists()) {
-            String escapedPath = suggestEscapes(line.substring(valueStart, line.length()))
-                    .replace("\\", "\\\\");
+            String escapedPath = suggestEscapes(line.substring(valueStart, line.length()));
 
-            // NOTE: Keep in sync with {@link #getSuggestedEscape} below
             String message = "Windows file separators (`\\`) and drive letter "
                     + "separators (':') must be escaped (`\\\\`) in property files; use "
-                    + escapedPath;
+                    + escapedPath
+                    // String is already escaped for Java; must double escape for the raw text
+                    // format
+                    .replace("\\", "\\\\");;
             int startOffset = offset + errorStart;
             int endOffset = offset + errorEnd + 1;
-            Location location = Location.create(context.file, contents, startOffset,
-                    endOffset);
-            context.report(ESCAPE, location, message);
+
+            String locationRange = contents.subSequence(startOffset, endOffset).toString();
+            String escapedRange = suggestEscapes(locationRange);
+            LintFix fix = fix()
+                    .name("Escape").replace().text(locationRange)
+                    .with(escapedRange)
+                    .build();
+            Location location = Location.create(context.file, contents, startOffset, endOffset);
+            context.report(ESCAPE, location, message, fix);
         }
     }
 
@@ -170,18 +176,5 @@ public class PropertyFileDetector extends Detector {
     static String suggestEscapes(@NonNull String value) {
         value = value.replace("\\:", ":").replace("\\\\", "\\");
         return SdkUtils.escapePropertyValue(value);
-    }
-
-    /**
-     * Returns the escaped string value suggested by the error message which should have
-     * been computed by this lint detector.
-     *
-     * @param message the error message created by this lint detector
-     * @param format the format of the error message
-     * @return the suggested escaped value
-     */
-    @Nullable
-    public static String getSuggestedEscape(@NonNull String message, @NonNull TextFormat format) {
-        return LintUtils.findSubstring(format.toText(message), "; use ", null);
     }
 }

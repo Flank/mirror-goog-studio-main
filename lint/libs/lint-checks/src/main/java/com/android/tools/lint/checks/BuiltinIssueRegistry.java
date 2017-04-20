@@ -30,7 +30,7 @@ import java.util.List;
 public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
-    static final int INITIAL_CAPACITY = 302;
+    static final int INITIAL_CAPACITY = 303;
 
     static {
         List<Issue> issues = new ArrayList<>(INITIAL_CAPACITY);
@@ -109,6 +109,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(UnpackedNativeCodeDetector.ISSUE);
         issues.add(UnsafeNativeCodeDetector.LOAD);
         issues.add(UnsafeNativeCodeDetector.UNSAFE_NATIVE_CODE_LOCATION);
+        issues.add(EllipsizeMaxLinesDetector.ISSUE);
         issues.add(ExifInterfaceDetector.ISSUE);
         issues.add(ExtraTextDetector.ISSUE);
         issues.add(FieldGetterDetector.ISSUE);

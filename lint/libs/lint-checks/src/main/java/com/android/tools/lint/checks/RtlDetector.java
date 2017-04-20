@@ -66,6 +66,7 @@ import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.LayoutDetector;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
@@ -408,8 +409,14 @@ public class RtlDetector extends LayoutDetector implements UastScanner {
                                 "To support older versions than API 17 (project specifies %1$d) "
                                     + "you must **also** specify `gravity` or `layout_gravity=\"%2$s\"`",
                                 project.getMinSdk(), expectedGravity);
+
+                        LintFix fix1 = fix().set(ANDROID_URI, ATTR_GRAVITY, expectedGravity)
+                                .build();
+                        LintFix fix2 = fix().set(ANDROID_URI, ATTR_LAYOUT_GRAVITY, expectedGravity)
+                                .build();
+                        LintFix fix = fix().group(fix1, fix2);
                         context.report(COMPAT, attribute,
-                                context.getNameLocation(attribute), message);
+                                context.getNameLocation(attribute), message, fix);
                     }
                 }
                 return;
@@ -526,12 +533,15 @@ public class RtlDetector extends LayoutDetector implements UastScanner {
             if (element.hasAttributeNS(ANDROID_URI, old)) {
                 return;
             }
+            String oldValue = convertNewToOld(value);
             String message = String.format(
                     "To support older versions than API 17 (project specifies %1$d) "
                             + "you should **also** add `%2$s:%3$s=\"%4$s\"`",
                     project.getMinSdk(), attribute.getPrefix(), old,
-                    convertNewToOld(value));
-            context.report(COMPAT, attribute, context.getNameLocation(attribute), message);
+                    oldValue);
+            LintFix fix = fix().set(attribute.getNamespaceURI(), old, oldValue)
+                    .build();
+            context.report(COMPAT, attribute, context.getNameLocation(attribute), message, fix);
         }
     }
 

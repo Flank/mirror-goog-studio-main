@@ -28,6 +28,7 @@ import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
@@ -233,15 +234,26 @@ public class CommentDetector extends ResourceXmlDetector implements UastScanner 
                         location = Location.create(context.file, source,
                                 offset + i - 1, offset + i - 1 + STOPSHIP_COMMENT.length());
                     }
-                    javaContext.report(STOP_SHIP, javaNode, location, message);
+                    LintFix fix = createRemoveStopShipFix();
+                    javaContext.report(STOP_SHIP, javaNode, location, message, fix);
                 } else {
                     assert xmlNode != null;
                     Location location = xmlContext.getLocation(xmlNode, i,
                             i + STOPSHIP_COMMENT.length());
-                    xmlContext.report(STOP_SHIP, xmlNode, location, message);
+                    LintFix fix = createRemoveStopShipFix();
+                    xmlContext.report(STOP_SHIP, xmlNode, location, message, fix);
                 }
             }
         }
+    }
+
+    @NonNull
+    private static LintFix createRemoveStopShipFix() {
+        // TODO: Remove comment if that's all that remains
+        return fix()
+                .name("Remove STOPSHIP").replace().pattern("(\\s*STOPSHIP)")
+                .with("")
+                .build();
     }
 
     private static class CommentChecker extends UElementHandler {

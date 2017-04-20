@@ -28,6 +28,7 @@ import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -98,7 +99,8 @@ public class TitleDetector extends ResourceXmlDetector {
             return;
         }
 
+        LintFix fix = fix().set(ANDROID_URI, ATTR_TITLE, "").build();
         String message = "Menu items should specify a `title`";
-        context.report(ISSUE, element, context.getLocation(element), message);
+        context.report(ISSUE, element, context.getLocation(element), message, fix);
     }
 }

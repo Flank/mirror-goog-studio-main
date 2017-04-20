@@ -41,6 +41,7 @@ import com.android.tools.lint.detector.api.Detector.XmlScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
@@ -557,6 +558,8 @@ public class UnsafeBroadcastReceiverDetector extends Detector
                             "android.provider.Telephony.SMS_RECEIVED".
                                 equals(actionName)) &&
                             !"android.permission.BROADCAST_SMS".equals(permission)) {
+                        LintFix fix = fix().set(ANDROID_URI, ATTR_PERMISSION,
+                                "android.permission.BROADCAST_SMS").build();
                         context.report(
                                 BROADCAST_SMS,
                                 element,
@@ -564,7 +567,7 @@ public class UnsafeBroadcastReceiverDetector extends Detector
                                 "BroadcastReceivers that declare an intent-filter for " +
                                 "SMS_DELIVER or SMS_RECEIVED must ensure that the " +
                                 "caller has the BROADCAST_SMS permission, otherwise it " +
-                                "is possible for malicious actors to spoof intents.");
+                                "is possible for malicious actors to spoof intents.", fix);
                     }
                     else if (isProtectedBroadcast(actionName)) {
                         if (mReceiversWithProtectedBroadcastIntentFilter == null) {

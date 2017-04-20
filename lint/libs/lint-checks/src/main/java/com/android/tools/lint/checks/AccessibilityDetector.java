@@ -30,6 +30,7 @@ import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
@@ -109,14 +110,18 @@ public class AccessibilityDetector extends LayoutDetector {
                     ATTR_IMPORTANT_FOR_ACCESSIBILITY))) {
                 return;
             }
+            LintFix fix = fix().set().todo(ANDROID_URI, ATTR_CONTENT_DESCRIPTION).build();
             context.report(ISSUE, element, context.getLocation(element),
-                    "[Accessibility] Missing `contentDescription` attribute on image");
+                    "[Accessibility] Missing `contentDescription` attribute on image",
+                    fix);
         } else {
             Attr attributeNode = element.getAttributeNodeNS(ANDROID_URI, ATTR_CONTENT_DESCRIPTION);
             String attribute = attributeNode.getValue();
             if (attribute.isEmpty() || attribute.equals("TODO")) {
+                LintFix fix = fix().set().todo(ANDROID_URI, ATTR_CONTENT_DESCRIPTION).build();
                 context.report(ISSUE, attributeNode, context.getLocation(attributeNode),
-                        "[Accessibility] Empty `contentDescription` attribute on image");
+                        "[Accessibility] Empty `contentDescription` attribute on image",
+                        fix);
             }
         }
     }

@@ -25,9 +25,8 @@ public class ServiceCastDetectorTest extends AbstractCheckTest {
         return new ServiceCastDetector();
     }
 
-    @SuppressWarnings("ALL") // sample code with warnings
-    public void testServiceCast() throws Exception {
-        assertEquals(""
+    public void testServiceCast() {
+        String expected = ""
                 + "src/test/pkg/SystemServiceTest.java:13: Error: Suspicious cast to DisplayManager for a DEVICE_POLICY_SERVICE: expected DevicePolicyManager [ServiceCast]\n"
                 + "        DisplayManager displayServiceWrong = (DisplayManager) getSystemService(\n"
                 + "                                             ^\n"
@@ -37,45 +36,48 @@ public class ServiceCastDetectorTest extends AbstractCheckTest {
                 + "src/test/pkg/SystemServiceTest.java:22: Error: Suspicious cast to DisplayManager for a DEVICE_POLICY_SERVICE: expected DevicePolicyManager [ServiceCast]\n"
                 + "        DisplayManager displayServiceWrong = (DisplayManager) context\n"
                 + "                                             ^\n"
-                + "3 errors, 0 warnings\n",
-
-            lintProject(java(""
-                    + "package test.pkg;\n"
-                    + "import android.content.ClipboardManager;\n"
-                    + "import android.app.Activity;\n"
-                    + "import android.app.WallpaperManager;\n"
-                    + "import android.content.Context;\n"
-                    + "import android.hardware.display.DisplayManager;\n"
-                    + "import android.service.wallpaper.WallpaperService;\n"
-                    + "\n"
-                    + "public class SystemServiceTest extends Activity {\n"
-                    + "\n"
-                    + "    public void test1() {\n"
-                    + "        DisplayManager displayServiceOk = (DisplayManager) getSystemService(DISPLAY_SERVICE);\n"
-                    + "        DisplayManager displayServiceWrong = (DisplayManager) getSystemService(\n"
-                    + "                DEVICE_POLICY_SERVICE);\n"
-                    + "        WallpaperService wallPaperOk = (WallpaperService) getSystemService(WALLPAPER_SERVICE);\n"
-                    + "        WallpaperManager wallPaperWrong = (WallpaperManager) getSystemService(WALLPAPER_SERVICE);\n"
-                    + "    }\n"
-                    + "\n"
-                    + "    public void test2(Context context) {\n"
-                    + "        DisplayManager displayServiceOk = (DisplayManager) context\n"
-                    + "                .getSystemService(DISPLAY_SERVICE);\n"
-                    + "        DisplayManager displayServiceWrong = (DisplayManager) context\n"
-                    + "                .getSystemService(DEVICE_POLICY_SERVICE);\n"
-                    + "    }\n"
-                    + "\n"
-                    + "    public void clipboard(Context context) {\n"
-                    + "      ClipboardManager clipboard = (ClipboardManager)context.getSystemService(Context.CLIPBOARD_SERVICE);\n"
-                    + "      android.content.ClipboardManager clipboard1 =  (android.content.ClipboardManager)context.getSystemService(Context.CLIPBOARD_SERVICE);\n"
-                    + "      android.text.ClipboardManager clipboard2 =  (android.text.ClipboardManager)context.getSystemService(Context.CLIPBOARD_SERVICE);\n"
-                    + "    }\n"
-                    + "}\n")));
+                + "3 errors, 0 warnings\n";
+        //noinspection all // Sample code
+        lint().files(
+                java(""
+                        + "package test.pkg;\n"
+                        + "import android.content.ClipboardManager;\n"
+                        + "import android.app.Activity;\n"
+                        + "import android.app.WallpaperManager;\n"
+                        + "import android.content.Context;\n"
+                        + "import android.hardware.display.DisplayManager;\n"
+                        + "import android.service.wallpaper.WallpaperService;\n"
+                        + "\n"
+                        + "public class SystemServiceTest extends Activity {\n"
+                        + "\n"
+                        + "    public void test1() {\n"
+                        + "        DisplayManager displayServiceOk = (DisplayManager) getSystemService(DISPLAY_SERVICE);\n"
+                        + "        DisplayManager displayServiceWrong = (DisplayManager) getSystemService(\n"
+                        + "                DEVICE_POLICY_SERVICE);\n"
+                        + "        WallpaperService wallPaperOk = (WallpaperService) getSystemService(WALLPAPER_SERVICE);\n"
+                        + "        WallpaperManager wallPaperWrong = (WallpaperManager) getSystemService(WALLPAPER_SERVICE);\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    public void test2(Context context) {\n"
+                        + "        DisplayManager displayServiceOk = (DisplayManager) context\n"
+                        + "                .getSystemService(DISPLAY_SERVICE);\n"
+                        + "        DisplayManager displayServiceWrong = (DisplayManager) context\n"
+                        + "                .getSystemService(DEVICE_POLICY_SERVICE);\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    public void clipboard(Context context) {\n"
+                        + "      ClipboardManager clipboard = (ClipboardManager)context.getSystemService(Context.CLIPBOARD_SERVICE);\n"
+                        + "      android.content.ClipboardManager clipboard1 =  (android.content.ClipboardManager)context.getSystemService(Context.CLIPBOARD_SERVICE);\n"
+                        + "      android.text.ClipboardManager clipboard2 =  (android.text.ClipboardManager)context.getSystemService(Context.CLIPBOARD_SERVICE);\n"
+                        + "    }\n"
+                        + "}\n"))
+                .run()
+                .expect(expected);
     }
 
     @SuppressWarnings("ALL") // sample code with warnings
-    public void testWifiManagerLookup() throws Exception {
-        assertEquals(""
+    public void testWifiManagerLookup() {
+        String expected = ""
                 + "src/test/pkg/WifiManagerTest.java:14: Error: The WIFI_SERVICE must be looked up on the Application context or memory will leak on devices < Android N. Try changing someActivity to someActivity.getApplicationContext() [WifiManagerLeak]\n"
                 + "        someActivity.getSystemService(Context.WIFI_SERVICE); // ERROR: Activity context\n"
                 + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
@@ -115,9 +117,11 @@ public class ServiceCastDetectorTest extends AbstractCheckTest {
                 + "src/test/pkg/WifiManagerTest.java:41: Warning: The WIFI_SERVICE must be looked up on the Application context or memory will leak on devices < Android N. Try changing ctx to ctx.getApplicationContext() [WifiManagerPotentialLeak]\n"
                 + "        ctx.getSystemService(Context.WIFI_SERVICE); // UNKNOWN (though likely)\n"
                 + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "10 errors, 3 warnings\n",
+                + "10 errors, 3 warnings\n";
 
-                lintProject(java(""
+        //noinspection all // Sample code
+        lint().files(
+                java(""
                         + "package test.pkg;\n"
                         + "\n"
                         + "import android.app.Activity;\n"
@@ -198,15 +202,68 @@ public class ServiceCastDetectorTest extends AbstractCheckTest {
                         + "            getContext().getSystemService(Context.WIFI_SERVICE); // ERROR: View context\n"
                         + "        }\n"
                         + "    }\n"
-                        + "}\n")));
+                        + "}\n"))
+                .run()
+                .expect(expected)
+                .expectFixDiffs(""
+                        + "Fix for src/test/pkg/WifiManagerTest.java line 13: Add getApplicationContext():\n"
+                        + "@@ -14 +14\n"
+                        + "-         someActivity.getSystemService(Context.WIFI_SERVICE); // ERROR: Activity context\n"
+                        + "+         someActivity.getApplicationContext().getSystemService(Context.WIFI_SERVICE); // ERROR: Activity context\n"
+                        + "Fix for src/test/pkg/WifiManagerTest.java line 14: Add getApplicationContext():\n"
+                        + "@@ -15 +15\n"
+                        + "-         someService.getSystemService(Context.WIFI_SERVICE);  // ERROR: Service context\n"
+                        + "+         someService.getApplicationContext().getSystemService(Context.WIFI_SERVICE);  // ERROR: Service context\n"
+                        + "Fix for src/test/pkg/WifiManagerTest.java line 15: Add getApplicationContext():\n"
+                        + "@@ -16 +16\n"
+                        + "-         fragment.getActivity().getSystemService(Context.WIFI_SERVICE); // ERROR: Activity context\n"
+                        + "+         fragment.getActivity().getApplicationContext().getSystemService(Context.WIFI_SERVICE); // ERROR: Activity context\n"
+                        + "Fix for src/test/pkg/WifiManagerTest.java line 16: Add getApplicationContext():\n"
+                        + "@@ -17 +17\n"
+                        + "-         fragment.getContext().getSystemService(Context.WIFI_SERVICE); // ERROR: FragmentHost context\n"
+                        + "+         fragment.getContext().getApplicationContext().getSystemService(Context.WIFI_SERVICE); // ERROR: FragmentHost context\n"
+                        + "Fix for src/test/pkg/WifiManagerTest.java line 28: Add getApplicationContext():\n"
+                        + "@@ -29 +29\n"
+                        + "-         context.getSystemService(Context.WIFI_SERVICE); // ERROR\n"
+                        + "+         context.getApplicationContext().getSystemService(Context.WIFI_SERVICE); // ERROR\n"
+                        + "Fix for src/test/pkg/WifiManagerTest.java line 33: Add getApplicationContext():\n"
+                        + "@@ -34 +34\n"
+                        + "-         mActivity.getSystemService(Context.WIFI_SERVICE); // ERROR: activity service\n"
+                        + "+         mActivity.getApplicationContext().getSystemService(Context.WIFI_SERVICE); // ERROR: activity service\n"
+                        + "Fix for src/test/pkg/WifiManagerTest.java line 52: Add getApplicationContext():\n"
+                        + "@@ -53 +53\n"
+                        + "-             getSystemService(WIFI_SERVICE); // ERROR: Activity context\n"
+                        + "+             getApplicationContext().getSystemService(WIFI_SERVICE); // ERROR: Activity context\n"
+                        + "Fix for src/test/pkg/WifiManagerTest.java line 53: Add getApplicationContext():\n"
+                        + "@@ -54 +54\n"
+                        + "-             this.getSystemService(Context.WIFI_SERVICE); // ERROR: Activity context\n"
+                        + "+             this.getApplicationContext().getSystemService(Context.WIFI_SERVICE); // ERROR: Activity context\n"
+                        + "Fix for src/test/pkg/WifiManagerTest.java line 65: Add getApplicationContext():\n"
+                        + "@@ -66 +66\n"
+                        + "-             getSystemService(WIFI_SERVICE); // ERROR: Service context\n"
+                        + "+             getApplicationContext().getSystemService(WIFI_SERVICE); // ERROR: Service context\n"
+                        + "Fix for src/test/pkg/WifiManagerTest.java line 75: Add getApplicationContext():\n"
+                        + "@@ -76 +76\n"
+                        + "-             getContext().getSystemService(Context.WIFI_SERVICE); // ERROR: View context\n"
+                        + "+             getContext().getApplicationContext().getSystemService(Context.WIFI_SERVICE); // ERROR: View context\n"
+                        + "Fix for src/test/pkg/WifiManagerTest.java line 31: Add getApplicationContext():\n"
+                        + "@@ -32 +32\n"
+                        + "-         foreignContext.getSystemService(Context.WIFI_SERVICE); // UNKNOWN\n"
+                        + "+         foreignContext.getApplicationContext().getSystemService(Context.WIFI_SERVICE); // UNKNOWN\n"
+                        + "Fix for src/test/pkg/WifiManagerTest.java line 32: Add getApplicationContext():\n"
+                        + "@@ -33 +33\n"
+                        + "-         mContext.getSystemService(Context.WIFI_SERVICE); // UNKNOWN\n"
+                        + "+         mContext.getApplicationContext().getSystemService(Context.WIFI_SERVICE); // UNKNOWN\n"
+                        + "Fix for src/test/pkg/WifiManagerTest.java line 40: Add getApplicationContext():\n"
+                        + "@@ -41 +41\n"
+                        + "-         ctx.getSystemService(Context.WIFI_SERVICE); // UNKNOWN (though likely)\n"
+                        + "+         ctx.getApplicationContext().getSystemService(Context.WIFI_SERVICE); // UNKNOWN (though likely)\n");
     }
 
-    @SuppressWarnings("ALL") // sample code with warnings
-    public void testWifiManagerLookupOnNougat() throws Exception {
-        assertEquals("No warnings.",
-
-                lintProject(
-                        java(""
+    public void testWifiManagerLookupOnNougat() {
+        //noinspection all // Sample code
+        lint().files(
+                java(""
                         + "package test.pkg;\n"
                         + "\n"
                         + "import android.app.Activity;\n"
@@ -218,8 +275,9 @@ public class ServiceCastDetectorTest extends AbstractCheckTest {
                         + "        someActivity.getSystemService(Context.WIFI_SERVICE); // ERROR: Activity context\n"
                         + "    }\n"
                         + "}\n"),
-                        // Android N:
-                        manifest().minSdk(24)
-        ));
+                // Android N:
+                manifest().minSdk(24))
+                .run()
+                .expectClean();
     }
 }

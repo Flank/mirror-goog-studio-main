@@ -1165,7 +1165,12 @@ public class CleanupDetectorTest extends AbstractCheckTest {
                 + "        editor.commit();\n"
                 + "        ~~~~~~~~~~~~~~~\n"
                 + "0 errors, 1 warnings\n";
-        lint().files(manifest().minSdk(11), mSharedPrefsTest8).run().expect(expected);
+        lint().files(manifest().minSdk(11), mSharedPrefsTest8).run().expect(expected)
+                .expectFixDiffs(""
+                        + "Fix for src/test/pkg/SharedPrefsTest8.java line 10: Replace commit() with apply():\n"
+                        + "@@ -11 +11\n"
+                        + "-         editor.commit();\n"
+                        + "+         editor.apply();\n");
     }
 
     public void testChainedCalls() throws Exception {

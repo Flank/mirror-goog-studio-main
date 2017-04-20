@@ -502,12 +502,12 @@ public class AppLinksValidDetectorTest extends AbstractCheckTest {
     public void testPathsBeginWithSlash() {
         // Paths should begin with /
         String expected = ""
-                + "AndroidManifest.xml:10: Error: android:pathPrefix attribute should start with /, but it is foo [AppLinkUrlError]\n"
-                + "                      android:pathPrefix=\"foo\"\n"
-                + "                                          ~~~\n"
-                + "AndroidManifest.xml:11: Error: android:path attribute should start with /, but it is foo [AppLinkUrlError]\n"
-                + "                      android:path=\"foo\"\n"
-                + "                                    ~~~\n"
+                + "AndroidManifest.xml:10: Error: android:pathPrefix attribute should start with /, but it is samplePrefix [AppLinkUrlError]\n"
+                + "                      android:pathPrefix=\"samplePrefix\"\n"
+                + "                                          ~~~~~~~~~~~~\n"
+                + "AndroidManifest.xml:11: Error: android:path attribute should start with /, but it is samplePath [AppLinkUrlError]\n"
+                + "                      android:path=\"samplePath\"\n"
+                + "                                    ~~~~~~~~~~\n"
                 + "2 errors, 0 warnings\n";
         //noinspection all // Sample code
         lint().files(
@@ -521,9 +521,9 @@ public class AppLinksValidDetectorTest extends AbstractCheckTest {
                         + "                <action android:name=\"android.intent.action.VIEW\" />\n"
                         + "                <data android:scheme=\"http\"\n"
                         + "                      android:host=\"example.com\"\n"
-                        + "                      android:pathPrefix=\"foo\"\n"
-                        + "                      android:path=\"foo\"\n"
-                        + "                      android:pathPattern=\"foo\"/>\n"
+                        + "                      android:pathPrefix=\"samplePrefix\"\n"
+                        + "                      android:path=\"samplePath\"\n"
+                        + "                      android:pathPattern=\"samplePattern\"/>\n"
                         + "                <category android:name=\"android.intent.category.DEFAULT\" />\n"
                         + "                <category android:name=\"android.intent.category.BROWSABLE\" />\n"
                         + "            </intent-filter>\n"
@@ -532,7 +532,16 @@ public class AppLinksValidDetectorTest extends AbstractCheckTest {
                         + "\n"
                         + "</manifest>\n"))
                 .run()
-                .expect(expected);
+                .expect(expected)
+                .expectFixDiffs(""
+                        + "Fix for AndroidManifest.xml line 9: Replace with /samplePrefix:\n"
+                        + "@@ -10 +10\n"
+                        + "-                       android:pathPrefix=\"samplePrefix\"\n"
+                        + "+                       android:pathPrefix=\"/samplePrefix\"\n"
+                        + "Fix for AndroidManifest.xml line 10: Replace with /samplePath:\n"
+                        + "@@ -11 +11\n"
+                        + "-                       android:path=\"samplePath\"\n"
+                        + "+                       android:path=\"/samplePath\"\n");
     }
 
     public void testSuppressWithOldId() {
@@ -692,7 +701,33 @@ public class AppLinksValidDetectorTest extends AbstractCheckTest {
                         + "\n"
                         + "</manifest>\n"))
                 .run()
-                .expect(expected);
+                .expect(expected)
+                .verifyFixes().window(1)
+                .expectFixDiffs(""
+                        + "Fix for AndroidManifest.xml line 14: Set scheme=\"http\":\n"
+                        + "@@ -15 +15\n"
+                        + "              android:theme=\"@style/FullscreenTheme\" >\n"
+                        + "-             <intent-filter android:label=\"@string/title_activity_fullscreen\" >\n"
+                        + "+             <intent-filter\n"
+                        + "+                 android:label=\"@string/title_activity_fullscreen\"\n"
+                        + "+                 android:scheme=\"http\" >\n"
+                        + "                  <action android:name=\"android.intent.action.VIEW\" />\n"
+                        + "Fix for AndroidManifest.xml line 16: Set host:\n"
+                        + "@@ -18 +18\n"
+                        + "  \n"
+                        + "-                 <data android:pathPrefix=\"/gizmos\" />\n"
+                        + "+                 <data\n"
+                        + "+                     android:host=\"|\"\n"
+                        + "+                     android:pathPrefix=\"/gizmos\" />\n"
+                        + "  \n"
+                        + "Fix for AndroidManifest.xml line 16: Set scheme=\"http\":\n"
+                        + "@@ -18 +18\n"
+                        + "  \n"
+                        + "-                 <data android:pathPrefix=\"/gizmos\" />\n"
+                        + "+                 <data\n"
+                        + "+                     android:pathPrefix=\"/gizmos\"\n"
+                        + "+                     android:scheme=\"http\" />\n"
+                        + "  \n");
     }
 
     public void testMultiData() {
@@ -809,7 +844,14 @@ public class AppLinksValidDetectorTest extends AbstractCheckTest {
                         + "\n"
                         + "</manifest>\n"))
                 .run()
-                .expect(expected);
+                .expect(expected)
+                .verifyFixes().window(1)
+                .expectFixDiffs(""
+                        + "Fix for AndroidManifest.xml line 20: Set host:\n"
+                        + "@@ -24 +24\n"
+                        + "                  <data\n"
+                        + "+                     android:host=\"|\"\n"
+                        + "                      android:pathPrefix=\"/gizmos\"\n");
     }
 
     public void testNotExported() {

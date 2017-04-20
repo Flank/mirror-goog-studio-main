@@ -21,10 +21,8 @@ import com.android.annotations.Nullable;
 import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.XmlParser;
-import com.android.utils.Pair;
 import com.google.common.annotations.Beta;
 import java.io.File;
-import java.util.Map;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -150,20 +148,32 @@ public class XmlContext extends ResourceContext {
      *                     client.
      * @param location     the location of the issue, or null if not known
      * @param message      the message for this warning
-     * @param quickfixData optional data to pass to the IDE for use by a quickfix.  If you're
-     *                     passing in multiple parameters, consider using {@link QuickfixData}
-     *                     instead of using for example {@link Pair} or {@link Map}
+     * @param quickfixData optional data to pass to the IDE for use by a quickfix.
      */
     public void report(
             @NonNull Issue issue,
             @Nullable Node scope,
             @NonNull Location location,
             @NonNull String message,
-            @Nullable Object quickfixData) {
+            @Nullable LintFix quickfixData) {
         if (scope != null && driver.isSuppressed(this, issue, scope)) {
             return;
         }
         super.doReport(issue, location, message, quickfixData);
+    }
+
+    /**
+     * @deprecated Here for temporary compatibility; the new typed quickfix data parameter
+     * should be used instead
+     */
+    @Deprecated
+    public void report(
+            @NonNull Issue issue,
+            @Nullable Node scope,
+            @NonNull Location location,
+            @NonNull String message,
+            @SuppressWarnings("unused") @Nullable Object quickfixData) {
+        report(issue, scope, location, message);
     }
 
     @Override

@@ -30,6 +30,7 @@ import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -298,19 +299,27 @@ public class ServiceCastDetector extends Detector implements UastScanner {
 
         String message = "The WIFI_SERVICE must be looked up on the "
                 + "Application context or memory will leak on devices < Android N. ";
-        String[] extraObject;
+
+        LintFix fix;
         if (call.getReceiver() != null) {
             String qualifier = call.getReceiver().asSourceString();
             message += String.format("Try changing `%1$s` to `%1$s.getApplicationContext()`",
                     qualifier);
-            extraObject = new String[] {qualifier, qualifier + ".getApplicationContext()"};
+            fix = fix()
+                    .name("Add getApplicationContext()")
+                    .replace().text(qualifier).with(qualifier + ".getApplicationContext()")
+                    .build();
         } else {
-            String qualifier =  call.getMethodName();
+            String qualifier = call.getMethodName();
             message += String.format("Try changing `%1$s` to `getApplicationContext().%1$s`",
                     qualifier);
-            extraObject = new String[] {qualifier, "getApplicationContext()." + qualifier};
+            fix = fix()
+                    .name("Add getApplicationContext()")
+                    .replace().text(qualifier).with("getApplicationContext()." + qualifier)
+                    .build();
         }
-        context.report(issue, call, context.getLocation(call), message, extraObject);
+
+        context.report(issue, call, context.getLocation(call), message, fix);
     }
 
     private static boolean isClipboard(@NonNull String cls) {

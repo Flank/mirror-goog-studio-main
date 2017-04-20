@@ -55,6 +55,7 @@ import com.android.tools.lint.detector.api.Detector.JavaPsiScanner;
 import com.android.tools.lint.detector.api.Detector.JavaScanner;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
@@ -2286,7 +2287,7 @@ public class LintDriver {
                 @NonNull Location location,
                 @NonNull String message,
                 @NonNull TextFormat format,
-                @Nullable Object quickfixData) {
+                @Nullable LintFix fix) {
             //noinspection ConstantConditions
             if (location == null) {
                 // Misbehaving third-party lint detectors
@@ -2324,7 +2325,7 @@ public class LintDriver {
                 }
             }
 
-            mDelegate.report(context, issue, severity, location, message, format, quickfixData);
+            mDelegate.report(context, issue, severity, location, message, format, fix);
         }
 
         // Everything else just delegates to the embedding lint client

@@ -55,6 +55,7 @@ import com.android.tools.lint.detector.api.CharSequences;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
@@ -319,7 +320,7 @@ public class LintCliClient extends LintClient {
             @NonNull Location location,
             @NonNull String message,
             @NonNull TextFormat format,
-            @Nullable Object quickfixData) {
+            @Nullable LintFix fix) {
         assert context.isEnabled(issue) || issue == LINT_ERROR;
 
         if (severity.isError()) {
@@ -347,6 +348,7 @@ public class LintCliClient extends LintClient {
         File file = location.getFile();
         warning.file = file;
         warning.path = getDisplayPath(context.getProject(), file);
+        warning.quickfixData = fix;
 
         Position startPosition = location.getStart();
         if (startPosition != null) {
@@ -688,7 +690,7 @@ public class LintCliClient extends LintClient {
                 report(new Context(driver, project, project, project.getDir()),
                         IssueRegistry.LINT_ERROR,
                         project.getConfiguration(driver).getSeverity(IssueRegistry.LINT_ERROR),
-                        location, message, TextFormat.RAW, id);
+                        location, message, TextFormat.RAW, LintFix.create().map(id).build());
             }
         } else {
             log(Severity.ERROR, null, "Lint: %1$s", message);

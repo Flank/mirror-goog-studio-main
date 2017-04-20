@@ -74,6 +74,7 @@ import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
@@ -552,8 +553,9 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
 
         if (!application.hasAttributeNS(ANDROID_URI, ATTR_ICON)
                 && context.isEnabled(APPLICATION_ICON)) {
+            LintFix fix = fix().set(ANDROID_URI, ATTR_ICON, "@mipmap/").caretEnd().build();
             context.report(APPLICATION_ICON, context.getLocation(sourceApplicationElement),
-                    "Should explicitly set `android:icon`, there is no default");
+                    "Should explicitly set `android:icon`, there is no default", fix);
         }
     }
 
@@ -568,16 +570,20 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
                 // Not required in Gradle projects; typically defined in build.gradle instead
                 // and inserted at build time
                 && !context.getMainProject().isGradleProject()) {
+            LintFix fix = fix().set(ANDROID_URI, ATTR_VERSION_CODE, "").build();
             context.report(SET_VERSION, element, context.getLocation(element),
-                    "Should set `android:versionCode` to specify the application version");
+                    "Should set `android:versionCode` to specify the application version",
+                    fix);
         }
         Attr nameNode = element.getAttributeNodeNS(ANDROID_URI, ATTR_VERSION_NAME);
         if (nameNode == null && context.isEnabled(SET_VERSION)
                 // Not required in Gradle projects; typically defined in build.gradle instead
                 // and inserted at build time
                 && !context.getMainProject().isGradleProject()) {
+            LintFix fix = fix().set(ANDROID_URI, ATTR_VERSION_NAME, "").build();
             context.report(SET_VERSION, element, context.getLocation(element),
-                    "Should set `android:versionName` to specify the application version");
+                    "Should set `android:versionName` to specify the application version",
+                    fix);
         }
 
         checkOverride(context, element, ATTR_VERSION_CODE);
@@ -852,12 +858,20 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
                         String target = targetSdkVersionNode.getValue();
                         try {
                             int api = Integer.parseInt(target);
-                            if (api < context.getClient().getHighestKnownApiLevel()) {
-                                context.report(TARGET_NEWER, element,
-                                  context.getLocation(targetSdkVersionNode),
-                                  "Not targeting the latest versions of Android; compatibility " +
-                                  "modes apply. Consider testing and updating this version. " +
-                                  "Consult the `android.os.Build.VERSION_CODES` javadoc for details.");
+                            int highest = context.getClient().getHighestKnownApiLevel();
+                            if (api < highest) {
+                                LintFix fix = fix()
+                                        .name("Update targetSdkVersion to " + highest)
+                                        .replace()
+                                        .pattern("targetSdkVersion\\s*=\\s*[\"'](.*)[\"']")
+                                        .with(Integer.toString(highest))
+                                        .build();
+                                Location location = context.getLocation(targetSdkVersionNode);
+                                context.report(TARGET_NEWER, element, location,
+                                        "Not targeting the latest versions of Android; compatibility " +
+                                        "modes apply. Consider testing and updating this version. " +
+                                        "Consult the `android.os.Build.VERSION_CODES` javadoc for details.",
+                                        fix);
                             }
                         } catch (NumberFormatException nufe) {
                             // Ignore: AAPT will enforce this.

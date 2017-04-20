@@ -21,7 +21,6 @@ import static com.android.SdkConstants.GRADLE_PLUGIN_RECOMMENDED_VERSION;
 import static com.android.SdkConstants.SUPPORT_LIB_GROUP_ID;
 import static com.android.ide.common.repository.GradleCoordinate.COMPARE_PLUS_HIGHER;
 import static com.android.tools.lint.checks.ManifestDetector.TARGET_NEWER;
-import static com.android.tools.lint.detector.api.LintUtils.findSubstring;
 import static com.android.tools.lint.detector.api.LintUtils.guessGradleLocation;
 import static com.google.common.base.Charsets.UTF_8;
 
@@ -51,12 +50,11 @@ import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.LintUtils;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.TextFormat;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ArrayListMultimap;
@@ -409,7 +407,11 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                             "Not targeting the latest versions of Android; compatibility " +
                             "modes apply. Consider testing and updating this version. " +
                            "Consult the android.os.Build.VERSION_CODES javadoc for details.";
-                    report(context, valueCookie, TARGET_NEWER, message);
+
+                    int highest = context.getClient().getHighestKnownApiLevel();
+                    String label = "Update targetSdkVersion to " + highest;
+                    LintFix fix = fix().replace().all().with(Integer.toString(highest)).build();
+                    report(context, valueCookie, TARGET_NEWER, message, fix);
                 }
                 if (version > 0) {
                     targetSdkVersion = version;
@@ -443,11 +445,10 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                     report(context, valueCookie, GRADLE_GETTER, message);
                 }
             } else if (property.equals("packageName")) {
-                if (isModelOlderThan011(context)) {
-                    return;
-                }
                 String message = "Deprecated: Replace 'packageName' with 'applicationId'";
-                report(context, getPropertyKeyCookie(valueCookie), DEPRECATED, message);
+                LintFix fix = fix().replace().text("packageName")
+                        .with("applicationId").build();
+                report(context, getPropertyKeyCookie(valueCookie), DEPRECATED, message, fix);
             }
             if (property.equals("versionCode") && context.isEnabled(HIGH_APP_VERSION_CODE)
                     && isInteger(value)) {
@@ -486,10 +487,11 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                     Revision recommended = getLatestBuildTools(context.getClient(),
                             version.getMajor());
                     if (recommended != null && version.compareTo(recommended) < 0) {
-                        // Keep in sync with {@link #getOldValue} and {@link #getNewValue}
                         String message = "Old buildToolsVersion " + version +
                                 "; recommended version is " + recommended + " or later";
-                        report(context, valueCookie, DEPENDENCY, message);
+                        LintFix fix = getUpdateDependencyFix(
+                                version.toString(), recommended.toString());
+                        report(context, valueCookie, DEPENDENCY, message, fix);
                     }
 
                     // 23.0.0 shipped with a serious bugs which affects program correctness
@@ -531,36 +533,43 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                 // with a $variable_name syntax) then don't try to parse it.
                 if (dependency != null) {
                     GradleCoordinate gc = GradleCoordinate.parseCoordinateString(dependency);
+                    boolean isResolved = false;
                     if (gc != null && dependency.contains("$")) {
                         if (value.startsWith("'") && value.endsWith("'") &&
-                            context.isEnabled(NOT_INTERPOLATED)) {
+                                context.isEnabled(NOT_INTERPOLATED)) {
                             String message = "It looks like you are trying to substitute a "
                                              + "version variable, but using single quotes ('). For Groovy "
                                              + "string interpolation you must use double quotes (\").";
-                            report(context, statementCookie, NOT_INTERPOLATED, message);
+                            LintFix fix = fix()
+                                    .name("Replace single quotes with double quotes").replace()
+                                    .text(value)
+                                    .with("\"" + value.substring(1, value.length() - 1) + "\"")
+                                    .build();
+                            report(context, statementCookie, NOT_INTERPOLATED, message, fix);
                         }
 
                         gc = resolveCoordinate(context, gc);
+                        isResolved = true;
                     }
                     if (gc != null) {
                         if (gc.acceptsGreaterRevisions()) {
                             String message = "Avoid using + in version numbers; can lead "
                                     + "to unpredictable and unrepeatable builds (" + dependency + ")";
-                            report(context, valueCookie, PLUS, message);
+                            LintFix fix = fix().map(gc).build();
+                            report(context, valueCookie, PLUS, message, fix);
                         }
                         if (!dependency.startsWith(SdkConstants.GRADLE_PLUGIN_NAME) ||
                             !checkGradlePluginDependency(context, gc, valueCookie)) {
-                            checkDependency(context, gc, valueCookie);
+                            checkDependency(context, gc, isResolved, valueCookie);
                         }
                     }
                 }
             }
         } else if (property.equals("packageNameSuffix")) {
-            if (isModelOlderThan011(context)) {
-                return;
-            }
             String message = "Deprecated: Replace 'packageNameSuffix' with 'applicationIdSuffix'";
-            report(context, getPropertyKeyCookie(valueCookie), DEPRECATED, message);
+            LintFix fix = fix().replace().text("packageNameSuffix")
+                    .with("applicationIdSuffix").build();
+            report(context, getPropertyKeyCookie(valueCookie), DEPRECATED, message, fix);
         } else if (property.equals("applicationIdSuffix")) {
             String suffix = getStringLiteralValue(value);
             if (suffix != null && !suffix.startsWith(".")) {
@@ -681,121 +690,14 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
         //     compileSdkVersion 19
         String string = getStringLiteralValue(value);
         if (isNumberString(string)) {
-            String quote = Character.toString(value.charAt(0));
             String message = String.format("Use an integer rather than a string here "
-                    + "(replace %1$s%2$s%1$s with just %2$s)", quote, string);
-            report(context, valueCookie, STRING_INTEGER, message);
+                    + "(replace %1$s with just %2$s)", value, string);
+            LintFix fix = fix()
+                    .name("Replace with integer").replace().text(value)
+                    .with(string)
+                    .build();
+            report(context, valueCookie, STRING_INTEGER, message, fix);
         }
-    }
-
-    /**
-     * Given an error message produced by this lint detector for the given issue type,
-     * returns the old value to be replaced in the source code.
-     * <p>
-     * Intended for IDE quickfix implementations.
-     *
-     * @param issue the corresponding issue
-     * @param errorMessage the error message associated with the error
-     * @param format the format of the error message
-     * @return the corresponding old value, or null if not recognized
-     */
-    @Nullable
-    public static String getOldValue(@NonNull Issue issue, @NonNull String errorMessage,
-            @NonNull TextFormat format) {
-        errorMessage = format.toText(errorMessage);
-
-        // Consider extracting all the error strings as constants and handling this
-        // using the LintUtils#getFormattedParameters() method to pull back out the information
-        if (issue == DEPENDENCY) {
-            // "A newer version of com.google.guava:guava than 11.0.2 is available: 17.0.0"
-            if (errorMessage.startsWith("A newer ")) {
-                return findSubstring(errorMessage, " than ", " ");
-            }
-            if (errorMessage.startsWith("Old buildToolsVersion ")) {
-                return findSubstring(errorMessage, "Old buildToolsVersion ", ";");
-            }
-            if (errorMessage.startsWith("Use Fabric Gradle ") ||
-                    errorMessage.startsWith("Use BugSnag ")) {
-                return findSubstring(errorMessage, "(was ", ")");
-            }
-        } else if (issue == STRING_INTEGER) {
-            return findSubstring(errorMessage, "replace ", " with ");
-        } else if (issue == DEPRECATED) {
-            if (errorMessage.contains(APP_PLUGIN_ID) &&
-                errorMessage.contains(OLD_APP_PLUGIN_ID)) {
-                return OLD_APP_PLUGIN_ID;
-            } else if (errorMessage.contains(LIB_PLUGIN_ID) &&
-                       errorMessage.contains(OLD_LIB_PLUGIN_ID)) {
-                return OLD_LIB_PLUGIN_ID;
-            }
-            // "Deprecated: Replace 'packageNameSuffix' with 'applicationIdSuffix'"
-            return findSubstring(errorMessage, "Replace '", "'");
-        } else if (issue == PLUS) {
-          return findSubstring(errorMessage, "(", ")");
-        } else if (issue == COMPATIBILITY) {
-            if (errorMessage.startsWith("Version 5.2.08")) {
-                return "5.2.08";
-            }
-
-            // "The targetSdkVersion (20) should not be higher than the compileSdkVersion (19)"
-            return findSubstring(errorMessage, "targetSdkVersion (", ")");
-        }
-
-        return null;
-    }
-
-    /**
-     * Given an error message produced by this lint detector for the given issue type,
-     * returns the new value to be put into the source code.
-     * <p>
-     * Intended for IDE quickfix implementations.
-     *
-     * @param issue the corresponding issue
-     * @param errorMessage the error message associated with the error
-     * @param format the format of the error message
-     * @return the corresponding new value, or null if not recognized
-     */
-    @Nullable
-    public static String getNewValue(@NonNull Issue issue, @NonNull String errorMessage,
-            @NonNull TextFormat format) {
-        errorMessage = format.toText(errorMessage);
-
-        if (issue == DEPENDENCY) {
-            // "A newer version of com.google.guava:guava than 11.0.2 is available: 17.0.0"
-            if (errorMessage.startsWith("A newer ")) {
-                return findSubstring(errorMessage, " is available: ", null);
-            }
-            if (errorMessage.startsWith("Old buildToolsVersion ")) {
-                return findSubstring(errorMessage, " version is ", " ");
-            }
-            if (errorMessage.startsWith("Use Fabric Gradle ")) {
-                return "1.21.6";
-            }
-            if (errorMessage.startsWith("Use BugSnag ")) {
-                return "2.1.2";
-            }
-        } else if (issue == STRING_INTEGER) {
-            return findSubstring(errorMessage, " just ", ")");
-        } else if (issue == DEPRECATED) {
-            if (errorMessage.contains(APP_PLUGIN_ID) &&
-                errorMessage.contains(OLD_APP_PLUGIN_ID)) {
-                return APP_PLUGIN_ID;
-            } else if (errorMessage.contains(LIB_PLUGIN_ID) &&
-                       errorMessage.contains(OLD_LIB_PLUGIN_ID)) {
-                return LIB_PLUGIN_ID;
-            }
-            // "Deprecated: Replace 'packageNameSuffix' with 'applicationIdSuffix'"
-            return findSubstring(errorMessage, " with '", "'");
-        } else if (issue == COMPATIBILITY) {
-            if (errorMessage.startsWith("Version 5.2.08")) {
-                return findSubstring(errorMessage, "Use version ", " ");
-            }
-
-            // "The targetSdkVersion (20) should not be higher than the compileSdkVersion (19)"
-            return findSubstring(errorMessage, "compileSdkVersion (", ")");
-        }
-
-        return null;
     }
 
     private static boolean isNumberString(@Nullable String s) {
@@ -826,7 +728,8 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
               String replaceWith = isOldAppPlugin ? APP_PLUGIN_ID : LIB_PLUGIN_ID;
               String message = String.format("'%1$s' is deprecated; use '%2$s' instead", plugin,
                       replaceWith);
-              report(context, cookie, DEPRECATED, message);
+                LintFix fix = fix().replace().text(plugin).with(replaceWith).build();
+                report(context, cookie, DEPRECATED, message, fix);
           }
         }
     }
@@ -838,10 +741,6 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
         } catch (Throwable t) {
             return null;
         }
-    }
-
-    private static boolean isModelOlderThan011(@NonNull Context context) {
-        return LintUtils.isModelOlderThan(context.getProject(), 0, 11, 0);
     }
 
     private static int sMajorBuildTools;
@@ -908,11 +807,14 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
     private void checkTargetCompatibility(Context context, Object cookie) {
         if (compileSdkVersion > 0 && targetSdkVersion > 0
                 && targetSdkVersion > compileSdkVersion) {
-            // NOTE: Keep this in sync with {@link #getOldValue} and {@link #getNewValue}
             String message = "The targetSdkVersion (" + targetSdkVersion
                     + ") should not be higher than the compileSdkVersion ("
                     + compileSdkVersion + ")";
-            reportNonFatalCompatibilityIssue(context, cookie, message);
+            LintFix fix = fix()
+                    .name("Set compileSdkVersion to " + targetSdkVersion).replace()
+                    .text(Integer.toString(compileSdkVersion))
+                    .with(Integer.toString(targetSdkVersion)).build();
+            reportNonFatalCompatibilityIssue(context, cookie, message, fix);
         }
     }
 
@@ -946,13 +848,15 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
     private void checkDependency(
             @NonNull Context context,
             @NonNull GradleCoordinate dependency,
+            boolean isResolved,
             @NonNull Object cookie) {
         String groupId = dependency.getGroupId();
         String artifactId = dependency.getArtifactId();
+        String revision = dependency.getRevision();
         GradleVersion version = dependency.getVersion();
 
         if (groupId != null && groupId.startsWith(SUPPORT_LIB_GROUP_ID)) {
-            checkSupportLibraries(context, dependency, cookie);
+            checkSupportLibraries(context, dependency, isResolved, cookie);
             if (minSdkVersion >= 14 && "appcompat-v7".equals(artifactId)
                   && compileSdkVersion >= 1 && compileSdkVersion < 21) {
                 report(context, cookie, DEPENDENCY,
@@ -967,10 +871,10 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                 && artifactId != null) {
 
             // 5.2.08 is not supported; special case and warn about this
-            if ("5.2.08".equals(dependency.getRevision()) && context.isEnabled(COMPATIBILITY)) {
+            if ("5.2.08".equals(revision) && context.isEnabled(COMPATIBILITY)) {
                 // This specific version is actually a preview version which should
                 // not be used (https://code.google.com/p/android/issues/detail?id=75292)
-                String maxVersion = "6.1.11";
+                String maxVersion = "10.2.1";
                 // Try to find a more recent available version, if one is available
                 File sdkHome = context.getClient().getSdkHome();
                 File repository = SdkMavenRepository.GOOGLE.getRepositoryLocation(sdkHome, true,
@@ -985,10 +889,11 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                         }
                     }
                 }
+                LintFix fix = getUpdateDependencyFix(revision, maxVersion);
                 String message = String.format("Version `5.2.08` should not be used; the app "
                         + "can not be published with this version. Use version `%1$s` "
                         + "instead.", maxVersion);
-                reportFatalCompatibilityIssue(context, cookie, message);
+                reportFatalCompatibilityIssue(context, cookie, message, fix);
             } else if (context.isEnabled(BUNDLED_GMS)
                   && PLAY_SERVICES_V650.isSameArtifact(dependency)
                   && COMPARE_PLUS_HIGHER.compare(dependency, PLAY_SERVICES_V650) >= 0) {
@@ -1000,10 +905,14 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             } else if (GMS_GROUP_ID.equals(groupId)
                   && "play-services-appindexing".equals(artifactId)) {
                 String message = "Deprecated: Replace '" + GMS_GROUP_ID
-                        + ":play-services-appindexing:" + dependency.getRevision()
+                        + ":play-services-appindexing:" + revision
                         + "' with 'com.google.firebase:firebase-appindexing:10.0.0' or above. "
                         + "More info: http://firebase.google.com/docs/app-indexing/android/migrate";
-                report(context, cookie, DEPRECATED, message);
+                LintFix fix = fix()
+                        .name("Replace with Firebase").replace()
+                        .text(GMS_GROUP_ID + ":play-services-appindexing:" + revision)
+                        .with("com.google.firebase:firebase-appindexing:10.2.1").build();
+                report(context, cookie, DEPRECATED, message, fix);
             }
 
             if (targetSdkVersion >= 26 && version != null) {
@@ -1023,7 +932,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                 }
             }
 
-            checkPlayServices(context, dependency, cookie);
+            checkPlayServices(context, dependency, isResolved, cookie);
             return;
         }
 
@@ -1056,23 +965,27 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             newerVersion = getNewerRevision(dependency, new Revision(3, 7, 0));
         } else if ("io.fabric.tools".equals(groupId) &&
                 "gradle".equals(artifactId)) {
-            GradleVersion parsed = GradleVersion.tryParse(dependency.getRevision());
+            GradleVersion parsed = GradleVersion.tryParse(revision);
             if (parsed != null && parsed.compareTo("1.21.6") < 0) {
+                LintFix fix = getUpdateDependencyFix(revision, "1.22.1");
                 report(context, cookie, DEPENDENCY, "Use Fabric Gradle plugin version 1.21.6 or "
                         + "later to improve Instant Run performance (was " +
-                        dependency.getRevision() + ")");
+                        revision + ")", fix);
             } else {
                 // From https://s3.amazonaws.com/fabric-artifacts/public/io/fabric/tools/gradle/maven-metadata.xml
                 newerVersion = getNewerRevision(dependency, new Revision(1, 22, 1));
             }
         } else if ("com.bugsnag".equals(groupId) &&
                 "bugsnag-android-gradle-plugin".equals(artifactId)) {
-            GradleVersion parsed = GradleVersion.tryParse(dependency.getRevision());
+            GradleVersion parsed = GradleVersion.tryParse(revision);
             if (parsed != null && parsed.compareTo("2.1.2") < 0) {
+                LintFix fix = getUpdateDependencyFix(revision, "2.4.1");
                 report(context, cookie, DEPENDENCY, "Use BugSnag Gradle plugin version 2.1.2 or "
                         + "later to improve Instant Run performance (was " +
-                        dependency.getRevision() + ")");
+                        revision + ")", fix);
             } else {
+                // From http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22com.bugsnag%22%20AND
+                // %20a%3A%22bugsnag-android-gradle-plugin%22
                 newerVersion = getNewerRevision(dependency, new Revision(2, 4, 1));
             }
         }
@@ -1089,8 +1002,10 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
         }
 
         if (newerVersion != null) {
-            String message = getNewerVersionAvailableMessage(dependency, newerVersion);
-            report(context, cookie, issue, message);
+            String versionString = newerVersion.toString();
+            String message = getNewerVersionAvailableMessage(dependency, versionString);
+            LintFix fix = getUpdateDependencyFix(revision, versionString);
+            report(context, cookie, issue, message, fix);
         }
     }
 
@@ -1111,14 +1026,17 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
         }
     }
 
-    private static String getNewerVersionAvailableMessage(GradleCoordinate dependency,
-            Revision version) {
-        return getNewerVersionAvailableMessage(dependency, version.toString());
+    @NonNull
+    private static LintFix getUpdateDependencyFix(@NonNull String currentVersion,
+            @NonNull String suggestedVersion) {
+        return fix()
+                .name("Change to " + suggestedVersion).replace().text(currentVersion)
+                .with(suggestedVersion)
+                .build();
     }
 
     private static String getNewerVersionAvailableMessage(GradleCoordinate dependency,
             String version) {
-        // NOTE: Keep this in sync with {@link #getOldValue} and {@link #getNewValue}
         return "A newer version of " + dependency.getGroupId() + ":" +
                 dependency.getArtifactId() + " than " + dependency.getRevision() +
                 " is available: " + version;
@@ -1287,7 +1205,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
     }
 
     private void checkSupportLibraries(Context context, GradleCoordinate dependency,
-            Object cookie) {
+            boolean isResolved, Object cookie) {
         String groupId = dependency.getGroupId();
         String artifactId = dependency.getArtifactId();
         assert groupId != null && artifactId != null;
@@ -1328,7 +1246,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                             + "Open the SDK manager and install it.");
         } else {
             checkLocalMavenVersions(context, dependency, cookie, groupId, artifactId,
-                    repository);
+                    isResolved, repository);
 
             if (!mCheckedSupportLibs && !artifactId.startsWith("multidex") &&
                     !artifactId.equals("support-annotations")) {
@@ -1362,7 +1280,8 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
      */
     private boolean mCheckedWearableLibs;
 
-    private void checkPlayServices(Context context, GradleCoordinate dependency, Object cookie) {
+    private void checkPlayServices(Context context, GradleCoordinate dependency, boolean isResolved,
+            Object cookie) {
         String groupId = dependency.getGroupId();
         String artifactId = dependency.getArtifactId();
         assert groupId != null && artifactId != null;
@@ -1377,7 +1296,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                             + "Open the SDK manager and install it.");
         } else {
             checkLocalMavenVersions(context, dependency, cookie, groupId, artifactId,
-                    repository);
+                    isResolved, repository);
         }
 
         if (GMS_GROUP_ID.equals(groupId) || FIREBASE_GROUP_ID.equals(groupId)) {
@@ -1687,14 +1606,17 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
     }
 
     private void checkLocalMavenVersions(Context context, GradleCoordinate dependency,
-            Object cookie, String groupId, String artifactId, File repository) {
+            Object cookie, String groupId, String artifactId, boolean isResolved, File repository) {
         GradleCoordinate max = MavenRepositories.getHighestInstalledVersion(
                 groupId, artifactId, repository, null, false, FileOpUtils.create());
         if (max != null) {
             if (COMPARE_PLUS_HIGHER.compare(dependency, max) < 0
                     && context.isEnabled(DEPENDENCY)) {
-                String message = getNewerVersionAvailableMessage(dependency, max.getRevision());
-                report(context, cookie, DEPENDENCY, message);
+                String maxRevision = max.getRevision();
+                String message = getNewerVersionAvailableMessage(dependency, maxRevision);
+                LintFix fix = !isResolved ?
+                        getUpdateDependencyFix(dependency.getRevision(), maxRevision) : null;
+                report(context, cookie, DEPENDENCY, message, fix);
             }
         }
     }
@@ -1731,6 +1653,11 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
 
     private void report(@NonNull Context context, @NonNull Object cookie, @NonNull Issue issue,
             @NonNull String message) {
+        report(context, cookie, issue, message, null);
+    }
+
+    private void report(@NonNull Context context, @NonNull Object cookie, @NonNull Issue issue,
+            @NonNull String message, @Nullable LintFix fix) {
         if (context.isEnabled(issue)) {
             // Suppressed?
             // Temporarily unconditionally checking for suppress comments in Gradle files
@@ -1744,7 +1671,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                 }
             }
 
-            context.report(issue, createLocation(context, cookie), message);
+            context.report(issue, createLocation(context, cookie), message, fix);
         }
     }
 
@@ -1773,6 +1700,14 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
         report(context, cookie, COMPATIBILITY, message);
     }
 
+    private void reportFatalCompatibilityIssue(
+            @NonNull Context context,
+            @NonNull Object cookie,
+            @NonNull String message,
+            @Nullable LintFix fix) {
+        report(context, cookie, COMPATIBILITY, message, fix);
+    }
+
     private static void reportFatalCompatibilityIssue(
             @NonNull Context context,
             @NonNull Location location,
@@ -1785,15 +1720,24 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             @NonNull Context context,
             @NonNull Object cookie,
             @NonNull String message) {
-        if (context.getDriver().isFatalOnlyMode()) {
-            return;
-        }
-
-        report(context, cookie, COMPATIBILITY, message);
+        reportNonFatalCompatibilityIssue(context, cookie, message, null);
     }
 
     /** See {@link #reportFatalCompatibilityIssue(Context, Object, String)} for an explanation. */
     private void reportNonFatalCompatibilityIssue(
+            @NonNull Context context,
+            @NonNull Object cookie,
+            @NonNull String message,
+            @Nullable LintFix lintFix) {
+        if (context.getDriver().isFatalOnlyMode()) {
+            return;
+        }
+
+        report(context, cookie, COMPATIBILITY, message, lintFix);
+    }
+
+    /** See {@link #reportFatalCompatibilityIssue(Context, Object, String)} for an explanation. */
+    private static void reportNonFatalCompatibilityIssue(
             @NonNull Context context,
             @NonNull Location location,
             @NonNull String message) {

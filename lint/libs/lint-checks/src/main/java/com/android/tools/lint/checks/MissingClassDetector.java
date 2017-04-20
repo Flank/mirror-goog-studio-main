@@ -37,7 +37,6 @@ import static com.android.resources.ResourceFolderType.VALUES;
 import static com.android.resources.ResourceFolderType.XML;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ClassContext;
@@ -46,13 +45,13 @@ import com.android.tools.lint.detector.api.Detector.ClassScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Location.Handle;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.TextFormat;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.android.utils.SdkUtils;
 import com.google.common.collect.Lists;
@@ -318,7 +317,8 @@ public class MissingClassDetector extends LayoutDetector implements ClassScanner
                 String message = "Use '$' instead of '.' for inner classes (or use only lowercase letters in package names); replace \"" +
                         className + "\" with \"" + fixed + "\"";
                 Location location = context.getLocation(classNameNode);
-                context.report(INNERCLASS, element, location, message);
+                LintFix fix = fix().replace().text(className).with(fixed).build();
+                context.report(INNERCLASS, element, location, message, fix);
             }
         }
     }
@@ -493,48 +493,5 @@ public class MissingClassDetector extends LayoutDetector implements ClassScanner
             curr = curr.substring(0, index) + '$' + curr.substring(index + 1);
             mReferencedClasses.remove(curr);
         }
-    }
-
-    /**
-     * Given an error message produced by this lint detector for the given issue type,
-     * returns the old value to be replaced in the source code.
-     * <p>
-     * Intended for IDE quickfix implementations.
-     *
-     * @param issue the corresponding issue
-     * @param errorMessage the error message associated with the error
-     * @param format the format of the error message
-     * @return the corresponding old value, or null if not recognized
-     */
-    @Nullable
-    public static String getOldValue(@NonNull Issue issue, @NonNull String errorMessage,
-            @NonNull TextFormat format) {
-        if (issue == INNERCLASS) {
-            errorMessage = format.toText(errorMessage);
-            return LintUtils.findSubstring(errorMessage, " replace \"", "\"");
-        }
-
-        return null;
-    }
-
-    /**
-     * Given an error message produced by this lint detector for the given issue type,
-     * returns the new value to be put into the source code.
-     * <p>
-     * Intended for IDE quickfix implementations.
-     *
-     * @param issue the corresponding issue
-     * @param errorMessage the error message associated with the error
-     * @param format the format of the error message
-     * @return the corresponding new value, or null if not recognized
-     */
-    @Nullable
-    public static String getNewValue(@NonNull Issue issue, @NonNull String errorMessage,
-            @NonNull TextFormat format) {
-        if (issue == INNERCLASS) {
-            errorMessage = format.toText(errorMessage);
-            return LintUtils.findSubstring(errorMessage, " with \"", "\"");
-        }
-        return null;
     }
 }

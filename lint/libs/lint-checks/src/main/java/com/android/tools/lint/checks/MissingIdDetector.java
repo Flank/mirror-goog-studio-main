@@ -26,6 +26,7 @@ import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
@@ -77,9 +78,12 @@ public class MissingIdDetector extends LayoutDetector {
     public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
         if (!element.hasAttributeNS(ANDROID_URI, ATTR_ID) &&
                 !element.hasAttributeNS(ANDROID_URI, ATTR_TAG)) {
+            LintFix fix = fix()
+                    .set().todo(ANDROID_URI, ATTR_ID, "@+id/", null)
+                    .build();
             context.report(ISSUE, element, context.getLocation(element),
                 "This `<fragment>` tag should specify an id or a tag to preserve state " +
-                "across activity restarts");
+                "across activity restarts", fix);
         }
     }
 }

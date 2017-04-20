@@ -17,7 +17,6 @@ package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.APPCOMPAT_LIB_ARTIFACT;
 import static com.android.SdkConstants.CLASS_ACTIVITY;
-import static com.android.tools.lint.detector.api.TextFormat.RAW;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -28,10 +27,9 @@ import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
-import com.android.tools.lint.detector.api.LintUtils;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.TextFormat;
 import com.intellij.psi.PsiMethod;
 import java.util.Arrays;
 import java.util.List;
@@ -58,8 +56,6 @@ public class AppCompatCallDetector extends Detector implements Detector.UastScan
     private static final String SET_PROGRESS_BAR_IN_VIS = "setProgressBarIndeterminateVisibility";
     private static final String SET_PROGRESS_BAR_INDETERMINATE = "setProgressBarIndeterminate";
     private static final String REQUEST_WINDOW_FEATURE = "requestWindowFeature";
-    /** If you change number of parameters or order, update {@link #getMessagePart(String, int,TextFormat)} */
-    private static final String ERROR_MESSAGE_FORMAT = "Should use `%1$s` instead of `%2$s` name";
 
     private boolean mDependsOnAppCompat;
 
@@ -105,8 +101,11 @@ public class AppCompatCallDetector extends Detector implements Detector.UastScan
             }
 
             if (replace != null) {
-                String message = String.format(ERROR_MESSAGE_FORMAT, replace, name);
-                context.report(ISSUE, node, context.getLocation(node), message);
+                String message = String.format("Should use `%1$s` instead of `%2$s` name", replace,
+                        name);
+                LintFix fix = fix().name("Replace with " + replace + "()").replace()
+                        .text(name).with(replace).build();
+                context.report(ISSUE, node, context.getLocation(node), message, fix);
             }
         }
     }
@@ -123,46 +122,5 @@ public class AppCompatCallDetector extends Detector implements Detector.UastScan
                     "android.support.v7.app.ActionBarActivity", false);
         }
         return false;
-    }
-
-    /**
-     * Given an error message created by this lint check, return the corresponding old method name
-     * that it suggests should be deleted. (Intended to support quickfix implementations
-     * for this lint check.)
-     *
-     * @param errorMessage the error message originally produced by this detector
-     * @param format the format of the error message
-     * @return the corresponding old method name, or null if not recognized
-     */
-    @Nullable
-    public static String getOldCall(@NonNull String errorMessage, @NonNull TextFormat format) {
-        return getMessagePart(errorMessage, 2, format);
-    }
-
-    /**
-     * Given an error message created by this lint check, return the corresponding new method name
-     * that it suggests replace the old method name. (Intended to support quickfix implementations
-     * for this lint check.)
-     *
-     * @param errorMessage the error message originally produced by this detector
-     * @param format the format of the error message
-     * @return the corresponding new method name, or null if not recognized
-     */
-    @Nullable
-    public static String getNewCall(@NonNull String errorMessage, @NonNull TextFormat format) {
-        return getMessagePart(errorMessage, 1, format);
-    }
-
-    @Nullable
-    private static String getMessagePart(@NonNull String errorMessage, int group,
-            @NonNull TextFormat format) {
-        List<String> parameters = LintUtils.getFormattedParameters(
-                RAW.convertTo(ERROR_MESSAGE_FORMAT, format),
-                errorMessage);
-        if (parameters.size() == 2 && group <= 2) {
-            return parameters.get(group - 1);
-        }
-
-        return null;
     }
 }

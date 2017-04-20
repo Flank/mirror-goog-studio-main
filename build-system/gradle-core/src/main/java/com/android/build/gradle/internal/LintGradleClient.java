@@ -39,6 +39,7 @@ import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.LintRequest;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
@@ -304,14 +305,14 @@ public class LintGradleClient extends LintCliClient {
     @Override
     public void report(@NonNull Context context, @NonNull Issue issue, @NonNull Severity severity,
             @NonNull Location location, @NonNull String message, @NonNull TextFormat format,
-            @Nullable Object quickfixData) {
+            @Nullable LintFix fix) {
         if (issue == IssueRegistry.LINT_ERROR
                 && message.startsWith("No `.class` files were found in project")) {
             // In Gradle, .class files are always generated when needed, so no need
             // to flag this (and it's erroneous on library projects)
             return;
         }
-        super.report(context, issue, severity, location, message, format, quickfixData);
+        super.report(context, issue, severity, location, message, format, fix);
     }
 
     @Nullable
