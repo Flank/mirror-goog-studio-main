@@ -93,9 +93,7 @@ def testEnvironment =
 
 testEnvironment << [
         TEST_TMPDIR: project.buildDir, // Use the same environment variable as Bazel for now.
-        CUSTOM_REPO: rootProject.file("../out/repo").toString()
-                + File.pathSeparator
-                + rootProject.file("../prebuilts/tools/common/m2/repository/").toString(),
+        CUSTOM_REPO: rootProject.file("../out/repo"),
         DATA_BINDING_INTERNAL_REPO: rootProject.file("../tools/data-binding/internal-prebuilts"),
         DATA_BINDING_REPO: rootProject.file("../tools/data-binding/maven-repo"),
         CUSTOM_IMPROVED_DEPENDENCY_RESOLUTION : "true"
