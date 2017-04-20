@@ -22,18 +22,18 @@ import java.nio.file.Path;
 import java.util.Map;
 
 public interface ApkSizeCalculator {
-    long getFullApkDownloadSize();
+    long getFullApkDownloadSize(@NonNull Path apk);
 
-    long getFullApkRawSize();
-
-    @NonNull
-    Map<String, Long> getDownloadSizePerFile();
+    long getFullApkRawSize(@NonNull Path apk);
 
     @NonNull
-    Map<String, Long> getRawSizePerFile();
+    Map<String, Long> getDownloadSizePerFile(@NonNull Path apk);
 
     @NonNull
-    static ApkSizeCalculator getDefault(@NonNull Path apk) {
-        return new GzipSizeCalculator(apk);
+    Map<String, Long> getRawSizePerFile(@NonNull Path apk);
+
+    @NonNull
+    static ApkSizeCalculator getDefault() {
+        return new GzipSizeCalculator();
     }
 }

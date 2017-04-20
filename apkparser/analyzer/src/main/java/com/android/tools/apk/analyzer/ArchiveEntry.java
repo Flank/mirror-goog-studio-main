@@ -20,11 +20,19 @@ import com.android.annotations.NonNull;
 import java.nio.file.Path;
 
 public class ArchiveEntry {
-    private final Path path;
+    @NonNull private final Archive archive;
+
+    /**
+     * This is the relative path in the archive. For inner archive root nodes, it's the relative
+     * path in the outer archive. For inner archive non-root nodes, it's the relative path in the
+     * inner archive.
+     */
+    @NonNull private final Path path;
     private long rawFileSize = -1;
     private long downloadFileSize = -1;
 
-    public ArchiveEntry(@NonNull Path path) {
+    public ArchiveEntry(@NonNull Archive archive, @NonNull Path path) {
+        this.archive = archive;
         this.path = path;
     }
 
@@ -47,5 +55,10 @@ public class ArchiveEntry {
 
     public long getDownloadFileSize() {
         return downloadFileSize;
+    }
+
+    @NonNull
+    public Archive getArchive() {
+        return archive;
     }
 }

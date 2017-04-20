@@ -27,6 +27,7 @@ import java.nio.file.Path;
 import java.util.Collections;
 
 public class Archives {
+
     @NonNull
     public static Archive open(@NonNull Path archive) throws IOException {
         URI uri;
