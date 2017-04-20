@@ -40,7 +40,10 @@ task copyVersionProperties(type: Copy) {
 tasks.compileJava.dependsOn copyVersionProperties
 
 test {
-    environment("CUSTOM_REPO", rootProject.file("../out/repo"))
+    environment("CUSTOM_REPO",
+            rootProject.file("../out/repo").toString()
+                    + File.pathSeparator
+                    + rootProject.file("../prebuilts/tools/common/m2/repository/").toString())
 
     testLogging {
         events "failed"
