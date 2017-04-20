@@ -2182,12 +2182,8 @@ public abstract class TaskManager {
                         .getTargetCompatibility()
                         .isJava8Compatible()
                 && variantScope.getJava8LangSupportType() == Java8LangSupport.DESUGAR) {
-            FileCache userCache =
-                    globalScope
-                                    .getProjectOptions()
-                                    .get(BooleanOption.ENABLE_INTERMEDIATE_ARTIFACTS_CACHE)
-                            ? globalScope.getBuildCache()
-                            : null;
+            FileCache userCache = getUserIntermediatesCache();
+            FileCache projectCache = getProjectIntermediatesCache();
 
             int minSdkVersion;
             if (DefaultApiVersion.isPreview(minSdk)) {
@@ -2201,7 +2197,7 @@ public abstract class TaskManager {
                             () -> androidBuilder.getBootClasspath(true),
                             System.getProperty("sun.boot.class.path"),
                             userCache,
-                            globalScope.getProjectLevelCache(),
+                            projectCache,
                             minSdkVersion,
                             androidBuilder.getJavaProcessExecutor(),
                             globalScope.getJava8LangSupportJar(),
@@ -2232,9 +2228,8 @@ public abstract class TaskManager {
         }
 
         boolean minified = runJavaCodeShrinker(variantScope);
-        FileCache userLevelCache = getUserLevelCache(minified, dexOptions.getPreDexLibraries());
-        FileCache projectLevelCache =
-                getProjectLevelCache(minified, dexOptions.getPreDexLibraries());
+        FileCache userLevelCache = getUserDexCache(minified, dexOptions.getPreDexLibraries());
+        FileCache projectLevelCache = getProjectDexCache(minified, dexOptions.getPreDexLibraries());
         DexArchiveBuilderTransform preDexTransform =
                 new DexArchiveBuilderTransform(
                         dexOptions,
@@ -2266,19 +2261,39 @@ public abstract class TaskManager {
     }
 
     @Nullable
-    private FileCache getUserLevelCache(boolean isMinifiedEnabled, boolean preDexLibraries) {
-        if (preDexLibraries
-                && !isMinifiedEnabled
-                && projectOptions.get(BooleanOption.ENABLE_INTERMEDIATE_ARTIFACTS_CACHE)) {
-            return buildCache;
+    private FileCache getUserDexCache(boolean isMinifiedEnabled, boolean preDexLibraries) {
+        if (!preDexLibraries || isMinifiedEnabled) {
+            return null;
+        }
+
+        return getUserIntermediatesCache();
+    }
+
+    @Nullable
+    private FileCache getProjectDexCache(boolean isMinifiedEnabled, boolean preDexLibraries) {
+        if (!preDexLibraries || isMinifiedEnabled) {
+            return null;
+        }
+
+        return getProjectIntermediatesCache();
+    }
+
+    @Nullable
+    private FileCache getUserIntermediatesCache() {
+        if (globalScope
+                .getProjectOptions()
+                .get(BooleanOption.ENABLE_INTERMEDIATE_ARTIFACTS_CACHE)) {
+            return globalScope.getBuildCache();
         } else {
             return null;
         }
     }
 
     @Nullable
-    private FileCache getProjectLevelCache(boolean isMinifiedEnabled, boolean preDexLibraries) {
-        if (preDexLibraries && !isMinifiedEnabled) {
+    private FileCache getProjectIntermediatesCache() {
+        if (globalScope
+                .getProjectOptions()
+                .get(BooleanOption.ENABLE_INTERMEDIATE_ARTIFACTS_CACHE)) {
             return globalScope.getProjectLevelCache();
         } else {
             return null;
