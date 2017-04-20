@@ -32,6 +32,7 @@ public enum ResourceFolderType {
     LAYOUT(ResourceConstants.FD_RES_LAYOUT),
     MENU(ResourceConstants.FD_RES_MENU),
     MIPMAP(ResourceConstants.FD_RES_MIPMAP),
+    NAVIGATION(ResourceConstants.FD_NAVIGATION),
     RAW(ResourceConstants.FD_RES_RAW),
     TRANSITION(ResourceConstants.FD_RES_TRANSITION),
     VALUES(ResourceConstants.FD_RES_VALUES),
