@@ -287,11 +287,10 @@ public class InstantRunVerifier {
             if (updatedMethod == null) {
                 // although it's probably ok if a method got deleted since nobody should be calling
                 // it anymore BUT the application might be using reflection to get the list of
-                // methods and would still see the deleted methods. To be prudent, restart.
-                // However, if the class initializer got removed, it's always fine.
-                return methodNode.name.equals(ByteCodeUtils.CLASS_INITIALIZER)
-                        ? COMPATIBLE
-                        : METHOD_DELETED;
+                // methods and would still see the deleted methods.
+                // Even if removing the static initializer should be fine in InstantRun mode, it
+                // confuses people so it's safer to just restart.
+                return METHOD_DELETED;
             }
 
             // remove the method from the visited ones on the updated class.
