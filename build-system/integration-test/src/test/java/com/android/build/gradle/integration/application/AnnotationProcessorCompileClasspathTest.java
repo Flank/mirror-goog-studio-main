@@ -49,7 +49,7 @@ public class AnnotationProcessorCompileClasspathTest {
 
         GradleBuildResult result = project.executor().expectFailure().run("assembleDebug");
         assertThat(result.getFailureMessage())
-                .contains("Annotation processors must be explicitly declared");
+                .contains("Annotation processors must now be declared explicitly");
         assertThat(result.getFailureMessage()).contains("butterknife-7.0.1.jar");
     }
 
