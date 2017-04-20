@@ -22,6 +22,7 @@ import com.android.build.gradle.options.ProjectOptions;
 
 public enum AaptGeneration {
     AAPT_V1,
+    @Deprecated
     AAPT_V2,
     AAPT_V2_JNI,
     ;

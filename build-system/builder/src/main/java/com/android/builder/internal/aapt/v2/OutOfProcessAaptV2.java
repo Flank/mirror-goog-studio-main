@@ -36,7 +36,10 @@ import java.io.File;
 /**
  * Implementation of {@link com.android.builder.internal.aapt.Aapt} that uses out-of-process
  * execution of {@code aapt2}.
+ *
+ * <p>Deprecated now, use {@link com.android.builder.internal.aapt.v2.AaptV2Jni} instead.
  */
+@Deprecated
 public class OutOfProcessAaptV2 extends AbstractProcessExecutionAapt {
 
     /**

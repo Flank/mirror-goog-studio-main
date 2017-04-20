@@ -112,7 +112,7 @@ public class InstantRunSlicesSplitApkBuilderTest {
                         androidBuilder,
                         packagingScope,
                         coreSigningConfig,
-                        AaptGeneration.AAPT_V2,
+                        AaptGeneration.AAPT_V2_JNI,
                         aaptOptions,
                         outputDirectory.getRoot(),
                         supportDirectory.getRoot()) {
