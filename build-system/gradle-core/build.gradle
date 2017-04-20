@@ -99,10 +99,7 @@ apply from: "$rootDir/buildSrc/base/publish.gradle"
 apply from: "$rootDir/buildSrc/base/bintray.gradle"
 
 test {
-    environment("CUSTOM_REPO",
-            rootProject.file("../out/repo").toString()
-                    + File.pathSeparator
-                    + rootProject.file("../prebuilts/tools/common/m2/repository/").toString())
+    environment("CUSTOM_REPO", rootProject.file("../out/repo"))
 
     testLogging {
         events "failed"

@@ -46,7 +46,6 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -527,40 +526,36 @@ public final class GradleTestProject implements TestRule {
                         false,
                         DEFAULT_KOTLIN_PLUGIN_VERSION);
         if (withDependencyChecker) {
-            result =
-                    result
-                            + "// Check to ensure dependencies are not resolved during configuration.\n"
-                            + "//\n"
-                            + "// If it is intentional, create GradleTestProject without dependency checker"
-                            + "// {@see GradleTestProjectBuilder#withDependencyChecker} or remove the"
-                            + "// checker with:\n"
-                            + "//     gradle.removeListener(rootProject.ext.dependencyResolutionChecker)\n"
-                            + "//\n"
-                            + "// Tips: If you need to trace down where the Configuration is resolved, it \n"
-                            + "// may be helpful to call setCanBeResolved(false) on the Configuration of \n"
-                            + "// interest to get a stacktrace.\n"
-                            + "Boolean isTaskGraphReady = false\n"
-                            + "gradle.taskGraph.whenReady { isTaskGraphReady = true }\n"
-                            + "\n"
-                            + "ext.dependencyResolutionChecker = new DependencyResolutionListener() {\n"
-                            + "    @Override\n"
-                            + "    void beforeResolve(ResolvableDependencies resolvableDependencies) {\n"
-                            + "        if (!isTaskGraphReady\n"
-                            + "                && !resolvableDependencies.getName().equals('classpath')\n"
-                            // classpath is resolved to find the plugin.
-                            + "                && project.findProperty(\""
-                            + AndroidProject.PROPERTY_BUILD_MODEL_ONLY
-                            + "\")?.toBoolean() != true) {\n"
-                            + "            throw new RuntimeException(\n"
-                            + "                    \"Dependency '$resolvableDependencies.name' was resolved during configuration\")\n"
-                            + "        }\n"
-                            + "    }\n"
-                            + "\n"
-                            + "    @Override\n"
-                            + "    void afterResolve(ResolvableDependencies resolvableDependencies) {}\n"
-                            + "}\n"
-                            + "\n"
-                            + "gradle.addListener(dependencyResolutionChecker)\n";
+            result = result
+                    + "// Check to ensure dependencies are not resolved during configuration.\n"
+                    + "//\n"
+                    + "// If it is intentional, create GradleTestProject without dependency checker"
+                    + "// {@see GradleTestProjectBuilder#withDependencyChecker} or remove the"
+                    + "// checker with:\n"
+                    + "//     gradle.removeListener(rootProject.ext.dependencyResolutionChecker)\n"
+                    + "//\n"
+                    + "// Tips: If you need to trace down where the Configuration is resolved, it \n"
+                    + "// may be helpful to call setCanBeResolved(false) on the Configuration of \n"
+                    + "// interest to get a stacktrace.\n"
+                    + "Boolean isTaskGraphReady = false\n"
+                    + "gradle.taskGraph.whenReady { isTaskGraphReady = true }\n"
+                    + "\n"
+                    + "ext.dependencyResolutionChecker = new DependencyResolutionListener() {\n"
+                    + "    @Override\n"
+                    + "    void beforeResolve(ResolvableDependencies resolvableDependencies) {\n"
+                    + "        if (!isTaskGraphReady\n"
+                    + "                && !resolvableDependencies.getName().equals('classpath')\n"  // classpath is resolved to find the plugin.
+                    + "                && project.findProperty(\"" + AndroidProject.PROPERTY_BUILD_MODEL_ONLY + "\")?.toBoolean() != true) {\n"
+                    + "            throw new RuntimeException(\n"
+                    + "                    \"Dependency '$resolvableDependencies.name' was resolved during configuration\")\n"
+                    + "        }\n"
+                    + "    }\n"
+                    + "\n"
+                    + "    @Override\n"
+                    + "    void afterResolve(ResolvableDependencies resolvableDependencies) {}\n"
+                    + "}\n"
+                    + "\n"
+                    + "gradle.addListener(dependencyResolutionChecker)\n";
         }
         return result;
     }
@@ -589,9 +584,7 @@ public final class GradleTestProject implements TestRule {
         if (customRepo != null) {
             // We're running under Gradle.
             // TODO: support USE_EXTERNAL_REPO
-            for (String path : Splitter.on(File.pathSeparatorChar).split(customRepo)) {
-                repos.add(Paths.get(path));
-            }
+            repos.add(Paths.get(customRepo));
         } else {
             // We're running under Bazel. Make sure the setup is there.
             assertThat(BazelIntegrationTestsSuite.OFFLINE_REPO)
@@ -742,9 +735,9 @@ public final class GradleTestProject implements TestRule {
     /**
      * Internal Apk construction facility that will copy the file first on Windows to avoid locking
      * the underlying file.
-     *
      * @param apkFile the file handle to create the APK from.
      * @return the Apk object.
+     * @throws IOException
      */
     private Apk _getApk(File apkFile) throws IOException {
         Apk apk;
@@ -775,7 +768,6 @@ public final class GradleTestProject implements TestRule {
 
         @Nullable
         String getTestName();
-
         boolean isSigned();
 
         static ApkType of(String name, boolean isSigned) {
@@ -840,6 +832,7 @@ public final class GradleTestProject implements TestRule {
         }
 
 
+
     }
 
     /**
@@ -860,8 +853,7 @@ public final class GradleTestProject implements TestRule {
     @NonNull
     public Apk getApk(@Nullable String filterName, ApkType apkType, String... dimensions)
             throws IOException {
-        return _getApk(
-                getOutputFile(
+        return _getApk(getOutputFile(
                         "apk"
                                 + (apkType.getTestName() != null ? "/" + apkType.getTestName() : "")
                                 + "/"
@@ -894,8 +886,7 @@ public final class GradleTestProject implements TestRule {
     @NonNull
     public Apk getFeatureApk(@Nullable String filterName, ApkType apkType, String... dimensions)
             throws IOException {
-        return _getApk(
-                getOutputFile(
+        return _getApk(getOutputFile(
                         "apk"
                                 + (apkType.getTestName() != null ? "/" + apkType.getTestName() : "")
                                 + "/feature/"
@@ -960,8 +951,8 @@ public final class GradleTestProject implements TestRule {
         List<String> dimensionList = Lists.newArrayListWithExpectedSize(1 + dimensions.length);
         dimensionList.add(getName());
         dimensionList.addAll(Arrays.asList(dimensions));
-        return new Aar(
-                getOutputFile("aar/" + Joiner.on("-").join(dimensionList) + SdkConstants.DOT_AAR));
+            return new Aar(getOutputFile(
+                    "aar/" + Joiner.on("-").join(dimensionList) + SdkConstants.DOT_AAR));
     }
 
     /**
