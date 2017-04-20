@@ -23,21 +23,30 @@ using profiler::CountDownLatch;
 
 TEST(BackgroundQueue, EnqueuingTasksWorks) {
   CountDownLatch job_1_waiting(1);
+  CountDownLatch job_1_finished(1);
   CountDownLatch job_2_waiting(1);
+  CountDownLatch job_2_finished(1);
 
+  int val = 0;
   BackgroundQueue bq("BQTestThread");
-  bq.EnqueueTask([&] { job_1_waiting.Await(); });
-  bq.EnqueueTask([&] { job_2_waiting.Await(); });
+  bq.EnqueueTask([&] {
+    job_1_waiting.Await();
+    val = 1;
+    job_1_finished.CountDown();
+  });
+  bq.EnqueueTask([&] {
+    job_2_waiting.Await();
+    val = 2;
+    job_2_finished.CountDown();
+  });
 
-  EXPECT_FALSE(bq.IsIdle());
+  EXPECT_EQ(0, val);
   job_1_waiting.CountDown();
-
-  EXPECT_FALSE(bq.IsIdle());
+  job_1_finished.Await();
+  EXPECT_EQ(1, val);
   job_2_waiting.CountDown();
-
-  while (!bq.IsIdle()) {
-    std::this_thread::yield();
-  }
+  job_2_finished.Await();
+  EXPECT_EQ(2, val);
 }
 
 TEST(BackgroundQueue, DestructorBlocksUntilJobsFinish) {

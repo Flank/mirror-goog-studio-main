@@ -26,47 +26,29 @@ using std::lock_guard;
 using std::mutex;
 using std::thread;
 using std::string;
-using std::queue;
 
 namespace profiler {
 
 BackgroundQueue::BackgroundQueue(string thread_name, int max_length)
-    : max_length_(max_length),
-      is_task_running_(false),
-      task_thread_name_(thread_name) {
-  assert(max_length_ > 0 || max_length_ == -1);
+    : task_queue_(max_length), task_thread_name_(thread_name) {
   task_thread_ = thread(&BackgroundQueue::TaskThread, this);
 }
 
 BackgroundQueue::~BackgroundQueue() {
-  task_channel_.Finish();
+  task_queue_.Finish();
   task_thread_.join();
 }
 
 void BackgroundQueue::EnqueueTask(function<void()> task) {
-  if (max_length_ > 0 &&
-      task_channel_.length() == static_cast<size_t>(max_length_)) {
-    // If we're falling behind (most likely because the background tasks are
-    // blocked), then just drop the oldest to make way for the newest.
-    function<void()> oldest_task;
-    task_channel_.Pop(&oldest_task);
-  }
-
-  task_channel_.Push(task);
-}
-
-bool BackgroundQueue::IsIdle() const {
-  return task_channel_.length() == 0 && !is_task_running_;
+  task_queue_.Push(task);
 }
 
 void BackgroundQueue::TaskThread() {
   SetThreadName(task_thread_name_);
 
   function<void()> task;
-  while (task_channel_.Pop(&task)) {
-    is_task_running_ = true;
+  while (task_queue_.Pop(&task)) {
     task();
-    is_task_running_ = false;
   }
 }
 

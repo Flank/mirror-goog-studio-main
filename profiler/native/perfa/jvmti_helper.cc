@@ -84,6 +84,25 @@ JNIEnv* GetThreadLocalJNI(JavaVM* vm) {
   return jni;
 }
 
+jthread AllocateJavaThread(jvmtiEnv* jvmti, JNIEnv* jni) {
+  ScopedLocalRef<jclass> klass(jni, jni->FindClass("java/lang/Thread"));
+  if (klass.get() == nullptr) {
+    Log::E("Failed to find Thread class.");
+  }
+
+  jmethodID method = jni->GetMethodID(klass.get(), "<init>", "()V");
+  if (method == nullptr) {
+    Log::E("Failed to find Thread.<init> method.");
+  }
+
+  jthread result = jni->NewObject(klass.get(), method);
+  if (result == nullptr) {
+    Log::E("Failed to create new Thread object.");
+  }
+
+  return result;
+}
+
 void* Allocate(jvmtiEnv* jvmti, jlong size) {
   unsigned char* alloc = nullptr;
   jvmtiError err = jvmti->Allocate(size, &alloc);

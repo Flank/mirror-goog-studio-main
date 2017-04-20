@@ -8,6 +8,7 @@ set(UTILS_SOURCES
     installer.cc
     package_manager.cc
     process_manager.cc
+    producer_consumer_queue.h
     stopwatch.cc
     tokenizer.cc
     trace.cc
@@ -52,13 +53,13 @@ endif()
 add_unit_test(profiler_utils_test
               activity_manager_test.cc
               background_queue_test.cc
-              channel_test.cc
               circular_buffer_test.cc
               clock_test.cc
               count_down_latch_test.cc
               current_process_test.cc
               file_cache_test.cc
               file_reader_test.cc
+              producer_consumer_queue_test.cc
               stopwatch_test.cc
               time_value_buffer_test.cc
               tokenizer_test.cc
