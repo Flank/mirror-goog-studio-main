@@ -187,20 +187,22 @@ public final class ProcessProfileWriter implements ProfileRecordWriter {
         return get().mProjects.getUnchecked(projectPath).properties;
     }
 
-    public static GradleBuildVariant.Builder addVariant(
+    public static GradleBuildVariant.Builder getOrCreateVariant(
             @NonNull String projectPath, @NonNull String variantName) {
-        GradleBuildVariant.Builder properties = GradleBuildVariant.newBuilder();
-        get().addVariant(projectPath, variantName, properties);
-        return properties;
+        return get().addVariant(projectPath, variantName);
     }
 
-    private void addVariant(
-            @NonNull String projectPath,
-            @NonNull String variantName,
-            @NonNull GradleBuildVariant.Builder properties) {
+    // Idempotent.
+    private GradleBuildVariant.Builder addVariant(
+            @NonNull String projectPath, @NonNull String variantName) {
         Project project = mProjects.getUnchecked(projectPath);
-        properties.setId(mNameAnonymizer.anonymizeVariant(projectPath, variantName));
-        project.variants.put(variantName, properties);
+        GradleBuildVariant.Builder properties = project.variants.get(variantName);
+        if (properties == null) {
+            properties = GradleBuildVariant.newBuilder();
+            properties.setId(mNameAnonymizer.anonymizeVariant(projectPath, variantName));
+            project.variants.put(variantName, properties);
+        }
+        return properties;
     }
 
     private GradleBuildMemorySample createAndRecordMemorySample() {
