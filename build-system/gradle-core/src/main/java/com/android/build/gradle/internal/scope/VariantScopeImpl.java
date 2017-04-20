@@ -170,7 +170,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     // Tasks
     private AndroidTask<DefaultTask> assembleTask;
     private AndroidTask<? extends DefaultTask> preBuildTask;
-    private AndroidTask<ProcessAndroidResources> generateRClassTask;
 
     private AndroidTask<Task> sourceGenTask;
     private AndroidTask<Task> resourceGenTask;
@@ -184,14 +183,9 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Nullable
     private AndroidTask<MergeSourceSetFolders> mergeAssetsTask;
     private AndroidTask<GenerateBuildConfig> generateBuildConfigTask;
-    private AndroidTask<GenerateResValues> generateResValuesTask;
-    private AndroidTask<ShaderCompile> shaderCompileTask;
 
     private AndroidTask<Sync> processJavaResourcesTask;
     private AndroidTask<TransformTask> mergeJavaResourcesTask;
-    private AndroidTask<?> shrinkResourcesTask;
-
-    private AndroidTask<MergeSourceSetFolders> mergeJniLibsFolderTask;
 
     @Nullable
     private AndroidTask<DataBindingProcessLayoutsTask> dataBindingProcessLayoutsTask;
@@ -939,33 +933,9 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @Override
     @NonNull
-    public File getPreDexOutputDir() {
-        return new File(globalScope.getIntermediatesDir(), "/pre-dexed/" +
-                getVariantConfiguration().getDirName());
-    }
-
-    @Override
-    @NonNull
-    public File getProguardOutputFile() {
-        return (variantData instanceof LibraryVariantData) ?
-                new File(getBaseBundleDir(), "classes.jar") :
-                new File(globalScope.getIntermediatesDir(),
-                        "/classes-proguard/" + getVariantConfiguration().getDirName()
-                                + "/classes.jar");
-    }
-
-    @Override
-    @NonNull
     public File getProguardComponentsJarFile() {
         return new File(globalScope.getIntermediatesDir(), "multi-dex/" + getVariantConfiguration().getDirName()
                 + "/componentClasses.jar");
-    }
-
-    @Override
-    @NonNull
-    public File getJarMergingOutputFile() {
-        return new File(globalScope.getIntermediatesDir(), "multi-dex/" + getVariantConfiguration().getDirName()
-                + "/allclasses.jar");
     }
 
     @Override
@@ -994,13 +964,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     public File getRenderscriptLibOutputDir() {
         return new File(globalScope.getIntermediatesDir(),
                 "rs/" + variantData.getVariantConfiguration().getDirName() + "/lib");
-    }
-
-    @Override
-    @NonNull
-    public File getSymbolLocation() {
-        return new File(globalScope.getIntermediatesDir() + "/symbols/" +
-                variantData.getVariantConfiguration().getDirName());
     }
 
     @Override
@@ -1121,13 +1084,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     public File getShadersOutputDir() {
         return getGeneratedAssetsDir("shaders");
-    }
-
-    @Override
-    @NonNull
-    public File getPackagedJarsJavaResDestinationDir() {
-        return new File(globalScope.getIntermediatesDir(),
-                "packagedJarsJavaResources/" + getVariantConfiguration().getDirName());
     }
 
     @Override
@@ -1277,29 +1233,11 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     }
 
     @Override
-    public File getMappingFile() {
-        return new File(globalScope.getOutputsDir(),
-                "/mapping/" + getVariantConfiguration().getDirName() + "/mapping.txt");
-    }
-
-    @Override
     @NonNull
     public File getGenerateSplitAbiResOutputDirectory() {
         return new File(
                 globalScope.getIntermediatesDir(),
                 FileUtils.join("splits", "res", "abi", getVariantConfiguration().getDirName()));
-    }
-
-    @NonNull
-    @Override
-    public File getGenerateSplitDensityOrLanguagesResOutputDirectory() {
-        return new File(
-                globalScope.getIntermediatesDir(),
-                FileUtils.join(
-                        "splits",
-                        "res",
-                        "densityLanguage",
-                        getVariantConfiguration().getDirName()));
     }
 
     @Override
@@ -1583,16 +1521,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     }
 
     @Override
-    public AndroidTask<ShaderCompile> getShaderCompileTask() {
-        return shaderCompileTask;
-    }
-
-    @Override
-    public void setShaderCompileTask(AndroidTask<ShaderCompile> shaderCompileTask) {
-        this.shaderCompileTask = shaderCompileTask;
-    }
-
-    @Override
     @Nullable
     public AndroidTask<MergeResources> getMergeResourcesTask() {
         return mergeResourcesTask;
@@ -1616,18 +1544,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         this.mergeAssetsTask = mergeAssetsTask;
     }
 
-    @Nullable
-    @Override
-    public AndroidTask<MergeSourceSetFolders> getMergeJniLibFoldersTask() {
-        return mergeJniLibsFolderTask;
-    }
-
-    @Override
-    public void setMergeJniLibFoldersTask(
-            @Nullable AndroidTask<MergeSourceSetFolders> mergeJniLibsFolderTask) {
-        this.mergeJniLibsFolderTask = mergeJniLibsFolderTask;
-    }
-
     @Override
     public AndroidTask<GenerateBuildConfig> getGenerateBuildConfigTask() {
         return generateBuildConfigTask;
@@ -1637,17 +1553,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     public void setGenerateBuildConfigTask(
             AndroidTask<GenerateBuildConfig> generateBuildConfigTask) {
         this.generateBuildConfigTask = generateBuildConfigTask;
-    }
-
-    @Override
-    public AndroidTask<GenerateResValues> getGenerateResValuesTask() {
-        return generateResValuesTask;
-    }
-
-    @Override
-    public void setGenerateResValuesTask(
-            AndroidTask<GenerateResValues> generateResValuesTask) {
-        this.generateResValuesTask = generateResValuesTask;
     }
 
     @Override
@@ -1979,16 +1884,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     public SplitScope getSplitScope() {
         return variantData.getSplitScope();
-    }
-
-    @Override
-    public AndroidTask<?> getShrinkResourcesTask() {
-        return shrinkResourcesTask;
-    }
-
-    @Override
-    public void setShrinkResourcesTask(AndroidTask<?> shrinkResourcesTask) {
-        this.shrinkResourcesTask = shrinkResourcesTask;
     }
 
     @NonNull
