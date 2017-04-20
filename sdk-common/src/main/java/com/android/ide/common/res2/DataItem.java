@@ -20,11 +20,10 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
-
+import com.google.common.base.Preconditions;
+import java.io.File;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
-
-import java.io.File;
 
 /**
  * A data item is the most elementary merge unit in the data merging process. Data items will
@@ -70,7 +69,7 @@ abstract class DataItem<F extends DataFile> {
      * @param name the name of the item
      */
     DataItem(@NonNull String name) {
-        mName = name;
+        mName = Preconditions.checkNotNull(name);
     }
 
     /**
