@@ -21,10 +21,10 @@ import junit.framework.TestCase;
 public class FolderTypeRelationShipTest extends TestCase {
 
     public void testResourceType() {
-        // All resource type except AAPT should be in the FolderTypeRelationShip map.
+        // All resource type except AAPT and MOCK should be in the FolderTypeRelationShip map.
         // Loop on all of the enum, and make sure there's at least one folder type for it.
         for (ResourceType type : ResourceType.values()) {
-            if (type == ResourceType.AAPT) {
+            if (type == ResourceType.AAPT || type == ResourceType.MOCK) {
                 continue;
             }
             assertTrue(type.getDisplayName(),

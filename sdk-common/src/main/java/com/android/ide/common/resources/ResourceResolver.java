@@ -16,30 +16,22 @@
 
 package com.android.ide.common.resources;
 
-import static com.android.SdkConstants.ANDROID_STYLE_RESOURCE_PREFIX;
-import static com.android.SdkConstants.PREFIX_ANDROID;
-import static com.android.SdkConstants.PREFIX_RESOURCE_REF;
-import static com.android.SdkConstants.REFERENCE_STYLE;
+import static com.android.SdkConstants.*;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.common.rendering.api.ArrayResourceValue;
-import com.android.ide.common.rendering.api.ItemResourceValue;
-import com.android.ide.common.rendering.api.LayoutLog;
-import com.android.ide.common.rendering.api.RenderResources;
-import com.android.ide.common.rendering.api.ResourceValue;
-import com.android.ide.common.rendering.api.StyleResourceValue;
+import com.android.ide.common.rendering.api.*;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
+import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import com.google.common.io.Files;
+import java.io.File;
+import java.io.IOException;
+import java.lang.ref.SoftReference;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -382,27 +374,27 @@ public class ResourceResolver extends RenderResources {
         }
 
         ResourceUrl resource = ResourceUrl.parse(reference);
-        if (resource != null && resource.hasValidName()) {
-            if (resource.theme) {
-                // no theme? no need to go further!
-                if (mDefaultTheme == null) {
-                    return null;
-                }
-
-                if (resource.type != ResourceType.ATTR) {
-                    // At this time, no support for ?type/name where type is not "attr"
-                    return null;
-                }
-
-                // Now look for the item in the theme, starting with the current one.
-                return findItemInTheme(resource.name, forceFrameworkOnly || resource.framework);
-            } else {
-                return findResValue(resource, forceFrameworkOnly);
-            }
+        if (resource == null || !resource.hasValidName()) {
+            // Looks like the value didn't reference anything. Return null.
+            return null;
         }
 
-        // Looks like the value didn't reference anything. Return null.
-        return null;
+        if (resource.theme) {
+            // no theme? no need to go further!
+            if (mDefaultTheme == null) {
+                return null;
+            }
+
+            if (resource.type != ResourceType.ATTR) {
+                // At this time, no support for ?type/name where type is not "attr"
+                return null;
+            }
+
+            // Now look for the item in the theme, starting with the current one.
+            return findItemInTheme(resource.name, forceFrameworkOnly || resource.framework);
+        } else {
+            return findResValue(resource, forceFrameworkOnly);
+        }
     }
 
     @Override
@@ -448,6 +440,43 @@ public class ResourceResolver extends RenderResources {
 
     // ---- Private helper methods.
 
+    private static final Map<String, SoftReference<List<String>>> sMockList = new HashMap<>();
+    private final Map<String, AtomicInteger> mMockPosition = new HashMap<>();
+
+    private ResourceValue findMockValue(String name) {
+        return Optional.ofNullable(mProjectResources.get(ResourceType.MOCK))
+                .map(t -> t.get(name))
+                .map(ResourceValue::getValue)
+                .map(
+                        fileName -> {
+                            AtomicInteger mockPosition = mMockPosition.get(fileName);
+                            if (mockPosition == null) {
+                                mockPosition = new AtomicInteger(0);
+                                mMockPosition.put(fileName, mockPosition);
+                            }
+
+                            SoftReference<List<String>> linesRef = sMockList.get(fileName);
+                            List<String> lines = linesRef != null ? linesRef.get() : null;
+                            if (lines == null) {
+                                try {
+                                    lines = Files.readLines(new File(fileName), Charsets.UTF_8);
+
+                                    sMockList.put(fileName, new SoftReference<>(lines));
+                                } catch (IOException ignore) {
+                                }
+                            }
+
+                            int lineCount = lines != null ? lines.size() : 0;
+                            String lineContent =
+                                    lineCount > 0
+                                            ? lines.get(mockPosition.getAndIncrement() % lineCount)
+                                            : null;
+
+                            return new ResourceValue(ResourceType.MOCK, name, lineContent, false);
+                        })
+                .orElse(null);
+    }
+
     /**
      * Searches for, and returns a {@link ResourceValue} by its parsed reference.
      *
@@ -459,6 +488,9 @@ public class ResourceResolver extends RenderResources {
         if (url.type == ResourceType.AAPT) {
             // Aapt resources are synthetic references that do not need to be resolved.
             return null;
+        } else if (url.type == ResourceType.MOCK) {
+            // Mock resources are only available within the tools namespace
+            return findMockValue(url.name);
         }
 
         // map of ResourceValue for the given type
@@ -466,7 +498,6 @@ public class ResourceResolver extends RenderResources {
         ResourceType resType = url.type;
         String resName = url.name;
         boolean isFramework = forceFramework || url.framework;
-
         if (!isFramework) {
             typeMap = mProjectResources.get(resType);
             ResourceValue item = typeMap.get(resName);
