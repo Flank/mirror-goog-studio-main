@@ -26,6 +26,7 @@ import com.android.build.gradle.integration.common.utils.PerformanceTestProjects
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.instant.InstantRunTestUtils;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.sdklib.AndroidVersion;
@@ -106,7 +107,11 @@ public class AntennaPodInstantRunTest {
 
     @NonNull
     private RunGradleTasks getExecutor() {
-        return project.executor();
+        if (java8LangSupport == VariantScope.Java8LangSupport.RETROLAMBDA) {
+            return project.executor().with(BooleanOption.ENABLE_EXTRACT_ANNOTATIONS, false);
+        } else {
+            return project.executor();
+        }
     }
 
     private void makeHotSwapChange(int i) throws Exception {

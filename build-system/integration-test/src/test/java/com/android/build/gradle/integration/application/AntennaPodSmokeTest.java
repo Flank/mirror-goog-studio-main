@@ -40,7 +40,7 @@ public class AntennaPodSmokeTest {
 
     @Parameterized.Parameter public VariantScope.Java8LangSupport java8LangSupport;
 
-    @Parameterized.Parameters
+    @Parameterized.Parameters(name = "{0}")
     public static List<VariantScope.Java8LangSupport> getJava8LangSupport() {
         return ImmutableList.of(
                 VariantScope.Java8LangSupport.RETROLAMBDA, VariantScope.Java8LangSupport.DESUGAR);
@@ -74,9 +74,12 @@ public class AntennaPodSmokeTest {
                 .with(BooleanOption.IDE_GENERATE_SOURCES_ONLY, true)
                 .run(ModelHelper.getDebugGenerateSourcesCommands(models));
 
-
-        project.executor().run(":app:assembleDebug");
-        if (java8LangSupport != VariantScope.Java8LangSupport.RETROLAMBDA) {
+        if (java8LangSupport == VariantScope.Java8LangSupport.RETROLAMBDA) {
+            project.executor()
+                    .with(BooleanOption.ENABLE_EXTRACT_ANNOTATIONS, false)
+                    .run(":app:assembleDebug");
+        } else {
+            project.executor().run(":app:assembleDebug");
             // Retrolambda is currently broken when building tests from clean
             project.executor().run("clean");
             project.executor().run(":app:assembleDebugAndroidTest");

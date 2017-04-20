@@ -46,7 +46,8 @@ class LocalJarsTest {
 
     @BeforeClass
     static void setUp() {
-        models = project.executeAndReturnMultiModel("clean", "assembleDebug")
+        project.executor().allowStderr(false).run("clean", "assembleDebug")
+        models = project.model().getMulti();
     }
 
     @AfterClass
