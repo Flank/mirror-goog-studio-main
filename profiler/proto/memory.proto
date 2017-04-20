@@ -57,6 +57,11 @@ service MemoryService {
   // Pre-O only: Used by Studio only for exporting legacy tracking data.
   rpc GetLegacyAllocationDump(DumpDataRequest) returns (DumpDataResponse) {}
 
+  // O+ studio-side only: Mirrors GetLegacyAllocationEvents but for O+ data.
+  // This returns a snapshot of all objects that are live at the requested time.
+  rpc GetAllocationSnaphot(AllocationSnapshotRequest)
+      returns (BatchAllocationSample) {}
+
   rpc ForceGarbageCollection(ForceGarbageCollectionRequest)
       returns (ForceGarbageCollectionResponse) {}
 }
@@ -127,6 +132,7 @@ message MemoryData {
   repeated GcStatsSample gc_stats_samples = 4;
   repeated HeapDumpInfo heap_dump_infos = 5;
   repeated AllocationsInfo allocations_info = 6;
+  repeated BatchAllocationSample allocation_samples = 7;
 }
 
 // Proto for describing a heap dump record.
@@ -304,6 +310,24 @@ message AllocationStack {
   repeated StackFrame stackFrames = 2;
 }
 
+message AllocationSnapshotRequest {
+  int32 process_id = 1;
+  Session session = 2;
+  int64 request_time = 3;  // exclusive;
+}
+
+// Batched AllocationEvents to minimize number of grpc
+// calls comapred to transferring them individually.
+message BatchAllocationSample {
+  int32 process_id = 1;
+  // From Perfa->Perfd and Perfd->Studio, this marks the
+  // time(ns) when the sample was first created in the agent.
+  // Within Studio, this indicates the latest timestamp amongst
+  // the events list.
+  int64 timestamp = 2;
+  repeated AllocationEvent events = 3;
+}
+
 // Proto format for handling O+ allocation data.
 message AllocationEvent {
   // Special case for java/lang/Class object allocations.
@@ -322,6 +346,12 @@ message AllocationEvent {
     // Legnth for array objects. For non-arrays, set to -1.
     int32 length = 4;
     // TODO - thread, stack info.
+
+    // Studio-side only so we can store and query data more
+    // efficiently. If an allocation has been free, this field
+    // would indicate the free timestamps (i.e. the timestamp
+    // of the gc event that triggered the deallocation)
+    int64 free_timestamp = 5;
   }
 
   message Deallocation {

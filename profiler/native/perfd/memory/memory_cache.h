@@ -19,6 +19,7 @@
 #include <mutex>
 #include <string>
 
+#include "proto/internal_memory.grpc.pb.h"
 #include "proto/memory.pb.h"
 #include "utils/circular_buffer.h"
 #include "utils/clock.h"
@@ -39,6 +40,8 @@ class MemoryCache {
   void SaveMemorySample(const proto::MemoryData::MemorySample& sample);
   void SaveAllocStatsSample(const proto::MemoryData::AllocStatsSample& sample);
   void SaveGcStatsSample(const proto::MemoryData::GcStatsSample& sample);
+  void SaveAllocationEvents(const proto::BatchAllocationSample* request);
+
   // Saves a new HeapDumpInfo sample based on the dump_file_name and
   // request_time parameters. This method returns false if a heap dump
   // is still in progress (e.g. a matching EndHeapDump has not been
@@ -47,6 +50,7 @@ class MemoryCache {
   // parameter is populated with the most recent HeapDumpInfo.
   bool StartHeapDump(const std::string& dump_file_name, int64_t request_time,
                      proto::TriggerHeapDumpResponse* response);
+
   bool EndHeapDump(int64_t end_time, bool success);
   void TrackAllocations(bool enabled, bool legacy,
                         proto::TrackAllocationsResponse* response);
@@ -70,11 +74,13 @@ class MemoryCache {
   CircularBuffer<proto::MemoryData::GcStatsSample> gc_stats_samples_;
   CircularBuffer<proto::HeapDumpInfo> heap_dump_infos_;
   CircularBuffer<proto::AllocationsInfo> allocations_info_;
+  CircularBuffer<proto::BatchAllocationSample> allocations_samples_;
   std::mutex memory_samples_mutex_;
   std::mutex alloc_stats_samples_mutex_;
   std::mutex gc_stats_samples_mutex_;
   std::mutex heap_dump_infos_mutex_;
   std::mutex allocations_info_mutex_;
+  std::mutex allocations_samples_mutex_;
 
   bool has_unfinished_heap_dump_;
   bool is_allocation_tracking_enabled_;

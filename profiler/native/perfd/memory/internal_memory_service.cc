@@ -91,8 +91,7 @@ Status InternalMemoryServiceImpl::RecordGcStats(
 }
 
 grpc::Status InternalMemoryServiceImpl::RecordAllocationEvents(
-    grpc::ServerContext *context,
-    const proto::RecordAllocationEventsRequest *request,
+    grpc::ServerContext *context, const proto::BatchAllocationSample *request,
     proto::EmptyMemoryReply *reply) {
   auto result = collectors_.find(request->process_id());
   if (result == collectors_.end()) {
@@ -100,6 +99,8 @@ grpc::Status InternalMemoryServiceImpl::RecordAllocationEvents(
         ::grpc::StatusCode::NOT_FOUND,
         "The memory collector for the specified pid has not been started yet.");
   }
+
+  result->second.memory_cache()->SaveAllocationEvents(request);
 
   return Status::OK;
 }

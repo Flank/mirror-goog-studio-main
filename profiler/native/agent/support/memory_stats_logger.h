@@ -30,8 +30,7 @@ void EnqueueAllocStats(int32_t alloc_count, int32_t free_count);
 // TODO: add count+bytes freed information.
 void EnqueueGcStats(int64_t start_time, int64_t end_time);
 
-void EnqueueAllocationEvents(
-    const proto::RecordAllocationEventsRequest& request);
+void EnqueueAllocationEvents(const proto::BatchAllocationSample& request);
 
 }  // end of namespace profiler
 

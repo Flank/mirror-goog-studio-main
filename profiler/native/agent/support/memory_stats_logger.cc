@@ -83,14 +83,16 @@ void EnqueueGcStats(int64_t start_time, int64_t end_time) {
       });
 }
 
-void EnqueueAllocationEvents(
-    const proto::RecordAllocationEventsRequest& request) {
-  Log::V("Enqueuing allocation events. Event Count = %d",
-         request.events_size());
+void EnqueueAllocationEvents(const proto::BatchAllocationSample& request) {
   Agent::Instance().background_queue()->EnqueueTask([request]() {
     auto mem_stub = Agent::Instance().memory_component()->service_stub();
     ClientContext context;
     EmptyMemoryReply reply;
+    // Note: The sample's timestamp is set once it reaches perfd, to avoid
+    // the sample being missed during MemoryCache::LoadMemoryData. This can
+    // occur if there is enough delay between here and when the sample gets
+    // saved in the cache, and other memory data samples with later timestamps
+    // have already been queried during LoadMemoryData.
     mem_stub.RecordAllocationEvents(&context, request, &reply);
   });
 }

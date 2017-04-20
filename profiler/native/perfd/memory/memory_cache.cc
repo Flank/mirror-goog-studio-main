@@ -26,8 +26,17 @@ using ::profiler::proto::HeapDumpInfo;
 using ::profiler::proto::MemoryData;
 using ::profiler::proto::AllocationsInfo;
 using ::profiler::proto::TriggerHeapDumpResponse;
+using ::profiler::proto::AllocationEvent;
+using ::profiler::proto::BatchAllocationSample;
 
 namespace profiler {
+
+// O+ allocation events data needs a larger buffer size as they are
+// pushed from perfa instead of being sampled at a fixed interval in perfd.
+// During initial heap snapshotting, there can potentially be a large
+// amount of samples being pushed before Studio has a chance to query them.
+// TODO: revisit whether this is too large.
+constexpr int64_t kAllocSampleCapcity = 500;
 
 MemoryCache::MemoryCache(const Clock& clock, FileCache* file_cache,
                          int32_t samples_capacity)
@@ -38,6 +47,7 @@ MemoryCache::MemoryCache(const Clock& clock, FileCache* file_cache,
       gc_stats_samples_(samples_capacity),
       heap_dump_infos_(samples_capacity),
       allocations_info_(samples_capacity),
+      allocations_samples_(kAllocSampleCapcity),
       has_unfinished_heap_dump_(false),
       is_allocation_tracking_enabled_(false) {}
 
@@ -55,6 +65,14 @@ void MemoryCache::SaveAllocStatsSample(
 void MemoryCache::SaveGcStatsSample(const MemoryData::GcStatsSample& sample) {
   std::lock_guard<std::mutex> lock(gc_stats_samples_mutex_);
   gc_stats_samples_.Add(sample);
+}
+
+void MemoryCache::SaveAllocationEvents(const BatchAllocationSample* request) {
+  std::lock_guard<std::mutex> lock(allocations_samples_mutex_);
+  BatchAllocationSample sample;
+  BatchAllocationSample* cache_sample = allocations_samples_.Add(sample);
+  cache_sample->CopyFrom(*request);
+  cache_sample->set_timestamp(clock_.GetCurrentTime());
 }
 
 bool MemoryCache::StartHeapDump(const std::string& dump_file_name,
@@ -142,10 +160,11 @@ void MemoryCache::LoadMemoryData(int64_t start_time_exl, int64_t end_time_inc,
   std::lock_guard<std::mutex> gc_stats_lock(gc_stats_samples_mutex_);
   std::lock_guard<std::mutex> heap_dump_lock(heap_dump_infos_mutex_);
   std::lock_guard<std::mutex> allocations_info_lock(allocations_info_mutex_);
+  std::lock_guard<std::mutex> allocations_data_lock(allocations_samples_mutex_);
 
   int64_t end_timestamp = -1;
   for (size_t i = 0; i < memory_samples_.size(); ++i) {
-    const proto::MemoryData::MemorySample& sample = memory_samples_.Get(i);
+    const MemoryData::MemorySample& sample = memory_samples_.Get(i);
     int64_t timestamp = sample.timestamp();
     // TODO add optimization to skip past already-queried entries if the array
     // gets large.
@@ -156,8 +175,7 @@ void MemoryCache::LoadMemoryData(int64_t start_time_exl, int64_t end_time_inc,
   }
 
   for (size_t i = 0; i < alloc_stats_samples_.size(); ++i) {
-    const proto::MemoryData::AllocStatsSample& sample =
-        alloc_stats_samples_.Get(i);
+    const MemoryData::AllocStatsSample& sample = alloc_stats_samples_.Get(i);
     int64_t timestamp = sample.timestamp();
     if (timestamp > start_time_exl && timestamp <= end_time_inc) {
       response->add_alloc_stats_samples()->CopyFrom(sample);
@@ -166,7 +184,7 @@ void MemoryCache::LoadMemoryData(int64_t start_time_exl, int64_t end_time_inc,
   }
 
   for (size_t i = 0; i < gc_stats_samples_.size(); ++i) {
-    const proto::MemoryData::GcStatsSample& sample = gc_stats_samples_.Get(i);
+    const MemoryData::GcStatsSample& sample = gc_stats_samples_.Get(i);
     int64_t start_time = sample.start_time();
     int64_t end_time = sample.end_time();
     if ((start_time > start_time_exl && start_time <= end_time_inc) ||
@@ -187,8 +205,6 @@ void MemoryCache::LoadMemoryData(int64_t start_time_exl, int64_t end_time_inc,
     }
   }
 
-  // TODO implement JVMTI allocation events AND MAKE SURE THE BUFFER IS LARGE
-
   for (size_t i = 0; i < heap_dump_infos_.size(); ++i) {
     const HeapDumpInfo& info = heap_dump_infos_.Get(i);
     int64_t start_time = info.start_time();
@@ -199,6 +215,16 @@ void MemoryCache::LoadMemoryData(int64_t start_time_exl, int64_t end_time_inc,
         (end_time > start_time_exl && end_time <= end_time_inc)) {
       response->add_heap_dump_infos()->CopyFrom(info);
       end_timestamp = std::max({start_time, end_time, end_timestamp});
+    }
+  }
+
+  // O+ data only.
+  for (size_t i = 0; i < allocations_samples_.size(); ++i) {
+    const BatchAllocationSample& sample = allocations_samples_.Get(i);
+    int64_t timestamp = sample.timestamp();
+    if (timestamp > start_time_exl && timestamp <= end_time_inc) {
+      response->add_allocation_samples()->CopyFrom(sample);
+      end_timestamp = std::max(timestamp, end_timestamp);
     }
   }
 

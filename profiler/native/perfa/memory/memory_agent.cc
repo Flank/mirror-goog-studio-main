@@ -43,11 +43,16 @@ const char* kClassClass = "Ljava/lang/Class;";
 
 // Wait time between sending alloc data to perfd/studio.
 constexpr long kDataTransferIntervalNs = Clock::ms_to_ns(500);
+
+// TODO looks like we are capped by a protobuf message size limit.
+// Investigate whether smaller batches are good enough, or if we
+// should tweak the limit for profilers.
+constexpr int kDataBatchSize = 2000;
 }
 
 namespace profiler {
 
-using proto::RecordAllocationEventsRequest;
+using proto::BatchAllocationSample;
 
 // STL container memory tracking for Debug only.
 std::atomic<int64_t> g_max_used_[kMemTagCount];
@@ -153,31 +158,40 @@ void MemoryAgent::StartLiveTracking() {
   jclass* classes;
   error = jvmti_->GetLoadedClasses(&class_count, &classes);
   CheckJvmtiError(jvmti_, error);
-  RecordAllocationEventsRequest class_request;
+  BatchAllocationSample class_sample;
+  class_sample.set_process_id(app_id_);
   for (int i = 0; i < class_count; ++i) {
     ScopedLocalRef<jclass> klass(jni, classes[i]);
 
-    AllocationEvent* event = class_request.add_events();
+    AllocationEvent* event = class_sample.add_events();
     RegisterNewClass(jni, klass.get(), event);
     event->set_tracking_start_time(last_tracking_start_ns_);
     event->set_timestamp(last_tracking_start_ns_);
+    if (class_sample.events_size() >= kDataBatchSize) {
+      profiler::EnqueueAllocationEvents(class_sample);
+      class_sample.clear_events();
+    }
   }
-  class_request.set_timestamp(last_tracking_start_ns_);
-  class_request.set_process_id(app_id_);
-  profiler::EnqueueAllocationEvents(class_request);
+  if (class_sample.events_size() > 0) {
+    profiler::EnqueueAllocationEvents(class_sample);
+  }
+  Log::V("Loaded classes: %d", class_count);
   Deallocate(jvmti_, classes);
 
   // Tag all objects already allocated on the heap.
-  RecordAllocationEventsRequest snapshot_request;
-  snapshot_request.set_timestamp(last_tracking_start_ns_);
-  snapshot_request.set_process_id(app_id_);
+  BatchAllocationSample snapshot_sample;
+  snapshot_sample.set_process_id(app_id_);
   jvmtiHeapCallbacks heap_callbacks;
   memset(&heap_callbacks, 0, sizeof(heap_callbacks));
   heap_callbacks.heap_iteration_callback = &HeapIterationCallback;
-  error = jvmti_->IterateThroughHeap(0, nullptr, &heap_callbacks,
-                                     &snapshot_request);
+  error =
+      jvmti_->IterateThroughHeap(0, nullptr, &heap_callbacks, &snapshot_sample);
   CheckJvmtiError(jvmti_, error);
-  profiler::EnqueueAllocationEvents(snapshot_request);
+  if (snapshot_sample.events_size() > 0) {
+    snapshot_sample.set_timestamp(clock_.GetCurrentTime());
+    profiler::EnqueueAllocationEvents(snapshot_sample);
+  }
+  Log::V("Live objects on heap: %ld", current_object_tag_ - kObjectStartTag);
 
   // Enable allocation+deallocation callbacks after initial heap walk.
   SetEventNotification(jvmti_, JVMTI_ENABLE, JVMTI_EVENT_VM_OBJECT_ALLOC);
@@ -276,8 +290,7 @@ void MemoryAgent::HandleControlSignal(const MemoryControlRequest* request) {
 jint MemoryAgent::HeapIterationCallback(jlong class_tag, jlong size,
                                         jlong* tag_ptr, jint length,
                                         void* user_data) {
-  RecordAllocationEventsRequest* request =
-      (RecordAllocationEventsRequest*)user_data;
+  BatchAllocationSample* sample = (BatchAllocationSample*)user_data;
 
   assert(user_data != nullptr);
   assert(class_tag != 0);  // All classes should be tagged by this point.
@@ -296,9 +309,9 @@ jint MemoryAgent::HeapIterationCallback(jlong class_tag, jlong size,
   long tag = agent_->GetNextObjectTag();
   *tag_ptr = tag;
 
-  AllocationEvent* event = request->add_events();
-  event->set_tracking_start_time(request->timestamp());
-  event->set_timestamp(request->timestamp());
+  AllocationEvent* event = sample->add_events();
+  event->set_tracking_start_time(agent_->last_tracking_start_ns_);
+  event->set_timestamp(agent_->last_tracking_start_ns_);
 
   AllocationEvent::Allocation* alloc = event->mutable_alloc_data();
   alloc->set_tag(tag);
@@ -306,19 +319,21 @@ jint MemoryAgent::HeapIterationCallback(jlong class_tag, jlong size,
   alloc->set_size(size);
   alloc->set_length(length);
 
+  if (sample->events_size() >= kDataBatchSize) {
+    profiler::EnqueueAllocationEvents(*sample);
+    sample->clear_events();
+  }
+
   return JVMTI_VISIT_OBJECTS;
 }
 
 void MemoryAgent::ClassPrepareCallback(jvmtiEnv* jvmti, JNIEnv* jni,
                                        jthread thread, jclass klass) {
-  int64_t time = agent_->clock_.GetCurrentTime();
-  RecordAllocationEventsRequest record_request;
-  AllocationEvent* event = record_request.add_events();
-  agent_->RegisterNewClass(jni, klass, event);
-  event->set_tracking_start_time(agent_->last_tracking_start_ns_);
-  event->set_timestamp(time);
-  record_request.set_process_id(agent_->app_id_);
-  profiler::EnqueueAllocationEvents(record_request);
+  AllocationEvent event;
+  agent_->RegisterNewClass(jni, klass, &event);
+  event.set_tracking_start_time(agent_->last_tracking_start_ns_);
+  event.set_timestamp(agent_->clock_.GetCurrentTime());
+  agent_->event_queue_.Push(event);
 }
 
 void MemoryAgent::ObjectAllocCallback(jvmtiEnv* jvmti, JNIEnv* jni,
@@ -345,12 +360,15 @@ void MemoryAgent::ObjectAllocCallback(jvmtiEnv* jvmti, JNIEnv* jni,
   error = jvmti->SetTag(object, tag);
   CheckJvmtiError(jvmti, error);
 
+  auto itr = agent_->class_tag_map_.find(klass_name);
+  assert(itr != agent_->class_tag_map_.end());
   Stopwatch sw;
   {
     AllocationEvent event;
     AllocationEvent::Allocation* alloc_data = event.mutable_alloc_data();
     alloc_data->set_tag(tag);
     alloc_data->set_size(size);
+    alloc_data->set_class_tag(itr->second);
     event.set_tracking_start_time(agent_->last_tracking_start_ns_);
     event.set_timestamp(agent_->clock_.GetCurrentTime());
     agent_->event_queue_.Push(event);
@@ -365,6 +383,7 @@ void MemoryAgent::ObjectFreeCallback(jvmtiEnv* jvmti, jlong tag) {
     AllocationEvent::Deallocation* free_data = event.mutable_free_data();
     free_data->set_tag(tag);
     event.set_tracking_start_time(agent_->last_tracking_start_ns_);
+    // Associate the free event with the last gc that occurred.
     event.set_timestamp(agent_->last_gc_start_ns_);
     agent_->event_queue_.Push(event);
   }
@@ -382,22 +401,25 @@ void MemoryAgent::AllocDataWorker(jvmtiEnv* jvmti, JNIEnv* jni, void* ptr) {
   while (true) {
     int64_t start_time_ns = stopwatch.GetElapsed();
 
-    RecordAllocationEventsRequest request;
-    request.set_timestamp(agent->last_tracking_start_ns_);
-    request.set_process_id(agent->app_id_);
+    BatchAllocationSample sample;
+    sample.set_process_id(agent->app_id_);
 
     // Gather all the data currently in the queue and push to perfd.
     // TODO: investigate whether we need to set time cap for large amount of
     // data.
     std::deque<AllocationEvent> queued_data = agent->event_queue_.Drain();
     while (!queued_data.empty()) {
-      AllocationEvent* event = request.add_events();
+      AllocationEvent* event = sample.add_events();
       event->CopyFrom(queued_data.front());
       queued_data.pop_front();
+      if (sample.events_size() >= kDataBatchSize) {
+        profiler::EnqueueAllocationEvents(sample);
+        sample.clear_events();
+      }
     }
 
-    if (request.events_size() > 0) {
-      profiler::EnqueueAllocationEvents(request);
+    if (sample.events_size() > 0) {
+      profiler::EnqueueAllocationEvents(sample);
     }
 
     // Sleeps a while before reading from the queue again, so that the agent

@@ -49,8 +49,7 @@ class InternalMemoryServiceImpl final
                              proto::EmptyMemoryReply *reply) override;
 
   grpc::Status RecordAllocationEvents(
-      grpc::ServerContext *context,
-      const proto::RecordAllocationEventsRequest *request,
+      grpc::ServerContext *context, const proto::BatchAllocationSample *request,
       proto::EmptyMemoryReply *reply) override;
 
   /**
