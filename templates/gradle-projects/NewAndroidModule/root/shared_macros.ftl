@@ -1,7 +1,6 @@
 <#-- Some common elements used in multiple files -->
-<#macro generateManifest packageName hasApplicationBlock=false isInstantApp=false>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" <#if isInstantApp>
-    xmlns:instant="http://schemas.android.com/instantapps"</#if>
+<#macro generateManifest packageName hasApplicationBlock=false>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="${packageName}"<#if !hasApplicationBlock>/</#if>><#if hasApplicationBlock>
     <application <#if minApiLevel gte 4 && buildApi gte 4>android:allowBackup="true"</#if>
         android:label="@string/app_name"<#if copyIcons>

@@ -1,5 +1,4 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          <#if isInstantApp!false>xmlns:instant="http://schemas.android.com/instantapps"</#if>>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <application>
         <activity android:name="${relativePackage}.${activityClass}"
@@ -23,8 +22,7 @@
                     android:value="${parentActivityClass}" />
             </#if>
             <#if isInstantApp>
-                <intent-filter xmlns:instant="http://schemas.android.com/instantapps" 
-                    instant:order="${instantAppActivityOrder}">
+                <intent-filter android:order="${instantAppActivityOrder}">
                     <action android:name="android.intent.action.VIEW" />
                     <category android:name="android.intent.category.BROWSABLE" />
                     <category android:name="android.intent.category.DEFAULT" />
