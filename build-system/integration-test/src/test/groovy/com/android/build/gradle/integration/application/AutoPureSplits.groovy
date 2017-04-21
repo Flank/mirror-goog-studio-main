@@ -28,6 +28,7 @@ import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 import static com.android.builder.core.BuilderConstants.DEBUG
 import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertNotNull
@@ -69,8 +70,10 @@ class AutoPureSplits {
     }
 
     @Test
-    void "test auto resConfigs only package application specific language"() throws Exception {
-        def model = project.executeAndReturnModel("clean", "assembleDebug").getOnlyModel()
+    void "test auto resConfigs only package application specific language with AAPT1"()
+            throws Exception {
+        project.executor().withEnabledAapt2(false).run("clean", "assembleDebug")
+        def model = project.model().getSingle().getOnlyModel()
 
         // Load the custom model for the project
         Collection<Variant> variants = model.getVariants()
@@ -117,5 +120,58 @@ class AutoPureSplits {
 
         // this checks we didn't miss any expected output.
         assertEquals(expected, actual)
+    }
+
+    @Test
+    void "test auto resConfigs only package application specific language with AAPT2"()
+            throws Exception {
+        project.executor().withEnabledAapt2(true).run("clean", "assembleDebug")
+        def model = project.model().getSingle().getOnlyModel()
+
+        // Load the custom model for the project
+        Collection<Variant> variants = model.getVariants()
+        assertEquals("Variant Count", 2 , variants.size())
+
+        // get the main artifact of the debug artifact
+        Variant debugVariant = ModelHelper.getVariant(variants, DEBUG)
+        AndroidArtifact debugMainArtifact = debugVariant.getMainArtifact()
+        assertNotNull("Debug main info null-check", debugMainArtifact)
+
+        // get the outputs.
+        Collection<AndroidArtifactOutput> debugOutputs = debugMainArtifact.getOutputs()
+        assertNotNull(debugOutputs)
+
+        // build a set of expected outputs
+        Set<String> expected = Sets.newHashSetWithExpectedSize(5)
+        expected.add("mdpi")
+        expected.add("hdpi")
+        expected.add("xhdpi")
+        expected.add("xxhdpi")
+        expected.add("en")
+        expected.add("fr")
+        expected.add("fr-rBE")
+        expected.add("fr-rCA")
+
+        assertEquals(1, debugOutputs.size())
+        AndroidArtifactOutput output = debugOutputs.iterator().next()
+        assertEquals(9, output.getOutputs().size())
+        Set<String> actual = new HashSet()
+        for (OutputFile outputFile : output.getOutputs()) {
+            String filter = ModelHelper.getFilter(outputFile, OutputFile.DENSITY)
+            if (filter == null) {
+                filter = ModelHelper.getFilter(outputFile, OutputFile.LANGUAGE)
+            }
+            assertEquals(filter == null  ? OutputFile.MAIN : OutputFile.SPLIT,
+                    outputFile.getOutputType())
+
+            // with pure splits, all split have the same version code.
+            assertEquals(12, output.getVersionCode())
+            if (filter != null) {
+                actual.add(filter)
+            }
+        }
+
+        // this checks we didn't miss any expected output.
+        assertThat(actual).containsExactlyElementsIn(expected)
     }
 }
