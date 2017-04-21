@@ -36,6 +36,7 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.builder.core.VariantConfiguration;
+import com.android.builder.core.VariantType;
 import com.android.ide.common.build.ApkData;
 import com.android.manifmerger.ManifestProvider;
 import com.android.utils.FileUtils;
@@ -78,8 +79,12 @@ public class ProcessTestManifest extends ManifestProcessorTask {
     @Nullable
     private File testManifestFile;
 
+    /** Whether there's just a single APK with both test and tested code. */
+    private boolean onlyTestApk;
+
     private File tmpDir;
     private String testApplicationId;
+    private String testedApplicationId;
     private Supplier<String> minSdkVersion;
     private Supplier<String> targetSdkVersion;
     private Supplier<String> instrumentationRunner;
@@ -99,11 +104,11 @@ public class ProcessTestManifest extends ManifestProcessorTask {
 
     @Override
     protected void doFullTaskAction() throws IOException {
-        if (testApplicationId == null && testTargetMetadata == null) {
-            throw new RuntimeException("testApplicationId and testTargetMetadata are null");
+        if (testedApplicationId == null && testTargetMetadata == null) {
+            throw new RuntimeException("testedApplicationId and testTargetMetadata are null");
         }
-        String testedApplicationId = this.testApplicationId;
-        if (testTargetMetadata != null) {
+        String testedApplicationId = this.getTestedApplicationId();
+        if (!onlyTestApk && testTargetMetadata != null) {
             Collection<BuildOutput> manifestOutputs =
                     BuildOutputs.load(
                             TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS, testTargetMetadata);
@@ -206,6 +211,16 @@ public class ProcessTestManifest extends ManifestProcessorTask {
 
     public void setTestApplicationId(String testApplicationId) {
         this.testApplicationId = testApplicationId;
+    }
+
+    @Input
+    @Optional
+    public String getTestedApplicationId() {
+        return testedApplicationId;
+    }
+
+    public void setTestedApplicationId(String testedApplicationId) {
+        this.testedApplicationId = testedApplicationId;
     }
 
     @Input
@@ -325,8 +340,7 @@ public class ProcessTestManifest extends ManifestProcessorTask {
 
             processTestManifestTask.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
             processTestManifestTask.setVariantName(config.getFullName());
-            // will only be used if testTargetMetadata is null.
-            processTestManifestTask.setTestApplicationId(config.getTestApplicationId());
+
 
             processTestManifestTask.minSdkVersion =
                     TaskInputHelper.memoize(config.getMinSdkVersion()::getApiString);
@@ -335,6 +349,14 @@ public class ProcessTestManifest extends ManifestProcessorTask {
                     TaskInputHelper.memoize(config.getTargetSdkVersion()::getApiString);
 
             processTestManifestTask.testTargetMetadata = testTargetMetadata;
+            processTestManifestTask.setTestApplicationId(config.getTestApplicationId());
+
+            // will only be used if testTargetMetadata is null.
+            processTestManifestTask.setTestedApplicationId(config.getTestedApplicationId());
+
+            VariantConfiguration testedConfig = config.getTestedConfig();
+            processTestManifestTask.onlyTestApk =
+                    testedConfig != null && testedConfig.getType() == VariantType.LIBRARY;
 
             processTestManifestTask.instrumentationRunner =
                     TaskInputHelper.memoize(config::getInstrumentationRunner);
