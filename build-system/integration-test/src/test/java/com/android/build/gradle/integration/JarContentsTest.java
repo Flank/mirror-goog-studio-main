@@ -17,25 +17,24 @@
 package com.android.build.gradle.integration;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.assertTrue;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.model.Version;
 import com.android.utils.FileUtils;
-import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Multimap;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 /** Checks what we distribute in our jars. */
@@ -65,7 +64,7 @@ public class JarContentsTest {
 
         ImmutableSetMultimap.Builder<String, String> expected = ImmutableSetMultimap.builder();
         expected.putAll(
-                "com/android/tools/build/builder/",
+                "com/android/tools/build/builder",
                 "com/android/builder/version.properties",
                 "com/android/builder/internal/AndroidManifest.template",
                 "desugar_deploy.jar",
@@ -78,10 +77,10 @@ public class JarContentsTest {
                 "win64/libaapt2_jni.dll",
                 "win64/libwinpthread-1.dll");
         expected.putAll(
-                "com/android/tools/build/builder-model/",
+                "com/android/tools/build/builder-model",
                 "com/android/builder/model/version.properties");
         expected.putAll(
-                "com/android/tools/build/gradle/",
+                "com/android/tools/build/gradle",
                 "com/android/build/gradle/internal/version.properties",
                 "META-INF/gradle-plugins/android.properties",
                 "META-INF/gradle-plugins/android-library.properties",
@@ -94,7 +93,7 @@ public class JarContentsTest {
                 "META-INF/gradle-plugins/com.android.atom.properties",
                 "META-INF/gradle-plugins/com.android.feature.properties");
         expected.putAll(
-                "com/android/tools/build/gradle-core/",
+                "com/android/tools/build/gradle-core",
                 "com/android/build/gradle/internal/test/report/base-style.css",
                 "com/android/build/gradle/internal/test/report/style.css",
                 "com/android/build/gradle/internal/test/report/report.js",
@@ -102,22 +101,22 @@ public class JarContentsTest {
                 "com/android/build/gradle/proguard-android-optimize.txt",
                 "instant-run/instant-run-server.jar");
         expected.putAll(
-                "com/android/tools/build/gradle-experimental/",
+                "com/android/tools/build/gradle-experimental",
                 "com/android/build/gradle/model/version.properties",
                 "META-INF/gradle-plugins/com.android.model.application.properties",
                 "META-INF/gradle-plugins/com.android.model.library.properties",
                 "META-INF/gradle-plugins/com.android.model.native.properties",
                 "META-INF/gradle-plugins/com.android.model.external.properties");
         expected.putAll(
-                "com/android/tools/internal/build/test/devicepool/",
+                "com/android/tools/internal/build/test/devicepool",
                 "META-INF/gradle-plugins/devicepool.properties");
         expected.putAll(
-                "com/android/tools/dvlib/",
+                "com/android/tools/dvlib",
                 "com/android/dvlib/devices-1.xsd",
                 "com/android/dvlib/devices-2.xsd",
                 "com/android/dvlib/devices-3.xsd");
         expected.putAll(
-                "com/android/tools/sdklib/",
+                "com/android/tools/sdklib",
                 "com/android/sdklib/internal/build/BuildConfig.template",
                 "com/android/sdklib/devices/wear.xml",
                 "com/android/sdklib/devices/tv.xml",
@@ -159,14 +158,14 @@ public class JarContentsTest {
                 "com/android/sdklib/repository/sources/sdk-sites-list-2.xsd",
                 "com/android/sdklib/repository/README.txt");
         expected.putAll(
-                "com/android/tools/lint/lint/",
+                "com/android/tools/lint/lint",
                 "com/android/tools/lint/lint-warning.png",
                 "com/android/tools/lint/lint-run.png",
                 "com/android/tools/lint/default.css",
                 "com/android/tools/lint/lint-error.png",
                 "com/android/tools/lint/hololike.css");
         expected.putAll(
-                "com/android/tools/repository/",
+                "com/android/tools/repository",
                 "com/android/repository/api/common.xjb",
                 "com/android/repository/api/generic.xjb",
                 "com/android/repository/api/global.xjb",
@@ -179,23 +178,13 @@ public class JarContentsTest {
                 "com/android/repository/impl/meta/generic-custom.xjb",
                 "com/android/repository/impl/sources/repo-sites-common-custom.xjb");
         expected.putAll(
-                "com/android/databinding/compilerCommon/",
-                "data_binding_version_info.properties");
+                "com/android/databinding/compilerCommon", "data_binding_version_info.properties");
         expected.putAll(
-                "com/android/databinding/compiler/",
+                "com/android/databinding/compiler",
                 "api-versions.xml",
                 "META-INF/services/javax.annotation.processing.Processor");
 
         EXPECTED = expected.build();
-    }
-
-    @BeforeClass
-    public static void checkExpectedMap() {
-        for (String key : EXPECTED.keySet()) {
-            if (!key.endsWith("/")) {
-                throw new AssertionError(key + "needs to end with a '/' in the EXPECTED map.");
-            }
-        }
     }
 
     @Test
@@ -209,14 +198,12 @@ public class JarContentsTest {
     }
 
     private static void checkGroup(String groupPrefix) throws Exception {
-        boolean foundAndroidRepo = false;
+        List<String> jarNames = new ArrayList<>();
 
         for (Path repo : GradleTestProject.getLocalRepositories()) {
             Path androidTools = repo.resolve(groupPrefix);
             if (!Files.isDirectory(androidTools)) {
                 continue;
-            } else {
-                foundAndroidRepo = true;
             }
 
             List<Path> ourJars =
@@ -227,14 +214,21 @@ public class JarContentsTest {
                             .filter(JarContentsTest::isCurrentVersion)
                             .collect(Collectors.toList());
 
-            assertThat(ourJars).named("jars to check").isNotEmpty();
-
             for (Path jar : ourJars) {
                 checkJar(jar, repo);
+                jarNames.add(jarRelativePathWithoutVersion(jar, repo));
             }
         }
 
-        assertTrue("Failed to find android repo.", foundAndroidRepo);
+        List<String> expectedJars =
+                EXPECTED.keySet()
+                        .stream()
+                        .filter(name -> name.startsWith(groupPrefix))
+                        .collect(Collectors.toList());
+        // Test only artifact need not be there.
+        expectedJars.remove("com/android/tools/internal/build/test/devicepool");
+        assertThat(expectedJars).isNotEmpty();
+        assertThat(jarNames).named("Jars for " + groupPrefix).containsAllIn(expectedJars);
     }
 
     private static boolean isIgnored(Path path) {
@@ -250,16 +244,22 @@ public class JarContentsTest {
                 || path.toString().contains(Version.ANDROID_TOOLS_BASE_VERSION);
     }
 
-    private static void checkJar(Path jar, Path repo) throws Exception {
-        String relativePath = repo.relativize(jar).toString();
+    private static String jarRelativePathWithoutVersion(Path jar, Path repo) {
+        String pathWithoutVersion = repo.relativize(jar).getParent().getParent().toString();
+        return FileUtils.toSystemIndependentPath(pathWithoutVersion);
+    }
 
-        String pathWithoutVersion =
-                relativePath.substring(0, CharMatcher.DIGIT.indexIn(relativePath));
+    private static void checkJar(Path jar, Path repo) throws Exception {
+
         Collection<String> expected =
-                EXPECTED.get(FileUtils.toSystemIndependentPath(pathWithoutVersion));
+                EXPECTED.get(
+                        FileUtils.toSystemIndependentPath(
+                                jarRelativePathWithoutVersion(jar, repo)));
         if (expected == null) {
             expected = Collections.emptySet();
         }
+
+        Set<String> actual = new HashSet<>();
 
         try (ZipFile zipFile = new ZipFile(jar.toFile())) {
             for (ZipEntry entry : Collections.list(zipFile.entries())) {
@@ -283,18 +283,10 @@ public class JarContentsTest {
                     continue;
                 }
 
-                if (expected.contains(actualName)) {
-                    continue;
-                }
-
-                throw new AssertionError(relativePath + " contains " + actualName);
+                actual.add(actualName);
             }
 
-            for (String expectedName : expected) {
-                if (zipFile.getEntry(expectedName) == null) {
-                    throw new AssertionError(relativePath + " does not contain " + expectedName);
-                }
-            }
+            assertThat(actual).named(jar.toString()).containsExactlyElementsIn(expected);
         }
     }
 }
