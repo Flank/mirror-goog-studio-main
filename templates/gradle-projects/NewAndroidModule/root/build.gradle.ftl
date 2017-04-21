@@ -9,7 +9,7 @@ apply plugin: 'com.android.application'
   </#if>
 </#if>
 
-<@shared.androidConfig hasApplicationId=isApplicationProject applicationId=packageName hasTests=true canHaveCpp=true/>
+<@shared.androidConfig hasApplicationId=isApplicationProject applicationId=packageName isBaseSplit=isBaseSplit hasTests=true canHaveCpp=true/>
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
