@@ -30,11 +30,11 @@ import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.TextFormat;
 import com.android.tools.lint.detector.api.TypeEvaluator;
 import com.android.tools.lint.detector.api.UastLintUtils;
 import com.google.common.collect.Sets;
@@ -358,7 +358,7 @@ public class ObjectAnimatorDetector extends Detector implements UastScanner {
         if (bestMethod == null) {
             report(context, BROKEN_PROPERTY, propertyNameExpression, null,
                     String.format("Could not find property setter method `%1$s` on `%2$s`",
-                            methodName, qualifiedName));
+                            methodName, qualifiedName), null);
             return;
         }
 
@@ -366,11 +366,11 @@ public class ObjectAnimatorDetector extends Detector implements UastScanner {
             report(context, BROKEN_PROPERTY, propertyNameExpression, bestMethod,
                     String.format("The setter for this property does not match the "
                                     + "expected signature (`public void %1$s(%2$s arg`)",
-                            methodName, expectedType));
+                            methodName, expectedType), null);
         } else if (context.getEvaluator().isStatic(bestMethod)) {
             report(context, BROKEN_PROPERTY, propertyNameExpression, bestMethod,
                     String.format("The setter for this property (%1$s.%2$s) should not be static",
-                            qualifiedName, methodName));
+                            qualifiedName, methodName), null);
         } else {
             PsiModifierListOwner owner = bestMethod;
             while (owner != null) {
@@ -392,10 +392,9 @@ public class ObjectAnimatorDetector extends Detector implements UastScanner {
             }
 
             report(context, MISSING_KEEP, propertyNameExpression, bestMethod, ""
-                  // Keep in sync with isAddKeepErrorMessage below
                   + "This method is accessed from an ObjectAnimator so it should be "
                   + "annotated with `@Keep` to ensure that it is not discarded or "
-                  + "renamed in release builds");
+                  + "renamed in release builds", fix().data(bestMethod));
         }
     }
 
@@ -404,7 +403,8 @@ public class ObjectAnimatorDetector extends Detector implements UastScanner {
             @NonNull Issue issue,
             @NonNull UExpression propertyNameExpression,
             @Nullable PsiMethod method,
-            @NonNull String message) {
+            @NonNull String message,
+            @Nullable LintFix fix) {
         boolean reportOnMethod = issue == MISSING_KEEP && method != null;
 
         // No need to report @Keep issues in third party libraries
@@ -476,7 +476,7 @@ public class ObjectAnimatorDetector extends Detector implements UastScanner {
             return;
         }
 
-        context.report(issue, method, location, message);
+        context.report(issue, method, location, message, fix);
     }
 
     private static boolean isInSameCompilationUnit(
@@ -485,24 +485,6 @@ public class ObjectAnimatorDetector extends Detector implements UastScanner {
         UFile containingFile = UastUtils.getContainingFile(element1);
         PsiFile file = containingFile != null ? containingFile.getPsi() : null;
         return Objects.equals(file, element2.getContainingFile());
-    }
-
-    /**
-     * Returns true if the error message (which should have been produced by this detector)
-     * corresponds to the method listed <b>on</b> a property method that it's missing a
-     * Keep annotation. Used by IDE quickfixes to only add keep annotations on the actual
-     * keep method, not on the error message (with the same inspection id) shown on the
-     * object animator.
-     *
-     * @param message    the original message produced by lint
-     * @param textFormat the format it's been provided in
-     * @return true if this is a message on a property method missing {@code @Keep}
-     */
-    @SuppressWarnings("unused") // Referenced from IDE
-    public static boolean isAddKeepErrorMessage(@NonNull String message,
-        @NonNull TextFormat textFormat) {
-        message = textFormat.convertTo(message, TextFormat.RAW);
-        return message.contains("This method is accessed from an ObjectAnimator so");
     }
 
     // Copy of PropertyValuesHolder#getMethodName - copy to ensure lint & platform agree

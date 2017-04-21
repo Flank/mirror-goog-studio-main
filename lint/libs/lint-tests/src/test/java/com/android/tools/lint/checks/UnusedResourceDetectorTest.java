@@ -16,14 +16,8 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.detector.api.TextFormat.TEXT;
-
-import com.android.annotations.NonNull;
-import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.Location;
-import com.android.tools.lint.detector.api.Severity;
 import java.io.File;
 import java.util.Arrays;
 import org.intellij.lang.annotations.Language;
@@ -880,12 +874,6 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                 + "        tools:shrinkMode=\"strict\"\n"
                                 + "        tools:keep=\"@raw/used,@layout/my_layout\" />\n")
                 ));
-    }
-
-    @Override
-    protected void checkReportedError(@NonNull Context context, @NonNull Issue issue,
-            @NonNull Severity severity, @NonNull Location location, @NonNull String message) {
-        assertNotNull(message, UnusedResourceDetector.getUnusedResource(message, TEXT));
     }
 
     @SuppressWarnings("all") // Sample code

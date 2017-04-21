@@ -16,7 +16,6 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.SdkConstants.ANDROID_NS_NAME;
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_COLUMN_COUNT;
 import static com.android.SdkConstants.ATTR_LAYOUT_COLUMN;
@@ -38,10 +37,9 @@ import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
-import com.android.tools.lint.detector.api.LintUtils;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.TextFormat;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.android.utils.XmlUtils;
 import java.util.Arrays;
@@ -164,7 +162,12 @@ public class GridLayoutDetector extends LayoutDetector {
             }
             String message = sb.toString();
 
-            context.report(ISSUE, attribute, context.getLocation(attribute), message);
+            LintFix fix = fix().name("Update to " + prefix + ":" + name).composite(
+                    fix().set(AUTO_URI, name, attribute.getValue()).build(),
+                    fix().unset(ANDROID_URI, name).build()
+            );
+
+            context.report(ISSUE, attribute, context.getLocation(attribute), message, fix);
         }
     }
 
@@ -185,54 +188,5 @@ public class GridLayoutDetector extends LayoutDetector {
         }
 
         return null;
-    }
-
-    /**
-     * Given an error message produced by this lint detector,
-     * returns the old value to be replaced in the source code.
-     * <p>
-     * Intended for IDE quickfix implementations.
-     *
-     * @param errorMessage the error message associated with the error
-     * @param format the format of the error message
-     * @return the corresponding old value, or null if not recognized
-     */
-    @Nullable
-    public static String getOldValue(@NonNull String errorMessage,
-            @NonNull TextFormat format) {
-        errorMessage = format.toText(errorMessage);
-        String attribute = LintUtils.findSubstring(errorMessage, " should use ", " ");
-        if (attribute == null) {
-            attribute = LintUtils.findSubstring(errorMessage, " should use ", null);
-        }
-        if (attribute != null) {
-            int index = attribute.indexOf(':');
-            if (index != -1) {
-                return ANDROID_NS_NAME + attribute.substring(index);
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Given an error message produced by this lint detector,
-     * returns the new value to be put into the source code.
-     * <p>
-     * Intended for IDE quickfix implementations.
-     *
-     * @param errorMessage the error message associated with the error
-     * @param format the format of the error message
-     * @return the corresponding new value, or null if not recognized
-     */
-    @Nullable
-    public static String getNewValue(@NonNull String errorMessage,
-            @NonNull TextFormat format) {
-        errorMessage = format.toText(errorMessage);
-        String attribute = LintUtils.findSubstring(errorMessage, " should use ", " ");
-        if (attribute == null) {
-            attribute = LintUtils.findSubstring(errorMessage, " should use ", null);
-        }
-        return attribute;
     }
 }

@@ -164,7 +164,7 @@ public class WearStandaloneAppDetector extends Detector implements Detector.XmlS
                         xmlContext.getLocation(application),
                         "Missing `<meta-data android:name="
                                 + "\"com.google.android.wearable.standalone\" ../>` element",
-                        fix().map(QFX_EXTRA_MISSING_META_DATA).build());
+                        fix().data(QFX_EXTRA_MISSING_META_DATA));
             }
         }
     }

@@ -704,8 +704,8 @@ public class SupportAnnotationDetector extends Detector implements UastScanner {
                 Location location = context.getLocation(node);
                 report(context, MISSING_PERMISSION, node, location, message,
                         // Pass data to IDE quickfix: names to add, and max applicable API version
-                        fix().map(requirement.getMissingPermissions(permissions),
-                                requirement.getLastApplicableApi()).build());
+                        fix().data(requirement.getMissingPermissions(permissions),
+                                requirement.getLastApplicableApi()));
             }
         } else if (requirement.isRevocable(permissions) &&
                 context.getMainProject().getTargetSdkVersion().getFeatureLevel() >= 23 &&
@@ -732,8 +732,8 @@ public class SupportAnnotationDetector extends Detector implements UastScanner {
                 Location location = context.getLocation(node);
                 report(context, MISSING_PERMISSION, node, location, message,
                         // Pass data to IDE quickfix: revocable names, and permission requirement
-                        fix().map(requirement.getRevocablePermissions(permissions),
-                                requirement).build());
+                        fix().data(requirement.getRevocablePermissions(permissions),
+                                requirement));
             }
         }
     }
@@ -980,7 +980,7 @@ public class SupportAnnotationDetector extends Detector implements UastScanner {
             }
 
             Location location = context.getLocation(node);
-            report(context, issue, node, location, message, fix().map(suggested).build());
+            report(context, issue, node, location, message, fix().data(suggested));
         }
     }
 

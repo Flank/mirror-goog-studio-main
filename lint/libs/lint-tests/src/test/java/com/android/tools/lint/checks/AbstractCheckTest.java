@@ -89,9 +89,9 @@ public abstract class AbstractCheckTest extends LintDetectorTest {
         TestLintTask task = TestLintTask.lint();
         task.runCompatChecks(false);
 
-        task.checkMessage((context, issue, severity, location, message)
+        task.checkMessage((context, issue, severity, location, message, fix)
                 -> AbstractCheckTest.super.checkReportedError(context, issue, severity, location,
-                message));
+                message, fix));
 
         // We call getIssues() instead of setting task.detector() because the above
         // getIssues call will ensure that we only check issues registered in the class

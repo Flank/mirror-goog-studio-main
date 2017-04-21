@@ -20,7 +20,12 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.tools.lint.detector.api.LintFix.ReplaceString;
 import com.android.tools.lint.detector.api.LintFix.SetAttribute;
+import com.google.common.collect.Maps;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import junit.framework.TestCase;
 
 public class LintFixTest extends TestCase {
@@ -28,6 +33,8 @@ public class LintFixTest extends TestCase {
         LintFix.FixMapBuilder builder = LintFix.create().map("foo", 3, new BigDecimal(50));
         builder.put("name1", "Name1");
         builder.put("name2", "Name2");
+        builder.put(Maps.newHashMap());
+        builder.put(new ArrayList<>());
         builder.put(null); // no-op
         LintFix.DataMap quickfixData = (LintFix.DataMap) builder.build();
         assertThat(quickfixData.get(Float.class)).isNull();
@@ -52,6 +59,14 @@ public class LintFixTest extends TestCase {
         assertThat(foundString).isTrue();
         assertThat(foundInteger).isTrue();
         assertThat(foundBigDecimal).isTrue();
+
+        assertNotNull(LintFix.getData(quickfixData, BigDecimal.class));
+
+        // Check key conversion to general interface
+        assertNull(LintFix.getData(quickfixData, ArrayList.class));
+        assertNotNull(LintFix.getData(quickfixData, List.class));
+        assertNull(LintFix.getData(quickfixData, HashMap.class));
+        assertNotNull(LintFix.getData(quickfixData, Map.class));
     }
 
     public void testSetAttribute() {

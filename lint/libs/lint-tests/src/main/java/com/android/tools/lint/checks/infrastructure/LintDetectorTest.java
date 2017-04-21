@@ -342,6 +342,16 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
             @NonNull String message) {
     }
 
+    protected void checkReportedError(
+            @NonNull Context context,
+            @NonNull Issue issue,
+            @NonNull Severity severity,
+            @NonNull Location location,
+            @NonNull String message,
+            @NonNull LintFix fixData) {
+        checkReportedError(context, issue, severity, location, message);
+    }
+
     protected TestLintClient createClient() {
         return new TestLintClient();
     }
@@ -911,7 +921,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
             }
 
             checkReportedError(context, issue, severity, location,
-                    format.convertTo(message, TextFormat.TEXT));
+                    format.convertTo(message, TextFormat.TEXT), fix);
 
             if (severity == Severity.FATAL) {
                 // Treat fatal errors like errors in the golden files.

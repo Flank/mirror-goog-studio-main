@@ -16,13 +16,12 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.detector.api.TextFormat.TEXT;
-
 import com.android.annotations.NonNull;
 import com.android.tools.lint.checks.infrastructure.ProjectDescription;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Severity;
 
@@ -121,14 +120,22 @@ public class ConstraintLayoutDetectorTest extends AbstractCheckTest {
                         + "    compile 'com.android.support.constraint:constraint-layout:1.0.0-alpha3\"'\n"
                         + "}")                );
 
-        lint().projects(project).run().expect(expected);
+        lint().projects(project)
+                .checkMessage(this::checkReportedError)
+                .run()
+                .expect(expected);
     }
 
     @Override
     protected void checkReportedError(@NonNull Context context, @NonNull Issue issue,
-            @NonNull Severity severity, @NonNull Location location, @NonNull String message) {
-        assertEquals(message.contains("obsolete"),
-                ConstraintLayoutDetector.isUpgradeDependencyError(message, TEXT));
+            @NonNull Severity severity, @NonNull Location location, @NonNull String message,
+            @NonNull LintFix fixData) {
+        if (issue == GradleDetector.DEPENDENCY) {
+            // Check for AndroidLintGradleDependencyInspection
+            assertTrue(fixData instanceof LintFix.DataMap);
+            LintFix.DataMap map = (LintFix.DataMap) fixData;
+            assertNotNull(map.get(ConstraintLayoutDetector.class));
+        }
     }
 
     @Override

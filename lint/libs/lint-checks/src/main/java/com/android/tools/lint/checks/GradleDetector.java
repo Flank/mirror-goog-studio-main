@@ -557,7 +557,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                             String message = "Avoid using + in version numbers; can lead "
                                     + "to unpredictable and unrepeatable builds (" + dependency
                                     + ")";
-                            LintFix fix = fix().map(gc).build();
+                            LintFix fix = fix().data(gc);
                             report(context, valueCookie, PLUS, message, fix);
                         }
                         if (!dependency.startsWith(SdkConstants.GRADLE_PLUGIN_NAME) ||
