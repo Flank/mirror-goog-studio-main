@@ -21,6 +21,8 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.AppExtension;
 import com.android.build.gradle.AppPlugin;
 import com.android.build.gradle.BaseExtension;
+import com.android.build.gradle.FeatureExtension;
+import com.android.build.gradle.FeaturePlugin;
 import com.android.build.gradle.LibraryExtension;
 import com.android.build.gradle.LibraryPlugin;
 import com.android.build.gradle.internal.SdkHandler;
@@ -40,6 +42,7 @@ public class TestProjects {
     public enum Plugin {
         APP("com.android.application", AppPlugin.class, AppExtension.class),
         LIBRARY("com.android.library", LibraryPlugin.class, LibraryExtension.class),
+        FEATURE("com.android.feature", FeaturePlugin.class, FeatureExtension.class),
         ;
 
         @NonNull private final String pluginName;

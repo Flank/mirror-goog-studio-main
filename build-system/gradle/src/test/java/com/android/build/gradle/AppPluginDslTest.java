@@ -34,7 +34,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-/** Tests for the public DSL of the App plugin ("android") */
+/** Tests for the public DSL of the App plugin ("com.android.application") */
 public class AppPluginDslTest {
 
     @Rule public TemporaryFolder projectDirectory = new TemporaryFolder();
