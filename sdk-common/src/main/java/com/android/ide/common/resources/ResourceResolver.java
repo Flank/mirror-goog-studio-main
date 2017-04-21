@@ -26,11 +26,13 @@ import com.android.resources.ResourceUrl;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
-import java.lang.ref.SoftReference;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -439,8 +441,35 @@ public class ResourceResolver extends RenderResources {
     }
 
     // ---- Private helper methods.
+    /** Holder for the sample data cache */
+    private static class CachedMockHolder {
+        private final long myLastModification;
+        private final List<String> myContents;
+        private final int myFileSizeMb;
 
-    private static final Map<String, SoftReference<List<String>>> sMockList = new HashMap<>();
+        CachedMockHolder(@NonNull File input) throws IOException {
+            if (!input.isFile()) {
+                throw new IOException("Sample data needs to be contained in a file");
+            }
+
+            myLastModification = input.lastModified();
+            myFileSizeMb = (int) (input.length() / 1_000_000);
+            myContents = Files.readLines(input, Charsets.UTF_8);
+        }
+    }
+
+    private static final Cache<String, CachedMockHolder> sMockList =
+            CacheBuilder.newBuilder()
+                    .expireAfterAccess(2, TimeUnit.MINUTES)
+                    .softValues()
+                    .weigher((String key, CachedMockHolder value) -> value.myFileSizeMb)
+                    .maximumWeight(50) // MB
+                    .build();
+
+    /**
+     * Holds the current cursor position for the sample data file so a consistent view is provided
+     * for a given resolver (i.e. entries are not repeated and they are different for each element).
+     */
     private final Map<String, AtomicInteger> mMockPosition = new HashMap<>();
 
     private ResourceValue findMockValue(String name) {
@@ -455,24 +484,29 @@ public class ResourceResolver extends RenderResources {
                                 mMockPosition.put(fileName, mockPosition);
                             }
 
-                            SoftReference<List<String>> linesRef = sMockList.get(fileName);
-                            List<String> lines = linesRef != null ? linesRef.get() : null;
-                            if (lines == null) {
-                                try {
-                                    lines = Files.readLines(new File(fileName), Charsets.UTF_8);
-
-                                    sMockList.put(fileName, new SoftReference<>(lines));
-                                } catch (IOException ignore) {
+                            File mockFile = new File(fileName);
+                            try {
+                                CachedMockHolder value = sMockList.getIfPresent(fileName);
+                                if (value == null
+                                        || value.myLastModification == 0
+                                        || value.myLastModification != mockFile.lastModified()) {
+                                    value = new CachedMockHolder(mockFile);
+                                    sMockList.put(fileName, value);
                                 }
+
+                                int lineCount = value.myContents.size();
+                                String lineContent =
+                                        lineCount > 0
+                                                ? value.myContents.get(
+                                                        mockPosition.getAndIncrement() % lineCount)
+                                                : null;
+
+                                return new ResourceValue(
+                                        ResourceUrl.create(null, ResourceType.MOCK, name),
+                                        lineContent);
+                            } catch (IOException ignore) {
                             }
-
-                            int lineCount = lines != null ? lines.size() : 0;
-                            String lineContent =
-                                    lineCount > 0
-                                            ? lines.get(mockPosition.getAndIncrement() % lineCount)
-                                            : null;
-
-                            return new ResourceValue(ResourceType.MOCK, name, lineContent, false);
+                            return null;
                         })
                 .orElse(null);
     }
