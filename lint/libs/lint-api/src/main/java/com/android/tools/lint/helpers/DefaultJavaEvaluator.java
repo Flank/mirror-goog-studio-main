@@ -39,17 +39,22 @@ import com.intellij.psi.PsiCompiledFile;
 import com.intellij.psi.PsiDirectory;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiJavaFile;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiModifier;
+import com.intellij.psi.PsiModifierList;
 import com.intellij.psi.PsiModifierListOwner;
 import com.intellij.psi.PsiPackage;
 import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiPrimitiveType;
 import com.intellij.psi.PsiType;
+import com.intellij.psi.impl.file.PsiPackageImpl;
+import com.intellij.psi.impl.source.tree.java.PsiCompositeModifierList;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.util.InheritanceUtil;
 import com.intellij.psi.util.MethodSignatureUtil;
 import com.intellij.psi.util.TypeConversionUtil;
+import java.util.Collections;
 import org.jetbrains.uast.UElement;
 import org.jetbrains.uast.UFile;
 import org.jetbrains.uast.UastUtils;
@@ -170,8 +175,32 @@ public class DefaultJavaEvaluator extends JavaEvaluator {
     @Nullable
     @Override
     public PsiPackage getPackage(@NonNull PsiElement node) {
-        PsiFile containingFile = node.getContainingFile();
+        PsiFile containingFile = node instanceof PsiFile ? (PsiFile) node : node.getContainingFile();
         if (containingFile != null) {
+            // Optimization: JavaDirectoryService can be slow so try to compute it directly
+            if (containingFile instanceof PsiJavaFile) {
+                String packageName = ((PsiJavaFile) containingFile).getPackageName();
+                return new PsiPackageImpl(node.getManager(), packageName) {
+                    @Nullable
+                    @Override
+                    public PsiModifierList getAnnotationList() {
+                        PsiClass cls = findClass(packageName + '.' + PACKAGE_INFO_CLASS);
+                        if (cls != null) {
+                            PsiModifierList modifierList = cls.getModifierList();
+                            if (modifierList != null) {
+                                // Use composite even if we just have one such that we don't
+                                // pass a modifier list tied to source elements in the class
+                                // (modifier lists can be part of the AST)
+                                return new PsiCompositeModifierList(getManager(),
+                                        Collections.singletonList(modifierList));
+                            }
+                            return modifierList;
+                        }
+                        return null;
+                    }
+                };
+            }
+
             PsiDirectory dir = containingFile.getParent();
             if (dir != null) {
                 return JavaDirectoryService.getInstance().getPackage(dir);
@@ -185,11 +214,7 @@ public class DefaultJavaEvaluator extends JavaEvaluator {
     public PsiPackage getPackage(@NonNull UElement node) {
         UFile uFile = UastUtils.getContainingFile(node);
         if (uFile != null) {
-            PsiFile containingFile = uFile.getPsi();
-            PsiDirectory dir = containingFile.getParent();
-            if (dir != null) {
-                return JavaDirectoryService.getInstance().getPackage(dir);
-            }
+            return getPackage(uFile.getPsi());
         }
         return null;
     }

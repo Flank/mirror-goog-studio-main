@@ -31,6 +31,7 @@ iml_module(
         "//tools/base/sdk-common:studio.sdk-common[module]",
         "//tools/base/layoutlib-api:studio.layoutlib-api[module]",
         "//tools/idea/java/java-psi-api[module]",
+        "//tools/idea/java/java-psi-impl[module]",
         "//tools/base/build-system:studio.manifest-merger[module]",
         "//tools/idea/.idea/libraries:uast",
     ],
