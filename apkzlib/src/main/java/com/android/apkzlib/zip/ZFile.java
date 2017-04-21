@@ -580,9 +580,13 @@ public class ZFile implements Closeable {
             entryEndOffset = 0;
         }
 
+        /*
+         * Check if there is an extra central directory offset. If there is, save it. Note that
+         * we can't call extraDirectoryOffset() because that would mark the file as dirty.
+         */
         long extraOffset = directoryStartOffset - entryEndOffset;
         Verify.verify(extraOffset >= 0, "extraOffset (%s) < 0", extraOffset);
-        setExtraDirectoryOffset(extraOffset);
+        extraDirectoryOffset = extraOffset;
     }
 
     /**

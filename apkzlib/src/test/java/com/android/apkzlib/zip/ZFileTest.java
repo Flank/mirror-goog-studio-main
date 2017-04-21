@@ -27,11 +27,9 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
-import com.android.apkzlib.utils.ApkZFileTestUtils;
 import com.android.apkzlib.zip.compress.DeflateExecutionCompressor;
 import com.android.apkzlib.zip.utils.CloseableByteSource;
 import com.android.apkzlib.zip.utils.RandomAccessFileUtils;
-import com.android.testutils.TestUtils;
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import com.google.common.hash.Hashing;
@@ -148,6 +146,21 @@ public class ZFileTest {
 
         try (ZFile zf = new ZFile(testZip)) {
             assertEquals(1, zf.entries().size());
+            assertTrue(zf.getCentralDirectoryOffset() > 0);
+            assertTrue(zf.getEocdOffset() > 0);
+        }
+    }
+
+    @Test
+    public void readOnlyV2SignedApkSupport() throws Exception {
+        File testZip = ZipTestUtils.cloneRsrc("v2-signed.apk", mTemporaryFolder);
+
+        assertTrue(testZip.setWritable(false));
+
+        try (ZFile zf = new ZFile(testZip)) {
+            assertEquals(416, zf.entries().size());
+            assertTrue(zf.getCentralDirectoryOffset() > 0);
+            assertTrue(zf.getEocdOffset() > 0);
         }
     }
 
