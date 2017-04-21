@@ -94,9 +94,7 @@ public class AaptV2Jni extends AbstractAapt {
         executor.execute(
                 () -> {
                     try {
-                        List<String> args =
-                                AaptV2CommandBuilder.makeCompile(
-                                        request.getInput(), request.getOutput());
+                        List<String> args = AaptV2CommandBuilder.makeCompile(request);
                         int returnCode = Aapt2Jni.compile(args);
                         if (returnCode == 0) {
                             result.set(

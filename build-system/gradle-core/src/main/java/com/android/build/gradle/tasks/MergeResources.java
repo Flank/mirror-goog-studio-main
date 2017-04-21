@@ -129,6 +129,8 @@ public class MergeResources extends IncrementalTask {
 
     @Nullable private File resourceShrinkerOutputFolder;
 
+    private boolean pseudoLocalesEnabled;
+
     @Input
     public String getBuildToolsVersion() {
         return getBuildTools().getRevision().toString();
@@ -181,7 +183,8 @@ public class MergeResources extends IncrementalTask {
                             getIncrementalFolder(),
                             dataBindingExpressionRemover,
                             dataBindingLayoutOutputFolder,
-                            resourceShrinkerOutputFolder);
+                            resourceShrinkerOutputFolder,
+                            pseudoLocalesEnabled);
 
             merger.mergeData(writer, false /*doCleanUp*/);
 
@@ -268,7 +271,8 @@ public class MergeResources extends IncrementalTask {
                             getIncrementalFolder(),
                             dataBindingExpressionRemover,
                             dataBindingLayoutOutputFolder,
-                            resourceShrinkerOutputFolder);
+                            resourceShrinkerOutputFolder,
+                            pseudoLocalesEnabled);
 
             merger.mergeData(writer, false /*doCleanUp*/);
             // No exception? Write the known state.
@@ -519,6 +523,11 @@ public class MergeResources extends IncrementalTask {
         return resourceShrinkerOutputFolder;
     }
 
+    @Input
+    public boolean isPseudoLocalesEnabled() {
+        return pseudoLocalesEnabled;
+    }
+
     /**
      * Compute the list of resource set to be used during execution based all the inputs.
      */
@@ -707,6 +716,12 @@ public class MergeResources extends IncrementalTask {
 
             mergeResourcesTask.resourceShrinkerOutputFolder =
                     scope.getResourceShrinkerInputFolder();
+
+            mergeResourcesTask.pseudoLocalesEnabled =
+                    scope.getVariantData()
+                            .getVariantConfiguration()
+                            .getBuildType()
+                            .isPseudoLocalesEnabled();
         }
     }
 }
