@@ -131,6 +131,33 @@ public class PerformanceTestProjects {
                 project.file("app/build.gradle"),
                 ",\\s*commit: \"git rev-parse --short HEAD\".execute\\(\\).text\\]",
                 "]");
+
+        antennaPodSetRetrolambdaEnabled(mainProject, false);
+    }
+
+    public static void antennaPodSetRetrolambdaEnabled(
+            @NonNull GradleTestProject mainProject, boolean enableRetrolambda) throws IOException {
+        GradleTestProject project = mainProject.getSubproject("AntennaPod");
+
+        String searchPrefix;
+        String replacePrefix;
+        if (enableRetrolambda) {
+            searchPrefix = "//";
+            replacePrefix = "";
+        } else {
+            searchPrefix = "";
+            replacePrefix = "//";
+        }
+
+        TestFileUtils.searchAndReplace(
+                project.file("app/build.gradle"),
+                searchPrefix + "apply plugin: \"me.tatarka.retrolambda\"",
+                replacePrefix + "apply plugin: \"me.tatarka.retrolambda\"");
+
+        TestFileUtils.searchAndReplace(
+                mainProject.file("AntennaPod/core/build.gradle"),
+                searchPrefix + "apply plugin: \"me.tatarka.retrolambda\"",
+                replacePrefix + "apply plugin: \"me.tatarka.retrolambda\"");
     }
 
 

@@ -77,10 +77,9 @@ public class AntennaPodPerformanceMatrixTest {
     @Parameterized.Parameters(name = "{0}")
     public static ProjectScenario[] getParameters() {
         return new ProjectScenario[] {
-            ProjectScenario.NORMAL,
-            ProjectScenario.DEX_ARCHIVE_MONODEX,
-            ProjectScenario.DEX_OUT_OF_PROCESS,
-            ProjectScenario.DESUGAR,
+            ProjectScenario.NORMAL_J8,
+            ProjectScenario.DEX_ARCHIVE_MONODEX_J8,
+            ProjectScenario.DEX_OUT_OF_PROCESS_J8,
         };
     }
 
@@ -91,20 +90,12 @@ public class AntennaPodPerformanceMatrixTest {
 
         File appBuildFile = project.file("app/build.gradle");
         switch (projectScenario) {
-            case NORMAL:
+            case NORMAL_J8:
                 break;
-            case DEX_OUT_OF_PROCESS:
+            case DEX_ARCHIVE_MONODEX_J8:
                 DexInProcessHelper.disableDexInProcess(appBuildFile);
                 break;
-            case DEX_ARCHIVE_MONODEX:
-                break;
-            case DESUGAR:
-                TestFileUtils.searchAndReplace(
-                        appBuildFile, "apply plugin: \"me.tatarka.retrolambda\"", "");
-                TestFileUtils.searchAndReplace(
-                        project.getSubproject("AntennaPod/core").getBuildFile(),
-                        "apply plugin: \"me.tatarka.retrolambda\"",
-                        "");
+            case DEX_OUT_OF_PROCESS_J8:
                 break;
             default:
                 throw new IllegalArgumentException(

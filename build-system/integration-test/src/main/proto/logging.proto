@@ -58,6 +58,7 @@ message GradleBenchmarkResult {
     GradleVersion gradle_version = 8;
     Branch branch = 9;
     Compiler compiler = 10;
+    Java8LangSupport java8LangSupport = 11;
 
     // Tells whether Jack or Dex are run in process. Will be renamed to
     // "CompilerInProcess" once we're ready to migrate the old data.
@@ -114,6 +115,11 @@ message GradleBenchmarkResult {
       JACK = 1;
       DEX_ARCHIVE = 2;
       DESUGAR = 3;
+    }
+
+    enum Java8LangSupport {
+      DESUGAR_TOOL = 0;
+      RETROLAMBD = 1;
     }
   }
 

@@ -62,17 +62,10 @@ public class AntennaPodInstantRunTest {
     @Before
     public void setUp() throws Exception {
         project = mainProject.getSubproject("AntennaPod");
-        if (java8LangSupport == VariantScope.Java8LangSupport.DESUGAR) {
-            TestFileUtils.searchAndReplace(
-                    project.getSubproject("AntennaPod/app").getBuildFile(),
-                    "apply plugin: \"me.tatarka.retrolambda\"",
-                    "");
-            TestFileUtils.searchAndReplace(
-                    project.getSubproject("AntennaPod/core").getBuildFile(),
-                    "apply plugin: \"me.tatarka.retrolambda\"",
-                    "");
-        }
         PerformanceTestProjects.initializeAntennaPod(mainProject);
+        if (java8LangSupport == VariantScope.Java8LangSupport.RETROLAMBDA) {
+            PerformanceTestProjects.antennaPodSetRetrolambdaEnabled(mainProject, true);
+        }
     }
 
     @Test

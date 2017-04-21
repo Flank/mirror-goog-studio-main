@@ -62,9 +62,23 @@ public enum ProjectScenario {
                 flags.setCompiler(Flags.Compiler.DEX_ARCHIVE);
                 flags.setMultiDex(Flags.MultiDexMode.LEGACY);
             }),
-    DESUGAR(
+    NORMAL_J8(
+            flags ->
+                    NORMAL.getFlags()
+                            .toBuilder()
+                            .setJava8LangSupport(Flags.Java8LangSupport.DESUGAR_TOOL)),
+    DEX_OUT_OF_PROCESS_J8(
+            flags ->
+                    DEX_OUT_OF_PROCESS
+                            .getFlags()
+                            .toBuilder()
+                            .setJava8LangSupport(Flags.Java8LangSupport.DESUGAR_TOOL)),
+    DEX_ARCHIVE_MONODEX_J8(
             flags -> {
-                flags.setCompiler(Flags.Compiler.DESUGAR);
+                DEX_ARCHIVE_MONODEX
+                        .getFlags()
+                        .toBuilder()
+                        .setJava8LangSupport(Flags.Java8LangSupport.DESUGAR_TOOL);
             }),
     ;
 
