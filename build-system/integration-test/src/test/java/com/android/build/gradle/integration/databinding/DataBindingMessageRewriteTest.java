@@ -57,6 +57,7 @@ public class DataBindingMessageRewriteTest {
 
                     GradleBuildResult result =
                             project.executor()
+                                    .withEnabledAapt2(false)
                                     .with(BooleanOption.IDE_INVOKED_FROM_IDE, true)
                                     .expectFailure()
                                     .run("assembleDebug");

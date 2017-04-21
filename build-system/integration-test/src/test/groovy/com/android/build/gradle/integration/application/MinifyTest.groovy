@@ -105,6 +105,7 @@ class MinifyTest {
                 "com/android/tests/basic/UnusedTestClass.class",
                 "com/android/tests/basic/UsedTestClass.class",
                 "com/android/tests/basic/test/BuildConfig.class",
+                "com/android/tests/basic/test/R.class"
         )
 
         FieldNode stringProviderField = ZipHelper.checkClassFile(

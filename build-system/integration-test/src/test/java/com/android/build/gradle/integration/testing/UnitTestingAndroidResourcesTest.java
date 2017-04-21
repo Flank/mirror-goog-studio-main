@@ -70,10 +70,11 @@ public class UnitTestingAndroidResourcesTest {
 
     @Test
     public void runUnitTests() throws Exception {
-        project.execute("testDebugUnitTest");
+        project.executor().withEnabledAapt2(false).run("testDebugUnitTest");
 
         Files.write(project.file("src/main/assets/foo.txt").toPath(), "CHANGE".getBytes());
-        GradleBuildResult result = project.executor().run("testDebugUnitTest");
+        GradleBuildResult result =
+                project.executor().withEnabledAapt2(false).run("testDebugUnitTest");
 
         assertThat(result.getNotUpToDateTasks()).contains(":testDebugUnitTest");
 
