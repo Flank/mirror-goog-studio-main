@@ -231,6 +231,7 @@ grpc::Status CpuServiceImpl::CheckAppProfilingState(
   // request corresponding to the app)
   bool is_being_profiled = last_request != last_start_profiling_requests_.end();
   response->set_being_profiled(is_being_profiled);
+  response->set_check_timestamp(clock_.GetCurrentTime());
   if (is_being_profiled) {
     // App is being profiled. Include the start profiling request and its
     // timestamp in the response.

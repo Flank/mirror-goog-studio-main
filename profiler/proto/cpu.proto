@@ -242,6 +242,8 @@ message ProfilingStateResponse {
   CpuProfilingAppStartRequest start_request = 2;
   // The timestamp when the profiling started if the app is being profiled.
   int64 start_timestamp = 3;
+  // The timestamp when the profiling state was checked.
+  int64 check_timestamp = 4;
 }
 
 // CPU data of a given app process.
