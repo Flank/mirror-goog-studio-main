@@ -207,6 +207,12 @@ public class GradleVersion implements Comparable<GradleVersion>, Serializable {
                 cause);
     }
 
+    public GradleVersion(int major, int minor) {
+        this((major + "." + minor), new VersionSegment(major),
+                new VersionSegment(minor), null,
+                Collections.<VersionSegment>emptyList(), 0, null, false);
+    }
+
     public GradleVersion(int major, int minor, int micro) {
         this((major + "." + minor + "." + micro), new VersionSegment(major),
                 new VersionSegment(minor), new VersionSegment(micro),
@@ -264,6 +270,10 @@ public class GradleVersion implements Comparable<GradleVersion>, Serializable {
 
     public int getPreview() {
         return mPreview;
+    }
+
+    public boolean isPreview() {
+        return mPreviewType != null || mSnapshot;
     }
 
     @Nullable
@@ -407,6 +417,20 @@ public class GradleVersion implements Comparable<GradleVersion>, Serializable {
     @NonNull
     public List<VersionSegment> getAdditionalSegments() {
         return mAdditionalSegments;
+    }
+
+    /** Returns the max of the two versions */
+    @Nullable
+    public static GradleVersion max(@Nullable GradleVersion version1, @Nullable GradleVersion version2) {
+        if (version2 == null) {
+            return version1;
+        } else if (version1 == null) {
+            return version2;
+        } else if (version1.compareTo(version2) < 0) {
+            return version2;
+        } else {
+            return version1;
+        }
     }
 
     public static class VersionSegment implements Serializable {

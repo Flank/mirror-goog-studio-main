@@ -38,32 +38,21 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * A {@linkplain com.android.ide.common.repository.SdkMavenRepository} represents a Maven
+ * A {@linkplain SdkMavenRepository} represents a Maven
  * repository that is shipped with the SDK and located in the {@code extras} folder of the
  * SDK location.
  */
 public enum SdkMavenRepository {
     /** The Android repository; contains support lib, app compat, media router, etc */
-    ANDROID("android", "Android Support Repository"),
+    ANDROID("android"),
 
     /** The Google repository; contains Play Services etc */
-    GOOGLE("google", "Google Support Repository");
+    GOOGLE("google");
 
     @NonNull private final String mDir;
-    @NonNull private final String myDisplayName;
 
-    SdkMavenRepository(@NonNull String dir, @NonNull String displayName) {
+    SdkMavenRepository(@NonNull String dir) {
         mDir = dir;
-        myDisplayName = displayName;
-    }
-
-    /**
-     * @deprecated For testability, use {@link #getRepositoryLocation(File, boolean, FileOp)}.
-     */
-    @Deprecated
-    @Nullable
-    public File getRepositoryLocation(@Nullable File sdkHome, boolean requireExists) {
-        return getRepositoryLocation(sdkHome, requireExists, FileOpUtils.create());
     }
 
     /**

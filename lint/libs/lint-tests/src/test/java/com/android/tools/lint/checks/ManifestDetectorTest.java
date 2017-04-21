@@ -16,7 +16,7 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.checks.GradleDetectorTest.createSdkPaths;
+import static com.android.tools.lint.checks.GradleDetectorTest.createRelativePaths;
 import static com.android.tools.lint.checks.infrastructure.ProjectDescription.Type.LIBRARY;
 
 import com.android.SdkConstants;
@@ -1723,7 +1723,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                     "extras/google/m2repository/com/google/android/gms/play-services-wearable/8.4.0/play-services-wearable-8.4.0.aar",
             };
 
-            createSdkPaths(mSdkDir, paths);
+            createRelativePaths(mSdkDir, paths);
         }
 
         return mSdkDir;

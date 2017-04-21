@@ -84,12 +84,83 @@ public class MavenRepositories {
         return null;
     }
 
-  /**
-   * Decides whether a given {@link GradleCoordinate} is considered preview.
-   *
-   * <p>This is mostly compatible with {@link GradleCoordinate#isPreview()}, but there is one edge
-   * case that we need to handle, related to Play Services. (See https://b.android.com/75292)
-   */
+    /**
+     * Find the best matching {@link GradleVersion}. Like
+     * {@link #getHighestInstalledVersion(String, String, File, String, boolean, FileOp)} but
+     * operates on {@link GradleVersion} instead of {@link GradleCoordinate}.
+     *
+     * @param groupId      the artifact group id
+     * @param artifactId   the artifact id
+     * @param repository   the path to the m2repository directory
+     * @param filter       an optional filter which the matched version name must start with
+     * @param allowPreview whether preview versions are allowed to match
+     * @param fileOp       file operator to use for file access
+     * @return the best (highest version) matching version, or null if none were found
+     */
+    @Nullable
+    public static GradleVersion getHighestInstalledVersionNumber(
+            @NonNull String groupId,
+            @NonNull String artifactId,
+            @NonNull File repository,
+            @Nullable String filter,
+            boolean allowPreview,
+            @NonNull FileOp fileOp) {
+        File versionDir = getArtifactIdDirectory(repository, groupId, artifactId);
+        return getHighestVersion(versionDir, filter, allowPreview, fileOp);
+    }
+
+    /**
+     * Given a directory containing version numbers returns the highest version number
+     * matching the given filter
+     *
+     * @param versionDir   the directory containing version numbers
+     * @param filter       an optional filter which the matched version name must start with
+     * @param allowPreview whether preview versions are allowed to match
+     * @param fileOp       file operator to use for file access
+     * @return the best (highest version), or null if none were found
+     */
+    @Nullable
+    public static GradleVersion getHighestVersion(
+            @NonNull File versionDir,
+            @Nullable String filter,
+            boolean allowPreview, @NonNull FileOp fileOp) {
+        File[] versionDirs = fileOp.listFiles(versionDir);
+        List<GradleVersion> versions = Lists.newArrayList();
+        for (File dir : versionDirs) {
+            if (!fileOp.isDirectory(dir)) {
+                continue;
+            }
+            String name = dir.getName();
+            if (filter != null && !name.startsWith(filter)) {
+                continue;
+            }
+            if (name.isEmpty() || !Character.isDigit(name.charAt(0))) {
+                continue;
+            }
+            GradleVersion version = GradleVersion.tryParse(name);
+            if (version != null && (allowPreview || !version.isPreview())) {
+                versions.add(version);
+            }
+        }
+
+        int size = versions.size();
+        switch (size) {
+            case 0:
+                return null;
+            case 1:
+                return versions.get(0);
+            default: {
+                return Collections.max(versions);
+            }
+        }
+    }
+
+    /**
+     * Decides whether a given {@link GradleCoordinate} is considered preview.
+     *
+     * <p>This is mostly compatible with {@link GradleCoordinate#isPreview()}, but there is one edge
+     * case that we need to handle, related to Play Services. (See https://b.android.com/75292)
+     */
     public static boolean isPreview(GradleCoordinate coordinate) {
         //noinspection SimplifiableIfStatement
         if (coordinate.isPreview()) {
