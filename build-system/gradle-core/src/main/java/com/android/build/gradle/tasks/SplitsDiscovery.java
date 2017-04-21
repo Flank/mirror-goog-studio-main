@@ -31,6 +31,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import joptsimple.internal.Strings;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
@@ -168,13 +169,29 @@ public class SplitsDiscovery extends BaseTask {
                     for (String prefix : prefixes) {
                         if (subResFolder.getName().startsWith(prefix)) {
                             providedResFolders
-                                    .add(subResFolder.getName().substring(prefix.length()));
+                                    .add(getFilter(subResFolder, prefix));
                         }
                     }
                 }
             }
         }
         return providedResFolders;
+    }
+
+    private static String getFilter(File file, String prefix) {
+        // File can either be a resource directory (e.g. drawable-hdpi) if we're using AAPT1 or it
+        // can be a .flat file (e.g. drawable-hdpi_ic_launcher.png.flat) if we're using AAPT2.
+        if (file.isDirectory()) {
+            return file.getName().substring(prefix.length());
+        } else if (file.isFile() && file.getName().endsWith(".flat")) {
+            // The format of AAPT2 compiled files is:
+            // {@code <type>(-<filter1>)*_<original-name-of-file>(.arsc).flat}
+            int firstUnderscore = file.getName().indexOf('_');
+            if (firstUnderscore > -1) {
+                return file.getName().substring(prefix.length(), firstUnderscore);
+            }
+        }
+        return Strings.EMPTY;
     }
 
     /**

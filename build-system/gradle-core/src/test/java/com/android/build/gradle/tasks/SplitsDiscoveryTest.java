@@ -197,6 +197,41 @@ public class SplitsDiscoveryTest {
     }
 
     @Test
+    public void testAllAutoFiltersWithAapt2() throws IOException {
+        File mergedFolder = temporaryFolder.newFolder();
+        assertThat(new File(mergedFolder, "drawable-xhdpi_ic_launcher.png.flat").createNewFile())
+                .isTrue();
+        assertThat(new File(mergedFolder, "drawable-hdpi_ic_launcher.png.flat").createNewFile())
+                .isTrue();
+        // wrong name, should not be picked up
+        assertThat(new File(mergedFolder, "xxhdpi_ic_launger.png.flat").mkdirs()).isTrue();
+
+        assertThat(new File(mergedFolder, "values-fr_values-fr.arsc.flat").createNewFile())
+                .isTrue();
+        assertThat(new File(mergedFolder, "values-de_values-fr.arsc.flat").createNewFile())
+                .isTrue();
+        assertThat(new File(mergedFolder, "values-fr-rBE_values-fr-rBE.arsc.flat").createNewFile())
+                .isTrue();
+        // Empty qualifier should not end up in the final list.
+        assertThat(new File(mergedFolder, "values_values.arsc.flat").createNewFile())
+                .isTrue();
+        // Wrong name, should not be picked up.
+        assertThat(new File(mergedFolder, "en_values-en.arsc.flat").mkdirs()).isTrue();
+        task.mergedResourcesFolders = project.files(mergedFolder).builtBy(task);
+
+        task.densityAuto = true;
+        task.languageAuto = true;
+        task.taskAction();
+
+        SplitList splitList = SplitList.load(outputs);
+        assertThat(splitList.getFilters(VariantOutput.FilterType.DENSITY))
+                .containsExactly("hdpi", "xhdpi");
+        assertThat(splitList.getFilters(VariantOutput.FilterType.LANGUAGE))
+                .containsExactly("fr", "de", "fr-rBE");
+        assertThat(splitList.getFilters(VariantOutput.FilterType.ABI)).isEmpty();
+    }
+
+    @Test
     public void testNoAutoForAbiFilters() throws IOException {
         File mergedFolder = temporaryFolder.newFolder();
         assertThat(new File(mergedFolder, "arm").mkdirs()).isTrue();
