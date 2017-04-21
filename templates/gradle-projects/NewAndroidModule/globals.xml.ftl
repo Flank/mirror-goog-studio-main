@@ -20,6 +20,7 @@
     <global id="hasMonolithicAppWrapper" type="boolean" value="${(isInstantApp!false)?string}" />
 
     <global id="baseLibName" type="string" value="base" />
+    <global id="isBaseSplit" type="boolean" value="false" />
     <global id="instantAppProjectName" type="string" value="instantapp" />
     <global id="monolithicAppProjectName" type="string" value="app" />
     <global id="instantAppPackageName" type="string" value="${packageName}.instantapp" />
