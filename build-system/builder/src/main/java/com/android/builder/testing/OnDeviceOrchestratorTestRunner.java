@@ -68,7 +68,8 @@ public class OnDeviceOrchestratorTestRunner extends SimpleTestRunner {
             adbArgs.add(getRunOptions());
             adbArgs.add(getArgsCommand());
 
-            adbArgs.add("android.support.test.orchestrator/android.support.test.orchestrator.Odo");
+            adbArgs.add(
+                    "android.support.test.orchestrator/android.support.test.orchestrator.OnDeviceOrchestrator");
 
             return Joiner.on(' ').join(adbArgs);
         }

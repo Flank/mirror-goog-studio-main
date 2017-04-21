@@ -46,6 +46,6 @@ public class OnDeviceOrchestratorTestRunnerTest {
                                 + "am instrument -r -w "
                                 + "-e targetInstrumentation com.example.app/android.support.test.runner.AndroidJUnitRunner "
                                 + "-e foo bar "
-                                + "android.support.test.orchestrator/android.support.test.orchestrator.Odo");
+                                + "android.support.test.orchestrator/android.support.test.orchestrator.OnDeviceOrchestrator");
     }
 }
