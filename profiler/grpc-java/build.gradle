@@ -35,7 +35,10 @@ dependencies {
         transitive false
     }
     packaging("io.grpc:grpc-netty:$grpcVersion") {
-        transitive false
+        // We intentionally bundle our own copy of netty dependencies,
+        // since the version included with IDEA can get updated without
+        // notice, which can break grpc.
+        transitive true
     }
     packaging("io.grpc:grpc-okhttp:$grpcVersion") {
         transitive false
@@ -96,6 +99,7 @@ jarjar.repackage('jarjarLibs') {
     from files(sourceSets.main.output.classesDir)
     dependsOn sourceSets.main.output
     classRename 'com.google.protobuf.**', 'com.google.protobuf3jarjar.@1'
+    classRename 'io.netty.**', 'io.nettyjarjar.@1'
 }
 
 artifacts {
