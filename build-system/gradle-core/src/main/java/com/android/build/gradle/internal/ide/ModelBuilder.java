@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.ide;
 
 import static com.android.builder.model.AndroidProject.ARTIFACT_MAIN;
+import static com.android.builder.model.AndroidProject.PROJECT_TYPE_FEATURE;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -274,7 +275,8 @@ public class ModelBuilder implements ToolingModelBuilder {
                 config.getBuildToolsVersion(),
                 projectType,
                 Version.BUILDER_MODEL_API_VERSION,
-                generation);
+                generation,
+                projectType == PROJECT_TYPE_FEATURE && config.getBaseSplit());
     }
 
     /**
