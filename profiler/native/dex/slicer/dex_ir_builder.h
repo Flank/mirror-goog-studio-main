@@ -46,7 +46,7 @@ struct MethodId {
 // This class enables modifications to a .dex IR
 class Builder {
  public:
-  Builder(std::shared_ptr<ir::DexFile> dex_ir) : dex_ir_(dex_ir) {}
+  explicit Builder(std::shared_ptr<ir::DexFile> dex_ir) : dex_ir_(dex_ir) {}
 
   // No copy/move semantics
   Builder(const Builder&) = delete;
@@ -68,12 +68,16 @@ class Builder {
 
   // Locate an existing method definition
   // (returns nullptr if the method is not found)
-  EncodedMethod* FindMethod(const MethodId& method_id);
+  EncodedMethod* FindMethod(const MethodId& method_id) const;
 
  private:
   // Locate an existing .dex IR string
   // (returns nullptr if the string is not found)
-  String* FindAsciiString(const char* cstr);
+  String* FindAsciiString(const char* cstr) const;
+
+  // Locate an existing .dex IR prototype
+  // (returns nullptr if the prototype is not found)
+  Proto* FindPrototype(const char* signature) const;
 
  private:
   std::shared_ptr<ir::DexFile> dex_ir_;
