@@ -41,6 +41,7 @@ import static com.android.tools.lint.detector.api.LintUtils.findSubstring;
 import static com.android.tools.lint.detector.api.LintUtils.getAutoBoxedType;
 import static com.android.tools.lint.detector.api.LintUtils.getChildren;
 import static com.android.tools.lint.detector.api.LintUtils.getFormattedParameters;
+import static com.android.tools.lint.detector.api.LintUtils.getLocale;
 import static com.android.tools.lint.detector.api.LintUtils.getLocaleAndRegion;
 import static com.android.tools.lint.detector.api.LintUtils.getPrimitiveType;
 import static com.android.tools.lint.detector.api.LintUtils.isImported;
@@ -62,6 +63,8 @@ import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.testutils.TestUtils;
 import com.android.tools.lint.LintCliClient;
+import com.android.tools.lint.checks.infrastructure.LintDetectorTest;
+import com.android.tools.lint.checks.infrastructure.TestFiles;
 import com.android.tools.lint.checks.infrastructure.TestIssueRegistry;
 import com.android.tools.lint.client.api.JavaParser;
 import com.android.tools.lint.client.api.LintDriver;
@@ -375,6 +378,47 @@ public class LintUtilsTest extends TestCase {
         checkEncoding("UTF_32LE", true /*bom*/, "\r\n");
     }
 
+    public void testGetLocale() throws Exception {
+        assertNull(getLocale(""));
+        assertNull(getLocale("values"));
+        assertNull(getLocale("values-xlarge-port"));
+        assertEquals("en", getLocale("values-en").getLanguage());
+        assertEquals("pt", getLocale("values-pt-rPT-nokeys").getLanguage());
+        assertEquals("pt", getLocale("values-b+pt+PT-nokeys").getLanguage());
+        assertEquals("zh", getLocale("values-zh-rCN-keyshidden").getLanguage());
+    }
+
+
+    public void testGetLocale2() throws Exception {
+        LintDetectorTest.TestFile xml;
+        XmlContext context;
+
+        xml = TestFiles.xml("res/values/strings.xml", ""
+                + "<resources>\n"
+                + "</resources>\n");
+        context = createXmlContext(xml.getContents(), new File(xml.getTargetPath()));
+        assertNull(getLocale(context));
+
+        xml = TestFiles.xml("res/values-no/strings.xml", ""
+                + "<resources>\n"
+                + "</resources>\n");
+        context = createXmlContext(xml.getContents(), new File(xml.getTargetPath()));
+        assertEquals("no", getLocale(context).getLanguage());
+
+        xml = TestFiles.xml("res/values/strings.xml", ""
+                + "<resources tools:locale=\"nb\" xmlns:tools=\"http://schemas.android.com/tools\">\n"
+                + "</resources>\n");
+        context = createXmlContext(xml.getContents(), new File(xml.getTargetPath()));
+        assertEquals("nb", getLocale(context).getLanguage());
+
+        // tools:locale wins over folder location
+        xml = TestFiles.xml("res/values-fr/strings.xml", ""
+                + "<resources tools:locale=\"nb\" xmlns:tools=\"http://schemas.android.com/tools\">\n"
+                + "</resources>\n");
+        context = createXmlContext(xml.getContents(), new File(xml.getTargetPath()));
+        assertEquals("nb", getLocale(context).getLanguage());
+    }
+
     public void testGetLocaleAndRegion() throws Exception {
         assertNull(getLocaleAndRegion(""));
         assertNull(getLocaleAndRegion("values"));
@@ -386,6 +430,7 @@ public class LintUtilsTest extends TestCase {
         assertEquals("ms", getLocaleAndRegion("values-ms-keyshidden"));
     }
 
+    @SuppressWarnings("all") // sample code
     public void testIsImported() throws Exception {
         assertFalse(isImported(getCompilationUnit(
                 "package foo.bar;\n" +
@@ -508,14 +553,11 @@ public class LintUtilsTest extends TestCase {
         return parse(javaSource, relativePath, false, true, true);
     }
 
-    public static Pair<JavaContext,Disposable>  parse(@Language("JAVA") final String javaSource,
-            final File relativePath, boolean lombok, boolean psi, boolean uast) {
-        // TODO: Clean up -- but where?
-        File dir = Files.createTempDir();
+    private static Project createTestProjectForFile(File dir, File relativePath, String source) {
         final File fullPath = new File(dir, relativePath.getPath());
         fullPath.getParentFile().mkdirs();
         try {
-            Files.write(javaSource, fullPath, Charsets.UTF_8);
+            Files.write(source, fullPath, Charsets.UTF_8);
         } catch (IOException e) {
             fail(e.getMessage());
         }
@@ -524,7 +566,7 @@ public class LintUtilsTest extends TestCase {
             @Override
             public CharSequence readFile(@NonNull File file) {
                 if (file.getPath().equals(fullPath.getPath())) {
-                    return javaSource;
+                    return source;
                 }
                 return super.readFile(file);
             }
@@ -543,7 +585,7 @@ public class LintUtilsTest extends TestCase {
                 return super.getCompileTarget(project);
             }
 
-            @Nullable
+            @NonNull
             @Override
             public File getSdkHome() {
                 return TestUtils.getSdk();
@@ -551,10 +593,44 @@ public class LintUtilsTest extends TestCase {
         };
         Project project = client.getProject(dir, dir);
         client.initializeProjects(Collections.singletonList(project));
+        return project;
+    }
+
+    public static XmlContext createXmlContext(@Language("XML") String xml, File relativePath) {
+        File dir = new File(System.getProperty("java.io.tmpdir"));
+        final File fullPath = new File(dir, relativePath.getPath());
+        Project project = createTestProjectForFile(dir, relativePath, xml);
+        LintCliClient client = (LintCliClient) project.getClient();
+
         LintDriver driver = new LintDriver(new TestIssueRegistry(),
                 new LintCliClient());
         driver.setScope(Scope.JAVA_FILE_SCOPE);
-        TestContext context = new TestContext(driver, client, project, javaSource, fullPath);
+        ResourceFolderType folderType = ResourceFolderType.getFolderType(
+                relativePath.getParentFile().getName());
+        XmlTestContext context = new XmlTestContext(driver, client, project, xml, fullPath,
+                folderType);
+        context.document = context.getParser().parseXml(context);
+        return context;
+    }
+
+    public static Pair<JavaContext,Disposable>  parse(@Language("JAVA") final String javaSource,
+            final File relativePath, boolean lombok, boolean psi, boolean uast) {
+        // TODO: Clean up -- but where?
+        File dir = Files.createTempDir();
+        final File fullPath = new File(dir, relativePath.getPath());
+        fullPath.getParentFile().mkdirs();
+        try {
+            Files.write(javaSource, fullPath, Charsets.UTF_8);
+        } catch (IOException e) {
+            fail(e.getMessage());
+        }
+        Project project = createTestProjectForFile(dir, relativePath, javaSource);
+        LintCliClient client = (LintCliClient) project.getClient();
+
+        LintDriver driver = new LintDriver(new TestIssueRegistry(),
+                new LintCliClient());
+        driver.setScope(Scope.JAVA_FILE_SCOPE);
+        JavaTestContext context = new JavaTestContext(driver, client, project, javaSource, fullPath);
         JavaParser parser = null;
         if (lombok || psi) {
             parser = client.getJavaParser(project);
@@ -775,9 +851,9 @@ public class LintUtilsTest extends TestCase {
         assertThat(isJavaKeyword("false")).isTrue();
     }
 
-    private static class TestContext extends JavaContext {
+    private static class JavaTestContext extends JavaContext {
         private final String mJavaSource;
-        public TestContext(LintDriver driver, LintCliClient client, Project project,
+        public JavaTestContext(LintDriver driver, LintCliClient client, Project project,
                 String javaSource, File file) {
             //noinspection ConstantConditions
             super(driver, project, null, file);
@@ -791,4 +867,21 @@ public class LintUtilsTest extends TestCase {
             return mJavaSource;
         }
     }
+
+    private static class XmlTestContext extends XmlContext {
+        private final String xmlSource;
+        public XmlTestContext(LintDriver driver, LintCliClient client, Project project,
+                String xmlSource, File file, ResourceFolderType type) {
+            //noinspection ConstantConditions
+            super(driver, project, null, file, type, client.getXmlParser());
+            this.xmlSource = xmlSource;
+        }
+
+        @Override
+        @Nullable
+        public String getContents() {
+            return xmlSource;
+        }
+    }
+
 }

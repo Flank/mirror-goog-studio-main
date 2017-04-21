@@ -16,13 +16,10 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.SdkConstants.ATTR_LOCALE;
 import static com.android.SdkConstants.ATTR_TRANSLATABLE;
-import static com.android.SdkConstants.FD_RES_VALUES;
 import static com.android.SdkConstants.TAG_PLURALS;
 import static com.android.SdkConstants.TAG_STRING;
 import static com.android.SdkConstants.TAG_STRING_ARRAY;
-import static com.android.SdkConstants.TOOLS_URI;
 import static com.android.tools.lint.checks.TypoLookup.isLetter;
 import static com.google.common.base.Objects.equal;
 
@@ -115,16 +112,12 @@ public class TypoDetector extends ResourceXmlDetector {
 
     /** Look up the locale and region from the given parent folder name and store it
      * in {@link #mLanguage} and {@link #mRegion} */
-    private void initLocale(@NonNull String parent) {
+    private void initLocale(@NonNull XmlContext context) {
         mLanguage = null;
         mRegion = null;
 
-        if (parent.equals(FD_RES_VALUES)) {
-            return;
-        }
-
-        LocaleQualifier locale = LintUtils.getLocale(parent);
-        if (locale != null) {
+        LocaleQualifier locale = LintUtils.getLocale(context);
+        if (locale != null && locale.hasLanguage()) {
             mLanguage = locale.getLanguage();
             mRegion = locale.hasRegion() ? locale.getRegion() : null;
         }
@@ -132,23 +125,9 @@ public class TypoDetector extends ResourceXmlDetector {
 
     @Override
     public void beforeCheckFile(@NonNull Context context) {
-        initLocale(context.file.getParentFile().getName());
+        initLocale((XmlContext) context);
         if (mLanguage == null) {
-            // Check to see if the user has specified the language for this folder
-            // using a tools:locale attribute
-            if (context instanceof XmlContext) {
-                Element root = ((XmlContext) context).document.getDocumentElement();
-                if (root != null) {
-                    String locale = root.getAttributeNS(TOOLS_URI, ATTR_LOCALE);
-                    if (locale != null && !locale.isEmpty()) {
-                        initLocale(FD_RES_VALUES + '-' + locale);
-                    }
-                }
-            }
-
-            if (mLanguage == null) {
-                mLanguage = "en";
-            }
+            mLanguage = "en";
         }
 
         if (!equal(mLastLanguage, mLanguage) || !equal(mLastRegion, mRegion)) {

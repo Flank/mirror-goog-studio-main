@@ -133,11 +133,6 @@ public final class LocaleQualifier extends ResourceQualifier {
     @Nullable
     public static LocaleQualifier getQualifier(@NonNull String segment) {
         /*
-         * Compute lower case version of the segment.
-         */
-        String segmentLc = segment.toLowerCase(Locale.US);
-
-        /*
          * Special case: "car" is a valid 3 letter language code (Carib language), but
          * it conflicts with the (much older) UI mode constant for
          * car dock mode, so this specific language string should not be recognized
