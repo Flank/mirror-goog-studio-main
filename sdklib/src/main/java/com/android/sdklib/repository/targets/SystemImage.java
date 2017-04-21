@@ -25,8 +25,8 @@ import com.android.sdklib.ISystemImage;
 import com.android.sdklib.repository.IdDisplay;
 import com.android.sdklib.repository.meta.DetailsTypes;
 import com.google.common.base.Objects;
-
 import java.io.File;
+import java.util.Comparator;
 
 /**
  * {@link ISystemImage} based on a {@link RepoPackage} (either system image, platform, or addon).
@@ -172,25 +172,16 @@ public class SystemImage implements ISystemImage {
     }
 
     @Override
-    public int compareTo(ISystemImage o) {
-        int res = getTag().compareTo(o.getTag());
-        if (res != 0) {
-            return res;
-        }
-        res = getAbiType().compareTo(o.getAbiType());
-        if (res != 0) {
-            return res;
-        }
-        if (getAddonVendor() == null ^ o.getAddonVendor() != null) {
-            return getAddonVendor() == null ? -1 : 1;
-        }
-        if (getAddonVendor() != null && o.getAddonVendor() != null) {
-            res = getAddonVendor().compareTo(o.getAddonVendor());
-            if (res != 0) {
-                return res;
-            }
-        }
-        res = getLocation().compareTo(o.getLocation());
+    public int compareTo(@NonNull ISystemImage o) {
+        int res =
+                Comparator.comparing(ISystemImage::getTag)
+                        .thenComparing(ISystemImage::getAbiType)
+                        .thenComparing(
+                                ISystemImage::getAddonVendor,
+                                Comparator.nullsFirst(IdDisplay::compareTo))
+                        .thenComparing(ISystemImage::getLocation)
+                        .compare(this, o);
+
         if (res != 0) {
             return res;
         }
