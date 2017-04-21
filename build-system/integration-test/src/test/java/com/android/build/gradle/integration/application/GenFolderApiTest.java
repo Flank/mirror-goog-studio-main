@@ -69,8 +69,16 @@ public class GenFolderApiTest {
     @Test
     public void checkTheCustomResGenerationTaskRan() throws Exception {
         assertThat(project.getApk("debug")).contains("res/xml/generated.xml");
-        assertThat(project.file("build/intermediates/res/merged/debug/values/values.xml"))
-                .contains("generated_string");
+        File intermediateFile =
+                project.file("build/intermediates/res/merged/debug/values/values.xml");
+        if (!intermediateFile.exists()) {
+            intermediateFile =
+                    project.file("build/intermediates/res/merged/debug/values_values.arsc.flat");
+            // we can't read the contents
+            assertThat(intermediateFile).exists();
+        } else {
+            assertThat(intermediateFile).contains("generated_string");
+        }
     }
 
 
@@ -80,15 +88,26 @@ public class GenFolderApiTest {
                 .withProperty("inject_enable_generate_values_res", "false")
                 .run("assembleDebug");
         assertThat(project.getApk("debug")).contains("res/xml/generated.xml");
-        assertThat(project.file("build/intermediates/res/merged/debug/values/values.xml"))
-                .doesNotContain("generated_string");
+        File intermediateFile =
+                project.file("build/intermediates/res/merged/debug/values/values.xml");
+        if (!intermediateFile.exists()) {
+            intermediateFile =
+                    project.file("build/intermediates/res/merged/debug/values_values.arsc.flat");
+            assertThat(intermediateFile).exists();
+        } else {
+            assertThat(intermediateFile).doesNotContain("generated_string");
+        }
 
         project.executor()
                 .withProperty("inject_enable_generate_values_res", "true")
                 .run("assembleDebug");
         assertThat(project.getApk("debug")).contains("res/xml/generated.xml");
-        assertThat(project.file("build/intermediates/res/merged/debug/values/values.xml"))
-                .contains("generated_string");
+
+        if (intermediateFile.getName().endsWith(".flat")) {
+            assertThat(intermediateFile).exists();
+        } else {
+            assertThat(intermediateFile).contains("generated_string");
+        }
     }
 
     @Test

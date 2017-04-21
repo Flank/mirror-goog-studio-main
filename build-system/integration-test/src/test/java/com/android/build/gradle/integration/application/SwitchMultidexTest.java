@@ -88,6 +88,7 @@ public class SwitchMultidexTest {
 
     private void legacyMultidex() throws Exception {
         project.executor()
+                .withEnabledAapt2(true)
                 .withProperty("inject.minsdk", "19")
                 .withProperty("inject.multidex", "true")
                 .run("assembleDebug");
@@ -119,7 +120,6 @@ public class SwitchMultidexTest {
                         "Lcom/example/helloworld/A0;",
                         "Lcom/example/helloworld/A1;",
                         "Lcom/example/helloworld/BuildConfig;",
-                        "Lcom/example/helloworld/R$attr;",
                         "Lcom/example/helloworld/R$id;",
                         "Lcom/example/helloworld/R$layout;",
                         "Lcom/example/helloworld/R$string;",
@@ -128,6 +128,7 @@ public class SwitchMultidexTest {
 
     private void nativeMultidex() throws IOException, InterruptedException {
         project.executor()
+                .withEnabledAapt2(true)
                 .withProperty("inject.minsdk", "21")
                 .withProperty("inject.multidex", "true")
                 .run("assembleDebug");
@@ -144,7 +145,6 @@ public class SwitchMultidexTest {
                         "Lcom/example/helloworld/A1;",
                         "Lcom/example/helloworld/BuildConfig;",
                         "Lcom/example/helloworld/HelloWorld;",
-                        "Lcom/example/helloworld/R$attr;",
                         "Lcom/example/helloworld/R$id;",
                         "Lcom/example/helloworld/R$layout;",
                         "Lcom/example/helloworld/R$string;",
