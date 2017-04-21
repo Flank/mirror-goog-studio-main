@@ -36,12 +36,16 @@ import static org.mockito.Mockito.when;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaLibrary;
+import com.android.ide.common.repository.GradleCoordinate;
+import com.android.ide.common.repository.GradleVersion;
 import com.android.testutils.TestUtils;
 import com.android.tools.lint.checks.infrastructure.TestIssueRegistry;
 import com.android.tools.lint.checks.infrastructure.TestLintTask;
+import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.DefaultPosition;
 import com.android.tools.lint.detector.api.Detector;
@@ -84,7 +88,10 @@ import org.codehaus.groovy.ast.stmt.Statement;
  */
 public class GradleDetectorTest extends AbstractCheckTest {
 
-    private File sdkDir;
+    private static File sdkRootDir;
+    private static File fullSdkDir;
+    private static File leanSdkDir;
+    private static File gradleUserHome;
 
     @Override
     protected void setUp() throws Exception {
@@ -95,9 +102,9 @@ public class GradleDetectorTest extends AbstractCheckTest {
     protected void tearDown() throws Exception {
         super.tearDown();
 
-        if (sdkDir != null) {
-            deleteFile(sdkDir);
-            sdkDir = null;
+        if (sdkRootDir != null) {
+            deleteFile(sdkRootDir);
+            sdkRootDir = null;
         }
     }
 
@@ -110,13 +117,25 @@ public class GradleDetectorTest extends AbstractCheckTest {
     }
 
     /** Creates a mock SDK installation structure, containing a fixed set of dependencies */
-    private File getMockSupportLibraryInstallation() {
-        if (sdkDir == null) {
+    private static File getMockSupportLibraryInstallation() {
+        initializeMockSdkDirs();
+        return fullSdkDir;
+    }
+
+    /** Like {@link #getMockSupportLibraryInstallation()} but without local support library */
+    private static File getSdkDirWithoutSupportLib() {
+        initializeMockSdkDirs();
+        return leanSdkDir;
+    }
+
+    private static void initializeMockSdkDirs() {
+        if (sdkRootDir == null) {
             // Make fake SDK "installation" such that we can predict the set
             // of Maven repositories discovered by this test
-            sdkDir = TestUtils.createTempDirDeletedOnExit();
+            sdkRootDir = TestUtils.createTempDirDeletedOnExit();
 
-            String[] paths = new String[]{
+            fullSdkDir = new File(sdkRootDir, "full");
+            createRelativePaths(fullSdkDir, new String[]{
                     // Android repository
                     "extras/android/m2repository/com/android/support/appcompat-v7/18.0.0/appcompat-v7-18.0.0.aar",
                     "extras/android/m2repository/com/android/support/appcompat-v7/19.0.0/appcompat-v7-19.0.0.aar",
@@ -160,25 +179,50 @@ public class GradleDetectorTest extends AbstractCheckTest {
                     // build tools
                     "build-tools/23.0.0/aapt",
                     "build-tools/23.0.3/aapt"
-            };
+            });
 
-            createSdkPaths(sdkDir, paths);
+            leanSdkDir = new File(sdkRootDir, "lean");
+            createRelativePaths(leanSdkDir, new String[]{
+                    // build tools
+                    "build-tools/23.0.0/aapt",
+                    "build-tools/23.0.3/aapt"
+            });
+
+            // Test-isolated version of ~/.gradle/
+            gradleUserHome = new File(sdkRootDir, "gradle-user-home");
+            createRelativePaths(gradleUserHome, new String[]{
+                    "caches/modules-2/files-2.1/com.android.tools.build/gradle/2.2.0/dummy",
+                    "caches/modules-2/files-2.1/com.android.tools.build/gradle/2.2.3/dummy",
+                    "caches/modules-2/files-2.1/com.android.tools.build/gradle/2.3.0/dummy",
+                    "caches/modules-2/files-2.1/com.android.tools.build/gradle/2.3.1/dummy",
+                    "caches/modules-2/files-2.1/com.android.tools.build/gradle/2.4.0-alpha3/dummy",
+                    "caches/modules-2/files-2.1/com.android.tools.build/gradle/2.4.0-alpha5/dummy",
+                    "caches/modules-2/files-2.1/com.android.tools.build/gradle/2.4.0-alpha6/dummy",
+                    "caches/modules-2/files-2.1/com.google.guava/guava/17.0/dummy",
+                    "caches/modules-2/files-2.1/org.apache.httpcomponents/httpcomponents-core/4.1/dummy",
+                    "caches/modules-2/files-2.1/org.apache.httpcomponents/httpcomponents-core/4.2.1/dummy",
+                    "caches/modules-2/files-2.1/org.apache.httpcomponents/httpcomponents-core/4.2.5/dummy",
+                    "caches/modules-2/files-2.1/org.apache.httpcomponents/httpcomponents-core/4.4/dummy",
+
+                    // SDK distributed via Maven
+                    "caches/modules-2/files-2.1/com.android.support/recyclerview-v7/26.0.0/dummy",
+                    "caches/modules-2/files-2.1/com.google.firebase/firebase-messaging/11.0.0/dummy",
+
+            });
         }
-
-        return sdkDir;
     }
 
-    public static void createSdkPaths(File sdkDir, String[] paths) {
+    public static void createRelativePaths(File sdkDir, String[] paths) {
         for (String path : paths) {
             File file = new File(sdkDir, path.replace('/', File.separatorChar));
             File parent = file.getParentFile();
             if (!parent.exists()) {
                 boolean ok = parent.mkdirs();
-                assertTrue(ok);
+                assertTrue(parent.getPath(), ok);
             }
             try {
                 boolean created = file.createNewFile();
-                assertTrue(created);
+                assertTrue(file.getPath(), created);
             } catch (IOException e) {
                 fail(e.toString());
             }
@@ -251,6 +295,86 @@ public class GradleDetectorTest extends AbstractCheckTest {
                         + "@@ -29 +29\n"
                         + "-     androidTestCompile 'com.android.support.test:runner:0.3'\n"
                         + "+     androidTestCompile 'com.android.support.test:runner:0.5'\n");
+    }
+
+    public void testVersionsFromGradleCache() {
+        String expected = ""
+                + "build.gradle:6: Warning: A newer version of com.android.tools.build:gradle than 2.4.0-alpha3 is available: 2.4.0-alpha6 [GradleDependency]\n"
+                + "        classpath 'com.android.tools.build:gradle:2.4.0-alpha3'\n"
+                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "build.gradle:10: Warning: A newer version of org.apache.httpcomponents:httpcomponents-core than 4.2 is available: 4.4 [GradleDependency]\n"
+                + "    compile 'org.apache.httpcomponents:httpcomponents-core:4.2'\n"
+                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "build.gradle:11: Warning: A newer version of com.android.support:recyclerview-v7 than 25.0.0 is available: 26.0.0 [GradleDependency]\n"
+                + "    compile 'com.android.support:recyclerview-v7:25.0.0'\n"
+                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "build.gradle:12: Warning: A newer version of com.google.firebase:firebase-messaging than 10.2.1 is available: 11.0.0 [GradleDependency]\n"
+                + "    compile 'com.google.firebase:firebase-messaging:10.2.1'\n"
+                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 4 warnings\n";
+
+        lint().files(
+                gradle(""
+                        + "buildscript {\n"
+                        + "    repositories {\n"
+                        + "        jcenter()\n"
+                        + "    }\n"
+                        + "    dependencies {\n"
+                        + "        classpath 'com.android.tools.build:gradle:2.4.0-alpha3'\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "dependencies {\n"
+                        + "    compile 'org.apache.httpcomponents:httpcomponents-core:4.2'\n"
+                        + "    compile 'com.android.support:recyclerview-v7:25.0.0'\n"
+                        + "    compile 'com.google.firebase:firebase-messaging:10.2.1'\n"
+                        + "}\n"))
+                .issues(DEPENDENCY)
+                .sdkHome(getMockSupportLibraryInstallation())
+                .run()
+                .expect(expected)
+                .expectFixDiffs(""
+                        + "Fix for build.gradle line 5: Change to 2.4.0-alpha6:\n"
+                        + "@@ -6 +6\n"
+                        + "-         classpath 'com.android.tools.build:gradle:2.4.0-alpha3'\n"
+                        + "+         classpath 'com.android.tools.build:gradle:2.4.0-alpha6'\n"
+                        + "Fix for build.gradle line 9: Change to 4.4:\n"
+                        + "@@ -10 +10\n"
+                        + "-     compile 'org.apache.httpcomponents:httpcomponents-core:4.2'\n"
+                        + "+     compile 'org.apache.httpcomponents:httpcomponents-core:4.4'\n"
+                        + "Fix for build.gradle line 10: Change to 26.0.0:\n"
+                        + "@@ -11 +11\n"
+                        + "-     compile 'com.android.support:recyclerview-v7:25.0.0'\n"
+                        + "+     compile 'com.android.support:recyclerview-v7:26.0.0'\n"
+                        + "Fix for build.gradle line 11: Change to 11.0.0:\n"
+                        + "@@ -12 +12\n"
+                        + "-     compile 'com.google.firebase:firebase-messaging:10.2.1'\n"
+                        + "+     compile 'com.google.firebase:firebase-messaging:11.0.0'\n");
+    }
+
+    public void testVersionFromIDE() {
+        // Hardcoded cache lookup for the test in GroovyGradleDetector below. In the IDE
+        // it consults SDK lib.
+        String expected = ""
+                + "build.gradle:2: Warning: A newer version of com.android.support.constraint:constraint-layout than 1.0.1 is available: 1.0.2 [GradleDependency]\n"
+                + "    compile 'com.android.support.constraint:constraint-layout:1.0.1'\n"
+                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "build.gradle:4: Warning: A newer version of com.android.support.constraint:constraint-layout than 1.0.3-alpha5 is available: 1.0.3-alpha8 [GradleDependency]\n"
+                + "    compile 'com.android.support.constraint:constraint-layout:1.0.3-alpha5'\n"
+                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 2 warnings\n";
+
+        lint().files(
+                gradle(""
+                        + "dependencies {\n"
+                        + "    compile 'com.android.support.constraint:constraint-layout:1.0.1'\n"
+                        + "    compile 'com.android.support.constraint:constraint-layout:1.0.2'\n" // OK
+                        + "    compile 'com.android.support.constraint:constraint-layout:1.0.3-alpha5'\n"
+                        + "    compile 'com.android.support.constraint:constraint-layout:1.0.+'\n" // OK
+                        + "}\n"))
+                .issues(DEPENDENCY)
+                .sdkHome(getMockSupportLibraryInstallation())
+                .run()
+                .expect(expected);
     }
 
     public void testCompatibility() throws Exception {
@@ -458,6 +582,31 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 .sdkHome(getMockSupportLibraryInstallation())
                 .run()
                 .expect(expected);
+    }
+
+    public void testNoWarningFromUnknownSupportLibrary() throws Exception {
+        //noinspection all // Sample code
+        lint().files(
+                gradle(""
+                        + "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    compileSdkVersion 21\n"
+                        + "\n"
+                        + "    defaultConfig {\n"
+                        + "        minSdkVersion 15\n"
+                        + "        targetSdkVersion 17\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    compile 'com.google.android.gms:play-services-appindexing:9.8.0'\n"
+                        + "    compile 'com.android.support:appcompat-v7:25.0.0'\n"
+                        + "}\n"))
+                .issues(DEPENDENCY)
+                .sdkHome(getSdkDirWithoutSupportLib())
+                .run()
+                .expectClean();
     }
 
     public void testDependenciesMinSdkVersionLollipop() throws Exception {
@@ -867,13 +1016,13 @@ public class GradleDetectorTest extends AbstractCheckTest {
 
             //noinspection all // Sample code
             assertEquals(""
-                + "build.gradle:9: Warning: A newer version of com.google.guava:guava than 11.0.2 is available: 17.0 [NewerVersionAvailable]\n"
-                + "    compile 'com.google.guava:guava:11.0.2'\n"
-                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "build.gradle:10: Warning: A newer version of com.google.guava:guava than 16.0-rc1 is available: 18.0.0-rc1 [NewerVersionAvailable]\n"
-                + "    compile 'com.google.guava:guava:16.0-rc1'\n"
-                + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "0 errors, 2 warnings\n",
+                            + "build.gradle:9: Warning: A newer version of com.google.guava:guava than 11.0.2 is available: 17.0 [NewerVersionAvailable]\n"
+                            + "    compile 'com.google.guava:guava:11.0.2'\n"
+                            + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                            + "build.gradle:10: Warning: A newer version of com.google.guava:guava than 16.0-rc1 is available: 18.0-rc1 [NewerVersionAvailable]\n"
+                            + "    compile 'com.google.guava:guava:16.0-rc1'\n"
+                            + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                            + "0 errors, 2 warnings\n",
 
                     lintProject(source("build.gradle", ""
                             + "apply plugin: 'com.android.application'\n"
@@ -1613,6 +1762,28 @@ public class GradleDetectorTest extends AbstractCheckTest {
     // the testing framework and the gradle plugin.
 
     public static class GroovyGradleDetector extends GradleDetector {
+        @Override
+        protected File getGradleUserHome() {
+            return gradleUserHome;
+        }
+
+        @Nullable
+        @Override
+        protected GradleVersion getHighestKnownVersion(@NonNull LintClient client,
+                @NonNull GradleCoordinate coordinate) {
+            // Hardcoded for unit test to ensure stable data
+            if ("com.android.support.constraint".equals(coordinate.getGroupId())
+                    && "constraint-layout".equals(coordinate.getArtifactId())) {
+                if (coordinate.isPreview()) {
+                    return GradleVersion.tryParse("1.0.3-alpha8");
+                } else {
+                    return GradleVersion.tryParse("1.0.2");
+                }
+            }
+
+            return null;
+        }
+
         @Override
         public void visitBuildScript(@NonNull final Context context, Map<String, Object> sharedData) {
             try {
