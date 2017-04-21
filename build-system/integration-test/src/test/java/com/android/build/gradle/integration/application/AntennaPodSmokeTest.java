@@ -16,23 +16,35 @@
 
 package com.android.build.gradle.integration.application;
 
-import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.truth.TruthHelper;
+import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.PerformanceTestProjects;
+import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.AndroidProject;
-import com.android.builder.model.SyncIssue;
+import com.google.common.collect.ImmutableList;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
+@RunWith(FilterableParameterized.class)
 public class AntennaPodSmokeTest {
+
+    @Parameterized.Parameter public VariantScope.Java8LangSupport java8LangSupport;
+
+    @Parameterized.Parameters
+    public static List<VariantScope.Java8LangSupport> getJava8LangSupport() {
+        return ImmutableList.of(
+                VariantScope.Java8LangSupport.RETROLAMBDA, VariantScope.Java8LangSupport.DESUGAR);
+    }
 
     @Rule
     public GradleTestProject mainProject =
@@ -44,6 +56,9 @@ public class AntennaPodSmokeTest {
     public void setUp() throws IOException {
         project = mainProject.getSubproject("AntennaPod");
         PerformanceTestProjects.initializeAntennaPod(mainProject);
+        if (java8LangSupport == VariantScope.Java8LangSupport.RETROLAMBDA) {
+            PerformanceTestProjects.antennaPodSetRetrolambdaEnabled(mainProject, true);
+        }
     }
 
     @Test
@@ -51,20 +66,7 @@ public class AntennaPodSmokeTest {
         GetAndroidModelAction.ModelContainer<AndroidProject> modelContainer =
                 project.model().ignoreSyncIssues().getMulti();
         Map<String, AndroidProject> models = modelContainer.getModelMap();
-
-        assertThat(models.get(":app").getSyncIssues()).hasSize(1);
-        TruthHelper.assertThat(models.get(":app"))
-                .hasSingleIssue(
-                        SyncIssue.SEVERITY_WARNING,
-                        SyncIssue.TYPE_GENERIC,
-                        null,
-                        "One of the plugins you are using supports Java 8 "
-                                + "language features. To try the support built into"
-                                + " the Android plugin, remove the following from "
-                                + "your build.gradle:\n"
-                                + "    apply plugin: 'me.tatarka.retrolambda'\n"
-                                + "To learn more, go to https://d.android.com/r/"
-                                + "tools/java-8-support-message.html\n");
+        PerformanceTestProjects.assertNoSyncErrors(models);
 
         project.executor().run("clean");
 
@@ -72,7 +74,13 @@ public class AntennaPodSmokeTest {
                 .with(BooleanOption.IDE_GENERATE_SOURCES_ONLY, true)
                 .run(ModelHelper.getDebugGenerateSourcesCommands(models));
 
+
         project.executor().run(":app:assembleDebug");
+        if (java8LangSupport != VariantScope.Java8LangSupport.RETROLAMBDA) {
+            // Retrolambda is currently broken when building tests from clean
+            project.executor().run("clean");
+            project.executor().run(":app:assembleDebugAndroidTest");
+        }
 
     }
 
