@@ -9,7 +9,7 @@ apply plugin: 'com.android.application'
   </#if>
 </#if>
 
-<@shared.androidConfig hasApplicationId=isApplicationProject hasTests=true canHaveCpp=true/>
+<@shared.androidConfig hasApplicationId=isApplicationProject applicationId=packageName hasTests=true canHaveCpp=true/>
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
@@ -20,7 +20,7 @@ dependencies {
     wearApp project(':${WearprojectName}')
     compile 'com.google.android.gms:play-services-wearable:+'
 </#if>
-<#if isInstantApp>
+<#if isInstantApp && hasInstantAppWrapper>
     implementation project(':${baseLibName}')
 </#if>
 }
