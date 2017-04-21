@@ -2174,6 +2174,32 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
+    public void testMovedMethod() {
+        // Regression test for https://issuetracker.google.com/37133935
+        // View#setForeground incorrectly requires API 23
+        //noinspection all // Sample code
+        lint().files(
+                manifest().minSdk(1),
+                java(""
+                        + "package test.pkg;\n"
+                        + "import android.content.Context;\n"
+                        + "import android.graphics.drawable.Drawable;\n"
+                        + "import android.support.annotation.NonNull;\n"
+                        + "import android.widget.FrameLayout;\n"
+                        + "\n"
+                        + "public class CustomFrameLayout extends FrameLayout {\n"
+                        + "    public CustomFrameLayout(@NonNull Context context) {\n"
+                        + "        super(context);\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    private static void test(CustomFrameLayout layout, Drawable drawable) {\n"
+                        + "        layout.setForeground(drawable);\n"
+                        + "    }\n"
+                        + "}"))
+                .run()
+                .expectClean();
+    }
+
     public void testInheritCompatLibrary() {
         String expected = ""
                 + "src/test/pkg/MyActivityImpl.java:8: Error: Call requires API level 11 (current min is 1): android.app.Activity#isChangingConfigurations [NewApi]\n"
