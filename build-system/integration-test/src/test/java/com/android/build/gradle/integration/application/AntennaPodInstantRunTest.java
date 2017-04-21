@@ -50,8 +50,7 @@ public class AntennaPodInstantRunTest {
     @Parameterized.Parameters
     public static List<VariantScope.Java8LangSupport> getJava8LangSupport() {
         return ImmutableList.of(
-                VariantScope.Java8LangSupport.EXTERNAL_PLUGIN,
-                VariantScope.Java8LangSupport.DESUGAR);
+                VariantScope.Java8LangSupport.RETROLAMBDA, VariantScope.Java8LangSupport.DESUGAR);
     }
 
     @Rule

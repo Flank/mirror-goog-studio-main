@@ -1900,9 +1900,12 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             return Java8LangSupport.JACK;
         }
 
-        if (globalScope.getProject().getPlugins().hasPlugin("me.tatarka.retrolambda")
-                || globalScope.getProject().getPlugins().hasPlugin("dexguard")) {
-            return Java8LangSupport.EXTERNAL_PLUGIN;
+        if (globalScope.getProject().getPlugins().hasPlugin("me.tatarka.retrolambda")) {
+            return Java8LangSupport.RETROLAMBDA;
+        }
+
+        if (globalScope.getProject().getPlugins().hasPlugin("dexguard")) {
+            return Java8LangSupport.DEXGUARD;
         }
 
         if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_DESUGAR)) {
