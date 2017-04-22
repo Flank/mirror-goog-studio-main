@@ -24,6 +24,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.apkzlib.utils.IOExceptionWrapper;
 import com.android.apkzlib.zip.compress.Zip64NotSupportedException;
+import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.dsl.AbiSplitOptions;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
@@ -37,10 +38,13 @@ import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.build.gradle.internal.scope.PackagingScope;
 import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
+import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.build.gradle.internal.tasks.KnownFilesSaveData;
 import com.android.build.gradle.internal.tasks.KnownFilesSaveData.InputSet;
+import com.android.build.gradle.internal.transforms.InstantRunSliceSplitApkBuilder;
+import com.android.build.gradle.internal.transforms.InstantRunSplitApkBuilder;
 import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
 import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.builder.files.FileCacheByPath;
@@ -48,7 +52,9 @@ import com.android.builder.files.IncrementalRelativeFileSets;
 import com.android.builder.files.RelativeFile;
 import com.android.builder.internal.packaging.IncrementalPackager;
 import com.android.builder.packaging.PackagingUtils;
+import com.android.builder.utils.FileCache;
 import com.android.ide.common.build.ApkData;
+import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.res2.FileStatus;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.FileUtils;
@@ -201,6 +207,15 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         return projectBaseName;
     }
 
+    protected File aaptIntermediateFolder;
+    protected String versionName;
+    protected int versionCode;
+    protected String applicationId;
+
+    protected AaptGeneration aaptGeneration;
+
+    protected FileCache fileCache;
+
     /**
      * Name of directory, inside the intermediate directory, where zip caches are kept.
      */
@@ -223,6 +238,22 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
     public void setDebugBuild(boolean debugBuild) {
         this.debugBuild = debugBuild;
+    }
+
+    @Input
+    @Optional
+    public String getVersionName() {
+        return versionName;
+    }
+
+    @Input
+    public int getVersionCode() {
+        return versionCode;
+    }
+
+    @Input
+    public String getApplicationId() {
+        return applicationId;
     }
 
     @Nested
@@ -286,17 +317,16 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         return aaptOptionsNoCompress != null ? aaptOptionsNoCompress : Collections.emptyList();
     }
 
+    interface OutputFileProvider {
+        @NonNull
+        File getOutputFile(@NonNull ApkData apkData);
+    }
+
     VariantScope.TaskOutputType taskInputType;
 
     @Input
     public VariantScope.TaskOutputType getTaskInputType() {
         return taskInputType;
-    }
-
-    interface OutputFileProvider {
-
-        @NonNull
-        File getOutputFile(@NonNull ApkData apkData);
     }
 
     public File getOutputDirectory() {
@@ -371,6 +401,63 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
     protected abstract VariantScope.TaskOutputType getTaskOutputType();
 
+    @Input
+    public String getAaptGeneration() {
+        return aaptGeneration.name();
+    }
+
+    @NonNull
+    Set<File> getAndroidResources(@NonNull ApkData apkData, @Nullable File processedResources)
+            throws IOException {
+
+        if (instantRunContext.isInInstantRunMode()
+                && instantRunContext.getPatchingPolicy()
+                        == InstantRunPatchingPolicy.MULTI_APK_SEPARATE_RESOURCES) {
+            Collection<BuildOutput> manifestFiles =
+                    BuildOutputs.load(
+                            TaskOutputHolder.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS,
+                            manifests);
+            BuildOutput manifestOutput =
+                    SplitScope.getOutput(
+                            manifestFiles,
+                            TaskOutputHolder.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS,
+                            apkData);
+
+            if (manifestOutput == null) {
+                throw new RuntimeException("Cannot find merged manifest file");
+            }
+            File manifestFile = manifestOutput.getOutputFile();
+            return ImmutableSet.of(generateEmptyAndroidResourcesForInstantRun(manifestFile));
+        } else {
+            return processedResources != null
+                    ? ImmutableSet.of(processedResources)
+                    : ImmutableSet.of();
+        }
+    }
+
+    @NonNull
+    private File generateEmptyAndroidResourcesForInstantRun(File manifestFile) throws IOException {
+        try {
+            // use default values for aaptOptions since we don't package any resources.
+            return InstantRunSliceSplitApkBuilder.generateSplitApkResourcesAp(
+                    getLogger(),
+                    InstantRunSplitApkBuilder.makeAapt(
+                            aaptGeneration, getBuilder(), fileCache, aaptIntermediateFolder),
+                    manifestFile,
+                    instantRunSupportDir,
+                    new com.android.builder.internal.aapt.AaptOptions(
+                            ImmutableList.of(), false, ImmutableList.of()),
+                    getBuilder(),
+                    resourceFiles,
+                    "main_resources");
+        } catch (InterruptedException e) {
+            Thread.interrupted();
+            throw new IOException("Exception while generating InstantRun main resources APK", e);
+        } catch (ProcessException e) {
+            throw new IOException("Exception while generating InstantRun main resources APK", e);
+        }
+    }
+
     @Override
     protected void doFullTaskAction() throws IOException {
 
@@ -406,10 +493,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
          */
         cacheByPath.clear();
 
-        Set<File> androidResources = new HashSet<>();
-        if (processedResources != null) {
-            androidResources.add(processedResources);
-        }
+        Set<File> androidResources = getAndroidResources(apkData, processedResources);
 
         FileUtils.mkdirs(outputDirectory);
 
@@ -654,13 +738,10 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
     }
 
     private File splitIncrementalAction(
-            ApkData apkData, @Nullable File resourceFile, Map<File, FileStatus> changedInputs)
+            ApkData apkData, @Nullable File processedResources, Map<File, FileStatus> changedInputs)
             throws IOException {
 
-        Set<File> androidResources = new HashSet<>();
-        if (resourceFile != null) {
-            androidResources.add(resourceFile);
-        }
+        Set<File> androidResources = getAndroidResources(apkData, processedResources);
 
         File incrementalDirForSplit = new File(getIncrementalFolder(), apkData.getFullName());
 
@@ -782,7 +863,6 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         saveData.setInputSet(allAndroidResources.keySet(), InputSet.ANDROID_RESOURCE);
         saveData.setInputSet(allJniResources.keySet(), InputSet.NATIVE_RESOURCE);
         saveData.saveCurrentData();
-        recordMetrics(outputFile, resourceFile);
         return outputFile;
     }
 
@@ -799,6 +879,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         @NonNull protected final FileCollection resourceFiles;
         @NonNull protected final File outputDirectory;
         @NonNull protected final SplitScope splitScope;
+        @Nullable private final FileCache fileCache;
         @NonNull private final VariantScope.TaskOutputType manifestType;
 
         public ConfigAction(
@@ -809,6 +890,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                 @NonNull FileCollection resourceFiles,
                 @NonNull FileCollection manifests,
                 @NonNull VariantScope.TaskOutputType manifestType,
+                @Nullable FileCache fileCache,
                 @NonNull SplitScope splitScope) {
             this.project = packagingScope.getProject();
             this.packagingScope = checkNotNull(packagingScope);
@@ -821,6 +903,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
             this.resourceFiles = resourceFiles;
             this.splitScope = splitScope;
             this.manifestType = manifestType;
+            this.fileCache = fileCache;
         }
 
         @Override
@@ -832,6 +915,14 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
             packageAndroidArtifact.setMinSdkVersion(packagingScope.getMinSdkVersion());
             packageAndroidArtifact.instantRunContext = packagingScope.getInstantRunBuildContext();
             packageAndroidArtifact.dexPackagingPolicy = dexPackagingPolicy;
+            packageAndroidArtifact.aaptIntermediateFolder =
+                    new File(
+                            packagingScope.getIncrementalDir("PackageAndroidArtifact"),
+                            "aapt-temp");
+            packageAndroidArtifact.versionName = packagingScope.getVersionName();
+            packageAndroidArtifact.versionCode = packagingScope.getVersionCode();
+            packageAndroidArtifact.applicationId = packagingScope.getApplicationId();
+
             packageAndroidArtifact.instantRunSupportDir =
                     packagingScope.getInstantRunSupportDir();
             packageAndroidArtifact.resourceFiles = resourceFiles;
@@ -840,6 +931,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                     packagingScope.getIncrementalDir(packageAndroidArtifact.getName()));
             packageAndroidArtifact.splitScope = splitScope;
 
+            packageAndroidArtifact.fileCache = fileCache;
             packageAndroidArtifact.aaptOptionsNoCompress =
                     packagingScope.getAaptOptions().getNoCompress();
 
@@ -856,6 +948,9 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
             packageAndroidArtifact.projectBaseName = packagingScope.getProjectBaseName();
             packageAndroidArtifact.manifestType = manifestType;
+            packageAndroidArtifact.aaptGeneration =
+                    AaptGeneration.fromProjectOptions(packagingScope.getProjectOptions());
+
             packagingScope.addTask(
                     TaskContainer.TaskKind.PACKAGE_ANDROID_ARTIFACT, packageAndroidArtifact);
             configure(packageAndroidArtifact);

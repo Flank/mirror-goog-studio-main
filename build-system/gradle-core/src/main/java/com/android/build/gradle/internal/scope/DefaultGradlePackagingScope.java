@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.pipeline.StreamFilter;
 import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
 import com.android.build.gradle.internal.variant.TaskContainer;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.internal.aapt.AaptOptions;
 import com.android.ide.common.build.ApkData;
@@ -207,6 +208,11 @@ public class DefaultGradlePackagingScope implements PackagingScope {
     }
 
     @Override
+    public ProjectOptions getProjectOptions() {
+        return mGlobalScope.getProjectOptions();
+    }
+
+    @Override
     public SplitScope getSplitScope() {
         return mVariantScope.getSplitScope();
     }
@@ -251,5 +257,11 @@ public class DefaultGradlePackagingScope implements PackagingScope {
     @Override
     public void addTask(TaskContainer.TaskKind taskKind, Task task) {
         mVariantScope.getVariantData().addTask(taskKind, task);
+    }
+
+    @NonNull
+    @Override
+    public File getInstantRunResourceApkFolder() {
+        return mVariantScope.getInstantRunResourceApkFolder();
     }
 }

@@ -104,7 +104,7 @@ public class InstantRunDependenciesApkBuilderTest {
     }
 
     @Before
-    public void setup() {
+    public void setup() throws IOException {
         instantRunSliceSplitApkBuilder =
                 new InstantRunDependenciesApkBuilder(
                         logger,
@@ -117,7 +117,8 @@ public class InstantRunDependenciesApkBuilderTest {
                         AaptGeneration.AAPT_V2_JNI,
                         new AaptOptions(null, false, null),
                         outputDirectory.getRoot(),
-                        supportDirectory.getRoot()) {
+                        supportDirectory.newFolder("instant-run"),
+                        supportDirectory.newFolder("aapt-temp")) {
                     @NonNull
                     @Override
                     protected File generateSplitApk(@NonNull DexFiles dexFiles)

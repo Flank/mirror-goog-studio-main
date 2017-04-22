@@ -326,7 +326,7 @@ public class ApplicationTaskManager extends TaskManager {
         InstantRunPatchingPolicy patchingPolicy =
                 variantScope.getInstantRunBuildContext().getPatchingPolicy();
 
-        if (patchingPolicy == InstantRunPatchingPolicy.MULTI_APK) {
+        if (InstantRunPatchingPolicy.useMultiApk(patchingPolicy)) {
 
             PackagingScope packagingScope = new DefaultGradlePackagingScope(variantScope);
 
@@ -343,7 +343,11 @@ public class ApplicationTaskManager extends TaskManager {
                             AaptGeneration.fromProjectOptions(projectOptions),
                             packagingScope.getAaptOptions(),
                             new File(packagingScope.getInstantRunSplitApkOutputFolder(), "dep"),
-                            packagingScope.getInstantRunSupportDir());
+                            packagingScope.getInstantRunSupportDir(),
+                            new File(
+                                    packagingScope.getIncrementalDir(
+                                            "InstantRunDependenciesApkBuilder"),
+                                    "aapt-temp"));
 
             Optional<AndroidTask<TransformTask>> dependenciesApkBuilderTask =
                     variantScope
@@ -367,6 +371,10 @@ public class ApplicationTaskManager extends TaskManager {
                             packagingScope.getAaptOptions(),
                             new File(packagingScope.getInstantRunSplitApkOutputFolder(), "slices"),
                             packagingScope.getInstantRunSupportDir(),
+                            new File(
+                                    packagingScope.getIncrementalDir(
+                                            "InstantRunSliceSplitApkBuilder"),
+                                    "aapt-temp"),
                             globalScope
                                     .getProjectOptions()
                                     .get(OptionalBooleanOption.SERIAL_AAPT2));
@@ -376,6 +384,7 @@ public class ApplicationTaskManager extends TaskManager {
 
             if (transformTaskAndroidTask.isPresent()) {
                 AndroidTask<TransformTask> splitApk = transformTaskAndroidTask.get();
+                splitApk.dependsOn(tasks, getValidateSigningTask(tasks, packagingScope));
                 variantScope.getAssembleTask().dependsOn(tasks, splitApk);
                 buildInfoGeneratorTask
                         .configure(tasks, task -> task.mustRunAfter(splitApk.getName()));

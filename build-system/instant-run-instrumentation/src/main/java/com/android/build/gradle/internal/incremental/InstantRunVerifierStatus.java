@@ -108,7 +108,8 @@ public enum InstantRunVerifierStatus {
         buildMode =
                 ImmutableMap.of(
                         InstantRunPatchingPolicy.PRE_LOLLIPOP, preLollipopBuildMode,
-                        InstantRunPatchingPolicy.MULTI_APK, multiApkBuildMode);
+                        InstantRunPatchingPolicy.MULTI_APK, multiApkBuildMode,
+                        InstantRunPatchingPolicy.MULTI_APK_SEPARATE_RESOURCES, multiApkBuildMode);
     }
 
     public InstantRunBuildMode getInstantRunBuildModeForPatchingPolicy(

@@ -29,6 +29,7 @@ import com.android.build.gradle.internal.scope.PackagingScope;
 import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
 import com.android.build.gradle.internal.variant.TaskContainer;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.internal.aapt.AaptOptions;
 import com.android.sdklib.AndroidVersion;
@@ -57,6 +58,7 @@ public class ExternalBuildPackagingScope implements PackagingScope {
     @NonNull private InstantRunBuildContext mInstantRunBuildContext;
     @Nullable
     private final SigningConfig mSigningConfig;
+    private final ProjectOptions mProjectOptions;
 
     public ExternalBuildPackagingScope(
             @NonNull Project project,
@@ -71,6 +73,7 @@ public class ExternalBuildPackagingScope implements PackagingScope {
         mTransformManager = transformManager;
         mSigningConfig = signingConfig;
         mInstantRunBuildContext = mVariantScope.getInstantRunBuildContext();
+        mProjectOptions = variantScope.getGlobalScope().getProjectOptions();
     }
 
     @NonNull
@@ -175,6 +178,11 @@ public class ExternalBuildPackagingScope implements PackagingScope {
         return mSigningConfig;
     }
 
+    @Override
+    public ProjectOptions getProjectOptions() {
+        return mProjectOptions;
+    }
+
     @NonNull
     @Override
     public PackagingOptions getPackagingOptions() {
@@ -273,5 +281,11 @@ public class ExternalBuildPackagingScope implements PackagingScope {
     @Override
     public void addTask(TaskContainer.TaskKind taskKind, Task task) {
         // not needed as customization not allowed in external build system.
+    }
+
+    @NonNull
+    @Override
+    public File getInstantRunResourceApkFolder() {
+        return mVariantScope.getInstantRunResourceApkFolder();
     }
 }

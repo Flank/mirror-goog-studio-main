@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.externalBuild;
 import com.android.annotations.NonNull;
 import com.android.build.OutputFile;
 import com.android.build.gradle.api.ApkOutputFile;
+import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.scope.GenericVariantScopeImpl;
 import com.android.build.gradle.internal.scope.InstantRunVariantScope;
@@ -26,6 +27,7 @@ import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TransformGlobalScope;
 import com.android.build.gradle.internal.scope.TransformVariantScope;
 import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.DeploymentDevice;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
@@ -71,9 +73,11 @@ import org.gradle.api.Project;
         this.mInstantRunBuildContext =
                 new InstantRunBuildContext(
                         true,
+                        AaptGeneration.fromProjectOptions(projectOptions),
                         DeploymentDevice.getDeploymentDeviceAndroidVersion(projectOptions),
                         projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI),
-                        projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY));
+                        projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY),
+                        projectOptions.get(BooleanOption.ENABLE_SEPARATE_APK_RESOURCES));
         this.splitScope = new SplitScope(SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY, apkDatas);
     }
 
@@ -241,5 +245,10 @@ import org.gradle.api.Project;
 
     public String getVersionName() {
         return manifestAttributeSupplier.getVersionName();
+    }
+
+    @NonNull
+    public File getInstantRunResourceApkFolder() {
+        return FileUtils.join(outputRootFolder, "incremental", "instant-run-resources");
     }
 }

@@ -149,6 +149,7 @@ import com.android.build.gradle.tasks.GenerateBuildConfig;
 import com.android.build.gradle.tasks.GenerateResValues;
 import com.android.build.gradle.tasks.GenerateSplitAbiRes;
 import com.android.build.gradle.tasks.GenerateTestConfig;
+import com.android.build.gradle.tasks.InstantRunResourcesApkBuilder;
 import com.android.build.gradle.tasks.JavaPreCompileTask;
 import com.android.build.gradle.tasks.Lint;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
@@ -2605,33 +2606,47 @@ public abstract class TaskManager {
                                 manifests,
                                 manifestType,
                                 variantScope.getSplitScope(),
+                                globalScope.getBuildCache(),
                                 taskOutputType));
         variantScope.addTaskOutput(taskOutputType, outputDirectory, packageApp.getName());
 
-        AndroidTask<PackageApplication> packageInstantRunResources = null;
+        AndroidTask<? extends Task> packageInstantRunResources = null;
 
         if (variantScope.getInstantRunBuildContext().isInInstantRunMode()) {
-            packageInstantRunResources =
-                    androidTasks.create(
-                            tasks,
-                            new PackageApplication.InstantRunResourcesConfigAction(
-                                    // FIX ME : this seems incorrect, we only use one per variant instead
-                                    // of one per full split.
-                                    variantScope.getInstantRunResourcesFile(),
-                                    packagingScope,
-                                    patchingPolicy,
-                                    resourceFilesInputType,
-                                    variantScope.getOutput(resourceFilesInputType),
-                                    manifests,
-                                    VariantScope.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS,
-                                    variantScope.getSplitScope()));
+            if (variantScope.getInstantRunBuildContext().getPatchingPolicy()
+                    == InstantRunPatchingPolicy.MULTI_APK_SEPARATE_RESOURCES) {
+                packageInstantRunResources =
+                        androidTasks.create(
+                                tasks,
+                                new InstantRunResourcesApkBuilder.ConfigAction(
+                                        resourceFilesInputType,
+                                        variantScope.getOutput(resourceFilesInputType),
+                                        packagingScope));
+                packageInstantRunResources.dependsOn(
+                        tasks, getValidateSigningTask(tasks, packagingScope));
+            } else {
+                // in instantRunMode, there is no user configured splits, only one apk.
+                packageInstantRunResources =
+                        androidTasks.create(
+                                tasks,
+                                new PackageApplication.InstantRunResourcesConfigAction(
+                                        variantScope.getInstantRunResourcesFile(),
+                                        packagingScope,
+                                        patchingPolicy,
+                                        resourceFilesInputType,
+                                        variantScope.getOutput(resourceFilesInputType),
+                                        manifests,
+                                        VariantScope.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS,
+                                        globalScope.getBuildCache(),
+                                        variantScope.getSplitScope()));
+            }
 
             // Make sure the MAIN artifact is registered after the RESOURCES one.
             packageApp.dependsOn(tasks, packageInstantRunResources);
         }
 
         // Common code for both packaging tasks.
-        Consumer<AndroidTask<PackageApplication>> configureResourcesAndAssetsDependencies =
+        Consumer<AndroidTask<? extends Task>> configureResourcesAndAssetsDependencies =
                 task -> {
                     task.dependsOn(tasks, variantScope.getMergeAssetsTask());
                     task.dependsOn(tasks, variantScope.getProcessResourcesTask());
@@ -2660,10 +2675,10 @@ public abstract class TaskManager {
         variantScope.setPackageApplicationTask(packageApp);
         variantScope.getAssembleTask().dependsOn(tasks, packageApp.getName());
 
-            checkState(variantScope.getAssembleTask() != null);
-            if (fullBuildInfoGeneratorTask != null) {
-                AndroidTask<PackageApplication> finalPackageInstantRunResources =
-                        packageInstantRunResources;
+        checkState(variantScope.getAssembleTask() != null);
+        if (fullBuildInfoGeneratorTask != null) {
+            AndroidTask<? extends Task> finalPackageInstantRunResources =
+                    packageInstantRunResources;
             fullBuildInfoGeneratorTask.configure(
                     tasks,
                     task -> {
@@ -2672,9 +2687,8 @@ public abstract class TaskManager {
                             task.mustRunAfter(finalPackageInstantRunResources.getName());
                         }
                     });
-                variantScope.getAssembleTask().dependsOn(
-                        tasks, fullBuildInfoGeneratorTask.getName());
-            }
+            variantScope.getAssembleTask().dependsOn(tasks, fullBuildInfoGeneratorTask.getName());
+        }
 
         if (splitsArePossible) {
 

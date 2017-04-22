@@ -106,6 +106,8 @@ public final class AaptV2CommandBuilder {
         Preconditions.checkNotNull(target);
         builder.add("-I", target.getPath(IAndroidTarget.ANDROID_JAR));
 
+        config.getImports().forEach(file -> builder.add("-I", file.getAbsolutePath()));
+
         File manifestFile = config.getManifestFile();
         Preconditions.checkNotNull(manifestFile);
         builder.add("--manifest", manifestFile.getAbsolutePath());

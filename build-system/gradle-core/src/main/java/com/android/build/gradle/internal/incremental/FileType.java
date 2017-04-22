@@ -21,6 +21,7 @@ package com.android.build.gradle.internal.incremental;
  */
 public enum FileType {
     /** Main APK file for 19, and below. */
+    @Deprecated
     MAIN,
     /** Main APK file when application is using the Split APK mode. */
     SPLIT_MAIN,
@@ -28,14 +29,10 @@ public enum FileType {
      * Reload dex file that can be used to patch application live.
      */
     RELOAD_DEX,
-    /**
-     * Pure split (code only) that can be installed individually on M+ devices.
-     */
+    /** Pure split (code only) that can be installed individually on L+ devices. */
     SPLIT,
     /**
      * Resources: res.ap_ file
      */
     RESOURCES,
-    /** Full split (main APK with reduced sets of resources). */
-    FULL_SPLIT
 }

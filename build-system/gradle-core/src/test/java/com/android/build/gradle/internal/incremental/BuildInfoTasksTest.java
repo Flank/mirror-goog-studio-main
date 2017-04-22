@@ -20,6 +20,7 @@ import static com.android.testutils.truth.MoreTruth.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.builder.profile.ProcessProfileWriterFactory;
 import com.android.sdklib.AndroidVersion;
 import java.io.File;
@@ -70,7 +71,13 @@ public class BuildInfoTasksTest {
     private void initialFailedBuild() throws IOException {
         Project project = createProject();
         InstantRunBuildContext context =
-                new InstantRunBuildContext(true, new AndroidVersion(23, null), null, null);
+                new InstantRunBuildContext(
+                        true,
+                        AaptGeneration.AAPT_V2_JNI,
+                        new AndroidVersion(23, null),
+                        null,
+                        null,
+                        true);
         runLoaderTask(project, context);
 
         context.addChangedFile(FileType.RESOURCES, new File("resources-debug.ap_"));
@@ -82,7 +89,13 @@ public class BuildInfoTasksTest {
     private void secondPassingBuild() throws IOException {
         Project project = createProject();
         InstantRunBuildContext context =
-                new InstantRunBuildContext(true, new AndroidVersion(23, null), null, null);
+                new InstantRunBuildContext(
+                        true,
+                        AaptGeneration.AAPT_V2_JNI,
+                        new AndroidVersion(23, null),
+                        null,
+                        null,
+                        true);
 
         runLoaderTask(project, context);
 

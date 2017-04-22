@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.incremental;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.builder.Version;
 import com.android.ide.common.xml.XmlPrettyPrinter;
 import com.android.sdklib.AndroidVersion;
@@ -46,6 +47,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
+import org.gradle.internal.impldep.org.jetbrains.annotations.NotNull;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
@@ -274,6 +276,7 @@ public class InstantRunBuildContext {
 
     @Nullable private final String density;
     @Nullable private final String abi;
+    private final boolean createSeparateApkForResources;
     @NonNull private final Build currentBuild;
     @NonNull private final TreeMap<Long, Build> previousBuilds = new TreeMap<>();
     private final boolean isInstantRunMode;
@@ -282,19 +285,30 @@ public class InstantRunBuildContext {
 
     public InstantRunBuildContext(
             boolean isInstantRunMode,
+            @NotNull AaptGeneration aaptGeneration,
             @NonNull AndroidVersion androidVersion,
             @Nullable String targetAbi,
-            @Nullable String density) {
-        this(defaultBuildIdAllocator, isInstantRunMode, androidVersion, targetAbi, density);
+            @Nullable String density,
+            boolean createSeparateApkForResources) {
+        this(
+                defaultBuildIdAllocator,
+                isInstantRunMode,
+                aaptGeneration,
+                androidVersion,
+                targetAbi,
+                density,
+                createSeparateApkForResources);
     }
 
     @VisibleForTesting
     InstantRunBuildContext(
             @NonNull BuildIdAllocator buildIdAllocator,
             boolean isInstantRunMode,
+            @NotNull AaptGeneration aaptGeneration,
             @NonNull AndroidVersion androidVersion,
             @Nullable String targetAbi,
-            @Nullable String density) {
+            @Nullable String density,
+            boolean createSeparateApkForResources) {
         currentBuild =
                 new Build(
                         buildIdAllocator.allocatedBuildId(),
@@ -303,9 +317,14 @@ public class InstantRunBuildContext {
                         null /* eligibilityStatus */);
         this.isInstantRunMode = isInstantRunMode;
         this.androidVersion = androidVersion;
-        this.patchingPolicy = InstantRunPatchingPolicy.getPatchingPolicy(androidVersion);
+        this.patchingPolicy =
+                InstantRunPatchingPolicy.getPatchingPolicy(
+                        androidVersion,
+                        aaptGeneration != AaptGeneration.AAPT_V1,
+                        createSeparateApkForResources);
         this.abi = targetAbi;
         this.density = density;
+        this.createSeparateApkForResources = createSeparateApkForResources;
     }
 
     public boolean isInInstantRunMode() {
@@ -443,6 +462,7 @@ public class InstantRunBuildContext {
                 case PRE_LOLLIPOP:
                     return;
                 case MULTI_APK:
+                case MULTI_APK_SEPARATE_RESOURCES:
                     if (fileType != FileType.SPLIT) {
                         return;
                     }
@@ -451,7 +471,7 @@ public class InstantRunBuildContext {
         if (fileType == FileType.MAIN) {
             // in case of MAIN, we need to disambiguate whether this is a SPLIT_MAIN or just a
             // MAIN. this is useful for the IDE so it knows which deployment method to use.
-            if (patchingPolicy == InstantRunPatchingPolicy.MULTI_APK) {
+            if (InstantRunPatchingPolicy.useMultiApk(patchingPolicy)) {
                 fileType = FileType.SPLIT_MAIN;
             }
 
@@ -463,10 +483,12 @@ public class InstantRunBuildContext {
             }
 
             // since the main FULL_APK is produced, no need to keep the RESOURCES record around.
-            Artifact resourcesApFile = currentBuild.getArtifactForType(FileType.RESOURCES);
-            while (resourcesApFile != null) {
-                currentBuild.artifacts.remove(resourcesApFile);
-                resourcesApFile = currentBuild.getArtifactForType(FileType.RESOURCES);
+            if (patchingPolicy != InstantRunPatchingPolicy.MULTI_APK_SEPARATE_RESOURCES) {
+                Artifact resourcesApFile = currentBuild.getArtifactForType(FileType.RESOURCES);
+                while (resourcesApFile != null) {
+                    currentBuild.artifacts.remove(resourcesApFile);
+                    resourcesApFile = currentBuild.getArtifactForType(FileType.RESOURCES);
+                }
             }
         }
         currentBuild.artifacts.add(new Artifact(fileType, file));
@@ -546,7 +568,7 @@ public class InstantRunBuildContext {
 
             // when a coldswap build was found, remove all RESOURCES entries for previous builds
             // as the resource is redelivered as part of the main split.
-            if (foundColdRestart && patchingPolicy == InstantRunPatchingPolicy.MULTI_APK) {
+            if (foundColdRestart && patchingPolicy.useMultiApk()) {
                 Artifact resourceApArtifact = previousBuild.getArtifactForType(FileType.RESOURCES);
                 if (resourceApArtifact != null) {
                     previousBuild.artifacts.remove(resourceApArtifact);
@@ -655,7 +677,7 @@ public class InstantRunBuildContext {
                         + "=======================================\n"
                         + "collapseMainArtifactsIntoCurrentBuild\n"
                         + "=======================================");
-        if (patchingPolicy == InstantRunPatchingPolicy.MULTI_APK) {
+        if (patchingPolicy.useMultiApk()) {
             // Add all of the older splits to the current build,
             // as the older builds will be thrown away.
             Set<String> splitLocations = Sets.newHashSet();

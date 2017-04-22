@@ -67,6 +67,7 @@ public class InstantRunSliceSplitApkBuilder extends InstantRunSplitApkBuilder {
             @NonNull AaptOptions aaptOptions,
             @NonNull File outputDirectory,
             @NonNull File supportDirectory,
+            @NonNull File aaptIntermediateDirectory,
             @Nullable Boolean runAapt2Serially) {
         super(
                 logger,
@@ -79,7 +80,8 @@ public class InstantRunSliceSplitApkBuilder extends InstantRunSplitApkBuilder {
                 aaptGeneration,
                 aaptOptions,
                 outputDirectory,
-                supportDirectory);
+                supportDirectory,
+                aaptIntermediateDirectory);
         runSerially = runAapt2Serially == null
                 ? SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS
                 : runAapt2Serially;

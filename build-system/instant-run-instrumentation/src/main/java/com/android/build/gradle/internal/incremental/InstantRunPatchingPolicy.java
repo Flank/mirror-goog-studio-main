@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.incremental;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidProject;
 import com.android.sdklib.AndroidVersion;
 
@@ -35,11 +36,19 @@ public enum InstantRunPatchingPolicy {
     PRE_LOLLIPOP(DexPackagingPolicy.STANDARD, false /* useMultidex */),
 
     /**
-     * For L and above, each shard dex file described above will be packaged in a single pure
-     * split APK that will be pushed and installed on the device using adb install-multiple
-     * commands.
+     * For L and above, each shard dex file described above will be packaged in a single pure split
+     * APK that will be pushed and installed on the device using adb install-multiple commands.
      */
-    MULTI_APK(DexPackagingPolicy.INSTANT_RUN_MULTI_APK, true /* useMultidex */);
+    MULTI_APK(DexPackagingPolicy.INSTANT_RUN_MULTI_APK, true /* useMultidex */),
+
+    /**
+     * For O and above, we ship the resources in a separate APK from the main APK.
+     *
+     * <p>In a near future, this can be merged with the {@link #MULTI_APK} case but - we need to
+     * test this thoroughly back to 21. - we need aapt2 in the stable build tools to support all
+     * cases.
+     */
+    MULTI_APK_SEPARATE_RESOURCES(DexPackagingPolicy.INSTANT_RUN_MULTI_APK, true /* useMultidex */);
 
     @NonNull
     private final DexPackagingPolicy dexPatchingPolicy;
@@ -57,6 +66,14 @@ public enum InstantRunPatchingPolicy {
         return useMultiDex;
     }
 
+    public static boolean useMultiApk(@Nullable InstantRunPatchingPolicy subject) {
+        return subject != null && subject.useMultiApk();
+    }
+
+    public boolean useMultiApk() {
+        return this == MULTI_APK_SEPARATE_RESOURCES || this == MULTI_APK;
+    }
+
     /**
      * Returns the dex packaging policy for this patching policy. There can be variations depending
      * on the target platforms.
@@ -72,15 +89,23 @@ public enum InstantRunPatchingPolicy {
      * passed by Android Studio.
      *
      * @param androidVersion the android version of the target device
+     * @param useAapt2OrAbove use aapt2 or above to process resources.
      * @return a {@link InstantRunPatchingPolicy} instance.
      */
     @NonNull
-    public static InstantRunPatchingPolicy getPatchingPolicy(AndroidVersion androidVersion) {
+    public static InstantRunPatchingPolicy getPatchingPolicy(
+            AndroidVersion androidVersion,
+            boolean useAapt2OrAbove,
+            boolean createSeparateApkForResources) {
 
         if (androidVersion.getFeatureLevel() < AndroidVersion.ART_RUNTIME.getFeatureLevel()) {
             return PRE_LOLLIPOP;
         } else {
-            return MULTI_APK;
+            return androidVersion.getFeatureLevel() >= AndroidVersion.VersionCodes.O
+                            && useAapt2OrAbove
+                            && createSeparateApkForResources
+                    ? MULTI_APK_SEPARATE_RESOURCES
+                    : MULTI_APK;
         }
     }
 

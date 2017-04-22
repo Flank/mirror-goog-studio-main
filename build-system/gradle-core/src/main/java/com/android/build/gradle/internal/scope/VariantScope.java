@@ -480,6 +480,9 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     @NonNull
     VariantDependencies getVariantDependencies();
 
+    @NonNull
+    File getInstantRunResourceApkFolder();
+
     enum Java8LangSupport {
         INVALID,
         UNUSED,

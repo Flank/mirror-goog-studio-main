@@ -53,6 +53,7 @@ public enum BooleanOption implements Option<Boolean> {
             AndroidProject.PROPERTY_BUILD_MODEL_FEATURE_FULL_DEPENDENCIES),
     IDE_REFRESH_EXTERNAL_NATIVE_MODEL(AndroidProject.PROPERTY_REFRESH_EXTERNAL_NATIVE_MODEL),
     IDE_GENERATE_SOURCES_ONLY(AndroidProject.PROPERTY_GENERATE_SOURCES_ONLY),
+    ENABLE_SEPARATE_APK_RESOURCES("android.enableSeparateApkRes", false),
     ;
 
     @NonNull private final String propertyName;

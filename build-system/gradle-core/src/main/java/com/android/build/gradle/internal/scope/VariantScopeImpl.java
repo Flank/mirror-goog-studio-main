@@ -44,6 +44,7 @@ import com.android.build.gradle.internal.InstantRunTaskManager;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.PostprocessingFeatures;
 import com.android.build.gradle.internal.SdkHandler;
+import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.coverage.JacocoReportTask;
@@ -229,9 +230,11 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         this.instantRunBuildContext =
                 new InstantRunBuildContext(
                         variantData.getVariantConfiguration().isInstantRunBuild(globalScope),
+                        AaptGeneration.fromProjectOptions(projectOptions),
                         DeploymentDevice.getDeploymentDeviceAndroidVersion(projectOptions),
                         projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI),
-                        projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY));
+                        projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY),
+                        projectOptions.get(BooleanOption.ENABLE_SEPARATE_APK_RESOURCES));
 
         validatePostprocessingOptions();
     }
@@ -661,8 +664,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     private boolean isInstantRunDexingTypeOverride() {
         return getInstantRunBuildContext().isInInstantRunMode()
-                && getInstantRunBuildContext().getPatchingPolicy()
-                        == InstantRunPatchingPolicy.MULTI_APK;
+                && InstantRunPatchingPolicy.useMultiApk(
+                        getInstantRunBuildContext().getPatchingPolicy());
     }
 
     @NonNull
@@ -1397,6 +1400,16 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         return FileUtils.join(
                 globalScope.getIntermediatesDir(),
                 "manifests",
+                "instant-run",
+                getVariantConfiguration().getDirName());
+    }
+
+    @NonNull
+    @Override
+    public File getInstantRunResourceApkFolder() {
+        return FileUtils.join(
+                globalScope.getIntermediatesDir(),
+                "resources",
                 "instant-run",
                 getVariantConfiguration().getDirName());
     }

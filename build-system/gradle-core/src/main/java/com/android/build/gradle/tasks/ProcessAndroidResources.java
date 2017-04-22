@@ -40,6 +40,7 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.dsl.DslAdaptersKt;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
+import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.build.gradle.internal.scope.SplitFactory;
@@ -51,6 +52,7 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitPackageIds;
+import com.android.build.gradle.internal.transforms.InstantRunSliceSplitApkBuilder;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
 import com.android.build.gradle.internal.variant.TaskContainer;
@@ -120,6 +122,8 @@ import org.gradle.tooling.BuildException;
 
 @CacheableTask
 public class ProcessAndroidResources extends IncrementalTask {
+
+    private static final String IR_APK_FILE_NAME = "resources";
 
     private static final Logger LOG = Logging.getLogger(ProcessAndroidResources.class);
 
@@ -205,6 +209,22 @@ public class ProcessAndroidResources extends IncrementalTask {
         return SplitList.getSplits(splitList, splitHandlingPolicy);
     }
 
+    @Input
+    public String getApplicationId() {
+        return applicationId;
+    }
+
+    @Input
+    @Optional
+    public String getVersionName() {
+        return versionName;
+    }
+
+    @Input
+    public int getVersionCode() {
+        return versionCode;
+    }
+
     FileCollection splitListInput;
 
     private SplitScope splitScope;
@@ -217,6 +237,12 @@ public class ProcessAndroidResources extends IncrementalTask {
     private FileCollection platformAttrRTxt;
 
     private boolean enableAapt2;
+
+    private String applicationId;
+    private String versionName;
+    private int versionCode;
+
+    private File supportDirectory;
 
     // FIX-ME : make me incremental !
     @Override
@@ -410,7 +436,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                                 + apkData.getFullName()
                                 + SdkConstants.DOT_RES);
 
-        // FIX MEy : there should be a better way to always get the manifest file to merge.
+        // FIX ME : there should be a better way to always get the manifest file to merge.
         // for instance, should the library task also output the .gson ?
         BuildOutput manifestOutput = SplitScope.getOutput(manifestsOutputs, taskInputType, apkData);
         if (manifestOutput == null) {
@@ -455,6 +481,22 @@ public class ProcessAndroidResources extends IncrementalTask {
         }
 
         try {
+
+            // If we are in instant run mode and we use a split APK for these resources.
+            if (buildContext.isInInstantRunMode()
+                    && buildContext.getPatchingPolicy()
+                            == InstantRunPatchingPolicy.MULTI_APK_SEPARATE_RESOURCES) {
+                supportDirectory.mkdirs();
+                // create a split identification manifest.
+                manifestFile =
+                        InstantRunSliceSplitApkBuilder.generateSplitApkManifest(
+                                supportDirectory,
+                                IR_APK_FILE_NAME,
+                                applicationId,
+                                versionName,
+                                versionCode);
+            }
+
             // If the new resources flag is enabled and if we are dealing with a library process
             // resources through the new parsers
             if (bypassAapt) {
@@ -754,6 +796,9 @@ public class ProcessAndroidResources extends IncrementalTask {
             }
 
             processResources.setEnableAapt2(projectOptions.get(BooleanOption.ENABLE_AAPT2));
+            processResources.versionCode = config.getVersionCode();
+            processResources.applicationId = config.getApplicationId();
+            processResources.versionName = config.getVersionName();
 
             // per exec
             processResources.setIncrementalFolder(variantScope.getIncrementalDir(getName()));
@@ -851,6 +896,8 @@ public class ProcessAndroidResources extends IncrementalTask {
                             : null;
             processResources.supportedAbis = config.getSupportedAbis();
             processResources.isLibrary = isLibrary;
+            processResources.supportDirectory =
+                    new File(variantScope.getInstantRunSplitApkOutputFolder(), "resources");
         }
     }
 

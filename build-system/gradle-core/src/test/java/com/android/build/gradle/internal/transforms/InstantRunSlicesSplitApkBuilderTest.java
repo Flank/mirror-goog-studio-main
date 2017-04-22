@@ -104,7 +104,7 @@ public class InstantRunSlicesSplitApkBuilderTest {
     }
 
     @Before
-    public void setup() {
+    public void setup() throws IOException {
         fileCache = FileCache.getInstanceWithSingleProcessLocking(fileCacheDirectory.getRoot());
         instantRunSliceSplitApkBuilder =
                 new InstantRunSliceSplitApkBuilder(
@@ -118,7 +118,8 @@ public class InstantRunSlicesSplitApkBuilderTest {
                         AaptGeneration.AAPT_V2_JNI,
                         new AaptOptions(null, false, null),
                         outputDirectory.getRoot(),
-                        supportDirectory.getRoot(), /* runAapt2Serially */
+                        supportDirectory.newFolder("instant-run"),
+                        supportDirectory.newFolder("aapt-temp"), /* runAapt2Serially */
                         false) {
                     @Override
                     @NonNull

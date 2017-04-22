@@ -62,7 +62,8 @@ public class InstantRunDependenciesApkBuilder extends InstantRunSplitApkBuilder 
             @NonNull AaptGeneration aaptGeneration,
             @NonNull AaptOptions aaptOptions,
             @NonNull File outputDirectory,
-            @NonNull File supportDirectory) {
+            @NonNull File supportDirectory,
+            @NonNull File aaptIntermediateDirectory) {
         super(
                 logger,
                 project,
@@ -74,7 +75,8 @@ public class InstantRunDependenciesApkBuilder extends InstantRunSplitApkBuilder 
                 aaptGeneration,
                 aaptOptions,
                 outputDirectory,
-                supportDirectory);
+                supportDirectory,
+                aaptIntermediateDirectory);
     }
 
     @NonNull

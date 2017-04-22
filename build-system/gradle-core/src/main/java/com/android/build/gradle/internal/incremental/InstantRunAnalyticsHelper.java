@@ -71,6 +71,8 @@ public class InstantRunAnalyticsHelper {
                 return InstantRunStatus.PatchingPolicy.PRE_LOLLIPOP;
             case MULTI_APK:
                 return InstantRunStatus.PatchingPolicy.MULTI_APK;
+            case MULTI_APK_SEPARATE_RESOURCES:
+                return InstantRunStatus.PatchingPolicy.MULTI_APK_SEPARATE_RESOURCES;
             default:
                 return InstantRunStatus.PatchingPolicy.UNKNOWN_PATCHING_POLICY;
         }
@@ -100,8 +102,6 @@ public class InstantRunAnalyticsHelper {
                 return InstantRunArtifact.Type.SPLIT;
             case RESOURCES:
                 return InstantRunArtifact.Type.RESOURCES;
-            case FULL_SPLIT:
-                return InstantRunArtifact.Type.FULL_SPLIT;
             default:
                 throw new RuntimeException("Cannot convert " + type);
         }

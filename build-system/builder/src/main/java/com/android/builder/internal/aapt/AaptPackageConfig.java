@@ -180,6 +180,9 @@ public class AaptPackageConfig implements Cloneable {
     @Nullable
     private VariantType mVariantType;
 
+    /** List of imported resource files */
+    @NonNull private ImmutableList<File> mImports;
+
     /** Package ID for the feature split. */
     @Nullable private Integer mPackageId;
 
@@ -195,6 +198,7 @@ public class AaptPackageConfig implements Cloneable {
         mVerbose = false;
         mResourceConfigs = ImmutableSet.of();
         mDependentFeatures = ImmutableSet.of();
+        mImports = ImmutableList.of();
     }
 
     @Override
@@ -209,6 +213,11 @@ public class AaptPackageConfig implements Cloneable {
             Verify.verify(false);
             return new AaptPackageConfig();
         }
+    }
+
+    @NonNull
+    public ImmutableList<File> getImports() {
+        return mImports;
     }
 
     /**
@@ -743,6 +752,19 @@ public class AaptPackageConfig implements Cloneable {
         @NonNull
         public Builder setCustomPackageForR(@Nullable String packageForR) {
             mConfig.mPackageForR = packageForR;
+            return this;
+        }
+
+        /**
+         * Adds a list of files that will be used as imports to resolve external symbols when
+         * running the aapt2 command.
+         *
+         * @param imports list of imports files.
+         * @return
+         */
+        @NonNull
+        public Builder setImports(@NonNull ImmutableList<File> imports) {
+            mConfig.mImports = imports;
             return this;
         }
 

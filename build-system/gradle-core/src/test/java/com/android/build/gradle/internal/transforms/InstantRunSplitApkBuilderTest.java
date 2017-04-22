@@ -39,6 +39,7 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 import java.io.File;
+import java.io.IOException;
 import java.util.Map;
 import org.gradle.api.Project;
 import org.gradle.api.logging.Logger;
@@ -73,6 +74,8 @@ public class InstantRunSplitApkBuilderTest {
 
     FileCache fileCache;
     InstantRunSliceSplitApkBuilder instantRunSliceSplitApkBuilder;
+    File instantRunFolder;
+    File aaptTempFolder;
 
     @Before
     public void setUpMock() {
@@ -85,7 +88,9 @@ public class InstantRunSplitApkBuilderTest {
     }
 
     @Before
-    public void setup() {
+    public void setup() throws IOException {
+        instantRunFolder = supportDirectory.newFolder("instant-run");
+        aaptTempFolder = supportDirectory.newFolder("aapt-temp");
         fileCache = FileCache.getInstanceWithSingleProcessLocking(fileCacheDirectory.getRoot());
         instantRunSliceSplitApkBuilder =
                 new InstantRunSliceSplitApkBuilder(
@@ -99,7 +104,8 @@ public class InstantRunSplitApkBuilderTest {
                         AaptGeneration.AAPT_V2_JNI,
                         new AaptOptions(null, false, null),
                         outputDirectory.getRoot(),
-                        supportDirectory.getRoot(), /* runAapt2Serially */
+                        instantRunFolder,
+                        aaptTempFolder, /* runAapt2Serially */
                         false) {
                     @Override
                     protected Aapt getAapt() {
@@ -128,7 +134,7 @@ public class InstantRunSplitApkBuilderTest {
                 new InstantRunSplitApkBuilder.DexFiles(files, "folderName");
 
         instantRunSliceSplitApkBuilder.generateSplitApk(dexFiles);
-        File folder = new File(supportDirectory.getRoot(), "folderName");
+        File folder = new File(instantRunFolder, "folderName");
         assertThat(folder.isDirectory()).isTrue();
         assertThat(folder.getName()).isEqualTo("folderName");
         File[] folderFiles = folder.listFiles();
@@ -213,7 +219,8 @@ public class InstantRunSplitApkBuilderTest {
                         AaptGeneration.AAPT_V2_JNI,
                         new AaptOptions(null, false, null),
                         outputDirectory.getRoot(),
-                        supportDirectory.getRoot(), /* runAapt2Serially */
+                        instantRunFolder,
+                        aaptTempFolder, /* runAapt2Serially */
                         false) {
                     @Override
                     protected Aapt getAapt() {
@@ -232,7 +239,7 @@ public class InstantRunSplitApkBuilderTest {
                 new InstantRunSplitApkBuilder.DexFiles(files, "folderName");
 
         instantRunSliceSplitApkBuilder.generateSplitApk(dexFiles);
-        File folder = new File(supportDirectory.getRoot(), "folderName");
+        File folder = new File(instantRunFolder, "folderName");
         assertThat(folder.isDirectory()).isTrue();
         assertThat(folder.getName()).isEqualTo("folderName");
         File[] folderFiles = folder.listFiles();

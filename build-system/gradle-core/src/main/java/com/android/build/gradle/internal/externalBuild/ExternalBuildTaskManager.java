@@ -274,6 +274,9 @@ class ExternalBuildTaskManager {
                         packagingScope.getAaptOptions(),
                         packagingScope.getInstantRunSplitApkOutputFolder(),
                         packagingScope.getInstantRunSupportDir(),
+                        new File(
+                                packagingScope.getIncrementalDir("InstantRunSliceSplitApkBuilder"),
+                                "aapt-temp"),
                         null);
 
         Optional<AndroidTask<TransformTask>> transformTaskAndroidTask =
@@ -291,6 +294,7 @@ class ExternalBuildTaskManager {
                                 project.files(androidManifestFile),
                                 VariantScope.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS,
                                 variantScope.getSplitScope(),
+                                globalScope.getBuildCache(),
                                 TaskOutputHolder.TaskOutputType.APK));
 
         transformTaskAndroidTask.ifPresent(
