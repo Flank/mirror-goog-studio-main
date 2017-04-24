@@ -118,8 +118,9 @@ message GradleBenchmarkResult {
     }
 
     enum Java8LangSupport {
-      DESUGAR_TOOL = 0;
-      RETROLAMBD = 1;
+      NO_SUPPORT = 0;
+      DESUGAR_TOOL = 1;
+      RETROLAMBD = 2;
     }
   }
 
