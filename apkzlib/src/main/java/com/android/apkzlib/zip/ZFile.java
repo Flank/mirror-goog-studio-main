@@ -38,6 +38,7 @@ import com.google.common.primitives.Ints;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.ByteArrayInputStream;
 import java.io.Closeable;
@@ -1560,18 +1561,24 @@ public class ZFile implements Closeable {
             throws IOException {
         if (mayCompress) {
             ListenableFuture<CompressionResult> result = compressor.compress(source);
-            Futures.addCallback(result, new FutureCallback<CompressionResult>() {
-                @Override
-                public void onSuccess(CompressionResult result) {
-                    compressInfo.set(new CentralDirectoryHeaderCompressInfo(newFileData,
-                            result.getCompressionMethod(), result.getSize()));
-                }
+            Futures.addCallback(
+                    result,
+                    new FutureCallback<CompressionResult>() {
+                        @Override
+                        public void onSuccess(CompressionResult result) {
+                            compressInfo.set(
+                                    new CentralDirectoryHeaderCompressInfo(
+                                            newFileData,
+                                            result.getCompressionMethod(),
+                                            result.getSize()));
+                        }
 
-                @Override
-                public void onFailure(@Nonnull Throwable t) {
-                    compressInfo.setException(t);
-                }
-            });
+                        @Override
+                        public void onFailure(@Nonnull Throwable t) {
+                            compressInfo.setException(t);
+                        }
+                    },
+                    MoreExecutors.directExecutor());
 
             ListenableFuture<CloseableByteSource> compressedByteSourceFuture =
                     Futures.transform(result, CompressionResult::getSource);
