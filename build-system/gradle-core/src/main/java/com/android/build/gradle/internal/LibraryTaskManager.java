@@ -55,6 +55,7 @@ import com.android.build.gradle.internal.transforms.LibraryIntermediateJarsTrans
 import com.android.build.gradle.internal.transforms.LibraryJniLibsTransform;
 import com.android.build.gradle.internal.variant.LibraryVariantData;
 import com.android.build.gradle.internal.variant.VariantHelper;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.AidlCompile;
 import com.android.build.gradle.tasks.ExtractAnnotations;
@@ -314,8 +315,12 @@ public class LibraryTaskManager extends TaskManager {
 
 
         AndroidTask<ExtractAnnotations> extractAnnotationsTask;
-        if (AndroidGradleOptions.isImprovedDependencyResolutionEnabled(project)
-                || variantScope.getVariantDependencies().isAnnotationsPresent()) {
+        if ((AndroidGradleOptions.isImprovedDependencyResolutionEnabled(project)
+                        || variantScope.getVariantDependencies().isAnnotationsPresent())
+                // Some versions of retrolambda remove the actions from the extract annotations task.
+                // TODO: remove this hack once tests are moved to a version that doesn't do this
+                // b/37564303
+                && projectOptions.get(BooleanOption.ENABLE_EXTRACT_ANNOTATIONS)) {
             extractAnnotationsTask =
                     getAndroidTasks()
                             .create(
@@ -423,6 +428,7 @@ public class LibraryTaskManager extends TaskManager {
 
                         intermediateTransformTask.ifPresent(
                                 t -> {
+                                    t.optionalDependsOn(tasks, extractAnnotationsTask);
                                     // publish the intermediate classes.jar.
                                     variantScope.addTaskOutput(
                                             TaskOutputType.LIBRARY_CLASSES,

@@ -40,6 +40,7 @@ import static com.android.tools.lint.detector.api.LintUtils.assertionsEnabled;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.LintUtils;
+import com.android.utils.FileUtils;
 import com.android.utils.XmlUtils;
 import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
@@ -287,7 +288,7 @@ public class Extractor {
         }
     }
 
-    public void writeTypedefFile(@NonNull File file) {
+    public void writeTypedefFile(@NonNull File file) throws IOException {
         // Write typedef recipe file for later processing
         String desc = "";
         if (typedefsToRemove != null) {
@@ -300,28 +301,9 @@ public class Extractor {
             }
             desc = sb.toString();
         }
-        if (file.exists()) {
-            boolean deleted = file.delete();
-            if (!deleted) {
-                Extractor.error("Could not delete old " + file);
-                return;
-            }
-        }
-        try {
-            File dir = file.getParentFile();
-            if (dir != null && !dir.exists()) {
-                boolean ok = dir.mkdirs();
-                if (!ok) {
-                    Extractor.error("Could not create directory " + dir);
-                    return;
-                }
-            }
-            if (!desc.isEmpty()) { // TODO: Remove this restriction?
-                Files.write(desc, file, Charsets.UTF_8);
-            }
-        } catch (IOException e) {
-            Extractor.error("Could not write " + file + ": " + e.getLocalizedMessage());
-        }
+        FileUtils.deleteIfExists(file);
+        Files.createParentDirs(file);
+        Files.write(desc, file, Charsets.UTF_8);
     }
 
     public static void removeTypedefClasses(@NonNull File classDir, @NonNull File typedefFile) {
@@ -334,7 +316,8 @@ public class Extractor {
         remover.removeFromTypedefFile(classDir, typedefFile);
     }
 
-    public void export(@Nullable File annotationsZip, @Nullable File proguardCfg) {
+    public void export(@Nullable File annotationsZip, @Nullable File proguardCfg)
+            throws IOException {
         if (proguardCfg != null) {
             if (keepItems.isEmpty()) {
                 if (proguardCfg.exists()) {
@@ -348,11 +331,9 @@ public class Extractor {
 
         if (annotationsZip != null) {
             if (itemMap.isEmpty() && packageMap == null) {
-                if (annotationsZip.exists()) {
-                    //noinspection ResultOfMethodCallIgnored
-                    annotationsZip.delete();
-                }
-            } else if (writeExternalAnnotations(annotationsZip)) {
+                FileUtils.deleteIfExists(annotationsZip);
+            } else {
+                writeExternalAnnotations(annotationsZip);
                 writeStats();
                 info("Annotations written to " + annotationsZip);
             }
@@ -767,12 +748,10 @@ public class Extractor {
         return false;
     }
 
-    private boolean writeExternalAnnotations(@NonNull File annotationsZip) {
-        try {
-            FileOutputStream fileOutputStream = new FileOutputStream(annotationsZip);
-            JarOutputStream zos = new JarOutputStream(new BufferedOutputStream(fileOutputStream));
-
-            try {
+    private void writeExternalAnnotations(@NonNull File annotationsZip) throws IOException {
+        try (FileOutputStream fileOutputStream = new FileOutputStream(annotationsZip);
+                JarOutputStream zos =
+                        new JarOutputStream(new BufferedOutputStream(fileOutputStream))) {
                 List<String> sortedPackages = new ArrayList<>(itemMap.keySet());
 
                 if (packageMap != null) {
@@ -830,7 +809,6 @@ public class Extractor {
                             if (document == null) {
                                 error("Could not parse XML document back in for entry " + name
                                         + ": invalid XML?\n\"\"\"\n" + xml + "\n\"\"\"\n");
-                                return false;
                             }
                         }
                         byte[] bytes = xml.getBytes(Charsets.UTF_8);
@@ -838,16 +816,7 @@ public class Extractor {
                         zos.closeEntry();
                     }
                 }
-            } finally {
-                zos.flush();
-                zos.close();
             }
-        } catch (IOException ioe) {
-            error(ioe.toString());
-            return false;
-        }
-
-        return true;
     }
 
     private void addPackage(@NonNull String pkg, @NonNull PackageItem item) {
