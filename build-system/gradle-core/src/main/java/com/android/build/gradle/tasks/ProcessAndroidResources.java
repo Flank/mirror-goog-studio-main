@@ -426,7 +426,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                         resPackageOutputFolder,
                         FN_RES_BASE
                                 + RES_QUALIFIER_SEP
-                                + apkData.getBaseName()
+                                + apkData.getFullName()
                                 + SdkConstants.DOT_RES);
 
         // FIX MEy : there should be a better way to always get the manifest file to merge.
