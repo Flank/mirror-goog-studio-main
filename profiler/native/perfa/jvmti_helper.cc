@@ -121,9 +121,7 @@ void Deallocate(jvmtiEnv* jvmti, void* ptr) {
 
 std::string GetMangledName(const char* klass_signature,
                            const char* method_name) {
-  // Remove leading "L" and trailing ";" from class signature.
   std::string klass_string(klass_signature);
-  klass_string = klass_string.substr(1, klass_string.length() - 2);
   std::string method_string(method_name);
 
   std::string mangled("Java_");

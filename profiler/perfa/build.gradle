@@ -41,6 +41,12 @@ dependencies {
     testCompile 'junit:junit:4.12'
 }
 
+sourceSets {
+    main {
+        java { srcDir "${rootProject.projectDir}/common/src/main/java" }
+    }
+}
+
 // dx the output jar which will be used by the agent to load in at runtime.
 task jarToDex(type: JavaExec, dependsOn: jar) {
     main = "-jar"

@@ -26,9 +26,6 @@
 #include "scoped_local_ref.h"
 #include "utils/log.h"
 
-#include "dex/slicer/code_ir.h"
-#include "dex/slicer/dex_ir.h"
-#include "dex/slicer/dex_ir_builder.h"
 #include "dex/slicer/instrumentation.h"
 #include "dex/slicer/reader.h"
 #include "dex/slicer/writer.h"
@@ -61,7 +58,7 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
                                const unsigned char* class_data,
                                jint* new_class_data_len,
                                unsigned char** new_class_data) {
-  if (class_being_redefined == nullptr || strcmp(name, "java/net/URL")) {
+  if (class_being_redefined == nullptr || strcmp(name, "java/net/URL") != 0) {
     return;
   }
 
@@ -80,12 +77,9 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
   auto dex_ir = reader.GetIr();
 
   slicer::MethodInstrumenter mi(dex_ir);
-  mi.AddTransformation<slicer::EntryHook>(ir::MethodId(
-      "Lcom/android/tools/profiler/ProfilerAgent;", "urlOpenConnection"));
-  mi.AddTransformation<slicer::DetourVirtualInvoke>(
-      ir::MethodId("LBase;", "foo", "(ILjava/lang/String;)I"),
-      ir::MethodId("LTracer;", "wrapFoo"));
-
+  mi.AddTransformation<slicer::ExitHook>(
+      ir::MethodId("Lcom/android/tools/profiler/support/network/HttpWrapper;",
+                   "wrapURLConnection"));
   if (!mi.InstrumentMethod(ir::MethodId(desc.c_str(), "openConnection",
                                         "()Ljava/net/URLConnection;"))) {
     Log::E("Error instrumenting URL.openConnection");
@@ -103,7 +97,23 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
   Log::V("Transformed class: %s", name);
 }
 
-void LoadDex(jvmtiEnv* jvmti) {
+void BindJNIMethod(JNIEnv* jni, const char* class_name, const char* method_name,
+                   const char* signature) {
+  jclass klass = jni->FindClass(class_name);
+  std::string mangled_name(GetMangledName(class_name, method_name));
+  void* sym = dlsym(RTLD_DEFAULT, mangled_name.c_str());
+  if (sym != nullptr) {
+    JNINativeMethod native_method;
+    native_method.fnPtr = sym;
+    native_method.name = const_cast<char*>(method_name);
+    native_method.signature = const_cast<char*>(signature);
+    jni->RegisterNatives(klass, &native_method, 1);
+  } else {
+    Log::V("Failed to find symbol for %s", mangled_name.c_str());
+  }
+}
+
+void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni) {
   // Load in perfa.jar which should be in to data/data.
   Dl_info dl_info;
   dladdr((void*)Agent_OnAttach, &dl_info);
@@ -111,6 +121,17 @@ void LoadDex(jvmtiEnv* jvmti) {
   std::string agent_lib_path(so_path.substr(0, so_path.find_last_of('/')));
   agent_lib_path.append("/perfa.jar");
   jvmti->AddToBootstrapClassLoaderSearch(agent_lib_path.c_str());
+
+  // We need to manually bind these two methods, because they are called from a thread that spanws
+  // in the "initialize" call, and the agent functions are only available after attaching.
+  // We will remove this once the tracking is done via JVMTI.
+  BindJNIMethod(jni, "com/android/tools/profiler/support/memory/VmStatsSampler", "logAllocStats", "(II)V");
+  BindJNIMethod(jni, "com/android/tools/profiler/support/memory/VmStatsSampler", "logGcStats", "()V");
+
+  jclass service =
+      jni->FindClass("com/android/tools/profiler/support/ProfilerService");
+  jmethodID initialize = jni->GetStaticMethodID(service, "initialize", "()V");
+  jni->CallStaticVoidMethod(service, initialize);
 }
 
 extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
@@ -122,7 +143,8 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
 
   Log::V("StudioProfilers agent attached.");
 
-  LoadDex(jvmti_env);
+  JNIEnv* jni_env = GetThreadLocalJNI(vm);
+  LoadDex(jvmti_env, jni_env);
 
   SetAllCapabilities(jvmti_env);
   jvmti_env->SetEventNotificationMode(
@@ -135,8 +157,7 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
                   jvmti_env->SetEventCallbacks(&callbacks, sizeof(callbacks)));
 
   // Sample instrumentation
-  JNIEnv* jniEnv = GetThreadLocalJNI(vm);
-  jclass klass = jniEnv->FindClass("java/net/URL");
+  jclass klass = jni_env->FindClass("java/net/URL");
   jclass classes[] = {klass};
   CheckJvmtiError(jvmti_env, jvmti_env->RetransformClasses(1, classes));
 
