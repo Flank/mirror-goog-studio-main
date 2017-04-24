@@ -1,3 +1,4 @@
+<#import "../../common/shared_manifest_macros.ftl" as manifestMacros>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <application>
@@ -18,12 +19,7 @@
             <meta-data android:name="android.support.PARENT_ACTIVITY"
                 android:value="${parentActivityClass}" />
             </#if>
-            <#if isLauncher && !(isLibraryProject!false)>
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-            </#if>
+            <@manifestMacros.commonActivityBody />
         </activity>
 
         <activity android:name="${relativePackage}.${DetailName}Activity"
