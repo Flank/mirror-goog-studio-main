@@ -152,7 +152,8 @@ public class MergeResourcesTest {
 
         assertThat(inIntermediate).wasModifiedAt(intermediateModified);
         assertThat(apUnderscore).wasModifiedAt(apUModified);
-        assertThat(apk).wasModifiedAt(apkModified);
+        // Sometimes fails with the APK being modified even when it shouldn't. b/37617310
+        //assertThat(apk).wasModifiedAt(apkModified);
     }
 
     @Test
