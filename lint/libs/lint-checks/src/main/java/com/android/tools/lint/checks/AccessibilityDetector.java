@@ -112,7 +112,7 @@ public class AccessibilityDetector extends LayoutDetector {
             }
             LintFix fix = fix().set().todo(ANDROID_URI, ATTR_CONTENT_DESCRIPTION).build();
             context.report(ISSUE, element, context.getLocation(element),
-                    "[Accessibility] Missing `contentDescription` attribute on image",
+                    "Missing `contentDescription` attribute on image",
                     fix);
         } else {
             Attr attributeNode = element.getAttributeNodeNS(ANDROID_URI, ATTR_CONTENT_DESCRIPTION);
@@ -120,7 +120,7 @@ public class AccessibilityDetector extends LayoutDetector {
             if (attribute.isEmpty() || attribute.equals("TODO")) {
                 LintFix fix = fix().set().todo(ANDROID_URI, ATTR_CONTENT_DESCRIPTION).build();
                 context.report(ISSUE, attributeNode, context.getLocation(attributeNode),
-                        "[Accessibility] Empty `contentDescription` attribute on image",
+                        "Empty `contentDescription` attribute on image",
                         fix);
             }
         }

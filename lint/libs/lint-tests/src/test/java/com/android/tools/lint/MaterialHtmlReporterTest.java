@@ -87,7 +87,7 @@ public class MaterialHtmlReporterTest  extends AbstractCheckTest {
                     new DefaultPosition(6, 4, 198), new DefaultPosition(6, 42, 236));
 
             Warning warning2 = new Warning(HardcodedValuesDetector.ISSUE,
-                    "[I18N] Hardcoded string \"Fooo\", should use @string resource",
+                    "Hardcoded string \"Fooo\", should use @string resource",
                     Severity.WARNING, project);
             warning2.line = 11;
             warning2.file = main;
@@ -275,7 +275,7 @@ public class MaterialHtmlReporterTest  extends AbstractCheckTest {
                             + "              <div class=\"mdl-card__supporting-text\">\n"
                             + "<div class=\"issue\">\n"
                             + "<div class=\"warningslist\">\n"
-                            + "<span class=\"location\"><a href=\"res/layout/main.xml\">res/layout/main.xml</a>:12</span>: <span class=\"message\">[I18N] Hardcoded string \"Fooo\", should use @string resource</span><br />\n"
+                            + "<span class=\"location\"><a href=\"res/layout/main.xml\">res/layout/main.xml</a>:12</span>: <span class=\"message\">Hardcoded string \"Fooo\", should use @string resource</span><br />\n"
                             + "</div>\n"
                             + "<div class=\"metadata\"><div class=\"explanation\" id=\"explanationHardcodedText\" style=\"display: none;\">\n"
                             + "Hardcoding text attributes directly in layout files is bad for several reasons:<br/>\n"

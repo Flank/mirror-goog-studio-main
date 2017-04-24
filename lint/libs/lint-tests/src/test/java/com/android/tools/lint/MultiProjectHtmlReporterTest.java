@@ -80,7 +80,7 @@ public class MultiProjectHtmlReporterTest extends AbstractCheckTest {
                     new DefaultPosition(6, 4, 198), new DefaultPosition(6, 42, 236));
 
             Warning warning2 = new Warning(HardcodedValuesDetector.ISSUE,
-                    "[I18N] Hardcoded string \"Fooo\", should use @string resource",
+                    "Hardcoded string \"Fooo\", should use @string resource",
                     Severity.WARNING, project);
             warning2.line = 11;
             warning2.file = new File("/foo/bar/Foo/res/layout/main.xml");

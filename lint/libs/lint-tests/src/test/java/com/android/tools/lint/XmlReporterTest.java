@@ -60,7 +60,7 @@ public class XmlReporterTest extends AbstractCheckTest {
                     new DefaultPosition(6, 4, 198), new DefaultPosition(6, 42, 236));
 
             Warning warning2 = new Warning(HardcodedValuesDetector.ISSUE,
-                    "[I18N] Hardcoded string \"Fooo\", should use @string resource",
+                    "Hardcoded string \"Fooo\", should use @string resource",
                     Severity.WARNING, project);
             warning2.line = 11;
             warning2.file = new File("/foo/bar/Foo/res/layout/main.xml");
@@ -102,7 +102,7 @@ public class XmlReporterTest extends AbstractCheckTest {
                     + "    <issue\n"
                     + "        id=\"HardcodedText\"\n"
                     + "        severity=\"Warning\"\n"
-                    + "        message=\"[I18N] Hardcoded string &quot;Fooo&quot;, should use @string resource\"\n"
+                    + "        message=\"Hardcoded string &quot;Fooo&quot;, should use @string resource\"\n"
                     + "        category=\"Internationalization\"\n"
                     + "        priority=\"5\"\n"
                     + "        summary=\"Hardcoded text\"\n"
@@ -153,7 +153,7 @@ public class XmlReporterTest extends AbstractCheckTest {
                     new DefaultPosition(6, 4, 198), new DefaultPosition(6, 42, 236));
 
             Warning warning2 = new Warning(HardcodedValuesDetector.ISSUE,
-                    "[I18N] Hardcoded string \"Fooo\", should use @string resource",
+                    "Hardcoded string \"Fooo\", should use @string resource",
                     Severity.WARNING, project);
             warning2.line = 11;
             warning2.file = new File("/foo/bar/Foo/res/layout/main.xml");
@@ -195,7 +195,7 @@ public class XmlReporterTest extends AbstractCheckTest {
                     + "    <issue\n"
                     + "        id=\"HardcodedText\"\n"
                     + "        severity=\"Warning\"\n"
-                    + "        message=\"[I18N] Hardcoded string &quot;Fooo&quot;, should use @string resource\"\n"
+                    + "        message=\"Hardcoded string &quot;Fooo&quot;, should use @string resource\"\n"
                     + "        category=\"Internationalization\"\n"
                     + "        priority=\"5\"\n"
                     + "        summary=\"Hardcoded text\"\n"
@@ -313,7 +313,7 @@ public class XmlReporterTest extends AbstractCheckTest {
                     new DefaultPosition(6, 4, 198), new DefaultPosition(6, 42, 236));
 
             Warning warning2 = new Warning(HardcodedValuesDetector.ISSUE,
-                    "[I18N] Hardcoded string \"Fooo\", should use @string resource",
+                    "Hardcoded string \"Fooo\", should use @string resource",
                     Severity.WARNING, project);
             warning2.line = 11;
             warning2.file = new File("/foo/bar/Foo/res/layout/main.xml");
@@ -347,7 +347,7 @@ public class XmlReporterTest extends AbstractCheckTest {
                             + "\n"
                             + "    <issue\n"
                             + "        id=\"HardcodedText\"\n"
-                            + "        message=\"[I18N] Hardcoded string &quot;Fooo&quot;, should use @string resource\"\n"
+                            + "        message=\"Hardcoded string &quot;Fooo&quot;, should use @string resource\"\n"
                             + "        errorLine1=\"        android:text=&quot;Fooo&quot; />\"\n"
                             + "        errorLine2=\"        ~~~~~~~~~~~~~~~~~~~\">\n"
                             + "        <location\n"

@@ -61,7 +61,7 @@ public class LintBaselineTest extends AbstractCheckTest {
                 + "    <issue\n"
                 + "        id=\"HardcodedText\"\n"
                 + "        severity=\"Warning\"\n"
-                + "        message=\"[I18N] Hardcoded string &quot;Fooo&quot;, should use @string resource\"\n"
+                + "        message=\"Hardcoded string &quot;Fooo&quot;, should use @string resource\"\n"
                 + "        category=\"Internationalization\"\n"
                 + "        priority=\"5\"\n"
                 + "        summary=\"Hardcoded text\"\n"
@@ -100,7 +100,7 @@ public class LintBaselineTest extends AbstractCheckTest {
         // Wrong issue
         found = baseline.findAndMark(ManifestDetector.USES_SDK,
                 Location.create(new File("bogus")),
-                "[I18N] Hardcoded string \"Fooo\", should use @string resource", Severity.WARNING,
+                "Hardcoded string \"Fooo\", should use @string resource", Severity.WARNING,
                 null);
         assertThat(found).isFalse();
         assertThat(baseline.getFoundWarningCount()).isEqualTo(0);
@@ -110,7 +110,7 @@ public class LintBaselineTest extends AbstractCheckTest {
         // Wrong file
         found = baseline.findAndMark(HardcodedValuesDetector.ISSUE,
                 Location.create(new File("res/layout-port/main.xml")),
-                "[I18N] Hardcoded string \"Fooo\", should use @string resource", Severity.WARNING,
+                "Hardcoded string \"Fooo\", should use @string resource", Severity.WARNING,
                 null);
         assertThat(found).isFalse();
         assertThat(baseline.getFoundWarningCount()).isEqualTo(0);
@@ -120,7 +120,7 @@ public class LintBaselineTest extends AbstractCheckTest {
         // Match
         found = baseline.findAndMark(HardcodedValuesDetector.ISSUE,
                 Location.create(new File("res/layout/main.xml")),
-                "[I18N] Hardcoded string \"Fooo\", should use @string resource", Severity.WARNING,
+                "Hardcoded string \"Fooo\", should use @string resource", Severity.WARNING,
                 null);
         assertThat(found).isTrue();
         assertThat(baseline.getFixedCount()).isEqualTo(1);
@@ -131,7 +131,7 @@ public class LintBaselineTest extends AbstractCheckTest {
         // Search for the same error once it's already been found: no longer there
         found = baseline.findAndMark(HardcodedValuesDetector.ISSUE,
                 Location.create(new File("res/layout/main.xml")),
-                "[I18N] Hardcoded string \"Fooo\", should use @string resource", Severity.WARNING,
+                "Hardcoded string \"Fooo\", should use @string resource", Severity.WARNING,
                 null);
         assertThat(found).isFalse();
         assertThat(baseline.getFoundWarningCount()).isEqualTo(1);
