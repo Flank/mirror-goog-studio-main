@@ -629,10 +629,6 @@ public class Main {
                 }
                 String path = args[++index];
                 File input = getInArgumentPath(path);
-                if (!input.exists()) {
-                    System.err.println("Library " + input + " does not exist.");
-                    exit(ERRNO_INVALID_ARGS);
-                }
                 flags.setBaselineFile(input);
             } else if (arg.equals(ARG_REMOVE_FIXED)) {
                 flags.setRemovedFixedBaselineIssues(true);

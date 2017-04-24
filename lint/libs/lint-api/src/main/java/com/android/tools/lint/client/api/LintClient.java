@@ -481,7 +481,8 @@ public abstract class LintClient {
     public File findResource(@NonNull String relativePath) {
         File top = getSdkHome();
         if (top == null) {
-            throw new IllegalArgumentException("Lint must be invoked with the System property "
+            throw new IllegalArgumentException("Lint must be invoked with "
+                    + "$ANDROID_HOME set to point to the SDK, or the System property "
                     + PROP_BIN_DIR + " pointing to the ANDROID_SDK tools directory");
         }
 

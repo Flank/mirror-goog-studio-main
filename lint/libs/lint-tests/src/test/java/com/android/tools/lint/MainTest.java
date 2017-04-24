@@ -16,6 +16,7 @@
 
 package com.android.tools.lint;
 
+import static com.android.tools.lint.LintCliFlags.ERRNO_CREATED_BASELINE;
 import static com.android.tools.lint.LintCliFlags.ERRNO_EXISTS;
 import static com.android.tools.lint.LintCliFlags.ERRNO_INVALID_ARGS;
 import static com.android.tools.lint.LintCliFlags.ERRNO_SUCCESS;
@@ -52,7 +53,9 @@ public class MainTest extends AbstractCheckTest {
             }
 
             assertEquals(expectedError, cleanup(error.toString()));
-            assertEquals(expectedOutput, cleanup(output.toString()));
+            if (expectedOutput != null) {
+                assertEquals(expectedOutput, cleanup(output.toString()));
+            }
             assertEquals(expectedExitCode, exitCode);
         } finally {
             System.setOut(previousOut);
@@ -362,6 +365,48 @@ public class MainTest extends AbstractCheckTest {
                 project.getPath()
         });
     }
+
+    public void testCreateBaseline() throws Exception {
+        File baseline = File.createTempFile("baseline", "xml");
+        //noinspection ResultOfMethodCallIgnored
+        baseline.delete(); // shouldn't exist
+        assertFalse(baseline.exists());
+        checkDriver(
+                // Expected output
+                null,
+
+                // Expected error
+                ""
+                        + "Created baseline file " + baseline.getPath() + "\n"
+                        + "\n"
+                        + "Also breaking the build in case this was not intentional. If you\n"
+                        + "deliberately created the baseline file, re-run the build and this\n"
+                        + "time it should succeed without warnings.\n"
+                        + "\n"
+                        + "If not, investigate the baseline path in the lintOptions config\n"
+                        + "or verify that the baseline file has been checked into version\n"
+                        + "control.\n"
+                        + "\n",
+
+                // Expected exit code
+                ERRNO_CREATED_BASELINE,
+
+                // Args
+                new String[]{
+                        "--check",
+                        "ContentDescription",
+                        "--baseline",
+                        baseline.getPath(),
+                        "--disable",
+                        "LintError",
+                        getProjectDir(null, mAccessibility).getPath()
+
+                });
+        assertTrue(baseline.exists());
+        //noinspection ResultOfMethodCallIgnored
+        baseline.delete();
+    }
+
 
     @Override
     protected Detector getDetector() {

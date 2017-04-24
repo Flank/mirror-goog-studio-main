@@ -69,7 +69,6 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.google.common.io.Closeables;
 import com.intellij.codeInsight.ExternalAnnotationsManager;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.util.Disposer;
@@ -176,19 +175,20 @@ public class LintCliClient extends LintClient {
             }
         }
 
+        File baselineFile = flags.getBaselineFile();
         if (!flags.isQuiet() && !hasConsoleOutput) {
             System.out.print(String.format("Lint found %1$s",
                     LintUtils.describeCounts(errorCount, warningCount, true, false)));
             if (baselineErrorCount > 0 || baselineWarningCount > 0) {
+                assert baselineFile != null;
                 System.out.print(String.format(" (%1$s filtered by baseline %2$s)",
                         LintUtils.describeCounts(stats.baselineErrorCount,
                                 stats.baselineWarningCount, true, true),
-                        flags.getBaselineFile().getName()));
+                        baselineFile.getName()));
             }
             System.out.println();
         }
 
-        File baselineFile = flags.getBaselineFile();
         if (baselineFile != null && !baselineFile.exists() && flags.isWriteBaselineIfMissing()) {
             File dir = baselineFile.getParentFile();
             boolean ok = true;
@@ -949,31 +949,25 @@ public class LintCliClient extends LintClient {
     @Override
     @Nullable
     public String getClientRevision() {
-        File file = findResource("tools" + File.separator +
-                "source.properties");
-        if (file != null && file.exists()) {
-            FileInputStream input = null;
-            try {
-                input = new FileInputStream(file);
-                Properties properties = new Properties();
-                properties.load(input);
+        try {
+            File file = findResource("tools" + File.separator +
+                    "source.properties");
+            if (file != null && file.exists()) {
+                try (FileInputStream input = new FileInputStream(file)) {
+                    Properties properties = new Properties();
+                    properties.load(input);
 
-                String revision = properties.getProperty("Pkg.Revision");
-                if (revision != null && !revision.isEmpty()) {
-                    return revision;
-                }
-            } catch (IOException e) {
-                // Couldn't find or read the version info: just print out unknown below
-            } finally {
-                try {
-                    Closeables.close(input, true /* swallowIOException */);
-                } catch (IOException e) {
-                    // cannot happen
+                    String revision = properties.getProperty("Pkg.Revision");
+                    if (revision != null && !revision.isEmpty()) {
+                        return revision;
+                    }
                 }
             }
+        } catch (Throwable ignore) {
+            // dev builds, tests, etc: fall through to unknown
         }
 
-        return null;
+        return "unknown";
     }
 
     @NonNull
