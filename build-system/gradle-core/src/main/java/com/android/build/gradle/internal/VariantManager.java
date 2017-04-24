@@ -18,6 +18,7 @@ package com.android.build.gradle.internal;
 
 import static com.android.builder.core.BuilderConstants.LINT;
 import static com.android.builder.core.VariantType.ANDROID_TEST;
+import static com.android.builder.core.VariantType.FEATURE;
 import static com.android.builder.core.VariantType.LIBRARY;
 import static com.android.builder.core.VariantType.UNIT_TEST;
 import static org.gradle.api.internal.artifacts.ArtifactAttributes.ARTIFACT_FORMAT;
@@ -1061,22 +1062,29 @@ public class VariantManager implements VariantModel {
                                         variantData.getScope().getJava8LangSupportType()));
 
                 if (variantFactory.hasTestScope()) {
-                    TestVariantData unitTestVariantData =
-                            createTestVariantData(variantData, UNIT_TEST);
-                    addVariant(unitTestVariantData);
-
                     if (buildTypeData == testBuildTypeData) {
                         variantForAndroidTest = variantData;
+                    }
+
+                    if (variantType != FEATURE) {
+                        // There's nothing special about unit testing the feature variant, so
+                        // there's no point creating the duplicate unit testing variant. This only
+                        // causes tests to run twice when running "testDebug".
+                        TestVariantData unitTestVariantData =
+                                createTestVariantData(variantData, UNIT_TEST);
+                        addVariant(unitTestVariantData);
                     }
                 }
             }
         }
 
         if (variantForAndroidTest != null) {
-            TestVariantData androidTestVariantData = createTestVariantData(
-                    variantForAndroidTest,
-                    ANDROID_TEST);
-            addVariant(androidTestVariantData);
+            // TODO: b/34624400
+            if (variantType != FEATURE) {
+                TestVariantData androidTestVariantData =
+                        createTestVariantData(variantForAndroidTest, ANDROID_TEST);
+                addVariant(androidTestVariantData);
+            }
         }
     }
 
