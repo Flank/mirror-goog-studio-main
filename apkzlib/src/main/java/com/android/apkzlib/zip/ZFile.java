@@ -687,7 +687,7 @@ public class ZFile implements Closeable {
          */
         int zip64LocatorStart = eocdStart - ZIP64_EOCD_LOCATOR_SIZE;
         if (zip64LocatorStart >= 0) {
-            byte possibleZip64Locator[] = new byte[4];
+            byte[] possibleZip64Locator = new byte[4];
             directFullyRead(zip64LocatorStart, possibleZip64Locator);
             if (LittleEndianUtils.readUnsigned4Le(ByteBuffer.wrap(possibleZip64Locator)) ==
                     ZIP64_EOCD_LOCATOR_SIGNATURE) {
@@ -788,7 +788,7 @@ public class ZFile implements Closeable {
                     return -1;
                 }
 
-                byte b[] = new byte[1];
+                byte[] b = new byte[1];
                 int r = directRead(mCurr, b);
                 if (r > 0) {
                     mCurr++;
@@ -1875,7 +1875,7 @@ public class ZFile implements Closeable {
                     throw new IOException("Cannot read source with " + sourceSize + " bytes.");
                 }
 
-                byte data[] = new byte[Ints.checkedCast(sourceSize)];
+                byte[] data = new byte[Ints.checkedCast(sourceSize)];
                 int read = 0;
                 while (read < data.length) {
                     int r = fromInput.read(data, read, data.length - read);
