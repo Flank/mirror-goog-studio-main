@@ -46,7 +46,6 @@ import static com.android.tools.lint.client.api.JavaParser.TYPE_FLOAT;
 import static com.android.tools.lint.client.api.JavaParser.TYPE_INT;
 import static com.android.tools.lint.client.api.JavaParser.TYPE_LONG;
 import static com.android.tools.lint.client.api.JavaParser.TYPE_STRING;
-import static com.android.tools.lint.detector.api.LintUtils.findSubstring;
 import static com.android.tools.lint.detector.api.LintUtils.getAutoBoxedType;
 import static com.android.tools.lint.detector.api.ResourceEvaluator.COLOR_INT_ANNOTATION;
 import static com.android.tools.lint.detector.api.ResourceEvaluator.PX_ANNOTATION;
@@ -64,13 +63,12 @@ import com.android.tools.lint.detector.api.ExternalReferenceExpression;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.TextFormat;
 import com.android.tools.lint.detector.api.UastLintUtils;
 import com.google.common.base.Joiner;
-import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -91,6 +89,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -666,8 +665,11 @@ public class AnnotationDetector extends Detector implements UastScanner {
                             String message = String.format(
                                     "Consider declaring this constant using 1 << %1$d instead",
                                     shift);
+                            String replace = String.format(Locale.ROOT, "1%s << %d",
+                                    o instanceof Long ? "L" : "", shift);
+                            LintFix fix = fix().replace().with(replace).build();
                             Location location = mContext.getLocation(initializer);
-                            mContext.report(FLAG_STYLE, initializer, location, message);
+                            mContext.report(FLAG_STYLE, initializer, location, message, fix);
                         }
                     }
                 }
@@ -806,8 +808,9 @@ public class AnnotationDetector extends Detector implements UastScanner {
                                 // Keep error message in sync with {@link #getMissingCases}
                                 String message = "Unexpected constant; expected one of: " + Joiner
                                         .on(", ").join(list);
+                                LintFix fix = fix().data(list);
                                 Location location = mContext.getNameLocation(caseValue);
-                                mContext.report(SWITCH_TYPE_DEF, caseValue, location, message);
+                                mContext.report(SWITCH_TYPE_DEF, caseValue, location, message, fix);
                             }
                         }
                     }
@@ -850,8 +853,9 @@ public class AnnotationDetector extends Detector implements UastScanner {
                     // Keep error message in sync with {@link #getMissingCases}
                     String message = "Switch statement on an `int` with known associated constant "
                             + "missing case " + Joiner.on(", ").join(list);
+                    LintFix fix = fix().data(list);
                     Location location = mContext.getLocation(mSwitchExpression.getSwitchIdentifier());
-                    mContext.report(SWITCH_TYPE_DEF, mSwitchExpression, location, message);
+                    mContext.report(SWITCH_TYPE_DEF, mSwitchExpression, location, message, fix);
                 }
             }
         }
@@ -912,30 +916,6 @@ public class AnnotationDetector extends Detector implements UastScanner {
         }
         Collections.sort(list);
         return list;
-    }
-
-    /**
-     * Given an error message produced by this lint detector for the {@link #SWITCH_TYPE_DEF} issue
-     * type, returns the list of missing enum cases. <p> Intended for IDE quickfix implementations.
-     *
-     * @param errorMessage the error message associated with the error
-     * @param format       the format of the error message
-     * @return the list of enum cases, or null if not recognized
-     */
-    @Nullable
-    public static List<String> getMissingCases(@NonNull String errorMessage,
-            @NonNull TextFormat format) {
-        errorMessage = format.toText(errorMessage);
-
-        String substring = findSubstring(errorMessage, " missing case ", null);
-        if (substring == null) {
-            substring = findSubstring(errorMessage, "expected one of: ", null);
-        }
-        if (substring != null) {
-            return Splitter.on(",").trimResults().splitToList(substring);
-        }
-
-        return null;
     }
 
     /**

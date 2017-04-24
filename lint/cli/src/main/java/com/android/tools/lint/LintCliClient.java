@@ -690,7 +690,7 @@ public class LintCliClient extends LintClient {
                 report(new Context(driver, project, project, project.getDir()),
                         IssueRegistry.LINT_ERROR,
                         project.getConfiguration(driver).getSeverity(IssueRegistry.LINT_ERROR),
-                        location, message, TextFormat.RAW, LintFix.create().map(id).build());
+                        location, message, TextFormat.RAW, LintFix.create().data(id));
             }
         } else {
             log(Severity.ERROR, null, "Lint: %1$s", message);

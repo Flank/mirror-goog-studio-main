@@ -16,7 +16,12 @@
 
 package com.android.tools.lint.checks.infrastructure;
 
+import static com.android.SdkConstants.ANDROID_NS_NAME;
+import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.AUTO_URI;
 import static com.android.SdkConstants.DOT_XML;
+import static com.android.SdkConstants.TOOLS_URI;
+import static com.android.SdkConstants.XMLNS_PREFIX;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -28,6 +33,9 @@ import com.android.ide.common.xml.XmlPrettyPrinter;
 import com.android.testutils.TestUtils;
 import com.android.tools.lint.Warning;
 import com.android.tools.lint.detector.api.LintFix;
+import com.android.tools.lint.detector.api.LintFix.DataMap;
+import com.android.tools.lint.detector.api.LintFix.GroupType;
+import com.android.tools.lint.detector.api.LintFix.LintFixGroup;
 import com.android.tools.lint.detector.api.LintFix.ReplaceString;
 import com.android.tools.lint.detector.api.LintFix.SetAttribute;
 import com.android.tools.lint.detector.api.Location;
@@ -37,6 +45,7 @@ import com.android.utils.XmlUtils;
 import com.google.common.collect.Lists;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -135,8 +144,14 @@ public class LintFixVerifier {
         for (Warning warning : warnings) {
             LintFix data = warning.quickfixData;
             List<LintFix> list;
-            if (data instanceof LintFix.LintFixGroup) {
-                list = ((LintFix.LintFixGroup) data).fixes;
+            if (data instanceof LintFixGroup) {
+                LintFixGroup group = (LintFixGroup) data;
+                if (group.type == GroupType.COMPOSITE) {
+                    // separated out again in applyFix
+                    list = Collections.singletonList(data);
+                } else {
+                    list = group.fixes;
+                }
             } else {
                 list = Collections.singletonList(data);
             }
@@ -150,23 +165,21 @@ public class LintFixVerifier {
                 String before = file.getContents();
                 assertNotNull(file.getTargetPath(), before);
 
+                if (lintFix instanceof DataMap && diffs != null) {
+                    // Doesn't edit file, but include in diffs so fixes can verify the
+                    // correct data is passed
+                    appendDataMap(warning, (DataMap)lintFix, diffs);
+                }
+
                 String after;
                 Boolean reformat = this.reformat;
-                if (lintFix instanceof ReplaceString) {
-                    ReplaceString replaceFix = (ReplaceString) lintFix;
-                    after = checkReplaceString(replaceFix, warning, before);
-                } else if (lintFix instanceof SetAttribute) {
-                    SetAttribute setFix = (SetAttribute) lintFix;
-                    after = checkSetAttribute(setFix, before, warning);
-                    if (reformat == null) {
-                        reformat = true;
-                    }
-                } else {
+                after = applyFix(warning, lintFix, before);
+                if (after == null) {
                     continue;
                 }
 
-                if (after == null) {
-                    continue;
+                if (reformat == null && haveSetAttribute(lintFix)) {
+                    reformat = true;
                 }
 
                 if (expectedFile != null) {
@@ -200,6 +213,46 @@ public class LintFixVerifier {
         }
     }
 
+    @Nullable
+    private static String applyFix(
+            @NonNull Warning warning,
+            @NonNull LintFix lintFix,
+            @NonNull String before) {
+        if (lintFix instanceof ReplaceString) {
+            ReplaceString replaceFix = (ReplaceString) lintFix;
+            return checkReplaceString(replaceFix, warning, before);
+        } else if (lintFix instanceof SetAttribute) {
+            SetAttribute setFix = (SetAttribute) lintFix;
+            return checkSetAttribute(setFix, before, warning);
+        } else if (lintFix instanceof LintFixGroup &&
+                ((LintFixGroup)lintFix).type == GroupType.COMPOSITE) {
+            for (LintFix nested : ((LintFixGroup) lintFix).fixes) {
+                String after = applyFix(warning, nested, before);
+                if (after == null) {
+                    return null;
+                }
+                before = after;
+            }
+            return before;
+        }
+        return null;
+    }
+
+    @Nullable
+    private static boolean haveSetAttribute(@NonNull LintFix lintFix) {
+        if (lintFix instanceof SetAttribute) {
+            return true;
+        } else if (lintFix instanceof LintFixGroup &&
+                ((LintFixGroup)lintFix).type == GroupType.COMPOSITE) {
+            for (LintFix nested : ((LintFixGroup) lintFix).fixes) {
+                if (haveSetAttribute(nested)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     private static String checkSetAttribute(
             @NonNull SetAttribute setFix,
             @NonNull String contents,
@@ -230,9 +283,10 @@ public class LintFixVerifier {
             }
             Element element = (Element) node;
             String value = setFix.value;
+            String namespace = setFix.namespace;
             if (value == null) {
-                if (setFix.namespace != null) {
-                    element.removeAttributeNS(setFix.namespace,
+                if (namespace != null) {
+                    element.removeAttributeNS(namespace,
                             setFix.attribute);
                 } else {
                     element.removeAttribute(setFix.attribute);
@@ -254,18 +308,32 @@ public class LintFixVerifier {
                     }
                 }
 
-                if (setFix.namespace != null) {
+                if (namespace != null) {
                     // Workaround for the fact that the namespace-setter method
                     // doesn't seem to work on these documents
-                    String prefix = document.lookupPrefix(setFix.namespace);
-                    if (prefix != null) {
-                        element.setAttribute(prefix + ":"
-                                + setFix.attribute, value);
-                    } else {
-                        element.setAttributeNS(setFix.namespace,
-                                setFix.attribute,
-                                value);
+                    String prefix = document.lookupPrefix(namespace);
+                    if (prefix == null) {
+                        String base = "ns";
+                        if (ANDROID_URI.equals(namespace)) {
+                            base = ANDROID_NS_NAME;
+                        } else if (TOOLS_URI.equals(namespace)) {
+                            base = "tools";
+                        } else if (AUTO_URI.equals(namespace)) {
+                            base = "app";
+                        }
+                        Element root = document.getDocumentElement();
+                        int index = 1;
+                        while (true) {
+                            prefix = base + (index == 1 ? "" : Integer.toString(index));
+                            if (!root.hasAttribute(XMLNS_PREFIX + prefix)) {
+                                break;
+                            }
+                            index++;
+                        }
+                        root.setAttribute(XMLNS_PREFIX + prefix, namespace);
                     }
+
+                    element.setAttribute(prefix + ":" + setFix.attribute, value);
                 } else {
                     element.setAttribute(setFix.attribute, value);
                 }
@@ -331,18 +399,44 @@ public class LintFixVerifier {
             @NonNull Warning warning,
             @Nullable String fixDescription,
             @NonNull String before,
-            @Nullable String after,
-            @Nullable StringBuilder diffs) {
-        if (after != null && diffs != null) {
-            String diff = TestUtils.getDiff(before, after, diffWindow);
-            if (!diff.isEmpty()) {
-                String targetPath = warning.path;
-                diffs.append("Fix for ").append(targetPath).append(" line ")
-                        .append(warning.line).append(": ");
-                if (fixDescription != null) {
-                    diffs.append(fixDescription).append(":\n");
-                }
-                diffs.append(diff);
+            @NonNull String after,
+            @NonNull StringBuilder diffs) {
+        String diff = TestUtils.getDiff(before, after, diffWindow);
+        if (!diff.isEmpty()) {
+            String targetPath = warning.path;
+            diffs.append("Fix for ").append(targetPath).append(" line ")
+                    .append(warning.line).append(": ");
+            if (fixDescription != null) {
+                diffs.append(fixDescription).append(":\n");
+            }
+            diffs.append(diff);
+        }
+    }
+
+    private static void appendDataMap(@NonNull Warning warning, @NonNull DataMap map,
+            @NonNull StringBuilder diffs) {
+        String targetPath = warning.path;
+        diffs.append("Data for ").append(targetPath).append(" line ")
+                .append(warning.line).append(": ");
+        String fixDescription = map.getDisplayName();
+        if (fixDescription != null) {
+            diffs.append(fixDescription).append(":\n");
+        }
+        List<Object> keys = Lists.newArrayList(map.keys());
+        keys.sort(Comparator.comparing(Object::toString));
+        for (Object key : keys) {
+            diffs.append("  ");
+            if (key instanceof Class<?>) {
+                diffs.append(((Class<?>)key).getSimpleName());
+            } else {
+                assert key instanceof String;
+                diffs.append(key.toString());
+            }
+            diffs.append(" : ");
+            if (key instanceof Class<?>) {
+                diffs.append(map.get((Class<?>)key));
+            } else {
+                diffs.append(map.get(key.toString()));
             }
         }
     }

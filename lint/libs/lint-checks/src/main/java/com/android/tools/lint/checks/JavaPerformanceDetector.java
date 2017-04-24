@@ -41,7 +41,6 @@ import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.TextFormat;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import com.intellij.psi.PsiElement;
@@ -516,24 +515,8 @@ public class JavaPerformanceDetector extends Detector implements Detector.UastSc
     }
 
     private static String getUseValueOfErrorMessage(String typeName, String argument) {
-        // Keep in sync with {@link #getReplacedType} below
         return String.format("Use `%1$s.valueOf(%2$s)` instead",
                 typeName.substring(typeName.lastIndexOf('.') + 1), argument);
-    }
-
-    /**
-     * For an error message for an {@link #USE_VALUE_OF} issue reported by this detector,
-     * returns the type being replaced. Intended to use for IDE quickfix implementations.
-     */
-    @SuppressWarnings("unused") // Used by the IDE
-    @Nullable
-    public static String getReplacedType(@NonNull String message, @NonNull TextFormat format) {
-        message = format.toText(message);
-        int index = message.indexOf('.');
-        if (index != -1 && message.startsWith("Use ")) {
-            return message.substring(4, index);
-        }
-        return null;
     }
 
     /** Visitor which records variable names assigned into */

@@ -85,6 +85,7 @@ import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
@@ -92,7 +93,6 @@ import com.android.tools.lint.detector.api.ResourceContext;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.TextFormat;
 import com.android.tools.lint.detector.api.UastLintUtils;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.intellij.psi.CommonClassNames;
@@ -126,8 +126,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import org.jetbrains.uast.UAnnotation;
 import org.jetbrains.uast.UBinaryExpression;
 import org.jetbrains.uast.UBinaryExpressionWithType;
@@ -474,7 +472,8 @@ public class ApiDetector extends ResourceXmlDetector
                                             + Character.toLowerCase(message.charAt(0))
                                             + message.substring(1);
                                 }
-                                context.report(UNSUPPORTED, attribute, location, message);
+                                context.report(UNSUPPORTED, attribute, location, message,
+                                        apiLevelFix(attributeApiLevel));
                             }
                         }
                     } else {
@@ -483,7 +482,8 @@ public class ApiDetector extends ResourceXmlDetector
                                 "Attribute `%1$s` is only used in API level %2$d and higher "
                                         + "(current min is %3$d)",
                                 attribute.getLocalName(), attributeApiLevel, minSdk);
-                        context.report(UNUSED, attribute, location, message);
+                        context.report(UNUSED, attribute, location, message,
+                                apiLevelFix(attributeApiLevel));
                     }
                 }
             }
@@ -505,7 +505,7 @@ public class ApiDetector extends ResourceXmlDetector
                     String message = String.format(
                       "Attribute `android:theme` is only used by `<include>` tags in API level 23 and higher "
                       + "(current min is %1$d)", minSdk);
-                    context.report(UNUSED, attribute, location, message);
+                    context.report(UNUSED, attribute, location, message, apiLevelFix(23));
                 }
             }
         }
@@ -527,9 +527,8 @@ public class ApiDetector extends ResourceXmlDetector
                     String message;
                     message = String.format(
                             "Using theme references in XML drawables requires API level %1$d "
-                                    + "(current min is %2$d)", api,
-                            minSdk);
-                    context.report(UNSUPPORTED, attribute, location, message);
+                                    + "(current min is %2$d)", api, minSdk);
+                    context.report(UNSUPPORTED, attribute, location, message, apiLevelFix(api));
                     // Don't flag individual theme attribute requirements here, e.g. once
                     // we've told you that you need at least v21 to reference themes, we don't
                     // need to also tell you that ?android:selectableItemBackground requires
@@ -591,15 +590,20 @@ public class ApiDetector extends ResourceXmlDetector
                                 + "that attribute `%4$s` is only used in API level %5$d "
                                 + "and higher",
                         name, api, minSdk, attributeName, attributeApiLevel);
-                context.report(UNSUPPORTED, attribute, location, message);
+                context.report(UNSUPPORTED, attribute, location, message, apiLevelFix(api));
             } else {
                 Location location = context.getLocation(attribute);
                 String message = String.format(
                         "`%1$s` requires API level %2$d (current min is %3$d)",
                         value, api, minSdk);
-                context.report(UNSUPPORTED, attribute, location, message);
+                context.report(UNSUPPORTED, attribute, location, message, apiLevelFix(api));
             }
         }
+    }
+
+    @NonNull
+    private static LintFix apiLevelFix(int api) {
+        return fix().data(api);
     }
 
     /**
@@ -716,7 +720,8 @@ public class ApiDetector extends ResourceXmlDetector
                                     String message = String.format(
                                             "`%1$s` requires API level %2$d (current min is %3$d)",
                                             text, api, minSdk);
-                                    context.report(UNSUPPORTED, element, location, message);
+                                    context.report(UNSUPPORTED, element, location, message,
+                                            apiLevelFix(api));
                                 }
                             }
                         }
@@ -752,7 +757,7 @@ public class ApiDetector extends ResourceXmlDetector
                 String message = String.format(
                         "View requires API level %1$d (current min is %2$d): `<%3$s>`",
                         api, minSdk, tag);
-                context.report(UNSUPPORTED, element, location, message);
+                context.report(UNSUPPORTED, element, location, message, apiLevelFix(api));
             }
         }
     }
@@ -782,7 +787,8 @@ public class ApiDetector extends ResourceXmlDetector
                                     "Attribute `%1$s` is only used in API level %2$d and higher "
                                             + "(current min is %3$d)",
                                     attribute.getLocalName(), attributeApiLevel, minSdk);
-                            context.report(UNUSED, attribute, location, message);
+                            context.report(UNUSED, attribute, location, message,
+                                    apiLevelFix(attributeApiLevel));
                         }
                     }
                 }
@@ -833,7 +839,7 @@ public class ApiDetector extends ResourceXmlDetector
                             "`<%1$s>` is only used in API level %2$d and higher "
                                     + "(current min is %3$d)", tag, api, minSdk);
                 }
-                context.report(issue, element, location, message);
+                context.report(issue, element, location, message, apiLevelFix(api));
             }
         }
     }
@@ -878,7 +884,7 @@ public class ApiDetector extends ResourceXmlDetector
                             "The pattern character '%1$c' requires API level 9 (current " +
                                     "min is %2$d) : \"`%3$s`\"", c, minSdk, pattern);
                     context.report(UNSUPPORTED, call, context.getRangeLocation(argument,
-                            i + 1, 1), message);
+                            i + 1, 1), message, apiLevelFix(9));
                     return;
                 }
             }
@@ -1117,7 +1123,7 @@ public class ApiDetector extends ResourceXmlDetector
             String message = String.format(
                 "Method reference requires API level %1$d (current min is %2$d): %3$s", api,
                 Math.max(minSdk, getTargetApi(expression)), signature);
-            mContext.report(UNSUPPORTED, expression, location, message);
+            mContext.report(UNSUPPORTED, expression, location, message, apiLevelFix(api));
         }
 
         @Override
@@ -1181,7 +1187,7 @@ public class ApiDetector extends ResourceXmlDetector
                             + "(current min is %4$d)",
                     classType.getClassName(),
                     interfaceType.getClassName(), api, Math.max(minSdk, getTargetApi(node)));
-            mContext.report(UNSUPPORTED, node, location, message);
+            mContext.report(UNSUPPORTED, node, location, message, apiLevelFix(api));
         }
 
         @Override
@@ -1203,7 +1209,7 @@ public class ApiDetector extends ResourceXmlDetector
                                         ? "Default" : "Static interface ",
                                 api,
                                 Math.max(minSdk, getTargetApi(method)));
-                        mContext.report(UNSUPPORTED, method, location, message);
+                        mContext.report(UNSUPPORTED, method, location, message, apiLevelFix(api));
                     }
                 }
             }
@@ -1290,7 +1296,8 @@ public class ApiDetector extends ResourceXmlDetector
                                 String message = String.format("Repeatable annotation requires "
                                         + "API level %1$d (current min is %2$d)", api,
                                         Math.max(minSdk, getTargetApi(aClass)));
-                                mContext.report(UNSUPPORTED, annotation, location, message);
+                                mContext.report(UNSUPPORTED, annotation, location, message,
+                                        apiLevelFix(api));
                             }
                         } else if ("java.lang.annotation.Target".equals(name)) {
                             PsiNameValuePair[] attributes = annotation.getParameterList()
@@ -1382,7 +1389,7 @@ public class ApiDetector extends ResourceXmlDetector
                     "%1$s requires API level %2$d (current min is %3$d): %4$s",
                     descriptor == null ? "Class" : descriptor, api,
                     Math.max(minSdk, getTargetApi(element)), fqcn);
-            mContext.report(UNSUPPORTED, element, location, message);
+            mContext.report(UNSUPPORTED, element, location, message, apiLevelFix(api));
         }
 
         private void checkAnnotationTarget(@NonNull PsiAnnotationMemberValue element,
@@ -1454,7 +1461,7 @@ public class ApiDetector extends ResourceXmlDetector
                         }
                     }
                 }
-                mContext.report(UNSUPPORTED, statement, location, message);
+                mContext.report(UNSUPPORTED, statement, location, message, apiLevelFix(api));
             }
         }
 
@@ -1751,7 +1758,7 @@ public class ApiDetector extends ResourceXmlDetector
                     "Call requires API level %1$d (current min is %2$d): %3$s", api,
                     Math.max(minSdk, getTargetApi(expression)), signature);
 
-            mContext.report(UNSUPPORTED, expression, location, message);
+            mContext.report(UNSUPPORTED, expression, location, message, apiLevelFix(api));
         }
 
         // Look for @RequiresApi in modifier lists
@@ -1793,7 +1800,8 @@ public class ApiDetector extends ResourceXmlDetector
                             String message = String.format(
                                 "Call requires API level %1$d (current min is %2$d): `%3$s`",
                                 api, Math.max(minSdk, getTargetApi(expression)), fqcn);
-                            mContext.report(UNSUPPORTED, expression, location, message);
+                            mContext.report(UNSUPPORTED, expression, location, message,
+                                    apiLevelFix(api));
                         }
                     }
 
@@ -1871,7 +1879,7 @@ public class ApiDetector extends ResourceXmlDetector
                     String message = String.format("Try-with-resources requires "
                             + "API level %1$d (current min is %2$d)", api,
                             Math.max(minSdk, getTargetApi(statement)));
-                    mContext.report(UNSUPPORTED, statement, location, message);
+                    mContext.report(UNSUPPORTED, statement, location, message, apiLevelFix(api));
                 }
             }
 
@@ -1889,7 +1897,9 @@ public class ApiDetector extends ResourceXmlDetector
                                     "As a workaround either create individual catch statements, or catch `Exception`.",
                             minSdk);
 
-                    mContext.report(UNSUPPORTED, statement, getCatchParametersLocation(mContext, catchClause), message);
+                    mContext.report(UNSUPPORTED, statement,
+                            getCatchParametersLocation(mContext, catchClause), message,
+                            apiLevelFix(19));
                     continue;
                 }
 
@@ -1932,7 +1942,7 @@ public class ApiDetector extends ResourceXmlDetector
                 String fqcn = resolved.getQualifiedName();
                 String message = String.format("Class requires API level %1$d (current min is %2$d): %3$s",
                         api, minSdk, fqcn);
-                mContext.report(UNSUPPORTED, location, message);
+                mContext.report(UNSUPPORTED, location, message, apiLevelFix(api));
             }
         }
 
@@ -2025,7 +2035,7 @@ public class ApiDetector extends ResourceXmlDetector
                     }
 
                     Location location = mContext.getLocation(locationNode);
-                    mContext.report(issue, node, location, message);
+                    mContext.report(issue, node, location, message, apiLevelFix(api));
                 }
             }
         }
@@ -2132,22 +2142,6 @@ public class ApiDetector extends ResourceXmlDetector
         return -1;
     }
 
-    public static int getRequiredVersion(@NonNull Issue issue, @NonNull String errorMessage,
-            @NonNull TextFormat format) {
-        errorMessage = format.toText(errorMessage);
-
-        if (issue == UNSUPPORTED || issue == INLINED) {
-            Pattern pattern = Pattern.compile("\\s(\\d+)\\s");
-            Matcher matcher = pattern.matcher(errorMessage);
-            if (matcher.find()) {
-                return Integer.parseInt(matcher.group(1));
-            }
-        }
-
-        return -1;
-    }
-
-
     protected void checkObsoleteSdkVersion(@NonNull JavaContext context,
             @NonNull UElement node) {
         UBinaryExpression binary = UastUtils.getParentOfType(node,
@@ -2158,7 +2152,7 @@ public class ApiDetector extends ResourceXmlDetector
             if (isConditional != null) {
                 String message = (isConditional ? "Unnecessary; SDK_INT is always >= " : "Unnecessary; SDK_INT is never < ") + minSdk;
                 context.report(OBSOLETE_SDK, binary, context.getLocation(binary),
-                        message, fix().map(isConditional).build());
+                        message, fix().data(isConditional));
             }
         }
     }
@@ -2179,7 +2173,7 @@ public class ApiDetector extends ResourceXmlDetector
                             + "`minSdkVersion` is %2$s. Merge all the resources in this folder "
                             + "into `%3$s`.",
                             folderVersion, minSdkVersion.getApiString(), newFolderName),
-                    fix().map(context.file, newFolderName, minSdkVersion).build());
+                    fix().data(context.file, newFolderName, minSdkVersion));
         }
     }
 

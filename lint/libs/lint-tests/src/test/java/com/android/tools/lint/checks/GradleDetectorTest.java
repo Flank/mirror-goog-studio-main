@@ -294,7 +294,8 @@ public class GradleDetectorTest extends AbstractCheckTest {
                         + "Fix for build.gradle line 28: Change to 0.5:\n"
                         + "@@ -29 +29\n"
                         + "-     androidTestCompile 'com.android.support.test:runner:0.3'\n"
-                        + "+     androidTestCompile 'com.android.support.test:runner:0.5'\n");
+                        + "+     androidTestCompile 'com.android.support.test:runner:0.5'\n"
+                        + "Data for build.gradle line 22:   GradleCoordinate : com.android.support:appcompat-v7:+");
     }
 
     public void testVersionsFromGradleCache() {

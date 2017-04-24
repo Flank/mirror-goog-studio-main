@@ -688,7 +688,7 @@ public class TestLintClient extends LintCliClient {
 
         if (task.messageChecker != null) {
             task.messageChecker.checkReportedError(context, issue, severity,
-                    location, format.convertTo(message, TextFormat.TEXT));
+                    location, format.convertTo(message, TextFormat.TEXT), fix);
         }
 
         if (severity == Severity.FATAL) {

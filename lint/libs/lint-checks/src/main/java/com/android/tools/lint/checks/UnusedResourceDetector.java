@@ -24,7 +24,6 @@ import static com.android.SdkConstants.DOT_JAVA;
 import static com.android.SdkConstants.DOT_XML;
 import static com.android.SdkConstants.TOOLS_PREFIX;
 import static com.android.SdkConstants.XMLNS_PREFIX;
-import static com.android.tools.lint.detector.api.LintUtils.findSubstring;
 import static com.android.utils.SdkUtils.endsWithIgnoreCase;
 import static com.google.common.base.Charsets.UTF_8;
 
@@ -48,6 +47,7 @@ import com.android.tools.lint.detector.api.Detector.XmlScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
@@ -55,7 +55,6 @@ import com.android.tools.lint.detector.api.ResourceContext;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.TextFormat;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.android.utils.XmlUtils;
 import com.google.common.collect.Lists;
@@ -66,6 +65,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -259,8 +259,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements UastS
                             // Process folders in alphabetical order such that we process
                             // based folders first: we want the locations in base folder
                             // order
-                            Collections.sort(folders,
-                                    (file1, file2) -> file1.getName().compareTo(file2.getName()));
+                            folders.sort(Comparator.comparing(File::getName));
                             for (File folder : folders) {
                                 if (folder.getName().startsWith(type.getName())) {
                                     File[] files = folder.listFiles();
@@ -312,13 +311,14 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements UastS
                         }
                     }
 
-                    // Keep in sync with getUnusedResource() below
+                    String field = resource.getField();
                     String message = String.format("The resource `%1$s` appears to be unused",
-                            resource.getField());
+                            field);
                     if (location == null) {
                         location = Location.create(context.getProject().getDir());
                     }
-                    context.report(getIssue(resource), location, message);
+                    LintFix fix = fix().data(field);
+                    context.report(getIssue(resource), location, message, fix);
                 }
             }
         }
@@ -448,21 +448,6 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements UastS
                 }
             }
         }
-    }
-
-    /**
-     * Given an error message created by this lint check, return the corresponding
-     * resource field name for the resource that is described as unused.
-     * (Intended to support quickfix implementations for this lint check.)
-     *
-     * @param errorMessage the error message originally produced by this detector
-     * @param format the format of the error message
-     * @return the corresponding resource field name, e.g. {@code R.string.foo}
-     */
-    @Nullable
-    public static String getUnusedResource(@NonNull String errorMessage, @NonNull TextFormat format) {
-        errorMessage = format.toText(errorMessage);
-        return findSubstring(errorMessage, "The resource ", " appears ");
     }
 
     private static Issue getIssue(@NonNull Resource resource) {

@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.intellij.lang.annotations.Language;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
@@ -61,6 +62,19 @@ public class LintFix {
         return displayName;
     }
 
+    /**
+     * Convenience wrapper which checks whether the given fix is a map, and
+     * if so returns the value stored by its key
+     */
+    @Nullable
+    public static <T> T getData(@Nullable LintFix fix, @NonNull Class<T> key) {
+        if (fix instanceof DataMap) {
+            return ((DataMap)fix).get(key);
+        }
+
+        return null;
+    }
+
     /** Builder for creating various types of fixes */
     public static class Builder {
         @Nls protected String displayName;
@@ -85,7 +99,38 @@ public class LintFix {
          */
         @SuppressWarnings("MethodMayBeStatic")
         public GroupBuilder group() {
-            return new GroupBuilder();
+            return new GroupBuilder(displayName).type(GroupType.ALTERNATIVES);
+        }
+
+        /**
+         * Creates a composite fix: multiple lint fixes which will all be applied as
+         * a single unit.
+         * <p>
+         * <b>NOTE:</b> Be careful combining multiple fixes that are potentially overlapping,
+         * such as replace strings.
+         *
+         * The test infrastructure may not apply these correctly. This is primarily
+         * intended for fixes that are clearly separate, such as setting multiple attributes.
+         */
+        @SuppressWarnings("MethodMayBeStatic")
+        public GroupBuilder composite() {
+            return new GroupBuilder(displayName).type(GroupType.COMPOSITE);
+        }
+
+        /**
+         * Creates a composite fix: multiple lint fixes which will all be applied as
+         * a single unit.
+         * <p>
+         * <b>NOTE:</b> Be careful combining multiple fixes that are potentially overlapping,
+         * such as replace strings.
+         *
+         * The test infrastructure may not apply these correctly. This is primarily
+         * intended for fixes that are clearly separate, such as setting multiple attributes.
+         */
+        @SuppressWarnings("MethodMayBeStatic")
+        public LintFix composite(LintFix... fixes) {
+            return new GroupBuilder(displayName).type(GroupType.COMPOSITE)
+                    .join(fixes).build();
         }
 
         /**
@@ -97,7 +142,7 @@ public class LintFix {
          */
         @SuppressWarnings("MethodMayBeStatic")
         public LintFix group(LintFix... fixes) {
-            return new GroupBuilder().join(fixes).build();
+            return new GroupBuilder(displayName).join(fixes).build();
         }
 
         /**
@@ -116,10 +161,31 @@ public class LintFix {
             return new SetAttributeBuilder(displayName);
         }
 
+        /**
+         * Clear an attribute
+         * @return a set attribute builder
+         */
+        public SetAttributeBuilder unset() {
+            return new SetAttributeBuilder(displayName).value(null);
+        }
+
+        /**
+         * Sets a specific attribute
+         * @return a set attribute builder
+         */
         public SetAttributeBuilder set(@Nullable String namespace, @NonNull String attribute,
                 @Nullable String value) {
             return new SetAttributeBuilder(displayName).namespace(namespace)
                     .attribute(attribute).value(value);
+        }
+
+        /**
+         * Sets a specific attribute
+         * @return a set attribute builder
+         */
+        public SetAttributeBuilder unset(@Nullable String namespace, @NonNull String attribute) {
+            return new SetAttributeBuilder(displayName).namespace(namespace)
+                    .attribute(attribute).value(null);
         }
 
         /**
@@ -141,14 +207,42 @@ public class LintFix {
 
             return builder;
         }
+
+        /**
+         * Passes one or more pieces of data; this will be transferred as a map
+         * behind the scenes. This is a convenience wrapper around
+         * {@link #map()} and {@link FixMapBuilder#build()}.
+         *
+         * @return a fix
+         */
+        @NonNull
+        public LintFix data(@NonNull Object... args) {
+            return map(args).build();
+        }
     }
 
     /** Builder for constructing a group of fixes */
     public static class GroupBuilder {
-        private List<LintFix> list = Lists.newArrayListWithExpectedSize(4);
+        @Nls private String displayName;
+        private GroupType type = GroupType.ALTERNATIVES;
+        private final List<LintFix> list = Lists.newArrayListWithExpectedSize(4);
 
         /** Constructed from {@link Builder#set()} */
-        private GroupBuilder() { }
+        private GroupBuilder(String displayName) {
+            this.displayName = displayName;
+        }
+
+        /**
+         * Sets display name. If not supplied a default will be created based on the
+         * type of quickfix.
+         *
+         * @param displayName the display name
+         * @return this
+         */
+        public GroupBuilder name(String displayName) {
+            this.displayName = displayName;
+            return this;
+        }
 
         /** Adds the given fixes to this group */
         public GroupBuilder join(@NonNull LintFix... fixes) {
@@ -162,11 +256,16 @@ public class LintFix {
             return this;
         }
 
+        public GroupBuilder type(@NonNull GroupType type) {
+            this.type = type;
+            return this;
+        }
+
         /** Construct a {@link LintFix} for this group of fixes */
         @NonNull
         public LintFix build() {
             assert !list.isEmpty();
-            return new LintFixGroup(list);
+            return new LintFixGroup(displayName, type, list);
         }
     }
 
@@ -403,6 +502,15 @@ public class LintFix {
                 return this;
             }
             Class<?> key = value.getClass();
+            // Simplify keys such that you don't end up with ArrayList, HashMap etc
+            // when you passed in something just typed List, Map, Set, etc
+            if (value instanceof List) {
+                key = List.class;
+            } else if (value instanceof Map) {
+                key = Map.class;
+            } else if (value instanceof Set) {
+                key = Set.class;
+            }
             assert !map.containsKey(key);
             map.put(key, value);
             return this;
@@ -460,10 +568,29 @@ public class LintFix {
             return map.values().iterator();
         }
 
+        /** Returns the keys */
+        public Set<Object> keys() {
+            return map.keySet();
+        }
+
         @Override
         public String toString() {
             return map.toString();
         }
+    }
+
+    /** Captures the various types of a {@link LintFixGroup} */
+    public enum GroupType {
+        /**
+         * This group represents a single fix where all the fixes should be applied
+         * as one
+         */
+        COMPOSITE,
+
+        /**
+         * This group represents separate fix alternatives the user can choose between
+         */
+        ALTERNATIVES
     }
 
     /**
@@ -474,11 +601,33 @@ public class LintFix {
      */
     public static class LintFixGroup extends LintFix {
         /** A list of fixes */
-        public final List<LintFix> fixes;
+        @NonNull public final List<LintFix> fixes;
 
-        public LintFixGroup(List<LintFix> fixes) {
-            super(null);
+        /** The type of group */
+        @NonNull public final GroupType type;
+
+        public LintFixGroup(@Nullable String displayName, @NonNull GroupType type,
+                @NonNull List<LintFix> fixes) {
+            super(displayName);
+            this.type = type;
             this.fixes = fixes;
+        }
+
+        @Nls
+        @Nullable
+        @Override
+        public String getDisplayName() {
+            // For composites, we can display the name of one of the actions
+            if (displayName == null && type == GroupType.COMPOSITE) {
+                for (LintFix fix : fixes) {
+                    String name = fix.getDisplayName();
+                    if (name != null) {
+                        return name;
+                    }
+                }
+            }
+
+            return displayName;
         }
     }
 

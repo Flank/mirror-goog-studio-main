@@ -39,6 +39,7 @@ import com.android.tools.lint.client.api.LintListener;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
@@ -904,6 +905,7 @@ public class TestLintTask {
                 @NonNull Issue issue,
                 @NonNull Severity severity,
                 @NonNull Location location,
-                @NonNull String message);
+                @NonNull String message,
+                @NonNull LintFix fixData);
     }
 }

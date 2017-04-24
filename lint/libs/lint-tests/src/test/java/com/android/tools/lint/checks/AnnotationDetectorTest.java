@@ -16,19 +16,8 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.checks.AnnotationDetector.SWITCH_TYPE_DEF;
-import static com.android.tools.lint.checks.AnnotationDetector.getMissingCases;
-import static com.android.tools.lint.detector.api.TextFormat.TEXT;
-
-import com.android.annotations.NonNull;
-import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.Location;
-import com.android.tools.lint.detector.api.Severity;
-import com.android.tools.lint.detector.api.TextFormat;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 @SuppressWarnings({"javadoc", "ClassNameDiffersFromFileName", "UnnecessaryLocalVariable",
@@ -155,7 +144,7 @@ public class AnnotationDetectorTest extends AbstractCheckTest {
 
     @SuppressWarnings("ClassNameDiffersFromFileName")
     public void testFlagStyle() throws Exception {
-        assertEquals(""
+        String expected = ""
                 + "src/test/pkg/IntDefTest.java:13: Warning: Consider declaring this constant using 1 << 44 instead [ShiftFlags]\n"
                 + "    public static final long FLAG5 = 0x100000000000L;\n"
                 + "                                     ~~~~~~~~~~~~~~~\n"
@@ -165,61 +154,91 @@ public class AnnotationDetectorTest extends AbstractCheckTest {
                 + "src/test/pkg/IntDefTest.java:15: Warning: Consider declaring this constant using 1 << 3 instead [ShiftFlags]\n"
                 + "    public static final long FLAG7 = 8L;\n"
                 + "                                     ~~\n"
-                + "0 errors, 3 warnings\n",
-                lintProject(
-                        java("src/test/pkg/IntDefTest.java", ""
-                                + "package test.pkg;\n"
-                                + "import android.support.annotation.IntDef;\n"
-                                + "\n"
-                                + "import java.lang.annotation.Retention;\n"
-                                + "import java.lang.annotation.RetentionPolicy;\n"
-                                + "\n"
-                                + "@SuppressWarnings(\"unused\")\n"
-                                + "public class IntDefTest {\n"
-                                + "    public static final long FLAG1 = 1;\n"
-                                + "    public static final long FLAG2 = 2;\n"
-                                + "    public static final long FLAG3 = 1 << 2;\n"
-                                + "    public static final long FLAG4 = 1 << 3;\n"
-                                + "    public static final long FLAG5 = 0x100000000000L;\n"
-                                + "    public static final long FLAG6 = 0x0002000000000000L;\n"
-                                + "    public static final long FLAG7 = 8L;\n"
-                                + "    public static final long FLAG8 = 9L;\n"
-                                + "    public static final long FLAG9 = 0;\n"
-                                + "    public static final long FLAG10 = 1;\n"
-                                + "    public static final long FLAG11 = -1;\n"
-                                + "\n"
-                                // Not a flag (missing flag=true)
-                                + "    @IntDef({FLAG1, FLAG2, FLAG3})\n"
-                                + "    @Retention(RetentionPolicy.SOURCE)\n"
-                                + "    private @interface Flags1 {}\n"
-                                + "\n"
-                                // OK: Too few values
-                                + "    @IntDef(flag = true, value={FLAG1, FLAG2})\n"
-                                + "    @Retention(RetentionPolicy.SOURCE)\n"
-                                + "    private @interface Flags2 {}\n"
-                                + "\n"
-                                // OK: Allow 0, 1, -1
-                                + "    @IntDef(flag = true, value={FLAG9, FLAG10, FLAG11})\n"
-                                + "    @Retention(RetentionPolicy.SOURCE)\n"
-                                + "    private @interface Flags3 {}\n"
-                                + "\n"
-                                // OK: Already using shifts
-                                + "    @IntDef(flag = true, value={FLAG1, FLAG3, FLAG4})\n"
-                                + "    @Retention(RetentionPolicy.SOURCE)\n"
-                                + "    private @interface Flags4 {}\n"
-                                + "\n"
-                                // Wrong: should be flagged
-                                + "    @IntDef(flag = true, value={FLAG5, FLAG6, FLAG7, FLAG8})\n"
-                                + "    @Retention(RetentionPolicy.SOURCE)\n"
-                                + "    private @interface Flags5 {}\n"
-                                + "\n"
-                                // Repeated: make sure we don't flag initializers twice!
-                                + "    @IntDef(flag = true, value={FLAG5, FLAG6, FLAG7, FLAG8})\n"
-                                + "    @Retention(RetentionPolicy.SOURCE)\n"
-                                + "    private @interface Flags6 {}\n"
-                                + "}"),
-                        mSupportClasspath,
-                        mSupportJar));
+                + "src/test/pkg/IntDefTest.java:20: Warning: Consider declaring this constant using 1 << 4 instead [ShiftFlags]\n"
+                + "    public static final int  FLAG12 = 0x10;\n"
+                + "                                      ~~~~\n"
+                + "0 errors, 4 warnings\n";
+        //noinspection all // Sample code
+        lint().files(
+                java("src/test/pkg/IntDefTest.java", ""
+                        + "package test.pkg;\n"
+                        + "import android.support.annotation.IntDef;\n"
+                        + "\n"
+                        + "import java.lang.annotation.Retention;\n"
+                        + "import java.lang.annotation.RetentionPolicy;\n"
+                        + "\n"
+                        + "@SuppressWarnings(\"unused\")\n"
+                        + "public class IntDefTest {\n"
+                        + "    public static final long FLAG1 = 1;\n"
+                        + "    public static final long FLAG2 = 2;\n"
+                        + "    public static final long FLAG3 = 1 << 2;\n"
+                        + "    public static final long FLAG4 = 1 << 3;\n"
+                        + "    public static final long FLAG5 = 0x100000000000L;\n"
+                        + "    public static final long FLAG6 = 0x0002000000000000L;\n"
+                        + "    public static final long FLAG7 = 8L;\n"
+                        + "    public static final long FLAG8 = 9L;\n"
+                        + "    public static final long FLAG9 = 0;\n"
+                        + "    public static final long FLAG10 = 1;\n"
+                        + "    public static final long FLAG11 = -1;\n"
+                        + "    public static final int  FLAG12 = 0x10;\n"
+                        + "    public static final int  FLAG13 = 1 << 1;\n"
+                        + "    public static final int  FLAG14 = 1 << 2;\n"
+                        + "\n"
+                        // Not a flag (missing flag=true)
+                        + "    @IntDef({FLAG1, FLAG2, FLAG3})\n"
+                        + "    @Retention(RetentionPolicy.SOURCE)\n"
+                        + "    private @interface Flags1 {}\n"
+                        + "\n"
+                        // OK: Too few values
+                        + "    @IntDef(flag = true, value={FLAG1, FLAG2})\n"
+                        + "    @Retention(RetentionPolicy.SOURCE)\n"
+                        + "    private @interface Flags2 {}\n"
+                        + "\n"
+                        // OK: Allow 0, 1, -1
+                        + "    @IntDef(flag = true, value={FLAG9, FLAG10, FLAG11})\n"
+                        + "    @Retention(RetentionPolicy.SOURCE)\n"
+                        + "    private @interface Flags3 {}\n"
+                        + "\n"
+                        // OK: Already using shifts
+                        + "    @IntDef(flag = true, value={FLAG1, FLAG3, FLAG4})\n"
+                        + "    @Retention(RetentionPolicy.SOURCE)\n"
+                        + "    private @interface Flags4 {}\n"
+                        + "\n"
+                        // Wrong: should be flagged
+                        + "    @IntDef(flag = true, value={FLAG5, FLAG6, FLAG7, FLAG8})\n"
+                        + "    @Retention(RetentionPolicy.SOURCE)\n"
+                        + "    private @interface Flags5 {}\n"
+                        + "\n"
+                        // Repeated: make sure we don't flag initializers twice!
+                        + "    @IntDef(flag = true, value={FLAG5, FLAG6, FLAG7, FLAG8})\n"
+                        + "    @Retention(RetentionPolicy.SOURCE)\n"
+                        + "    private @interface Flags6 {}\n"
+                        + "\n"
+                        + "    @IntDef(flag = true, value={FLAG12, FLAG13, FLAG14})\n"
+                        + "    @Retention(RetentionPolicy.SOURCE)\n"
+                        + "    private @interface Flags7 {}\n"
+                        + "}"),
+                mSupportClasspath,
+                mSupportJar)
+                .run()
+                .expect(expected)
+                .expectFixDiffs(""
+                        + "Fix for src/test/pkg/IntDefTest.java line 12: Replace with 1L << 44:\n"
+                        + "@@ -13 +13\n"
+                        + "-     public static final long FLAG5 = 0x100000000000L;\n"
+                        + "+     public static final long FLAG5 = 1L << 44;\n"
+                        + "Fix for src/test/pkg/IntDefTest.java line 13: Replace with 1L << 49:\n"
+                        + "@@ -14 +14\n"
+                        + "-     public static final long FLAG6 = 0x0002000000000000L;\n"
+                        + "+     public static final long FLAG6 = 1L << 49;\n"
+                        + "Fix for src/test/pkg/IntDefTest.java line 14: Replace with 1L << 3:\n"
+                        + "@@ -15 +15\n"
+                        + "-     public static final long FLAG7 = 8L;\n"
+                        + "+     public static final long FLAG7 = 1L << 3;\n"
+                        + "Fix for src/test/pkg/IntDefTest.java line 19: Replace with 1 << 4:\n"
+                        + "@@ -20 +20\n"
+                        + "-     public static final int  FLAG12 = 0x10;\n"
+                        + "+     public static final int  FLAG12 = 1 << 4;\n");
     }
 
     public void testMissingIntDefSwitchConstants() throws Exception {
@@ -408,17 +427,6 @@ public class AnnotationDetectorTest extends AbstractCheckTest {
                                 + "        }\n"
                                 + "    }\n"
                                 + "}\n")));
-    }
-
-    public void testGetEnumCases() {
-        assertEquals(
-                Arrays.asList("LENGTH_INDEFINITE", "LENGTH_SHORT", "LENGTH_LONG"),
-                getMissingCases("Don't use a constant here; expected one of: LENGTH_INDEFINITE, LENGTH_SHORT, LENGTH_LONG",
-                        TextFormat.TEXT));
-        assertEquals(
-                Collections.singletonList("LENGTH_SHORT"),
-                getMissingCases("Switch statement on an int with known associated constant missing case LENGTH_SHORT",
-                                TextFormat.TEXT));
     }
 
     public void testUnexpectedSwitchConstant() throws Exception {
@@ -648,15 +656,6 @@ public class AnnotationDetectorTest extends AbstractCheckTest {
                         mSupportClasspath,
                         mSupportJar
                 ));
-    }
-
-    @Override
-    protected void checkReportedError(@NonNull Context context, @NonNull Issue issue,
-            @NonNull Severity severity, @NonNull Location location, @NonNull String message) {
-        if (issue == SWITCH_TYPE_DEF) {
-            assertNotNull("Could not extract message tokens from " + message,
-                    getMissingCases(message, TEXT));
-        }
     }
 
     @Override
