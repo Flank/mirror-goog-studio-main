@@ -117,7 +117,6 @@ public class AbstractCompilesUtil {
                             && !processorConfiguration.getAllDependencies().isEmpty();
             if (variantScope.getGlobalScope().getExtension().getDataBinding().isEnabled()
                     || hasAnnotationProcessor
-                    || project.getPlugins().hasPlugin(ANDROID_APT_PLUGIN_NAME)
                     || project.getPlugins().hasPlugin("me.tatarka.retrolambda")) {
                 incremental = false;
                 log.verbose("Incremental Java compilation disabled in variant %1$s "
