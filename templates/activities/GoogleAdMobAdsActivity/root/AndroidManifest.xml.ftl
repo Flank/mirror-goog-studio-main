@@ -1,3 +1,4 @@
+<#import "../../common/shared_manifest_macros.ftl" as manifestMacros>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" >
 
     <!-- Include required permissions for Google Mobile Ads to run. -->
@@ -20,12 +21,7 @@
             <meta-data android:name="android.support.PARENT_ACTIVITY"
                 android:value="${parentActivityClass}" />
             </#if>
-            <#if isLauncher && !(isLibraryProject!false)>
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-            </#if>
+            <@manifestMacros.commonActivityBody />
         </activity>
         <!--Include the AdActivity configChanges and theme. -->
         <activity android:name="com.google.android.gms.ads.AdActivity"
