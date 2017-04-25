@@ -62,7 +62,7 @@ public class TextReporterTest extends AbstractCheckTest {
             warning1.location.setSecondary(secondary);
 
             Warning warning2 = new Warning(HardcodedValuesDetector.ISSUE,
-                    "[I18N] Hardcoded string \"Fooo\", should use @string resource",
+                    "Hardcoded string \"Fooo\", should use @string resource",
                     Severity.WARNING, project);
             warning2.line = 11;
             warning2.file = new File("/foo/bar/Foo/res/layout/main.xml");
@@ -92,7 +92,7 @@ public class TextReporterTest extends AbstractCheckTest {
                     + "    <uses-sdk android:minSdkVersion=\"8\" />\n"
                     + "    ^\n"
                     + "    AndroidManifest.xml:8: Secondary location\n"
-                    + "res/layout/main.xml:12: Warning: [I18N] Hardcoded string \"Fooo\", should use @string resource [HardcodedText]\n"
+                    + "res/layout/main.xml:12: Warning: Hardcoded string \"Fooo\", should use @string resource [HardcodedText]\n"
                     + "        android:text=\"Fooo\" />\n"
                     + "        ~~~~~~~~~~~~~~~~~~~\n"
                     + "    AndroidManifest.xml:8: Secondary location\n"
@@ -135,7 +135,7 @@ public class TextReporterTest extends AbstractCheckTest {
             warning1.location.setSecondary(secondary);
 
             Warning warning2 = new Warning(HardcodedValuesDetector.ISSUE,
-                    "[I18N] Hardcoded string \"Fooo\", should use @string resource",
+                    "Hardcoded string \"Fooo\", should use @string resource",
                     Severity.WARNING, project);
             warning2.line = 11;
             warning2.file = new File("/foo/bar/Foo/res/layout/main.xml");
@@ -192,7 +192,7 @@ public class TextReporterTest extends AbstractCheckTest {
                     + "\n"
                     + "   http://developer.android.com/guide/topics/manifest/uses-sdk-element.html\n"
                     + "\n"
-                    + "res/layout/main.xml:12: Warning: [I18N] Hardcoded string \"Fooo\", should use @string resource [HardcodedText]\n"
+                    + "res/layout/main.xml:12: Warning: Hardcoded string \"Fooo\", should use @string resource [HardcodedText]\n"
                     + "        android:text=\"Fooo\" />\n"
                     + "        ~~~~~~~~~~~~~~~~~~~\n"
                     + "    AndroidManifest.xml:8: Secondary location\n"
