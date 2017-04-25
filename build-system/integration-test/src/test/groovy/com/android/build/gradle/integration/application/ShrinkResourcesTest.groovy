@@ -270,7 +270,7 @@ res/layout/used21.xml"""
         //noinspection SpellCheckingInspection
         uncompressed =
                 project.file(
-                        "abisplits/build/intermediates/res/release/resources-arm64-v8a-release.ap_")
+                        "abisplits/build/intermediates/res/release/resources-arm64-v8aRelease.ap_")
         assertTrue(compressed.toString() + " is not a file", compressed.isFile())
         assertTrue(uncompressed.toString() + " is not a file", uncompressed.isFile())
         //noinspection SpellCheckingInspection

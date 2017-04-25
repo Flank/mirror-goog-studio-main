@@ -168,7 +168,8 @@ public class FeatureTest {
         // Check that the base feature resource package is built properly.
         try (ZipFileSubject baseFeatureResources =
                 assertThatZip(
-                        baseProject.getIntermediateFile("res/feature/debug/resources-debug.ap_"))) {
+                        baseProject.getIntermediateFile(
+                                "res/feature/debug/resources-debugFeature.ap_"))) {
             baseFeatureResources.exists();
             baseFeatureResources.contains("AndroidManifest.xml");
             baseFeatureResources.contains("resources.arsc");
