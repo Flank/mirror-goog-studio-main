@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.Set;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -70,6 +71,7 @@ public class DexArchiveMergerTest {
     }
 
     @Test
+    @Ignore("http://b/37655702")
     public void test_monoDex_twoDexMerging() throws Exception {
         Path fstArchive =
                 DexArchiveTestUtil.createClassesAndConvertToDexArchive(
