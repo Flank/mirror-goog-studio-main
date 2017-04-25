@@ -49,6 +49,8 @@ import com.verifier.tests.RemoveClassAnnotation;
 import com.verifier.tests.RemoveInterfaceImplementation;
 import com.verifier.tests.RemoveMethodAnnotation;
 import com.verifier.tests.RemoveNotRuntimeClassAnnotation;
+import com.verifier.tests.StaticInitializerAdded;
+import com.verifier.tests.StaticInitializerRemoved;
 import com.verifier.tests.UnchangedClass;
 import com.verifier.tests.UnchangedClassInitializer1;
 import java.io.IOException;
@@ -461,5 +463,23 @@ public class InstantRunVerifierTest {
     public void testClassWithObjectTypePrefix() throws IOException {
         InstantRunVerifierStatus changes = harness.verify(AnyClassWithMethodInvocation.class, null);
         assertEquals(COMPATIBLE, changes);
+    }
+
+    @Test
+    public void testStaticInitializerRemoved() throws IOException {
+        // not changing a field type should be ok.
+        assertEquals(COMPATIBLE, harness.verify(StaticInitializerRemoved.class, null));
+        assertEquals(
+                InstantRunVerifierStatus.METHOD_DELETED,
+                harness.verify(StaticInitializerRemoved.class, "verifier"));
+    }
+
+    @Test
+    public void testStaticInitializerAdded() throws IOException {
+        // not changing a field type should be ok.
+        assertEquals(COMPATIBLE, harness.verify(StaticInitializerAdded.class, null));
+        assertEquals(
+                InstantRunVerifierStatus.METHOD_ADDED,
+                harness.verify(StaticInitializerAdded.class, "verifier"));
     }
 }
