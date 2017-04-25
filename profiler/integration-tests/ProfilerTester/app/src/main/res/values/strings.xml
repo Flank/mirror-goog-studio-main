@@ -1,4 +1,36 @@
 <resources>
     <string name="app_name">ProfilerTester</string>
     <string name="action_settings">Settings</string>
+
+
+    <string-array name="category_array">
+        <item>CPU</item>
+        <item>MEMORY</item>
+        <item>NETWORK</item>
+        <item>EVENT</item>
+    </string-array>
+
+    <string-array name="cpu_array">
+        <item>Periodic Usage</item>
+        <item>Running State</item>
+        <item>Sleeping State</item>
+        <item>Waiting State</item>
+    </string-array>
+
+    <string-array name="memory_array">
+        <item>Java Memory Allocation</item>
+        <item>Native Memory Allocation</item>
+    </string-array>
+
+    <string-array name="network_array">
+        <item>Http Request</item>
+        <item>OkHttp Request</item>
+    </string-array>
+
+    <string-array name="event_array">
+        <item>Tap Screen</item>
+        <item>Rotate Screen</item>
+        <item>Type words</item>
+    </string-array>
+
 </resources>
