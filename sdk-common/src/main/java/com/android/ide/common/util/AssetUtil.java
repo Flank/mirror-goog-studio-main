@@ -55,9 +55,33 @@ public class AssetUtil {
     }
 
     /**
+     * Return the scaling factor to apply to the <code>source</code> rectangle so that its width or
+     * height is equal to the width or height of <code>destination</code> rectangle, while remaining
+     * contained within <code>destination</code>.
+     */
+    public static float getRectangleInsideScale(
+            @NonNull Rectangle source, @NonNull Rectangle destination) {
+        float scaleWidth = (float) destination.width / (float) source.width;
+        float scaleHeight = (float) destination.height / (float) source.height;
+        return Math.min(scaleWidth, scaleHeight);
+    }
+
+    /**
+     * Return the scaling factor to apply to the <code>source</code> rectangle so that its width or
+     * height is equal to the width or height of <code>destination</code> rectangle so that
+     * destination is fully contained insde <code>source</code>.
+     */
+    public static float getRectangleOutsideScale(
+            @NonNull Rectangle source, @NonNull Rectangle destination) {
+        float scaleWidth = (float) destination.width / (float) source.width;
+        float scaleHeight = (float) destination.height / (float) source.height;
+        return Math.max(scaleWidth, scaleHeight);
+    }
+
+    /**
      * Creates a new ARGB {@link BufferedImage} of the given width and height.
      *
-     * @param width  The width of the new image.
+     * @param width The width of the new image.
      * @param height The height of the new image.
      * @return The newly created image.
      */
@@ -462,6 +486,21 @@ public class AssetUtil {
                     scaledHeight,
                     null);
         }
+    }
+
+    /**
+     * Draws the given {@link BufferedImage} to the canvas, centered, wholly contained within the
+     * bounds defined by the destination rectangle, and with preserved aspect ratio.
+     *
+     * @param g The destination canvas.
+     * @param source The source image.
+     * @param dstRect The destination rectangle in the destination canvas into which to draw the
+     *     image.
+     */
+    public static void drawCentered(Graphics2D g, BufferedImage source, Rectangle imageRect) {
+        int w = source.getWidth();
+        int h = source.getHeight();
+        g.drawImage(source, (imageRect.width - w) / 2, (imageRect.height - h) / 2, w, h, null);
     }
 
     /**

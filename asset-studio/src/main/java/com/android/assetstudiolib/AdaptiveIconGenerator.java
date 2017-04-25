@@ -41,23 +41,12 @@ import java.util.concurrent.Callable;
 /** A {@link GraphicGenerator} that generates Android adaptive icons. */
 public class AdaptiveIconGenerator extends GraphicGenerator {
 
-    private static final Rectangle IMAGE_SIZE_WEB = new Rectangle(0, 0, 512, 512);
-    private static final Rectangle IMAGE_SIZE_FULL_BLEED = new Rectangle(0, 0, 108, 108);
-    private static final Rectangle IMAGE_SIZE_VIEWPORT = new Rectangle(0, 0, 72, 72);
-    private static final Rectangle IMAGE_SIZE_LEGACY = new Rectangle(0, 0, 48, 48);
-    private static final Rectangle IMAGE_SIZE_SAFE_ZONE = new Rectangle(0, 0, 66, 66);
-    // The offset of the target rect in side the safe zone rect
-    private static final int SAFE_ZONE_TARGET_RECT_OFFSET = 2;
-
-    // The target zone inside the safe zone rectangle inside the full bleed layer
-    private static final Rectangle IMAGE_SIZE_FULL_BLEED_TARGET_RECT =
-            new Rectangle(
-                    SAFE_ZONE_TARGET_RECT_OFFSET
-                            + (IMAGE_SIZE_FULL_BLEED.width - IMAGE_SIZE_SAFE_ZONE.width) / 2,
-                    SAFE_ZONE_TARGET_RECT_OFFSET
-                            + (IMAGE_SIZE_FULL_BLEED.height - IMAGE_SIZE_SAFE_ZONE.height) / 2,
-                    IMAGE_SIZE_SAFE_ZONE.width - 2 * SAFE_ZONE_TARGET_RECT_OFFSET,
-                    IMAGE_SIZE_SAFE_ZONE.height - 2 * SAFE_ZONE_TARGET_RECT_OFFSET);
+    private static final Rectangle IMAGE_SIZE_VIEW_PORT_WEB_PX = new Rectangle(0, 0, 512, 512);
+    private static final Rectangle IMAGE_SIZE_FULL_BLEED_WEB_PX = new Rectangle(0, 0, 768, 768);
+    private static final Rectangle IMAGE_SIZE_FULL_BLEED_DP = new Rectangle(0, 0, 108, 108);
+    private static final Rectangle IMAGE_SIZE_VIEWPORT_DP = new Rectangle(0, 0, 72, 72);
+    private static final Rectangle IMAGE_SIZE_LEGACY_DP = new Rectangle(0, 0, 48, 48);
+    private static final Rectangle IMAGE_SIZE_SAFE_ZONE_DP = new Rectangle(0, 0, 66, 66);
 
     /**
      * Scaling images with {@link AssetUtil#scaledImage(BufferedImage, int, int)} is time consuming
@@ -86,23 +75,17 @@ public class AdaptiveIconGenerator extends GraphicGenerator {
         private static class Key {
             @NonNull private final BufferedImage image;
             @NonNull private final Dimension imageRectSize;
-            @NonNull private final Dimension targetSize;
-            private final boolean crop;
             private final boolean useFillColor;
             private final int fillColor;
 
             public Key(
                     @NonNull BufferedImage image,
                     @NonNull Dimension imageRectSize,
-                    @NonNull Dimension targetSize,
-                    boolean crop,
                     boolean useFillColor,
                     int fillColor) {
 
                 this.image = image;
                 this.imageRectSize = imageRectSize;
-                this.targetSize = targetSize;
-                this.crop = crop;
                 this.useFillColor = useFillColor;
                 this.fillColor = fillColor;
             }
@@ -112,8 +95,6 @@ public class AdaptiveIconGenerator extends GraphicGenerator {
                 return Objects.hash(
                         this.image,
                         this.imageRectSize,
-                        this.targetSize,
-                        this.crop,
                         this.useFillColor,
                         this.fillColor);
             }
@@ -126,8 +107,6 @@ public class AdaptiveIconGenerator extends GraphicGenerator {
                 Key other = (Key) obj;
                 return Objects.equals(this.image, other.image)
                         && Objects.equals(this.imageRectSize, other.imageRectSize)
-                        && Objects.equals(this.targetSize, other.targetSize)
-                        && this.crop == other.crop
                         && this.useFillColor == other.useFillColor
                         && this.fillColor == other.fillColor;
             }
@@ -137,37 +116,32 @@ public class AdaptiveIconGenerator extends GraphicGenerator {
         public BufferedImage getOrCreate(
                 @NonNull BufferedImage image,
                 @NonNull Dimension imageRectSize,
-                @NonNull Dimension targetSize,
-                boolean crop,
                 boolean useFillColor,
                 int fillColor,
                 Callable<BufferedImage> generator) {
-            Key key = new Key(image, imageRectSize, targetSize, crop, useFillColor, fillColor);
+            Key key = new Key(image, imageRectSize, useFillColor, fillColor);
 
-            // Initial lookup attempt
             synchronized (lock) {
+                // Initial lookup attempt
                 BufferedImage value = map.get(key);
                 if (value != null) {
                     return value;
                 }
-            }
 
-            // Value not present, create it
-            BufferedImage value;
-            try {
-                value = generator.call();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-            assert value != null;
+                // Value not present, create it
+                try {
+                    value = generator.call();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+                assert value != null;
 
-            // Store new value
-            synchronized (lock) {
+                // Store new value
                 if (!map.containsKey(key)) {
                     map.put(key, value);
                 }
+                return value;
             }
-            return value;
         }
     }
 
@@ -213,21 +187,43 @@ public class AdaptiveIconGenerator extends GraphicGenerator {
             @NonNull String name,
             @NonNull AdaptiveIconOptions options,
             @NonNull List<Callable<GeneratedIcon>> tasks) {
+        if (!options.generateOutputIcons) {
+            return;
+        }
         for (Density density :
                 new Density[] {
                     Density.MEDIUM, Density.HIGH, Density.XHIGH, Density.XXHIGH, Density.XXXHIGH
                 }) {
             AdaptiveIconOptions localOptions = cloneOptions(options);
             localOptions.density = density;
-            localOptions.isWebGraphic = false;
             localOptions.showGrid = false;
             localOptions.showSafeZone = false;
 
-            createOutputIconsTasks(imageCache, name, localOptions, density, tasks);
+            createOutputIconsForSingleDensityTasks(imageCache, name, localOptions, density, tasks);
+        }
+
+        if (options.generateWebIcon) {
+            tasks.add(
+                    () -> {
+                        AdaptiveIconOptions localOptions = cloneOptions(options);
+                        localOptions.showGrid = false;
+                        localOptions.showSafeZone = false;
+                        localOptions.generateWebIcon = true;
+                        localOptions.generateOutputIcons = true;
+                        localOptions.generatePreviewIcons = false;
+                        localOptions.legacyIconShape = localOptions.webIconShape;
+                        BufferedImage image = generateLegacyImage(imageCache, localOptions);
+                        return new GeneratedImageIcon(
+                                name,
+                                Paths.get(getIconPath(localOptions, name)),
+                                IconCategory.WEB,
+                                Density.NODPI,
+                                image);
+                    });
         }
     }
 
-    private void createOutputIconsTasks(
+    private void createOutputIconsForSingleDensityTasks(
             @NonNull ImageCache imageCache,
             @NonNull String name,
             @NonNull AdaptiveIconOptions options,
@@ -235,11 +231,18 @@ public class AdaptiveIconGenerator extends GraphicGenerator {
             @NonNull List<Callable<GeneratedIcon>> tasks) {
         tasks.add(
                 () -> {
+                    AdaptiveIconOptions foregroundOptions = cloneOptions(options);
+                    foregroundOptions.generateWebIcon = false;
+                    foregroundOptions.generatePreviewIcons = false;
+                    foregroundOptions.generateOutputIcons = true;
                     BufferedImage foregroundImage =
-                            generateAdaptiveIconForegroundLayer(imageCache, options);
+                            generateAdaptiveIconForegroundLayer(imageCache, foregroundOptions);
                     return new GeneratedImageIcon(
-                            options.foregroundLayerName,
-                            Paths.get(getIconPath(options, options.foregroundLayerName)),
+                            foregroundOptions.foregroundLayerName,
+                            Paths.get(
+                                    getIconPath(
+                                            foregroundOptions,
+                                            foregroundOptions.foregroundLayerName)),
                             IconCategory.ADAPTIVE_FOREGROUND_LAYER,
                             density,
                             foregroundImage);
@@ -249,52 +252,72 @@ public class AdaptiveIconGenerator extends GraphicGenerator {
         if (backgroundIsImage(options)) {
             tasks.add(
                     () -> {
+                        AdaptiveIconOptions backgroundOptions = cloneOptions(options);
+                        backgroundOptions.generateWebIcon = false;
+                        backgroundOptions.generatePreviewIcons = false;
+                        backgroundOptions.generateOutputIcons = true;
                         BufferedImage backgroundImage =
-                                generateAdaptiveIconBackgroundLayer(imageCache, options);
+                                generateAdaptiveIconBackgroundLayer(imageCache, backgroundOptions);
                         return new GeneratedImageIcon(
-                                options.backgroundLayerName,
-                                Paths.get(getIconPath(options, options.backgroundLayerName)),
+                                backgroundOptions.backgroundLayerName,
+                                Paths.get(
+                                        getIconPath(
+                                                backgroundOptions,
+                                                backgroundOptions.backgroundLayerName)),
                                 IconCategory.ADAPTIVE_BACKGROUND_LAYER,
                                 density,
                                 backgroundImage);
                     });
         }
 
-        tasks.add(
-                () -> {
-                    AdaptiveIconOptions legacyOptions = cloneOptions(options);
-                    legacyOptions.previewShape = PreviewShape.LEGACY;
-                    BufferedImage legacy = generateLegacyPreviewImage(imageCache, legacyOptions);
-                    return new GeneratedImageIcon(
-                            name,
-                            Paths.get(getIconPath(legacyOptions, name)),
-                            IconCategory.LEGACY,
-                            density,
-                            legacy);
-                });
+        if (options.generateLegacyIcon) {
+            tasks.add(
+                    () -> {
+                        AdaptiveIconOptions legacyOptions = cloneOptions(options);
+                        legacyOptions.previewShape = PreviewShape.LEGACY;
+                        legacyOptions.generateWebIcon = false;
+                        legacyOptions.generatePreviewIcons = false;
+                        legacyOptions.generateOutputIcons = true;
+                        BufferedImage legacy = generateLegacyImage(imageCache, legacyOptions);
+                        return new GeneratedImageIcon(
+                                name,
+                                Paths.get(getIconPath(legacyOptions, name)),
+                                IconCategory.LEGACY,
+                                density,
+                                legacy);
+                    });
+        }
 
-        tasks.add(
-                () -> {
-                    AdaptiveIconOptions legacyOptions = cloneOptions(options);
-                    legacyOptions.previewShape = PreviewShape.LEGACY_ROUND;
-                    BufferedImage legacyRound =
-                            generateLegacyPreviewImage(imageCache, legacyOptions);
-                    return new GeneratedImageIcon(
-                            name + "_round",
-                            Paths.get(getIconPath(legacyOptions, name + "_round")),
-                            IconCategory.ROUND_API_25,
-                            density,
-                            legacyRound);
-                });
+        if (options.generateRoundIcon) {
+            tasks.add(
+                    () -> {
+                        AdaptiveIconOptions legacyOptions = cloneOptions(options);
+                        legacyOptions.previewShape = PreviewShape.LEGACY_ROUND;
+                        legacyOptions.generateWebIcon = false;
+                        legacyOptions.generatePreviewIcons = false;
+                        legacyOptions.generateOutputIcons = true;
+                        legacyOptions.legacyIconShape = Shape.CIRCLE;
+                        BufferedImage legacyRound = generateLegacyImage(imageCache, legacyOptions);
+                        return new GeneratedImageIcon(
+                                name + "_round",
+                                Paths.get(getIconPath(legacyOptions, name + "_round")),
+                                IconCategory.ROUND_API_25,
+                                density,
+                                legacyRound);
+                    });
+        }
     }
 
     private void createXmlDrawableResourcesTasks(
             @NonNull String name,
             @NonNull AdaptiveIconOptions options,
             @NonNull List<Callable<GeneratedIcon>> tasks) {
+        if (!options.generateOutputIcons) {
+            return;
+        }
         AdaptiveIconOptions xmlOptions = cloneOptions(options);
         xmlOptions.density = Density.ANYDPI;
-        xmlOptions.isWebGraphic = false;
+        xmlOptions.generateWebIcon = false;
 
         tasks.add(
                 () -> {
@@ -322,7 +345,7 @@ public class AdaptiveIconGenerator extends GraphicGenerator {
                     () -> {
                         AdaptiveIconGenerator.AdaptiveIconOptions iconPathOptions =
                                 cloneOptions(xmlOptions);
-                        iconPathOptions.isWebGraphic = false;
+                        iconPathOptions.generateWebIcon = false;
                         iconPathOptions.density = Density.ANYDPI;
                         iconPathOptions.iconFolderKind = IconFolderKind.VALUES;
 
@@ -378,29 +401,43 @@ public class AdaptiveIconGenerator extends GraphicGenerator {
 
     private static void createPreviewImagesTasks(
             @NonNull ImageCache imageCache,
-            @NonNull AdaptiveIconOptions adaptiveIconOptions,
+            @NonNull AdaptiveIconOptions options,
             @NonNull List<Callable<GeneratedIcon>> tasks) {
-        for (PreviewShape shape :
-                new PreviewShape[] {
-                    PreviewShape.FULL_BLEED,
-                    PreviewShape.SQUIRCLE,
-                    PreviewShape.CIRCLE,
-                    PreviewShape.SQUARE,
-                    PreviewShape.ROUNDED_SQUARE,
-                    PreviewShape.LEGACY_ROUND,
-                    PreviewShape.LEGACY
-                }) {
+        if (!options.generatePreviewIcons) {
+            return;
+        }
+
+        List<PreviewShape> previewShapes = new ArrayList<>();
+        previewShapes.add(PreviewShape.FULL_BLEED);
+        previewShapes.add(PreviewShape.SQUIRCLE);
+        previewShapes.add(PreviewShape.CIRCLE);
+        previewShapes.add(PreviewShape.SQUARE);
+        previewShapes.add(PreviewShape.ROUNDED_SQUARE);
+        if (options.generateLegacyIcon) {
+            previewShapes.add(PreviewShape.LEGACY);
+        }
+        if (options.generateRoundIcon) {
+            previewShapes.add(PreviewShape.LEGACY_ROUND);
+        }
+        if (options.generateWebIcon) {
+            previewShapes.add(PreviewShape.WEB);
+        }
+
+        for (PreviewShape previewShape : previewShapes) {
             tasks.add(
                     () -> {
-                        AdaptiveIconOptions localOptions = cloneOptions(adaptiveIconOptions);
-                        localOptions.density = adaptiveIconOptions.previewDensity;
-                        localOptions.previewShape = shape;
-                        localOptions.isWebGraphic = false;
+                        AdaptiveIconOptions localOptions = cloneOptions(options);
+                        localOptions.density = options.previewDensity;
+                        localOptions.previewShape = previewShape;
+                        localOptions.generateLegacyIcon = (previewShape == PreviewShape.LEGACY);
+                        localOptions.generateRoundIcon =
+                                (previewShape == PreviewShape.LEGACY_ROUND);
+                        localOptions.generateWebIcon = (previewShape == PreviewShape.WEB);
 
                         BufferedImage image = generatePreviewImage(imageCache, localOptions);
                         return new GeneratedImageIcon(
-                                shape.id,
-                                null, // no path
+                                previewShape.id,
+                                null, // no path for preview icons
                                 IconCategory.PREVIEW,
                                 localOptions.density,
                                 image);
@@ -417,7 +454,7 @@ public class AdaptiveIconGenerator extends GraphicGenerator {
             String name) {
         AdaptiveIconOptions adaptiveIconOptions = (AdaptiveIconOptions) options;
         AdaptiveIconOptions localOptions = cloneOptions(adaptiveIconOptions);
-        localOptions.isWebGraphic = false;
+        localOptions.generateWebIcon = false;
 
         GeneratedIcons icons = generateIcons(context, options, name);
         icons.getList()
@@ -437,7 +474,7 @@ public class AdaptiveIconGenerator extends GraphicGenerator {
                             AdaptiveIconOptions iconOptions = cloneOptions(localOptions);
                             iconOptions.density = x.getDensity();
                             iconOptions.iconFolderKind = IconFolderKind.MIPMAP;
-                            iconOptions.isWebGraphic = (x.getCategory() == IconCategory.WEB);
+                            iconOptions.generateWebIcon = (x.getCategory() == IconCategory.WEB);
                             imageMap.put(x.getOutputPath().toString(), x.getImage());
                         });
     }
@@ -446,35 +483,56 @@ public class AdaptiveIconGenerator extends GraphicGenerator {
     @Override
     public BufferedImage generate(
             @NonNull GraphicGeneratorContext context, @NonNull Options options) {
-        AdaptiveIconOptions adaptiveIconOptions = (AdaptiveIconOptions) options;
         ImageCache imageCache = new ImageCache(context);
-
-        if (adaptiveIconOptions.isWebGraphic) {
-            return generateWebGraphicPreviewImage(imageCache, adaptiveIconOptions);
-        } else if (adaptiveIconOptions.previewShape == PreviewShape.FULL_BLEED) {
-            return generateFullBleedPreviewImage(imageCache, adaptiveIconOptions);
-        } else if (adaptiveIconOptions.previewShape == PreviewShape.LEGACY
-                || adaptiveIconOptions.previewShape == PreviewShape.LEGACY_ROUND) {
-            return generateLegacyPreviewImage(imageCache, adaptiveIconOptions);
-        } else {
-            return generateViewportPreviewImage(imageCache, adaptiveIconOptions);
-        }
+        return generatePreviewImage(imageCache, (AdaptiveIconOptions) options);
     }
 
     @NonNull
-    public static BufferedImage generatePreviewImage(
-            @NonNull ImageCache imageCache, @NonNull Options options) {
-        AdaptiveIconOptions adaptiveIconOptions = (AdaptiveIconOptions) options;
+    private static BufferedImage generatePreviewImage(
+            @NonNull ImageCache imageCache, @NonNull AdaptiveIconOptions options) {
 
-        if (adaptiveIconOptions.isWebGraphic) {
-            return generateWebGraphicPreviewImage(imageCache, adaptiveIconOptions);
-        } else if (adaptiveIconOptions.previewShape == PreviewShape.FULL_BLEED) {
-            return generateFullBleedPreviewImage(imageCache, adaptiveIconOptions);
-        } else if (adaptiveIconOptions.previewShape == PreviewShape.LEGACY
-                || adaptiveIconOptions.previewShape == PreviewShape.LEGACY_ROUND) {
-            return generateLegacyPreviewImage(imageCache, adaptiveIconOptions);
-        } else {
-            return generateViewportPreviewImage(imageCache, adaptiveIconOptions);
+        switch (options.previewShape) {
+            case CIRCLE:
+            case SQUIRCLE:
+            case ROUNDED_SQUARE:
+            case SQUARE:
+                return generateViewportPreviewImage(imageCache, options);
+
+            case LEGACY:
+                options.generatePreviewIcons = true;
+                options.generateWebIcon = false;
+                return generateLegacyImage(imageCache, options);
+
+            case LEGACY_ROUND:
+                options.generatePreviewIcons = true;
+                options.generateWebIcon = false;
+                options.legacyIconShape = Shape.CIRCLE;
+                return generateLegacyImage(imageCache, options);
+
+            case FULL_BLEED:
+                {
+                    BufferedImage image = generateFullBleedPreviewImage(imageCache, options);
+                    // For preview, scale image down so that it does not display relatively
+                    // too big compared to the other preview icons.
+                    return scaledPreviewImage(image, 0.8f);
+                }
+
+            case WEB:
+                {
+                    options.generatePreviewIcons = true;
+                    options.generateWebIcon = true;
+                    options.legacyIconShape = options.webIconShape;
+                    BufferedImage image = generateLegacyImage(imageCache, options);
+                    image = AssetUtil.trimmedImage(image);
+                    // For preview, scale image down so that it does not display relatively
+                    // too big compared to the other preview icons.
+                    float scale = getMdpiScaleFactor(options.previewDensity);
+                    return scaledPreviewImage(image, 0.25f * scale);
+                }
+
+            case NONE:
+            default:
+                throw new IllegalArgumentException();
         }
     }
 
@@ -492,106 +550,157 @@ public class AdaptiveIconGenerator extends GraphicGenerator {
         localOptions.useForegroundColor = options.useForegroundColor;
         localOptions.foregroundColor = options.foregroundColor;
         localOptions.backgroundColor = options.backgroundColor;
-        localOptions.cropForeground = options.cropForeground;
-        localOptions.cropBackground = options.cropBackground;
+        localOptions.generateLegacyIcon = options.generateLegacyIcon;
+        localOptions.generateRoundIcon = options.generateRoundIcon;
+        localOptions.generateWebIcon = options.generateWebIcon;
+        localOptions.generateOutputIcons = options.generateOutputIcons;
+        localOptions.generatePreviewIcons = options.generatePreviewIcons;
+
         localOptions.previewShape = options.previewShape;
-        localOptions.legacyShape = options.legacyShape;
+        localOptions.legacyIconShape = options.legacyIconShape;
+        localOptions.webIconShape = options.webIconShape;
         localOptions.showGrid = options.showGrid;
         localOptions.showSafeZone = options.showSafeZone;
-        localOptions.isWebGraphic = options.isWebGraphic;
         localOptions.foregroundLayerName = options.foregroundLayerName;
         localOptions.backgroundLayerName = options.backgroundLayerName;
 
         return localOptions;
     }
 
-    @NonNull
-    public static BufferedImage generateWebGraphicPreviewImage(
-            @NonNull ImageCache imageCache, @NonNull AdaptiveIconOptions options) {
-        // Scale the image to 521x512 (for now)
-        Density tempDensity = options.density;
-        options.density = Density.XXXHIGH;
-        BufferedImage largeImage = generateViewportPreviewImage(imageCache, options);
-        options.density = tempDensity;
-        return AssetUtil.scaledImage(largeImage, IMAGE_SIZE_WEB.width, IMAGE_SIZE_WEB.height);
-    }
-
     @SuppressWarnings("UseJBColor")
     @NonNull
     private static BufferedImage generateFullBleedPreviewImage(
             @NonNull ImageCache imageCache, @NonNull AdaptiveIconOptions options) {
-        Layers layers = generateAdaptiveIconPreviewLayers(imageCache, options);
+        Layers layers = generateAdaptiveIconLayers(imageCache, options);
         BufferedImage result = mergeLayers(layers, Color.BLACK);
         drawGrid(options, result);
         return result;
     }
 
+    /**
+     * Generate a {@link BufferedImage} for either a "Legacy", "Round" or "Web" icon. The created
+     * image consists of both background and foregroud layer images merge together, then a shape
+     * (e.g. circle, square) mask is applied, and finally the image is scaled to the appropriate
+     * size (48x48 legacy or 512x512px web).
+     */
     @NonNull
-    private static BufferedImage generateLegacyPreviewImage(
+    private static BufferedImage generateLegacyImage(
             @NonNull ImageCache imageCache, @NonNull AdaptiveIconOptions options) {
-        if (options.backgroundImage == null) {
-            // If we don't have a background image, generate a regular the legacy icon
-            BufferedImage legacyIcon = generateLegacyIconLayer(imageCache, options);
-            drawGrid(options, legacyIcon);
-            return legacyIcon;
+        Shape legacyShape = options.legacyIconShape;
+
+        Rectangle viewportRect = getViewportRectangle(options);
+        Rectangle legacyRect = getLegacyRectangle(options);
+        Density legacyOrWebDensity = (options.generateWebIcon ? null : options.density);
+        Rectangle legacyTargetRect =
+                LauncherIconGenerator.getTargetRect(legacyShape, legacyOrWebDensity);
+
+        // Generate full bleed and viewport images
+        Layers layers = generateAdaptiveIconLayers(imageCache, options);
+        BufferedImage fullBleed = mergeLayers(layers);
+        BufferedImage viewport = cropImage(fullBleed, viewportRect);
+
+        BufferedImage mask;
+        if (legacyShape == Shape.NONE) {
+            mask = null;
+        } else if (legacyShape == Shape.SQUARE) {
+            mask = generateMaskLayer(imageCache, options, PreviewShape.SQUARE);
+        } else if (legacyShape == Shape.CIRCLE) {
+            mask = generateMaskLayer(imageCache, options, PreviewShape.CIRCLE);
         } else {
-            // If we have a background image, it is more complicated:
-            // 1. Generate the foreground image as the legacy, but without background shape
-            // 2. Generate the background image as the adaptive icon, then scale it to
-            //    the legacy size
-            // 3. Merge both images
-            // 4. Apply the mask corresponding to the legacy shape
-            // 5. Draw the grid
-            BufferedImage legacyForegroundIcon =
-                    generateLegacyIconLayer(
-                            imageCache,
-                            options,
-                            options.sourceImage,
-                            options.useForegroundColor,
-                            options.foregroundColor,
-                            false);
-            BufferedImage adaptiveBackgroundLayer =
-                    generateAdaptiveIconBackgroundLayer(imageCache, options);
-            BufferedImage legacyBackgroundLayer =
-                    cropImageToViewport(options, adaptiveBackgroundLayer);
+            // Apply the legacy mask (scaled to the viewport size)
+            mask =
+                    LauncherIconGenerator.loadMaskImage(
+                            imageCache.getContext(), legacyShape, legacyOrWebDensity);
 
-            // Scale image to the legacy icon size
-            Rectangle imageRect =
-                    AssetUtil.scaleRectangle(
-                            IMAGE_SIZE_LEGACY,
-                            GraphicGenerator.getMdpiScaleFactor(options.density));
-            BufferedImage legacyBackgroundIcon =
-                    AssetUtil.scaledImage(legacyBackgroundLayer, imageRect.width, imageRect.height);
+            if (mask != null) {
+                // Resize the mask to have the same proportion it has in the launcher icon
+                // target rectangle
+                float maskScale = getRectangleInsideScale(legacyTargetRect, viewportRect);
+                mask =
+                        options.generatePreviewIcons
+                                ? scaledPreviewImage(mask, maskScale)
+                                : scaledImage(mask, maskScale);
 
-            BufferedImage legacyIcon =
-                    mergeLayers(new Layers(legacyBackgroundIcon, legacyForegroundIcon));
-
-            // Apply mask corresponding to the legacy shape
-            Shape legacyShape =
-                    options.previewShape == PreviewShape.LEGACY_ROUND
-                            ? Shape.CIRCLE
-                            : options.legacyShape;
-
-            if (legacyShape != Shape.NONE) {
-                BufferedImage mask =
-                        LauncherIconGenerator.loadMaskImage(
-                                imageCache.getContext(),
-                                legacyShape,
-                                options.density.getResourceValue());
-                legacyIcon = applyMask(legacyIcon, mask);
             }
-
-            // Draw grid on top of everything if needed
-            drawGrid(options, legacyIcon);
-
-            return legacyIcon;
         }
+
+        // Apply the legacy mask (scaled to the viewport size)
+        if (mask != null) {
+            viewport = applyMask(viewport, mask);
+        }
+
+        float viewportScale = getRectangleInsideScale(viewportRect, legacyTargetRect);
+        BufferedImage scaledViewport =
+                options.generatePreviewIcons
+                        ? scaledPreviewImage(viewport, viewportScale)
+                        : scaledImage(viewport, viewportScale);
+
+        BufferedImage result = AssetUtil.newArgbBufferedImage(legacyRect.width, legacyRect.height);
+        Graphics2D gTemp = (Graphics2D) result.getGraphics();
+        AssetUtil.drawCentered(gTemp, scaledViewport, legacyRect);
+        gTemp.dispose();
+        return result;
     }
 
+    /** See {@link AssetUtil#getRectangleInsideScale(Rectangle, Rectangle)}. */
+    private static float getRectangleInsideScale(
+            @NonNull Rectangle source, @NonNull Rectangle destination) {
+        return AssetUtil.getRectangleInsideScale(source, destination);
+    }
+
+    /** Scale an image given a scale factor. */
+    @NonNull
+    private static BufferedImage scaledImage(@NonNull BufferedImage image, float scale) {
+        int width = Math.round(image.getWidth() * scale);
+        int height = Math.round(image.getHeight() * scale);
+        return scaledImage(image, width, height);
+    }
+
+    /** Scale an image given the desired scaled image size. */
+    @NonNull
+    public static BufferedImage scaledImage(@NonNull BufferedImage image, int width, int height) {
+        return AssetUtil.scaledImage(image, width, height);
+    }
+
+    /**
+     * For performance reason, we use a lower qualitty (but faster) image scaling algorithm when
+     * generating preview images.
+     */
+    @NonNull
+    private static BufferedImage scaledPreviewImage(@NonNull BufferedImage image, float scale) {
+        int width = Math.round(image.getWidth() * scale);
+        int height = Math.round(image.getHeight() * scale);
+        return scaledPreviewImage(image, width, height);
+    }
+
+    /**
+     * For performance reason, we use a lower qualitty (but faster) image scaling algorithm when
+     * generating preview images.
+     */
+    @NonNull
+    public static BufferedImage scaledPreviewImage(
+            @NonNull BufferedImage source, int width, int height) {
+        // Common case optimization: scaling to the same (width, height) should be a no-op, but
+        // the source.getScaledInstance call below is actually CPU intensive.
+        if (source.getWidth() == width && source.getHeight() == height) {
+            return source;
+        }
+
+        BufferedImage scaledBufImage =
+                new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = scaledBufImage.createGraphics();
+        g.setRenderingHint(
+                RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g.drawImage(source, 0, 0, width, height, null);
+        g.dispose();
+        return scaledBufImage;
+    }
+
+    /** Generate a preview image with a Shape mask applied (e.g. Square, Squircle). */
     @NonNull
     private static BufferedImage generateViewportPreviewImage(
             @NonNull ImageCache imageCache, @NonNull AdaptiveIconOptions options) {
-        Layers layers = generateAdaptiveIconPreviewLayers(imageCache, options);
+        Layers layers = generateAdaptiveIconLayers(imageCache, options);
         BufferedImage result = mergeLayers(layers);
         BufferedImage mask = generateMaskLayer(imageCache, options, options.previewShape);
         result = cropImageToViewport(options, result);
@@ -603,12 +712,7 @@ public class AdaptiveIconGenerator extends GraphicGenerator {
 
     private static BufferedImage cropImageToViewport(
             @NonNull AdaptiveIconOptions options, @NonNull BufferedImage image) {
-
-        Rectangle viewportRect =
-                AssetUtil.scaleRectangle(
-                        IMAGE_SIZE_VIEWPORT, GraphicGenerator.getMdpiScaleFactor(options.density));
-
-        return cropImage(image, viewportRect);
+        return cropImage(image, getViewportRectangle(options));
     }
 
     private static BufferedImage cropImage(
@@ -668,58 +772,13 @@ public class AdaptiveIconGenerator extends GraphicGenerator {
     }
 
     @NonNull
-    private static Layers generateAdaptiveIconPreviewLayers(
+    private static Layers generateAdaptiveIconLayers(
             @NonNull ImageCache imageCache, @NonNull AdaptiveIconOptions options) {
 
         BufferedImage backgroundImage = generateAdaptiveIconBackgroundLayer(imageCache, options);
         BufferedImage foregroundImage = generateAdaptiveIconForegroundLayer(imageCache, options);
 
         return new Layers(backgroundImage, foregroundImage);
-    }
-
-    @NonNull
-    private static BufferedImage generateLegacyIconLayer(
-            @NonNull ImageCache imageCache, @NonNull AdaptiveIconOptions options) {
-        return generateLegacyIconLayer(
-                imageCache,
-                options,
-                options.sourceImage,
-                options.useForegroundColor,
-                options.foregroundColor,
-                true);
-    }
-
-    @NonNull
-    private static BufferedImage generateLegacyIconLayer(
-            @NonNull ImageCache imageCache,
-            @NonNull AdaptiveIconOptions options,
-            @NonNull BufferedImage sourceImage,
-            boolean useForegroundColor,
-            int foregroundColor,
-            boolean renderShape) {
-
-        Shape legacyShape =
-                options.previewShape == PreviewShape.LEGACY_ROUND
-                        ? Shape.CIRCLE
-                        : options.legacyShape;
-
-        LauncherIconGenerator generator = new LauncherIconGenerator();
-        LauncherIconGenerator.LauncherOptions localOptions =
-                new LauncherIconGenerator.LauncherOptions();
-        localOptions.minSdk = options.minSdk;
-        localOptions.sourceImage = sourceImage;
-        localOptions.density = options.density;
-        localOptions.iconFolderKind = options.iconFolderKind;
-
-        localOptions.useForegroundColor = useForegroundColor;
-        localOptions.foregroundColor = foregroundColor;
-        localOptions.renderShape = renderShape;
-        localOptions.backgroundColor = options.backgroundColor;
-        localOptions.crop = options.cropForeground;
-        localOptions.shape = legacyShape;
-        localOptions.isWebGraphic = false;
-
-        return generator.generate(imageCache.getContext(), localOptions);
     }
 
     @Nullable
@@ -749,32 +808,66 @@ public class AdaptiveIconGenerator extends GraphicGenerator {
             return null;
         }
 
-        String resourceName =
-                String.format(
-                        "/images/adaptive_icons_masks/adaptive_%s-%s.png",
-                        maskName, options.density.getResourceValue());
+        if (options.generateWebIcon) {
+            String resourceName =
+                    String.format(
+                            "/images/adaptive_icons_masks/adaptive_%s-%s.png",
+                            maskName, Density.XXXHIGH.getResourceValue());
 
-        return imageCache.getContext().loadImageResource(resourceName);
+            BufferedImage mask = imageCache.getContext().loadImageResource(resourceName);
+            if (mask == null) {
+                return null;
+            }
+            Rectangle maskRect = new Rectangle(0, 0, mask.getWidth(), mask.getHeight());
+            float scale = getRectangleInsideScale(maskRect, getViewportRectangle(options));
+            return options.generatePreviewIcons
+                    ? scaledPreviewImage(mask, scale)
+                    : scaledImage(mask, scale);
+        } else {
+            String resourceName =
+                    String.format(
+                            "/images/adaptive_icons_masks/adaptive_%s-%s.png",
+                            maskName, options.density.getResourceValue());
+
+            return imageCache.getContext().loadImageResource(resourceName);
+        }
+    }
+
+    @NonNull
+    private static Rectangle getFullBleedRectangle(@NonNull AdaptiveIconOptions options) {
+        if (options.generateWebIcon) {
+            return IMAGE_SIZE_FULL_BLEED_WEB_PX;
+        }
+        return AssetUtil.scaleRectangle(
+                IMAGE_SIZE_FULL_BLEED_DP, GraphicGenerator.getMdpiScaleFactor(options.density));
+    }
+
+    @NonNull
+    private static Rectangle getViewportRectangle(@NonNull AdaptiveIconOptions options) {
+        if (options.generateWebIcon) {
+            return IMAGE_SIZE_VIEW_PORT_WEB_PX;
+        }
+        return AssetUtil.scaleRectangle(
+                IMAGE_SIZE_VIEWPORT_DP, GraphicGenerator.getMdpiScaleFactor(options.density));
+    }
+
+    @NonNull
+    private static Rectangle getLegacyRectangle(@NonNull AdaptiveIconOptions options) {
+        if (options.generateWebIcon) {
+            return IMAGE_SIZE_VIEW_PORT_WEB_PX;
+        }
+        return AssetUtil.scaleRectangle(
+                IMAGE_SIZE_LEGACY_DP, GraphicGenerator.getMdpiScaleFactor(options.density));
     }
 
     @NonNull
     private static BufferedImage generateAdaptiveIconBackgroundLayer(
             @NonNull ImageCache imageCache, @NonNull AdaptiveIconOptions options) {
 
-        Rectangle imageRect =
-                AssetUtil.scaleRectangle(
-                        IMAGE_SIZE_FULL_BLEED,
-                        GraphicGenerator.getMdpiScaleFactor(options.density));
-
+        Rectangle imageRect = getFullBleedRectangle(options);
         if (backgroundIsImage(options)) {
             return generateAdaptiveIconLayer(
-                    imageCache,
-                    options.backgroundImage,
-                    imageRect,
-                    imageRect,
-                    options.cropBackground,
-                    false,
-                    0);
+                    imageCache, options.backgroundImage, imageRect, false, 0);
         } else {
             return generateAdaptiveIconBackgroundLayerFlatColor(options, imageRect);
         }
@@ -784,22 +877,12 @@ public class AdaptiveIconGenerator extends GraphicGenerator {
     private static BufferedImage generateAdaptiveIconForegroundLayer(
             ImageCache imageCache, @NonNull AdaptiveIconOptions options) {
 
-        Rectangle imageRect =
-                AssetUtil.scaleRectangle(
-                        IMAGE_SIZE_FULL_BLEED,
-                        GraphicGenerator.getMdpiScaleFactor(options.density));
-
-        Rectangle targetRect =
-                AssetUtil.scaleRectangle(
-                        IMAGE_SIZE_FULL_BLEED_TARGET_RECT,
-                        GraphicGenerator.getMdpiScaleFactor(options.density));
+        Rectangle imageRect = getFullBleedRectangle(options);
 
         return generateAdaptiveIconLayer(
                 imageCache,
                 options.sourceImage,
                 imageRect,
-                targetRect,
-                options.cropForeground,
                 options.useForegroundColor,
                 options.foregroundColor);
     }
@@ -827,9 +910,9 @@ public class AdaptiveIconGenerator extends GraphicGenerator {
         BufferedImage tempImage = AssetUtil.newArgbBufferedImage(imageRect.width, imageRect.height);
 
         Graphics2D gTemp = (Graphics2D) tempImage.getGraphics();
-        AssetUtil.drawCenterInside(gTemp, mask, imageRect);
+        AssetUtil.drawCentered(gTemp, mask, imageRect);
         gTemp.setComposite(AlphaComposite.SrcIn);
-        AssetUtil.drawCenterInside(gTemp, image, imageRect);
+        AssetUtil.drawCentered(gTemp, image, imageRect);
         gTemp.dispose();
 
         return tempImage;
@@ -840,16 +923,12 @@ public class AdaptiveIconGenerator extends GraphicGenerator {
             @NonNull ImageCache imageCache,
             @NonNull BufferedImage sourceImage,
             @NonNull Rectangle imageRect,
-            @NonNull Rectangle targetRect,
-            boolean crop,
             boolean useFillColor,
             int fillColor) {
 
         return imageCache.getOrCreate(
                 sourceImage,
                 imageRect.getSize(),
-                targetRect.getSize(),
-                crop,
                 useFillColor,
                 fillColor,
                 () -> {
@@ -857,12 +936,7 @@ public class AdaptiveIconGenerator extends GraphicGenerator {
                     BufferedImage iconImage =
                             AssetUtil.newArgbBufferedImage(imageRect.width, imageRect.height);
                     Graphics2D gIcon = (Graphics2D) iconImage.getGraphics();
-                    if (crop) {
-                        AssetUtil.drawCenterScaled(
-                                gIcon, sourceImage, imageRect, targetRect.width, targetRect.height);
-                    } else {
-                        AssetUtil.drawCenterInside(gIcon, sourceImage, targetRect);
-                    }
+                    AssetUtil.drawCenterInside(gIcon, sourceImage, imageRect);
                     AssetUtil.Effect[] effects;
                     if (useFillColor) {
                         //noinspection UseJBColor
@@ -894,7 +968,7 @@ public class AdaptiveIconGenerator extends GraphicGenerator {
 
     private static void drawGrid(
             @NonNull AdaptiveIconOptions adaptiveIconOptions, @NonNull Graphics2D gOut) {
-        if (adaptiveIconOptions.isWebGraphic) {
+        if (adaptiveIconOptions.generateWebIcon) {
             return;
         }
 
@@ -923,7 +997,7 @@ public class AdaptiveIconGenerator extends GraphicGenerator {
         float scaleFactor = GraphicGenerator.getMdpiScaleFactor(options.density);
 
         // 72x72
-        int size = IMAGE_SIZE_VIEWPORT.width;
+        int size = IMAGE_SIZE_VIEWPORT_DP.width;
         int center = size / 2;
 
         //noinspection UseJBColor
@@ -966,7 +1040,7 @@ public class AdaptiveIconGenerator extends GraphicGenerator {
         float scaleFactor = GraphicGenerator.getMdpiScaleFactor(options.density);
 
         // 108x108
-        int size = IMAGE_SIZE_FULL_BLEED.width;
+        int size = IMAGE_SIZE_FULL_BLEED_DP.width;
         int center = size / 2;
 
         //noinspection UseJBColor
@@ -979,7 +1053,7 @@ public class AdaptiveIconGenerator extends GraphicGenerator {
             g.drawRect(0, 0, size, size);
 
             // Viewport
-            g.drawRect(18, 18, IMAGE_SIZE_VIEWPORT.width, IMAGE_SIZE_VIEWPORT.height);
+            g.drawRect(18, 18, IMAGE_SIZE_VIEWPORT_DP.width, IMAGE_SIZE_VIEWPORT_DP.height);
 
             // "+" and "x" cross
             g.drawLine(0, 0, size, size);
@@ -990,7 +1064,7 @@ public class AdaptiveIconGenerator extends GraphicGenerator {
 
         if (options.showSafeZone) {
             // Safe zone: 66dp
-            g.drawCenteredCircle(center, center, IMAGE_SIZE_SAFE_ZONE.width / 2);
+            g.drawCenteredCircle(center, center, IMAGE_SIZE_SAFE_ZONE_DP.width / 2);
         }
     }
 
@@ -999,7 +1073,7 @@ public class AdaptiveIconGenerator extends GraphicGenerator {
         float scaleFactor = GraphicGenerator.getMdpiScaleFactor(options.density);
 
         // 48x48
-        int size = IMAGE_SIZE_LEGACY.width;
+        int size = IMAGE_SIZE_LEGACY_DP.width;
         int center = size / 2;
 
         //noinspection UseJBColor
@@ -1039,7 +1113,7 @@ public class AdaptiveIconGenerator extends GraphicGenerator {
     @NonNull
     @Override
     protected String getIconPath(@NonNull Options options, @NonNull String name) {
-        if (((AdaptiveIconOptions) options).isWebGraphic) {
+        if (((AdaptiveIconOptions) options).generateWebIcon) {
             return name + "-web.png"; // Store at the root of the project
         }
 
@@ -1053,6 +1127,12 @@ public class AdaptiveIconGenerator extends GraphicGenerator {
             iconFolderKind = IconFolderKind.MIPMAP;
         }
 
+        /** The foreground layer name, used to generate resource paths */
+        public String foregroundLayerName;
+
+        /** The background layer name, used to generate resource paths */
+        public String backgroundLayerName;
+
         /**
          * Whether to use the foreground color. If we are using images as the source asset for our
          * icons, you shouldn't apply the foreground color, which would paint over it and obscure
@@ -1063,23 +1143,26 @@ public class AdaptiveIconGenerator extends GraphicGenerator {
         /** Foreground color, as an RRGGBB packed integer */
         public int foregroundColor = 0;
 
-        /** Background color, as an RRGGBB packed integer. The background color is used only */
+        /**
+         * Background color, as an RRGGBB packed integer. The background color is used only if
+         * {@link #backgroundImage} is <code>null</code>.
+         */
         public int backgroundColor = 0;
 
         /** Source image to use as a basis for the icon background layer (optional) */
         public BufferedImage backgroundImage;
 
-        /** Whether the image should be cropped or not */
-        public boolean cropForeground = true;
+        /** Whether to actual icons to be written to disk */
+        public boolean generateOutputIcons = true;
 
-        /** Whether the background image should be cropped or not */
-        public boolean cropBackground = true;
+        /** Whether to actual preview icons */
+        public boolean generatePreviewIcons = true;
 
-        /** If set, generate a preview image */
-        public PreviewShape previewShape = PreviewShape.NONE;
+        /** Whether to generate the "Legacy" icon (API <= 24) */
+        public boolean generateLegacyIcon = true;
 
-        /** The shape to use for the legacy icon */
-        public Shape legacyShape = Shape.SQUARE;
+        /** Whether to generate the "Round" icon (API 25) */
+        public boolean generateRoundIcon = true;
 
         /**
          * Whether a web graphic should be generated (will ignore normal density setting). The
@@ -1088,22 +1171,25 @@ public class AdaptiveIconGenerator extends GraphicGenerator {
          * GraphicGenerator#generate(String, Map, GraphicGeneratorContext, Options, String)} method
          * will use this flag to determine whether it should include a web graphic in its iteration.
          */
-        public boolean isWebGraphic;
+        public boolean generateWebIcon;
+
+        /** If set, generate a preview image */
+        public PreviewShape previewShape = PreviewShape.NONE;
+
+        /** The density of the preview images */
+        public Density previewDensity;
+
+        /** The shape to use for the "Legacy" icon */
+        public Shape legacyIconShape = Shape.SQUARE;
+
+        /** The shape to use for the "Web" icon */
+        public Shape webIconShape = Shape.SQUARE;
 
         /** Whether to draw the keyline shapes */
         public boolean showGrid;
 
         /** Whether to draw the safe zone circle */
         public boolean showSafeZone;
-
-        /** The density of the preview images */
-        public Density previewDensity;
-
-        /** The foreground layer name, used to generate resource paths */
-        public String foregroundLayerName;
-
-        /** The background layer name, used to generate resource paths */
-        public String backgroundLayerName;
     }
 
     public enum PreviewShape {
@@ -1113,8 +1199,9 @@ public class AdaptiveIconGenerator extends GraphicGenerator {
         ROUNDED_SQUARE("rounded-square", "Rounded Square"),
         SQUARE("square", "Square"),
         FULL_BLEED("full-bleed-layers", "Full Bleed Layers"),
-        LEGACY("legacy", "Legacy (API <= 24)"),
-        LEGACY_ROUND("legacy-round", "Round (API 25)");
+        LEGACY("legacy", "Legacy (API \u2264 24)"),
+        LEGACY_ROUND("legacy-round", "Round (API 25)"),
+        WEB("web", "Web");
 
         /** Id, used when shape is converted to a string */
         public final String id;
