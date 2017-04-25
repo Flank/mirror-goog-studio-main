@@ -586,60 +586,81 @@ public class AdaptiveIconGenerator extends GraphicGenerator {
     @NonNull
     private static BufferedImage generateLegacyImage(
             @NonNull ImageCache imageCache, @NonNull AdaptiveIconOptions options) {
-        Shape legacyShape = options.legacyIconShape;
 
-        Rectangle viewportRect = getViewportRectangle(options);
-        Rectangle legacyRect = getLegacyRectangle(options);
+        // The "Web" density does not exist in the "Density" enum. Various "Legacy" icon APIs use
+        // "null" as a placeholder for "Web".
         Density legacyOrWebDensity = (options.generateWebIcon ? null : options.density);
-        Rectangle legacyTargetRect =
-                LauncherIconGenerator.getTargetRect(legacyShape, legacyOrWebDensity);
+
+        // The viewport rectangle (72x72dp) scaled according to density
+        Rectangle viewportRect = getViewportRectangle(options);
+
+        // The "Legacy" icon rectangle (48x48dp) scaled according to density
+        Rectangle legacyRect = getLegacyRectangle(options);
+
+        // The sub-rectangle of the 48x48dp "Legacy" icon that corresponds to the "Legacy" icon
+        // shape, scaled according to the density
+        Rectangle legacyShapeRect =
+                LauncherIconGenerator.getTargetRect(options.legacyIconShape, legacyOrWebDensity);
 
         // Generate full bleed and viewport images
         Layers layers = generateAdaptiveIconLayers(imageCache, options);
         BufferedImage fullBleed = mergeLayers(layers);
-        BufferedImage viewport = cropImage(fullBleed, viewportRect);
 
-        BufferedImage mask;
-        if (legacyShape == Shape.NONE) {
-            mask = null;
-        } else if (legacyShape == Shape.SQUARE) {
-            mask = generateMaskLayer(imageCache, options, PreviewShape.SQUARE);
-        } else if (legacyShape == Shape.CIRCLE) {
-            mask = generateMaskLayer(imageCache, options, PreviewShape.CIRCLE);
-        } else {
-            // Apply the legacy mask (scaled to the viewport size)
-            mask =
-                    LauncherIconGenerator.loadMaskImage(
-                            imageCache.getContext(), legacyShape, legacyOrWebDensity);
-
-            if (mask != null) {
-                // Resize the mask to have the same proportion it has in the launcher icon
-                // target rectangle
-                float maskScale = getRectangleInsideScale(legacyTargetRect, viewportRect);
-                mask =
-                        options.generatePreviewIcons
-                                ? scaledPreviewImage(mask, maskScale)
-                                : scaledImage(mask, maskScale);
-
-            }
-        }
-
-        // Apply the legacy mask (scaled to the viewport size)
-        if (mask != null) {
-            viewport = applyMask(viewport, mask);
-        }
-
-        float viewportScale = getRectangleInsideScale(viewportRect, legacyTargetRect);
-        BufferedImage scaledViewport =
+        // Scale the "Full Bleed" icon so that it is contained in the "Legacy" shape rectangle.
+        //
+        // Note that even though we scale the "Full Bleed" image, we use the ratio of the
+        // Viewport rectangle (72x72dp) to Legacy shape (sub-rectangle of 48x48dp) as the
+        // scaling factor, because the Viewport rectangle is the visible part of Adaptive icons,
+        // whereas the "Full Bleed" icon is never entirely visible.
+        float viewportScale = getRectangleInsideScale(viewportRect, legacyShapeRect);
+        BufferedImage scaledFullBleed =
                 options.generatePreviewIcons
-                        ? scaledPreviewImage(viewport, viewportScale)
-                        : scaledImage(viewport, viewportScale);
+                        ? scaledPreviewImage(fullBleed, viewportScale)
+                        : scaledImage(fullBleed, viewportScale);
 
-        BufferedImage result = AssetUtil.newArgbBufferedImage(legacyRect.width, legacyRect.height);
-        Graphics2D gTemp = (Graphics2D) result.getGraphics();
-        AssetUtil.drawCentered(gTemp, scaledViewport, legacyRect);
-        gTemp.dispose();
-        return result;
+        // Load shadow and mask corresponding to legacy shape
+        BufferedImage shapeImageBack = null;
+        BufferedImage shapeImageFore = null;
+        BufferedImage shapeImageMask = null;
+        if (options.legacyIconShape != Shape.NONE) {
+            shapeImageBack =
+                    LauncherIconGenerator.loadBackImage(
+                            imageCache.getContext(), options.legacyIconShape, legacyOrWebDensity);
+            shapeImageFore =
+                    LauncherIconGenerator.loadStyleImage(
+                            imageCache.getContext(),
+                            options.legacyIconShape,
+                            legacyOrWebDensity,
+                            Style.SIMPLE);
+            shapeImageMask =
+                    LauncherIconGenerator.loadMaskImage(
+                            imageCache.getContext(), options.legacyIconShape, legacyOrWebDensity);
+        }
+
+        // Generate legacy image by merging shadow, mask and (scaled) adaptive icon
+        BufferedImage legacyImage =
+                AssetUtil.newArgbBufferedImage(legacyRect.width, legacyRect.height);
+        Graphics2D gLegacy = (Graphics2D) legacyImage.getGraphics();
+
+        // Start with backdrop image (semi transparent shadow)
+        if (shapeImageBack != null) {
+            AssetUtil.drawCentered(gLegacy, shapeImageBack, legacyRect);
+        }
+
+        // Apply the mask to the scaled adaptive icon
+        if (shapeImageMask != null) {
+            scaledFullBleed = applyMask(scaledFullBleed, shapeImageMask);
+        }
+
+        // Draw the scaled adaptive icon on top of shadow effect
+        AssetUtil.drawCentered(gLegacy, scaledFullBleed, legacyRect);
+
+        // Finish with the foreground effect (shadow outline)
+        if (shapeImageFore != null) {
+            gLegacy.drawImage(shapeImageFore, 0, 0, null);
+        }
+        gLegacy.dispose();
+        return legacyImage;
     }
 
     /** See {@link AssetUtil#getRectangleInsideScale(Rectangle, Rectangle)}. */
