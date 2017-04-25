@@ -43,8 +43,8 @@ using own = std::unique_ptr<T>;
 constexpr dex::u4 kInvalidOffset = dex::u4(-1);
 
 struct Bytecode;
-struct PackedSwitch;
-struct SparseSwitch;
+struct PackedSwitchPayload;
+struct SparseSwitchPayload;
 struct ArrayData;
 struct Label;
 struct TryBlockBegin;
@@ -73,11 +73,18 @@ class Visitor {
   Visitor(const Visitor&) = delete;
   Visitor& operator=(const Visitor&) = delete;
 
+  // instructions
   virtual bool Visit(Bytecode* bytecode) { return false; }
-  virtual bool Visit(PackedSwitch* packed_switch) { return false; }
-  virtual bool Visit(SparseSwitch* sparse_switch) { return false; }
+  virtual bool Visit(PackedSwitchPayload* packed_switch) { return false; }
+  virtual bool Visit(SparseSwitchPayload* sparse_switch) { return false; }
   virtual bool Visit(ArrayData* array_data) { return false; }
   virtual bool Visit(Label* label) { return false; }
+  virtual bool Visit(DbgInfoHeader* dbg_header) { return false; }
+  virtual bool Visit(DbgInfoAnnotation* dbg_annotation) { return false; }
+  virtual bool Visit(TryBlockBegin* try_begin) { return false; }
+  virtual bool Visit(TryBlockEnd* try_end) { return false; }
+
+  // operands
   virtual bool Visit(CodeLocation* location) { return false; }
   virtual bool Visit(Const32* const32) { return false; }
   virtual bool Visit(Const64* const64) { return false; }
@@ -90,10 +97,6 @@ class Visitor {
   virtual bool Visit(Field* field) { return false; }
   virtual bool Visit(Method* method) { return false; }
   virtual bool Visit(LineNumber* line) { return false; }
-  virtual bool Visit(DbgInfoHeader* dbg_header) { return false; }
-  virtual bool Visit(DbgInfoAnnotation* dbg_annotation) { return false; }
-  virtual bool Visit(TryBlockBegin* try_begin) { return false; }
-  virtual bool Visit(TryBlockEnd* try_end) { return false; }
 };
 
 // The root of the polymorphic code IR nodes hierarchy
@@ -246,14 +249,14 @@ struct Bytecode : public Instruction {
   virtual bool Accept(Visitor* visitor) override { return visitor->Visit(this); }
 };
 
-struct PackedSwitch : public Instruction {
+struct PackedSwitchPayload : public Instruction {
   dex::s4 first_key = 0;
   std::vector<Label*> targets;
 
   virtual bool Accept(Visitor* visitor) override { return visitor->Visit(this); }
 };
 
-struct SparseSwitch : public Instruction {
+struct SparseSwitchPayload : public Instruction {
   struct SwitchCase {
     dex::s4 key = 0;
     Label* target = nullptr;
@@ -371,11 +374,11 @@ struct CodeIr {
   void DissasembleDebugInfo(const ir::DebugInfo* ir_debug_info);
 
   void FixupSwitches();
-  void FixupPackedSwitch(PackedSwitch* instr, dex::u4 base_offset, const dex::u2* ptr);
-  void FixupSparseSwitch(SparseSwitch* instr, dex::u4 base_offset, const dex::u2* ptr);
+  void FixupPackedSwitch(PackedSwitchPayload* instr, dex::u4 base_offset, const dex::u2* ptr);
+  void FixupSparseSwitch(SparseSwitchPayload* instr, dex::u4 base_offset, const dex::u2* ptr);
 
-  SparseSwitch* DecodeSparseSwitch(const dex::u2* /*ptr*/, dex::u4 offset);
-  PackedSwitch* DecodePackedSwitch(const dex::u2* /*ptr*/, dex::u4 offset);
+  SparseSwitchPayload* DecodeSparseSwitch(const dex::u2* /*ptr*/, dex::u4 offset);
+  PackedSwitchPayload* DecodePackedSwitch(const dex::u2* /*ptr*/, dex::u4 offset);
   ArrayData* DecodeArrayData(const dex::u2* ptr, dex::u4 offset);
   Bytecode* DecodeBytecode(const dex::u2* ptr, dex::u4 offset);
 
@@ -395,12 +398,12 @@ struct CodeIr {
 
   // data structures for fixing up switch payloads
   struct PackedSwitchFixup {
-    PackedSwitch* instr = nullptr;
+    PackedSwitchPayload* instr = nullptr;
     dex::u4 base_offset = kInvalidOffset;
   };
 
   struct SparseSwitchFixup {
-    SparseSwitch* instr = nullptr;
+    SparseSwitchPayload* instr = nullptr;
     dex::u4 base_offset = kInvalidOffset;
   };
 

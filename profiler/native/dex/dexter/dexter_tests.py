@@ -41,6 +41,8 @@ test_cases = {
   'mi'              : { 'args' : '-d -x test_method_instrumenter', 'input' : ['entry_hooks.dex'] },
   'find_method'     : { 'args' : '-x stress_find_method', 'input' : [
                           'hello.dex', 'entry_hooks.dex', 'medium.dex', 'large.dex', 'try_catch.dex' ] },
+  'verbose_cfg'     : { 'args' : '-d --cfg=verbose', 'input' : ['*.dex'] },
+  'compact_cfg'     : { 'args' : '-d --cfg=compact', 'input' : ['*.dex'] },
 }
 
 # run a shell command and returns the stdout content

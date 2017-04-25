@@ -20,7 +20,29 @@
 #include <cinttypes>
 #include <cmath>
 
+void PrintCodeIrVisitor::StartInstruction(const lir::Instruction* instr) {
+  if (cfg_ == nullptr || current_block_index_ >= cfg_->basic_blocks.size()) {
+    return;
+  }
+  const lir::BasicBlock& current_block = cfg_->basic_blocks[current_block_index_];
+  if (instr == current_block.region.first) {
+    printf("............................. begin block %d .............................\n", current_block.id);
+  }
+}
+
+void PrintCodeIrVisitor::EndInstruction(const lir::Instruction* instr) {
+  if (cfg_ == nullptr || current_block_index_ >= cfg_->basic_blocks.size()) {
+    return;
+  }
+  const lir::BasicBlock& current_block = cfg_->basic_blocks[current_block_index_];
+  if (instr == current_block.region.last) {
+    printf(".............................. end block %d ..............................\n", current_block.id);
+    ++current_block_index_;
+  }
+}
+
 bool PrintCodeIrVisitor::Visit(lir::Bytecode* bytecode) {
+  StartInstruction(bytecode);
   printf("\t%5u| %s", bytecode->offset, dex::GetOpcodeName(bytecode->opcode));
   bool first = true;
   for (auto op : bytecode->operands) {
@@ -29,10 +51,12 @@ bool PrintCodeIrVisitor::Visit(lir::Bytecode* bytecode) {
     first = false;
   }
   printf("\n");
+  EndInstruction(bytecode);
   return true;
 }
 
-bool PrintCodeIrVisitor::Visit(lir::PackedSwitch* packed_switch) {
+bool PrintCodeIrVisitor::Visit(lir::PackedSwitchPayload* packed_switch) {
+  StartInstruction(packed_switch);
   printf("\t%5u| packed-switch-payload\n", packed_switch->offset);
   int key = packed_switch->first_key;
   for (auto target : packed_switch->targets) {
@@ -40,21 +64,26 @@ bool PrintCodeIrVisitor::Visit(lir::PackedSwitch* packed_switch) {
     printf("Label_%d", target->id);
     printf("\n");
   }
+  EndInstruction(packed_switch);
   return true;
 }
 
-bool PrintCodeIrVisitor::Visit(lir::SparseSwitch* sparse_switch) {
+bool PrintCodeIrVisitor::Visit(lir::SparseSwitchPayload* sparse_switch) {
+  StartInstruction(sparse_switch);
   printf("\t%5u| sparse-switch-payload\n", sparse_switch->offset);
   for (auto& switchCase : sparse_switch->switch_cases) {
     printf("\t\t%5d: ", switchCase.key);
     printf("Label_%d", switchCase.target->id);
     printf("\n");
   }
+  EndInstruction(sparse_switch);
   return true;
 }
 
 bool PrintCodeIrVisitor::Visit(lir::ArrayData* array_data) {
+  StartInstruction(array_data);
   printf("\t%5u| fill-array-data-payload\n", array_data->offset);
+  EndInstruction(array_data);
   return true;
 }
 
@@ -168,17 +197,27 @@ bool PrintCodeIrVisitor::Visit(lir::Method* method) {
   return true;
 }
 
+bool PrintCodeIrVisitor::Visit(lir::LineNumber* line_number) {
+  printf("%d", line_number->line);
+  return true;
+}
+
 bool PrintCodeIrVisitor::Visit(lir::Label* label) {
+  StartInstruction(label);
   printf("Label_%d:\n", label->id);
+  EndInstruction(label);
   return true;
 }
 
 bool PrintCodeIrVisitor::Visit(lir::TryBlockBegin* try_begin) {
+  StartInstruction(try_begin);
   printf("\t.try_begin_%d\n", try_begin->id);
+  EndInstruction(try_begin);
   return true;
 }
 
 bool PrintCodeIrVisitor::Visit(lir::TryBlockEnd* try_end) {
+  StartInstruction(try_end);
   printf("\t.try_end_%d\n", try_end->try_begin->id);
   for (const auto& handler : try_end->handlers) {
     printf("\t  catch(%s) : Label_%d\n", handler.ir_type->Decl().c_str(),
@@ -187,15 +226,12 @@ bool PrintCodeIrVisitor::Visit(lir::TryBlockEnd* try_end) {
   if (try_end->catch_all != nullptr) {
     printf("\t  catch(...) : Label_%d\n", try_end->catch_all->id);
   }
-  return true;
-}
-
-bool PrintCodeIrVisitor::Visit(lir::LineNumber* line_number) {
-  printf("%d", line_number->line);
+  EndInstruction(try_end);
   return true;
 }
 
 bool PrintCodeIrVisitor::Visit(lir::DbgInfoHeader* dbg_header) {
+  StartInstruction(dbg_header);
   printf("\t.params");
   bool first = true;
   for (auto paramName : dbg_header->param_names) {
@@ -204,10 +240,12 @@ bool PrintCodeIrVisitor::Visit(lir::DbgInfoHeader* dbg_header) {
     first = false;
   }
   printf("\n");
+  EndInstruction(dbg_header);
   return true;
 }
 
 bool PrintCodeIrVisitor::Visit(lir::DbgInfoAnnotation* annotation) {
+  StartInstruction(annotation);
   const char* name = ".dbg_???";
   switch (annotation->dbg_opcode) {
     case dex::DBG_START_LOCAL:
@@ -245,6 +283,7 @@ bool PrintCodeIrVisitor::Visit(lir::DbgInfoAnnotation* annotation) {
   }
 
   printf("\n");
+  EndInstruction(annotation);
   return true;
 }
 
@@ -275,6 +314,17 @@ void DexDissasembler::DumpMethod(ir::EncodedMethod* ir_method) const {
 
 void DexDissasembler::Dissasemble(ir::EncodedMethod* ir_method) const {
   lir::CodeIr code_ir(ir_method, dex_ir_);
-  PrintCodeIrVisitor visitor(dex_ir_);
+  std::unique_ptr<lir::ControlFlowGraph> cfg;
+  switch (cfg_type_) {
+    case CfgType::Compact:
+      cfg.reset(new lir::ControlFlowGraph(&code_ir, false));
+      break;
+    case CfgType::Verbose:
+      cfg.reset(new lir::ControlFlowGraph(&code_ir, true));
+      break;
+    default:
+      break;
+  }
+  PrintCodeIrVisitor visitor(dex_ir_, cfg.get());
   code_ir.Accept(&visitor);
 }

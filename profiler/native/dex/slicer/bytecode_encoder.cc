@@ -433,7 +433,7 @@ bool BytecodeEncoder::Visit(Bytecode* bytecode) {
   return true;
 }
 
-bool BytecodeEncoder::Visit(PackedSwitch* packed_switch) {
+bool BytecodeEncoder::Visit(PackedSwitchPayload* packed_switch) {
   CHECK(offset_ % 2 == 0);
 
   // keep track of the switches
@@ -457,7 +457,7 @@ bool BytecodeEncoder::Visit(PackedSwitch* packed_switch) {
   return true;
 }
 
-bool BytecodeEncoder::Visit(SparseSwitch* sparse_switch) {
+bool BytecodeEncoder::Visit(SparseSwitchPayload* sparse_switch) {
   CHECK(offset_ % 2 == 0);
 
   // keep track of the switches
@@ -550,7 +550,7 @@ void BytecodeEncoder::FixupPackedSwitch(dex::u4 base_offset,
   auto instr = packed_switches_[payload_offset];
   CHECK(instr != nullptr);
 
-  auto payload = bytecode_.ptr<dex::PackedSwitch>(payload_offset * 2);
+  auto payload = bytecode_.ptr<dex::PackedSwitchPayload>(payload_offset * 2);
   CHECK(payload->ident == dex::kPackedSwitchSignature);
   CHECK(reinterpret_cast<dex::u1*>(payload->targets + payload->size) <=
         bytecode_.data() + bytecode_.size());
@@ -567,7 +567,7 @@ void BytecodeEncoder::FixupSparseSwitch(dex::u4 base_offset,
   auto instr = sparse_switches_[payload_offset];
   CHECK(instr != nullptr);
 
-  auto payload = bytecode_.ptr<dex::SparseSwitch>(payload_offset * 2);
+  auto payload = bytecode_.ptr<dex::SparseSwitchPayload>(payload_offset * 2);
   CHECK(payload->ident == dex::kSparseSwitchSignature);
 
   dex::s4* const targets = payload->data + payload->size;
