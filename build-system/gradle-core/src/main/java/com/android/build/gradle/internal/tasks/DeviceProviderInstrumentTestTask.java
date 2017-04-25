@@ -24,6 +24,7 @@ import static com.android.builder.core.BuilderConstants.FD_REPORTS;
 import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
 import static com.android.sdklib.BuildToolInfo.PathId.SPLIT_SELECT;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
@@ -45,6 +46,7 @@ import com.android.builder.testing.api.TestException;
 import com.android.ide.common.process.ProcessExecutor;
 import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
@@ -54,6 +56,7 @@ import java.util.function.Supplier;
 import javax.xml.parsers.ParserConfigurationException;
 import org.gradle.api.GradleException;
 import org.gradle.api.Nullable;
+import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.tasks.InputFile;
@@ -72,28 +75,21 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
         TestRunner build(@Nullable File splitSelectExec, @NonNull ProcessExecutor processExecutor);
     }
 
+    private DeviceProvider deviceProvider;
+    private File coverageDir;
     private File reportsDir;
     private File resultsDir;
-    private File coverageDir;
-
-    private String flavorName;
-
-    @Nullable
-    private Collection<String> installOptions;
-
-    private DeviceProvider deviceProvider;
-    private TestData testData;
-
-    private Supplier<File> splitSelectExec;
+    private FileCollection buddyApks;
+    private FileCollection testTargetManifests;
     private ProcessExecutor processExecutor;
-
+    private String flavorName;
+    private Supplier<File> splitSelectExec;
+    private TestData testData;
+    private TestRunnerFactory testRunnerFactory;
     private boolean ignoreFailures;
     private boolean testFailed;
 
-    private TestRunnerFactory testRunnerFactory;
-
-
-    @Nullable private FileCollection testTargetManifests;
+    @Nullable private Collection<String> installOptions;
 
     @TaskAction
     protected void runTests() throws DeviceException, IOException, InterruptedException,
@@ -111,7 +107,7 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
             testData.loadFromMetadataFile(testTargetManifests.getSingleFile());
         }
 
-        boolean success = false;
+        boolean success;
         // If there are tests to run, and the test runner returns with no results, we fail (since
         // this is most likely a problem with the device setup). If no, the task will succeed.
         if (!testsFound()) {
@@ -135,8 +131,8 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
                         testRunner.runTests(
                                 getProject().getName(),
                                 getFlavorName(),
-                                testData.getTestApk(),
                                 testData,
+                                buddyApks.getFiles(),
                                 deviceProvider.getDevices(),
                                 deviceProvider.getMaxThreads(),
                                 deviceProvider.getTimeoutInMs(),
@@ -283,6 +279,11 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
         return testTargetManifests;
     }
 
+    @InputFiles
+    public FileCollection getBuddyApks() {
+        return buddyApks;
+    }
+
     public static class ConfigAction implements TaskConfigAction<DeviceProviderInstrumentTestTask> {
 
         @NonNull
@@ -318,6 +319,8 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
 
         @Override
         public void execute(@NonNull DeviceProviderInstrumentTestTask task) {
+            Project project = scope.getGlobalScope().getProject();
+
             final boolean connected = deviceProvider instanceof ConnectedDeviceProvider;
             String variantName = scope.getTestedVariantData() != null ?
                     scope.getTestedVariantData().getName() : scope.getVariantData().getName();
@@ -399,18 +402,18 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
                 rootLocation = scope.getGlobalScope().getBuildDir() + "/" +
                         FD_OUTPUTS + "/" + FD_ANDROID_RESULTS;
             }
-            task.resultsDir = scope.getGlobalScope().getProject().file(rootLocation + subFolder);
+            task.resultsDir = project.file(rootLocation + subFolder);
 
             rootLocation = scope.getGlobalScope().getExtension().getTestOptions().getReportDir();
             if (rootLocation == null) {
                 rootLocation = scope.getGlobalScope().getBuildDir() + "/" +
                         FD_REPORTS + "/" + FD_ANDROID_TESTS;
             }
-            task.reportsDir = scope.getGlobalScope().getProject().file(rootLocation + subFolder);
+            task.reportsDir = project.file(rootLocation + subFolder);
 
             rootLocation = scope.getGlobalScope().getBuildDir() + "/" + FD_OUTPUTS
                     + "/code-coverage";
-            task.setCoverageDir(scope.getGlobalScope().getProject().file(rootLocation + subFolder));
+            task.setCoverageDir(project.file(rootLocation + subFolder));
 
             if (scope.getVariantData() instanceof TestVariantData) {
                 TestVariantData testVariantData = (TestVariantData) scope.getVariantData();
@@ -420,6 +423,14 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
                     testVariantData.providerTestTaskList.add(task);
                 }
             }
+
+            // The configuration is not created by the experimental plugin, so just create an empty
+            // FileCollection in this case.
+            task.buddyApks =
+                    MoreObjects.firstNonNull(
+                            project.getConfigurations()
+                                    .findByName(SdkConstants.TEST_HELPERS_CONFIGURATION),
+                            project.files());
 
             task.setEnabled(deviceProvider.isConfigured());
 

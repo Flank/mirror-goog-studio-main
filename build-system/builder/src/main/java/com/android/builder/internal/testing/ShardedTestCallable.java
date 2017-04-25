@@ -68,9 +68,6 @@ public class ShardedTestCallable implements Callable<Boolean> {
     private final File coverageDir;
 
     @NonNull
-    private final File testApk;
-
-    @NonNull
     private final List<File> testedApks;
 
     @NonNull
@@ -87,7 +84,6 @@ public class ShardedTestCallable implements Callable<Boolean> {
             @NonNull DeviceConnector device,
             @NonNull String projectName,
             @NonNull String flavorName,
-            @NonNull File testApk,
             @NonNull List<File> testedApks,
             @NonNull TestData testData,
             @NonNull File resultsDir,
@@ -100,7 +96,6 @@ public class ShardedTestCallable implements Callable<Boolean> {
         this.flavorName = flavorName;
         this.resultsDir = resultsDir;
         this.coverageDir = coverageDir;
-        this.testApk = testApk;
         this.testedApks = testedApks;
         this.testData = testData;
         this.timeoutInMs = timeoutInMs;
@@ -150,13 +145,20 @@ public class ShardedTestCallable implements Callable<Boolean> {
                     }
                 }
 
-                logger.verbose("DeviceConnector '%s': installing %s", deviceName, testApk);
+                logger.verbose(
+                        "DeviceConnector '%s': installing %s", deviceName, testData.getTestApk());
                 if (device.getApiLevel() >= 21) {
-                    device.installPackages(ImmutableList.of(testApk),
-                            ImmutableList.<String>of() /* installOptions */, timeoutInMs, logger);
+                    device.installPackages(
+                            ImmutableList.of(testData.getTestApk()),
+                            ImmutableList.<String>of() /* installOptions */,
+                            timeoutInMs,
+                            logger);
                 } else {
-                    device.installPackage(testApk,
-                            ImmutableList.<String>of() /* installOptions */, timeoutInMs, logger);
+                    device.installPackage(
+                            testData.getTestApk(),
+                            ImmutableList.<String>of() /* installOptions */,
+                            timeoutInMs,
+                            logger);
                 }
                 logger.verbose("Installed test apk on %s", deviceName);
             }
@@ -263,7 +265,7 @@ public class ShardedTestCallable implements Callable<Boolean> {
                 // uninstall the apps
                 // This should really not be null, because if it was the build
                 // would have broken before.
-                uninstall(testApk, testData.getApplicationId(), deviceName);
+                uninstall(testData.getTestApk(), testData.getApplicationId(), deviceName);
 
                 if (!testedApks.isEmpty()) {
                     for (File testedApk : testedApks) {
