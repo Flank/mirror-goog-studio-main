@@ -906,8 +906,14 @@ public class LintCliClient extends LintClient {
             files.addAll(project.getJavaSourceFolders());
             files.addAll(project.getGeneratedSourceFolders());
             files.addAll(project.getJavaLibraries(true));
-            files.addAll(project.getJavaClassFolders());
             files.addAll(project.getTestLibraries());
+
+            // Don't include the class folders:
+            //  files.addAll(project.getJavaClassFolders());
+            // These are the outputs from the sources and generated sources, which we will
+            // parse directly with PSI/UAST anyway. Including them here leads lint to do
+            // a lot more work (e.g. when resolving symbols it looks at both .java and .class
+            // matches)
         }
 
         IAndroidTarget buildTarget = null;

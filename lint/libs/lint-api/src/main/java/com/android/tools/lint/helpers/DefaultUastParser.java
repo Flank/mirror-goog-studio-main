@@ -23,6 +23,7 @@ import com.android.tools.lint.client.api.UastParser;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Location;
+import com.android.tools.lint.detector.api.Project;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.StandardFileSystems;
@@ -51,12 +52,18 @@ public class DefaultUastParser extends UastParser {
 
     public DefaultUastParser(@Nullable com.android.tools.lint.detector.api.Project project,
             @NonNull com.intellij.openapi.project.Project p) {
-        javaEvaluator = new DefaultJavaEvaluator(p, project);
+        javaEvaluator = createEvaluator(project, p);
         if (!p.isDisposed()) {
             uastContext = ServiceManager.getService(p, UastContext.class);
         } else {
             uastContext = null;
         }
+    }
+
+    @NonNull
+    protected DefaultJavaEvaluator createEvaluator(@Nullable Project project,
+            @NonNull com.intellij.openapi.project.Project p) {
+        return new DefaultJavaEvaluator(p, project);
     }
 
     /**
