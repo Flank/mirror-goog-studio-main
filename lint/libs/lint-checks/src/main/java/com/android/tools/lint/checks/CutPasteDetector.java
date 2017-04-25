@@ -95,7 +95,7 @@ public class CutPasteDetector extends Detector implements Detector.UastScanner {
 
     @Override
     public List<String> getApplicableMethodNames() {
-        return Collections.singletonList("findViewById");
+        return Collections.singletonList(ViewTypeDetector.FIND_VIEW_BY_ID);
     }
 
     @Override

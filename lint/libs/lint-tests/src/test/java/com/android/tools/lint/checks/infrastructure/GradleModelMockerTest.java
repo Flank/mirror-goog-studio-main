@@ -30,6 +30,7 @@ import com.android.builder.model.BuildType;
 import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.ClassField;
 import com.android.builder.model.Dependencies;
+import com.android.builder.model.JavaCompileOptions;
 import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.LintOptions;
 import com.android.builder.model.MavenCoordinates;
@@ -986,6 +987,40 @@ public class GradleModelMockerTest {
         assertThat(options.getDisable()).containsExactly("TypographyFractions", "TypographyQuotes");
         assertThat(options.getEnable()).containsExactly("RtlHardcoded", "RtlCompat", "RtlEnabled");
         assertThat(options.getCheck()).containsExactly("NewApi", "InlinedApi");
+    }
+
+    @Test
+    public void testLanguageOptions1() {
+        GradleModelMocker mocker = createMocker(""
+                + "android {\n"
+                + "    compileOptions {\n"
+                + "        sourceCompatibility JavaVersion.VERSION_1_8\n"
+                + "        targetCompatibility JavaVersion.VERSION_1_8\n"
+                + "    }\n"
+                + "}");
+        assertThat(mocker).isNotNull();
+        AndroidProject project = mocker.getProject();
+        assertThat(project).isNotNull();
+        JavaCompileOptions compileOptions = project.getJavaCompileOptions();
+        assertThat(compileOptions.getSourceCompatibility()).isEqualTo("1.8");
+        assertThat(compileOptions.getTargetCompatibility()).isEqualTo("1.8");
+    }
+
+    @Test
+    public void testLanguageOptions2() {
+        GradleModelMocker mocker = createMocker(""
+                + "android {\n"
+                + "    compileOptions {\n"
+                + "        sourceCompatibility JavaVersion.VERSION_1_7\n"
+                + "        targetCompatibility JavaVersion.VERSION_1_7\n"
+                + "    }\n"
+                + "}");
+        assertThat(mocker).isNotNull();
+        AndroidProject project = mocker.getProject();
+        assertThat(project).isNotNull();
+        JavaCompileOptions compileOptions = project.getJavaCompileOptions();
+        assertThat(compileOptions.getSourceCompatibility()).isEqualTo("1.7");
+        assertThat(compileOptions.getTargetCompatibility()).isEqualTo("1.7");
     }
 
     private static final Comparator<AndroidLibrary> LIBRARY_COMPARATOR = (o1, o2) -> {
