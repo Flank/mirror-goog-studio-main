@@ -14,6 +14,7 @@
             id="instantAppActivityHost"
             name="Instant App URL Host"
             type="string"
+            suggest="${companyDomain}"
             default="instantapp.example.com"
             visibility="isInstantApp!false"
             help="The domain to use in the Instant App route for this activity"/>
@@ -22,7 +23,7 @@
             id="instantAppActivityRouteType"
             name="Instant App URL Route Type"
             type="enum"
-            default="path"
+            default="pathPattern"
             visibility="isInstantApp!false"
             help="The type of route to use in the Instant App route for this activity" >
             <option id="path">Path</option>
@@ -34,7 +35,7 @@
             id="instantAppActivityRoute"
             name="Instant App URL Route"
             type="string"
-            default="/"
+            default="/.*"
             visibility="isInstantApp!false"
             help="The route to use in the Instant App route for this activity"/>
 
