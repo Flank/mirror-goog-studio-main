@@ -269,6 +269,15 @@ public class AnnotationProcessorTest {
     }
 
     @Test
+    public void androidAptPluginFail() throws Exception {
+        TestFileUtils.appendToFile(
+                project.getSubproject(":app").getBuildFile(),
+                "apply plugin: 'com.neenbedankt.android-apt'\n");
+
+        project.executor().expectFailure().run("assembleDebug");
+    }
+
+    @Test
     @Category(DeviceTests.class)
     public void connectedCheck() throws Exception {
         TestFileUtils.appendToFile(

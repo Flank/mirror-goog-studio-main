@@ -28,7 +28,6 @@ import com.android.build.gradle.api.AnnotationProcessorOptions;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
-import com.android.build.gradle.tasks.factory.AbstractCompilesUtil;
 import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
@@ -110,9 +109,7 @@ public class JavaPreCompileTask extends AndroidBuilderTask {
 
     @TaskAction
     public void preCompile() throws IOException {
-        boolean grandfathered =
-                annotationProcessorOptions.getIncludeCompileClasspath() != null
-                        || hasOldAptPlugin();
+        boolean grandfathered = annotationProcessorOptions.getIncludeCompileClasspath() != null;
         Collection<ResolvedArtifactResult> compileProcessors = null;
         if (!grandfathered) {
             compileProcessors = collectAnnotationProcessors(compileClasspaths);
@@ -218,10 +215,6 @@ public class JavaPreCompileTask extends AndroidBuilderTask {
         return files.stream()
                 .map(artifact -> artifact.getId().getDisplayName())
                 .collect(Collectors.toList());
-    }
-
-    private boolean hasOldAptPlugin() {
-        return getProject().getPlugins().hasPlugin(AbstractCompilesUtil.ANDROID_APT_PLUGIN_NAME);
     }
 
     public static class ConfigAction implements TaskConfigAction<JavaPreCompileTask> {
