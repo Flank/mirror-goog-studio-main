@@ -43,7 +43,7 @@ maven_java_library(
     resources = [":resources"],
     visibility = ["//visibility:public"],
     deps = [
-        "//prebuilts/tools/common/intellij-core:intellij-core-171.3780.107",
+        "//prebuilts/tools/common/intellij-core:intellij-core-171.4249.32",
         "//tools/analytics-library/protos/src/main/proto",
         "//tools/base/annotations",
         "//tools/base/build-system:gradle-api_neverlink",
