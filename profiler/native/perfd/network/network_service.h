@@ -59,8 +59,10 @@ class NetworkServiceImpl final : public proto::NetworkService::Service {
   void StartAppCollector(int32_t pid);
   void StartCollectorFor(NetworkProfilerBuffer *buffer, int32_t sample_rate_ms);
 
-  // Max number of profiler data instances that a buffer can hold.
-  static const int kBufferCapacity = 10 * 60 * 10;
+  // Max number of an app's profiler data instances. Polling rate of read
+  // data to profiler is less than 1 second, 10 seconds is enough to hold
+  // and 1024 is consistent with memory_levels_sampler.
+  static const int kBufferCapacity = 1024;
 
   // TODO: The vectors may need mutex.
   std::unique_ptr<NetworkProfilerBuffer> device_buffer_;
