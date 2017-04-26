@@ -21,6 +21,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.concurrency.GuardedBy;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -138,7 +139,8 @@ public class WaitableExecutor<T> {
      * @param callable the callable to run.
      */
     public void execute(Callable<T> callable) {
-        mFutureSet.add(mCompletionService.submit(callable));
+        boolean added = mFutureSet.add(mCompletionService.submit(callable));
+        Preconditions.checkState(added, "Failed to add callable");
     }
 
     /**
