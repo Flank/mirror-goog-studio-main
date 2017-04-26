@@ -37,14 +37,19 @@ message RegisterMemoryAgentRequest {
 }
 
 message MemoryControlRequest {
-  enum Signal {
-    UNSPECIFICED = 0;
-    ENABLE_TRACKING = 1;
-    DISABLE_TRACKING = 2;
+  message EnableTracking {
+    int64 timestamp = 1;
   }
+
+  message DisableTracking {
+    int64 timestamp = 1;
+  }
+
   int64 pid = 1;
-  Signal signal = 2;
-  // TODO: handle control-specific data.
+  oneof control {
+    EnableTracking enable_request = 2;
+    DisableTracking disable_request = 3;
+  }
 }
 
 message AllocStatsRequest {

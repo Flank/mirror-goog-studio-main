@@ -128,9 +128,10 @@ void MemoryCollector::GetHeapDumpData(int64_t dump_time,
   memory_cache_.ReadHeapDumpFileContents(dump_time, response);
 }
 
-void MemoryCollector::TrackAllocations(bool enabled, bool legacy,
+void MemoryCollector::TrackAllocations(int64_t request_time, bool enabled,
+                                       bool legacy,
                                        TrackAllocationsResponse* response) {
-  memory_cache_.TrackAllocations(enabled, legacy, response);
+  memory_cache_.TrackAllocations(request_time, enabled, legacy, response);
 }
 
 }  // namespace profiler

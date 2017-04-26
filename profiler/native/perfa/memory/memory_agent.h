@@ -60,8 +60,8 @@ class MemoryAgent {
   MemoryAgent& operator=(const MemoryAgent&) = delete;
 
   void Initialize();
-  void StartLiveTracking();
-  void StopLiveTracking();
+  void StartLiveTracking(int64_t timestamp);
+  void StopLiveTracking(int64_t timestamp);
   void RegisterNewClass(JNIEnv* jni, jclass klass, AllocationEvent* event);
   void LogGcStart();
   void LogGcFinish();
@@ -98,7 +98,7 @@ class MemoryAgent {
   jvmtiEnv* jvmti_;
   bool is_live_tracking_;
   int32_t app_id_;
-  int64_t last_tracking_start_ns_;
+  int64_t current_capture_time_ns_;
   int64_t last_gc_start_ns_;
   std::atomic<long> current_class_tag_;
   std::atomic<long> current_object_tag_;

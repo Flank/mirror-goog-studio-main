@@ -87,7 +87,7 @@ MemoryAgent::MemoryAgent(jvmtiEnv* jvmti)
     : jvmti_(jvmti),
       is_live_tracking_(false),
       app_id_(getpid()),
-      last_tracking_start_ns_(-1),
+      current_capture_time_ns_(-1),
       last_gc_start_ns_(-1),
       current_class_tag_(kClassStartTag),
       current_object_tag_(kObjectStartTag) {}
@@ -129,12 +129,12 @@ void MemoryAgent::Initialize() {
  * - Walk through the heap to tag all existing objects
  * - Sets up a agent thread which offload data back to perfd/studio.
  */
-void MemoryAgent::StartLiveTracking() {
+void MemoryAgent::StartLiveTracking(int64_t timestamp) {
   if (is_live_tracking_) {
     return;
   }
   is_live_tracking_ = true;
-  last_tracking_start_ns_ = clock_.GetCurrentTime();
+  current_capture_time_ns_ = timestamp;
   event_queue_.Reset();
 
   // Called from grpc so we need to attach.
@@ -165,8 +165,8 @@ void MemoryAgent::StartLiveTracking() {
 
     AllocationEvent* event = class_sample.add_events();
     RegisterNewClass(jni, klass.get(), event);
-    event->set_tracking_start_time(last_tracking_start_ns_);
-    event->set_timestamp(last_tracking_start_ns_);
+    event->set_capture_time(current_capture_time_ns_);
+    event->set_timestamp(current_capture_time_ns_);
     if (class_sample.events_size() >= kDataBatchSize) {
       profiler::EnqueueAllocationEvents(class_sample);
       class_sample.clear_events();
@@ -208,7 +208,7 @@ void MemoryAgent::StartLiveTracking() {
  * TODO: Stops live allocation tracking by disabling the event notification
  * and removing all global refs that we have created for jclasses.
  */
-void MemoryAgent::StopLiveTracking() {}
+void MemoryAgent::StopLiveTracking(int64_t timestamp) {}
 
 void MemoryAgent::RegisterNewClass(JNIEnv* jni, jclass klass,
                                    AllocationEvent* event) {
@@ -273,14 +273,14 @@ void MemoryAgent::LogGcFinish() {
 }
 
 void MemoryAgent::HandleControlSignal(const MemoryControlRequest* request) {
-  switch (request->signal()) {
-    case MemoryControlRequest::ENABLE_TRACKING:
+  switch (request->control_case()) {
+    case MemoryControlRequest::kEnableRequest:
       Log::V("Live memory tracking enabled.");
-      StartLiveTracking();
+      StartLiveTracking(request->enable_request().timestamp());
       break;
-    case MemoryControlRequest::DISABLE_TRACKING:
+    case MemoryControlRequest::kDisableRequest:
       Log::V("Live memory tracking disabled.");
-      StopLiveTracking();
+      StopLiveTracking(request->disable_request().timestamp());
       break;
     default:
       Log::V("Unknown memory control signal.");
@@ -310,8 +310,8 @@ jint MemoryAgent::HeapIterationCallback(jlong class_tag, jlong size,
   *tag_ptr = tag;
 
   AllocationEvent* event = sample->add_events();
-  event->set_tracking_start_time(agent_->last_tracking_start_ns_);
-  event->set_timestamp(agent_->last_tracking_start_ns_);
+  event->set_capture_time(agent_->current_capture_time_ns_);
+  event->set_timestamp(agent_->current_capture_time_ns_);
 
   AllocationEvent::Allocation* alloc = event->mutable_alloc_data();
   alloc->set_tag(tag);
@@ -331,7 +331,7 @@ void MemoryAgent::ClassPrepareCallback(jvmtiEnv* jvmti, JNIEnv* jni,
                                        jthread thread, jclass klass) {
   AllocationEvent event;
   agent_->RegisterNewClass(jni, klass, &event);
-  event.set_tracking_start_time(agent_->last_tracking_start_ns_);
+  event.set_capture_time(agent_->current_capture_time_ns_);
   event.set_timestamp(agent_->clock_.GetCurrentTime());
   agent_->event_queue_.Push(event);
 }
@@ -369,7 +369,7 @@ void MemoryAgent::ObjectAllocCallback(jvmtiEnv* jvmti, JNIEnv* jni,
     alloc_data->set_tag(tag);
     alloc_data->set_size(size);
     alloc_data->set_class_tag(itr->second);
-    event.set_tracking_start_time(agent_->last_tracking_start_ns_);
+    event.set_capture_time(agent_->current_capture_time_ns_);
     event.set_timestamp(agent_->clock_.GetCurrentTime());
     agent_->event_queue_.Push(event);
   }
@@ -382,7 +382,7 @@ void MemoryAgent::ObjectFreeCallback(jvmtiEnv* jvmti, jlong tag) {
     AllocationEvent event;
     AllocationEvent::Deallocation* free_data = event.mutable_free_data();
     free_data->set_tag(tag);
-    event.set_tracking_start_time(agent_->last_tracking_start_ns_);
+    event.set_capture_time(agent_->current_capture_time_ns_);
     // Associate the free event with the last gc that occurred.
     event.set_timestamp(agent_->last_gc_start_ns_);
     agent_->event_queue_.Push(event);

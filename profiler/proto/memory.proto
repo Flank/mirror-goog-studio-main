@@ -315,14 +315,17 @@ message AllocationStack {
 message AllocationSnapshotRequest {
   int32 process_id = 1;
   Session session = 2;
-  int64 start_time = 3;  // inclusive;
+  // The start time (id) of the tracking session from which
+  // allocation data should be returned.
+  int64 capture_time = 3;
+  int64 start_time = 4;  // inclusive;
   // NOTE that compared to other proto request, end_time here
   // is exclusive as ongoing live instances are set to have a
   // free_timestamp of Long.MAX_VALUE. This allows us to naturally
   // query for all current live instances by passing in MAX_VALUE
   // as the end_time, without having to special case an invalid
   // duration value.
-  int64 end_time = 4; // exclusive;
+  int64 end_time = 5; // exclusive;
 }
 
 // Batched AllocationEvents to minimize number of grpc
@@ -369,7 +372,7 @@ message AllocationEvent {
   }
 
   // associates an event with a particular tracking session.
-  int64 tracking_start_time = 1;
+  int64 capture_time = 1;
 
   // If it is an allocation event, this marks the exact time 
   // when the alloc happens. If it is a deallocation event, this

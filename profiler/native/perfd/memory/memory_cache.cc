@@ -119,7 +119,8 @@ bool MemoryCache::EndHeapDump(int64_t end_time, bool success) {
   return true;
 }
 
-void MemoryCache::TrackAllocations(bool enabled, bool legacy,
+void MemoryCache::TrackAllocations(int64_t request_time, bool enabled,
+                                   bool legacy,
                                    TrackAllocationsResponse* response) {
   std::lock_guard<std::mutex> lock(allocations_info_mutex_);
 
@@ -130,10 +131,9 @@ void MemoryCache::TrackAllocations(bool enabled, bool legacy,
       response->set_status(TrackAllocationsResponse::NOT_ENABLED);
     }
   } else {
-    int64_t timestamp = clock_.GetCurrentTime();
     if (enabled) {
       AllocationsInfo info;
-      info.set_start_time(timestamp);
+      info.set_start_time(request_time);
       info.set_end_time(kUnfinishedTimestamp);
       info.set_legacy(legacy);
       info.set_status(AllocationsInfo::IN_PROGRESS);
@@ -143,13 +143,12 @@ void MemoryCache::TrackAllocations(bool enabled, bool legacy,
     } else {
       assert(allocations_info_.size() > 0);
       AllocationsInfo& info = allocations_info_.back();
-      info.set_end_time(timestamp);
+      info.set_end_time(request_time);
       info.set_status(AllocationsInfo::COMPLETED);
       response->mutable_info()->CopyFrom(info);
     }
     response->set_status(TrackAllocationsResponse::SUCCESS);
     is_allocation_tracking_enabled_ = enabled;
-    // TODO enable/disable post-O allocation tracking
   }
 }
 

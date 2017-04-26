@@ -167,9 +167,15 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(
     // Forwards a control signal to perfa to toggle JVMTI-based tracking.
     MemoryControlRequest control_request;
     control_request.set_pid(app_id);
-    control_request.set_signal(request->enabled()
-                                   ? MemoryControlRequest::ENABLE_TRACKING
-                                   : MemoryControlRequest::DISABLE_TRACKING);
+    if (request->enabled()) {
+      MemoryControlRequest::EnableTracking* enable_request =
+          control_request.mutable_enable_request();
+      enable_request->set_timestamp(request->request_time());
+    } else {
+      MemoryControlRequest::DisableTracking* disable_request =
+          control_request.mutable_disable_request();
+      disable_request->set_timestamp(request->request_time());
+    }
     if (!private_service_->SendRequestToAgent(control_request)) {
       return ::grpc::Status(::grpc::StatusCode::UNKNOWN,
                             "Unable to start live allocation tracking.");
@@ -178,7 +184,8 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(
     // If a signal was successful sent, update the AllocationsInfo sample
     // that we track in perfd.
     (result->second)
-        .TrackAllocations(request->enabled(), request->legacy(), response);
+        .TrackAllocations(request->request_time(), request->enabled(),
+                          request->legacy(), response);
     switch (response->status()) {
       case TrackAllocationsResponse::SUCCESS:
       case TrackAllocationsResponse::IN_PROGRESS:

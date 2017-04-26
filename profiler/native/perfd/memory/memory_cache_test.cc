@@ -31,16 +31,16 @@ const int64_t profiler::MemoryCache::kUnfinishedTimestamp;
 TEST(MemoryCache, TrackAllocations) {
   profiler::FileCache file_cache(
       std::unique_ptr<profiler::FileSystem>(new profiler::MemoryFileSystem()));
-  profiler::FakeClock fake_clock(5);
+  profiler::FakeClock fake_clock(0);
   profiler::MemoryCache cache(fake_clock, &file_cache, 2);
   TrackAllocationsResponse response;
 
   // Ensure stopping does nothing if no current tracking is enabled.
-  cache.TrackAllocations(false, false, &response);
+  cache.TrackAllocations(0, false, false, &response);
   EXPECT_EQ(TrackAllocationsResponse::NOT_ENABLED, response.status());
 
   // Begin a tracking session at t=5.
-  cache.TrackAllocations(true, false, &response);
+  cache.TrackAllocations(5, true, false, &response);
   EXPECT_EQ(TrackAllocationsResponse::SUCCESS, response.status());
   EXPECT_EQ(AllocationsInfo::IN_PROGRESS, response.info().status());
   EXPECT_EQ(5, response.info().start_time());
@@ -50,12 +50,11 @@ TEST(MemoryCache, TrackAllocations) {
 
   // Ensures enabling tracking while one is already in progress
   // does nothing.
-  cache.TrackAllocations(true, false, &response);
+  cache.TrackAllocations(5, true, false, &response);
   EXPECT_EQ(TrackAllocationsResponse::IN_PROGRESS, response.status());
 
   // Complete a tracking session at t=10.
-  fake_clock.SetCurrentTime(10);
-  cache.TrackAllocations(false, false, &response);
+  cache.TrackAllocations(10, false, false, &response);
   EXPECT_EQ(TrackAllocationsResponse::SUCCESS, response.status());
   EXPECT_EQ(AllocationsInfo::COMPLETED, response.info().status());
   EXPECT_EQ(5, response.info().start_time());
@@ -63,7 +62,7 @@ TEST(MemoryCache, TrackAllocations) {
   EXPECT_EQ(false, response.info().legacy());
 
   // Start a tracking session at t=10;
-  cache.TrackAllocations(true, true, &response);
+  cache.TrackAllocations(10, true, true, &response);
   EXPECT_EQ(TrackAllocationsResponse::SUCCESS, response.status());
   EXPECT_EQ(AllocationsInfo::IN_PROGRESS, response.info().status());
   EXPECT_EQ(10, response.info().start_time());
@@ -90,8 +89,7 @@ TEST(MemoryCache, TrackAllocations) {
   EXPECT_EQ(true, data_response.allocations_info(1).legacy());
 
   // Complete the tracking session at t=15
-  fake_clock.SetCurrentTime(15);
-  cache.TrackAllocations(false, true, &response);
+  cache.TrackAllocations(15, false, true, &response);
   EXPECT_EQ(TrackAllocationsResponse::SUCCESS, response.status());
   EXPECT_EQ(AllocationsInfo::COMPLETED, response.info().status());
   EXPECT_EQ(10, response.info().start_time());

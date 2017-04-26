@@ -52,7 +52,7 @@ class MemoryCache {
                      proto::TriggerHeapDumpResponse* response);
 
   bool EndHeapDump(int64_t end_time, bool success);
-  void TrackAllocations(bool enabled, bool legacy,
+  void TrackAllocations(int64_t request_time, bool enabled, bool legacy,
                         proto::TrackAllocationsResponse* response);
 
   void LoadMemoryData(int64_t start_time_exl, int64_t end_time_inc,
