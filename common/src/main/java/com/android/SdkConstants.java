@@ -419,6 +419,8 @@ public final class SdkConstants {
     public static final String FD_LLDB = "lldb"; //$NON-NLS-1$
     public static final String FD_CMAKE = "cmake"; //$NON-NLS-1$
     public static final String FD_GAPID = "gapid"; //$NON-NLS-1$
+    /** Sample data for the project sample data */
+    public static final String FD_SAMPLE_DATA = "sampledata";
 
     /**
      * Name of an extra's sample folder. Ideally extras should have one {@link #FD_SAMPLES} folder
