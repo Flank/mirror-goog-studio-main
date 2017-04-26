@@ -88,6 +88,43 @@ model {
     }
 
     @Test
+    public void "check multiflavor model"() {
+        project.buildFile << """
+apply plugin: "com.android.model.native"
+
+model {
+    android {
+        compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+        ndk {
+            moduleName "hello-jni"
+        }
+        productFlavors {
+            create("free") {
+                dimension "pricing"
+            }
+            create("paid") {
+                dimension "pricing"
+            }
+            create("beta") {
+                dimension "releaseType"
+            }
+            create("normal") {
+                dimension "releaseType"
+            }
+        }
+    }
+}
+"""
+        NativeAndroidProject model =
+                project.executeAndReturnModel(NativeAndroidProject.class, "clean", "assemble")
+        assertThat(model.buildFiles).isEmpty()
+        checkModel(
+                model,
+                ImmutableSet.of("debug", "release"),
+                ImmutableSet.of("freeBeta", "freeNormal", "paidBeta", "paidNormal"));
+    }
+
+    @Test
     public void "check model with variants"() {
         project.buildFile << """
 apply plugin: "com.android.model.native"
