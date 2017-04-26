@@ -19,7 +19,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Table;
-
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
@@ -39,7 +38,7 @@ public class SystemImageManager {
      */
     private final DetailsTypes.SysImgDetailsType mValidator;
 
-    private static final String SYS_IMG_NAME = "system.img";
+    public static final String SYS_IMG_NAME = "system.img";
 
     /**
      * How far down the directory hierarchy we'll search for system images (starting from a

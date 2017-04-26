@@ -390,25 +390,21 @@ public class AvdManager {
     public static AvdManager getInstance(@NonNull AndroidSdkHandler sdkHandler,
             @NonNull ILogger log)
             throws AndroidLocationException {
-        return getInstance(
-                sdkHandler,
-                new File(AndroidLocation.getAvdFolder()),
-                log,
-                FileOpUtils.create());
+        return getInstance(sdkHandler, new File(AndroidLocation.getAvdFolder()), log);
     }
 
     @Nullable
     public static AvdManager getInstance(
             @NonNull AndroidSdkHandler sdkHandler,
             @NonNull File baseAvdFolder,
-            @NonNull ILogger log,
-            @NonNull FileOp fop)
+            @NonNull ILogger log)
             throws AndroidLocationException {
         if (sdkHandler.getLocation() == null) {
             throw new AndroidLocationException("Local SDK path not set!");
         }
         synchronized(mManagers) {
             AvdManager manager;
+            FileOp fop = sdkHandler.getFileOp();
             WeakReference<AvdManager> ref = mManagers
                     .get(sdkHandler.getLocation().getPath(), fop);
             if (ref != null && (manager = ref.get()) != null) {

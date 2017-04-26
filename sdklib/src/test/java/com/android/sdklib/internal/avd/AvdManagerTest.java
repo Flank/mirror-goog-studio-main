@@ -16,6 +16,8 @@
 
 package com.android.sdklib.internal.avd;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.android.prefs.AndroidLocation;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.testframework.MockFileOp;
@@ -25,13 +27,9 @@ import com.android.sdklib.repository.targets.SystemImage;
 import com.android.testutils.MockLog;
 import com.android.utils.NullLogger;
 import com.google.common.collect.Maps;
-
-import junit.framework.TestCase;
-
 import java.io.File;
 import java.util.*;
-
-import static com.google.common.truth.Truth.assertThat;
+import junit.framework.TestCase;
 
 public class AvdManagerTest extends TestCase {
 
@@ -59,8 +57,7 @@ public class AvdManagerTest extends TestCase {
                 AvdManager.getInstance(
                         mAndroidSdkHandler,
                         new File(ANDROID_HOME, AndroidLocation.FOLDER_AVD),
-                        new NullLogger(),
-                        mFileOp);
+                        new NullLogger());
         mAvdFolder =
                 AvdInfo.getDefaultAvdFolder(mAvdManager, getName(), mFileOp, false);
 
