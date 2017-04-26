@@ -1050,7 +1050,7 @@ public class VariantManager implements VariantModel {
 
                 GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
                 VariantScope variantScope = variantData.getScope();
-                ProcessProfileWriter.addVariant(project.getPath(), variantData.getName())
+                ProcessProfileWriter.getOrCreateVariant(project.getPath(), variantData.getName())
                         .setIsDebug(variantConfig.getBuildType().isDebuggable())
                         .setUseJack(variantConfig.isJackEnabled())
                         .setMinifyEnabled(variantScope.getCodeShrinker() != null)
