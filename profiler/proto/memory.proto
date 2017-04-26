@@ -58,7 +58,9 @@ service MemoryService {
   rpc GetLegacyAllocationDump(DumpDataRequest) returns (DumpDataResponse) {}
 
   // O+ studio-side only: Mirrors GetLegacyAllocationEvents but for O+ data.
-  // This returns a snapshot of all objects that are live at the requested time.
+  // This returns a snapshot of all objects that have been allocated and free_data
+  // within the request's start and end times. Note that if an object is allocated
+  // and collected within the time range, it would not be included in the result.
   rpc GetAllocationSnaphot(AllocationSnapshotRequest)
       returns (BatchAllocationSample) {}
 
@@ -313,7 +315,14 @@ message AllocationStack {
 message AllocationSnapshotRequest {
   int32 process_id = 1;
   Session session = 2;
-  int64 request_time = 3;  // exclusive;
+  int64 start_time = 3;  // inclusive;
+  // NOTE that compared to other proto request, end_time here
+  // is exclusive as ongoing live instances are set to have a
+  // free_timestamp of Long.MAX_VALUE. This allows us to naturally
+  // query for all current live instances by passing in MAX_VALUE
+  // as the end_time, without having to special case an invalid
+  // duration value.
+  int64 end_time = 4; // exclusive;
 }
 
 // Batched AllocationEvents to minimize number of grpc
@@ -350,7 +359,8 @@ message AllocationEvent {
     // Studio-side only so we can store and query data more
     // efficiently. If an allocation has been free, this field
     // would indicate the free timestamps (i.e. the timestamp
-    // of the gc event that triggered the deallocation)
+    // of the gc event that triggered the deallocation).
+    // Note that free_timestamp would be set to Long.MAX_VALUE
     int64 free_timestamp = 5;
   }
 
