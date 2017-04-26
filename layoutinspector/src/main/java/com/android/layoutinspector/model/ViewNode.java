@@ -40,9 +40,10 @@ public class ViewNode implements TreeNode {
     }
 
     @NonNull public final String name;
-    public final Map<String, ViewProperty> namedProperties = Maps.newHashMap();
-    public final List<ViewProperty> properties = Lists.newArrayList();
-    public final List<ViewNode> children = Lists.newArrayList();
+    @NonNull public final Map<String, List<ViewProperty>> groupedProperties = Maps.newHashMap();
+    @NonNull public final Map<String, ViewProperty> namedProperties = Maps.newHashMap();
+    @NonNull public final List<ViewProperty> properties = Lists.newArrayList();
+    @NonNull public final List<ViewNode> children = Lists.newArrayList();
 
     public final ViewNode parent;
     public final int index;
@@ -100,6 +101,8 @@ public class ViewNode implements TreeNode {
             properties.add(property);
             namedProperties.put(property.fullName, property);
 
+            addPropertyToGroup(property);
+
             stop = start >= data.length();
             if (!stop) {
                 start += 1;
@@ -107,6 +110,24 @@ public class ViewNode implements TreeNode {
         } while (!stop);
 
         Collections.sort(properties);
+    }
+
+    private void addPropertyToGroup(@NonNull ViewProperty property) {
+        String key = getKey(property);
+        List<ViewProperty> propertiesList = groupedProperties.getOrDefault(key, new LinkedList<>());
+        propertiesList.add(property);
+        groupedProperties.put(key, propertiesList);
+    }
+
+    @NonNull
+    private String getKey(@NonNull ViewProperty property) {
+        if (property.category != null) {
+            return property.category;
+        } else if (property.fullName.endsWith("()")) {
+            return "methods";
+        } else {
+            return "properties";
+        }
     }
 
     public ViewProperty getProperty(String name, String... altNames) {

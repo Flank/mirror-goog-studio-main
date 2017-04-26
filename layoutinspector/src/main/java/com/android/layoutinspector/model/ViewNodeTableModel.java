@@ -17,7 +17,9 @@ package com.android.layoutinspector.model;
 
 import com.android.annotations.NonNull;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import java.util.List;
+import java.util.Map;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableModel;
@@ -28,10 +30,14 @@ public class ViewNodeTableModel implements TableModel {
 
     private final List<ViewProperty> mEntries = Lists.newArrayList();
 
+    private final Map<String, List<ViewProperty>> mGroupedProperties = Maps.newHashMap();
+
     public void setNode(@NonNull ViewNode node) {
         // Go through the properties, filtering the favorites properties first
         mEntries.clear();
         mEntries.addAll(node.properties);
+        mGroupedProperties.clear();
+        mGroupedProperties.putAll(node.groupedProperties);
         notifyChange(new TableModelEvent(this));
     }
 
@@ -85,5 +91,9 @@ public class ViewNodeTableModel implements TableModel {
         for (TableModelListener l : mListeners) {
             l.tableChanged(event);
         }
+    }
+
+    public Map<String, List<ViewProperty>> getGroupedProperties() {
+        return mGroupedProperties;
     }
 }

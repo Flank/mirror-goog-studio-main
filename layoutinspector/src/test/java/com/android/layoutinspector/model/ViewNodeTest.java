@@ -17,7 +17,6 @@ package com.android.layoutinspector.model;
 
 import static org.junit.Assert.*;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 public class ViewNodeTest {
@@ -74,12 +73,24 @@ public class ViewNodeTest {
         ViewNode node = ViewNode.parseFlatString(getViewNodeFlatString());
         ViewNodeTableModel model = new ViewNodeTableModel();
         model.setNode(node);
-        Assert.assertEquals(4, model.getRowCount());
+        assertEquals(4, model.getRowCount());
         // Arbitrarily take the second row for testing
         assertTrue(model.getValueAt(1, 0) instanceof String);
         assertTrue(model.getValueAt(1, 1) instanceof String);
-        Assert.assertEquals("zoo", model.getValueAt(1, 0));
-        Assert.assertEquals("baz", model.getValueAt(1, 1));
+        assertEquals("zoo", model.getValueAt(1, 0));
+        assertEquals("baz", model.getValueAt(1, 1));
+    }
+
+    @Test
+    public void testViewNodeGroupProperties() throws Exception {
+        ViewNode node = ViewNode.parseFlatString(getViewNodeFlatString());
+
+        assertEquals(node.groupedProperties.size(), 3);
+        assertEquals(node.groupedProperties.get("properties").size(), 2);
+        assertEquals("4394", node.groupedProperties.get("cat").get(0).getValue());
+        ViewProperty property = node.groupedProperties.get("properties").get(0);
+        assertEquals("zoo", property.name);
+        assertEquals("baz", property.getValue());
     }
 
     private static byte[] getViewNodeFlatString() {
