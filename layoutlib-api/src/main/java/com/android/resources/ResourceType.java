@@ -68,8 +68,11 @@ public enum ResourceType {
     /** Represents item tags inside a style definition. */
     STYLE_ITEM("_style_item", "Style Item"),
 
-    /** Not an actual resource type from AAPT. Used to provide mock values in the tools namespace */
-    MOCK("mock", "Mock");
+    /**
+     * Not an actual resource type from AAPT. Used to provide sample data values in the tools
+     * namespace
+     */
+    SAMPLE_DATA("sample", "Sample data");
 
     private final String mName;
     private final String mDisplayName;

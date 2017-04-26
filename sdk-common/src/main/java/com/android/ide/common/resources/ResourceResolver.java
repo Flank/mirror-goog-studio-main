@@ -473,7 +473,7 @@ public class ResourceResolver extends RenderResources {
     private final Map<String, AtomicInteger> mMockPosition = new HashMap<>();
 
     private ResourceValue findMockValue(String name) {
-        return Optional.ofNullable(mProjectResources.get(ResourceType.MOCK))
+        return Optional.ofNullable(mProjectResources.get(ResourceType.SAMPLE_DATA))
                 .map(t -> t.get(name))
                 .map(ResourceValue::getValue)
                 .map(
@@ -502,7 +502,7 @@ public class ResourceResolver extends RenderResources {
                                                 : null;
 
                                 return new ResourceValue(
-                                        ResourceUrl.create(null, ResourceType.MOCK, name),
+                                        ResourceUrl.create(null, ResourceType.SAMPLE_DATA, name),
                                         lineContent);
                             } catch (IOException ignore) {
                             }
@@ -522,7 +522,7 @@ public class ResourceResolver extends RenderResources {
         if (url.type == ResourceType.AAPT) {
             // Aapt resources are synthetic references that do not need to be resolved.
             return null;
-        } else if (url.type == ResourceType.MOCK) {
+        } else if (url.type == ResourceType.SAMPLE_DATA) {
             // Mock resources are only available within the tools namespace
             return findMockValue(url.name);
         }
