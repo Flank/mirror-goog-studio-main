@@ -266,6 +266,7 @@ public final class DevSdkUpdater {
             List<String> args = new ArrayList<>();
             args.add("--sdk_root=" + osSdkDest.getAbsolutePath());
             args.add("--verbose");
+            args.add("--channel=2");
             args.addAll(packages);
 
             Archive.sHostConfig = new Archive.HostConfig(osEntry.mName);
