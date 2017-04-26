@@ -31,7 +31,6 @@ import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher;
 import com.android.builder.model.InstantRun;
 import com.android.ddmlib.IDevice;
 import com.android.sdklib.AndroidVersion;
-import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.SplitApks;
 import com.android.tools.ir.client.InstantRunArtifact;
 import com.google.common.base.Charsets;
@@ -73,22 +72,20 @@ public class KotlinHotSwapTest {
         InstantRun instantRunModel =
                 InstantRunTestUtils.getInstantRunModel(project.model().getSingle().getOnlyModel());
 
-        InstantRunTestUtils.doInitialBuild(project, new AndroidVersion(19, null));
+        InstantRunTestUtils.doInitialBuild(project, new AndroidVersion(21, null));
 
         SplitApks apks = InstantRunTestUtils.getCompiledColdSwapChange(instantRunModel);
-        assertThat(apks).hasSize(1);
-        Apk apk = apks.get(0);
 
         // As no injected API level, will default to no splits.
-        assertThat(apk)
-                .hasMainClass("Lcom/example/helloworld/HelloWorld;")
+        assertThat(apks)
+                .hasClass("Lcom/example/helloworld/HelloWorld;")
                 .that()
                 .hasMethod("onCreate");
-        assertThat(apk).hasMainClass("Lcom/android/tools/ir/server/InstantRunContentProvider;");
+        assertThat(apks).hasClass("Lcom/android/tools/ir/server/InstantRunContentProvider;");
 
         createActivityClass("CHANGE");
 
-        project.executor().withInstantRun(new AndroidVersion(19, null)).run("assembleDebug");
+        project.executor().withInstantRun(new AndroidVersion(21, null)).run("assembleDebug");
 
         InstantRunArtifact artifact = InstantRunTestUtils.getReloadDexArtifact(instantRunModel);
 

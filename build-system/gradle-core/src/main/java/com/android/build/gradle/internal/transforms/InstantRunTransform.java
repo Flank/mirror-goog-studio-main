@@ -144,7 +144,6 @@ public class InstantRunTransform extends Transform {
                         transformScope
                                 .getInstantRunBuildContext()
                                 .getPatchingPolicy()
-                                .getDexPatchingPolicy()
                                 .toString())
                 : ImmutableMap.of();
 

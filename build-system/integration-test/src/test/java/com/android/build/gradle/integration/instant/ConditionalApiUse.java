@@ -57,36 +57,6 @@ public class ConditionalApiUse {
     public Expect expect = Expect.createAndEnableStackTrace();
 
     @Test
-    public void buildFor19() throws Exception {
-
-        InstantRun instantRunModel =
-                InstantRunTestUtils.doInitialBuild(project, new AndroidVersion(19, null));
-
-        Apk apk = project.getApk("debug");
-
-        assertThat(apk)
-                .hasMainClass("Lcom/android/tests/conditionalApiUse/MyException;")
-                .that()
-                .doesNotHaveField("$change");
-
-        // since we are building for 19, and the super class of MyException did not
-        // exist at that release level, it should not be instrumented.
-
-        makeHotswapCompatibleChange();
-
-        project.executor().withInstantRun(new AndroidVersion(19, null)).run("assembleDebug");
-
-        // because we touched a class that was not compatible with InstantRun, we should have
-        // a coldswap event.
-        InstantRunBuildInfo buildInfo = InstantRunTestUtils.loadContext(instantRunModel);
-        assertThat(buildInfo.getVerifierStatus()).isEqualTo(
-                InstantRunVerifierStatus.INSTANT_RUN_DISABLED.toString());
-
-        assertThat(buildInfo.getArtifacts()).hasSize(1);
-        assertThat(buildInfo.getArtifacts().get(0).type).isEqualTo(InstantRunArtifactType.MAIN);
-    }
-
-    @Test
     public void buildFor23() throws Exception {
         InstantRun instantRunModel =
                 InstantRunTestUtils.doInitialBuild(project, new AndroidVersion(23, null));

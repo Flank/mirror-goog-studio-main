@@ -2237,13 +2237,10 @@ public abstract class TaskManager {
                     variantScope.getInstantRunTaskManager().createPreColdswapTask(projectOptions);
             preColdSwapTask.dependsOn(tasks, allActionsAnchorTask);
 
-            if (InstantRunPatchingPolicy.PRE_LOLLIPOP
-                    != variantScope.getInstantRunBuildContext().getPatchingPolicy()) {
-                // force pre-dexing to be true as we rely on individual slices to be packaged
-                // separately.
-                extension.getDexOptions().setPreDexLibraries(true);
-                variantScope.getInstantRunTaskManager().createSlicerTask();
-            }
+            // force pre-dexing to be true as we rely on individual slices to be packaged
+            // separately.
+            extension.getDexOptions().setPreDexLibraries(true);
+            variantScope.getInstantRunTaskManager().createSlicerTask();
 
             extension.getDexOptions().setJumboMode(true);
         }
@@ -2808,9 +2805,6 @@ public abstract class TaskManager {
          * forcing a cold swap is triggered, the main FULL_APK must be rebuilt (even if the
          * resources were changed in a previous build).
          */
-        InstantRunPatchingPolicy patchingPolicy =
-                variantScope.getInstantRunBuildContext().getPatchingPolicy();
-
         DefaultGradlePackagingScope packagingScope = new DefaultGradlePackagingScope(variantScope);
 
         VariantScope.TaskOutputType manifestType =
@@ -2847,7 +2841,6 @@ public abstract class TaskManager {
                         new PackageApplication.StandardConfigAction(
                                 packagingScope,
                                 outputDirectory,
-                                patchingPolicy,
                                 resourceFilesInputType,
                                 variantScope.getOutput(resourceFilesInputType),
                                 manifests,
@@ -2872,14 +2865,13 @@ public abstract class TaskManager {
                 packageInstantRunResources.dependsOn(
                         tasks, getValidateSigningTask(tasks, packagingScope));
             } else {
-                // in instantRunMode, there is no user configured splits, only one apk.
+                // in instantRunMode, there is no user configured splits, only  one apk.
                 packageInstantRunResources =
                         androidTasks.create(
                                 tasks,
                                 new PackageApplication.InstantRunResourcesConfigAction(
                                         variantScope.getInstantRunResourcesFile(),
                                         packagingScope,
-                                        patchingPolicy,
                                         resourceFilesInputType,
                                         variantScope.getOutput(resourceFilesInputType),
                                         manifests,

@@ -23,14 +23,10 @@ import com.google.common.collect.ImmutableMap;
 public enum InstantRunVerifierStatus {
 
     // There were no changes.
-    NO_CHANGES(
-            InstantRunBuildMode.HOT_WARM,
-            InstantRunBuildMode.HOT_WARM),
+    NO_CHANGES(InstantRunBuildMode.HOT_WARM),
 
     // changes are compatible with current InstantRun features.
-    COMPATIBLE(
-            InstantRunBuildMode.HOT_WARM,
-            InstantRunBuildMode.HOT_WARM),
+    COMPATIBLE(InstantRunBuildMode.HOT_WARM),
 
     // the verifier did not run successfully.
     NOT_RUN,
@@ -91,23 +87,20 @@ public enum InstantRunVerifierStatus {
 
     COLD_SWAP_REQUESTED,
 
-    FULL_BUILD_REQUESTED(
-            InstantRunBuildMode.FULL, InstantRunBuildMode.FULL),
+    FULL_BUILD_REQUESTED(InstantRunBuildMode.FULL),
 
-    INITIAL_BUILD(InstantRunBuildMode.FULL, InstantRunBuildMode.FULL);
+    INITIAL_BUILD(InstantRunBuildMode.FULL);
 
     private final ImmutableMap<InstantRunPatchingPolicy, InstantRunBuildMode> buildMode;
 
     InstantRunVerifierStatus() {
-        this(InstantRunBuildMode.FULL, InstantRunBuildMode.COLD);
+        this(InstantRunBuildMode.COLD);
     }
 
     InstantRunVerifierStatus(
-            @NonNull InstantRunBuildMode preLollipopBuildMode,
             @NonNull InstantRunBuildMode multiApkBuildMode) {
         buildMode =
                 ImmutableMap.of(
-                        InstantRunPatchingPolicy.PRE_LOLLIPOP, preLollipopBuildMode,
                         InstantRunPatchingPolicy.MULTI_APK, multiApkBuildMode,
                         InstantRunPatchingPolicy.MULTI_APK_SEPARATE_RESOURCES, multiApkBuildMode);
     }

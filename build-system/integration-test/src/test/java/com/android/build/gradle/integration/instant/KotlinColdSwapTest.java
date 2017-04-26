@@ -57,53 +57,6 @@ public class KotlinColdSwapTest {
     }
 
     @Test
-    public void withDalvik() throws Exception {
-        new ColdSwapTester(project)
-                .testDalvik(
-                        new ColdSwapTester.Steps() {
-                            @Override
-                            public void checkApks(@NonNull SplitApks splitApks) throws Exception {
-                                assertThat(splitApks.size()).isEqualTo(1);
-                                checkDalvikApk(splitApks.get(0));
-                            }
-
-                            @Override
-                            public void makeChange() throws Exception {
-                                makeColdSwapChange();
-                            }
-
-                            @Override
-                            public void checkVerifierStatus(
-                                    @NonNull InstantRunVerifierStatus status) throws Exception {
-                                assertThat(status).isEqualTo(EXPECTED_STATUS);
-                            }
-
-                            @Override
-                            public void checkBuildMode(@NonNull InstantRunBuildMode buildMode)
-                                    throws Exception {
-                                // for api 19 (pre-lollipop) a full build is triggered
-                                assertEquals(InstantRunBuildMode.FULL, buildMode);
-                            }
-
-                            @Override
-                            public void checkArtifacts(
-                                    @NonNull List<InstantRunBuildContext.Artifact> artifacts)
-                                    throws Exception {
-                                assertThat(artifacts).hasSize(1);
-                                checkDalvikApk(new Apk(artifacts.get(0).getLocation()));
-                            }
-                        });
-    }
-
-    private static void checkDalvikApk(@NonNull Apk apk) throws Exception {
-        assertThat(apk)
-                .hasMainClass("Lcom/example/helloworld/HelloWorld;")
-                .that()
-                .hasMethod("onCreate");
-        assertThat(apk).hasMainClass("Lcom/android/tools/ir/server/AppInfo;");
-    }
-
-    @Test
     public void withMultiApk() throws Exception {
         new ColdSwapTester(project)
                 .testMultiApk(

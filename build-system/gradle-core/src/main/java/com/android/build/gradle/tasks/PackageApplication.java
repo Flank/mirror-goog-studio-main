@@ -18,7 +18,6 @@ package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.incremental.DexPackagingPolicy;
 import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
 import com.android.build.gradle.internal.scope.OutputScope;
@@ -98,7 +97,6 @@ public class PackageApplication extends PackageAndroidArtifact {
         public StandardConfigAction(
                 @NonNull PackagingScope packagingScope,
                 @NonNull File outputDirectory,
-                @Nullable InstantRunPatchingPolicy patchingPolicy,
                 @NonNull VariantScope.TaskOutputType inputResourceFilesType,
                 @NonNull FileCollection resourceFiles,
                 @NonNull FileCollection manifests,
@@ -109,7 +107,6 @@ public class PackageApplication extends PackageAndroidArtifact {
             super(
                     packagingScope,
                     outputDirectory,
-                    patchingPolicy,
                     inputResourceFilesType,
                     resourceFiles,
                     manifests,
@@ -150,7 +147,6 @@ public class PackageApplication extends PackageAndroidArtifact {
         public InstantRunResourcesConfigAction(
                 @NonNull File outputFile,
                 @NonNull PackagingScope scope,
-                @Nullable InstantRunPatchingPolicy patchingPolicy,
                 @NonNull VariantScope.TaskOutputType inputResourceFilesType,
                 @NonNull FileCollection resourceFiles,
                 @NonNull FileCollection manifests,
@@ -160,7 +156,6 @@ public class PackageApplication extends PackageAndroidArtifact {
             super(
                     scope,
                     outputFile.getParentFile(),
-                    patchingPolicy,
                     inputResourceFilesType,
                     resourceFiles,
                     manifests,
@@ -187,9 +182,6 @@ public class PackageApplication extends PackageAndroidArtifact {
             packageApplication.expectedOutputType =
                     TaskOutputHolder.TaskOutputType.INSTANT_RUN_PACKAGED_RESOURCES;
             packageApplication.instantRunFileType = FileType.RESOURCES;
-
-            // Don't try to add any special dex files to this zip.
-            packageApplication.dexPackagingPolicy = DexPackagingPolicy.STANDARD;
 
             // Skip files which are not needed for hot/cold swap.
             FileCollection emptyCollection = packagingScope.getProject().files();

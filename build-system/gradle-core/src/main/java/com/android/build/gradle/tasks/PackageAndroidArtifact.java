@@ -29,7 +29,6 @@ import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.dsl.AbiSplitOptions;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
-import com.android.build.gradle.internal.incremental.DexPackagingPolicy;
 import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
@@ -184,8 +183,6 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
     protected File instantRunSupportDir;
 
-    protected DexPackagingPolicy dexPackagingPolicy;
-
     protected FileCollection manifests;
 
     @Nullable protected Collection<String> aaptOptionsNoCompress;
@@ -291,8 +288,8 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
     }
 
     @Input
-    public String getDexPackagingPolicy() {
-        return dexPackagingPolicy.toString();
+    public Boolean isInInstantRunMode() {
+        return instantRunContext.isInInstantRunMode();
     }
 
     /*
@@ -636,7 +633,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                 ImmutableMap.builder();
         javaResourcesForApk.putAll(changedJavaResources);
 
-        if (dexPackagingPolicy == DexPackagingPolicy.INSTANT_RUN_MULTI_APK) {
+        if (isInInstantRunMode()) {
             changedDex = ImmutableMap.copyOf(
                     Maps.filterKeys(
                             changedDex,
@@ -873,7 +870,6 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
         protected final Project project;
         protected final PackagingScope packagingScope;
-        @Nullable protected final DexPackagingPolicy dexPackagingPolicy;
         @NonNull protected final FileCollection manifests;
         @NonNull protected final VariantScope.TaskOutputType inputResourceFilesType;
         @NonNull protected final FileCollection resourceFiles;
@@ -885,7 +881,6 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         public ConfigAction(
                 @NonNull PackagingScope packagingScope,
                 @NonNull File outputDirectory,
-                @Nullable InstantRunPatchingPolicy patchingPolicy,
                 @NonNull VariantScope.TaskOutputType inputResourceFilesType,
                 @NonNull FileCollection resourceFiles,
                 @NonNull FileCollection manifests,
@@ -895,9 +890,6 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
             this.project = packagingScope.getProject();
             this.packagingScope = checkNotNull(packagingScope);
             this.inputResourceFilesType = inputResourceFilesType;
-            dexPackagingPolicy = patchingPolicy == null
-                    ? DexPackagingPolicy.STANDARD
-                    : patchingPolicy.getDexPatchingPolicy();
             this.manifests = manifests;
             this.outputDirectory = outputDirectory;
             this.resourceFiles = resourceFiles;
@@ -914,7 +906,6 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
             packageAndroidArtifact.setVariantName(packagingScope.getFullVariantName());
             packageAndroidArtifact.setMinSdkVersion(packagingScope.getMinSdkVersion());
             packageAndroidArtifact.instantRunContext = packagingScope.getInstantRunBuildContext();
-            packageAndroidArtifact.dexPackagingPolicy = dexPackagingPolicy;
             packageAndroidArtifact.aaptIntermediateFolder =
                     new File(
                             packagingScope.getIncrementalDir("PackageAndroidArtifact"),
@@ -971,7 +962,6 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
         protected void configure(T task) {
             task.instantRunFileType = FileType.MAIN;
-            task.dexPackagingPolicy = dexPackagingPolicy;
 
             task.dexFolders = packagingScope.getDexFolders();
             task.javaResourceFiles = packagingScope.getJavaResources();

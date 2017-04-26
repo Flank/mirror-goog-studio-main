@@ -57,7 +57,6 @@ import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.dsl.PostprocessingOptions;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
-import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
@@ -679,17 +678,11 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             // for non-library legacy multidex test variants, we want to have exactly one DEX file
             // until the test runner supports multiple dex files in the test apk
             return DexingType.MONO_DEX;
-        } else if (isInstantRunDexingTypeOverride()) {
+        } else if (getInstantRunBuildContext().isInInstantRunMode()) {
             return DexingType.NATIVE_MULTIDEX;
         }
 
         return dexingType;
-    }
-
-    private boolean isInstantRunDexingTypeOverride() {
-        return getInstantRunBuildContext().isInInstantRunMode()
-                && InstantRunPatchingPolicy.useMultiApk(
-                        getInstantRunBuildContext().getPatchingPolicy());
     }
 
     @NonNull

@@ -67,8 +67,6 @@ public class InstantRunAnalyticsHelper {
             return InstantRunStatus.PatchingPolicy.UNKNOWN_PATCHING_POLICY;
         }
         switch (policy) {
-            case PRE_LOLLIPOP:
-                return InstantRunStatus.PatchingPolicy.PRE_LOLLIPOP;
             case MULTI_APK:
                 return InstantRunStatus.PatchingPolicy.MULTI_APK;
             case MULTI_APK_SEPARATE_RESOURCES:

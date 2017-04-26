@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.incremental;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidProject;
 import com.android.sdklib.AndroidVersion;
 
@@ -28,18 +27,14 @@ import com.android.sdklib.AndroidVersion;
  */
 public enum InstantRunPatchingPolicy {
 
-    /**
-     * For Dalvik, a patch dex file will be generated with the incremental changes from the last
-     * non incremental build or the last build that contained changes identified by the verifier as
-     * incompatible.
-     */
-    PRE_LOLLIPOP(DexPackagingPolicy.STANDARD, false /* useMultidex */),
+    /** Denotes instant-run disabled builds. */
+    UNKNOWN_PATCHING_POLICY,
 
     /**
      * For L and above, each shard dex file described above will be packaged in a single pure split
      * APK that will be pushed and installed on the device using adb install-multiple commands.
      */
-    MULTI_APK(DexPackagingPolicy.INSTANT_RUN_MULTI_APK, true /* useMultidex */),
+    MULTI_APK,
 
     /**
      * For O and above, we ship the resources in a separate APK from the main APK.
@@ -48,41 +43,8 @@ public enum InstantRunPatchingPolicy {
      * test this thoroughly back to 21. - we need aapt2 in the stable build tools to support all
      * cases.
      */
-    MULTI_APK_SEPARATE_RESOURCES(DexPackagingPolicy.INSTANT_RUN_MULTI_APK, true /* useMultidex */);
+    MULTI_APK_SEPARATE_RESOURCES;
 
-    @NonNull
-    private final DexPackagingPolicy dexPatchingPolicy;
-    private final boolean useMultiDex;
-
-    InstantRunPatchingPolicy(@NonNull DexPackagingPolicy dexPatchingPolicy, boolean useMultiDex) {
-        this.dexPatchingPolicy = dexPatchingPolicy;
-        this.useMultiDex = useMultiDex;
-    }
-
-    /**
-     * Returns true of this packaging policy relies on multidex or not.
-     */
-    public boolean useMultiDex() {
-        return useMultiDex;
-    }
-
-    public static boolean useMultiApk(@Nullable InstantRunPatchingPolicy subject) {
-        return subject != null && subject.useMultiApk();
-    }
-
-    public boolean useMultiApk() {
-        return this == MULTI_APK_SEPARATE_RESOURCES || this == MULTI_APK;
-    }
-
-    /**
-     * Returns the dex packaging policy for this patching policy. There can be variations depending
-     * on the target platforms.
-     * @return the desired dex packaging policy for dex files
-     */
-    @NonNull
-    public DexPackagingPolicy getDexPatchingPolicy() {
-        return dexPatchingPolicy;
-    }
 
     /**
      * Returns the patching policy following the {@link AndroidProject#PROPERTY_BUILD_API} value
@@ -99,7 +61,7 @@ public enum InstantRunPatchingPolicy {
             boolean createSeparateApkForResources) {
 
         if (androidVersion.getFeatureLevel() < AndroidVersion.ART_RUNTIME.getFeatureLevel()) {
-            return PRE_LOLLIPOP;
+            return UNKNOWN_PATCHING_POLICY;
         } else {
             return androidVersion.getFeatureLevel() >= AndroidVersion.VersionCodes.O
                             && useAapt2OrAbove

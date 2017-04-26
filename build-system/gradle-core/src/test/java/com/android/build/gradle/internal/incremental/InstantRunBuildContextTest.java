@@ -716,17 +716,6 @@ public class InstantRunBuildContextTest {
                         idAllocator,
                         true,
                         AaptGeneration.AAPT_V2_JNI,
-                        new AndroidVersion(20, null),
-                        "x86",
-                        null,
-                        true);
-        assertThat(context.getPatchingPolicy()).isEqualTo(InstantRunPatchingPolicy.PRE_LOLLIPOP);
-
-        context =
-                new InstantRunBuildContext(
-                        idAllocator,
-                        true,
-                        AaptGeneration.AAPT_V2_JNI,
                         new AndroidVersion(21, null),
                         "x86",
                         null,
@@ -753,7 +742,7 @@ public class InstantRunBuildContextTest {
                         idAllocator,
                         true,
                         AaptGeneration.AAPT_V2_JNI,
-                        new AndroidVersion(19, null),
+                        new AndroidVersion(21, null),
                         null,
                         null,
                         true);
@@ -767,7 +756,7 @@ public class InstantRunBuildContextTest {
         assertNotNull(context.getLastBuild());
         assertThat(context.getLastBuild().getArtifacts()).hasSize(1);
         assertThat(Iterables.getOnlyElement(context.getLastBuild().getArtifacts()).getType())
-                .isEqualTo(FileType.MAIN);
+                .isEqualTo(FileType.SPLIT_MAIN);
 
     }
 

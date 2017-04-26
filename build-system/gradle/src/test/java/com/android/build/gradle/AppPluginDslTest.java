@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.fixture.TestConstants;
 import com.android.build.gradle.internal.fixture.TestProjects;
 import com.android.build.gradle.internal.fixture.VariantChecker;
 import com.android.build.gradle.internal.fixture.VariantCheckers;
+import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.OptionalCompilationStep;
@@ -346,6 +347,7 @@ public class AppPluginDslTest {
         project =
                 TestProjects.builder(projectDirectory.newFolder("oldDsl_instantRun").toPath())
                         .withPlugin(pluginType)
+                        .withProperty(IntegerOption.IDE_TARGET_DEVICE_API, 21)
                         .withProperty(
                                 AndroidProject.PROPERTY_OPTIONAL_COMPILATION_STEPS,
                                 OptionalCompilationStep.INSTANT_DEV.name())
@@ -366,6 +368,7 @@ public class AppPluginDslTest {
         project =
                 TestProjects.builder(projectDirectory.newFolder("oldDsl_instantRun").toPath())
                         .withPlugin(pluginType)
+                        .withProperty(IntegerOption.IDE_TARGET_DEVICE_API, 21)
                         .withProperty(
                                 AndroidProject.PROPERTY_OPTIONAL_COMPILATION_STEPS,
                                 OptionalCompilationStep.INSTANT_DEV.name())
@@ -400,6 +403,7 @@ public class AppPluginDslTest {
         project =
                 TestProjects.builder(projectDirectory.newFolder("newDsl_instantRun").toPath())
                         .withPlugin(pluginType)
+                        .withProperty(IntegerOption.IDE_TARGET_DEVICE_API, 21)
                         .withProperty(
                                 AndroidProject.PROPERTY_OPTIONAL_COMPILATION_STEPS,
                                 OptionalCompilationStep.INSTANT_DEV.name())
@@ -420,6 +424,7 @@ public class AppPluginDslTest {
         project =
                 TestProjects.builder(projectDirectory.newFolder("newDsl_override").toPath())
                         .withPlugin(pluginType)
+                        .withProperty(IntegerOption.IDE_TARGET_DEVICE_API, 21)
                         .withProperty(
                                 AndroidProject.PROPERTY_OPTIONAL_COMPILATION_STEPS,
                                 OptionalCompilationStep.INSTANT_DEV.name())

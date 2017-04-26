@@ -57,16 +57,6 @@ public class InstantRunFullBuildTest {
     }
 
     @Test
-    public void testDalvik() throws Exception {
-        doTest(19);
-    }
-
-    @Test
-    public void testMultiDex() throws Exception {
-        doTest(23);
-    }
-
-    @Test
     public void testMultiApk() throws Exception {
         doTest(24);
     }

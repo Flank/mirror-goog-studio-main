@@ -54,11 +54,7 @@ public class JavaResourcesTest {
     @Parameterized.Parameters(name="{0}")
     public static Collection<Object[]> getParameters() {
         return Arrays.asList(
-                new Object[][] {
-                    {new AndroidVersion(19, null)},
-                    {new AndroidVersion(21, null)},
-                    {new AndroidVersion(24, null)}
-                });
+                new Object[][] {{new AndroidVersion(21, null)}, {new AndroidVersion(26, null)}});
     }
 
     @Parameterized.Parameter() public AndroidVersion androidVersion;
