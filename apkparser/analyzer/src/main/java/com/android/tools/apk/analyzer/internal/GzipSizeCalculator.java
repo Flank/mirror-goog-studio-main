@@ -31,19 +31,13 @@ import java.nio.file.Path;
 import java.util.Enumeration;
 import java.util.Map;
 import java.util.logging.Logger;
-import java.util.zip.Deflater;
-import java.util.zip.GZIPOutputStream;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-import java.util.zip.ZipInputStream;
-import java.util.zip.ZipOutputStream;
+import java.util.zip.*;
 
 public class GzipSizeCalculator implements ApkSizeCalculator {
-    private final Path apk;
 
-    public GzipSizeCalculator(@NonNull Path apk) {
-        this.apk = apk;
+    public GzipSizeCalculator() {}
 
+    private void verify(@NonNull Path apk) {
         try (ZipFile zf = new ZipFile(apk.toFile())) {
             // just verifying that this is a valid zip file
         } catch (IOException e) {
@@ -52,7 +46,8 @@ public class GzipSizeCalculator implements ApkSizeCalculator {
     }
 
     @Override
-    public long getFullApkDownloadSize() {
+    public long getFullApkDownloadSize(@NonNull Path apk) {
+        verify(apk);
         CountingOutputStream out = new CountingOutputStream(ByteStreams.nullOutputStream());
 
         // There is a difference between uncompressing the apk, and then compressing again using
@@ -72,7 +67,8 @@ public class GzipSizeCalculator implements ApkSizeCalculator {
     }
 
     @Override
-    public long getFullApkRawSize() {
+    public long getFullApkRawSize(@NonNull Path apk) {
+        verify(apk);
         try {
             return Files.size(apk);
         } catch (IOException e) {
@@ -84,7 +80,8 @@ public class GzipSizeCalculator implements ApkSizeCalculator {
 
     @NonNull
     @Override
-    public Map<String, Long> getDownloadSizePerFile() {
+    public Map<String, Long> getDownloadSizePerFile(@NonNull Path apk) {
+        verify(apk);
         try {
             Path rezippedApk = Files.createTempFile("analyzer", SdkConstants.DOT_ZIP);
             reCompressWithZip(apk, rezippedApk);
@@ -102,7 +99,8 @@ public class GzipSizeCalculator implements ApkSizeCalculator {
 
     @NonNull
     @Override
-    public Map<String, Long> getRawSizePerFile() {
+    public Map<String, Long> getRawSizePerFile(@NonNull Path apk) {
+        verify(apk);
         return getCompressedSizePerFile(apk);
     }
 

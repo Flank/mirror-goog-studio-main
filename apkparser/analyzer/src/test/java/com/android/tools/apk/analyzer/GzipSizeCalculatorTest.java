@@ -20,33 +20,36 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.testutils.TestResources;
 import com.android.tools.apk.analyzer.internal.GzipSizeCalculator;
+import java.nio.file.Path;
 import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 
 public class GzipSizeCalculatorTest {
     private ApkSizeCalculator myCalculator;
+    private Path myApk;
 
     @Before
     public void setup() {
-        myCalculator = new GzipSizeCalculator(TestResources.getFile("/test.apk").toPath());
+        myApk = TestResources.getFile("/test.apk").toPath();
+        myCalculator = new GzipSizeCalculator();
     }
 
     @Test
     public void getFullApkDownloadSize() {
         long expected = 502; // gzip -9 test.apk; ls -l test.apk.gz
-        assertThat(myCalculator.getFullApkDownloadSize()).isEqualTo(expected);
+        assertThat(myCalculator.getFullApkDownloadSize(myApk)).isEqualTo(expected);
     }
 
     @Test
     public void getFullApkRawSize() {
         long expected = 960; // ls -l test.apk
-        assertThat(myCalculator.getFullApkRawSize()).isEqualTo(expected);
+        assertThat(myCalculator.getFullApkRawSize(myApk)).isEqualTo(expected);
     }
 
     @Test
     public void getDownloadSizePerFile() {
-        Map<String, Long> downloadSizePerFile = myCalculator.getDownloadSizePerFile();
+        Map<String, Long> downloadSizePerFile = myCalculator.getDownloadSizePerFile(myApk);
 
         // The expected values can be seen via unzip -lv resources/test.apk
         // Note: for this test apk, the re-compressing at "zip -9" actually has no impact.
@@ -58,7 +61,7 @@ public class GzipSizeCalculatorTest {
 
     @Test
     public void getRawSizePerFile() {
-        Map<String, Long> rawSizePerFile = myCalculator.getRawSizePerFile();
+        Map<String, Long> rawSizePerFile = myCalculator.getRawSizePerFile(myApk);
 
         // The expected values can be seen via unzip -lv resources/test.apk
         assertThat(rawSizePerFile.get("/AndroidManifest.xml")).isEqualTo(11);
