@@ -1,5 +1,7 @@
 package android.com.java.profilertester;
 
+import android.app.Activity;
+import android.com.java.profilertester.network.NetworkAsyncTask;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.util.Log;
@@ -21,10 +23,12 @@ import java.util.ArrayList;
 public class MainActivityFragment extends Fragment {
 
     final static String TAG = MainActivityFragment.class.getName();
+    final static int NETWORK_CATEGORY_NUMBER = 2;
 
     private View myFragmentView;
     private Spinner mActionSpinner, mCategorySpinner;
     private ArrayList<ArrayAdapter<CharSequence> > mAdaptorList;
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -70,5 +74,18 @@ public class MainActivityFragment extends Fragment {
         });
 
         return myFragmentView;
+    }
+
+    public void testScenario() {
+        int categoryNumber = mCategorySpinner.getSelectedItemPosition();
+        int actionNumber = mActionSpinner.getSelectedItemPosition();
+        if (categoryNumber == -1) {
+            return;
+        }
+
+        // network scenarios
+        if (categoryNumber == NETWORK_CATEGORY_NUMBER) {
+            new NetworkAsyncTask().execute(actionNumber);
+        }
     }
 }
