@@ -37,12 +37,14 @@ public class CompileTest {
     @Test
     public void compilePng() throws Exception {
         Path drawable = temporaryFolder.newFolder("drawable").toPath();
-        Path lena = drawable.resolve("lena.png");
+        Path lena = drawable.resolve("lena☃.png");
         Path out = temporaryFolder.newFolder("out").toPath();
 
         Aapt2TestFiles.writeLenaPng(lena);
 
-        assertEquals(0, Aapt2Jni.compile(Arrays.asList("-o", out.toString(), lena.toString())));
+        Aapt2Result result = Aapt2Jni.compile(Arrays.asList("-o", out.toString(), lena.toString()));
+        assertEquals(0, result.getReturnCode());
+        assertTrue(result.getMessages().isEmpty());
         Path expectedOut = out.resolve(Aapt2RenamingConventions.compilationRename(lena.toFile()));
         assertTrue(Files.exists(expectedOut));
     }
@@ -55,7 +57,10 @@ public class CompileTest {
 
         Aapt2TestFiles.writeStringsXml(strings);
 
-        assertEquals(0, Aapt2Jni.compile(Arrays.asList("-o", out.toString(), strings.toString())));
+        Aapt2Result result =
+                Aapt2Jni.compile(Arrays.asList("-o", out.toString(), strings.toString()));
+        assertEquals(0, result.getReturnCode());
+        assertTrue(result.getMessages().isEmpty());
         Path expectedOut =
                 out.resolve(Aapt2RenamingConventions.compilationRename(strings.toFile()));
         assertTrue(Files.isRegularFile(expectedOut));
@@ -64,15 +69,23 @@ public class CompileTest {
     @Test
     public void compileXmlWithError() throws Exception {
         Path values = temporaryFolder.newFolder("values").toPath();
-        Path strings = values.resolve("strings.xml");
+        Path strings = values.resolve("strings☃.xml");
         Path out = temporaryFolder.newFolder("out").toPath();
 
         List<String> lines = new ArrayList<>();
         lines.add("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
+        lines.add("");
         lines.add("<reso");
         Files.write(strings, lines, StandardCharsets.UTF_8);
 
-        assertEquals(1, Aapt2Jni.compile(Arrays.asList("-o", out.toString(), strings.toString())));
+        Aapt2Result result =
+                Aapt2Jni.compile(Arrays.asList("-o", out.toString(), strings.toString()));
+        assertEquals(1, result.getReturnCode());
+        assertEquals(1, result.getMessages().size());
+        assertEquals("xml parser error: unclosed token", result.getMessages().get(0).getMessage());
+        assertEquals(strings.toString(), result.getMessages().get(0).getPath());
+        assertEquals(Aapt2Result.Message.LogLevel.ERROR, result.getMessages().get(0).getLevel());
+        assertEquals(0, result.getMessages().get(0).getLine());
         Path expectedOut =
                 out.resolve(Aapt2RenamingConventions.compilationRename(strings.toFile()));
         assertFalse("Compiled file should not be created.", Files.exists(expectedOut));

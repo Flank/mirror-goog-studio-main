@@ -231,8 +231,10 @@ public final class Aapt2Jni {
      * @param arguments arguments for compilation (see {@code Compile.cpp})
      */
     @CheckReturnValue
-    public static int compile(@Nonnull List<String> arguments) {
-        return nativeCompile(arguments);
+    public static Aapt2Result compile(@Nonnull List<String> arguments) {
+        Aapt2Result.Builder builder = Aapt2Result.builder();
+        int returnCode = nativeCompile(arguments, builder);
+        return builder.setReturnCode(returnCode).build();
     }
 
     /**
@@ -241,8 +243,10 @@ public final class Aapt2Jni {
      * @param arguments arguments for linking (see {@code Link.cpp})
      */
     @CheckReturnValue
-    public static int link(@Nonnull List<String> arguments) {
-        return nativeLink(arguments);
+    public static Aapt2Result link(@Nonnull List<String> arguments) {
+        Aapt2Result.Builder builder = Aapt2Result.builder();
+        int returnCode = nativeLink(arguments, builder);
+        return builder.setReturnCode(returnCode).build();
     }
 
     /**
@@ -260,12 +264,15 @@ public final class Aapt2Jni {
      *
      * @param arguments arguments for compilation (see {@code Compile.cpp})
      */
-    private static native int nativeCompile(@Nonnull List<String> arguments);
+    private static native int nativeCompile(
+            @Nonnull List<String> arguments, @Nonnull Aapt2JniLogCallback diagnostics);
 
     /**
      * JNI call.
      *
      * @param arguments arguments for linking (see {@code Link.cpp})
      */
-    private static native int nativeLink(@Nonnull List<String> arguments);
+    private static native int nativeLink(
+            @Nonnull List<String> arguments, @Nonnull Aapt2JniLogCallback diagnostics);
+
 }

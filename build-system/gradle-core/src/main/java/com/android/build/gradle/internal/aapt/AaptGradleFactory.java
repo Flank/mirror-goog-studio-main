@@ -157,7 +157,10 @@ public final class AaptGradleFactory {
                         intermediateDir,
                         new FilteringLogger(builder.getLogger()));
             case AAPT_V2_JNI:
-                return new AaptV2Jni(intermediateDir, WaitableExecutor.useGlobalSharedThreadPool());
+                return new AaptV2Jni(
+                        intermediateDir,
+                        WaitableExecutor.useGlobalSharedThreadPool(),
+                        teeOutputHandler);
             default:
                 throw new IllegalArgumentException("unknown aapt generation" + aaptGeneration);
         }

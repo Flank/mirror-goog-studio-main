@@ -10,7 +10,7 @@ load("//tools/base/bazel:bazel.bzl", "fileset")
 
 srcjar(
     name = "srcjar",
-    java_library = ":aaptjlib",
+    java_library = ":aaptjlib_src",
     visibility = ["//tools/base/build-system/builder:__pkg__"],
 )
 
@@ -34,14 +34,30 @@ fileset(
     },
 )
 
+DEPS = [
+    "//tools/base/annotations",
+    "//tools/base/third_party:com.google.auto.value_auto-value",
+    "//tools/base/third_party:com.google.code.findbugs_jsr305",
+    "//tools/base/third_party:com.google.guava_guava",
+]
+
 java_library(
     name = "aaptjlib",
     srcs = glob(["src/main/java/**/*.java"]),
-    resources = [":resources"],
-    deps = [
-        "//tools/base/annotations",
-        "//tools/base/third_party:com.google.code.findbugs_jsr305",
+    plugins = [
+        ":auto-value-plugin",
     ],
+    resources = [":resources"],
+    deps = DEPS,
+)
+
+# srcjar includes the generated sources, which will get regenerated in builder
+# So have a fake library just to collect the real sources.
+java_library(
+    name = "aaptjlib_src",
+    srcs = glob(["src/main/java/**/*.java"]),
+    tags = ["manual"],
+    deps = DEPS,
 )
 
 java_test(
@@ -60,5 +76,13 @@ java_test(
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:org.mockito_mockito-core",
+    ],
+)
+
+java_plugin(
+    name = "auto-value-plugin",
+    processor_class = "com.google.auto.value.processor.AutoValueProcessor",
+    deps = [
+        "//tools/base/third_party:com.google.auto.value_auto-value",
     ],
 )

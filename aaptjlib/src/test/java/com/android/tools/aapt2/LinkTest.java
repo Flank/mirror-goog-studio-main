@@ -49,8 +49,10 @@ public class LinkTest {
         Path lena = drawable.resolve("lena.png");
         Aapt2TestFiles.writeLenaPng(lena);
         Path compileOut = temporaryFolder.newFolder().toPath();
-        assertEquals(
-                0, Aapt2Jni.compile(Arrays.asList("-o", compileOut.toString(), lena.toString())));
+        Aapt2Result result =
+                Aapt2Jni.compile(Arrays.asList("-o", compileOut.toString(), lena.toString()));
+        assertEquals(0, result.getReturnCode());
+        assertTrue(result.getMessages().isEmpty());
         compiledLenaPng =
                 compileOut.resolve(Aapt2RenamingConventions.compilationRename(lena.toFile()));
         assertTrue(Files.exists(compiledLenaPng));
@@ -62,9 +64,10 @@ public class LinkTest {
         Path strings = values.resolve("strings.xml");
         Aapt2TestFiles.writeStringsXml(strings);
         Path compileOut = temporaryFolder.newFolder().toPath();
-        assertEquals(
-                0,
-                Aapt2Jni.compile(Arrays.asList("-o", compileOut.toString(), strings.toString())));
+        Aapt2Result result =
+                Aapt2Jni.compile(Arrays.asList("-o", compileOut.toString(), strings.toString()));
+        assertEquals(0, result.getReturnCode());
+        assertTrue(result.getMessages().isEmpty());
         compiledStringsXml =
                 compileOut.resolve(Aapt2RenamingConventions.compilationRename(strings.toFile()));
         assertTrue(Files.isRegularFile(compiledStringsXml));
@@ -84,8 +87,7 @@ public class LinkTest {
     public void link() throws IOException {
         Path resourceDotApUnderscore = temporaryFolder.newFile("resources.ap_").toPath();
 
-        assertEquals(
-                0,
+        Aapt2Result result =
                 Aapt2Jni.link(
                         Arrays.asList(
                                 "-o",
@@ -96,8 +98,10 @@ public class LinkTest {
                                 "-R",
                                 compiledLenaPng.toString(),
                                 "-R",
-                                compiledStringsXml.toString())));
+                                compiledStringsXml.toString()));
 
+        assertEquals(0, result.getReturnCode());
+        assertTrue(result.getMessages().isEmpty());
         assertTrue(Files.exists(resourceDotApUnderscore));
         Set<String> elements = new HashSet<>();
         try (ZipInputStream zipInputStream =
@@ -118,6 +122,41 @@ public class LinkTest {
 
     @Test
     public void linkFailure() throws IOException {
-        assertEquals(1, Aapt2Jni.link(Collections.singletonList("--invalid-option")));
+        Path resourceDotApUnderscore = temporaryFolder.newFile("resources2.ap_").toPath();
+
+        Aapt2Result result =
+                Aapt2Jni.link(
+                        Arrays.asList(
+                                "-o",
+                                resourceDotApUnderscore.toString(),
+                                "--manifest",
+                                manifest.toString(),
+                                "-R",
+                                compiledStringsXml.toString()));
+
+        assertEquals(1, result.getReturnCode());
+        assertEquals(3, result.getMessages().size());
+
+        assertEquals(Aapt2Result.Message.LogLevel.ERROR, result.getMessages().get(0).getLevel());
+        assertEquals(compiledStringsXml.toString(), result.getMessages().get(0).getPath());
+        assertEquals(-1, result.getMessages().get(0).getLine());
+        assertEquals(
+                "resource string/string_name does not override an existing resource",
+                result.getMessages().get(0).getMessage());
+
+        assertEquals(
+                "define an <add-resource> tag or use --auto-add-overlay",
+                result.getMessages().get(1).getMessage());
+        assertEquals("failed parsing overlays", result.getMessages().get(2).getMessage());
+        ;
+    }
+
+    @Test
+    public void invalidOption() throws IOException {
+        Aapt2Result result =
+                Aapt2Jni.link(Collections.singletonList("--link-test----invalid-option"));
+        assertEquals(1, result.getReturnCode());
+        // NB: Argument parse failures are output directly to stderr.
+        assertEquals(0, result.getMessages().size());
     }
 }
