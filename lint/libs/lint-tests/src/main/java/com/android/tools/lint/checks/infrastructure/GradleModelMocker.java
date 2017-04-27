@@ -37,6 +37,7 @@ import com.android.builder.model.BuildType;
 import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.ClassField;
 import com.android.builder.model.Dependencies;
+import com.android.builder.model.JavaCompileOptions;
 import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.Library;
 import com.android.builder.model.LintOptions;
@@ -121,6 +122,7 @@ public class GradleModelMocker {
     private VectorDrawablesOptions vectorDrawablesOptions;
     private boolean allowUnrecognizedConstructs;
     private boolean fullDependencies;
+    private JavaCompileOptions compileOptions;
 
     public GradleModelMocker(@Language("Groovy") String gradle) {
         this.gradle = gradle;
@@ -226,6 +228,12 @@ public class GradleModelMocker {
 
         lintOptions = createLintOptions();
         when(project.getLintOptions()).thenReturn(lintOptions);
+
+        compileOptions = mock(JavaCompileOptions.class);
+        when(compileOptions.getSourceCompatibility()).thenReturn("1.7");
+        when(compileOptions.getTargetCompatibility()).thenReturn("1.7");
+        when(compileOptions.getEncoding()).thenReturn("UTF-8");
+        when(project.getJavaCompileOptions()).thenReturn(compileOptions);
 
         // built-in build-types
         getBuildType("debug", true);
@@ -724,6 +732,12 @@ public class GradleModelMocker {
                 VectorDrawablesOptions options = getVectorDrawableOptions();
                 when(options.getUseSupportLibrary()).thenReturn(true);
             }
+        } else if (key.startsWith("android.compileOptions.sourceCompatibility JavaVersion.VERSION_")) {
+            String s = key.substring(key.indexOf("VERSION_") + "VERSION_".length()).replace('_','.');
+            when(compileOptions.getSourceCompatibility()).thenReturn(s);
+        } else if (key.startsWith("android.compileOptions.targetCompatibility JavaVersion.VERSION_")) {
+            String s = key.substring(key.indexOf("VERSION_") + "VERSION_".length()).replace('_','.');
+            when(compileOptions.getTargetCompatibility()).thenReturn(s);
         } else if (key.startsWith("buildscript.dependencies.classpath ")) {
             if (key.contains("'com.android.tools.build:gradle:")) {
                 String value = getUnquotedValue(key);

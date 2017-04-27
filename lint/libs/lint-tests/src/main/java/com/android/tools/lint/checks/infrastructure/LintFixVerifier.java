@@ -238,7 +238,6 @@ public class LintFixVerifier {
         return null;
     }
 
-    @Nullable
     private static boolean haveSetAttribute(@NonNull LintFix lintFix) {
         if (lintFix instanceof SetAttribute) {
             return true;

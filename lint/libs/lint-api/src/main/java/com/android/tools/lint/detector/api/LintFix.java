@@ -274,6 +274,8 @@ public class LintFix {
         @Nls protected String displayName;
         private String newText;
         private String oldText;
+        private boolean shortenNames;
+        private boolean reformat;
         @Language("RegExp") private String oldPattern;
 
         /** Constructed from {@link Builder#replace()} */
@@ -325,10 +327,24 @@ public class LintFix {
             return this;
         }
 
+        /** The IDE should simplify fully qualified names in the element after this fix has
+         * been run (off by default) */
+        public ReplaceStringBuilder shortenNames() {
+            this.shortenNames = true;
+            return this;
+        }
+
+        /** Whether the replaced range should be reformatted */
+        public ReplaceStringBuilder reformat(boolean reformat) {
+            this.reformat = reformat;
+            return this;
+        }
+
         /** Constructs a {@link LintFix} for this string replacement */
         @NonNull
         public LintFix build() {
-            return new ReplaceString(displayName, oldText, oldPattern, newText);
+            return new ReplaceString(displayName, oldText, oldPattern, newText, shortenNames,
+                    reformat);
         }
     }
 
@@ -710,26 +726,35 @@ public class LintFix {
         @Nullable public final String oldPattern;
         /** The replacement string. */
         @NonNull public final String replacement;
+        /** Whether symbols should be shortened after replacement */
+        public final boolean shortenNames;
+        /** Whether the modified text range should be reformatted */
+        public final boolean reformat;
 
         /**
          * Replace the given string within the range of the element this warning is marked on
          *
-         * @param displayName the displayName
-         * @param oldString   the literal string to replace
-         * @param oldPattern  the regular expression to replace (provided as a string such that it
-         *                    only needs to be compiled if actually referenced by the IDE.
-         *                    If there is a group in the regexp, the substitution will be placed
-         *                    within the group.
-         * @param replacement the replacement literal string
+         * @param displayName  the displayName
+         * @param oldString    the literal string to replace
+         * @param oldPattern   the regular expression to replace (provided as a string such that it
+         *                     only needs to be compiled if actually referenced by the IDE. If there
+         *                     is a group in the regexp, the substitution will be placed within the
+         *                     group.
+         * @param replacement  the replacement literal string
+         * @param shortenNames whether to shorten references in the replaced range
+         * @param reformat     whether to reformat the replaced range
          */
         private ReplaceString(
-                @NonNull String displayName,
-                @Nullable String oldString, @Nullable String oldPattern,
-                @NonNull String replacement) {
+          @NonNull String displayName,
+          @Nullable String oldString, @Nullable String oldPattern,
+          @NonNull String replacement, boolean shortenNames,
+                boolean reformat) {
             super(displayName);
             this.oldString = oldString;
             this.oldPattern = oldPattern;
             this.replacement = replacement;
+            this.shortenNames = shortenNames;
+            this.reformat = reformat;
         }
 
         /** Return display name */

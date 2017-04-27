@@ -29,7 +29,9 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
+import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ApiVersion;
+import com.android.builder.model.JavaCompileOptions;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SourceProvider;
 import com.android.manifmerger.ManifestMerger2;
@@ -71,7 +73,9 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.intellij.codeInsight.ExternalAnnotationsManager;
 import com.intellij.openapi.Disposable;
+import com.intellij.openapi.roots.LanguageLevelProjectExtension;
 import com.intellij.openapi.util.Disposer;
+import com.intellij.pom.java.LanguageLevel;
 import com.intellij.util.lang.UrlClassLoader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -936,6 +940,28 @@ public class LintCliClient extends LintClient {
         }
 
         projectEnvironment.registerPaths(files);
+
+        LanguageLevel maxLevel = LanguageLevel.JDK_1_7;
+        for (Project project : knownProjects) {
+            AndroidProject model = project.getGradleProjectModel();
+            if (model != null) {
+                JavaCompileOptions javaCompileOptions = model.getJavaCompileOptions();
+                String sourceCompatibility = javaCompileOptions.getSourceCompatibility();
+                LanguageLevel level = LanguageLevel.parse(sourceCompatibility);
+                if (level != null && maxLevel.isLessThan(level)) {
+                    maxLevel = level;
+                }
+            }
+        }
+
+        com.intellij.openapi.project.Project ideaProject = getIdeaProject();
+        if (ideaProject != null) {
+            LanguageLevelProjectExtension languageLevelProjectExtension = ideaProject
+                    .getComponent(LanguageLevelProjectExtension.class);
+            if (languageLevelProjectExtension != null) {
+                languageLevelProjectExtension.setLanguageLevel(maxLevel);
+            }
+        }
 
         super.initializeProjects(knownProjects);
     }
