@@ -69,7 +69,6 @@ import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingProcessLayoutsTask;
 import com.android.build.gradle.internal.variant.ApplicationVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.LibraryVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.TestedVariantData;
 import com.android.build.gradle.options.BooleanOption;
@@ -81,13 +80,11 @@ import com.android.build.gradle.tasks.AidlCompile;
 import com.android.build.gradle.tasks.ExternalNativeBuildTask;
 import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
 import com.android.build.gradle.tasks.GenerateBuildConfig;
-import com.android.build.gradle.tasks.GenerateResValues;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.build.gradle.tasks.RenderscriptCompile;
-import com.android.build.gradle.tasks.ShaderCompile;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BootClasspathBuilder;
 import com.android.builder.core.BuilderConstants;
@@ -532,13 +529,13 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     }
 
     /**
-     * Determine if the feature module is the base feature split module.
+     * Determine if the feature module is the base feature module.
      *
-     * @return true if this feature module is the base feature split module. False otherwise.
+     * @return true if this feature module is the base feature module. False otherwise.
      */
     @Override
-    public boolean isBaseSplit() {
-        return globalScope.getExtension().getBaseSplit();
+    public boolean isBaseFeature() {
+        return globalScope.getExtension().getBaseFeature();
     }
 
     @NonNull
@@ -863,8 +860,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                         .getAnnotationProcessorConfiguration();
                 break;
             case FEATURE_CLASSPATH:
-                configuration =
-                        getVariantData().getVariantDependency().getFeatureSplitConfiguration();
+                configuration = getVariantData().getVariantDependency().getFeatureConfiguration();
                 break;
             default:
                 throw new RuntimeException("unknown ConfigType value");

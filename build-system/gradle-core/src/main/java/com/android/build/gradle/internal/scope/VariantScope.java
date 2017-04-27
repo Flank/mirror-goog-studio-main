@@ -37,13 +37,11 @@ import com.android.build.gradle.tasks.AidlCompile;
 import com.android.build.gradle.tasks.ExternalNativeBuildTask;
 import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
 import com.android.build.gradle.tasks.GenerateBuildConfig;
-import com.android.build.gradle.tasks.GenerateResValues;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.build.gradle.tasks.RenderscriptCompile;
-import com.android.build.gradle.tasks.ShaderCompile;
 import com.android.builder.dexing.DexingMode;
 import com.android.builder.model.ApiVersion;
 import java.io.File;
@@ -92,7 +90,7 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     boolean isTestOnly();
 
-    boolean isBaseSplit();
+    boolean isBaseFeature();
 
     @NonNull
     DexingMode getDexingMode();

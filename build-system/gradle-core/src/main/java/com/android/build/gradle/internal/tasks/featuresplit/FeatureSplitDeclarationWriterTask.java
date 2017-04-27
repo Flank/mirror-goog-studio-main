@@ -55,7 +55,7 @@ public class FeatureSplitDeclarationWriterTask extends BaseTask {
         @NonNull
         @Override
         public String getName() {
-            return variantScope.getTaskName("featureSplit", "Writer");
+            return variantScope.getTaskName("feature", "Writer");
         }
 
         @NonNull

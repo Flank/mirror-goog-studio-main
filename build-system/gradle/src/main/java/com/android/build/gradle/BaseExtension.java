@@ -1031,7 +1031,7 @@ public abstract class BaseExtension implements AndroidConfig {
 
     // For compatibility with FeatureExtension.
     @Override
-    public Boolean getBaseSplit() {
-        throw new GradleException("baseSplit is not supported.");
+    public Boolean getBaseFeature() {
+        throw new GradleException("baseFeature is not supported.");
     }
 }

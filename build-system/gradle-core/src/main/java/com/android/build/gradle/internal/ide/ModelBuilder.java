@@ -276,7 +276,7 @@ public class ModelBuilder implements ToolingModelBuilder {
                 projectType,
                 Version.BUILDER_MODEL_API_VERSION,
                 generation,
-                projectType == PROJECT_TYPE_FEATURE && config.getBaseSplit());
+                projectType == PROJECT_TYPE_FEATURE && config.getBaseFeature());
     }
 
     /**

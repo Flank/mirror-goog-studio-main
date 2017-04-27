@@ -76,7 +76,7 @@ public class FeatureSplitPackageIdsWriterTask extends BaseTask {
         @NonNull
         @Override
         public String getName() {
-            return variantScope.getTaskName("generate", "FeatureSplitPackageIds");
+            return variantScope.getTaskName("generate", "FeaturePackageIds");
         }
 
         @NonNull

@@ -4,10 +4,10 @@ android {
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
 
-    baseSplit true
+    baseFeature true
 }
 
 dependencies {
-    featureSplit project(':feature')
+    feature project(':feature')
     implementation project(':library')
 }

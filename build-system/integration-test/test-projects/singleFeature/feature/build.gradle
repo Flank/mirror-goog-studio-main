@@ -4,5 +4,5 @@ android {
     compileSdkVersion rootProject.latestCompileSdk
     buildToolsVersion = rootProject.buildToolsVersion
 
-    baseSplit true
+    baseFeature true
 }
