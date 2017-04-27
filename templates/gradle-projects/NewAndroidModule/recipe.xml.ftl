@@ -105,7 +105,7 @@
 <#if copyIcons>
     <#if !isLibraryProject>
         <@copyIconCommands destination=escapeXmlAttribute(resOut)/>
-    <#elseif hasInstantAppWrapper>
+    <#elseif hasInstantAppWrapper || isBaseSplit>
         <@copyIconCommands destination=escapeXmlAttribute(baseLibResOut)/>
     </#if>
 </#if>
@@ -119,7 +119,7 @@
     </#if>
 </#if>
 
-<#if hasInstantAppWrapper>
+<#if hasInstantAppWrapper || isBaseSplit>
     <instantiate from="root/res/values/styles.xml.ftl"
                    to="${escapeXmlAttribute(baseLibResOut)}/values/styles.xml" />
     <#if buildApi gte 22>
