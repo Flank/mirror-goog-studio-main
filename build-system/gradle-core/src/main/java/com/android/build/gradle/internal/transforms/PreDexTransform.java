@@ -259,7 +259,7 @@ public class PreDexTransform extends Transform {
             }
 
             logger.verbose("inputFiles : %s", Joiner.on(",").join(inputFiles.keySet()));
-            WaitableExecutor<Void> executor = WaitableExecutor.useGlobalSharedThreadPool();
+            WaitableExecutor executor = WaitableExecutor.useGlobalSharedThreadPool();
 
             for (Map.Entry<File, File> entry : inputFiles.entrySet()) {
                 FileCache usedBuildCache =

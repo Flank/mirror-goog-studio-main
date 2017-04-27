@@ -53,7 +53,6 @@ public class DexArchiveMergerCallable implements Callable<Void> {
     public Void call() throws Exception {
         Dex mergedDex = mergeDexes(dexesToMerge);
         Files.write(outputDex, mergedDex.getBytes());
-
         return null;
     }
 

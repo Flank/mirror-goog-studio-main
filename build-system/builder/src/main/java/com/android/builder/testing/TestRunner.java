@@ -33,7 +33,6 @@ public interface TestRunner {
     /**
      * Returns true if the tests succeeded.
      *
-     * @param maxThreads the max number of threads to run in parallel. 0 means unlimited.
      * @param timeoutInMs time out in milliseconds
      * @param installOptions parameters passed to the pm install command.
      * @return true if the test succeed
@@ -44,7 +43,6 @@ public interface TestRunner {
             @NonNull TestData testData,
             @NonNull Set<File> helperApks,
             @NonNull List<? extends DeviceConnector> deviceList,
-            int maxThreads,
             int timeoutInMs,
             @NonNull Collection<String> installOptions,
             @NonNull File resultsDir,

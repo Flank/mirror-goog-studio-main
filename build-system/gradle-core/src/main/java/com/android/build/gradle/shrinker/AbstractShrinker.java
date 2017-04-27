@@ -63,7 +63,7 @@ public abstract class AbstractShrinker<T> {
     private static final boolean IGNORE_PACKAGE_NAME =
             Boolean.getBoolean("android.newShrinker.ignorePackageName");
 
-    protected final WaitableExecutor<Void> mExecutor;
+    protected final WaitableExecutor mExecutor;
 
     protected final ShrinkerGraph<T> mGraph;
 
@@ -73,7 +73,7 @@ public abstract class AbstractShrinker<T> {
 
     protected AbstractShrinker(
             @NonNull ShrinkerGraph<T> graph,
-            @NonNull WaitableExecutor<Void> executor,
+            @NonNull WaitableExecutor executor,
             @NonNull ShrinkerLogger shrinkerLogger,
             @Nullable BytecodeVersion bytecodeVersion) {
         mGraph = graph;

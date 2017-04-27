@@ -464,7 +464,7 @@ public class JavaSerializationShrinkerGraph implements ShrinkerGraph<String> {
     }
 
     @Override
-    public void clearCounters(@NonNull WaitableExecutor<Void> executor) {
+    public void clearCounters(@NonNull WaitableExecutor executor) {
         getCounters(CounterSet.SHRINK).mReferenceCounters.invalidateAll();
         getCounters(CounterSet.LEGACY_MULTIDEX).mReferenceCounters.invalidateAll();
     }

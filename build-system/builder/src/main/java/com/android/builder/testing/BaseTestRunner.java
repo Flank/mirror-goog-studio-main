@@ -114,7 +114,6 @@ public abstract class BaseTestRunner implements TestRunner {
             @NonNull TestData testData,
             @NonNull Set<File> helperApks,
             @NonNull List<? extends DeviceConnector> deviceList,
-            int maxThreadsInParallel,
             int timeoutInMs,
             @NonNull Collection<String> installOptions,
             @NonNull File resultsDir,
@@ -175,14 +174,13 @@ public abstract class BaseTestRunner implements TestRunner {
                         projectName, variantName, resultsDir, logger, unauthorizedDevices);
             }
 
-            WaitableExecutor<Boolean> executor =
+            WaitableExecutor executor =
                     scheduleTests(
                             projectName,
                             variantName,
                             testData,
                             apksForDevice,
                             helperApks,
-                            maxThreadsInParallel,
                             timeoutInMs,
                             installOptions,
                             resultsDir,
@@ -207,13 +205,12 @@ public abstract class BaseTestRunner implements TestRunner {
     }
 
     @NonNull
-    protected abstract WaitableExecutor<Boolean> scheduleTests(
+    protected abstract WaitableExecutor scheduleTests(
             @NonNull String projectName,
             @NonNull String variantName,
             @NonNull TestData testData,
             @NonNull Map<DeviceConnector, ImmutableList<File>> apksForDevice,
             @NonNull Set<File> helperApks,
-            int maxThreadsInParallel,
             int timeoutInMs,
             @NonNull Collection<String> installOptions,
             @NonNull File resultsDir,

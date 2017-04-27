@@ -62,13 +62,4 @@ public abstract class DeviceProvider {
      * @return if the provider is configured.
      */
     public abstract boolean isConfigured();
-
-    /**
-     * Limit on the number of threads using this {@link DeviceProvider} in parallel. 0 means no
-     * limit.
-     */
-    @SuppressWarnings("MethodMayBeStatic") // Exposed API.
-    public int getMaxThreads() {
-        return 0;
-    }
 }

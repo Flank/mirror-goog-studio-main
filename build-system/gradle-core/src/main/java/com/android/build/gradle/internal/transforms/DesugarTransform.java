@@ -147,7 +147,7 @@ public class DesugarTransform extends Transform {
     private final int minSdk;
     @NonNull private final JavaProcessExecutor executor;
     @NonNull private FileCollection java8LangSupportJar;
-    @NonNull private final WaitableExecutor<Void> waitableExecutor;
+    @NonNull private final WaitableExecutor waitableExecutor;
     private boolean verbose;
 
     @NonNull private Set<InputEntry> cacheMisses = Sets.newConcurrentHashSet();

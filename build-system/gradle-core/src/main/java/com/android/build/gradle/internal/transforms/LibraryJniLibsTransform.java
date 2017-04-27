@@ -113,7 +113,7 @@ public class LibraryJniLibsTransform extends Transform {
 
         FileUtils.cleanOutputDir(jniLibsFolder);
 
-        WaitableExecutor<Void> executor = WaitableExecutor.useGlobalSharedThreadPool();
+        WaitableExecutor executor = WaitableExecutor.useGlobalSharedThreadPool();
 
         for (TransformInput input : invocation.getReferencedInputs()) {
             for (JarInput jarInput : input.getJarInputs()) {

@@ -18,52 +18,38 @@ package com.android.ide.common.internal;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
-import com.android.annotations.concurrency.GuardedBy;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.MoreExecutors;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.concurrent.CompletionService;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorCompletionService;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.Future;
+import java.util.concurrent.RejectedExecutionException;
 
 /**
- * A utility wrapper around a {@link CompletionService} using an ThreadPoolExecutor so that it
- * is possible to wait on all the tasks.
+ * A utility wrapper around a {link ForkJoinPool} that allows to wait on all the submitted tasks.
  *
- * Tasks are submitted as {@link Callable} with {@link #execute(java.util.concurrent.Callable)}.
+ * <p>Tasks are submitted as {@link Callable} with {@link #execute(java.util.concurrent.Callable)}.
  *
- * After executing all tasks, it is possible to wait on them with
- * {@link #waitForTasksWithQuickFail(boolean)}, or {@link #waitForAllTasks()}.
+ * <p>After executing all tasks, it is possible to wait on them with {@link
+ * #waitForTasksWithQuickFail(boolean)}, or {@link #waitForAllTasks()}.
  *
- * This class is not Thread safe!
- *
- * @param <T> Result type of all the tasks.
+ * <p>Tasks can also be individually monitored using the {@link Future<>} object
  */
-public class WaitableExecutor<T> {
+public class WaitableExecutor {
 
-    @Nullable private final ExecutorService mExecutorService;
-    @NonNull private final CompletionService<T> mCompletionService;
-    @NonNull private final Set<Future<T>> mFutureSet = Sets.newConcurrentHashSet();
-    private int parallelism;
+    @NonNull private final ForkJoinPool forkJoinPool;
+    private final boolean owned;
+    @NonNull private final Set<ForkJoinTask<?>> futureSet = Sets.newConcurrentHashSet();
 
-    WaitableExecutor(
-            @Nullable ExecutorService mExecutorService,
-            @NonNull CompletionService<T> mCompletionService,
-            int parallelism) {
-        this.mExecutorService = mExecutorService;
-        this.mCompletionService = mCompletionService;
-        this.parallelism = parallelism;
+    WaitableExecutor(@NonNull ForkJoinPool forkJoinPool, boolean owned) {
+        this.forkJoinPool = forkJoinPool;
+        this.owned = owned;
     }
 
     /**
@@ -78,29 +64,8 @@ public class WaitableExecutor<T> {
      *
      * @see ExecutorSingleton#sThreadPoolSize
      */
-    public static <T> WaitableExecutor<T> useGlobalSharedThreadPool() {
-        return new WaitableExecutor<>(
-                null,
-                new ExecutorCompletionService<T>(ExecutorSingleton.getExecutor()),
-                ExecutorSingleton.getThreadPoolSize());
-    }
-
-    /**
-     * Creates a new {@link WaitableExecutor} which uses a globally shared thread pool, but limits
-     * the number of tasks (scheduled through this {@link WaitableExecutor}) that can execute in
-     * parallel. The thread submitting tasks will not block, but tasks may be queued before being
-     * passed to the {@link CompletionService}.
-     *
-     * @param parallelTaskLimit number of tasks that can execute in parallel
-     * @see #useGlobalSharedThreadPool()
-     */
-    public static <T> WaitableExecutor<T> useGlobalSharedThreadPoolWithLimit(
-            int parallelTaskLimit) {
-        checkArgument(parallelTaskLimit > 0, "parallelTaskLimit needs to be a positive number.");
-        return new BoundedWaitableExecutor<>(
-                null,
-                new ExecutorCompletionService<>(ExecutorSingleton.getExecutor()),
-                parallelTaskLimit);
+    public static WaitableExecutor useGlobalSharedThreadPool() {
+        return new WaitableExecutor(ForkJoinPool.commonPool(), false);
     }
 
     /**
@@ -111,11 +76,10 @@ public class WaitableExecutor<T> {
      *
      * @see #useGlobalSharedThreadPool()
      */
-    public static <T> WaitableExecutor<T> useNewFixedSizeThreadPool(int nThreads) {
+    public static WaitableExecutor useNewFixedSizeThreadPool(int nThreads) {
         checkArgument(nThreads > 0, "Number of threads needs to be a positive number.");
-        ExecutorService executorService = Executors.newFixedThreadPool(nThreads);
-        return new WaitableExecutor<>(
-                executorService, new ExecutorCompletionService<T>(executorService), nThreads);
+        return new WaitableExecutor(new ForkJoinPool(nThreads), true);
+
     }
 
     /**
@@ -126,21 +90,21 @@ public class WaitableExecutor<T> {
      */
     @VisibleForTesting
     @SuppressWarnings("unused") // Temporarily used when debugging.
-    public static <T> WaitableExecutor<T> useDirectExecutor() {
-        return new WaitableExecutor<>(
-                null,
-                new ExecutorCompletionService<T>(MoreExecutors.newDirectExecutorService()),
-                1);
+    public static WaitableExecutor useDirectExecutor() {
+        return new WaitableExecutor(new ForkJoinPool(1), true);
     }
 
     /**
      * Submits a Callable for execution.
      *
      * @param callable the callable to run.
+     * @throws RejectedExecutionException if the task cannot be scheduled for execution
      */
-    public void execute(Callable<T> callable) {
-        boolean added = mFutureSet.add(mCompletionService.submit(callable));
-        Preconditions.checkState(added, "Failed to add callable");
+    public synchronized <T> ForkJoinTask<T> execute(Callable<T> callable) {
+        ForkJoinTask<T> submitted = forkJoinPool.submit(callable);
+        boolean added = futureSet.add(submitted);
+        Preconditions.checkState(added, "Failed to add task");
+        return submitted;
     }
 
     /**
@@ -148,7 +112,7 @@ public class WaitableExecutor<T> {
      * been fetched yet.
      */
     int getUnprocessedTasksCount() {
-        return mFutureSet.size();
+        return futureSet.size();
     }
 
     /**
@@ -163,29 +127,23 @@ public class WaitableExecutor<T> {
      * @throws InterruptedException if this thread was interrupted. Not if the tasks were
      *     interrupted.
      */
-    public List<T> waitForTasksWithQuickFail(boolean cancelRemaining) throws InterruptedException {
+    public synchronized <T> List<T> waitForTasksWithQuickFail(boolean cancelRemaining)
+            throws InterruptedException {
         List<T> results = Lists.newArrayListWithCapacity(getUnprocessedTasksCount());
+
         try {
-            while (getUnprocessedTasksCount() > 0) {
-                Future<T> future = mCompletionService.take();
-
-                assert mFutureSet.contains(future);
-                mFutureSet.remove(future);
-
-                // Get the result from the task. If the task threw an exception,
-                // this will throw it, wrapped in an ExecutionException, caught below.
-                results.add(future.get());
+            for (ForkJoinTask<?> future : futureSet) {
+                results.add((T) future.join());
             }
-        } catch (ExecutionException e) {
+        } catch (RuntimeException | Error e) {
             if (cancelRemaining) {
                 cancelAllTasks();
             }
-
-            // get the original exception and throw that one.
-            throw new RuntimeException(e.getCause());
+            throw e;
         } finally {
-            if (mExecutorService != null) {
-                mExecutorService.shutdownNow();
+            futureSet.clear();
+            if (owned) {
+                forkJoinPool.shutdownNow();
             }
         }
 
@@ -219,119 +177,43 @@ public class WaitableExecutor<T> {
      *     interrupted.
      */
     @NonNull
-    public List<TaskResult<T>> waitForAllTasks() throws InterruptedException {
+    public synchronized <T> List<TaskResult<T>> waitForAllTasks() throws InterruptedException {
         List<TaskResult<T>> results = Lists.newArrayListWithCapacity(getUnprocessedTasksCount());
         try {
-            while (getUnprocessedTasksCount() > 0) {
-                Future<T> future = mCompletionService.take();
-
-                assert mFutureSet.contains(future);
-                mFutureSet.remove(future);
-
+            for (ForkJoinTask<?> future : futureSet) {
                 // Get the result from the task.
                 try {
-                    results.add(TaskResult.withValue(future.get()));
-                } catch (ExecutionException e) {
+                    results.add(TaskResult.withValue((T) future.join()));
+                } catch (RuntimeException e) {
                     // the original exception thrown by the task is the cause of this one.
                     Throwable cause = e.getCause();
 
-                    //noinspection StatementWithEmptyBody
-                    if (cause instanceof InterruptedException) {
-                        // if the task was cancelled we probably don't care about its result.
-                    } else {
-                        // there was an error.
-                        results.add(new TaskResult<>(cause));
-                    }
+                    // there was an error.
+                    results.add(new TaskResult<>(cause));
+                } catch (Error e) {
+                    results.add(new TaskResult<>(e));
                 }
             }
         } finally {
-            if (mExecutorService != null) {
-                mExecutorService.shutdownNow();
+            futureSet.clear();
+            if (owned) {
+                forkJoinPool.shutdownNow();
             }
         }
 
         return results;
     }
 
-    /**
-     * Cancel all remaining tasks.
-     */
-    public void cancelAllTasks() {
-        for (Future<T> future : mFutureSet) {
+    /** Cancel all remaining tasks. */
+    public synchronized void cancelAllTasks() {
+        for (Future<?> future : futureSet) {
             future.cancel(true /*mayInterruptIfRunning*/);
         }
+        futureSet.clear();
     }
 
     /** Returns the parallelism of this executor i.e. how many tasks can run in parallel. */
     public int getParallelism() {
-        return parallelism;
-    }
-
-    /**
-     * A {@link WaitableExecutor} that limits the number of tasks (scheduled through this executor)
-     * that can execute in parallel.
-     */
-    private static class BoundedWaitableExecutor<T> extends WaitableExecutor<T> {
-        private final int bound;
-
-        @GuardedBy("overflow")
-        private final Queue<Callable<T>> overflow;
-
-        @GuardedBy("overflow")
-        private int inCompletionService;
-
-        BoundedWaitableExecutor(
-                @Nullable ExecutorService mExecutorService,
-                @NonNull CompletionService<T> mCompletionService,
-                int bound) {
-            super(mExecutorService, mCompletionService, bound);
-            this.bound = bound;
-            this.inCompletionService = 0;
-            this.overflow = new LinkedList<>();
-        }
-
-        @Override
-        public void execute(Callable<T> callable) {
-            // Amend the callable to schedule more work once it's done.
-            Callable<T> wrapper =
-                    () -> {
-                        try {
-                            return callable.call();
-                        } finally {
-                            synchronized (overflow) {
-                                Callable<T> next = overflow.poll();
-                                if (next != null) {
-                                    super.execute(next);
-                                } else {
-                                    inCompletionService--;
-                                }
-                            }
-                        }
-                    };
-
-            synchronized (overflow) {
-                if (inCompletionService < bound) {
-                    inCompletionService++;
-                    super.execute(wrapper);
-                } else {
-                    overflow.add(wrapper);
-                }
-            }
-        }
-
-        @Override
-        public void cancelAllTasks() {
-            synchronized (overflow) {
-                overflow.clear();
-            }
-            super.cancelAllTasks();
-        }
-
-        @Override
-        int getUnprocessedTasksCount() {
-            synchronized (overflow) {
-                return super.getUnprocessedTasksCount() + overflow.size();
-            }
-        }
+        return forkJoinPool.getParallelism();
     }
 }

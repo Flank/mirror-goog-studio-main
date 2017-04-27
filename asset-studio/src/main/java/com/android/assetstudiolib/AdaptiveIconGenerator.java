@@ -166,7 +166,7 @@ public class AdaptiveIconGenerator extends GraphicGenerator {
         createPreviewImagesTasks(cache, adaptiveIconOptions, tasks);
 
         // Execute tasks in parallel and wait for results
-        WaitableExecutor<GeneratedIcon> executor = WaitableExecutor.useGlobalSharedThreadPool();
+        WaitableExecutor executor = WaitableExecutor.useGlobalSharedThreadPool();
         tasks.forEach(executor::execute);
 
         List<GeneratedIcon> results;

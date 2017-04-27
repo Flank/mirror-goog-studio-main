@@ -44,7 +44,7 @@ public class DexArchiveBuilder {
     }
 
     @NonNull private final DexArchiveBuilderConfig config;
-    @NonNull private final WaitableExecutor<DexArchiveEntry> executor;
+    @NonNull private final WaitableExecutor executor;
 
     /**
      * Creates instance that is configured for processing .class input files, and producing a dex

@@ -112,7 +112,7 @@ public class ExtractJarsTransform extends Transform {
         }
 
         try {
-            WaitableExecutor<Void> executor = WaitableExecutor.useGlobalSharedThreadPool();
+            WaitableExecutor executor = WaitableExecutor.useGlobalSharedThreadPool();
 
             for (TransformInput input : transformInvocation.getInputs()) {
                 for (DirectoryInput dirInput : input.getDirectoryInputs()) {
@@ -171,6 +171,8 @@ public class ExtractJarsTransform extends Transform {
                                             FileUtils.cleanOutputDir(outJarFolder);
                                             return null;
                                         });
+                                break;
+                            case NOTCHANGED:
                                 break;
                         }
                     }

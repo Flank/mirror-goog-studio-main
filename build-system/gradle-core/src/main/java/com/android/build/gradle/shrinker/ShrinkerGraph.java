@@ -262,7 +262,7 @@ public interface ShrinkerGraph<T> {
     Map<T, DependencyType> getRoots(@NonNull CounterSet counterSet);
 
     /** Clears all the counters, for all nodes. */
-    void clearCounters(@NonNull WaitableExecutor<Void> executor);
+    void clearCounters(@NonNull WaitableExecutor executor);
 
     /**
      * Checks if the given given (representing a class) was added to the graph.

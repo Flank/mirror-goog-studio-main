@@ -22,13 +22,13 @@ import com.android.builder.dexing.DexArchiveMerger;
 import com.android.builder.dexing.DexMergerConfig;
 import com.android.builder.dexing.DexingMode;
 import com.android.dx.command.dexer.DxContext;
-import com.android.ide.common.internal.WaitableExecutor;
 import com.android.ide.common.process.ProcessOutput;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ForkJoinPool;
 
 /**
  * Helper class to invoke the {@link com.android.builder.dexing.DexArchiveMerger} used to merge dex
@@ -41,7 +41,7 @@ class DexMergerTransformCallable implements Callable<Void> {
     @NonNull private final File dexOutputDir;
     @NonNull private final Collection<Path> dexArchives;
     @Nullable private final Set<String> mainDexList;
-    @NonNull private final WaitableExecutor<Void> executor;
+    @NonNull private final ForkJoinPool forkJoinPool;
 
     public DexMergerTransformCallable(
             @NonNull DexingMode dexingMode,
@@ -49,13 +49,13 @@ class DexMergerTransformCallable implements Callable<Void> {
             @NonNull File dexOutputDir,
             @NonNull Collection<Path> dexArchives,
             @Nullable Set<String> mainDexList,
-            @NonNull WaitableExecutor<Void> executor) {
+            @NonNull ForkJoinPool forkJoinPool) {
         this.dexingMode = dexingMode;
         this.processOutput = processOutput;
         this.dexOutputDir = dexOutputDir;
         this.dexArchives = dexArchives;
         this.mainDexList = mainDexList;
-        this.executor = executor;
+        this.forkJoinPool = forkJoinPool;
     }
 
     @Override
@@ -63,7 +63,7 @@ class DexMergerTransformCallable implements Callable<Void> {
         DxContext dxContext =
                 new DxContext(processOutput.getStandardOutput(), processOutput.getErrorOutput());
         DexMergerConfig config = new DexMergerConfig(dexingMode, dxContext);
-        DexArchiveMerger merger = new DexArchiveMerger(config, executor);
+        DexArchiveMerger merger = new DexArchiveMerger(config, forkJoinPool);
         merger.merge(dexArchives, dexOutputDir.toPath(), mainDexList);
         return null;
     }

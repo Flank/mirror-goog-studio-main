@@ -40,22 +40,18 @@ public class SimpleTestRunner extends BaseTestRunner {
 
     @Override
     @NonNull
-    protected WaitableExecutor<Boolean> scheduleTests(
+    protected WaitableExecutor scheduleTests(
             @NonNull String projectName,
             @NonNull String variantName,
             @NonNull TestData testData,
             @NonNull Map<DeviceConnector, ImmutableList<File>> apksForDevice,
             @NonNull Set<File> helperApks,
-            int maxThreadsInParallel,
             int timeoutInMs,
             @NonNull Collection<String> installOptions,
             @NonNull File resultsDir,
             @NonNull File coverageDir,
             @NonNull ILogger logger) {
-        WaitableExecutor<Boolean> executor =
-                maxThreadsInParallel > 0
-                        ? WaitableExecutor.useGlobalSharedThreadPoolWithLimit(maxThreadsInParallel)
-                        : WaitableExecutor.useGlobalSharedThreadPool();
+        WaitableExecutor executor = WaitableExecutor.useGlobalSharedThreadPool();
 
         for (Map.Entry<DeviceConnector, ImmutableList<File>> apks : apksForDevice.entrySet()) {
             DeviceConnector device = apks.getKey();

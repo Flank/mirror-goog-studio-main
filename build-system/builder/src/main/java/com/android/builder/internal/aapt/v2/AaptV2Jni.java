@@ -21,16 +21,17 @@ import com.android.builder.internal.aapt.AaptException;
 import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.builder.internal.aapt.AbstractAapt;
 import com.android.ide.common.internal.WaitableExecutor;
-import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.ide.common.res2.CompileResourceRequest;
 import com.android.tools.aapt2.Aapt2Jni;
 import com.android.tools.aapt2.Aapt2RenamingConventions;
 import com.google.common.base.Joiner;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.SettableFuture;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.concurrent.Future;
 
 /**
  * Implementation of {@link com.android.builder.internal.aapt.Aapt} that uses out-of-process
@@ -39,85 +40,58 @@ import java.util.List;
 public class AaptV2Jni extends AbstractAapt {
 
     @NonNull private final File intermediateDir;
-    @NonNull private final ProcessOutputHandler processOutputHandler;
-    @NonNull private final WaitableExecutor<Void> executor;
+    @NonNull private final WaitableExecutor executor;
 
     /** Creates a new entry point to {@code aapt2} using the jni bindings. */
-    public AaptV2Jni(
-            @NonNull File intermediateDir,
-            @NonNull WaitableExecutor<Void> executor,
-            @NonNull ProcessOutputHandler processOutputHandler) {
+    public AaptV2Jni(@NonNull File intermediateDir, @NonNull WaitableExecutor executor) {
         this.intermediateDir = intermediateDir;
         this.executor = executor;
-        this.processOutputHandler = processOutputHandler;
     }
 
-    @NonNull
     @Override
     protected ListenableFuture<Void> makeValidatedPackage(@NonNull AaptPackageConfig config)
             throws AaptException {
 
-        SettableFuture<Void> result = SettableFuture.create();
-        executor.execute(
-                () -> {
-                    if (config.getResourceOutputApk() != null) {
-                        Files.deleteIfExists(config.getResourceOutputApk().toPath());
-                    }
-                    try {
-                        List<String> args = AaptV2CommandBuilder.makeLink(config, intermediateDir);
-                        int returnCode = Aapt2Jni.link(args);
-                        if (returnCode == 0) {
-                            result.set(null);
-                        } else {
-                            result.setException(
-                                    new AaptException(
-                                            "Aapt2 link failed: returned error code "
-                                                    + returnCode
-                                                    + "\n"
-                                                    + "aapt2 link "
-                                                    + Joiner.on(' ').join(args)));
-                        }
-                    } catch (Exception e) {
-                        result.setException(e);
-                        throw e;
-                    }
-                    return null;
-                });
-        return result;
+        if (config.getResourceOutputApk() != null) {
+            try {
+                Files.deleteIfExists(config.getResourceOutputApk().toPath());
+            } catch (IOException e) {
+                throw new AaptException(e.getMessage(), e);
+            }
+        }
+        List<String> args = AaptV2CommandBuilder.makeLink(config, intermediateDir);
+        int returnCode = Aapt2Jni.link(args);
+        if (returnCode != 0) {
+            throw new AaptException(
+                    "Aapt2 link failed: returned error code "
+                            + returnCode
+                            + "\n"
+                            + "aapt2 link "
+                            + Joiner.on(' ').join(args));
+        }
+        return Futures.immediateFuture(null);
     }
 
     @NonNull
     @Override
-    public ListenableFuture<File> compile(@NonNull CompileResourceRequest request)
-            throws Exception {
-        SettableFuture<File> result = SettableFuture.create();
-        executor.execute(
+    public Future<File> compile(@NonNull CompileResourceRequest request) throws Exception {
+        return executor.execute(
                 () -> {
-                    try {
-                        List<String> args = AaptV2CommandBuilder.makeCompile(request);
-                        int returnCode = Aapt2Jni.compile(args);
-                        if (returnCode == 0) {
-                            result.set(
-                                    new File(
-                                            request.getOutput(),
-                                            Aapt2RenamingConventions.compilationRename(
-                                                    request.getInput())));
-                        } else {
-                            result.setException(
-                                    new AaptException(
-                                            "Aapt2 compile failed: returned error code "
-                                                    + returnCode
-                                                    + "\n"
-                                                    + "aapt2 compile "
-                                                    + Joiner.on(' ').join(args)));
-                        }
-                    } catch (Exception e) {
-                        result.setException(e);
-                        throw e;
+                    List<String> args = AaptV2CommandBuilder.makeCompile(request);
+                    int returnCode = Aapt2Jni.compile(args);
+                    if (returnCode == 0) {
+                        return new File(
+                                request.getOutput(),
+                                Aapt2RenamingConventions.compilationRename(request.getInput()));
+                    } else {
+                        throw new AaptException(
+                                "Aapt2 compile failed: returned error code "
+                                        + returnCode
+                                        + "\n"
+                                        + "aapt2 compile "
+                                        + Joiner.on(' ').join(args));
                     }
-                    return null;
                 });
-        return result;
     }
 
     @Override

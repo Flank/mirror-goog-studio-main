@@ -20,7 +20,6 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.dx.command.dexer.DxContext;
-import com.android.ide.common.internal.WaitableExecutor;
 import com.android.testutils.TestClassesGenerator;
 import com.android.testutils.TestInputsGenerator;
 import com.google.common.base.Preconditions;
@@ -32,6 +31,7 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
 
 /** Helper methods for testing dex archives. */
@@ -157,12 +157,9 @@ public final class DexArchiveTestUtil {
                 (dexingMode == DexingMode.LEGACY_MULTIDEX) == (mainDexList != null),
                 "Main Dex list must be set if and only if legacy multidex is enabled.");
 
-        WaitableExecutor<Void> executor = WaitableExecutor.useGlobalSharedThreadPool();
         DexMergerConfig config = new DexMergerConfig(dexingMode, dxContext);
-        DexArchiveMerger merger = new DexArchiveMerger(config, executor);
+        DexArchiveMerger merger = new DexArchiveMerger(config, ForkJoinPool.commonPool());
         Files.createDirectory(outputDir);
-
         merger.merge(inputs, outputDir, mainDexList);
-        executor.waitForTasksWithQuickFail(true);
     }
 }

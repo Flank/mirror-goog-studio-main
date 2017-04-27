@@ -222,7 +222,7 @@ public class ProcessAndroidResources extends IncrementalTask {
     @Override
     protected void doFullTaskAction() throws IOException {
 
-        WaitableExecutor<Void> executor = WaitableExecutor.useGlobalSharedThreadPool();
+        WaitableExecutor executor = WaitableExecutor.useGlobalSharedThreadPool();
         AtomicBoolean codeGenNecessary = new AtomicBoolean(true);
 
         if (buildTargetAbi != null

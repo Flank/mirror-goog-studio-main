@@ -49,7 +49,7 @@ import org.gradle.api.logging.Logger;
  */
 public class InstantRunSliceSplitApkBuilder extends InstantRunSplitApkBuilder {
 
-    private final WaitableExecutor<File> executor = WaitableExecutor.useGlobalSharedThreadPool();
+    private final WaitableExecutor executor = WaitableExecutor.useGlobalSharedThreadPool();
 
     public InstantRunSliceSplitApkBuilder(
             @NonNull Logger logger,

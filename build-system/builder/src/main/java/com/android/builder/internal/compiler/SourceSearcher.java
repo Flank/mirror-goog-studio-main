@@ -33,8 +33,7 @@ public class SourceSearcher {
     @NonNull
     private final Collection<File> mSourceFolders;
     private final String[] mExtensions;
-    @Nullable
-    private WaitableExecutor<Void> mExecutor;
+    @Nullable private WaitableExecutor mExecutor;
     private boolean initialized = false;
 
     public interface SourceFileProcessor {

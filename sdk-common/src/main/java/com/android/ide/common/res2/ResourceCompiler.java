@@ -18,8 +18,8 @@ package com.android.ide.common.res2;
 
 import com.android.annotations.NonNull;
 import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
 import java.io.File;
+import java.util.concurrent.Future;
 
 /**
  * Compiler that will process individual resource files. A compiler will produce an optional
@@ -41,5 +41,5 @@ public interface ResourceCompiler {
      * @throws Exception failed to process the compilation request
      */
     @NonNull
-    ListenableFuture<File> compile(@NonNull CompileResourceRequest request) throws Exception;
+    Future<File> compile(@NonNull CompileResourceRequest request) throws Exception;
 }

@@ -62,7 +62,7 @@ public class IncrementalShrinker<T> extends AbstractShrinker<T> {
     }
 
     public IncrementalShrinker(
-            @NonNull WaitableExecutor<Void> executor,
+            @NonNull WaitableExecutor executor,
             @NonNull ShrinkerGraph<T> graph,
             @NonNull ShrinkerLogger shrinkerLogger,
             @Nullable BytecodeVersion bytecodeVersion) {
@@ -282,6 +282,8 @@ public class IncrementalShrinker<T> extends AbstractShrinker<T> {
                                                 unresolvedReferences,
                                                 modifiedClasses);
                                         break;
+                                    case NOTCHANGED:
+                                        break;
                                 }
                                 return null;
                             });
@@ -296,8 +298,9 @@ public class IncrementalShrinker<T> extends AbstractShrinker<T> {
      * up-to-date edges, according to the current state of the class.
      *
      * <p>This only works on {@link DependencyType#REQUIRED_CODE_REFERENCE} edges, which are only
-     * ever created from method containing the opcode to target member. The first pass is equivalent
-     * to removing all code from the method, the second to adding "current" opcodes to it.
+     * ever created from method containing the opcode to target memShareber. The first pass is
+     * equivalent to removing all code from the method, the second to adding "current" opcodes to
+     * it.
      *
      * @throws IncrementalRunImpossibleException If current members of the class are not the same as
      *     they used to be. This means that edges of other types need to be updated, and we don't
