@@ -85,13 +85,10 @@ public class ClientWindow {
     /** Lists all the active window for the current client. */
     @Nullable
     public static List<ClientWindow> getAll(
-            @NonNull Client client, long timeout, @NonNull TimeUnit unit) {
+            @NonNull Client client, long timeout, @NonNull TimeUnit unit) throws IOException {
         ClientData cd = client.getClientData();
         if (cd.hasFeature(ClientData.FEATURE_VIEW_HIERARCHY)) {
-            try {
-                return new ListViewRootsHandler().getWindows(client, timeout, unit);
-            } catch (IOException ignored) {
-            }
+            return new ListViewRootsHandler().getWindows(client, timeout, unit);
         }
         return null;
     }
