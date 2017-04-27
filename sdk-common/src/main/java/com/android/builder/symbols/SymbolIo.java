@@ -25,7 +25,6 @@ import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
@@ -365,7 +364,7 @@ public final class SymbolIo {
 
             // loop on the resource types so that the order is always the same
             for (ResourceType resType : ResourceType.values()) {
-                List<Symbol> symbols = getSymbolByResourceType(table, resType);
+                List<Symbol> symbols = table.getSymbolByResourceType(resType);
                 if (symbols.isEmpty()) {
                     continue;
                 }
@@ -497,7 +496,7 @@ public final class SymbolIo {
 
             // loop on the resource types so that the order is always the same
             for (ResourceType resType : ResourceType.values()) {
-                List<Symbol> symbols = getSymbolByResourceType(table, resType);
+                List<Symbol> symbols = table.getSymbolByResourceType(resType);
                 if (symbols.isEmpty()) {
                     continue;
                 }
@@ -557,20 +556,5 @@ public final class SymbolIo {
         return file;
     }
 
-    /**
-     * Collect all the symbols for a particular symbol type to a sorted list of symbols.
-     *
-     * <p>The symbols are sorted by name to make output predicable and, therefore, testing easier.
-     */
-    @NonNull
-    private static List<Symbol> getSymbolByResourceType(
-            @NonNull SymbolTable table, @NonNull ResourceType type) {
-        final Comparator<Symbol> nameComparator = Comparator.comparing(Symbol::getName);
 
-        final ImmutableCollection<Symbol> symbolCollection = table.getSymbols().row(type).values();
-
-        List<Symbol> symbols = Lists.newArrayList(symbolCollection);
-        symbols.sort(nameComparator);
-        return symbols;
-    }
 }

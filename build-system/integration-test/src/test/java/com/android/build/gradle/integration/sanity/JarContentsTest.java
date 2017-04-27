@@ -204,6 +204,7 @@ public class JarContentsTest {
                 "com/android/builder/profile/",
                 "com/android/builder/sdk/",
                 "com/android/builder/signing/",
+                "com/android/builder/symbols/",
                 "com/android/builder/tasks/",
                 "com/android/builder/testing/",
                 "com/android/builder/utils/",
