@@ -91,7 +91,20 @@ public class TestLintResult {
      * @return this
      */
     public TestLintResult expect(@NonNull String expectedText) {
-        assertEquals(expectedText, describeOutput());
+        String actual = describeOutput();
+        if (!actual.equals(expectedText)) {
+            // See if it's a Windows path issue
+            if (!actual.equals(expectedText.replace(File.separatorChar, '/'))) {
+                assertEquals("The expected lint output does not match, but it *does* "
+                        + "match when Windows file separators (\\) are replaced by Unix ones.\n"
+                        + "Make sure your lint detector calls LintClient.getDisplayPath(File) "
+                        + "instead of displaying paths directly (in unit tests they will then "
+                        + "be converted to forward slashes for test output stability.)\n",
+                        expectedText, actual);
+            }
+
+            assertEquals(expectedText, actual);
+        }
         cleanup();
         return this;
     }

@@ -187,9 +187,13 @@ class BlameFile {
             index += 2;
         }
 
-        int range = location.indexOf(':', index);
-        if (range == -1) {
-            range = location.length();
+        int range = location.length();
+        while (range > 0) {
+            char c = location.charAt(range - 1);
+            if (c != ':' && c != '-' && !Character.isDigit(c)) {
+                break;
+            }
+            range--;
         }
 
         String path = location.substring(index, range);
@@ -375,7 +379,7 @@ class BlameFile {
     static class BlameNode {
         @Nullable private String from;
         @Nullable private List<Pair<String,String>> attributeLocations;
-        private String key;
+        private final String key;
 
         public BlameNode(String key) {
             this.key = key;

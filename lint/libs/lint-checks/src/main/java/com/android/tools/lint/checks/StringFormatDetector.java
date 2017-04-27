@@ -627,7 +627,7 @@ public class StringFormatDetector extends ResourceXmlDetector implements UastSca
                                 number, name,
                                 str,
                                 currentFormat, format,
-                                f.getParentFile().getName() + File.separator + f.getName());
+                                LintUtils.getFileNameWithParent(context.getClient(), f));
                         //warned = true;
                         context.report(ARG_TYPES, location, message);
                         break;

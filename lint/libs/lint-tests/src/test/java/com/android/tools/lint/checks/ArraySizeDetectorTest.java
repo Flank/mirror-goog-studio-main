@@ -25,7 +25,7 @@ public class ArraySizeDetectorTest extends AbstractCheckTest {
         return new ArraySizeDetector();
     }
     public void testArraySizes() throws Exception {
-        assertEquals(""
+        String expected = ""
                 + "res/values/arrays.xml:3: Warning: Array security_questions has an inconsistent number of items (3 in values-nl-rNL/arrays.xml, 4 in values-cs/arrays.xml) [InconsistentArrays]\n"
                 + "    <string-array name=\"security_questions\">\n"
                 + "    ^\n"
@@ -36,14 +36,15 @@ public class ArraySizeDetectorTest extends AbstractCheckTest {
                 + "    <array name=\"signal_strength\">\n"
                 + "    ^\n"
                 + "    res/values-land/arrays.xml:2: Declaration with array size (6)\n"
-                + "0 errors, 2 warnings\n",
-
-            lintProject(
-                 mArrays,
-                 mArrays2,
-                 mArrays3,
-                 mArrays4,
-                 mStrings));
+                + "0 errors, 2 warnings\n";
+        lint().files(
+                mArrays,
+                mArrays2,
+                mArrays3,
+                mArrays4,
+                mStrings)
+                .run()
+                .expect(expected);
     }
 
     public void testMultipleArrays() throws Exception {

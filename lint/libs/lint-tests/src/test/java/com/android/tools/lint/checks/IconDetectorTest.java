@@ -33,7 +33,6 @@ import static com.android.tools.lint.checks.IconDetector.ICON_XML_AND_PNG;
 import static com.android.tools.lint.checks.IconDetector.WEBP_ELIGIBLE;
 import static com.android.tools.lint.checks.IconDetector.WEBP_UNSUPPORTED;
 
-import com.android.SdkConstants;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
 
@@ -88,9 +87,6 @@ public class IconDetectorTest extends AbstractCheckTest {
     }
 
     public void testMixed() throws Exception {
-        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
-            return;
-        }
         String expected = ""
                 + "res/drawable/background.xml: Warning: The following images appear both as density independent .xml files and as bitmap files: res/drawable-mdpi/background.png, res/drawable/background.xml [IconXmlAndPng]\n"
                 + "    res/drawable-mdpi/background.png: <No location-specific message\n"
@@ -164,9 +160,6 @@ public class IconDetectorTest extends AbstractCheckTest {
     }
 
     public void testNoDpi2() throws Exception {
-        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
-            return;
-        }
         // Having additional icon names in the no-dpi folder should not cause any complaints
         String expected = ""
                 + "res/drawable-xxxhdpi/frame.png: Warning: The image frame.png varies significantly in its density-independent (dip) size across the various density versions: drawable-ldpi/frame.png: 629x387 dp (472x290 px), drawable-mdpi/frame.png: 472x290 dp (472x290 px), drawable-hdpi/frame.png: 315x193 dp (472x290 px), drawable-xhdpi/frame.png: 236x145 dp (472x290 px), drawable-xxhdpi/frame.png: 157x97 dp (472x290 px), drawable-xxxhdpi/frame.png: 118x73 dp (472x290 px) [IconDipSize]\n"
@@ -199,9 +192,6 @@ public class IconDetectorTest extends AbstractCheckTest {
     }
 
     public void testNoDpiMix() throws Exception {
-        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
-            return;
-        }
         String expected = ""
                 + "res/drawable-mdpi/frame.xml: Warning: The following images appear in both -nodpi and in a density folder: frame.png, frame.xml [IconNoDpi]\n"
                 + "    res/drawable-mdpi/frame.png: <No location-specific message\n"
@@ -237,9 +227,6 @@ public class IconDetectorTest extends AbstractCheckTest {
     }
 
     public void testMixedFormat() throws Exception {
-        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
-            return;
-        }
         // Test having a mixture of .xml and .png resources for the same name
         // Make sure we don't get:
         // drawable-hdpi: Warning: Missing the following drawables in drawable-hdpi: f.png (found in drawable-mdpi)

@@ -18,7 +18,6 @@ package com.android.tools.lint.checks;
 
 import static com.android.tools.lint.checks.PropertyFileDetector.suggestEscapes;
 
-import com.android.SdkConstants;
 import com.android.tools.lint.detector.api.Detector;
 
 public class PropertyFileDetectorTest extends AbstractCheckTest {
@@ -28,9 +27,6 @@ public class PropertyFileDetectorTest extends AbstractCheckTest {
     }
 
     public void test() {
-        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
-            return;
-        }
         String expected = ""
                 + "local.properties:11: Error: Windows file separators (\\) and drive letter separators (':') must be escaped (\\\\) in property files; use C\\:\\\\my\\\\path\\\\to\\\\sdk [PropertyEscape]\n"
                 + "windows.dir=C:\\my\\path\\to\\sdk\n"
@@ -72,9 +68,6 @@ public class PropertyFileDetectorTest extends AbstractCheckTest {
     }
 
     public void testUseHttpInsteadOfHttps() {
-        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
-            return;
-        }
 
         //noinspection all // Sample code
         String expected = ""
@@ -100,9 +93,6 @@ public class PropertyFileDetectorTest extends AbstractCheckTest {
     }
 
     public void testIssue92789() {
-        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
-            return;
-        }
 
         // Regression test for https://code.google.com/p/android/issues/detail?id=92789
         //noinspection all // Sample code

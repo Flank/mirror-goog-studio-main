@@ -521,7 +521,8 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                             + "use / instead";
                     report(context, valueCookie, PATH, message);
 
-                } else if (new File(path.replace('/', File.separatorChar)).isAbsolute()) {
+                } else if (path.startsWith("/")
+                        || new File(path.replace('/', File.separatorChar)).isAbsolute()) {
                     String message = "Avoid using absolute paths in .gradle files";
                     report(context, valueCookie, PATH, message);
                 }

@@ -1451,6 +1451,17 @@ public abstract class LintClient {
     }
 
     /**
+     * Formats the given path
+     * @param file the path to compute a display name for
+     * @return a path formatted for user display, in {@link TextFormat#RAW} text format (e.g.
+     *      with backslashes, asterisks etc escaped)
+     */
+    @NonNull
+    public String getDisplayPath(File file) {
+        return TextFormat.TEXT.convertTo(file.getPath(), TextFormat.RAW);
+    }
+
+    /**
      * Returns true if this client supports project resource repository lookup via
      * {@link #getResourceRepository(Project, boolean, boolean)}
      *

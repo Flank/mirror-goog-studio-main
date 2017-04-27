@@ -48,6 +48,7 @@ public class TextReporter extends Reporter {
     private final Writer writer;
     private final boolean close;
     private final LintCliFlags flags;
+    private boolean forwardSlashPaths;
 
     /**
      * Constructs a new {@link TextReporter}
@@ -108,8 +109,9 @@ public class TextReporter extends Reporter {
                 }
                 int startLength = output.length();
 
-                if (warning.path != null) {
-                    output.append(warning.path);
+                String p = warning.path;
+                if (p != null) {
+                    appendPath(output, p);
                     output.append(':');
 
                     if (warning.line >= 0) {
@@ -154,7 +156,7 @@ public class TextReporter extends Reporter {
                             output.append("    ");
                             String path = client.getDisplayPath(warning.project,
                                     location.getFile());
-                            output.append(path);
+                            appendPath(output, path);
 
                             Position start = location.getStart();
                             if (start != null) {
@@ -194,7 +196,7 @@ public class TextReporter extends Reporter {
 
                                 String path = client.getDisplayPath(warning.project,
                                         location.getFile());
-                                sb.append(path);
+                                appendPath(sb, path);
 
                                 Position start = location.getStart();
                                 if (start != null) {
@@ -247,15 +249,30 @@ public class TextReporter extends Reporter {
                 writer.close();
 
                 if (!client.getFlags().isQuiet() && this.output != null) {
-                    String path = this.output.getAbsolutePath();
+                    String path = convertPath(this.output.getAbsolutePath());
                     System.out.println(String.format("Wrote text report to %1$s", path));
                 }
             }
         }
     }
 
-    private void explainIssue(@NonNull StringBuilder output, @Nullable Issue issue)
-            throws IOException {
+    private void appendPath(@NonNull StringBuilder sb, @NonNull String path) {
+        sb.append(convertPath(path));
+    }
+
+    @NonNull
+    private String convertPath(@NonNull String path) {
+        if (forwardSlashPaths) {
+            if (File.separatorChar == '/') {
+                return path;
+            }
+            return path.replace(File.separatorChar, '/');
+        }
+
+        return path;
+    }
+
+    private void explainIssue(@NonNull StringBuilder output, @Nullable Issue issue) {
         if (issue == null || !flags.isExplainIssues() || issue == IssueRegistry.LINT_ERROR) {
             return;
         }
@@ -293,5 +310,21 @@ public class TextReporter extends Reporter {
 
     boolean isWriteToConsole() {
         return output == null;
+    }
+
+    /**
+     * Gets whether the reporter should convert paths to forward slashes
+     * @return true if forcing paths to forward slashes
+     */
+    public boolean isForwardSlashPaths() {
+        return forwardSlashPaths;
+    }
+
+    /**
+     * Sets whether the reporter should convert paths to forward slashes
+     * @param forwardSlashPaths true to force paths to forward slashes
+     */
+    public void setForwardSlashPaths(boolean forwardSlashPaths) {
+        this.forwardSlashPaths = forwardSlashPaths;
     }
 }

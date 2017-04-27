@@ -16,7 +16,6 @@
 
 package com.android.tools.lint.checks;
 
-import com.android.SdkConstants;
 import com.android.tools.lint.detector.api.Detector;
 
 @SuppressWarnings("javadoc")
@@ -90,9 +89,6 @@ public class TypoDetectorTest extends AbstractCheckTest {
     }
 
     public void testRepeatedWords() {
-        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
-            return;
-        }
         String expected = ""
                 + "res/values/strings.xml:5: Warning: Repeated word \"to\" in message: possible typo [Typos]\n"
                 + "     extra location provider commands.  This may allow the app to to interfere\n"

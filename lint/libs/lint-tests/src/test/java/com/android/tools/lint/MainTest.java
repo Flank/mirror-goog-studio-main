@@ -35,8 +35,7 @@ import org.intellij.lang.annotations.Language;
 public class MainTest extends AbstractCheckTest {
 
     private void checkDriver(String expectedOutput, String expectedError, int expectedExitCode,
-            String[] args)
-            throws Exception {
+            String[] args) {
         PrintStream previousOut = System.out;
         PrintStream previousErr = System.err;
         try {
@@ -377,7 +376,7 @@ public class MainTest extends AbstractCheckTest {
 
                 // Expected error
                 ""
-                        + "Created baseline file " + baseline.getPath() + "\n"
+                        + "Created baseline file " + cleanup(baseline.getPath()) + "\n"
                         + "\n"
                         + "Also breaking the build in case this was not intentional. If you\n"
                         + "deliberately created the baseline file, re-run the build and this\n"
@@ -415,9 +414,6 @@ public class MainTest extends AbstractCheckTest {
     }
 
     public void test_getCleanPath() throws Exception {
-        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
-            return;
-        }
         assertEquals("foo", LintCliClient.getCleanPath(new File("foo")));
         String sep = File.separator;
         assertEquals("foo" + sep + "bar",
@@ -446,10 +442,13 @@ public class MainTest extends AbstractCheckTest {
                 LintCliClient.getCleanPath(new File(sep + "foo" + sep + "..")));
         assertEquals(sep + "foo",
                 LintCliClient.getCleanPath(new File(sep + "foo" + sep + "bar " + sep + "..")));
-        assertEquals(sep + "c:",
-                LintCliClient.getCleanPath(new File(sep + "c:")));
-        assertEquals(sep + "c:" + sep + "foo",
-                LintCliClient.getCleanPath(new File(sep + "c:" + sep + "foo")));
+
+        if (SdkConstants.CURRENT_PLATFORM != SdkConstants.PLATFORM_WINDOWS) {
+            assertEquals(sep + "c:",
+                    LintCliClient.getCleanPath(new File(sep + "c:")));
+            assertEquals(sep + "c:" + sep + "foo",
+                    LintCliClient.getCleanPath(new File(sep + "c:" + sep + "foo")));
+        }
     }
 
     public void testGradle() throws Exception {
@@ -479,6 +478,11 @@ public class MainTest extends AbstractCheckTest {
 
     public void testValidateOutput() throws Exception {
         if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
+            // This test relies on making directories not writable, then
+            // running lint pointing the output to that directory
+            // and checking that error messages make sense. This isn't
+            // supported on Windows; calling file.setWritable(false) returns
+            // false; so skip this entire test on Windows.
             return;
         }
         File project = getProjectDir(null,
@@ -573,11 +577,11 @@ public class MainTest extends AbstractCheckTest {
             + "    <ImageButton android:importantForAccessibility=\"no\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:src=\"@drawable/android_button\" android:focusable=\"false\" android:clickable=\"false\" android:layout_weight=\"1.0\" />\n"
             + "</LinearLayout>\n";
 
-    private TestFile mAccessibility = xml("res/layout/accessibility.xml", ACCESSIBILITY_XML);
+    private final TestFile mAccessibility = xml("res/layout/accessibility.xml", ACCESSIBILITY_XML);
 
-    private TestFile mAccessibility2 = xml("myres1/layout/accessibility1.xml", ACCESSIBILITY_XML);
+    private final TestFile mAccessibility2 = xml("myres1/layout/accessibility1.xml", ACCESSIBILITY_XML);
 
-    private TestFile mAccessibility3 = xml("myres2/layout/accessibility1.xml", ACCESSIBILITY_XML);
+    private final TestFile mAccessibility3 = xml("myres2/layout/accessibility1.xml", ACCESSIBILITY_XML);
 
     @SuppressWarnings("all") // Sample code
     private TestFile mGetterTest = java(""

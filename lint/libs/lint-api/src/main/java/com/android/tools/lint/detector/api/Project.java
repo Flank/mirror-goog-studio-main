@@ -621,10 +621,10 @@ public class Project {
                length++;
            }
 
-           return path.substring(length);
+           return client.getDisplayPath(new File(path.substring(length)));
        }
 
-       return path;
+       return client.getDisplayPath(file);
     }
 
     /**

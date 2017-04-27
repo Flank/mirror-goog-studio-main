@@ -21,7 +21,6 @@ import static com.android.tools.lint.checks.TypographyDetector.GRAVE_QUOTATION;
 import static com.android.tools.lint.checks.TypographyDetector.HYPHEN_RANGE_PATTERN;
 import static com.android.tools.lint.checks.TypographyDetector.SINGLE_QUOTE;
 
-import com.android.SdkConstants;
 import com.android.tools.lint.detector.api.Detector;
 
 @SuppressWarnings("javadoc")
@@ -32,9 +31,6 @@ public class TypographyDetectorTest extends AbstractCheckTest {
     }
 
     public void test() throws Exception {
-        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
-            return;
-        }
         //noinspection all // Sample code
         assertEquals(""
                 + "res/values/typography.xml:17: Warning: Replace \"-\" with an \"en dash\" character (\u2013, &#8211;) ? [TypographyDashes]\n"

@@ -79,6 +79,7 @@ import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
+import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Location.Handle;
 import com.android.tools.lint.detector.api.Scope;
@@ -427,7 +428,7 @@ public class ObsoleteLayoutParamsDetector extends LayoutDetector {
                     String parentTag = include.getSecond();
                     sb.append(String.format("included from within a `%1$s` in `%2$s`",
                             parentTag,
-                            from.getParentFile().getName() + File.separator + from.getName()));
+                            LintUtils.getFileNameWithParent(context.getClient(), from)));
                 }
                 String message = String.format("Invalid layout param '`%1$s`' (%2$s)",
                             name, sb.toString());

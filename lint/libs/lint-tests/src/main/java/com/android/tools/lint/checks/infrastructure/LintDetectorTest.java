@@ -318,13 +318,6 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                     result, secondResult);
         }
 
-        // The output typically contains a few directory/filenames.
-        // On Windows we need to change the separators to the unix-style
-        // forward slash to make the test as OS-agnostic as possible.
-        if (File.separatorChar != '/') {
-            result = result.replace(File.separatorChar, '/');
-        }
-
         for (File f : files) {
             deleteFile(f);
         }
@@ -348,7 +341,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
             @NonNull Severity severity,
             @NonNull Location location,
             @NonNull String message,
-            @NonNull LintFix fixData) {
+            @Nullable LintFix fixData) {
         checkReportedError(context, issue, severity, location, message);
     }
 
@@ -737,7 +730,9 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
     public class TestLintClient extends LintCliClient {
         public TestLintClient() {
             super(new LintCliFlags(), "test");
-            flags.getReporters().add(new TextReporter(this, flags, writer, false));
+            TextReporter reporter = new TextReporter(this, flags, writer, false);
+            reporter.setForwardSlashPaths(true); // stable tests
+            flags.getReporters().add(reporter);
         }
 
         protected final StringWriter writer = new StringWriter();
@@ -754,6 +749,11 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
             return true;
         }
 
+        @NonNull
+        @Override
+        public String getDisplayPath(File file) {
+            return file.getPath().replace(File.separatorChar, '/'); // stable tests
+        }
 
         @Override
         public String getSuperClass(@NonNull Project project, @NonNull String name) {
@@ -807,17 +807,10 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                 }
             }
 
-            // The output typically contains a few directory/filenames.
-            // On Windows we need to change the separators to the unix-style
-            // forward slash to make the test as OS-agnostic as possible.
-            if (File.separatorChar != '/') {
-                result = result.replace(File.separatorChar, '/');
-            }
-
             return result;
         }
 
-        public String getErrors() throws Exception {
+        public String getErrors() {
             return writer.toString();
         }
 

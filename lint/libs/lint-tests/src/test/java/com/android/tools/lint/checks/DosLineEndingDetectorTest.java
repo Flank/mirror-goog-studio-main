@@ -16,7 +16,6 @@
 
 package com.android.tools.lint.checks;
 
-import com.android.SdkConstants;
 import com.android.tools.lint.detector.api.Detector;
 
 @SuppressWarnings("javadoc")
@@ -27,9 +26,6 @@ public class DosLineEndingDetectorTest extends AbstractCheckTest {
     }
 
     public void test() throws Exception {
-        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
-            return;
-        }
         //noinspection all // Sample code
         assertEquals(""
                 + "res/layout/crcrlf.xml:4: Error: Incorrect line ending: found carriage return (\\r) without corresponding newline (\\n) [MangledCRLF]\n"

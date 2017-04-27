@@ -988,9 +988,8 @@ public class IconDetector extends ResourceXmlDetector implements UastScanner {
                         location.setSecondary(linkedLocation);
                         Dimension dip = entry2.getValue();
                         Dimension px = pixelSizes.get(file);
-                        //noinspection ConstantConditions
-                        sb.append(file.getParentFile().getName()).append(File.separator)
-                                .append(file.getName()).append(": ");
+                        sb.append(LintUtils.getFileNameWithParent(context.getClient(), file));
+                        sb.append(": ");
                         sb.append(String.format("%1$dx%2$d dp (%3$dx%4$d px)",
                                 dip.width, dip.height, px.width, px.height));
                     }
@@ -2066,16 +2065,18 @@ public class IconDetector extends ResourceXmlDetector implements UastScanner {
                 context.report(
                         ICON_EXPECTED_SIZE,
                         Location.create(file),
-                        "Incorrect icon size for `" + folderName + File.separator
-                                + file.getName() + "`: "
+                        "Incorrect icon size for `"
+                                + LintUtils.getFileNameWithParent(context.getClient(), file)
+                                + "`: "
                                 + String.format("expected %1$dx%2$d, but was %3$dx%4$d",
                                 width, height, size.width, size.height));
             } else if (!exactMatch && (size.width > width || size.height > height)) {
                 context.report(
                         ICON_EXPECTED_SIZE,
                         Location.create(file),
-                        "Incorrect icon size for `" + folderName + File.separator
-                                + file.getName() + "`: "
+                        "Incorrect icon size for `"
+                                + LintUtils.getFileNameWithParent(context.getClient(), file)
+                                + "`: "
                                 + String.format("icon size should be at most %1$dx%2$d, but " +
                                         "was %3$dx%4$d",
                                 width, height, size.width, size.height));

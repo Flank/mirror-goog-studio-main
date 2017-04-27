@@ -129,7 +129,9 @@ public class TestLintClient extends LintCliClient {
 
     public TestLintClient() {
         super(new LintCliFlags(), "test");
-        flags.getReporters().add(new TextReporter(this, flags, writer, false));
+        TextReporter reporter = new TextReporter(this, flags, writer, false);
+        reporter.setForwardSlashPaths(true); // stable tests
+        flags.getReporters().add(reporter);
     }
 
     void setLintTask(@Nullable TestLintTask task) {
@@ -283,13 +285,6 @@ public class TestLintClient extends LintCliClient {
                     result, secondResult);
         }
 
-        // The output typically contains a few directory/filenames.
-        // On Windows we need to change the separators to the unix-style
-        // forward slash to make the test as OS-agnostic as possible.
-        if (File.separatorChar != '/') {
-            result = result.replace(File.separatorChar, '/');
-        }
-
         for (File f : files) {
             TestUtils.deleteFile(f);
         }
@@ -359,6 +354,12 @@ public class TestLintClient extends LintCliClient {
         }
 
         return new TestProject(this, dir, referenceDir, description, mocker);
+    }
+
+    @NonNull
+    @Override
+    public String getDisplayPath(File file) {
+        return file.getPath().replace(File.separatorChar, '/'); // stable tests
     }
 
     @Override
@@ -554,16 +555,14 @@ public class TestLintClient extends LintCliClient {
         });
 
         for (File dir : sorted) {
-            if (result.contains(dir.getPath())) {
-                result = result.replace(dir.getPath(), "/TESTROOT");
+            String path = dir.getPath();
+            if (result.contains(path)) {
+                result = result.replace(path, "/TESTROOT");
             }
-        }
-
-        // The output typically contains a few directory/filenames.
-        // On Windows we need to change the separators to the unix-style
-        // forward slash to make the test as OS-agnostic as possible.
-        if (File.separatorChar != '/') {
-            result = result.replace(File.separatorChar, '/');
+            path = path.replace(File.separatorChar, '/');
+            if (result.contains(path)) {
+                result = result.replace(path, "/TESTROOT");
+            }
         }
 
         return result;

@@ -88,8 +88,7 @@ public class PrivateKeyDetector extends Detector implements Detector.OtherFileSc
 
         File file = context.file;
         if (isPrivateKeyFile(file)) {
-            String fileName = file.getParentFile().getName() + File.separator
-                + file.getName();
+            String fileName = LintUtils.getFileNameWithParent(context.getClient(), file);
             String message = String.format(
                 "The `%1$s` file seems to be a private key file. " +
                 "Please make sure not to embed this in your APK file.", fileName);
