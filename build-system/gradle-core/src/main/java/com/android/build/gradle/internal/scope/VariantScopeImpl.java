@@ -69,7 +69,6 @@ import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingProcessLayoutsTask;
 import com.android.build.gradle.internal.variant.ApplicationVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.LibraryVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.TestedVariantData;
 import com.android.build.gradle.options.BooleanOption;
@@ -81,13 +80,11 @@ import com.android.build.gradle.tasks.AidlCompile;
 import com.android.build.gradle.tasks.ExternalNativeBuildTask;
 import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
 import com.android.build.gradle.tasks.GenerateBuildConfig;
-import com.android.build.gradle.tasks.GenerateResValues;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.build.gradle.tasks.RenderscriptCompile;
-import com.android.build.gradle.tasks.ShaderCompile;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BootClasspathBuilder;
 import com.android.builder.core.BuilderConstants;
@@ -472,16 +469,21 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 return null;
             } else {
                 //noinspection deprecation - this needs to use the old DSL methods.
-                return coreBuildType.isUseProguard() ? PROGUARD : ANDROID_GRADLE;
+                Boolean useProguard = coreBuildType.isUseProguard();
+
+                if (useProguard == null) {
+                    return getDefaultCodeShrinker();
+                } else {
+                    return useProguard ? PROGUARD : ANDROID_GRADLE;
+                }
+
             }
         } else {
-            CodeShrinker userChoice = postprocessingOptions.getCodeShrinkerEnum();
-            if (userChoice == null) {
-                // TODO: consider Instant Run here.
-                userChoice = PROGUARD;
-            }
+            CodeShrinker chosenShrinker =
+                    MoreObjects.firstNonNull(
+                            postprocessingOptions.getCodeShrinkerEnum(), getDefaultCodeShrinker());
 
-            switch (userChoice) {
+            switch (chosenShrinker) {
                 case PROGUARD:
                     boolean somethingToDo =
                             postprocessingOptions.isRemoveUnusedCode()
@@ -491,9 +493,14 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 case ANDROID_GRADLE:
                     return postprocessingOptions.isRemoveUnusedCode() ? ANDROID_GRADLE : null;
                 default:
-                    throw new AssertionError("Unknown value " + userChoice);
+                    throw new AssertionError("Unknown value " + chosenShrinker);
             }
         }
+    }
+
+    @NonNull
+    private CodeShrinker getDefaultCodeShrinker() {
+        return getInstantRunBuildContext().isInInstantRunMode() ? ANDROID_GRADLE : PROGUARD;
     }
 
     @Override

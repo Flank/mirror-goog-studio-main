@@ -47,5 +47,5 @@ public interface CoreBuildType extends BuildType {
 
     /** @deprecated Use {@link VariantScope#getCodeShrinker()} instead. */
     @Deprecated
-    boolean isUseProguard();
+    Boolean isUseProguard();
 }

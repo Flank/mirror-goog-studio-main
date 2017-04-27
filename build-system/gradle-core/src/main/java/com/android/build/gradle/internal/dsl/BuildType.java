@@ -76,7 +76,7 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
     @Nullable private String postprocessingDslMethodUsed;
 
     private boolean shrinkResources = false;
-    private boolean useProguard = true;
+    private Boolean useProguard;
 
     public BuildType(
             @NonNull String name,
@@ -513,7 +513,7 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
     }
 
     @Override
-    public boolean isUseProguard() {
+    public Boolean isUseProguard() {
         // Try to return a sensible value for the model and third party plugins inspecting the DSL.
         if (postprocessingConfiguration != PostprocessingConfiguration.POSTPROCESSING_BLOCK) {
             return useProguard;
