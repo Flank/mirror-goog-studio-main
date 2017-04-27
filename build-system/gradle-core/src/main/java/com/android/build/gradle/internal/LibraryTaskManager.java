@@ -668,7 +668,8 @@ public class LibraryTaskManager extends TaskManager {
         ConfigurableFileCollection fileCollection =
                 scope.createAnchorOutput(TaskOutputHolder.AnchorOutputType.CLASSES_FOR_UNIT_TESTS);
         fileCollection.from(scope.getOutput(JAVAC));
-        fileCollection.from(scope.getVariantData().getAllGeneratedBytecode());
+        fileCollection.from(scope.getVariantData().getAllPreJavacGeneratedBytecode());
+        fileCollection.from(scope.getVariantData().getAllPostJavacGeneratedBytecode());
     }
 
     private void excludeDataBindingClassesIfNecessary(

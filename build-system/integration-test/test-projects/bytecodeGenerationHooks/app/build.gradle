@@ -13,7 +13,7 @@ android {
 }
 
 dependencies {
-    compile project(':library')
-    compile project(':jar')
-    testCompile 'junit:junit:4.12'
+    api project(':library')
+    api project(':jar')
+    testImplementation 'junit:junit:4.12'
 }

@@ -56,7 +56,8 @@ public class PackageJarArtifactConfigAction implements TaskConfigAction<Jar> {
         // way.)s
         jar.from(scope.getJavaOutputDir());
         // Also had bytecode generated through other compilers.
-        jar.from(scope.getVariantData().getAllGeneratedBytecode());
+        jar.from(scope.getVariantData().getAllPreJavacGeneratedBytecode());
+        jar.from(scope.getVariantData().getAllPostJavacGeneratedBytecode());
 
         jar.setDestinationDir(
                 new File(
