@@ -223,21 +223,27 @@ void MemoryAgent::RegisterNewClass(JNIEnv* jni, jclass klass,
   std::string klass_name = sig_mutf8;
   Deallocate(jvmti_, sig_mutf8);
 
-  // TODO: possible scenario where same class gets loaded from
-  // different loaders?
-  assert(agent_->class_tag_map_.find(klass_name) ==
-         agent_->class_tag_map_.end());
+  long tag = 0;
+  AllocationEvent::Klass klass_data;
+  auto itr = class_tag_map_.find(klass_name);
+  if (itr != class_tag_map_.end()) {
+    // We have a class from multiple class loaders.
+    // TODO treat them as separate classes.
+    // For now, let them share the same tag.
+    tag = itr->second;
+    klass_data.set_tag(tag);
+    klass_data.set_name(klass_name);
 
-  long tag = GetNextClassTag();
+  } else {
+    tag = GetNextClassTag();
+    klass_data.set_tag(tag);
+    klass_data.set_name(klass_name);
+    class_tag_map_.emplace(std::make_pair(klass_name, tag));
+    class_data_.push_back(klass_data);
+    assert(class_data_.size() == tag);
+  }
   error = jvmti_->SetTag(klass, tag);
   CheckJvmtiError(jvmti_, error);
-
-  AllocationEvent::Klass klass_data;
-  klass_data.set_tag(tag);
-  klass_data.set_name(klass_name);
-  class_data_.push_back(klass_data);
-  class_tag_map_.emplace(std::make_pair(klass_name, tag));
-  assert(class_data_.size() == tag);
 
   // Cache the jclasses so that they will never be gc.
   // This ensures that any jmethodID/jfieldID will never become
