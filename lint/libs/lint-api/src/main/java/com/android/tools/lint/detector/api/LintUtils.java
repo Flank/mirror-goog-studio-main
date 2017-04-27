@@ -335,7 +335,7 @@ public class LintUtils {
      * @param errorCount   the count of errors
      * @param warningCount the count of warnings
      * @param comma        if true, use a comma to separate messages, otherwise "and"
-     * @param capitalize
+     * @param capitalize   whether we should capitalize sentence
      * @return a description string
      */
     @NonNull
@@ -1814,6 +1814,12 @@ public class LintUtils {
         return providers;
     }
 
+    private static boolean isTestArtifact(@NonNull SourceProviderContainer extra) {
+        String artifactName = extra.getArtifactName();
+        return AndroidProject.ARTIFACT_ANDROID_TEST.equals(artifactName)
+                || AndroidProject.ARTIFACT_UNIT_TEST.equals(artifactName);
+    }
+
     @NonNull
     public static List<SourceProvider> getTestSourceProviders(
             @NonNull AndroidProject project,
@@ -1822,8 +1828,7 @@ public class LintUtils {
 
         ProductFlavorContainer defaultConfig = project.getDefaultConfig();
         for (SourceProviderContainer extra : defaultConfig.getExtraSourceProviders()) {
-            String artifactName = extra.getArtifactName();
-            if (AndroidProject.ARTIFACT_ANDROID_TEST.equals(artifactName)) {
+            if (isTestArtifact(extra)) {
                 providers.add(extra.getSourceProvider());
             }
         }
@@ -1832,8 +1837,7 @@ public class LintUtils {
             for (ProductFlavorContainer flavor : project.getProductFlavors()) {
                 if (flavorName.equals(flavor.getProductFlavor().getName())) {
                     for (SourceProviderContainer extra : flavor.getExtraSourceProviders()) {
-                        String artifactName = extra.getArtifactName();
-                        if (AndroidProject.ARTIFACT_ANDROID_TEST.equals(artifactName)) {
+                        if (isTestArtifact(extra)) {
                             providers.add(extra.getSourceProvider());
                         }
                     }
@@ -1845,8 +1849,7 @@ public class LintUtils {
         for (BuildTypeContainer buildType : project.getBuildTypes()) {
             if (buildTypeName.equals(buildType.getBuildType().getName())) {
                 for (SourceProviderContainer extra : buildType.getExtraSourceProviders()) {
-                    String artifactName = extra.getArtifactName();
-                    if (AndroidProject.ARTIFACT_ANDROID_TEST.equals(artifactName)) {
+                    if (isTestArtifact(extra)) {
                         providers.add(extra.getSourceProvider());
                     }
                 }

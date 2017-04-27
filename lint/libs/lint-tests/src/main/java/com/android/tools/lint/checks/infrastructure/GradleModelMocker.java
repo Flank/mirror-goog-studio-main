@@ -278,11 +278,17 @@ public class GradleModelMocker {
         SourceProvider mainProvider = createSourceProvider(projectDir, "main");
         when(defaultContainer.getSourceProvider()).thenReturn(mainProvider);
 
-        SourceProviderContainer extraProvider = mock(SourceProviderContainer.class);
-        when(extraProvider.getArtifactName()).thenReturn(AndroidProject.ARTIFACT_ANDROID_TEST);
-        SourceProvider testSourceProvider = createSourceProvider(projectDir, "test");
-        when(extraProvider.getSourceProvider()).thenReturn(testSourceProvider);
-        List<SourceProviderContainer> extraProviders = Lists.newArrayList(extraProvider);
+        SourceProviderContainer androidTestProvider = mock(SourceProviderContainer.class);
+        when(androidTestProvider.getArtifactName()).thenReturn(AndroidProject.ARTIFACT_ANDROID_TEST);
+        SourceProvider androidSourceProvider = createSourceProvider(projectDir, "androidTest");
+        when(androidTestProvider.getSourceProvider()).thenReturn(androidSourceProvider);
+        SourceProviderContainer unitTestProvider = mock(SourceProviderContainer.class);
+        when(unitTestProvider.getArtifactName()).thenReturn(AndroidProject.ARTIFACT_UNIT_TEST);
+        SourceProvider unitSourceProvider = createSourceProvider(projectDir, "test");
+        when(unitTestProvider.getSourceProvider()).thenReturn(unitSourceProvider);
+
+        List<SourceProviderContainer> extraProviders = Lists.newArrayList(androidTestProvider,
+                unitTestProvider);
         when(defaultContainer.getExtraSourceProviders()).thenReturn(extraProviders);
 
         List<ProductFlavorContainer> flavorContainers = Lists.newArrayList();

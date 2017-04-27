@@ -94,7 +94,7 @@ public class TestLintResult {
         String actual = describeOutput();
         if (!actual.equals(expectedText)) {
             // See if it's a Windows path issue
-            if (!actual.equals(expectedText.replace(File.separatorChar, '/'))) {
+            if (actual.equals(expectedText.replace(File.separatorChar, '/'))) {
                 assertEquals("The expected lint output does not match, but it *does* "
                         + "match when Windows file separators (\\) are replaced by Unix ones.\n"
                         + "Make sure your lint detector calls LintClient.getDisplayPath(File) "

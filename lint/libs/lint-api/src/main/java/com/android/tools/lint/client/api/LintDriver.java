@@ -1777,7 +1777,7 @@ public class LintDriver {
             if (!testContexts.isEmpty()) {
                 List<Detector> testScanners = filterTestScanners(uastScanners);
                 if (!testScanners.isEmpty()) {
-                    UElementVisitor uTestVisitor = new UElementVisitor(parser, uastScanners);
+                    UElementVisitor uTestVisitor = new UElementVisitor(parser, testScanners);
 
                     for (JavaContext context : testContexts) {
                         fireEvent(EventType.SCANNING_FILE, context);
@@ -1862,13 +1862,13 @@ public class LintDriver {
                 }
 
                 if (!filtered.isEmpty()) {
+                    /* Let's not complain quite yet
                     List<String> detectorNames = Lists.newArrayListWithCapacity(filtered.size());
                     for (Detector detector : filtered) {
                         detectorNames.add(detector.getClass().getName());
                     }
                     Collections.sort(detectorNames);
 
-                    /* Let's not complain quite yet
                     String message = String.format("Lint found one or more custom checks using its "
                             + "older Java API; these checks are still run in compatibility mode, "
                             + "but this causes duplicated parsing, and in the next version lint "
@@ -1899,12 +1899,14 @@ public class LintDriver {
 
                     if (!testContexts.isEmpty()) {
                         List<Detector> testScanners = filterTestScanners(filtered);
-                        JavaVisitor oldTestVisitor = new JavaVisitor(parser, testScanners);
-                        for (JavaContext context : testContexts) {
-                            fireEvent(EventType.SCANNING_FILE, context);
-                            oldTestVisitor.visitFile(context);
-                            if (canceled) {
-                                return;
+                        if (!testScanners.isEmpty()) {
+                            JavaVisitor oldTestVisitor = new JavaVisitor(parser, testScanners);
+                            for (JavaContext context : testContexts) {
+                                fireEvent(EventType.SCANNING_FILE, context);
+                                oldTestVisitor.visitFile(context);
+                                if (canceled) {
+                                    return;
+                                }
                             }
                         }
                     }

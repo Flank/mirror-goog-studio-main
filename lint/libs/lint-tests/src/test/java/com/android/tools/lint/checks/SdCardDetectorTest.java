@@ -244,6 +244,12 @@ public class SdCardDetectorTest extends AbstractCheckTest {
                         + "public class MyTest {\n"
                         + "    String s = \"/sdcard/mydir\";\n"
                         + "}\n"),
+                java("src/androidTest/java/test/pkg/MyTest.java", ""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "public class MyTest {\n"
+                        + "    String s = \"/sdcard/mydir\";\n"
+                        + "}\n"),
                 gradle(""
                         + "android {\n"
                         + "    lintOptions {\n"
@@ -252,16 +258,25 @@ public class SdCardDetectorTest extends AbstractCheckTest {
                         + "}\n"))
                 .run()
                 .expect(""
+                        + "src/androidTest/java/test/pkg/MyTest.java:4: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n"
+                        + "    String s = \"/sdcard/mydir\";\n"
+                        + "               ~~~~~~~~~~~~~~~\n"
                         + "src/test/java/test/pkg/MyTest.java:4: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n"
                         + "    String s = \"/sdcard/mydir\";\n"
                         + "               ~~~~~~~~~~~~~~~\n"
-                        + "0 errors, 1 warnings\n");
+                        + "0 errors, 2 warnings\n");
     }
 
     public void testNothingInTests() throws Exception {
         //noinspection all // Sample code
         lint().files(
                 java("src/test/java/test/pkg/MyTest.java", ""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "public class MyTest {\n"
+                        + "    String s = \"/sdcard/mydir\";\n"
+                        + "}\n"),
+                java("src/androidTest/java/test/pkg/MyTest.java", ""
                         + "package test.pkg;\n"
                         + "\n"
                         + "public class MyTest {\n"
