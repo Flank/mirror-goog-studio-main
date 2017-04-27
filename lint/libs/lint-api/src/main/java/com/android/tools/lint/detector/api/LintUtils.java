@@ -484,6 +484,21 @@ public class LintUtils {
     }
 
     /**
+     * Computes a canonical "display path" for a resource (which typically
+     * is the parent name plus a file separator, plus the file name)
+     *
+     * @param client lint client used for formatting
+     * @param file   resource file
+     * @return the display path
+     */
+    @NonNull
+    public static String getFileNameWithParent(@NonNull LintClient client,
+            @NonNull File file) {
+        return client.getDisplayPath(
+                new File(file.getParentFile().getName(), file.getName()));
+    }
+
+    /**
      * Returns true if the first string can be edited (Via insertions, deletions or
      * substitutions) into the second string in at most the given number of editing
      * operations. This computes the edit distance between the two strings and returns

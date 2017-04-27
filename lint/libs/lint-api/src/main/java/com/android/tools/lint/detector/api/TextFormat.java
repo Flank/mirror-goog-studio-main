@@ -123,8 +123,9 @@ public enum TextFormat {
             }
             case TEXT: {
                 switch (to) {
-                    case TEXT:
                     case RAW:
+                        return textToRaw(message);
+                    case TEXT:
                         return message;
                     case HTML:
                     case HTML_WITH_UNICODE:
@@ -158,6 +159,34 @@ public enum TextFormat {
             }
         }
         return message;
+    }
+
+    @NonNull
+    private static String textToRaw(@NonNull String message) {
+        boolean mustEscape = false;
+        int n = message.length();
+        for (int i = 0; i < n; i++) {
+            char c = message.charAt(i);
+            if (c == '\\' || c == '*' || c == '`') {
+                mustEscape = true;
+                break;
+            }
+        }
+
+        if (!mustEscape) {
+            return message;
+        }
+
+        StringBuilder sb = new StringBuilder(message.length() * 2);
+        for (int i = 0; i < n; i++) {
+            char c = message.charAt(i);
+            if (c == '\\' || c == '*' || c == '`') {
+                sb.append('\\');
+            }
+            sb.append(c);
+        }
+
+        return sb.toString();
     }
 
     /** Converts to this output format from the given HTML-format text */

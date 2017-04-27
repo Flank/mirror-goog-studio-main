@@ -2337,6 +2337,12 @@ public class LintDriver {
             return mDelegate.getConfiguration(project, driver);
         }
 
+        @NonNull
+        @Override
+        public String getDisplayPath(File file) {
+            return mDelegate.getDisplayPath(file);
+        }
+
         @Override
         public void log(@NonNull Severity severity, @Nullable Throwable exception,
                 @Nullable String format, @Nullable Object... args) {

@@ -27,6 +27,7 @@ import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.ide.common.resources.configuration.LocaleQualifier;
 import com.android.ide.common.resources.configuration.ResourceQualifier;
 import com.android.resources.ResourceFolderType;
+import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ClassContext;
 import com.android.tools.lint.detector.api.Context;
@@ -34,6 +35,7 @@ import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
+import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.ResourceContext;
 import com.android.tools.lint.detector.api.Scope;
@@ -536,6 +538,8 @@ public class LocaleFolderDetector extends Detector implements Detector.ResourceF
 
                         // Report all the locations where this happens
                         Collections.sort(threeLetterLocales);
+                        File jarFile = context.getJarFile();
+                        LintClient client = context.getClient();
                         for (File file : threeLetterLocales) {
                             String message = String.format("The app will crash on platforms older "
                                     + "than v21 (minSdkVersion is %1$d) because"
@@ -543,8 +547,8 @@ public class LocaleFolderDetector extends Detector implements Detector.ResourceF
                                     + "jar file %2$s) and this folder resource name only works "
                                     + "on v21 or later with that call present in the app",
                                     context.getMainProject().getMinSdk(),
-                                    context.getJarFile().getParentFile().getName()
-                                            + File.separator + context.getJarFile().getName());
+                                    jarFile != null ? LintUtils.getFileNameWithParent(client,
+                                            jarFile) : "?");
                             Location location = Location.create(file);
                             context.report(GET_LOCALES, location, message);
                         }

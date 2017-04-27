@@ -131,6 +131,7 @@ public class ArraySizeDetector extends ResourceXmlDetector {
 
             // Check that all arrays for the same name have the same number of translations
 
+            LintClient client = context.getClient();
             Set<String> alreadyReported = new HashSet<>();
             Map<String, Integer> countMap = new HashMap<>();
             Map<String, File> fileMap = new HashMap<>();
@@ -162,11 +163,9 @@ public class ArraySizeDetector extends ResourceXmlDetector {
                         }
                         mLocations.put(name, null);
 
-                        String thisName = file.getParentFile().getName() + File.separator
-                                + file.getName();
+                        String thisName = LintUtils.getFileNameWithParent(client, file);
                         File otherFile = fileMap.get(name);
-                        String otherName = otherFile.getParentFile().getName() + File.separator
-                                + otherFile.getName();
+                        String otherName = LintUtils.getFileNameWithParent(client, otherFile);
                         String message = String.format(
                              "Array `%1$s` has an inconsistent number of items (%2$d in `%3$s`, %4$d in `%5$s`)",
                              name, count, thisName, current, otherName);
@@ -302,12 +301,10 @@ public class ArraySizeDetector extends ResourceXmlDetector {
                 if (rv instanceof ArrayResourceValue) {
                     ArrayResourceValue arv = (ArrayResourceValue) rv;
                     if (childCount != arv.getElementCount()) {
-                        String thisName = context.file.getParentFile().getName() + File.separator
-                                + context.file.getName();
+                        String thisName = LintUtils.getFileNameWithParent(client, context.file);
                         assert source != null;
                         File otherFile = source.getFile();
-                        String otherName = otherFile.getParentFile().getName() + File.separator
-                                + otherFile.getName();
+                        String otherName = LintUtils.getFileNameWithParent(client, otherFile);
                         String message = String.format(
                                 "Array `%1$s` has an inconsistent number of items (%2$d in `%3$s`, %4$d in `%5$s`)",
                                 name, childCount, thisName, arv.getElementCount(), otherName);

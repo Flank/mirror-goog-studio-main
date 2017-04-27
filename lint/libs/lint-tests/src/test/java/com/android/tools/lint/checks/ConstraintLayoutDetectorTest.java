@@ -17,6 +17,7 @@
 package com.android.tools.lint.checks;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.tools.lint.checks.infrastructure.ProjectDescription;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
@@ -129,7 +130,7 @@ public class ConstraintLayoutDetectorTest extends AbstractCheckTest {
     @Override
     protected void checkReportedError(@NonNull Context context, @NonNull Issue issue,
             @NonNull Severity severity, @NonNull Location location, @NonNull String message,
-            @NonNull LintFix fixData) {
+            @Nullable LintFix fixData) {
         if (issue == GradleDetector.DEPENDENCY) {
             // Check for AndroidLintGradleDependencyInspection
             assertTrue(fixData instanceof LintFix.DataMap);

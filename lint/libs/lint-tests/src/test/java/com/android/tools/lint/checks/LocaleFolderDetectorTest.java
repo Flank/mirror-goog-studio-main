@@ -19,7 +19,6 @@ package com.android.tools.lint.checks;
 
 import static com.android.tools.lint.checks.LocaleFolderDetector.suggestBcp47Correction;
 
-import com.android.SdkConstants;
 import com.android.tools.lint.detector.api.Detector;
 import org.intellij.lang.annotations.Language;
 
@@ -164,9 +163,6 @@ public class LocaleFolderDetectorTest extends AbstractCheckTest {
     }
 
     public void testCrashApi19FromLibrary() throws Exception {
-        if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS) {
-            return;
-        }
         // b/34520084
         String expected = ""
                 + "res/values-b+kok+IN: Error: The app will crash on platforms older than v21 (minSdkVersion is 18) because AssetManager#getLocales() is called (from the library jar file libs/build-compat.jar) and this folder resource name only works on v21 or later with that call present in the app [GetLocales]\n"

@@ -43,6 +43,7 @@ import com.android.tools.lint.detector.api.Position;
 import com.android.utils.PositionXmlParser;
 import com.android.utils.XmlUtils;
 import com.google.common.collect.Lists;
+import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Comparator;
@@ -120,12 +121,13 @@ public class LintFixVerifier {
     public LintFixVerifier expectFixDiffs(@NonNull String expected) {
         StringBuilder diff = new StringBuilder(100);
         checkFixes(null, null, diff);
-        assertEquals(expected, diff.toString());
+        assertEquals(expected, diff.toString().replace("\r\n", "\n"));
         return this;
     }
 
     @Nullable
     private TestFile findTestFile(@NonNull String path) {
+        path = path.replace(File.separatorChar, '/');
         for (ProjectDescription project : task.projects) {
             for (TestFile file : project.files) {
                 if (file.getTargetPath().equals(path)) {
@@ -402,7 +404,7 @@ public class LintFixVerifier {
             @NonNull StringBuilder diffs) {
         String diff = TestUtils.getDiff(before, after, diffWindow);
         if (!diff.isEmpty()) {
-            String targetPath = warning.path;
+            String targetPath = warning.path.replace(File.separatorChar, '/');
             diffs.append("Fix for ").append(targetPath).append(" line ")
                     .append(warning.line).append(": ");
             if (fixDescription != null) {
@@ -415,8 +417,8 @@ public class LintFixVerifier {
     private static void appendDataMap(@NonNull Warning warning, @NonNull DataMap map,
             @NonNull StringBuilder diffs) {
         String targetPath = warning.path;
-        diffs.append("Data for ").append(targetPath).append(" line ")
-                .append(warning.line).append(": ");
+        diffs.append("Data for ").append(targetPath.replace(File.separatorChar, '/'))
+                .append(" line ").append(warning.line).append(": ");
         String fixDescription = map.getDisplayName();
         if (fixDescription != null) {
             diffs.append(fixDescription).append(":\n");

@@ -454,7 +454,7 @@ public class HtmlReporterTest extends AbstractCheckTest {
                     + "\n"
                     + "</body>\n"
                     + "</html>",
-                report);
+                report.replace("\r\n", "\n"));
         } finally {
             deleteFile(projectDir);
         }

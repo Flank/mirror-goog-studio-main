@@ -29,6 +29,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.resources.FolderTypeRelationship;
 import com.android.resources.ResourceFolderType;
+import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Implementation;
@@ -366,8 +367,8 @@ public class DuplicateIdDetector extends LayoutDetector {
             return LintUtils.getLayoutName(mFile);
         }
 
-        String getDisplayName() {
-            return mFile.getParentFile().getName() + File.separator + mFile.getName();
+        String getDisplayName(@NonNull LintClient client) {
+            return LintUtils.getFileNameWithParent(client, mFile);
         }
 
         void include(Layout target) {
@@ -392,11 +393,6 @@ public class DuplicateIdDetector extends LayoutDetector {
 
         List<Layout> getIncludes() {
             return mIncludes;
-        }
-
-        @Override
-        public String toString() {
-            return getDisplayName();
         }
     }
 
@@ -538,6 +534,7 @@ public class DuplicateIdDetector extends LayoutDetector {
                 Multimap<String, Set<String>> nameToIds =
                         ArrayListMultimap.create(includes.size(), 4);
 
+                LintClient client = mContext.getClient();
                 for (Layout included : includes) {
                     if (seen.contains(included)) {
                         continue;
@@ -581,7 +578,7 @@ public class DuplicateIdDetector extends LayoutDetector {
                                 String msg = String.format(
                                         "Duplicate id %1$s, defined or included multiple " +
                                         "times in %2$s: %3$s",
-                                        id, layout.getDisplayName(),
+                                        id, layout.getDisplayName(client),
                                         sorted.toString());
 
                                 // Store location request for the <include> tag
@@ -632,6 +629,7 @@ public class DuplicateIdDetector extends LayoutDetector {
                 Map<Layout, Occurrence> occurrences, Set<Layout> seen) {
             seen.add(layout);
 
+            LintClient client = mContext.getClient();
             Set<String> layoutIds = layout.getIds();
             if (layoutIds != null && layoutIds.contains(id)) {
                 StringBuilder path = new StringBuilder(80);
@@ -639,11 +637,11 @@ public class DuplicateIdDetector extends LayoutDetector {
                 if (!stack.isEmpty()) {
                     Iterator<Layout> iterator = stack.descendingIterator();
                     while (iterator.hasNext()) {
-                        path.append(iterator.next().getDisplayName());
+                        path.append(iterator.next().getDisplayName(client));
                         path.append(" => ");
                     }
                 }
-                path.append(layout.getDisplayName());
+                path.append(layout.getDisplayName(client));
                 path.append(" defines ");
                 path.append(id);
 

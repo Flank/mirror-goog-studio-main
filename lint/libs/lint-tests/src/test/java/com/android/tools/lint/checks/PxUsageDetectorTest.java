@@ -257,7 +257,7 @@ public class PxUsageDetectorTest extends AbstractCheckTest {
 
     public void testIncrementalDimensions() throws Exception {
         String expected = ""
-                + "res/layout/textsize2.xml:9: Warning: Should use \"sp\" instead of \"dp\" for text sizes (@dimen/bottom_bar_portrait_button_font_size is defined as 16dp in /TESTROOT/project0/res/values/dimens.xml [SpUsage]\n"
+                + "res/layout/textsize2.xml:9: Warning: Should use \"sp\" instead of \"dp\" for text sizes (@dimen/bottom_bar_portrait_button_font_size is defined as 16dp in values/dimens.xml [SpUsage]\n"
                 + "        android:textSize=\"@dimen/bottom_bar_portrait_button_font_size\"\n"
                 + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "0 errors, 1 warnings\n";

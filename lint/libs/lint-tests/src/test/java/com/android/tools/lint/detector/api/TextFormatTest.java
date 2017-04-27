@@ -349,4 +349,17 @@ public class TextFormatTest extends TestCase {
             issue.getBriefDescription(TextFormat.RAW);
         }
     }
+
+    public void testTextToRaw() {
+        assertEquals("foo\\\\bar\\*baz\\*", TextFormat.TEXT.convertTo("foo\\bar*baz*",
+                TextFormat.RAW));
+        assertEquals("\\*\\*\\*foo\\*\\*\\*", TextFormat.TEXT.convertTo("***foo***",
+                TextFormat.RAW));
+        assertEquals("\\`symbol\\`", TextFormat.TEXT.convertTo("`symbol`",
+                TextFormat.RAW));
+        assertEquals("foo\\bar*baz*", TextFormat.RAW.convertTo("foo\\\\bar\\*baz\\*",
+                TextFormat.TEXT));
+        assertEquals("`symbol`", TextFormat.RAW.convertTo("\\`symbol\\`",
+                TextFormat.TEXT));
+    }
 }

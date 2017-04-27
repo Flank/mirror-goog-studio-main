@@ -38,7 +38,7 @@ public class NegativeMarginDetectorTest extends AbstractCheckTest {
                 + "res/layout/negative_margins.xml:11: Warning: Margin values should not be negative [NegativeMargin]\n"
                 + "    <TextView android:layout_marginTop=\"-1dp\"/> <!-- WARNING -->\n"
                 + "              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "res/layout/negative_margins.xml:13: Warning: Margin values should not be negative (@dimen/negative is defined as -16dp in /TESTROOT/res/values/negative_margins.xml [NegativeMargin]\n"
+                + "res/layout/negative_margins.xml:13: Warning: Margin values should not be negative (@dimen/negative is defined as -16dp in values/negative_margins.xml [NegativeMargin]\n"
                 + "    <TextView android:layout_marginTop=\"@dimen/negative\"/> <!-- WARNING -->\n"
                 + "              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "0 errors, 2 warnings\n",
@@ -58,7 +58,7 @@ public class NegativeMarginDetectorTest extends AbstractCheckTest {
 
     public void testIncrementalInValues() throws Exception {
         assertEquals(""
-                + "res/values/negative_margins.xml:10: Warning: Margin values should not be negative (@dimen/negative is defined as -16dp in /TESTROOT/res/values/negative_margins.xml [NegativeMargin]\n"
+                + "res/values/negative_margins.xml:10: Warning: Margin values should not be negative (@dimen/negative is defined as -16dp in values/negative_margins.xml [NegativeMargin]\n"
                 + "        <item name=\"android:layout_marginTop\">@dimen/negative</item> <!-- WARNING -->\n"
                 + "                                              ^\n"
                 + "res/values/negative_margins.xml:11: Warning: Margin values should not be negative [NegativeMargin]\n"
