@@ -27,6 +27,6 @@
 
     <global id="instantAppOut" type="string" value="${escapeXmlAttribute(instantAppDir!'./' + (instantAppProjectName!'instantapp'))}" />
     <global id="monolithicAppOut" type="string" value="${escapeXmlAttribute(monolithicAppDir!'./' + (monolithicAppProjectName!'app'))}" />
-    <global id="baseLibOut" type="string" value="${escapeXmlAttribute(baseLibDir!'./' + baseLibName!'base')}" />
-    <global id="baseLibResOut" type="string" value="${escapeXmlAttribute(baseLibResDir!'./' + baseLibName!'base' + '/src/main/res')}" />
+    <global id="baseLibOut" type="string" value="${escapeXmlAttribute(baseLibDir!'./base')}" />
+    <global id="baseLibResOut" type="string" value="${escapeXmlAttribute(baseLibResDir!'./base/src/main/res')}" />
 </globals>
