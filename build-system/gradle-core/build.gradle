@@ -62,10 +62,6 @@ dependencies {
     // not exposed as a runtime dependency.
     provided gradleApi()
 
-    testRuntime fileTree(
-            dir:file("$rootProject.ext.androidHostOut/gradle-dist-link/lib"),
-            includes: ["**/**"])
-
     // Package the instant-run-server.jar, nothing else.
     includeInJar project(path: ':base:instant-run:instant-run-server', configuration: 'archives')
 
