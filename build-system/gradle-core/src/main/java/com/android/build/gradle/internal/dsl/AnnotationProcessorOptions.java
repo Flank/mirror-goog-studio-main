@@ -26,11 +26,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-/**
- * DSL object for configuring APT options.
- */
+/** DSL object for configuring APT options. */
 @SuppressWarnings("UnnecessaryInheritDoc")
-public class AnnotationProcessorOptions implements CoreAnnotationProcessorOptions {
+public class AnnotationProcessorOptions
+        implements com.android.build.gradle.api.AnnotationProcessorOptions {
 
     private final List<String> classNames = Lists.newArrayList();
     private final Map<String, String> arguments = Maps.newHashMap();
@@ -97,7 +96,7 @@ public class AnnotationProcessorOptions implements CoreAnnotationProcessorOption
         this.includeCompileClasspath = includeCompileClasspath;
     }
 
-    public void _initWith(CoreAnnotationProcessorOptions aptOptions) {
+    public void _initWith(com.android.build.gradle.api.AnnotationProcessorOptions aptOptions) {
         setClassNames(aptOptions.getClassNames());
         setArguments(aptOptions.getArguments());
         setIncludeCompileClasspath(aptOptions.getIncludeCompileClasspath());

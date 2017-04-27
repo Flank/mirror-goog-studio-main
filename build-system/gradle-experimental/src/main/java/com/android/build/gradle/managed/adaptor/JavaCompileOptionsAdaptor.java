@@ -17,25 +17,22 @@
 package com.android.build.gradle.managed.adaptor;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.dsl.CoreAnnotationProcessorOptions;
-import com.android.build.gradle.internal.dsl.CoreJavaCompileOptions;
-import com.android.build.gradle.managed.JavaCompileOptions;
+import com.android.build.gradle.api.AnnotationProcessorOptions;
+import com.android.build.gradle.api.JavaCompileOptions;
 
-/**
- * An adaptor to convert a managed.JavaCompileOptions to a CoreJavaCompileOptions.
- */
-public class JavaCompileOptionsAdaptor implements CoreJavaCompileOptions {
+/** An adaptor to convert a managed.JavaCompileOptions to a CoreJavaCompileOptions. */
+public class JavaCompileOptionsAdaptor implements JavaCompileOptions {
 
-    @NonNull
-    private final JavaCompileOptions javaCompileOptions;
+    @NonNull private final com.android.build.gradle.managed.JavaCompileOptions javaCompileOptions;
 
-    public JavaCompileOptionsAdaptor(@NonNull JavaCompileOptions javaCompileOptions) {
+    public JavaCompileOptionsAdaptor(
+            @NonNull com.android.build.gradle.managed.JavaCompileOptions javaCompileOptions) {
         this.javaCompileOptions = javaCompileOptions;
     }
 
     @NonNull
     @Override
-    public CoreAnnotationProcessorOptions getAnnotationProcessorOptions() {
+    public AnnotationProcessorOptions getAnnotationProcessorOptions() {
         return new AnnotationProcessorOptionsAdaptor(
                 javaCompileOptions.getAnnotationProcessorOptions());
     }

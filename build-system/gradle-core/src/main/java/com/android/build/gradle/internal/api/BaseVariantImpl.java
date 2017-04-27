@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
+import com.android.build.gradle.api.JavaCompileOptions;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -133,6 +134,12 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @NonNull
     public ProductFlavor getMergedFlavor() {
         return getVariantData().getVariantConfiguration().getMergedFlavor();
+    }
+
+    @NonNull
+    @Override
+    public JavaCompileOptions getJavaCompileOptions() {
+        return getVariantData().getVariantConfiguration().getJavaCompileOptions();
     }
 
     @NonNull

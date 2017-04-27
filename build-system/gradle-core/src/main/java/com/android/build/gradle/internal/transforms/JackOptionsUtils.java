@@ -21,11 +21,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.ProguardFiles;
+import com.android.build.gradle.api.AnnotationProcessorOptions;
 import com.android.build.gradle.internal.CompileOptions;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.internal.dsl.CoreAnnotationProcessorOptions;
 import com.android.build.gradle.internal.dsl.CoreJackOptions;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -124,7 +124,7 @@ public class JackOptionsUtils {
         final GradleVariantConfiguration config = scope.getVariantData().getVariantConfiguration();
 
         /* Annotation processor setup */
-        CoreAnnotationProcessorOptions annotationProcessorOptions =
+        AnnotationProcessorOptions annotationProcessorOptions =
                 config.getJavaCompileOptions().getAnnotationProcessorOptions();
         builder.setAnnotationProcessorNames(annotationProcessorOptions.getClassNames())
                 .setAnnotationProcessorOptions(annotationProcessorOptions.getArguments())

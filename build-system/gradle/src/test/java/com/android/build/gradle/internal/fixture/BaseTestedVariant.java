@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
+import com.android.build.gradle.api.JavaCompileOptions;
 import com.android.build.gradle.api.TestVariant;
 import com.android.build.gradle.api.UnitTestVariant;
 import com.android.build.gradle.internal.api.TestedVariant;
@@ -108,6 +109,12 @@ public interface BaseTestedVariant extends BaseVariant, TestedVariant {
         @Override
         public ProductFlavor getMergedFlavor() {
             return variant.getMergedFlavor();
+        }
+
+        @NonNull
+        @Override
+        public JavaCompileOptions getJavaCompileOptions() {
+            return variant.getJavaCompileOptions();
         }
 
         @NonNull

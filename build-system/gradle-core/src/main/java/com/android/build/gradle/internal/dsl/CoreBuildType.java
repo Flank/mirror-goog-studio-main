@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.api.JavaCompileOptions;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.model.BuildType;
 
@@ -36,7 +37,7 @@ public interface CoreBuildType extends BuildType {
     CoreJackOptions getJackOptions();
 
     @NonNull
-    CoreJavaCompileOptions getJavaCompileOptions();
+    JavaCompileOptions getJavaCompileOptions();
 
     @NonNull
     CoreShaderOptions getShaders();

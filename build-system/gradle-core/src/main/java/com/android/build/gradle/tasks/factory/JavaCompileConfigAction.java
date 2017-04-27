@@ -7,9 +7,9 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.api.AnnotationProcessorOptions;
 import com.android.build.gradle.internal.CompileOptions;
 import com.android.build.gradle.internal.LoggerWrapper;
-import com.android.build.gradle.internal.dsl.CoreAnnotationProcessorOptions;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -131,8 +131,9 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
                     project.getPath(), scope.getFullVariantName());
         }
 
-        CoreAnnotationProcessorOptions annotationProcessorOptions =
-                scope.getVariantConfiguration().getJavaCompileOptions()
+        AnnotationProcessorOptions annotationProcessorOptions =
+                scope.getVariantConfiguration()
+                        .getJavaCompileOptions()
                         .getAnnotationProcessorOptions();
 
         if (!annotationProcessorOptions.getClassNames().isEmpty()) {

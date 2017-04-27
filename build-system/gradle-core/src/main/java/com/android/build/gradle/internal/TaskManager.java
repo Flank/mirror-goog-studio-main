@@ -56,6 +56,8 @@ import com.android.build.api.transform.Transform;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.ProguardFiles;
+import com.android.build.gradle.api.AnnotationProcessorOptions;
+import com.android.build.gradle.api.JavaCompileOptions;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
@@ -63,9 +65,6 @@ import com.android.build.gradle.internal.coverage.JacocoPlugin;
 import com.android.build.gradle.internal.coverage.JacocoReportTask;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.AbiSplitOptions;
-import com.android.build.gradle.internal.dsl.AnnotationProcessorOptions;
-import com.android.build.gradle.internal.dsl.CoreAnnotationProcessorOptions;
-import com.android.build.gradle.internal.dsl.CoreJavaCompileOptions;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
 import com.android.build.gradle.internal.incremental.BuildInfoLoaderTask;
@@ -2767,12 +2766,14 @@ public abstract class TaskManager {
     private void setDataBindingAnnotationProcessorParams(@NonNull VariantScope scope) {
         BaseVariantData variantData = scope.getVariantData();
         GradleVariantConfiguration variantConfiguration = variantData.getVariantConfiguration();
-        CoreJavaCompileOptions javaCompileOptions = variantConfiguration
-                .getJavaCompileOptions();
-        CoreAnnotationProcessorOptions processorOptions = javaCompileOptions
-                .getAnnotationProcessorOptions();
-        if (processorOptions instanceof AnnotationProcessorOptions) {
-            AnnotationProcessorOptions ots = (AnnotationProcessorOptions) processorOptions;
+        JavaCompileOptions javaCompileOptions = variantConfiguration.getJavaCompileOptions();
+        AnnotationProcessorOptions processorOptions =
+                javaCompileOptions.getAnnotationProcessorOptions();
+        if (processorOptions
+                instanceof com.android.build.gradle.internal.dsl.AnnotationProcessorOptions) {
+            com.android.build.gradle.internal.dsl.AnnotationProcessorOptions ots =
+                    (com.android.build.gradle.internal.dsl.AnnotationProcessorOptions)
+                            processorOptions;
             // Specify data binding only if another class is specified. Doing so disables discovery
             // so we must explicitly list data binding.
             if (!ots.getClassNames().isEmpty()

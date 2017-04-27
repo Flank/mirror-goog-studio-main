@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,15 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.dsl;
+package com.android.build.gradle.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import java.util.List;
 import java.util.Map;
 
-public interface CoreAnnotationProcessorOptions {
+/** Options for configuring Java annotation processor. */
+public interface AnnotationProcessorOptions {
 
     /**
      * Annotation processors to run.

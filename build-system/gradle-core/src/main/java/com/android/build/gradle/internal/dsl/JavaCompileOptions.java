@@ -23,11 +23,9 @@ import com.google.common.base.Objects;
 import org.gradle.api.Action;
 import org.gradle.internal.reflect.Instantiator;
 
-/**
- * DSL object for javaCompileOptions.
- */
+/** DSL object for javaCompileOptions. */
 @SuppressWarnings("unused") // exposed in DSL
-public class JavaCompileOptions implements CoreJavaCompileOptions {
+public class JavaCompileOptions implements com.android.build.gradle.api.JavaCompileOptions {
     @NonNull
     private AnnotationProcessorOptions annotationProcessorOptions;
 

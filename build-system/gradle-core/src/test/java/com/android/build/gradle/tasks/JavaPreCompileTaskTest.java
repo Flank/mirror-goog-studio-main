@@ -22,8 +22,8 @@ import static org.junit.Assert.fail;
 import static org.mockito.Mockito.when;
 
 import com.android.build.gradle.AndroidConfig;
+import com.android.build.gradle.api.JavaCompileOptions;
 import com.android.build.gradle.internal.dsl.AnnotationProcessorOptions;
-import com.android.build.gradle.internal.dsl.CoreJavaCompileOptions;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.model.DataBindingOptions;
@@ -86,7 +86,7 @@ public class JavaPreCompileTaskTest {
 
     @Mock DataBindingOptions dataBindingOptions;
 
-    @Mock CoreJavaCompileOptions compileOptions;
+    @Mock JavaCompileOptions compileOptions;
 
     private Set<String> processorNames;
 

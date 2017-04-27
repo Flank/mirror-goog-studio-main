@@ -18,8 +18,7 @@ package com.android.build.gradle.managed.adaptor;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.dsl.CoreAnnotationProcessorOptions;
-import com.android.build.gradle.managed.AnnotationProcessorOptions;
+import com.android.build.gradle.api.AnnotationProcessorOptions;
 import com.android.build.gradle.managed.KeyValuePair;
 import java.util.List;
 import java.util.Map;
@@ -28,13 +27,16 @@ import java.util.stream.Collectors;
 /**
  * An adaptor to convert a managed.AnnotationProcessorOptions to a CoreAnnotationProcessorOptions.
  */
-public class AnnotationProcessorOptionsAdaptor implements CoreAnnotationProcessorOptions{
+public class AnnotationProcessorOptionsAdaptor implements AnnotationProcessorOptions {
 
     @NonNull
-    private final AnnotationProcessorOptions annotationProcessorOptions;
+    private final com.android.build.gradle.managed.AnnotationProcessorOptions
+            annotationProcessorOptions;
 
     public AnnotationProcessorOptionsAdaptor(
-            @NonNull AnnotationProcessorOptions annotationProcessorOptions) {
+            @NonNull
+                    com.android.build.gradle.managed.AnnotationProcessorOptions
+                            annotationProcessorOptions) {
         this.annotationProcessorOptions = annotationProcessorOptions;
     }
 

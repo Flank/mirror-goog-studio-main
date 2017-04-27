@@ -104,9 +104,17 @@ public interface BaseVariant {
     ProductFlavor getMergedFlavor();
 
     /**
-     * Returns the list of {@link com.android.builder.core.DefaultProductFlavor} for this build variant.
+     * Returns a {@link JavaCompileOptions} that represents the java compile settings for this build
+     * variant.
+     */
+    @NonNull
+    JavaCompileOptions getJavaCompileOptions();
+
+    /**
+     * Returns the list of {@link com.android.builder.core.DefaultProductFlavor} for this build
+     * variant.
      *
-     * This is always non-null but could be empty.
+     * <p>This is always non-null but could be empty.
      */
     @NonNull
     List<ProductFlavor> getProductFlavors();

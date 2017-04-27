@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.dsl;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
+import com.android.build.gradle.api.JavaCompileOptions;
 import com.android.build.gradle.internal.scope.CodeShrinker;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.DefaultBuildType;
@@ -67,7 +68,8 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
     @NonNull private final NdkOptions ndkConfig;
     @NonNull private final ExternalNativeBuildOptions externalNativeBuildOptions;
     @NonNull private final JackOptions jackOptions;
-    @NonNull private final JavaCompileOptions javaCompileOptions;
+    @NonNull
+    private final com.android.build.gradle.internal.dsl.JavaCompileOptions javaCompileOptions;
     @NonNull private final ShaderOptions shaderOptions;
     @NonNull private final ErrorReporter errorReporter;
     @NonNull private final PostprocessingOptions postprocessingOptions;
@@ -87,7 +89,10 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
         this.project = project;
         this.errorReporter = errorReporter;
         jackOptions = instantiator.newInstance(JackOptions.class, errorReporter);
-        javaCompileOptions = instantiator.newInstance(JavaCompileOptions.class, instantiator);
+        javaCompileOptions =
+                instantiator.newInstance(
+                        com.android.build.gradle.internal.dsl.JavaCompileOptions.class,
+                        instantiator);
         shaderOptions = instantiator.newInstance(ShaderOptions.class);
         ndkConfig = instantiator.newInstance(NdkOptions.class);
         externalNativeBuildOptions = instantiator.newInstance(ExternalNativeBuildOptions.class,
@@ -102,7 +107,7 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
         this.project = project;
         this.errorReporter = errorReporter;
         jackOptions = new JackOptions(errorReporter);
-        javaCompileOptions = new JavaCompileOptions();
+        javaCompileOptions = new com.android.build.gradle.internal.dsl.JavaCompileOptions();
         shaderOptions = new ShaderOptions();
         ndkConfig = new NdkOptions();
         externalNativeBuildOptions = new ExternalNativeBuildOptions();
@@ -127,12 +132,10 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
         return jackOptions;
     }
 
-    /**
-     * Options for configuration Java compilation.
-     */
+    /** Options for configuration Java compilation. */
     @Override
     @NonNull
-    public CoreJavaCompileOptions getJavaCompileOptions() {
+    public JavaCompileOptions getJavaCompileOptions() {
         return javaCompileOptions;
     }
 

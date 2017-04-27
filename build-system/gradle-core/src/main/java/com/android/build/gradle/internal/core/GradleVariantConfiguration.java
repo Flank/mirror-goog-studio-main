@@ -23,10 +23,10 @@ import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.TestAndroidConfig;
+import com.android.build.gradle.api.JavaCompileOptions;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions;
 import com.android.build.gradle.internal.dsl.CoreJackOptions;
-import com.android.build.gradle.internal.dsl.CoreJavaCompileOptions;
 import com.android.build.gradle.internal.dsl.CoreNdkOptions;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
@@ -390,7 +390,7 @@ public class GradleVariantConfiguration
         }
     }
 
-    public CoreJavaCompileOptions getJavaCompileOptions() {
+    public JavaCompileOptions getJavaCompileOptions() {
         return mergedJavaCompileOptions;
     }
 

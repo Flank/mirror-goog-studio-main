@@ -24,7 +24,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
-import com.android.build.gradle.internal.dsl.CoreAnnotationProcessorOptions;
+import com.android.build.gradle.api.AnnotationProcessorOptions;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.BaseTask;
@@ -64,7 +64,7 @@ public class JavaPreCompileTask extends BaseTask {
 
     private FileCollection compileClasspaths;
 
-    private CoreAnnotationProcessorOptions annotationProcessorOptions;
+    private AnnotationProcessorOptions annotationProcessorOptions;
 
     private VariantScope scope;
 
@@ -73,7 +73,7 @@ public class JavaPreCompileTask extends BaseTask {
             @NonNull File annotationProcessorOutputFolder,
             @NonNull FileCollection annotationProcessorConfiguration,
             @NonNull FileCollection compileClasspaths,
-            @NonNull CoreAnnotationProcessorOptions annotationProcessorOptions,
+            @NonNull AnnotationProcessorOptions annotationProcessorOptions,
             @NonNull VariantScope variantScope) {
         this.annotationProcessorOutputFolder = annotationProcessorOutputFolder;
         this.annotationProcessorConfiguration = annotationProcessorConfiguration;

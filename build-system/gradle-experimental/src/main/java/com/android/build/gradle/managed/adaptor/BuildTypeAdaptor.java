@@ -18,10 +18,10 @@ package com.android.build.gradle.managed.adaptor;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.api.JavaCompileOptions;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreExternalNativeBuildOptions;
 import com.android.build.gradle.internal.dsl.CoreJackOptions;
-import com.android.build.gradle.internal.dsl.CoreJavaCompileOptions;
 import com.android.build.gradle.internal.dsl.CoreNdkOptions;
 import com.android.build.gradle.internal.dsl.CoreShaderOptions;
 import com.android.build.gradle.managed.BuildType;
@@ -110,7 +110,7 @@ public class BuildTypeAdaptor extends BaseConfigAdaptor implements CoreBuildType
 
     @Override
     @NonNull
-    public CoreJavaCompileOptions getJavaCompileOptions() {
+    public JavaCompileOptions getJavaCompileOptions() {
         return new JavaCompileOptionsAdaptor(buildType.getJavaCompileOptions());
     }
 
