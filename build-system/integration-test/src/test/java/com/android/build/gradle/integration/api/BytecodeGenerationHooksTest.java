@@ -22,8 +22,10 @@ import com.android.build.gradle.integration.common.category.SmokeTests;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
+import com.android.testutils.apk.Aar;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.Dex;
+import com.android.testutils.apk.Zip;
 import com.android.utils.FileUtils;
 import com.android.utils.SdkUtils;
 import com.google.common.base.Splitter;
@@ -56,12 +58,14 @@ public class BytecodeGenerationHooksTest {
         GradleBuildResult result = project.executor().run("clean", "app:assembleDebug");
 
         // check that the app's dex file contains the App class.
-        Apk apk = project.getSubproject("app").getApk("debug");
+        Apk apk = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG);
         assertThat(apk.getFile()).isFile();
-        Optional<Dex> dex = apk.getMainDexFile();
-        assertThat(dex).isPresent();
+        Optional<Dex> dexOptional = apk.getMainDexFile();
+        assertThat(dexOptional).isPresent();
         //noinspection OptionalGetWithoutIsPresent
-        assertThat(dex.get()).containsClasses("Lcom/example/bytecode/App;");
+        final Dex dexFile = dexOptional.get();
+        assertThat(dexFile).containsClasses("Lcom/example/bytecode/App;");
+        assertThat(dexFile).containsClasses("Lcom/example/bytecode/PostJavacApp;");
 
         // verify the compile classpath
         checkDependencies(
@@ -103,6 +107,11 @@ public class BytecodeGenerationHooksTest {
     @Test
     public void buildLibrary() throws IOException, InterruptedException {
         project.execute("clean", "lib:assembleDebug");
+
+        Aar aar = project.getSubproject("library").getAar("debug");
+        Zip classes = aar.getEntryAsZip("classes.jar");
+        assertThat(classes).contains("com/example/bytecode/Lib.class");
+        assertThat(classes).contains("com/example/bytecode/PostJavacLib.class");
     }
 
     @Test

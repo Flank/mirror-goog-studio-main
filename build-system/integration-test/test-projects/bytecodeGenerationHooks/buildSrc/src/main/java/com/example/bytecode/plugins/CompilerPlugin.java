@@ -19,7 +19,9 @@ public class CompilerPlugin implements Plugin<Project> {
 
     private Project project;
     private File appJar;
+    private File postJavacAppJar;
     private File libJar;
+    private File postJavacLibJar;
     private File testJar;
 
     @Override
@@ -41,51 +43,54 @@ public class CompilerPlugin implements Plugin<Project> {
 
         if (pluginClass.equals(AppPlugin.class)) {
             AppExtension extension = (AppExtension) project.getExtensions().getByName("android");
-            processVariants(extension.getApplicationVariants(), appJar);
+            processVariants(extension.getApplicationVariants(), appJar, postJavacAppJar);
 
             testedExtension = extension;
         } else if (pluginClass.equals(LibraryPlugin.class)) {
             LibraryExtension extension =
                     (LibraryExtension) project.getExtensions().getByName("android");
-            processVariants(extension.getLibraryVariants(), libJar);
+            processVariants(extension.getLibraryVariants(), libJar, postJavacLibJar);
 
             testedExtension = extension;
         } else if (pluginClass.equals(TestPlugin.class)) {
             TestExtension extension = (TestExtension) project.getExtensions().getByName("android");
-            processVariants(extension.getApplicationVariants(), testJar);
+            processVariants(extension.getApplicationVariants(), testJar, null);
             // no test here.
         }
 
         if (testedExtension != null) {
-            processVariants(testedExtension.getTestVariants(), testJar);
-            processVariants(testedExtension.getUnitTestVariants(), testJar);
+            processVariants(testedExtension.getTestVariants(), testJar, null);
+            processVariants(testedExtension.getUnitTestVariants(), testJar, null);
         }
     }
 
     private void computeJarLocations() {
         File rootDir = project.getRootProject().getProjectDir();
         appJar = new File(rootDir, "app.jar");
+        postJavacAppJar = new File(rootDir, "postjavacapp.jar");
         libJar = new File(rootDir, "lib.jar");
+        postJavacLibJar = new File(rootDir, "postjavaclib.jar");
         testJar = new File(rootDir, "test.jar");
     }
 
     private <T extends BaseVariant> void processVariants(
-            DomainObjectSet<T> variants, File sourceJar) {
+            DomainObjectSet<T> variants, File sourceJar, File postJavacJar) {
         variants.all(
                 variant -> {
                     // figure out the output.
                     File outputDir =
                             project.file(
                                     project.getBuildDir()
-                                            + "/generated/bytecode/"
+                                            + "/generated/preJavacbytecode/"
                                             + variant.getDirName());
 
                     // create the file collection that contains the result. We'll add the task
                     // dependency later when we have it
                     ConfigurableFileCollection fc = project.files(outputDir);
 
-                    // and register it with the variant, getting the key in return
-                    Object key = variant.registerGeneratedBytecode(fc);
+                    // and register it with the variant, getting the key in return that will
+                    // be used for the classpath
+                    Object key = variant.registerPreJavacGeneratedBytecode(fc);
 
                     // create the task, querying the classpath with the provided key.
                     BytecodeGeneratingTask t =
@@ -99,11 +104,34 @@ public class CompilerPlugin implements Plugin<Project> {
                                                 task.setClasspath(variant.getCompileClasspath(key));
                                             });
 
-                    // add the task dependency
+                    // add the task dependency to the file collection so that consumers can have
+                    // the proper dependency.
                     fc.builtBy(t);
 
                     // make the task run after the variant's prebuild task
                     t.dependsOn(variant.getPreBuild());
+
+                    // also create a post javac bytecode generating task if needed
+                    if (postJavacJar != null) {
+                        File outputDir2 =
+                                project.file(
+                                        project.getBuildDir()
+                                                + "/generated/postJavacBytecode/"
+                                                + variant.getDirName());
+                        ConfigurableFileCollection fc2 = project.files(outputDir2);
+                        variant.registerPostJavacGeneratedBytecode(fc2);
+
+                        BytecodeGeneratingTask t2 =
+                                project.getTasks()
+                                        .create(
+                                                "generateBytecode2For" + variant.getName(),
+                                                BytecodeGeneratingTask.class,
+                                                task -> {
+                                                    task.setSourceJar(postJavacJar);
+                                                    task.setOutputDir(outputDir2);
+                                                });
+                        fc2.builtBy(t2);
+                    }
                 });
     }
 }

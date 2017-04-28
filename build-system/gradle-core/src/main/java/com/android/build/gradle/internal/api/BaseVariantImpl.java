@@ -293,8 +293,19 @@ public abstract class BaseVariantImpl implements BaseVariant {
     }
 
     @Override
+    public Object registerPreJavacGeneratedBytecode(@NonNull FileCollection fileCollection) {
+        return getVariantData().registerPreJavacGeneratedBytecode(fileCollection);
+    }
+
+    @Override
+    @Deprecated
     public Object registerGeneratedBytecode(@NonNull FileCollection fileCollection) {
-        return getVariantData().registerGeneratedBytecode(fileCollection);
+        return registerPreJavacGeneratedBytecode(fileCollection);
+    }
+
+    @Override
+    public void registerPostJavacGeneratedBytecode(@NonNull FileCollection fileCollection) {
+        getVariantData().registerPostJavacGeneratedBytecode(fileCollection);
     }
 
     @NonNull

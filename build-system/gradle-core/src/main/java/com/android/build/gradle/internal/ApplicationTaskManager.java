@@ -404,7 +404,10 @@ public class ApplicationTaskManager extends TaskManager {
     protected void postJavacCreation(
             @NonNull final TaskFactory tasks, @NonNull VariantScope scope) {
         final FileCollection javacOutput = scope.getOutput(JAVAC);
-        final FileCollection generatedBC = scope.getVariantData().getAllGeneratedBytecode();
+        final FileCollection preJavacGeneratedBC =
+                scope.getVariantData().getAllPreJavacGeneratedBytecode();
+        final FileCollection postJavacGeneratedBC =
+                scope.getVariantData().getAllPostJavacGeneratedBytecode();
 
         // Create the classes artifact for uses by external test modules.
         File dest =
@@ -434,7 +437,8 @@ public class ApplicationTaskManager extends TaskManager {
                             @Override
                             public void execute(@NonNull Jar task) {
                                 task.from(javacOutput);
-                                task.from(generatedBC);
+                                task.from(preJavacGeneratedBC);
+                                task.from(postJavacGeneratedBC);
                                 task.setDestinationDir(dest);
                                 task.setArchiveName("classes.jar");
                             }
@@ -449,7 +453,8 @@ public class ApplicationTaskManager extends TaskManager {
         ConfigurableFileCollection fileCollection =
                 scope.createAnchorOutput(TaskOutputHolder.AnchorOutputType.CLASSES_FOR_UNIT_TESTS);
         fileCollection.from(javacOutput);
-        fileCollection.from(generatedBC);
+        fileCollection.from(preJavacGeneratedBC);
+        fileCollection.from(postJavacGeneratedBC);
     }
 
     @Override

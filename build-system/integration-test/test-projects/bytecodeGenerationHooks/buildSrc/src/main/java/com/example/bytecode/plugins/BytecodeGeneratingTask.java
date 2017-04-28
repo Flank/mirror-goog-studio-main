@@ -9,6 +9,7 @@ import org.gradle.api.DefaultTask;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 
@@ -25,6 +26,7 @@ public class BytecodeGeneratingTask extends DefaultTask {
     }
 
     @InputFiles
+    @Optional
     public FileCollection getClasspath() {
         return classpath;
     }
@@ -83,19 +85,21 @@ public class BytecodeGeneratingTask extends DefaultTask {
         }
 
         // check the compile classpath
-        Set<File> files = classpath.getFiles();
-        for (File file : files) {
-            if (!file.exists()) {
-                throw new RuntimeException("Dependency file does not exist: " + file);
+        if (classpath != null) {
+            Set<File> files = classpath.getFiles();
+            for (File file : files) {
+                if (!file.exists()) {
+                    throw new RuntimeException("Dependency file does not exist: " + file);
+                }
+                // prints the content so that the test can validate it.
+                System.out.println(
+                        "BytecodeGeneratingTask("
+                                + getProject().getPath()
+                                + ":"
+                                + getName()
+                                + "): "
+                                + file);
             }
-            // prints the content so that the test can validate it.
-            System.out.println(
-                    "BytecodeGeneratingTask("
-                            + getProject().getPath()
-                            + ":"
-                            + getName()
-                            + "): "
-                            + file);
         }
     }
 }

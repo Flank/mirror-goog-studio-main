@@ -3,6 +3,8 @@ package com.example.app;
 import android.test.ActivityInstrumentationTestCase;
 import com.example.bytecode.App;
 import com.example.bytecode.Lib;
+import com.example.bytecode.PostJavacApp;
+import com.example.bytecode.PostJavacLib;
 import com.example.bytecode.Test;
 
 public class AppActivityTest extends ActivityInstrumentationTestCase<AppActivity> {
@@ -21,7 +23,9 @@ public class AppActivityTest extends ActivityInstrumentationTestCase<AppActivity
         Test test = new Test("test");
         // test the bytecode of the tested app is present
         App app = new App("app");
+        PostJavacApp app2 = new PostJavacApp("app");
         // test the bytecode of the tested app's dependencies is present
         Lib lib = new Lib("lib");
+        PostJavacLib lib2 = new PostJavacLib("lib");
     }
 }

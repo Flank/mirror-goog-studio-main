@@ -279,8 +279,18 @@ public interface BaseTestedVariant extends BaseVariant, TestedVariant {
         }
 
         @Override
+        public Object registerPreJavacGeneratedBytecode(@NonNull FileCollection fileCollection) {
+            return variant.registerPreJavacGeneratedBytecode(fileCollection);
+        }
+
+        @Override
+        public void registerPostJavacGeneratedBytecode(@NonNull FileCollection fileCollection) {
+            variant.registerPostJavacGeneratedBytecode(fileCollection);
+        }
+
+        @Override
         public Object registerGeneratedBytecode(@NonNull FileCollection fileCollection) {
-            return variant.registerGeneratedBytecode(fileCollection);
+            return registerPreJavacGeneratedBytecode(fileCollection);
         }
 
         @Override
