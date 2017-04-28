@@ -52,7 +52,7 @@ message File {
   string path = 2;
 
   // symbol table of the file.
-  string symbol = 3;
+  repeated string symbol = 3;
 }
 
 message Record {
