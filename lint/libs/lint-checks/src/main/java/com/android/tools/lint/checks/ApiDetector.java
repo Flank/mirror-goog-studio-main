@@ -58,6 +58,8 @@ import static com.android.tools.lint.detector.api.CharSequences.indexOf;
 import static com.android.tools.lint.detector.api.ClassContext.getFqcn;
 import static com.android.tools.lint.detector.api.LintUtils.skipParentheses;
 import static com.android.utils.SdkUtils.getResourceFieldName;
+import static com.intellij.pom.java.LanguageLevel.JDK_1_7;
+import static com.intellij.pom.java.LanguageLevel.JDK_1_8;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -1192,9 +1194,12 @@ public class ApiDetector extends ResourceXmlDetector
 
         @Override
         public void visitMethod(@NonNull UMethod method) {
-            // API check for default methods
             PsiClass containingClass = method.getContainingClass();
-            if (containingClass != null && containingClass.isInterface()) {
+
+            // API check for default methods
+            if (containingClass != null && containingClass.isInterface()
+                    // (unless using desugar which supports this for all API levels)
+                    && !isUsingDesugar(mContext, method)) {
                 PsiModifierList methodModifierList = method.getModifierList();
                 if (methodModifierList.hasExplicitModifier(PsiModifier.DEFAULT) ||
                         methodModifierList.hasExplicitModifier(PsiModifier.STATIC)) {
@@ -1282,8 +1287,10 @@ public class ApiDetector extends ResourceXmlDetector
 
         @Override
         public void visitClass(@NonNull UClass aClass) {
-            // Check for repeatable annotations
-            if (aClass.isAnnotationType()) {
+            // Check for repeatable and type annotations
+            if (aClass.isAnnotationType()
+                    // Desugar adds support for type annotations
+                    && !isUsingDesugar(mContext, aClass)) {
                 PsiModifierList modifierList = aClass.getModifierList();
                 if (modifierList != null) {
                     for (PsiAnnotation annotation : modifierList.getAnnotations()) {
@@ -1736,6 +1743,16 @@ public class ApiDetector extends ResourceXmlDetector
                 }
             }
 
+            // Desugar rewrites compare calls (see b/36390874)
+            if (name.equals("compare") && api == 19
+                    && owner.startsWith("java/lang/") && desc.length() == 4
+                    && isUsingDesugar(mContext, expression)
+                    && (desc.equals("(JJ)") || desc.equals("(ZZ)") || desc.equals("(BB)")
+                    || desc.equals("(CC)") || desc.equals("(II)") || desc.equals("(JJ)")
+                    || desc.equals("(SS)"))) {
+                return;
+            }
+
             String signature;
             if (CONSTRUCTOR_NAME.equals(name)) {
                 signature = "new " + fqcn;
@@ -1862,7 +1879,10 @@ public class ApiDetector extends ResourceXmlDetector
         public void visitTryExpression(@NonNull UTryExpression statement) {
             List<UVariable> resourceList = statement.getResourceVariables();
             //noinspection VariableNotUsedInsideIf
-            if (!resourceList.isEmpty()) {
+            if (!resourceList.isEmpty()
+                    // (unless using desugar which supports this for all API levels)
+                    && !isUsingDesugar(mContext, statement)) {
+
                 int api = 19; // minSdk for try with resources
                 int minSdk = getMinSdk(mContext);
 
@@ -2062,6 +2082,20 @@ public class ApiDetector extends ResourceXmlDetector
                 || isWithinVersionCheckConditional(element, api)
                 || isPrecededByVersionCheckExit(element, api);
 
+    }
+
+    private static boolean isUsingDesugar(@NonNull Context context, @NonNull UElement element) {
+        // Desugar runs if the Gradle plugin is 2.4.0 alpha 8 or higher...
+        GradleVersion version = context.getProject().getGradleModelVersion();
+        if (version == null) {
+            return false;
+        }
+        if (!version.isAtLeast(2, 4, 0, "alpha", 8, true)) {
+            return false;
+        }
+
+        // ... *and* the language level is at least 1.8
+        return LintUtils.getLanguageLevel(element, JDK_1_7).isAtLeast(JDK_1_8);
     }
 
     public static int getTargetApi(@Nullable UElement scope) {

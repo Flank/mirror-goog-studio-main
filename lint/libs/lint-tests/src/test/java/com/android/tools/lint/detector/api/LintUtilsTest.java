@@ -715,6 +715,10 @@ public class LintUtilsTest extends TestCase {
         assertTrue(isModelOlderThan(project, 1, 0, 1));
         assertFalse(isModelOlderThan(project, 1, 0, 0));
         assertFalse(isModelOlderThan(project, 0, 11, 0));
+
+        project = mock(Project.class);
+        assertTrue(isModelOlderThan(project, 0, 0, 0, true));
+        assertFalse(isModelOlderThan(project, 0, 0, 0, false));
     }
 
     private static final class DefaultApiVersion implements ApiVersion {

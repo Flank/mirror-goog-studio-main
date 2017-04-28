@@ -96,13 +96,16 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.intellij.ide.util.JavaAnonymousClassesHelper;
+import com.intellij.pom.java.LanguageLevel;
 import com.intellij.psi.CommonClassNames;
 import com.intellij.psi.PsiAnonymousClass;
 import com.intellij.psi.PsiCallExpression;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiClassType;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiImportStatement;
+import com.intellij.psi.PsiJavaFile;
 import com.intellij.psi.PsiLiteral;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiParenthesizedExpression;
@@ -128,7 +131,9 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import lombok.ast.ImportDeclaration;
 import org.jetbrains.uast.UElement;
+import org.jetbrains.uast.UFile;
 import org.jetbrains.uast.UParenthesizedExpression;
+import org.jetbrains.uast.UastUtils;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
@@ -1389,9 +1394,17 @@ public class LintUtils {
      */
     public static boolean isModelOlderThan(@NonNull Project project,
             int major, int minor, int micro) {
+        return isModelOlderThan(project, major, minor, micro, false);
+    }
+
+    /**
+     * Returns true if the given Gradle model is older than the given version number
+     */
+    public static boolean isModelOlderThan(@NonNull Project project,
+            int major, int minor, int micro, boolean defaultForNonGradleProjects) {
         GradleVersion version = project.getGradleModelVersion();
         if (version == null) {
-            return false;
+            return defaultForNonGradleProjects;
         }
 
         if (version.getMajor() != major) {
@@ -1401,6 +1414,41 @@ public class LintUtils {
             return version.getMinor() < minor;
         }
         return version.getMicro() < micro;
+    }
+
+
+    /**
+     * Returns the Java language level for the given element, or the default level
+     * if an applicable the language level is not found (for example if the element
+     * is not a Java element
+     */
+    @NonNull
+    public static LanguageLevel getLanguageLevel(@NonNull UElement element,
+            @NonNull LanguageLevel defaultLevel) {
+        UFile containingFile = UastUtils.getContainingFile(element);
+        if (containingFile == null) {
+            return defaultLevel;
+        }
+
+        return getLanguageLevel(containingFile.getPsi(), defaultLevel);
+    }
+
+    /**
+     * Returns the Java language level for the given element, or the default level
+     * if an applicable the language level is not found (for example if the element
+     * is not a Java element
+     */
+    @NonNull
+    public static LanguageLevel getLanguageLevel(@NonNull PsiElement element,
+            @NonNull LanguageLevel defaultLevel) {
+        PsiFile containingFile = element instanceof PsiFile
+                ? (PsiFile) element
+                : element.getContainingFile();
+        if (containingFile instanceof PsiJavaFile) {
+            return ((PsiJavaFile) containingFile).getLanguageLevel();
+        }
+
+        return defaultLevel;
     }
 
     /**
