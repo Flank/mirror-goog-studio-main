@@ -113,8 +113,6 @@ Status InternalNetworkServiceImpl::SendHttpRequest(
   if (conn != nullptr) {
     conn->request.fields = httpRequest->fields();
     conn->request.method = httpRequest->method();
-    conn->thread.id = httpRequest->thread().id();
-    conn->thread.name = httpRequest->thread().name();
   }
   else {
     Log::V("Unhandled http request (%lld)", (long long) httpRequest->conn_id());
@@ -130,6 +128,25 @@ Status InternalNetworkServiceImpl::SendHttpResponse(
     conn->response.fields = httpResponse->fields();
   } else {
     Log::V("Unhandled http response (%lld)", (long long) httpResponse->conn_id());
+  }
+  return Status::OK;
+}
+
+Status InternalNetworkServiceImpl::TrackThread(
+    ServerContext *context, const proto::JavaThreadRequest *threadData,
+    proto::EmptyNetworkReply *reply) {
+  ConnectionDetails* conn = network_cache_.GetDetails(threadData->conn_id());
+  if (conn != nullptr) {
+    bool found = false;
+    for (auto thread: conn->threads) {
+      if (thread.id == threadData->thread().id()) {
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      conn->threads.emplace_back(threadData->thread().id(), threadData->thread().name());
+    }
   }
   return Status::OK;
 }

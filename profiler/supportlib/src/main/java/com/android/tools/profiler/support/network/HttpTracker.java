@@ -90,6 +90,7 @@ final class HttpTracker {
 
             int b = myWrapped.read();
             mByteBatcher.addByte(b);
+            myConnectionTracker.trackThread();
             return b;
         }
 
@@ -99,9 +100,9 @@ final class HttpTracker {
                 onReadBegin(myConnectionTracker.myId);
                 myFirstRead = false;
             }
-
             int bytesRead = myWrapped.read(buffer, byteOffset, byteCount);
             mByteBatcher.addBytes(buffer, byteOffset, bytesRead);
+            myConnectionTracker.trackThread();
             return bytesRead;
         }
 
@@ -111,6 +112,7 @@ final class HttpTracker {
                 onReadBegin(myConnectionTracker.myId);
                 myFirstRead = false;
             }
+            myConnectionTracker.trackThread();
             return myWrapped.skip(byteCount);
         }
 
@@ -151,6 +153,7 @@ final class HttpTracker {
                 myFirstWrite = false;
             }
             myWrapped.write(buffer, offset, length);
+            myConnectionTracker.trackThread();
         }
 
         @Override
@@ -160,6 +163,7 @@ final class HttpTracker {
                 myFirstWrite = false;
             }
             myWrapped.write(oneByte);
+            myConnectionTracker.trackThread();
         }
 
         @Override
@@ -192,6 +196,7 @@ final class HttpTracker {
             }
 
             onPreConnect(myId, url, s.toString());
+            trackThread();
         }
 
         @Override
@@ -221,8 +226,8 @@ final class HttpTracker {
                 }
                 s.append("\n");
             }
-            Thread thread = Thread.currentThread();
-            onRequest(myId, method, s.toString(), thread.getName(), thread.getId());
+            trackThread();
+            onRequest(myId, method, s.toString());
         }
 
         @Override
@@ -236,8 +241,8 @@ final class HttpTracker {
                 }
                 s.append("\n");
             }
-
             onResponse(myId, response, s.toString());
+            trackThread();
         }
 
         @Override
@@ -246,11 +251,16 @@ final class HttpTracker {
             return new InputStreamTracker(stream, this);
         }
 
+        void trackThread() {
+            Thread thread = Thread.currentThread();
+            trackThread(myId, thread.getName(), thread.getId());
+        }
+
         private native long nextId();
+        private native void trackThread(long id, String theadName, long threadId);
         private native void onPreConnect(long id, String url, String stack);
         private native void onRequestBody(long id);
-        private native void onRequest(
-                long id, String method, String fields, String threadName, long threadId);
+        private native void onRequest(long id, String method, String fields);
         private native void onResponse(long id, String response, String fields);
         private native void onResponseBody(long id);
         private native void onDisconnect(long id);

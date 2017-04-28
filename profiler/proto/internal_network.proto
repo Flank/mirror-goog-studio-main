@@ -25,6 +25,7 @@ service InternalNetworkService {
   rpc SendHttpEvent(HttpEventRequest) returns (EmptyNetworkReply) {}
   rpc SendHttpRequest(HttpRequestRequest) returns (EmptyNetworkReply) {}
   rpc SendHttpResponse(HttpResponseRequest) returns (EmptyNetworkReply) {}
+  rpc TrackThread(JavaThreadRequest) returns (EmptyNetworkReply) {}
 }
 
 // HTTP request registration data, used to communicate with perfd that a new
@@ -79,8 +80,6 @@ message HttpRequestRequest {
   // https://en.wikipedia.org/wiki/List_of_HTTP_header_fields#Request_fields.
   string fields = 2;
   string method = 3;
-  // The thread where this connection was connected.
-  JavaThread thread = 4;
 }
 
 // Response data of HTTP connection.
@@ -89,6 +88,11 @@ message HttpResponseRequest {
   // Header fields associated with this response. See also:
   // https://en.wikipedia.org/wiki/List_of_HTTP_header_fields#Response_fields.
   string fields = 2;
+}
+
+message JavaThreadRequest {
+  int64 conn_id = 1;
+  JavaThread thread = 2;
 }
 
 message EmptyNetworkReply {}

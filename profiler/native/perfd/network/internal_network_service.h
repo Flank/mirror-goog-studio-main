@@ -51,6 +51,10 @@ class InternalNetworkServiceImpl final
                                 const proto::HttpResponseRequest *httpResponse,
                                 proto::EmptyNetworkReply *reply) override;
 
+  grpc::Status TrackThread(grpc::ServerContext *context,
+                           const proto::JavaThreadRequest *thread,
+                           proto::EmptyNetworkReply *reply) override;
+
  private:
   FileCache &file_cache_;
   NetworkCache &network_cache_;
