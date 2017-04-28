@@ -346,6 +346,9 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
                 if (!path.startsWith(mostRecentRoot)) {
                     RelativePath relativePath = details.getRelativePath();
                     String pathString = relativePath.getPathString();
+                    // The above method always uses / as a file separator but for
+                    // comparisons with the path we need to use the native separator:
+                    pathString = pathString.replace('/', File.separatorChar);
 
                     if (path.endsWith(pathString)) {
                         String root = path.substring(0, path.length() - pathString.length());

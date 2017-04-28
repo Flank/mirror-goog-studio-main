@@ -1664,8 +1664,9 @@ public class Extractor {
                     }
                     empty = false;
                     writer.print("      <val name=\"");
-                    if (pair.getName() != null) {
-                        writer.print(pair.getName());
+                    String name = pair.getName();
+                    if (name != null) {
+                        writer.print(name);
                     } else {
                         writer.print(ATTR_VALUE); // default name
                     }
@@ -1725,7 +1726,7 @@ public class Extractor {
         @Nullable
         private String attributeString(@Nullable PsiAnnotationMemberValue value) {
             StringBuilder sb = new StringBuilder();
-            if (appendExpression(sb, value)) {
+            if (value != null && appendExpression(sb, value)) {
                 return sb.toString();
             } else {
                 return null;
