@@ -15,6 +15,10 @@ version = '1.0'// TODO: Pass in as an argument
 ext {
     protobufVersion = '3.0.0'
     grpcVersion = '1.0.3'
+    // We need to package in our own copy of netty dependencies, since Studio
+    // can manually update its own netty library separately from us.
+    // See also: https://mvnrepository.com/artifact/io.grpc/grpc-netty/1.0.3
+    nettyVersion = '4.1.6.Final'
 }
 
 configurations {
@@ -35,10 +39,37 @@ dependencies {
         transitive false
     }
     packaging("io.grpc:grpc-netty:$grpcVersion") {
-        // We intentionally bundle our own copy of netty dependencies,
-        // since the version included with IDEA can get updated without
-        // notice, which can break grpc.
-        transitive true
+        transitive false
+    }
+    packaging("io.netty:netty-handler-proxy:$nettyVersion") {
+        transitive false
+    }
+    packaging("io.netty:netty-codec-http2:$nettyVersion") {
+        transitive false
+    }
+    packaging("io.netty:netty-transport:$nettyVersion") {
+        transitive false
+    }
+    packaging("io.netty:netty-codec-socks:$nettyVersion") {
+        transitive false
+    }
+    packaging("io.netty:netty-codec-http:$nettyVersion") {
+        transitive false
+    }
+    packaging("io.netty:netty-handler:$nettyVersion") {
+        transitive false
+    }
+    packaging("io.netty:netty-buffer:$nettyVersion") {
+        transitive false
+    }
+    packaging("io.netty:netty-resolver:$nettyVersion") {
+        transitive false
+    }
+    packaging("io.netty:netty-codec:$nettyVersion") {
+        transitive false
+    }
+    packaging("io.netty:netty-common:$nettyVersion") {
+        transitive false
     }
     packaging("io.grpc:grpc-okhttp:$grpcVersion") {
         transitive false
