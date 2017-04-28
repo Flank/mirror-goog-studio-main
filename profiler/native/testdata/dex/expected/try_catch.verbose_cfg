@@ -1,5 +1,5 @@
 
-method A.<init>() : void
+method A.<init>():void
 {
 ............................. begin block 1 .............................
 	.src "tryCatch.java"
@@ -9,14 +9,14 @@ method A.<init>() : void
 	    0| move-object v0, v2
 	.local v0, "this", A
 	    1| move-object v1, v0
-	    2| invoke-direct {v1}, java.lang.Throwable.<init>
+	    2| invoke-direct {v1}, java.lang.Throwable.<init>():void
 .............................. end block 1 ..............................
 ............................. begin block 2 .............................
 	    5| return-void
 .............................. end block 2 ..............................
 }
 
-method B.<init>() : void
+method B.<init>():void
 {
 ............................. begin block 1 .............................
 	.src "tryCatch.java"
@@ -26,14 +26,14 @@ method B.<init>() : void
 	    0| move-object v0, v2
 	.local v0, "this", B
 	    1| move-object v1, v0
-	    2| invoke-direct {v1}, java.lang.Throwable.<init>
+	    2| invoke-direct {v1}, java.lang.Throwable.<init>():void
 .............................. end block 1 ..............................
 ............................. begin block 2 .............................
 	    5| return-void
 .............................. end block 2 ..............................
 }
 
-method TryCatch.<init>() : void
+method TryCatch.<init>():void
 {
 ............................. begin block 1 .............................
 	.src "tryCatch.java"
@@ -43,14 +43,14 @@ method TryCatch.<init>() : void
 	    0| move-object v0, v2
 	.local v0, "this", TryCatch
 	    1| move-object v1, v0
-	    2| invoke-direct {v1}, java.lang.Object.<init>
+	    2| invoke-direct {v1}, java.lang.Object.<init>():void
 .............................. end block 1 ..............................
 ............................. begin block 2 .............................
 	    5| return-void
 .............................. end block 2 ..............................
 }
 
-method TryCatch.foo(int) : int
+method TryCatch.foo(int):int
 {
 ............................. begin block 1 .............................
 	.params "?"
@@ -89,7 +89,7 @@ Label_2:
 	   13| move-object v3, v1
 	   14| move-object v1, v3
 	   15| move-object v2, v3
-	   16| invoke-direct {v2}, A.<init>
+	   16| invoke-direct {v2}, A.<init>():void
 .............................. end block 6 ..............................
 ............................. begin block 7 .............................
 	   19| throw v1
@@ -103,7 +103,7 @@ Label_3:
 	   22| move-object v3, v1
 	   23| move-object v1, v3
 	   24| move-object v2, v3
-	   25| invoke-direct {v2}, B.<init>
+	   25| invoke-direct {v2}, B.<init>():void
 .............................. end block 9 ..............................
 ............................. begin block 10 .............................
 	   28| throw v1
@@ -115,14 +115,14 @@ Label_4:
 	   30| move v0, v1
 	   31| goto Label_1
 .............................. end block 11 ..............................
-Label_5:
+Label_5: <aligned>
 	.line 28
 	   32| packed-switch-payload
 		    1: Label_2
 		    2: Label_3
 }
 
-method TryCatch.main(java.lang.String[]) : void
+method TryCatch.main(java.lang.String[]):void
 {
 ............................. begin block 1 .............................
 	.params "?"
@@ -136,7 +136,7 @@ method TryCatch.main(java.lang.String[]) : void
 .............................. end block 1 ..............................
 	.try_begin_1
 ............................. begin block 2 .............................
-	    2| invoke-static {v3}, TryCatch.foo
+	    2| invoke-static {v3}, TryCatch.foo(int):int
 .............................. end block 2 ..............................
 	.try_end_1
 	  catch(B) : Label_3
@@ -159,7 +159,7 @@ Label_1:
 	   11| new-array v5, v5, java.lang.Object[]
 .............................. end block 6 ..............................
 ............................. begin block 7 .............................
-	   13| invoke-virtual {v3,v4,v5}, java.io.PrintStream.printf
+	   13| invoke-virtual {v3,v4,v5}, java.io.PrintStream.printf(java.lang.String, java.lang.Object[]):java.io.PrintStream
 .............................. end block 7 ..............................
 ............................. begin block 8 .............................
 	   16| move-result-object v3
@@ -190,7 +190,7 @@ Label_3:
 	   25| new-array v5, v5, java.lang.Object[]
 .............................. end block 13 ..............................
 ............................. begin block 14 .............................
-	   27| invoke-virtual {v3,v4,v5}, java.io.PrintStream.printf
+	   27| invoke-virtual {v3,v4,v5}, java.io.PrintStream.printf(java.lang.String, java.lang.Object[]):java.io.PrintStream
 .............................. end block 14 ..............................
 	.try_end_2
 	  catch(A) : Label_4
@@ -220,7 +220,7 @@ Label_4:
 	   39| new-array v5, v5, java.lang.Object[]
 .............................. end block 19 ..............................
 ............................. begin block 20 .............................
-	   41| invoke-virtual {v3,v4,v5}, java.io.PrintStream.printf
+	   41| invoke-virtual {v3,v4,v5}, java.io.PrintStream.printf(java.lang.String, java.lang.Object[]):java.io.PrintStream
 .............................. end block 20 ..............................
 	.try_end_3
 	  catch(...) : Label_5
@@ -237,7 +237,7 @@ Label_4:
 	   50| new-array v5, v5, java.lang.Object[]
 .............................. end block 23 ..............................
 ............................. begin block 24 .............................
-	   52| invoke-virtual {v3,v4,v5}, java.io.PrintStream.printf
+	   52| invoke-virtual {v3,v4,v5}, java.io.PrintStream.printf(java.lang.String, java.lang.Object[]):java.io.PrintStream
 .............................. end block 24 ..............................
 ............................. begin block 25 .............................
 	   55| move-result-object v3
@@ -260,7 +260,7 @@ Label_5:
 	   64| new-array v5, v5, java.lang.Object[]
 .............................. end block 28 ..............................
 ............................. begin block 29 .............................
-	   66| invoke-virtual {v3,v4,v5}, java.io.PrintStream.printf
+	   66| invoke-virtual {v3,v4,v5}, java.io.PrintStream.printf(java.lang.String, java.lang.Object[]):java.io.PrintStream
 .............................. end block 29 ..............................
 ............................. begin block 30 .............................
 	   69| move-result-object v3

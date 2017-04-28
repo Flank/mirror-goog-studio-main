@@ -52,6 +52,7 @@ void Dexter::PrintHelp() {
   printf(" -o : output a new .dex file\n");
   printf(" -d : dissasemble method bodies\n");
   printf(" -m : print .dex layout map\n");
+  printf(" --cfg : generate control flow graph (compact|verbose)\n");
   printf("\n");
 }
 

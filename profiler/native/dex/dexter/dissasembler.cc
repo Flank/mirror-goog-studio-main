@@ -19,6 +19,24 @@
 #include <stdio.h>
 #include <cinttypes>
 #include <cmath>
+#include <sstream>
+
+// Builds a human readable method declaration, not including the name, ex:
+// "(android.content.Context, android.content.pm.ActivityInfo) : java.lang.String"
+static std::string MethodDeclaration(const ir::Proto* proto) {
+  std::stringstream ss;
+  ss << "(";
+  if (proto->param_types != nullptr) {
+    bool first = true;
+    for (auto type : proto->param_types->types) {
+      ss << (first ? "" : ", ") << type->Decl();
+      first = false;
+    }
+  }
+  ss << "):";
+  ss << proto->return_type->Decl();
+  return ss.str();
+}
 
 void PrintCodeIrVisitor::StartInstruction(const lir::Instruction* instr) {
   if (cfg_ == nullptr || current_block_index_ >= cfg_->basic_blocks.size()) {
@@ -144,11 +162,11 @@ bool PrintCodeIrVisitor::Visit(lir::VRegRange* vreg_range) {
 }
 
 bool PrintCodeIrVisitor::Visit(lir::String* string) {
-  if (string->index == dex::kNoIndex) {
+  if (string->ir_string == nullptr) {
     printf("<null>");
     return true;
   }
-  auto ir_string = dex_ir_->strings_map[string->index];
+  auto ir_string = string->ir_string;
   printf("\"");
   for (const char* p = ir_string->c_str(); *p != '\0'; ++p) {
     if (::isprint(*p)) {
@@ -178,22 +196,25 @@ bool PrintCodeIrVisitor::Visit(lir::String* string) {
 
 bool PrintCodeIrVisitor::Visit(lir::Type* type) {
   CHECK(type->index != dex::kNoIndex);
-  auto ir_type = dex_ir_->types_map[type->index];
+  auto ir_type = type->ir_type;
   printf("%s", ir_type->Decl().c_str());
   return true;
 }
 
 bool PrintCodeIrVisitor::Visit(lir::Field* field) {
   CHECK(field->index != dex::kNoIndex);
-  auto ir_field = dex_ir_->fields_map[field->index];
+  auto ir_field = field->ir_field;
   printf("%s.%s", ir_field->parent->Decl().c_str(), ir_field->name->c_str());
   return true;
 }
 
 bool PrintCodeIrVisitor::Visit(lir::Method* method) {
   CHECK(method->index != dex::kNoIndex);
-  auto ir_method = dex_ir_->methods_map[method->index];
-  printf("%s.%s", ir_method->parent->Decl().c_str(), ir_method->name->c_str());
+  auto ir_method = method->ir_method;
+  printf("%s.%s%s",
+         ir_method->parent->Decl().c_str(),
+         ir_method->name->c_str(),
+         MethodDeclaration(ir_method->prototype).c_str());
   return true;
 }
 
@@ -204,7 +225,7 @@ bool PrintCodeIrVisitor::Visit(lir::LineNumber* line_number) {
 
 bool PrintCodeIrVisitor::Visit(lir::Label* label) {
   StartInstruction(label);
-  printf("Label_%d:\n", label->id);
+  printf("Label_%d:%s\n", label->id, (label->aligned ? " <aligned>" : ""));
   EndInstruction(label);
   return true;
 }
@@ -294,20 +315,10 @@ void DexDissasembler::DumpAllMethods() const {
 }
 
 void DexDissasembler::DumpMethod(ir::EncodedMethod* ir_method) const {
-  printf("\nmethod %s.%s(", ir_method->decl->parent->Decl().c_str(),
-         ir_method->decl->name->c_str());
-
-  auto proto = ir_method->decl->prototype;
-
-  if (proto->param_types != nullptr) {
-    bool first = true;
-    for (auto type : proto->param_types->types) {
-      printf("%s%s", (first ? "" : ", "), type->Decl().c_str());
-      first = false;
-    }
-  }
-
-  printf(") : %s\n{\n", proto->return_type->Decl().c_str());
+  printf("\nmethod %s.%s%s\n{\n",
+         ir_method->decl->parent->Decl().c_str(),
+         ir_method->decl->name->c_str(),
+         MethodDeclaration(ir_method->decl->prototype).c_str());
   Dissasemble(ir_method);
   printf("}\n");
 }
