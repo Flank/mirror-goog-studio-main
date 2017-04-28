@@ -126,7 +126,7 @@ public class BuildTypeAdaptor extends BaseConfigAdaptor implements CoreBuildType
     }
 
     @Override
-    public boolean isUseProguard() {
+    public Boolean isUseProguard() {
         return buildType.getUseProguard();
     }
 }

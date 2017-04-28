@@ -34,6 +34,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
 import org.gradle.api.Project;
 import org.gradle.testfixtures.ProjectBuilder;
 
@@ -88,6 +90,7 @@ public class TestProjects {
         @NonNull private String applicationId = "com.android.tools.test";
         @NonNull private Path projectDir;
         @NonNull private Plugin plugin = Plugin.APP;
+        @NonNull private Map<String, String> properties = new HashMap<>();
         @Nullable private Project parentProject = null;
         @Nullable private String projectName = "test";
 
@@ -110,6 +113,12 @@ public class TestProjects {
         @NonNull
         public Builder withProjectName(@NonNull String projectName) {
             this.projectName = projectName;
+            return this;
+        }
+
+        @NonNull
+        public Builder withProperty(@NonNull String property, @NonNull String value) {
+            this.properties.put(property, value);
             return this;
         }
 
@@ -146,6 +155,11 @@ public class TestProjects {
             }
 
             Project project = projectBuilder.build();
+
+            for (Map.Entry<String, String> entry : this.properties.entrySet()) {
+                project.getExtensions().add(entry.getKey(), entry.getValue());
+            }
+
             project.apply(ImmutableMap.of("plugin", plugin.getPluginName()));
 
             return project;

@@ -25,6 +25,8 @@ import com.android.build.gradle.internal.fixture.TestProjects;
 import com.android.build.gradle.internal.fixture.VariantChecker;
 import com.android.build.gradle.internal.fixture.VariantCheckers;
 import com.android.build.gradle.tasks.MergeResources;
+import com.android.builder.model.AndroidProject;
+import com.android.builder.model.OptionalCompilationStep;
 import groovy.util.Eval;
 import java.util.Arrays;
 import org.gradle.api.Project;
@@ -43,19 +45,23 @@ public class AppPluginDslTest {
     protected AppExtension android;
     protected Project project;
     protected VariantChecker checker;
+    private TestProjects.Plugin pluginType = TestProjects.Plugin.APP;
 
     @Before
     public void setUp() throws Exception {
-        TestProjects.Plugin myPlugin = TestProjects.Plugin.APP;
         project =
                 TestProjects.builder(projectDirectory.newFolder("project").toPath())
-                        .withPlugin(myPlugin)
+                        .withPlugin(pluginType)
                         .build();
 
-        android = (AppExtension) project.getExtensions().getByType(myPlugin.getExtensionClass());
+        initFieldsFromProject();
+    }
+
+    private void initFieldsFromProject() {
+        android = (AppExtension) project.getExtensions().getByType(pluginType.getExtensionClass());
         android.setCompileSdkVersion(TestConstants.COMPILE_SDK_VERSION);
         android.setBuildToolsVersion(TestConstants.BUILD_TOOL_VERSION);
-        plugin = (AppPlugin) project.getPlugins().getPlugin(myPlugin.getPluginClass());
+        plugin = (AppPlugin) project.getPlugins().getPlugin(pluginType.getPluginClass());
         checker = VariantCheckers.createAppChecker(android);
     }
 
@@ -298,6 +304,127 @@ public class AppPluginDslTest {
 
         BuildType releaseCopy = android.getBuildTypes().create("releaseCopy");
         releaseCopy.initWith(release);
+    }
+
+    @Test
+    public void testShrinkerChoice_oldDsl_instantRun() throws Exception {
+        project =
+                TestProjects.builder(projectDirectory.newFolder("oldDsl_instantRun").toPath())
+                        .withPlugin(pluginType)
+                        .withProperty(
+                                AndroidProject.PROPERTY_OPTIONAL_COMPILATION_STEPS,
+                                OptionalCompilationStep.INSTANT_DEV.name())
+                        .build();
+        initFieldsFromProject();
+
+        android.getBuildTypes().getByName("debug").setMinifyEnabled(true);
+
+        plugin.createAndroidTasks(false);
+
+        assertThat(project.getTasks().getNames())
+                .doesNotContain("transformClassesAndResourcesWithProguardForDebug");
+
+        assertThat(project.getTasks().getNames())
+                .contains("transformClassesWithAndroidGradleClassShrinkerForDebug");
+    }
+
+    @Test
+    public void testShrinkerChoice_oldDsl_override() throws Exception {
+        project =
+                TestProjects.builder(projectDirectory.newFolder("oldDsl_instantRun").toPath())
+                        .withPlugin(pluginType)
+                        .withProperty(
+                                AndroidProject.PROPERTY_OPTIONAL_COMPILATION_STEPS,
+                                OptionalCompilationStep.INSTANT_DEV.name())
+                        .build();
+        initFieldsFromProject();
+
+        BuildType debug = android.getBuildTypes().getByName("debug");
+        debug.setMinifyEnabled(true);
+        debug.setUseProguard(true);
+
+        plugin.createAndroidTasks(false);
+
+        // If the user insists on ProGuard, they get a warning a no shrinking at all.
+        assertThat(project.getTasks().getNames())
+                .doesNotContain("transformClassesAndResourcesWithProguardForDebug");
+
+        assertThat(project.getTasks().getNames())
+                .doesNotContain("transformClassesWithAndroidGradleClassShrinkerForDebug");
+    }
+
+    @Test
+    public void testShrinkerChoice_oldDsl_noInstantRun() throws Exception {
+        android.getBuildTypes().getByName("debug").setMinifyEnabled(true);
+
+        plugin.createAndroidTasks(false);
+
+        assertThat(project.getTasks().getNames())
+                .contains("transformClassesAndResourcesWithProguardForDebug");
+
+        assertThat(project.getTasks().getNames())
+                .doesNotContain("transformClassesWithAndroidGradleClassShrinkerForDebug");
+    }
+
+    @Test
+    public void testShrinkerChoice_newDsl_instantRun() throws Exception {
+        project =
+                TestProjects.builder(projectDirectory.newFolder("newDsl_instantRun").toPath())
+                        .withPlugin(pluginType)
+                        .withProperty(
+                                AndroidProject.PROPERTY_OPTIONAL_COMPILATION_STEPS,
+                                OptionalCompilationStep.INSTANT_DEV.name())
+                        .build();
+        initFieldsFromProject();
+
+        android.getBuildTypes().getByName("debug").getPostprocessing().setRemoveUnusedCode(true);
+
+        plugin.createAndroidTasks(false);
+
+        assertThat(project.getTasks().getNames())
+                .doesNotContain("transformClassesAndResourcesWithProguardForDebug");
+
+        assertThat(project.getTasks().getNames())
+                .contains("transformClassesWithAndroidGradleClassShrinkerForDebug");
+    }
+
+    @Test
+    public void testShrinkerChoice_newDsl_override() throws Exception {
+        project =
+                TestProjects.builder(projectDirectory.newFolder("newDsl_override").toPath())
+                        .withPlugin(pluginType)
+                        .withProperty(
+                                AndroidProject.PROPERTY_OPTIONAL_COMPILATION_STEPS,
+                                OptionalCompilationStep.INSTANT_DEV.name())
+                        .build();
+        initFieldsFromProject();
+
+        PostprocessingOptions postprocessing =
+                android.getBuildTypes().getByName("debug").getPostprocessing();
+        postprocessing.setRemoveUnusedCode(true);
+        postprocessing.setCodeShrinker("proguard");
+
+        plugin.createAndroidTasks(false);
+
+        // If the user insists on ProGuard, they get a warning a no shrinking at all.
+        assertThat(project.getTasks().getNames())
+                .doesNotContain("transformClassesAndResourcesWithProguardForDebug");
+
+        assertThat(project.getTasks().getNames())
+                .doesNotContain("transformClassesWithAndroidGradleClassShrinkerForDebug");
+    }
+
+    @Test
+    public void testShrinkerChoice_newDsl_noInstantRun() throws Exception {
+        android.getBuildTypes().getByName("debug").getPostprocessing().setRemoveUnusedCode(true);
+
+        plugin.createAndroidTasks(false);
+
+        assertThat(project.getTasks().getNames())
+                .contains("transformClassesAndResourcesWithProguardForDebug");
+
+        assertThat(project.getTasks().getNames())
+                .doesNotContain("transformClassesWithAndroidGradleClassShrinkerForDebug");
     }
 
     private void checkGeneratedDensities(String taskName, String... densities) {
