@@ -125,7 +125,9 @@ public interface AndroidProject {
     int MODEL_LEVEL_0_ORIGINAL = 0 ; // studio 1.0, no support for SyncIssue
     int MODEL_LEVEL_1_SYNC_ISSUE = 1; // studio 1.1+, with SyncIssue
     int MODEL_LEVEL_2_DONT_USE = 2; // Don't use this. Go level 1 to level 3 when ready.
-    int MODEL_LEVEL_LATEST = MODEL_LEVEL_2_DONT_USE;
+    int MODEL_LEVEL_3_VARIANT_OUTPUT_POST_BUILD =
+            3; // Model for 3.0 with no variant output in import sync model.
+    int MODEL_LEVEL_LATEST = MODEL_LEVEL_3_VARIANT_OUTPUT_POST_BUILD;
 
     int PROJECT_TYPE_APP = 0;
     int PROJECT_TYPE_LIBRARY = 1;
