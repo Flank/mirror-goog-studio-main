@@ -129,7 +129,7 @@ public class WaitableExecutor {
      */
     public synchronized <T> List<T> waitForTasksWithQuickFail(boolean cancelRemaining)
             throws InterruptedException {
-        List<T> results = Lists.newArrayListWithCapacity(getUnprocessedTasksCount());
+        List<T> results = Lists.newArrayListWithCapacity(futureSet.size());
 
         try {
             for (ForkJoinTask<?> future : futureSet) {
@@ -178,7 +178,7 @@ public class WaitableExecutor {
      */
     @NonNull
     public synchronized <T> List<TaskResult<T>> waitForAllTasks() throws InterruptedException {
-        List<TaskResult<T>> results = Lists.newArrayListWithCapacity(getUnprocessedTasksCount());
+        List<TaskResult<T>> results = Lists.newArrayListWithCapacity(futureSet.size());
         try {
             for (ForkJoinTask<?> future : futureSet) {
                 // Get the result from the task.
