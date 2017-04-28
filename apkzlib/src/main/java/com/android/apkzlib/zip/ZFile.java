@@ -1581,7 +1581,8 @@ public class ZFile implements Closeable {
                     MoreExecutors.directExecutor());
 
             ListenableFuture<CloseableByteSource> compressedByteSourceFuture =
-                    Futures.transform(result, CompressionResult::getSource);
+                    Futures.transform(
+                            result, CompressionResult::getSource, MoreExecutors.directExecutor());
             LazyDelegateByteSource compressedByteSource = new LazyDelegateByteSource(
                     compressedByteSourceFuture);
             return new ProcessedAndRawByteSources(source, compressedByteSource);
