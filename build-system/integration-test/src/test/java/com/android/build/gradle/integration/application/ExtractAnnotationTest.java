@@ -53,9 +53,6 @@ public class ExtractAnnotationTest {
 
     @Test
     public void checkExtractAnnotation() throws Exception {
-        // disable test on Windows, b.android.com/329605
-        Assume.assumeTrue(SdkConstants.CURRENT_PLATFORM != SdkConstants.PLATFORM_WINDOWS);
-
         File debugFileOutput = project.file("build/intermediates/annotations/debug");
         Zip classesJar = new Zip(project.file("build/intermediates/bundles/debug/classes.jar"));
         Zip file = new Zip(new File(debugFileOutput, "annotations.zip"));
