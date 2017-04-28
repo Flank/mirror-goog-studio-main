@@ -539,13 +539,13 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     }
 
     /**
-     * Determine if the feature module is the base feature split module.
+     * Determine if the feature module is the base feature module.
      *
-     * @return true if this feature module is the base feature split module. False otherwise.
+     * @return true if this feature module is the base feature module. False otherwise.
      */
     @Override
-    public boolean isBaseSplit() {
-        return globalScope.getExtension().getBaseSplit();
+    public boolean isBaseFeature() {
+        return globalScope.getExtension().getBaseFeature();
     }
 
     @NonNull
@@ -870,8 +870,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                         .getAnnotationProcessorConfiguration();
                 break;
             case FEATURE_CLASSPATH:
-                configuration =
-                        getVariantData().getVariantDependency().getFeatureSplitConfiguration();
+                configuration = getVariantData().getVariantDependency().getFeatureConfiguration();
                 break;
             default:
                 throw new RuntimeException("unknown ConfigType value");

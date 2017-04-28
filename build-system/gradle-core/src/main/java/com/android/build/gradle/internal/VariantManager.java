@@ -477,7 +477,8 @@ public class VariantManager implements VariantModel {
                             .addSourceSets(testVariantSourceSets)
                             .setFlavorSelection(extension.getFlavorSelection())
                             .setBaseSplit(
-                                    variantType == VariantType.FEATURE && extension.getBaseSplit());
+                                    variantType == VariantType.FEATURE
+                                            && extension.getBaseFeature());
 
             final VariantDependencies variantDep = builder.build();
             variantData.setVariantDependency(variantDep);
@@ -824,7 +825,7 @@ public class VariantManager implements VariantModel {
                         .setFlavorSelection(extension.getFlavorSelection())
                         .addSourceSets(variantSourceSets)
                         .setBaseSplit(
-                                variantType == VariantType.FEATURE && extension.getBaseSplit());
+                                variantType == VariantType.FEATURE && extension.getBaseFeature());
 
         final VariantDependencies variantDep = builder.build();
         variantData.setVariantDependency(variantDep);

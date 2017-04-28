@@ -187,8 +187,8 @@ public class AndroidConfigAdaptor implements com.android.build.gradle.AndroidCon
     }
 
     @Override
-    public Boolean getBaseSplit() {
-        return model.getBaseSplit();
+    public Boolean getBaseFeature() {
+        return model.getBaseFeature();
     }
 
     public ModelMap<FunctionalSourceSet> getSources() {

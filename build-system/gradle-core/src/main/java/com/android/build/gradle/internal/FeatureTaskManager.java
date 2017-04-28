@@ -97,7 +97,7 @@ public class FeatureTaskManager extends TaskManager {
         // Create all current streams (dependencies mostly at this point)
         createDependencyStreams(tasks, variantScope);
 
-        if (variantScope.isBaseSplit()) {
+        if (variantScope.isBaseFeature()) {
             // Base feature specific tasks.
             createFeatureApplicationIdWriterTask(tasks, variantScope);
             createFeatureIdsWriterTask(tasks, variantScope);
@@ -286,7 +286,7 @@ public class FeatureTaskManager extends TaskManager {
         }
 
         AndroidTask<? extends ManifestProcessorTask> mergeManifestsAndroidTask;
-        if (variantScope.isBaseSplit()) {
+        if (variantScope.isBaseFeature()) {
             // Base split. Merge all the dependent libraries and the other splits.
             mergeManifestsAndroidTask =
                     androidTasks.create(
@@ -408,7 +408,7 @@ public class FeatureTaskManager extends TaskManager {
             @NonNull MergeType sourceTaskOutputType,
             @NonNull String baseName) {
         // TODO: we need a better way to determine if we are dealing with a base split or not.
-        if (scope.isBaseSplit()) {
+        if (scope.isBaseFeature()) {
             // Base feature split.
             return super.createProcessAndroidResourcesConfigAction(
                     scope,

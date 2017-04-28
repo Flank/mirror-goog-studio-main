@@ -39,7 +39,7 @@ public class FeatureExtension extends LibraryExtension {
     private final DefaultDomainObjectSet<FeatureVariant> featureVariantList =
             new DefaultDomainObjectSet<FeatureVariant>(FeatureVariant.class);
 
-    private boolean isBaseSplit = false;
+    private boolean isBaseFeature = false;
 
     public FeatureExtension(
             @NonNull Project project,
@@ -83,16 +83,16 @@ public class FeatureExtension extends LibraryExtension {
         }
     }
 
-    public void baseSplit(boolean value) {
-        isBaseSplit = value;
+    public void baseFeature(boolean value) {
+        isBaseFeature = value;
     }
 
-    public void setBaseSplit(boolean value) {
-        baseSplit(value);
+    public void setBaseFeature(boolean value) {
+        baseFeature(value);
     }
 
     @Override
-    public Boolean getBaseSplit() {
-        return isBaseSplit;
+    public Boolean getBaseFeature() {
+        return isBaseFeature;
     }
 }

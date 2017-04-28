@@ -77,7 +77,7 @@ public class VariantDependencies {
     public static final String CONFIG_NAME_S_IMPLEMENTATION = "%sImplementation";
     public static final String CONFIG_NAME_RUNTIME_ONLY = "runtimeOnly";
     public static final String CONFIG_NAME_S_RUNTIME_ONLY = "%sRuntimeOnly";
-    public static final String CONFIG_NAME_FEATURE_SPLIT = "featureSplit";
+    public static final String CONFIG_NAME_FEATURE_SPLIT = "feature";
     public static final String CONFIG_NAME_PACKAGE_ID = "packageId";
 
     public static final class PublishedConfigurations {
@@ -118,7 +118,7 @@ public class VariantDependencies {
     @NonNull private final Map<AndroidTypeAttr, PublishedConfigurations> publishedConfigurations;
     @NonNull private final Configuration jackPluginConfiguration;
     @Nullable private final Configuration wearAppConfiguration;
-    @Nullable private final Configuration featureSplitConfiguration;
+    @Nullable private final Configuration featureConfiguration;
     @Nullable private final Configuration packageIdConfiguation;
     @Nullable private final Configuration manifestSplitConfiguration;
 
@@ -304,7 +304,7 @@ public class VariantDependencies {
 
             Map<AndroidTypeAttr, PublishedConfigurations> publishedConfigurations =
                     Maps.newHashMap();
-            Configuration featureSplit = null;
+            Configuration feature = null;
             Configuration packageId = null;
             Configuration manifestSplitElements = null;
 
@@ -357,27 +357,24 @@ public class VariantDependencies {
                             publishType,
                             new PublishedConfigurations(apiElements, runtimeElements, publishType));
 
-                    // if publish type is FEATURE then include the featureSplit config to consume
-                    // the list of featureSplit.
+                    // if publish type is FEATURE then include the feature config to consume the
+                    // list of feature.
                     if (publishType == AndroidTypeAttr.TYPE_FEATURE) {
                         if (baseSplit) {
                             // first the variant-specific configuration that will contain the
                             // the splits. It's per-variant to contain the right attribute.
                             // It'll be used to consume the manifest.
-                            featureSplit =
-                                    configurations.maybeCreate(variantName + "FeatureSplits");
-                            featureSplit.extendsFrom(
+                            feature = configurations.maybeCreate(variantName + "Feature");
+                            feature.extendsFrom(
                                     configurations.getByName(CONFIG_NAME_FEATURE_SPLIT));
-                            featureSplit.setDescription(
-                                    "Feature Split dependencies for the base Split");
-                            featureSplit.setCanBeConsumed(false);
-                            final AttributeContainer featureSplitAttributes =
-                                    featureSplit.getAttributes();
-                            featureSplitAttributes.attribute(
+                            feature.setDescription("Feature Split dependencies for the base Split");
+                            feature.setCanBeConsumed(false);
+                            final AttributeContainer featureAttributes = feature.getAttributes();
+                            featureAttributes.attribute(
                                     AndroidTypeAttr.ATTRIBUTE,
                                     AndroidTypeAttr.TYPE_FEATURE_MANIFEST);
                             applyVariantAttributes(
-                                    featureSplitAttributes, buildType, consumptionFlavorMap);
+                                    featureAttributes, buildType, consumptionFlavorMap);
 
                             // then the configuration to publish the packageId package
                             // this is not per-variant so detect if we already created it first
@@ -430,7 +427,7 @@ public class VariantDependencies {
                     annotationProcessor,
                     jackPlugin,
                     wearApp,
-                    featureSplit,
+                    feature,
                     packageId,
                     manifestSplitElements);
         }
@@ -537,7 +534,7 @@ public class VariantDependencies {
             @NonNull Configuration annotationProcessorConfiguration,
             @NonNull Configuration jackPluginConfiguration,
             @Nullable Configuration wearAppConfiguration,
-            @Nullable Configuration featureSplitConfiguration,
+            @Nullable Configuration featureConfiguration,
             @Nullable Configuration packageIdConfiguation,
             @Nullable Configuration manifestSplitConfiguration) {
         this.variantName = variantName;
@@ -548,7 +545,7 @@ public class VariantDependencies {
         this.annotationProcessorConfiguration = annotationProcessorConfiguration;
         this.jackPluginConfiguration = jackPluginConfiguration;
         this.wearAppConfiguration = wearAppConfiguration;
-        this.featureSplitConfiguration = featureSplitConfiguration;
+        this.featureConfiguration = featureConfiguration;
         this.packageIdConfiguation = packageIdConfiguation;
         this.manifestSplitConfiguration = manifestSplitConfiguration;
     }
@@ -602,8 +599,8 @@ public class VariantDependencies {
     }
 
     @Nullable
-    public Configuration getFeatureSplitConfiguration() {
-        return featureSplitConfiguration;
+    public Configuration getFeatureConfiguration() {
+        return featureConfiguration;
     }
 
     @Nullable
