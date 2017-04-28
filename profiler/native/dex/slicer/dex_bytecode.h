@@ -370,7 +370,7 @@ struct Instruction {
 };
 
 // "packed-switch-payload" format
-struct PackedSwitch {
+struct PackedSwitchPayload {
   u2 ident;
   u2 size;
   s4 first_key;
@@ -378,7 +378,7 @@ struct PackedSwitch {
 };
 
 // "sparse-switch-payload" format
-struct SparseSwitch {
+struct SparseSwitchPayload {
   u2 ident;
   u2 size;
   s4 data[];

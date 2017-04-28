@@ -355,7 +355,7 @@ void CodeIr::Dissasemble() {
   MergeInstructions(instructions, try_ends_);
 }
 
-PackedSwitch* CodeIr::DecodePackedSwitch(const dex::u2* /*ptr*/,
+PackedSwitchPayload* CodeIr::DecodePackedSwitch(const dex::u2* /*ptr*/,
                                          dex::u4 offset) {
   // actual decoding is delayed to FixupPackedSwitch()
   // (since the label offsets are relative to the referring
@@ -363,15 +363,15 @@ PackedSwitch* CodeIr::DecodePackedSwitch(const dex::u2* /*ptr*/,
   CHECK(offset % 2 == 0);
   auto& instr = packed_switches_[offset].instr;
   CHECK(instr == nullptr);
-  instr = Alloc<PackedSwitch>();
+  instr = Alloc<PackedSwitchPayload>();
   return instr;
 }
 
-void CodeIr::FixupPackedSwitch(PackedSwitch* instr, dex::u4 base_offset,
+void CodeIr::FixupPackedSwitch(PackedSwitchPayload* instr, dex::u4 base_offset,
                                const dex::u2* ptr) {
   CHECK(instr->targets.empty());
 
-  auto dex_packed_switch = reinterpret_cast<const dex::PackedSwitch*>(ptr);
+  auto dex_packed_switch = reinterpret_cast<const dex::PackedSwitchPayload*>(ptr);
   CHECK(dex_packed_switch->ident == dex::kPackedSwitchSignature);
 
   instr->first_key = dex_packed_switch->first_key;
@@ -381,7 +381,7 @@ void CodeIr::FixupPackedSwitch(PackedSwitch* instr, dex::u4 base_offset,
   }
 }
 
-SparseSwitch* CodeIr::DecodeSparseSwitch(const dex::u2* /*ptr*/,
+SparseSwitchPayload* CodeIr::DecodeSparseSwitch(const dex::u2* /*ptr*/,
                                          dex::u4 offset) {
   // actual decoding is delayed to FixupSparseSwitch()
   // (since the label offsets are relative to the referring
@@ -389,22 +389,22 @@ SparseSwitch* CodeIr::DecodeSparseSwitch(const dex::u2* /*ptr*/,
   CHECK(offset % 2 == 0);
   auto& instr = sparse_switches_[offset].instr;
   CHECK(instr == nullptr);
-  instr = Alloc<SparseSwitch>();
+  instr = Alloc<SparseSwitchPayload>();
   return instr;
 }
 
-void CodeIr::FixupSparseSwitch(SparseSwitch* instr, dex::u4 base_offset,
+void CodeIr::FixupSparseSwitch(SparseSwitchPayload* instr, dex::u4 base_offset,
                                const dex::u2* ptr) {
   CHECK(instr->switch_cases.empty());
 
-  auto dex_sparse_switch = reinterpret_cast<const dex::SparseSwitch*>(ptr);
+  auto dex_sparse_switch = reinterpret_cast<const dex::SparseSwitchPayload*>(ptr);
   CHECK(dex_sparse_switch->ident == dex::kSparseSwitchSignature);
 
   auto& data = dex_sparse_switch->data;
   auto& size = dex_sparse_switch->size;
 
   for (dex::u2 i = 0; i < size; ++i) {
-    SparseSwitch::SwitchCase switch_case = {};
+    SparseSwitchPayload::SwitchCase switch_case = {};
     switch_case.key = data[i];
     switch_case.target = GetLabel(base_offset + data[i + size]);
     instr->switch_cases.push_back(switch_case);

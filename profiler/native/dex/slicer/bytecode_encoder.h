@@ -40,8 +40,8 @@ class BytecodeEncoder : public Visitor {
  private:
   // the visitor interface
   virtual bool Visit(Bytecode* bytecode) override;
-  virtual bool Visit(PackedSwitch* packed_switch) override;
-  virtual bool Visit(SparseSwitch* sparse_switch) override;
+  virtual bool Visit(PackedSwitchPayload* packed_switch) override;
+  virtual bool Visit(SparseSwitchPayload* sparse_switch) override;
   virtual bool Visit(ArrayData* array_data) override;
   virtual bool Visit(Label* label) override;
   virtual bool Visit(DbgInfoHeader* dbg_header) override;
@@ -78,8 +78,8 @@ class BytecodeEncoder : public Visitor {
 
   // Keeping track of the switch payload instructions for late fixups
   // (map encoded bytecode offset -> LIR instruction)
-  std::map<dex::u4, const PackedSwitch*> packed_switches_;
-  std::map<dex::u4, const SparseSwitch*> sparse_switches_;
+  std::map<dex::u4, const PackedSwitchPayload*> packed_switches_;
+  std::map<dex::u4, const SparseSwitchPayload*> sparse_switches_;
 
   const InstructionsList& instructions_;
 };

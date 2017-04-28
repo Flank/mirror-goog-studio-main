@@ -16,6 +16,7 @@
 
 #include "experimental.h"
 #include "slicer/code_ir.h"
+#include "slicer/control_flow_graph.h"
 #include "slicer/dex_ir.h"
 #include "slicer/dex_ir_builder.h"
 #include "slicer/instrumentation.h"
@@ -28,10 +29,13 @@
 namespace experimental {
 
 // Rewrites every method through raising to code IR -> back to bytecode
+// (also stress the CFG creation)
 void FullRewrite(std::shared_ptr<ir::DexFile> dex_ir) {
   for (auto& ir_method : dex_ir->encoded_methods) {
     if (ir_method->code != nullptr) {
       lir::CodeIr code_ir(ir_method.get(), dex_ir);
+      lir::ControlFlowGraph cfg_compact(&code_ir, false);
+      lir::ControlFlowGraph cfg_verbose(&code_ir, true);
       code_ir.Assemble();
     }
   }

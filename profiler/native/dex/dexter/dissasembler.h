@@ -19,18 +19,20 @@
 #include "slicer/common.h"
 #include "slicer/code_ir.h"
 #include "slicer/dex_ir.h"
+#include "slicer/control_flow_graph.h"
 
 #include <memory>
 
 // Code IR formatting visitor
 class PrintCodeIrVisitor : public lir::Visitor {
  public:
-  PrintCodeIrVisitor(std::shared_ptr<ir::DexFile> dex_ir) : dex_ir_(dex_ir) {}
+  PrintCodeIrVisitor(std::shared_ptr<ir::DexFile> dex_ir, lir::ControlFlowGraph* cfg)
+      : dex_ir_(dex_ir), cfg_(cfg) {}
 
  private:
   virtual bool Visit(lir::Bytecode* bytecode) override;
-  virtual bool Visit(lir::PackedSwitch* packed_switch) override;
-  virtual bool Visit(lir::SparseSwitch* sparse_switch) override;
+  virtual bool Visit(lir::PackedSwitchPayload* packed_switch) override;
+  virtual bool Visit(lir::SparseSwitchPayload* sparse_switch) override;
   virtual bool Visit(lir::ArrayData* array_data) override;
   virtual bool Visit(lir::Label* label) override;
   virtual bool Visit(lir::CodeLocation* location) override;
@@ -50,14 +52,27 @@ class PrintCodeIrVisitor : public lir::Visitor {
   virtual bool Visit(lir::TryBlockBegin* try_begin) override;
   virtual bool Visit(lir::TryBlockEnd* try_end) override;
 
+  void StartInstruction(const lir::Instruction* instr);
+  void EndInstruction(const lir::Instruction* instr);
+
  private:
   std::shared_ptr<ir::DexFile> dex_ir_;
+  lir::ControlFlowGraph* cfg_ = nullptr;
+  size_t current_block_index_ = 0;
 };
 
 // A .dex bytecode dissasembler using lir::CodeIr
 class DexDissasembler {
  public:
-  explicit DexDissasembler(std::shared_ptr<ir::DexFile> dex_ir) : dex_ir_(dex_ir) {}
+  // The type of CFG (Control Flow Graph) used by the dissasembler:
+  //    None    - no CFG, plain listing
+  //    Compact - CFG with non-exceptional flow only
+  //    Verbose - CFG modeling the EH control flow too
+  enum class CfgType { None, Compact, Verbose };
+
+ public:
+  explicit DexDissasembler(std::shared_ptr<ir::DexFile> dex_ir, CfgType cfg_type = CfgType::None)
+      : dex_ir_(dex_ir), cfg_type_(cfg_type) {}
 
   DexDissasembler(const DexDissasembler&) = delete;
   DexDissasembler& operator=(const DexDissasembler&) = delete;
@@ -70,5 +85,6 @@ class DexDissasembler {
 
  private:
   std::shared_ptr<ir::DexFile> dex_ir_;
+  CfgType cfg_type_ = CfgType::None;
 };
 

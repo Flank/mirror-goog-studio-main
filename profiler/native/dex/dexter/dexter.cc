@@ -15,7 +15,6 @@
  */
 
 #include "dexter.h"
-#include "dissasembler.h"
 #include "experimental.h"
 #include "slicer/common.h"
 #include "slicer/scopeguard.h"
@@ -23,10 +22,12 @@
 #include "slicer/writer.h"
 #include "slicer/chronometer.h"
 
+#include <getopt.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <memory>
 #include <sstream>
+#include <map>
 
 // Converts a class name to a type descriptor
 // (ex. "java.lang.String" to "Ljava/lang/String;")
@@ -55,10 +56,33 @@ void Dexter::PrintHelp() {
 }
 
 int Dexter::Run() {
+  // names for the CFG options
+  const std::map<std::string, DexDissasembler::CfgType> cfg_type_names = {
+    { "none", DexDissasembler::CfgType::None },
+    { "compact", DexDissasembler::CfgType::Compact },
+    { "verbose", DexDissasembler::CfgType::Verbose },
+  };
+
+  // long cmdline options
+  enum { kBuildCFG = 1 };
+  const option long_options[] = {
+    { "cfg", required_argument, 0, kBuildCFG },
+    { 0, 0, 0, 0}
+  };
+
   bool show_help = false;
   int opt = 0;
-  while ((opt = ::getopt(argc_, argv_, "hlsvdmo:e:x:")) != -1) {
+  int opt_index = 0;
+  while ((opt = ::getopt_long(argc_, argv_, "hlsvdmo:e:x:", long_options, &opt_index)) != -1) {
     switch (opt) {
+      case kBuildCFG: {
+        auto it = cfg_type_names.find(::optarg);
+        if (it == cfg_type_names.end()) {
+          printf("Invalid --cfg type\n");
+          show_help = true;
+        }
+        cfg_type_ = it->second;
+      } break;
       case 's':
         stats_ = true;
         break;
@@ -360,7 +384,7 @@ int Dexter::ProcessDex() {
 
   // dissasemble method bodies?
   if (dissasemble_) {
-    DexDissasembler disasm(dex_ir);
+    DexDissasembler disasm(dex_ir, cfg_type_);
     disasm.DumpAllMethods();
   }
 
