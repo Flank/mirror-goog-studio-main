@@ -28,7 +28,7 @@
     <global id="instantAppActivityOrder" type="string" value="1" />
     <global id="instantAppActivityHost" type="string" value="instantapp.example.com" />
     <global id="instantAppActivityRoute" type="string" value="" />
-    <global id="baseLibResOut" type="string" value="${escapeXmlAttribute(baseLibResDir!'./src/main/res')}" />
+    <global id="baseFeatureResOut" type="string" value="${escapeXmlAttribute(baseFeatureResDir!'./src/main/res')}" />
 
     <global id="manifestOut" value="${manifestDir}" />
     <global id="buildVersion" value="${buildApi}" />

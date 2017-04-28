@@ -5,5 +5,5 @@ apply plugin: 'com.android.application'
 
 dependencies {
     implementation project(':${projectName}')
-    implementation project(':${baseLibName}')
+    implementation project(':${baseFeatureName}')
 }
