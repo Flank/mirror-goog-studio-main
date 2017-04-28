@@ -2,8 +2,8 @@
 <template
     format="5"
     revision="5"
-    name="Instant Application"
-    description="Creates a new Android Instant App Application module.">
+    name="Instant App"
+    description="Creates a new Android Instant App module.">
 
     <category value="Application" />
 
