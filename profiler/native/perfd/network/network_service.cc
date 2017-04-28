@@ -35,8 +35,8 @@ namespace {
 // Network collector for device data uses dumpsys command, while network
 // collector for an app reads from system file. Sampling rates are chosen
 // based on how heavyweight each collector is expected to be.
-static const int32_t kDeviceSampleRateMs = 400;
-static const int32_t kAppSampleRateMs = 200;
+static const int32_t kDeviceSampleRateMs = 500;
+static const int32_t kAppSampleRateMs = 500;
 }
 
 NetworkServiceImpl::NetworkServiceImpl(NetworkCache *network_cache)

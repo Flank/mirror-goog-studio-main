@@ -30,7 +30,7 @@ namespace profiler {
 class NetStatsFileReader final {
  public:
   NetStatsFileReader(const std::string &uid, const std::string &file) :
-    uid_(uid), file_(file) {}
+    uid_(atoi(uid.c_str())), file_(file) {}
 
   // Reparse the target stats file, updating the local copy of data values read
   // from it
@@ -43,7 +43,8 @@ class NetStatsFileReader final {
   int64_t bytes_rx() { return bytes_rx_; }
 
  private:
-  const std::string uid_;
+  // Unsigned integer that is app uid for parsing file to get traffic bytes.
+  const uint32_t uid_;
   const std::string file_;
 
   int64_t bytes_tx_{0};

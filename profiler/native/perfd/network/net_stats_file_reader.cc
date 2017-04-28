@@ -15,40 +15,45 @@
  */
 #include "net_stats_file_reader.h"
 
-#include "utils/file_reader.h"
-#include "utils/tokenizer.h"
+#include <inttypes.h>
 
 namespace profiler {
 
 void NetStatsFileReader::Refresh() {
+  FILE *fp = fopen(file_.c_str(), "r");
+  if (fp == NULL) {
+    return;
+  }
+
   bytes_tx_ = 0;
   bytes_rx_ = 0;
 
-  std::vector<std::string> lines;
-  FileReader::Read(file_, &lines);
+  // Buffer length 512 is the maximum line length of formatted proc stat file.
+  // An example in opensource code is
+  // platform/frameworks/base/core/jni/android_net_TrafficStats.cpp
+  char buffer[512];
+  char iface[64];
 
-  for (const std::string &line : lines) {
-    Tokenizer t(line);
-    // Line, broken into tokens, with tokens we care about |highlighted|:
-    // idx iface acct_tag_hex |uid| cnt_set |rx_bytes| rx_packets |tx_bytes|
-    // Currently, we are not only sampling the user's traffic but also the
-    // bytes sent between agent <-> perfd, which to the user is noise. Here,
-    // we ignore the bytes sent on the loopback device to avoid counting such
-    // traffic. We agree as of right now that, users care about traffic from
-    // outside much more than inter-process traffic.
-    std::string str;
-    if (t.SkipTokens(1) && t.GetNextToken(&str) && str != "lo" &&
-        t.SkipTokens(1) && t.GetNextToken(&str) && str == uid_) {
-      std::string rx_str;
-      std::string tx_str;
-      if (t.SkipTokens(1) && t.GetNextToken(&rx_str) && t.SkipTokens(1) &&
-          t.GetNextToken(&tx_str)) {
-        // TODO: Use std::stoll() after we use libc++, and remove '.c_str()'.
-        bytes_tx_ += atol(tx_str.c_str());
-        bytes_rx_ += atol(rx_str.c_str());
-      }
+  uint32_t idx, uid, set;
+  uint64_t tag, rx_bytes, rx_packets, tx_bytes;
+
+  // Line, broken into tokens, with tokens we care about |highlighted|:
+  // idx iface acct_tag_hex |uid| cnt_set |rx_bytes| rx_packets |tx_bytes|
+  // Currently, we are not only sampling the user's traffic but also the
+  // bytes sent between agent <-> perfd, which to the user is noise. Here,
+  // we ignore the bytes sent on the loopback device to avoid counting such
+  // traffic. We agree as of right now that, users care about traffic from
+  // outside much more than inter-process traffic.
+  while(fgets(buffer, sizeof(buffer), fp) != NULL) {
+    if (sscanf(buffer,
+               "%" SCNu32 " %31s 0x%" SCNx64 " %u %u %" SCNu64 " %" SCNu64 " %"
+               SCNu64, &idx, iface, &tag, &uid, &set, &rx_bytes, &rx_packets,
+               &tx_bytes) == 8 && uid_ == uid && strcmp("lo", iface) != 0) {
+      bytes_tx_ += tx_bytes;
+      bytes_rx_ += rx_bytes;
     }
   }
+  fclose(fp);
 }
 
 }  // namespace profiler
