@@ -1,5 +1,5 @@
 
-method Base.<init>() : void
+method Base.<init>():void
 {
 	.src "entryHooks.java"
 	.line 27
@@ -8,11 +8,11 @@ method Base.<init>() : void
 	    0| move-object v0, v2
 	.local v0, "this", Base
 	    1| move-object v1, v0
-	    2| invoke-direct {v1}, java.lang.Object.<init>
+	    2| invoke-direct {v1}, java.lang.Object.<init>():void
 	    5| return-void
 }
 
-method Base.foo(int, java.lang.String) : int
+method Base.foo(int, java.lang.String):int
 {
 	.params "?", "?"
 	.src "entryHooks.java"
@@ -34,7 +34,7 @@ method Base.foo(int, java.lang.String) : int
 	   12| move-object v6, v9
 	   13| const/4 v7, #+0 (0x00000000 | 0.00000)
 	   14| move v8, v1
-	   15| invoke-static {v8}, java.lang.Integer.valueOf
+	   15| invoke-static {v8}, java.lang.Integer.valueOf(int):java.lang.Integer
 	   18| move-result-object v8
 	   19| aput-object v8, v6, v7
 	   21| move-object v9, v5
@@ -43,7 +43,7 @@ method Base.foo(int, java.lang.String) : int
 	   24| const/4 v7, #+1 (0x00000001 | 1.40130e-45)
 	   25| move-object v8, v2
 	   26| aput-object v8, v6, v7
-	   28| invoke-virtual {v3,v4,v5}, java.io.PrintStream.printf
+	   28| invoke-virtual {v3,v4,v5}, java.io.PrintStream.printf(java.lang.String, java.lang.Object[]):java.io.PrintStream
 	   31| move-result-object v3
 	.line 32
 	   32| move v3, v1
@@ -52,7 +52,7 @@ method Base.foo(int, java.lang.String) : int
 	   34| return v0
 }
 
-method Derived.<init>() : void
+method Derived.<init>():void
 {
 	.src "entryHooks.java"
 	.line 36
@@ -61,11 +61,11 @@ method Derived.<init>() : void
 	    0| move-object v0, v2
 	.local v0, "this", Derived
 	    1| move-object v1, v0
-	    2| invoke-direct {v1}, Base.<init>
+	    2| invoke-direct {v1}, Base.<init>():void
 	    5| return-void
 }
 
-method Derived.foo(int, java.lang.String) : int
+method Derived.foo(int, java.lang.String):int
 {
 	.params "?", "?"
 	.src "entryHooks.java"
@@ -87,7 +87,7 @@ method Derived.foo(int, java.lang.String) : int
 	   12| move-object v6, v9
 	   13| const/4 v7, #+0 (0x00000000 | 0.00000)
 	   14| move v8, v1
-	   15| invoke-static {v8}, java.lang.Integer.valueOf
+	   15| invoke-static {v8}, java.lang.Integer.valueOf(int):java.lang.Integer
 	   18| move-result-object v8
 	   19| aput-object v8, v6, v7
 	   21| move-object v9, v5
@@ -96,7 +96,7 @@ method Derived.foo(int, java.lang.String) : int
 	   24| const/4 v7, #+1 (0x00000001 | 1.40130e-45)
 	   25| move-object v8, v2
 	   26| aput-object v8, v6, v7
-	   28| invoke-virtual {v3,v4,v5}, java.io.PrintStream.printf
+	   28| invoke-virtual {v3,v4,v5}, java.io.PrintStream.printf(java.lang.String, java.lang.Object[]):java.io.PrintStream
 	   31| move-result-object v3
 	.line 41
 	   32| move v3, v1
@@ -107,7 +107,7 @@ method Derived.foo(int, java.lang.String) : int
 	   37| return v0
 }
 
-method Target.<init>() : void
+method Target.<init>():void
 {
 	.src "entryHooks.java"
 	.line 45
@@ -116,11 +116,11 @@ method Target.<init>() : void
 	    0| move-object v0, v2
 	.local v0, "this", Target
 	    1| move-object v1, v0
-	    2| invoke-direct {v1}, java.lang.Object.<init>
+	    2| invoke-direct {v1}, java.lang.Object.<init>():void
 	    5| return-void
 }
 
-method Target.main(java.lang.String[]) : void
+method Target.main(java.lang.String[]):void
 {
 	.params "?"
 	.src "entryHooks.java"
@@ -131,7 +131,7 @@ method Target.main(java.lang.String[]) : void
 	.local v0, "args", java.lang.String[]
 	    1| sget-object v1, java.lang.System.out
 	    3| const-string v2, "Hello, world!"
-	    5| invoke-virtual {v1,v2}, java.io.PrintStream.println
+	    5| invoke-virtual {v1,v2}, java.io.PrintStream.println(java.lang.String):void
 	.line 52
 	    8| sget-object v1, java.lang.System.out
 	   10| const-string v2, "final = %d\n"
@@ -141,22 +141,22 @@ method Target.main(java.lang.String[]) : void
 	   16| move-object v3, v7
 	   17| move-object v4, v7
 	   18| const/4 v5, #+0 (0x00000000 | 0.00000)
-	   19| invoke-static {}, Target.test
+	   19| invoke-static {}, Target.test():int
 	   22| move-result v6
-	   23| invoke-static {v6}, java.lang.Integer.valueOf
+	   23| invoke-static {v6}, java.lang.Integer.valueOf(int):java.lang.Integer
 	   26| move-result-object v6
 	   27| aput-object v6, v4, v5
-	   29| invoke-virtual {v1,v2,v3}, java.io.PrintStream.printf
+	   29| invoke-virtual {v1,v2,v3}, java.io.PrintStream.printf(java.lang.String, java.lang.Object[]):java.io.PrintStream
 	   32| move-result-object v1
 	.line 53
 	   33| sget-object v1, java.lang.System.out
 	   35| const-string v2, "Good bye!"
-	   37| invoke-virtual {v1,v2}, java.io.PrintStream.println
+	   37| invoke-virtual {v1,v2}, java.io.PrintStream.println(java.lang.String):void
 	.line 54
 	   40| return-void
 }
 
-method Target.test() : int
+method Target.test():int
 {
 	.src "entryHooks.java"
 	.line 58
@@ -166,7 +166,7 @@ method Target.test() : int
 	    2| move-object v4, v1
 	    3| move-object v1, v4
 	    4| move-object v2, v4
-	    5| invoke-direct {v2}, Target.<init>
+	    5| invoke-direct {v2}, Target.<init>():void
 	    8| move-object v0, v1
 	.line 59
 	.local v0, "obj", Target
@@ -175,20 +175,20 @@ method Target.test() : int
 	   12| move-object v4, v2
 	   13| move-object v2, v4
 	   14| move-object v3, v4
-	   15| invoke-direct {v3}, Derived.<init>
+	   15| invoke-direct {v3}, Derived.<init>():void
 	   18| iput-object v2, v1, Target.test
 	.line 60
 	   20| move-object v1, v0
 	   21| const/4 v2, #+3 (0x00000003 | 4.20390e-45)
 	   22| const-string v3, "Testing..."
-	   24| invoke-virtual {v1,v2,v3}, Target.foo
+	   24| invoke-virtual {v1,v2,v3}, Target.foo(int, java.lang.String):int
 	   27| move-result v1
 	   28| move v0, v1
 	.end_local v0
 	   29| return v0
 }
 
-method Target.foo(int) : int
+method Target.foo(int):int
 {
 	.params "?"
 	.src "entryHooks.java"
@@ -205,7 +205,7 @@ method Target.foo(int) : int
 	    4| return v0
 }
 
-method Target.foo(int, int) : int
+method Target.foo(int, int):int
 {
 	.params "?", "?"
 	.src "entryHooks.java"
@@ -224,14 +224,14 @@ method Target.foo(int, int) : int
 	    5| return v0
 }
 
-method Target.foo(int, java.lang.String) : int
+method Target.foo(int, java.lang.String):int
 {
 	.params "?", "?"
 	.src "entryHooks.java"
 	.line 65
 	.prologue_end
 	.line 65
-	    0| invoke-static/range {v9..v11}, Tracer.onFooEntry
+	    0| invoke-static/range {v9..v11}, Tracer.onFooEntry(Target, int, java.lang.String):void
 	    3| move-object v0, v9
 	.local v0, "this", Target
 	    4| move v1, v10
@@ -255,7 +255,7 @@ Label_1:
 	   16| iget-object v6, v6, Target.test
 	   18| move v7, v4
 	   19| move-object v8, v2
-	   20| invoke-static {v6,v7,v8}, Tracer.wrapFoo
+	   20| invoke-static {v6,v7,v8}, Tracer.wrapFoo(Base, int, java.lang.String):int
 	   23| move-result v6
 	   24| add-int/2addr v5, v6
 	   25| move v3, v5
@@ -267,12 +267,12 @@ Label_2:
 	   30| move v5, v3
 	   31| move v0, v5
 	.end_local v0
-	   32| invoke-static/range {v0..v0}, Tracer.onFooExit
+	   32| invoke-static/range {v0..v0}, Tracer.onFooExit(int):int
 	   35| move-result v0
 	   36| return v0
 }
 
-method Target.foo(int, java.lang.String, java.lang.String) : int
+method Target.foo(int, java.lang.String, java.lang.String):int
 {
 	.params "?", "?", "?"
 	.src "entryHooks.java"
@@ -293,7 +293,7 @@ method Target.foo(int, java.lang.String, java.lang.String) : int
 	    6| return v0
 }
 
-method Target.foo(int, java.lang.String[]) : int
+method Target.foo(int, java.lang.String[]):int
 {
 	.params "?", "?"
 	.src "entryHooks.java"
@@ -312,14 +312,14 @@ method Target.foo(int, java.lang.String[]) : int
 	    5| return v0
 }
 
-method Target.foo(int, java.lang.String[][]) : java.lang.Integer
+method Target.foo(int, java.lang.String[][]):java.lang.Integer
 {
 	.params "?", "?"
 	.src "entryHooks.java"
 	.line 78
 	.prologue_end
 	.line 78
-	    0| invoke-static/range {v4..v6}, Tracer.onFooEntry
+	    0| invoke-static/range {v4..v6}, Tracer.onFooEntry(Target, int, java.lang.String[][]):void
 	    3| move-object v0, v4
 	.local v0, "this", Target
 	    4| move v1, v5
@@ -327,16 +327,16 @@ method Target.foo(int, java.lang.String[][]) : java.lang.Integer
 	    5| move-object v2, v6
 	.local v2, "msgs", java.lang.String[][]
 	    6| const/4 v3, #+5 (0x00000005 | 7.00649e-45)
-	    7| invoke-static {v3}, java.lang.Integer.valueOf
+	    7| invoke-static {v3}, java.lang.Integer.valueOf(int):java.lang.Integer
 	   10| move-result-object v3
 	   11| move-object v0, v3
 	.end_local v0
-	   12| invoke-static/range {v0..v0}, Tracer.onFooExit
+	   12| invoke-static/range {v0..v0}, Tracer.onFooExit(java.lang.Integer):java.lang.Integer
 	   15| move-result-object v0
 	   16| return-object v0
 }
 
-method Target.foo() : void
+method Target.foo():void
 {
 	.src "entryHooks.java"
 	.line 73
@@ -345,7 +345,7 @@ method Target.foo() : void
 	    0| return-void
 }
 
-method Tracer.<init>() : void
+method Tracer.<init>():void
 {
 	.src "entryHooks.java"
 	.line 2
@@ -354,11 +354,11 @@ method Tracer.<init>() : void
 	    0| move-object v0, v2
 	.local v0, "this", Tracer
 	    1| move-object v1, v0
-	    2| invoke-direct {v1}, java.lang.Object.<init>
+	    2| invoke-direct {v1}, java.lang.Object.<init>():void
 	    5| return-void
 }
 
-method Tracer.onEntry(java.lang.String) : void
+method Tracer.onEntry(java.lang.String):void
 {
 	.params "?"
 	.src "entryHooks.java"
@@ -372,24 +372,24 @@ method Tracer.onEntry(java.lang.String) : void
 	    5| move-object v4, v2
 	    6| move-object v2, v4
 	    7| move-object v3, v4
-	    8| invoke-direct {v3}, java.lang.StringBuilder.<init>
+	    8| invoke-direct {v3}, java.lang.StringBuilder.<init>():void
 	   11| const-string v3, "OnEntry("
-	   13| invoke-virtual {v2,v3}, java.lang.StringBuilder.append
+	   13| invoke-virtual {v2,v3}, java.lang.StringBuilder.append(java.lang.String):java.lang.StringBuilder
 	   16| move-result-object v2
 	   17| move-object v3, v0
-	   18| invoke-virtual {v2,v3}, java.lang.StringBuilder.append
+	   18| invoke-virtual {v2,v3}, java.lang.StringBuilder.append(java.lang.String):java.lang.StringBuilder
 	   21| move-result-object v2
 	   22| const-string v3, ")"
-	   24| invoke-virtual {v2,v3}, java.lang.StringBuilder.append
+	   24| invoke-virtual {v2,v3}, java.lang.StringBuilder.append(java.lang.String):java.lang.StringBuilder
 	   27| move-result-object v2
-	   28| invoke-virtual {v2}, java.lang.StringBuilder.toString
+	   28| invoke-virtual {v2}, java.lang.StringBuilder.toString():java.lang.String
 	   31| move-result-object v2
-	   32| invoke-virtual {v1,v2}, java.io.PrintStream.println
+	   32| invoke-virtual {v1,v2}, java.io.PrintStream.println(java.lang.String):void
 	.line 7
 	   35| return-void
 }
 
-method Tracer.onFooEntry(Target, int, java.lang.String) : void
+method Tracer.onFooEntry(Target, int, java.lang.String):void
 {
 	.params "?", "?", "?"
 	.src "entryHooks.java"
@@ -417,7 +417,7 @@ method Tracer.onFooEntry(Target, int, java.lang.String) : void
 	   19| move-object v6, v9
 	   20| const/4 v7, #+1 (0x00000001 | 1.40130e-45)
 	   21| move v8, v1
-	   22| invoke-static {v8}, java.lang.Integer.valueOf
+	   22| invoke-static {v8}, java.lang.Integer.valueOf(int):java.lang.Integer
 	   25| move-result-object v8
 	   26| aput-object v8, v6, v7
 	   28| move-object v9, v5
@@ -426,13 +426,13 @@ method Tracer.onFooEntry(Target, int, java.lang.String) : void
 	   31| const/4 v7, #+2 (0x00000002 | 2.80260e-45)
 	   32| move-object v8, v2
 	   33| aput-object v8, v6, v7
-	   35| invoke-virtual {v3,v4,v5}, java.io.PrintStream.printf
+	   35| invoke-virtual {v3,v4,v5}, java.io.PrintStream.printf(java.lang.String, java.lang.Object[]):java.io.PrintStream
 	   38| move-result-object v3
 	.line 12
 	   39| return-void
 }
 
-method Tracer.onFooExit(int) : int
+method Tracer.onFooExit(int):int
 {
 	.params "?"
 	.src "entryHooks.java"
@@ -450,10 +450,10 @@ method Tracer.onFooExit(int) : int
 	   10| move-object v4, v7
 	   11| const/4 v5, #+0 (0x00000000 | 0.00000)
 	   12| move v6, v0
-	   13| invoke-static {v6}, java.lang.Integer.valueOf
+	   13| invoke-static {v6}, java.lang.Integer.valueOf(int):java.lang.Integer
 	   16| move-result-object v6
 	   17| aput-object v6, v4, v5
-	   19| invoke-virtual {v1,v2,v3}, java.io.PrintStream.printf
+	   19| invoke-virtual {v1,v2,v3}, java.io.PrintStream.printf(java.lang.String, java.lang.Object[]):java.io.PrintStream
 	   22| move-result-object v1
 	.line 17
 	   23| move v1, v0
@@ -464,7 +464,7 @@ method Tracer.onFooExit(int) : int
 	   29| return v0
 }
 
-method Tracer.wrapFoo(Base, int, java.lang.String) : int
+method Tracer.wrapFoo(Base, int, java.lang.String):int
 {
 	.params "?", "?", "?"
 	.src "entryHooks.java"
@@ -486,9 +486,9 @@ method Tracer.wrapFoo(Base, int, java.lang.String) : int
 	   12| move-object v6, v9
 	   13| const/4 v7, #+0 (0x00000000 | 0.00000)
 	   14| move-object v8, v0
-	   15| invoke-virtual {v8}, java.lang.Object.getClass
+	   15| invoke-virtual {v8}, java.lang.Object.getClass():java.lang.Class
 	   18| move-result-object v8
-	   19| invoke-virtual {v8}, java.lang.Class.getName
+	   19| invoke-virtual {v8}, java.lang.Class.getName():java.lang.String
 	   22| move-result-object v8
 	   23| aput-object v8, v6, v7
 	   25| move-object v9, v5
@@ -496,7 +496,7 @@ method Tracer.wrapFoo(Base, int, java.lang.String) : int
 	   27| move-object v6, v9
 	   28| const/4 v7, #+1 (0x00000001 | 1.40130e-45)
 	   29| move v8, v1
-	   30| invoke-static {v8}, java.lang.Integer.valueOf
+	   30| invoke-static {v8}, java.lang.Integer.valueOf(int):java.lang.Integer
 	   33| move-result-object v8
 	   34| aput-object v8, v6, v7
 	   36| move-object v9, v5
@@ -505,13 +505,13 @@ method Tracer.wrapFoo(Base, int, java.lang.String) : int
 	   39| const/4 v7, #+2 (0x00000002 | 2.80260e-45)
 	   40| move-object v8, v2
 	   41| aput-object v8, v6, v7
-	   43| invoke-virtual {v3,v4,v5}, java.io.PrintStream.printf
+	   43| invoke-virtual {v3,v4,v5}, java.io.PrintStream.printf(java.lang.String, java.lang.Object[]):java.io.PrintStream
 	   46| move-result-object v3
 	.line 23
 	   47| move-object v3, v0
 	   48| move v4, v1
 	   49| move-object v5, v2
-	   50| invoke-virtual {v3,v4,v5}, Base.foo
+	   50| invoke-virtual {v3,v4,v5}, Base.foo(int, java.lang.String):int
 	   53| move-result v3
 	   54| const/16 v4, #+10 (0x0000000a | 1.40130e-44)
 	   56| add-int/lit8 v3, v3, #+10 (0x0000000a | 1.40130e-44)

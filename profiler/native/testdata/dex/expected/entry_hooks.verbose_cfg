@@ -1,5 +1,5 @@
 
-method Base.<init>() : void
+method Base.<init>():void
 {
 ............................. begin block 1 .............................
 	.src "entryHooks.java"
@@ -9,14 +9,14 @@ method Base.<init>() : void
 	    0| move-object v0, v2
 	.local v0, "this", Base
 	    1| move-object v1, v0
-	    2| invoke-direct {v1}, java.lang.Object.<init>
+	    2| invoke-direct {v1}, java.lang.Object.<init>():void
 .............................. end block 1 ..............................
 ............................. begin block 2 .............................
 	    5| return-void
 .............................. end block 2 ..............................
 }
 
-method Base.foo(int, java.lang.String) : int
+method Base.foo(int, java.lang.String):int
 {
 ............................. begin block 1 .............................
 	.params "?", "?"
@@ -45,7 +45,7 @@ method Base.foo(int, java.lang.String) : int
 	   12| move-object v6, v9
 	   13| const/4 v7, #+0 (0x00000000 | 0.00000)
 	   14| move v8, v1
-	   15| invoke-static {v8}, java.lang.Integer.valueOf
+	   15| invoke-static {v8}, java.lang.Integer.valueOf(int):java.lang.Integer
 .............................. end block 4 ..............................
 ............................. begin block 5 .............................
 	   18| move-result-object v8
@@ -60,7 +60,7 @@ method Base.foo(int, java.lang.String) : int
 	   26| aput-object v8, v6, v7
 .............................. end block 6 ..............................
 ............................. begin block 7 .............................
-	   28| invoke-virtual {v3,v4,v5}, java.io.PrintStream.printf
+	   28| invoke-virtual {v3,v4,v5}, java.io.PrintStream.printf(java.lang.String, java.lang.Object[]):java.io.PrintStream
 .............................. end block 7 ..............................
 ............................. begin block 8 .............................
 	   31| move-result-object v3
@@ -72,7 +72,7 @@ method Base.foo(int, java.lang.String) : int
 .............................. end block 8 ..............................
 }
 
-method Derived.<init>() : void
+method Derived.<init>():void
 {
 ............................. begin block 1 .............................
 	.src "entryHooks.java"
@@ -82,14 +82,14 @@ method Derived.<init>() : void
 	    0| move-object v0, v2
 	.local v0, "this", Derived
 	    1| move-object v1, v0
-	    2| invoke-direct {v1}, Base.<init>
+	    2| invoke-direct {v1}, Base.<init>():void
 .............................. end block 1 ..............................
 ............................. begin block 2 .............................
 	    5| return-void
 .............................. end block 2 ..............................
 }
 
-method Derived.foo(int, java.lang.String) : int
+method Derived.foo(int, java.lang.String):int
 {
 ............................. begin block 1 .............................
 	.params "?", "?"
@@ -118,7 +118,7 @@ method Derived.foo(int, java.lang.String) : int
 	   12| move-object v6, v9
 	   13| const/4 v7, #+0 (0x00000000 | 0.00000)
 	   14| move v8, v1
-	   15| invoke-static {v8}, java.lang.Integer.valueOf
+	   15| invoke-static {v8}, java.lang.Integer.valueOf(int):java.lang.Integer
 .............................. end block 4 ..............................
 ............................. begin block 5 .............................
 	   18| move-result-object v8
@@ -133,7 +133,7 @@ method Derived.foo(int, java.lang.String) : int
 	   26| aput-object v8, v6, v7
 .............................. end block 6 ..............................
 ............................. begin block 7 .............................
-	   28| invoke-virtual {v3,v4,v5}, java.io.PrintStream.printf
+	   28| invoke-virtual {v3,v4,v5}, java.io.PrintStream.printf(java.lang.String, java.lang.Object[]):java.io.PrintStream
 .............................. end block 7 ..............................
 ............................. begin block 8 .............................
 	   31| move-result-object v3
@@ -147,7 +147,7 @@ method Derived.foo(int, java.lang.String) : int
 .............................. end block 8 ..............................
 }
 
-method Target.<init>() : void
+method Target.<init>():void
 {
 ............................. begin block 1 .............................
 	.src "entryHooks.java"
@@ -157,14 +157,14 @@ method Target.<init>() : void
 	    0| move-object v0, v2
 	.local v0, "this", Target
 	    1| move-object v1, v0
-	    2| invoke-direct {v1}, java.lang.Object.<init>
+	    2| invoke-direct {v1}, java.lang.Object.<init>():void
 .............................. end block 1 ..............................
 ............................. begin block 2 .............................
 	    5| return-void
 .............................. end block 2 ..............................
 }
 
-method Target.main(java.lang.String[]) : void
+method Target.main(java.lang.String[]):void
 {
 ............................. begin block 1 .............................
 	.params "?"
@@ -180,7 +180,7 @@ method Target.main(java.lang.String[]) : void
 	    3| const-string v2, "Hello, world!"
 .............................. end block 2 ..............................
 ............................. begin block 3 .............................
-	    5| invoke-virtual {v1,v2}, java.io.PrintStream.println
+	    5| invoke-virtual {v1,v2}, java.io.PrintStream.println(java.lang.String):void
 .............................. end block 3 ..............................
 ............................. begin block 4 .............................
 	.line 52
@@ -198,18 +198,18 @@ method Target.main(java.lang.String[]) : void
 	   16| move-object v3, v7
 	   17| move-object v4, v7
 	   18| const/4 v5, #+0 (0x00000000 | 0.00000)
-	   19| invoke-static {}, Target.test
+	   19| invoke-static {}, Target.test():int
 .............................. end block 7 ..............................
 ............................. begin block 8 .............................
 	   22| move-result v6
-	   23| invoke-static {v6}, java.lang.Integer.valueOf
+	   23| invoke-static {v6}, java.lang.Integer.valueOf(int):java.lang.Integer
 .............................. end block 8 ..............................
 ............................. begin block 9 .............................
 	   26| move-result-object v6
 	   27| aput-object v6, v4, v5
 .............................. end block 9 ..............................
 ............................. begin block 10 .............................
-	   29| invoke-virtual {v1,v2,v3}, java.io.PrintStream.printf
+	   29| invoke-virtual {v1,v2,v3}, java.io.PrintStream.printf(java.lang.String, java.lang.Object[]):java.io.PrintStream
 .............................. end block 10 ..............................
 ............................. begin block 11 .............................
 	   32| move-result-object v1
@@ -220,7 +220,7 @@ method Target.main(java.lang.String[]) : void
 	   35| const-string v2, "Good bye!"
 .............................. end block 12 ..............................
 ............................. begin block 13 .............................
-	   37| invoke-virtual {v1,v2}, java.io.PrintStream.println
+	   37| invoke-virtual {v1,v2}, java.io.PrintStream.println(java.lang.String):void
 .............................. end block 13 ..............................
 ............................. begin block 14 .............................
 	.line 54
@@ -228,7 +228,7 @@ method Target.main(java.lang.String[]) : void
 .............................. end block 14 ..............................
 }
 
-method Target.test() : int
+method Target.test():int
 {
 ............................. begin block 1 .............................
 	.src "entryHooks.java"
@@ -241,7 +241,7 @@ method Target.test() : int
 	    2| move-object v4, v1
 	    3| move-object v1, v4
 	    4| move-object v2, v4
-	    5| invoke-direct {v2}, Target.<init>
+	    5| invoke-direct {v2}, Target.<init>():void
 .............................. end block 2 ..............................
 ............................. begin block 3 .............................
 	    8| move-object v0, v1
@@ -254,7 +254,7 @@ method Target.test() : int
 	   12| move-object v4, v2
 	   13| move-object v2, v4
 	   14| move-object v3, v4
-	   15| invoke-direct {v3}, Derived.<init>
+	   15| invoke-direct {v3}, Derived.<init>():void
 .............................. end block 4 ..............................
 ............................. begin block 5 .............................
 	   18| iput-object v2, v1, Target.test
@@ -266,7 +266,7 @@ method Target.test() : int
 	   22| const-string v3, "Testing..."
 .............................. end block 6 ..............................
 ............................. begin block 7 .............................
-	   24| invoke-virtual {v1,v2,v3}, Target.foo
+	   24| invoke-virtual {v1,v2,v3}, Target.foo(int, java.lang.String):int
 .............................. end block 7 ..............................
 ............................. begin block 8 .............................
 	   27| move-result v1
@@ -276,7 +276,7 @@ method Target.test() : int
 .............................. end block 8 ..............................
 }
 
-method Target.foo(int) : int
+method Target.foo(int):int
 {
 ............................. begin block 1 .............................
 	.params "?"
@@ -295,7 +295,7 @@ method Target.foo(int) : int
 .............................. end block 1 ..............................
 }
 
-method Target.foo(int, int) : int
+method Target.foo(int, int):int
 {
 ............................. begin block 1 .............................
 	.params "?", "?"
@@ -316,7 +316,7 @@ method Target.foo(int, int) : int
 .............................. end block 1 ..............................
 }
 
-method Target.foo(int, java.lang.String) : int
+method Target.foo(int, java.lang.String):int
 {
 ............................. begin block 1 .............................
 	.params "?", "?"
@@ -353,7 +353,7 @@ Label_1:
 ............................. begin block 4 .............................
 	   15| move v7, v4
 	   16| move-object v8, v2
-	   17| invoke-virtual {v6,v7,v8}, Base.foo
+	   17| invoke-virtual {v6,v7,v8}, Base.foo(int, java.lang.String):int
 .............................. end block 4 ..............................
 ............................. begin block 5 .............................
 	   20| move-result v6
@@ -373,7 +373,7 @@ Label_2:
 .............................. end block 6 ..............................
 }
 
-method Target.foo(int, java.lang.String, java.lang.String) : int
+method Target.foo(int, java.lang.String, java.lang.String):int
 {
 ............................. begin block 1 .............................
 	.params "?", "?", "?"
@@ -396,7 +396,7 @@ method Target.foo(int, java.lang.String, java.lang.String) : int
 .............................. end block 1 ..............................
 }
 
-method Target.foo(int, java.lang.String[]) : int
+method Target.foo(int, java.lang.String[]):int
 {
 ............................. begin block 1 .............................
 	.params "?", "?"
@@ -417,7 +417,7 @@ method Target.foo(int, java.lang.String[]) : int
 .............................. end block 1 ..............................
 }
 
-method Target.foo(int, java.lang.String[][]) : java.lang.Integer
+method Target.foo(int, java.lang.String[][]):java.lang.Integer
 {
 ............................. begin block 1 .............................
 	.params "?", "?"
@@ -432,7 +432,7 @@ method Target.foo(int, java.lang.String[][]) : java.lang.Integer
 	    2| move-object v2, v6
 	.local v2, "msgs", java.lang.String[][]
 	    3| const/4 v3, #+5 (0x00000005 | 7.00649e-45)
-	    4| invoke-static {v3}, java.lang.Integer.valueOf
+	    4| invoke-static {v3}, java.lang.Integer.valueOf(int):java.lang.Integer
 .............................. end block 1 ..............................
 ............................. begin block 2 .............................
 	    7| move-result-object v3
@@ -442,7 +442,7 @@ method Target.foo(int, java.lang.String[][]) : java.lang.Integer
 .............................. end block 2 ..............................
 }
 
-method Target.foo() : void
+method Target.foo():void
 {
 ............................. begin block 1 .............................
 	.src "entryHooks.java"
@@ -453,7 +453,7 @@ method Target.foo() : void
 .............................. end block 1 ..............................
 }
 
-method Tracer.<init>() : void
+method Tracer.<init>():void
 {
 ............................. begin block 1 .............................
 	.src "entryHooks.java"
@@ -463,14 +463,14 @@ method Tracer.<init>() : void
 	    0| move-object v0, v2
 	.local v0, "this", Tracer
 	    1| move-object v1, v0
-	    2| invoke-direct {v1}, java.lang.Object.<init>
+	    2| invoke-direct {v1}, java.lang.Object.<init>():void
 .............................. end block 1 ..............................
 ............................. begin block 2 .............................
 	    5| return-void
 .............................. end block 2 ..............................
 }
 
-method Tracer.onEntry(java.lang.String) : void
+method Tracer.onEntry(java.lang.String):void
 {
 ............................. begin block 1 .............................
 	.params "?"
@@ -489,33 +489,33 @@ method Tracer.onEntry(java.lang.String) : void
 	    5| move-object v4, v2
 	    6| move-object v2, v4
 	    7| move-object v3, v4
-	    8| invoke-direct {v3}, java.lang.StringBuilder.<init>
+	    8| invoke-direct {v3}, java.lang.StringBuilder.<init>():void
 .............................. end block 3 ..............................
 ............................. begin block 4 .............................
 	   11| const-string v3, "OnEntry("
 .............................. end block 4 ..............................
 ............................. begin block 5 .............................
-	   13| invoke-virtual {v2,v3}, java.lang.StringBuilder.append
+	   13| invoke-virtual {v2,v3}, java.lang.StringBuilder.append(java.lang.String):java.lang.StringBuilder
 .............................. end block 5 ..............................
 ............................. begin block 6 .............................
 	   16| move-result-object v2
 	   17| move-object v3, v0
-	   18| invoke-virtual {v2,v3}, java.lang.StringBuilder.append
+	   18| invoke-virtual {v2,v3}, java.lang.StringBuilder.append(java.lang.String):java.lang.StringBuilder
 .............................. end block 6 ..............................
 ............................. begin block 7 .............................
 	   21| move-result-object v2
 	   22| const-string v3, ")"
 .............................. end block 7 ..............................
 ............................. begin block 8 .............................
-	   24| invoke-virtual {v2,v3}, java.lang.StringBuilder.append
+	   24| invoke-virtual {v2,v3}, java.lang.StringBuilder.append(java.lang.String):java.lang.StringBuilder
 .............................. end block 8 ..............................
 ............................. begin block 9 .............................
 	   27| move-result-object v2
-	   28| invoke-virtual {v2}, java.lang.StringBuilder.toString
+	   28| invoke-virtual {v2}, java.lang.StringBuilder.toString():java.lang.String
 .............................. end block 9 ..............................
 ............................. begin block 10 .............................
 	   31| move-result-object v2
-	   32| invoke-virtual {v1,v2}, java.io.PrintStream.println
+	   32| invoke-virtual {v1,v2}, java.io.PrintStream.println(java.lang.String):void
 .............................. end block 10 ..............................
 ............................. begin block 11 .............................
 	.line 7
@@ -523,7 +523,7 @@ method Tracer.onEntry(java.lang.String) : void
 .............................. end block 11 ..............................
 }
 
-method Tracer.onFooEntry(Target, int, java.lang.String) : void
+method Tracer.onFooEntry(Target, int, java.lang.String):void
 {
 ............................. begin block 1 .............................
 	.params "?", "?", "?"
@@ -560,7 +560,7 @@ method Tracer.onFooEntry(Target, int, java.lang.String) : void
 	   19| move-object v6, v9
 	   20| const/4 v7, #+1 (0x00000001 | 1.40130e-45)
 	   21| move v8, v1
-	   22| invoke-static {v8}, java.lang.Integer.valueOf
+	   22| invoke-static {v8}, java.lang.Integer.valueOf(int):java.lang.Integer
 .............................. end block 5 ..............................
 ............................. begin block 6 .............................
 	   25| move-result-object v8
@@ -575,7 +575,7 @@ method Tracer.onFooEntry(Target, int, java.lang.String) : void
 	   33| aput-object v8, v6, v7
 .............................. end block 7 ..............................
 ............................. begin block 8 .............................
-	   35| invoke-virtual {v3,v4,v5}, java.io.PrintStream.printf
+	   35| invoke-virtual {v3,v4,v5}, java.io.PrintStream.printf(java.lang.String, java.lang.Object[]):java.io.PrintStream
 .............................. end block 8 ..............................
 ............................. begin block 9 .............................
 	   38| move-result-object v3
@@ -584,7 +584,7 @@ method Tracer.onFooEntry(Target, int, java.lang.String) : void
 .............................. end block 9 ..............................
 }
 
-method Tracer.onFooExit(int) : int
+method Tracer.onFooExit(int):int
 {
 ............................. begin block 1 .............................
 	.params "?"
@@ -609,14 +609,14 @@ method Tracer.onFooExit(int) : int
 	   10| move-object v4, v7
 	   11| const/4 v5, #+0 (0x00000000 | 0.00000)
 	   12| move v6, v0
-	   13| invoke-static {v6}, java.lang.Integer.valueOf
+	   13| invoke-static {v6}, java.lang.Integer.valueOf(int):java.lang.Integer
 .............................. end block 4 ..............................
 ............................. begin block 5 .............................
 	   16| move-result-object v6
 	   17| aput-object v6, v4, v5
 .............................. end block 5 ..............................
 ............................. begin block 6 .............................
-	   19| invoke-virtual {v1,v2,v3}, java.io.PrintStream.printf
+	   19| invoke-virtual {v1,v2,v3}, java.io.PrintStream.printf(java.lang.String, java.lang.Object[]):java.io.PrintStream
 .............................. end block 6 ..............................
 ............................. begin block 7 .............................
 	   22| move-result-object v1
@@ -630,7 +630,7 @@ method Tracer.onFooExit(int) : int
 .............................. end block 7 ..............................
 }
 
-method Tracer.wrapFoo(Base, int, java.lang.String) : int
+method Tracer.wrapFoo(Base, int, java.lang.String):int
 {
 ............................. begin block 1 .............................
 	.params "?", "?", "?"
@@ -659,11 +659,11 @@ method Tracer.wrapFoo(Base, int, java.lang.String) : int
 	   12| move-object v6, v9
 	   13| const/4 v7, #+0 (0x00000000 | 0.00000)
 	   14| move-object v8, v0
-	   15| invoke-virtual {v8}, java.lang.Object.getClass
+	   15| invoke-virtual {v8}, java.lang.Object.getClass():java.lang.Class
 .............................. end block 4 ..............................
 ............................. begin block 5 .............................
 	   18| move-result-object v8
-	   19| invoke-virtual {v8}, java.lang.Class.getName
+	   19| invoke-virtual {v8}, java.lang.Class.getName():java.lang.String
 .............................. end block 5 ..............................
 ............................. begin block 6 .............................
 	   22| move-result-object v8
@@ -675,7 +675,7 @@ method Tracer.wrapFoo(Base, int, java.lang.String) : int
 	   27| move-object v6, v9
 	   28| const/4 v7, #+1 (0x00000001 | 1.40130e-45)
 	   29| move v8, v1
-	   30| invoke-static {v8}, java.lang.Integer.valueOf
+	   30| invoke-static {v8}, java.lang.Integer.valueOf(int):java.lang.Integer
 .............................. end block 7 ..............................
 ............................. begin block 8 .............................
 	   33| move-result-object v8
@@ -690,7 +690,7 @@ method Tracer.wrapFoo(Base, int, java.lang.String) : int
 	   41| aput-object v8, v6, v7
 .............................. end block 9 ..............................
 ............................. begin block 10 .............................
-	   43| invoke-virtual {v3,v4,v5}, java.io.PrintStream.printf
+	   43| invoke-virtual {v3,v4,v5}, java.io.PrintStream.printf(java.lang.String, java.lang.Object[]):java.io.PrintStream
 .............................. end block 10 ..............................
 ............................. begin block 11 .............................
 	   46| move-result-object v3
@@ -698,7 +698,7 @@ method Tracer.wrapFoo(Base, int, java.lang.String) : int
 	   47| move-object v3, v0
 	   48| move v4, v1
 	   49| move-object v5, v2
-	   50| invoke-virtual {v3,v4,v5}, Base.foo
+	   50| invoke-virtual {v3,v4,v5}, Base.foo(int, java.lang.String):int
 .............................. end block 11 ..............................
 ............................. begin block 12 .............................
 	   53| move-result v3
