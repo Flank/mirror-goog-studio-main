@@ -38,6 +38,7 @@ maven_java_library(
         "org.jacoco:org.jacoco.core": ["org.ow2.asm:asm-debug-all"],
         "org.jacoco:org.jacoco.report": ["org.ow2.asm:asm-debug-all"],
     },
+    javacopts = ["-Xep:MissingCasesInEnumSwitch:WARN"],
     pom = ":pom",
     resource_strip_prefix = "tools/base/build-system/gradle-core",
     resources = [":resources"],

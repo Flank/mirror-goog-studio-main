@@ -10,4 +10,3 @@ test --jvmopt='-Dfile.encoding=UTF-8'
 # Keep debug info
 build --javacopt="-g:source,lines,vars"
 build --javacopt=-Xep:FallThrough:OFF  # enforcing Google style, essentially
-build --javacopt=-Xep:MissingCasesInEnumSwitch:WARN  # pending cleanup

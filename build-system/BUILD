@@ -25,6 +25,7 @@ iml_module(
 iml_module(
     name = "studio.manifest-merger",
     srcs = ["manifest-merger/src/main/java"],
+    javacopts = ["-Xep:MissingCasesInEnumSwitch:WARN"],
     tags = ["managed"],
     test_srcs = ["manifest-merger/src/test/java"],
     visibility = ["//visibility:public"],
@@ -96,6 +97,7 @@ java_test(
 maven_java_library(
     name = "tools.manifest-merger",
     srcs = glob(["manifest-merger/src/main/java/**"]),
+    javacopts = ["-Xep:MissingCasesInEnumSwitch:WARN"],
     pom = ":manifest-merger.pom",
     visibility = ["//visibility:public"],
     deps = [

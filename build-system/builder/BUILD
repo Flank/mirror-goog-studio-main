@@ -32,6 +32,7 @@ maven_java_library(
         "//tools/base/aaptjlib:srcjar",
         "//tools/dx/dalvik/dx:srcjar",
     ],
+    javacopts = ["-Xep:MissingCasesInEnumSwitch:WARN"],
     plugins = [
         ":auto-value-plugin",
     ],

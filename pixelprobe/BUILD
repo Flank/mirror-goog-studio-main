@@ -8,6 +8,7 @@ iml_module(
         "src/main/java",
         "src/test/tools",
     ],
+    javacopts = ["-Xep:MissingCasesInEnumSwitch:WARN"],
     resources = ["src/main/resources"],
     tags = ["managed"],
     test_resources = ["src/test/resources"],

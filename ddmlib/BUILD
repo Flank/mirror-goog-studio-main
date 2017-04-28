@@ -4,6 +4,7 @@ load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 iml_module(
     name = "studio.ddmlib",
     srcs = ["src/main/java"],
+    javacopts = ["-Xep:MissingCasesInEnumSwitch:WARN"],
     tags = ["managed"],
     test_data = ["//prebuilts/studio/sdk:platform-tools"],
     test_resources = ["src/test/resources"],
@@ -29,6 +30,7 @@ iml_module(
 maven_java_library(
     name = "tools.ddmlib",
     srcs = glob(["src/main/java/**"]),
+    javacopts = ["-Xep:MissingCasesInEnumSwitch:WARN"],
     pom = ":pom",
     visibility = ["//visibility:public"],
     deps = [
