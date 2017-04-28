@@ -12,7 +12,7 @@
                    to="${escapeXmlAttribute(manifestOut)}/AndroidManifest.xml" />
 <#if hasInstantAppWrapper>
     <instantiate from="root/res/values/strings.xml.ftl"
-                   to="${escapeXmlAttribute(baseLibResOut)}/values/strings.xml" />
+                   to="${escapeXmlAttribute(baseFeatureResOut)}/values/strings.xml" />
 <#else>
     <instantiate from="root/res/values/strings.xml.ftl"
                    to="${escapeXmlAttribute(resOut)}/values/strings.xml" />
@@ -65,14 +65,14 @@
                 to="${instantAppOut}/.gitignore" />
     </#if>
 
-    <mkdir at="${baseLibOut}" />
-    <instantiate from="root/baseLib-AndroidManifest.xml.ftl"
-                   to="${baseLibOut}/src/main/AndroidManifest.xml" />
-    <instantiate from="root/baseLib-build.gradle.ftl"
-                   to="${baseLibOut}/build.gradle" />
+    <mkdir at="${baseFeatureOut}" />
+    <instantiate from="root/baseFeature-AndroidManifest.xml.ftl"
+                   to="${baseFeatureOut}/src/main/AndroidManifest.xml" />
+    <instantiate from="root/baseFeature-build.gradle.ftl"
+                   to="${baseFeatureOut}/build.gradle" />
     <#if makeIgnore>
         <copy from="root/module_ignore"
-                to="${baseLibOut}/.gitignore" />
+                to="${baseFeatureOut}/.gitignore" />
     </#if>
 </#if>
 
@@ -105,8 +105,8 @@
 <#if copyIcons>
     <#if !isLibraryProject>
         <@copyIconCommands destination=escapeXmlAttribute(resOut)/>
-    <#elseif hasInstantAppWrapper || isBaseSplit>
-        <@copyIconCommands destination=escapeXmlAttribute(baseLibResOut)/>
+    <#elseif hasInstantAppWrapper || isBaseFeature>
+        <@copyIconCommands destination=escapeXmlAttribute(baseFeatureResOut)/>
     </#if>
 </#if>
 
@@ -119,12 +119,12 @@
     </#if>
 </#if>
 
-<#if hasInstantAppWrapper || isBaseSplit>
+<#if hasInstantAppWrapper || isBaseFeature>
     <instantiate from="root/res/values/styles.xml.ftl"
-                   to="${escapeXmlAttribute(baseLibResOut)}/values/styles.xml" />
+                   to="${escapeXmlAttribute(baseFeatureResOut)}/values/styles.xml" />
     <#if buildApi gte 22>
         <copy from="root/res/values/colors.xml"
-                to="${escapeXmlAttribute(baseLibResOut)}/values/colors.xml" />
+                to="${escapeXmlAttribute(baseFeatureResOut)}/values/colors.xml" />
     </#if>
 </#if>
 

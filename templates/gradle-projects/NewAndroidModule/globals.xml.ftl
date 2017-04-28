@@ -19,14 +19,14 @@
     <global id="hasInstantAppWrapper" type="boolean" value="${(isInstantApp!false)?string}" />
     <global id="hasMonolithicAppWrapper" type="boolean" value="${(isInstantApp!false)?string}" />
 
-    <global id="baseLibName" type="string" value="base" />
-    <global id="isBaseSplit" type="boolean" value="false" />
+    <global id="baseFeatureName" type="string" value="base" />
+    <global id="isBaseFeature" type="boolean" value="false" />
     <global id="instantAppProjectName" type="string" value="instantapp" />
     <global id="monolithicAppProjectName" type="string" value="app" />
     <global id="instantAppPackageName" type="string" value="${packageName}.instantapp" />
 
     <global id="instantAppOut" type="string" value="${escapeXmlAttribute(instantAppDir!'./' + (instantAppProjectName!'instantapp'))}" />
     <global id="monolithicAppOut" type="string" value="${escapeXmlAttribute(monolithicAppDir!'./' + (monolithicAppProjectName!'app'))}" />
-    <global id="baseLibOut" type="string" value="${escapeXmlAttribute(baseLibDir!'./base')}" />
-    <global id="baseLibResOut" type="string" value="${escapeXmlAttribute(baseLibResDir!'./base/src/main/res')}" />
+    <global id="baseFeatureOut" type="string" value="${escapeXmlAttribute(baseFeatureDir!'./base')}" />
+    <global id="baseFeatureResOut" type="string" value="${escapeXmlAttribute(baseFeatureResDir!'./base/src/main/res')}" />
 </globals>

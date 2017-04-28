@@ -9,7 +9,7 @@ apply plugin: 'com.android.application'
   </#if>
 </#if>
 
-<@shared.androidConfig hasApplicationId=isApplicationProject applicationId=packageName isBaseSplit=isBaseSplit hasTests=true canHaveCpp=true/>
+<@shared.androidConfig hasApplicationId=isApplicationProject applicationId=packageName isBaseFeature=isBaseFeature hasTests=true canHaveCpp=true/>
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
@@ -21,6 +21,6 @@ dependencies {
     compile 'com.google.android.gms:play-services-wearable:+'
 </#if>
 <#if isInstantApp && hasInstantAppWrapper>
-    implementation project(':${baseLibName}')
+    implementation project(':${baseFeatureName}')
 </#if>
 }
