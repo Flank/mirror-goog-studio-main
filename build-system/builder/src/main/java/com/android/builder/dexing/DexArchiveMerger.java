@@ -22,7 +22,6 @@ import com.android.annotations.Nullable;
 import com.android.dex.Dex;
 import com.android.dex.DexIndexOverflowException;
 import com.android.dx.merge.DexMerger;
-import com.android.ide.common.internal.WaitableExecutor;
 import com.android.utils.PathUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -37,6 +36,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -65,7 +66,7 @@ public class DexArchiveMerger {
 
     @NonNull private final DexMergerConfig config;
     @NonNull private final DexMergingStrategy mergingStrategy;
-    @NonNull private final WaitableExecutor<Void> executor;
+    @NonNull private final ForkJoinPool forkJoinPool;
 
     /**
      * Creates an instance of merger. The executor that is specified in parameters will be used to
@@ -75,20 +76,19 @@ public class DexArchiveMerger {
      * the merging is finished.
      *
      * @param config configuration for this merging
-     * @param executor executor used to schedule tasks in the merging process
+     * @param forkJoinPool executor used to schedule tasks in the merging process
      */
-    public DexArchiveMerger(
-            @NonNull DexMergerConfig config, @NonNull WaitableExecutor<Void> executor) {
-        this(config, new ReferenceCountMergingStrategy(), executor);
+    public DexArchiveMerger(@NonNull DexMergerConfig config, @NonNull ForkJoinPool forkJoinPool) {
+        this(config, new ReferenceCountMergingStrategy(), forkJoinPool);
     }
 
     public DexArchiveMerger(
             @NonNull DexMergerConfig config,
             @NonNull DexMergingStrategy mergingStrategy,
-            @NonNull WaitableExecutor<Void> executor) {
+            @NonNull ForkJoinPool forkJoinPool) {
         this.config = config;
         this.mergingStrategy = mergingStrategy;
-        this.executor = executor;
+        this.forkJoinPool = forkJoinPool;
     }
 
     /**
@@ -151,28 +151,32 @@ public class DexArchiveMerger {
         Map<Path, List<Dex>> dexesFromArchives = Maps.newConcurrentMap();
         // counts how many inputs are yet to be processed
         AtomicInteger inputsToProcess = new AtomicInteger(inputs.size());
+        ArrayList<ForkJoinTask<Void>> subTasks = new ArrayList<>();
         for (Path archivePath : inputs) {
-            executor.execute(
-                    () -> {
-                        try (DexArchive dexArchive = DexArchives.fromInput(archivePath)) {
-                            List<DexArchiveEntry> entries = dexArchive.getFiles();
-                            List<Dex> dexes = new ArrayList<>(entries.size());
-                            for (DexArchiveEntry e : entries) {
-                                dexes.add(new Dex(e.getDexFileContent()));
-                            }
+            subTasks.add(
+                    forkJoinPool.submit(
+                            () -> {
+                                try (DexArchive dexArchive = DexArchives.fromInput(archivePath)) {
+                                    List<DexArchiveEntry> entries = dexArchive.getFiles();
+                                    List<Dex> dexes = new ArrayList<>(entries.size());
+                                    for (DexArchiveEntry e : entries) {
+                                        dexes.add(new Dex(e.getDexFileContent()));
+                                    }
 
-                            dexesFromArchives.put(dexArchive.getRootPath(), dexes);
-                        }
+                                    dexesFromArchives.put(dexArchive.getRootPath(), dexes);
+                                }
 
-                        if (inputsToProcess.decrementAndGet() == 0) {
-                            mergeMonoDexEntries(output, dexesFromArchives);
-                        }
-                        return null;
-                    });
+                                if (inputsToProcess.decrementAndGet() == 0) {
+                                    mergeMonoDexEntries(output, dexesFromArchives).join();
+                                }
+                                return null;
+                            }));
         }
+        // now wait for all subtasks execution.
+        subTasks.forEach(ForkJoinTask::join);
     }
 
-    private void mergeMonoDexEntries(
+    private ForkJoinTask<Void> mergeMonoDexEntries(
             @NonNull Path output, @NonNull Map<Path, List<Dex>> dexesFromArchives) {
         List<Path> sortedPaths = Ordering.natural().sortedCopy(dexesFromArchives.keySet());
         int numberOfDexFiles = dexesFromArchives.values().stream().mapToInt(List::size).sum();
@@ -181,7 +185,7 @@ public class DexArchiveMerger {
             sortedDexes.addAll(dexesFromArchives.get(p));
         }
         // trigger merging with sorted set
-        submitForMerging(sortedDexes, output.resolve(getDexFileName(0)));
+        return submitForMerging(sortedDexes, output.resolve(getDexFileName(0)));
     }
 
     /**
@@ -213,6 +217,7 @@ public class DexArchiveMerger {
             classesDexSuffix = 0;
         }
 
+        List<ForkJoinTask<Void>> subTasks = new ArrayList<>();
         List<Dex> toMergeInMain = Lists.newArrayList();
         mergingStrategy.startNewDex();
 
@@ -233,7 +238,7 @@ public class DexArchiveMerger {
 
             if (!mergingStrategy.tryToAddForMerging(dex)) {
                 Path dexOutput = output.resolve(getDexFileName(classesDexSuffix++));
-                submitForMerging(mergingStrategy.getAllDexToMerge(), dexOutput);
+                subTasks.add(submitForMerging(mergingStrategy.getAllDexToMerge(), dexOutput));
                 mergingStrategy.startNewDex();
 
                 // adding now should succeed
@@ -246,14 +251,17 @@ public class DexArchiveMerger {
 
         if (config.getDexingMode() == DexingMode.LEGACY_MULTIDEX) {
             // write the main dex file
-            submitForMerging(toMergeInMain, output.resolve(getDexFileName(0)));
+            subTasks.add(submitForMerging(toMergeInMain, output.resolve(getDexFileName(0))));
         }
 
         // if there are some remaining unprocessed dex files, merge them
         if (!mergingStrategy.getAllDexToMerge().isEmpty()) {
             Path dexOutput = output.resolve(getDexFileName(classesDexSuffix));
-            submitForMerging(mergingStrategy.getAllDexToMerge(), dexOutput);
+            subTasks.add(submitForMerging(mergingStrategy.getAllDexToMerge(), dexOutput));
         }
+
+        // now wait for all subtasks completion.
+        subTasks.forEach(ForkJoinTask::join);
     }
 
     @NonNull
@@ -275,8 +283,10 @@ public class DexArchiveMerger {
         }
     }
 
-    private void submitForMerging(@NonNull List<Dex> dexes, @NonNull Path dexOutputPath) {
-        executor.execute(new DexArchiveMergerCallable(dexes, dexOutputPath, config.getDxContext()));
+    private ForkJoinTask<Void> submitForMerging(
+            @NonNull List<Dex> dexes, @NonNull Path dexOutputPath) {
+        return forkJoinPool.submit(
+                new DexArchiveMergerCallable(dexes, dexOutputPath, config.getDxContext()));
     }
 
     @NonNull

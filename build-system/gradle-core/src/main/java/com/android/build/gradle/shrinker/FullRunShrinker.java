@@ -77,7 +77,7 @@ public class FullRunShrinker<T> extends AbstractShrinker<T> {
     private final Set<File> mPlatformJars;
 
     public FullRunShrinker(
-            @NonNull WaitableExecutor<Void> executor,
+            @NonNull WaitableExecutor executor,
             @NonNull ShrinkerGraph<T> graph,
             @NonNull Set<File> platformJars,
             @NonNull ShrinkerLogger shrinkerLogger,

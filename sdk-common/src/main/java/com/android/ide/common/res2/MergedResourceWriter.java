@@ -42,14 +42,12 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.MoreExecutors;
-import com.google.common.util.concurrent.SettableFuture;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -229,6 +227,7 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
         // Make sure all PNGs are generated first.
         super.end();
         // now perform all the databinding, PNG crunching (AAPT1) and resources compilation (AAPT2).
+        Map<Future, String> outstandingRequests = new HashMap<>();
         try {
             mResourceCompiler.start();
             File tmpDir = new File(mTemporaryDirectory, "stripped.dir");
@@ -241,7 +240,7 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
             while (!mCompileResourceRequests.isEmpty()) {
                 CompileResourceRequest request = mCompileResourceRequests.poll();
                 try {
-                    ListenableFuture<File> result;
+                    Future<File> result;
                     File fileToCompile = request.getInput();
 
                     if (mMergingLog != null) {
@@ -306,31 +305,12 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
                                             request.getFolderName(),
                                             pseudoLocalesEnabled));
 
+                    outstandingRequests.put(result, request.getInput().getAbsolutePath());
+
                     // adding to the mCompiling seems unnecessary at this point, the end() call will
                     // take care of waiting for all requests to be processed.
                     mCompiling.add(result);
-                    result.addListener(
-                            () -> {
-                                try {
-                                    File outFile = result.get();
-                                    mCompiledFileMap.put(
-                                            request.getInput().getAbsolutePath(),
-                                            outFile.getAbsolutePath());
-                                } catch (Exception e) {
-                                    /*
-                                     * We will detect any exceptions (or generate them during copy)
-                                     * asynchronously, so we need to be careful to report them back.
-                                     * Because end() will wait for all futures and report any
-                                     * failures, we will register a new future that will throw the
-                                     * exception when we fail. This ensures that end() will throw
-                                     * the exception.
-                                     */
-                                    SettableFuture<File> failureSimulator = SettableFuture.create();
-                                    failureSimulator.setException(e);
-                                    mCompiling.add(failureSimulator);
-                                }
-                            },
-                            MoreExecutors.sameThreadExecutor());
+
                 } catch(PngException | IOException e) {
                     throw MergingException.wrapException(e).withFile(request.getInput()).build();
                 }
@@ -345,7 +325,8 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
         try {
             Future<File> first;
             while ((first = mCompiling.pollFirst()) != null) {
-                first.get();
+                File outFile = first.get();
+                mCompiledFileMap.put(outstandingRequests.get(first), outFile.getAbsolutePath());
             }
 
         } catch (InterruptedException|ExecutionException e) {

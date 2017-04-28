@@ -18,9 +18,7 @@ package com.android.ide.common.res2;
 
 import com.android.annotations.NonNull;
 import com.android.ide.common.internal.WaitableExecutor;
-
 import java.io.File;
-
 import javax.xml.parsers.DocumentBuilderFactory;
 
 /**
@@ -30,8 +28,7 @@ public abstract class MergeWriter<I extends DataItem> implements MergeConsumer<I
 
     @NonNull
     private final File mRootFolder;
-    @NonNull
-    private final WaitableExecutor<Void> mExecutor;
+    @NonNull private final WaitableExecutor mExecutor;
 
     public MergeWriter(@NonNull File rootFolder) {
         mRootFolder = rootFolder;
@@ -63,7 +60,7 @@ public abstract class MergeWriter<I extends DataItem> implements MergeConsumer<I
     }
 
     @NonNull
-    protected WaitableExecutor<Void> getExecutor() {
+    protected WaitableExecutor getExecutor() {
         return mExecutor;
     }
 

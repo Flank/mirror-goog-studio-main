@@ -142,7 +142,7 @@ public class SplitScope implements Serializable {
     public void parallelForEach(VariantScope.OutputType outputType, SplitAction action)
             throws IOException {
 
-        WaitableExecutor<Void> executor = WaitableExecutor.useGlobalSharedThreadPool();
+        WaitableExecutor executor = WaitableExecutor.useGlobalSharedThreadPool();
         apkDatas.forEach(
                 split ->
                         executor.execute(
@@ -210,7 +210,7 @@ public class SplitScope implements Serializable {
             TwoParameterizedSplitOutputAction<T, U> action,
             T parameterOne,
             U parameterTwo) {
-        WaitableExecutor<Void> executor = WaitableExecutor.useGlobalSharedThreadPool();
+        WaitableExecutor executor = WaitableExecutor.useGlobalSharedThreadPool();
         apkDatas.forEach(
                 split -> {
                     executor.execute(

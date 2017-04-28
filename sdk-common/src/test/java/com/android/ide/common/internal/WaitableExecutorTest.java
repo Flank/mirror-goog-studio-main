@@ -29,7 +29,7 @@ import org.junit.Test;
 /** Tests for the {@link WaitableExecutor}. */
 public class WaitableExecutorTest {
 
-    @NonNull private WaitableExecutor<Integer> executor;
+    @NonNull private WaitableExecutor executor;
 
     @Before
     public void setUp() {
@@ -42,14 +42,14 @@ public class WaitableExecutorTest {
         executor.execute(() -> 2);
         executor.execute(() -> 3);
 
-        List<Integer> results =
+        List<?> results =
                 executor.waitForAllTasks().stream().map(e -> e.value).collect(Collectors.toList());
         Truth.assertThat(results).containsExactly(1, 2, 3);
     }
 
     @Test
     public void checkNoTaskResults() throws InterruptedException {
-        List<Integer> results =
+        List<?> results =
                 executor.waitForAllTasks().stream().map(e -> e.value).collect(Collectors.toList());
         Truth.assertThat(results).isEmpty();
     }
@@ -91,18 +91,5 @@ public class WaitableExecutorTest {
         } catch (Exception e) {
             Truth.assertThat(e.getCause().getMessage()).contains("Fail this task");
         }
-    }
-
-    @Test
-    public void checkLimit() throws Exception {
-        executor = WaitableExecutor.useGlobalSharedThreadPoolWithLimit(1);
-
-        executor.execute(() -> 1);
-        executor.execute(() -> 2);
-        executor.execute(() -> 3);
-
-        List<Integer> results =
-                executor.waitForAllTasks().stream().map(e -> e.value).collect(Collectors.toList());
-        Truth.assertThat(results).containsExactly(1, 2, 3);
     }
 }

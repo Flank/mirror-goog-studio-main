@@ -18,9 +18,7 @@ package com.android.builder.dexing;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.ide.common.internal.WaitableExecutor;
 import com.android.utils.PathUtils;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.nio.file.FileVisitOption;
@@ -34,6 +32,8 @@ import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinTask;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
@@ -54,13 +54,13 @@ import java.util.zip.ZipInputStream;
  */
 public class RuntimeAnnotatedClassCollector {
 
-    @NonNull private final WaitableExecutor<List<String>> waitableExecutor;
+    @NonNull private final ForkJoinPool forkJoinPool;
     @NonNull private final Predicate<byte[]> keepClassPredicate;
 
     public RuntimeAnnotatedClassCollector(@NonNull Predicate<byte[]> keepClassPredicate)
             throws InterruptedException {
         this.keepClassPredicate = keepClassPredicate;
-        this.waitableExecutor = WaitableExecutor.useGlobalSharedThreadPool();
+        this.forkJoinPool = ForkJoinPool.commonPool();
     }
 
     @NonNull
@@ -137,12 +137,22 @@ public class RuntimeAnnotatedClassCollector {
     @NonNull
     public Set<String> collectClasses(@NonNull Collection<Path> inputs)
             throws InterruptedException {
+        List<ForkJoinTask<List<String>>> subTasks = new ArrayList<>();
         for (Path input : inputs) {
-            waitableExecutor.execute(() -> kept(input, keepClassPredicate));
+            subTasks.add(forkJoinPool.submit(() -> kept(input, keepClassPredicate)));
         }
-        List<List<String>> result = waitableExecutor.waitForTasksWithQuickFail(true);
 
-        return ImmutableSet.copyOf(
-                result.stream().flatMap(Collection::stream).collect(Collectors.toSet()));
+        try {
+            return subTasks.stream()
+                    .map(ForkJoinTask::join)
+                    .flatMap(Collection::stream)
+                    .collect(Collectors.toSet());
+        } catch (RuntimeException e) {
+            Throwable t = e.getCause();
+            if (t instanceof RuntimeException) {
+                throw (RuntimeException) t;
+            }
+            throw e;
+        }
     }
 }

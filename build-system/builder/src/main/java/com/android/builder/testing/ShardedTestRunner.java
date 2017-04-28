@@ -45,19 +45,18 @@ public class ShardedTestRunner extends BaseTestRunner {
 
     @Override
     @NonNull
-    protected WaitableExecutor<Boolean> scheduleTests(
+    protected WaitableExecutor scheduleTests(
             @NonNull String projectName,
             @NonNull String variantName,
             @NonNull TestData testData,
             @NonNull Map<DeviceConnector, ImmutableList<File>> apksForDevice,
             @NonNull Set<File> helperApks,
-            int maxThreadsInParallel,
             int timeoutInMs,
             @NonNull Collection<String> installOptions,
             @NonNull File resultsDir,
             @NonNull File coverageDir,
             @NonNull ILogger logger) {
-        WaitableExecutor<Boolean> executor =
+        WaitableExecutor executor =
                 WaitableExecutor.useNewFixedSizeThreadPool(apksForDevice.keySet().size());
 
         int numShards;

@@ -134,7 +134,6 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
                                 testData,
                                 buddyApks.getFiles(),
                                 deviceProvider.getDevices(),
-                                deviceProvider.getMaxThreads(),
                                 deviceProvider.getTimeoutInMs(),
                                 extraArgs,
                                 resultsOutDir,

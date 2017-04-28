@@ -138,7 +138,7 @@ public class LibraryIntermediateJarsTransform extends LibraryBaseTransform {
             }
         }
 
-        WaitableExecutor<Void> executor = WaitableExecutor.useGlobalSharedThreadPool();
+        WaitableExecutor executor = WaitableExecutor.useGlobalSharedThreadPool();
 
         if (mainClassInputChanged) {
             executor.execute(() -> {

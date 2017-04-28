@@ -40,7 +40,6 @@ import com.android.ide.common.blame.Message;
 import com.android.ide.common.blame.ParsingProcessOutputHandler;
 import com.android.ide.common.blame.parser.DexParser;
 import com.android.ide.common.blame.parser.ToolOutputParser;
-import com.android.ide.common.internal.WaitableExecutor;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessOutput;
 import com.android.ide.common.process.ProcessOutputHandler;
@@ -60,8 +59,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinTask;
 import org.gradle.api.file.FileCollection;
 
 /**
@@ -96,8 +98,7 @@ public class DexMergerTransform extends Transform {
     @NonNull private final DexingMode dexingMode;
     @Nullable private final FileCollection mainDexListFile;
     @NonNull private final ErrorReporter errorReporter;
-    @NonNull private final WaitableExecutor<Void> callableExecutor;
-    @NonNull private final WaitableExecutor<Void> dexMergerExecutor;
+    @NonNull private final ForkJoinPool forkJoinPool = ForkJoinPool.commonPool();
 
     public DexMergerTransform(
             @NonNull DexingMode dexingMode,
@@ -109,8 +110,6 @@ public class DexMergerTransform extends Transform {
                 (dexingMode == DexingMode.LEGACY_MULTIDEX) == (mainDexListFile != null),
                 "Main dex list must only be set when in legacy multidex");
         this.errorReporter = errorReporter;
-        this.callableExecutor = WaitableExecutor.useGlobalSharedThreadPool();
-        this.dexMergerExecutor = WaitableExecutor.useGlobalSharedThreadPool();
     }
 
     @NonNull
@@ -180,23 +179,25 @@ public class DexMergerTransform extends Transform {
         }
 
         ProcessOutput output = null;
+        List<ForkJoinTask<Void>> mergeTasks;
         try (Closeable ignored = output = outputHandler.createOutput()) {
             if (dexingMode == DexingMode.NATIVE_MULTIDEX) {
-                handleNativeMultiDex(
-                        transformInvocation.getInputs(),
-                        output,
-                        outputProvider,
-                        transformInvocation.isIncremental());
+                mergeTasks =
+                        handleNativeMultiDex(
+                                transformInvocation.getInputs(),
+                                output,
+                                outputProvider,
+                                transformInvocation.isIncremental());
             } else {
-                handleLegacyAndMonoDex(transformInvocation.getInputs(), output, outputProvider);
+                mergeTasks =
+                        handleLegacyAndMonoDex(
+                                transformInvocation.getInputs(), output, outputProvider);
             }
 
-            callableExecutor.waitForTasksWithQuickFail(true);
-            dexMergerExecutor.waitForTasksWithQuickFail(true);
+            // now wait for all merge tasks completion
+            mergeTasks.forEach(ForkJoinTask::join);
+
         } catch (IOException e) {
-            throw new TransformException(e);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
             throw new TransformException(e);
         } catch (Exception e) {
             throw new TransformException(Throwables.getRootCause(e));
@@ -212,7 +213,8 @@ public class DexMergerTransform extends Transform {
     }
 
     /** For legacy and mono-dex we always merge all dex archives, non-incrementally. */
-    private void handleLegacyAndMonoDex(
+    @NonNull
+    private List<ForkJoinTask<Void>> handleLegacyAndMonoDex(
             @NonNull Collection<TransformInput> inputs,
             @NonNull ProcessOutput output,
             @NonNull TransformOutputProvider outputProvider)
@@ -241,7 +243,8 @@ public class DexMergerTransform extends Transform {
             mainDexClasses.addAll(Files.readAllLines(mainDexListPath));
         }
 
-        submitForMerging(output, outputDir, dexArchiveBuilder.build(), mainDexClasses);
+        return ImmutableList.of(
+                submitForMerging(output, outputDir, dexArchiveBuilder.build(), mainDexClasses));
     }
 
     /**
@@ -249,17 +252,20 @@ public class DexMergerTransform extends Transform {
      * while other inputs will be merged individually (merging a single input might also result in
      * multiple DEX files).
      */
-    private void handleNativeMultiDex(
+    @NonNull
+    private List<ForkJoinTask<Void>> handleNativeMultiDex(
             @NonNull Collection<TransformInput> inputs,
             @NonNull ProcessOutput output,
             @NonNull TransformOutputProvider outputProvider,
             boolean isIncremental)
             throws IOException {
 
+        ImmutableList.Builder<ForkJoinTask<Void>> subTasks = ImmutableList.builder();
         Multimap<Status, Path> externalLibs = ArrayListMultimap.create();
         for (TransformInput input : inputs) {
-            processDirectories(output, outputProvider, isIncremental, input);
-            processJars(output, outputProvider, isIncremental, input, externalLibs);
+            subTasks.addAll(processDirectories(output, outputProvider, isIncremental, input));
+            subTasks.addAll(
+                    processJars(output, outputProvider, isIncremental, input, externalLibs));
         }
 
         File externalLibsOutput =
@@ -273,18 +279,21 @@ public class DexMergerTransform extends Transform {
             // if non-incremental, or inputs have changed, merge again
             FileUtils.cleanOutputDir(externalLibsOutput);
             if (!externalLibs.isEmpty()) {
-                submitForMerging(output, externalLibsOutput, externalLibs.values(), null);
+                subTasks.add(
+                        submitForMerging(output, externalLibsOutput, externalLibs.values(), null));
             }
         }
+        return subTasks.build();
     }
 
-    private void processJars(
+    private List<ForkJoinTask<Void>> processJars(
             @NonNull ProcessOutput output,
             @NonNull TransformOutputProvider outputProvider,
             boolean isIncremental,
             @NonNull TransformInput input,
             @NonNull Multimap<Status, Path> externalLibs)
             throws IOException {
+        ImmutableList.Builder<ForkJoinTask<Void>> subTasks = ImmutableList.builder();
         for (JarInput jarInput : input.getJarInputs()) {
             if (jarInput.getScopes().equals(Collections.singleton(Scope.EXTERNAL_LIBRARIES))) {
                 externalLibs.put(jarInput.getStatus(), jarInput.getFile().toPath());
@@ -301,18 +310,24 @@ public class DexMergerTransform extends Transform {
             if (!isIncremental
                     || jarInput.getStatus() == Status.ADDED
                     || jarInput.getStatus() == Status.CHANGED) {
-                submitForMerging(
-                        output, dexOutput, ImmutableList.of(jarInput.getFile().toPath()), null);
+                subTasks.add(
+                        submitForMerging(
+                                output,
+                                dexOutput,
+                                ImmutableList.of(jarInput.getFile().toPath()),
+                                null));
             }
         }
+        return subTasks.build();
     }
 
-    private void processDirectories(
+    private List<ForkJoinTask<Void>> processDirectories(
             @NonNull ProcessOutput output,
             @NonNull TransformOutputProvider outputProvider,
             boolean isIncremental,
             TransformInput input)
             throws IOException {
+        ImmutableList.Builder<ForkJoinTask<Void>> subTasks = ImmutableList.builder();
         for (DirectoryInput directoryInput : input.getDirectoryInputs()) {
             Path rootFolder = directoryInput.getFile().toPath();
             File dexOutput =
@@ -338,14 +353,16 @@ public class DexMergerTransform extends Transform {
 
                 if (runAgain) {
                     FileUtils.cleanOutputDir(dexOutput);
-                    submitForMerging(
-                            output,
-                            dexOutput,
-                            ImmutableList.of(directoryInput.getFile().toPath()),
-                            null);
+                    subTasks.add(
+                            submitForMerging(
+                                    output,
+                                    dexOutput,
+                                    ImmutableList.of(directoryInput.getFile().toPath()),
+                                    null));
                 }
             }
         }
+        return subTasks.build();
     }
 
     /**
@@ -355,22 +372,18 @@ public class DexMergerTransform extends Transform {
      * @param dexOutputDir the directory to output dexes to
      * @param dexArchives the dex archive inputs
      * @param mainDexList the list of classes to keep in the main dex. Must be set <em>if and only
-     *     if</em> the dex mode is legacy multidex.
+     * @return the {@link ForkJoinTask} instance for the submission.
      */
-    private void submitForMerging(
+    @NonNull
+    private ForkJoinTask<Void> submitForMerging(
             @NonNull ProcessOutput output,
             @NonNull File dexOutputDir,
             @NonNull Collection<Path> dexArchives,
             @Nullable Set<String> mainDexList) {
         DexMergerTransformCallable callable =
                 new DexMergerTransformCallable(
-                        dexingMode,
-                        output,
-                        dexOutputDir,
-                        dexArchives,
-                        mainDexList,
-                        dexMergerExecutor);
-        callableExecutor.execute(callable);
+                        dexingMode, output, dexOutputDir, dexArchives, mainDexList, forkJoinPool);
+        return forkJoinPool.submit(callable);
     }
 
     @NonNull

@@ -88,8 +88,7 @@ public class InstantRunTransformTest {
     @Mock
     Project project;
 
-    @Mock
-    WaitableExecutor<Void> executor;
+    @Mock WaitableExecutor executor;
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();

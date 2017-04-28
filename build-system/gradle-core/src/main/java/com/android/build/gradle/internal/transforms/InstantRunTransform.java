@@ -82,11 +82,9 @@ public class InstantRunTransform extends Transform {
     private final ImmutableList.Builder<String> generatedClasses3Names = ImmutableList.builder();
     private final InstantRunVariantScope transformScope;
     private final AndroidVersion targetPlatformApi;
-    private final WaitableExecutor<Void> executor;
+    private final WaitableExecutor executor;
 
-    public InstantRunTransform(
-            WaitableExecutor<Void> executor,
-            InstantRunVariantScope transformScope) {
+    public InstantRunTransform(WaitableExecutor executor, InstantRunVariantScope transformScope) {
         this.transformScope = transformScope;
         this.executor = executor;
         this.targetPlatformApi =

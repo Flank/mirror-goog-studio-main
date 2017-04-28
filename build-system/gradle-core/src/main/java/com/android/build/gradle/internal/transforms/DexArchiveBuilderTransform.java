@@ -81,7 +81,7 @@ public class DexArchiveBuilderTransform extends Transform {
     @Nullable private final FileCache userLevelCache;
     @Nullable private final FileCache projectLevelCache;
     private boolean instantRunMode;
-    @NonNull private final WaitableExecutor<Void> executor;
+    @NonNull private final WaitableExecutor executor;
     private final int minSdkVersion;
 
     public DexArchiveBuilderTransform(
