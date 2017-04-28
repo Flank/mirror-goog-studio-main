@@ -266,6 +266,8 @@ public class UnsafeBroadcastReceiverDetector extends Detector
             case "android.intent.action.ACTION_DEFAULT_DATA_SUBSCRIPTION_CHANGED":
             case "android.intent.action.ACTION_DEFAULT_SMS_SUBSCRIPTION_CHANGED":
             case "android.intent.action.ACTION_DEFAULT_SUBSCRIPTION_CHANGED":
+            case "android.telephony.action.DEFAULT_SMS_SUBSCRIPTION_CHANGED":
+            case "android.telephony.action.DEFAULT_SUBSCRIPTION_CHANGED":
             case "android.intent.action.ACTION_DEFAULT_VOICE_SUBSCRIPTION_CHANGED":
             case "android.intent.action.ACTION_IDLE_MAINTENANCE_END":
             case "android.intent.action.ACTION_IDLE_MAINTENANCE_START":
