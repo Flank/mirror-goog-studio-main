@@ -211,7 +211,7 @@ public class CustomClassTransform extends Transform {
                                     break;
                                 case REMOVED:
                                     File outputFile = toOutputFile(outputDir, inputDir, inputFile);
-                                    FileUtils.delete(outputFile);
+                                    FileUtils.deleteIfExists(outputFile);
                                     break;
                             }
                         }
@@ -234,10 +234,10 @@ public class CustomClassTransform extends Transform {
 
         if (functions.isEmpty()) {
             throw new IllegalStateException(
-                    "Custom transform does not provide a BiFunction to apply");
+                    "Custom transform does not provide a BiConsumer to apply");
         } else if (functions.size() > 1) {
             throw new IllegalStateException(
-                    "Custom transform provides more than one BiFunction to apply");
+                    "Custom transform provides more than one BiConsumer to apply");
         }
         BiConsumer uncheckedFunction = functions.get(0);
         // Validate the generic arguments are valid:
@@ -255,7 +255,7 @@ public class CustomClassTransform extends Transform {
             }
         }
         throw new IllegalStateException(
-                "Custom transform must provide a BiFunction<InputStream, OutputStream>");
+                "Custom transform must provide a BiConsumer<InputStream, OutputStream>");
     }
 
     private void transformJar(
@@ -291,7 +291,7 @@ public class CustomClassTransform extends Transform {
 
     @NonNull
     private static File toOutputFile(File outputDir, File inputDir, File inputFile) {
-        return new File(outputDir, FileUtils.relativePath(inputFile, inputDir));
+        return new File(outputDir, FileUtils.relativePossiblyNonExistingPath(inputFile, inputDir));
     }
 
     private void apply(
