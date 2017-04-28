@@ -221,6 +221,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     private InstantRunTaskManager instantRunTaskManager;
 
+    private ConfigurableFileCollection desugarTryWithResourcesRuntimeJar;
+
     public VariantScopeImpl(
             @NonNull GlobalScope globalScope,
             @NonNull ErrorReporter errorReporter,
@@ -1965,6 +1967,23 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         } else {
             return null;
         }
+    }
+
+    @NonNull
+    @Override
+    public ConfigurableFileCollection getTryWithResourceRuntimeSupportJar() {
+        if (desugarTryWithResourcesRuntimeJar == null) {
+            desugarTryWithResourcesRuntimeJar =
+                    getProject()
+                            .files(
+                                    FileUtils.join(
+                                            globalScope.getIntermediatesDir(),
+                                            "processing-tools",
+                                            "runtime-deps",
+                                            variantData.getVariantConfiguration().getDirName(),
+                                            "desugar_try_with_resources.jar"));
+        }
+        return desugarTryWithResourcesRuntimeJar;
     }
 
     @Override

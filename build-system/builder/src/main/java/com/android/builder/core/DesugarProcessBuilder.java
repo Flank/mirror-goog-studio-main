@@ -29,6 +29,7 @@ import java.util.Map;
 
 /** A builder to create an information necessary to run Desugar in a separate JVM process. */
 public final class DesugarProcessBuilder extends ProcessEnvBuilder<DesugarProcessBuilder> {
+    public static final int MIN_SUPPORTED_API_TRY_WITH_RESOURCES = 19;
     private static final String DESUGAR_MAIN = "com.google.devtools.build.android.desugar.Desugar";
 
     @NonNull private final Path java8LangSupportJar;
@@ -76,6 +77,10 @@ public final class DesugarProcessBuilder extends ProcessEnvBuilder<DesugarProces
         bootClasspath.forEach(b -> builder.addArgs("--bootclasspath_entry", b.toString()));
 
         builder.addArgs("--min_sdk_version", Integer.toString(minSdkVersion));
+        if (minSdkVersion < MIN_SUPPORTED_API_TRY_WITH_RESOURCES) {
+            builder.addArgs("--desugar_try_with_resources_if_needed");
+            builder.addArgs("--desugar_try_with_resources_omit_runtime_classes");
+        }
 
         return builder.createJavaProcess();
     }

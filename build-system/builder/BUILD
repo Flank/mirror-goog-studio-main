@@ -15,10 +15,12 @@ fileset(
         "//prebuilts/tools/common/aapt/jni:win64/libwinpthread-1.dll",
         "//tools/buildSrc/base:version.properties",
         "//tools/external/desugar:desugar_deploy.jar",
+        "//tools/external/desugar/java/com/google/devtools/build/android/desugar/runtime:libthrowable_extension.jar",
     ],
     mappings = {
         "//tools/buildSrc/base:": "com/android/builder/",
         "//tools/external/desugar:": "",
+        "//tools/external/desugar/java/com/google/devtools/build/android/desugar/runtime:": "",
         "//prebuilts/tools/common/aapt/jni:": "",
         "src/main/resources/": "",
     },

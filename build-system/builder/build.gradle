@@ -122,7 +122,11 @@ dependencies {
         transitive = false
     }
 
+
     resourcesRuntime(project(path: ':external:desugar', configuration: 'fatJar')) {
+        transitive = false
+    }
+    resourcesRuntime(project(path: ':external:desugar', configuration: 'runtimeTryWithResources')) {
         transitive = false
     }
 }

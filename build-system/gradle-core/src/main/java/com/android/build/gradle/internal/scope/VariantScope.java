@@ -51,6 +51,7 @@ import org.gradle.api.DefaultTask;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.ArtifactView;
+import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.compile.JavaCompile;
@@ -485,4 +486,7 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     /** Min sdk version to pass to dx. This is necessary to allow API 24+ features. */
     @Nullable
     ApiVersion getMinSdkForDx();
+
+    @NonNull
+    ConfigurableFileCollection getTryWithResourceRuntimeSupportJar();
 }
