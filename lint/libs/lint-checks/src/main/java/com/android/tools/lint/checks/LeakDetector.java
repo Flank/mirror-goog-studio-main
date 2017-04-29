@@ -78,7 +78,9 @@ public class LeakDetector extends Detector implements Detector.UastScanner {
             "to the activity which prevents it from getting garbage collected.\n" +
             "\n" +
             "Similarly, direct field references to activities and fragments from these " +
-            "longer running instances can cause leaks.",
+            "longer running instances can cause leaks.\n" +
+            "\n" +
+            "ViewModel classes should never point to Views or non-application Contexts.",
 
             Category.PERFORMANCE,
             6,
@@ -90,7 +92,8 @@ public class LeakDetector extends Detector implements Detector.UastScanner {
     private static final List<String> SUPER_CLASSES = Arrays.asList(
             "android.content.Loader",
             "android.support.v4.content.Loader",
-            "android.os.AsyncTask"
+            "android.os.AsyncTask",
+            "android.arch.lifecycle.ViewModel"
     );
 
     /** Constructs a new {@link LeakDetector} check */
@@ -108,18 +111,20 @@ public class LeakDetector extends Detector implements Detector.UastScanner {
     /** Warn about inner classes that aren't static: these end up retaining the outer class */
     @Override
     public void visitClass(@NonNull JavaContext context, @NonNull UClass declaration) {
+        PsiClass containingClass = UastUtils.getContainingUClass(declaration);
+        boolean isAnonymous = declaration instanceof UAnonymousClass;
+
         // Only consider static inner classes
-        if (context.getEvaluator().isStatic(declaration)) {
+        boolean isStatic = context.getEvaluator().isStatic(declaration) || containingClass == null;
+        if (isStatic || isAnonymous) { // containingClass == null: implicitly static
             // But look for fields that store contexts
             for (UField field : declaration.getFields()) {
                 checkInstanceField(context, field);
             }
 
-            return;
-        }
-        boolean isAnonymous = declaration instanceof UAnonymousClass;
-        if (declaration.getContainingClass() == null && !isAnonymous) {
-            return;
+            if (!isAnonymous) {
+                return;
+            }
         }
 
         String superClass = null;

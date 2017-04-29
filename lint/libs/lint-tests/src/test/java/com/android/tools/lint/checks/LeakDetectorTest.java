@@ -174,6 +174,28 @@ public class LeakDetectorTest extends AbstractCheckTest {
                         + "0 errors, 3 warnings\n");
     }
 
+    public void testTopLevelLoader() {
+        //noinspection all // Sample code
+        lint().files(
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "import android.app.Activity;\n"
+                        + "import android.content.Context;\n"
+                        + "import android.content.Loader;\n"
+                        + "\n"
+                        + "public abstract class SupportLoaderTest extends Loader {\n"
+                        + "    private Activity activity; // Leak\n"
+                        + "    public SupportLoaderTest(Context context) { super(context); }\n"
+                        + "}\n"))
+                .run()
+                .expect(""
+                        + "src/test/pkg/SupportLoaderTest.java:8: Warning: This field leaks a context object [StaticFieldLeak]\n"
+                        + "    private Activity activity; // Leak\n"
+                        + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "0 errors, 1 warnings\n");
+    }
+
     public void testAsyncTask() {
         //noinspection all // Sample code
         lint().files(
@@ -194,6 +216,7 @@ public class LeakDetectorTest extends AbstractCheckTest {
                         + "    public AsyncTask createTask() {\n"
                         + "        return new AsyncTask() { // Leak\n"
                         + "            @Override protected Object doInBackground(Object[] objects) { return null; }\n"
+                        + "            android.view.View view; // Leak\n"
                         + "        };\n"
                         + "    }\n"
                         + "}\n"))
@@ -205,7 +228,10 @@ public class LeakDetectorTest extends AbstractCheckTest {
                         + "src/test/pkg/AsyncTaskTest.java:15: Warning: This AsyncTask class should be static or leaks might occur (anonymous android.os.AsyncTask) [StaticFieldLeak]\n"
                         + "        return new AsyncTask() { // Leak\n"
                         + "               ^\n"
-                        + "0 errors, 2 warnings\n");
+                        + "src/test/pkg/AsyncTaskTest.java:17: Warning: This field leaks a context object [StaticFieldLeak]\n"
+                        + "            android.view.View view; // Leak\n"
+                        + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "0 errors, 3 warnings\n");
     }
 
     public void testAssignAppContext() {
@@ -229,5 +255,44 @@ public class LeakDetectorTest extends AbstractCheckTest {
                         + "}\n"))
                 .run()
                 .expectClean();
+    }
+
+    public void testLifeCycle() {
+        //noinspection all // Sample code
+        lint().files(
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "import android.arch.lifecycle.ViewModel;\n"
+                        + "import android.content.Context;\n"
+                        + "import android.view.View;\n"
+                        + "import android.widget.LinearLayout;\n"
+                        + "\n"
+                        + "public class MyModel extends ViewModel {\n"
+                        + "    private String myString; // OK\n"
+                        + "    private LinearLayout myLayout; // ERROR\n"
+                        + "    private InnerClass2 myObject; // ERROR\n"
+                        + "    private Context myContext; // ERROR\n"
+                        + "\n"
+                        + "    public static class InnerClass1 {\n"
+                        + "        public View view; // OK\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    public static class InnerClass2 {\n"
+                        + "        public View view; // OK\n"
+                        + "    }\n"
+                        + "}\n"),
+                java(""
+                        + "package android.arch.lifecycle;\n"
+                        + "public class ViewModel { }\n"))
+                .run()
+                .expect(""
+                        + "src/test/pkg/MyModel.java:10: Warning: This field leaks a context object [StaticFieldLeak]\n"
+                        + "    private LinearLayout myLayout; // ERROR\n"
+                        + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "src/test/pkg/MyModel.java:12: Warning: This field leaks a context object [StaticFieldLeak]\n"
+                        + "    private Context myContext; // ERROR\n"
+                        + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "0 errors, 2 warnings\n");
     }
 }
