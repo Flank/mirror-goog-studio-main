@@ -79,7 +79,7 @@ public class ArtifactCollectionWithTestedArtifact implements ArtifactCollection 
 
     @Override
     public Collection<Throwable> getFailures() {
-        throw new UnsupportedOperationException();
+        return testArtifacts.getFailures();
     }
 
     @NonNull

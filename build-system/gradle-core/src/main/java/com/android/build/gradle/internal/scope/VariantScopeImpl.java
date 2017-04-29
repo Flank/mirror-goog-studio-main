@@ -881,6 +881,10 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
         Spec<ComponentIdentifier> filter = getComponentFilter(scope);
 
+        boolean lenientMode =
+                Boolean.TRUE.equals(
+                        globalScope.getProjectOptions().get(BooleanOption.IDE_BUILD_MODEL_ONLY));
+
         return configuration
                 .getIncoming()
                 .artifactView(
@@ -889,6 +893,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                             if (filter != null) {
                                 config.componentFilter(filter);
                             }
+                            // TODO somehow read the unresolved dependencies?
+                            config.lenient(lenientMode);
                         });
     }
 

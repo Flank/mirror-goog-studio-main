@@ -49,7 +49,6 @@ android {
 """
     }
 
-    @Ignore("b.android.com/234484")
     @Test
     public void unresolvedDependencies() {
         project.getBuildFile() << """

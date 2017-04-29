@@ -50,6 +50,7 @@ import com.android.ide.common.caching.CreatingCache;
 import com.android.utils.ImmutableCollectors;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -62,7 +63,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import org.gradle.api.artifacts.ArtifactCollection;
+import org.gradle.api.artifacts.ResolveException;
 import org.gradle.api.artifacts.component.ComponentArtifactIdentifier;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
@@ -84,6 +87,8 @@ public class ArtifactDependencyGraph {
     private static final CreatingCache<HashableResolvedArtifactResult, Library> sLibraryCache =
             new CreatingCache<>(ArtifactDependencyGraph::instantiateLibrary);
     private static final Map<String, Library> sGlobalLibrary = Maps.newHashMap();
+
+    private final List<Throwable> failures = Lists.newArrayList();
 
     public static void clearCaches() {
         sMavenCoordinatesCache.clear();
@@ -218,7 +223,7 @@ public class ArtifactDependencyGraph {
      * Returns a set of HashableResolvedArtifactResult where the {@link
      * HashableResolvedArtifactResult#isJava} field as been setup properly.
      */
-    private static Set<HashableResolvedArtifactResult> getAllArtifacts(
+    private Set<HashableResolvedArtifactResult> getAllArtifacts(
             @NonNull VariantScope variantScope,
             AndroidArtifacts.ConsumedConfigType consumedConfigType) {
         // Query for all the JARs. This will give us every dependency, even the Android ones (
@@ -232,7 +237,7 @@ public class ArtifactDependencyGraph {
                         AndroidArtifacts.ArtifactScope.ALL,
                         AndroidArtifacts.ArtifactType.JAR);
 
-        ArtifactCollection externalAArList =
+        ArtifactCollection externalAarList =
                 variantScope.getArtifactCollection(
                         consumedConfigType,
                         // FIXME once we only support level two, we can pass ArtifactScope.EXTERNAL here
@@ -246,15 +251,18 @@ public class ArtifactDependencyGraph {
             mainArtifactList =
                     ((ArtifactCollectionWithTestedArtifact) mainArtifactList).getTestArtifacts();
         }
-        if (externalAArList instanceof ArtifactCollectionWithTestedArtifact) {
-            externalAArList =
-                    ((ArtifactCollectionWithTestedArtifact) externalAArList).getTestArtifacts();
+        if (externalAarList instanceof ArtifactCollectionWithTestedArtifact) {
+            externalAarList =
+                    ((ArtifactCollectionWithTestedArtifact) externalAarList).getTestArtifacts();
         }
+
+        // collect dependency resolution failures
+        failures.addAll(externalAarList.getFailures());
 
         // build a list of external AARs. Put the hashable result directly in it as we'll want these
         // instead of the other ones in order to have direct access to the exploded aar.
         Map<ComponentIdentifier, HashableResolvedArtifactResult> externalAarMap = Maps.newHashMap();
-        for (ResolvedArtifactResult result : externalAArList.getArtifacts()) {
+        for (ResolvedArtifactResult result : externalAarList.getArtifacts()) {
             externalAarMap.put(
                     result.getId().getComponentIdentifier(),
                     new HashableResolvedArtifactResult(result, false /*isJava*/));
@@ -281,7 +289,7 @@ public class ArtifactDependencyGraph {
 
 
     /** Create a level 2 dependency graph. */
-    public static DependencyGraphs createLevel2DependencyGraph(
+    public DependencyGraphs createLevel2DependencyGraph(
             @NonNull VariantScope variantScope, boolean withFullDependency) {
         List<GraphItem> compileItems = Lists.newArrayList();
 
@@ -322,7 +330,7 @@ public class ArtifactDependencyGraph {
     }
 
     /** Create a level 1 dependency list. */
-    public static DependenciesImpl createDependencies(VariantScope variantScope) {
+    public DependenciesImpl createDependencies(VariantScope variantScope) {
         ImmutableList.Builder<String> projects = ImmutableList.builder();
         ImmutableList.Builder<AndroidLibrary> androidLibraries = ImmutableList.builder();
         ImmutableList.Builder<JavaLibrary> javaLibrary = ImmutableList.builder();
@@ -371,6 +379,38 @@ public class ArtifactDependencyGraph {
 
         return new DependenciesImpl(
                 androidLibraries.build(), javaLibrary.build(), projects.build());
+    }
+
+    @NonNull
+    public List<String> collectFailures() {
+        if (failures.isEmpty()) {
+            return ImmutableList.of();
+        }
+
+        // TODO get a better API in gradle to get this info
+
+        Pattern pattern = Pattern.compile(".*Could not find (.+)\\.");
+
+        return failures.stream()
+                .map(
+                        throwable -> {
+                            if (throwable instanceof ResolveException) {
+                                throwable = throwable.getCause();
+                            }
+
+                            String message = throwable.getMessage();
+                            Iterable<String> lines = Splitter.on('\n').split(message);
+
+                            for (String line : lines) {
+                                Matcher m = pattern.matcher(line);
+                                if (m.matches()) {
+                                    return m.group(1);
+                                }
+                            }
+
+                            return throwable.getMessage();
+                        })
+                .collect(Collectors.toList());
     }
 
     @NonNull

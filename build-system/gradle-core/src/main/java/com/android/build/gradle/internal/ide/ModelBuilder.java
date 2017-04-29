@@ -120,6 +120,8 @@ public class ModelBuilder implements ToolingModelBuilder {
     private int modelLevel = AndroidProject.MODEL_LEVEL_0_ORIGINAL;
     private boolean modelWithFullDependency = false;
 
+    private Set<SyncIssue> syncIssues = Sets.newLinkedHashSet();
+
     public ModelBuilder(
             @NonNull GlobalScope globalScope,
             @NonNull AndroidBuilder androidBuilder,
@@ -222,7 +224,7 @@ public class ModelBuilder implements ToolingModelBuilder {
 
         AaptOptions aaptOptions = AaptOptionsImpl.create(config.getAaptOptions());
 
-        List<SyncIssue> syncIssues = Lists.newArrayList(extraModelInfo.getSyncIssues().values());
+        syncIssues.addAll(extraModelInfo.getSyncIssues().values());
 
         List<String> flavorDimensionList = config.getFlavorDimensionList() != null ?
                 config.getFlavorDimensionList() : Lists.newArrayList();
@@ -270,7 +272,6 @@ public class ModelBuilder implements ToolingModelBuilder {
                 cloneSigningConfigs(config.getSigningConfigs()),
                 aaptOptions,
                 artifactMetaDataList,
-                findUnresolvedDependencies(syncIssues),
                 syncIssues,
                 config.getCompileOptions(),
                 lintOptions,
@@ -402,16 +403,23 @@ public class ModelBuilder implements ToolingModelBuilder {
         Dependencies dependencies;
         DependencyGraphs dependencyGraphs;
 
+        ArtifactDependencyGraph graph = new ArtifactDependencyGraph();
+
         if (modelLevel >= AndroidProject.MODEL_LEVEL_4_NEW_DEP_MODEL) {
             dependencies = EMPTY_DEPENDENCIES_IMPL;
 
             dependencyGraphs =
-                    ArtifactDependencyGraph.createLevel2DependencyGraph(
+                    graph.createLevel2DependencyGraph(
                             variantData.getScope(), modelWithFullDependency);
         } else {
-            dependencies = ArtifactDependencyGraph.createDependencies(variantData.getScope());
+            dependencies = graph.createDependencies(variantData.getScope());
 
             dependencyGraphs = EMPTY_DEPENDENCY_GRAPH;
+        }
+
+        List<String> failures = graph.collectFailures();
+        if (!failures.isEmpty()) {
+            handleUnresolvedDependencies(failures);
         }
 
         return new JavaArtifactImpl(
@@ -431,6 +439,17 @@ public class ModelBuilder implements ToolingModelBuilder {
                 dependencyGraphs,
                 sourceProviders.variantSourceProvider,
                 sourceProviders.multiFlavorSourceProvider);
+    }
+
+    private void handleUnresolvedDependencies(@NonNull List<String> failures) {
+        for (String failure : failures) {
+            syncIssues.add(
+                    new SyncIssueImpl(
+                            SyncIssue.TYPE_UNRESOLVED_DEPENDENCY,
+                            SyncIssue.SEVERITY_ERROR,
+                            failure,
+                            String.format("Unable to resolve dependency '%s'", failure)));
+        }
     }
 
     /**
@@ -501,16 +520,20 @@ public class ModelBuilder implements ToolingModelBuilder {
         DependenciesImpl dependencies;
         DependencyGraphs dependencyGraphs;
 
+        ArtifactDependencyGraph graph = new ArtifactDependencyGraph();
         if (modelLevel >= AndroidProject.MODEL_LEVEL_4_NEW_DEP_MODEL) {
             dependencies = EMPTY_DEPENDENCIES_IMPL;
 
-            dependencyGraphs =
-                    ArtifactDependencyGraph.createLevel2DependencyGraph(
-                            scope, modelWithFullDependency);
+            dependencyGraphs = graph.createLevel2DependencyGraph(scope, modelWithFullDependency);
         } else {
-            dependencies = ArtifactDependencyGraph.createDependencies(scope);
+            dependencies = graph.createDependencies(scope);
 
             dependencyGraphs = EMPTY_DEPENDENCY_GRAPH;
+        }
+
+        List<String> failures = graph.collectFailures();
+        if (!failures.isEmpty()) {
+            handleUnresolvedDependencies(failures);
         }
 
         return new AndroidArtifactImpl(
@@ -743,15 +766,5 @@ public class ModelBuilder implements ToolingModelBuilder {
             this.variantSourceProvider = variantSourceProvider;
             this.multiFlavorSourceProvider = multiFlavorSourceProvider;
         }
-    }
-
-    /**
-     * Return the unresolved dependencies in SyncIssues
-     */
-    private static Collection<String> findUnresolvedDependencies(
-            @NonNull Collection<SyncIssue> syncIssues) {
-        return syncIssues.stream()
-                .filter(issue -> issue.getType() == SyncIssue.TYPE_UNRESOLVED_DEPENDENCY)
-                .map(SyncIssue::getData).collect(Collectors.toList());
     }
 }
