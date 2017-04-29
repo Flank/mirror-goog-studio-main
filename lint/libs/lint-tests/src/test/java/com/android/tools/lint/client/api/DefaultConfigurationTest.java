@@ -40,6 +40,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Pattern;
 import org.intellij.lang.annotations.Language;
 
@@ -434,8 +435,14 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
 
         Location landscapeLocation = Location.create(landscapeFile);
 
-        assertTrue(configuration.isIgnored(plainContext, ObsoleteLayoutParamsDetector.ISSUE,
-                Location.create(plainFile), ""));
+        assertTrue(
+                String.format(Locale.US, "File `%s` was not ignored", plainFile.getPath()),
+                configuration.isIgnored(
+                        plainContext,
+                        ObsoleteLayoutParamsDetector.ISSUE,
+                        Location.create(plainFile),
+                        ""));
+
         assertTrue(configuration.isIgnored(largeContext, ObsoleteLayoutParamsDetector.ISSUE,
                 Location.create(largeFile), ""));
         assertTrue(configuration.isIgnored(windowsContext, ObsoleteLayoutParamsDetector.ISSUE,
