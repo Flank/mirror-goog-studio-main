@@ -23,7 +23,9 @@ import com.android.build.OutputFile;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
+import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -49,10 +51,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import org.gradle.api.GradleException;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.ParallelizableTask;
@@ -76,6 +79,8 @@ public class InstallVariantTask extends BaseTask {
 
     private Collection<String> installOptions;
 
+    private FileCollection apkDirectory;
+
     private BaseVariantData variantData;
 
     public InstallVariantTask() {
@@ -96,12 +101,8 @@ public class InstallVariantTask extends BaseTask {
         GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
 
         List<OutputFile> outputs =
-                variantData
-                        .getSplitScope()
-                        .getOutputs(VariantScope.TaskOutputType.APK)
-                        .stream()
-                        .map(splitOutput -> splitOutput)
-                        .collect(Collectors.toList());
+                ImmutableList.copyOf(
+                        BuildOutputs.load(VariantScope.TaskOutputType.APK, getApkDirectory()));
 
         install(
                 getProjectName(),
@@ -232,6 +233,15 @@ public class InstallVariantTask extends BaseTask {
         this.installOptions = installOptions;
     }
 
+    @InputDirectory
+    public File getApkDirectory() {
+        return apkDirectory.getSingleFile();
+    }
+
+    public void setApkDirectory(FileCollection apkDirectory) {
+        this.apkDirectory = apkDirectory;
+    }
+
     public BaseVariantData getVariantData() {
         return variantData;
     }
@@ -268,6 +278,7 @@ public class InstallVariantTask extends BaseTask {
             installTask.setGroup(TaskManager.INSTALL_GROUP);
             installTask.setProjectName(scope.getGlobalScope().getProject().getName());
             installTask.setVariantData(scope.getVariantData());
+            installTask.setApkDirectory(scope.getOutput(TaskOutputHolder.TaskOutputType.APK));
             installTask.setTimeOutInMs(
                     scope.getGlobalScope().getExtension().getAdbOptions().getTimeOutInMs());
             installTask.setInstallOptions(
