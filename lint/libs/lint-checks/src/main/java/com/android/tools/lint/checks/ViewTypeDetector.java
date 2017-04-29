@@ -27,6 +27,8 @@ import static com.android.SdkConstants.DOT_XML;
 import static com.android.SdkConstants.ID_PREFIX;
 import static com.android.SdkConstants.NEW_ID_PREFIX;
 import static com.android.SdkConstants.VIEW_TAG;
+import static com.intellij.pom.java.LanguageLevel.JDK_1_7;
+import static com.intellij.pom.java.LanguageLevel.JDK_1_8;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -63,8 +65,6 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.pom.java.LanguageLevel;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiClassType;
-import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiJavaFile;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiType;
@@ -85,10 +85,8 @@ import org.jetbrains.uast.UBinaryExpressionWithType;
 import org.jetbrains.uast.UCallExpression;
 import org.jetbrains.uast.UElement;
 import org.jetbrains.uast.UExpression;
-import org.jetbrains.uast.UFile;
 import org.jetbrains.uast.UQualifiedReferenceExpression;
 import org.jetbrains.uast.UVariable;
-import org.jetbrains.uast.UastUtils;
 import org.kxml2.io.KXmlParser;
 import org.w3c.dom.Attr;
 import org.xmlpull.v1.XmlPullParser;
@@ -320,19 +318,9 @@ public class ViewTypeDetector extends ResourceXmlDetector implements UastScanner
           @NonNull JavaContext context,
           @NonNull UCallExpression findViewByIdCall,
           @NonNull UCallExpression surroundingCall) {
-        // This issue only applies in Java, not Kotlin etc
-        UFile containingFile = UastUtils.getContainingFile(surroundingCall);
-        if (containingFile == null) {
-            return;
-        }
-        PsiFile psi = containingFile.getPsi();
-        if (!(psi instanceof PsiJavaFile)) {
-            return;
-        }
-
-        // Only applies for 1.8
-        LanguageLevel languageLevel = ((PsiJavaFile) psi).getLanguageLevel();
-        if (languageLevel.isLessThan(LanguageLevel.JDK_1_8)) {
+        // This issue only applies in Java, not Kotlin etc - and for language level 1.8
+        LanguageLevel languageLevel = LintUtils.getLanguageLevel(surroundingCall, JDK_1_7);
+        if (languageLevel.isLessThan(JDK_1_8)) {
             return;
         }
 
