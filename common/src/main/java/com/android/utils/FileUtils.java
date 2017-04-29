@@ -18,6 +18,7 @@ package com.android.utils;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
@@ -113,11 +114,15 @@ public final class FileUtils {
      * destination file exists, it gets overwritten.
      */
     public static void copyFile(@NonNull File from, @NonNull File to) throws IOException {
-        java.nio.file.Files.copy(
-                from.toPath(),
-                to.toPath(),
-                StandardCopyOption.COPY_ATTRIBUTES,
-                StandardCopyOption.REPLACE_EXISTING);
+        if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) {
+            Files.copy(from, to);
+        } else {
+            java.nio.file.Files.copy(
+                    from.toPath(),
+                    to.toPath(),
+                    StandardCopyOption.COPY_ATTRIBUTES,
+                    StandardCopyOption.REPLACE_EXISTING);
+        }
     }
 
     /**
