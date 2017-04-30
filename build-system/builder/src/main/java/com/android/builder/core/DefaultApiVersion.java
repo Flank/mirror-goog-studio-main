@@ -70,6 +70,15 @@ public class DefaultApiVersion implements ApiVersion {
         }
     }
 
+    /** Returns the API level as integer. It recognizes preview versions. */
+    public static int getFeatureLevel(@NonNull ApiVersion apiVersion) {
+        if (apiVersion.getCodename() != null) {
+            return SdkVersionInfo.getApiByPreviewName(apiVersion.getCodename(), true);
+        } else {
+            return apiVersion.getApiLevel();
+        }
+    }
+
     @Override
     public int getApiLevel() {
         return mApiLevel;

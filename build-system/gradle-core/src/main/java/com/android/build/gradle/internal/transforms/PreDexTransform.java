@@ -86,21 +86,17 @@ public class PreDexTransform extends Transform {
 
     private boolean instantRunMode;
 
-    @Nullable private final Integer minSdkVersion;
-
     public PreDexTransform(
             @NonNull DexOptions dexOptions,
             @NonNull AndroidBuilder androidBuilder,
             @Nullable FileCache buildCache,
             @NonNull DexingMode dexingMode,
-            boolean instantRunMode,
-            @Nullable Integer minSdkVersion) {
+            boolean instantRunMode) {
         this.dexOptions = dexOptions;
         this.androidBuilder = androidBuilder;
         this.buildCache = buildCache;
         this.dexingMode = dexingMode;
         this.instantRunMode = instantRunMode;
-        this.minSdkVersion = minSdkVersion;
     }
 
     @NonNull
@@ -138,7 +134,7 @@ public class PreDexTransform extends Transform {
 
             params.put("optimize", true);
             params.put("jumbo", dexOptions.getJumboMode());
-            params.put("multidex-mode", dexingMode.toString());
+            params.put("multidex-mode", dexingMode.getDexingType().name());
             params.put("java-max-heap-size", dexOptions.getJavaMaxHeapSize());
             params.put(
                     "additional-parameters",
@@ -151,8 +147,8 @@ public class PreDexTransform extends Transform {
                     getName());
             BuildToolInfo buildTools = targetInfo.getBuildTools();
             params.put("build-tools", buildTools.getRevision().toString());
-            if (minSdkVersion != null) {
-                params.put("min-sdk-version", minSdkVersion);
+            if (dexingMode.getMinSdkVersionValue() != null) {
+                params.put("min-sdk-version", dexingMode.getMinSdkVersionValue());
             }
 
             return params;
@@ -276,8 +272,7 @@ public class PreDexTransform extends Transform {
                                 usedBuildCache,
                                 dexingMode,
                                 dexOptions,
-                                androidBuilder,
-                                minSdkVersion);
+                                androidBuilder);
                 logger.verbose("Adding PreDexCallable for %s : %s", entry.getKey(), action);
                 executor.execute(action);
             }

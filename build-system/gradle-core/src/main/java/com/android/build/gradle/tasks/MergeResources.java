@@ -645,10 +645,7 @@ public class MergeResources extends IncrementalTask {
             final Project project = scope.getGlobalScope().getProject();
 
             mergeResourcesTask.setMinSdk(
-                    variantData
-                            .getVariantConfiguration()
-                            .getResourcesMinSdkVersion()
-                            .getApiLevel());
+                    variantData.getVariantConfiguration().getMinSdkVersion().getApiLevel());
 
             mergeResourcesTask.aaptGeneration =
                     AaptGeneration.fromProjectOptions(scope.getGlobalScope().getProjectOptions());

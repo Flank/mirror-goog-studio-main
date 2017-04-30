@@ -25,17 +25,17 @@ import com.android.dx.command.dexer.DxContext;
  */
 public class DexMergerConfig {
 
-    @NonNull private final DexingMode dexingMode;
+    @NonNull private final DexingType dexingType;
     @NonNull private final DxContext dxContext;
 
-    public DexMergerConfig(@NonNull DexingMode dexingMode, @NonNull DxContext dxContext) {
-        this.dexingMode = dexingMode;
+    public DexMergerConfig(@NonNull DexingType dexingType, @NonNull DxContext dxContext) {
+        this.dexingType = dexingType;
         this.dxContext = dxContext;
     }
 
     @NonNull
-    public DexingMode getDexingMode() {
-        return dexingMode;
+    public DexingType getDexingType() {
+        return dexingType;
     }
 
     @NonNull

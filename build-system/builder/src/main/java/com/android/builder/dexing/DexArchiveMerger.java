@@ -118,7 +118,7 @@ public class DexArchiveMerger {
         // sort paths so we produce deterministic output
         List<Path> inputPaths = Ordering.natural().sortedCopy(inputs);
 
-        switch (config.getDexingMode()) {
+        switch (config.getDexingType()) {
             case MONO_DEX:
                 Preconditions.checkState(
                         mainDexClasses == null, "Main dex list cannot be set for monodex.");
@@ -135,7 +135,7 @@ public class DexArchiveMerger {
                 mergeMultidex(inputPaths, outputDir, Collections.emptySet());
                 break;
             default:
-                throw new IllegalStateException("Unknown dexing mode" + config.getDexingMode());
+                throw new IllegalStateException("Unknown dexing type" + config.getDexingType());
         }
     }
 
@@ -192,7 +192,7 @@ public class DexArchiveMerger {
      * Merges all DEX files from the dex archives into DEX file(s). It does so by using {@link
      * DexMergingStrategy} which specifies when a DEX file should be started.
      *
-     * <p>For {@link DexingMode#LEGACY_MULTIDEX} mode, only classes specified in the main dex
+     * <p>For {@link DexingType#LEGACY_MULTIDEX} mode, only classes specified in the main dex
      * classes list will be packaged in the classes.dex, thus creating a minimal main DEX. Remaining
      * DEX classes will be placed in other DEX files.
      *
@@ -210,7 +210,7 @@ public class DexArchiveMerger {
         }
 
         int classesDexSuffix;
-        if (config.getDexingMode() == DexingMode.LEGACY_MULTIDEX) {
+        if (config.getDexingType() == DexingType.LEGACY_MULTIDEX) {
             // if we are in native multidex, we should leave classes.dex for the main dex
             classesDexSuffix = 1;
         } else {
@@ -225,7 +225,7 @@ public class DexArchiveMerger {
             DexArchiveEntry entry = entries.next();
             Dex dex = new Dex(entry.getDexFileContent());
 
-            if (config.getDexingMode() == DexingMode.LEGACY_MULTIDEX) {
+            if (config.getDexingType() == DexingType.LEGACY_MULTIDEX) {
                 // check if this should go to the main dex
                 Path classFile =
                         DexArchiveEntry.withClassExtension(entry.getRelativePathInArchive());
@@ -249,7 +249,7 @@ public class DexArchiveMerger {
             }
         }
 
-        if (config.getDexingMode() == DexingMode.LEGACY_MULTIDEX) {
+        if (config.getDexingType() == DexingType.LEGACY_MULTIDEX) {
             // write the main dex file
             subTasks.add(submitForMerging(toMergeInMain, output.resolve(getDexFileName(0))));
         }

@@ -79,7 +79,7 @@ public final class DexArchiveTestUtil {
 
     public static void mergeMonoDex(@NonNull Collection<Path> dexArchives, @NonNull Path outputDir)
             throws IOException, InterruptedException {
-        implMergeDexes(dexArchives, outputDir, DexingMode.MONO_DEX, null);
+        implMergeDexes(dexArchives, outputDir, DexingType.MONO_DEX, null);
     }
 
     public static void mergeLegacyDex(
@@ -87,13 +87,13 @@ public final class DexArchiveTestUtil {
             @NonNull Path outputDir,
             @NonNull Set<String> mainDexList)
             throws IOException, InterruptedException {
-        implMergeDexes(dexArchives, outputDir, DexingMode.LEGACY_MULTIDEX, mainDexList);
+        implMergeDexes(dexArchives, outputDir, DexingType.LEGACY_MULTIDEX, mainDexList);
     }
 
     public static void mergeNativeDex(
             @NonNull Collection<Path> dexArchives, @NonNull Path outputDir)
             throws IOException, InterruptedException {
-        implMergeDexes(dexArchives, outputDir, DexingMode.NATIVE_MULTIDEX, null);
+        implMergeDexes(dexArchives, outputDir, DexingType.NATIVE_MULTIDEX, null);
     }
 
     /** Gets a DEX-style class names from the specified class names without the package. */
@@ -150,14 +150,14 @@ public final class DexArchiveTestUtil {
     private static void implMergeDexes(
             @NonNull Collection<Path> inputs,
             @NonNull Path outputDir,
-            @NonNull DexingMode dexingMode,
+            @NonNull DexingType dexingType,
             @Nullable Set<String> mainDexList)
             throws IOException, InterruptedException {
         Preconditions.checkState(
-                (dexingMode == DexingMode.LEGACY_MULTIDEX) == (mainDexList != null),
+                (dexingType == DexingType.LEGACY_MULTIDEX) == (mainDexList != null),
                 "Main Dex list must be set if and only if legacy multidex is enabled.");
 
-        DexMergerConfig config = new DexMergerConfig(dexingMode, dxContext);
+        DexMergerConfig config = new DexMergerConfig(dexingType, dxContext);
         DexArchiveMerger merger = new DexArchiveMerger(config, ForkJoinPool.commonPool());
         Files.createDirectory(outputDir);
         merger.merge(inputs, outputDir, mainDexList);

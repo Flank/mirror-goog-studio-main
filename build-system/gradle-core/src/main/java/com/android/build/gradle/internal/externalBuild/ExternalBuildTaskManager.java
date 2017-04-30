@@ -52,6 +52,7 @@ import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.DefaultDexOptions;
 import com.android.builder.core.DefaultManifestParser;
 import com.android.builder.dexing.DexingMode;
+import com.android.builder.dexing.DexingType;
 import com.android.builder.profile.Recorder;
 import com.android.builder.signing.DefaultSigningConfig;
 import com.android.ide.common.build.ApkData;
@@ -296,7 +297,7 @@ class ExternalBuildTaskManager {
         AndroidBuilder androidBuilder = externalBuildContext.getAndroidBuilder();
         InstantRunPatchingPolicy patchingPolicy =
                 variantScope.getInstantRunBuildContext().getPatchingPolicy();
-        final DexingMode dexingMode = DexingMode.NATIVE_MULTIDEX;
+        final DexingMode dexingMode = new DexingMode(DexingType.NATIVE_MULTIDEX);
         //if (patchingPolicy != null && patchingPolicy.useMultiDex()) {
         //    dexingMode = DexingMode.NATIVE_MULTIDEX;
         //} else {
@@ -309,8 +310,7 @@ class ExternalBuildTaskManager {
                         androidBuilder,
                         variantScope.getGlobalScope().getBuildCache(),
                         dexingMode,
-                        variantScope.getInstantRunBuildContext().isInInstantRunMode(),
-                        null);
+                        variantScope.getInstantRunBuildContext().isInInstantRunMode());
         transformManager.addTransform(tasks, variantScope, preDexTransform);
 
         //if (dexingMode != DexingMode.NATIVE_MULTIDEX) {
