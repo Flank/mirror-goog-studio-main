@@ -31,42 +31,39 @@ bool isLoopbackAddress(const char* address) {
 
 namespace profiler {
 
-using std::string;
-
-void ConnectionSampler::GetData(profiler::proto::NetworkProfilerData *data) {
-  int connection_number = 0;
+void ConnectionSampler::Refresh() {
   char buffer[kLineBufferSize];
-  for (auto &file_name : files_) {
-    connection_number += ReadConnectionNumber(file_name, buffer);
-  }
-  data->mutable_connection_data()->set_connection_number(connection_number);
-}
-
-int ConnectionSampler::ReadConnectionNumber(const string &file, char *buffer) {
-  int count = 0;
-
-  FILE *fp = fopen(file.c_str(), "r");
-  if (fp == NULL) {
-    return count;
-  }
-
   char localAddress[kAddressStringSize];
   char remoteAddress[kAddressStringSize];
   uint32_t idx, uid, number;
 
-  while(fgets(buffer, kLineBufferSize * sizeof(char), fp) != NULL) {
-    if (sscanf(buffer,
-               " %" SCNu32 ": %32[^:]:%x %32[^:]:%x %x %x:%x %x:%x %x %" SCNu32,
-               &idx, localAddress, &number, remoteAddress, &number, &number,
-               &number, &number, &number, &number, &number, &uid) == 12 &&
-               uid_ == uid && !isLoopbackAddress(localAddress) &&
-               !isLoopbackAddress(remoteAddress)) {
-      count++;
+  connections_.erase(connections_.begin(), connections_.end());
+  for (auto &file : files_) {
+    FILE *fp = fopen(file.c_str(), "r");
+    if (fp == nullptr) {
+      continue;
     }
-  }
-  fclose(fp);
 
-  return count;
+    while(fgets(buffer, kLineBufferSize * sizeof(char), fp) != NULL) {
+      if (sscanf(buffer,
+          " %" SCNu32 ": %32[^:]:%x %32[^:]:%x %x %x:%x %x:%x %x %" SCNu32,
+          &idx, localAddress, &number, remoteAddress, &number, &number,
+          &number, &number, &number, &number, &number, &uid) == 12 &&
+          !isLoopbackAddress(localAddress) &&
+          !isLoopbackAddress(remoteAddress)) {
+        connections_[uid]++;
+      }
+    }
+    fclose(fp);
+  }
+}
+
+proto::NetworkProfilerData ConnectionSampler::Sample(const uint32_t uid) {
+  proto::NetworkProfilerData data;
+  if (connections_.find(uid) != connections_.end()) {
+    data.mutable_connection_data()->set_connection_number(connections_[uid]);
+  }
+  return data;
 }
 
 }  // namespace profiler

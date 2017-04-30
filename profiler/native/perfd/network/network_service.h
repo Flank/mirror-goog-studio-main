@@ -30,7 +30,8 @@ namespace profiler {
 // Service class to pass profiler data through grpc.
 class NetworkServiceImpl final : public proto::NetworkService::Service {
  public:
-  explicit NetworkServiceImpl(NetworkCache *network_cache);
+  explicit NetworkServiceImpl(NetworkCache *network_cache)
+      : network_cache_(*network_cache), collector_(kSampleRateMs) {}
 
   grpc::Status GetData(grpc::ServerContext *context,
                        const proto::NetworkDataRequest *request,
@@ -53,23 +54,19 @@ class NetworkServiceImpl final : public proto::NetworkService::Service {
                               proto::HttpDetailsResponse *response) override;
 
  private:
-  // Start sampling data for device network information.
-  void StartDeviceCollector();
-  // Start sampling data for a given app (non-zero |pid|).
-  void StartAppCollector(int32_t pid);
-  void StartCollectorFor(NetworkProfilerBuffer *buffer, int32_t sample_rate_ms);
-
   // Max number of an app's profiler data instances. Polling rate of read
   // data to profiler is less than 1 second, 10 seconds is enough to hold
   // and 1024 is consistent with memory_levels_sampler.
-  static const int kBufferCapacity = 1024;
-
-  // TODO: The vectors may need mutex.
-  std::unique_ptr<NetworkProfilerBuffer> device_buffer_;
-  std::vector<std::unique_ptr<NetworkProfilerBuffer>> app_buffers_;
-  std::vector<std::unique_ptr<NetworkCollector>> collectors_;
+  static const int32_t kBufferCapacity = 1024;
+  // Network collector for device data uses dumpsys command, while network
+  // collector for an app reads from system file. Sampling rates are chosen
+  // based on how heavyweight each collector is expected to be.
+  static const int32_t kSampleRateMs = 500;
 
   NetworkCache &network_cache_;
+  NetworkCollector collector_;
+  // Buffers holding every started app's data, each buffer has app's pid.
+  std::vector<std::unique_ptr<NetworkProfilerBuffer>> app_buffers_;
 };
 
 }  // namespace profiler

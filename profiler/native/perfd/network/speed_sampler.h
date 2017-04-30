@@ -16,12 +16,13 @@
 #ifndef PERFD_NETWORK_SPEED_SAMPLER_H_
 #define PERFD_NETWORK_SPEED_SAMPLER_H_
 
-#include "perfd/network/network_sampler.h"
-
 #include "perfd/network/net_stats_file_reader.h"
+#include "perfd/network/network_sampler.h"
 #include "perfd/network/speed_converter.h"
+#include "proto/network.pb.h"
 
 #include <string>
+#include <unordered_map>
 
 namespace profiler {
 
@@ -29,17 +30,19 @@ namespace profiler {
 // and received network speeds of an app.
 class SpeedSampler final : public NetworkSampler {
  public:
-  SpeedSampler(const std::string &uid, const std::string &file)
-      : stats_reader_(uid, file) {}
+  SpeedSampler(const std::string &file) : stats_reader_(file) {}
 
-  // Reads traffic bytes sent and received, and store data in given {@code
-  // NetworkProfilerData}.
-  void GetData(profiler::proto::NetworkProfilerData *data) override;
+  // Read every app's traffic bytes sent and received, and save data internally.
+  void Refresh() override;
+  // Returns a given app's traffic bytes from last refresh.
+  proto::NetworkProfilerData Sample(const uint32_t uid) override;
 
  private:
   NetStatsFileReader stats_reader_;
-  std::unique_ptr<SpeedConverter> tx_speed_converter_;
-  std::unique_ptr<SpeedConverter> rx_speed_converter_;
+  // Mapping of app uid to the app's bytes sent speed converter.
+  std::unordered_map<uint32_t, SpeedConverter> tx_speed_converters_;
+  // Mapping of app uid to the app's bytes received speed converter.
+  std::unordered_map<uint32_t, SpeedConverter> rx_speed_converters_;
 };
 
 }  // namespace profiler

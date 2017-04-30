@@ -15,6 +15,7 @@
  */
 #include "net_stats_file_reader.h"
 
+#include <cstring>
 #include <inttypes.h>
 
 namespace profiler {
@@ -24,9 +25,8 @@ void NetStatsFileReader::Refresh() {
   if (fp == NULL) {
     return;
   }
-
-  bytes_tx_ = 0;
-  bytes_rx_ = 0;
+  bytes_tx_.erase(bytes_tx_.begin(), bytes_tx_.end());
+  bytes_rx_.erase(bytes_rx_.begin(), bytes_rx_.end());
 
   // Buffer length 512 is the maximum line length of formatted proc stat file.
   // An example in opensource code is
@@ -48,12 +48,20 @@ void NetStatsFileReader::Refresh() {
     if (sscanf(buffer,
                "%" SCNu32 " %31s 0x%" SCNx64 " %u %u %" SCNu64 " %" SCNu64 " %"
                SCNu64, &idx, iface, &tag, &uid, &set, &rx_bytes, &rx_packets,
-               &tx_bytes) == 8 && uid_ == uid && strcmp("lo", iface) != 0) {
-      bytes_tx_ += tx_bytes;
-      bytes_rx_ += rx_bytes;
+               &tx_bytes) == 8 && strcmp("lo", iface) != 0) {
+      bytes_tx_[uid] = bytes_tx_[uid] + tx_bytes;
+      bytes_rx_[uid] = bytes_rx_[uid] + rx_bytes;
     }
   }
   fclose(fp);
+}
+
+uint64_t NetStatsFileReader::bytes_tx(uint32_t uid) {
+  return bytes_tx_.find(uid) != bytes_tx_.end() ? bytes_tx_[uid] : 0;
+}
+
+uint64_t NetStatsFileReader::bytes_rx(uint32_t uid) {
+  return bytes_rx_.find(uid) != bytes_rx_.end() ? bytes_rx_[uid] : 0;
 }
 
 }  // namespace profiler

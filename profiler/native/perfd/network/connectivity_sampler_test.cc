@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 #include "connectivity_sampler.h"
-#include "proto/network.pb.h"
 #include "test/utils.h"
 #include "utils/bash_command.h"
 
@@ -26,20 +25,33 @@ using profiler::TestUtils;
 TEST(ConnectivitySampler, RadioActive) {
   ConnectivitySampler sampler(
     "cat " + TestUtils::getNetworkTestData("connectivity_radio_active.txt"),
-    "");
-  profiler::proto::NetworkProfilerData data;
-  sampler.GetData(&data);
+    "cat " + TestUtils::getNetworkTestData(
+        "connectivity_network_type_mobile.txt"));
+  sampler.Refresh();
+  auto data = sampler.Sample();
   EXPECT_TRUE(data.has_connectivity_data());
   EXPECT_EQ(profiler::proto::ConnectivityData::ACTIVE,
             data.connectivity_data().radio_state());
 }
 
+TEST(ConnectivitySampler, RadioIsDefaultValueWhenNetworkIsWifi) {
+  ConnectivitySampler sampler(
+    "cat " + TestUtils::getNetworkTestData("connectivity_radio_active.txt"),
+    "cat " + TestUtils::getNetworkTestData("connectivity_network_type_wifi.txt")
+  );
+  sampler.Refresh();
+  auto data = sampler.Sample();
+  EXPECT_TRUE(data.has_connectivity_data());
+  EXPECT_EQ(0, data.connectivity_data().radio_state());
+}
+
 TEST(ConnectivitySampler, RadioSleeping) {
   ConnectivitySampler sampler(
     "cat " + TestUtils::getNetworkTestData("connectivity_radio_sleeping.txt"),
-    "");
-  profiler::proto::NetworkProfilerData data;
-  sampler.GetData(&data);
+    "cat " + TestUtils::getNetworkTestData(
+        "connectivity_network_type_mobile.txt"));
+  sampler.Refresh();
+  auto data = sampler.Sample();
   EXPECT_TRUE(data.has_connectivity_data());
   EXPECT_EQ(profiler::proto::ConnectivityData::SLEEPING,
             data.connectivity_data().radio_state());
@@ -48,9 +60,10 @@ TEST(ConnectivitySampler, RadioSleeping) {
 TEST(ConnectivitySampler, NoRadioState) {
   ConnectivitySampler sampler(
     "cat " + TestUtils::getNetworkTestData("connectivity_radio_missing.txt"),
-    "");
-  profiler::proto::NetworkProfilerData data;
-  sampler.GetData(&data);
+    "cat " + TestUtils::getNetworkTestData(
+        "connectivity_network_type_mobile.txt"));
+  sampler.Refresh();
+  auto data = sampler.Sample();
   EXPECT_TRUE(data.has_connectivity_data());
   EXPECT_EQ(profiler::proto::ConnectivityData::UNSPECIFIED,
             data.connectivity_data().radio_state());
@@ -58,9 +71,11 @@ TEST(ConnectivitySampler, NoRadioState) {
 
 TEST(ConnectivitySampler, RadioStateTrueAndFalseMatch) {
   ConnectivitySampler sampler("cat " + TestUtils::getNetworkTestData(
-    "connectivity_radio_both_false_and_true_exist.txt"), "");
-  profiler::proto::NetworkProfilerData data;
-  sampler.GetData(&data);
+    "connectivity_radio_both_false_and_true_exist.txt"),
+    "cat " + TestUtils::getNetworkTestData(
+        "connectivity_network_type_mobile.txt"));
+  sampler.Refresh();
+  auto data = sampler.Sample();
   EXPECT_TRUE(data.has_connectivity_data());
   EXPECT_EQ(profiler::proto::ConnectivityData::SLEEPING,
             data.connectivity_data().radio_state());
@@ -68,20 +83,19 @@ TEST(ConnectivitySampler, RadioStateTrueAndFalseMatch) {
 
 TEST(ConnectivitySampler, NoNetworkTypeId) {
   ConnectivitySampler sampler("", "cat " + TestUtils::getNetworkTestData(
-                                      "connectivity_no_network_type_id.txt"));
-  profiler::proto::NetworkProfilerData data;
-  sampler.GetData(&data);
+    "connectivity_no_network_type_id.txt"));
+  sampler.Refresh();
+  auto data = sampler.Sample();
   EXPECT_TRUE(data.has_connectivity_data());
   EXPECT_EQ(profiler::proto::ConnectivityData::INVALID,
             data.connectivity_data().default_network_type());
 }
 
 TEST(ConnectivitySampler, NetworkTypeWifi) {
-  ConnectivitySampler sampler(
-      "", "cat " + TestUtils::getNetworkTestData(
-                       "connectivity_network_type_wifi.txt"));
-  profiler::proto::NetworkProfilerData data;
-  sampler.GetData(&data);
+  ConnectivitySampler sampler("", "cat " + TestUtils::getNetworkTestData(
+    "connectivity_network_type_wifi.txt"));
+  sampler.Refresh();
+  auto data = sampler.Sample();
   EXPECT_TRUE(data.has_connectivity_data());
   EXPECT_EQ(profiler::proto::ConnectivityData::WIFI,
             data.connectivity_data().default_network_type());
@@ -89,9 +103,9 @@ TEST(ConnectivitySampler, NetworkTypeWifi) {
 
 TEST(ConnectivitySampler, NetworkTypeMobile) {
   ConnectivitySampler sampler("", "cat " + TestUtils::getNetworkTestData(
-                                      "connectivity_network_type_mobile.txt"));
-  profiler::proto::NetworkProfilerData data;
-  sampler.GetData(&data);
+    "connectivity_network_type_mobile.txt"));
+  sampler.Refresh();
+  auto data = sampler.Sample();
   EXPECT_TRUE(data.has_connectivity_data());
   EXPECT_EQ(profiler::proto::ConnectivityData::MOBILE,
             data.connectivity_data().default_network_type());

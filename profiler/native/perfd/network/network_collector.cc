@@ -30,22 +30,18 @@
 
 namespace profiler {
 
+NetworkCollector::NetworkCollector(int sample_ms)
+    : sample_us_(sample_ms * 1000) {
+  samplers_.emplace_back(
+      new ConnectivitySampler(NetworkConstants::GetRadioStatusCommand(),
+          NetworkConstants::GetDefaultNetworkTypeCommand()));
+  samplers_.emplace_back(
+      new SpeedSampler(NetworkConstants::GetTrafficBytesFilePath()));
+  samplers_.emplace_back(
+      new ConnectionSampler(NetworkConstants::GetConnectionFilePaths()));
+}
+
 NetworkCollector::~NetworkCollector() {
-  if (is_running_) {
-    Stop();
-  }
-}
-
-void NetworkCollector::Start() {
-  if (samplers_.empty()) {
-    CreateSamplers();
-  }
-  if (!is_running_.exchange(true)) {
-    profiler_thread_ = std::thread(&NetworkCollector::Collect, this);
-  }
-}
-
-void NetworkCollector::Stop() {
   if (is_running_.exchange(false)) {
     profiler_thread_.join();
   }
@@ -53,47 +49,56 @@ void NetworkCollector::Stop() {
 
 void NetworkCollector::Collect() {
   SetThreadName("Studio:PollNet");
-
-  profiler::SteadyClock clock;
   while (is_running_.load()) {
     Trace::Begin("NET:Collect");
-    for (const auto &sampler : samplers_) {
-      // TODO: Sometimes, we may actually want to create more than one response
-      // entry per tick. Revisit this logic to allow that.
-      // (For example, between the last tick and this tick, TrafficSampler may
-      // want to create an additional point in the middle where the speed
-      // dropped to 0)
-      profiler::proto::NetworkProfilerData response;
-      sampler->GetData(&response);
-      int64_t time = clock.GetCurrentTime();
-      response.mutable_basic_info()->set_process_id(pid_);
-      response.mutable_basic_info()->set_end_timestamp(time);
-      buffer_.Add(response, time);
+    for (auto &sampler : samplers_) {
+      sampler->Refresh();
     }
+    StoreDataToBuffer();
     Trace::End();
     usleep(sample_us_);
   }
 }
 
-void NetworkCollector::CreateSamplers() {
-  // TODO: This class will be replaced by a follow up CL soon.
-  if (pid_ == proto::AppId::ANY) {
-    samplers_.emplace_back(new ConnectivitySampler(
-        NetworkConstants::GetRadioStatusCommand(),
-        NetworkConstants::GetDefaultNetworkTypeCommand()));
-    return;
-  }
-
-  std::string uid;
-  bool has_uid = UidFetcher::GetUidString(pid_, &uid);
-  if (has_uid) {
-    samplers_.emplace_back(
-        new SpeedSampler(uid, NetworkConstants::GetTrafficBytesFilePath()));
-    samplers_.emplace_back(
-        new ConnectionSampler(uid, NetworkConstants::GetConnectionFilePaths()));
+void NetworkCollector::StoreDataToBuffer() {
+  // TODO: Use clock from Daemon::Utilities from profiler component
+  SteadyClock clock;
+  auto time = clock.GetCurrentTime();
+  std::lock_guard<std::mutex> lock(buffer_mutex_);
+  for (auto it = uid_to_buffers_.begin(); it != uid_to_buffers_.end(); it++) {
+    auto &uid = it->first;
+    auto &buffer = it->second;
+    for (auto &sampler : samplers_) {
+      auto response = sampler->Sample(uid);
+      response.mutable_basic_info()->set_process_id(buffer->pid());
+      response.mutable_basic_info()->set_end_timestamp(time);
+      buffer->Add(response, time);
+    }
   }
 }
 
-int NetworkCollector::pid() { return pid_; }
+void NetworkCollector::Start(int32_t pid, NetworkProfilerBuffer *buffer) {
+  int uid = UidFetcher::GetUid(pid);
+  std::lock_guard<std::mutex> lock(buffer_mutex_);
+  if (uid >= 0 && uid_to_buffers_.find(uid) == uid_to_buffers_.end()) {
+    uid_to_buffers_.emplace(uid, buffer);
+    if (!is_running_.exchange(true)) {
+      profiler_thread_ = std::thread(&NetworkCollector::Collect, this);
+    }
+  }
+}
+
+void NetworkCollector::Stop(int32_t pid) {
+  std::lock_guard<std::mutex> lock(buffer_mutex_);
+  for (auto it = uid_to_buffers_.begin(); it != uid_to_buffers_.end(); it++) {
+    if (pid == it->second->pid()) {
+      uid_to_buffers_.erase(it);
+      if (uid_to_buffers_.empty() && is_running_.exchange(false)) {
+        profiler_thread_.join();
+      }
+      return;
+    }
+  }
+}
 
 }  // namespace profiler

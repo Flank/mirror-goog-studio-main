@@ -18,18 +18,23 @@
 
 #include "proto/network.pb.h"
 
-#include <string>
-#include <vector>
-
 namespace profiler {
+
+using proto::NetworkProfilerData;
 
 // Abstract network data collector.
 class NetworkSampler {
  public:
   virtual ~NetworkSampler() = default;
 
-  // Run data collection and put result into the given proto.
-  virtual void GetData(profiler::proto::NetworkProfilerData *data) = 0;
+  // Refresh data for this sampler for all apps. After this is called, collected
+  // data are stored in sampler internally.
+  virtual void Refresh() = 0;
+
+  // |Sample| returns collected data of a given app from the last refresh call.
+  // It is be called once per app we are profiling, and each call is expected
+  // to use the same data collected by the latest refresh.
+  virtual NetworkProfilerData Sample(const uint32_t uid) = 0;
 };
 
 }  // namespace profiler

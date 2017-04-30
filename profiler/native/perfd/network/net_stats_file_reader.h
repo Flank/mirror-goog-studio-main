@@ -16,9 +16,8 @@
 #ifndef PERFD_NETWORK_NET_STATS_FILE_READER_H_
 #define PERFD_NETWORK_NET_STATS_FILE_READER_H_
 
-#include "perfd/network/network_sampler.h"
-
 #include <string>
+#include <unordered_map>
 
 namespace profiler {
 
@@ -29,26 +28,22 @@ namespace profiler {
 // class should call |Refresh| before checking the latest values.
 class NetStatsFileReader final {
  public:
-  NetStatsFileReader(const std::string &uid, const std::string &file) :
-    uid_(atoi(uid.c_str())), file_(file) {}
-
+  NetStatsFileReader(const std::string &file) : file_(file) {}
   // Reparse the target stats file, updating the local copy of data values read
   // from it
   void Refresh();
-
-  // Sent (transmitted) bytes since device boot
-  int64_t bytes_tx() { return bytes_tx_; }
-
-  // Received bytes since device boot
-  int64_t bytes_rx() { return bytes_rx_; }
+  // Sent (transmitted) bytes since device boot of a specific app.
+  uint64_t bytes_tx(uint32_t id);
+  // Received bytes since device boot of a specific app.
+  uint64_t bytes_rx(uint32_t id);
 
  private:
-  // Unsigned integer that is app uid for parsing file to get traffic bytes.
-  const uint32_t uid_;
   const std::string file_;
-
-  int64_t bytes_tx_{0};
-  int64_t bytes_rx_{0};
+  // Mapping of app uid to the app's sent/received bytes. After |Refresh|
+  // is called, all app's sent/received bytes data are stored in the map.
+  // If an app has sent/received bytes since device boot, it has a map entry.
+  std::unordered_map<uint32_t, uint64_t> bytes_tx_;
+  std::unordered_map<uint32_t, uint64_t> bytes_rx_;
 };
 
 }  // namespace profiler
