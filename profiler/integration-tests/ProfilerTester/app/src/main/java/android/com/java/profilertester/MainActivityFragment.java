@@ -1,6 +1,7 @@
 package android.com.java.profilertester;
 
 import android.app.Activity;
+import android.com.java.profilertester.cpu.CpuAsyncTask;
 import android.com.java.profilertester.network.NetworkAsyncTask;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
@@ -23,6 +24,7 @@ import java.util.ArrayList;
 public class MainActivityFragment extends Fragment {
 
     final static String TAG = MainActivityFragment.class.getName();
+    final static int CPU_CATEGORY_NUMBER = 0;
     final static int NETWORK_CATEGORY_NUMBER = 2;
 
     private View myFragmentView;
@@ -81,6 +83,11 @@ public class MainActivityFragment extends Fragment {
         int actionNumber = mActionSpinner.getSelectedItemPosition();
         if (categoryNumber == -1) {
             return;
+        }
+
+        // cpu scenario
+        if (categoryNumber == CPU_CATEGORY_NUMBER) {
+            new CpuAsyncTask(getActivity()).execute(actionNumber);
         }
 
         // network scenarios
