@@ -141,11 +141,6 @@ public final class AaptV2CommandBuilder {
         }
 
         // options controlled by build variants
-
-        if (config.isDebuggable()) {
-//            builder.addArgs("--debug-mode");
-        }
-
         ILogger logger = config.getLogger();
         Preconditions.checkNotNull(logger);
         if (config.getVariantType() != VariantType.ANDROID_TEST
