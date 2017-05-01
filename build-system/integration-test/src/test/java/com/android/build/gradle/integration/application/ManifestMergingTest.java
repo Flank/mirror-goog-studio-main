@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import java.io.File;
 import org.junit.Assume;
@@ -140,4 +141,24 @@ public class ManifestMergingTest {
                         "android:testOnly=\"true\"");
     }
 
+    @Test
+    public void checkMinAndTargetSdkVersion_WithTargetDeviceApi() throws Exception {
+        // Regression test for https://issuetracker.google.com/issues/37133933
+        TestFileUtils.appendToFile(
+                flavors.getBuildFile(),
+                "android {\n"
+                        + "    compileSdkVersion 24\n"
+                        + "    defaultConfig {\n"
+                        + "        minSdkVersion 15\n"
+                        + "        targetSdkVersion 24\n"
+                        + "    }\n"
+                        + "}");
+        flavors.executor()
+                .with(IntegerOption.IDE_TARGET_DEVICE_API, 22)
+                .run("clean", "assembleF1FaDebug");
+        File manifestFile =
+                flavors.file("build/intermediates/manifests/full/f1Fa/debug/AndroidManifest.xml");
+        assertThat(manifestFile)
+                .containsAllOf("android:minSdkVersion=\"15\"", "android:targetSdkVersion=\"24\"");
+    }
 }
