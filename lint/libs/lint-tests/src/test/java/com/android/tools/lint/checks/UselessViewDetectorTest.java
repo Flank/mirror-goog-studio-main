@@ -287,4 +287,24 @@ public class UselessViewDetectorTest extends AbstractCheckTest {
                         + "  </FrameLayout>\n"
                         + "</LinearLayout>")));
     }
+
+    public void testDataBinding() {
+        // Regression test for 37140356
+        lint().files(
+                xml("res/layout/layout.xml", ""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<FrameLayout \n"
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    xmlns:app=\"http://schemas.android.com/apk/res/foo.bar.baz\"\n"
+                        + "             android:layout_width=\"match_parent\"\n"
+                        + "             android:layout_height=\"wrap_content\">\n"
+                        + "        <LinearLayout\n"
+                        + "            android:layout_width=\"match_parent\" \n"
+                        + "            android:layout_height=\"wrap_content\" \n"
+                        + "            android:orientation=\"vertical\" \n"
+                        + "            app:viewModel=\"@{viewModel}\" /> "
+                        + "</FrameLayout>\n"))
+                .run()
+                .expectClean();
+    }
 }

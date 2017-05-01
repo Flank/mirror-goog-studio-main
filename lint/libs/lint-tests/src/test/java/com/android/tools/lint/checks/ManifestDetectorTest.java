@@ -647,7 +647,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                 issues(ManifestDetector.UNIQUE_PERMISSION)
                 .run()
                 .expect(""
-                        + "/TESTROOT/Library/AndroidManifest.xml:9: Error: Permission name SEND_SMS is not unique (appears in both foo.permission.SEND_SMS and bar.permission.SEND_SMS) [UniquePermission]\n"
+                        + "../Library/AndroidManifest.xml:9: Error: Permission name SEND_SMS is not unique (appears in both foo.permission.SEND_SMS and bar.permission.SEND_SMS) [UniquePermission]\n"
                         + "    <permission android:name=\"bar.permission.SEND_SMS\"\n"
                         + "                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "    AndroidManifest.xml:9: Previous permission here\n"
@@ -705,7 +705,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                 issues(ManifestDetector.UNIQUE_PERMISSION)
                 .run()
                 .expect(""
-                        + "/TESTROOT/Library/AndroidManifest.xml:8: Error: Permission name PERMISSION_NAME_1 is not unique (appears in both pkg2.PERMISSION_NAME_1 and pkg1.PERMISSION_NAME_1) [UniquePermission]\n"
+                        + "../Library/AndroidManifest.xml:8: Error: Permission name PERMISSION_NAME_1 is not unique (appears in both pkg2.PERMISSION_NAME_1 and pkg1.PERMISSION_NAME_1) [UniquePermission]\n"
                         + "    <permission android:name=\"pkg1.PERMISSION_NAME_1\"/>\n"
                         + "                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "    AndroidManifest.xml:5: Previous permission here\n"

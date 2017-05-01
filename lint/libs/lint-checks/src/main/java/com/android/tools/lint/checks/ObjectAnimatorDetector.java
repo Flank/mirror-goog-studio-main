@@ -42,6 +42,7 @@ import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiClassType;
 import com.intellij.psi.PsiCompiledElement;
+import com.intellij.psi.PsiCompiledFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiLocalVariable;
@@ -307,7 +308,9 @@ public class ObjectAnimatorDetector extends Detector implements UastScanner {
     private static boolean isHolderConstructionMethod(@NonNull JavaContext context,
             @NonNull UCallExpression callExpression) {
         String referenceName = callExpression.getMethodName();
-        if (referenceName != null && referenceName.startsWith("of")) {
+        if (referenceName != null && referenceName.startsWith("of")
+                // This will require more indirection; see unit test
+                && !referenceName.equals("ofKeyframe")) {
             PsiMethod resolved = callExpression.resolve();
             if (resolved != null && context.getEvaluator().isMemberInClass(resolved,
                     "android.animation.PropertyValuesHolder")) {
@@ -422,7 +425,7 @@ public class ObjectAnimatorDetector extends Detector implements UastScanner {
         mAlreadyWarned.add(locationNode);
 
         Location methodLocation = null;
-        if (method != null) {
+        if (method != null && !(method instanceof PsiCompiledElement)) {
             methodLocation = method.getNameIdentifier() != null
                     ? context.getRangeLocation(method.getNameIdentifier(), 0, method.getParameterList(), 0)
                     : context.getNameLocation(method);

@@ -463,4 +463,29 @@ public class ObjectAnimatorDetectorTest extends AbstractCheckTest {
                 .run()
                 .expectClean();
     }
+
+    public void test37136742() {
+        // Regression test for 37136742
+        lint().files(
+                java(""
+                        + "package test.pkg;\n"
+                        + "import android.animation.Keyframe;\n"
+                        + "import android.animation.ObjectAnimator;\n"
+                        + "import android.animation.PropertyValuesHolder;\n"
+                        + "import android.app.Activity;\n"
+                        + "import android.view.View;\n"
+                        + "\n"
+                        + "public class TestObjAnimator extends Activity {\n"
+                        + "    public void animate(View target) {\n"
+                        + "        Keyframe kf0 = Keyframe.ofFloat(0f, 0f);\n"
+                        + "        Keyframe kf1 = Keyframe.ofFloat(.5f, 360f);\n"
+                        + "        Keyframe kf2 = Keyframe.ofFloat(1f, 0f);\n"
+                        + "        PropertyValuesHolder pvhRotation = PropertyValuesHolder.ofKeyframe(\"rotation\", kf0, kf1, kf2);\n"
+                        + "        ObjectAnimator rotationAnim = ObjectAnimator.ofPropertyValuesHolder(target, pvhRotation);\n"
+                        + "        rotationAnim.setDuration(5000);\n"
+                        + "    }\n"
+                        + "}\n"))
+                .run()
+                .expectClean();
+    }
 }

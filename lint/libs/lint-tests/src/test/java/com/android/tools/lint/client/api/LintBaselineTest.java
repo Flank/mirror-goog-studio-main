@@ -61,7 +61,7 @@ public class LintBaselineTest extends AbstractCheckTest {
                 + "    <issue\n"
                 + "        id=\"HardcodedText\"\n"
                 + "        severity=\"Warning\"\n"
-                + "        message=\"Hardcoded string &quot;Fooo&quot;, should use @string resource\"\n"
+                + "        message=\"[I18N] Hardcoded string &quot;Fooo&quot;, should use @string resource\"\n"
                 + "        category=\"Internationalization\"\n"
                 + "        priority=\"5\"\n"
                 + "        summary=\"Hardcoded text\"\n"
@@ -144,7 +144,9 @@ public class LintBaselineTest extends AbstractCheckTest {
         assertTrue(LintBaseline.isSamePathSuffix("foo", "foo"));
         assertTrue(LintBaseline.isSamePathSuffix("", ""));
         assertTrue(LintBaseline.isSamePathSuffix("abc/def/foo", "def/foo"));
+        assertTrue(LintBaseline.isSamePathSuffix("abc/def/foo", "../../def/foo"));
         assertTrue(LintBaseline.isSamePathSuffix("abc\\def\\foo", "abc\\def\\foo"));
+        assertTrue(LintBaseline.isSamePathSuffix("abc\\def\\foo", "..\\..\\abc\\def\\foo"));
         assertTrue(LintBaseline.isSamePathSuffix("abc\\def\\foo", "def\\foo"));
         assertFalse(LintBaseline.isSamePathSuffix("foo", "bar"));
     }

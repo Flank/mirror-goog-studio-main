@@ -1275,6 +1275,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
         // versions used.
         if (SUPPORT_LIB_GROUP_ID.equals(groupId)
                 && !artifactId.startsWith("multidex")
+                && !artifactId.startsWith("renderscript")
                 // Support annotation libraries work with any compileSdkVersion
                 && !artifactId.equals("support-annotations")) {
             if (compileSdkVersion >= 18
@@ -1296,8 +1297,10 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             }
         }
 
-        if (!mCheckedSupportLibs && !artifactId.startsWith("multidex") &&
-                !artifactId.equals("support-annotations")) {
+        if (!mCheckedSupportLibs
+                && !artifactId.startsWith("multidex")
+                && !artifactId.startsWith("renderscript")
+                && !artifactId.equals("support-annotations")) {
             mCheckedSupportLibs = true;
             if (!context.getScope().contains(Scope.ALL_RESOURCE_FILES)) {
                 // Incremental editing: try flagging them in this file!
@@ -1556,6 +1559,10 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                     // decided to do its own numbering (and isn't tied to the rest in terms
                     // of implementation dependencies)
                     && !coordinates.getArtifactId().startsWith("multidex")
+                    // Renderscript has stated in b/37630182 that they are built and
+                    // distributed separate from the rest and do not have any version
+                    // dependencies
+                    && !coordinates.getArtifactId().startsWith("renderscript")
                     // Similarly firebase job dispatcher doesn't follow normal firebase version
                     // numbering
                     && !coordinates.getArtifactId().startsWith("firebase-jobdispatcher")) {

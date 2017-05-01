@@ -181,14 +181,24 @@ public class LintCliClient extends LintClient {
 
         File baselineFile = flags.getBaselineFile();
         if (!flags.isQuiet() && !hasConsoleOutput) {
-            System.out.print(String.format("Lint found %1$s",
-                    LintUtils.describeCounts(errorCount, warningCount, true, false)));
             if (baselineErrorCount > 0 || baselineWarningCount > 0) {
+                if (errorCount == 0 && warningCount == 1) {
+                    // the warning is the warning about baseline issues having been filtered
+                    // out, don't list this as "1 warning"
+                    System.out.print("Lint found no new issues");
+                } else {
+                    System.out.print(String.format("Lint found %1$s",
+                            LintUtils.describeCounts(errorCount, Math.max(0, warningCount - 1),
+                                    true, false)));
+                }
                 assert baselineFile != null;
                 System.out.print(String.format(" (%1$s filtered by baseline %2$s)",
                         LintUtils.describeCounts(stats.baselineErrorCount,
                                 stats.baselineWarningCount, true, true),
                         baselineFile.getName()));
+            } else {
+                System.out.print(String.format("Lint found %1$s",
+                        LintUtils.describeCounts(errorCount, warningCount, true, false)));
             }
             System.out.println();
         }
@@ -820,6 +830,8 @@ public class LintCliClient extends LintClient {
             }
         } else if (fullPath) {
             path = getCleanPath(file.getAbsoluteFile());
+        } else if (file.isAbsolute() && file.exists()) {
+            path = Reporter.getRelativePath(project.getReferenceDir(), file);
         }
 
         return path;

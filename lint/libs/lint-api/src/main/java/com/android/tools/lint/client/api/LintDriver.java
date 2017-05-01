@@ -248,8 +248,8 @@ public class LintDriver {
             sb.append(frame.getFileName()).append(':').append(frame.getLineNumber());
             sb.append(')');
             count++;
-            // Only print the top 3-4 frames such that we can identify the bug
-            if (count == 4) {
+            // Only print the top N frames such that we can identify the bug
+            if (count == 8) {
                 break;
             }
         }

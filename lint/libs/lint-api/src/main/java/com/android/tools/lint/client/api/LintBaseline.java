@@ -27,9 +27,12 @@ import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
 import com.android.utils.XmlUtils;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -41,6 +44,8 @@ import java.io.Writer;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import org.kxml2.io.KXmlParser;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -142,10 +147,35 @@ public class LintBaseline {
         if (fixedCount > 0 && !(writeOnClose && removeFixed)) {
             LintClient client = driver.getClient();
             File baselineFile = getFile();
+            Map<String, Integer> ids = Maps.newHashMap();
+            for (Entry entry : messageToEntry.values()) {
+                Integer count = ids.get(entry.issueId);
+                if (count == null) {
+                    count = 1;
+                } else {
+                    count = count+1;
+                }
+                ids.put(entry.issueId, count);
+            }
+            List<String> sorted = Lists.newArrayList(ids.keySet());
+            Collections.sort(sorted);
+            StringBuilder issueTypes = new StringBuilder();
+            for (String id : sorted) {
+                if (issueTypes.length() > 0) {
+                    issueTypes.append(", ");
+                }
+                issueTypes.append(id);
+                Integer count = ids.get(id);
+                if (count > 1) {
+                    issueTypes.append(" (").append(Integer.toString(count)).append(")");
+                }
+            }
+
             // Keep in sync with isFixedMessage() below
             String message = String.format("%1$d errors/warnings were listed in the "
                     + "baseline file (%2$s) but not found in the project; perhaps they have "
-                    + "been fixed?", fixedCount, getDisplayPath(project, baselineFile));
+                    + "been fixed? Unmatched issue types: %3$s", fixedCount,
+                    getDisplayPath(project, baselineFile), issueTypes);
             client.report(new Context(driver, project, project, baselineFile),
                     IssueRegistry.BASELINE,
                     client.getConfiguration(project, driver).getSeverity(IssueRegistry.BASELINE),
@@ -284,10 +314,20 @@ public class LintBaseline {
     static boolean isSamePathSuffix(@NonNull String path, @NonNull String suffix) {
         int i = path.length() - 1;
         int j = suffix.length() - 1;
-        if (j > i) {
+
+        int begin = 0;
+        for (; begin < j; begin++) {
+            char c = suffix.charAt(begin);
+            if (c != '.' && c != '/' && c != '\\') {
+                break;
+            }
+        }
+
+        if (j - begin > i) {
             return false;
         }
-        for (; j > 0; i--, j--) {
+
+        for (; j > begin; i--, j--) {
             char c1 = path.charAt(i);
             char c2 = suffix.charAt(j);
             if (c1 != c2) {
@@ -354,7 +394,18 @@ public class LintBaseline {
                     String value = parser.getAttributeValue(i);
                     switch (name) {
                         case ATTR_ID: issue = value; break;
-                        case ATTR_MESSAGE: message = value; break;
+                        case ATTR_MESSAGE: {
+                            message = value;
+                            // Error message changed recently; let's stay compatible
+                            if (message.startsWith("[")) {
+                                if (message.startsWith("[I18N] ")) {
+                                    message = message.substring("[I18N] ".length());
+                                } else if (message.startsWith("[Accessibility] ")) {
+                                    message = message.substring("[Accessibility] ".length());
+                                }
+                            }
+                            break;
+                        }
                         case ATTR_FILE: path = value; break;
                         case ATTR_LINE: line = value; break;
                     }

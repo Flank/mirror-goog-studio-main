@@ -54,6 +54,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
 /**
@@ -225,8 +226,27 @@ public class UselessViewDetector extends LayoutDetector {
         if (nodeHasBackground || parentHasBackground) {
             format += "; transfer the `background` attribute to the other view";
         }
+
+        // Look for data binding
+        if (hasDataBindingAttributes(element)) {
+            return;
+        }
+
         String message = String.format(format, tag, parentTag);
         context.report(USELESS_PARENT, element, location, message);
+    }
+
+    private static boolean hasDataBindingAttributes(@NonNull Element element) {
+        NamedNodeMap attributes = element.getAttributes();
+        for (int i = 0, n = attributes.getLength(); i < n; i++) {
+            Node attribute = attributes.item(i);
+            String nodeValue = attribute.getNodeValue();
+            if (LintUtils.isDataBindingExpression(nodeValue)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     // This is the old UselessView check from layoutopt
@@ -254,6 +274,11 @@ public class UselessViewDetector extends LayoutDetector {
         }
 
         if (element == context.document.getDocumentElement()) {
+            return;
+        }
+
+        // Look for data binding
+        if (hasDataBindingAttributes(element)) {
             return;
         }
 

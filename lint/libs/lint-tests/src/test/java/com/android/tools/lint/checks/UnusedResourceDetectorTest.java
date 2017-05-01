@@ -16,6 +16,10 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.checks.MissingClassDetector.MISSING;
+import static com.android.tools.lint.checks.infrastructure.ProjectDescription.Type.LIBRARY;
+
+import com.android.tools.lint.checks.infrastructure.ProjectDescription;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
 import java.io.File;
@@ -274,26 +278,22 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
     }
 
     public void testMultiProject() throws Exception {
-        File master = getProjectDir("MasterProject",
-                // Master project
-                manifest().pkg("foo.master").minSdk(14),
-                projectProperties().property("android.library.reference.1", "../LibraryProject"),
-                mMainCode
-        );
-        File library = getProjectDir("LibraryProject",
+        //noinspection all // Sample code
+        ProjectDescription library = project(
                 // Library project
                 mLibraryManifest,
-                projectProperties().library(true).compileSdk(14),
                 mLibraryCode,
                 mLibraryStrings
-        );
-        assertEquals(""
-                + "LibraryProject/res/values/strings.xml:7: Warning: The resource R.string.string3 appears to be unused [UnusedResources]\n"
-                + "    <string name=\"string3\">String 3</string>\n"
-                + "            ~~~~~~~~~~~~~~\n"
-                + "0 errors, 1 warnings\n",
+        ).type(LIBRARY).name("LibraryProject");
 
-           checkLint(Arrays.asList(master, library)).replace("/TESTROOT/", ""));
+        //noinspection all // Sample code
+        ProjectDescription main = project(
+                mMainCode
+        ).name("App").dependsOn(library);
+
+        lint().projects(main, library)
+                .run()
+                .expectClean();
     }
 
     public void testFqcnReference() throws Exception {
@@ -357,31 +357,6 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                         + "    }"
                         + "}")
             ));
-    }
-
-    public void testNoMerging() throws Exception {
-        // http://code.google.com/p/android/issues/detail?id=36952
-
-        File master = getProjectDir("MasterProject",
-                // Master project
-                manifest().pkg("foo.master").minSdk(14),
-                projectProperties().property("android.library.reference.1", "../LibraryProject"),
-                mMainCode
-        );
-        File library = getProjectDir("LibraryProject",
-                // Library project
-                mLibraryManifest,
-                projectProperties().library(true).compileSdk(14),
-                mLibraryCode,
-                mLibraryStrings
-        );
-        assertEquals(""
-                + "LibraryProject/res/values/strings.xml:7: Warning: The resource R.string.string3 appears to be unused [UnusedResources]\n"
-                + "    <string name=\"string3\">String 3</string>\n"
-                + "            ~~~~~~~~~~~~~~\n"
-                + "0 errors, 1 warnings\n",
-
-           checkLint(Arrays.asList(master, library)).replace("/TESTROOT/", ""));
     }
 
     public void testLibraryMerging() throws Exception {

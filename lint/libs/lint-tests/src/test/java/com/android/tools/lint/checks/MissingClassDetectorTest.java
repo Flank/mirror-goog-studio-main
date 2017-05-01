@@ -19,7 +19,9 @@ package com.android.tools.lint.checks;
 import static com.android.tools.lint.checks.MissingClassDetector.INNERCLASS;
 import static com.android.tools.lint.checks.MissingClassDetector.INSTANTIATABLE;
 import static com.android.tools.lint.checks.MissingClassDetector.MISSING;
+import static com.android.tools.lint.checks.infrastructure.ProjectDescription.Type.LIBRARY;
 
+import com.android.tools.lint.checks.infrastructure.ProjectDescription;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Scope;
@@ -311,18 +313,9 @@ public class MissingClassDetectorTest extends AbstractCheckTest {
 
     public void testLibraryWithMissingClassInApp() throws Exception {
         mScopes = null;
-        mEnabled = Sets.newHashSet(MISSING);
 
-        File master = getProjectDir("MasterProject",
-                // Master project
-                xml("AndroidManifest.xml", ""
-                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "    package=\"test.pkg.app\">\n"
-                        + "</manifest>"),
-                mTestProvider2_class,
-                projectProperties().dependsOn("../LibraryProject").manifestMerger(true).compileSdk(14)
-        );
-        File library = getProjectDir("LibraryProject",
+        //noinspection all // Sample code
+        ProjectDescription library = project(
                 // Library project
                 xml("AndroidManifest.xml", ""
                         + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
@@ -342,14 +335,27 @@ public class MissingClassDetectorTest extends AbstractCheckTest {
                         + "</manifest>"),
                 projectProperties().library(true).compileSdk(14),
                 mTestProvider2_class
-        );
+        ).type(LIBRARY).name("LibraryProject");
 
-        assertEquals(""
-                + "LibraryProject/AndroidManifest.xml:11: Error: Class referenced in the manifest, test.pkg.TestService, was not found in the project or the libraries [MissingRegistered]\n"
-                + "        <service android:name=\".TestService\" />\n"
-                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "1 errors, 0 warnings\n",
-                checkLint(Arrays.asList(master, library)).replace("/TESTROOT/",""));
+        //noinspection all // Sample code
+        ProjectDescription main = project(
+                // Master project
+                xml("AndroidManifest.xml", ""
+                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    package=\"test.pkg.app\">\n"
+                        + "</manifest>"),
+                mTestProvider2_class,
+                projectProperties().dependsOn("../LibraryProject").manifestMerger(true).compileSdk(14)
+        ).name("App").dependsOn(library);
+
+        lint().projects(main, library)
+                .issues(MISSING)
+                .run()
+                .expect(""
+                        + "LibraryProject/AndroidManifest.xml:11: Error: Class referenced in the manifest, test.pkg.TestService, was not found in the project or the libraries [MissingRegistered]\n"
+                        + "        <service android:name=\".TestService\" />\n"
+                        + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "1 errors, 0 warnings\n");
     }
 
     public void testInnerClassStatic() throws Exception {

@@ -1143,6 +1143,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                         + "    compile \"com.android.support:preference-v7:25.0-SNAPSHOT\"\n"
                         + "    compile \"com.android.support:cardview-v7:24.2\"\n"
                         + "    compile \"com.android.support:support-annotations:25.0.0\"\n"
+                        + "    compile \"com.android.support:renderscript:25.0.2\"\n"
                         + "}\n"))
                 .issues(COMPATIBILITY)
                 .incremental()
