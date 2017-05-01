@@ -68,6 +68,9 @@ class TransformTestHelper {
     static SingleJarInputBuilder singleJarBuilder(@NonNull File jarFile) {
         return new SingleJarInputBuilder(jarFile);
     }
+    static DirectoryInputBuilder directoryBuilder(@NonNull File directory) {
+        return new DirectoryInputBuilder(directory);
+    }
 
     static class InvocationBuilder {
 
@@ -304,6 +307,34 @@ class TransformTestHelper {
         }
     }
 
+    static class DirectoryInputBuilder {
+        private final File directory;
+        private ImmutableSet.Builder<? super Scope> scopes;
+        private ImmutableMap.Builder<File, Status> changedFiles;
+
+        DirectoryInputBuilder(File directory) {
+            this.directory = directory;
+            this.scopes = ImmutableSet.builder();
+            this.changedFiles = ImmutableMap.builder();
+        }
+
+        TransformInput build() {
+            return new FakeTransformInput(
+                    ImmutableList.of(),
+                    ImmutableList.of(
+                            new FakeDirectoryInput(
+                                    directory.getName(),
+                                    scopes.build(),
+                                    directory,
+                                    changedFiles.build())));
+        }
+
+        public DirectoryInputBuilder putChangedFiles(Map<File, Status> changedFiles) {
+            this.changedFiles.putAll(changedFiles);
+            return this;
+        }
+    }
+
 
     private static class FakeJarInput implements JarInput {
 
@@ -364,18 +395,18 @@ class TransformTestHelper {
 
     private static class FakeDirectoryInput implements DirectoryInput {
 
-        private final String name;
-        private final ScopeType scopeType;
-        private final File file;
-        private final Map<File, Status> changedFiles;
+        @NonNull private final String name;
+        @NonNull private final Set<? super Scope> scopes;
+        @NonNull private final File file;
+        @NonNull private final Map<File, Status> changedFiles;
 
         protected FakeDirectoryInput(
-                String name,
-                ScopeType scopeType,
+                @NonNull String name,
+                @NonNull Set<? super Scope> scopes,
                 File rootFolder,
                 Map<File, Status> changedFiles) {
             this.name = name;
-            this.scopeType = scopeType;
+            this.scopes = scopes;
             this.file = rootFolder;
             this.changedFiles = changedFiles;
         }
@@ -395,7 +426,7 @@ class TransformTestHelper {
         @NonNull
         @Override
         public Set<? super Scope> getScopes() {
-            return ImmutableSet.of(scopeType);
+            return scopes;
         }
 
         @NonNull
@@ -407,7 +438,7 @@ class TransformTestHelper {
         @NonNull
         @Override
         public Map<File, Status> getChangedFiles() {
-            return ImmutableMap.of();
+            return changedFiles;
         }
     }
 }
