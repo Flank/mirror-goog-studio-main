@@ -88,12 +88,10 @@ import com.android.build.gradle.tasks.RenderscriptCompile;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BootClasspathBuilder;
 import com.android.builder.core.BuilderConstants;
-import com.android.builder.core.DefaultApiVersion;
 import com.android.builder.core.ErrorReporter;
 import com.android.builder.core.VariantType;
 import com.android.builder.dexing.DexingMode;
 import com.android.builder.dexing.DexingType;
-import com.android.builder.model.ApiVersion;
 import com.android.builder.model.SyncIssue;
 import com.android.repository.api.ProgressIndicator;
 import com.android.sdklib.AndroidTargetHash;
@@ -573,7 +571,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @NonNull
     @Override
-    public ApiVersion getMinSdkVersion() {
+    public AndroidVersion getMinSdkVersion() {
         return getVariantConfiguration().getMinSdkVersion();
     }
 
@@ -1946,14 +1944,15 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @Nullable
     @Override
-    public ApiVersion getMinSdkForDx() {
+    public AndroidVersion getMinSdkForDx() {
         if (getJava8LangSupportType() != Java8LangSupport.DESUGAR) {
             return null;
         }
 
-        ApiVersion minSdkVersion = getVariantConfiguration().getMinSdkVersionWithTargetDeviceApi();
-        if (DefaultApiVersion.getFeatureLevel(minSdkVersion) >= 24) {
-            return minSdkVersion;
+        AndroidVersion minSdkForDx =
+                getVariantConfiguration().getMinSdkVersionWithTargetDeviceApi();
+        if (minSdkForDx.getFeatureLevel() >= 24) {
+            return minSdkForDx;
         } else {
             return null;
         }

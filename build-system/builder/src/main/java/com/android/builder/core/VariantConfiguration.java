@@ -35,6 +35,7 @@ import com.android.builder.model.SigningConfig;
 import com.android.builder.model.SourceProvider;
 import com.android.ide.common.res2.AssetSet;
 import com.android.ide.common.res2.ResourceSet;
+import com.android.sdklib.AndroidVersion;
 import com.android.utils.StringHelper;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -1018,7 +1019,7 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      * @return the minSdkVersion
      */
     @NonNull
-    public ApiVersion getMinSdkVersion() {
+    public AndroidVersion getMinSdkVersion() {
         if (mTestedConfig != null) {
             return mTestedConfig.getMinSdkVersion();
         }
@@ -1030,12 +1031,12 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
                     DefaultApiVersion.create(getManifestAttributeSupplier().getMinSdkVersion());
         }
 
-        return minSdkVersion;
+        return new AndroidVersion(minSdkVersion.getApiLevel(), minSdkVersion.getCodename());
     }
 
     /** Returns the minSdkVersion as integer. */
     public int getMinSdkVersionValue() {
-        return DefaultApiVersion.getFeatureLevel(getMinSdkVersion());
+        return getMinSdkVersion().getFeatureLevel();
     }
 
     /**
@@ -1785,10 +1786,10 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
 
     @NonNull
     public DexingMode getDexingMode() {
-        ApiVersion minSdkVersion = getMinSdkVersion();
+        AndroidVersion minSdkVersion = getMinSdkVersion();
         if (isMultiDexEnabled()) {
             return new DexingMode(
-                    DefaultApiVersion.getFeatureLevel(minSdkVersion) < 21
+                    minSdkVersion.getFeatureLevel() < 21
                             ? DexingType.LEGACY_MULTIDEX
                             : DexingType.NATIVE_MULTIDEX,
                     minSdkVersion);

@@ -25,8 +25,8 @@ import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
 import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.AaptOptions;
-import com.android.builder.model.ApiVersion;
 import com.android.ide.common.build.ApkData;
+import com.android.sdklib.AndroidVersion;
 import java.io.File;
 import java.util.Set;
 import org.gradle.api.Project;
@@ -48,11 +48,9 @@ public interface PackagingScope extends TaskOutputHolder {
     @NonNull
     String getFullVariantName();
 
-    /**
-     * Min SDK version of the artifact to create.
-     */
+    /** Min SDK version of the artifact to create. */
     @NonNull
-    ApiVersion getMinSdkVersion();
+    AndroidVersion getMinSdkVersion();
 
     @NonNull
     InstantRunBuildContext getInstantRunBuildContext();

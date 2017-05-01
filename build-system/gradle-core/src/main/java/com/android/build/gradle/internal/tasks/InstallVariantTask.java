@@ -30,7 +30,6 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.internal.InstallUtils;
-import com.android.builder.model.ApiVersion;
 import com.android.builder.sdk.SdkInfo;
 import com.android.builder.sdk.TargetInfo;
 import com.android.builder.testing.ConnectedDeviceProvider;
@@ -41,6 +40,7 @@ import com.android.builder.testing.api.DeviceProvider;
 import com.android.ide.common.build.SplitOutputMatcher;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessExecutor;
+import com.android.sdklib.AndroidVersion;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
@@ -122,7 +122,7 @@ public class InstallVariantTask extends BaseTask {
             @NonNull String projectName,
             @NonNull String variantName,
             @NonNull DeviceProvider deviceProvider,
-            @NonNull ApiVersion minSkdVersion,
+            @NonNull AndroidVersion minSkdVersion,
             @NonNull ProcessExecutor processExecutor,
             @NonNull File splitSelectExe,
             @NonNull List<OutputFile> outputs,

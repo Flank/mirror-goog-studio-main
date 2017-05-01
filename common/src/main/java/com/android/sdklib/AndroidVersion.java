@@ -20,7 +20,6 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.google.common.base.Objects;
-
 import java.util.regex.Pattern;
 
 /**
@@ -116,20 +115,24 @@ public final class AndroidVersion implements Comparable<AndroidVersion> {
     }
 
     /**
-     * <p>
-     * Creates an {@link AndroidVersion} from a string that may be an integer API
-     * level or a string codename.
-     * </p>
-     * <Em>Important</em>: An important limitation of this method is that cannot possible
-     * recreate the API level integer from a pure string codename. This is only OK to use
-     * if the caller can guarantee that only {@link #getApiString()} will be used later.
-     * Wrong things will happen if the caller then tries to resolve the numeric
-     * {@link #getApiLevel()}.
+     * Creates an {@link AndroidVersion} with the given api level of a release version (the codename
+     * is null).
+     */
+    public AndroidVersion(int apiLevel) {
+        this(apiLevel, null);
+    }
+
+    /**
+     * Creates an {@link AndroidVersion} from a string that may be an integer API level or a string
+     * codename. <Em>Important</em>: An important limitation of this method is that cannot possible
+     * recreate the API level integer from a pure string codename. This is only OK to use if the
+     * caller can guarantee that only {@link #getApiString()} will be used later. Wrong things will
+     * happen if the caller then tries to resolve the numeric {@link #getApiLevel()}.
      *
-     * @param apiOrCodename A non-null API integer or a codename in its "ALL_CAPS" format.
-     *                      "REL" is notable not a valid codename.
-     * @throws AndroidVersionException if the input isn't a pure integer or doesn't look like
-     *                      a valid string codename.
+     * @param apiOrCodename A non-null API integer or a codename in its "ALL_CAPS" format. "REL" is
+     *     notable not a valid codename.
+     * @throws AndroidVersionException if the input isn't a pure integer or doesn't look like a
+     *     valid string codename.
      */
     public AndroidVersion(@NonNull String apiOrCodename) throws AndroidVersionException {
         int apiLevel = 0;
@@ -212,6 +215,11 @@ public final class AndroidVersion implements Comparable<AndroidVersion> {
      */
     public boolean isPreview() {
         return mCodename != null;
+    }
+
+    /** Checks if the version is having legacy multidex support. */
+    public boolean isLegacyMultidex() {
+        return this.getFeatureLevel() < 21;
     }
 
     /**

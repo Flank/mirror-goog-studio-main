@@ -18,10 +18,10 @@ package com.android.builder.testing;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.ApiVersion;
 import com.android.builder.testing.api.DeviceConfigProvider;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessExecutor;
+import com.android.sdklib.AndroidVersion;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
@@ -77,11 +77,9 @@ public interface TestData {
      */
     boolean isTestCoverageEnabled();
 
-    /**
-     * The min SDK version of the app
-     */
+    /** The min SDK version of the app */
     @NonNull
-    ApiVersion getMinSdkVersion();
+    AndroidVersion getMinSdkVersion();
 
     boolean isLibrary();
 

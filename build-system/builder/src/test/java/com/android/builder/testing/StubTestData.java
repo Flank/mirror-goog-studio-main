@@ -18,10 +18,10 @@ package com.android.builder.testing;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.model.ApiVersion;
 import com.android.builder.testing.api.DeviceConfigProvider;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessExecutor;
+import com.android.sdklib.AndroidVersion;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
@@ -43,7 +43,7 @@ public class StubTestData implements TestData {
     private List<File> testDirectories = new ArrayList<>();
     private List<File> testedApks = new ArrayList<>();
     private Map<String, String> instrumentationRunnerArguments = new HashMap<>();
-    private ApiVersion minSdkVersion;
+    private AndroidVersion minSdkVersion;
     private boolean animationsDisabled;
     private boolean testCoverageEnabled;
     private boolean isLibrary;
@@ -132,11 +132,11 @@ public class StubTestData implements TestData {
     }
 
     @Override
-    public ApiVersion getMinSdkVersion() {
+    public AndroidVersion getMinSdkVersion() {
         return minSdkVersion;
     }
 
-    public void setMinSdkVersion(ApiVersion minSdkVersion) {
+    public void setMinSdkVersion(AndroidVersion minSdkVersion) {
         this.minSdkVersion = minSdkVersion;
     }
 
