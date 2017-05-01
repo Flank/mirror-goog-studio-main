@@ -20,16 +20,20 @@ import static com.android.SdkConstants.ANDROID_PREFIX;
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_COLOR;
 import static com.android.SdkConstants.ATTR_DRAWABLE;
+import static com.android.SdkConstants.ATTR_FONT;
 import static com.android.SdkConstants.ATTR_LAYOUT;
 import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.ATTR_PARENT;
 import static com.android.SdkConstants.ATTR_TYPE;
 import static com.android.SdkConstants.COLOR_RESOURCE_PREFIX;
 import static com.android.SdkConstants.DRAWABLE_PREFIX;
+import static com.android.SdkConstants.FONT_PREFIX;
 import static com.android.SdkConstants.LAYOUT_RESOURCE_PREFIX;
 import static com.android.SdkConstants.NEW_ID_PREFIX;
 import static com.android.SdkConstants.STYLE_RESOURCE_PREFIX;
 import static com.android.SdkConstants.TAG_COLOR;
+import static com.android.SdkConstants.TAG_FONT;
+import static com.android.SdkConstants.TAG_FONT_FAMILY;
 import static com.android.SdkConstants.TAG_ITEM;
 import static com.android.SdkConstants.TAG_STYLE;
 import static com.android.SdkConstants.VIEW_INCLUDE;
@@ -137,6 +141,7 @@ public class ResourceCycleDetector extends ResourceXmlDetector {
     @Override
     public boolean appliesTo(@NonNull ResourceFolderType folderType) {
         return folderType == ResourceFolderType.VALUES
+                || folderType == ResourceFolderType.FONT
                 || folderType == ResourceFolderType.COLOR
                 || folderType == ResourceFolderType.DRAWABLE
                 || folderType == ResourceFolderType.LAYOUT;
@@ -145,11 +150,7 @@ public class ResourceCycleDetector extends ResourceXmlDetector {
     @Override
     public Collection<String> getApplicableElements() {
         return Arrays.asList(
-                VIEW_INCLUDE,
-                TAG_STYLE,
-                TAG_COLOR,
-                TAG_ITEM
-        );
+                VIEW_INCLUDE, TAG_STYLE, TAG_COLOR, TAG_ITEM, TAG_FONT_FAMILY, TAG_FONT);
     }
 
     private void recordReference(@NonNull ResourceType type, @NonNull String from,
@@ -375,6 +376,28 @@ public class ResourceCycleDetector extends ResourceXmlDetector {
                             break;
                         }
                     }
+                }
+            }
+        } else if (tagName.equals(TAG_FONT)) {
+            Attr text = element.getAttributeNodeNS(ANDROID_URI, ATTR_FONT);
+            if (text != null && text.getValue().startsWith(FONT_PREFIX)) {
+                String font = text.getValue().trim().substring(FONT_PREFIX.length());
+                String currentFont = LintUtils.getBaseName(context.file.getName());
+                if (mReferences != null) {
+                    if (mLocations != null) {
+                        recordLocation(context, text, ResourceType.FONT, currentFont);
+                    } else {
+                        recordReference(ResourceType.FONT, currentFont, font);
+                    }
+                }
+                if (currentFont.equals(font)
+                        && context.isEnabled(CYCLE)
+                        && context.getDriver().getPhase() == 1) {
+                    context.report(
+                            CYCLE,
+                            text,
+                            context.getLocation(text),
+                            String.format("Font `%1$s` should not reference itself", font));
                 }
             }
         }
