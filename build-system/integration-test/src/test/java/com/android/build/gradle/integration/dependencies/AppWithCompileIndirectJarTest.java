@@ -82,8 +82,11 @@ public class AppWithCompileIndirectJarTest {
 
     @Test
     public void checkLevel1Model() throws Exception {
-        Map<String, AndroidProject> models = project.model()
-                .level(AndroidProject.MODEL_LEVEL_1_SYNC_ISSUE).getMulti().getModelMap();
+        Map<String, AndroidProject> models =
+                project.model()
+                        .level(AndroidProject.MODEL_LEVEL_3_VARIANT_OUTPUT_POST_BUILD)
+                        .getMulti()
+                        .getModelMap();
 
         Variant appDebug = ModelHelper.getVariant(models.get(":app").getVariants(), "debug");
 
@@ -119,7 +122,7 @@ public class AppWithCompileIndirectJarTest {
     }
 
     @Test
-    public void checkLevel2Model() throws Exception {
+    public void checkLevel4Model() throws Exception {
         final ModelContainer<AndroidProject> modelContainer = project.model()
                 .level(AndroidProject.MODEL_LEVEL_LATEST).getMulti();
         LibraryGraphHelper helper = new LibraryGraphHelper(modelContainer);

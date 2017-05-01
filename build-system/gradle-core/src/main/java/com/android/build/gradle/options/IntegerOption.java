@@ -34,6 +34,7 @@ public enum IntegerOption implements Option<Integer> {
      * @see AndroidProject#MODEL_LEVEL_0_ORIGINAL
      * @see AndroidProject#MODEL_LEVEL_1_SYNC_ISSUE
      * @see AndroidProject#MODEL_LEVEL_2_DONT_USE
+     * @see AndroidProject#MODEL_LEVEL_3_VARIANT_OUTPUT_POST_BUILD
      */
     IDE_BUILD_MODEL_ONLY_VERSION(AndroidProject.PROPERTY_BUILD_MODEL_ONLY_VERSIONED),
 

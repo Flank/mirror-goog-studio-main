@@ -119,8 +119,14 @@ public interface SyncIssue {
      */
     int TYPE_MISSING_SDK_PACKAGE = 24;
 
+    /**
+     * Indicates that the plugin requires a newer version of studio. Minimum version is passed in
+     * the data.
+     */
+    int TYPE_STUDIO_TOO_OLD = 25;
+
     /** Highest number assigned to types of {@link SyncIssue}s. */
-    int TYPE_MAX = 24; // increment when adding new types.
+    int TYPE_MAX = 25; // increment when adding new types.
 
     /** Returns the severity of the issue. */
     int getSeverity();
