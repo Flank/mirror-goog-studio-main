@@ -19,10 +19,12 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:paddingTop="@dimen/nav_header_vertical_spacing"
-<#if appCompat>
-        app:srcCompat="@android:drawable/sym_def_app_icon"
+<#if appCompat && buildApi gte 25 && targetApi gte 25>
+        app:srcCompat="@mipmap/ic_launcher_round"
+<#elseif appCompat>
+        app:srcCompat="@mipmap/ic_launcher"
 <#else>
-        android:src="@android:drawable/sym_def_app_icon"
+        android:src="@mipmap/ic_launcher"
 </#if>
         android:id="@+id/imageView" />
 
