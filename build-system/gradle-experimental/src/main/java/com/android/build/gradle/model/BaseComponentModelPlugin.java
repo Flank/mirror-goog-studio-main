@@ -87,7 +87,6 @@ import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.internal.compiler.JackConversionCache;
 import com.android.builder.internal.compiler.PreDexCache;
-import com.android.builder.model.InstantRun;
 import com.android.builder.profile.ThreadRecorder;
 import com.android.builder.sdk.TargetInfo;
 import com.android.builder.signing.DefaultSigningConfig;
@@ -623,13 +622,9 @@ public class BaseComponentModelPlugin implements Plugin<Project>, ToolingRegistr
                         binary.setVariantData(
                                 variantManager.createVariantData(
                                         new BuildTypeAdaptor(binary.getBuildType()),
-                                        adaptedFlavors));
+                                        adaptedFlavors,
+                                        true));
                         for (BaseVariantData variantData : binary.getVariantData()) {
-                            variantData
-                                    .getVariantConfiguration()
-                                    .setInstantRunSupportStatusOverride(
-                                            InstantRun
-                                                    .STATUS_NOT_SUPPORTED_FOR_EXPERIMENTAL_PLUGIN);
                             variantManager.addVariant(variantData);
                         }
                     });

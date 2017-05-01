@@ -47,7 +47,7 @@ import org.gradle.api.Project;
     private final TransformGlobalScope globalScope;
     private final File outputRootFolder;
     private final ExternalBuildContext externalBuildContext;
-    private final InstantRunBuildContext mInstantRunBuildContext = new InstantRunBuildContext();
+    private final InstantRunBuildContext mInstantRunBuildContext = new InstantRunBuildContext(true);
     private final AaptOptions aaptOptions;
     private final ManifestAttributeSupplier manifestAttributeSupplier;
     private final SplitScope splitScope;
@@ -157,6 +157,7 @@ import org.gradle.api.Project;
         return new File(outputRootFolder, "/incremental-verifier/debug");
     }
 
+    @Override
     @NonNull
     public InstantRunBuildContext getInstantRunBuildContext() {
         return mInstantRunBuildContext;

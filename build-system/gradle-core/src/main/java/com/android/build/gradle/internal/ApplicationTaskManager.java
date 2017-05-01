@@ -333,7 +333,7 @@ public class ApplicationTaskManager extends TaskManager {
             @NonNull AndroidTask<BuildInfoWriterTask> buildInfoGeneratorTask,
             @NonNull VariantScope variantScope) {
 
-        if (getIncrementalMode(variantScope.getVariantConfiguration()) == IncrementalMode.NONE
+        if (!variantScope.getInstantRunBuildContext().isInInstantRunMode()
                 || variantScope.getInstantRunTaskManager() == null) {
             return;
         }

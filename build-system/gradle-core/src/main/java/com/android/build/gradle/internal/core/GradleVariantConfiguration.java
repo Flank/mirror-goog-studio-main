@@ -22,6 +22,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.AndroidConfig;
+import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.TestAndroidConfig;
 import com.android.build.gradle.api.JavaCompileOptions;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
@@ -30,6 +31,7 @@ import com.android.build.gradle.internal.dsl.CoreJackOptions;
 import com.android.build.gradle.internal.dsl.CoreNdkOptions;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
+import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
@@ -39,7 +41,9 @@ import com.android.builder.core.VariantConfiguration;
 import com.android.builder.core.VariantType;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.model.InstantRun;
+import com.android.builder.model.OptionalCompilationStep;
 import com.android.builder.model.SourceProvider;
+import com.android.sdklib.AndroidVersion;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -52,6 +56,7 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import org.gradle.api.Project;
 
 /**
  * Version of {@link com.android.builder.core.VariantConfiguration} that uses the specific
@@ -307,6 +312,43 @@ public class GradleVariantConfiguration
         super.addProductFlavor(productFlavor, sourceProvider, dimensionName);
         mergeOptions();
         return this;
+    }
+
+    protected enum IncrementalMode {
+        /* Not an instantRun mode */
+        NONE,
+        /* instantRun mode */
+        FULL,
+    }
+
+    public boolean isInstantRunBuild(@NonNull GlobalScope globalScope) {
+        return getIncrementalMode(globalScope) == IncrementalMode.FULL;
+    }
+
+    /**
+     * Returns the incremental mode for this variant.
+     *
+     * @param globalScope the project's global scope.
+     * @return the {@link IncrementalMode} for this variant.
+     */
+    protected IncrementalMode getIncrementalMode(@NonNull GlobalScope globalScope) {
+        if (isInstantRunSupported()
+                && targetDeviceSupportsInstantRun(this, globalScope.getProject())
+                && globalScope.isActive(OptionalCompilationStep.INSTANT_DEV)) {
+            return IncrementalMode.FULL;
+        }
+        return IncrementalMode.NONE;
+    }
+
+    private static boolean targetDeviceSupportsInstantRun(
+            @NonNull GradleVariantConfiguration config, @NonNull Project project) {
+        if (config.isLegacyMultiDexMode()) {
+            // We don't support legacy multi-dex on Dalvik.
+            return AndroidGradleOptions.getTargetAndroidVersion(project).getFeatureLevel()
+                    >= AndroidVersion.ART_RUNTIME.getFeatureLevel();
+        }
+
+        return true;
     }
 
     @NonNull

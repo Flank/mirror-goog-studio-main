@@ -281,7 +281,7 @@ public class FeatureTaskManager extends TaskManager {
             @NonNull TaskFactory tasks,
             @NonNull VariantScope variantScope,
             @NonNull ImmutableList.Builder<ManifestMerger2.Invoker.Feature> optionalFeatures) {
-        if (getIncrementalMode(variantScope.getVariantConfiguration()) != IncrementalMode.NONE) {
+        if (variantScope.getVariantConfiguration().isInstantRunBuild(globalScope)) {
             optionalFeatures.add(ManifestMerger2.Invoker.Feature.INSTANT_RUN_REPLACEMENT);
         }
 

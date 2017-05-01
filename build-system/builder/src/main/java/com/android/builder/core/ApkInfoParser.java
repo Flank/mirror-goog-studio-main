@@ -100,13 +100,13 @@ public class ApkInfoParser {
 
     /**
      * Computes and returns the info for an APK
+     *
      * @param apkFile the APK to parse
      * @return a non-null ApkInfo object.
-     * @throws ProcessException
+     * @throws ProcessException when aapt failed to execute
      */
     @NonNull
-    public ApkInfo parseApk(@NonNull File apkFile)
-            throws ProcessException {
+    public ApkInfo parseApk(@NonNull File apkFile) throws ProcessException {
 
         if (!mAaptFile.isFile()) {
             throw new IllegalStateException(
@@ -153,17 +153,35 @@ public class ApkInfoParser {
 
     /**
      * Returns the aapt output.
+     *
      * @param apkFile the apk file to call aapt on.
      * @return the output as a list of files.
-     * @throws ProcessException
+     * @throws ProcessException when aapt failed to execute
      */
     @NonNull
-    private List<String> getAaptOutput(@NonNull File apkFile)
+    private List<String> getAaptOutput(@NonNull File apkFile) throws ProcessException {
+        return invokeAaptWithParameters(apkFile, "dump", "badging");
+    }
+    /**
+     * Returns the full aapt manifest dump output.
+     *
+     * @param apkFile the apk file to call aapt on.
+     * @return the output as a list of files.
+     * @throws ProcessException when aapt failed to execute
+     */
+    @NonNull
+    public List<String> getFullAaptOutput(@NonNull File apkFile) throws ProcessException {
+        return invokeAaptWithParameters(apkFile, "l", "-a");
+    }
+
+    private List<String> invokeAaptWithParameters(@NonNull File apkFile, String... parameters)
             throws ProcessException {
+
         ProcessInfoBuilder builder = new ProcessInfoBuilder();
 
         builder.setExecutable(mAaptFile);
-        builder.addArgs("dump", "badging", apkFile.getPath());
+        builder.addArgs(parameters);
+        builder.addArgs(apkFile.getPath());
 
         CachedProcessOutputHandler processOutputHandler = new CachedProcessOutputHandler();
 
