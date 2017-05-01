@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.JavaCompileOptions;
+import com.android.build.gradle.api.SourceKind;
 import com.android.build.gradle.api.TestVariant;
 import com.android.build.gradle.api.UnitTestVariant;
 import com.android.build.gradle.internal.api.TestedVariant;
@@ -39,6 +40,7 @@ import java.util.Collection;
 import java.util.List;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.AbstractCopyTask;
 import org.gradle.api.tasks.compile.JavaCompile;
@@ -127,6 +129,12 @@ public interface BaseTestedVariant extends BaseVariant, TestedVariant {
         @Override
         public List<SourceProvider> getSourceSets() {
             return variant.getSourceSets();
+        }
+
+        @NonNull
+        @Override
+        public List<ConfigurableFileTree> getSourceFolders(@NonNull SourceKind folderType) {
+            return variant.getSourceFolders(folderType);
         }
 
         @NonNull

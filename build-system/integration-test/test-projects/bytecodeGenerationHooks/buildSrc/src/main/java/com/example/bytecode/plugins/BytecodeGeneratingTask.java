@@ -2,10 +2,12 @@ package com.example.bytecode.plugins;
 
 import com.google.common.io.ByteStreams;
 import java.io.*;
+import java.util.List;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import org.gradle.api.DefaultTask;
+import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
@@ -16,6 +18,7 @@ import org.gradle.api.tasks.TaskAction;
 /** A task that generates bytecode simply by extracting it from a jar. */
 public class BytecodeGeneratingTask extends DefaultTask {
 
+    private List<ConfigurableFileTree> sourceFolders;
     private File sourceJar;
     private FileCollection classpath;
     private File outputDir;
@@ -31,11 +34,19 @@ public class BytecodeGeneratingTask extends DefaultTask {
         return classpath;
     }
 
+    @InputFiles
+    public List<ConfigurableFileTree> getSourceFolders() {
+        return sourceFolders;
+    }
+
     @OutputDirectory
     public File getOutputDir() {
         return outputDir;
     }
 
+    public void setSourceFolders(List<ConfigurableFileTree> sourceFolders) {
+        this.sourceFolders = sourceFolders;
+    }
     public void setSourceJar(File sourceJar) {
         this.sourceJar = sourceJar;
     }

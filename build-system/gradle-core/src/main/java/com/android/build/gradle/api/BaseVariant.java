@@ -33,6 +33,7 @@ import java.util.Collection;
 import java.util.List;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.AbstractCopyTask;
 import org.gradle.api.tasks.compile.JavaCompile;
@@ -127,6 +128,15 @@ public interface BaseVariant {
      */
     @NonNull
     List<SourceProvider> getSourceSets();
+
+    /**
+     * Returns a list of FileCollection representing the source folders.
+     *
+     * @param folderType the type of folder to return.
+     * @return a list of folder + dependency as file collections.
+     */
+    @NonNull
+    List<ConfigurableFileTree> getSourceFolders(@NonNull SourceKind folderType);
 
     /** Returns the configuration object for the compilation */
     @NonNull
