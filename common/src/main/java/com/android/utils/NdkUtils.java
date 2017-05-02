@@ -17,7 +17,6 @@
 package com.android.utils;
 
 import com.android.annotations.NonNull;
-
 import java.io.File;
 
 /**
@@ -35,7 +34,12 @@ public class NdkUtils {
 
     @NonNull
     public static String getTargetNameFromBuildOutputFile(@NonNull File output) {
-        String artifactName = removeFileExtension(output.getName());
+        return getTargetNameFromBuildOutputFileName(output.getName());
+    }
+
+    @NonNull
+    public static String getTargetNameFromBuildOutputFileName(@NonNull String basename) {
+        String artifactName = removeFileExtension(basename);
         if (artifactName.startsWith("lib")) {
             artifactName = artifactName.substring(3);
         }

@@ -16,8 +16,7 @@
 package com.android.build.gradle.external.gnumake;
 
 
-import com.android.utils.StringHelperPOSIX;
-import com.android.utils.StringHelperWindows;
+import com.android.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,24 +25,20 @@ import java.util.List;
  */
 class CommandLineParser {
     /**
-     * Give a string which represents a series of shell commands (the output of ndk-build -n).
-     * Token each command by splitting on spaces while observing quoting rules on the specified
-     * platform.
+     * Give a string which represents a series of shell commands (the output of ndk-build -n). Token
+     * each command by splitting on spaces while observing quoting rules on the specified platform.
      *
-     * The result is a list of {@link CommandLine} structures. One for each command in the original
-     * ndk-build output.
+     * <p>The result is a list of {@link CommandLine} structures. One for each command in the
+     * original ndk-build output.
      */
-    static List<CommandLine> parse(String commands, boolean isWin32) {
+    @NonNull
+    static List<CommandLine> parse(@NonNull String commands, @NonNull OsFileConventions policy) {
         String[] lines = commands.split("[\r\n]+");
         List<CommandLine> commandLines = new ArrayList<>();
         for (String line : lines) {
-            List<String> commandList = isWin32
-                    ? StringHelperWindows.splitCommandLine(line)
-                    : StringHelperPOSIX.splitCommandLine(line);
+            List<String> commandList = policy.splitCommandLine(line);
             for (String commandString : commandList) {
-                List<String> split = isWin32
-                        ? StringHelperWindows.tokenizeString(commandString)
-                        : StringHelperPOSIX.tokenizeString(commandString);
+                List<String> split = policy.tokenizeString(commandString);
                 String command = split.get(0);
                 split.remove(0);
                 commandLines.add(new CommandLine(command, split));

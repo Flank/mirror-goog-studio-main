@@ -40,7 +40,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 @RunWith(Parameterized.class)
 class NdkBuildTargetsTest {
     @Parameterized.Parameters(name = "model = {0}")
-    public static Collection<Object[]> data() {
+    static Collection<Object[]> data() {
         return [
                 [false].toArray(),
                 [true].toArray()

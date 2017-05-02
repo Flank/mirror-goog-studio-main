@@ -39,8 +39,10 @@ import org.junit.Test;
 
 public class CommandClassifierTest {
 
-    private static String classify(String string) {
-        List<BuildStepInfo> commandSummaries = CommandClassifier.classify(string, true);
+    private static String classify(@NonNull String string) {
+        List<BuildStepInfo> commandSummaries =
+                CommandClassifier.classify(
+                        string, AbstractOsFileConventions.createForCurrentHost());
         StringBuilder sb = new StringBuilder();
         for (BuildStepInfo buildStepInfo : commandSummaries) {
             sb.append("[");
@@ -60,7 +62,7 @@ public class CommandClassifierTest {
                 .replace("  ", " ");
     }
 
-    private static void assertClassifyContains(String string, @NonNull String expect) {
+    private static void assertClassifyContains(@NonNull String string, @NonNull String expect) {
         assertThat(classify(string)).contains(expect);
     }
 

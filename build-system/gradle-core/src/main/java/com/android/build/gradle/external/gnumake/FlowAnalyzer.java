@@ -15,12 +15,14 @@
  */
 package com.android.build.gradle.external.gnumake;
 
+import com.android.annotations.NonNull;
 import com.android.utils.SparseArray;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -33,16 +35,17 @@ import java.util.Set;
  */
 class FlowAnalyzer {
     /**
-     * Build the flow analysis for the given set of classifications.
-     * This tracks library files back through the {@link BuildStepInfo} call chain and
-     * attributes source input files (.c and .cpp) to resulting library files (.so)
+     * Build the flow analysis for the given set of classifications. This tracks library files back
+     * through the {@link BuildStepInfo} call chain and attributes source input files (.c and .cpp)
+     * to resulting library files (.so)
      *
-     * @return ListMultimap where keys are the library names and values are a list of
-     * {@link BuildStepInfo} of the source files used to create the library.
+     * @return ListMultimap where keys are the library names and values are a list of {@link
+     *     BuildStepInfo} of the source files used to create the library.
      */
+    @NonNull
     static ListMultimap<String, List<BuildStepInfo>> analyze(
-            String commands, boolean isWin32) {
-        List<BuildStepInfo> commandSummaries = CommandClassifier.classify(commands, isWin32);
+            @NonNull String commands, @NonNull OsFileConventions policy) {
+        List<BuildStepInfo> commandSummaries = CommandClassifier.classify(commands, policy);
 
         // For each filename, record the last command that created it.
         Map<String, Integer> outputToCommand = new HashMap<>();
@@ -100,8 +103,7 @@ class FlowAnalyzer {
                     // Sort the inputs
                     List<BuildStepInfo> ordered = new ArrayList<>();
                     ordered.addAll(outputToTerminals.get(i));
-                    Collections.sort(ordered,
-                            (o1, o2) -> o1.getOnlyInput().compareTo(o2.getOnlyInput()));
+                    Collections.sort(ordered, Comparator.comparing(BuildStepInfo::getOnlyInput));
                     result.put(output, ordered);
                 }
             }
