@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.dependency;
 
 import com.android.annotations.NonNull;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import java.util.Collection;
 import java.util.Iterator;
@@ -81,7 +82,10 @@ public class SubtractingArtifactCollection implements ArtifactCollection {
 
     @Override
     public Collection<Throwable> getFailures() {
-        throw new UnsupportedOperationException();
+        ImmutableList.Builder<Throwable> builder = ImmutableList.builder();
+        builder.addAll(testArtifacts.getFailures());
+        builder.addAll(testedArtifacts.getFailures());
+        return builder.build();
     }
 
     @NonNull

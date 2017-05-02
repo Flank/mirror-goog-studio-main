@@ -31,6 +31,7 @@ import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.model.Variant;
+import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
@@ -56,8 +57,6 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
     private final AaptOptions aaptOptions;
     @NonNull
     private final Collection<ArtifactMetaData> extraArtifacts;
-    @NonNull
-    private final Collection<String> unresolvedDependencies;
     @NonNull
     private final Collection<SyncIssue> syncIssues;
 
@@ -103,7 +102,6 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
             @NonNull Collection<SigningConfig> signingConfigs,
             @NonNull AaptOptions aaptOptions,
             @NonNull Collection<ArtifactMetaData> extraArtifacts,
-            @NonNull Collection<String> unresolvedDependencies,
             @NonNull Collection<SyncIssue> syncIssues,
             @NonNull CompileOptions compileOptions,
             @NonNull LintOptions lintOptions,
@@ -127,7 +125,6 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
         this.signingConfigs = signingConfigs;
         this.aaptOptions = aaptOptions;
         this.extraArtifacts = extraArtifacts;
-        this.unresolvedDependencies = unresolvedDependencies;
         this.syncIssues = syncIssues;
         this.javaCompileOptions = new DefaultJavaCompileOptions(compileOptions);
         this.lintOptions = lintOptions;
@@ -243,7 +240,7 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
     @Override
     @NonNull
     public Collection<String> getUnresolvedDependencies() {
-        return unresolvedDependencies;
+        return ImmutableList.of();
     }
 
     @NonNull
@@ -311,7 +308,6 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
                 && Objects.equals(signingConfigs, that.signingConfigs)
                 && Objects.equals(aaptOptions, that.aaptOptions)
                 && Objects.equals(extraArtifacts, that.extraArtifacts)
-                && Objects.equals(unresolvedDependencies, that.unresolvedDependencies)
                 && Objects.equals(syncIssues, that.syncIssues)
                 && Objects.equals(javaCompileOptions, that.javaCompileOptions)
                 && Objects.equals(lintOptions, that.lintOptions)
@@ -337,7 +333,6 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
                 signingConfigs,
                 aaptOptions,
                 extraArtifacts,
-                unresolvedDependencies,
                 syncIssues,
                 generation,
                 javaCompileOptions,
