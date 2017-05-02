@@ -192,7 +192,7 @@ public class DependencyManager {
             if (modelLevelInt != null) {
                 modelLevel = modelLevelInt;
             }
-            if (modelLevel > AndroidProject.MODEL_LEVEL_2_DONT_USE) {
+            if (modelLevel >= AndroidProject.MODEL_LEVEL_4_NEW_DEP_MODEL) {
                 needPackageScope = AndroidGradleOptions.buildModelWithFullDependencies(project);
             }
         }

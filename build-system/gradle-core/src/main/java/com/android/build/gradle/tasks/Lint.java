@@ -59,6 +59,7 @@ import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
+import org.gradle.api.plugins.ExtraPropertiesExtension;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
@@ -388,7 +389,18 @@ public class Lint extends BaseTask {
         String modelName = AndroidProject.class.getName();
         ToolingModelBuilder modelBuilder = toolingRegistry.getBuilder(modelName);
         assert modelBuilder != null;
-        return (AndroidProject) modelBuilder.buildAll(modelName, gradleProject);
+
+        // setup the level 3 sync.
+        final ExtraPropertiesExtension ext = gradleProject.getExtensions().getExtraProperties();
+        ext.set(
+                AndroidProject.PROPERTY_BUILD_MODEL_ONLY_VERSIONED,
+                Integer.toString(AndroidProject.MODEL_LEVEL_3_VARIANT_OUTPUT_POST_BUILD));
+
+        try {
+            return (AndroidProject) modelBuilder.buildAll(modelName, gradleProject);
+        } finally {
+            ext.set(AndroidProject.PROPERTY_BUILD_MODEL_ONLY_VERSIONED, null);
+        }
     }
 
     private static BuiltinIssueRegistry createIssueRegistry() {

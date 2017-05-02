@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.ide;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.CompileOptions;
+import com.android.builder.Version;
 import com.android.builder.model.AaptOptions;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ArtifactMetaData;
@@ -41,8 +42,6 @@ import java.util.Objects;
 final class DefaultAndroidProject implements AndroidProject, Serializable {
     private static final long serialVersionUID = 1L;
 
-    @NonNull
-    private final String modelVersion;
     @NonNull
     private final String name;
     @NonNull
@@ -92,7 +91,6 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
     private final Collection<String> flavorDimensions;
 
     DefaultAndroidProject(
-            @NonNull String modelVersion,
             @NonNull String name,
             @NonNull ProductFlavorContainer defaultConfig,
             @NonNull Collection<String> flavorDimensions,
@@ -117,7 +115,6 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
             int apiVersion,
             int generation,
             boolean baseSplit) {
-        this.modelVersion = modelVersion;
         this.name = name;
         this.defaultConfig = defaultConfig;
         this.flavorDimensions = flavorDimensions;
@@ -147,7 +144,7 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
     @Override
     @NonNull
     public String getModelVersion() {
-        return modelVersion;
+        return Version.ANDROID_GRADLE_PLUGIN_VERSION;
     }
 
     @Override
@@ -307,7 +304,6 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
         return generation == that.generation
                 && projectType == that.projectType
                 && apiVersion == that.apiVersion
-                && Objects.equals(modelVersion, that.modelVersion)
                 && Objects.equals(name, that.name)
                 && Objects.equals(compileTarget, that.compileTarget)
                 && Objects.equals(bootClasspath, that.bootClasspath)
@@ -334,7 +330,6 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
     @Override
     public int hashCode() {
         return Objects.hash(
-                modelVersion,
                 name,
                 compileTarget,
                 bootClasspath,

@@ -375,7 +375,7 @@ public class ArtifactDependencyGraph {
 
     @NonNull
     public static Dependencies clone(@NonNull Dependencies dependencies, int modelLevel) {
-        if (modelLevel >= AndroidProject.MODEL_LEVEL_2_DONT_USE) {
+        if (modelLevel >= AndroidProject.MODEL_LEVEL_4_NEW_DEP_MODEL) {
             return EMPTY_DEPENDENCIES_IMPL;
         }
 
@@ -392,7 +392,7 @@ public class ArtifactDependencyGraph {
             @NonNull DependencyGraphs dependencyGraphs,
             int modelLevel,
             boolean modelWithFullDependency) {
-        if (modelLevel < AndroidProject.MODEL_LEVEL_2_DONT_USE) {
+        if (modelLevel < AndroidProject.MODEL_LEVEL_4_NEW_DEP_MODEL) {
             return EMPTY_DEPENDENCY_GRAPH;
         }
 

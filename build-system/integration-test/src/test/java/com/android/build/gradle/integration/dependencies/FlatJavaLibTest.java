@@ -68,7 +68,10 @@ public class FlatJavaLibTest {
                         + "    compile 'com.android.support:design:" + SUPPORT_LIB_VERSION
                         + "'\n"
                         + "}\n");
-        models = project.model().level(AndroidProject.MODEL_LEVEL_1_SYNC_ISSUE).getMulti();
+        models =
+                project.model()
+                        .level(AndroidProject.MODEL_LEVEL_3_VARIANT_OUTPUT_POST_BUILD)
+                        .getMulti();
     }
 
     @AfterClass

@@ -37,7 +37,6 @@ import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.GraphItem;
-import com.android.builder.model.level2.Library;
 import com.android.testutils.apk.Apk;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Iterables;
@@ -104,8 +103,10 @@ public class AppWithCompileIndirectJavaProjectTest {
 
     @Test
     public void checkLevel1Model() throws Exception {
-        ModelContainer<AndroidProject> modelContainer = project.model()
-                .level(AndroidProject.MODEL_LEVEL_1_SYNC_ISSUE).getMulti();
+        ModelContainer<AndroidProject> modelContainer =
+                project.model()
+                        .level(AndroidProject.MODEL_LEVEL_3_VARIANT_OUTPUT_POST_BUILD)
+                        .getMulti();
 
         Map<String, AndroidProject> models = modelContainer.getModelMap();
 
@@ -152,7 +153,7 @@ public class AppWithCompileIndirectJavaProjectTest {
     }
 
     @Test
-    public void checkLevel2Model() throws Exception {
+    public void checkLevel4Model() throws Exception {
         ModelContainer<AndroidProject> modelContainer = project.model()
                 .level(AndroidProject.MODEL_LEVEL_LATEST)
                 .withFeature(FULL_DEPENDENCIES)

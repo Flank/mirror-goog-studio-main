@@ -193,6 +193,12 @@ public class ModelBuilder implements ToolingModelBuilder {
         if (modelLevelInt != null) {
             modelLevel = modelLevelInt;
         }
+
+        if (modelLevel < AndroidProject.MODEL_LEVEL_3_VARIANT_OUTPUT_POST_BUILD) {
+            // FIXME move to 3.0
+            throw new RuntimeException("This Gradle plugin requires Studio 2.4 minimum");
+        }
+
         modelWithFullDependency = AndroidGradleOptions.buildModelWithFullDependencies(project);
 
         // Get the boot classpath. This will ensure the target is configured.
@@ -252,7 +258,6 @@ public class ModelBuilder implements ToolingModelBuilder {
         }
 
         return new DefaultAndroidProject(
-                Version.ANDROID_GRADLE_PLUGIN_VERSION,
                 project.getName(),
                 defaultConfig,
                 flavorDimensionList,
@@ -397,7 +402,7 @@ public class ModelBuilder implements ToolingModelBuilder {
         Dependencies dependencies;
         DependencyGraphs dependencyGraphs;
 
-        if (modelLevel == AndroidProject.MODEL_LEVEL_2_DONT_USE) {
+        if (modelLevel >= AndroidProject.MODEL_LEVEL_4_NEW_DEP_MODEL) {
             dependencies = EMPTY_DEPENDENCIES_IMPL;
 
             dependencyGraphs =
@@ -496,7 +501,7 @@ public class ModelBuilder implements ToolingModelBuilder {
         DependenciesImpl dependencies;
         DependencyGraphs dependencyGraphs;
 
-        if (modelLevel == AndroidProject.MODEL_LEVEL_2_DONT_USE) {
+        if (modelLevel >= AndroidProject.MODEL_LEVEL_4_NEW_DEP_MODEL) {
             dependencies = EMPTY_DEPENDENCIES_IMPL;
 
             dependencyGraphs =

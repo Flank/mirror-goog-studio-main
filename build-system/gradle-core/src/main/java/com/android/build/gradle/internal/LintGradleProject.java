@@ -21,7 +21,6 @@ import com.android.builder.model.Variant;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
-import com.android.tools.lint.LintCliClient;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Project;
 import com.android.utils.Pair;
@@ -49,6 +48,7 @@ import org.gradle.api.artifacts.ExternalDependency;
 import org.gradle.api.artifacts.FileCollectionDependency;
 import org.gradle.api.artifacts.ProjectDependency;
 import org.gradle.api.file.SourceDirectorySet;
+import org.gradle.api.plugins.ExtraPropertiesExtension;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.plugins.PluginContainer;
@@ -791,7 +791,20 @@ public class LintGradleProject extends Project {
                     String modelName = AndroidProject.class.getName();
                     ToolingModelBuilder builder = registry.getBuilder(modelName);
                     assert builder.canBuild(modelName) : modelName;
-                    return (AndroidProject) builder.buildAll(modelName, gradleProject);
+
+                    // setup the level 3 sync.
+                    final ExtraPropertiesExtension ext =
+                            gradleProject.getExtensions().getExtraProperties();
+                    ext.set(
+                            AndroidProject.PROPERTY_BUILD_MODEL_ONLY_VERSIONED,
+                            Integer.toString(
+                                    AndroidProject.MODEL_LEVEL_3_VARIANT_OUTPUT_POST_BUILD));
+
+                    try {
+                        return (AndroidProject) builder.buildAll(modelName, gradleProject);
+                    } finally {
+                        ext.set(AndroidProject.PROPERTY_BUILD_MODEL_ONLY_VERSIONED, null);
+                    }
                 }
             }
 

@@ -100,13 +100,6 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
         return this;
     }
 
-    /** Fetch the model as studio 1.0 would. */
-    public BuildModel asStudio1() {
-        Preconditions.checkState(
-                maxSyncIssueSeverityLevel == 0, "Studio 1 was not aware of sync issues.");
-        return level(AndroidProject.MODEL_LEVEL_0_ORIGINAL);
-    }
-
     /**
      * Fetch the model as studio would, with the specified model level.
      *
@@ -226,14 +219,16 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
             case AndroidProject.MODEL_LEVEL_0_ORIGINAL:
                 // nothing.
                 break;
-            case AndroidProject.MODEL_LEVEL_2_DONT_USE:
+                //case AndroidProject.MODEL_LEVEL_2_DONT_USE:
+            case AndroidProject.MODEL_LEVEL_3_VARIANT_OUTPUT_POST_BUILD:
+            case AndroidProject.MODEL_LEVEL_4_NEW_DEP_MODEL:
                 with(IntegerOption.IDE_BUILD_MODEL_ONLY_VERSION, modelLevel);
                 // intended fall-through
             case AndroidProject.MODEL_LEVEL_1_SYNC_ISSUE:
                 with(BooleanOption.IDE_BUILD_MODEL_ONLY_ADVANCED, true);
                 break;
             default:
-                throw new RuntimeException("Unsupported ModelLevel");
+                throw new RuntimeException("Unsupported ModelLevel:" + modelLevel);
         }
 
         setJvmArguments(executor);
