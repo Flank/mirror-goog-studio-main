@@ -325,7 +325,7 @@ public final class GradleTestProject implements TestRule {
         File gradleDir = TestUtils.getWorkspaceFile("tools/external/gradle");
 
         // should match gradle-3.4-201612071523+0000-bin.zip, and gradle-3.2-bin.zip
-        Pattern gradleVersion = Pattern.compile("^gradle-(\\d+.\\d+)(-.+)?-bin\\.zip$");
+        Pattern gradleVersion = Pattern.compile("^gradle-(\\d+.\\d+)(-\\d+\\+\\d+)?-bin\\.zip$");
 
         Comparator<Pair<String, String>> revisionsCmp =
                 Comparator.nullsFirst(
@@ -1143,7 +1143,6 @@ public final class GradleTestProject implements TestRule {
         File distributionDirectory = TestUtils.getWorkspaceFile("tools/external/gradle");
         String distributionName = String.format("gradle-%s-bin.zip", targetGradleVersion);
         File distributionZip = new File(distributionDirectory, distributionName);
-        assertThat(distributionZip).isFile();
 
         projectConnection =
                 connector
