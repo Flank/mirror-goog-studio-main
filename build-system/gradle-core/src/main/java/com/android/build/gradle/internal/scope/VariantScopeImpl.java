@@ -741,6 +741,20 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         return mainCollection.plus(getVariantData().getGeneratedBytecode(generatedBytecodeKey));
     }
 
+    @NonNull
+    @Override
+    public ArtifactCollection getJavaClasspathArtifacts(
+            @NonNull ConsumedConfigType configType,
+            @NonNull ArtifactType classesType,
+            @Nullable Object generatedBytecodeKey) {
+        ArtifactCollection mainCollection = getArtifactCollection(configType, ALL, classesType);
+
+        return new ArtifactCollectionWithTestedArtifact(
+                mainCollection,
+                getVariantData().getGeneratedBytecode(generatedBytecodeKey),
+                getProject().getPath());
+    }
+
     @Override
     public boolean keepDefaultBootstrap() {
         // javac 1.8 may generate code that uses class not available in android.jar.  This is fine

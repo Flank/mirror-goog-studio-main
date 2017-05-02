@@ -138,6 +138,12 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
             @NonNull ArtifactType classesType,
             @Nullable Object generatedBytecodeKey);
 
+    @NonNull
+    ArtifactCollection getJavaClasspathArtifacts(
+            @NonNull AndroidArtifacts.ConsumedConfigType configType,
+            @NonNull ArtifactType classesType,
+            @Nullable Object generatedBytecodeKey);
+
     boolean keepDefaultBootstrap();
 
     @NonNull
