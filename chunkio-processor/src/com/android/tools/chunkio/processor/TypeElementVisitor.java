@@ -59,7 +59,6 @@ class TypeElementVisitor extends SimpleTypeVisitor6<ChunkReader, Void> {
 
         ChunkReader reader = ChunkReaders.get(name);
         if (reader == null) {
-            //noinspection EnumSwitchStatementWhichMissesCases
             switch (element.getKind()) {
                 case ENUM:
                     reader = getEnumChunkReader(element);
@@ -69,6 +68,9 @@ class TypeElementVisitor extends SimpleTypeVisitor6<ChunkReader, Void> {
                     break;
                 case INTERFACE:
                     reader = getCollectionChunkReader(declaredType, name);
+                    break;
+                default:
+                    // do nothing
                     break;
             }
         }
