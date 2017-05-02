@@ -115,7 +115,6 @@ public class AndroidGradleOptions {
      * @return an integer or null if we are not in model-only mode.
      * @see AndroidProject#MODEL_LEVEL_0_ORIGINAL
      * @see AndroidProject#MODEL_LEVEL_1_SYNC_ISSUE
-     * @see AndroidProject#MODEL_LEVEL_2_DONT_USE
      * @see AndroidProject#MODEL_LEVEL_3_VARIANT_OUTPUT_POST_BUILD
      * @see AndroidProject#MODEL_LEVEL_4_NEW_DEP_MODEL
      */
