@@ -68,17 +68,20 @@ import com.android.builder.model.SigningConfig;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.model.SourceProviderContainer;
 import com.android.builder.model.SyncIssue;
+import com.android.builder.model.TestVariantBuildOutput;
 import com.android.builder.model.TestedTargetVariant;
 import com.android.builder.model.Variant;
 import com.android.builder.model.VariantBuildOutput;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.GlobalLibraryMap;
 import com.android.ide.common.build.ApkInfo;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.util.Collection;
@@ -174,12 +177,53 @@ public class ModelBuilder implements ToolingModelBuilder {
 
         ImmutableList.Builder<VariantBuildOutput> variantsOutput = ImmutableList.builder();
 
+        // gather the testingVariants per testedVariant
+        Multimap<VariantScope, VariantScope> sortedVariants = ArrayListMultimap.create();
         for (VariantScope variantScope : variantManager.getVariantScopes()) {
-            if (!variantScope.getVariantData().getType().isForTesting()) {
+            boolean isForTesting = variantScope.getVariantData().getType().isForTesting();
+
+            if (isForTesting && variantScope.getTestedVariantData() != null) {
+                sortedVariants.put(variantScope.getTestedVariantData().getScope(), variantScope);
+            }
+        }
+
+        for (VariantScope variantScope : variantManager.getVariantScopes()) {
+            boolean isForTesting = variantScope.getVariantData().getType().isForTesting();
+
+            if (!isForTesting) {
+                Collection<VariantScope> testingVariants = sortedVariants.get(variantScope);
+                Collection<TestVariantBuildOutput> testVariantBuildOutputs;
+                if (testingVariants == null) {
+                    testVariantBuildOutputs = ImmutableList.of();
+                } else {
+                    testVariantBuildOutputs =
+                            testingVariants
+                                    .stream()
+                                    .map(
+                                            testVariantScope ->
+                                                    new DefaultTestVariantBuildOutput(
+                                                            testVariantScope.getFullVariantName(),
+                                                            getBuildOutputSupplier(
+                                                                            testVariantScope
+                                                                                    .getVariantData())
+                                                                    .get(),
+                                                            variantScope.getFullVariantName(),
+                                                            testVariantScope
+                                                                                    .getVariantData()
+                                                                                    .getType()
+                                                                            == VariantType
+                                                                                    .ANDROID_TEST
+                                                                    ? TestVariantBuildOutput
+                                                                            .TestType.ANDROID_TEST
+                                                                    : TestVariantBuildOutput
+                                                                            .TestType.UNIT))
+                                    .collect(Collectors.toList());
+                }
                 variantsOutput.add(
                         new DefaultVariantBuildOutput(
                                 variantScope.getFullVariantName(),
-                                getBuildOutputSupplier(variantScope.getVariantData()).get()));
+                                getBuildOutputSupplier(variantScope.getVariantData()).get(),
+                                testVariantBuildOutputs));
             }
         }
 
@@ -611,6 +655,19 @@ public class ModelBuilder implements ToolingModelBuilder {
                                 new File(
                                         variantData.getScope().getGlobalScope().getApkLocation(),
                                         variantData.getVariantConfiguration().getDirName())));
+            case UNIT_TEST:
+                return (BuildOutputSupplier<Collection<BuildOutput>>)
+                        () ->
+                                ImmutableList.of(
+                                        new BuildOutput(
+                                                VariantScope.TaskOutputType.JAVAC,
+                                                ApkInfo.of(
+                                                        VariantOutput.OutputType.MAIN,
+                                                        ImmutableList.of(),
+                                                        variantData
+                                                                .getVariantConfiguration()
+                                                                .getVersionCode()),
+                                                variantData.getScope().getJavaOutputDir()));
             default:
                 throw new RuntimeException("Unhandled build type " + variantData.getType());
         }

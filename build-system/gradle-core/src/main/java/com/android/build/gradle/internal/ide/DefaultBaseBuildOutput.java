@@ -17,28 +17,34 @@
 package com.android.build.gradle.internal.ide;
 
 import com.android.annotations.NonNull;
+import com.android.build.OutputFile;
 import com.android.build.gradle.internal.scope.BuildOutput;
-import com.android.builder.model.TestVariantBuildOutput;
-import com.android.builder.model.VariantBuildOutput;
+import com.android.builder.model.BaseBuildOutput;
+import java.io.Serializable;
 import java.util.Collection;
+import java.util.stream.Collectors;
 
-/** Default implementation of the {@link VariantBuildOutput}. */
-public class DefaultVariantBuildOutput extends DefaultBaseBuildOutput
-        implements VariantBuildOutput {
+/** Default implementation of the variant output minimal model. */
+public abstract class DefaultBaseBuildOutput implements BaseBuildOutput, Serializable {
 
-    Collection<TestVariantBuildOutput> testVariants;
+    @NonNull private final String name;
+    @NonNull private final Collection<BuildOutput> buildOutputs;
 
-    public DefaultVariantBuildOutput(
-            @NonNull String name,
-            @NonNull Collection<BuildOutput> buildOutputSupplier,
-            @NonNull Collection<TestVariantBuildOutput> testVariants) {
-        super(name, buildOutputSupplier);
-        this.testVariants = testVariants;
+    public DefaultBaseBuildOutput(
+            @NonNull String name, @NonNull Collection<BuildOutput> buildOutputSupplier) {
+        this.name = name;
+        this.buildOutputs = buildOutputSupplier;
     }
 
-    @Override
     @NonNull
-    public Collection<TestVariantBuildOutput> getTestingVariants() {
-        return testVariants;
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    @NonNull
+    @Override
+    public Collection<OutputFile> getOutputs() {
+        return buildOutputs.stream().collect(Collectors.toList());
     }
 }

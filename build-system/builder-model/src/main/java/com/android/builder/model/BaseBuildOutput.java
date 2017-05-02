@@ -17,17 +17,26 @@
 package com.android.builder.model;
 
 import com.android.annotations.NonNull;
+import com.android.build.OutputFile;
 import java.util.Collection;
 
-/** Model that represents a variant build output */
-public interface VariantBuildOutput extends BaseBuildOutput {
+/** Base model to represents a variant or a test variant build output. */
+public interface BaseBuildOutput {
 
     /**
-     * Returns a possibly empty list of test variants for this variant.
+     * Variant full name.
      *
-     * @return a {@link Collection} of {@link TestVariantBuildOutput} for all the test variants
-     *     testing this variant.
+     * @return a {@link String} representing this variant's name.
      */
     @NonNull
-    Collection<TestVariantBuildOutput> getTestingVariants();
+    String getName();
+
+    /**
+     * Returns the collection of build output for this Variant.
+     *
+     * @return a possibly empty {@link Collection} of {@link AndroidArtifactOutput} for each output
+     *     file from this variant.
+     */
+    @NonNull
+    Collection<OutputFile> getOutputs();
 }

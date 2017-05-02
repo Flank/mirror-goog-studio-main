@@ -17,17 +17,32 @@
 package com.android.builder.model;
 
 import com.android.annotations.NonNull;
-import java.util.Collection;
 
-/** Model that represents a variant build output */
-public interface VariantBuildOutput extends BaseBuildOutput {
+/** Model for a test variant build output */
+public interface TestVariantBuildOutput extends BaseBuildOutput {
+
+    /** Enum for all possible test variant types that can be returned. */
+    enum TestType {
+        UNIT,
+        ANDROID_TEST
+    }
+
+    String UNIT = TestType.UNIT.name();
+    String ANDROID_TEST = TestType.ANDROID_TEST.name();
 
     /**
-     * Returns a possibly empty list of test variants for this variant.
+     * Returns the variant name of the tested variant.
      *
-     * @return a {@link Collection} of {@link TestVariantBuildOutput} for all the test variants
-     *     testing this variant.
+     * @return the tested variant name.
      */
     @NonNull
-    Collection<TestVariantBuildOutput> getTestingVariants();
+    String getTestedVariantName();
+
+    /**
+     * Returns the test variant type as a String
+     *
+     * @return one of {@link TestType} value as a {@link String}
+     */
+    @NonNull
+    String getType();
 }

@@ -40,6 +40,7 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ProjectBuildOutput;
+import com.android.builder.model.TestVariantBuildOutput;
 import com.android.builder.model.VariantBuildOutput;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
@@ -294,6 +295,63 @@ public class ModelBuilderTest {
                     .isEqualTo("some apk");
         }
         assertThat(expectedVariantNames).isEmpty();
+    }
+
+    @Test
+    public void testSingleVariantWithOutputWithSingleTestVariantMinimalisticModel()
+            throws IOException {
+
+        GradleVariantConfiguration variantConfiguration =
+                Mockito.mock(GradleVariantConfiguration.class);
+        when(variantConfiguration.getDirName()).thenReturn("variant/name");
+
+        VariantScope variantScope = createVariantScope("variantName");
+        BaseVariantData variantData = createVariantData(variantScope, variantConfiguration);
+
+        GradleVariantConfiguration testVariantConfiguration =
+                Mockito.mock(GradleVariantConfiguration.class);
+        when(testVariantConfiguration.getDirName()).thenReturn("test/name");
+        VariantScope testVariantScope = createVariantScope("testVariant");
+        BaseVariantData testVariantData =
+                createVariantData(testVariantScope, testVariantConfiguration);
+        when(testVariantData.getType()).thenReturn(VariantType.UNIT_TEST);
+        when(testVariantScope.getTestedVariantData()).thenReturn(variantData);
+
+        when(variantManager.getVariantScopes())
+                .thenReturn(ImmutableList.of(variantScope, testVariantScope));
+
+        SplitScope splitScope = new SplitScope(SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY);
+        File variantOutputFolder = new File(apkLocation, FileUtils.join("variant", "name"));
+        File apkOutput = new File(variantOutputFolder, "main.apk");
+        Files.createParentDirs(apkOutput);
+        Files.write("some apk", apkOutput, Charsets.UTF_8);
+
+        SplitFactory splitFactory = new SplitFactory(variantConfiguration, splitScope);
+        splitScope.addOutputForSplit(
+                TaskOutputHolder.TaskOutputType.APK, splitFactory.addMainApk(), apkOutput);
+        splitScope.save(ImmutableList.of(TaskOutputHolder.TaskOutputType.APK), variantOutputFolder);
+
+        ProjectBuildOutput projectBuildOutput = modelBuilder.buildMinimalisticModel();
+        assertThat(projectBuildOutput).isNotNull();
+        Collection<VariantBuildOutput> variantsBuildOutput =
+                projectBuildOutput.getVariantsBuildOutput();
+        assertThat(variantsBuildOutput).hasSize(1);
+
+        VariantBuildOutput variantBuildOutput =
+                Iterators.getOnlyElement(variantsBuildOutput.iterator());
+        assertThat(variantBuildOutput.getName()).isEqualTo("variantName");
+        Collection<OutputFile> variantOutputs = variantBuildOutput.getOutputs();
+        assertThat(variantOutputs).isNotNull();
+        assertThat(variantOutputs).hasSize(1);
+
+        // check the test variant.
+        Collection<TestVariantBuildOutput> testingVariants =
+                variantBuildOutput.getTestingVariants();
+        assertThat(testingVariants).hasSize(1);
+        TestVariantBuildOutput testVariant = Iterators.getOnlyElement(testingVariants.iterator());
+        assertThat(testVariant.getName()).isEqualTo("testVariant");
+        assertThat(testVariant.getTestedVariantName()).isEqualTo("variantName");
+        assertThat(testVariant.getOutputs()).hasSize(1);
     }
 
     private static BaseVariantData createVariantData(
