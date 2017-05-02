@@ -18,6 +18,7 @@
     <string-array name="memory_array">
         <item>Java Memory Allocation</item>
         <item>Native Memory Allocation</item>
+        <item>Object Allocation</item>
     </string-array>
 
     <string-array name="network_array">
