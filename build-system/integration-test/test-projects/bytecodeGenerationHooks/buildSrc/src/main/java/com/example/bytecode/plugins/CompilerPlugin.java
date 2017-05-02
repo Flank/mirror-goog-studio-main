@@ -104,7 +104,8 @@ public class CompilerPlugin implements Plugin<Project> {
                                                         variant.getSourceFolders(SourceKind.JAVA));
                                                 task.setSourceJar(sourceJar);
                                                 task.setOutputDir(outputDir);
-                                                task.setClasspath(variant.getCompileClasspath(key));
+                                                task.setClasspath(
+                                                        variant.getCompileClasspathArtifacts(key));
                                             });
 
                     // add the task dependency to the file collection so that consumers can have

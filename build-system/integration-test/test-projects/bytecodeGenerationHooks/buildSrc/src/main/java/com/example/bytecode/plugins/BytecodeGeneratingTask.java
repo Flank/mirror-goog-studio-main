@@ -7,6 +7,7 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import org.gradle.api.DefaultTask;
+import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.InputFile;
@@ -20,7 +21,7 @@ public class BytecodeGeneratingTask extends DefaultTask {
 
     private List<ConfigurableFileTree> sourceFolders;
     private File sourceJar;
-    private FileCollection classpath;
+    private ArtifactCollection classpath;
     private File outputDir;
 
     @InputFile
@@ -31,7 +32,7 @@ public class BytecodeGeneratingTask extends DefaultTask {
     @InputFiles
     @Optional
     public FileCollection getClasspath() {
-        return classpath;
+        return classpath != null ? classpath.getArtifactFiles() : null;
     }
 
     @InputFiles
@@ -51,7 +52,7 @@ public class BytecodeGeneratingTask extends DefaultTask {
         this.sourceJar = sourceJar;
     }
 
-    public void setClasspath(FileCollection classpath) {
+    public void setClasspath(ArtifactCollection classpath) {
         this.classpath = classpath;
     }
 
@@ -97,7 +98,7 @@ public class BytecodeGeneratingTask extends DefaultTask {
 
         // check the compile classpath
         if (classpath != null) {
-            Set<File> files = classpath.getFiles();
+            Set<File> files = classpath.getArtifactFiles().getFiles();
             for (File file : files) {
                 if (!file.exists()) {
                     throw new RuntimeException("Dependency file does not exist: " + file);

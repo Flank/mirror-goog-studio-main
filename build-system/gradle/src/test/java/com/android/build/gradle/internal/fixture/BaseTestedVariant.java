@@ -39,6 +39,7 @@ import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import org.gradle.api.Task;
+import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.FileCollection;
@@ -219,6 +220,12 @@ public interface BaseTestedVariant extends BaseVariant, TestedVariant {
         @Override
         public FileCollection getCompileClasspath(Object key) {
             return variant.getCompileClasspath(key);
+        }
+
+        @NonNull
+        @Override
+        public ArtifactCollection getCompileClasspathArtifacts(@Nullable Object key) {
+            return variant.getCompileClasspathArtifacts(key);
         }
 
         @NonNull

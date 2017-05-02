@@ -45,6 +45,7 @@ import java.util.Collection;
 import java.util.List;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Task;
+import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.FileCollection;
@@ -343,6 +344,17 @@ public abstract class BaseVariantImpl implements BaseVariant {
         return getVariantData()
                 .getScope()
                 .getJavaClasspath(
+                        AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
+                        AndroidArtifacts.ArtifactType.CLASSES,
+                        generatorKey);
+    }
+
+    @NonNull
+    @Override
+    public ArtifactCollection getCompileClasspathArtifacts(@Nullable Object generatorKey) {
+        return getVariantData()
+                .getScope()
+                .getJavaClasspathArtifacts(
                         AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                         AndroidArtifacts.ArtifactType.CLASSES,
                         generatorKey);
