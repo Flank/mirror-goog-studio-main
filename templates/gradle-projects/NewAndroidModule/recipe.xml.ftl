@@ -80,8 +80,8 @@
         <#-- Copy adaptive-icons -->
         <copy from="root/res/mipmap-anydpi/ic_launcher.xml"
                 to="${destination}/mipmap-anydpi/ic_launcher.xml" />
-        <copy from="root/res/mipmap-anydpi/ic_launcher_background.xml"
-                to="${destination}/mipmap-anydpi/ic_launcher_background.xml" />
+        <copy from="root/res/drawable/ic_launcher_background.xml"
+                to="${destination}/drawable/ic_launcher_background.xml" />
         <copy from="root/res/mipmap-anydpi/ic_launcher_round.xml"
                 to="${destination}/mipmap-anydpi/ic_launcher_round.xml" />
         <@copyMipmap destination=escapeXmlAttribute(destination)
