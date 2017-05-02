@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.JavaCompileOptions;
+import com.android.build.gradle.api.SourceKind;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -37,12 +38,15 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.BuildType;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SourceProvider;
+import com.android.builder.model.SyncIssue;
+import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.compile.JavaCompile;
@@ -146,6 +150,24 @@ public abstract class BaseVariantImpl implements BaseVariant {
     @Override
     public List<SourceProvider> getSourceSets() {
         return getVariantData().getVariantConfiguration().getSortedSourceProviders();
+    }
+
+    @NonNull
+    @Override
+    public List<ConfigurableFileTree> getSourceFolders(@NonNull SourceKind folderType) {
+        switch (folderType) {
+            case JAVA:
+                return getVariantData().getJavaSources();
+            default:
+                androidBuilder
+                        .getErrorReporter()
+                        .handleSyncError(
+                                null,
+                                SyncIssue.TYPE_GENERIC,
+                                "Unknown SourceKind value: " + folderType);
+        }
+
+        return ImmutableList.of();
     }
 
     @NonNull

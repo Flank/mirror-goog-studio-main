@@ -2,6 +2,7 @@ package com.example.bytecode.plugins;
 
 import com.android.build.gradle.*;
 import com.android.build.gradle.api.BaseVariant;
+import com.android.build.gradle.api.SourceKind;
 import java.io.File;
 import org.gradle.api.DomainObjectSet;
 import org.gradle.api.Plugin;
@@ -99,6 +100,8 @@ public class CompilerPlugin implements Plugin<Project> {
                                             "generateBytecodeFor" + variant.getName(),
                                             BytecodeGeneratingTask.class,
                                             task -> {
+                                                task.setSourceFolders(
+                                                        variant.getSourceFolders(SourceKind.JAVA));
                                                 task.setSourceJar(sourceJar);
                                                 task.setOutputDir(outputDir);
                                                 task.setClasspath(variant.getCompileClasspath(key));
@@ -118,8 +121,6 @@ public class CompilerPlugin implements Plugin<Project> {
                                         project.getBuildDir()
                                                 + "/generated/postJavacBytecode/"
                                                 + variant.getDirName());
-                        ConfigurableFileCollection fc2 = project.files(outputDir2);
-                        variant.registerPostJavacGeneratedBytecode(fc2);
 
                         BytecodeGeneratingTask t2 =
                                 project.getTasks()
@@ -127,10 +128,15 @@ public class CompilerPlugin implements Plugin<Project> {
                                                 "generateBytecode2For" + variant.getName(),
                                                 BytecodeGeneratingTask.class,
                                                 task -> {
+                                                    task.setSourceFolders(
+                                                            variant.getSourceFolders(
+                                                                    SourceKind.JAVA));
                                                     task.setSourceJar(postJavacJar);
                                                     task.setOutputDir(outputDir2);
                                                 });
-                        fc2.builtBy(t2);
+
+                        ConfigurableFileCollection fc2 = project.files(outputDir2).builtBy(t2);
+                        variant.registerPostJavacGeneratedBytecode(fc2);
                     }
                 });
     }
