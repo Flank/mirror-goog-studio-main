@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.scope;
 
+import static com.android.SdkConstants.FD_COMPILED;
 import static com.android.SdkConstants.FD_MERGED;
 import static com.android.SdkConstants.FD_RES;
 import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML;
@@ -1111,6 +1112,16 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     public void setMergeResourceOutputDir(@Nullable File mergeResourceOutputDir) {
         this.mergeResourceOutputDir = mergeResourceOutputDir;
+    }
+
+    @Override
+    @NonNull
+    public File getCompiledResourcesOutputDir() {
+        return FileUtils.join(
+                getGlobalScope().getIntermediatesDir(),
+                FD_RES,
+                FD_COMPILED,
+                getVariantConfiguration().getDirName());
     }
 
     @NonNull

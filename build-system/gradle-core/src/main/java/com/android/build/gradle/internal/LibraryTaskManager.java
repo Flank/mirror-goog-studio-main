@@ -62,6 +62,7 @@ import com.android.build.gradle.tasks.AidlCompile;
 import com.android.build.gradle.tasks.AndroidZip;
 import com.android.build.gradle.tasks.ExtractAnnotations;
 import com.android.build.gradle.tasks.MergeResources;
+import com.android.build.gradle.tasks.VerifyLibraryResourcesTask;
 import com.android.build.gradle.tasks.ZipMergingTask;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
@@ -206,6 +207,11 @@ public class LibraryTaskManager extends TaskManager {
                                     ? MergeType.PACKAGE
                                     : MergeType.MERGE,
                             globalScope.getProjectBaseName());
+
+                    // Only verify resources if in Release.
+                    if (!variantScope.getVariantConfiguration().getBuildType().isDebuggable()) {
+                        createVerifyLibraryResTask(tasks, variantScope, MergeType.MERGE);
+                    }
 
                     // process java resources only, the merge is setup after
                     // the task to generate intermediate jars for project to project publishing.
@@ -718,4 +724,15 @@ public class LibraryTaskManager extends TaskManager {
         }
         return assembleDefault;
     }
+
+    public void createVerifyLibraryResTask(
+            @NonNull TaskFactory tasks, @NonNull VariantScope scope, @NonNull MergeType mergeType) {
+        AndroidTask<VerifyLibraryResourcesTask> verifyLibraryResources =
+                androidTasks.create(
+                        tasks, new VerifyLibraryResourcesTask.ConfigAction(scope, mergeType));
+
+        verifyLibraryResources.dependsOn(tasks, scope.getMergeResourcesTask());
+        scope.getAssembleTask().dependsOn(tasks, verifyLibraryResources);
+    }
+
 }

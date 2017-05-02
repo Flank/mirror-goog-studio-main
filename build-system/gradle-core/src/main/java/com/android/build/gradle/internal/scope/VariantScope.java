@@ -223,6 +223,9 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     void setMergeResourceOutputDir(@Nullable File mergeResourceOutputDir);
 
     @NonNull
+    File getCompiledResourcesOutputDir();
+
+    @NonNull
     File getResourceBlameLogDir();
 
     @NonNull

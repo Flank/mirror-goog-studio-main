@@ -450,6 +450,8 @@ public final class SdkConstants {
     public static final String FD_ADDON_LIBS = "libs"; //$NON-NLS-1$
     /** Name of the merged resources folder. */
     public static final String FD_MERGED = "merged"; //$NON-NLS-1$
+    /** Name of the compiled resources folder. */
+    public static final String FD_COMPILED = "compiled"; //$NON-NLS-1$
     /** Name of the output dex folder. */
     public static final String FD_DEX = "dex"; //$NON-NLS-1$
     /** Name of the generated source folder. */
