@@ -19,9 +19,7 @@ package com.android.build.gradle.internal.transforms;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.transform.Context;
-import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.Format;
-import com.android.build.api.transform.JarInput;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformInput;
@@ -31,7 +29,6 @@ import com.android.build.gradle.internal.pipeline.TransformInvocationBuilder;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
 import com.google.common.truth.Truth;
@@ -48,9 +45,9 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
@@ -106,22 +103,22 @@ public class CustomClassTransformTest {
         transform = new CustomClassTransform(jar.getPath());
     }
 
-    private static File addFakeClass(File dir, String name, String content) throws IOException {
-        if (dir.getName().endsWith(".jar")) {
+    private static File addFakeClass(File file, String name, String content) throws IOException {
+        if (file.getName().endsWith(".jar")) {
             Map<String, String> env = new HashMap<>();
             env.put("create", "true");
-            URI uri = URI.create("jar:" + dir.toURI());
+            URI uri = URI.create("jar:" + file.toURI());
             try (FileSystem zipfs = FileSystems.newFileSystem(uri, env)) {
                 Path pathInZipfile = zipfs.getPath(name);
                 // copy a file into the zip file
                 Files.write(pathInZipfile, content.getBytes(Charsets.UTF_8));
             }
-            return dir;
-        } else {
-            File file = new File(dir, name);
-            file.getParentFile().mkdirs();
-            Files.write(file.toPath(), content.getBytes(Charsets.UTF_8));
             return file;
+        } else {
+            File clazz = new File(file, name);
+            clazz.getParentFile().mkdirs();
+            Files.write(clazz.toPath(), content.getBytes(Charsets.UTF_8));
+            return clazz;
         }
     }
 
@@ -180,97 +177,19 @@ public class CustomClassTransformTest {
         };
     }
 
-    private static TransformInput createTransformInput(
-            @NonNull File folder, @Nullable Map<File, Status> changes, Map<File, Status> jars) {
-        return new TransformInput() {
-
-            @NonNull
-            @Override
-            public Collection<JarInput> getJarInputs() {
-                ImmutableList.Builder<JarInput> builder = ImmutableList.builder();
-                for (Map.Entry<File, Status> entry : jars.entrySet()) {
-                    builder.add(createJarInput(entry.getKey(), entry.getValue()));
-                }
-                return builder.build();
-            }
-
-            @NonNull
-            @Override
-            public Collection<DirectoryInput> getDirectoryInputs() {
-                return ImmutableList.of(createDirectoryInput(folder, changes));
-            }
-        };
-    }
-
-    @NonNull
-    private static JarInput createJarInput(@NonNull File jar, Status status) {
-        return new JarInput() {
-            @NonNull
-            @Override
-            public Status getStatus() {
-                return status;
-            }
-
-            @NonNull
-            @Override
-            public String getName() {
-                return jar.getName();
-            }
-
-            @NonNull
-            @Override
-            public File getFile() {
-                return jar;
-            }
-
-            @NonNull
-            @Override
-            public Set<ContentType> getContentTypes() {
-                return ImmutableSet.of();
-            }
-
-            @NonNull
-            @Override
-            public Set<? super Scope> getScopes() {
-                return ImmutableSet.of();
-            }
-        };
-    }
-
-    @NonNull
-    private static DirectoryInput createDirectoryInput(
-            @NonNull final File folder, @NonNull final Map<File, Status> changes) {
-        return new DirectoryInput() {
-            @NonNull
-            @Override
-            public Map<File, Status> getChangedFiles() {
-                return changes;
-            }
-
-            @NonNull
-            @Override
-            public String getName() {
-                return folder.getName();
-            }
-
-            @NonNull
-            @Override
-            public File getFile() {
-                return folder;
-            }
-
-            @NonNull
-            @Override
-            public Set<ContentType> getContentTypes() {
-                return ImmutableSet.of();
-            }
-
-            @NonNull
-            @Override
-            public Set<Scope> getScopes() {
-                return ImmutableSet.of();
-            }
-        };
+    private static List<TransformInput> createTransformInputs(
+            @NonNull File folder,
+            @Nullable Map<File, Status> changes,
+            @NonNull Map<File, Status> jars) {
+        ImmutableList.Builder<TransformInput> builder = ImmutableList.builder();
+        for (Map.Entry<File, Status> entry : jars.entrySet()) {
+            builder.add(
+                    TransformTestHelper.singleJarBuilder(entry.getKey())
+                            .setStatus(entry.getValue())
+                            .build());
+        }
+        builder.add(TransformTestHelper.directoryBuilder(folder).putChangedFiles(changes).build());
+        return builder.build();
     }
 
     @Test
@@ -287,10 +206,8 @@ public class CustomClassTransformTest {
         addFakeClass(jar, "j.class", "J");
         addFakeClass(jar, "k.class", "K");
 
-        ImmutableList<TransformInput> transformInput =
-                ImmutableList.of(
-                        createTransformInput(
-                                dir, ImmutableMap.of(), ImmutableMap.of(jar, Status.ADDED)));
+        List<TransformInput> transformInput =
+                createTransformInputs(dir, ImmutableMap.of(), ImmutableMap.of(jar, Status.ADDED));
         TransformOutputProvider transformOutput = createTransformOutput(out);
         TransformInvocation invocation =
                 new TransformInvocationBuilder(context)
@@ -356,8 +273,7 @@ public class CustomClassTransformTest {
                         removedJar, Status.REMOVED,
                         changedJar, Status.CHANGED);
 
-        ImmutableList<TransformInput> transformInput =
-                ImmutableList.of(createTransformInput(dir, files, jars));
+        List<TransformInput> transformInput = createTransformInputs(dir, files, jars);
         TransformInvocation invocation =
                 new TransformInvocationBuilder(context)
                         .addInputs(transformInput)
