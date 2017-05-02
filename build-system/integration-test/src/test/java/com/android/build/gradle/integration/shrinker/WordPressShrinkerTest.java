@@ -106,6 +106,8 @@ public class WordPressShrinkerTest {
                         "Landroid/support/v4/media/session/MediaControllerCompat$MediaControllerImplApi21$ExtraBinderRequestResultReceiver;",
                         "Landroid/support/v4/media/session/MediaControllerCompat$MediaControllerImplApi21$ExtraCallback$1;",
                         "Landroid/support/v4/media/session/MediaControllerCompat$MediaControllerImplApi21$ExtraCallback$2;",
+                        "Landroid/support/v4/media/session/MediaControllerCompat$MediaControllerImplApi21$ExtraCallback$3;",
+                        "Landroid/support/v4/media/session/MediaControllerCompat$MediaControllerImplApi21$ExtraCallback$4;",
                         "Landroid/support/v4/media/session/MediaControllerCompat$MediaControllerImplApi21$ExtraCallback;",
                         "Landroid/support/v4/media/session/MediaControllerCompat$MediaControllerImplApi21;",
                         "Landroid/support/v4/media/session/MediaControllerCompat$MediaControllerImplApi23;",
