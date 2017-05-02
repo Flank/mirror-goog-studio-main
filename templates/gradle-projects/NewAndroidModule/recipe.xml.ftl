@@ -73,6 +73,9 @@
         <copy from="root/module_ignore"
                 to="${baseFeatureOut}/.gitignore" />
     </#if>
+<#elseif isInstantApp && !isBaseFeature>
+    <merge from="root/baseFeatureDependency-build.gradle.ftl"
+             to="${baseFeatureOut}/build.gradle" />
 </#if>
 
 <#macro copyIconCommands destination>
