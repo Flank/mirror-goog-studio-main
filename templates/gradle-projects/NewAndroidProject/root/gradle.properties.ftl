@@ -19,3 +19,8 @@ org.gradle.jvmargs=-Xmx1536m
 # This option should only be used with decoupled projects. More details, visit
 # http://www.gradle.org/docs/current/userguide/multi_project_builds.html#sec:decoupled_projects
 # org.gradle.parallel=true
+<#if includeKotlinSupport!false>
+# TODO: Remove me. This is a temporary workaround for an
+# incompatibility bug between the Android plugin and the Kotlin plugin.
+kotlin.incremental=false
+</#if>
