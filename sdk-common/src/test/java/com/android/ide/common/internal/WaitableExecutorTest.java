@@ -18,7 +18,7 @@ package com.android.ide.common.internal;
 
 import static org.junit.Assert.fail;
 
-import com.android.annotations.NonNull;
+import com.google.common.base.Throwables;
 import com.google.common.truth.Truth;
 import java.util.List;
 import java.util.Objects;
@@ -29,7 +29,7 @@ import org.junit.Test;
 /** Tests for the {@link WaitableExecutor}. */
 public class WaitableExecutorTest {
 
-    @NonNull private WaitableExecutor executor;
+    private WaitableExecutor executor;
 
     @Before
     public void setUp() {
@@ -43,14 +43,20 @@ public class WaitableExecutorTest {
         executor.execute(() -> 3);
 
         List<?> results =
-                executor.waitForAllTasks().stream().map(e -> e.value).collect(Collectors.toList());
+                executor.waitForAllTasks()
+                        .stream()
+                        .map(WaitableExecutor.TaskResult::getValue)
+                        .collect(Collectors.toList());
         Truth.assertThat(results).containsExactly(1, 2, 3);
     }
 
     @Test
     public void checkNoTaskResults() throws InterruptedException {
         List<?> results =
-                executor.waitForAllTasks().stream().map(e -> e.value).collect(Collectors.toList());
+                executor.waitForAllTasks()
+                        .stream()
+                        .map(WaitableExecutor.TaskResult::getValue)
+                        .collect(Collectors.toList());
         Truth.assertThat(results).isEmpty();
     }
 
@@ -64,16 +70,21 @@ public class WaitableExecutorTest {
                 });
 
         List<WaitableExecutor.TaskResult<Integer>> results = executor.waitForAllTasks();
-        List<Integer> values = results.stream().map(e -> e.value).collect(Collectors.toList());
+        List<Integer> values =
+                results.stream()
+                        .map(WaitableExecutor.TaskResult::getValue)
+                        .collect(Collectors.toList());
         Truth.assertThat(values).containsExactly(1, 2, null);
 
         List<String> exceptions =
                 results.stream()
-                        .map(e -> e.exception)
+                        .map(WaitableExecutor.TaskResult::getException)
                         .filter(Objects::nonNull)
                         .map(Throwable::getMessage)
                         .collect(Collectors.toList());
-        Truth.assertThat(exceptions).containsExactly("Fail this task");
+        Truth.assertThat(exceptions)
+                .named("Exceptions from results " + results)
+                .containsExactly("Fail this task");
     }
 
     @Test
@@ -89,7 +100,7 @@ public class WaitableExecutorTest {
             executor.waitForTasksWithQuickFail(false);
             fail();
         } catch (Exception e) {
-            Truth.assertThat(e.getCause().getMessage()).contains("Fail this task");
+            Truth.assertThat(Throwables.getRootCause(e).getMessage()).contains("Fail this task");
         }
     }
 }

@@ -155,9 +155,10 @@ public class SplitScope implements Serializable {
             List<WaitableExecutor.TaskResult<Void>> taskResults = executor.waitForAllTasks();
             taskResults.forEach(
                     taskResult -> {
-                        if (taskResult.exception != null) {
+                        if (taskResult.getException() != null) {
                             throw new BuildException(
-                                    taskResult.exception.getMessage(), taskResult.exception);
+                                    taskResult.getException().getMessage(),
+                                    taskResult.getException());
                         }
                     });
         } catch (InterruptedException e) {
@@ -234,9 +235,10 @@ public class SplitScope implements Serializable {
             List<WaitableExecutor.TaskResult<Void>> taskResults = executor.waitForAllTasks();
             taskResults.forEach(
                     taskResult -> {
-                        if (taskResult.exception != null) {
+                        if (taskResult.getException() != null) {
                             throw new BuildException(
-                                    taskResult.exception.getMessage(), taskResult.exception);
+                                    taskResult.getException().getMessage(),
+                                    taskResult.getException());
                         }
                     });
         } catch (InterruptedException e) {

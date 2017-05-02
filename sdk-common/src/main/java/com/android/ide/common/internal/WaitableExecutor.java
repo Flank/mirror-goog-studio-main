@@ -18,7 +18,10 @@ package com.android.ide.common.internal;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
+import com.android.annotations.concurrency.Immutable;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -150,18 +153,37 @@ public class WaitableExecutor {
         return results;
     }
 
+    @Immutable
     public static final class TaskResult<T> {
-        public T value;
-        public Throwable exception;
+        @Nullable private final T value;
+        @Nullable private final Throwable exception;
 
-        static <T> TaskResult<T> withValue(T value) {
-            TaskResult<T> result = new TaskResult<>(null);
-            result.value = value;
-            return result;
+        TaskResult(@Nullable T value) {
+            this.value = value;
+            this.exception = null;
         }
 
-        TaskResult(Throwable cause) {
-            exception = cause;
+        TaskResult(@NonNull Throwable exception) {
+            this.value = null;
+            this.exception = Preconditions.checkNotNull(exception);
+        }
+
+        @Nullable
+        public T getValue() {
+            return value;
+        }
+
+        @Nullable
+        public Throwable getException() {
+            return exception;
+        }
+
+        @Override
+        public String toString() {
+            return MoreObjects.toStringHelper(this)
+                    .add("value", getValue())
+                    .add("exception", getException())
+                    .toString();
         }
     }
 
@@ -183,13 +205,10 @@ public class WaitableExecutor {
             for (ForkJoinTask<?> future : futureSet) {
                 // Get the result from the task.
                 try {
-                    results.add(TaskResult.withValue((T) future.join()));
+                    results.add(new TaskResult((T) future.join()));
                 } catch (RuntimeException e) {
                     // the original exception thrown by the task is the cause of this one.
-                    Throwable cause = e.getCause();
-
-                    // there was an error.
-                    results.add(new TaskResult<>(cause));
+                    results.add(new TaskResult<>(e.getCause() != null ? e.getCause() : e));
                 } catch (Error e) {
                     results.add(new TaskResult<>(e));
                 }
