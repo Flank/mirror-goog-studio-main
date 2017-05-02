@@ -352,7 +352,6 @@ public final class Images {
             ColorMode colorMode, ColorSpace colorSpace, int size, byte[] map, int transparency) {
 
         ColorModel colorModel = null;
-        //noinspection EnumSwitchStatementWhichMissesCases
         switch (colorMode) {
             case BITMAP:
                 colorModel = CsIndexColorModel.createInvertedBitmap();
@@ -360,6 +359,9 @@ public final class Images {
             case INDEXED:
                 if (colorSpace == null) colorSpace = ColorSpace.getInstance(ColorSpace.CS_sRGB);
                 colorModel = CsIndexColorModel.createIndexed(size, map, transparency, colorSpace);
+                break;
+            default:
+                // do nothing
                 break;
         }
 
@@ -401,7 +403,6 @@ public final class Images {
             ColorMode colorMode, ColorSpace colorSpace, int size, byte[] map, int transparency) {
 
         ColorModel colorModel = null;
-        //noinspection EnumSwitchStatementWhichMissesCases
         switch (colorMode) {
             case BITMAP:
                 colorModel = CsIndexColorModel.createInvertedBitmap();
@@ -409,6 +410,9 @@ public final class Images {
             case INDEXED:
                 if (colorSpace == null) colorSpace = ColorSpace.getInstance(ColorSpace.CS_sRGB);
                 colorModel = CsIndexColorModel.createIndexed(size, map, transparency, colorSpace);
+                break;
+            default:
+                // do nothing
                 break;
         }
 
