@@ -1311,6 +1311,12 @@ public final class SdkConstants {
     public static final String ATTR_ADJUST_VIEW_BOUNDS = "adjustViewBounds"; //$NON-NLS-1$
     public static final String ATTR_CROP_TO_PADDING = "cropToPadding"; //$NON-NLS-1$
 
+    // Font attributes of a TAG_FONT_FAMILY element
+    public static final String ATTR_FONT_PROVIDER_AUTHORITY = "fontProviderAuthority";
+    public static final String ATTR_FONT_PROVIDER_QUERY = "fontProviderQuery";
+    public static final String ATTR_FONT_PROVIDER_PACKAGE = "fontProviderPackage";
+    public static final String ATTR_FONT_PROVIDER_CERTS = "fontProviderCerts";
+
     // Font attributes of a TAG_FONT element
     public static final String ATTR_FONT_STYLE = "fontStyle";
     public static final String ATTR_FONT_WEIGHT = "fontWeight";

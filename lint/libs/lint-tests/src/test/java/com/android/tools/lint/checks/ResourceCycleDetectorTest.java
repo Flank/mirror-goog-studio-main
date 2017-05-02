@@ -376,14 +376,14 @@ public class ResourceCycleDetectorTest extends AbstractCheckTest {
         //noinspection all // Sample code
         assertEquals(
                 ""
-                        + "res/drawable/font1.xml:6: Error: Font Resource definition cycle: font1 => font2 => font1 [ResourceCycle]\n"
+                        + "res/font/font1.xml:6: Error: Font Resource definition cycle: font1 => font2 => font1 [ResourceCycle]\n"
                         + "        android:font=\"@font/font2\" />\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "    res/drawable/font2.xml:6: Reference from @font/font2 to font/font1 here\n"
+                        + "    res/font/font2.xml:6: Reference from @font/font2 to font/font1 here\n"
                         + "1 errors, 0 warnings\n",
                 lintProject(
                         xml(
-                                "res/drawable/font1.xml",
+                                "res/font/font1.xml",
                                 ""
                                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                         + "<font-family xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
@@ -394,7 +394,7 @@ public class ResourceCycleDetectorTest extends AbstractCheckTest {
                                         + "</font-family>"
                                         + "\n"),
                         xml(
-                                "res/drawable/font2.xml",
+                                "res/font/font2.xml",
                                 ""
                                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                         + "<font-family xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
@@ -410,15 +410,15 @@ public class ResourceCycleDetectorTest extends AbstractCheckTest {
         //noinspection all // Sample code
         assertEquals(
                 ""
-                        + "res/drawable/font1.xml:6: Error: Font Resource definition cycle: font1 => font2 => font3 => font1 [ResourceCycle]\n"
+                        + "res/font/font1.xml:6: Error: Font Resource definition cycle: font1 => font2 => font3 => font1 [ResourceCycle]\n"
                         + "        android:font=\"@font/font2\" />\n"
                         + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                        + "    res/drawable/font3.xml:6: Reference from @font/font3 to font/font1 here\n"
-                        + "    res/drawable/font2.xml:6: Reference from @font/font2 to font/font3 here\n"
+                        + "    res/font/font3.xml:6: Reference from @font/font3 to font/font1 here\n"
+                        + "    res/font/font2.xml:6: Reference from @font/font2 to font/font3 here\n"
                         + "1 errors, 0 warnings\n",
                 lintProject(
                         xml(
-                                "res/drawable/font1.xml",
+                                "res/font/font1.xml",
                                 ""
                                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                         + "<font-family xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
@@ -429,7 +429,7 @@ public class ResourceCycleDetectorTest extends AbstractCheckTest {
                                         + "</font-family>"
                                         + "\n"),
                         xml(
-                                "res/drawable/font2.xml",
+                                "res/font/font2.xml",
                                 ""
                                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                         + "<font-family xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
@@ -440,7 +440,7 @@ public class ResourceCycleDetectorTest extends AbstractCheckTest {
                                         + "</font-family>"
                                         + "\n"),
                         xml(
-                                "res/drawable/font3.xml",
+                                "res/font/font3.xml",
                                 ""
                                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                                         + "<font-family xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"

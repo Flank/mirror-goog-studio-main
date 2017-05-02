@@ -1970,4 +1970,15 @@ public class LintUtils {
 
         return false;
     }
+
+    @SafeVarargs
+    @Nullable
+    public static <T> T coalesce(@NonNull T... ts) {
+        for (T t : ts) {
+            if (t != null) {
+                return t;
+            }
+        }
+        return null;
+    }
 }
