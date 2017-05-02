@@ -707,6 +707,10 @@ public abstract class TaskManager {
             optionalFeatures.add(ManifestMerger2.Invoker.Feature.TEST_ONLY);
         }
 
+        if (variantScope.getVariantConfiguration().getBuildType().isDebuggable()) {
+            optionalFeatures.add(ManifestMerger2.Invoker.Feature.DEBUGGABLE);
+        }
+
         if (AndroidGradleOptions.getAdvancedProfilingTransforms(project).length > 0
                 && variantScope.getVariantConfiguration().getBuildType().isDebuggable()) {
             optionalFeatures.add(ManifestMerger2.Invoker.Feature.ADVANCED_PROFILING);

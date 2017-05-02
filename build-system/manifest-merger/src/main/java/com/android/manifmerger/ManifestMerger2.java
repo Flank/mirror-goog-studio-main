@@ -329,6 +329,12 @@ public class ManifestMerger2 {
                         addTestOnlyAttribute(document).prettyPrint());
             }
 
+            if (mOptionalFeatures.contains(Invoker.Feature.DEBUGGABLE)) {
+                mergingReport.setMergedDocument(
+                        MergingReport.MergedManifestKind.MERGED,
+                        addDebuggableAttribute(document).prettyPrint());
+            }
+
             if (!mOptionalFeatures.contains(Invoker.Feature.SKIP_BLAME)) {
                 try {
                     mergingReport.setMergedDocument(MergingReport.MergedManifestKind.BLAME,
@@ -377,6 +383,19 @@ public class ManifestMerger2 {
             setAndroidAttribute(application.getXml(),
                                 SdkConstants.ATTR_TEST_ONLY,
                                 SdkConstants.VALUE_TRUE);
+        }
+        return document.reparse();
+    }
+
+    /** Set android:debuggable="true" */
+    @NonNull
+    private static XmlDocument addDebuggableAttribute(XmlDocument document) {
+        Optional<XmlElement> applicationOptional =
+                document.getByTypeAndKey(ManifestModel.NodeTypes.APPLICATION, null /* keyValue */);
+        if (applicationOptional.isPresent()) {
+            XmlElement application = applicationOptional.get();
+            setAndroidAttribute(
+                    application.getXml(), SdkConstants.ATTR_DEBUGGABLE, SdkConstants.VALUE_TRUE);
         }
         return document.reparse();
     }
@@ -1068,7 +1087,10 @@ public class ManifestMerger2 {
             ADD_FEATURE_SPLIT_INFO,
 
             /** Set transitional feature split attributes */
-            TRANSITIONAL_FEATURE_SPLIT_ATTRIBUTES
+            TRANSITIONAL_FEATURE_SPLIT_ATTRIBUTES,
+
+            /** Set the android:debuggable flag to the application. */
+            DEBUGGABLE
         }
 
         /**

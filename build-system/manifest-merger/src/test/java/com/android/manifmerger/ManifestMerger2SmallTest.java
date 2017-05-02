@@ -752,6 +752,39 @@ public class ManifestMerger2SmallTest {
     }
 
     @Test
+    public void testAddingDebuggableAttribute() throws Exception {
+        String xml =
+                ""
+                        + "<manifest\n"
+                        + "    package=\"com.foo.bar\""
+                        + "    xmlns:t=\"http://schemas.android.com/apk/res/android\">\n"
+                        + "    <activity t:name=\"activityOne\"/>\n"
+                        + "    <application t:name=\".applicationOne\" "
+                        + "         t:backupAgent=\"com.foo.example.myBackupAgent\"/>\n"
+                        + "</manifest>";
+
+        File inputFile = inputAsFile("testAddingDebuggableAttribute", xml);
+
+        MockLog mockLog = new MockLog();
+        MergingReport mergingReport =
+                ManifestMerger2.newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
+                        .withFeatures(ManifestMerger2.Invoker.Feature.DEBUGGABLE)
+                        .merge();
+
+        assertTrue(mergingReport.getResult().isSuccess());
+        String xmlText = mergingReport.getMergedDocument(MergedManifestKind.MERGED);
+        Document xmlDocument = parse(xmlText);
+        assertEquals(
+                "true",
+                xmlDocument
+                        .getElementsByTagName(SdkConstants.TAG_APPLICATION)
+                        .item(0)
+                        .getAttributes()
+                        .getNamedItemNS(SdkConstants.ANDROID_URI, SdkConstants.ATTR_DEBUGGABLE)
+                        .getNodeValue());
+    }
+
+    @Test
     public void testInternetPermissionAdded() throws Exception {
         String xml =
                 ""
