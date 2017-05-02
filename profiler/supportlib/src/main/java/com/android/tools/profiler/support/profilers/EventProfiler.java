@@ -41,7 +41,6 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
     private static final int UNINITIALIZED_ROTATION = -1;
     private static final int MAX_SLEEP_BACKOFF_MS = 500;
     private Set<Activity> myActivities = new HashSet<Activity>();
-    private Class mSupportLibFragment;
     private int myCurrentRotation = UNINITIALIZED_ROTATION;
     private volatile boolean myInitialized = false;
     public EventProfiler() {
@@ -163,16 +162,6 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
                                         // Do nothing.
                                     }
                                 }
-
-                                try {
-                                    // Attempt to load the FragmentActivity from the support lib. If this class does not
-                                    // exist this is a good indication that the support lib is not used by this application.
-                                    mSupportLibFragment =
-                                            Class.forName(
-                                                    "android.support.v4.app.FragmentActivity");
-                                } catch (ClassNotFoundException ex) {
-                                    mSupportLibFragment = null;
-                                }
                             }
                         });
         initThread.start();
@@ -186,52 +175,8 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
         inputConnectionPoller.start();
     }
 
-    private void overrideFragmentManager(Activity activity) {
-        Object fragmentManager = null;
-        Object fragmentList = null;
-        // Test if this activity is using the support lib Fragments or
-        // android.app.Fragment.
-        if(mSupportLibFragment != null &&
-                mSupportLibFragment.isAssignableFrom(activity.getClass())) {
-            try {
-                Method fragmentManagerMethod = mSupportLibFragment
-                        .getMethod("getSupportFragmentManager");
-                fragmentManager = fragmentManagerMethod.invoke(activity);
-                Class fragment = Class.forName("android.support.v4.app.Fragment");
-                fragmentList = new FragmentList(activity.hashCode());
-            } catch (NoSuchMethodException ex) {
-
-            } catch (IllegalAccessException ex) {
-
-            } catch (InvocationTargetException ex) {
-
-            } catch (ClassNotFoundException ex) {
-
-            }
-        }
-        // If we failed to set the fragment manager from the support lib, set it from
-        // the android library.
-        if(fragmentManager == null) {
-            fragmentManager = activity.getFragmentManager();
-            fragmentList = new FragmentList<android.app.Fragment>(activity.hashCode());
-        }
-
-        try {
-            Class fragmentManagerImplClass = fragmentManager.getClass();
-            Field activeField = fragmentManagerImplClass.getDeclaredField("mActive");
-            activeField.setAccessible(true);
-            activeField.set(fragmentManager, fragmentList);
-            activeField.setAccessible(false);
-        } catch (NoSuchFieldException ex) {
-            Log.e(ProfilerService.STUDIO_PROFILER, "No Field: " + ex.getMessage());
-        } catch (IllegalAccessException ex) {
-            Log.e(ProfilerService.STUDIO_PROFILER, "No Access: " + ex.getMessage());
-        }
-    }
-
     @Override
     public void onActivityCreated(Activity activity, Bundle bundle) {
-        overrideFragmentManager(activity);
         updateCallback(activity);
         sendActivityCreated(activity.getLocalClassName(), activity.hashCode());
     }
@@ -272,47 +217,6 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
     @Override
     public void onActivityDestroyed(Activity activity) {
         sendActivityDestroyed(activity.getLocalClassName(), activity.hashCode());
-    }
-
-    /**
-     * This class is used as an injection point to capture fragment activated / deactivated
-     * events. The way this is done is by using reflecting FragmentManager and replacing the
-     * ArrayList<Fragment> internally with this class. We then intercept the add/set calls to
-     * track the life of a fragment.
-     * @param <E> This value should either be android.app.Fragment, or android.support.v4.app.Fragment.
-     */
-    // TODO Have fragment events get sent back to Android Studio
-    private class FragmentList<E> extends ArrayList<E> {
-
-        private final int myActivityHash;
-
-        public FragmentList(int activityHash) {
-            myActivityHash = activityHash;
-        }
-
-        @Override
-        public boolean add(E fragment) {
-            sendFragmentAdded(fragment.getClass().getName(), fragment.hashCode(), myActivityHash);
-            return super.add(fragment);
-        }
-
-        @Override
-        public void add(int index, E fragment) {
-            sendFragmentAdded(fragment.getClass().getName(), fragment.hashCode(), myActivityHash);
-            super.add(index, fragment);
-        }
-
-        @Override
-        public E set(int index, E fragment) {
-            if (fragment == null) {
-                sendFragmentRemoved(
-                        get(index).getClass().getName(), get(index).hashCode(), myActivityHash);
-            } else {
-                sendFragmentAdded(
-                        fragment.getClass().getName(), fragment.hashCode(), myActivityHash);
-            }
-            return super.set(index, fragment);
-        }
     }
 
     /**
