@@ -322,6 +322,7 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/com/github/xizzhu/simple-tool-tip/0.5.0:aar",
         "//prebuilts/tools/common/m2/repository/com/google/android/apps/common/testing/accessibility/framework/accessibility-test-framework/2.1:jar",
         "//prebuilts/tools/common/m2/repository/com/google/android/exoplayer/exoplayer/r1.5.9:aar",
+        "//prebuilts/tools/common/m2/repository/com/google/auto/auto-common/0.3:jar",
         "//prebuilts/tools/common/m2/repository/com/google/auto/auto-common/0.4:jar",
         "//prebuilts/tools/common/m2/repository/com/google/auto/auto-common/0.6:jar",
         "//prebuilts/tools/common/m2/repository/com/google/auto/service/auto-service/1.0-rc2:jar",

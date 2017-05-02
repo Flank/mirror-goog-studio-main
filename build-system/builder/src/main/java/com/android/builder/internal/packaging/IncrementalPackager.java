@@ -198,18 +198,18 @@ public class IncrementalPackager implements Closeable {
     }
 
     /**
-     * Updates resources in the archive.
+     * Updates java resources in the archive.
+     *
+     * <p>The implementation of the transform API means that some streams will contain classes and
+     * resources intermingled. This is true for when proguard is used and because annotation
+     * processors can generate resources. Therefore this method ignores resources ending with {@code
+     * .class}.
      *
      * @param files the resources to update
      * @throws IOException failed to update the archive
      */
     public void updateJavaResources(@NonNull ImmutableMap<RelativeFile, FileStatus> files)
             throws IOException {
-        /*
-         * There is a bug somewhere in the proguard build tasks that places .class files as
-         * resources. These will be removed here, but this filtering code can -- and should -- be
-         * removed once that bug is fixed.
-         */
         updateFiles(
                 PackagedFileUpdates.fromIncrementalRelativeFileSet(
                         Maps.filterKeys(
@@ -309,6 +309,10 @@ public class IncrementalPackager implements Closeable {
                         file.getAbsolutePath()), e);
             }
         }
+    }
+
+    public boolean hasPendingChangesWithWait() throws IOException {
+        return mApkCreator != null && mApkCreator.hasPendingChangesWithWait();
     }
 
     @Override

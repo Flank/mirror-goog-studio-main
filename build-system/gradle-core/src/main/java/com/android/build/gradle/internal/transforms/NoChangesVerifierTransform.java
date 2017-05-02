@@ -16,9 +16,11 @@
 
 package com.android.build.gradle.internal.transforms;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.JarInput;
+import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.ContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.Status;
@@ -30,6 +32,7 @@ import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Set;
@@ -108,7 +111,15 @@ public class NoChangesVerifierTransform extends Transform {
             for (DirectoryInput directoryInput : input.getDirectoryInputs()) {
                 if (!Sets.intersection(directoryInput.getContentTypes(), inputTypes).isEmpty()) {
                     if (!directoryInput.getChangedFiles().isEmpty()) {
-                        return true;
+                        if (inputTypes.contains(QualifiedContent.DefaultContentType.CLASSES)) {
+                            return true;
+                        } else {
+                            for (File file : directoryInput.getChangedFiles().keySet()) {
+                                if (!file.getPath().endsWith(SdkConstants.DOT_CLASS)) {
+                                    return true;
+                                }
+                            }
+                        }
                     }
                 }
             }

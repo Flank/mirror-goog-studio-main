@@ -288,6 +288,15 @@ public abstract class LibraryBaseTransform extends Transform {
         jarMerger.setTypedefRemover(typedefRemover);
 
         for (QualifiedContent content : qualifiedContentList) {
+            if (content.getContentTypes().contains(QualifiedContent.DefaultContentType.RESOURCES)) {
+                jarMerger.setFilter(filter);
+            } else {
+                // Filter out resources if they are not in the scope.
+                jarMerger.setFilter(
+                        path ->
+                                path.endsWith(SdkConstants.DOT_CLASS)
+                                        && (filter == null || filter.checkEntry(path)));
+            }
             if (content instanceof JarInput) {
                 jarMerger.addJar(content.getFile());
             } else {

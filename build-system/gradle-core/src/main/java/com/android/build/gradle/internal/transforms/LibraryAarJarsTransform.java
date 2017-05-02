@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.transforms;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.transform.JarInput;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.TransformException;
@@ -120,28 +119,11 @@ public class LibraryAarJarsTransform extends LibraryBaseTransform {
             throw new RuntimeException("Empty Main scope for " + getName());
         }
 
-        if (mainScope.size() == 1) {
-            QualifiedContent content = mainScope.get(0);
-            if (content instanceof JarInput) {
-                copyJarWithContentFilter(content.getFile(), mainClassLocation, patterns);
-            } else {
-                jarFolderToLocation(
-                        content.getFile(),
-                        mainClassLocation,
-                        archivePath -> checkEntry(patterns, archivePath),
-                        typedefRecipe != null
-                                ? new TypedefRemover().setTypedefFile(typedefRecipe)
-                                : null);
-            }
-        } else {
-            mergeInputsToLocation(
-                    mainScope,
-                    mainClassLocation,
-                    archivePath -> checkEntry(patterns, archivePath),
-                    typedefRecipe != null
-                            ? new TypedefRemover().setTypedefFile(typedefRecipe)
-                            : null);
-        }
+        mergeInputsToLocation(
+                mainScope,
+                mainClassLocation,
+                archivePath -> checkEntry(patterns, archivePath),
+                typedefRecipe != null ? new TypedefRemover().setTypedefFile(typedefRecipe) : null);
 
         // process local scope
         FileUtils.deleteDirectoryContents(localJarsLocation);

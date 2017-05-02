@@ -65,4 +65,7 @@ public interface ApkCreator extends Closeable {
      * @throws IOException failed to remove the entry
      */
     void deleteFile(@Nonnull String apkPath) throws IOException;
+
+    /** Returns true if the APK will be rewritten on close. */
+    boolean hasPendingChangesWithWait() throws IOException;
 }

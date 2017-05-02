@@ -301,6 +301,9 @@ public class ZFile implements Closeable {
 
     /**
      * Are the in-memory changes that have not been written to the zip file?
+     *
+     * <p>This might be false, but will become true after {@link #processAllReadyEntriesWithWait()}
+     * is called if there are {@link #uncompressedEntries} compressing in the background.
      */
     private boolean dirty;
 
@@ -2504,8 +2507,16 @@ public class ZFile implements Closeable {
     }
 
     /**
-     * Hint to where files should be positioned.
+     * Are there in-memory changes that have not been written to the zip file?
+     *
+     * <p>Waits for all pending processing which may make changes.
      */
+    public boolean hasPendingChangesWithWait() throws IOException {
+        processAllReadyEntriesWithWait();
+        return dirty;
+    }
+
+    /** Hint to where files should be positioned. */
     enum PositionHint {
         /**
          * File may be positioned anywhere, caller doesn't care.

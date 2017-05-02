@@ -525,14 +525,14 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
             packager.updateAssets(changedAssets);
             packager.updateAndroidResources(changedAndroidResources);
             packager.updateNativeLibraries(changedNLibs);
+            // Only report APK as built if it has actually changed.
+            if (packager.hasPendingChangesWithWait()) {
+                // FIX-ME : below would not work in multi apk situations. There is code somewhere
+                // to ensure we only build ONE multi APK for the target device, make sure it is still
+                // active.
+                instantRunContext.addChangedFile(instantRunFileType, outputFile);
+            }
         }
-
-        // FIX-ME : below would not work in multi apk situations. There is code somewhere
-        // to ensure we only build ONE multi APK for the target device, make sure it is still
-        // active.
-
-        // Mark this APK production, this might get overridden if the apk is signed/aligned.
-        instantRunContext.addChangedFile(instantRunFileType, outputFile);
 
         /*
          * Save all used zips in the cache.
