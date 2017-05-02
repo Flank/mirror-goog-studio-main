@@ -84,7 +84,7 @@ public final class InstantRunTestUtils {
     @NonNull
     public static InstantRunBuildContext loadBuildContext(
             AndroidVersion androidVersion, @NonNull InstantRun instantRunModel) throws Exception {
-        InstantRunBuildContext context = new InstantRunBuildContext();
+        InstantRunBuildContext context = new InstantRunBuildContext(true);
         context.setApiLevel(androidVersion, null);
         context.loadFromXml(Files.toString(instantRunModel.getInfoFile(), Charsets.UTF_8));
         return context;
@@ -241,7 +241,7 @@ public final class InstantRunTestUtils {
             if (!allowedArtifactTypes.contains(artifact.type)) {
                 throw new AssertionError("Unexpected artifact " + artifact);
             }
-            apks.add(new Apk(artifact.file.toPath()));
+            apks.add(new InstantRunApk(artifact.file.toPath(), artifact.type));
         }
         return new SplitApks(apks);
     }

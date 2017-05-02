@@ -231,6 +231,9 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         this.transformManager = transformManager;
         this.variantData = variantData;
         this.variantPublishingSpec = VariantPublishingSpec.getVariantSpec(variantData.getType());
+        this.instantRunBuildContext =
+                new InstantRunBuildContext(
+                        variantData.getVariantConfiguration().isInstantRunBuild(globalScope));
 
         validatePostprocessingOptions();
     }
@@ -1650,7 +1653,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         this.coverageReportTask = coverageReportTask;
     }
 
-    @NonNull private InstantRunBuildContext instantRunBuildContext = new InstantRunBuildContext();
+    @NonNull private final InstantRunBuildContext instantRunBuildContext;
 
     @Override
     @NonNull

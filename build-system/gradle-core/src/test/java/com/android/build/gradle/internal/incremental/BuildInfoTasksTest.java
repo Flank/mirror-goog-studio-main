@@ -69,7 +69,7 @@ public class BuildInfoTasksTest {
 
     private void initialFailedBuild() throws IOException {
         Project project = createProject();
-        InstantRunBuildContext context = new InstantRunBuildContext();
+        InstantRunBuildContext context = new InstantRunBuildContext(true);
         context.setApiLevel(new AndroidVersion(23, null), null);
         runLoaderTask(project, context);
 
@@ -81,7 +81,7 @@ public class BuildInfoTasksTest {
 
     private void secondPassingBuild() throws IOException {
         Project project = createProject();
-        InstantRunBuildContext context = new InstantRunBuildContext();
+        InstantRunBuildContext context = new InstantRunBuildContext(true);
         context.setApiLevel(new AndroidVersion(23, null), null);
 
         runLoaderTask(project, context);

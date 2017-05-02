@@ -286,27 +286,23 @@ public class InstantRunBuildContext {
     private String abi = null;
     private final Build currentBuild;
     private final TreeMap<Long, Build> previousBuilds = new TreeMap<>();
-    private boolean isInstantRunMode = false;
+    private final boolean isInstantRunMode;
     private final AtomicLong token = new AtomicLong(0);
     private boolean buildHasFailed = false;
 
-    public InstantRunBuildContext() {
-        this(defaultBuildIdAllocator);
+    public InstantRunBuildContext(boolean isInstantRunMode) {
+        this(defaultBuildIdAllocator, isInstantRunMode);
     }
 
     @VisibleForTesting
-    InstantRunBuildContext(@NonNull BuildIdAllocator buildIdAllocator) {
+    InstantRunBuildContext(@NonNull BuildIdAllocator buildIdAllocator, boolean isInstantRunMode) {
         currentBuild =
                 new Build(
                         buildIdAllocator.allocatedBuildId(),
                         InstantRunVerifierStatus.NO_CHANGES,
                         InstantRunBuildMode.HOT_WARM,
                         null /* eligibilityStatus */);
-    }
-
-
-    public void setInstantRunMode(boolean instantRunMode) {
-        isInstantRunMode = instantRunMode;
+        this.isInstantRunMode = isInstantRunMode;
     }
 
     public boolean isInInstantRunMode() {

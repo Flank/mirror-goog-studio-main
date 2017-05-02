@@ -26,6 +26,7 @@ import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessExecutor;
 import com.android.testutils.apk.Apk;
 import com.android.utils.StdLogger;
+import com.google.common.base.Joiner;
 import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.IterableSubject;
 import com.google.common.truth.SubjectFactory;
@@ -35,6 +36,7 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.junit.Assert;
@@ -76,8 +78,20 @@ public final class ApkSubject extends AbstractDexAndroidSubject<ApkSubject, Apk>
     }
 
     @NonNull
-    public IterableSubject<? extends IterableSubject<?, String, List<String>>,
-            String, List<String>> locales() {
+    public static List<String> getManifestContent(@NonNull Path apk) {
+        ProcessExecutor processExecutor =
+                new DefaultProcessExecutor(new StdLogger(StdLogger.Level.ERROR));
+        ApkInfoParser parser = new ApkInfoParser(SdkHelper.getAapt(), processExecutor);
+        try {
+            return parser.getFullAaptOutput(apk.toFile());
+        } catch (ProcessException e) {
+            throw new UncheckedIOException(new IOException(e));
+        }
+    }
+
+    @NonNull
+    public IterableSubject<? extends IterableSubject<?, String, List<String>>, String, List<String>>
+            locales() {
         File apk = getSubject().getFile().toFile();
         List<String> locales = ApkHelper.getLocales(apk);
 
@@ -112,6 +126,21 @@ public final class ApkSubject extends AbstractDexAndroidSubject<ApkSubject, Apk>
 
         if (!apkInfo.getVersionCode().equals(versionCode)) {
             failWithBadResults("has versionCode", versionCode, "is", actualVersionCode);
+        }
+    }
+
+    public void hasManifestContent(Pattern pattern) {
+        Path apk = getSubject().getFile();
+
+        List<String> manifestContent = getManifestContent(apk);
+        Optional<String> matchingLine =
+                manifestContent
+                        .stream()
+                        .filter(line -> pattern.matcher(line).matches())
+                        .findFirst();
+        if (!matchingLine.isPresent()) {
+            failWithBadResults(
+                    "has manifest content", pattern, "is", Joiner.on("\n").join(manifestContent));
         }
     }
 

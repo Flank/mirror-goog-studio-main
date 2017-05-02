@@ -46,7 +46,7 @@ public class InstantRunBuildContextTest {
 
     @Test
     public void testTaskDurationRecording() throws ParserConfigurationException {
-        InstantRunBuildContext buildContext = new InstantRunBuildContext(idAllocator);
+        InstantRunBuildContext buildContext = new InstantRunBuildContext(idAllocator, true);
         buildContext.startRecording(InstantRunBuildContext.TaskType.VERIFIER);
         try {
             Thread.sleep(10);
@@ -56,12 +56,12 @@ public class InstantRunBuildContextTest {
         assertThat(buildContext.stopRecording(InstantRunBuildContext.TaskType.VERIFIER))
                 .isAtLeast(1L);
         assertThat(buildContext.getBuildId())
-                .isNotEqualTo(new InstantRunBuildContext().getBuildId());
+                .isNotEqualTo(new InstantRunBuildContext(true).getBuildId());
     }
 
     @Test
     public void testPersistenceFromCleanState() throws ParserConfigurationException {
-        InstantRunBuildContext buildContext = new InstantRunBuildContext(idAllocator);
+        InstantRunBuildContext buildContext = new InstantRunBuildContext(idAllocator, true);
         buildContext.setApiLevel(new AndroidVersion(23, null), null);
         String persistedState = buildContext.toXml();
         assertThat(persistedState).isNotEmpty();
@@ -70,7 +70,7 @@ public class InstantRunBuildContextTest {
 
     @Test
     public void testFormatPresence() throws ParserConfigurationException {
-        InstantRunBuildContext buildContext = new InstantRunBuildContext(idAllocator);
+        InstantRunBuildContext buildContext = new InstantRunBuildContext(idAllocator, true);
         buildContext.setApiLevel(new AndroidVersion(23, null), null);
         String persistedState = buildContext.toXml();
         assertThat(persistedState).isNotEmpty();
@@ -84,7 +84,7 @@ public class InstantRunBuildContextTest {
 
     @Test
     public void testDuplicateEntries() throws ParserConfigurationException, IOException {
-        InstantRunBuildContext context = new InstantRunBuildContext(idAllocator);
+        InstantRunBuildContext context = new InstantRunBuildContext(idAllocator, true);
         context.setApiLevel(new AndroidVersion(21, null), null);
         context.addChangedFile(
                 FileType.SPLIT, new File("/tmp/dependencies.apk"));
@@ -100,7 +100,7 @@ public class InstantRunBuildContextTest {
     @Test
     public void testLoadingFromCleanState()
             throws ParserConfigurationException, SAXException, IOException {
-        InstantRunBuildContext buildContext = new InstantRunBuildContext(idAllocator);
+        InstantRunBuildContext buildContext = new InstantRunBuildContext(idAllocator, true);
         buildContext.setApiLevel(new AndroidVersion(23, null), null);
         File file = new File("/path/to/non/existing/file");
         buildContext.loadFromXmlFile(file);
@@ -113,7 +113,7 @@ public class InstantRunBuildContextTest {
     public void testLoadingFromADifferentPluginVersion() throws Exception {
         String xml;
         {
-            InstantRunBuildContext context = new InstantRunBuildContext(idAllocator);
+            InstantRunBuildContext context = new InstantRunBuildContext(idAllocator, true);
             context.setApiLevel(new AndroidVersion(23, null), null);
             context.addChangedFile(
                     FileType.MAIN, new File("/tmp/main.apk"));
@@ -123,7 +123,7 @@ public class InstantRunBuildContextTest {
         }
         xml = xml.replace(Version.ANDROID_GRADLE_PLUGIN_VERSION, "Other");
         {
-            InstantRunBuildContext context = new InstantRunBuildContext(idAllocator);
+            InstantRunBuildContext context = new InstantRunBuildContext(idAllocator, true);
             context.setApiLevel(new AndroidVersion(23, null), null);
             context.loadFromXml(xml);
             assertThat(context.getVerifierResult())
@@ -137,7 +137,7 @@ public class InstantRunBuildContextTest {
             throws IOException, ParserConfigurationException, SAXException {
         File tmpFile = createMarkedBuildInfo();
 
-        InstantRunBuildContext newContext = new InstantRunBuildContext(idAllocator);
+        InstantRunBuildContext newContext = new InstantRunBuildContext(idAllocator, true);
         newContext.setApiLevel(new AndroidVersion(23, null), null);
 
         newContext.loadFromXmlFile(tmpFile);
@@ -148,17 +148,17 @@ public class InstantRunBuildContextTest {
     @Test
     public void testPersistingAndLoadingPastBuilds()
             throws IOException, ParserConfigurationException, SAXException {
-        InstantRunBuildContext buildContext = new InstantRunBuildContext(idAllocator);
+        InstantRunBuildContext buildContext = new InstantRunBuildContext(idAllocator, true);
         buildContext.setApiLevel(new AndroidVersion(23, null), null);
         buildContext.setSecretToken(12345L);
         File buildInfo = createBuildInfo(buildContext);
-        buildContext = new InstantRunBuildContext(idAllocator);
+        buildContext = new InstantRunBuildContext(idAllocator, true);
         buildContext.setApiLevel(new AndroidVersion(23, null), null);
         buildContext.loadFromXmlFile(buildInfo);
         assertThat(buildContext.getPreviousBuilds()).hasSize(1);
         saveBuildInfo(buildContext, buildInfo);
 
-        buildContext = new InstantRunBuildContext(idAllocator);
+        buildContext = new InstantRunBuildContext(idAllocator, true);
         buildContext.setApiLevel(new AndroidVersion(23, null), null);
         buildContext.loadFromXmlFile(buildInfo);
         assertThat(buildContext.getSecretToken()).isEqualTo(12345L);
@@ -167,14 +167,14 @@ public class InstantRunBuildContextTest {
 
     @Test
     public void testXmlFormat() throws ParserConfigurationException, IOException, SAXException {
-        InstantRunBuildContext first = new InstantRunBuildContext(idAllocator);
+        InstantRunBuildContext first = new InstantRunBuildContext(idAllocator, true);
         first.setApiLevel(new AndroidVersion(23, null), null);
         first.setDensity("xxxhdpi");
         first.addChangedFile(FileType.MAIN, new File("main.apk"));
         first.addChangedFile(FileType.SPLIT, new File("split.apk"));
         String buildInfo = first.toXml();
 
-        InstantRunBuildContext second = new InstantRunBuildContext(idAllocator);
+        InstantRunBuildContext second = new InstantRunBuildContext(idAllocator, true);
         second.setApiLevel(new AndroidVersion(23, null), null);
         second.setDensity("xhdpi");
         second.loadFromXml(buildInfo);
@@ -230,7 +230,7 @@ public class InstantRunBuildContextTest {
     @Test
     public void testArtifactsPersistence()
             throws IOException, ParserConfigurationException, SAXException {
-        InstantRunBuildContext buildContext = new InstantRunBuildContext(idAllocator);
+        InstantRunBuildContext buildContext = new InstantRunBuildContext(idAllocator, true);
         buildContext.setApiLevel(new AndroidVersion(23, null), null);
         buildContext.addChangedFile(FileType.MAIN,
                 new File("main.apk"));
@@ -239,7 +239,7 @@ public class InstantRunBuildContextTest {
         String buildInfo = buildContext.toXml();
 
         // check xml format, the IDE depends on it.
-        buildContext = new InstantRunBuildContext(idAllocator);
+        buildContext = new InstantRunBuildContext(idAllocator, true);
         buildContext.setApiLevel(new AndroidVersion(23, null), null);
         buildContext.loadFromXml(buildInfo);
         assertThat(buildContext.getPreviousBuilds()).hasSize(1);
@@ -255,13 +255,13 @@ public class InstantRunBuildContextTest {
     @Test
     public void testOldReloadPurge()
             throws ParserConfigurationException, IOException, SAXException {
-        InstantRunBuildContext initial = new InstantRunBuildContext(idAllocator);
+        InstantRunBuildContext initial = new InstantRunBuildContext(idAllocator, true);
         initial.setApiLevel(new AndroidVersion(23, null), null);
         initial.addChangedFile(FileType.SPLIT, new File("/tmp/split-0.apk"));
         initial.close();
         String buildInfo = initial.toXml();
 
-        InstantRunBuildContext first = new InstantRunBuildContext(idAllocator);
+        InstantRunBuildContext first = new InstantRunBuildContext(idAllocator, true);
         first.setApiLevel(new AndroidVersion(23, null), null);
         first.loadFromXml(buildInfo);
         first.addChangedFile(FileType.RELOAD_DEX,
@@ -270,7 +270,7 @@ public class InstantRunBuildContextTest {
         first.close();
         buildInfo = first.toXml();
 
-        InstantRunBuildContext second = new InstantRunBuildContext(idAllocator);
+        InstantRunBuildContext second = new InstantRunBuildContext(idAllocator, true);
         second.setApiLevel(new AndroidVersion(23, null), null);
         second.loadFromXml(buildInfo);
         second.addChangedFile(FileType.SPLIT, new File("split.apk"));
@@ -291,13 +291,13 @@ public class InstantRunBuildContextTest {
     @Test
     public void testMultipleReloadCollapse()
             throws ParserConfigurationException, IOException, SAXException {
-        InstantRunBuildContext initial = new InstantRunBuildContext(idAllocator);
+        InstantRunBuildContext initial = new InstantRunBuildContext(idAllocator, true);
         initial.setApiLevel(new AndroidVersion(23, null), null);
         initial.addChangedFile(FileType.SPLIT, new File("/tmp/split-0.apk"));
         initial.close();
         String buildInfo = initial.toXml();
 
-        InstantRunBuildContext first = new InstantRunBuildContext(idAllocator);
+        InstantRunBuildContext first = new InstantRunBuildContext(idAllocator, true);
         first.setApiLevel(new AndroidVersion(23, null), null);
         first.loadFromXml(buildInfo);
         first.addChangedFile(FileType.RELOAD_DEX,
@@ -306,7 +306,7 @@ public class InstantRunBuildContextTest {
         first.close();
         buildInfo = first.toXml();
 
-        InstantRunBuildContext second = new InstantRunBuildContext(idAllocator);
+        InstantRunBuildContext second = new InstantRunBuildContext(idAllocator, true);
         second.setApiLevel(new AndroidVersion(23, null), null);
         second.loadFromXml(buildInfo);
         second.addChangedFile(FileType.SPLIT, new File("split.apk"));
@@ -315,7 +315,7 @@ public class InstantRunBuildContextTest {
         second.close();
         buildInfo = second.toXml();
 
-        InstantRunBuildContext third = new InstantRunBuildContext(idAllocator);
+        InstantRunBuildContext third = new InstantRunBuildContext(idAllocator, true);
         third.setApiLevel(new AndroidVersion(23, null), null);
         third.loadFromXml(buildInfo);
         third.addChangedFile(FileType.RESOURCES,
@@ -326,7 +326,7 @@ public class InstantRunBuildContextTest {
         third.close();
         buildInfo = third.toXml();
 
-        InstantRunBuildContext fourth = new InstantRunBuildContext(idAllocator);
+        InstantRunBuildContext fourth = new InstantRunBuildContext(idAllocator, true);
         fourth.setApiLevel(new AndroidVersion(23, null), null);
         fourth.loadFromXml(buildInfo);
         fourth.addChangedFile(FileType.RESOURCES,
@@ -354,14 +354,14 @@ public class InstantRunBuildContextTest {
     @Test
     public void testOverlappingAndEmptyChanges()
             throws ParserConfigurationException, IOException, SAXException {
-        InstantRunBuildContext initial = new InstantRunBuildContext(idAllocator);
+        InstantRunBuildContext initial = new InstantRunBuildContext(idAllocator, true);
         initial.setApiLevel(new AndroidVersion(25, null), null);
         initial.addChangedFile(FileType.MAIN, new File("/tmp/main.apk"));
         initial.addChangedFile(FileType.SPLIT, new File("/tmp/split-0.apk"));
         initial.close();
         String buildInfo = initial.toXml();
 
-        InstantRunBuildContext first = new InstantRunBuildContext(idAllocator);
+        InstantRunBuildContext first = new InstantRunBuildContext(idAllocator, true);
         first.setApiLevel(new AndroidVersion(25, null), null);
         first.loadFromXml(buildInfo);
         first.addChangedFile(FileType.SPLIT, new File("/tmp/split-1.apk"));
@@ -370,7 +370,7 @@ public class InstantRunBuildContextTest {
         first.close();
         buildInfo = first.toXml();
 
-        InstantRunBuildContext second = new InstantRunBuildContext(idAllocator);
+        InstantRunBuildContext second = new InstantRunBuildContext(idAllocator, true);
         second.setApiLevel(new AndroidVersion(25, null), null);
         second.loadFromXml(buildInfo);
         second.addChangedFile(FileType.SPLIT, new File("/tmp/split-2.apk"));
@@ -378,7 +378,7 @@ public class InstantRunBuildContextTest {
         second.close();
         buildInfo = second.toXml();
 
-        InstantRunBuildContext third = new InstantRunBuildContext(idAllocator);
+        InstantRunBuildContext third = new InstantRunBuildContext(idAllocator, true);
         third.setApiLevel(new AndroidVersion(25, null), null);
         third.loadFromXml(buildInfo);
         third.addChangedFile(FileType.SPLIT, new File("/tmp/split-2.apk"));
@@ -432,20 +432,20 @@ public class InstantRunBuildContextTest {
     @Test
     public void testTemporaryBuildProduction()
             throws ParserConfigurationException, IOException, SAXException {
-        InstantRunBuildContext initial = new InstantRunBuildContext(idAllocator);
+        InstantRunBuildContext initial = new InstantRunBuildContext(idAllocator, true);
         initial.setApiLevel(new AndroidVersion(21, null), null);
         initial.addChangedFile(FileType.SPLIT, new File("/tmp/split-1.apk"));
         initial.addChangedFile(FileType.SPLIT, new File("/tmp/split-2.apk"));
         String buildInfo = initial.toXml();
 
-        InstantRunBuildContext first = new InstantRunBuildContext(idAllocator);
+        InstantRunBuildContext first = new InstantRunBuildContext(idAllocator, true);
         first.setApiLevel(new AndroidVersion(21, null), null);
         first.loadFromXml(buildInfo);
         first.addChangedFile(FileType.RESOURCES, new File("/tmp/resources_ap"));
         first.close();
         String tmpBuildInfo = first.toXml(InstantRunBuildContext.PersistenceMode.TEMP_BUILD);
 
-        InstantRunBuildContext fixed = new InstantRunBuildContext(idAllocator);
+        InstantRunBuildContext fixed = new InstantRunBuildContext(idAllocator, true);
         fixed.setApiLevel(new AndroidVersion(21, null), null);
         fixed.loadFromXml(buildInfo);
         fixed.mergeFrom(tmpBuildInfo);
@@ -469,7 +469,7 @@ public class InstantRunBuildContextTest {
     @Test
     public void testX86InjectedArchitecture() {
 
-        InstantRunBuildContext context = new InstantRunBuildContext(idAllocator);
+        InstantRunBuildContext context = new InstantRunBuildContext(idAllocator, true);
         context.setApiLevel(new AndroidVersion(20, null), "x86");
         assertThat(context.getPatchingPolicy()).isEqualTo(InstantRunPatchingPolicy.PRE_LOLLIPOP);
 
@@ -494,7 +494,7 @@ public class InstantRunBuildContextTest {
 
     @Test
     public void testResourceRemovalWhenBuildingMainApp() throws Exception {
-        InstantRunBuildContext context = new InstantRunBuildContext(idAllocator);
+        InstantRunBuildContext context = new InstantRunBuildContext(idAllocator, true);
         context.setApiLevel(new AndroidVersion(19, null), null);
 
         context.addChangedFile(FileType.RESOURCES, new File("res.ap_"));
@@ -512,7 +512,7 @@ public class InstantRunBuildContextTest {
 
     @Test
     public void testFullAPKRequestWithSplits() throws Exception {
-        InstantRunBuildContext initial = new InstantRunBuildContext(idAllocator);
+        InstantRunBuildContext initial = new InstantRunBuildContext(idAllocator, true);
         initial.setApiLevel(new AndroidVersion(25, null), null);
 
         // set the initial build.
@@ -524,7 +524,7 @@ public class InstantRunBuildContextTest {
         String buildInfo = initial.toXml();
 
         // re-add only the main apk.
-        InstantRunBuildContext update = new InstantRunBuildContext(idAllocator);
+        InstantRunBuildContext update = new InstantRunBuildContext(idAllocator, true);
         update.setApiLevel(new AndroidVersion(25, null), null);
         update.setVerifierStatus(InstantRunVerifierStatus.FULL_BUILD_REQUESTED);
         update.loadFromXml(buildInfo);
@@ -535,7 +535,7 @@ public class InstantRunBuildContextTest {
         assertThat(update.getLastBuild().getArtifacts()).hasSize(4);
 
         // now add only one split apk.
-        update = new InstantRunBuildContext(idAllocator);
+        update = new InstantRunBuildContext(idAllocator, true);
         update.setApiLevel(new AndroidVersion(25, null), null);
         update.setVerifierStatus(InstantRunVerifierStatus.FULL_BUILD_REQUESTED);
         update.loadFromXml(buildInfo);
@@ -546,7 +546,7 @@ public class InstantRunBuildContextTest {
         assertThat(update.getLastBuild().getArtifacts()).hasSize(4);
 
         // and one of each type.
-        update = new InstantRunBuildContext(idAllocator);
+        update = new InstantRunBuildContext(idAllocator, true);
         update.setApiLevel(new AndroidVersion(25, null), null);
         update.setVerifierStatus(InstantRunVerifierStatus.FULL_BUILD_REQUESTED);
         update.loadFromXml(buildInfo);
@@ -561,7 +561,7 @@ public class InstantRunBuildContextTest {
 
     @Test
     public void testMainSplitReAddingWithSplitAPK() throws Exception {
-        InstantRunBuildContext initial = new InstantRunBuildContext(idAllocator);
+        InstantRunBuildContext initial = new InstantRunBuildContext(idAllocator, true);
         initial.setApiLevel(new AndroidVersion(21, null), null);
 
         // set the initial build.
@@ -573,7 +573,7 @@ public class InstantRunBuildContextTest {
         String buildInfo = initial.toXml();
 
         // re-add only one of the split apk.
-        InstantRunBuildContext update = new InstantRunBuildContext(idAllocator);
+        InstantRunBuildContext update = new InstantRunBuildContext(idAllocator, true);
         update.setApiLevel(new AndroidVersion(21, null), null);
         update.setVerifierStatus(InstantRunVerifierStatus.METHOD_ADDED);
         update.loadFromXml(buildInfo);
@@ -593,7 +593,7 @@ public class InstantRunBuildContextTest {
 
     @Test
     public void testMainSplitNoReAddingWithAlreadyPresent() throws Exception {
-        InstantRunBuildContext initial = new InstantRunBuildContext(idAllocator);
+        InstantRunBuildContext initial = new InstantRunBuildContext(idAllocator, true);
         initial.setApiLevel(new AndroidVersion(21, null), null);
 
         // set the initial build.
@@ -605,7 +605,7 @@ public class InstantRunBuildContextTest {
         String buildInfo = initial.toXml();
 
         // re-add only the main apk and a split
-        InstantRunBuildContext update = new InstantRunBuildContext(idAllocator);
+        InstantRunBuildContext update = new InstantRunBuildContext(idAllocator, true);
         update.setApiLevel(new AndroidVersion(21, null), null);
         update.setVerifierStatus(InstantRunVerifierStatus.METHOD_ADDED);
         update.loadFromXml(buildInfo);
@@ -627,7 +627,7 @@ public class InstantRunBuildContextTest {
 
     @Test
     public void testMainSplitNoReAddingWithSplitAPK() throws Exception {
-        InstantRunBuildContext initial = new InstantRunBuildContext(idAllocator);
+        InstantRunBuildContext initial = new InstantRunBuildContext(idAllocator, true);
         initial.setApiLevel(new AndroidVersion(25, null), null);
 
         // set the initial build.
@@ -639,7 +639,7 @@ public class InstantRunBuildContextTest {
         String buildInfo = initial.toXml();
 
         // re-add only one of the split apk.
-        InstantRunBuildContext update = new InstantRunBuildContext(idAllocator);
+        InstantRunBuildContext update = new InstantRunBuildContext(idAllocator, true);
         update.setApiLevel(new AndroidVersion(25, null), null);
         update.setVerifierStatus(InstantRunVerifierStatus.METHOD_ADDED);
         update.loadFromXml(buildInfo);
@@ -659,13 +659,13 @@ public class InstantRunBuildContextTest {
 
     @Test
     public void testFullSplitNoFilter() throws Exception {
-        InstantRunBuildContext initial = new InstantRunBuildContext(idAllocator);
+        InstantRunBuildContext initial = new InstantRunBuildContext(idAllocator, true);
         initial.addChangedFile(FileType.FULL_SPLIT, new File("fullSplit.apk"));
         initial.close();
 
         String buildInfo = initial.toXml();
 
-        InstantRunBuildContext reloaded = new InstantRunBuildContext(idAllocator);
+        InstantRunBuildContext reloaded = new InstantRunBuildContext(idAllocator, true);
         reloaded.loadFromXml(buildInfo);
         assertThat(reloaded.getPreviousBuilds().size()).isEqualTo(1);
         assertThat(reloaded.getLastBuild().getArtifacts().size()).isEqualTo(1);
@@ -688,7 +688,7 @@ public class InstantRunBuildContextTest {
     }
 
     private static File createMarkedBuildInfo() throws IOException, ParserConfigurationException {
-        InstantRunBuildContext originalContext = new InstantRunBuildContext(idAllocator);
+        InstantRunBuildContext originalContext = new InstantRunBuildContext(idAllocator, true);
         originalContext.setApiLevel(new AndroidVersion(23, null), null);
         return createBuildInfo(originalContext);
     }

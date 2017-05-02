@@ -186,7 +186,6 @@ import com.android.builder.dexing.DexingMode;
 import com.android.builder.dexing.DexingType;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.model.DataBindingOptions;
-import com.android.builder.model.OptionalCompilationStep;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.profile.Recorder;
 import com.android.builder.testing.ConnectedDeviceProvider;
@@ -195,7 +194,6 @@ import com.android.builder.testing.api.TestServer;
 import com.android.builder.utils.FileCache;
 import com.android.ide.common.build.ApkData;
 import com.android.manifmerger.ManifestMerger2;
-import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
@@ -745,7 +743,7 @@ public abstract class TaskManager {
             @NonNull TaskFactory tasks,
             @NonNull VariantScope variantScope,
             @NonNull ImmutableList.Builder<ManifestMerger2.Invoker.Feature> optionalFeatures) {
-        if (getIncrementalMode(variantScope.getVariantConfiguration()) != IncrementalMode.NONE) {
+        if (variantScope.getVariantConfiguration().isInstantRunBuild(globalScope)) {
             optionalFeatures.add(ManifestMerger2.Invoker.Feature.INSTANT_RUN_REPLACEMENT);
         }
 
@@ -1765,39 +1763,6 @@ public abstract class TaskManager {
         createConnectedTestForVariant(tasks, variantScope);
     }
 
-
-    protected enum IncrementalMode {
-        NONE,
-        FULL,
-    }
-
-    /**
-     * Returns the incremental mode for this variant.
-     *
-     * @param config the variant's configuration
-     * @return the {@link IncrementalMode} for this variant.
-     */
-    protected IncrementalMode getIncrementalMode(@NonNull GradleVariantConfiguration config) {
-        if (config.isInstantRunSupported()
-                && targetDeviceSupportsInstantRun(config, project)
-                && globalScope.isActive(OptionalCompilationStep.INSTANT_DEV)) {
-            return IncrementalMode.FULL;
-        }
-        return IncrementalMode.NONE;
-    }
-
-    private static boolean targetDeviceSupportsInstantRun(
-            @NonNull GradleVariantConfiguration config,
-            @NonNull Project project) {
-        if (config.isLegacyMultiDexMode()) {
-            // We don't support legacy multi-dex on Dalvik.
-            return AndroidGradleOptions.getTargetAndroidVersion(project).getFeatureLevel()
-                    >= AndroidVersion.ART_RUNTIME.getFeatureLevel();
-        }
-
-        return true;
-    }
-
     /** Is the given variant relevant for lint? */
     private static boolean isLintVariant(@NonNull BaseVariantData baseVariantData) {
         // Only create lint targets for variants like debug and release, not debugTest
@@ -2048,21 +2013,16 @@ public abstract class TaskManager {
 
         checkNotNull(variantScope.getJavacTask());
 
-        variantScope
-                .getInstantRunBuildContext()
-                .setInstantRunMode(
-                        getIncrementalMode(variantScope.getVariantConfiguration())
-                                != IncrementalMode.NONE);
-
         final BaseVariantData variantData = variantScope.getVariantData();
         final GradleVariantConfiguration config = variantData.getVariantConfiguration();
 
         TransformManager transformManager = variantScope.getTransformManager();
 
         // ---- Code Coverage first -----
-        boolean isTestCoverageEnabled = config.getBuildType().isTestCoverageEnabled() &&
-                !config.getType().isForTesting() &&
-                getIncrementalMode(variantScope.getVariantConfiguration()) == IncrementalMode.NONE;
+        boolean isTestCoverageEnabled =
+                config.getBuildType().isTestCoverageEnabled()
+                        && !config.getType().isForTesting()
+                        && !variantScope.getInstantRunBuildContext().isInInstantRunMode();
         if (isTestCoverageEnabled) {
             createJacocoTransform(tasks, variantScope);
         }
@@ -2493,8 +2453,7 @@ public abstract class TaskManager {
         // we add it as well.
         boolean isTestCoverageEnabled =
                 config.getBuildType().isTestCoverageEnabled()
-                        && getIncrementalMode(variantScope.getVariantConfiguration())
-                                == IncrementalMode.NONE
+                        && !variantScope.getInstantRunBuildContext().isInInstantRunMode()
                         && (!config.getType().isForTesting()
                                 || (config.getTestedConfig() != null
                                         && config.getTestedConfig().getType()
@@ -2852,8 +2811,6 @@ public abstract class TaskManager {
          * forcing a cold swap is triggered, the main FULL_APK must be rebuilt (even if the
          * resources were changed in a previous build).
          */
-        IncrementalMode incrementalMode = getIncrementalMode(variantConfiguration);
-
         InstantRunPatchingPolicy patchingPolicy =
                 variantScope.getInstantRunBuildContext().getPatchingPolicy();
 
@@ -3001,7 +2958,7 @@ public abstract class TaskManager {
             installTask.dependsOn(tasks, variantScope.getAssembleTask());
         }
 
-        if (incrementalMode == IncrementalMode.NONE) {
+        if (!variantScope.getInstantRunBuildContext().isInInstantRunMode()) {
             maybeCreateLintVitalTask(tasks, variantData);
         }
 
@@ -3099,7 +3056,7 @@ public abstract class TaskManager {
         BuiltInShrinkerTransform transform = new BuiltInShrinkerTransform(scope);
         applyProguardConfig(transform, scope);
 
-        if (getIncrementalMode(scope.getVariantConfiguration()) != IncrementalMode.NONE) {
+        if (scope.getInstantRunBuildContext().isInInstantRunMode()) {
             //TODO: This is currently overly broad, as finding the actual application class
             //      requires manually parsing the manifest, see
             //      aapt -D (getMainDexListProguardOutputFile)
@@ -3114,7 +3071,7 @@ public abstract class TaskManager {
             @NonNull TaskFactory taskFactory,
             @NonNull VariantScope variantScope,
             @Nullable FileCollection mappingFileCollection) {
-        if (getIncrementalMode(variantScope.getVariantConfiguration()) != IncrementalMode.NONE) {
+        if (variantScope.getInstantRunBuildContext().isInInstantRunMode()) {
             logger.warn(
                     "ProGuard is disabled for variant {} because it is not compatible with Instant Run. See "
                             + "http://d.android.com/r/studio-ui/shrink-code-with-ir.html "

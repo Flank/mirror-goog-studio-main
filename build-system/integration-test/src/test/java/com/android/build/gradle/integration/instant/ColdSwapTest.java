@@ -28,11 +28,13 @@ import com.android.build.gradle.internal.incremental.InstantRunBuildMode;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.SplitApks;
+import com.android.tools.fd.client.InstantRunArtifactType;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 import com.google.common.truth.Expect;
 import java.util.List;
+import java.util.regex.Pattern;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -102,11 +104,22 @@ public class ColdSwapTest {
 
     @Test
     public void withMultiApk() throws Exception {
+        Pattern provider =
+                Pattern.compile(".*com.android.tools.fd.runtime.InstantRunContentProvider.*");
         new ColdSwapTester(project)
                 .testMultiApk(
                         new ColdSwapTester.Steps() {
                             @Override
-                            public void checkApks(@NonNull SplitApks apk) throws Exception {}
+                            public void checkApks(@NonNull SplitApks apks) throws Exception {
+                                // check that our manifest contains the ContentProvider hook
+                                for (int i = 0; i < apks.size(); i++) {
+                                    InstantRunApk apk = (InstantRunApk) apks.get(i);
+                                    if (apk.getArtifactType()
+                                            .equals(InstantRunArtifactType.SPLIT_MAIN)) {
+                                        assertThat(apk).hasManifestContent(provider);
+                                    }
+                                }
+                            }
 
                             @Override
                             public void makeChange() throws Exception {
