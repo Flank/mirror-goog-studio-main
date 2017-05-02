@@ -1010,6 +1010,7 @@ public final class SdkConstants {
 
     // Font family tag
     public static final String TAG_FONT_FAMILY = "font-family";
+    public static final String TAG_FONT = "font";
 
     // Tags: XML
     public static final String TAG_HEADER = "header"; //$NON-NLS-1$
@@ -1309,6 +1310,11 @@ public final class SdkConstants {
     // ImageView attributes
     public static final String ATTR_ADJUST_VIEW_BOUNDS = "adjustViewBounds"; //$NON-NLS-1$
     public static final String ATTR_CROP_TO_PADDING = "cropToPadding"; //$NON-NLS-1$
+
+    // Font attributes of a TAG_FONT element
+    public static final String ATTR_FONT_STYLE = "fontStyle";
+    public static final String ATTR_FONT_WEIGHT = "fontWeight";
+    public static final String ATTR_FONT = "font";
 
     // ConstraintLayout layout params
     public static final String ATTR_LAYOUT_EDITOR_ABSOLUTE_X =
@@ -1738,6 +1744,7 @@ public final class SdkConstants {
     public static final String STRING_PREFIX = "@string/"; //$NON-NLS-1$
     public static final String DIMEN_PREFIX = "@dimen/"; //$NON-NLS-1$
     public static final String MIPMAP_PREFIX = "@mipmap/"; //$NON-NLS-1$
+    public static final String FONT_PREFIX = "@font/"; //$NON-NLS-1$
     public static final String AAPT_ATTR_PREFIX = "@aapt:_aapt/";
 
     public static final String ANDROID_LAYOUT_RESOURCE_PREFIX = "@android:layout/"; //$NON-NLS-1$
