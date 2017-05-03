@@ -118,8 +118,10 @@ public class IncrementalPackager implements Closeable {
             @NonNull File intermediateDir, @NonNull ApkCreatorFactory factory,
             @NonNull Set<String> acceptedAbis, boolean jniDebugMode)
             throws PackagerException, IOException {
-        Preconditions.checkArgument(intermediateDir.isDirectory(),
-                "!intermediateDir.isDirectory()");
+        if (!intermediateDir.isDirectory()) {
+            throw new IllegalArgumentException(
+                    "!intermediateDir.isDirectory(): " + intermediateDir);
+        }
         checkOutputFile(creationData.getApkPath());
 
         mApkCreator = factory.make(creationData);
