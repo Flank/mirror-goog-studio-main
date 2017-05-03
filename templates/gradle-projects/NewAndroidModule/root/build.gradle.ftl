@@ -20,7 +20,7 @@ dependencies {
     wearApp project(':${WearprojectName}')
     compile 'com.google.android.gms:play-services-wearable:+'
 </#if>
-<#if isInstantApp && hasInstantAppWrapper>
+<#if isInstantApp && !isBaseFeature>
     implementation project(':${baseFeatureName}')
 </#if>
 }
