@@ -33,12 +33,14 @@ import java.util.Map;
  *
  * <p>See <a href="https://developer.android.com/studio/build/jack.html">Jack and Jill</a>
  */
+@Deprecated
 @SuppressWarnings("UnnecessaryInheritDoc")
 public class JackOptions implements CoreJackOptions {
 
     static final String DEPRECATION_WARNING =
-            "The Jack toolchain is deprecated. To enable support for Java 8 language features, "
-                    + "remove 'jackOptions { ... }' from your "
+            "The Jack toolchain is deprecated and will not run. "
+                    + "To enable support for Java 8 language features "
+                    + "built into the plugin, remove 'jackOptions { ... }' from your "
                     + "build.gradle file, and add\n\n"
                     + "android.compileOptions.sourceCompatibility 1.8\n"
                     + "android.compileOptions.targetCompatibility 1.8\n\n"
@@ -73,12 +75,12 @@ public class JackOptions implements CoreJackOptions {
     @Override
     @Nullable
     public Boolean isEnabled() {
-        return isEnabledFlag;
+        // Jack toolchain has been deprecated
+        return null;
     }
 
     public void setEnabled(@Nullable Boolean enabled) {
         errorReporter.handleSyncWarning(null, SyncIssue.TYPE_GENERIC, DEPRECATION_WARNING);
-        isEnabledFlag = enabled;
     }
 
     /** {@inheritDoc} */
