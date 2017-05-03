@@ -8,7 +8,11 @@
 
     <instantiate from="root/res/layout/fragment_simple.xml.ftl"
                    to="${escapeXmlAttribute(resOut)}/layout/${fragmentLayoutName}.xml" />
-
-    <instantiate from="root/src/app_package/SimpleActivityFragment.ftl"
+<#if generateKotlin>
+    <instantiate from="root/src/app_package/SimpleActivityFragment.kt.ftl"
+                   to="${escapeXmlAttribute(srcOut)}/${fragmentClass}.kt" />
+<#else>
+    <instantiate from="root/src/app_package/SimpleActivityFragment.java.ftl"
                    to="${escapeXmlAttribute(srcOut)}/${fragmentClass}.java" />
+</#if>
 </recipe>
