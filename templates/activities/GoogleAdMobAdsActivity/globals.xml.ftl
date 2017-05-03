@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <globals>
+    <#include "../common/common_globals.xml.ftl" />
     <global id="manifestOut" value="${manifestDir}" />
 <#if hasDependency('com.android.support:appcompat-v7')>
     <global id="appCompat" type="boolean" value="true" />
