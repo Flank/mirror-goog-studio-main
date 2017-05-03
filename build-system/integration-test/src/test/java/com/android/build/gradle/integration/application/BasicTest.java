@@ -23,20 +23,29 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import com.android.build.OutputFile;
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.category.SmokeTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.options.StringOption;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.JavaCompileOptions;
 import com.android.builder.model.OptionalCompilationStep;
+import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.SyncIssue;
+import com.android.builder.model.TestVariantBuildOutput;
 import com.android.builder.model.Variant;
+import com.android.builder.model.VariantBuildOutput;
 import com.android.sdklib.AndroidVersion;
+import com.google.common.collect.Iterators;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import org.gradle.api.JavaVersion;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -160,6 +169,60 @@ public class BasicTest {
                 .withInstantRun(new AndroidVersion(23, null), OptionalCompilationStep.RESTART_ONLY)
                 .with(StringOption.IDE_BUILD_TARGET_DENISTY, "xxhdpi")
                 .run("assembleDebug");
+    }
+
+    @Test
+    public void testBuildOutputModel() throws Exception {
+        project.executor()
+                .with(AaptGeneration.AAPT_V2_JNI)
+                .run("assemble", "assembleDebugAndroidTest", "testDebugUnitTest");
+
+        // get the initial minimalistic model.
+        Map<String, ProjectBuildOutput> multi = project.model().getMulti(ProjectBuildOutput.class);
+        ProjectBuildOutput mainModule = multi.get(":");
+        assertThat(mainModule.getVariantsBuildOutput()).hasSize(2);
+        assertThat(
+                        mainModule
+                                .getVariantsBuildOutput()
+                                .stream()
+                                .map(VariantBuildOutput::getName)
+                                .collect(Collectors.toList()))
+                .containsExactly("debug", "release");
+
+        for (VariantBuildOutput variantBuildOutput : mainModule.getVariantsBuildOutput()) {
+            assertThat(variantBuildOutput.getOutputs()).hasSize(1);
+            OutputFile output = variantBuildOutput.getOutputs().iterator().next();
+            assertThat(output.getOutputFile().exists()).isTrue();
+            assertThat(output.getFilters()).isEmpty();
+            assertThat(output.getOutputType()).isEqualTo("MAIN");
+
+            int expectedTestedVariants = variantBuildOutput.getName().equals("debug") ? 2 : 1;
+            assertThat(variantBuildOutput.getTestingVariants()).hasSize(expectedTestedVariants);
+            List<String> testVariantTypes =
+                    variantBuildOutput
+                            .getTestingVariants()
+                            .stream()
+                            .map(TestVariantBuildOutput::getType)
+                            .collect(Collectors.toList());
+            if (expectedTestedVariants == 1) {
+                assertThat(testVariantTypes).containsExactly("UNIT");
+            } else {
+                assertThat(testVariantTypes).containsExactly("UNIT", "ANDROID_TEST");
+            }
+
+            for (TestVariantBuildOutput testVariantBuildOutput :
+                    variantBuildOutput.getTestingVariants()) {
+                assertThat(testVariantBuildOutput.getTestedVariantName())
+                        .isEqualTo(variantBuildOutput.getName());
+                assertThat(testVariantBuildOutput.getOutputs()).hasSize(1);
+                output = Iterators.getOnlyElement(testVariantBuildOutput.getOutputs().iterator());
+                assertThat(output.getOutputType()).isEqualTo("MAIN");
+                assertThat(output.getFilters()).isEmpty();
+                if (variantBuildOutput.getName().equals("debug")) {
+                    assertThat(output.getOutputFile().exists()).isTrue();
+                }
+            }
+        }
     }
 
     @Test

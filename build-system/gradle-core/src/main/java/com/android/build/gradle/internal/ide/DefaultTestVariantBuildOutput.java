@@ -19,26 +19,34 @@ package com.android.build.gradle.internal.ide;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.builder.model.TestVariantBuildOutput;
-import com.android.builder.model.VariantBuildOutput;
 import java.util.Collection;
 
-/** Default implementation of the {@link VariantBuildOutput}. */
-public class DefaultVariantBuildOutput extends DefaultBaseBuildOutput
-        implements VariantBuildOutput {
+/** Default implementation of the {@link TestVariantBuildOutput}. */
+public class DefaultTestVariantBuildOutput extends DefaultBaseBuildOutput
+        implements TestVariantBuildOutput {
 
-    Collection<TestVariantBuildOutput> testVariants;
+    private final String testedVariantName;
+    private final TestType testType;
 
-    public DefaultVariantBuildOutput(
+    public DefaultTestVariantBuildOutput(
             @NonNull String name,
             @NonNull Collection<BuildOutput> buildOutputSupplier,
-            @NonNull Collection<TestVariantBuildOutput> testVariants) {
+            @NonNull String testedVariantName,
+            @NonNull TestType testType) {
         super(name, buildOutputSupplier);
-        this.testVariants = testVariants;
+        this.testedVariantName = testedVariantName;
+        this.testType = testType;
     }
 
-    @Override
     @NonNull
-    public Collection<TestVariantBuildOutput> getTestingVariants() {
-        return testVariants;
+    @Override
+    public String getTestedVariantName() {
+        return testedVariantName;
+    }
+
+    @NonNull
+    @Override
+    public String getType() {
+        return testType.name();
     }
 }
