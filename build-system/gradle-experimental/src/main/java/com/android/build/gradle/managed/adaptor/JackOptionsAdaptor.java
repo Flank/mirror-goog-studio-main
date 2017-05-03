@@ -38,7 +38,7 @@ public class JackOptionsAdaptor implements CoreJackOptions {
 
     @Override
     public Boolean isEnabled() {
-        return jackOptions.getEnabled();
+        return false;
     }
 
     @Override
