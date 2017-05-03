@@ -26,6 +26,9 @@ import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.options.BooleanOption;
+import com.android.builder.model.AndroidProject;
+import com.android.builder.model.SyncIssue;
 import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
@@ -74,6 +77,30 @@ public class DesugarAppTest {
         GradleBuildResult result = project.executor().run("assembleDebug");
         assertThat(result.getNotUpToDateTasks()).contains(":transformClassesWithDesugarForDebug");
         assertThat(result.getNotUpToDateTasks()).contains(":extractJava8LangSupportJar");
+    }
+
+    @Test
+    public void syncIssueIfJava8AndDesugarDisabled() throws IOException, InterruptedException {
+        enableDesugar();
+        AndroidProject result =
+                project.model()
+                        .with(BooleanOption.ENABLE_DESUGAR, false)
+                        .ignoreSyncIssues()
+                        .getSingle()
+                        .getOnlyModel();
+        boolean found =
+                result.getSyncIssues()
+                        .stream()
+                        .filter(i -> i.getSeverity() == SyncIssue.SEVERITY_ERROR)
+                        .anyMatch(
+                                i ->
+                                        i.getMessage()
+                                                .equals(
+                                                        "Please add 'android.enableDesugar=true' "
+                                                                + "to your gradle.properties file "
+                                                                + "to enable Java 8 language "
+                                                                + "support."));
+        assertThat(found).named("Sync issue to enable Desugar found").isTrue();
     }
 
     @Test

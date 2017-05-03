@@ -270,50 +270,34 @@ public class ApplicationTaskManager extends TaskManager {
         createDataBindingMergeArtifactsTaskIfNecessary(tasks, variantScope);
         AndroidTask<? extends JavaCompile> javacTask = createJavacTask(tasks, variantScope);
         VariantScope.Java8LangSupport java8LangSupport = variantScope.getJava8LangSupportType();
-        if (variantScope
-                .getGlobalScope()
-                .getExtension()
-                .getCompileOptions()
-                .getTargetCompatibility()
-                .isJava8Compatible()) {
-
-            if (java8LangSupport != VariantScope.Java8LangSupport.DESUGAR) {
-                // Only warn for users of retrolambda and dexguard
-                if (java8LangSupport == VariantScope.Java8LangSupport.DEXGUARD
-                        || java8LangSupport == VariantScope.Java8LangSupport.RETROLAMBDA) {
-                    String pluginName;
-                    if (java8LangSupport == VariantScope.Java8LangSupport.DEXGUARD) {
-                        pluginName = "dexguard";
-                    } else {
-                        pluginName = "me.tatarka.retrolambda";
-                    }
-
-                    String warningMsg =
-                            String.format(
-                                    "One of the plugins you are using supports Java 8 "
-                                            + "language features. To try the support built into"
-                                            + " the Android plugin, remove the following from "
-                                            + "your build.gradle:\n"
-                                            + "    apply plugin: '%s'\n"
-                                            + "To learn more, go to https://d.android.com/r/"
-                                            + "tools/java-8-support-message.html\n",
-                                    pluginName);
-
-                    androidBuilder
-                            .getErrorReporter()
-                            .handleSyncWarning(null, SyncIssue.TYPE_GENERIC, warningMsg);
-                } else {
-                    androidBuilder
-                            .getErrorReporter()
-                            .handleSyncError(
-                                    variantScope.getVariantConfiguration().getFullName(),
-                                    SyncIssue.TYPE_GENERIC,
-                                    "Please add 'android.enableDesugar=true' to your "
-                                            + "gradle.properties file to enable Java 8 "
-                                            + "language support.");
-                }
-            }
+        if (java8LangSupport == VariantScope.Java8LangSupport.INVALID) {
+            return;
         }
+        // Only warn for users of retrolambda and dexguard
+        String pluginName = null;
+        if (java8LangSupport == VariantScope.Java8LangSupport.DEXGUARD) {
+            pluginName = "dexguard";
+        } else if (java8LangSupport == VariantScope.Java8LangSupport.RETROLAMBDA) {
+            pluginName = "me.tatarka.retrolambda";
+        }
+
+        if (pluginName != null) {
+            String warningMsg =
+                    String.format(
+                            "One of the plugins you are using supports Java 8 "
+                                    + "language features. To try the support built into"
+                                    + " the Android plugin, remove the following from "
+                                    + "your build.gradle:\n"
+                                    + "    apply plugin: '%s'\n"
+                                    + "To learn more, go to https://d.android.com/r/"
+                                    + "tools/java-8-support-message.html\n",
+                            pluginName);
+
+            androidBuilder
+                    .getErrorReporter()
+                    .handleSyncWarning(null, SyncIssue.TYPE_GENERIC, warningMsg);
+        }
+
         addJavacClassesStream(variantScope);
         setJavaCompilerTask(javacTask, tasks, variantScope);
         getAndroidTasks().create(tasks, new AndroidJarTask.JarClassesConfigAction(variantScope));

@@ -33,21 +33,21 @@ public class AbstractCompilesUtilTest {
         Assert.assertEquals(
                 JavaVersion.VERSION_1_6,
                 chooseDefaultJavaVersion(
-                        "android-15", CURRENT_JDK_VERSION, VariantScope.Java8LangSupport.NONE));
+                        "android-15", CURRENT_JDK_VERSION, VariantScope.Java8LangSupport.UNUSED));
         Assert.assertEquals(
                 JavaVersion.VERSION_1_7,
                 chooseDefaultJavaVersion(
-                        "android-21", CURRENT_JDK_VERSION, VariantScope.Java8LangSupport.NONE));
+                        "android-21", CURRENT_JDK_VERSION, VariantScope.Java8LangSupport.UNUSED));
         Assert.assertEquals(
                 JavaVersion.VERSION_1_7,
                 chooseDefaultJavaVersion(
                         "Google Inc.:Google APIs:22",
                         CURRENT_JDK_VERSION,
-                        VariantScope.Java8LangSupport.NONE));
+                        VariantScope.Java8LangSupport.UNUSED));
         Assert.assertEquals(
                 JavaVersion.VERSION_1_7,
                 chooseDefaultJavaVersion(
-                        "android-24", CURRENT_JDK_VERSION, VariantScope.Java8LangSupport.NONE));
+                        "android-24", CURRENT_JDK_VERSION, VariantScope.Java8LangSupport.UNUSED));
         Assert.assertEquals(
                 JavaVersion.VERSION_1_7,
                 chooseDefaultJavaVersion(

@@ -2097,12 +2097,7 @@ public abstract class TaskManager {
             @NonNull VariantScope variantScope,
             @NonNull ApiVersion minSdk,
             @NonNull TransformManager transformManager) {
-        if (globalScope
-                        .getExtension()
-                        .getCompileOptions()
-                        .getTargetCompatibility()
-                        .isJava8Compatible()
-                && variantScope.getJava8LangSupportType() == Java8LangSupport.DESUGAR) {
+        if (variantScope.getJava8LangSupportType() == Java8LangSupport.DESUGAR) {
             FileCache userCache = getUserIntermediatesCache();
             FileCache projectCache = getProjectIntermediatesCache();
 

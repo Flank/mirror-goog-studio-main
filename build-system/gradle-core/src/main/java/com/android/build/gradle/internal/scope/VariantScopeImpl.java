@@ -39,7 +39,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.external.gson.NativeBuildConfigValue;
-import com.android.build.gradle.internal.CompileOptions;
 import com.android.build.gradle.internal.InstantRunTaskManager;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.SdkHandler;
@@ -762,10 +761,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
         // only if target and source is explicitly specified to 1.8 (and above), we keep the
         // default bootclasspath with Desugar. Otherwise, we use android.jar.
-        CompileOptions compileOptions = getGlobalScope().getExtension().getCompileOptions();
-        return java8LangSupport == VariantScope.Java8LangSupport.DESUGAR
-                && compileOptions.getTargetCompatibility().isJava8Compatible()
-                && compileOptions.getSourceCompatibility().isJava8Compatible();
+        return java8LangSupport == VariantScope.Java8LangSupport.DESUGAR;
     }
 
     @Override
@@ -1884,6 +1880,14 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     public Java8LangSupport getJava8LangSupportType() {
         // in order of precedence
+        if (!getGlobalScope()
+                .getExtension()
+                .getCompileOptions()
+                .getTargetCompatibility()
+                .isJava8Compatible()) {
+            return Java8LangSupport.UNUSED;
+        }
+
         if (globalScope.getProject().getPlugins().hasPlugin("me.tatarka.retrolambda")) {
             return Java8LangSupport.RETROLAMBDA;
         }
@@ -1896,21 +1900,19 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             return Java8LangSupport.DESUGAR;
         }
 
-        return Java8LangSupport.NONE;
+        errorReporter.handleSyncError(
+                getVariantConfiguration().getFullName(),
+                SyncIssue.TYPE_GENERIC,
+                "Please add 'android.enableDesugar=true' to your "
+                        + "gradle.properties file to enable Java 8 "
+                        + "language support.");
+        return Java8LangSupport.INVALID;
     }
 
     @Nullable
     @Override
     public ApiVersion getMinSdkForDx() {
         if (getJava8LangSupportType() != Java8LangSupport.DESUGAR) {
-            return null;
-        }
-
-        if (!globalScope
-                .getExtension()
-                .getCompileOptions()
-                .getTargetCompatibility()
-                .isJava8Compatible()) {
             return null;
         }
 

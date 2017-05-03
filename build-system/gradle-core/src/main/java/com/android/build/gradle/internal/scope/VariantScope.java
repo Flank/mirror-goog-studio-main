@@ -457,7 +457,8 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     VariantDependencies getVariantDependencies();
 
     enum Java8LangSupport {
-        NONE,
+        INVALID,
+        UNUSED,
         DESUGAR,
         RETROLAMBDA,
         DEXGUARD,

@@ -1063,12 +1063,12 @@ public class VariantManager implements VariantModel {
                                 .setUseMultidex(variantConfig.isMultiDexEnabled())
                                 .setUseLegacyMultidex(variantConfig.isLegacyMultiDexMode())
                                 .setVariantType(variantData.getType().getAnalyticsVariantType());
-
-                if (variantData.getScope().getJava8LangSupportType()
-                        != VariantScope.Java8LangSupport.NONE) {
+                VariantScope.Java8LangSupport supportType =
+                        variantData.getScope().getJava8LangSupportType();
+                if (supportType != VariantScope.Java8LangSupport.INVALID
+                        && supportType != VariantScope.Java8LangSupport.UNUSED) {
                     profileBuilder.setJava8LangSupport(
-                            getJava8LangSupportForAnalytics(
-                                    variantData.getScope().getJava8LangSupportType()));
+                            getJava8LangSupportForAnalytics(supportType));
                 }
 
                 if (variantFactory.hasTestScope()) {
@@ -1151,6 +1151,10 @@ public class VariantManager implements VariantModel {
     @NonNull
     private static GradleBuildVariant.Java8LangSupport getJava8LangSupportForAnalytics(
             @NonNull VariantScope.Java8LangSupport type) {
+        Preconditions.checkArgument(
+                type != VariantScope.Java8LangSupport.UNUSED
+                        && type != VariantScope.Java8LangSupport.INVALID,
+                "Unsupported type");
         switch (type) {
             case RETROLAMBDA:
                 return GradleBuildVariant.Java8LangSupport.RETROLAMBDA;
