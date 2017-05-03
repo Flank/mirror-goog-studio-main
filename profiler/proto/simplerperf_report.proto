@@ -37,6 +37,12 @@ message Sample {
   }
 
   repeated CallChainEntry callchain = 3;
+
+  // Count of the events that have happened since last sample (regardless of
+  // whether the last sample is lost). The event type is decided by '-e' option
+  // in simpleperf record command. By default, '-e cpu-cycles' is used, and this
+  // field is the number of cpu cycles.
+  uint64 event_count = 4;
 }
 
 message LostSituation {
