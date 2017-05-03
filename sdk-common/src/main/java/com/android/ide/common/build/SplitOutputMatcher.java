@@ -280,7 +280,20 @@ public class SplitOutputMatcher {
     @Nullable
     private static String getFilter(
             @NonNull VariantOutput variantOutput, @NonNull String filterType) {
-        for (FilterData filterData : variantOutput.getFilters()) {
+        Collection<FilterData> filters;
+        try {
+            filters = variantOutput.getFilters();
+        } catch (UnsupportedOperationException ignored) {
+            // Before plugin 3.0, only OutputFilter::getFilters exists, but not VariantOutput::getFilters.
+            filters =
+                    variantOutput
+                            .getOutputs()
+                            .stream()
+                            .map(OutputFile::getFilters)
+                            .flatMap(Collection::stream)
+                            .collect(Collectors.toList());
+        }
+        for (FilterData filterData : filters) {
             if (filterData.getFilterType().equals(filterType)) {
                 return filterData.getIdentifier();
             }
