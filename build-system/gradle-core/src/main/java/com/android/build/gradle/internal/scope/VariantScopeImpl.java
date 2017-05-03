@@ -191,9 +191,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Nullable
     private AndroidTask<TransformTask> dataBindingMergeBindingArtifactsTask;
 
-    /** @see BaseVariantData#javaCompilerTask */
-    @Nullable
-    private AndroidTask<? extends Task> javaCompilerTask;
     @Nullable
     private AndroidTask<? extends JavaCompile> javacTask;
 
@@ -510,11 +507,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         return getInstantRunBuildContext().isInInstantRunMode() ? ANDROID_GRADLE : PROGUARD;
     }
 
-    @Override
-    public boolean isJackEnabled() {
-        return getVariantConfiguration().isJackEnabled();
-    }
-
     /**
      * Determine if the final output should be marked as testOnly to prevent uploading to Play
      * store.
@@ -760,16 +752,13 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     public boolean keepDefaultBootstrap() {
         // javac 1.8 may generate code that uses class not available in android.jar.  This is fine
-        // if jack or desugar are used to compile code for the app or compile task is created only
+        // if desugar is used to compile code for the app or compile task is created only
         // for unit test. In those cases, we want to keep the default bootstrap classpath.
         if (!JavaVersion.current().isJava8Compatible()) {
             return false;
         }
 
         VariantScope.Java8LangSupport java8LangSupport = getJava8LangSupportType();
-        if (java8LangSupport == VariantScope.Java8LangSupport.JACK) {
-            return true;
-        }
 
         // only if target and source is explicitly specified to 1.8 (and above), we keep the
         // default bootclasspath with Desugar. Otherwise, we use android.jar.
@@ -1172,26 +1161,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     public File getTypedefFile() {
         return new File(globalScope.getIntermediatesDir(), "typedefs.txt");
-    }
-
-    @NonNull
-    @Override
-    public File getJackEcjOptionsFile() {
-        return new File(globalScope.getIntermediatesDir(),
-                "jack/" + getDirName() + "/ecj-options.txt");
-    }
-
-    @Override
-    @NonNull
-    public File getJackClassesZip() {
-        return new File(globalScope.getIntermediatesDir(),
-                "packaged/" + getVariantConfiguration().getDirName() + "/classes.zip");
-    }
-
-    @Override
-    @NonNull
-    public File getJackCoverageMetadataFile() {
-        return new File(globalScope.getIntermediatesDir(), "jack/" + getDirName() + "/coverage.em");
     }
 
     @NonNull
@@ -1615,12 +1584,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @Override
     @Nullable
-    public AndroidTask<? extends Task> getJavaCompilerTask() {
-        return javaCompilerTask;
-    }
-
-    @Override
-    @Nullable
     public AndroidTask<? extends  JavaCompile> getJavacTask() {
         return javacTask;
     }
@@ -1629,12 +1592,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     public void setJavacTask(
             @Nullable AndroidTask<? extends JavaCompile> javacTask) {
         this.javacTask = javacTask;
-    }
-
-    @Override
-    public void setJavaCompilerTask(
-            @NonNull AndroidTask<? extends Task> javaCompileTask) {
-        this.javaCompilerTask = javaCompileTask;
     }
 
     @Override
@@ -1927,10 +1884,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     public Java8LangSupport getJava8LangSupportType() {
         // in order of precedence
-        if (isJackEnabled()) {
-            return Java8LangSupport.JACK;
-        }
-
         if (globalScope.getProject().getPlugins().hasPlugin("me.tatarka.retrolambda")) {
             return Java8LangSupport.RETROLAMBDA;
         }

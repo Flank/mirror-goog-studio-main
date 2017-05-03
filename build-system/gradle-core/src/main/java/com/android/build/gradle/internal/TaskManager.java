@@ -25,11 +25,9 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.DATA_BINDING;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JAR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JAVA_RES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JNI;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.PROGUARD_RULES;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.ANNOTATION_PROCESSOR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.APK_MAPPING;
@@ -97,7 +95,6 @@ import com.android.build.gradle.internal.tasks.ExtractProguardFiles;
 import com.android.build.gradle.internal.tasks.ExtractTryWithResourcesSupportJar;
 import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
 import com.android.build.gradle.internal.tasks.InstallVariantTask;
-import com.android.build.gradle.internal.tasks.JackJacocoReportTask;
 import com.android.build.gradle.internal.tasks.LintCompile;
 import com.android.build.gradle.internal.tasks.MockableAndroidJarTask;
 import com.android.build.gradle.internal.tasks.SigningReportTask;
@@ -118,10 +115,6 @@ import com.android.build.gradle.internal.transforms.DexArchiveBuilderTransform;
 import com.android.build.gradle.internal.transforms.DexMergerTransform;
 import com.android.build.gradle.internal.transforms.DexTransform;
 import com.android.build.gradle.internal.transforms.ExtractJarsTransform;
-import com.android.build.gradle.internal.transforms.JackCompileTransform;
-import com.android.build.gradle.internal.transforms.JackGenerateDexTransform;
-import com.android.build.gradle.internal.transforms.JackOptionsUtils;
-import com.android.build.gradle.internal.transforms.JackPreDexTransform;
 import com.android.build.gradle.internal.transforms.JacocoTransform;
 import com.android.build.gradle.internal.transforms.JarMergingTransform;
 import com.android.build.gradle.internal.transforms.MainDexListTransform;
@@ -213,11 +206,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
@@ -550,42 +541,6 @@ public abstract class TaskManager {
                                         RUNTIME_CLASSPATH, EXTERNAL, JNI))
                         .build());
 
-        if (variantScope.isJackEnabled()) {
-            // add project sources for the Jack pipeline
-            Callable<List<File>> javaSources =
-                    () -> {
-                        List<File> sources = Lists.newArrayList();
-                        sources.addAll(
-                                variantScope
-                                        .getVariantData()
-                                        .getUserJavaSources()
-                                        .stream()
-                                        .map(FileCollection::getFiles)
-                                        .flatMap(Set::stream)
-                                        .collect(Collectors.toList()));
-                        sources.addAll(
-                                variantScope
-                                        .getVariantData()
-                                        .getGeneratedJavaSources()
-                                        .stream()
-                                        .map(FileCollection::getFiles)
-                                        .flatMap(Set::stream)
-                                        .collect(Collectors.toList()));
-
-                        return sources;
-                    };
-
-            FileCollection sourcesCollection = project.files(javaSources).builtBy(
-                    variantData.getVariantDependency().getCompileClasspath());
-
-            transformManager.addStream(
-                    OriginalStream.builder(project, "project-java-sources")
-                            .addContentTypes(ExtendedContentType.JAVA_SOURCES)
-                            .addScope(Scope.PROJECT)
-                            .setFileCollection(sourcesCollection)
-                            .build());
-        }
-
         // data binding related artifacts for external libs
         if (extension.getDataBinding().isEnabled()) {
             transformManager.addStream(
@@ -649,28 +604,15 @@ public abstract class TaskManager {
 
             VariantScope testedVariantScope = testedVariantData.getScope();
 
-            if (!variantScope.isJackEnabled()) {
-                // create two streams of different types.
-                transformManager.addStream(
-                        OriginalStream.builder(project, "tested-code-javac-out")
-                                .addContentTypes(DefaultContentType.CLASSES)
-                                .addScope(Scope.TESTED_CODE)
-                                .setFolders(
-                                        () ->
-                                                ImmutableList.of(
-                                                        testedVariantScope.getJavaOutputDir()))
-                                .setDependency(testedVariantScope.getJavacTask().getName())
-                                .build());
-            } else {
-                FileCollection testedAppJack = testedVariantData.getJackCompilationOutput();
-                checkNotNull(testedAppJack, "Tested variant has no jack output specified.");
-                transformManager.addStream(
-                        OriginalStream.builder(project, "tested-code-jack-out")
-                                .addContentType(ExtendedContentType.JACK)
-                                .addScope(Scope.TESTED_CODE)
-                                .setFileCollection(testedAppJack)
-                                .build());
-            }
+            // create two streams of different types.
+            transformManager.addStream(
+                    OriginalStream.builder(project, "tested-code-javac-out")
+                            .addContentTypes(DefaultContentType.CLASSES)
+                            .addScope(Scope.TESTED_CODE)
+                            .setFolders(
+                                    () -> ImmutableList.of(testedVariantScope.getJavaOutputDir()))
+                            .setDependency(testedVariantScope.getJavacTask().getName())
+                            .build());
 
             transformManager.addStream(
                     OriginalStream.builder(project, "tested-code-deps")
@@ -1486,15 +1428,6 @@ public abstract class TaskManager {
             @NonNull TaskFactory tasks,
             @NonNull VariantScope scope) {
         scope.getCompileTask().dependsOn(tasks, javaCompilerTask);
-        scope.setJavaCompilerTask(javaCompilerTask);
-
-        // TODO: Get rid of it once we stop keeping tasks in variant data.
-        //noinspection VariableNotUsedInsideIf
-        if (scope.getVariantData().javacTask != null) {
-            // This is not the experimental plugin, let's update variant data, so Variants API
-            // keeps working.
-            scope.getVariantData().javaCompilerTask = tasks.named(javaCompilerTask.getName());
-        }
     }
 
     /**
@@ -1740,18 +1673,10 @@ public abstract class TaskManager {
         // parse jars before any consumer
         createDataBindingMergeArtifactsTaskIfNecessary(tasks, variantScope);
         // Add a task to compile the test application
-        if (variantData.getVariantConfiguration().isJackEnabled()) {
-            createJackTask(tasks, variantScope);
-        } else {
-            AndroidTask<? extends JavaCompile> javacTask = createJavacTask(tasks, variantScope);
-            addJavacClassesStream(variantScope);
-            setJavaCompilerTask(javacTask, tasks, variantScope);
-            createPostCompilationTasks(tasks, variantScope);
-        }
-        checkNotNull(variantScope.getJavaCompilerTask());
-        variantScope.getJavaCompilerTask().dependsOn(
-                tasks,
-                testedVariantData.getScope().getJavaCompilerTask());
+        AndroidTask<? extends JavaCompile> javacTask = createJavacTask(tasks, variantScope);
+        addJavacClassesStream(variantScope);
+        setJavaCompilerTask(javacTask, tasks, variantScope);
+        createPostCompilationTasks(tasks, variantScope);
 
         // Add data binding tasks if enabled
         createDataBindingTasksIfNecessary(tasks, variantScope);
@@ -1793,9 +1718,7 @@ public abstract class TaskManager {
 
     private void maybeCreateLintVitalTask(
             @NonNull TaskFactory tasks, @NonNull ApkVariantData variantData) {
-        // TODO: re-enable with Jack when possible
         if (variantData.getVariantConfiguration().getBuildType().isDebuggable()
-                || variantData.getVariantConfiguration().isJackEnabled()
                 || !extension.getLintOptions().isCheckReleaseBuilds()) {
             return;
         }
@@ -1956,17 +1879,10 @@ public abstract class TaskManager {
                 connectedAndroidTest -> connectedAndroidTest.dependsOn(connectedTask.getName()));
 
         if (baseVariantData.getVariantConfiguration().getBuildType().isTestCoverageEnabled()) {
-            final AndroidTask reportTask;
-            if (baseVariantData.getVariantConfiguration().isJackEnabled()) {
-                reportTask = androidTasks.create(
-                        tasks,
-                        new JackJacocoReportTask.ConfigAction(variantScope));
-            } else {
-                reportTask = androidTasks.create(
-                        tasks,
-                        new JacocoReportTask.ConfigAction(variantScope));
-                reportTask.dependsOn(tasks, project.getConfigurations().getAt(JacocoPlugin.ANT_CONFIGURATION_NAME));
-            }
+            final AndroidTask reportTask =
+                    androidTasks.create(tasks, new JacocoReportTask.ConfigAction(variantScope));
+            reportTask.dependsOn(
+                    tasks, project.getConfigurations().getAt(JacocoPlugin.ANT_CONFIGURATION_NAME));
             reportTask.dependsOn(tasks, connectedTask.getName());
 
             variantScope.setCoverageReportTask(reportTask);
@@ -2514,165 +2430,6 @@ public abstract class TaskManager {
         task.ifPresent(t -> t.dependsOn(taskFactory, agentTask));
     }
 
-    public void createJackTask(
-            @NonNull final TaskFactory tasks, @NonNull final VariantScope scope) {
-        JackOptionsUtils.executeJackChecks(scope.getVariantConfiguration().getJackOptions());
-
-        processPackagedLibsWithJack(tasks, scope);
-        processRuntimeLibsWithJack(tasks, scope);
-
-        JackCompileTransform jackCompileTransform = createSourcesJackTransform(scope);
-        AndroidTask<TransformTask> jackTask =
-                compileSourcesWithJack(tasks, scope, jackCompileTransform);
-        if (jackTask == null) {
-            // Error adding JackCompileTransform. A SyncIssue was already emitted at this point.
-            getLogger().error("Could not create jack transform.", new Throwable());
-            return;
-        }
-
-        if (jackCompileTransform.getOutputTypes().contains(ExtendedContentType.JACK)) {
-            // the sources transform emitted JACK files, we need the final step to generate DEX
-            generateDexWithJack(tasks, scope, jackTask);
-        }
-    }
-
-    private void processRuntimeLibsWithJack(
-            @NonNull TaskFactory tasks, @NonNull VariantScope scope) {
-        VariantDependencies variantDependency = scope.getVariantDependencies();
-        JackPreDexTransform preDexRuntimeTransform =
-                new JackPreDexTransform(
-                        JackOptionsUtils.forPreDexing(scope),
-                        () -> androidBuilder.getBootClasspath(true),
-                        androidBuilder::getBuildToolInfo,
-                        androidBuilder.getErrorReporter(),
-                        androidBuilder.getJavaProcessExecutor(),
-                        JackPreDexTransform.InputType.CLASSPATH_LIBRARY,
-                        variantDependency.getJackPluginConfiguration());
-
-        scope.getTransformManager().addTransform(
-                tasks,
-                scope,
-                preDexRuntimeTransform,
-                (t, task) -> task.dependsOn(variantDependency.getJackPluginConfiguration()));
-    }
-
-    private void processPackagedLibsWithJack(
-            @NonNull TaskFactory tasks, @NonNull VariantScope scope) {
-        VariantDependencies variantDependency = scope.getVariantDependencies();
-        JackPreDexTransform preDexPackagedTransform =
-                new JackPreDexTransform(
-                        JackOptionsUtils.forPreDexing(scope),
-                        ImmutableList::of,
-                        androidBuilder::getBuildToolInfo,
-                        androidBuilder.getErrorReporter(),
-                        androidBuilder.getJavaProcessExecutor(),
-                        JackPreDexTransform.InputType.PACKAGED_LIBRARY,
-                        variantDependency.getJackPluginConfiguration());
-        scope.getTransformManager().addTransform(
-                tasks,
-                scope,
-                preDexPackagedTransform,
-                (t, task) -> task.dependsOn(variantDependency.getJackPluginConfiguration()));
-    }
-
-    /** Creates the transform that will compile the sources with Jack. */
-    private JackCompileTransform createSourcesJackTransform(@NonNull VariantScope scope) {
-        VariantDependencies variantDependency = scope.getVariantDependencies();
-        Boolean includeCompileClasspaths = scope.getVariantConfiguration()
-                .getJavaCompileOptions()
-                .getAnnotationProcessorOptions()
-                .getIncludeCompileClasspath();
-        FileCollection processorPaths =
-                Boolean.TRUE.equals(includeCompileClasspaths)
-                        ? scope.getArtifactFileCollection(COMPILE_CLASSPATH, ALL, CLASSES)
-                        : project.files();
-        processorPaths =
-                processorPaths.plus(
-                        scope.getArtifactFileCollection(ANNOTATION_PROCESSOR, ALL, JAR));
-        JackCompileTransform jackCompileTransform =
-                new JackCompileTransform(
-                        JackOptionsUtils.forSourceCompilation(scope),
-                        androidBuilder::getBuildToolInfo,
-                        androidBuilder.getErrorReporter(),
-                        androidBuilder.getJavaProcessExecutor(),
-                        processorPaths,
-                        variantDependency.getJackPluginConfiguration());
-        scope.getVariantData().jackCompileTransform = jackCompileTransform;
-        return jackCompileTransform;
-    }
-
-    /** Adds {@link JackCompileTransform} transform to the pipeline stream and creates the task. */
-    private AndroidTask<TransformTask> compileSourcesWithJack(
-            @NonNull TaskFactory tasks,
-            @NonNull VariantScope scope,
-            @NonNull JackCompileTransform jackCompileTransform) {
-        BaseVariantData variantData = scope.getVariantData();
-        variantData.setJackCompilationOutput(
-                project.files(jackCompileTransform.getJackCompilationOutput()));
-        final AndroidTask<TransformTask> jackTask =
-                scope.getTransformManager()
-                        .addTransform(
-                                tasks,
-                                scope,
-                                jackCompileTransform,
-                                (transform, task) -> {
-                                    variantData.javaCompilerTask = task;
-                                    assert variantData.getJackCompilationOutput() != null;
-                                    variantData.getJackCompilationOutput().builtBy(task);
-                                })
-                        .orElse(null);
-
-        if (jackTask == null) {
-            return null;
-        }
-
-        // Jack is compiling and also providing the binary and mapping files.
-        setJavaCompilerTask(jackTask, tasks, scope);
-        setupCompileTaskDependencies(tasks, scope, jackTask);
-
-        jackTask.optionalDependsOn(tasks, scope.getMergeJavaResourcesTask());
-        jackTask.dependsOn(tasks, scope.getSourceGenTask());
-        jackTask.dependsOn(
-                tasks,
-                variantData.getVariantDependency().getJackPluginConfiguration(),
-                variantData.getVariantDependency().getAnnotationProcessorConfiguration());
-
-        return jackTask;
-    }
-
-    /** Creates transform that will consume all JACK files, and produce the final DEX file(s). */
-    @NonNull
-    private AndroidTask<TransformTask> generateDexWithJack(
-            @NonNull TaskFactory tasks,
-            @NonNull VariantScope scope,
-            @NonNull AndroidTask<TransformTask> jackTask) {
-        checkNotNull(scope.getVariantData().getJackCompilationOutput(), "Should be set beforehand");
-        checkNotNull(
-                scope.getVariantConfiguration().getJackOptions().isJackInProcess(),
-                "JackInProcess has a default value.");
-        VariantDependencies variantDependency = scope.getVariantDependencies();
-        JackGenerateDexTransform jackGenerateDexTransform =
-                new JackGenerateDexTransform(
-                        JackOptionsUtils.forDexGeneration(scope),
-                        scope.getVariantData().getJackCompilationOutput(),
-                        androidBuilder::getBuildToolInfo,
-                        androidBuilder.getErrorReporter(),
-                        androidBuilder.getJavaProcessExecutor(),
-                        variantDependency.getJackPluginConfiguration());
-        TransformTask.ConfigActionCallback<JackGenerateDexTransform> jackDexTransformCallback =
-                (transform, task) -> {
-                    task.dependsOn(variantDependency.getJackPluginConfiguration());
-                };
-        final AndroidTask<TransformTask> jackDexTransformTask =
-                scope.getTransformManager()
-                        .addTransform(
-                                tasks, scope, jackGenerateDexTransform, jackDexTransformCallback)
-                        .orElse(null);
-        jackDexTransformTask.dependsOn(tasks, jackTask);
-
-        return jackDexTransformTask;
-    }
-
     /**
      * Must be called before the javac task is created so that we it can be earlier in the transform
      * pipeline.
@@ -2727,10 +2484,6 @@ public abstract class TaskManager {
             }
         }
 
-        boolean isJack = scope.getVariantConfiguration().isJackEnabled();
-        if (isJack) {
-            getLogger().warn("Using Data Binding with Jack compiler is an experimental feature.");
-        }
         dataBindingBuilder.setDebugLogEnabled(getLogger().isDebugEnabled());
         AndroidTask<DataBindingProcessLayoutsTask> processLayoutsTask = androidTasks
                 .create(tasks, new DataBindingProcessLayoutsTask.ConfigAction(scope));
@@ -2745,7 +2498,7 @@ public abstract class TaskManager {
         exportBuildInfo.dependsOn(tasks, processLayoutsTask);
         exportBuildInfo.dependsOn(tasks, scope.getSourceGenTask());
 
-        AndroidTask<? extends Task> javaCompilerTask = scope.getJavaCompilerTask();
+        AndroidTask<? extends Task> javaCompilerTask = scope.getJavacTask();
         if (javaCompilerTask != null) {
             javaCompilerTask.dependsOn(tasks, exportBuildInfo);
             javaCompilerTask.dependsOn(tasks, scope.getDataBindingMergeArtifactsTask());
@@ -2933,10 +2686,7 @@ public abstract class TaskManager {
                 tasks,
                 // FIX ME : Reinstate once ShrinkResourcesTransform is converted.
                 // variantOutputScope.getShrinkResourcesTask(),
-                // TODO: When Jack is converted, add activeDexTask to VariantScope.
-                variantScope.getJavaCompilerTask(),
-                // TODO: Remove when Jack is converted to AndroidTask.
-                variantData.javaCompilerTask,
+                variantScope.getJavacTask(),
                 variantData.packageSplitResourcesTask,
                 variantData.packageSplitAbiTask);
 

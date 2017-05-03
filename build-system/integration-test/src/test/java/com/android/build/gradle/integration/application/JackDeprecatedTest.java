@@ -25,6 +25,7 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
 import java.io.IOException;
+import java.util.Locale;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -63,7 +64,7 @@ public class JackDeprecatedTest {
 
         // assert that we still run Jack
         GradleBuildResult result = project.executor().run("assembleDebug");
-        assertThat(result.getNotUpToDateTasks())
-                .contains(":transformJackAndJavaSourcesWithJackCompileForDebug");
+        result.getNotUpToDateTasks()
+                .forEach(task -> assertThat(task.toLowerCase(Locale.US)).doesNotContain("jack"));
     }
 }

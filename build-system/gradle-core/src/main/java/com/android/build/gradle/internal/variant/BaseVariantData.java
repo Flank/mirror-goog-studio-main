@@ -36,7 +36,6 @@ import com.android.build.gradle.internal.scope.VariantScopeImpl;
 import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
 import com.android.build.gradle.internal.tasks.PrepareDependenciesTask;
-import com.android.build.gradle.internal.transforms.JackCompileTransform;
 import com.android.build.gradle.tasks.AidlCompile;
 import com.android.build.gradle.tasks.BinaryFileProviderTask;
 import com.android.build.gradle.tasks.ExternalNativeBuildTask;
@@ -124,18 +123,17 @@ public abstract class BaseVariantData implements TaskContainer {
     public Sync processJavaResourcesTask;
     public NdkCompile ndkCompileTask;
 
-    /** Can be JavaCompile or JackTask depending on user's settings. */
-    public Task javaCompilerTask;
     public JavaCompile javacTask;
+
     @NonNull
     public Collection<ExternalNativeBuildTask> externalNativeBuildTasks = Lists.newArrayList();
-    @Nullable public JackCompileTransform jackCompileTransform = null;
     // empty anchor compile task to set all compilations tasks as dependents.
     public Task compileTask;
+    /** JavaCompile, keeping it for backwards compatibility */
+    public Task javaCompilerTask;
 
     public BinaryFileProviderTask binaryFileProviderTask;
 
-    // TODO : why is Jack not registered as the obfuscationTask ???
     public Task obfuscationTask;
 
     private List<ConfigurableFileTree> javaSources;
@@ -153,9 +151,6 @@ public abstract class BaseVariantData implements TaskContainer {
 
     @Nullable
     private LayoutXmlProcessor layoutXmlProcessor;
-
-    // This is the Jack output when compiling the sources.
-    @Nullable private ConfigurableFileCollection jackCompilationOutput = null;
 
     /**
      * If true, variant outputs will be considered signed. Only set if you manually set the outputs
@@ -368,34 +363,22 @@ public abstract class BaseVariantData implements TaskContainer {
     }
 
     public void registerJavaGeneratingTask(@NonNull Task task, @NonNull File... generatedSourceFolders) {
-        Preconditions.checkState(javacTask != null || jackCompileTransform != null);
+        Preconditions.checkNotNull(javacTask);
         sourceGenTask.dependsOn(task);
 
         for (File f : generatedSourceFolders) {
-            if (javacTask != null) {
-                javacTask.source(f);
-            }
-            if (jackCompileTransform != null) {
-                jackCompileTransform.addGeneratedSource(
-                        scope.getGlobalScope().getProject().fileTree(f));
-            }
+            javacTask.source(f);
         }
 
         addJavaSourceFoldersToModel(generatedSourceFolders);
     }
 
     public void registerJavaGeneratingTask(@NonNull Task task, @NonNull Collection<File> generatedSourceFolders) {
-        Preconditions.checkState(javacTask != null || jackCompileTransform != null);
+        Preconditions.checkNotNull(javacTask);
         sourceGenTask.dependsOn(task);
 
         for (File f : generatedSourceFolders) {
-            if (javacTask != null) {
-                javacTask.source(f);
-            }
-            if (jackCompileTransform != null) {
-                jackCompileTransform.addGeneratedSource(
-                        scope.getGlobalScope().getProject().fileTree(f));
-            }
+            javacTask.source(f);
         }
 
         addJavaSourceFoldersToModel(generatedSourceFolders);
@@ -768,15 +751,5 @@ public abstract class BaseVariantData implements TaskContainer {
         } else {
             return scope.getSourceFoldersJavaResDestinationDir();
         }
-    }
-
-    @Nullable
-    public ConfigurableFileCollection getJackCompilationOutput() {
-        return jackCompilationOutput;
-    }
-
-    public void setJackCompilationOutput(
-            @Nullable ConfigurableFileCollection jackCompilationOutput) {
-        this.jackCompilationOutput = jackCompilationOutput;
     }
 }

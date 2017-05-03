@@ -27,8 +27,6 @@
     <orderEntry type="library" exported="" name="asm-tools" level="project" />
     <orderEntry type="library" scope="TEST" name="JUnit4" level="project" />
     <orderEntry type="module" module-name="assetstudio-base" />
-    <orderEntry type="module" module-name="jack-api" exported="" />
-    <orderEntry type="module" module-name="jill-api" exported="" />
     <orderEntry type="library" exported="" name="guava-tools" level="project" />
     <orderEntry type="library" name="truth" level="project" />
     <orderEntry type="module" module-name="builder-model" exported="" />

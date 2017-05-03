@@ -60,7 +60,6 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.DependencyReportTask;
 import com.android.build.gradle.internal.tasks.SigningReportTask;
 import com.android.build.gradle.internal.transforms.DexTransform;
-import com.android.build.gradle.internal.transforms.JackPreDexTransform;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.managed.AndroidConfig;
@@ -85,7 +84,6 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.ExternalNativeBuildTaskUtils;
 import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
 import com.android.builder.core.AndroidBuilder;
-import com.android.builder.internal.compiler.JackConversionCache;
 import com.android.builder.internal.compiler.PreDexCache;
 import com.android.builder.profile.ThreadRecorder;
 import com.android.builder.sdk.TargetInfo;
@@ -251,14 +249,6 @@ public class BaseComponentModelPlugin implements Plugin<Project>, ToolingRegistr
                                                             "dex-cache",
                                                             "cache.xml"),
                                                     logger);
-                                    JackConversionCache.getCache()
-                                            .clear(
-                                                    FileUtils.join(
-                                                            project.getRootProject().getBuildDir(),
-                                                            FD_INTERMEDIATES,
-                                                            "jack-cache",
-                                                            "cache.xml"),
-                                                    logger);
                                 } catch (IOException e) {
                                     throw new RuntimeException(e);
                                 }
@@ -274,11 +264,6 @@ public class BaseComponentModelPlugin implements Plugin<Project>, ToolingRegistr
                             PreDexCache.getCache().load(
                                     new File(project.getRootProject().getBuildDir(),
                                             FD_INTERMEDIATES + "/dex-cache/cache.xml"));
-                            break;
-                        } else if (transform instanceof JackPreDexTransform) {
-                            JackConversionCache.getCache().load(
-                                    new File(project.getRootProject().getBuildDir(),
-                                            FD_INTERMEDIATES + "/jack-cache/cache.xml"));
                             break;
                         }
                     }

@@ -45,11 +45,9 @@
       <module fileurl="file://$PROJECT_DIR$/instant-run/instant-run-server/instant-run-server.iml" filepath="$PROJECT_DIR$/instant-run/instant-run-server/instant-run-server.iml" group="build-system/instant-run" />
       <module fileurl="file://$PROJECT_DIR$/instant-run-test-instrumenter/instant-run-test-instrumenter.iml" filepath="$PROJECT_DIR$/instant-run-test-instrumenter/instant-run-test-instrumenter.iml" group="build-system/instant-run" />
       <module fileurl="file://$PROJECT_DIR$/build-system/integration-test/integration-test.iml" filepath="$PROJECT_DIR$/build-system/integration-test/integration-test.iml" group="build-system" />
-      <module fileurl="file://$PROJECT_DIR$/jack/jack-api/jack-api.iml" filepath="$PROJECT_DIR$/jack/jack-api/jack-api.iml" group="build-system" />
       <module fileurl="file://$PROJECT_DIR$/build-system/java-lib-plugin/java-lib-model/java-lib-model.iml" filepath="$PROJECT_DIR$/build-system/java-lib-plugin/java-lib-model/java-lib-model.iml" group="build-system/java-lib-plugin" />
       <module fileurl="file://$PROJECT_DIR$/build-system/java-lib-plugin/java-lib-model-builder/java-lib-model-builder.iml" filepath="$PROJECT_DIR$/build-system/java-lib-plugin/java-lib-model-builder/java-lib-model-builder.iml" group="build-system/java-lib-plugin" />
       <module fileurl="file://$PROJECT_DIR$/jaxb-inheritance-plugin/jaxb-inheritance-plugin.iml" filepath="$PROJECT_DIR$/jaxb-inheritance-plugin/jaxb-inheritance-plugin.iml" group="base" />
-      <module fileurl="file://$PROJECT_DIR$/jack/jill-api/jill-api.iml" filepath="$PROJECT_DIR$/jack/jill-api/jill-api.iml" group="build-system" />
       <module fileurl="file://$PROJECT_DIR$/layoutinspector/layoutinspector.iml" filepath="$PROJECT_DIR$/layoutinspector/layoutinspector.iml" group="base/layoutinspector" />
       <module fileurl="file://$PROJECT_DIR$/layoutlib-api/layoutlib-api-base.iml" filepath="$PROJECT_DIR$/layoutlib-api/layoutlib-api-base.iml" group="base" />
       <module fileurl="file://$PROJECT_DIR$/lint/libs/lint-api/lint-api-base.iml" filepath="$PROJECT_DIR$/lint/libs/lint-api/lint-api-base.iml" group="lint" />

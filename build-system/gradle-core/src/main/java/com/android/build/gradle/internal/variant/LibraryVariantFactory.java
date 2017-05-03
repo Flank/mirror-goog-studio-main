@@ -144,39 +144,6 @@ public class LibraryVariantFactory extends BaseVariantFactory {
                         "' in flavor '" + productFlavor.getProductFlavor().getName() + "'.");
             }
         }
-
-        // Jack is not supported in library project.
-        for (BuildTypeData buildType: model.getBuildTypes().values()) {
-            if (Boolean.TRUE.equals(buildType.getBuildType().getJackOptions().isEnabled())) {
-                errorReporter.handleSyncError(
-                        buildType.getBuildType().getName(),
-                        SyncIssue.TYPE_GENERIC,
-                        "Library projects cannot enable Jack. " +
-                        "Jack is enabled in buildType '" + buildType.getBuildType().getName() +
-                        "'.");
-            }
-        }
-
-        for (ProductFlavorData productFlavor : model.getProductFlavors().values()) {
-            if (Boolean.TRUE.equals(
-                    productFlavor.getProductFlavor().getJackOptions().isEnabled())) {
-                errorReporter.handleSyncError(
-                        productFlavor.getProductFlavor().getName(),
-                        SyncIssue.TYPE_GENERIC,
-                        "Library projects cannot enable Jack. " +
-                        "Jack is enabled in productFlavor '" +
-                        productFlavor.getProductFlavor().getName() + "'.");
-            }
-        }
-
-        if (Boolean.TRUE.equals(
-                model.getDefaultConfig().getProductFlavor().getJackOptions().isEnabled())) {
-            errorReporter.handleSyncError(
-                    model.getDefaultConfig().getProductFlavor().getName(),
-                    SyncIssue.TYPE_GENERIC,
-                    "Library projects cannot enable Jack. " +
-                    "Jack is enabled in default config.");
-        }
     }
 
     @Override
