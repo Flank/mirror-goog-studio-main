@@ -458,7 +458,13 @@ public class VariantDependencies {
             // first go through the product flavors and add matching attributes
             for (CoreProductFlavor f : productFlavors) {
                 if (f.getDimension() == null) {
-                    throw new RuntimeException("Null dimension for " + f.getName());
+                    throw new RuntimeException(
+                            "All flavors must now belong to a named flavor dimension. "
+                                    + "The flavor '"
+                                    + f.getName()
+                                    + "' is not assigned to a flavor dimension. "
+                                    + "Learn more at "
+                                    + "https://d.android.com/r/tools/flavorDimensions-missing-error-message.html");
                 }
                 map.put(Attribute.of(f.getDimension(), ProductFlavorAttr.class), ProductFlavorAttr.of(f.getName()));
             }
