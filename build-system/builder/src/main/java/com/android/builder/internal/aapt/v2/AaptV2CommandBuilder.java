@@ -160,7 +160,7 @@ public final class AaptV2CommandBuilder {
         /*
          * Never compress apks.
          */
-//        builder.addArgs("-0", "apk");
+        builder.add("-0", "apk");
 
         /*
          * Add custom no-compress extensions.
