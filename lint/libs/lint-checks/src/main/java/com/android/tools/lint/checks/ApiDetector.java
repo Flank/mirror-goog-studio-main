@@ -126,7 +126,9 @@ import com.intellij.psi.util.PsiTreeUtil;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
 import org.jetbrains.uast.UAnnotation;
 import org.jetbrains.uast.UBinaryExpression;
@@ -1587,29 +1589,37 @@ public class ApiDetector extends ResourceXmlDetector
                 UExpression qualifier = expression.getReceiver();
                 if (qualifier != null && !(qualifier instanceof UThisExpression)
                         && !(qualifier instanceof PsiSuperExpression)) {
-                    PsiType type = qualifier.getExpressionType();
-                    if (type instanceof PsiClassType) {
-                        String expressionOwner = evaluator.getInternalName((PsiClassType) type);
-                        if (expressionOwner != null && !expressionOwner.equals(owner)) {
-                            int specificApi = mApiDatabase
-                                    .getCallVersion(expressionOwner, name, desc);
-                            if (specificApi == -1) {
-                                if (ApiLookup.isRelevantOwner(expressionOwner)) {
-                                    return;
+                    PsiType receiverType = qualifier.getExpressionType();
+                    if (receiverType instanceof PsiClassType) {
+                        PsiClassType containingType =
+                                mContext.getEvaluator().getClassType(containingClass);
+                        List<PsiClassType> inheritanceChain = getInheritanceChain(
+                                (PsiClassType) receiverType, containingType);
+                        if (inheritanceChain != null) {
+                            for (PsiClassType type : inheritanceChain) {
+                                String expressionOwner = evaluator.getInternalName(type);
+                                if (expressionOwner != null && !expressionOwner.equals(owner)) {
+                                    int specificApi =
+                                            mApiDatabase.getCallVersion(expressionOwner, name, desc);
+                                    if (specificApi == -1) {
+                                        if (ApiLookup.isRelevantOwner(expressionOwner)) {
+                                            return;
+                                        }
+                                    } else if (specificApi <= minSdk) {
+                                        return;
+                                    } else {
+                                        // For example, for Bundle#getString(String,String) the API level
+                                        // is 12, whereas for BaseBundle#getString(String,String) the API
+                                        // level is 21. If the code specified a Bundle instead of
+                                        // a BaseBundle, reported the Bundle level in the error message
+                                        // instead.
+                                        if (specificApi < api) {
+                                            api = specificApi;
+                                            fqcn = type.getCanonicalText();
+                                        }
+                                        api = Math.min(specificApi, api);
+                                    }
                                 }
-                            } else if (specificApi <= minSdk) {
-                                return;
-                            } else {
-                                // For example, for Bundle#getString(String,String) the API level
-                                // is 12, whereas for BaseBundle#getString(String,String) the API
-                                // level is 21. If the code specified a Bundle instead of
-                                // a BaseBundle, reported the Bundle level in the error message
-                                // instead.
-                                if (specificApi < api) {
-                                    api = specificApi;
-                                    fqcn = type.getCanonicalText();
-                                }
-                                api = Math.min(specificApi, api);
                             }
                         }
                     }
@@ -2059,6 +2069,50 @@ public class ApiDetector extends ResourceXmlDetector
                 }
             }
         }
+    }
+
+    /**
+     * Returns the first (in DFS order) inheritance chain connecting the two given classes.
+     *
+     * @param derivedClass the derived class
+     * @param baseClass the base class
+     * @return The first found inheritance chain connecting the two classes, or {@code null} if the
+     *         classes are not related by inheritance. The {@code baseClass} is not included in the
+     *         returned inheritance chain, which will be empty if the two classes are the same.
+     */
+    @Nullable
+    private static List<PsiClassType> getInheritanceChain(PsiClassType derivedClass,
+            PsiClassType baseClass) {
+        if (derivedClass.equals(baseClass)) {
+            return Collections.emptyList();
+        }
+        List<PsiClassType> chain = getInheritanceChain(derivedClass, baseClass, new HashSet<>(), 0);
+        if (chain != null) {
+            Collections.reverse(chain);
+        }
+        return chain;
+    }
+
+    @Nullable
+    private static List<PsiClassType> getInheritanceChain(PsiClassType derivedClass,
+            PsiClassType baseClass, HashSet<PsiType> visited, int depth) {
+        if (derivedClass.equals(baseClass)) {
+            return new ArrayList<>(depth);
+        }
+
+        ++depth;
+        for (PsiType type : derivedClass.getSuperTypes()) {
+            if (visited.add(type) && type instanceof PsiClassType) {
+                PsiClassType classType = (PsiClassType)type;
+                List<PsiClassType> chain =
+                        getInheritanceChain(classType, baseClass, visited, depth);
+                if (chain != null) {
+                    chain.add(derivedClass);
+                    return chain;
+                }
+            }
+        }
+        return null;
     }
 
     private static boolean isSuppressed(
