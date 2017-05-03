@@ -68,6 +68,7 @@ public class JarContentsTest {
                 "com/android/builder/version.properties",
                 "com/android/builder/internal/AndroidManifest.template",
                 "desugar_deploy.jar",
+                "libthrowable_extension.jar",
                 "linux64/libaapt2_jni.so",
                 "linux64/libc++.so",
                 "mac64/libaapt2_jni.dylib",

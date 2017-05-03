@@ -94,6 +94,7 @@ import com.android.build.gradle.internal.tasks.DependencyReportTask;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
 import com.android.build.gradle.internal.tasks.ExtractJava8LangSupportJar;
 import com.android.build.gradle.internal.tasks.ExtractProguardFiles;
+import com.android.build.gradle.internal.tasks.ExtractTryWithResourcesSupportJar;
 import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
 import com.android.build.gradle.internal.tasks.InstallVariantTask;
 import com.android.build.gradle.internal.tasks.JackJacocoReportTask;
@@ -179,6 +180,7 @@ import com.android.build.gradle.tasks.factory.TestServerTaskConfigAction;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.DefaultApiVersion;
 import com.android.builder.core.DefaultDexOptions;
+import com.android.builder.core.DesugarProcessBuilder;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.core.VariantType;
 import com.android.builder.dependency.level2.AndroidDependency;
@@ -2206,6 +2208,29 @@ public abstract class TaskManager {
                             globalScope.getJava8LangSupportJar(),
                             project.getLogger().isEnabled(LogLevel.INFO));
             transformManager.addTransform(tasks, variantScope, desugarTransform);
+
+            if (minSdkVersion < DesugarProcessBuilder.MIN_SUPPORTED_API_TRY_WITH_RESOURCES) {
+                // add runtime classes for try-with-resources support
+                String taskName =
+                        variantScope.getTaskName(ExtractTryWithResourcesSupportJar.TASK_NAME);
+                AndroidTask<ExtractTryWithResourcesSupportJar> extractTryWithResources =
+                        androidTasks.create(
+                                tasks,
+                                new ExtractTryWithResourcesSupportJar.ConfigAction(
+                                        variantScope.getTryWithResourceRuntimeSupportJar(),
+                                        taskName,
+                                        variantScope.getFullVariantName()));
+                variantScope
+                        .getTryWithResourceRuntimeSupportJar()
+                        .builtBy(extractTryWithResources.get(tasks));
+                transformManager.addStream(
+                        OriginalStream.builder(project, "runtime-deps-try-with-resources")
+                                .addContentTypes(TransformManager.CONTENT_CLASS)
+                                .addScope(Scope.PROJECT)
+                                .setFileCollection(
+                                        variantScope.getTryWithResourceRuntimeSupportJar())
+                                .build());
+            }
         }
     }
 

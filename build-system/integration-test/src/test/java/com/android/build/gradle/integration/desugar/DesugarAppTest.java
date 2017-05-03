@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.desugar;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
+import static com.android.builder.core.DesugarProcessBuilder.MIN_SUPPORTED_API_TRY_WITH_RESOURCES;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -29,6 +30,7 @@ import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.io.InputStream;
@@ -42,6 +44,15 @@ import org.junit.Test;
 
 /** Tests use of Java 8 language in the application module. */
 public class DesugarAppTest {
+
+    private static final ImmutableList<String> TRY_WITH_RESOURCES_RUNTIME =
+            ImmutableList.of(
+                    "Lcom/google/devtools/build/android/desugar/runtime/ThrowableExtension;",
+                    "Lcom/google/devtools/build/android/desugar/runtime/ThrowableExtension$AbstractDesugaringStrategy;",
+                    "Lcom/google/devtools/build/android/desugar/runtime/ThrowableExtension$MimicDesugaringStrategy;",
+                    "Lcom/google/devtools/build/android/desugar/runtime/ThrowableExtension$NullDesugaringStrategy;",
+                    "Lcom/google/devtools/build/android/desugar/runtime/ThrowableExtension$ReuseDesugaringStrategy;");
+
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder()
@@ -80,11 +91,12 @@ public class DesugarAppTest {
 
         GradleBuildResult result = project.executor().run("assembleDebug");
         assertThat(result.getNotUpToDateTasks()).contains(":transformClassesWithDesugarForDebug");
-        assertThatApk(project.getApk("debug")).containsClass("Lcom/example/helloworld/Data;");
+        assertThatApk(project.getApk(GradleTestProject.ApkType.DEBUG))
+                .containsClass("Lcom/example/helloworld/Data;");
     }
 
     @Test
-    public void convertsJava8Dependency()
+    public void desugarsLibraryDependency()
             throws IOException, InterruptedException, ProcessException {
         enableDesugar();
         TestFileUtils.appendToFile(
@@ -92,11 +104,11 @@ public class DesugarAppTest {
                 "dependencies {\n"
                         + "    compile fileTree(dir: 'libs', include: ['*.jar'])\n"
                         + "}");
-        List<String> classes = createJava8LibAndGetClasses();
+        List<String> classes = createLibToDesugarAndGetClasses();
         project.executor().run("assembleDebug");
-        Apk apk = project.getApk("debug");
-        for (String klass : classes) {
-            assertThat(apk).containsClass("L" + klass.replaceAll("\\.", "/") + ";");
+        Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
+        for (String klass : Iterables.concat(classes, TRY_WITH_RESOURCES_RUNTIME)) {
+            assertThat(apk).containsClass(klass);
         }
     }
 
@@ -131,7 +143,7 @@ public class DesugarAppTest {
 
         project.executor().run("assembleDebug");
         project.executor().run("clean", "assembleDebug");
-        assertThat(project.getApk("debug"))
+        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG))
                 .containsClass("Landroid/support/v4/app/ActivityCompat;");
     }
 
@@ -154,7 +166,8 @@ public class DesugarAppTest {
                         "}"));
 
         project.executor().withUseDexArchive(false).run("assembleDebug");
-        assertThat(project.getApk("debug")).containsClass("Lcom/example/helloworld/Data;");
+        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG))
+                .containsClass("Lcom/example/helloworld/Data;");
     }
 
     @Test
@@ -183,7 +196,8 @@ public class DesugarAppTest {
                         "}"));
 
         project.executor().withUseDexArchive(false).run("assembleDebug");
-        assertThat(project.getApk("debug")).containsClass("Lcom/example/helloworld/Data;");
+        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG))
+                .containsClass("Lcom/example/helloworld/Data;");
     }
 
     private void enableDesugar() throws IOException {
@@ -212,11 +226,48 @@ public class DesugarAppTest {
         project.executor().run("assembleDebug");
     }
 
+    @Test
+    public void testTryWithResourcesPlatformUnsupported()
+            throws IOException, InterruptedException, ProcessException {
+        enableDesugar();
+        writeClassWithTryWithResources();
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                String.format(
+                        "\n" + "android.defaultConfig.minSdkVersion %d\n",
+                        MIN_SUPPORTED_API_TRY_WITH_RESOURCES - 1));
+        project.executor().run("assembleDebug");
+        Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
+        for (String klass : TRY_WITH_RESOURCES_RUNTIME) {
+            assertThat(apk).containsClass(klass);
+        }
+    }
+
+    @Test
+    public void testTryWithResourcesPlatformSupported()
+            throws IOException, InterruptedException, ProcessException {
+        enableDesugar();
+        writeClassWithTryWithResources();
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                String.format(
+                        "\n" + "android.defaultConfig.minSdkVersion %d\n",
+                        MIN_SUPPORTED_API_TRY_WITH_RESOURCES));
+        project.executor().run("assembleDebug");
+        Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
+        for (String klass : TRY_WITH_RESOURCES_RUNTIME) {
+            assertThat(apk).doesNotContainClass(klass);
+        }
+    }
+
     @NonNull
-    private List<String> createJava8LibAndGetClasses() throws IOException {
+    private List<String> createLibToDesugarAndGetClasses() throws IOException {
         class Utility {
             public void lambdaMethod() {
                 Runnable r = () -> {};
+                try (java.io.StringReader reader = new java.io.StringReader("")) {
+                    System.out.println("In try-with-resources with reader " + reader.hashCode());
+                }
             }
         }
         Path lib = project.getTestDir().toPath().resolve("libs/my-lib.jar");
@@ -230,6 +281,20 @@ public class DesugarAppTest {
             out.write(ByteStreams.toByteArray(in));
             out.closeEntry();
         }
-        return ImmutableList.of(Utility.class.getName());
+        return ImmutableList.of("L" + Utility.class.getName().replaceAll("\\.", "/") + ";");
+    }
+
+    private void writeClassWithTryWithResources() throws IOException {
+        Files.write(
+                project.getMainSrcDir().toPath().resolve("com/example/helloworld/Data.java"),
+                ImmutableList.of(
+                        "package com.example.helloworld;",
+                        "import java.io.StringReader;",
+                        "public class Data {",
+                        "    public void foo() {",
+                        "        try(StringReader r = new StringReader(\"\")) {",
+                        "        }",
+                        "    }",
+                        "}"));
     }
 }
