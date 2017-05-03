@@ -50,7 +50,7 @@ android {
     }
 
     @Test
-    public void unresolvedDependencies() {
+    public void unresolvedFixedDependencies() {
         project.getBuildFile() << """
 dependencies {
     compile 'foo:bar:1.2.3'
@@ -62,4 +62,19 @@ dependencies {
                 SyncIssue.TYPE_UNRESOLVED_DEPENDENCY,
                 'foo:bar:1.2.3')
     }
+
+    @Test
+    public void unresolvedDynamicDependencies() {
+        project.getBuildFile() << """
+dependencies {
+    compile 'foo:bar:+'
+}
+"""
+        AndroidProject model = project.model().ignoreSyncIssues().getSingle().getOnlyModel()
+        assertThat(model).hasSingleIssue(
+                SyncIssue.SEVERITY_ERROR,
+                SyncIssue.TYPE_UNRESOLVED_DEPENDENCY,
+                'foo:bar:+')
+    }
+
 }

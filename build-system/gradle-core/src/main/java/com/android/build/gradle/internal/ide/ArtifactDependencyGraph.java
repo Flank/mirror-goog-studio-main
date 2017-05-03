@@ -388,8 +388,12 @@ public class ArtifactDependencyGraph {
         }
 
         // TODO get a better API in gradle to get this info
+        System.err.println("FAILURES");
 
-        Pattern pattern = Pattern.compile(".*Could not find (.+)\\.");
+        Pattern pattern =
+                Pattern.compile(
+                        "Could not find any matches for (.+) as no versions of .+ are available.");
+        Pattern pattern2 = Pattern.compile(".*Could not find (.+)\\.");
 
         return failures.stream()
                 .map(
@@ -403,6 +407,11 @@ public class ArtifactDependencyGraph {
 
                             for (String line : lines) {
                                 Matcher m = pattern.matcher(line);
+                                if (m.matches()) {
+                                    return m.group(1);
+                                }
+
+                                m = pattern2.matcher(line);
                                 if (m.matches()) {
                                     return m.group(1);
                                 }
