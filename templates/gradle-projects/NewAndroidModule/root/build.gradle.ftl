@@ -8,6 +8,10 @@ apply plugin: 'com.android.library'
 apply plugin: 'com.android.application'
   </#if>
 </#if>
+<#if includeKotlinSupport!false>
+apply plugin: 'kotlin-android'
+</#if>
+
 
 <@shared.androidConfig hasApplicationId=isApplicationProject applicationId=packageName isBaseFeature=isBaseFeature hasTests=true canHaveCpp=true/>
 
@@ -23,4 +27,8 @@ dependencies {
 <#if isInstantApp && !isBaseFeature>
     implementation project(':${baseFeatureName}')
 </#if>
+<#if includeKotlinSupport!false>
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
+</#if>
+
 }
