@@ -336,9 +336,9 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         // TO DO : move ALL output file name calculations to Split.
         String splitOutputFileName = apkData.getOutputFileName();
         File outputFile =
-                splitOutputFileName == null
+                outputFileProvider != null
                         ? outputFileProvider.getOutputFile(apkData)
-                        : new File(outputDirectory, splitOutputFileName);
+                        : new File(outputDirectory, apkData.getOutputFileName());
 
         /*
          * Additionally, make sure we have no previous package, if it exists.
@@ -663,9 +663,9 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         // TO DO : move ALL output file name calculations to Split.
         String splitOutputFileName = apkData.getOutputFileName();
         File outputFile =
-                splitOutputFileName == null
+                outputFileProvider != null
                         ? outputFileProvider.getOutputFile(apkData)
-                        : new File(outputDirectory, splitOutputFileName);
+                        : new File(outputDirectory, apkData.getOutputFileName());
 
         Collection<BuildOutput> manifestOutputs = BuildOutputs.load(manifestType, manifests);
 
@@ -766,7 +766,6 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
             packageAndroidArtifact.aaptOptions = packagingScope.getAaptOptions();
 
-            packageAndroidArtifact.outputDirectory = outputDirectory;
             packageAndroidArtifact.manifests = manifests;
 
             packageAndroidArtifact.dexFolders = packagingScope.getDexFolders();
@@ -778,10 +777,6 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
             packageAndroidArtifact.setDebugBuild(packagingScope.isDebuggable());
             packageAndroidArtifact.setPackagingOptions(packagingScope.getPackagingOptions());
 
-            packageAndroidArtifact.outputFileProvider =
-                    split ->
-                            packagingScope.getOutputPackageFile(
-                                    outputDirectory, packagingScope.getProjectBaseName(), split);
             packageAndroidArtifact.projectBaseName = packagingScope.getProjectBaseName();
             packageAndroidArtifact.manifestType = manifestType;
             packagingScope.addTask(

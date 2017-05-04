@@ -29,11 +29,8 @@ import org.gradle.api.Project;
 /**
  * Gradle plugin for supporting InstantRun with external build system..
  *
- * <p>
- * This plugin is private to the android build system and is not intented to be used directly in
- * end users projects.
- * </p>
- * Interfaces, DSL and tasks are subject to change without any notification.
+ * <p>This plugin is private to the android build system and is not intended to be used directly in
+ * end users projects. Interfaces, DSL and tasks are subject to change without any notification.
  */
 public class ExternalBuildPlugin implements Plugin<Project> {
 

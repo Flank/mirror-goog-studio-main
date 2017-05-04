@@ -47,6 +47,8 @@ import org.mockito.MockitoAnnotations;
 
 /** Tests for the {@link CompatibleScreensManifest} class */
 public class CompatibleScreensManifestTest {
+    private static final String PROJECT = "project";
+
     @Rule public TemporaryFolder projectFolder = new TemporaryFolder();
     @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
@@ -95,7 +97,7 @@ public class CompatibleScreensManifestTest {
     @Test
     public void testNoSplit() throws IOException {
 
-        SplitFactory splitFactory = new SplitFactory(variantConfiguration, splitScope);
+        SplitFactory splitFactory = new SplitFactory(PROJECT, variantConfiguration, splitScope);
         ApkData mainApk = splitFactory.addMainApk();
         when(splitScope.getApkDatas()).thenReturn(ImmutableList.of(mainApk));
 
@@ -112,7 +114,7 @@ public class CompatibleScreensManifestTest {
     @Test
     public void testSingleSplitWithMinSdkVersion() throws IOException {
 
-        SplitFactory splitFactory = new SplitFactory(variantConfiguration, splitScope);
+        SplitFactory splitFactory = new SplitFactory(PROJECT, variantConfiguration, splitScope);
         ApkData splitApk =
                 splitFactory.addFullSplit(
                         ImmutableList.of(Pair.of(VariantOutput.FilterType.DENSITY, "xhdpi")));
@@ -140,7 +142,7 @@ public class CompatibleScreensManifestTest {
     @Test
     public void testSingleSplitWithoutMinSdkVersion() throws IOException {
 
-        SplitFactory splitFactory = new SplitFactory(variantConfiguration, splitScope);
+        SplitFactory splitFactory = new SplitFactory(PROJECT, variantConfiguration, splitScope);
         ApkData splitApk =
                 splitFactory.addFullSplit(
                         ImmutableList.of(Pair.of(VariantOutput.FilterType.DENSITY, "xhdpi")));
@@ -164,7 +166,7 @@ public class CompatibleScreensManifestTest {
     @Test
     public void testMultipleSplitsWithMinSdkVersion() throws IOException {
 
-        SplitFactory splitFactory = new SplitFactory(variantConfiguration, splitScope);
+        SplitFactory splitFactory = new SplitFactory(PROJECT, variantConfiguration, splitScope);
         ApkData xhdpiSplit =
                 splitFactory.addFullSplit(
                         ImmutableList.of(Pair.of(VariantOutput.FilterType.DENSITY, "xhdpi")));

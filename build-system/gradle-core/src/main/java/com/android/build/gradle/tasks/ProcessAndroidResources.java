@@ -364,7 +364,9 @@ public class ProcessAndroidResources extends IncrementalTask {
                                 filterValue -> {
                                     ApkData configurationApkData =
                                             splitFactory.addConfigurationSplit(
-                                                    filterType, filterValue);
+                                                    filterType,
+                                                    filterValue,
+                                                    "" /* replaced later */);
                                     configurationApkData.setVersionCode(
                                             variantScope
                                                     .getVariantConfiguration()
@@ -387,6 +389,8 @@ public class ProcessAndroidResources extends IncrementalTask {
                                             findPackagedResForSplit(
                                                     resPackageOutputFolder, configurationApkData);
                                     if (packagedResForSplit != null) {
+                                        configurationApkData.setOutputFileName(
+                                                packagedResForSplit.getName());
                                         splitScope.addOutputForSplit(
                                                 VariantScope.TaskOutputType
                                                         .DENSITY_OR_LANGUAGE_SPLIT_PROCESSED_RES,

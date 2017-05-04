@@ -125,8 +125,11 @@ public class GenerateSplitAbiRes extends BaseTask {
 
         splitScope.deleteAllEntries(VariantScope.TaskOutputType.ABI_PROCESSED_SPLIT_RES);
         for (String split : getSplits()) {
+            File resPackageFile = getOutputFileForSplit(split);
+
             ApkData abiApkData =
-                    splitFactory.addConfigurationSplit(OutputFile.FilterType.ABI, split);
+                    splitFactory.addConfigurationSplit(
+                            OutputFile.FilterType.ABI, split, resPackageFile.getName());
             abiApkData.setVersionCode(variantScope.getVariantConfiguration().getVersionCode());
             abiApkData.setVersionName(variantScope.getVariantConfiguration().getVersionName());
 
@@ -134,8 +137,6 @@ public class GenerateSplitAbiRes extends BaseTask {
             if (variantScope.getVariantData().variantOutputFactory != null) {
                 variantScope.getVariantData().variantOutputFactory.create(abiApkData);
             }
-
-            File resPackageFile = getOutputFileForSplit(split);
 
             File tmpDirectory = new File(outputDirectory, getOutputBaseName());
             FileUtils.mkdirs(tmpDirectory);

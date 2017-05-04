@@ -155,6 +155,7 @@ class ExternalBuildTaskManager {
                         "main",
                         "main",
                         "main",
+                        "debug.apk",
                         ImmutableList.of());
 
         ExternalBuildVariantScope variantScope =
@@ -260,7 +261,7 @@ class ExternalBuildTaskManager {
                         tasks,
                         new PackageApplication.StandardConfigAction(
                                 packagingScope,
-                                project.getBuildDir(),
+                                FileUtils.join(globalScope.getBuildDir(), "outputs", "apk"),
                                 variantScope.getInstantRunBuildContext().getPatchingPolicy(),
                                 VariantScope.TaskOutputType.MERGED_RES,
                                 project.files(processedAndroidResourcesFile),

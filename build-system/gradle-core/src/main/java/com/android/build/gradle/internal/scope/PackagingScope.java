@@ -104,10 +104,6 @@ public interface PackagingScope extends TaskOutputHolder {
     @NonNull
     Project getProject();
 
-    /** Returns the output package file. */
-    @NonNull
-    File getOutputPackageFile(File destinationDir, String projectBaseName, ApkData apkData);
-
     /** Returns the project base name */
     String getProjectBaseName();
 

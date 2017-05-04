@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.scope;
 
+import static com.android.SdkConstants.DOT_ANDROID_PACKAGE;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.FilterData;
@@ -39,17 +41,27 @@ public class SplitFactory {
 
     static final String UNIVERSAL = "universal";
 
+    private final String projectBaseName;
     private final GradleVariantConfiguration variantConfiguration;
     private final SplitScope splitScope;
 
     public SplitFactory(
+            String projectBaseName,
             GradleVariantConfiguration variantConfiguration,
             SplitScope splitScope) {
+        this.projectBaseName = projectBaseName;
         this.variantConfiguration = variantConfiguration;
         this.splitScope = splitScope;
     }
 
+    private String getOutputFileName(String baseName) {
+        String suffix =
+                variantConfiguration.isSigningReady() ? DOT_ANDROID_PACKAGE : "-unsigned.apk";
+        return projectBaseName + "-" + baseName + suffix;
+    }
+
     public ApkData addMainApk() {
+        String baseName = variantConfiguration.getBaseName();
         ApkData mainApk =
                 // the main output basename comes from the variant configuration.
                 // the main output should not have a dirName set as all the getXXXOutputDirectory
@@ -58,17 +70,23 @@ public class SplitFactory {
                 // return the top level folder and have all users use the getDirName() as part of
                 // the task output folder configuration.
                 new Main(
-                        variantConfiguration.getBaseName(), variantConfiguration.getFullName(), "");
+                        baseName,
+                        variantConfiguration.getFullName(),
+                        "",
+                        getOutputFileName(baseName));
         checkNoDuplicate(mainApk);
         splitScope.addSplit(mainApk);
         return mainApk;
     }
 
     public ApkData addUniversalApk() {
+
+        String baseName = variantConfiguration.computeBaseNameWithSplits(UNIVERSAL);
         ApkData mainApk =
                 new Universal(
-                        variantConfiguration.computeBaseNameWithSplits(UNIVERSAL),
-                        variantConfiguration.computeFullNameWithSplits(UNIVERSAL));
+                        baseName,
+                        variantConfiguration.computeFullNameWithSplits(UNIVERSAL),
+                        getOutputFileName(baseName));
         checkNoDuplicate(mainApk);
         splitScope.addSplit(mainApk);
         return mainApk;
@@ -96,19 +114,23 @@ public class SplitFactory {
                                                         filter.getFirst(), filter.getSecond()))
                                 .collect(Collectors.toList()));
         String filterName = FullSplit._getFilterName(filtersList);
+        String baseName = variantConfiguration.computeBaseNameWithSplits(filterName);
         ApkData apkData =
                 new FullSplit(
                         filterName,
-                        variantConfiguration.computeBaseNameWithSplits(filterName),
+                        baseName,
                         variantConfiguration.computeFullNameWithSplits(filterName),
+                        getOutputFileName(baseName),
                         filtersList);
         splitScope.addSplit(apkData);
         return apkData;
     }
 
-    public ApkData addConfigurationSplit(OutputFile.FilterType filterType, String s) {
-        ImmutableList<FilterData> filtersList = ImmutableList.of(new FilterDataImpl(filterType, s));
-        return addConfigurationSplit(filtersList);
+    public ApkData addConfigurationSplit(
+            OutputFile.FilterType filterType, String filterValue, String fileName) {
+        ImmutableList<FilterData> filtersList =
+                ImmutableList.of(new FilterDataImpl(filterType, filterValue));
+        return addConfigurationSplit(filtersList, fileName);
     }
 
     public static String getFilterNameForSplits(Collection<FilterData> filters) {
@@ -116,7 +138,7 @@ public class SplitFactory {
                 .join(filters.stream().map(FilterData::getIdentifier).collect(Collectors.toList()));
     }
 
-    public ApkData addConfigurationSplit(ImmutableList<FilterData> filtersList) {
+    private ApkData addConfigurationSplit(ImmutableList<FilterData> filtersList, String fileName) {
         String filterName = getFilterNameForSplits(filtersList);
         ApkData apkData =
                 new DefaultApkData(
@@ -125,6 +147,7 @@ public class SplitFactory {
                         variantConfiguration.computeBaseNameWithSplits(filterName),
                         variantConfiguration.getFullName(),
                         variantConfiguration.getDirName(),
+                        fileName,
                         filtersList);
         splitScope.addSplit(apkData);
         return apkData;
@@ -134,10 +157,11 @@ public class SplitFactory {
 
         private final String baseName, fullName, dirName;
 
-        private Main(String baseName, String fullName, String dirName) {
+        private Main(String baseName, String fullName, String dirName, String fileName) {
             this.baseName = baseName;
             this.fullName = fullName;
             this.dirName = dirName;
+            setOutputFileName(fileName);
         }
 
         @Override
@@ -192,9 +216,10 @@ public class SplitFactory {
     private static class Universal extends ApkData {
         private final String baseName, fullName;
 
-        private Universal(String baseName, String fullName) {
+        private Universal(String baseName, String fullName, String fileName) {
             this.baseName = baseName;
             this.fullName = fullName;
+            setOutputFileName(fileName);
         }
 
         @Override
@@ -260,8 +285,9 @@ public class SplitFactory {
                 String filterName,
                 String baseName,
                 String fullName,
+                String fileName,
                 ImmutableList<FilterData> filters) {
-            super(baseName, fullName);
+            super(baseName, fullName, fileName);
             this.filterName = filterName;
             this.filters = filters;
         }
@@ -343,6 +369,7 @@ public class SplitFactory {
                 String baseName,
                 String fullName,
                 String dirName,
+                String fileName,
                 ImmutableList<FilterData> filters) {
             this.outputType = outputType;
             this.filters = filters;
@@ -350,6 +377,7 @@ public class SplitFactory {
             this.baseName = baseName;
             this.fullName = fullName;
             this.dirName = dirName;
+            setOutputFileName(fileName);
         }
 
         @Override
