@@ -30,6 +30,7 @@ import com.android.build.gradle.tasks.BundleInstantApp;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.profile.Recorder;
 import com.android.utils.FileUtils;
+import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
 import java.io.File;
 import java.util.Set;
 import org.gradle.api.Project;
@@ -66,17 +67,28 @@ public class InstantAppTaskManager extends TaskManager {
     public void createTasksForVariantScope(
             @NonNull final TaskFactory tasks, @NonNull final VariantScope variantScope) {
         // Create the bundling task.
-        File bundleDir =
-                FileUtils.join(
-                        globalScope.getApkLocation(),
-                        variantScope.getVariantConfiguration().getDirName());
-        AndroidTask<BundleInstantApp> bundleTask =
-                getAndroidTasks()
-                        .create(tasks, new BundleInstantApp.ConfigAction(variantScope, bundleDir));
-        variantScope.getAssembleTask().dependsOn(tasks, bundleTask);
+        recorder.record(
+                GradleBuildProfileSpan.ExecutionType.INSTANTAPP_TASK_MANAGER_CREATE_PACKAGING_TASK,
+                project.getPath(),
+                variantScope.getFullVariantName(),
+                () -> {
+                    File bundleDir =
+                            FileUtils.join(
+                                    globalScope.getApkLocation(),
+                                    variantScope.getVariantConfiguration().getDirName());
+                    AndroidTask<BundleInstantApp> bundleTask =
+                            getAndroidTasks()
+                                    .create(
+                                            tasks,
+                                            new BundleInstantApp.ConfigAction(
+                                                    variantScope, bundleDir));
+                    variantScope.getAssembleTask().dependsOn(tasks, bundleTask);
 
-        variantScope.addTaskOutput(
-                TaskOutputHolder.TaskOutputType.INSTANTAPP_BUNDLE, bundleDir, bundleTask.getName());
+                    variantScope.addTaskOutput(
+                            TaskOutputHolder.TaskOutputType.INSTANTAPP_BUNDLE,
+                            bundleDir,
+                            bundleTask.getName());
+                });
 
         // FIXME: Stop creating dummy tasks just to make the IDE sync shut up.
         tasks.create(variantScope.getTaskName("generate", "Sources"));
