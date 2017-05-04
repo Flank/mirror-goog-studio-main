@@ -81,7 +81,9 @@ public class SplitScope implements Serializable {
         return splitHandlingPolicy;
     }
 
-    void addSplit(@NonNull ApkData apkData) {
+    // TODO : make this method package private again once bazel can handle
+    // package private methods and sandbox testing.
+    public void addSplit(@NonNull ApkData apkData) {
         apkDatas.add(apkData);
     }
 
