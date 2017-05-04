@@ -32,18 +32,19 @@ package com.android.build.gradle.external.gnumake;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.annotations.NonNull;
 import com.google.common.collect.Lists;
 import java.io.FileNotFoundException;
 import java.util.List;
 import org.junit.Test;
 
 public class CommandLineParserTest {
-    private static List<String> EMPTY_ARGS = Lists.newArrayList();
+    @NonNull private static final List<String> EMPTY_ARGS = Lists.newArrayList();
 
-
-    private static void assertThatAllShellResultsEquals(String target, CommandLine... expected) {
-        List<CommandLine> win32 = CommandLineParser.parse(target, true);
-        List<CommandLine> bash = CommandLineParser.parse(target, false);
+    private static void assertThatAllShellResultsEquals(
+            @NonNull String target, @NonNull CommandLine... expected) {
+        List<CommandLine> win32 = CommandLineParser.parse(target, new WindowsFileConventions());
+        List<CommandLine> bash = CommandLineParser.parse(target, new PosixFileConventions());
 
         // Check that win32 and bash are equal
         assertThat(win32).isEqualTo(bash);
@@ -55,9 +56,11 @@ public class CommandLineParserTest {
     }
 
     private static void assertThatEachShellResultEquals(
-            String target, CommandLine expectedWin32, CommandLine expectedBash) {
-        CommandLine win32 = CommandLineParser.parse(target, true).get(0);
-        CommandLine bash = CommandLineParser.parse(target, false).get(0);
+            @NonNull String target,
+            @NonNull CommandLine expectedWin32,
+            @NonNull CommandLine expectedBash) {
+        CommandLine win32 = CommandLineParser.parse(target, new WindowsFileConventions()).get(0);
+        CommandLine bash = CommandLineParser.parse(target, new PosixFileConventions()).get(0);
 
         assertThat(win32).isEqualTo(expectedWin32);
         assertThat(bash).isEqualTo(expectedBash);

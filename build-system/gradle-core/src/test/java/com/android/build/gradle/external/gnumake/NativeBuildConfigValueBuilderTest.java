@@ -31,6 +31,7 @@
 package com.android.build.gradle.external.gnumake;
 
 import com.android.SdkConstants;
+import com.android.annotations.NonNull;
 import com.android.build.gradle.external.gson.NativeBuildConfigValue;
 import com.android.build.gradle.truth.NativeBuildConfigValueSubject;
 import com.google.common.truth.Truth;
@@ -43,13 +44,12 @@ import org.junit.Test;
 
 public class NativeBuildConfigValueBuilderTest {
 
-    private static void assertThatNativeBuildConfigEquals(String string, String expected) {
+    private static void assertThatNativeBuildConfigEquals(@NonNull String string, String expected) {
         File projectPath = new File("/projects/MyProject/jni/Android.mk");
 
         NativeBuildConfigValue actualValue =
                 new NativeBuildConfigValueBuilder(projectPath, projectPath.getParentFile())
-                        .addCommands(
-                                "echo build command", "echo clean command", "debug", string, true)
+                        .addCommands("echo build command", "echo clean command", "debug", string)
                         .build();
         String actualResult = new GsonBuilder()
                 .setPrettyPrinting()

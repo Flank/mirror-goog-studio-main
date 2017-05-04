@@ -32,81 +32,54 @@ package com.android.build.gradle.external.gnumake;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.annotations.NonNull;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import org.junit.Test;
 
 public class FlowAnalyzerTest {
 
-    private final ArrayList<String> COMPILE_FLAG_C = Lists.newArrayList("-c");
+    @NonNull private final ArrayList<String> compileFlagC = Lists.newArrayList("-c");
 
-    private void assertFlowAnalysisEquals(String string, String expected) {
-        ListMultimap<String, List<BuildStepInfo>> io = FlowAnalyzer
-                    .analyze(string, true);
-        StringBuilder sb = new StringBuilder();
-        for (Map.Entry<String, List<BuildStepInfo>> output : io.entries()) {
-            sb.append(output.getKey());
-            sb.append(":\n");
-            List<BuildStepInfo> commandSummaries = output.getValue();
-            Collections.sort(commandSummaries, new Comparator<BuildStepInfo>() {
-                @Override
-                public int compare(BuildStepInfo o1, BuildStepInfo o2) {
-                    return o1.getOnlyInput().compareTo(o2.getOnlyInput());
-                }
-            });
-
-            for (BuildStepInfo input : commandSummaries) {
-                sb.append("  ");
-                sb.append(input.getOnlyInput()).append(" -> ").append(input.getCommand());
-                sb.append("\n");
-            }
-        }
-        assertThat(expected).isEqualTo(sb.toString());
-    }
-
-    private void assertFlowAnalysisEquals(
-            String string,
-            FlowAnalysisBuilder expected) {
-        ListMultimap<String, List<BuildStepInfo>> io = FlowAnalyzer
-                .analyze(string, true);
+    private static void assertFlowAnalysisEquals(
+            @NonNull String string, @NonNull FlowAnalysisBuilder expected) {
+        ListMultimap<String, List<BuildStepInfo>> io =
+                FlowAnalyzer.analyze(string, AbstractOsFileConventions.createForCurrentHost());
 
         assertThat(io).isEqualTo(expected.map);
     }
 
     private static class FlowAnalysisBuilder {
-        ListMultimap<String, List<BuildStepInfo>> map;
+        @NonNull final ListMultimap<String, List<BuildStepInfo>> map;
         FlowAnalysisBuilder() {
             this.map = ArrayListMultimap.create();
         }
 
-        FlowAnalysisBuilder with(String library) {
-            return with(library, new BuildStepInfosBuilder());
-        }
-
-        FlowAnalysisBuilder with(String library, BuildStepInfosBuilder info) {
+        @NonNull
+        FlowAnalysisBuilder with(String library, @NonNull BuildStepInfosBuilder info) {
             map.put(library, info.infos);
             return this;
         }
     }
 
+    @NonNull
     private static FlowAnalysisBuilder flow() {
         return new FlowAnalysisBuilder();
     }
 
     private static class BuildStepInfosBuilder {
-        List<BuildStepInfo> infos = Lists.newArrayList();
+        @NonNull final List<BuildStepInfo> infos = Lists.newArrayList();
+
+        @NonNull
         BuildStepInfosBuilder with(
-                String command,
-                List<String> commandArgs,
-                String input,
-                List<String> outputs,
+                @NonNull String command,
+                @NonNull List<String> commandArgs,
+                @NonNull String input,
+                @NonNull List<String> outputs,
                 boolean inputsAreSourceFiles) {
             infos.add(new BuildStepInfo(
                     new CommandLine(command, commandArgs),
@@ -117,39 +90,61 @@ public class FlowAnalyzerTest {
         }
     }
 
+    @NonNull
     private static BuildStepInfosBuilder step() {
         return new BuildStepInfosBuilder();
     }
 
     @Test
     public void disallowedTerminal() throws FileNotFoundException {
-        assertFlowAnalysisEquals("g++ -c a.c -o a.o\ng++ a.o -o a.so",
-                flow().with("a.so",
-                        step().with("g++", COMPILE_FLAG_C, "a.c",
-                                Lists.newArrayList("a.o"), true)));
+        assertFlowAnalysisEquals(
+                "g++ -c a.c -o a.o\ng++ a.o -o a.so",
+                flow().with(
+                                "a.so",
+                                step().with(
+                                                "g++",
+                                                compileFlagC,
+                                                "a.c",
+                                                Lists.newArrayList("a.o"),
+                                                true)));
     }
 
     @Test
     public void doubleTarget() throws FileNotFoundException {
-        assertFlowAnalysisEquals("g++ -c a.c -o x/a.o\n" +
-                "g++ x/a.o -o x/a.so\n" +
-                "g++ -c a.c -o y/a.o\n" +
-                "g++ y/a.o -o y/a.so",
-                flow()
-                    .with("y/a.so",
-                        step().with("g++", COMPILE_FLAG_C, "a.c",
-                                Lists.newArrayList("y/a.o"), true))
-                    .with("x/a.so",
-                        step().with("g++", COMPILE_FLAG_C, "a.c",
-                                Lists.newArrayList("x/a.o"), true)));
+        assertFlowAnalysisEquals(
+                "g++ -c a.c -o x/a.o\n"
+                        + "g++ x/a.o -o x/a.so\n"
+                        + "g++ -c a.c -o y/a.o\n"
+                        + "g++ y/a.o -o y/a.so",
+                flow().with(
+                                "y/a.so",
+                                step().with(
+                                                "g++",
+                                                compileFlagC,
+                                                "a.c",
+                                                Lists.newArrayList("y/a.o"),
+                                                true))
+                        .with(
+                                "x/a.so",
+                                step().with(
+                                                "g++",
+                                                compileFlagC,
+                                                "a.c",
+                                                Lists.newArrayList("x/a.o"),
+                                                true)));
     }
 
     @Test
     public void simple() throws FileNotFoundException {
-        assertFlowAnalysisEquals("g++ -c a.c -o a.o\ng++ a.o -o a.so",
-                flow().with("a.so",
-                        step().with("g++", COMPILE_FLAG_C, "a.c",
-                                Lists.newArrayList("a.o"), true)
-                ));
+        assertFlowAnalysisEquals(
+                "g++ -c a.c -o a.o\ng++ a.o -o a.so",
+                flow().with(
+                                "a.so",
+                                step().with(
+                                                "g++",
+                                                compileFlagC,
+                                                "a.c",
+                                                Lists.newArrayList("a.o"),
+                                                true)));
     }
 }

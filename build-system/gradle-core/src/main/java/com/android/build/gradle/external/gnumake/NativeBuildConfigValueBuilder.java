@@ -23,7 +23,6 @@ import com.android.build.gradle.external.gson.NativeSourceFileValue;
 import com.android.build.gradle.external.gson.NativeToolchainValue;
 import com.android.utils.NativeSourceFileExtensions;
 import com.android.utils.NdkUtils;
-import com.android.utils.StringHelper;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -33,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -66,51 +66,58 @@ import java.util.stream.Collectors;
 public class NativeBuildConfigValueBuilder {
 
     // These are flags which have a following argument.
-    private static final List<String> STRIP_FLAGS_WITH_ARG = Arrays.asList(
-
-            "-c",
-            "-o",
-            // Skip -M* flags because these govern the creation of .d files in gcc. We don't want
-            // spurious files dropped by Cidr. See see b.android.com/215555 and
-            // b.android.com/213429.
-            // Also, removing these flags reduces the number of Settings groups that have to be
-            // passed to Android Studio.
-            "-MF",
-            "-MT",
-            "-MQ");
+    @NonNull
+    private static final List<String> STRIP_FLAGS_WITH_ARG =
+            Arrays.asList(
+                    "-c",
+                    "-o",
+                    // Skip -M* flags because these govern the creation of .d files in gcc. We don't want
+                    // spurious files dropped by Cidr. See see b.android.com/215555 and
+                    // b.android.com/213429.
+                    // Also, removing these flags reduces the number of Settings groups that have to be
+                    // passed to Android Studio.
+                    "-MF",
+                    "-MT",
+                    "-MQ");
 
     // These are flags which don't have a following argument.
-    private static final List<String> STRIP_FLAGS_WITHOUT_ARG = Lists.newArrayList(
-            // Skip -M* flags because these govern the creation of .d files in gcc. We don't want
-            // spurious files dropped by Cidr. See see b.android.com/215555 and
-            // b.android.com/213429
-            "-M",
-            "-MM",
-            "-MD",
-            "-MG",
-            "-MP",
-            "-MMD");
-
-    private final Map<String, String> toolChainToCCompiler = new HashMap<>();
-    private final Map<String, String> toolChainToCppCompiler = new HashMap<>();
-    private final Set<String> cFileExtensions = new HashSet<>();
-    private final Set<String> cppFileExtensions = new HashSet<>();
-    private final File androidMk;
-    private final File executionRootPath;
     @NonNull
-    private final List<Output> outputs;
+    private static final List<String> STRIP_FLAGS_WITHOUT_ARG =
+            Lists.newArrayList(
+                    // Skip -M* flags because these govern the creation of .d files in gcc. We don't want
+                    // spurious files dropped by Cidr. See see b.android.com/215555 and
+                    // b.android.com/213429
+                    "-M", "-MM", "-MD", "-MG", "-MP", "-MMD");
+
+    @NonNull private final Map<String, String> toolChainToCCompiler = new HashMap<>();
+    @NonNull private final Map<String, String> toolChainToCppCompiler = new HashMap<>();
+    @NonNull private final Set<String> cFileExtensions = new HashSet<>();
+    @NonNull private final Set<String> cppFileExtensions = new HashSet<>();
+    @NonNull private final File androidMk;
+    @NonNull private final File executionRootPath;
+    @NonNull private final List<Output> outputs;
+    @NonNull private final OsFileConventions fileConventions;
 
     /**
-     * Constructs a NativeBuildConfigValueBuilder which can be used to build a
-     * {@link NativeBuildConfigValue}.
+     * Constructs a NativeBuildConfigValueBuilder which can be used to build a {@link
+     * NativeBuildConfigValue}.
      *
-     * projectRootPath -- file path to the project that contains an ndk-build project (
+     * <p>projectRootPath -- file path to the project that contains an ndk-build project (
      */
-    public NativeBuildConfigValueBuilder(File androidMk, File executionRootPath) {
+    public NativeBuildConfigValueBuilder(@NonNull File androidMk, @NonNull File executionRootPath) {
+        this(androidMk, executionRootPath, AbstractOsFileConventions.createForCurrentHost());
+    }
+
+    NativeBuildConfigValueBuilder(
+            @NonNull File androidMk,
+            @NonNull File executionRootPath,
+            @NonNull OsFileConventions fileConventions) {
         this.androidMk = androidMk;
         this.executionRootPath = executionRootPath;
         this.outputs = new ArrayList<>();
+        this.fileConventions = fileConventions;
     }
+
 
     /** Add commands for a particular variant. */
     @NonNull
@@ -118,9 +125,9 @@ public class NativeBuildConfigValueBuilder {
             String buildCommand,
             String cleanCommand,
             String variantName,
-            String commands,
-            boolean isWin32) {
-        ListMultimap<String, List<BuildStepInfo>> outputs = FlowAnalyzer.analyze(commands, isWin32);
+            @NonNull String commands) {
+        ListMultimap<String, List<BuildStepInfo>> outputs =
+                FlowAnalyzer.analyze(commands, fileConventions);
         for (Map.Entry<String, List<BuildStepInfo>> entry : outputs.entries()) {
             this.outputs.add(
                     new Output(
@@ -144,7 +151,7 @@ public class NativeBuildConfigValueBuilder {
 
         NativeBuildConfigValue config = new NativeBuildConfigValue();
         // Sort by library name so that output is stable
-        Collections.sort(outputs, (o1, o2) -> o1.libraryName.compareTo(o2.libraryName));
+        Collections.sort(outputs, Comparator.comparing(o -> o.libraryName));
         config.cleanCommands = generateCleanCommands();
         config.buildFiles = Lists.newArrayList(androidMk);
         config.libraries = generateLibraries();
@@ -165,9 +172,11 @@ public class NativeBuildConfigValueBuilder {
         for (Output output : outputs) {
             // This pattern is for standard ndk-build and should give names like:
             //  mips64-test-libstl-release
-            File outputFile = new File(output.outputFileName);
-            String abi = outputFile.getParentFile().getName();
-            output.artifactName = NdkUtils.getTargetNameFromBuildOutputFile(outputFile);
+            String parentFile = fileConventions.getFileParent(output.outputFileName);
+            String abi = fileConventions.getFileName(parentFile);
+            output.artifactName =
+                    NdkUtils.getTargetNameFromBuildOutputFileName(
+                            fileConventions.getFileName(output.outputFileName));
             output.libraryName = String.format("%s-%s-%s", output.artifactName,
                     output.variantName, abi);
         }
@@ -233,8 +242,9 @@ public class NativeBuildConfigValueBuilder {
     }
 
     @NonNull
-    private static String findToolChainName(@NonNull String outputFileName) {
-        return "toolchain-" + new File(outputFileName).getParentFile().getName();
+    private String findToolChainName(@NonNull String outputFileName) {
+        return "toolchain-"
+                + fileConventions.getFileName(fileConventions.getFileParent(outputFileName));
     }
 
     private void findToolchainNames() {
@@ -260,21 +270,22 @@ public class NativeBuildConfigValueBuilder {
 
         for (Output output : outputs) {
             NativeLibraryValue value = new NativeLibraryValue();
-            File outputFile = new File(output.outputFileName);
             librariesMap.put(output.libraryName, value);
             value.buildCommand = output.buildCommand + " " + output.outputFileName;
-            value.abi = outputFile.getParentFile().getName();
+            value.abi =
+                    fileConventions.getFileName(
+                            fileConventions.getFileParent(output.outputFileName));
             value.artifactName = output.artifactName;
             value.toolchain = output.toolchain;
-            value.output = outputFile;
+            value.output = fileConventions.toFile(output.outputFileName);
             value.files = new ArrayList<>();
 
             for (BuildStepInfo input : output.commandInputs) {
                 NativeSourceFileValue file = new NativeSourceFileValue();
                 value.files.add(file);
-                file.src = new File(input.getOnlyInput());
-                if (!file.src.isAbsolute()) {
-                    file.src = new File(executionRootPath, input.getOnlyInput());
+                file.src = fileConventions.toFile(input.getOnlyInput());
+                if (!fileConventions.isPathAbsolute(input.getOnlyInput())) {
+                    file.src = fileConventions.toFile(executionRootPath, input.getOnlyInput());
                 }
                 List<String> flags = new ArrayList<>();
                 for (int i = 0; i < input.getCommand().args.size(); ++i) {
@@ -291,7 +302,7 @@ public class NativeBuildConfigValueBuilder {
                     }
                     flags.add(arg);
                 }
-                file.flags = StringHelper.quoteAndJoinTokens(flags);
+                file.flags = fileConventions.quoteAndJoinTokens(flags);
             }
         }
 
@@ -322,10 +333,12 @@ public class NativeBuildConfigValueBuilder {
             toolchainsMap.put(toolchain, toolchainValue);
 
             if (toolChainToCCompiler.containsKey(toolchain)) {
-                toolchainValue.cCompilerExecutable = new File(toolChainToCCompiler.get(toolchain));
+                toolchainValue.cCompilerExecutable =
+                        fileConventions.toFile(toolChainToCCompiler.get(toolchain));
             }
             if (toolChainToCppCompiler.containsKey(toolchain)) {
-                toolchainValue.cppCompilerExecutable = new File(toolChainToCppCompiler.get(toolchain));
+                toolchainValue.cppCompilerExecutable =
+                        fileConventions.toFile(toolChainToCppCompiler.get(toolchain));
             }
         }
         return toolchainsMap;

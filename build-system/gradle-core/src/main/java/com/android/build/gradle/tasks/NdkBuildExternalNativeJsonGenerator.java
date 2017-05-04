@@ -132,8 +132,7 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
                                                 true /* removeJobsFlag */)
                                         + " clean",
                                 variantName,
-                                buildOutput,
-                                isWindows())
+                                buildOutput)
                         .build();
 
         if (applicationMk.exists()) {
@@ -178,8 +177,10 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
         return builder;
     }
 
+    @NonNull
     @Override
-    String executeProcess(ProcessInfoBuilder processBuilder) throws ProcessException, IOException {
+    String executeProcess(@NonNull ProcessInfoBuilder processBuilder)
+            throws ProcessException, IOException {
         return ExternalNativeBuildTaskUtils
                 .executeBuildProcessAndLogError(
                         androidBuilder,
@@ -199,9 +200,8 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
         return Maps.newHashMap();
     }
 
-    /**
-     * Get the path of the ndk-build script.
-     */
+    /** Get the path of the ndk-build script. */
+    @NonNull
     private String getNdkBuild() {
         String tool = "ndk-build";
         if (isWindows()) {

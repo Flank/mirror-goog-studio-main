@@ -49,10 +49,10 @@ class CommandClassifier {
     @NonNull
     @VisibleForTesting
     static List<BuildStepInfo> classify(
-            String commands,
-            boolean isWin32,
-            List<BuildTool> classifiers) {
-        List<CommandLine> commandLines = CommandLineParser.parse(commands, isWin32);
+            @NonNull String commands,
+            @NonNull OsFileConventions policy,
+            @NonNull List<BuildTool> classifiers) {
+        List<CommandLine> commandLines = CommandLineParser.parse(commands, policy);
 
         List<BuildStepInfo> commandSummaries = new ArrayList<>();
 
@@ -75,9 +75,8 @@ class CommandClassifier {
      */
     @NonNull
     static List<BuildStepInfo> classify(
-            String commands,
-            boolean isWin32) {
-        return classify(commands, isWin32, DEFAULT_CLASSIFIERS);
+            @NonNull String commands, @NonNull OsFileConventions policy) {
+        return classify(commands, policy, DEFAULT_CLASSIFIERS);
     }
 
     interface BuildTool {
@@ -88,9 +87,9 @@ class CommandClassifier {
     }
 
     /**
-     * This build tool matches gcc-ar (the android NDK archiver).
-     * We care about the cases where the command specifies 'c' for create.
-     * In this case, we pull out the inputs (typically .o) and output (.a).
+     * This build tool matches gcc-ar (the android NDK archiver). We care about the cases where the
+     * command specifies 'c' for create. In this case, we pull out the inputs (typically .o) and
+     * output (.a).
      */
     static class ArBuildTool implements BuildTool {
         @NonNull
@@ -161,10 +160,10 @@ class CommandClassifier {
     /**
      * A CCache command line is like:
      *
-     *   /usr/bin/ccache gcc [gcc-flags]
+     * <p>/usr/bin/ccache gcc [gcc-flags]
      *
-     * This build tool first looks for ccache executable and then translates it into a
-     * compiler BuildStepInfo.
+     * <p>This build tool first looks for ccache executable and then translates it into a compiler
+     * BuildStepInfo.
      */
     static class CCacheBuildTool implements BuildTool {
         @Nullable
@@ -195,9 +194,9 @@ class CommandClassifier {
     }
 
     /**
-     * This build tool matches gcc, g++ and clang. Inputs may be like .c, .cpp, etc in the case
-     * that the tool is used as a compiler. Inputs may also be like .o in the case that the tool
-     * is used as a linker. Output may be like .o or .so respectively.
+     * This build tool matches gcc, g++ and clang. Inputs may be like .c, .cpp, etc in the case that
+     * the tool is used as a compiler. Inputs may also be like .o in the case that the tool is used
+     * as a linker. Output may be like .o or .so respectively.
      */
     static class NativeCompilerBuildTool implements BuildTool {
         @NonNull
@@ -213,27 +212,28 @@ class CommandClassifier {
 
             // Inputs are whatever is left over that doesn't look like a flag.
             List<String> inputs =
-                    nonOptions.stream()
-                    // gcc and clang don't allow source files that start with "-", so we don't need
-                    // to either.
-                    .filter(nonOption -> !nonOption.startsWith("-"))
-                    // Do a weak heuristic check about whether this might really be a file. If
-                    // there's no dot then it probably isn't a file.
-                    .filter(nonOption -> nonOption.contains("."))
-                    .collect(Collectors.toList());
+                    nonOptions
+                            .stream()
+                            // gcc and clang don't allow source files that start with "-", so we don't need
+                            // to either.
+                            .filter(nonOption -> !nonOption.startsWith("-"))
+                            // Do a weak heuristic check about whether this might really be a file. If
+                            // there's no dot then it probably isn't a file.
+                            .filter(nonOption -> nonOption.contains("."))
+                            .collect(Collectors.toList());
 
             // Check -o
             if (options.has("o") && options.hasArgument("o")) {
                 //noinspection unchecked
-                List<String> outputValues = (List<String> ) options.valuesOf("o");
+                List<String> outputValues = (List<String>) options.valuesOf("o");
                 if (options.valuesOf("o").size() > 1) {
                     throw new RuntimeException(
-                        String.format(
-                                "GNUMAKE: Expected exactly one -o file in compile step:"
-                                        + " %s\nbut received: \n%s\nin command:\n%s\n",
-                                this,
-                                Joiner.on("\n").join(outputValues),
-                                Joiner.on("\n").join(command.args)));
+                            String.format(
+                                    "GNUMAKE: Expected exactly one -o file in compile step:"
+                                            + " %s\nbut received: \n%s\nin command:\n%s\n",
+                                    this,
+                                    Joiner.on("\n").join(outputValues),
+                                    Joiner.on("\n").join(command.args)));
                 }
                 String output = (String) options.valueOf("o");
                 outputs.add(output);
@@ -241,9 +241,7 @@ class CommandClassifier {
 
             // Figure out whether this command can supply terminal source file (.cpp, .c).
             // The -c, -S and -E flags indicate this case.
-            boolean inputsAreSourceFiles = options.has("c")
-                || options.has("S")
-                || options.has("E");
+            boolean inputsAreSourceFiles = options.has("c") || options.has("S") || options.has("E");
 
             if (inputsAreSourceFiles && inputs.size() != 1) {
                 throw new RuntimeException(
