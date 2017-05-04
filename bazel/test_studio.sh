@@ -9,6 +9,6 @@ readonly build_number="$3"
 readonly script_dir="$(dirname "$0")"
 readonly testlogs_dir="$(${script_dir}/bazel info output_path)/local-fastbuild/testlogs"
 
-"${script_dir}/bazel" --batch test --test_output=errors --test_summary=detailed $(< "${script_dir}/targets")
+"${script_dir}/bazel" --batch test --test_tag_filters=-slow --test_output=errors --test_summary=detailed $(< "${script_dir}/targets")
 
 (cd "${testlogs_dir}" && zip -qr "${dist_dir}/bazel_testlogs_${build_number}.zip" *)
