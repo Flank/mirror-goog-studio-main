@@ -1,9 +1,11 @@
 package android.com.java.profilertester;
 
-import android.app.Activity;
 import android.com.java.profilertester.cpu.CpuAsyncTask;
+import android.com.java.profilertester.evnet.EmptyActivity;
+import android.com.java.profilertester.evnet.EventConfigurations;
 import android.com.java.profilertester.memory.MemoryAsyncTask;
 import android.com.java.profilertester.network.NetworkAsyncTask;
+import android.content.Intent;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.util.Log;
@@ -12,6 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
 import android.widget.Spinner;
 
 import java.util.ArrayList;
@@ -28,6 +31,7 @@ public class MainActivityFragment extends Fragment {
     final static int CPU_CATEGORY_NUMBER = 0;
     final static int MEMORY_CATEGORY_NUMBER = 1;
     final static int NETWORK_CATEGORY_NUMBER = 2;
+    final static int EVENT_CATEGORY_NUMBER = 3;
 
     private View myFragmentView;
     private Spinner mActionSpinner, mCategorySpinner;
@@ -65,19 +69,42 @@ public class MainActivityFragment extends Fragment {
         mCategorySpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
-                mActionSpinner.setVisibility(View.VISIBLE);
                 mActionSpinner.setAdapter(mAdaptorList.get(position));
                 mAdaptorList.get(position).notifyDataSetChanged();
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> parentView) {
-                Log.i(TAG, "nothing selected");
+                Log.i(TAG, "mCategorySpinner: nothing selected");
+            }
+        });
+
+        mActionSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
+                resetScenario();
             }
 
+            @Override
+            public void onNothingSelected(AdapterView<?> parentView) {
+                Log.i(TAG, "mActionSpinner: nothing selected");
+            }
         });
 
         return myFragmentView;
+    }
+
+    private void resetScenario() {
+        int categoryNumber = mCategorySpinner.getSelectedItemPosition();
+        int actionNumber = mActionSpinner.getSelectedItemPosition();
+
+        // enable editor field for 'type words' scenario
+        EditText editorText = (EditText) myFragmentView.findViewById(R.id.section_editor);
+        if (categoryNumber == EVENT_CATEGORY_NUMBER && actionNumber == EventConfigurations.ActionNumber.TYPE_WORDS.ordinal()) {
+            editorText.setVisibility(View.VISIBLE);
+        } else {
+            editorText.setVisibility(View.INVISIBLE);
+        }
     }
 
     public void testScenario() {
@@ -100,6 +127,14 @@ public class MainActivityFragment extends Fragment {
         // network scenarios
         if (categoryNumber == NETWORK_CATEGORY_NUMBER) {
             new NetworkAsyncTask().execute(actionNumber);
+        }
+
+        // event scenarios
+        if (categoryNumber == EVENT_CATEGORY_NUMBER) {
+            if (actionNumber == EventConfigurations.ActionNumber.SWITCH_ACTIVITY.ordinal()) {
+                Intent intent = new Intent(getActivity(), EmptyActivity.class);
+                startActivity(intent);
+            }
         }
     }
 }

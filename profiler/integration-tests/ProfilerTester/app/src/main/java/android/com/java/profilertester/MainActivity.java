@@ -12,7 +12,7 @@ import android.view.MenuItem;
 
 public class MainActivity extends AppCompatActivity {
 
-    private MainActivityFragment fragment;
+    private MainActivityFragment mFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -21,7 +21,7 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        fragment = (MainActivityFragment) getSupportFragmentManager().findFragmentById(R.id.fragment);
+        mFragment = (MainActivityFragment) getSupportFragmentManager().findFragmentById(R.id.fragment);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -29,13 +29,9 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 Snackbar.make(view, "Running", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
-                fragment.testScenario();
+                mFragment.testScenario();
             }
         });
-
-        // Example of a call to a native method
-        TextView tv = (TextView) findViewById(R.id.sample_text);
-        tv.setText("Instructions");
     }
 
     @Override

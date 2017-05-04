@@ -28,8 +28,11 @@
 
     <string-array name="event_array">
         <item>Tap Screen</item>
+        <item>Tap Screen and Hold</item>
         <item>Rotate Screen</item>
-        <item>Type words</item>
+        <item>Type Words</item>
+        <item>Volume Buttons</item>
+        <item>Switch Activities</item>
     </string-array>
 
 </resources>
