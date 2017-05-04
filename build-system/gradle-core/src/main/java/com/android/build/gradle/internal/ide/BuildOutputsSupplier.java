@@ -74,7 +74,9 @@ public class BuildOutputsSupplier implements BuildOutputSupplier<Collection<Buil
 
     @Override
     public File guessOutputFile(String relativeFileName) {
-        return new File(outputFolders.get(0), relativeFileName);
+        return outputFolders.isEmpty()
+                ? new File(relativeFileName)
+                : new File(outputFolders.get(0), relativeFileName);
     }
 
     private static void processFile(
