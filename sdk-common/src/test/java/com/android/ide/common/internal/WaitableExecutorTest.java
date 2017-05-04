@@ -23,18 +23,12 @@ import com.google.common.truth.Truth;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import org.junit.Before;
 import org.junit.Test;
 
 /** Tests for the {@link WaitableExecutor}. */
 public class WaitableExecutorTest {
 
-    private WaitableExecutor executor;
-
-    @Before
-    public void setUp() {
-        executor = WaitableExecutor.useGlobalSharedThreadPool();
-    }
+    private final WaitableExecutor executor = WaitableExecutor.useGlobalSharedThreadPool();
 
     @Test
     public void checkTaskResults() throws InterruptedException {
