@@ -100,6 +100,7 @@ public class JarContentsTest {
                 "com/android/build/gradle/internal/test/report/report.js",
                 "com/android/build/gradle/proguard-android.txt",
                 "com/android/build/gradle/proguard-android-optimize.txt",
+                "META-INF/gradle-plugins/com.android.base.properties",
                 "instant-run/instant-run-server.jar");
         expected.putAll(
                 "com/android/tools/build/gradle-experimental",

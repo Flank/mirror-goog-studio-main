@@ -54,6 +54,7 @@ java_test(
         ":gradle-experimental",
         "//tools/base/annotations",
         "//tools/base/build-system:gradle-api",
+        "//tools/base/build-system/gradle-core",
         "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:com.google.truth_truth",
     ],

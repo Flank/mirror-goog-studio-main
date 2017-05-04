@@ -20,6 +20,7 @@ import static com.android.builder.core.VariantType.ANDROID_TEST;
 import static com.android.builder.core.VariantType.UNIT_TEST;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.api.AndroidBasePlugin;
 import com.android.build.gradle.internal.ProductFlavorCombo;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.managed.AndroidConfig;
@@ -86,6 +87,7 @@ public class AndroidComponentModelPlugin implements Plugin<Project> {
 
     @Override
     public void apply(Project project) {
+        project.getPluginManager().apply(AndroidBasePlugin.class);
         checkPluginVersion();
         checkGradleVersion(project);
         TaskInputHelper.enableBypass();

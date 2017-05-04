@@ -271,8 +271,6 @@ public class BaseComponentModelPlugin implements Plugin<Project>, ToolingRegistr
             }
         });
 
-        // setup SDK repositories.
-        sdkHandler.addLocalRepositories(project);
         return sdkHandler;
     }
 
@@ -387,6 +385,11 @@ public class BaseComponentModelPlugin implements Plugin<Project>, ToolingRegistr
                     toolingModelBuilderRegistry,
                     BuildCacheUtils.createBuildCacheIfEnabled(project, projectOptions),
                     projectLevelCache);
+        }
+
+        @Mutate
+        public void setUpSdkRepositories(SdkHandler sdkHandler, Project project) {
+            sdkHandler.addLocalRepositories(project);
         }
 
         // TODO: Remove code duplicated from BasePlugin.
