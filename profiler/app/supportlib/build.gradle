@@ -16,19 +16,26 @@
 
 apply plugin: 'java'
 
-archivesBaseName = 'perfa'
+group = 'com.android.tools'
+archivesBaseName = 'studio-profiler-lib'
 
-File androidJar = file('../../../../prebuilts/sdk/25/android.jar');
+File androidJar = file('../../../../../prebuilts/sdk/23/android.jar');
 if (!androidJar.exists()) {
     // If not there, we're in one of the AOSP release branches where the
     // repo configuration does not include the whole prebuilts repository.
     // Fetch the SDK via $ANDROID_HOME instead.
-    File jar = file(System.env.ANDROID_HOME + '/platforms/android-25/android.jar');
+    File jar = file(System.env.ANDROID_HOME + '/platforms/android-23/android.jar');
     if (jar.exists()) {
         androidJar = jar
     } else {
-        throw new RuntimeException("android-25 android.jar not found at " + androidJar.absolutePath)
+        throw new RuntimeException("android-23 android.jar not found at " + androidJar.absolutePath)
     }
+}
+
+configurations {
+    provided
+    aar
+    jni
 }
 
 compileJava {
@@ -37,24 +44,23 @@ compileJava {
 }
 
 dependencies {
-    compileOnly files(androidJar)
+    provided files(androidJar)
+    jni project(path: ":native", configuration: "supportjni")
     testCompile 'junit:junit:4.12'
 }
 
 sourceSets {
     main {
-        java { srcDir "${rootProject.projectDir}/common/src/main/java" }
+        compileClasspath += configurations.provided
+        java { srcDir "${rootProject.projectDir}/app/common/src/main/java" }
     }
 }
 
-// dx the output jar which will be used by the agent to load in at runtime.
-task jarToDex(type: JavaExec, dependsOn: jar) {
-    main = "-jar"
-    args = [
-      "../../../../prebuilts/sdk/tools/lib/dx.jar",
-      "--dex",
-      "--output=" + libsDir.absolutePath + "/perfa.jar",
-      libsDir.absolutePath + "/" + archivesBaseName + ".jar"
-    ]
+// turn off strict javadoc
+tasks.withType(Javadoc) {
+    options.addStringOption('Xdoclint:none', '-quiet')
 }
-build.dependsOn(jarToDex)
+
+jar {
+    from configurations.jni
+}
