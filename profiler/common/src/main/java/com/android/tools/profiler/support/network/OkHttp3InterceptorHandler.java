@@ -36,10 +36,8 @@ public final class OkHttp3InterceptorHandler extends OkHttpInterceptorHandler {
     protected void trackRequest(HttpConnectionTracker tracker, Object request) throws Throwable {
         String method = (String) request.getClass().getDeclaredMethod("method").invoke(request);
         Object headers = request.getClass().getDeclaredMethod("headers").invoke(request);
-        tracker.trackRequest(
-                method,
-                (Map<String, List<String>>)
-                        headers.getClass().getDeclaredMethod("toMultimap").invoke(headers));
+        Object headersMultiMap = headers.getClass().getDeclaredMethod("toMultimap").invoke(headers);
+        tracker.trackRequest(method, (Map<String, List<String>>) headersMultiMap);
     }
 
     @Override
@@ -48,9 +46,18 @@ public final class OkHttp3InterceptorHandler extends OkHttpInterceptorHandler {
         Map<String, List<String>> fields = new HashMap<String, List<String>>();
         fields.put(STATUS_CODE_NAME, Collections.singletonList(code));
         Object headers = response.getClass().getDeclaredMethod("headers").invoke(response);
-        fields.putAll(
-                (Map<String, List<String>>)
-                        headers.getClass().getDeclaredMethod("toMultimap").invoke(headers));
+        Object headersMultiMap = headers.getClass().getDeclaredMethod("toMultimap").invoke(headers);
+        fields.putAll((Map<String, List<String>>) headersMultiMap);
         tracker.trackResponse("", fields);
+    }
+
+    @Override
+    protected Object wrapResponse(final Object response, final Object wrappedBody)
+            throws Throwable {
+        Object builder = response.getClass().getDeclaredMethod("newBuilder").invoke(response);
+        ClassLoader classLoader = response.getClass().getClassLoader();
+        Class<?> bodyClass = Class.forName(OKHTTP_PACKAGE + "ResponseBody", false, classLoader);
+        builder.getClass().getDeclaredMethod("body", bodyClass).invoke(builder, wrappedBody);
+        return builder.getClass().getDeclaredMethod("build").invoke(builder);
     }
 }
