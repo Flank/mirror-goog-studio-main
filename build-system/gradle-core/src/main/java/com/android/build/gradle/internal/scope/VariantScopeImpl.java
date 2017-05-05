@@ -823,13 +823,17 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             @NonNull ArtifactType artifactType) {
         ArtifactView artifactView = getArtifactView(configType, scope, artifactType);
 
-        return handleTestedComponent(
-                artifactView.getFiles(),
-                configType,
-                scope,
-                artifactType,
-                FileCollection::plus,
-                (collection, artifactView1) -> collection.minus(artifactView1.getFiles()));
+        if (configType.needsTestedComponents()) {
+            return handleTestedComponent(
+                    artifactView.getFiles(),
+                    configType,
+                    scope,
+                    artifactType,
+                    FileCollection::plus,
+                    (collection, artifactView1) -> collection.minus(artifactView1.getFiles()));
+        }
+
+        return artifactView.getFiles();
     }
 
     @Override
@@ -840,17 +844,21 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             @NonNull ArtifactType artifactType) {
         ArtifactView artifactView = getArtifactView(configType, scope, artifactType);
 
-        return handleTestedComponent(
-                artifactView.getArtifacts(),
-                configType,
-                scope,
-                artifactType,
-                (artifactResults, collection) ->
-                        new ArtifactCollectionWithTestedArtifact(
-                                artifactResults, collection, getProject().getPath()),
-                (artifactResults, artifactView1) ->
-                        new SubtractingArtifactCollection(
-                                artifactResults, artifactView1.getArtifacts()));
+        if (configType.needsTestedComponents()) {
+            return handleTestedComponent(
+                    artifactView.getArtifacts(),
+                    configType,
+                    scope,
+                    artifactType,
+                    (artifactResults, collection) ->
+                            new ArtifactCollectionWithTestedArtifact(
+                                    artifactResults, collection, getProject().getPath()),
+                    (artifactResults, artifactView1) ->
+                            new SubtractingArtifactCollection(
+                                    artifactResults, artifactView1.getArtifacts()));
+        }
+
+        return artifactView.getArtifacts();
     }
 
     @Override
