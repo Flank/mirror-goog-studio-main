@@ -30,6 +30,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
+import com.android.testutils.VirtualTimeScheduler;
 import com.android.tools.device.internal.adb.commands.AdbCommand;
 import com.android.tools.device.internal.adb.commands.ServerVersion;
 import com.google.common.base.Charsets;
@@ -38,8 +39,6 @@ import com.google.common.util.concurrent.Service;
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
@@ -69,7 +68,7 @@ public class AdbServerServiceTest {
     @Mock private Endpoint endpoint;
     @Mock private Connection connection;
     @Mock private AdbCommand<?> command;
-    private ExecutorService executorService;
+    private VirtualTimeScheduler virtualScheduler;
 
     private AdbServerService adbService;
 
@@ -84,7 +83,7 @@ public class AdbServerServiceTest {
 
     @Before
     public void setUp() throws IOException {
-        executorService = Executors.newCachedThreadPool();
+        virtualScheduler = new VirtualTimeScheduler();
         // we can use a smaller amount than in production code in tests since they are a more
         // controlled environment
         int probeTimeoutMs = 50;
@@ -95,7 +94,7 @@ public class AdbServerServiceTest {
 
     @After
     public void tearDown() {
-        executorService.shutdownNow();
+        virtualScheduler.shutdownNow();
     }
 
     // Tests that the service lifecycle performs the expected operations when connecting to an
@@ -104,17 +103,21 @@ public class AdbServerServiceTest {
     public void lifecycle_existingServer()
             throws TimeoutException, IOException, InterruptedException {
         when(probe.probe(any(), anyLong(), any())).thenReturn(endpoint);
-        adbService = new AdbServerService(options, launcher, probe, executorService);
+        adbService = new AdbServerService(options, launcher, probe, virtualScheduler);
 
         // start the server
-        adbService.startAsync().awaitRunning();
+        adbService.startAsync();
+        assertThat(adbService.state()).isEqualTo(Service.State.STARTING);
+        virtualScheduler.advanceBy(1);
 
         // verify interactions during launch
         assertThat(adbService.state()).isEqualTo(Service.State.RUNNING);
         verify(launcher, never()).launch(anyInt(), anyLong(), any());
 
         // now attempt to stop
-        adbService.stopAsync().awaitTerminated();
+        adbService.stopAsync();
+        assertThat(adbService.state()).isEqualTo(Service.State.STOPPING);
+        virtualScheduler.advanceBy(1);
 
         // verify interactions during termination
         assertThat(adbService.state()).isEqualTo(Service.State.TERMINATED);
@@ -128,10 +131,11 @@ public class AdbServerServiceTest {
         when(probe.probe(any(), anyLong(), any())).thenReturn(null);
         when(launcher.launch(anyInt(), anyLong(), any())).thenReturn(endpoint);
         when(endpoint.newConnection()).thenReturn(connection);
-        adbService = new AdbServerService(options, launcher, probe, executorService);
+        adbService = new AdbServerService(options, launcher, probe, virtualScheduler);
 
         // start the server
-        adbService.startAsync().awaitRunning();
+        adbService.startAsync();
+        virtualScheduler.advanceBy(1);
 
         // verify interactions during launch
         assertThat(adbService.state()).isEqualTo(Service.State.RUNNING);
@@ -142,7 +146,8 @@ public class AdbServerServiceTest {
                         eq(TimeUnit.MILLISECONDS));
 
         // now attempt to stop
-        adbService.stopAsync().awaitTerminated();
+        adbService.stopAsync();
+        virtualScheduler.advanceBy(1);
 
         // verify interactions during termination
         assertThat(adbService.state()).isEqualTo(Service.State.TERMINATED);
@@ -158,10 +163,12 @@ public class AdbServerServiceTest {
     public void start_launcherError() throws IOException, TimeoutException, InterruptedException {
         when(probe.probe(any(), anyLong(), any())).thenReturn(null);
         when(launcher.launch(anyInt(), anyLong(), any())).thenThrow(IOException.class);
-        adbService = new AdbServerService(options, launcher, probe, executorService);
+        adbService = new AdbServerService(options, launcher, probe, virtualScheduler);
 
         try {
-            adbService.startAsync().awaitRunning();
+            adbService.startAsync();
+            virtualScheduler.advanceBy(1);
+            adbService.awaitRunning();
             fail("Shouldn't have been able to start the server if the launcher threw an error");
         } catch (IllegalStateException ignored) {
             assertThat(adbService.state()).isEqualTo(Service.State.FAILED);
@@ -175,12 +182,16 @@ public class AdbServerServiceTest {
         when(endpoint.newConnection()).thenReturn(connection);
         doThrow(new IOException()).when(connection).issueCommand(any());
 
-        adbService = new AdbServerService(options, launcher, probe, executorService);
+        adbService = new AdbServerService(options, launcher, probe, virtualScheduler);
 
-        adbService.startAsync().awaitRunning();
+        adbService.startAsync();
+        virtualScheduler.advanceBy(1);
+        assertThat(adbService.state()).isEqualTo(Service.State.RUNNING);
 
         try {
-            adbService.stopAsync().awaitTerminated();
+            adbService.stopAsync();
+            virtualScheduler.advanceBy(1);
+            adbService.awaitTerminated();
             fail("Shouldn't have been able to terminate if we couldn't issue the kill command");
         } catch (IllegalStateException e) {
             assertThat(adbService.state()).isEqualTo(Service.State.FAILED);
@@ -191,7 +202,7 @@ public class AdbServerServiceTest {
     @Test
     public void execute_whenNotRunning()
             throws IOException, InterruptedException, TimeoutException {
-        adbService = new AdbServerService(options, launcher, probe, executorService);
+        adbService = new AdbServerService(options, launcher, probe, virtualScheduler);
 
         CompletableFuture<UnsignedInteger> future = adbService.execute(new ServerVersion());
         try {
@@ -210,10 +221,12 @@ public class AdbServerServiceTest {
         when(command.getName()).thenReturn("mock");
         when(command.execute(connection)).thenThrow(new NullPointerException("foo"));
 
-        adbService = new AdbServerService(options, launcher, probe, executorService);
-        adbService.startAsync().awaitRunning();
+        adbService = new AdbServerService(options, launcher, probe, virtualScheduler);
+        adbService.startAsync();
+        virtualScheduler.advanceBy(1);
 
         CompletableFuture<?> cf = adbService.execute(command);
+        virtualScheduler.advanceBy(1);
 
         try {
             cf.get();
@@ -232,10 +245,12 @@ public class AdbServerServiceTest {
         when(endpoint.newConnection()).thenReturn(connection);
         when(command.getName()).thenReturn("mock");
 
-        adbService = new AdbServerService(options, launcher, probe, executorService);
-        adbService.startAsync().awaitRunning();
+        adbService = new AdbServerService(options, launcher, probe, virtualScheduler);
+        adbService.startAsync();
+        virtualScheduler.advanceBy(1);
 
         CompletableFuture<?> cf = adbService.execute(command);
+        virtualScheduler.advanceBy(1);
         cf.get();
 
         // verify that the execute method of the command was invoked
