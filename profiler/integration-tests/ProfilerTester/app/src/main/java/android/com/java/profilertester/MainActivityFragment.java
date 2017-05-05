@@ -69,8 +69,10 @@ public class MainActivityFragment extends Fragment {
         mCategorySpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
-                mActionSpinner.setAdapter(mAdaptorList.get(position));
-                mAdaptorList.get(position).notifyDataSetChanged();
+                if (mActionSpinner.getAdapter() != mAdaptorList.get(position)) {
+                    mActionSpinner.setAdapter(mAdaptorList.get(position));
+                    mAdaptorList.get(position).notifyDataSetChanged();
+                }
             }
 
             @Override
@@ -92,6 +94,44 @@ public class MainActivityFragment extends Fragment {
         });
 
         return myFragmentView;
+    }
+
+    private void setScenario(int category, int action) {
+        if (category != mCategorySpinner.getSelectedItemPosition()) {
+            mCategorySpinner.setSelection(category);
+            mActionSpinner.setAdapter(mAdaptorList.get(category));
+        }
+        mActionSpinner.setSelection(action);
+    }
+
+    public boolean scenarioMoveBack() {
+        int category = mCategorySpinner.getSelectedItemPosition();
+        int action = mActionSpinner.getSelectedItemPosition();
+        --action;
+        if (action == -1) {
+            --category;
+            if (category == -1) {
+                return false;
+            }
+            action = mAdaptorList.get(category).getCount() - 1;
+        }
+        setScenario(category, action);
+        return true;
+    }
+
+    public boolean scenarioMoveForward() {
+        int category = mCategorySpinner.getSelectedItemPosition();
+        int action = mActionSpinner.getSelectedItemPosition();
+        ++action;
+        if (action == mAdaptorList.get(category).getCount()) {
+            ++category;
+            if (category > EVENT_CATEGORY_NUMBER) {
+                return false;
+            }
+            action = 0;
+        }
+        setScenario(category, action);
+        return true;
     }
 
     private void resetScenario() {
