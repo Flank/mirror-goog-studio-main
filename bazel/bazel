@@ -77,7 +77,7 @@ def main():
 def define_env(env, var, value, msg=None):
   prev = os.environ.get(var)
   if prev:
-    if not path.exists(value):
+    if not os.path.exists(value):
       print '{} is set to {}, but it does not exist'.format(var, value)
       sys.exit(1)
     env[var] = prev
