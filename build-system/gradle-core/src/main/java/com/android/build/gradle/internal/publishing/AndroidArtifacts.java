@@ -49,7 +49,6 @@ public class AndroidArtifacts {
     private static final String TYPE_SYMBOL = "android-symbol";
     private static final String TYPE_PROGUARD_RULES = "android-proguad";
     private static final String TYPE_DATA_BINDING = "android-databinding";
-    private static final String TYPE_ANNOTATION_JAR = "android-annotation-jar";
     private static final String TYPE_EXPLODED_AAR = "android-exploded-aar";
     private static final String TYPE_JAR = "jar";
 

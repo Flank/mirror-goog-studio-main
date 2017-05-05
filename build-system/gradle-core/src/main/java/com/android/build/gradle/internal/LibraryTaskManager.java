@@ -415,9 +415,7 @@ public class LibraryTaskManager extends TaskManager {
                                 new LibraryIntermediateJarsTransform(
                                         mainClassJar,
                                         mainResJar,
-                                        extractAnnotationsTask != null
-                                                ? variantScope.getTypedefFile()
-                                                : null,
+                                        null,
                                         packageName,
                                         extension.getPackageBuildConfig());
                         excludeDataBindingClassesIfNecessary(variantScope, intermediateTransform);
@@ -428,7 +426,6 @@ public class LibraryTaskManager extends TaskManager {
 
                         intermediateTransformTask.ifPresent(
                                 t -> {
-                                    t.optionalDependsOn(tasks, extractAnnotationsTask);
                                     // publish the intermediate classes.jar.
                                     variantScope.addTaskOutput(
                                             TaskOutputType.LIBRARY_CLASSES,

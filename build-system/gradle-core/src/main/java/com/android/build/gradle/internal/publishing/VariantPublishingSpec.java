@@ -154,10 +154,6 @@ public class VariantPublishingSpec {
                         outputSpec(LIBRARY_CLASSES, ArtifactType.CLASSES, API_AND_RUNTIME_ELEMENTS),
                         outputSpec(
                                 LIBRARY_CLASSES_AS_JAR, ArtifactType.JAR, API_AND_RUNTIME_ELEMENTS),
-                        outputSpec(
-                                TaskOutputType.ANNOTATIONS_ZIP,
-                                ArtifactType.ANNOTATIONS,
-                                RUNTIME_ELEMENTS_ONLY),
                         outputSpec(LIBRARY_JAVA_RES, ArtifactType.JAVA_RES, RUNTIME_ELEMENTS_ONLY),
                         outputSpec(
                                 CONSUMER_PROGUARD_FILE,
