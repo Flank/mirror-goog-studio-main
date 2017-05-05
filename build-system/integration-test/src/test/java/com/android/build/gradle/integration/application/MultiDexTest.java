@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.application;
 
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.SUPPORT_LIB_VERSION;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
 import com.android.annotations.NonNull;
@@ -34,6 +35,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -225,6 +227,22 @@ public class MultiDexTest {
                 project.executor().expectFailure().withUseDexArchive(false).run("assembleIcsDebug");
 
         assertThat(result.getStderr()).contains("main dex capacity exceeded");
+    }
+
+    @Test
+    public void checkNativeMultidexAndroidTest() throws IOException, InterruptedException {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "dependencies {\n"
+                        + "    androidTestCompile 'com.android.support:appcompat-v7:"
+                        + SUPPORT_LIB_VERSION
+                        + "'\n"
+                        + "}");
+        project.execute("assembleLollipopDebugAndroidTest");
+        // it should contain 2 dex files, one for sources, one for the external lib
+        assertThat(project.getTestApk("lollipop")).contains("classes.dex");
+        assertThat(project.getTestApk("lollipop")).contains("classes2.dex");
     }
 
     private void commonApkChecks(String buildType) throws Exception {

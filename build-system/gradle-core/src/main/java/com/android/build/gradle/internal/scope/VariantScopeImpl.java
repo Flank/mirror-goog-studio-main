@@ -549,18 +549,22 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     @Override
     public DexingMode getDexingMode() {
+        DexingMode dexingMode = variantData.getVariantConfiguration().getDexingMode();
+
         if (variantData.getType().isForTesting()
                 && getTestedVariantData() != null
-                && getTestedVariantData().getType() != VariantType.LIBRARY) {
-            // for non-library test variants, we always want to have exactly one DEX file
+                && getTestedVariantData().getType() != VariantType.LIBRARY
+                && dexingMode.getDexingType() == DexingType.LEGACY_MULTIDEX) {
+            // for non-library legacy multidex test variants, we want to have exactly one DEX file
+            // until the test runner supports multiple dex files in the test apk
             return new DexingMode(
                     DexingType.MONO_DEX, getVariantConfiguration().getMinSdkVersion());
         } else if (isInstantRunDexingModeOverride()) {
             return new DexingMode(
                     DexingType.NATIVE_MULTIDEX, getVariantConfiguration().getMinSdkVersion());
-        } else {
-            return variantData.getVariantConfiguration().getDexingMode();
         }
+
+        return dexingMode;
     }
 
     private boolean isInstantRunDexingModeOverride() {
