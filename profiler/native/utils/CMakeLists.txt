@@ -3,12 +3,15 @@ set(UTILS_SOURCES
     background_queue.cc
     bash_command.cc
     current_process.cc
+    device_info.cc
     file_cache.cc
+    file_descriptor_utils.cc
     file_reader.cc
     installer.cc
     package_manager.cc
     process_manager.cc
     producer_consumer_queue.h
+    socket_utils.cc
     stopwatch.cc
     tokenizer.cc
     trace.cc

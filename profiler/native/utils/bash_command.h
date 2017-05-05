@@ -21,6 +21,9 @@
 
 namespace profiler {
 
+// Absolute on-device path to 'run-as'.
+const char *const kRunAsExecutable = "/system/bin/run-as";
+
 // Run bash commands.
 class BashCommandRunner {
  public:

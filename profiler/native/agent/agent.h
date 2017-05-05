@@ -39,9 +39,19 @@ using PerfdStatusChanged = std::function<void(bool)>;
 
 class Agent {
  public:
+  enum class SocketType { kUnspecified, kAbstractSocket };
+
+  // Should be called by everyone except JVMTI.
   // Grab the singleton instance of the Agent. This will initialize the class if
   // necessary.
-  static Agent& Instance();
+  static Agent& Instance() { return Instance(SocketType::kUnspecified); }
+
+  // Should be called only by JVMTI.
+  // Temporary workaround to let JVMTI-enabled agent use Unix abstract
+  // socket instead of a port number.
+  // TODO: Remove this constructor after we use only JVMTI to instrument
+  // bytecode on O+ devices.
+  static Agent& Instance(SocketType socket_type);
 
   const proto::InternalEventService::Stub& event_stub() { return *event_stub_; }
 
@@ -59,7 +69,7 @@ class Agent {
   static constexpr int64_t kHeartBeatIntervalNs = Clock::ms_to_ns(250);
 
   // Use Agent::Instance() to initialize.
-  explicit Agent(const char* address);
+  explicit Agent(SocketType socket_type);
   ~Agent() = delete;  // TODO: Support destroying the agent
 
   std::unique_ptr<proto::AgentService::Stub> service_stub_;

@@ -45,6 +45,8 @@ class ProcessManager {
   // Return true is process |pid| is currently running (present in /proc).
   bool IsPidAlive(int pid) const;
 
+  static std::string GetCmdlineForPid(int pid);
+
  private:
   std::vector<Process> GetAllProcesses() const;
 };

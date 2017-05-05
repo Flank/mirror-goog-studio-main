@@ -14,21 +14,93 @@
  * limitations under the License.
  */
 #include "perfd/profiler_service.h"
-#include "perfd/generic_component.h"
 
+#include <sys/socket.h>
 #include <sys/time.h>
-
+#include <sys/types.h>
+#include <unistd.h>
+#include <sstream>
+#include <string>
+#include "perfd/connector.h"
+#include "perfd/generic_component.h"
 #include "utils/android_studio_version.h"
+#include "utils/config.h"
+#include "utils/current_process.h"
+#include "utils/device_info.h"
 #include "utils/file_reader.h"
 #include "utils/log.h"
+#include "utils/process_manager.h"
+#include "utils/socket_utils.h"
 #include "utils/trace.h"
 
 using grpc::ServerContext;
 using grpc::ServerWriter;
 using grpc::Status;
 using profiler::proto::AgentStatusResponse;
+using std::string;
 
 namespace profiler {
+
+namespace {
+
+// Connector is a program that inherits (since it is invoked by execl()) a
+// client socket already connected to the daemon and passes the socket to the
+// agent. This is technically an implementation detail of perfd due to Android's
+// security restriction. Therefore, we frame the functionality into "perfd
+// -connect". However, in the point of view of process relationship, we use
+// connector as the process name (not binary name) for the ease of description.
+const char* const kConnectorFileName = "perfd";
+// On-device path of the connector program relative to an app's data folder.
+const char* const kConnectorRelativePath = "./perfd";
+
+// Copy connector executable from this process's folder (perfd's folder) to
+// app's data folder.
+void CopyConnectorToAppFolder(const string& app_name) {
+  std::ostringstream os;
+  os << kRunAsExecutable << " " << app_name << " cp " << CurrentProcess::dir()
+     << kConnectorFileName << " .";
+  if (system(os.str().c_str()) == -1) {
+    perror("system");
+    exit(-1);
+  }
+}
+
+// Use execl() and run-as to run connector which will establish the
+// communication between perfd and the agent.
+//
+// By using execl(), the client-side socket that's connected to daemon can be
+// used by connector.
+// By using run-as, connector is under the same user as the agent, and thus it
+// can talk to the agent who is waiting for the client socket.
+void RunConnector(const string& app_name, const string& daemon_address) {
+  // Use connect() to create a client socket that can talk to the server.
+  int fd;  // The client socket that's connected to daemon.
+  if ((fd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
+    perror("socket error");
+    exit(-1);
+  }
+  struct sockaddr_un addr_un;
+  socklen_t addr_len;
+  SetUnixSocketAddr(daemon_address.c_str(), &addr_un, &addr_len);
+  if (connect(fd, (struct sockaddr*)&addr_un, addr_len) == -1) {
+    perror("connect error");
+    exit(-1);
+  }
+
+  // Pass the fd as command line argument to connector.
+  char buf[32];
+  sprintf(buf, "%d", fd);
+  CopyConnectorToAppFolder(app_name);
+  int return_value =
+      execl(kRunAsExecutable, kRunAsExecutable, app_name.c_str(),
+            kConnectorRelativePath, kConnectCmdLineArg, buf, (char*)nullptr);
+  if (return_value == -1) {
+    perror("execl");
+    exit(-1);
+  }
+}
+
+}  // namespace
 
 Status ProfilerServiceImpl::GetCurrentTime(
     ServerContext* context, const profiler::proto::TimeRequest* request,
@@ -38,7 +110,7 @@ Status ProfilerServiceImpl::GetCurrentTime(
   response->set_timestamp_ns(clock_.GetCurrentTime());
   // TODO: Move this to utils.
   timeval time;
-  gettimeofday(&time, NULL);
+  gettimeofday(&time, nullptr);
   // Not specifying LL may cause overflow depending on the underlying type of
   // time.tv_sec.
   int64_t t = time.tv_sec * 1000000LL + time.tv_usec;
@@ -86,7 +158,7 @@ Status ProfilerServiceImpl::GetDevices(
     profiler::proto::GetDevicesResponse* response) {
   Trace trace("PRO:GetDevices");
   profiler::proto::Device* device = response->add_device();
-  std::string device_id;
+  string device_id;
   FileReader::Read("/proc/sys/kernel/random/boot_id", &device_id);
   device->set_boot_id(device_id);
   return Status::OK;
@@ -96,8 +168,57 @@ Status ProfilerServiceImpl::AttachAgent(
     grpc::ServerContext* context,
     const profiler::proto::AgentAttachRequest* request,
     profiler::proto::AgentAttachResponse* response) {
-  return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED,
-                        "Not implemented on device");
+  if (profiler::DeviceInfo::feature_level() < 26) {
+    return ::grpc::Status(
+        ::grpc::StatusCode::UNIMPLEMENTED,
+        "Attaching agent not implemented on Nougat or older devices");
+  } else {
+    string app_name = ProcessManager::GetCmdlineForPid(request->process_id());
+    if (app_name.empty()) {
+      Log::V("Process (PID %d) isn't running. Cannot attach agent.",
+             request->process_id());
+      response->set_status(
+          profiler::proto::AgentAttachResponse::FAILURE_UNKNOWN);
+      return Status::OK;
+    }
+
+    // Do nothing if daemon knows agent is alive (i.e., heart is beating).
+    if (IsAppProcessAlive(request->process_id())) {
+      Log::V("Agent already running in app %s (PID %d).", app_name.c_str(),
+             request->process_id());
+      response->set_status(profiler::proto::AgentAttachResponse::SUCCESS);
+      return Status::OK;
+    }
+
+    int fork_pid = fork();
+    if (fork_pid == -1) {
+      perror("fork connector");
+      return ::grpc::Status(::grpc::StatusCode::RESOURCE_EXHAUSTED,
+                            "Cannot fork a process to run connector");
+    } else if (fork_pid == 0) {
+      // child process
+      RunConnector(app_name, kDaemonSocketName);
+      // RunConnector calls excl() at the end. It returns only if an error
+      // has occured.
+      exit(EXIT_FAILURE);
+    } else {
+      // parent process
+      response->set_status(profiler::proto::AgentAttachResponse::SUCCESS);
+      return Status::OK;
+    }
+  }
+}
+
+bool ProfilerServiceImpl::IsAppProcessAlive(int32_t process_id) {
+  auto got = heartbeat_timestamp_map_.find(process_id);
+  if (got != heartbeat_timestamp_map_.end()) {
+    int64_t current_time = clock_.GetCurrentTime();
+    if (GenericComponent::kHeartbeatThresholdNs >
+        (current_time - got->second)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 }  // namespace profiler

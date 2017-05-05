@@ -18,9 +18,13 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <mutex>
+#include <string>
 
 #include <grpc++/support/channel_arguments.h>
+#include "agent/daemon_socket.h"
 #include "utils/config.h"
+#include "utils/device_info.h"
+#include "utils/log.h"
 #include "utils/stopwatch.h"
 #include "utils/thread_name.h"
 
@@ -43,13 +47,22 @@ using proto::InternalEventService;
 using proto::InternalNetworkService;
 using std::lock_guard;
 
-Agent& Agent::Instance() {
-  static Agent* instance = new Agent(kServerAddress);
+Agent& Agent::Instance(SocketType socket_type) {
+  static Agent* instance = new Agent(socket_type);
   return *instance;
 }
 
-Agent::Agent(const char* address)
+Agent::Agent(SocketType socket_type)
     : background_queue_("Studio:Agent", kMaxBackgroundTasks) {
+  std::string target;
+  if (profiler::DeviceInfo::feature_level() >= 26 ||
+      socket_type == SocketType::kAbstractSocket) {
+    // For O and post-O devices, we used an existing socket of which the file
+    // descriptor will be provided into kAgentSocketName.
+    target = GetDaemonSocketAsGrpcTarget(kAgentSocketName);
+  } else {
+    target = kServerAddress;
+  }
   // Override default channel arguments in gRPC to limit the reconnect delay to
   // 1 second when the daemon is unavailable. GRPC's default arguments may
   // have backoff as long as 120 seconds. In cases when the phone is
@@ -58,7 +71,8 @@ Agent::Agent(const char* address)
   grpc::ChannelArguments channel_args;
   channel_args.SetInt(GRPC_ARG_MAX_RECONNECT_BACKOFF_MS, 1000);
   auto channel = grpc::CreateCustomChannel(
-      address, grpc::InsecureChannelCredentials(), channel_args);
+      target, grpc::InsecureChannelCredentials(), channel_args);
+
   service_stub_ = AgentService::NewStub(channel);
   event_stub_ = InternalEventService::NewStub(channel);
   network_stub_ = InternalNetworkService::NewStub(channel);
