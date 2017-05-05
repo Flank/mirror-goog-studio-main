@@ -1,7 +1,7 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
-    <#if includeKotlinSupport!false>ext.kotlin_version = '1.1.2-2'</#if>
+    <#if includeKotlinSupport!false>ext.kotlin_version = '${kotlinVersion}'</#if>
     repositories {
         jcenter()
     }
