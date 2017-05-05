@@ -2,6 +2,7 @@
 """Runs the bazel executable for the platform, passing args along."""
 
 import os
+import re
 import subprocess
 import sys
 import multiprocessing
@@ -25,15 +26,36 @@ def main():
 
   bazel = os.path.join(workspace, 'prebuilts', 'tools', platform, 'bazel',
                        'bazel-real')
-  env = {
-      'CC':
-          os.environ.get('GCC', '/usr/bin/gcc'),
-      'JAVA_HOME':
-          os.path.join(workspace, 'prebuilts', 'studio', 'jdk', jdk_subdir),
-      'TERM':
-          os.environ.get('TERM', ''),
-  }
   args = sys.argv[1:]
+
+  env = {}
+  env['JAVA_HOME'] = os.path.join(workspace, 'prebuilts', 'studio', 'jdk', jdk_subdir)
+  env['TERM'] = os.environ.get('TERM', '')
+  if sys.platform == 'darwin':
+    args.insert(0, '--watchfs')
+    env['CC'] = os.environ.get('GCC', '/usr/bin/gcc')
+  elif sys.platform == 'win32':
+    define_env(env, 'BAZEL_SH', 'C:\\tools\\msys64\\usr\\bin\\bash.exe',
+        'NOTE: Bazel for Windows currently hardcodes "C:\\tools\\msys64", but we\n' +
+        'could not find an installation of msys at this path on your machine.\n' +
+        'Consider moving your installation if you already have it or\n' +
+        'install it there from http://www.msys.org.\n' +
+        '\n' +
+        'See also: https://github.com/bazelbuild/bazel/issues/2447')
+    define_env(env, 'BAZEL_VS', 'C:\\Program Files (x86)\\Microsoft Visual Studio 14.0',
+        'Please install VC++ build tools for bazel to work. For a consistent version\n' +
+        'use Visual C++ 2015 Build Tools which you can find at:\n' +
+        'http://landinghub.visualstudio.com/visual-cpp-build-tools')
+    define_env(env, 'BAZEL_PYTHON', 'C:\\python_27_amd64\\files\\python.exe')
+    define_env(env, 'BAZEL_SH', 'C:\\tools\\msys64\\usr\\bin\\bash.exe')
+    # Bazel for windows requires a couple of extra env vars be set
+    # SYSTEMROOT must be defined to run a win .exe; otherwise, subprocess.call
+    # will hang.
+    env['SYSTEMROOT'] = 'C:\\Windows'
+    env['TMP'] = 'C:\\Windows\\Temp'
+
+  else: # Linux
+    env['CC'] = os.environ.get('GCC', '/usr/bin/gcc')
 
   if bazel_command(args) == 'test':
     # Keep this logic in sync with integration-test BUILD file and CheckAllRunner.
@@ -49,23 +71,22 @@ def main():
     args.insert(bazel_command_index(args) + 1, '--local_test_jobs=' + str(test_jobs))
     print('Running with {} local test jobs.'.format(test_jobs))
 
-  if sys.platform == 'darwin':
-    args.insert(0, '--watchfs')
-  elif sys.platform == 'win32':
-    # Bazel for windows requires a couple of extra env vars be set
-    # SYSTEMROOT must be defined to run a win .exe; otherwise, subprocess.call
-    # will hang.
-    env['SYSTEMROOT'] = 'C:\\Windows'
-    env['BAZEL_PYTHON'] = os.environ.get('BAZEL_PYTHON')
-    env['BAZEL_SH'] = os.environ.get('BAZEL_SH')
-    # Only pass in BAZEL_VS if explicitly defined. Otherwise, leave it unset,
-    # which causes Bazel to auto-search for the installation (this is good
-    # enough for most developers).
-    vs_env = os.environ.get('BAZEL_VS')
-    if vs_env:
-      env['BAZEL_VS'] = vs_env
-
   sys.exit(subprocess.call([bazel] + args, env=env))
+
+
+def define_env(env, var, value, msg=None):
+  prev = os.environ.get(var)
+  if prev:
+    if not path.exists(value):
+      print '{} is set to {}, but it does not exist'.format(var, value)
+      sys.exit(1)
+    env[var] = prev
+  elif os.path.exists(value):
+    env[var] = value
+  else:
+    print 'Cannot find {} while trying to set "{}"'.format(value, var)
+    print msg if msg else 'Make sure {} exists, or set "{}" manually to the correct value.'.format(value, var)
+    sys.exit(1)
 
 
 def find_workspace(path):
