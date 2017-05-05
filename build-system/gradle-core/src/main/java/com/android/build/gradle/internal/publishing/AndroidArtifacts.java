@@ -65,20 +65,28 @@ public class AndroidArtifacts {
     private static final String TYPE_FEATURE_RESOURCE_PKG = "android-feature-res-ap_";
 
     public enum ConsumedConfigType {
-        COMPILE_CLASSPATH(API_ELEMENTS),
-        RUNTIME_CLASSPATH(RUNTIME_ELEMENTS),
-        ANNOTATION_PROCESSOR(RUNTIME_ELEMENTS),
-        FEATURE_CLASSPATH(FEATURE_ELEMENTS);
+        COMPILE_CLASSPATH(API_ELEMENTS, true),
+        RUNTIME_CLASSPATH(RUNTIME_ELEMENTS, true),
+        ANNOTATION_PROCESSOR(RUNTIME_ELEMENTS, false),
+        FEATURE_CLASSPATH(FEATURE_ELEMENTS, false);
 
         @NonNull
         private final PublishedConfigType publishedTo;
-        ConsumedConfigType(@NonNull PublishedConfigType publishedTo) {
+        private final boolean needsTestedComponents;
+
+        ConsumedConfigType(
+                @NonNull PublishedConfigType publishedTo, boolean needsTestedComponents) {
             this.publishedTo = publishedTo;
+            this.needsTestedComponents = needsTestedComponents;
         }
 
         @NonNull
         public PublishedConfigType getPublishedTo() {
             return publishedTo;
+        }
+
+        public boolean needsTestedComponents() {
+            return needsTestedComponents;
         }
     }
 
