@@ -12,16 +12,10 @@
     <#include "../common/recipe_app_bar.xml.ftl" />
 </#if>
 
-<#if generateKotlin>
-    <instantiate from="root/src/app_package/SimpleActivity.kt.ftl"
-                   to="${escapeXmlAttribute(srcOut)}/${activityClass}.kt" />
-    <open file="${escapeXmlAttribute(srcOut)}/${activityClass}.kt" />
-<#else>
     <instantiate from="root/src/app_package/SimpleActivity.java.ftl"
                    to="${escapeXmlAttribute(srcOut)}/${activityClass}.java" />
-    <open file="${escapeXmlAttribute(srcOut)}/${activityClass}.java" />
-</#if>
 
+    <open file="${escapeXmlAttribute(srcOut)}/${activityClass}.java" />
 <#if useFragment>
     <open file="${escapeXmlAttribute(resOut)}/layout/${fragmentLayoutName}.xml" />
 <#else>
