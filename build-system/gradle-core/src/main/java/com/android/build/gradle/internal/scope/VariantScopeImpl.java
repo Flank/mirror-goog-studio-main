@@ -27,7 +27,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.API_ELEMENTS;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.FEATURE_ELEMENTS;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.METADATA_ELEMENTS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS;
 import static com.android.build.gradle.internal.scope.CodeShrinker.ANDROID_GRADLE;
 import static com.android.build.gradle.internal.scope.CodeShrinker.PROGUARD;
@@ -329,14 +329,10 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                     publishConfiguration.getRuntimeElements(), file, builtBy, artifactType);
         }
 
-        if (configTypes.contains(FEATURE_ELEMENTS)
-                && getVariantData().getVariantDependency().getManifestSplitConfiguration()
-                        != null) {
+        if (configTypes.contains(METADATA_ELEMENTS)
+                && publishConfiguration.getMetadataElements() != null) {
             publishArtifactToConfiguration(
-                    getVariantData().getVariantDependency().getManifestSplitConfiguration(),
-                    file,
-                    builtBy,
-                    artifactType);
+                    publishConfiguration.getMetadataElements(), file, builtBy, artifactType);
         }
     }
 
@@ -885,8 +881,9 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                         .getVariantDependency()
                         .getAnnotationProcessorConfiguration();
                 break;
-            case FEATURE_CLASSPATH:
-                configuration = getVariantData().getVariantDependency().getFeatureConfiguration();
+            case METADATA_VALUES:
+                configuration =
+                        getVariantData().getVariantDependency().getMetadataValuesConfiguration();
                 break;
             default:
                 throw new RuntimeException("unknown ConfigType value");

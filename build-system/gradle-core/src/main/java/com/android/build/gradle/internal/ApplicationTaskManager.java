@@ -39,6 +39,8 @@ import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AppPreBuildTask;
+import com.android.build.gradle.internal.tasks.ApplicationId;
+import com.android.build.gradle.internal.tasks.ApplicationIdWriterTask;
 import com.android.build.gradle.internal.tasks.TestPreBuildTask;
 import com.android.build.gradle.internal.transforms.InstantRunDependenciesApkBuilder;
 import com.android.build.gradle.internal.transforms.InstantRunSliceSplitApkBuilder;
@@ -106,6 +108,9 @@ public class ApplicationTaskManager extends TaskManager {
 
         // Create all current streams (dependencies mostly at this point)
         createDependencyStreams(tasks, variantScope);
+
+        // Add a task to publish the applicationId.
+        createApplicationIdWriterTask(tasks, variantScope);
 
         // Add a task to process the manifest(s)
         recorder.record(
@@ -486,4 +491,26 @@ public class ApplicationTaskManager extends TaskManager {
             createGenerateMicroApkDataTask(tasks, scope, null);
         }
     }
+
+    private void createApplicationIdWriterTask(
+            @NonNull TaskFactory tasks, @NonNull VariantScope variantScope) {
+
+        File applicationIdOutputDirectory =
+                FileUtils.join(
+                        globalScope.getIntermediatesDir(),
+                        "applicationId",
+                        variantScope.getVariantConfiguration().getDirName());
+
+        AndroidTask<ApplicationIdWriterTask> writeTask =
+                androidTasks.create(
+                        tasks,
+                        new ApplicationIdWriterTask.ConfigAction(
+                                variantScope, applicationIdOutputDirectory));
+
+        variantScope.addTaskOutput(
+                TaskOutputHolder.TaskOutputType.METADATA_APP_ID,
+                ApplicationId.getOutputFile(applicationIdOutputDirectory),
+                writeTask.getName());
+    }
+
 }

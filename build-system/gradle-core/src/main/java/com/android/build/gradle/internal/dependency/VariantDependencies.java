@@ -77,20 +77,23 @@ public class VariantDependencies {
     public static final String CONFIG_NAME_S_IMPLEMENTATION = "%sImplementation";
     public static final String CONFIG_NAME_RUNTIME_ONLY = "runtimeOnly";
     public static final String CONFIG_NAME_S_RUNTIME_ONLY = "%sRuntimeOnly";
-    public static final String CONFIG_NAME_FEATURE_SPLIT = "feature";
-    public static final String CONFIG_NAME_PACKAGE_ID = "packageId";
+    public static final String CONFIG_NAME_FEATURE = "feature";
+    public static final String CONFIG_NAME_APPLICATION = "application";
 
     public static final class PublishedConfigurations {
         @NonNull private final Configuration apiElements;
         @NonNull private final Configuration runtimeElements;
+        @Nullable private final Configuration metadataElements;
         @NonNull private final AndroidTypeAttr type;
 
         PublishedConfigurations(
                 @NonNull Configuration apiElements,
                 @NonNull Configuration runtimeElements,
+                @Nullable Configuration metadataElements,
                 @NonNull AndroidTypeAttr type) {
             this.apiElements = apiElements;
             this.runtimeElements = runtimeElements;
+            this.metadataElements = metadataElements;
             this.type = type;
         }
 
@@ -102,6 +105,11 @@ public class VariantDependencies {
         @NonNull
         public Configuration getRuntimeElements() {
             return runtimeElements;
+        }
+
+        @Nullable
+        public Configuration getMetadataElements() {
+            return metadataElements;
         }
 
         @NonNull
@@ -118,9 +126,7 @@ public class VariantDependencies {
     @NonNull private final Map<AndroidTypeAttr, PublishedConfigurations> publishedConfigurations;
     @NonNull private final Configuration jackPluginConfiguration;
     @Nullable private final Configuration wearAppConfiguration;
-    @Nullable private final Configuration featureConfiguration;
-    @Nullable private final Configuration packageIdConfiguation;
-    @Nullable private final Configuration manifestSplitConfiguration;
+    @Nullable private final Configuration metadataValuesConfiguration;
 
     /**
      *  Whether we have a direct dependency on com.android.support:support-annotations; this
@@ -304,9 +310,7 @@ public class VariantDependencies {
 
             Map<AndroidTypeAttr, PublishedConfigurations> publishedConfigurations =
                     Maps.newHashMap();
-            Configuration feature = null;
-            Configuration packageId = null;
-            Configuration manifestSplitElements = null;
+            Configuration metadataValues = null;
 
             if (publishTypes != null) {
                 Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> publicationFlavorMap =
@@ -353,53 +357,50 @@ public class VariantDependencies {
                     // apiElements only extends the api classpaths.
                     apiElements.setExtendsFrom(apiClasspaths);
 
+                    // FIXME: we should create this configuration unconditionally. This is a quick
+                    // workaround so we don't end up with ambiguous resolution between feature
+                    // and libraries. This is fine for now as libraries do not publish anything
+                    // there.
+                    Configuration metadataElements = null;
+                    if (variantType != VariantType.LIBRARY) {
+                        metadataElements =
+                                configurations.maybeCreate(configNamePrefix + "MetadataElements");
+                        metadataElements.setDescription("Metadata elements for " + variantName);
+                        metadataElements.setCanBeResolved(false);
+                        final AttributeContainer metadataElementsAttributes =
+                                metadataElements.getAttributes();
+                        applyVariantAttributes(
+                                metadataElementsAttributes, buildType, publicationFlavorMap);
+                        metadataElementsAttributes.attribute(
+                                AndroidTypeAttr.ATTRIBUTE, AndroidTypeAttr.TYPE_METADATA);
+                        metadataElementsAttributes.attribute(
+                                VariantAttr.ATTRIBUTE, variantNameAttr);
+                    }
+
                     publishedConfigurations.put(
                             publishType,
-                            new PublishedConfigurations(apiElements, runtimeElements, publishType));
+                            new PublishedConfigurations(
+                                    apiElements, runtimeElements, metadataElements, publishType));
 
-                    // if publish type is FEATURE then include the feature config to consume the
-                    // list of feature.
-                    if (publishType == AndroidTypeAttr.TYPE_FEATURE) {
-                        if (baseSplit) {
-                            // first the variant-specific configuration that will contain the
-                            // the splits. It's per-variant to contain the right attribute.
-                            // It'll be used to consume the manifest.
-                            feature = configurations.maybeCreate(variantName + "Feature");
-                            feature.extendsFrom(
-                                    configurations.getByName(CONFIG_NAME_FEATURE_SPLIT));
-                            feature.setDescription("Feature Split dependencies for the base Split");
-                            feature.setCanBeConsumed(false);
-                            final AttributeContainer featureAttributes = feature.getAttributes();
-                            featureAttributes.attribute(
-                                    AndroidTypeAttr.ATTRIBUTE,
-                                    AndroidTypeAttr.TYPE_FEATURE_MANIFEST);
-                            applyVariantAttributes(
-                                    featureAttributes, buildType, consumptionFlavorMap);
-
-                            // then the configuration to publish the packageId package
-                            // this is not per-variant so detect if we already created it first
-                            packageId = configurations.findByName(CONFIG_NAME_PACKAGE_ID);
-                            if (packageId == null) {
-                                packageId = configurations.create(CONFIG_NAME_PACKAGE_ID);
-                                packageId.setDescription("Package Ids for the base Split");
-                                packageId.setCanBeResolved(false);
-                            }
-                        } else {
-                            // the configuration that allows non-base split to publish their manifest
-                            manifestSplitElements =
-                                    configurations.maybeCreate(
-                                            variantName + "ManifestFeatureElements");
-                            manifestSplitElements.setDescription(
-                                    "Manifest elements for Split " + variantName);
-                            manifestSplitElements.setCanBeResolved(false);
-                            final AttributeContainer manifestSplitAttributes =
-                                    manifestSplitElements.getAttributes();
-                            manifestSplitAttributes.attribute(
-                                    AndroidTypeAttr.ATTRIBUTE,
-                                    AndroidTypeAttr.TYPE_FEATURE_MANIFEST);
-                            applyVariantAttributes(
-                                    manifestSplitAttributes, buildType, publicationFlavorMap);
-                        }
+                    if (variantType == VariantType.FEATURE && baseSplit) {
+                        // The variant-specific configuration that will contain the non-base feature
+                        // metadata and the application metadata. It's per-variant to contain the
+                        // right attribute. It'll be used to get the applicationId and to consume
+                        // the manifest.
+                        metadataValues =
+                                configurations.maybeCreate(configNamePrefix + "MetadataValues");
+                        metadataValues.extendsFrom(
+                                configurations.getByName(CONFIG_NAME_FEATURE),
+                                configurations.getByName(CONFIG_NAME_APPLICATION));
+                        metadataValues.setDescription(
+                                "Metadata Values dependencies for the base Split");
+                        metadataValues.setCanBeConsumed(false);
+                        final AttributeContainer featureMetadataAttributes =
+                                metadataValues.getAttributes();
+                        featureMetadataAttributes.attribute(
+                                AndroidTypeAttr.ATTRIBUTE, AndroidTypeAttr.TYPE_METADATA);
+                        applyVariantAttributes(
+                                featureMetadataAttributes, buildType, consumptionFlavorMap);
                     }
                 }
             }
@@ -427,9 +428,7 @@ public class VariantDependencies {
                     annotationProcessor,
                     jackPlugin,
                     wearApp,
-                    feature,
-                    packageId,
-                    manifestSplitElements);
+                    metadataValues);
         }
 
         private static void checkOldConfigurations(
@@ -540,9 +539,7 @@ public class VariantDependencies {
             @NonNull Configuration annotationProcessorConfiguration,
             @NonNull Configuration jackPluginConfiguration,
             @Nullable Configuration wearAppConfiguration,
-            @Nullable Configuration featureConfiguration,
-            @Nullable Configuration packageIdConfiguation,
-            @Nullable Configuration manifestSplitConfiguration) {
+            @Nullable Configuration metadataValuesConfiguration) {
         this.variantName = variantName;
         this.checker = dependencyChecker;
         this.compileClasspath = compileClasspath;
@@ -551,9 +548,7 @@ public class VariantDependencies {
         this.annotationProcessorConfiguration = annotationProcessorConfiguration;
         this.jackPluginConfiguration = jackPluginConfiguration;
         this.wearAppConfiguration = wearAppConfiguration;
-        this.featureConfiguration = featureConfiguration;
-        this.packageIdConfiguation = packageIdConfiguation;
-        this.manifestSplitConfiguration = manifestSplitConfiguration;
+        this.metadataValuesConfiguration = metadataValuesConfiguration;
     }
 
     public String getName() {
@@ -605,18 +600,8 @@ public class VariantDependencies {
     }
 
     @Nullable
-    public Configuration getFeatureConfiguration() {
-        return featureConfiguration;
-    }
-
-    @Nullable
-    public Configuration getPackageIdConfiguation() {
-        return packageIdConfiguation;
-    }
-
-    @Nullable
-    public Configuration getManifestSplitConfiguration() {
-        return manifestSplitConfiguration;
+    public Configuration getMetadataValuesConfiguration() {
+        return metadataValuesConfiguration;
     }
 
     @NonNull

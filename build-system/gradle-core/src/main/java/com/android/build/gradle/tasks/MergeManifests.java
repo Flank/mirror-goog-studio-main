@@ -18,10 +18,11 @@ package com.android.build.gradle.tasks;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_APPLICATION_ID_DECLARATION;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_SPLIT_MANIFEST;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.MANIFEST;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.METADATA_APP_ID_DECLARATION;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.METADATA_FEATURE_MANIFEST;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.FEATURE_CLASSPATH;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.METADATA_VALUES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 
 import com.android.SdkConstants;
@@ -36,8 +37,8 @@ import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.tasks.ApplicationId;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
-import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitApplicationId;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.builder.core.AndroidBuilder;
@@ -106,9 +107,9 @@ public class MergeManifests extends ManifestProcessorTask {
                         compatibleScreensManifest);
 
         String packageOverride;
-        if (packageManifest != null) {
-            FeatureSplitApplicationId loaded = FeatureSplitApplicationId.load(packageManifest);
-            packageOverride = loaded.getApplicationId();
+        if (packageManifest != null && !packageManifest.isEmpty()) {
+            packageOverride =
+                    ApplicationId.load(packageManifest.getSingleFile()).getApplicationId();
         } else {
             packageOverride = getPackageOverride();
         }
@@ -561,10 +562,14 @@ public class MergeManifests extends ManifestProcessorTask {
         public void execute(@NonNull MergeManifests processManifestTask) {
             super.execute(processManifestTask);
 
+            processManifestTask.packageManifest =
+                    variantScope.getArtifactFileCollection(
+                            METADATA_VALUES, MODULE, METADATA_APP_ID_DECLARATION);
+
             // This includes the other features.
             processManifestTask.featureManifests =
                     variantScope.getArtifactCollection(
-                            FEATURE_CLASSPATH, MODULE, FEATURE_SPLIT_MANIFEST);
+                            METADATA_VALUES, MODULE, METADATA_FEATURE_MANIFEST);
         }
     }
 }

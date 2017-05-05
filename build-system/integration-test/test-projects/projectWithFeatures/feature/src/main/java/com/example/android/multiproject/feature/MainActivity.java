@@ -18,7 +18,7 @@ package com.example.android.multiproject.feature;
 
 import android.app.Activity;
 import android.os.Bundle;
-import com.example.android.multiproject.R;
+import com.example.android.multiproject.base.R;
 
 public class MainActivity extends Activity {
     @Override

@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.tasks.featuresplit;
+package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -26,16 +25,15 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import org.apache.commons.io.FileUtils;
-import org.gradle.api.file.FileCollection;
 
-/** Information containing the base split application ID. */
-public class FeatureSplitApplicationId {
+/** Information containing a module application ID. */
+public class ApplicationId {
 
     @VisibleForTesting static final String PERSISTED_FILE_NAME = "application-id.json";
 
     @NonNull private final String applicationId;
 
-    public FeatureSplitApplicationId(@NonNull String applicationId) {
+    public ApplicationId(@NonNull String applicationId) {
         this.applicationId = applicationId;
     }
 
@@ -52,29 +50,13 @@ public class FeatureSplitApplicationId {
     }
 
     @NonNull
-    public static FeatureSplitApplicationId load(@NonNull FileCollection input) throws IOException {
-        File persistedFile = getOutputFile(input);
-        if (persistedFile == null) {
+    public static ApplicationId load(@NonNull File input) throws FileNotFoundException {
+        if (!input.getName().equals(PERSISTED_FILE_NAME)) {
             throw new FileNotFoundException("No application declaration present.");
         }
-        return load(persistedFile);
-    }
-
-    @NonNull
-    public static FeatureSplitApplicationId load(@NonNull File input) throws FileNotFoundException {
         GsonBuilder gsonBuilder = new GsonBuilder();
         Gson gson = gsonBuilder.create();
-        return gson.fromJson(new FileReader(input), FeatureSplitApplicationId.class);
-    }
-
-    @Nullable
-    private static File getOutputFile(@NonNull FileCollection input) {
-        for (File file : input.getAsFileTree().getFiles()) {
-            if (file.getName().equals(PERSISTED_FILE_NAME)) {
-                return file;
-            }
-        }
-        return null;
+        return gson.fromJson(new FileReader(input), ApplicationId.class);
     }
 
     @NonNull
