@@ -5,7 +5,5 @@
     <global id="simpleLayoutName" value="${layoutName}" />
     <global id="excludeMenu" type="boolean" value="true" />
     <global id="generateActivityTitle" type="boolean" value="false" />
-    <global id="generateKotlin" type="boolean"
-            value="${((includeKotlinSupport!false) || (language!'Java')?string == 'Kotlin')?string}" />
     <#include "../common/common_globals.xml.ftl" />
 </globals>

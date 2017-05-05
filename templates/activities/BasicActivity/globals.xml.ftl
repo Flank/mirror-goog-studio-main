@@ -5,6 +5,4 @@
     <global id="simpleLayoutName" value="<#if appCompatActivity>${contentLayoutName}<#else>${layoutName}</#if>" />
     <global id="appBarLayoutName" value="${layoutName}" />
     <global id="fragmentClass" value="${activityClass}Fragment" />
-    <global id="generateKotlin" type="boolean"
-            value="${((includeKotlinSupport!false) || language!'Java'?string == 'Kotlin')?string}" />
 </globals>
