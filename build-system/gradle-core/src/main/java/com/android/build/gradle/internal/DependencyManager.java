@@ -274,21 +274,6 @@ public class DependencyManager {
             }
         }
 
-        // Resolve jackPluginConfiguration.
-        Configuration jackPluginConfiguration = variantDeps.getJackPluginConfiguration();
-        jackPluginConfiguration.resolve();
-        if (extraModelInfo.getMode() != STANDARD &&
-                jackPluginConfiguration.getResolvedConfiguration().hasError()) {
-            try {
-                jackPluginConfiguration.getResolvedConfiguration().rethrowFailure();
-            } catch (Exception e) {
-                extraModelInfo.handleSyncError(
-                        "jackPlugin",
-                        SyncIssue.TYPE_UNRESOLVED_DEPENDENCY,
-                        "Unable to find Jack plugin. " + e.getMessage());
-            }
-        }
-
         if (DEBUG_DEPENDENCY) {
             System.out.println("*** COMPILE DEPS ***");
             /*

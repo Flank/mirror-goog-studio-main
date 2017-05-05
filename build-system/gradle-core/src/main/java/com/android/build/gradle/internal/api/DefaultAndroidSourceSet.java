@@ -22,7 +22,6 @@ import static com.android.build.gradle.internal.dependency.VariantDependencies.C
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_COMPILE;
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_COMPILE_ONLY;
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_IMPLEMENTATION;
-import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_JACK_PLUGIN;
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_PROVIDED;
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_PUBLISH;
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_RUNTIME_ONLY;
@@ -32,7 +31,6 @@ import static com.android.build.gradle.internal.dependency.VariantDependencies.C
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_S_COMPILE;
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_S_COMPILE_ONLY;
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_S_IMPLEMENTATION;
-import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_S_JACK_PLUGIN;
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_S_PROVIDED;
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_S_PUBLISH;
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_S_RUNTIME_ONLY;
@@ -232,11 +230,8 @@ public class DefaultAndroidSourceSet implements AndroidSourceSet, SourceProvider
     @NonNull
     @Override
     public String getJackPluginConfigurationName() {
-        if (name.equals(SourceSet.MAIN_SOURCE_SET_NAME)) {
-            return CONFIG_NAME_JACK_PLUGIN;
-        } else {
-            return String.format(CONFIG_NAME_S_JACK_PLUGIN, name);
-        }
+        throw new RuntimeException(
+                "AndroidSourceSet.getJackPluginConfigurationName() is not supported anymore.");
     }
 
     @Override
