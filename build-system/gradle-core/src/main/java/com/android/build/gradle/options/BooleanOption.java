@@ -36,8 +36,6 @@ public enum BooleanOption implements Option<Boolean> {
     OVERRIDE_PATH_CHECK_PROPERTY("android.overridePathCheck"),
     OVERRIDE_PATH_CHECK_PROPERTY_OLD("com.android.build.gradle.overridePathCheck"),
     ENABLE_DESUGAR("android.enableDesugar", true),
-    ENABLE_FEATURE_SPLIT_TRANSITIONAL_ATTRIBUTES(
-            "android.enableFeatureSplitTransitionalAttributes", true),
 
     ENABLE_DEPRECATED_NDK("android.useDeprecatedNdk"),
     DISABLE_RESOURCE_VALIDATION("android.disableResourceValidation"),

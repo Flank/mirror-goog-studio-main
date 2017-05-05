@@ -38,7 +38,6 @@ import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitPackageI
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.FeatureVariantData;
 import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.AndroidJarTask;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
@@ -48,6 +47,8 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.profile.Recorder;
 import com.android.manifmerger.ManifestMerger2;
+import com.android.sdklib.AndroidTargetHash;
+import com.android.sdklib.AndroidVersion;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
@@ -386,10 +387,13 @@ public class FeatureTaskManager extends TaskManager {
         } else {
             // Non-base split. Publish the feature manifest.
             optionalFeatures.add(ManifestMerger2.Invoker.Feature.ADD_FEATURE_SPLIT_INFO);
-            if (variantScope
-                    .getGlobalScope()
-                    .getProjectOptions()
-                    .get(BooleanOption.ENABLE_FEATURE_SPLIT_TRANSITIONAL_ATTRIBUTES)) {
+
+            // FIXME: This is temporary until we enforce usage of compile SDK 26 on features.
+            final AndroidVersion androidVersion =
+                    AndroidTargetHash.getVersionFromHash(
+                            variantScope.getGlobalScope().getExtension().getCompileSdkVersion());
+            if (androidVersion != null
+                    && androidVersion.getApiLevel() < AndroidVersion.VersionCodes.O) {
                 optionalFeatures.add(
                         ManifestMerger2.Invoker.Feature.TRANSITIONAL_FEATURE_SPLIT_ATTRIBUTES);
             }
