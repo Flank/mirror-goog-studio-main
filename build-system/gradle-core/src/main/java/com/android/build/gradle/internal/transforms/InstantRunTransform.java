@@ -275,18 +275,22 @@ public class InstantRunTransform extends Transform {
         // class loader could also be store in the VariantScope for potential reuse if some
         // other transform need to load project's classes.
         try (URLClassLoader urlClassLoader = new NonDelegatingUrlClassloader(referencedInputUrls)) {
-            Thread.currentThread().setContextClassLoader(urlClassLoader);
-
-            workItems.forEach(workItem -> executor.execute(() -> {
-                ClassLoader currentThreadClassLoader = Thread.currentThread()
-                        .getContextClassLoader();
-                Thread.currentThread().setContextClassLoader(urlClassLoader);
-                try {
-                    return workItem.doWork();
-                } finally {
-                    Thread.currentThread().setContextClassLoader(currentThreadClassLoader);
-                }
-            }));
+            workItems.forEach(
+                    workItem ->
+                            executor.execute(
+                                    () -> {
+                                        ClassLoader currentThreadClassLoader =
+                                                Thread.currentThread().getContextClassLoader();
+                                        Thread.currentThread()
+                                                .setContextClassLoader(urlClassLoader);
+                                        try {
+                                            return workItem.doWork();
+                                        } finally {
+                                            Thread.currentThread()
+                                                    .setContextClassLoader(
+                                                            currentThreadClassLoader);
+                                        }
+                                    }));
 
             try {
                 // wait for all work items completion.

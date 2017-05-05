@@ -176,8 +176,6 @@ public class InstantRunTransformTest {
         doAnswer(invocation -> {
             Object[] args = invocation.getArguments();
             Callable callable = (Callable) args[0];
-            // check that the context class loader is not the one we just created above.
-            assertNotEquals(classLoader, Thread.currentThread().getContextClassLoader());
             callable.call();
             return null;
         }).when(executor).execute(anyCallable());
@@ -194,6 +192,9 @@ public class InstantRunTransformTest {
                     .addOutputProvider(transformOutput)
                     .setIncrementalMode(true)
                     .build());
+
+            // make sure any thread class loader set during the transform execution has been reset
+            assertEquals(classLoader, Thread.currentThread().getContextClassLoader());
         } finally {
             Thread.currentThread().setContextClassLoader(currentClassLoader);
         }
