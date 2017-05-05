@@ -21,14 +21,14 @@ import static com.android.SdkConstants.*;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.*;
+import com.android.ide.common.resources.sampledata.SampleDataHolder;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
@@ -441,28 +441,12 @@ public class ResourceResolver extends RenderResources {
     }
 
     // ---- Private helper methods.
-    /** Holder for the sample data cache */
-    private static class CachedMockHolder {
-        private final long myLastModification;
-        private final List<String> myContents;
-        private final int myFileSizeMb;
 
-        CachedMockHolder(@NonNull File input) throws IOException {
-            if (!input.isFile()) {
-                throw new IOException("Sample data needs to be contained in a file");
-            }
-
-            myLastModification = input.lastModified();
-            myFileSizeMb = (int) (input.length() / 1_000_000);
-            myContents = Files.readLines(input, Charsets.UTF_8);
-        }
-    }
-
-    private static final Cache<String, CachedMockHolder> sMockList =
+    private static final Cache<String, SampleDataHolder> sMockList =
             CacheBuilder.newBuilder()
                     .expireAfterAccess(2, TimeUnit.MINUTES)
                     .softValues()
-                    .weigher((String key, CachedMockHolder value) -> value.myFileSizeMb)
+                    .weigher((String key, SampleDataHolder value) -> value.getFileSizeMb())
                     .maximumWeight(50) // MB
                     .build();
 
@@ -478,27 +462,36 @@ public class ResourceResolver extends RenderResources {
                 .map(ResourceValue::getValue)
                 .map(
                         fileName -> {
-                            AtomicInteger mockPosition = mMockPosition.get(fileName);
+                            AtomicInteger mockPosition = mMockPosition.get(name);
                             if (mockPosition == null) {
                                 mockPosition = new AtomicInteger(0);
-                                mMockPosition.put(fileName, mockPosition);
+                                mMockPosition.put(name, mockPosition);
                             }
 
-                            File mockFile = new File(fileName);
+                            File sampleFile = new File(fileName);
                             try {
-                                CachedMockHolder value = sMockList.getIfPresent(fileName);
+                                SampleDataHolder value = sMockList.getIfPresent(name);
                                 if (value == null
-                                        || value.myLastModification == 0
-                                        || value.myLastModification != mockFile.lastModified()) {
-                                    value = new CachedMockHolder(mockFile);
+                                        || value.getLastModification() == 0
+                                        || value.getLastModification()
+                                                != sampleFile.lastModified()) {
+                                    List<String> splitResourceName =
+                                            Splitter.on('/').limit(2).splitToList(name);
+                                    String path =
+                                            splitResourceName.size() > 1
+                                                    ? splitResourceName.get(1)
+                                                    : "";
+                                    value = SampleDataHolder.getFromFile(sampleFile, path);
                                     sMockList.put(fileName, value);
                                 }
 
-                                int lineCount = value.myContents.size();
+                                int lineCount = value.getContents().size();
                                 String lineContent =
                                         lineCount > 0
-                                                ? value.myContents.get(
-                                                        mockPosition.getAndIncrement() % lineCount)
+                                                ? value.getContents()
+                                                        .get(
+                                                                mockPosition.getAndIncrement()
+                                                                        % lineCount)
                                                 : null;
 
                                 return new ResourceValue(

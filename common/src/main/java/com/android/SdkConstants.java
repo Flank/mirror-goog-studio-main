@@ -1659,6 +1659,8 @@ public final class SdkConstants {
     public static final String EXT_HPROF = "hprof"; //$NON-NLS-1$
     public static final String EXT_GZ = "gz"; //$NON-NLS-1$
 
+    public static final String EXT_JSON = "json";
+
     private static final String DOT = "."; //$NON-NLS-1$
 
     /** Dot-Extension of the Application package Files, i.e. ".apk". */
