@@ -66,13 +66,18 @@ import org.gradle.api.Project;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.tasks.CacheableTask;
+import org.gradle.api.tasks.Classpath;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.ParallelizableTask;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 
+@CacheableTask
 @ParallelizableTask
 public class MergeResources extends IncrementalTask {
 
@@ -343,6 +348,8 @@ public class MergeResources extends IncrementalTask {
     }
 
     @InputFiles
+    // TODO Confirm that we don't care about where these things are
+    @PathSensitive(PathSensitivity.RELATIVE)
     public FileCollection getRenderscriptResOutputDir() {
         return renderscriptResOutputDir;
     }
@@ -353,6 +360,8 @@ public class MergeResources extends IncrementalTask {
     }
 
     @InputFiles
+    // TODO Confirm that we don't care about where these things are
+    @PathSensitive(PathSensitivity.RELATIVE)
     public FileCollection getGeneratedResOutputDir() {
         return generatedResOutputDir;
     }
@@ -363,6 +372,8 @@ public class MergeResources extends IncrementalTask {
     }
 
     @InputFiles
+    // TODO Confirm that we don't care about where these things are
+    @PathSensitive(PathSensitivity.RELATIVE)
     @Optional
     public FileCollection getMicroApkResDirectory() {
         return microApkResDirectory;
@@ -374,6 +385,8 @@ public class MergeResources extends IncrementalTask {
     }
 
     @InputFiles
+    // TODO Confirm that we don't care about where these things are
+    @PathSensitive(PathSensitivity.RELATIVE)
     @Optional
     public FileCollection getExtraGeneratedResFolders() {
         return extraGeneratedResFolders;
@@ -384,7 +397,8 @@ public class MergeResources extends IncrementalTask {
         this.extraGeneratedResFolders = extraGeneratedResFolders;
     }
 
-    @InputFiles
+    // TODO Is this a classpath?
+    @Classpath
     @Optional
     public FileCollection getLibraries() {
         if (libraries != null) {
@@ -405,6 +419,8 @@ public class MergeResources extends IncrementalTask {
     }
 
     @InputFiles
+    // TODO Confirm that we don't care about where these things are
+    @PathSensitive(PathSensitivity.RELATIVE)
     public Set<File> getSourceFolderInputs() {
         List<ResourceSet> inputs = sourceFolderInputs.get();
         Set<File> files = Sets.newHashSetWithExpectedSize(inputs.size());
@@ -425,6 +441,8 @@ public class MergeResources extends IncrementalTask {
         this.outputDir = outputDir;
     }
 
+    // TODO This is an input, right?
+    @Input
     public boolean getCrunchPng() {
         return crunchPng;
     }
@@ -433,6 +451,8 @@ public class MergeResources extends IncrementalTask {
         this.crunchPng = crunchPng;
     }
 
+    // TODO This is an input, right?
+    @Input
     public boolean getProcessResources() {
         return processResources;
     }
@@ -461,6 +481,7 @@ public class MergeResources extends IncrementalTask {
         this.validateEnabled = validateEnabled;
     }
 
+    // TODO Is this something we want to store in the cached result?
     @OutputDirectory
     @Optional
     public File getBlameLogFolder() {
@@ -471,6 +492,8 @@ public class MergeResources extends IncrementalTask {
         this.blameLogFolder = blameLogFolder;
     }
 
+    // TODO This is an output, right?
+    @OutputDirectory
     public File getGeneratedPngsOutputDir() {
         return generatedPngsOutputDir;
     }
@@ -511,12 +534,14 @@ public class MergeResources extends IncrementalTask {
         return aaptGeneration.name();
     }
 
+    // TODO Is this something we want to store in the cached result?
     @OutputDirectory
     @Optional
     public File getDataBindingLayoutOutputFolder() {
         return dataBindingLayoutOutputFolder;
     }
 
+    // TODO Is this something we want to store in the cached result?
     @OutputDirectory
     @Optional
     public File getResourceShrinkerOutputFolder() {

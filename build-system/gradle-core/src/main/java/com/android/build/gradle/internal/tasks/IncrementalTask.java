@@ -20,6 +20,7 @@ import com.google.common.collect.Maps;
 import java.io.File;
 import java.util.Map;
 import org.gradle.api.Action;
+import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
@@ -46,6 +47,7 @@ public abstract class IncrementalTask extends BaseTask {
      *
      * @return whether this task can support incremental update.
      */
+    @Internal
     protected boolean isIncremental() {
         return false;
     }
