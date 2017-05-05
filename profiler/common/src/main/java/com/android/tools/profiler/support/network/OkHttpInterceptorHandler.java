@@ -82,7 +82,10 @@ public abstract class OkHttpInterceptorHandler implements InvocationHandler {
                     @Override
                     public Object invoke(Object proxy, Method method, Object[] args)
                             throws Throwable {
-                        // TODO: disconnect tracker when source.close is called
+                        if ("close".equals(method.getName())) {
+                            wrappedInputStream.close();
+                            return null;
+                        }
                         if ("inputStream".equals(method.getName())) {
                             return wrappedInputStream;
                         }
