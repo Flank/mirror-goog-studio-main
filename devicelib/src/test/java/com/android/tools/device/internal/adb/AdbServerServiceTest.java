@@ -19,6 +19,7 @@ package com.android.tools.device.internal.adb;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.argThat;
@@ -89,7 +90,7 @@ public class AdbServerServiceTest {
         int probeTimeoutMs = 50;
         options =
                 new AdbServerOptions(
-                        AdbConstants.ANY_PORT, AdbConstants.DEFAULT_HOST, probeTimeoutMs);
+                        AdbConstants.ANY_PORT, AdbConstants.DEFAULT_HOST, false, probeTimeoutMs);
     }
 
     @After
@@ -112,7 +113,7 @@ public class AdbServerServiceTest {
 
         // verify interactions during launch
         assertThat(adbService.state()).isEqualTo(Service.State.RUNNING);
-        verify(launcher, never()).launch(anyInt(), anyLong(), any());
+        verify(launcher, never()).launch(anyInt(), anyBoolean(), anyLong(), any());
 
         // now attempt to stop
         adbService.stopAsync();
@@ -129,7 +130,7 @@ public class AdbServerServiceTest {
     @Test
     public void lifecycle_newServer() throws TimeoutException, IOException, InterruptedException {
         when(probe.probe(any(), anyLong(), any())).thenReturn(null);
-        when(launcher.launch(anyInt(), anyLong(), any())).thenReturn(endpoint);
+        when(launcher.launch(anyInt(), anyBoolean(), anyLong(), any())).thenReturn(endpoint);
         when(endpoint.newConnection()).thenReturn(connection);
         adbService = new AdbServerService(options, launcher, probe, virtualScheduler);
 
@@ -142,6 +143,7 @@ public class AdbServerServiceTest {
         verify(launcher, times(1))
                 .launch(
                         eq(options.getPort()),
+                        eq(false),
                         eq(options.getStartTimeout(TimeUnit.MILLISECONDS)),
                         eq(TimeUnit.MILLISECONDS));
 
@@ -162,7 +164,8 @@ public class AdbServerServiceTest {
     @Test
     public void start_launcherError() throws IOException, TimeoutException, InterruptedException {
         when(probe.probe(any(), anyLong(), any())).thenReturn(null);
-        when(launcher.launch(anyInt(), anyLong(), any())).thenThrow(IOException.class);
+        when(launcher.launch(anyInt(), anyBoolean(), anyLong(), any()))
+                .thenThrow(IOException.class);
         adbService = new AdbServerService(options, launcher, probe, virtualScheduler);
 
         try {
@@ -178,7 +181,7 @@ public class AdbServerServiceTest {
     @Test
     public void stop_error() throws IOException, TimeoutException, InterruptedException {
         when(probe.probe(any(), anyLong(), any())).thenReturn(null);
-        when(launcher.launch(anyInt(), anyLong(), any())).thenReturn(endpoint);
+        when(launcher.launch(anyInt(), anyBoolean(), anyLong(), any())).thenReturn(endpoint);
         when(endpoint.newConnection()).thenReturn(connection);
         doThrow(new IOException()).when(connection).issueCommand(any());
 

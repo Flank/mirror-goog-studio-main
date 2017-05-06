@@ -115,7 +115,12 @@ class AdbServerService extends AbstractService {
             endpoint = probe.probe(address, options.getProbeTimeout(unit), unit);
             if (endpoint == null) {
                 LOG.info("No existing server detected, launching adb server");
-                endpoint = launcher.launch(options.getPort(), options.getStartTimeout(unit), unit);
+                endpoint =
+                        launcher.launch(
+                                options.getPort(),
+                                options.shouldUseLibUsb(),
+                                options.getStartTimeout(unit),
+                                unit);
                 terminateServerOnStop = true;
             } else {
                 LOG.info("Server already running");
