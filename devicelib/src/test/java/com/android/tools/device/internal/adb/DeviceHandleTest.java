@@ -26,7 +26,9 @@ import org.junit.Test;
 public class DeviceHandleTest {
     @Test
     public void create_WithoutDevicePath() {
-        DeviceHandle handle = DeviceHandle.create("2fe6c14a        device product:kltexx model:SM_G900F device:klte");
+        DeviceHandle handle =
+                DeviceHandle.create(
+                        "2fe6c14a        device product:kltexx model:SM_G900F device:klte");
 
         assertThat(handle.getSerial()).isEqualTo("2fe6c14a");
         assertThat(handle.getConnectionState()).isEqualTo(ConnectionState.DEVICE);
@@ -38,7 +40,9 @@ public class DeviceHandleTest {
 
     @Test
     public void create_WithDevicePath() {
-        DeviceHandle handle = DeviceHandle.create("0871182e               device usb:3-1 product:razorg model:Nexus_7 device:deb");
+        DeviceHandle handle =
+                DeviceHandle.create(
+                        "0871182e               device usb:3-1 product:razorg model:Nexus_7 device:deb");
 
         assertThat(handle.getSerial()).isEqualTo("0871182e");
         assertThat(handle.getDevicePath().get()).isEqualTo("usb:3-1");
@@ -48,10 +52,25 @@ public class DeviceHandleTest {
     public void create_InvalidListing() {
         try {
             DeviceHandle.create("2fe6c14a       product:kltexx model:SM_G900F device:klte");
-            fail("DeviceHandle should not have been constructed if the connection state was missing");
+            fail(
+                    "DeviceHandle should not have been constructed if the connection state was missing");
         } catch (IllegalArgumentException e) {
-            assertThat(e.getMessage()).isEqualTo("transport listing expected to have atleast 5 components, got 4 in '2fe6c14a       product:kltexx model:SM_G900F device:klte'");
+            assertThat(e.getMessage()).isEqualTo("Unknown connection state: product:kltexx");
         }
+    }
+
+    @Test
+    public void create_offline() {
+        DeviceHandle handle = DeviceHandle.create("CQEU5L7L8HBIV8DA       offline usb:20:22");
+        assertThat(handle.getSerial()).isEqualTo("CQEU5L7L8HBIV8DA");
+        assertThat(handle.getConnectionState()).isEqualTo(ConnectionState.OFFLINE);
+    }
+
+    @Test
+    public void create_unauthorized() {
+        DeviceHandle handle = DeviceHandle.create("CQEU5L7L8HBIV8DA       unauthorized");
+        assertThat(handle.getSerial()).isEqualTo("CQEU5L7L8HBIV8DA");
+        assertThat(handle.getConnectionState()).isEqualTo(ConnectionState.UNAUTHORIZED);
     }
 
     @Test

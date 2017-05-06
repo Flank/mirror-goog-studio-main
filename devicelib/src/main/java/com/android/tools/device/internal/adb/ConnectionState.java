@@ -48,6 +48,6 @@ public enum ConnectionState {
             }
         }
 
-        return UNKNOWN;
+        throw new IllegalArgumentException("Unknown connection state: " + name);
     }
 };
