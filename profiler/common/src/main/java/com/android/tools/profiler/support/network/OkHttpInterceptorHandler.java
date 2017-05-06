@@ -19,6 +19,7 @@ package com.android.tools.profiler.support.network;
 import java.io.InputStream;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 
 public abstract class OkHttpInterceptorHandler implements InvocationHandler {
 
@@ -26,20 +27,18 @@ public abstract class OkHttpInterceptorHandler implements InvocationHandler {
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        if (method.getName().equals("intercept")) {
+        if ("intercept".equals(method.getName())) {
             Object chain = args[0];
             Object request = chain.getClass().getDeclaredMethod("request").invoke(chain);
             HttpConnectionTracker tracker = track(request);
             trackRequest(tracker, request);
-            Object response =
-                    chain.getClass()
-                            .getDeclaredMethod("proceed", request.getClass())
-                            .invoke(chain, request);
+            Method proceed = chain.getClass().getDeclaredMethod("proceed", request.getClass());
+            Object response = proceed.invoke(chain, request);
             trackResponse(tracker, response);
-            trackResponseBody(tracker, response);
-            return response;
+            InputStream inputStream = trackResponseBody(tracker, response);
+            return wrapResponse(response, inputStream, tracker);
         }
-        return null;
+        return method.invoke(proxy, args);
     }
 
     protected abstract HttpConnectionTracker track(Object request) throws Throwable;
@@ -50,22 +49,65 @@ public abstract class OkHttpInterceptorHandler implements InvocationHandler {
     protected abstract void trackResponse(HttpConnectionTracker tracker, Object response)
             throws Throwable;
 
-    protected static void trackResponseBody(HttpConnectionTracker tracker, Object response)
+    protected static final InputStream trackResponseBody(
+            final HttpConnectionTracker tracker, final Object response) throws Throwable {
+        Object body = response.getClass().getDeclaredMethod("body").invoke(response);
+        if (body == null) {
+            return null;
+        }
+        Object source = body.getClass().getDeclaredMethod("source").invoke(body);
+        Object inputStream = source.getClass().getDeclaredMethod("inputStream").invoke(source);
+        return inputStream instanceof InputStream
+                ? tracker.trackResponseBody((InputStream) inputStream)
+                : null;
+    }
+
+    private final Object wrapResponse(
+            final Object response, final InputStream wrappedStream, HttpConnectionTracker tracker)
             throws Throwable {
         Object body = response.getClass().getDeclaredMethod("body").invoke(response);
+        if (body == null) {
+            return response;
+        }
+        Object source = body.getClass().getDeclaredMethod("source").invoke(body);
+        Object wrappedSource = wrapResponseSource(source, wrappedStream);
+        Object wrappedBody = wrapResponseBody(body, wrappedSource);
+        return wrapResponse(response, wrappedBody);
+    }
+
+    private final Object wrapResponseSource(
+            final Object source, final InputStream wrappedInputStream) throws Throwable {
+        InvocationHandler sourceHandler =
+                new InvocationHandler() {
+                    @Override
+                    public Object invoke(Object proxy, Method method, Object[] args)
+                            throws Throwable {
+                        // TODO: disconnect tracker when source.close is called
+                        if ("inputStream".equals(method.getName())) {
+                            return wrappedInputStream;
+                        }
+                        return method.invoke(source, args);
+                    }
+                };
+        ClassLoader sourceClassLoader = source.getClass().getClassLoader();
+        Class<?> sourceClass = Class.forName("okio.BufferedSource", false, sourceClassLoader);
+        return Proxy.newProxyInstance(sourceClassLoader, new Class[] {sourceClass}, sourceHandler);
+    }
+
+    private final Object wrapResponseBody(final Object body, final Object wrappedSource)
+            throws Throwable {
+        Object contentType = body.getClass().getDeclaredMethod("contentType").invoke(body);
         long contentLength = (Long) body.getClass().getDeclaredMethod("contentLength").invoke(body);
         Object source = body.getClass().getDeclaredMethod("source").invoke(body);
-        source.getClass().getDeclaredMethod("request", Long.TYPE).invoke(source, contentLength);
-        Object buffer = source.getClass().getDeclaredMethod("buffer").invoke(source);
-        buffer = buffer.getClass().getDeclaredMethod("clone").invoke(buffer);
-        InputStream stream =
-                tracker.trackResponseBody(
-                        (InputStream)
-                                buffer.getClass().getDeclaredMethod("inputStream").invoke(buffer));
-        while (stream.read() != -1) { // expected empty loop body
-        }
-        stream.close();
+        Class<?> sourceClass =
+                Class.forName("okio.BufferedSource", false, source.getClass().getClassLoader());
+        return body.getClass()
+                .getMethod("create", contentType.getClass(), Long.TYPE, sourceClass)
+                .invoke(null, contentType, contentLength, wrappedSource);
     }
+
+    protected abstract Object wrapResponse(final Object response, final Object wrappedBody)
+            throws Throwable;
 
     protected static StackTraceElement[] getCallstack(String okHttpPackage) {
         StackTraceElement[] callstack = new Throwable().getStackTrace();

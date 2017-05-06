@@ -16,11 +16,12 @@
 
 package com.android.tools.profiler.support.network;
 
+import java.lang.reflect.Method;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public final class OkHttp2InterceptorHandler extends OkHttpInterceptorHandler {
 
@@ -49,17 +50,25 @@ public final class OkHttp2InterceptorHandler extends OkHttpInterceptorHandler {
         tracker.trackResponse("", fields);
     }
 
+    @Override
+    protected Object wrapResponse(final Object response, final Object wrappedBody)
+            throws Throwable {
+        Object builder = response.getClass().getDeclaredMethod("newBuilder").invoke(response);
+        ClassLoader classLoader = response.getClass().getClassLoader();
+        Class<?> bodyClass = Class.forName(OKHTTP_PACKAGE + "ResponseBody", false, classLoader);
+        builder.getClass().getDeclaredMethod("body", bodyClass).invoke(builder, wrappedBody);
+        return builder.getClass().getDeclaredMethod("build").invoke(builder);
+    }
+
     private static Map<String, List<String>> getFieldsMap(Object headers) throws Throwable {
-        Set<String> names =
-                (Set<String>) headers.getClass().getDeclaredMethod("names").invoke(headers);
         Map<String, List<String>> fields = new HashMap<String, List<String>>();
-        for (String name : names) {
-            List<String> valueList =
-                    (List<String>)
-                            headers.getClass()
-                                    .getDeclaredMethod("values", String.class)
-                                    .invoke(headers, name);
-            fields.put(name, valueList);
+        Object names = headers.getClass().getDeclaredMethod("names").invoke(headers);
+        if (names instanceof Collection) {
+            Collection<String> nameStrings = (Collection<String>) names;
+            Method values = headers.getClass().getDeclaredMethod("values", String.class);
+            for (String name : nameStrings) {
+                fields.put(name, (List<String>) values.invoke(headers, name));
+            }
         }
         return fields;
     }
