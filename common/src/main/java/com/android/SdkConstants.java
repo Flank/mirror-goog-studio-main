@@ -1414,6 +1414,7 @@ public final class SdkConstants {
             "layout_constraintGuide_percent"; //$NON-NLS-1$
     public static final String LAYOUT_CONSTRAINT_DEPRECATED_GUIDE_PERCENT =
             "layout_constraintGuide_Percent"; //$NON-NLS-1$
+    public static final String ATTR_LOCKED = "locked"; //$NON-NLS-1$
 
     // FlexboxLayout params
     public static final String ATTR_FLEX_DIRECTION = "flexDirection";
