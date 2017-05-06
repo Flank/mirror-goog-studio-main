@@ -59,6 +59,15 @@ public class ListDevicesTest {
     }
 
     @Test
+    public void list_empty() throws IOException {
+        byte[] responseData = createOkayResponse("");
+        StreamConnection connection =
+                new StreamConnection(new ByteArrayInputStream(responseData), commandStream);
+        List<DeviceHandle> devices = listDevices.execute(connection);
+        assertThat(devices.isEmpty()).isTrue();
+    }
+
+    @Test
     public void list_error() throws IOException {
         byte[] responseData = "FAIL0003err".getBytes(Charsets.UTF_8);
         StreamConnection connection = new StreamConnection(new ByteArrayInputStream(responseData),
