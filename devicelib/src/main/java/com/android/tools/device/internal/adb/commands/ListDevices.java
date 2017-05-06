@@ -19,6 +19,7 @@ package com.android.tools.device.internal.adb.commands;
 import com.android.annotations.NonNull;
 import com.android.tools.device.internal.adb.Connection;
 import com.android.tools.device.internal.adb.DeviceHandle;
+import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
@@ -50,7 +51,12 @@ public class ListDevices implements AdbCommand<List<DeviceHandle>> {
             throw new IOException(msg);
         }
 
-        String response = conn.readString(conn.readUnsignedHexInt().intValue());
+        int len = conn.readUnsignedHexInt().intValue();
+        if (len == 0) {
+            return ImmutableList.of();
+        }
+
+        String response = conn.readString(len);
 
         return Arrays.stream(response.split("\n"))
                 .map(DeviceHandle::create)
