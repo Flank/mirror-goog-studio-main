@@ -144,6 +144,7 @@ import org.jetbrains.uast.UExpression;
 import org.jetbrains.uast.UFile;
 import org.jetbrains.uast.UIdentifier;
 import org.jetbrains.uast.UIfExpression;
+import org.jetbrains.uast.ULambdaExpression;
 import org.jetbrains.uast.ULiteralExpression;
 import org.jetbrains.uast.UMethod;
 import org.jetbrains.uast.UNamedExpression;
@@ -1555,7 +1556,7 @@ public class SupportAnnotationDetector extends Detector implements UastScanner {
             @NonNull UElement methodCall) {
         //noinspection unchecked
         PsiMethod method = UastUtils.getParentOfType(methodCall, UMethod.class, true,
-                UAnonymousClass.class);
+                UAnonymousClass.class, ULambdaExpression.class);
         return getThreads(context, method);
     }
 
