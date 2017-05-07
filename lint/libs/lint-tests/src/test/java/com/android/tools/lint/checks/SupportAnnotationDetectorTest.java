@@ -3222,6 +3222,41 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testThreadsInLambdas() {
+        // Regression test for b/38069472
+        //noinspection all // Sample code
+        lint().files(
+                manifest().minSdk(1),
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "import android.support.annotation.MainThread;\n"
+                        + "import android.support.annotation.WorkerThread;\n"
+                        + "\n"
+                        + "import java.util.concurrent.Executor;\n"
+                        + "\n"
+                        + "public abstract class ApiCallInLambda<T> {\n"
+                        + "    Executor networkExecutor;\n"
+                        + "    @MainThread\n"
+                        + "    private void fetchFromNetwork(T data) {\n"
+                        + "        networkExecutor.execute(() -> {\n"
+                        + "            Call<T> call = createCall();\n"
+                        + "        });\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    @WorkerThread\n"
+                        + "    protected abstract Call<T> createCall();\n"
+                        + "\n"
+                        + "    private static class Call<T> {\n"
+                        + "    }\n"
+                        + "}\n"),
+                mSupportClasspath,
+                mSupportJar)
+                .checkMessage(this::checkReportedError)
+                .run()
+                .expectClean();
+    }
+
     public static final String SUPPORT_JAR_PATH = "libs/support-annotations.jar";
     private TestFile mSupportJar = base64gzip(SUPPORT_JAR_PATH,
             SUPPORT_ANNOTATIONS_JAR_BASE64_GZIP);
