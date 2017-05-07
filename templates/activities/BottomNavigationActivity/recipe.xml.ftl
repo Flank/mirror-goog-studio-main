@@ -15,8 +15,13 @@
     <copy from="root/res/drawable"
             to="${escapeXmlAttribute(resOut)}/drawable" />
 
+<#if generateKotlin>
+    <instantiate from="root/src/app_package/MainActivity.kt.ftl"
+                   to="${escapeXmlAttribute(srcOut)}/${activityClass}.kt" />
+<#else>
     <instantiate from="root/src/app_package/MainActivity.java.ftl"
                    to="${escapeXmlAttribute(srcOut)}/${activityClass}.java" />
+</#if>
     <instantiate from="root/res/layout/activity_main.xml.ftl"
                    to="${escapeXmlAttribute(resOut)}/layout/${layoutName}.xml" />
 

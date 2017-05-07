@@ -38,16 +38,19 @@
     <global id="superClassFqcn" type="string" value="android.app.Activity"/>
     <global id="Support" value="" />
     <global id="actionBarClassFqcn" type = "string" value="android.app.ActionBar" />
+    <global id="kotlinActionBar" type="string" value="actionBar" />
 <#elseif appCompatActivity>
     <global id="superClass" type="string" value="AppCompatActivity"/>
     <global id="superClassFqcn" type="string" value="android.support.v7.app.AppCompatActivity"/>
     <global id="Support" value="Support" />
     <global id="actionBarClassFqcn" type = "string" value="android.support.v7.app.ActionBar" />
+    <global id="kotlinActionBar" type="string" value="supportActionBar" />
 <#else>
     <global id="superClass" type="string" value="ActionBarActivity"/>
     <global id="superClassFqcn" type="string" value="android.support.v7.app.ActionBarActivity"/>
     <global id="Support" value="Support" />
     <global id="actionBarClassFqcn" type = "string" value="android.support.v7.app.ActionBar" />
+    <global id="kotlinActionBar" type="string" value="supportActionBar" />
 </#if>
 
     <global id="srcOut" value="${srcDir}/${slashedPackageName(packageName)}" />
@@ -55,4 +58,6 @@
     <global id="menuName" value="${classToResource(activityClass!'')}" />
     <global id="simpleName" value="${activityToLayout(activityClass!'')}" />
     <global id="relativePackage" value="<#if relativePackage?has_content>${relativePackage}<#else>${packageName}</#if>" />
+    <global id="generateKotlin" type="boolean"
+            value="${((includeKotlinSupport!false) || (language!'Java')?string == 'Kotlin')?string}" />
 </globals>

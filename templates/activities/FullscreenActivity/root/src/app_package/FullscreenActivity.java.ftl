@@ -184,7 +184,7 @@ public class ${activityClass} extends ${superClass} {
     };
 
     /**
-     * Schedules a call to hide() in [delay] milliseconds, canceling any
+     * Schedules a call to hide() in delay milliseconds, canceling any
      * previously scheduled calls.
      */
     private void delayedHide(int delayMillis) {
