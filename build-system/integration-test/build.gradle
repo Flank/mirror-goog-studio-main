@@ -126,6 +126,12 @@ configure([test, testPrebuilts]) {
     forkEvery = 1
     maxParallelForks = Runtime.runtime.availableProcessors() / 4
 
+    // FIXME: Temporarily disable multi-threading on Windows to address http://b/38119382.
+    // We will remove this work-around once the issue is resolved.
+    if (org.gradle.internal.os.OperatingSystem.current().windows) {
+        maxParallelForks = 1
+    }
+
     useJUnit {
         if (System.properties['test.includeCategories'] != null) {
             def categories = System.properties['test.includeCategories'].split(',')
@@ -197,6 +203,12 @@ configure(allConnectedTestTasks) {
         count = 8
     }
     maxParallelForks = count
+
+    // FIXME: Temporarily disable multi-threading on Windows to address http://b/38119382.
+    // We will remove this work-around once the issue is resolved.
+    if (org.gradle.internal.os.OperatingSystem.current().windows) {
+        maxParallelForks = 1
+    }
 
     exclude "com/android/build/gradle/integration/performance/**"
     exclude "com/android/build/gradle/integration/automatic/**"
