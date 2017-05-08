@@ -91,7 +91,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -221,7 +220,6 @@ public class ProcessAndroidResources extends IncrementalTask {
     protected void doFullTaskAction() throws IOException {
 
         WaitableExecutor executor = WaitableExecutor.useGlobalSharedThreadPool();
-        AtomicBoolean codeGenNecessary = new AtomicBoolean(true);
 
         if (buildTargetAbi != null
                 && supportedAbis != null
@@ -290,26 +288,40 @@ public class ProcessAndroidResources extends IncrementalTask {
 
         SplitList splitList = SplitList.load(splitListInput);
 
+        // do a first pass at the list so we generate the code synchronously since it's required
+        // by the full splits asynchronous processing below.
+        List<ApkData> apkDataList = new ArrayList<>(splitsToGenerate);
         for (ApkData apkData : splitsToGenerate) {
+            if (apkData.requiresAapt()) {
+                boolean codeGen =
+                        (apkData.getType() == OutputFile.OutputType.MAIN
+                                || apkData.getFilter(OutputFile.FilterType.DENSITY) == null);
+                if (codeGen) {
+                    apkDataList.remove(apkData);
+                    invokeAaptForSplit(
+                            manifestsOutputs,
+                            packageIdFileSet,
+                            splitList,
+                            featureResourcePackages,
+                            apkData,
+                            codeGen);
+                    break;
+                }
+            }
+        }
+
+        // now all remaining splits will be generate asynchronously.
+        for (ApkData apkData : apkDataList) {
             if (apkData.requiresAapt()) {
                 executor.execute(
                         () -> {
-                            boolean codeGen =
-                                    codeGenNecessary.get()
-                                            && (apkData.getType() == OutputFile.OutputType.MAIN
-                                                    || apkData.getFilter(
-                                                                    OutputFile.FilterType.DENSITY)
-                                                            == null);
-                            if (codeGen) {
-                                codeGenNecessary.set(false);
-                            }
                             invokeAaptForSplit(
                                     manifestsOutputs,
                                     packageIdFileSet,
                                     splitList,
                                     featureResourcePackages,
                                     apkData,
-                                    codeGen);
+                                    false);
                             return null;
                         });
             }
