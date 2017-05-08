@@ -19,7 +19,9 @@ package com.android.apkzlib.zip;
 import com.google.common.base.Charsets;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
+import java.nio.charset.CodingErrorAction;
 import javax.annotation.Nonnull;
 
 /**
@@ -52,10 +54,9 @@ public class EncodeUtils {
                     + "length is " + length + ".");
         }
 
-        Charset charset = flagsCharset(flags);
         byte[] stringBytes = new byte[length];
         bytes.get(stringBytes);
-        return charset.decode(ByteBuffer.wrap(stringBytes)).toString();
+        return decode(stringBytes, flags);
     }
 
     /**
@@ -68,7 +69,23 @@ public class EncodeUtils {
     @Nonnull
     public static String decode(@Nonnull byte[] data, @Nonnull GPFlags flags) {
         Charset charset = flagsCharset(flags);
-        return charset.decode(ByteBuffer.wrap(data)).toString();
+
+        while (true) {
+            try {
+                return charset.newDecoder()
+                        .onMalformedInput(CodingErrorAction.REPORT)
+                        .decode(ByteBuffer.wrap(data))
+                        .toString();
+            } catch (CharacterCodingException e) {
+                // If we're trying to decode ASCII, try UTF-8. Otherwise, revert to the default
+                // behavior (usually replacing invalid characters).
+                if (charset == Charsets.US_ASCII) {
+                    charset = Charsets.UTF_8;
+                } else {
+                    return charset.decode(ByteBuffer.wrap(data)).toString();
+                }
+            }
+        }
     }
 
     /**

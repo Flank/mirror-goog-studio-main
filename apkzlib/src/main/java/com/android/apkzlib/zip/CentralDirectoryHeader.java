@@ -128,6 +128,7 @@ public class CentralDirectoryHeader implements Cloneable {
      * Creates data for a file.
      *
      * @param name the file name
+     * @param encodedFileName the encoded file name, this array will be owned by the header
      * @param uncompressedSize the uncompressed file size
      * @param compressInfo computation that defines the compression information
      * @param flags flags used in the entry
@@ -135,6 +136,7 @@ public class CentralDirectoryHeader implements Cloneable {
      */
     CentralDirectoryHeader(
             @Nonnull String name,
+            @Nonnull byte[] encodedFileName,
             long uncompressedSize,
             @Nonnull Future<CentralDirectoryHeaderCompressInfo> compressInfo,
             @Nonnull GPFlags flags,
@@ -156,7 +158,7 @@ public class CentralDirectoryHeader implements Cloneable {
         internalAttributes = 0;
         externalAttributes = 0;
         offset = -1;
-        encodedFileName = EncodeUtils.encode(name, gpBit);
+        this.encodedFileName = encodedFileName;
         this.compressInfo = compressInfo;
         file = zFile;
     }

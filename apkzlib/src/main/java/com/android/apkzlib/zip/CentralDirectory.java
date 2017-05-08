@@ -341,7 +341,9 @@ class CentralDirectory {
                             + ".");
         }
 
-        String fileName = EncodeUtils.decode(bytes, fileNameLength, flags);
+        byte[] encodedFileName = new byte[fileNameLength];
+        bytes.get(encodedFileName);
+        String fileName = EncodeUtils.decode(encodedFileName, flags);
 
         byte[] extraField = new byte[extraFieldLength];
         bytes.get(extraField);
@@ -362,11 +364,7 @@ class CentralDirectory {
                                 versionNeededToExtract));
         CentralDirectoryHeader centralDirectoryHeader =
                 new CentralDirectoryHeader(
-                        fileName,
-                        uncompressedSize,
-                        compressInfo,
-                        flags,
-                        file);
+                        fileName, encodedFileName, uncompressedSize, compressInfo, flags, file);
         centralDirectoryHeader.setMadeBy(madeBy);
         centralDirectoryHeader.setLastModTime(lastModTime);
         centralDirectoryHeader.setLastModDate(lastModDate);

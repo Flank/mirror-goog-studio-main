@@ -1522,12 +1522,14 @@ public class ZFile implements Closeable {
 
         SettableFuture<CentralDirectoryHeaderCompressInfo> compressInfo =
                 SettableFuture.create();
+        GPFlags flags = GPFlags.make(encodeWithUtf8);
         CentralDirectoryHeader newFileData =
                 new CentralDirectoryHeader(
                         name,
+                        EncodeUtils.encode(name, flags),
                         source.size(),
                         compressInfo,
-                        GPFlags.make(encodeWithUtf8),
+                        flags,
                         this);
         newFileData.setCrc32(crc32);
 
