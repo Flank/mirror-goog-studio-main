@@ -568,7 +568,22 @@ public class LintFix {
         @Nullable
         public <T> T get(@NonNull Class<T> key) {
             //noinspection unchecked
-            return (T) map.get(key);
+            T t = (T)map.get(key);
+            if (t != null) {
+                return t;
+            }
+
+            // See if there are other matches for this class.
+            for (Map.Entry<Object, Object> entry : map.entrySet()) {
+                Object k = entry.getKey();
+                if (k instanceof Class &&
+                        key.isAssignableFrom((Class<?>)k)) {
+                    //noinspection unchecked
+                    return (T)entry.getValue();
+                }
+            }
+
+            return null;
         }
 
         /** Returns the value for the given String key */
