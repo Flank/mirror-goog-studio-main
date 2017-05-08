@@ -16,17 +16,17 @@
 
 package com.google.devrel.gmscore.tools.apk.arsc;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
-
-import javax.annotation.Nullable;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 /** A package chunk is a collection of resource data types within a package. */
 public final class PackageChunk extends ChunkWithChunks {
@@ -64,6 +64,9 @@ public final class PackageChunk extends ChunkWithChunks {
   /** Contains a mapping of a type index to all of the {@link TypeChunk} with that index. */
   private final Multimap<Integer, TypeChunk> types = ArrayListMultimap.create();
 
+  /** May contain a library chunk for mapping dynamic references to resolved references. */
+  private Optional<LibraryChunk> libraryChunk = Optional.absent();
+
   protected PackageChunk(ByteBuffer buffer, @Nullable Chunk parent) {
     super(buffer, parent);
     id = buffer.getInt();
@@ -85,6 +88,12 @@ public final class PackageChunk extends ChunkWithChunks {
       } else if (chunk instanceof TypeSpecChunk) {
         TypeSpecChunk typeSpecChunk = (TypeSpecChunk) chunk;
         typeSpecs.put(typeSpecChunk.getId(), typeSpecChunk);
+      } else if (chunk instanceof LibraryChunk) {
+          if (libraryChunk.isPresent()) {
+              throw new IllegalStateException(
+                      "Multiple library chunks present in package chunk.");
+          }
+          libraryChunk = Optional.of((LibraryChunk) chunk);
       } else if (!(chunk instanceof StringPoolChunk)) {
         throw new IllegalStateException(
             String.format("PackageChunk contains an unexpected chunk: %s", chunk.getClass()));
