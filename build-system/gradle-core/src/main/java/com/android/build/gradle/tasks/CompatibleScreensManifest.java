@@ -19,10 +19,13 @@ package com.android.build.gradle.tasks;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.DefaultAndroidTask;
+import com.android.build.gradle.internal.tasks.TaskInputHelper;
+import com.android.builder.model.ApiVersion;
 import com.android.ide.common.build.ApkData;
 import com.android.resources.Density;
 import com.android.utils.FileUtils;
@@ -33,7 +36,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.api.tasks.TaskAction;
@@ -49,6 +54,7 @@ public class CompatibleScreensManifest extends DefaultAndroidTask {
     private Set<String> screenSizes;
     private File outputFolder;
     private SplitScope splitScope;
+    private Supplier<String> minSdkVersion;
 
     @Input
     public Set<String> getScreenSizes() {
@@ -62,6 +68,16 @@ public class CompatibleScreensManifest extends DefaultAndroidTask {
     @Input
     List<ApkData> getSplits() {
         return splitScope.getApkDatas();
+    }
+
+    @Input
+    @Optional
+    String getMinSdkVersion() {
+        return minSdkVersion.get();
+    }
+
+    void setMinSdkVersion(Supplier<String> minSdkVersion) {
+        this.minSdkVersion = minSdkVersion;
     }
 
     @OutputDirectory
@@ -91,12 +107,17 @@ public class CompatibleScreensManifest extends DefaultAndroidTask {
             return null;
         }
 
-        StringBuilder content = new StringBuilder(
-                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-                "    package=\"\">\n" +
-                "\n" +
-                "    <compatible-screens>\n");
+        StringBuilder content = new StringBuilder();
+        content.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n")
+                .append("<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n")
+                .append("    package=\"\">\n")
+                .append("\n");
+        if (minSdkVersion.get() != null) {
+            content.append("    <uses-sdk android:minSdkVersion=\"")
+                    .append(minSdkVersion.get())
+                    .append("\"/>\n");
+        }
+        content.append("    <compatible-screens>\n");
 
         // convert unsupported values to numbers.
         density = convert(density, Density.XXHIGH, Density.XXXHIGH);
@@ -132,8 +153,7 @@ public class CompatibleScreensManifest extends DefaultAndroidTask {
     public static class ConfigAction implements TaskConfigAction<CompatibleScreensManifest> {
 
         @NonNull private final VariantScope scope;
-        @NonNull
-        private final Set<String> screenSizes;
+        @NonNull private final Set<String> screenSizes;
 
         public ConfigAction(@NonNull VariantScope scope, @NonNull Set<String> screenSizes) {
             this.scope = scope;
@@ -154,10 +174,17 @@ public class CompatibleScreensManifest extends DefaultAndroidTask {
 
         @Override
         public void execute(@NonNull CompatibleScreensManifest csmTask) {
-            csmTask.splitScope = scope.getVariantData().getSplitScope();
+            csmTask.splitScope = scope.getSplitScope();
             csmTask.setVariantName(scope.getFullVariantName());
             csmTask.setScreenSizes(screenSizes);
             csmTask.setOutputFolder(scope.getCompatibleScreensManifestDirectory());
+            GradleVariantConfiguration config = scope.getVariantConfiguration();
+            csmTask.minSdkVersion =
+                    TaskInputHelper.memoize(
+                            () -> {
+                                ApiVersion minSdk = config.getMergedFlavor().getMinSdkVersion();
+                                return minSdk == null ? null : minSdk.getApiString();
+                            });
         }
     }
 }
