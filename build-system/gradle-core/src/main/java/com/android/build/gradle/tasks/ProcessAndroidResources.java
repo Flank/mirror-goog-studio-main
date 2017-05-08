@@ -310,7 +310,7 @@ public class ProcessAndroidResources extends IncrementalTask {
             }
         }
 
-        // now all remaining splits will be generate asynchronously.
+        // now all remaining splits will be generated asynchronously.
         for (ApkData apkData : apkDataList) {
             if (apkData.requiresAapt()) {
                 executor.execute(
@@ -450,6 +450,9 @@ public class ProcessAndroidResources extends IncrementalTask {
 
         String packageForR = null;
         File srcOut = null;
+        File symbolOutputDir = null;
+        File proguardOutputFile = null;
+        File mainDexListProguardOutputFile = null;
         if (generateCode) {
             packageForR = originalApplicationId;
 
@@ -458,6 +461,10 @@ public class ProcessAndroidResources extends IncrementalTask {
             if (srcOut != null) {
                 FileUtils.cleanOutputDir(srcOut);
             }
+
+            symbolOutputDir = getTextSymbolOutputDir();
+            proguardOutputFile = getProguardOutputFile();
+            mainDexListProguardOutputFile = getMainDexListProguardOutputFile();
         }
 
         String splitFilter = apkData.getFilter(OutputFile.FilterType.DENSITY);
@@ -490,12 +497,12 @@ public class ProcessAndroidResources extends IncrementalTask {
                 SymbolUtils.processLibraryMainSymbolTable(
                         symbolTable,
                         generateCode ? getLibraryInfoList() : ImmutableList.of(),
-                        getEnforceUniquePackageName(),
-                        getPackageForR(),
+                        generateCode && getEnforceUniquePackageName(),
+                        packageForR,
                         manifestFile,
                         srcOut,
-                        getTextSymbolOutputDir(),
-                        getProguardOutputFile());
+                        symbolOutputDir,
+                        proguardOutputFile);
             } else {
 
                 Aapt aapt =
@@ -515,12 +522,11 @@ public class ProcessAndroidResources extends IncrementalTask {
                                 .setLibraries(
                                         generateCode ? getLibraryInfoList() : ImmutableList.of())
                                 .setCustomPackageForR(packageForR)
-                                .setSymbolOutputDir(getTextSymbolOutputDir())
+                                .setSymbolOutputDir(symbolOutputDir)
                                 .setSourceOutputDir(srcOut)
                                 .setResourceOutputApk(resOutBaseNameFile)
-                                .setProguardOutputFile(getProguardOutputFile())
-                                .setMainDexListProguardOutputFile(
-                                        getMainDexListProguardOutputFile())
+                                .setProguardOutputFile(proguardOutputFile)
+                                .setMainDexListProguardOutputFile(mainDexListProguardOutputFile)
                                 .setVariantType(getType())
                                 .setDebuggable(getDebuggable())
                                 .setPseudoLocalize(getPseudoLocalesEnabled())

@@ -27,6 +27,7 @@ import com.android.io.StreamException;
 import com.android.xml.AndroidManifest;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
@@ -63,6 +64,9 @@ public class SymbolUtils {
             @NonNull File symbolsOut,
             @Nullable File proguardOut)
             throws IOException {
+
+        Preconditions.checkNotNull(sourceOut, "Source output directory should not be null");
+        Preconditions.checkNotNull(symbolsOut, "Symbols output directory should not be null");
 
         // Parse the manifest only when necessary.
         if (mainPackageName == null || proguardOut != null) {
@@ -187,7 +191,7 @@ public class SymbolUtils {
      * service}, {@code provider} and {@code receiver} keep class data in the manifest, generates
      * keep rules for each of them and returns them as a list.
      *
-     * <p>For examples refer to {@link SymbolUtilsTest.java}.
+     * <p>For examples refer to {@code SymbolUtilsTest.java}.
      *
      * @param manifest containing keep class data
      */
@@ -204,7 +208,7 @@ public class SymbolUtils {
      * each of them, as long as the node doesn't declare it belongs to a private process. Returns
      * the keep rules as a list.
      *
-     * <p>For examples refer to {@link SymbolUtilsTest.java}.
+     * <p>For examples refer to {@code SymbolUtilsTest.java}.
      *
      * @param manifest containing keep class data
      */
