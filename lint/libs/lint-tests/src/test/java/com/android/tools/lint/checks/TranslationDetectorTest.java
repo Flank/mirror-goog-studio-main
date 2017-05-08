@@ -377,6 +377,8 @@ public class TranslationDetectorTest extends AbstractCheckTest {
                             + "  <string name=\"com.example.app.BaseActivity\">Home</string>\n"
                             + "  <string name=\"com.example.app.PrefsActivity\">Preferences</string>\n"
                             + "  <string name=\"test.pkg.OnClickActivity\">Clicks</string>\n"
+                            + "\n"
+                            + "  <string name=\"google_crash_reporting_api_key\" translatable=\"false\">AIzbSyCILMsOuUKwN3qhtxrPq7FFemDJUAXTyZ8</string>\n"
                             + "</resources>\n"),
                         mDonottranslate // to make app multilingual
                 ));

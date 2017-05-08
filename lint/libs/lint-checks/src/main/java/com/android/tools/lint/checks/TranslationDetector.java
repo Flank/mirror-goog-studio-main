@@ -661,13 +661,21 @@ public class TranslationDetector extends ResourceXmlDetector {
         //    https://code.google.com/p/android/issues/detail?id=195824
         // For Firebase see also
         //    https://firebase.google.com/docs/reference/gradle/#processing_the_json_file
-        return name.equals("gcm_defaultSenderId")
-                || name.equals("google_app_id")
-                || name.equals("google_api_key")
-                || name.equals("google_storage_bucket")
-                || name.equals("ga_trackingID")
-                || name.equals("default_web_client_id")
-                || name.equals("firebase_database_url");
+        // And finally
+        //    https://developers.google.com/android/guides/google-services-plugin
+        switch (name) {
+            case "gcm_defaultSenderId":
+            case "google_app_id":
+            case "google_api_key":
+            case "google_storage_bucket":
+            case "ga_trackingID":
+            case "default_web_client_id":
+            case "firebase_database_url":
+            case "google_crash_reporting_api_key":
+                return true;
+            default:
+                return false;
+        }
     }
 
     private static boolean allItemsAreReferences(Element element) {
