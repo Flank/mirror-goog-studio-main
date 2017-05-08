@@ -93,9 +93,9 @@ public class AntennaPodPerformanceMatrixTest {
             case NORMAL_J8:
                 break;
             case DEX_ARCHIVE_MONODEX_J8:
-                DexInProcessHelper.disableDexInProcess(appBuildFile);
                 break;
             case DEX_OUT_OF_PROCESS_J8:
+                DexInProcessHelper.disableDexInProcess(appBuildFile);
                 break;
             default:
                 throw new IllegalArgumentException(
