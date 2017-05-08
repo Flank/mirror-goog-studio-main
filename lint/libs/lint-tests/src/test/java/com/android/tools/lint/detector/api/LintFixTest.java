@@ -69,6 +69,15 @@ public class LintFixTest extends TestCase {
         assertNotNull(LintFix.getData(quickfixData, Map.class));
     }
 
+    public void testClassInheritance() {
+        //noinspection UnnecessaryBoxing
+        LintFix.FixMapBuilder builder = LintFix.create().map(Integer.valueOf(5));
+        LintFix.DataMap quickfixData = (LintFix.DataMap) builder.build();
+        assertThat(quickfixData.get(Integer.class)).isEqualTo(5);
+        // Looking up with a more general class:
+        assertThat(quickfixData.get(Number.class)).isEqualTo(5);
+    }
+
     public void testSetAttribute() {
         SetAttribute fixData = (SetAttribute) LintFix.create().set().namespace("namespace")
                 .attribute("attribute").value("value").build();
