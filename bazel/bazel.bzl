@@ -46,7 +46,7 @@ _form_jar = rule(
 )
 
 def _iml_resources(name, resources, srcs):
-  res_exclude = ["**/*.java", "**/*.kt", "**/*.groovy", "**/.DS_Store"]
+  res_exclude = ["**/*.java", "**/*.kt", "**/*.groovy", "**/.DS_Store", "META-INF/MANIFEST.MF"]
 
   iml_resource_dirs = resources + srcs
   iml_resources = native.glob(
