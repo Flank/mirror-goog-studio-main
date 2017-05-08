@@ -35,12 +35,8 @@ class ${activityClass} : ${superClass}() {
                     .setAction("Action", null).show()
         }
 </#if>
-<#if parentActivityClass != "">
-<#if Support != "">
-        ${Support?uncap_first}ActionBar!!.setDisplayHomeAsUpEnabled(true)
-<#else>
-        actionBar!!.setDisplayHomeAsUpEnabled(true)
-</#if>
+<#if parentActivityClass?has_content>
+        ${kotlinActionBar}!!.setDisplayHomeAsUpEnabled(true)
 </#if>
 <#include "../../../../common/jni_code_usage.kt.ftl">
     }

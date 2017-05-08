@@ -47,6 +47,7 @@
             name="Activity Name"
             type="string"
             constraints="class|unique|nonempty"
+            suggest="${layoutToActivity(layoutName)}"
             default="MainActivity"
             help="The name of the activity class to create"/>
 

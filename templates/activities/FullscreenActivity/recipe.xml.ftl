@@ -19,8 +19,13 @@
     <merge from="root/res/values/strings.xml.ftl"
              to="${escapeXmlAttribute(resOut)}/values/strings.xml" />
 
+<#if generateKotlin>
+    <instantiate from="root/src/app_package/FullscreenActivity.kt.ftl"
+                   to="${escapeXmlAttribute(srcOut)}/${activityClass}.kt" />
+<#else>
     <instantiate from="root/src/app_package/FullscreenActivity.java.ftl"
                    to="${escapeXmlAttribute(srcOut)}/${activityClass}.java" />
+</#if>
 
     <open file="${escapeXmlAttribute(resOut)}/layout/${layoutName}.xml" />
 </recipe>
