@@ -951,6 +951,31 @@ public class ZFileTest {
                     filetMignonKorean + " " + isGoodJapanese,
                     entry.getCentralDirectoryHeader().getName());
             assertArrayEquals(
+                    "Stuff about food is good.\n".getBytes(Charsets.US_ASCII), entry.read());
+        }
+    }
+
+    @Test
+    public void utf8NamesSupportedOnReadingWithoutUtf8Flag() throws Exception {
+        File zip = ZipTestUtils.cloneRsrc("zip-with-utf8-filename.zip", mTemporaryFolder);
+
+        // Reset bytes 7 and 122 that have the flag in the local header and central directory.
+        byte[] data = Files.toByteArray(zip);
+        data[7] = 0;
+        data[122] = 0;
+        Files.write(data, zip);
+
+        try (ZFile f = new ZFile(zip)) {
+            assertEquals(1, f.entries().size());
+
+            StoredEntry entry = f.entries().iterator().next();
+            String filetMignonKorean = "\uc548\uc2eC \uc694\ub9ac";
+            String isGoodJapanese = "\u3068\u3066\u3082\u826f\u3044";
+
+            assertEquals(
+                    filetMignonKorean + " " + isGoodJapanese,
+                    entry.getCentralDirectoryHeader().getName());
+            assertArrayEquals(
                     "Stuff about food is good.\n".getBytes(Charsets.US_ASCII),
                     entry.read());
         }

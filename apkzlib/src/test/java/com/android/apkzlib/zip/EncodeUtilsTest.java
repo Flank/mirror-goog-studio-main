@@ -56,4 +56,17 @@ public class EncodeUtilsTest {
                 (byte) 0xd0, (byte) 0xb0 }, encoded);
         assertEquals(kazakhCapital, EncodeUtils.decode(encoded, flags));
     }
+
+    @Test
+    public void asciiDecodeAsUtf8() {
+        byte[] greatWallChinese =
+                new byte[] {
+                    (byte) 0xe9, (byte) 0x95, (byte) 0xB7, (byte) 0xe5, (byte) 0x9F, (byte) 0x8E
+                };
+
+        GPFlags flags = GPFlags.make(false);
+
+        String text = EncodeUtils.decode(greatWallChinese, flags);
+        assertEquals("\u9577\u57ce", text);
+    }
 }
