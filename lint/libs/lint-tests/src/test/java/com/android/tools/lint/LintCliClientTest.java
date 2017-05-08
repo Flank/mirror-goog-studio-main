@@ -19,6 +19,8 @@ package com.android.tools.lint;
 import com.android.tools.lint.checks.AbstractCheckTest;
 import com.android.tools.lint.checks.HardcodedValuesDetector;
 import com.android.tools.lint.detector.api.Detector;
+import com.intellij.codeInsight.CustomExceptionHandler;
+import com.intellij.openapi.extensions.Extensions;
 
 public class LintCliClientTest extends AbstractCheckTest {
     public void testUnknownId() {
@@ -40,6 +42,12 @@ public class LintCliClientTest extends AbstractCheckTest {
                         + "        check 'HardcodedText', 'UnknownLintId'\n"
                         + "                                ~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings\n");
+    }
+
+    public void testMissingExtensionPoints() {
+        LintCoreApplicationEnvironment.get();
+        // Regression test for 37817771
+        Extensions.getExtensions(CustomExceptionHandler.KEY);
     }
 
     @Override

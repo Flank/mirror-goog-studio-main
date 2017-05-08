@@ -17,6 +17,7 @@
 package com.android.tools.lint;
 
 import com.intellij.codeInsight.ContainerProvider;
+import com.intellij.codeInsight.CustomExceptionHandler;
 import com.intellij.codeInsight.ExternalAnnotationsManager;
 import com.intellij.codeInsight.InferredAnnotationsManager;
 import com.intellij.codeInsight.runner.JavaMainMethodProvider;
@@ -134,6 +135,7 @@ public class LintCoreApplicationEnvironment extends JavaCoreApplicationEnvironme
         CoreApplicationEnvironment.registerExtensionPoint(rootArea, TypeAnnotationModifier.EP_NAME, TypeAnnotationModifier.class);
         CoreApplicationEnvironment.registerExtensionPoint(rootArea, UastLanguagePlugin.Companion.getExtensionPointName(), UastLanguagePlugin.class);
         CoreApplicationEnvironment.registerExtensionPoint(rootArea, MetaLanguage.EP_NAME, MetaLanguage.class);
+        CoreApplicationEnvironment.registerExtensionPoint(rootArea, CustomExceptionHandler.KEY, CustomExceptionHandler.class);
 
         rootArea.getExtensionPoint(UastLanguagePlugin.Companion.getExtensionPointName()).registerExtension(
                 new org.jetbrains.uast.java.JavaUastLanguagePlugin());
