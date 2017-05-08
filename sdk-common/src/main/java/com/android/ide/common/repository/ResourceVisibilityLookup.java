@@ -48,7 +48,9 @@ import java.util.Set;
  */
 public abstract class ResourceVisibilityLookup {
     /**
-     * Returns true if the given resource is private
+     * Returns true if the given resource is private.
+     * Note that {@link #isPublic} is normally the opposite of {@link #isPrivate},
+     * except for unknown resources - they will both return false in that case.
      *
      * @param type the type of the resource
      * @param name the resource field name of the resource (in other words, for
@@ -56,6 +58,24 @@ public abstract class ResourceVisibilityLookup {
      * @return true if the given resource is private
      */
     public abstract boolean isPrivate(
+            @NonNull ResourceType type,
+            @NonNull String name);
+
+    /**
+     * Returns true if the given resource is public.
+     * Note that {@link #isPublic} is normally the opposite of {@link #isPrivate},
+     * except for unknown resources - they will both return false in that case.
+     *
+     * @param type the type of the resource
+     * @param name the resource field name of the resource (in other words, for
+     *             style Theme:Variant.Cls the name would be Theme_Variant_Cls
+     * @return true if the given resource is public
+     */
+    public abstract boolean isPublic(
+            @NonNull ResourceType type,
+            @NonNull String name);
+
+    protected abstract boolean isKnown(
             @NonNull ResourceType type,
             @NonNull String name);
 
@@ -130,6 +150,16 @@ public abstract class ResourceVisibilityLookup {
             return false;
         }
 
+        @Override
+        public boolean isKnown(@NonNull ResourceType type, @NonNull String name) {
+            return false;
+        }
+
+        @Override
+        public boolean isPublic(@NonNull ResourceType type, @NonNull String name) {
+            return false;
+        }
+
         @Nullable
         @Override
         public AndroidLibrary getPrivateIn(@NonNull ResourceType type, @NonNull String name) {
@@ -180,7 +210,7 @@ public abstract class ResourceVisibilityLookup {
           @NonNull AndroidLibrary library) {
         List<AndroidLibrary> result = Lists.newArrayList();
         for (AndroidLibrary dependency : library.getLibraryDependencies()) {
-            addLibraries(result, new HashSet<String>(), dependency);
+            addLibraries(result, new HashSet<>(), dependency);
         }
 
         return result;
@@ -218,7 +248,31 @@ public abstract class ResourceVisibilityLookup {
         public boolean isPrivate(@NonNull ResourceType type, @NonNull String name) {
             for (int i = 0, n = mRepositories.size(); i < n; i++) {
                 ResourceVisibilityLookup lookup = mRepositories.get(i);
-                if (lookup.isPrivate(type, name)) {
+                if (lookup.isPublic(type, name)) {
+                    return false;
+                }
+            }
+            return isKnown(type, name);
+        }
+
+        @SuppressWarnings("ForLoopReplaceableByForEach")
+        @Override
+        public boolean isKnown(@NonNull ResourceType type, @NonNull String name) {
+            for (int i = 0, n = mRepositories.size(); i < n; i++) {
+                ResourceVisibilityLookup lookup = mRepositories.get(i);
+                if (lookup.isKnown(type, name)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        @SuppressWarnings("ForLoopReplaceableByForEach")
+        @Override
+        public boolean isPublic(@NonNull ResourceType type, @NonNull String name) {
+            for (int i = 0, n = mRepositories.size(); i < n; i++) {
+                ResourceVisibilityLookup lookup = mRepositories.get(i);
+                if (lookup.isPublic(type, name) && lookup.isKnown(type, name)) {
                     return true;
                 }
             }
@@ -491,6 +545,16 @@ public abstract class ResourceVisibilityLookup {
                 return false;
             }
             return !mPublic.containsEntry(name, type);
+        }
+
+        @Override
+        public boolean isKnown(@NonNull ResourceType type, @NonNull String name) {
+            return mAll.containsEntry(name, type);
+        }
+
+        @Override
+        public boolean isPublic(@NonNull ResourceType type, @NonNull String name) {
+            return isKnown(type, name) && (mPublic == null || mPublic.containsEntry(name, type));
         }
     }
 

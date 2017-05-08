@@ -170,13 +170,17 @@ public class ResourceVisibilityLookupTest extends TestCase {
                         + "int string action_settings 0x7f040000\n"
                         + "int string app_name 0x7f040001\n"
                         + "int string hello_world 0x7f040002",
-                ""
+                "string hello_world"
         );
         AndroidLibrary library2 = createMockLibrary(
                 "com.android.tools:test-library2:1.0.0",
                 ""
                         + "int layout foo 0x7f030001\n"
-                        + "int layout bar 0x7f060000\n",
+                        + "int layout bar 0x7f060000\n"
+                        // Used public, but not explicitly declared: should remain public
+                        // even though from the perspective of this library it looks private
+                        // since this is a usage/override, not a declaration
+                        + "int string hello_world 0x7f040003",
                 ""
                         + "layout foo\n"
         );
@@ -190,6 +194,7 @@ public class ResourceVisibilityLookupTest extends TestCase {
         assertTrue(visibility.isPrivate(ResourceType.DIMEN, "activity_vertical_margin"));
         assertFalse(visibility.isPrivate(ResourceType.LAYOUT, "foo"));
         assertTrue(visibility.isPrivate(ResourceType.LAYOUT, "bar"));
+        assertFalse(visibility.isPrivate(ResourceType.STRING, "hello_world"));
 
         assertFalse(visibility.isPrivate(ResourceType.DIMEN, "unknown")); // not in this library
     }

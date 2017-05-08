@@ -677,7 +677,6 @@ public class CleanupDetector extends Detector implements Detector.UastScanner {
             if (parent instanceof UCallExpression
                     || parent instanceof UVariable
                     || parent instanceof UPolyadicExpression
-                    || parent instanceof UBinaryExpression // Not currently a polyadic expr in UAST
                     || parent instanceof UUnaryExpression
                     || parent instanceof UReturnExpression) {
                 returnValueIgnored = false;
