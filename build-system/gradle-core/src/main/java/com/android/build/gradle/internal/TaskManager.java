@@ -1374,6 +1374,10 @@ public abstract class TaskManager {
 
         postJavacCreation(tasks, scope);
 
+        if (extension.getDataBinding().isEnabled()) {
+            javacTask.optionalDependsOn(tasks, scope.getDataBindingMergeArtifactsTask());
+        }
+
         return javacTask;
     }
 
@@ -1672,14 +1676,16 @@ public abstract class TaskManager {
         // create data binding merge task before the javac task so that it can
         // parse jars before any consumer
         createDataBindingMergeArtifactsTaskIfNecessary(tasks, variantScope);
+
+        // Add data binding tasks if enabled
+        createDataBindingTasksIfNecessary(tasks, variantScope);
+
         // Add a task to compile the test application
         AndroidTask<? extends JavaCompile> javacTask = createJavacTask(tasks, variantScope);
         addJavacClassesStream(variantScope);
         setJavaCompilerTask(javacTask, tasks, variantScope);
         createPostCompilationTasks(tasks, variantScope);
 
-        // Add data binding tasks if enabled
-        createDataBindingTasksIfNecessary(tasks, variantScope);
 
         createPackagingTask(tasks, variantScope, null /* buildInfoGeneratorTask */);
 
@@ -2493,11 +2499,7 @@ public abstract class TaskManager {
         exportBuildInfo.dependsOn(tasks, processLayoutsTask);
         exportBuildInfo.dependsOn(tasks, scope.getSourceGenTask());
 
-        AndroidTask<? extends Task> javaCompilerTask = scope.getJavacTask();
-        if (javaCompilerTask != null) {
-            javaCompilerTask.dependsOn(tasks, exportBuildInfo);
-            javaCompilerTask.dependsOn(tasks, scope.getDataBindingMergeArtifactsTask());
-        }
+        scope.setDataBindingExportBuildInfoTask(exportBuildInfo);
     }
 
     private void setDataBindingAnnotationProcessorParams(@NonNull VariantScope scope) {

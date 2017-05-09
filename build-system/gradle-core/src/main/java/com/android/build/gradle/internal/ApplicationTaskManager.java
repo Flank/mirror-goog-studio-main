@@ -208,6 +208,9 @@ public class ApplicationTaskManager extends TaskManager {
                 variantScope.getFullVariantName(),
                 () -> createMergeJniLibFoldersTasks(tasks, variantScope));
 
+        // Add data binding tasks if enabled
+        createDataBindingTasksIfNecessary(tasks, variantScope);
+
         // Add a compile task
         recorder.record(
                 ExecutionType.APP_TASK_MANAGER_CREATE_COMPILE_TASK,
@@ -215,8 +218,6 @@ public class ApplicationTaskManager extends TaskManager {
                 variantScope.getFullVariantName(),
                 () -> addCompileTask(tasks, variantScope));
 
-        // Add data binding tasks if enabled
-        createDataBindingTasksIfNecessary(tasks, variantScope);
 
         createStripNativeLibraryTask(tasks, variantScope);
 

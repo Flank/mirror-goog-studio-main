@@ -234,14 +234,16 @@ public class LibraryTaskManager extends TaskManager {
                     // create data binding merge task before the javac task so that it can
                     // parse jars before any consumer
                     createDataBindingMergeArtifactsTaskIfNecessary(tasks, variantScope);
+
+                    // Add data binding tasks if enabled
+                    createDataBindingTasksIfNecessary(tasks, variantScope);
+
                     AndroidTask<? extends JavaCompile> javacTask =
                             createJavacTask(tasks, variantScope);
                     addJavacClassesStream(variantScope);
                     TaskManager.setJavaCompilerTask(javacTask, tasks, variantScope);
                 });
 
-        // Add data binding tasks if enabled
-        createDataBindingTasksIfNecessary(tasks, variantScope);
 
         // Add dependencies on NDK tasks if NDK plugin is applied.
         if (!isComponentModelPlugin()) {

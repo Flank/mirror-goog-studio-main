@@ -685,35 +685,46 @@ public abstract class BaseVariantData implements TaskContainer {
 
         // then all the generated src folders.
         if (scope.getProcessResourcesTask() != null) {
-            sourceSets.add(project.fileTree(scope.getRClassSourceOutputDir()));
+            sourceSets.add(
+                    project.fileTree(scope.getRClassSourceOutputDir())
+                            .builtBy(scope.getProcessResourcesTask().getName()));
         }
 
         // for the other, there's no duplicate so no issue.
         if (scope.getGenerateBuildConfigTask() != null) {
-            sourceSets.add(project.fileTree(scope.getBuildConfigSourceOutputDir()));
+            sourceSets.add(
+                    project.fileTree(scope.getBuildConfigSourceOutputDir())
+                            .builtBy(scope.getGenerateBuildConfigTask().getName()));
         }
 
         if (scope.getAidlCompileTask() != null) {
-            sourceSets.add(project.fileTree(scope.getAidlSourceOutputDir()));
+            sourceSets.add(
+                    project.fileTree(scope.getAidlSourceOutputDir())
+                            .builtBy(scope.getAidlCompileTask().getName()));
         }
 
-        if (scope.getGlobalScope().getExtension().getDataBinding().isEnabled()) {
-            sourceSets.add(project.fileTree(scope.getClassOutputForDataBinding()));
+        if (scope.getGlobalScope().getExtension().getDataBinding().isEnabled()
+                && scope.getDataBindingExportBuildInfoTask() != null) {
+            sourceSets.add(
+                    project.fileTree(scope.getClassOutputForDataBinding())
+                            .builtBy(scope.getDataBindingExportBuildInfoTask().getName()));
         }
 
         if (!variantConfiguration.getRenderscriptNdkModeEnabled()
                 && scope.getRenderscriptCompileTask() != null) {
-            sourceSets.add(project.fileTree(scope.getRenderscriptSourceOutputDir()));
+            sourceSets.add(
+                    project.fileTree(scope.getRenderscriptSourceOutputDir())
+                            .builtBy(scope.getRenderscriptCompileTask().getName()));
         }
 
         return sourceSets.build();
     }
 
-        /**
-         * Returns the Java folders needed for code coverage report.
-         *
-         * This includes all the source folders except for the ones containing R and buildConfig.
-         */
+    /**
+     * Returns the Java folders needed for code coverage report.
+     *
+     * <p>This includes all the source folders except for the ones containing R and buildConfig.
+     */
     @NonNull
     public List<File> getJavaSourceFoldersForCoverage() {
         // Build the list of source folders.
