@@ -22,7 +22,6 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Publ
 
 import com.android.annotations.NonNull;
 import org.gradle.api.attributes.Attribute;
-import org.gradle.api.plugins.JavaPlugin;
 
 /**
  * Helper for publishing android artifacts, both for internal (inter-project) and external
@@ -36,6 +35,8 @@ public class AndroidArtifacts {
     private static final String TYPE_APK = "apk";
 
     // types for AAR content
+    private static final String TYPE_CLASSES = "android-classes";
+    private static final String TYPE_JAVA_RES = "android-java-res";
     private static final String TYPE_MANIFEST = "android-manifest";
     private static final String TYPE_MANIFEST_METADATA = "android-manifest-metadata";
     private static final String TYPE_ANDROID_RES = "android-res";
@@ -100,7 +101,7 @@ public class AndroidArtifacts {
     }
 
     public enum ArtifactType {
-        CLASSES(JavaPlugin.CLASS_DIRECTORY),
+        CLASSES(TYPE_CLASSES),
         // Jar file for annotation processor as both classes and resources are needed, and for building model
         JAR(TYPE_JAR),
 
@@ -114,7 +115,7 @@ public class AndroidArtifacts {
         DATA_BINDING(TYPE_DATA_BINDING),
 
         // runtime only elements
-        JAVA_RES(JavaPlugin.RESOURCES_DIRECTORY),
+        JAVA_RES(TYPE_JAVA_RES),
         ANDROID_RES(TYPE_ANDROID_RES),
         ASSETS(TYPE_ASSETS),
         SYMBOL_LIST(TYPE_SYMBOL),
