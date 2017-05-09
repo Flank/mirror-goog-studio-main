@@ -15,33 +15,20 @@
  */
 package com.android.ide.common.resources.sampledata;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.google.common.base.Charsets;
-import com.google.common.collect.ImmutableList;
-import com.google.common.io.Files;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /** Holder for the sample data cache */
 public class SampleDataHolder {
-    private static final SampleDataHolder EMPTY_SAMPLE_DATA_HOLDER =
-            new SampleDataHolder("", 0, 0, ImmutableList.of());
-
     private final String myName;
     private final long myLastModification;
-    private final List<String> myContents;
+    private final byte[] myContents;
     private final int myFileSizeMb;
 
-    private SampleDataHolder(
+    public SampleDataHolder(
             @NonNull String name,
             long lastModification,
             int contentSizeMb,
-            @NonNull List<String> contents) {
+            @NonNull byte[] contents) {
         myName = name;
         myLastModification = lastModification;
         myFileSizeMb = contentSizeMb;
@@ -58,67 +45,11 @@ public class SampleDataHolder {
     }
 
     @NonNull
-    public List<String> getContents() {
+    public byte[] getContents() {
         return myContents;
     }
 
     public int getFileSizeMb() {
         return myFileSizeMb;
-    }
-
-    @NonNull
-    public static SampleDataHolder getFromFile(@NonNull File input, @NonNull String contentPath)
-            throws IOException {
-        String fileName = input.getName();
-        if (input.isDirectory()) {
-            // The directory can contain images. Generate a dynamic list of all the files contains
-            return new SampleDataHolder(
-                    fileName,
-                    input.lastModified(),
-                    (int) (input.length() / 1_000_000),
-                    Arrays.stream(input.listFiles())
-                            .map(File::getAbsolutePath)
-                            .collect(Collectors.toList()));
-        }
-
-        String extension = "." + Files.getFileExtension(fileName);
-        switch (extension) {
-            case SdkConstants.DOT_JSON:
-                return getFromJsonFile(input, contentPath);
-            case ".":
-                return new SampleDataHolder(
-                        fileName,
-                        input.lastModified(),
-                        (int) (input.length() / 1_000_000),
-                        Files.readLines(input, Charsets.UTF_8));
-        }
-
-        throw new IOException("Unsupported format type " + extension);
-    }
-
-    static SampleDataHolder getFromJsonFile(@NonNull File input, @NonNull String contentPath)
-            throws IOException {
-        if (contentPath.isEmpty()) {
-            return EMPTY_SAMPLE_DATA_HOLDER;
-        }
-
-        SampleDataJsonParser parser = SampleDataJsonParser.parse(new FileReader(input));
-        if (parser == null) {
-            // Failed to parse the JSON file
-            return EMPTY_SAMPLE_DATA_HOLDER;
-        }
-
-        List<String> content = parser.getContentFromPath(contentPath);
-
-        if (content.isEmpty()) {
-            return EMPTY_SAMPLE_DATA_HOLDER;
-        }
-
-        // TODO: Calculate size of the content
-        return new SampleDataHolder(
-                input.getName() + contentPath,
-                input.lastModified(),
-                (int) (input.length() / 1_000_000),
-                content);
     }
 }

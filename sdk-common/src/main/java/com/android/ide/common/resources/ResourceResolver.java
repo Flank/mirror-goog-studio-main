@@ -441,7 +441,7 @@ public class ResourceResolver extends RenderResources {
         return Optional.ofNullable(mProjectResources.get(ResourceType.SAMPLE_DATA))
                 .map(t -> t.get(name))
                 .map(ResourceValue::getValue)
-                .map(fileName -> mSampleDataManager.getSampleDataLine(name, fileName))
+                .map(content -> mSampleDataManager.getSampleDataLine(name, content))
                 .map(
                         lineContent ->
                                 new ResourceValue(
