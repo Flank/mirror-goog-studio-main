@@ -90,5 +90,8 @@ public class ResourceUrlTest extends TestCase {
         assertEquals(
                 "?android:attr/foo",
                 ResourceUrl.parse("@android:attr/foo").asThemeUrl().toString());
+
+        assertTrue(ResourceUrl.parse("@sample/test.json/user/email").hasValidName());
+        assertFalse(ResourceUrl.parse("@string/test.json/user/email").hasValidName());
     }
 }
