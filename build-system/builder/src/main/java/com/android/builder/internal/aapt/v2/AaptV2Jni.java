@@ -16,6 +16,7 @@
 
 package com.android.builder.internal.aapt.v2;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.builder.internal.aapt.AaptException;
 import com.android.builder.internal.aapt.AaptPackageConfig;
@@ -28,6 +29,7 @@ import com.android.ide.common.res2.CompileResourceRequest;
 import com.android.tools.aapt2.Aapt2Jni;
 import com.android.tools.aapt2.Aapt2RenamingConventions;
 import com.android.tools.aapt2.Aapt2Result;
+import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -35,6 +37,7 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.concurrent.Future;
@@ -57,6 +60,25 @@ public class AaptV2Jni extends AbstractAapt {
         this.intermediateDir = intermediateDir;
         this.executor = executor;
         this.processOutputHandler = processOutputHandler;
+
+        // FIXME: Work-around to address http://b/38175665 (File nio copy sometimes fails on Windows
+        // when using Aapt2jni): We need to perform a "dummy" file nio copy here to somehow
+        // resolve file nio copy's low-level dependencies *before* Aapt2jni is used.
+        // We will remove this code once there is a proper fix.
+        if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) {
+            File sourceFile = new File(intermediateDir, "dummySource");
+            File targetFile = new File(intermediateDir, "dummyTarget");
+            try {
+                FileUtils.deleteIfExists(sourceFile);
+                FileUtils.deleteIfExists(targetFile);
+                Files.createFile(sourceFile.toPath());
+                Files.copy(sourceFile.toPath(), targetFile.toPath());
+                FileUtils.delete(sourceFile);
+                FileUtils.delete(targetFile);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        }
     }
 
     @NonNull
