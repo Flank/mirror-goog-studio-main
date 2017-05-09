@@ -112,6 +112,18 @@ public class StandaloneNdkComponentModelPlugin implements Plugin<Project> {
             }
         }
 
+        @Mutate
+        public static void createAssembleTasksForProductFlavorCombos(
+                ModelMap<Task> tasks, List<ProductFlavorCombo<ProductFlavor>> flavorCombos) {
+            for (final ProductFlavorCombo<ProductFlavor> combo : flavorCombos) {
+                if (combo.getFlavorList().size() <= 1) {
+                    // Tasks should already be created.
+                    break;
+                }
+                createAssembleTaskForFlavorCombo(tasks, combo.getFlavorList());
+            }
+        }
+
         /**
          * Create assemble tasks for each AndroidBinary and configure their dependencies
          */
@@ -130,7 +142,6 @@ public class StandaloneNdkComponentModelPlugin implements Plugin<Project> {
                     }
 
                     if (binary.getProductFlavors().size() > 1) {
-                        createAssembleTaskForFlavorCombo(tasks, binary.getProductFlavors());
                         dependsOn(tasks, getAssembleTaskName(binary.getProductFlavors()), binaryAssembleTaskName);
                     }
                 }
