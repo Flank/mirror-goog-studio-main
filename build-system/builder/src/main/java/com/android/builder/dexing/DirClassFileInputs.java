@@ -17,10 +17,12 @@
 package com.android.builder.dexing;
 
 import com.android.annotations.NonNull;
+import com.google.common.collect.Lists;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Iterator;
+import java.util.List;
 import java.util.function.Predicate;
 
 /**
@@ -67,6 +69,12 @@ final class DirClassFileInputs implements ClassFileInput {
     @Override
     public void close() throws IOException {
         // do nothing
+    }
+
+    @NonNull
+    @Override
+    public List<ClassFileEntry> allEntries() {
+        return Lists.newLinkedList(this);
     }
 
     @NonNull

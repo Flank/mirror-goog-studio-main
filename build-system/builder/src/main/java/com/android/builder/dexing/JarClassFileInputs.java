@@ -19,10 +19,12 @@ package com.android.builder.dexing;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.apkzlib.zip.ZFile;
+import com.google.common.collect.Lists;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
+import java.util.List;
 import java.util.function.Predicate;
 
 /**
@@ -95,6 +97,12 @@ final class JarClassFileInputs implements ClassFileInput {
                             }
                         })
                 .iterator();
+    }
+
+    @NonNull
+    @Override
+    public List<ClassFileEntry> allEntries() {
+        return Lists.newLinkedList(this);
     }
 
     @Override

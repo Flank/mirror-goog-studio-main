@@ -31,9 +31,6 @@ import com.android.dx.dex.cf.CfOptions;
  */
 public class DexArchiveBuilderConfig {
 
-    /** Number of threads to use when creating the dex archive. */
-    private final int numThreads;
-
     @NonNull private final DxContext dxContext;
 
     @NonNull private final DexOptions dexOptions;
@@ -42,17 +39,14 @@ public class DexArchiveBuilderConfig {
     /**
      * Creates a configuration object used to set up the dex archive conversion.
      *
-     * @param numThreads number of .class to .dex file conversions to run in parallel
      * @param dxContext used when invoking dx, mainly for getting the standard and error output
      * @param optimized generated dex should be optimized
      * @param minSdkVersion minimum sdk version used to enable dx features
      */
     public DexArchiveBuilderConfig(
-            int numThreads,
             @NonNull DxContext dxContext,
             boolean optimized,
             int minSdkVersion) {
-        this.numThreads = numThreads;
         this.dxContext = dxContext;
 
         this.dexOptions = new DexOptions();
@@ -74,10 +68,6 @@ public class DexArchiveBuilderConfig {
     @NonNull
     public CfOptions getCfOptions() {
         return cfOptions;
-    }
-
-    public int getNumThreads() {
-        return numThreads;
     }
 
     @NonNull

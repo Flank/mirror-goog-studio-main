@@ -27,6 +27,9 @@ import com.android.dx.dex.file.ClassDefItem;
 import com.android.dx.dex.file.DexFile;
 import com.android.utils.PathUtils;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 
 /**
@@ -37,40 +40,43 @@ import java.util.concurrent.Callable;
  * <p>In order to perform the conversion, it invokes dx directly to parse and translate the content
  * of a class file.
  */
-public class DexArchiveBuilderCallable implements Callable<DexArchiveEntry> {
+public class DexArchiveBuilderCallable implements Callable<List<DexArchiveEntry>> {
 
-    @NonNull private final Path relativePath;
-    @NonNull private final byte[] classFileContent;
+    @NonNull private final Map<Path, byte[]> pathToContent;
 
     @NonNull private final DxContext dxContext;
     @NonNull private final DexOptions dexOptions;
     @NonNull private final CfOptions cfOptions;
 
     public DexArchiveBuilderCallable(
-            @NonNull Path relativePath,
-            @NonNull byte[] classFileContent,
+            @NonNull Map<Path, byte[]> pathToContent,
             @NonNull DxContext dxContext,
             @NonNull DexOptions dexOptions,
             @NonNull CfOptions cfOptions) {
-        this.relativePath = relativePath;
-        this.classFileContent = classFileContent;
+        this.pathToContent = pathToContent;
         this.dxContext = dxContext;
         this.dexOptions = dexOptions;
         this.cfOptions = cfOptions;
     }
 
     @Override
-    public DexArchiveEntry call() throws Exception {
-        // parses the class file
-        String unixClassFile = PathUtils.toSystemIndependentPath(relativePath);
-        DirectClassFile directClassFile = parseClass(unixClassFile, classFileContent);
+    public List<DexArchiveEntry> call() throws Exception {
+        List<DexArchiveEntry> res = new ArrayList<>(pathToContent.size());
+        for (Map.Entry<Path, byte[]> e : pathToContent.entrySet()) {
+            Path relativePath = e.getKey();
+            byte[] classFileContent = e.getValue();
+            // parses the class file
+            String unixClassFile = PathUtils.toSystemIndependentPath(relativePath);
+            DirectClassFile directClassFile = parseClass(unixClassFile, classFileContent);
 
-        DexFile dexFile = new DexFile(dexOptions);
-        // starts the actual translation and writes the content to the dex file specified
-        translateClass(classFileContent, directClassFile, dexFile);
+            DexFile dexFile = new DexFile(dexOptions);
+            // starts the actual translation and writes the content to the dex file specified
+            translateClass(classFileContent, directClassFile, dexFile);
 
-        byte[] dexClassContent = dexFile.toDex(null, false);
-        return new DexArchiveEntry(dexClassContent, relativePath);
+            byte[] dexClassContent = dexFile.toDex(null, false);
+            res.add(new DexArchiveEntry(dexClassContent, relativePath));
+        }
+        return res;
     }
 
     /** Copied from dx, from {@link com.android.dx.command.dexer.Main}. */

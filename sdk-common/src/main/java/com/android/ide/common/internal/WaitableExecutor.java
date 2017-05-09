@@ -125,6 +125,13 @@ public class WaitableExecutor {
      * <p>If you want to get the results of all tasks (result and/or exception), use {@link
      * #waitForAllTasks()}
      *
+     * <p>To get the actual cause of the failure, examine the exception thrown. There are some
+     * nuances to it though. If the exception was thrown on the same thread on which we wait for
+     * completion, the {@link Throwable#getCause()} will be {@code null}. If the exception was
+     * thrown on a different thread, the fork join pool mechanism will try to set the cause. Because
+     * there is no access to this information, you probably want to check for the cause first, and
+     * only if it is null, to check the exception thrown by this method.
+     *
      * @param cancelRemaining if true, and a task fails, cancel all remaining tasks.
      * @return a list of all the return values from the tasks.
      * @throws InterruptedException if this thread was interrupted. Not if the tasks were
