@@ -328,9 +328,23 @@ public interface BaseVariant {
     void registerJavaGeneratingTask(@NonNull Task task, @NonNull Collection<File> sourceFolders);
 
     /**
+     * Register the output of an external annotation processor.
+     *
+     * <p>The output is passed to the javac task, but the source generation hooks does not depend on
+     * this.
+     *
+     * <p>In order to properly wire up tasks, the FileTree object must include dependency
+     * information about the task that generates the content of this folders.
+     *
+     * @param folder a ConfigurableFileTree that contains a single folder and the task dependency
+     *     information
+     */
+    void registerExternalAptJavaOutput(@NonNull ConfigurableFileTree folder);
+
+    /**
      * Adds to the variant new generated resource folders.
      *
-     * In order to properly wire up tasks, the FileCollection object must include dependency
+     * <p>In order to properly wire up tasks, the FileCollection object must include dependency
      * information about the task that generates the content of this folders.
      *
      * @param folders a FileCollection that contains the folders and the task dependency information
