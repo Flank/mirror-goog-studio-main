@@ -43,6 +43,8 @@ test_cases = {
                           'hello.dex', 'entry_hooks.dex', 'medium.dex', 'large.dex', 'try_catch.dex' ] },
   'verbose_cfg'     : { 'args' : '-d --cfg=verbose', 'input' : ['*.dex'] },
   'compact_cfg'     : { 'args' : '-d --cfg=compact', 'input' : ['*.dex'] },
+  'scratch_regs'    : { 'args' : '-d -x stress_scratch_regs', 'input' : ['*.dex'] },
+  'regs_usage'      : { 'args' : '-x regs_histogram', 'input' : ['*.dex'] },
 }
 
 # run a shell command and returns the stdout content

@@ -304,6 +304,28 @@ void TestMethodInstrumenter(std::shared_ptr<ir::DexFile> dex_ir) {
   CHECK(mi.InstrumentMethod(method2));
 }
 
+// Stress scratch register allocation
+void StressScratchRegs(std::shared_ptr<ir::DexFile> dex_ir) {
+  slicer::MethodInstrumenter mi(dex_ir);
+
+  // queue multiple allocations to stress corner cases (various counts and alignments)
+  auto t1 = mi.AddTransformation<slicer::AllocateScratchRegs>(1, false);
+  auto t2 = mi.AddTransformation<slicer::AllocateScratchRegs>(1, false);
+  auto t3 = mi.AddTransformation<slicer::AllocateScratchRegs>(1);
+  auto t4 = mi.AddTransformation<slicer::AllocateScratchRegs>(20);
+
+  // apply the transformations to every single method
+  for (auto& ir_method : dex_ir->encoded_methods) {
+    if (ir_method->code != nullptr) {
+      CHECK(mi.InstrumentMethod(ir_method.get()));
+      CHECK(t1->ScratchRegs().size() == 1);
+      CHECK(t2->ScratchRegs().size() == 1);
+      CHECK(t3->ScratchRegs().size() == 1);
+      CHECK(t4->ScratchRegs().size() == 20);
+    }
+  }
+}
+
 // Stress the roundtrip: EncodedMethod -> MethodId -> FindMethod -> EncodedMethod
 // NOTE: until we start indexing methods this test is slow on debug builds + large .dex images
 void StressFindMethod(std::shared_ptr<ir::DexFile> dex_ir) {
@@ -320,6 +342,43 @@ void StressFindMethod(std::shared_ptr<ir::DexFile> dex_ir) {
   printf("Everything looks fine, found %d methods.\n", method_count);
 }
 
+static void PrintHistogram(const std::map<int, int> histogram, const char* name) {
+  constexpr int kHistogramWidth = 100;
+  int max_count = 0;
+  for (const auto& kv : histogram) {
+    max_count = std::max(max_count, kv.second);
+  }
+  printf("\nHistogram: %s [max_count=%d]\n\n", name, max_count);
+  for (const auto& kv : histogram) {
+    printf("%6d [ %3d ] ", kv.second, kv.first);
+    int hist_len = static_cast<int>(static_cast<double>(kv.second) / max_count * kHistogramWidth);
+    for (int i = 0; i <= hist_len; ++i) {
+      printf("*");
+    }
+    printf("\n");
+  }
+}
+
+// Builds a histogram of registers count per method
+void RegsHistogram(std::shared_ptr<ir::DexFile> dex_ir) {
+  std::map<int, int> regs_histogram;
+  std::map<int, int> param_histogram;
+  std::map<int, int> extra_histogram;
+  for (auto& ir_method : dex_ir->encoded_methods) {
+    if (ir_method->code != nullptr) {
+      const int regs = ir_method->code->registers;
+      const int ins =  ir_method->code->ins_count;
+      CHECK(regs >= ins);
+      regs_histogram[regs]++;
+      param_histogram[ins]++;
+      extra_histogram[regs - ins]++;
+    }
+  }
+  PrintHistogram(regs_histogram, "Method registers");
+  PrintHistogram(param_histogram, "Method parameter registers");
+  PrintHistogram(regs_histogram, "Method extra registers (total - parameters)");
+}
+
 void ListExperiments(std::shared_ptr<ir::DexFile> dex_ir);
 
 using Experiment = void (*)(std::shared_ptr<ir::DexFile>);
@@ -333,6 +392,8 @@ std::map<std::string, Experiment> experiments_registry = {
     { "stress_wrap_invoke", &StressWrapInvoke },
     { "test_method_instrumenter", &TestMethodInstrumenter },
     { "stress_find_method", &StressFindMethod },
+    { "stress_scratch_regs", &StressScratchRegs },
+    { "regs_histogram", &RegsHistogram },
 };
 
 // Lists all the registered experiments

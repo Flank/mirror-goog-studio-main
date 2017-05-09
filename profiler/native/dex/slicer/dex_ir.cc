@@ -79,6 +79,21 @@ std::string Type::Decl() const {
   return dex::DescriptorToDecl(descriptor->c_str());
 }
 
+Type::Category Type::GetCategory() const {
+  switch (*descriptor->c_str()) {
+    case 'L':
+    case '[':
+      return Category::Reference;
+    case 'V':
+      return Category::Void;
+    case 'D':
+    case 'J':
+      return Category::WideScalar;
+    default:
+      return Category::Scalar;
+  }
+}
+
 // Create the corresponding JNI signature:
 //  https://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/types.html#type_signatures
 std::string Proto::Signature() const {

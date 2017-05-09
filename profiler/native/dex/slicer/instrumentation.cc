@@ -211,12 +211,194 @@ bool DetourVirtualInvoke::Apply(lir::CodeIr* code_ir) {
   return true;
 }
 
-bool MethodInstrumenter::InstrumentMethod(const ir::MethodId& method_id) {
-  // locate the method to be instrumented
-  ir::Builder builder(dex_ir_);
-  auto ir_method = builder.FindMethod(method_id);
-  if (ir_method == nullptr || ir_method->code == nullptr) {
-    // we couldn't find the specified method, or it's an abstract method
+// Register re-numbering visitor
+// (renumbers vN to vN+shift)
+class RegsRenumberVisitor : public lir::Visitor {
+ public:
+  RegsRenumberVisitor(int shift) : shift_(shift) {
+    CHECK(shift > 0);
+  }
+
+ private:
+  virtual bool Visit(lir::Bytecode* bytecode) override {
+    for (auto operand : bytecode->operands) {
+      operand->Accept(this);
+    }
+    return true;
+  }
+
+  virtual bool Visit(lir::DbgInfoAnnotation* dbg_annotation) override {
+    for (auto operand : dbg_annotation->operands) {
+      operand->Accept(this);
+    }
+    return true;
+  }
+
+  virtual bool Visit(lir::VReg* vreg) override {
+    vreg->reg += shift_;
+    return true;
+  }
+
+  virtual bool Visit(lir::VRegPair* vreg_pair) override {
+    vreg_pair->base_reg += shift_;
+    return true;
+  }
+
+  virtual bool Visit(lir::VRegList* vreg_list) override {
+    for (auto& reg : vreg_list->registers) {
+      reg += shift_;
+    }
+    return true;
+  }
+
+  virtual bool Visit(lir::VRegRange* vreg_range) override {
+    vreg_range->base_reg += shift_;
+    return true;
+  }
+
+ private:
+  int shift_ = 0;
+};
+
+// Try to allocate registers by renumbering the existing allocation
+//
+// NOTE: we can't bump the register count over 16 since it may
+//  make existing bytecodes "unencodable" (if they have 4 bit reg fields)
+//
+void AllocateScratchRegs::RegsRenumbering(lir::CodeIr* code_ir) {
+  CHECK(left_to_allocate_ > 0);
+  int delta = std::min(left_to_allocate_,
+                       16 - static_cast<int>(code_ir->ir_method->code->registers));
+  if (delta < 1) {
+    // can't allocate any registers through renumbering
+    return;
+  }
+  assert(delta <= 16);
+
+  // renumber existing registers
+  RegsRenumberVisitor visitor(delta);
+  for (auto instr : code_ir->instructions) {
+    instr->Accept(&visitor);
+  }
+
+  // we just allocated "delta" registers (v0..vX)
+  Allocate(code_ir, 0, delta);
+}
+
+// Allocates registers by generating prologue code to relocate params
+// into their original registers (parameters are allocated in the last IN registers)
+//
+// There are three types of register moves depending on the value type:
+// 1. vreg -> vreg
+// 2. vreg/wide -> vreg/wide
+// 3. vreg/obj -> vreg/obj
+//
+void AllocateScratchRegs::ShiftParams(lir::CodeIr* code_ir) {
+  const auto ir_method = code_ir->ir_method;
+  CHECK(ir_method->code->ins_count > 0);
+  CHECK(left_to_allocate_ > 0);
+
+  // build a param list with the explicit "this" argument for non-static methods
+  std::vector<ir::Type*> param_types;
+  if ((ir_method->access_flags & dex::kAccStatic) == 0) {
+    param_types.push_back(ir_method->decl->parent);
+  }
+  if (ir_method->decl->prototype->param_types != nullptr) {
+    const auto& orig_param_types = ir_method->decl->prototype->param_types->types;
+    param_types.insert(param_types.end(), orig_param_types.begin(), orig_param_types.end());
+  }
+
+  const dex::u4 shift = left_to_allocate_;
+
+  Allocate(code_ir, ir_method->code->registers, left_to_allocate_);
+  assert(left_to_allocate_ == 0);
+
+  const dex::u4 regs = ir_method->code->registers;
+  const dex::u4 ins_count = ir_method->code->ins_count;
+  CHECK(regs >= ins_count);
+
+  // generate the args "relocation" instructions
+  auto first_instr = code_ir->instructions.begin();
+  dex::u4 reg = regs - ins_count;
+  for (const auto& type : param_types) {
+    auto move = code_ir->Alloc<lir::Bytecode>();
+    switch (type->GetCategory()) {
+      case ir::Type::Category::Reference:
+        move->opcode = dex::OP_MOVE_OBJECT_16;
+        move->operands.push_back(code_ir->Alloc<lir::VReg>(reg - shift));
+        move->operands.push_back(code_ir->Alloc<lir::VReg>(reg));
+        reg += 1;
+        break;
+      case ir::Type::Category::Scalar:
+        move->opcode = dex::OP_MOVE_16;
+        move->operands.push_back(code_ir->Alloc<lir::VReg>(reg - shift));
+        move->operands.push_back(code_ir->Alloc<lir::VReg>(reg));
+        reg += 1;
+        break;
+      case ir::Type::Category::WideScalar:
+        move->opcode = dex::OP_MOVE_WIDE_16;
+        move->operands.push_back(code_ir->Alloc<lir::VRegPair>(reg - shift));
+        move->operands.push_back(code_ir->Alloc<lir::VRegPair>(reg));
+        reg += 2;
+        break;
+      case ir::Type::Category::Void:
+        FATAL("void parameter type");
+    }
+    code_ir->instructions.insert(first_instr, move);
+  }
+}
+
+// Mark [first_reg, first_reg + count) as scratch registers
+void AllocateScratchRegs::Allocate(lir::CodeIr* code_ir, dex::u4 first_reg, int count) {
+  CHECK(count > 0 && count <= left_to_allocate_);
+  code_ir->ir_method->code->registers += count;
+  left_to_allocate_ -= count;
+  for (int i = 0; i < count; ++i) {
+    CHECK(scratch_regs_.insert(first_reg + i).second);
+  }
+}
+
+// Allocate scratch registers without doing a full register allocation:
+//
+// 1. if there are not params, increase the method regs count and we're done
+// 2. if the method uses less than 16 registers, we can renumber the existing registers
+// 3. if we still have registers to allocate, increase the method registers count,
+//     and generate prologue code to shift the param regs into their original registers
+//
+bool AllocateScratchRegs::Apply(lir::CodeIr* code_ir) {
+  const auto code = code_ir->ir_method->code;
+  // .dex bytecode allows up to 64k vregs
+  CHECK(code->registers + allocate_count_ <= (1 << 16));
+
+  scratch_regs_.clear();
+  left_to_allocate_ = allocate_count_;
+
+  // can we allocate by simply incrementing the method regs count?
+  if (code->ins_count == 0) {
+    Allocate(code_ir, code->registers, left_to_allocate_);
+    return true;
+  }
+
+  // allocate as many registers as possible using renumbering
+  if (allow_renumbering_) {
+    RegsRenumbering(code_ir);
+  }
+
+  // if we still have registers to allocate, generate prologue
+  // code to shift the params into their original registers
+  if (left_to_allocate_ > 0) {
+    ShiftParams(code_ir);
+  }
+
+  assert(left_to_allocate_ == 0);
+  assert(scratch_regs_.size() == size_t(allocate_count_));
+  return true;
+}
+
+bool MethodInstrumenter::InstrumentMethod(ir::EncodedMethod* ir_method) {
+  CHECK(ir_method != nullptr);
+  if (ir_method->code == nullptr) {
+    // can't instrument abstract methods
     return false;
   }
 
@@ -230,6 +412,17 @@ bool MethodInstrumenter::InstrumentMethod(const ir::MethodId& method_id) {
   }
   code_ir.Assemble();
   return true;
+}
+
+bool MethodInstrumenter::InstrumentMethod(const ir::MethodId& method_id) {
+  // locate the method to be instrumented
+  ir::Builder builder(dex_ir_);
+  auto ir_method = builder.FindMethod(method_id);
+  if (ir_method == nullptr) {
+    // we couldn't find the specified method
+    return false;
+  }
+  return InstrumentMethod(ir_method);
 }
 
 }  // namespace slicer

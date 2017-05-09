@@ -24,6 +24,7 @@
 #include <memory>
 #include <vector>
 #include <utility>
+#include <set>
 
 namespace slicer {
 
@@ -86,6 +87,33 @@ class DetourVirtualInvoke : public Transformation {
   ir::MethodId detour_method_id_;
 };
 
+// Allocates scratch registers without doing a full register allocation
+class AllocateScratchRegs : public Transformation {
+ public:
+  AllocateScratchRegs(int allocate_count, bool allow_renumbering = true)
+    : allocate_count_(allocate_count), allow_renumbering_(allow_renumbering) {
+    CHECK(allocate_count > 0);
+  }
+
+  virtual bool Apply(lir::CodeIr* code_ir) override;
+
+  const std::set<dex::u4>& ScratchRegs() const {
+    CHECK(scratch_regs_.size() == static_cast<size_t>(allocate_count_));
+    return scratch_regs_;
+  }
+
+ private:
+  void RegsRenumbering(lir::CodeIr* code_ir);
+  void ShiftParams(lir::CodeIr* code_ir);
+  void Allocate(lir::CodeIr* code_ir, dex::u4 first_reg, int count);
+
+ private:
+  const int allocate_count_;
+  const bool allow_renumbering_;
+  int left_to_allocate_ = 0;
+  std::set<dex::u4> scratch_regs_;
+};
+
 // A friendly helper for instrumenting existing methods: it allows batching
 // a set of transformations to be applied to method (the batching allow it
 // to build and encode the code IR once per method regardless of how many
@@ -112,11 +140,14 @@ class MethodInstrumenter {
   // Queue a transformation
   // (T is a class derived from Transformation)
   template<class T, class... Args>
-  void AddTransformation(Args&&... args) {
-    transformations_.emplace_back(new T(std::forward<Args>(args)...));
+  T* AddTransformation(Args&&... args) {
+    T* transformation = new T(std::forward<Args>(args)...);
+    transformations_.emplace_back(transformation);
+    return transformation;
   }
 
   // Apply all the queued transformations to the specified method
+  bool InstrumentMethod(ir::EncodedMethod* ir_method);
   bool InstrumentMethod(const ir::MethodId& method_id);
 
  private:

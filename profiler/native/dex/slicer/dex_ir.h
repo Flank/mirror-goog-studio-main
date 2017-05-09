@@ -173,10 +173,13 @@ struct String : public IndexedNode {
 struct Type : public IndexedNode {
   IR_INDEXED_TYPE;
 
+  enum class Category { Void, Scalar, WideScalar, Reference };
+
   String* descriptor;
   Class* class_def;
 
   std::string Decl() const;
+  Category GetCategory() const;
 };
 
 struct TypeList : public Node {
