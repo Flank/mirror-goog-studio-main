@@ -55,7 +55,7 @@ Agent& Agent::Instance(SocketType socket_type) {
 Agent::Agent(SocketType socket_type)
     : background_queue_("Studio:Agent", kMaxBackgroundTasks) {
   std::string target;
-  if (profiler::DeviceInfo::feature_level() >= 26 ||
+  if (profiler::DeviceInfo::feature_level() >= 26 &&
       socket_type == SocketType::kAbstractSocket) {
     // For O and post-O devices, we used an existing socket of which the file
     // descriptor will be provided into kAgentSocketName.
