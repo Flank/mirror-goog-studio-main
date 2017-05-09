@@ -11,6 +11,7 @@ target_link_libraries(perfd
                       profiler_event
                       profiler_memory
                       profiler_network
+                      profiler_graphics
                       profiler_protos
                       profiler_utils)
 
@@ -21,5 +22,6 @@ add_subdirectory(cpu)
 add_subdirectory(event)
 add_subdirectory(memory)
 add_subdirectory(network)
+add_subdirectory(graphics)
 
 install_executable(perfd)

@@ -20,6 +20,7 @@
 #include "perfd/daemon.h"
 #include "perfd/event/event_profiler_component.h"
 #include "perfd/generic_component.h"
+#include "perfd/graphics/graphics_profiler_component.h"
 #include "perfd/memory/memory_profiler_component.h"
 #include "perfd/network/network_profiler_component.h"
 #include "utils/config.h"
@@ -67,6 +68,9 @@ int main(int argc, char** argv) {
 
   profiler::NetworkProfilerComponent network_component{&daemon.utilities()};
   daemon.RegisterComponent(&network_component);
+
+  profiler::GraphicsProfilerComponent graphics_component{&daemon.utilities()};
+  daemon.RegisterComponent(&graphics_component);
 
   if (profiler::DeviceInfo::feature_level() >= 26 &&
       // TODO: remove the check on argument after agent uses only JVMTI to
