@@ -18,8 +18,9 @@ package com.android.tests;
 
 import static org.junit.Assert.*;
 
-import android.util.ArrayMap;
+import android.opengl.Matrix;
 import android.os.Debug;
+import android.util.ArrayMap;
 import org.junit.Test;
 
 public class UnitTest {
@@ -35,5 +36,11 @@ public class UnitTest {
 
         // Check a static method as well.
         assertEquals(0, Debug.getGlobalAllocCount());
+
+        // Check a native method converted to a non-native one in the mockable jar.
+        float[] result = new float[16];
+        float[] operand = new float[] {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
+        Matrix.multiplyMM(result, 0, operand, 0, operand, 0);
+        assertArrayEquals(new float[16], result, 0);
     }
 }

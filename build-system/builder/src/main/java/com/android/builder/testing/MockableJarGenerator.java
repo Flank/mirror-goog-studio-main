@@ -151,7 +151,7 @@ public class MockableJarGenerator {
 
         List<MethodNode> methodNodes = classNode.methods;
         for (MethodNode methodNode : methodNodes) {
-            methodNode.access &= ~Opcodes.ACC_FINAL;
+            methodNode.access &= ~(Opcodes.ACC_FINAL | Opcodes.ACC_NATIVE);
             fixMethodBody(methodNode, classNode);
         }
 
@@ -174,9 +174,8 @@ public class MockableJarGenerator {
      * Rewrites the method bytecode to remove the "Stub!" exception.
      */
     private void fixMethodBody(MethodNode methodNode, ClassNode classNode) {
-        if ((methodNode.access & Opcodes.ACC_NATIVE) != 0
-                || (methodNode.access & Opcodes.ACC_ABSTRACT) != 0) {
-            // Abstract and native method don't have bodies to rewrite.
+        if ((methodNode.access & Opcodes.ACC_ABSTRACT) != 0) {
+            // Abstract methods don't have bodies to rewrite.
             return;
         }
 
@@ -187,6 +186,11 @@ public class MockableJarGenerator {
 
         Type returnType = Type.getReturnType(methodNode.desc);
         InsnList instructions = methodNode.instructions;
+        if (instructions == null) {
+            // Create a body if the method didn't have it, e.g. if it was native.
+            instructions = new InsnList();
+            methodNode.instructions = instructions;
+        }
 
         if (methodNode.name.equals(CONSTRUCTOR)) {
             // Keep the call to parent constructor, delete the exception after that.
@@ -215,7 +219,7 @@ public class MockableJarGenerator {
                     instructions.add(new InsnNode(Opcodes.FCONST_0));
                 } else if (returnType.equals(Type.DOUBLE_TYPE)) {
                     instructions.add(new InsnNode(Opcodes.DCONST_0));
-                } else {
+                } else if (!returnType.equals(Type.VOID_TYPE)) {
                     instructions.add(new InsnNode(Opcodes.ACONST_NULL));
                 }
 
