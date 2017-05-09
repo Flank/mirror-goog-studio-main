@@ -31,7 +31,7 @@ import java.util.Set;
 public class SampleDataJsonParser {
     private final JsonObject myRootObject;
 
-    private SampleDataJsonParser(JsonObject rootObject) {
+    private SampleDataJsonParser(@NonNull JsonObject rootObject) {
         myRootObject = rootObject;
     }
 
@@ -44,6 +44,7 @@ public class SampleDataJsonParser {
         return null;
     }
 
+    @NonNull
     public List<String> getContentFromPath(String path) {
         ImmutableList<String> pathItems = ImmutableList.copyOf(Splitter.on('/').splitToList(path));
         ArrayList<String> content = new ArrayList<>();

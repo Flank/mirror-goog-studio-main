@@ -21,19 +21,12 @@ import static com.android.SdkConstants.*;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.rendering.api.*;
-import com.android.ide.common.resources.sampledata.SampleDataHolder;
+import com.android.ide.common.resources.sampledata.SampleDataManager;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
 import com.google.common.base.Joiner;
-import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import java.io.File;
-import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -442,65 +435,18 @@ public class ResourceResolver extends RenderResources {
 
     // ---- Private helper methods.
 
-    private static final Cache<String, SampleDataHolder> sMockList =
-            CacheBuilder.newBuilder()
-                    .expireAfterAccess(2, TimeUnit.MINUTES)
-                    .softValues()
-                    .weigher((String key, SampleDataHolder value) -> value.getFileSizeMb())
-                    .maximumWeight(50) // MB
-                    .build();
+    private SampleDataManager mSampleDataManager = new SampleDataManager();
 
-    /**
-     * Holds the current cursor position for the sample data file so a consistent view is provided
-     * for a given resolver (i.e. entries are not repeated and they are different for each element).
-     */
-    private final Map<String, AtomicInteger> mMockPosition = new HashMap<>();
-
-    private ResourceValue findMockValue(String name) {
+    private ResourceValue findSampleDataValue(@NonNull String name) {
         return Optional.ofNullable(mProjectResources.get(ResourceType.SAMPLE_DATA))
                 .map(t -> t.get(name))
                 .map(ResourceValue::getValue)
+                .map(fileName -> mSampleDataManager.getSampleDataLine(name, fileName))
                 .map(
-                        fileName -> {
-                            AtomicInteger mockPosition = mMockPosition.get(name);
-                            if (mockPosition == null) {
-                                mockPosition = new AtomicInteger(0);
-                                mMockPosition.put(name, mockPosition);
-                            }
-
-                            File sampleFile = new File(fileName);
-                            try {
-                                SampleDataHolder value = sMockList.getIfPresent(name);
-                                if (value == null
-                                        || value.getLastModification() == 0
-                                        || value.getLastModification()
-                                                != sampleFile.lastModified()) {
-                                    List<String> splitResourceName =
-                                            Splitter.on('/').limit(2).splitToList(name);
-                                    String path =
-                                            splitResourceName.size() > 1
-                                                    ? splitResourceName.get(1)
-                                                    : "";
-                                    value = SampleDataHolder.getFromFile(sampleFile, path);
-                                    sMockList.put(fileName, value);
-                                }
-
-                                int lineCount = value.getContents().size();
-                                String lineContent =
-                                        lineCount > 0
-                                                ? value.getContents()
-                                                        .get(
-                                                                mockPosition.getAndIncrement()
-                                                                        % lineCount)
-                                                : null;
-
-                                return new ResourceValue(
+                        lineContent ->
+                                new ResourceValue(
                                         ResourceUrl.create(null, ResourceType.SAMPLE_DATA, name),
-                                        lineContent);
-                            } catch (IOException ignore) {
-                            }
-                            return null;
-                        })
+                                        lineContent))
                 .orElse(null);
     }
 
@@ -516,8 +462,8 @@ public class ResourceResolver extends RenderResources {
             // Aapt resources are synthetic references that do not need to be resolved.
             return null;
         } else if (url.type == ResourceType.SAMPLE_DATA) {
-            // Mock resources are only available within the tools namespace
-            return findMockValue(url.name);
+            // Sample data resources are only available within the tools namespace
+            return findSampleDataValue(url.name);
         }
 
         // map of ResourceValue for the given type

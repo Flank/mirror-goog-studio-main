@@ -23,7 +23,9 @@ import com.google.common.io.Files;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /** Holder for the sample data cache */
 public class SampleDataHolder {
@@ -46,6 +48,7 @@ public class SampleDataHolder {
         myContents = contents;
     }
 
+    @NonNull
     public String getName() {
         return myName;
     }
@@ -54,6 +57,7 @@ public class SampleDataHolder {
         return myLastModification;
     }
 
+    @NonNull
     public List<String> getContents() {
         return myContents;
     }
@@ -65,13 +69,19 @@ public class SampleDataHolder {
     @NonNull
     public static SampleDataHolder getFromFile(@NonNull File input, @NonNull String contentPath)
             throws IOException {
-        if (!input.isFile()) {
-            throw new IOException("Sample data needs to be contained in a file");
+        String fileName = input.getName();
+        if (input.isDirectory()) {
+            // The directory can contain images. Generate a dynamic list of all the files contains
+            return new SampleDataHolder(
+                    fileName,
+                    input.lastModified(),
+                    (int) (input.length() / 1_000_000),
+                    Arrays.stream(input.listFiles())
+                            .map(File::getAbsolutePath)
+                            .collect(Collectors.toList()));
         }
 
-        String fileName = input.getName();
         String extension = "." + Files.getFileExtension(fileName);
-
         switch (extension) {
             case SdkConstants.DOT_JSON:
                 return getFromJsonFile(input, contentPath);
