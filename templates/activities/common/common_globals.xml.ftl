@@ -32,6 +32,7 @@
 
     <global id="manifestOut" value="${manifestDir}" />
     <global id="buildVersion" value="${buildApi}" />
+    <global id="buildApiRevision" type="integer" value="${buildApiRevision!0}" />
 
 <#if !appCompat>
     <global id="superClass" type="string" value="Activity"/>

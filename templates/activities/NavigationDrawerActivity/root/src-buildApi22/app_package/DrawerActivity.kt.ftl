@@ -1,3 +1,4 @@
+<#import "root://activities/common/kotlin_macros.ftl" as kt>
 package ${packageName}
 
 import android.os.Bundle
@@ -19,29 +20,29 @@ class ${activityClass} : ${superClass}(), NavigationView.OnNavigationItemSelecte
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.${layoutName})
-        val toolbar = findViewById(R.id.toolbar) as Toolbar
+        val toolbar = <@kt.findViewById id="R.id.toolbar" type="Toolbar"/>
         setSupportActionBar(toolbar)
 
 <#if hasAppBar>
-        val fab = findViewById(R.id.fab) as FloatingActionButton
+        val fab = <@kt.findViewById id="R.id.fab" type="FloatingActionButton"/>
         fab.setOnClickListener { view ->
             Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                     .setAction("Action", null).show()
         }
 </#if>
 
-        val drawer = findViewById(R.id.drawer_layout) as DrawerLayout
+        val drawer = <@kt.findViewById id="R.id.drawer_layout" type="DrawerLayout"/>
         val toggle = ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close)
         drawer.addDrawerListener(toggle)
         toggle.syncState()
 
-        val navigationView = findViewById(R.id.nav_view) as NavigationView
+        val navigationView = <@kt.findViewById id="R.id.nav_view" type="NavigationView"/>
         navigationView.setNavigationItemSelectedListener(this)
     }
 
     override fun onBackPressed() {
-        val drawer = findViewById(R.id.drawer_layout) as DrawerLayout
+        val drawer = <@kt.findViewById id="R.id.drawer_layout" type="DrawerLayout"/>
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START)
         } else {
@@ -88,7 +89,7 @@ class ${activityClass} : ${superClass}(), NavigationView.OnNavigationItemSelecte
             }
         }
 
-        val drawer = findViewById(R.id.drawer_layout) as DrawerLayout
+        val drawer = <@kt.findViewById id="R.id.drawer_layout" type="DrawerLayout"/>
         drawer.closeDrawer(GravityCompat.START)
         return true
     }
