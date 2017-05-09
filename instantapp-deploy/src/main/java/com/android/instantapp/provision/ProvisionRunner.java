@@ -23,6 +23,9 @@ import com.android.ddmlib.CollectingOutputReceiver;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.TimeoutException;
+import com.android.instantapp.sdk.InstantAppSdkException;
+import com.android.instantapp.sdk.ManifestParser;
+import com.android.instantapp.sdk.Metadata;
 import com.android.sdklib.AndroidVersion;
 import com.google.common.base.Splitter;
 import java.io.File;
@@ -54,7 +57,11 @@ public class ProvisionRunner {
                     ProvisionException.ErrorType.INVALID_SDK,
                     "Path " + instantAppSdk.getAbsolutePath() + " is not valid.");
         }
-        myMetadata = new ManifestParser(instantAppSdk).getMetadata();
+        try {
+            myMetadata = new ManifestParser(instantAppSdk).getMetadata();
+        } catch (InstantAppSdkException e) {
+            throw new ProvisionException(ProvisionException.ErrorType.INVALID_SDK, e);
+        }
         myListener = listener;
         myProvisionCache = new HashMap<>();
     }
@@ -134,6 +141,7 @@ public class ProvisionRunner {
         myListener.printMessage("Starting provision");
 
         String buildType = getOsBuildType(device);
+        int apiLevel = device.getVersion().getApiLevel();
 
         if (!myListener.isCancelled() && provisionState.lastSucceeded == ProvisionState.Step.NONE) {
             myListener.logMessage("Checking API level", null);
@@ -181,7 +189,7 @@ public class ProvisionRunner {
             assert provisionState.arch != null;
             myListener.printMessage("Installing apks");
             myListener.logMessage("Installing apks", null);
-            installApks(device, provisionState.arch, provisionState);
+            installApks(device, provisionState.arch, apiLevel, provisionState);
             myListener.logMessage("Apks installed successfully", null);
             provisionState.lastSucceeded = ProvisionState.Step.INSTALL;
         }
@@ -293,9 +301,11 @@ public class ProvisionRunner {
     private void installApks(
             @NonNull IDevice device,
             @NonNull Metadata.Arch arch,
+            int apiLevel,
             @NonNull ProvisionState provisionState)
             throws ProvisionException {
-        ProvisionApksInstaller apksInstaller = new ProvisionApksInstaller(myMetadata.getApks(arch));
+        ProvisionApksInstaller apksInstaller =
+                new ProvisionApksInstaller(myMetadata.getApks(arch, apiLevel));
         apksInstaller.installAll(device, provisionState, myListener);
     }
 

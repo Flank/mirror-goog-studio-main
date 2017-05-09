@@ -13,13 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.instantapp.provision;
+package com.android.instantapp.sdk;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.EnumMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import org.w3c.dom.Element;
@@ -30,7 +35,7 @@ import org.xml.sax.SAXException;
  * Receives a manifest.xml file representing the metadata of the Instant App SDK and parses it,
  * producing an instance of {@link Metadata}.
  */
-class ManifestParser {
+public class ManifestParser {
     @NonNull private final File myManifestFile;
     @NonNull private final File myApksDirectory;
 
@@ -40,18 +45,16 @@ class ManifestParser {
      *
      * @param instantAppSdk the folder containing the SDK.
      */
-    ManifestParser(@NonNull File instantAppSdk) throws ProvisionException {
+    public ManifestParser(@NonNull File instantAppSdk) throws InstantAppSdkException {
         myManifestFile = new File(instantAppSdk, "manifest.xml");
         if (!myManifestFile.exists() || !myManifestFile.isFile()) {
-            throw new ProvisionException(
-                    ProvisionException.ErrorType.INVALID_SDK,
+            throw new InstantAppSdkException(
                     "Manifest file " + myManifestFile.getAbsolutePath() + " does not exist.");
         }
 
         myApksDirectory = new File(new File(instantAppSdk, "tools"), "apks");
         if (!myApksDirectory.exists() || !myApksDirectory.isDirectory()) {
-            throw new ProvisionException(
-                    ProvisionException.ErrorType.INVALID_SDK,
+            throw new InstantAppSdkException(
                     "Apks folder " + myApksDirectory.getAbsolutePath() + " does not exist.");
         }
     }
@@ -132,7 +135,7 @@ class ManifestParser {
      * @return a new instance of {@link Metadata} representing the SDK.
      */
     @NonNull
-    Metadata getMetadata() throws ProvisionException {
+    public Metadata getMetadata() throws InstantAppSdkException {
         try {
             Element manifest =
                     (Element)
@@ -143,13 +146,9 @@ class ManifestParser {
                                     .item(0);
             return parseManifest(manifest);
         } catch (SAXException | IOException | ParserConfigurationException e) {
-            throw new ProvisionException(
-                    ProvisionException.ErrorType.INVALID_SDK, "Manifest file is corrupted.", e);
+            throw new InstantAppSdkException("Manifest file is corrupted.", e);
         } catch (RuntimeException e) {
-            throw new ProvisionException(
-                    ProvisionException.ErrorType.INVALID_SDK,
-                    "Manifest file is not in the expected format.",
-                    e);
+            throw new InstantAppSdkException("Manifest file is not in the expected format.", e);
         }
     }
 
@@ -168,7 +167,17 @@ class ManifestParser {
         List<Metadata.GServicesOverride> gServicesOverrides =
                 parseGServicesOverrides(
                         (Element) manifestNode.getElementsByTagName("gservicesOverrides").item(0));
-        return new Metadata(versionCode, versionName, apks, enabledDevices, gServicesOverrides);
+        Metadata.LibraryCompatibility libraryCompatibility =
+                parseLibraryCompatibility(
+                        (Element)
+                                manifestNode.getElementsByTagName("libraryCompatibility").item(0));
+        return new Metadata(
+                versionCode,
+                versionName,
+                apks,
+                enabledDevices,
+                gServicesOverrides,
+                libraryCompatibility);
     }
 
     @NonNull
@@ -202,7 +211,32 @@ class ManifestParser {
         Metadata.Arch arch = Metadata.Arch.create(archName);
         String versionCodeString =
                 apkVersionInfoNode.getElementsByTagName("versionCode").item(0).getTextContent();
+
+        Set<Integer> apiLevelsSet = new HashSet<>();
+        NodeList sdkIntsNodes = apkVersionInfoNode.getElementsByTagName("sdkInt");
+        if (sdkIntsNodes.getLength() > 0) {
+            NodeList sdkIntNodes = ((Element) sdkIntsNodes.item(0)).getElementsByTagName("sdkInt");
+            for (int i = 0; i < sdkIntNodes.getLength(); i++) {
+                String sdkIntString = sdkIntNodes.item(i).getTextContent();
+                int sdkInt = Integer.parseInt(sdkIntString);
+                apiLevelsSet.add(sdkInt);
+            }
+        }
+
         long versionCode = Long.parseLong(versionCodeString);
-        return new Metadata.ApkInfo(pkgName, apkFile, arch, versionCode);
+        return new Metadata.ApkInfo(pkgName, apkFile, arch, apiLevelsSet, versionCode);
+    }
+
+    @NonNull
+    @VisibleForTesting
+    Metadata.LibraryCompatibility parseLibraryCompatibility(
+            @NonNull Element libraryCompatibilityNode) {
+        String aiaCompatApiMinVersionString =
+                libraryCompatibilityNode
+                        .getElementsByTagName("aiaCompatApiMinVersion")
+                        .item(0)
+                        .getTextContent();
+        long aiaCompatApiMinVersion = Long.parseLong(aiaCompatApiMinVersionString);
+        return new Metadata.LibraryCompatibility(aiaCompatApiMinVersion);
     }
 }

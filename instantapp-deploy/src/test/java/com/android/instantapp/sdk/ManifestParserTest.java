@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.instantapp.provision;
+package com.android.instantapp.sdk;
 
-import static com.android.instantapp.provision.ProvisionTests.getInstantAppSdk;
+import static com.android.instantapp.sdk.InstantAppSdkTests.getInstantAppSdk;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -68,7 +68,7 @@ public class ManifestParserTest {
         assertFalse(
                 metadata.isSupportedDevice(
                         new Metadata.Device(
-                                null, null, Collections.singleton(22), null, "ranchu")));
+                                null, null, Collections.singleton(20), null, "ranchu")));
         assertFalse(
                 metadata.isSupportedDevice(
                         new Metadata.Device(
@@ -87,8 +87,21 @@ public class ManifestParserTest {
                                         "sony", null, Collections.singleton(23), null, null))
                         .size());
 
-        assertEquals(4, metadata.getApks(Metadata.Arch.ARM64_V8A).size());
-        assertEquals(1, metadata.getApks(Metadata.Arch.DEFAULT).size());
+        assertEquals(4, metadata.getApks(Metadata.Arch.ARM64_V8A, 23).size());
+        assertEquals(1, metadata.getApks(Metadata.Arch.DEFAULT, 23).size());
+
+        for (Metadata.ApkInfo apkInfo : metadata.getApks(Metadata.Arch.X86, 22)) {
+            if (apkInfo.getPkgName().compareTo("com.google.android.gms") == 0) {
+                assertTrue(apkInfo.getApk().getName().contains("lmp"));
+            }
+        }
+        for (Metadata.ApkInfo apkInfo : metadata.getApks(Metadata.Arch.X86, 24)) {
+            if (apkInfo.getPkgName().compareTo("com.google.android.gms") == 0) {
+                assertTrue(apkInfo.getApk().getName().contains("mnc"));
+            }
+        }
+
+        assertEquals(1, metadata.getAiaCompatApiMinVersion());
     }
 
     @Test
@@ -161,6 +174,36 @@ public class ManifestParserTest {
     }
 
     @Test
+    public void testParseApkVersionInfoWithoutSdkInt() throws Exception {
+        Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+
+        Element apkVersionInfoElement =
+                generateNode(
+                        doc,
+                        "apkVersionInfo",
+                        generateLeaf(doc, "path", "release/GmsCore_prodmnc_xxhdpi_armeabi-v7a.apk"),
+                        generateLeaf(doc, "arch", "armeabi-v7a"),
+                        generateLeaf(doc, "packageName", "com.google.android.gms"),
+                        generateLeaf(doc, "versionCode", "11034430"),
+                        generateLeaf(doc, "versionName", "11.0.34 (430-153866981)"));
+
+        Metadata.ApkInfo apkInfo = myManifestParser.parseApkVersionInfo(apkVersionInfoElement);
+
+        assertEquals(
+                FileUtils.join(
+                                myInstantAppSdk,
+                                "tools",
+                                "apks",
+                                "release",
+                                "GmsCore_prodmnc_xxhdpi_armeabi-v7a.apk")
+                        .getPath(),
+                apkInfo.getApk().getPath());
+        assertEquals(Metadata.Arch.ARMEABI_V7A, apkInfo.getArch());
+        assertEquals("com.google.android.gms", apkInfo.getPkgName());
+        assertEquals(11034430, apkInfo.getVersionCode());
+    }
+
+    @Test
     public void testParseApkVersionInfoWithoutArch() throws Exception {
         Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
 
@@ -194,6 +237,12 @@ public class ManifestParserTest {
                         generateLeaf(doc, "path", "release/GmsCore_prodmnc_xxhdpi_armeabi-v7a.apk"),
                         generateLeaf(doc, "arch", "armeabi-v7a"),
                         generateLeaf(doc, "packageName", "com.google.android.gms"),
+                        generateNode(
+                                doc,
+                                "sdkInt",
+                                generateLeaf(doc, "sdkInt", "23"),
+                                generateLeaf(doc, "sdkInt", "24"),
+                                generateLeaf(doc, "sdkInt", "25")),
                         generateLeaf(doc, "versionCode", "11034430"),
                         generateLeaf(doc, "versionName", "11.0.34 (430-153866981)"));
 
@@ -210,7 +259,19 @@ public class ManifestParserTest {
                 apkInfo.getApk().getPath());
         assertEquals(Metadata.Arch.ARMEABI_V7A, apkInfo.getArch());
         assertEquals("com.google.android.gms", apkInfo.getPkgName());
+        assertThat(apkInfo.getApiLevels(), CoreMatchers.hasItems(23, 24, 25));
         assertEquals(11034430, apkInfo.getVersionCode());
+    }
+
+    @Test
+    public void testParseLibraryCompatibility() throws Exception {
+        Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+
+        Element libraryCompatibilityNode =
+                generateNode(
+                        doc,
+                        "libraryCompatibility",
+                        generateLeaf(doc, "aiaCompatApiMinVersion", "1"));
     }
 
     private static Element generateNode(
