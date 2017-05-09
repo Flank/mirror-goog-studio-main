@@ -15,7 +15,7 @@
  */
 package com.android.instantapp.provision;
 
-import static com.android.instantapp.provision.ProvisionTests.getInstantAppSdk;
+import static com.android.instantapp.sdk.InstantAppSdkTests.getInstantAppSdk;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -27,6 +27,7 @@ import static org.mockito.Mockito.doThrow;
 import com.android.annotations.NonNull;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.InstallException;
+import com.android.instantapp.sdk.InstantAppSdkTests;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -49,7 +50,7 @@ public class ProvisionRunnerTest {
 
     @Test
     public void testSucceedsPostO() throws Throwable {
-        IDevice device = new ProvisionTests.DeviceGenerator().setApiLevel(25, "O").getDevice();
+        IDevice device = new InstantAppSdkTests.DeviceGenerator().setApiLevel(25, "O").getDevice();
         myProvisionRunner.runProvision(device);
         assertEquals(
                 ProvisionRunner.ProvisionState.Step.FINISHED,
@@ -59,7 +60,7 @@ public class ProvisionRunnerTest {
     @Test
     public void testFailsWhenArchNotSupported() throws Throwable {
         IDevice device =
-                new ProvisionTests.DeviceGenerator()
+                new InstantAppSdkTests.DeviceGenerator()
                         .setApiLevel(23, null)
                         .setArchitectures("mips")
                         .getDevice();
@@ -72,7 +73,7 @@ public class ProvisionRunnerTest {
     @Test
     public void testFailsWhenDeviceNotEnabled() throws Throwable {
         IDevice device =
-                new ProvisionTests.DeviceGenerator()
+                new InstantAppSdkTests.DeviceGenerator()
                         .setApiLevel(23, null)
                         .setArchitectures("x86")
                         .setHardware("fakeRanchu")
@@ -86,8 +87,8 @@ public class ProvisionRunnerTest {
     @Test
     public void testFailsWhenDeviceWrongApiLevel() throws Throwable {
         IDevice device =
-                new ProvisionTests.DeviceGenerator()
-                        .setApiLevel(22, null)
+                new InstantAppSdkTests.DeviceGenerator()
+                        .setApiLevel(20, null)
                         .setArchitectures("x86")
                         .setHardware("ranchu")
                         .getDevice();
@@ -100,7 +101,7 @@ public class ProvisionRunnerTest {
     @Test
     public void testFailsWhenNotLoggedInGoogleAccount() throws Throwable {
         IDevice device =
-                new ProvisionTests.DeviceGenerator()
+                new InstantAppSdkTests.DeviceGenerator()
                         .setApiLevel(23, null)
                         .setArchitectures("x86")
                         .setHardware("ranchu")
@@ -114,7 +115,7 @@ public class ProvisionRunnerTest {
     @Test
     public void testFailsWhenInstallFails() throws Throwable {
         IDevice device =
-                new ProvisionTests.DeviceGenerator()
+                new InstantAppSdkTests.DeviceGenerator()
                         .setApiLevel(23, null)
                         .setArchitectures("x86")
                         .setHardware("ranchu")
@@ -130,7 +131,7 @@ public class ProvisionRunnerTest {
     @Test
     public void testSucceedsIfNoProblem() throws Throwable {
         IDevice device =
-                new ProvisionTests.DeviceGenerator()
+                new InstantAppSdkTests.DeviceGenerator()
                         .setApiLevel(23, null)
                         .setArchitectures("x86")
                         .setHardware("ranchu")

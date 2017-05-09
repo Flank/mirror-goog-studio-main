@@ -13,42 +13,53 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.instantapp.provision;
+package com.android.instantapp.sdk;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Represents the model of the metadata found in the Instant Apps Sdk and useful . This class can be
  * initialized passing the Sdk containing an xml manifest file.
  */
-class Metadata {
+public class Metadata {
     private final long mySdkVersionCode;
     @NonNull private final String mySdkVersionName;
     @NonNull private final Map<Arch, List<ApkInfo>> myApks;
     @NonNull private final Set<Device> myEnabledDevices;
     @NonNull private final List<GServicesOverride> myGServicesOverrides;
+    @NonNull private final LibraryCompatibility myLibraryCompatibility;
 
     Metadata(
             long sdkVersionCode,
             @NonNull String sdkVersionName,
             @NonNull Map<Arch, List<ApkInfo>> apks,
             @NonNull Set<Device> enabledDevices,
-            @NonNull List<GServicesOverride> gServicesOverrides) {
+            @NonNull List<GServicesOverride> gServicesOverrides,
+            @NonNull LibraryCompatibility libraryCompatibility) {
         mySdkVersionCode = sdkVersionCode;
         mySdkVersionName = sdkVersionName;
         myApks = apks;
         myEnabledDevices = enabledDevices;
         myGServicesOverrides = gServicesOverrides;
+        myLibraryCompatibility = libraryCompatibility;
     }
 
-    boolean isSupportedArch(@NonNull String arch) {
+    public long getAiaCompatApiMinVersion() {
+        return myLibraryCompatibility.getAiaCompatApiMinVersion();
+    }
+
+    public boolean isSupportedArch(@NonNull String arch) {
         return myApks.keySet().contains(Arch.create(arch));
     }
 
-    boolean isSupportedDevice(@NonNull Device device) {
+    public boolean isSupportedDevice(@NonNull Device device) {
         for (Device enabledDevice : myEnabledDevices) {
             if (enabledDevice.matches(device)) {
                 return true;
@@ -58,11 +69,21 @@ class Metadata {
     }
 
     @NonNull
-    List<ApkInfo> getApks(@NonNull Arch arch) {
+    public List<ApkInfo> getApks(@NonNull Arch arch, int apiLevel) {
         List<ApkInfo> apks = new LinkedList<>();
-        apks.addAll(myApks.get((Arch.DEFAULT)));
+        for (ApkInfo apkInfo : myApks.get(Arch.DEFAULT)) {
+            // Default is all api levels.
+            if (apkInfo.getApiLevels().isEmpty() || apkInfo.getApiLevels().contains(apiLevel)) {
+                apks.add(apkInfo);
+            }
+        }
         if (arch != Arch.DEFAULT) {
-            apks.addAll(myApks.get(arch));
+            for (ApkInfo apkInfo : myApks.get(arch)) {
+                // Default is all api levels.
+                if (apkInfo.getApiLevels().isEmpty() || apkInfo.getApiLevels().contains(apiLevel)) {
+                    apks.add(apkInfo);
+                }
+            }
         }
         return apks;
     }
@@ -73,7 +94,7 @@ class Metadata {
      * @return all the gServicesOverrides that should be applied to the specific device.
      */
     @NonNull
-    List<GServicesOverride> getGServicesOverrides(@NonNull Device device) {
+    public List<GServicesOverride> getGServicesOverrides(@NonNull Device device) {
         List<GServicesOverride> gServicesOverrides = new ArrayList<>();
         for (GServicesOverride gServicesOverride : myGServicesOverrides) {
             Set<Device> gServiceDevices = gServicesOverride.getDevices();
@@ -90,7 +111,7 @@ class Metadata {
         return gServicesOverrides;
     }
 
-    enum Arch {
+    public enum Arch {
         DEFAULT("default"),
         ARMEABI("armeabi"),
         ARMEABI_V7A("armeabi-v7a"),
@@ -123,16 +144,23 @@ class Metadata {
         }
     }
 
-    static class ApkInfo {
+    public static class ApkInfo {
         @NonNull private final String myPkgName;
         @NonNull private final File myApk;
         @NonNull private final Arch myArch;
+        @NonNull private final Set<Integer> myApiLevels;
         private final long myVersionCode;
 
-        ApkInfo(@NonNull String pkgName, @NonNull File apk, @NonNull Arch arch, long version) {
+        public ApkInfo(
+                @NonNull String pkgName,
+                @NonNull File apk,
+                @NonNull Arch arch,
+                @NonNull Set<Integer> apiLevels,
+                long version) {
             myPkgName = pkgName;
             myApk = apk;
             myArch = arch;
+            myApiLevels = apiLevels;
             myVersionCode = version;
         }
 
@@ -151,12 +179,17 @@ class Metadata {
             return myArch;
         }
 
+        @NonNull
+        public Set<Integer> getApiLevels() {
+            return myApiLevels;
+        }
+
         public long getVersionCode() {
             return myVersionCode;
         }
     }
 
-    static class Device {
+    public static class Device {
         // ro.product.manufacturer
         @Nullable private final String myManufacturer;
         // ro.product.device
@@ -168,7 +201,7 @@ class Metadata {
         // ro.hardware
         @Nullable private final String myHardware;
 
-        Device(
+        public Device(
                 @Nullable String manufacturer,
                 @Nullable String androidDevice,
                 @NonNull Set<Integer> apiLevels,
@@ -244,7 +277,7 @@ class Metadata {
         }
     }
 
-    static class GServicesOverride {
+    public static class GServicesOverride {
         @NonNull private final Set<Device> myDevices;
         @NonNull private final String myKey;
         @NonNull private final String myValue;
@@ -270,6 +303,18 @@ class Metadata {
         @NonNull
         public String getValue() {
             return myValue;
+        }
+    }
+
+    public static class LibraryCompatibility {
+        private final long myAiaCompatApiMinVersion;
+
+        LibraryCompatibility(long aiaCompatApiMinVersion) {
+            myAiaCompatApiMinVersion = aiaCompatApiMinVersion;
+        }
+
+        public long getAiaCompatApiMinVersion() {
+            return myAiaCompatApiMinVersion;
         }
     }
 }

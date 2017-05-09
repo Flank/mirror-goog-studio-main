@@ -21,6 +21,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.InstallException;
+import com.android.instantapp.sdk.Metadata;
 import java.util.LinkedList;
 import java.util.List;
 

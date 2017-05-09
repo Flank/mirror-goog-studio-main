@@ -1,4 +1,20 @@
-package com.android.instantapp.provision;
+/*
+ * Copyright (C) 2017 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.android.instantapp.sdk;
 
 import static com.google.common.io.Files.createTempDir;
 import static org.mockito.ArgumentMatchers.eq;
@@ -24,14 +40,14 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 /** Utils to test. */
-public class ProvisionTests {
+public class InstantAppSdkTests {
 
     @NonNull
-    static File getInstantAppSdk() throws IOException {
-        String path = "whsdk39";
+    public static File getInstantAppSdk() throws IOException {
+        String path = "whsdk-testnew";
         File jarFile =
                 new File(
-                        ProvisionTests.class
+                        InstantAppSdkTests.class
                                 .getProtectionDomain()
                                 .getCodeSource()
                                 .getLocation()
@@ -63,7 +79,7 @@ public class ProvisionTests {
             return new File(instantAppSdk, path);
         } else {
             // If running in the IDE, the resources are not compressed in a jar, just return it.
-            return new File(Resources.getResource(ProvisionTests.class, "/" + path).getFile());
+            return new File(Resources.getResource(InstantAppSdkTests.class, "/" + path).getFile());
         }
     }
 
@@ -76,20 +92,21 @@ public class ProvisionTests {
         }
 
         @NonNull
-        public DeviceGenerator setArchitectures(@NonNull String... archs) {
+        public InstantAppSdkTests.DeviceGenerator setArchitectures(@NonNull String... archs) {
             when(myDevice.getAbis()).thenReturn(Lists.newArrayList(archs));
             return this;
         }
 
         @NonNull
-        public DeviceGenerator setApiLevel(int apiLevel, @Nullable String codename) {
+        public InstantAppSdkTests.DeviceGenerator setApiLevel(
+                int apiLevel, @Nullable String codename) {
             when(myDevice.getVersion()).thenReturn(new AndroidVersion(apiLevel, codename));
             return this;
         }
 
         @NonNull
-        public DeviceGenerator setVersionOfPackage(@NonNull String pkgName, long version)
-                throws Throwable {
+        public InstantAppSdkTests.DeviceGenerator setVersionOfPackage(
+                @NonNull String pkgName, long version) throws Throwable {
             String shellCommand = "dumpsys package " + pkgName;
             doAnswer(
                             invocation -> {
@@ -107,7 +124,7 @@ public class ProvisionTests {
         }
 
         @NonNull
-        public DeviceGenerator setGoogleAccountLogged() throws Throwable {
+        public InstantAppSdkTests.DeviceGenerator setGoogleAccountLogged() throws Throwable {
             String shellCommand = "dumpsys account";
             doAnswer(
                             invocation -> {
@@ -125,31 +142,31 @@ public class ProvisionTests {
         }
 
         @NonNull
-        public DeviceGenerator setOsBuildType(@NonNull String osBuildType) {
+        public InstantAppSdkTests.DeviceGenerator setOsBuildType(@NonNull String osBuildType) {
             when(myDevice.getProperty("ro.build.tags")).thenReturn(osBuildType);
             return this;
         }
 
         @NonNull
-        public DeviceGenerator setManufacturer(@NonNull String manufacturer) {
+        public InstantAppSdkTests.DeviceGenerator setManufacturer(@NonNull String manufacturer) {
             when(myDevice.getProperty("ro.product.manufacturer")).thenReturn(manufacturer);
             return this;
         }
 
         @NonNull
-        public DeviceGenerator setAndroidDevice(@NonNull String androidDevice) {
+        public InstantAppSdkTests.DeviceGenerator setAndroidDevice(@NonNull String androidDevice) {
             when(myDevice.getProperty("ro.product.device")).thenReturn(androidDevice);
             return this;
         }
 
         @NonNull
-        public DeviceGenerator setProduct(@NonNull String product) {
+        public InstantAppSdkTests.DeviceGenerator setProduct(@NonNull String product) {
             when(myDevice.getProperty("ro.product.name")).thenReturn(product);
             return this;
         }
 
         @NonNull
-        public DeviceGenerator setHardware(@NonNull String hardware) {
+        public InstantAppSdkTests.DeviceGenerator setHardware(@NonNull String hardware) {
             when(myDevice.getProperty("ro.hardware")).thenReturn(hardware);
             return this;
         }
