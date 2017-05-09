@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -721,11 +722,38 @@ public class PerformanceTestProjects {
                     "/* $0 */");
         }
 
-
         // because we are testing the source generation which will trigger the test manifest
         // merging, minSdkVersion has to be at least 17
         TestFileUtils.searchAndReplace(
                 project.file("dependencies.gradle"), "(minSdkVersion *): \\d+,", "$1: 17,");
+
+        Stream<Path> allBuildFiles =
+                Files.find(
+                        project.getTestDir().toPath(),
+                        Integer.MAX_VALUE,
+                        (path, attrs) -> path.getFileName().toString().equals("build.gradle"));
+        Pattern appPlugin = Pattern.compile("apply plugin:\\s*'com.android.application'");
+        Pattern libPlugin = Pattern.compile("apply plugin:\\s*'com.android.library'");
+        allBuildFiles.forEach(buildGradle -> {
+            String fileContent;
+            try {
+                 fileContent = new String(Files.readAllBytes(buildGradle));
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+            if (appPlugin.matcher(fileContent).find()
+                    || libPlugin.matcher(fileContent).find()) {
+                try {
+                    TestFileUtils.appendToFile(buildGradle.toFile(),
+                            "\n"
+                                    + "android.defaultConfig.javaCompileOptions {\n"
+                                    + "annotationProcessorOptions.includeCompileClasspath = true\n"
+                                    + "}");
+                } catch (IOException e) {
+                    throw new UncheckedIOException(e);
+                }
+            }
+        });
     }
 
     public static void assertNoSyncErrors(@NonNull Map<String, AndroidProject> models) {

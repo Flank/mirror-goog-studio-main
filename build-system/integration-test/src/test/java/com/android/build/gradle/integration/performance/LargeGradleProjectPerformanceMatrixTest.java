@@ -82,20 +82,17 @@ public class LargeGradleProjectPerformanceMatrixTest {
 
         PerformanceTestProjects.assertNoSyncErrors(models);
 
-        // TODO: warm up (This is really slow already)
-
-        executor().recordBenchmark(BenchmarkMode.EVALUATION).run("tasks");
-
-        // TODO: Introduce more benchmarks once this one seems stable.
-        if (true) {
-            return;
-        }
-        executor().recordBenchmark(BenchmarkMode.BUILD__FROM_CLEAN).run("assembleDebug");
-
-        executor().recordBenchmark(BenchmarkMode.NO_OP).run("assembleDebug");
-
+        // warm-up
+        executor().run("clean");
+        executor().run(":phthalic:assembleDebug");
         executor().run("clean");
 
+        // recording data
+        executor().recordBenchmark(BenchmarkMode.EVALUATION).run("tasks");
+        executor().recordBenchmark(BenchmarkMode.BUILD__FROM_CLEAN).run(":phthalic:assembleDebug");
+        executor().recordBenchmark(BenchmarkMode.NO_OP).run(":phthalic:assembleDebug");
+
+        executor().run("clean");
         project.model().ignoreSyncIssues().recordBenchmark(BenchmarkMode.SYNC).getMulti();
 
         executor()
