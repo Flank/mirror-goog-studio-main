@@ -1220,9 +1220,9 @@ public class AdaptiveIconGenerator extends GraphicGenerator {
         ROUNDED_SQUARE("rounded-square", "Rounded Square"),
         SQUARE("square", "Square"),
         FULL_BLEED("full-bleed-layers", "Full Bleed Layers"),
-        LEGACY("legacy", "Legacy (API \u2264 24)"),
-        LEGACY_ROUND("legacy-round", "Round (API 25)"),
-        WEB("web", "Web");
+        LEGACY("legacy", "Legacy Icon"),
+        LEGACY_ROUND("legacy-round", "Round Icon"),
+        WEB("web", "Google Play Store");
 
         /** Id, used when shape is converted to a string */
         public final String id;
