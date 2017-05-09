@@ -41,10 +41,6 @@ public class ProjectOptionsBuilder {
         integers = new EnumMap<>(IntegerOption.class);
         strings = new EnumMap<>(StringOption.class);
 
-        booleans.put(
-                BooleanOption.ENABLE_IMPROVED_DEPENDENCY_RESOLUTION,
-                GradleTestProject.IMPROVED_DEPENDENCY_RESOLUTION);
-        // Tested separately
         booleans.put(BooleanOption.ENABLE_SDK_DOWNLOAD, false); // Not enabled in tests
 
         // TODO: enable by default

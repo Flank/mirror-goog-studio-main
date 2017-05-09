@@ -103,17 +103,4 @@ public class LocalJarInAarInModelTest {
             }
         }
     }
-
-    @Test
-    public void checkSyncFailsIfImprovedDependencyResolutionDisabled() throws IOException {
-        // disable dependency resolution at execution, expect that syncing fails
-        try {
-            project.model()
-                    .with(BooleanOption.ENABLE_IMPROVED_DEPENDENCY_RESOLUTION, false)
-                    .getSingle();
-            fail("Expected BuildException");
-        } catch (BuildException exception) {
-            // Expected
-        }
-    }
 }

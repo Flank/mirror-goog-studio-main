@@ -72,19 +72,13 @@ public class TestWithMismatchDep {
 
     @Test
     public void testMismatchDependencyDoesNotBreakDebugBuild() throws Exception {
-        GradleBuildResult result = project.executor().run("assembleDebug");
-
-        // check there is a log output
-        if (!project.isImprovedDependencyEnabled()) {
-            // There won't be an error message if dependency is not resolved on configuration.
-            assertThat(result.getStdout()).named("stdout").contains(ERROR_MSG);
-        }
+        project.executor().run("assembleDebug");
     }
 
     @Test
     public void testMismatchDependencyCanRunNonBuildTasks() throws Exception {
         // it's important to be able to run the dependencies task to
         // investigate dependency issues.
-        GradleBuildResult result = project.executor().run("dependencies");
+        project.executor().run("dependencies");
     }
 }

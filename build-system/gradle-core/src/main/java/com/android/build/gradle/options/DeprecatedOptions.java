@@ -36,6 +36,10 @@ public enum DeprecatedOptions implements Option<String> {
             "com.android.build.threadPoolSize",
             "The com.android.build.threadPoolSize property has been replaced by "
                     + IntegerOption.THREAD_POOL_SIZE.getPropertyName()),
+    ENABLE_IMPROVED_DEPENDENCY_RESOLUTION(
+            "android.enableImprovedDependenciesResolution",
+            "The android.enableImprovedDependenciesResolution property does not have any effect. "
+                    + "Dependency resolution is only performed during task execution phase."),
     ;
 
     @NonNull private final String propertyName;

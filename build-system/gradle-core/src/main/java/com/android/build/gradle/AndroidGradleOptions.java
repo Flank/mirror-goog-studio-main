@@ -208,13 +208,6 @@ public class AndroidGradleOptions {
         return EnumSet.noneOf(OptionalCompilationStep.class);
     }
 
-    public static boolean isImprovedDependencyResolutionEnabled(@NonNull Project project) {
-        return getBoolean(
-                project,
-                BooleanOption.ENABLE_IMPROVED_DEPENDENCY_RESOLUTION.getPropertyName(),
-                BooleanOption.ENABLE_IMPROVED_DEPENDENCY_RESOLUTION.getDefaultValue());
-    }
-
     @Nullable
     private static String getString(@NonNull Project project, String propertyName) {
         return project.hasProperty(propertyName) ? project.property(propertyName).toString() : null;

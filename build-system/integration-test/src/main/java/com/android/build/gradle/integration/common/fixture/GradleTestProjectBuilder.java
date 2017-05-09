@@ -37,7 +37,6 @@ public final class GradleTestProjectBuilder {
     @Nullable private String name;
     @Nullable private TestProject testProject = null;
     @Nullable private String targetGradleVersion;
-    private boolean improvedDependencyEnabled = GradleTestProject.IMPROVED_DEPENDENCY_RESOLUTION;
     @Nullable private String buildToolsVersion;
     private boolean withoutNdk = false;
     @NonNull private List<String> gradleProperties = Lists.newArrayList();
@@ -55,7 +54,6 @@ public final class GradleTestProjectBuilder {
         return new GradleTestProject(
                 name,
                 testProject,
-                improvedDependencyEnabled,
                 targetGradleVersion,
                 withoutNdk,
                 withDependencyChecker,
@@ -194,12 +192,6 @@ public final class GradleTestProjectBuilder {
     public GradleTestProjectBuilder withRelativeProfileDirectory(
             @NonNull Path relativeProfileDirectory) {
         this.relativeProfileDirectory = relativeProfileDirectory;
-        return this;
-    }
-
-    public GradleTestProjectBuilder withImprovedDependencyResolution(
-            boolean improvedDependencyEnabled) {
-        this.improvedDependencyEnabled = improvedDependencyEnabled;
         return this;
     }
 

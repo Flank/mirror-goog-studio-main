@@ -115,8 +115,6 @@ public final class GradleTestProject implements TestRule {
     @NonNull public static final File ANDROID_HOME;
     @NonNull public static final File ANDROID_NDK_HOME;
 
-    public static final boolean IMPROVED_DEPENDENCY_RESOLUTION;
-
     public static final String DEVICE_TEST_TASK = "deviceCheck";
 
     private static final int MAX_TEST_NAME_DIR_WINDOWS = 100;
@@ -182,10 +180,6 @@ public final class GradleTestProject implements TestRule {
             ANDROID_GRADLE_PLUGIN_VERSION =
                     MoreObjects.firstNonNull(envVersion, Version.ANDROID_GRADLE_PLUGIN_VERSION);
 
-            IMPROVED_DEPENDENCY_RESOLUTION =
-                    Strings.isNullOrEmpty(
-                            System.getenv().get("CUSTOM_DISABLE_IMPROVED_DEPENDENCY_RESOLUTION"));
-
             String envCustomCompileSdk =
                     Strings.emptyToNull(System.getenv().get("CUSTOM_COMPILE_SDK"));
             DEFAULT_COMPILE_SDK_VERSION = MoreObjects.firstNonNull(envCustomCompileSdk, "24");
@@ -242,7 +236,6 @@ public final class GradleTestProject implements TestRule {
 
     private final String targetGradleVersion;
 
-    private final boolean improvedDependencyEnabled;
     @Nullable private final String buildToolsVersion;
 
     @Nullable private final BenchmarkRecorder benchmarkRecorder;
@@ -258,7 +251,6 @@ public final class GradleTestProject implements TestRule {
     GradleTestProject(
             @Nullable String name,
             @Nullable TestProject testProject,
-            boolean improvedDependencyEnabled,
             @Nullable String targetGradleVersion,
             boolean withoutNdk,
             boolean withDependencyChecker,
@@ -270,7 +262,6 @@ public final class GradleTestProject implements TestRule {
         this.testDir = null;
         this.buildFile = sourceDir = null;
         this.name = (name == null) ? DEFAULT_TEST_PROJECT_NAME : name;
-        this.improvedDependencyEnabled = improvedDependencyEnabled;
         this.targetGradleVersion = targetGradleVersion;
         this.testProject = testProject;
         this.withoutNdk = withoutNdk;
@@ -303,7 +294,6 @@ public final class GradleTestProject implements TestRule {
         gradleProperties = ImmutableList.of();
         testProject = null;
         targetGradleVersion = rootProject.getTargetGradleVersion();
-        improvedDependencyEnabled = rootProject.isImprovedDependencyEnabled();
         openConnections = null;
         buildToolsVersion = null;
         benchmarkRecorder = rootProject.benchmarkRecorder;
@@ -1190,10 +1180,6 @@ public final class GradleTestProject implements TestRule {
     @Nullable
     String getHeapSize() {
         return heapSize;
-    }
-
-    public boolean isImprovedDependencyEnabled() {
-        return improvedDependencyEnabled;
     }
 
     public File getLocalProp() {

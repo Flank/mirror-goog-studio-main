@@ -491,16 +491,6 @@ public class VariantManager implements VariantModel {
                         variantDep.getRuntimeClasspath().getName(), COM_ANDROID_SUPPORT_MULTIDEX_INSTRUMENTATION);
             }
 
-            if (!AndroidGradleOptions.isImprovedDependencyResolutionEnabled(project)) {
-                recorder.record(
-                        ExecutionType.RESOLVE_DEPENDENCIES,
-                        project.getPath(),
-                        testVariantConfig.getFullName(),
-                        () ->
-                                taskManager.resolveDependencies(
-                                        variantDep, null /*testedProjectPath*/));
-            }
-
             switch (variantType) {
                 case ANDROID_TEST:
                     taskManager.createAndroidTestVariantTasks(tasks, (TestVariantData) variantData);
@@ -852,14 +842,6 @@ public class VariantManager implements VariantModel {
         final String testedProjectPath = extension instanceof TestAndroidConfig ?
                 ((TestAndroidConfig) extension).getTargetProjectPath() :
                 null;
-
-        if (!AndroidGradleOptions.isImprovedDependencyResolutionEnabled(project)) {
-            recorder.record(
-                    ExecutionType.RESOLVE_DEPENDENCIES,
-                    project.getPath(),
-                    variantConfig.getFullName(),
-                    () -> taskManager.resolveDependencies(variantDep, testedProjectPath));
-        }
 
         return variantData;
     }

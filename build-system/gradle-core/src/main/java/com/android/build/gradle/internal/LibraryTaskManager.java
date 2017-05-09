@@ -34,7 +34,6 @@ import com.android.build.api.transform.QualifiedContent.DefaultContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.Transform;
 import com.android.build.gradle.AndroidConfig;
-import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
@@ -101,7 +100,6 @@ public class LibraryTaskManager extends TaskManager {
             @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull AndroidConfig extension,
             @NonNull SdkHandler sdkHandler,
-            @NonNull DependencyManager dependencyManager,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
         super(
@@ -112,7 +110,6 @@ public class LibraryTaskManager extends TaskManager {
                 dataBindingBuilder,
                 extension,
                 sdkHandler,
-                dependencyManager,
                 toolingRegistry,
                 recorder);
     }
@@ -317,12 +314,10 @@ public class LibraryTaskManager extends TaskManager {
 
 
         AndroidTask<ExtractAnnotations> extractAnnotationsTask;
-        if ((AndroidGradleOptions.isImprovedDependencyResolutionEnabled(project)
-                        || variantScope.getVariantDependencies().isAnnotationsPresent())
-                // Some versions of retrolambda remove the actions from the extract annotations task.
-                // TODO: remove this hack once tests are moved to a version that doesn't do this
-                // b/37564303
-                && projectOptions.get(BooleanOption.ENABLE_EXTRACT_ANNOTATIONS)) {
+        // Some versions of retrolambda remove the actions from the extract annotations task.
+        // TODO: remove this hack once tests are moved to a version that doesn't do this
+        // b/37564303
+        if (projectOptions.get(BooleanOption.ENABLE_EXTRACT_ANNOTATIONS)) {
             extractAnnotationsTask =
                     getAndroidTasks()
                             .create(
