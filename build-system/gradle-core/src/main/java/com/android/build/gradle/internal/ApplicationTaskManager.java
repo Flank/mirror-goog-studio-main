@@ -483,7 +483,9 @@ public class ApplicationTaskManager extends TaskManager {
                                 .getFiles());
             }
         } else {
-            createGenerateMicroApkDataTask(tasks, scope, null);
+            if (Boolean.TRUE.equals(unbundledWearApp)) {
+                createGenerateMicroApkDataTask(tasks, scope, null);
+            }
         }
     }
 }
