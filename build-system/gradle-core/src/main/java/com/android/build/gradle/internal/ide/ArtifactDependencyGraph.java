@@ -50,7 +50,6 @@ import com.android.ide.common.caching.CreatingCache;
 import com.android.utils.ImmutableCollectors;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -387,13 +386,10 @@ public class ArtifactDependencyGraph {
             return ImmutableList.of();
         }
 
-        // TODO get a better API in gradle to get this info
-        System.err.println("FAILURES");
-
         Pattern pattern =
-                Pattern.compile(
-                        "Could not find any matches for (.+) as no versions of .+ are available.");
-        Pattern pattern2 = Pattern.compile(".*Could not find (.+)\\.");
+                Pattern.compile(".*any matches for ([a-zA-Z0-9:\\-.+]+) .*", Pattern.DOTALL);
+        Pattern pattern2 =
+                Pattern.compile(".*Could not find ([a-zA-Z0-9:\\-.]+)\\..*", Pattern.DOTALL);
 
         return failures.stream()
                 .map(
@@ -403,18 +399,15 @@ public class ArtifactDependencyGraph {
                             }
 
                             String message = throwable.getMessage();
-                            Iterable<String> lines = Splitter.on('\n').split(message);
 
-                            for (String line : lines) {
-                                Matcher m = pattern.matcher(line);
-                                if (m.matches()) {
-                                    return m.group(1);
-                                }
+                            Matcher m = pattern.matcher(message);
+                            if (m.matches()) {
+                                return m.group(1);
+                            }
 
-                                m = pattern2.matcher(line);
-                                if (m.matches()) {
-                                    return m.group(1);
-                                }
+                            m = pattern2.matcher(message);
+                            if (m.matches()) {
+                                return m.group(1);
                             }
 
                             return throwable.getMessage();
