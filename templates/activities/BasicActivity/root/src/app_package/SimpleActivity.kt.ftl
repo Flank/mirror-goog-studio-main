@@ -1,3 +1,4 @@
+<#import "root://activities/common/kotlin_macros.ftl" as kt>
 package ${packageName}
 
 import android.os.Bundle
@@ -26,10 +27,10 @@ class ${activityClass} : ${superClass}() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.${layoutName})
 <#if hasAppBar>
-        val toolbar = findViewById(R.id.toolbar) as Toolbar
+        val toolbar = <@kt.findViewById id="R.id.toolbar" type="Toolbar"/>
         setSupportActionBar(toolbar)
 
-        val fab = findViewById(R.id.fab) as FloatingActionButton
+        val fab = <@kt.findViewById id="R.id.fab" type="FloatingActionButton"/>
         fab.setOnClickListener { view ->
             Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                     .setAction("Action", null).show()

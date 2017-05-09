@@ -1,3 +1,4 @@
+<#import "root://activities/common/kotlin_macros.ftl" as kt>
 package ${packageName}
 
 import android.os.Bundle
@@ -31,8 +32,8 @@ class ${activityClass} : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.${layoutName})
 
-        mTextMessage = findViewById(R.id.message) as TextView
-        val navigation = findViewById(R.id.navigation) as BottomNavigationView
+        mTextMessage = <@kt.findViewById id="R.id.message" type="TextView"/>
+        val navigation = <@kt.findViewById id="R.id.navigation" type="BottomNavigationView"/>
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener)
     }
 }
