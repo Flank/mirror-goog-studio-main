@@ -20,12 +20,12 @@ import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
 import org.gradle.api.JavaVersion;
+import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs;
 
-/**
- * Specialization of the JavaCompile task to record execution time.
- */
+/** Specialization of the JavaCompile task to record execution time. */
+@CacheableTask
 public class AndroidJavaCompile extends JavaCompile {
 
     String compileSdkVersion;

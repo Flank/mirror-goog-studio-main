@@ -58,26 +58,32 @@ import org.gradle.api.file.FileVisitDetails;
 import org.gradle.api.file.RelativePath;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.plugins.BasePlugin;
+import org.gradle.api.tasks.CacheableTask;
+import org.gradle.api.tasks.Classpath;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputDirectory;
-import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.ParallelizableTask;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 
 /**
- * Task which extracts annotations from the source files, and writes them to one of
- * two possible destinations:
+ * Task which extracts annotations from the source files, and writes them to one of two possible
+ * destinations:
+ *
  * <ul>
- *     <li> A "external annotations" file (pointed to by {@link ExtractAnnotations#output})
- *          which records the annotations in a zipped XML format for use by the IDE and by
- *          lint to associate the (source retention) annotations back with the compiled code</li>
+ *   <li>A "external annotations" file (pointed to by {@link ExtractAnnotations#output}) which
+ *       records the annotations in a zipped XML format for use by the IDE and by lint to associate
+ *       the (source retention) annotations back with the compiled code
  * </ul>
- * We typically only extract external annotations when building libraries; ProGuard annotations
- * are extracted when building libraries (to record in the AAR), <b>or</b> when building an
- * app module where ProGuarding is enabled.
+ *
+ * We typically only extract external annotations when building libraries; ProGuard annotations are
+ * extracted when building libraries (to record in the AAR), <b>or</b> when building an app module
+ * where ProGuarding is enabled.
  */
+@CacheableTask
 @ParallelizableTask
 public class ExtractAnnotations extends AbstractAndroidCompile {
     private BaseVariantData variant;
@@ -94,6 +100,7 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
 
     private ArtifactCollection libraries;
 
+    // TODO Is this an input? If it is, we could be mixing up cached results belonging to different variants
     public BaseVariantData getVariant() {
         return variant;
     }
@@ -103,7 +110,8 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
     }
 
     /** Boot classpath: typically android.jar */
-    @Input
+    // TODO This would be better if it returned a FileCollection (but it works now as is)
+    @Classpath
     public List<String> getBootClasspath() {
         return bootClasspath.get();
     }
@@ -112,7 +120,8 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
         this.bootClasspath = bootClasspath;
     }
 
-    @InputFiles
+    // TODO Do we have JARs in here? Do they constitute a classpath?
+    @Classpath
     public FileCollection getLibraries() {
         return libraries.getArtifactFiles();
     }
@@ -157,11 +166,12 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
     }
 
     /**
-     * Location of class files. If set, any non-public typedef source retention annotations
-     * will be removed prior to .jar packaging.
+     * Location of class files. If set, any non-public typedef source retention annotations will be
+     * removed prior to .jar packaging.
      */
     @Optional
     @InputDirectory
+    @PathSensitive(PathSensitivity.RELATIVE)
     public File getClassDir() {
         return classDir;
     }
