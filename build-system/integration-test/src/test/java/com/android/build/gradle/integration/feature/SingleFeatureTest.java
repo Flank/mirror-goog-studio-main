@@ -48,7 +48,6 @@ public class SingleFeatureTest {
         // Build all the things.
         sProject.executor()
                 .with(AaptGeneration.AAPT_V2_JNI)
-                .withEnabledFeatureSplitTransitionalAttributes(true)
                 .run("assemble");
 
         // Check the feature module output contents.
