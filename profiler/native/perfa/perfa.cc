@@ -121,6 +121,8 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
 
   Log::V("StudioProfilers agent attached.");
 
+  Agent::Instance(Agent::SocketType::kAbstractSocket);
+
   JNIEnv* jni_env = GetThreadLocalJNI(vm);
   LoadDex(jvmti_env, jni_env);
 
@@ -139,7 +141,6 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
   jclass classes[] = {klass};
   CheckJvmtiError(jvmti_env, jvmti_env->RetransformClasses(1, classes));
 
-  Agent::Instance(Agent::SocketType::kAbstractSocket);
   MemoryTrackingEnv::Instance(vm);
 
   return JNI_OK;
