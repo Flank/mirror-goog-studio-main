@@ -1,7 +1,7 @@
 add_library(perfa SHARED
             perfa.cc
             jvmti_helper.cc
-            memory/memory_agent.cc)
+            memory/memory_tracking_env.cc)
 
 # Include agents's symbol into agent's dynamic symbol table as agent relies
 # on dlsym to bind the native methods

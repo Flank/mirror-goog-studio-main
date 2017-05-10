@@ -33,8 +33,8 @@ enum MemTag {
   kMemTagCount,
 };
 
-extern std::atomic<int64_t> g_max_used_[kMemTagCount];
-extern std::atomic<int64_t> g_total_used_[kMemTagCount];
+extern std::atomic<int64_t> g_max_used[kMemTagCount];
+extern std::atomic<int64_t> g_total_used[kMemTagCount];
 
 template <class T>
 void atomic_update_max(std::atomic<T>* max, T value) {
@@ -68,14 +68,14 @@ struct TrackingAllocator {
 
   inline T* allocate(std::size_t n) {
     size_t size = sizeof(T) * n;
-    g_total_used_[TAG] += size;
-    atomic_update_max(&(g_max_used_[TAG]), g_total_used_[TAG].load());
+    g_total_used[TAG] += size;
+    atomic_update_max(&(g_max_used[TAG]), g_total_used[TAG].load());
     return static_cast<T*>(malloc(size));
   };
 
   inline void deallocate(T* p, std::size_t n) {
     size_t size = sizeof(T) * n;
-    g_total_used_[TAG] -= size;
+    g_total_used[TAG] -= size;
     free(p);
   };
 

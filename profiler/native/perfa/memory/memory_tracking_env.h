@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef MEMORY_AGENT_H
-#define MEMORY_AGENT_H
+#ifndef MEMORY_TRACKING_ENV_H
+#define MEMORY_TRACKING_ENV_H
 
 #include "jvmti.h"
 
@@ -47,17 +47,17 @@ using ClassGlobalRefs = std::vector<jobject>;
 using ClassData = std::vector<AllocationEvent::Klass>;
 #endif
 
-class MemoryAgent {
+class MemoryTrackingEnv {
  public:
-  static MemoryAgent* Instance(JavaVM* vm);
+  static MemoryTrackingEnv* Instance(JavaVM* vm);
 
  private:
-  explicit MemoryAgent(jvmtiEnv* jvmti);
+  explicit MemoryTrackingEnv(jvmtiEnv* jvmti);
 
-  // Agent is alive through the app's lifetime, don't bother cleaning up.
-  ~MemoryAgent() = delete;
-  MemoryAgent(const MemoryAgent&) = delete;
-  MemoryAgent& operator=(const MemoryAgent&) = delete;
+  // Environment is alive through the app's lifetime, don't bother cleaning up.
+  ~MemoryTrackingEnv() = delete;
+  MemoryTrackingEnv(const MemoryTrackingEnv&) = delete;
+  MemoryTrackingEnv& operator=(const MemoryTrackingEnv&) = delete;
 
   void Initialize();
   void StartLiveTracking(int64_t timestamp);
@@ -100,6 +100,8 @@ class MemoryAgent {
   int32_t app_id_;
   int64_t current_capture_time_ns_;
   int64_t last_gc_start_ns_;
+  std::atomic<int> total_live_count_;
+  std::atomic<int> total_free_count_;
   std::atomic<long> current_class_tag_;
   std::atomic<long> current_object_tag_;
 
@@ -112,4 +114,4 @@ class MemoryAgent {
 
 }  // namespace profiler
 
-#endif  // MEMORY_AGENT_H
+#endif  // MEMORY_TRACKING_ENV_H

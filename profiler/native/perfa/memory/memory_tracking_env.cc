@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "memory_agent.h"
+#include "memory_tracking_env.h"
 
 #include <cassert>
 #include <cstring>
@@ -29,8 +29,8 @@
 
 namespace {
 
-static JavaVM* vm_;
-static profiler::MemoryAgent* agent_;
+static JavaVM* g_vm;
+static profiler::MemoryTrackingEnv* g_env;
 
 // Start tag of Class objects - use 1 as 0 represents no tag.
 constexpr long kClassStartTag = 1;
@@ -55,8 +55,8 @@ namespace profiler {
 using proto::BatchAllocationSample;
 
 // STL container memory tracking for Debug only.
-std::atomic<int64_t> g_max_used_[kMemTagCount];
-std::atomic<int64_t> g_total_used_[kMemTagCount];
+std::atomic<int64_t> g_max_used[kMemTagCount];
+std::atomic<int64_t> g_total_used[kMemTagCount];
 const char* MemTagToString(MemTag tag) {
   switch (tag) {
     case kClassTagMap:
@@ -70,29 +70,31 @@ const char* MemTagToString(MemTag tag) {
   }
 }
 
-MemoryAgent* MemoryAgent::Instance(JavaVM* vm) {
-  if (agent_ == nullptr) {
+MemoryTrackingEnv* MemoryTrackingEnv::Instance(JavaVM* vm) {
+  if (g_env == nullptr) {
     // Create a stand-alone jvmtiEnv to avoid any callback conflicts
     // with other profilers' agents.
-    vm_ = vm;
-    jvmtiEnv* jvmti = CreateJvmtiEnv(vm_);
-    agent_ = new MemoryAgent(jvmti);
-    agent_->Initialize();
+    g_vm = vm;
+    jvmtiEnv* jvmti = CreateJvmtiEnv(g_vm);
+    g_env = new MemoryTrackingEnv(jvmti);
+    g_env->Initialize();
   }
 
-  return agent_;
+  return g_env;
 }
 
-MemoryAgent::MemoryAgent(jvmtiEnv* jvmti)
+MemoryTrackingEnv::MemoryTrackingEnv(jvmtiEnv* jvmti)
     : jvmti_(jvmti),
       is_live_tracking_(false),
       app_id_(getpid()),
       current_capture_time_ns_(-1),
       last_gc_start_ns_(-1),
+      total_live_count_(0),
+      total_free_count_(0),
       current_class_tag_(kClassStartTag),
       current_object_tag_(kObjectStartTag) {}
 
-void MemoryAgent::Initialize() {
+void MemoryTrackingEnv::Initialize() {
   jvmtiError error;
 
   SetAllCapabilities(jvmti_);
@@ -118,7 +120,7 @@ void MemoryAgent::Initialize() {
 
   auto memory_component = Agent::Instance().memory_component();
   memory_component->RegisterMemoryControlHandler(std::bind(
-      &MemoryAgent::HandleControlSignal, this, std::placeholders::_1));
+      &MemoryTrackingEnv::HandleControlSignal, this, std::placeholders::_1));
   memory_component->OpenControlStream();
 }
 
@@ -129,7 +131,7 @@ void MemoryAgent::Initialize() {
  * - Walk through the heap to tag all existing objects
  * - Sets up a agent thread which offload data back to perfd/studio.
  */
-void MemoryAgent::StartLiveTracking(int64_t timestamp) {
+void MemoryTrackingEnv::StartLiveTracking(int64_t timestamp) {
   if (is_live_tracking_) {
     return;
   }
@@ -138,7 +140,7 @@ void MemoryAgent::StartLiveTracking(int64_t timestamp) {
   event_queue_.Reset();
 
   // Called from grpc so we need to attach.
-  JNIEnv* jni = GetThreadLocalJNI(vm_);
+  JNIEnv* jni = GetThreadLocalJNI(g_vm);
   jvmtiError error;
 
   // Trigger a GC - this is necessary to clean up any Class objects
@@ -208,10 +210,10 @@ void MemoryAgent::StartLiveTracking(int64_t timestamp) {
  * TODO: Stops live allocation tracking by disabling the event notification
  * and removing all global refs that we have created for jclasses.
  */
-void MemoryAgent::StopLiveTracking(int64_t timestamp) {}
+void MemoryTrackingEnv::StopLiveTracking(int64_t timestamp) {}
 
-void MemoryAgent::RegisterNewClass(JNIEnv* jni, jclass klass,
-                                   AllocationEvent* event) {
+void MemoryTrackingEnv::RegisterNewClass(JNIEnv* jni, jclass klass,
+                                         AllocationEvent* event) {
   std::lock_guard<std::mutex> lock(class_data_mutex_);
 
   jvmtiError error;
@@ -257,9 +259,11 @@ void MemoryAgent::RegisterNewClass(JNIEnv* jni, jclass klass,
   event->mutable_class_data()->CopyFrom(klass_data);
 }
 
-void MemoryAgent::LogGcStart() { last_gc_start_ns_ = clock_.GetCurrentTime(); }
+void MemoryTrackingEnv::LogGcStart() {
+  last_gc_start_ns_ = clock_.GetCurrentTime();
+}
 
-void MemoryAgent::LogGcFinish() {
+void MemoryTrackingEnv::LogGcFinish() {
   profiler::EnqueueGcStats(last_gc_start_ns_, clock_.GetCurrentTime());
 
 #ifndef NDEBUG
@@ -271,14 +275,15 @@ void MemoryAgent::LogGcFinish() {
   Log::V(">> Memory(bytes)");
   for (int i = 0; i < kMemTagCount; i++) {
     Log::V(">> %s: Total=%ld, Max=%ld", MemTagToString((MemTag)i),
-           (long)g_total_used_[i].load(), (long)g_max_used_[i].load());
+           (long)g_total_used[i].load(), (long)g_max_used[i].load());
   }
   event_queue_.PrintStats();
   Log::V(">> [MEM AGENT STATS DUMP END]");
 #endif
 }
 
-void MemoryAgent::HandleControlSignal(const MemoryControlRequest* request) {
+void MemoryTrackingEnv::HandleControlSignal(
+    const MemoryControlRequest* request) {
   switch (request->control_case()) {
     case MemoryControlRequest::kEnableRequest:
       Log::V("Live memory tracking enabled.");
@@ -293,17 +298,19 @@ void MemoryAgent::HandleControlSignal(const MemoryControlRequest* request) {
   }
 }
 
-jint MemoryAgent::HeapIterationCallback(jlong class_tag, jlong size,
-                                        jlong* tag_ptr, jint length,
-                                        void* user_data) {
+jint MemoryTrackingEnv::HeapIterationCallback(jlong class_tag, jlong size,
+                                              jlong* tag_ptr, jint length,
+                                              void* user_data) {
+  g_env->total_live_count_++;
+
   BatchAllocationSample* sample = (BatchAllocationSample*)user_data;
 
   assert(user_data != nullptr);
   assert(class_tag != 0);  // All classes should be tagged by this point.
-  assert(agent_->class_data_.size() >= class_tag);
+  assert(g_env->class_data_.size() >= class_tag);
 
   // Class tag starts at 1, thus the offset in its vector position.
-  const auto class_data = agent_->class_data_[class_tag - 1];
+  const auto class_data = g_env->class_data_[class_tag - 1];
   if (class_data.name().compare(kClassClass) == 0) {
     // Skip Class objects as they should already be tagged.
     // TODO account for their sizes in Ljava/lang/Class;
@@ -312,12 +319,12 @@ jint MemoryAgent::HeapIterationCallback(jlong class_tag, jlong size,
     return JVMTI_VISIT_OBJECTS;
   }
 
-  long tag = agent_->GetNextObjectTag();
+  long tag = g_env->GetNextObjectTag();
   *tag_ptr = tag;
 
   AllocationEvent* event = sample->add_events();
-  event->set_capture_time(agent_->current_capture_time_ns_);
-  event->set_timestamp(agent_->current_capture_time_ns_);
+  event->set_capture_time(g_env->current_capture_time_ns_);
+  event->set_timestamp(g_env->current_capture_time_ns_);
 
   AllocationEvent::Allocation* alloc = event->mutable_alloc_data();
   alloc->set_tag(tag);
@@ -333,18 +340,20 @@ jint MemoryAgent::HeapIterationCallback(jlong class_tag, jlong size,
   return JVMTI_VISIT_OBJECTS;
 }
 
-void MemoryAgent::ClassPrepareCallback(jvmtiEnv* jvmti, JNIEnv* jni,
-                                       jthread thread, jclass klass) {
+void MemoryTrackingEnv::ClassPrepareCallback(jvmtiEnv* jvmti, JNIEnv* jni,
+                                             jthread thread, jclass klass) {
   AllocationEvent event;
-  agent_->RegisterNewClass(jni, klass, &event);
-  event.set_capture_time(agent_->current_capture_time_ns_);
-  event.set_timestamp(agent_->clock_.GetCurrentTime());
-  agent_->event_queue_.Push(event);
+  g_env->RegisterNewClass(jni, klass, &event);
+  event.set_capture_time(g_env->current_capture_time_ns_);
+  event.set_timestamp(g_env->clock_.GetCurrentTime());
+  g_env->event_queue_.Push(event);
 }
 
-void MemoryAgent::ObjectAllocCallback(jvmtiEnv* jvmti, JNIEnv* jni,
-                                      jthread thread, jobject object,
-                                      jclass klass, jlong size) {
+void MemoryTrackingEnv::ObjectAllocCallback(jvmtiEnv* jvmti, JNIEnv* jni,
+                                            jthread thread, jobject object,
+                                            jclass klass, jlong size) {
+  g_env->total_live_count_++;
+
   jvmtiError error;
 
   char* sig_mutf8;
@@ -362,12 +371,12 @@ void MemoryAgent::ObjectAllocCallback(jvmtiEnv* jvmti, JNIEnv* jni,
     return;
   }
 
-  long tag = agent_->GetNextObjectTag();
+  long tag = g_env->GetNextObjectTag();
   error = jvmti->SetTag(object, tag);
   CheckJvmtiError(jvmti, error);
 
-  auto itr = agent_->class_tag_map_.find(klass_name);
-  assert(itr != agent_->class_tag_map_.end());
+  auto itr = g_env->class_tag_map_.find(klass_name);
+  assert(itr != g_env->class_tag_map_.end());
   Stopwatch sw;
   {
     AllocationEvent event;
@@ -375,45 +384,52 @@ void MemoryAgent::ObjectAllocCallback(jvmtiEnv* jvmti, JNIEnv* jni,
     alloc_data->set_tag(tag);
     alloc_data->set_size(size);
     alloc_data->set_class_tag(itr->second);
-    event.set_capture_time(agent_->current_capture_time_ns_);
-    event.set_timestamp(agent_->clock_.GetCurrentTime());
-    agent_->event_queue_.Push(event);
+    event.set_capture_time(g_env->current_capture_time_ns_);
+    event.set_timestamp(g_env->clock_.GetCurrentTime());
+    g_env->event_queue_.Push(event);
   }
-  agent_->timing_stats_.Track(TimingStats::kAllocate, sw.GetElapsed());
+  g_env->timing_stats_.Track(TimingStats::kAllocate, sw.GetElapsed());
 }
 
-void MemoryAgent::ObjectFreeCallback(jvmtiEnv* jvmti, jlong tag) {
+void MemoryTrackingEnv::ObjectFreeCallback(jvmtiEnv* jvmti, jlong tag) {
+  g_env->total_free_count_++;
+
   Stopwatch sw;
   {
     AllocationEvent event;
     AllocationEvent::Deallocation* free_data = event.mutable_free_data();
     free_data->set_tag(tag);
-    event.set_capture_time(agent_->current_capture_time_ns_);
+    event.set_capture_time(g_env->current_capture_time_ns_);
     // Associate the free event with the last gc that occurred.
-    event.set_timestamp(agent_->last_gc_start_ns_);
-    agent_->event_queue_.Push(event);
+    event.set_timestamp(g_env->last_gc_start_ns_);
+    g_env->event_queue_.Push(event);
   }
-  agent_->timing_stats_.Track(TimingStats::kFree, sw.GetElapsed());
+  g_env->timing_stats_.Track(TimingStats::kFree, sw.GetElapsed());
 }
 
-void MemoryAgent::GCStartCallback(jvmtiEnv* jvmti) { agent_->LogGcStart(); }
+void MemoryTrackingEnv::GCStartCallback(jvmtiEnv* jvmti) {
+  g_env->LogGcStart();
+}
 
-void MemoryAgent::GCFinishCallback(jvmtiEnv* jvmti) { agent_->LogGcFinish(); }
+void MemoryTrackingEnv::GCFinishCallback(jvmtiEnv* jvmti) {
+  g_env->LogGcFinish();
+}
 
-void MemoryAgent::AllocDataWorker(jvmtiEnv* jvmti, JNIEnv* jni, void* ptr) {
+void MemoryTrackingEnv::AllocDataWorker(jvmtiEnv* jvmti, JNIEnv* jni,
+                                        void* ptr) {
   Stopwatch stopwatch;
-  MemoryAgent* agent = static_cast<MemoryAgent*>(ptr);
-  assert(agent != nullptr);
+  MemoryTrackingEnv* env = static_cast<MemoryTrackingEnv*>(ptr);
+  assert(env != nullptr);
   while (true) {
     int64_t start_time_ns = stopwatch.GetElapsed();
 
     BatchAllocationSample sample;
-    sample.set_process_id(agent->app_id_);
+    sample.set_process_id(env->app_id_);
 
     // Gather all the data currently in the queue and push to perfd.
     // TODO: investigate whether we need to set time cap for large amount of
     // data.
-    std::deque<AllocationEvent> queued_data = agent->event_queue_.Drain();
+    std::deque<AllocationEvent> queued_data = env->event_queue_.Drain();
     while (!queued_data.empty()) {
       AllocationEvent* event = sample.add_events();
       event->CopyFrom(queued_data.front());
@@ -427,6 +443,8 @@ void MemoryAgent::AllocDataWorker(jvmtiEnv* jvmti, JNIEnv* jni, void* ptr) {
     if (sample.events_size() > 0) {
       profiler::EnqueueAllocationEvents(sample);
     }
+
+    profiler::EnqueueAllocStats(env->total_live_count_, env->total_free_count_);
 
     // Sleeps a while before reading from the queue again, so that the agent
     // don't generate too many rpc requests in places with high allocation
