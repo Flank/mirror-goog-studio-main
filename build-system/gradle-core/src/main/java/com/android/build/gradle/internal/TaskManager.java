@@ -3165,7 +3165,7 @@ public abstract class TaskManager {
                 .add(
                         "annotationProcessor",
                         SdkConstants.DATA_BINDING_ANNOTATION_PROCESSOR_ARTIFACT + ":" + version);
-        if (options.isEnabledForTests()) {
+        if (options.isEnabledForTests() || this instanceof LibraryTaskManager) {
             project.getDependencies().add("androidTestAnnotationProcessor",
                     SdkConstants.DATA_BINDING_ANNOTATION_PROCESSOR_ARTIFACT + ":" +
                             version);
