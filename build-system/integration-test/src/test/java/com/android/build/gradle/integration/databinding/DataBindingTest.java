@@ -23,10 +23,13 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.testutils.apk.Aar;
 import com.android.testutils.apk.Apk;
+import com.android.testutils.apk.Dex;
+import com.android.testutils.truth.MoreTruth;
 import com.google.common.base.Joiner;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -81,9 +84,22 @@ public class DataBindingTest {
 
         if (myLibrary) {
             Aar aar = project.getAar("debug");
-            assertThat(aar).doesNotContainClass("Landroid/g/testapp/databinding/ActivityMainBinding;");
+            assertThat(aar)
+                    .doesNotContainClass(
+                            "Landroid/databinding/testapp/databinding/ActivityMainBinding;");
             assertThat(aar).doesNotContainClass("Landroid/databinding/adapters/Converters;");
             assertThat(aar).doesNotContainClass("Landroid/databinding/DataBindingComponent;");
+
+            // also builds the test app
+            project.executor().run("assembleDebugAndroidTest");
+
+            Apk testApk = project.getApk(GradleTestProject.ApkType.ANDROIDTEST_DEBUG);
+            assertThat(testApk.getFile()).isFile();
+            Optional<Dex> dexOptional = testApk.getMainDexFile();
+            assertThat(dexOptional).isPresent();
+            MoreTruth.assertThat(dexOptional.get())
+                    .containsClass("Landroid/databinding/testapp/databinding/ActivityMainBinding;");
+
         } else {
             Apk apk = project.getApk("debug");
             assertThat(apk).containsClass("Landroid/databinding/testapp/databinding/ActivityMainBinding;");
