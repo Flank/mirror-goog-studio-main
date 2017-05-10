@@ -1402,7 +1402,8 @@ public abstract class TaskManager {
         scope.getTransformManager()
                 .addStream(
                         OriginalStream.builder(project, "pre-javac-generated-bytecode")
-                                .addContentType(DefaultContentType.CLASSES)
+                                .addContentTypes(
+                                        DefaultContentType.CLASSES, DefaultContentType.RESOURCES)
                                 .addScope(Scope.PROJECT)
                                 .setFileCollection(
                                         scope.getVariantData().getAllPreJavacGeneratedBytecode())
@@ -1411,7 +1412,8 @@ public abstract class TaskManager {
         scope.getTransformManager()
                 .addStream(
                         OriginalStream.builder(project, "post-javac-generated-bytecode")
-                                .addContentType(DefaultContentType.CLASSES)
+                                .addContentTypes(
+                                        DefaultContentType.CLASSES, DefaultContentType.RESOURCES)
                                 .addScope(Scope.PROJECT)
                                 .setFileCollection(
                                         scope.getVariantData().getAllPostJavacGeneratedBytecode())
