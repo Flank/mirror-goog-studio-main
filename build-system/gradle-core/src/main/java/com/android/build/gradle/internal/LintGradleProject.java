@@ -795,15 +795,21 @@ public class LintGradleProject extends Project {
                     // setup the level 3 sync.
                     final ExtraPropertiesExtension ext =
                             gradleProject.getExtensions().getExtraProperties();
-                    ext.set(
-                            AndroidProject.PROPERTY_BUILD_MODEL_ONLY_VERSIONED,
-                            Integer.toString(
-                                    AndroidProject.MODEL_LEVEL_3_VARIANT_OUTPUT_POST_BUILD));
+                    // Ensure that projects are constructed serially since otherwise
+                    // it's possible for a race condition on the below property
+                    // to trigger occasional NPE's like the one in b.android.com/38117575
+                    //noinspection SynchronizationOnLocalVariableOrMethodParameter
+                    synchronized (ext) {
+                        ext.set(
+                                AndroidProject.PROPERTY_BUILD_MODEL_ONLY_VERSIONED,
+                                Integer.toString(
+                                        AndroidProject.MODEL_LEVEL_3_VARIANT_OUTPUT_POST_BUILD));
 
-                    try {
-                        return (AndroidProject) builder.buildAll(modelName, gradleProject);
-                    } finally {
-                        ext.set(AndroidProject.PROPERTY_BUILD_MODEL_ONLY_VERSIONED, null);
+                        try {
+                            return (AndroidProject) builder.buildAll(modelName, gradleProject);
+                        } finally {
+                            ext.set(AndroidProject.PROPERTY_BUILD_MODEL_ONLY_VERSIONED, null);
+                        }
                     }
                 }
             }
