@@ -22,7 +22,7 @@
 
 #include "agent/agent.h"
 #include "jvmti_helper.h"
-#include "memory/memory_agent.h"
+#include "memory/memory_tracking_env.h"
 #include "scoped_local_ref.h"
 #include "utils/log.h"
 
@@ -32,7 +32,7 @@
 
 using profiler::Log;
 using profiler::Agent;
-using profiler::MemoryAgent;
+using profiler::MemoryTrackingEnv;
 using profiler::ScopedLocalRef;
 
 namespace profiler {
@@ -97,22 +97,6 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
   Log::V("Transformed class: %s", name);
 }
 
-void BindJNIMethod(JNIEnv* jni, const char* class_name, const char* method_name,
-                   const char* signature) {
-  jclass klass = jni->FindClass(class_name);
-  std::string mangled_name(GetMangledName(class_name, method_name));
-  void* sym = dlsym(RTLD_DEFAULT, mangled_name.c_str());
-  if (sym != nullptr) {
-    JNINativeMethod native_method;
-    native_method.fnPtr = sym;
-    native_method.name = const_cast<char*>(method_name);
-    native_method.signature = const_cast<char*>(signature);
-    jni->RegisterNatives(klass, &native_method, 1);
-  } else {
-    Log::V("Failed to find symbol for %s", mangled_name.c_str());
-  }
-}
-
 void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni) {
   // Load in perfa.jar which should be in to data/data.
   Dl_info dl_info;
@@ -121,12 +105,6 @@ void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni) {
   std::string agent_lib_path(so_path.substr(0, so_path.find_last_of('/')));
   agent_lib_path.append("/perfa.jar");
   jvmti->AddToBootstrapClassLoaderSearch(agent_lib_path.c_str());
-
-  // We need to manually bind these two methods, because they are called from a thread that spanws
-  // in the "initialize" call, and the agent functions are only available after attaching.
-  // We will remove this once the tracking is done via JVMTI.
-  BindJNIMethod(jni, "com/android/tools/profiler/support/memory/VmStatsSampler", "logAllocStats", "(II)V");
-  BindJNIMethod(jni, "com/android/tools/profiler/support/memory/VmStatsSampler", "logGcStats", "()V");
 
   jclass service =
       jni->FindClass("com/android/tools/profiler/support/ProfilerService");
@@ -162,7 +140,7 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
   CheckJvmtiError(jvmti_env, jvmti_env->RetransformClasses(1, classes));
 
   Agent::Instance(Agent::SocketType::kAbstractSocket);
-  MemoryAgent::Instance(vm);
+  MemoryTrackingEnv::Instance(vm);
 
   return JNI_OK;
 }
