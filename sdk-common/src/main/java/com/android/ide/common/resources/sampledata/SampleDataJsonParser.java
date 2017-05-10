@@ -16,6 +16,8 @@
 package com.android.ide.common.resources.sampledata;
 
 import com.android.annotations.NonNull;
+import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonArray;
@@ -45,12 +47,14 @@ public class SampleDataJsonParser {
     }
 
     @NonNull
-    public List<String> getContentFromPath(String path) {
-        ImmutableList<String> pathItems = ImmutableList.copyOf(Splitter.on('/').splitToList(path));
+    public byte[] getContentFromPath(String path) {
+        ImmutableList<String> pathItems =
+                ImmutableList.copyOf(
+                        Splitter.on('/').omitEmptyStrings().trimResults().splitToList(path));
         ArrayList<String> content = new ArrayList<>();
         visitElementAndGetContent(myRootObject, pathItems, content);
 
-        return content;
+        return Joiner.on('\n').join(content).getBytes(Charsets.UTF_8);
     }
 
     public Set<String> getPossiblePaths() {
