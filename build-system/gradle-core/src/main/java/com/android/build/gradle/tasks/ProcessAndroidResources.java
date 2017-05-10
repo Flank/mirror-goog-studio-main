@@ -504,10 +504,17 @@ public class ProcessAndroidResources extends IncrementalTask {
                         symbolOutputDir,
                         proguardOutputFile);
             } else {
+                AaptGeneration aaptGen = aaptGeneration;
+                if (SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS
+                        && aaptGeneration == AaptGeneration.AAPT_V2_JNI) {
+                    // If we're on Windows we should fall back to out of process AAPT2 instead of
+                    // AAPT2 JNI for the link phase.
+                    aaptGen = AaptGeneration.AAPT_V2;
+                }
 
                 Aapt aapt =
                         AaptGradleFactory.make(
-                                aaptGeneration,
+                                aaptGen,
                                 builder,
                                 processOutputHandler,
                                 true,
@@ -535,7 +542,8 @@ public class ProcessAndroidResources extends IncrementalTask {
                                 .setSplits(getSplits(splitList))
                                 .setPreferredDensity(preferredDensity)
                                 .setPackageId(packageId)
-                                .setDependentFeatures(featurePackagesBuilder.build());
+                                .setDependentFeatures(featurePackagesBuilder.build())
+                                .setListResourceFiles(aaptGen == AaptGeneration.AAPT_V2);
 
                 builder.processResources(aapt, config,
                         generateCode && getEnforceUniquePackageName());

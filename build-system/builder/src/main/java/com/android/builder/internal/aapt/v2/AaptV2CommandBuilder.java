@@ -23,6 +23,7 @@ import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.builder.internal.aapt.AaptUtils;
 import com.android.ide.common.res2.CompileResourceRequest;
 import com.android.sdklib.IAndroidTarget;
+import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -30,7 +31,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -96,15 +99,34 @@ public final class AaptV2CommandBuilder {
         builder.add("--manifest", manifestFile.getAbsolutePath());
 
         if (config.getResourceDir() != null) {
-            // TODO: Fix when aapt 2 supports -R directories (http://b.android.com/209331)
-            // builder.addArgs("-R", config.getResourceDir().getAbsolutePath());
             try {
-                Files.walk(config.getResourceDir().toPath())
-                        .filter(Files::isRegularFile)
-                        .forEach((p) -> builder.add("-R", p.toString()));
+                if (config.isListResourceFiles()) {
+                    // AAPT2 only accepts individual files passed to the -R flag. In order to not
+                    // pass every single resource file, instead create a temporary file containing a
+                    // list of resource files and pass it as the only -R argument.
+                    File file = new File(intermediateDir, "aapt-resources-list.txt");
+
+                    // Resources list could have changed since last run.
+                    FileUtils.deleteIfExists(file);
+                    try (FileOutputStream fos = new FileOutputStream(file);
+                         PrintWriter pw = new PrintWriter(fos)) {
+
+                        Files.walk(config.getResourceDir().toPath())
+                                .filter(Files::isRegularFile)
+                                .forEach((p) -> pw.print(p.toString() + " "));
+                    }
+                    builder.add("-R", "@" + file.getAbsolutePath());
+                } else {
+                    // TODO: Fix when aapt 2 supports -R directories (http://b.android.com/209331)
+                    // builder.addArgs("-R", config.getResourceDir().getAbsolutePath());
+
+                    Files.walk(config.getResourceDir().toPath())
+                            .filter(Files::isRegularFile)
+                            .forEach((p) -> builder.add("-R", p.toString()));
+                }
             } catch (IOException e) {
-                throw new AaptException("Failed to walk path " + config.getResourceDir());
-            }
+                    throw new AaptException("Failed to walk path " + config.getResourceDir());
+                }
         }
 
         builder.add("--auto-add-overlay");
