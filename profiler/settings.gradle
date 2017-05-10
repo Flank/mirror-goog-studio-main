@@ -3,3 +3,6 @@ include 'transform'
 include 'supportlib'
 include 'native'
 include 'grpc-java'
+
+project(":perfa").projectDir = file("app/perfa")
+project(":supportlib").projectDir = file("app/supportlib")
