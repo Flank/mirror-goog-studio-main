@@ -30,7 +30,9 @@ void EnqueueAllocStats(int32_t alloc_count, int32_t free_count);
 // TODO: add count+bytes freed information.
 void EnqueueGcStats(int64_t start_time, int64_t end_time);
 
-void EnqueueAllocationEvents(const proto::BatchAllocationSample& request);
+// Queues the BatchAlllocationSample to be sent to perfd.
+// Note the non-const request, as pid is set on the request before the queue.
+void EnqueueAllocationEvents(proto::BatchAllocationSample& request);
 
 }  // end of namespace profiler
 
