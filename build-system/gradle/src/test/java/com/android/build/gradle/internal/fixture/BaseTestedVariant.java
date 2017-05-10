@@ -285,6 +285,11 @@ public interface BaseTestedVariant extends BaseVariant, TestedVariant {
         }
 
         @Override
+        public void registerExternalAptJavaOutput(@NonNull ConfigurableFileTree folder) {
+            variant.registerExternalAptJavaOutput(folder);
+        }
+
+        @Override
         public void registerGeneratedResFolders(@NonNull FileCollection folders) {
             variant.registerGeneratedResFolders(folders);
         }

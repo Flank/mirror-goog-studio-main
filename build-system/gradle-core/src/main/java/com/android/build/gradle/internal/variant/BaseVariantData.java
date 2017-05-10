@@ -346,6 +346,14 @@ public abstract class BaseVariantData implements TaskContainer {
         return result;
     }
 
+    public void addJavaSourceFoldersToModel(@NonNull File generatedSourceFolder) {
+        if (extraGeneratedSourceFolders == null) {
+            extraGeneratedSourceFolders = Lists.newArrayList();
+        }
+
+        extraGeneratedSourceFolders.add(generatedSourceFolder);
+    }
+
     public void addJavaSourceFoldersToModel(@NonNull File... generatedSourceFolders) {
         if (extraGeneratedSourceFolders == null) {
             extraGeneratedSourceFolders = Lists.newArrayList();
@@ -382,6 +390,13 @@ public abstract class BaseVariantData implements TaskContainer {
         }
 
         addJavaSourceFoldersToModel(generatedSourceFolders);
+    }
+
+    public void registerExternalAptJavaOutput(@NonNull ConfigurableFileTree folder) {
+        Preconditions.checkNotNull(javacTask);
+
+        javacTask.source(folder);
+        addJavaSourceFoldersToModel(folder.getDir());
     }
 
     public void registerGeneratedResFolders(@NonNull FileCollection folders) {

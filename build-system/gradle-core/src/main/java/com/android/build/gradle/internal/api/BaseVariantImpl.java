@@ -306,6 +306,11 @@ public abstract class BaseVariantImpl implements BaseVariant {
     }
 
     @Override
+    public void registerExternalAptJavaOutput(@NonNull ConfigurableFileTree folder) {
+        getVariantData().registerExternalAptJavaOutput(folder);
+    }
+
+    @Override
     public void registerGeneratedResFolders(@NonNull FileCollection folders) {
         getVariantData().registerGeneratedResFolders(folders);
     }
