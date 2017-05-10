@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.tasks;
 
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.EXTERNAL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 
@@ -48,8 +48,9 @@ public class TestPreBuildTask extends DefaultAndroidTask {
                 variantScope
                         .getTestedVariantData()
                         .getScope()
-                        .getArtifactCollection(RUNTIME_CLASSPATH, ALL, CLASSES);
-        testRuntimeClasspath = variantScope.getArtifactCollection(RUNTIME_CLASSPATH, ALL, CLASSES);
+                        .getArtifactCollection(RUNTIME_CLASSPATH, EXTERNAL, CLASSES);
+        testRuntimeClasspath =
+                variantScope.getArtifactCollection(RUNTIME_CLASSPATH, EXTERNAL, CLASSES);
 
         checkTestAndTestedDependencies();
     }

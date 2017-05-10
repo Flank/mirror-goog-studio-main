@@ -73,7 +73,7 @@ public class BytecodeGenerationHooksTest {
                 "BytecodeGeneratingTask(:app:generateBytecodeFordebug): ",
                 true,
                 "library/build/intermediates/intermediate-jars/debug/classes.jar",
-                "jar/build/classes/main");
+                "jar/build/libs/jar.jar");
     }
 
     @Test
@@ -87,7 +87,7 @@ public class BytecodeGenerationHooksTest {
                 true,
                 "app/build/intermediates/classes-jar/debug/classes.jar",
                 "library/build/intermediates/intermediate-jars/debug/classes.jar",
-                "jar/build/classes/main");
+                "jar/build/libs/jar.jar");
     }
 
     @Test
@@ -101,7 +101,7 @@ public class BytecodeGenerationHooksTest {
                 false,
                 "app/build/intermediates/classes-jar/debug/classes.jar",
                 "library/build/intermediates/intermediate-jars/debug/classes.jar",
-                "jar/build/classes/main");
+                "jar/build/libs/jar.jar");
     }
 
     @Test
@@ -141,7 +141,7 @@ public class BytecodeGenerationHooksTest {
                 "BytecodeGeneratingTask(:test:generateBytecodeFordebug): ",
                 true,
                 "app/build/intermediates/classes-jar/debug/classes.jar",
-                "jar/build/classes/main",
+                "jar/build/libs/jar.jar",
                 "library/build/intermediates/intermediate-jars/debug/classes.jar");
     }
 

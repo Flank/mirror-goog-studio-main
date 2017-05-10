@@ -28,10 +28,12 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 import java.io.IOException;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
 /** Integration test for composite build. */
+@Ignore("https://issuetracker.google.com/issues/38176743")
 public class CompositeBuildTest {
 
     @Rule
