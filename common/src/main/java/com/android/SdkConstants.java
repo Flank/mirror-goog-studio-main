@@ -1114,6 +1114,12 @@ public final class SdkConstants {
     public static final String TABLE_CONSTRAINT_LAYOUT = CLASS_TABLE_CONSTRAINT_LAYOUT;
     public static final String CONSTRAINT_LAYOUT_GUIDELINE = CLASS_CONSTRAINT_LAYOUT_GUIDELINE;
     public static final String CONSTRAINT_LAYOUT_BARRIER = CLASS_CONSTRAINT_LAYOUT_BARRIER;
+    public static final String CONSTRAINT_BARRIER_TOP = "top";
+    public static final String CONSTRAINT_BARRIER_BOTTOM = "bottom";
+    public static final String CONSTRAINT_BARRIER_LEFT = "left";
+    public static final String CONSTRAINT_BARRIER_RIGHT = "right";
+    public static final String CONSTRAINT_BARRIER_START = "start";
+    public static final String CONSTRAINT_BARRIER_END = "end";
 
     // Tags: Drawables
     public static final String TAG_BITMAP = "bitmap"; //$NON-NLS-1$
