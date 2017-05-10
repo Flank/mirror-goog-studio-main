@@ -67,6 +67,29 @@ public class BytecodeGenerationHooksTest {
         assertThat(dexFile).containsClasses("Lcom/example/bytecode/App;");
         assertThat(dexFile).containsClasses("Lcom/example/bytecode/PostJavacApp;");
 
+        assertThat(apk).contains("META-INF/app.kotlin_module");
+        assertThat(apk).contains("META-INF/post-app.kotlin_module");
+        assertThat(apk).contains("META-INF/lib.kotlin_module");
+        assertThat(apk).contains("META-INF/post-lib.kotlin_module");
+
+        // also verify that the kotlin module files are present in the intermediate classes.jar
+        // published by the library
+        File intermediateJars =
+                project.getSubproject("library").getIntermediateFile("intermediate-jars", "debug");
+        assertThat(intermediateJars).isDirectory();
+
+        File classesJar = new File(intermediateJars, "classes.jar");
+        assertThat(classesJar).isFile();
+        Zip classesZip = new Zip(classesJar);
+        assertThat(classesZip).contains("META-INF/lib.kotlin_module");
+        assertThat(classesZip).contains("META-INF/post-lib.kotlin_module");
+
+        File resJar = new File(intermediateJars, "res.jar");
+        assertThat(resJar).isFile();
+        Zip resZip = new Zip(classesJar);
+        assertThat(resZip).contains("META-INF/lib.kotlin_module");
+        assertThat(resZip).contains("META-INF/post-lib.kotlin_module");
+
         // verify the compile classpath
         checkDependencies(
                 result,
@@ -79,6 +102,19 @@ public class BytecodeGenerationHooksTest {
     @Test
     public void buildAppTest() throws IOException, InterruptedException {
         GradleBuildResult result = project.executor().run("clean", "app:assembleAndroidTest");
+
+        final GradleTestProject appProject = project.getSubproject("app");
+
+        Apk apk = appProject.getApk(GradleTestProject.ApkType.ANDROIDTEST_DEBUG);
+        assertThat(apk.getFile()).isFile();
+        assertThat(apk).contains("META-INF/test.kotlin_module");
+
+        // also verify that the app's jar used by test compilation contains the kotlin module files
+        File classesJar = appProject.getIntermediateFile("classes-jar", "debug", "classes.jar");
+        assertThat(classesJar).isFile();
+        Zip classesZip = new Zip(classesJar);
+        assertThat(classesZip).contains("META-INF/app.kotlin_module");
+        assertThat(classesZip).contains("META-INF/post-app.kotlin_module");
 
         // verify the compile classpath
         checkDependencies(
@@ -112,6 +148,8 @@ public class BytecodeGenerationHooksTest {
         Zip classes = aar.getEntryAsZip("classes.jar");
         assertThat(classes).contains("com/example/bytecode/Lib.class");
         assertThat(classes).contains("com/example/bytecode/PostJavacLib.class");
+        assertThat(classes).contains("META-INF/lib.kotlin_module");
+        assertThat(classes).contains("META-INF/post-lib.kotlin_module");
     }
 
     @Test

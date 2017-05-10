@@ -49,7 +49,7 @@ class LibMinifyTest {
     void "check library has its fields obfuscated"() {
         // test whether a library project has its fields obfuscated
         TestFileUtils.checkContent(
-                project.getOutputFile("mapping/release/mapping.txt"),
+                project.getOutputFile("mapping", "release", "mapping.txt"),
                 "int obfuscatedInt -> a")
     }
 
