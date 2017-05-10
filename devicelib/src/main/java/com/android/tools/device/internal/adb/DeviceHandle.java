@@ -19,6 +19,7 @@ package com.android.tools.device.internal.adb;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.google.common.collect.ImmutableMap;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -35,8 +36,11 @@ public final class DeviceHandle {
     private final String devPath;
     private final ImmutableMap<String, String> props;
 
-    private DeviceHandle(@NonNull String serial, @NonNull ConnectionState connectionState,
-            @Nullable String devicePath, @NonNull Map<String, String> props) {
+    private DeviceHandle(
+            @NonNull String serial,
+            @NonNull ConnectionState connectionState,
+            @Nullable String devicePath,
+            @NonNull Map<String, String> props) {
         this.serial = serial;
         this.state = connectionState;
         this.devPath = devicePath;
@@ -78,10 +82,10 @@ public final class DeviceHandle {
             return false;
         }
         DeviceHandle that = (DeviceHandle) o;
-        return Objects.equals(serial, that.serial) &&
-                state == that.state &&
-                Objects.equals(devPath, that.devPath) &&
-                Objects.equals(props, that.props);
+        return Objects.equals(serial, that.serial)
+                && state == that.state
+                && Objects.equals(devPath, that.devPath)
+                && Objects.equals(props, that.props);
     }
 
     @Override
@@ -90,25 +94,40 @@ public final class DeviceHandle {
     }
 
     /**
-     * Returns a {@link DeviceHandle} from adb's transport listing.
+     * Returns a {@link DeviceHandle} from adb's transport listing (both long and short forms)
      *
-     * In adb's terminology, each device is a "transport". The long listing for a transport prints
-     * out the transport in the following format:
-     * <pre>serial-number connection-state-name device-path? product:x model:y device:z</pre>
-     * @see <a href="https://android.googlesource.com/platform/system/core/+/master/adb/transport.cpp">system/core/adb/transport.cpp</a>
+     * <p>In adb's terminology, each device is a "transport". The long listing for a transport
+     * prints out the transport in the following format:
+     *
+     * <pre>serial-number connection-state-name device-path? (product:x model:y device:z)?</pre>
+     *
+     * The device path field is absent in the case of Windows. The product details are absent if the
+     * device is not online.
+     *
+     * <p>The short listing only contains the first two fields (serial and connection state).
+     *
+     * @see <a
+     *     href="https://android.googlesource.com/platform/system/core/+/master/adb/transport.cpp">system/core/adb/transport.cpp</a>
      */
     @NonNull
     public static DeviceHandle create(@NonNull String transport) {
         String[] components = transport.split("\\s+");
-        if (components.length < 5) {
-            String msg = String.format(Locale.US,
-                    "transport listing expected to have atleast 5 components, got %1$d in '%2$s'",
-                    components.length, transport);
+        if (components.length < 2) {
+            String msg =
+                    String.format(
+                            Locale.US,
+                            "transport listing expected to have atleast 2 components, got %1$d in '%2$s'",
+                            components.length,
+                            transport);
             throw new IllegalArgumentException(msg);
         }
 
         String serial = components[0];
         ConnectionState connectionState = ConnectionState.fromName(components[1]);
+
+        if (components.length == 2) {
+            return new DeviceHandle(serial, connectionState, null, Collections.emptyMap());
+        }
 
         int propsIndex = 2;
         String devPath = null;
