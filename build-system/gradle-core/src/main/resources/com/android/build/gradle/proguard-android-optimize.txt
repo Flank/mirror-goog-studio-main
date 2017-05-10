@@ -17,7 +17,6 @@
 -optimizations !code/simplification/arithmetic,!code/simplification/cast,!field/*,!class/merging/*
 -optimizationpasses 5
 -allowaccessmodification
--dontpreverify
 
 # The remainder of this file is identical to the non-optimized version
 # of the Proguard configuration file (except that the other file has
