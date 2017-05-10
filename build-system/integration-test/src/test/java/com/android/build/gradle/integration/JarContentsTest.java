@@ -98,8 +98,9 @@ public class JarContentsTest {
                 "com/android/build/gradle/internal/test/report/base-style.css",
                 "com/android/build/gradle/internal/test/report/style.css",
                 "com/android/build/gradle/internal/test/report/report.js",
-                "com/android/build/gradle/proguard-android.txt",
-                "com/android/build/gradle/proguard-android-optimize.txt",
+                "com/android/build/gradle/proguard-common.txt",
+                "com/android/build/gradle/proguard-header.txt",
+                "com/android/build/gradle/proguard-optimizations.txt",
                 "META-INF/gradle-plugins/com.android.base.properties",
                 "instant-run/instant-run-server.jar");
         expected.putAll(
