@@ -58,14 +58,27 @@ public class AdbServerLauncherTest {
         when(runner.start(any())).thenReturn(process);
         when(runner.waitFor(anyLong(), any(TimeUnit.class))).thenReturn(true);
 
-        launcher.launch(1234, 10, TimeUnit.SECONDS);
+        launcher.launch(1234, false, 10, TimeUnit.SECONDS);
         ImmutableList<String> expectedArgs =
                 ImmutableList.of(
                         AdbTestUtils.getPathToAdb().toString(),
                         "-P",
                         Integer.toString(1234),
                         "start-server");
-        verify(runner).start(argThat(pb -> pb.command().equals(expectedArgs)));
+        verify(runner)
+                .start(
+                        argThat(
+                                pb ->
+                                        pb.command().equals(expectedArgs)
+                                                && pb.environment().get("ADB_LIBUSB").equals("0")));
+    }
+
+    @Test
+    public void launch_withLibUsb() throws Exception {
+        when(runner.start(any())).thenReturn(process);
+        when(runner.waitFor(anyLong(), any(TimeUnit.class))).thenReturn(true);
+        launcher.launch(1234, true, 10, TimeUnit.SECONDS);
+        verify(runner).start(argThat(pb -> pb.environment().get("ADB_LIBUSB").equals("1")));
     }
 
     @Test
@@ -76,7 +89,7 @@ public class AdbServerLauncherTest {
         when(runner.getStderr()).thenReturn("can't start adb");
 
         try {
-            launcher.launch(1234, 2, TimeUnit.SECONDS);
+            launcher.launch(1234, false, 2, TimeUnit.SECONDS);
             fail("Expected to timeout if runner.waitFor fails");
         } catch (TimeoutException e) {
             String msg =
@@ -97,7 +110,7 @@ public class AdbServerLauncherTest {
         when(runner.getStderr()).thenReturn("can't start adb");
 
         try {
-            launcher.launch(1234, 1, TimeUnit.MILLISECONDS);
+            launcher.launch(1234, false, 1, TimeUnit.MILLISECONDS);
             fail("Expected an IOException if the process failed to launch");
         } catch (IOException e) {
             String msg =

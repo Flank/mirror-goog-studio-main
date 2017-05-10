@@ -31,18 +31,24 @@ class AdbServerOptions {
 
     private final int port;
     private final String hostName;
+    private final boolean libUsb;
 
     private final long probeTimeoutMs;
     private final long startTimeoutMs;
 
     public AdbServerOptions(int port, @Nullable String hostName) {
-        this(port, hostName, PROBE_TIMEOUT_MS);
+        this(port, hostName, false);
+    }
+
+    public AdbServerOptions(int port, @Nullable String hostName, boolean useLibUsbBackend) {
+        this(port, hostName, useLibUsbBackend, PROBE_TIMEOUT_MS);
     }
 
     @VisibleForTesting
-    AdbServerOptions(int port, @Nullable String hostName, long probeTimeoutMs) {
+    AdbServerOptions(int port, @Nullable String hostName, boolean useLibUsb, long probeTimeoutMs) {
         this.port = port;
         this.hostName = hostName;
+        this.libUsb = useLibUsb;
         this.probeTimeoutMs = probeTimeoutMs;
         this.startTimeoutMs = START_TIMEOUT_MS;
     }
@@ -54,6 +60,10 @@ class AdbServerOptions {
 
     public int getPort() {
         return port;
+    }
+
+    public boolean shouldUseLibUsb() {
+        return libUsb;
     }
 
     public long getProbeTimeout(@NonNull TimeUnit unit) {

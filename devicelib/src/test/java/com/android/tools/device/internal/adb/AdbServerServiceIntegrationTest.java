@@ -59,7 +59,7 @@ public class AdbServerServiceIntegrationTest {
      */
     @BeforeClass
     public static void setupLogger() {
-        Logger logger = Logger.getLogger(AdbServerService.class.getName());
+        Logger logger = Logger.getLogger(AdbServerService.class.getPackage().getName());
         logger.setUseParentHandlers(false);
 
         handler = new ConsoleHandler();
@@ -112,7 +112,8 @@ public class AdbServerServiceIntegrationTest {
     @Test
     public void launchServer()
             throws InterruptedException, ExecutionException, TimeoutException, IOException {
-        AdbServerOptions options = new AdbServerOptions(getFreePort(), AdbConstants.DEFAULT_HOST);
+        AdbServerOptions options =
+                new AdbServerOptions(getFreePort(), AdbConstants.DEFAULT_HOST, true);
         Launcher launcher =
                 new AdbServerLauncher(AdbTestUtils.getPathToAdb(), new OsProcessRunner(executor));
         AdbServerService service =

@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 class AdbServerLauncher implements Launcher {
     private final Path adb;
@@ -39,7 +41,7 @@ class AdbServerLauncher implements Launcher {
 
     @NonNull
     @Override
-    public Endpoint launch(int port, long timeout, @NonNull TimeUnit unit)
+    public Endpoint launch(int port, boolean useLibUsb, long timeout, @NonNull TimeUnit unit)
             throws IOException, InterruptedException, TimeoutException {
         if (port == AdbConstants.ANY_PORT) {
             // TODO(b/35644544): Have adb pick a free port
@@ -48,7 +50,17 @@ class AdbServerLauncher implements Launcher {
 
         List<String> cmd =
                 Arrays.asList(adb.toString(), "-P", Integer.toString(port), "start-server");
-        Process process = runner.start(new ProcessBuilder(cmd));
+
+        ProcessBuilder pb = new ProcessBuilder(cmd);
+        pb.environment().put("ADB_LIBUSB", useLibUsb ? "1" : "0");
+
+        Logger logger = Logger.getLogger(getClass().getName());
+        if (logger.isLoggable(Level.FINE)) {
+            logger.fine("Launching adb: " + Joiner.on(" ").join(cmd));
+            logger.fine("  ADB_LIBUSB=" + pb.environment().get("ADB_LIBUSB"));
+        }
+
+        Process process = runner.start(pb);
         if (!runner.waitFor(timeout, unit)) {
             runner.destroyForcibly();
             String msg =

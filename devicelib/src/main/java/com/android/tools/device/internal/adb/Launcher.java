@@ -24,6 +24,6 @@ import java.util.concurrent.TimeoutException;
 /** A {@link Launcher} provides a way to launch an ADB Server. */
 interface Launcher {
     @NonNull
-    Endpoint launch(int port, long timeout, @NonNull TimeUnit unit)
+    Endpoint launch(int port, boolean useLibUsb, long timeout, @NonNull TimeUnit unit)
             throws IOException, InterruptedException, TimeoutException;
 }
