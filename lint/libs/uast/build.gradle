@@ -2,7 +2,7 @@ apply plugin: 'java'
 
 group = 'com.android.tools.external.com-intellij'
 archivesBaseName = 'uast'
-version = '171.4249.32'
+version = '171.4249.33'
 
 dependencies {
     compile 'org.jetbrains.trove4j:trove4j:20160824'

@@ -769,6 +769,37 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 ));
     }
 
+    public void testReferenceFromObjectLiteralArguments() throws Exception {
+        lint().files(
+                xml("res/layout/main.xml", ""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    android:orientation=\"vertical\" android:layout_width=\"match_parent\"\n"
+                        + "    android:layout_height=\"match_parent\" />\n"),
+                java("test/my/pkg/MyTest.java", ""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "public class MyTest {\n"
+                        + "    public Object test() {\n"
+                        + "        return new Inner<String>(R.layout.main) {\n"
+                        + "            @Override\n"
+                        + "            public void foo() {\n"
+                        + "                super.foo();\n"
+                        + "            }\n"
+                        + "        };\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    private static class Inner<T> {\n"
+                        + "        public Inner(int id) {\n"
+                        + "        }\n"
+                        + "        public void foo() {\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}\n"))
+                .run()
+                .expectClean();
+    }
+
     public void testKeepAndDiscard() throws Exception {
         mEnableIds = false;
         assertEquals("No warnings.",
