@@ -26,6 +26,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.api.transform.Transform;
+import com.android.build.gradle.api.AndroidBasePlugin;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.ApiObjectFactory;
 import com.android.build.gradle.internal.BadPluginException;
@@ -236,6 +237,8 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
 
     protected void apply(@NonNull Project project) {
         checkPluginVersion();
+        project.getPluginManager().apply(AndroidBasePlugin.class);
+
         TaskInputHelper.enableBypass();
 
         this.project = project;
