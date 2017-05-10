@@ -28,7 +28,7 @@ public class AndroidTypeAttr implements org.gradle.api.Named {
     public static final AndroidTypeAttr TYPE_APK = of("Apk");
     public static final AndroidTypeAttr TYPE_AAR = of("Aar");
     public static final AndroidTypeAttr TYPE_FEATURE = of("Feature");
-    public static final AndroidTypeAttr TYPE_FEATURE_MANIFEST = of("Feature-Manifest");
+    public static final AndroidTypeAttr TYPE_METADATA = of("Metadata");
 
     private static AndroidTypeAttr of(String name) {
         return new AndroidTypeAttr(name);

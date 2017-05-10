@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.publishing;
 
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.API_ELEMENTS;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.FEATURE_ELEMENTS;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.METADATA_ELEMENTS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.AnchorOutputType.CLASSES_FOR_UNIT_TESTS;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.AIDL_PARCELABLE;
@@ -29,8 +29,6 @@ import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutpu
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.FEATURE_APPLICATION_ID_DECLARATION;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.FEATURE_IDS_DECLARATION;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.FEATURE_RESOURCE_PKG;
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.FEATURE_SPLIT_DECLARATION;
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.FEATURE_SPLIT_MANIFEST;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.JAVAC;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.JAVA_RES;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.LIBRARY_CLASSES;
@@ -41,6 +39,9 @@ import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutpu
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.LINT_JAR;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.MANIFEST_METADATA;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.MERGED_ASSETS;
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.METADADA_FEATURE_MANIFEST;
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.METADATA_APP_ID;
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.METADATA_FEATURE_DECLARATION;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.PACKAGED_RES;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.PUBLIC_RES;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.RENDERSCRIPT_HEADERS;
@@ -102,8 +103,8 @@ public class VariantPublishingSpec {
             ImmutableList.of(RUNTIME_ELEMENTS);
     private static final ImmutableList<PublishedConfigType> API_AND_RUNTIME_ELEMENTS =
             ImmutableList.of(API_ELEMENTS, RUNTIME_ELEMENTS);
-    private static final ImmutableList<PublishedConfigType> FEATURE_ELEMENTS_ONLY =
-            ImmutableList.of(FEATURE_ELEMENTS);
+    private static final ImmutableList<PublishedConfigType> METADATA_ELEMENTS_ONLY =
+            ImmutableList.of(METADATA_ELEMENTS);
 
     static {
         variantSpec(
@@ -120,7 +121,11 @@ public class VariantPublishingSpec {
                                 ArtifactType.JAR,
                                 API_ELEMENTS_ONLY),
                         outputSpec(APK, ArtifactType.APK, RUNTIME_ELEMENTS_ONLY),
-                        outputSpec(APK_MAPPING, ArtifactType.APK_MAPPING, API_ELEMENTS_ONLY))
+                        outputSpec(APK_MAPPING, ArtifactType.APK_MAPPING, API_ELEMENTS_ONLY),
+                        outputSpec(
+                                METADATA_APP_ID,
+                                ArtifactType.METADATA_APP_ID_DECLARATION,
+                                METADATA_ELEMENTS_ONLY))
                 .withTestingSpec(
                         VariantType.ANDROID_TEST,
                         // java output query is done via CLASSES instead of JAR, so provide
@@ -178,13 +183,13 @@ public class VariantPublishingSpec {
         variantSpec(
                 VariantType.FEATURE,
                 outputSpec(
-                        FEATURE_SPLIT_DECLARATION,
-                        ArtifactType.FEATURE_SPLIT_DECLARATION,
-                        FEATURE_ELEMENTS_ONLY),
+                        METADATA_FEATURE_DECLARATION,
+                        ArtifactType.METADATA_FEATURE_DECLARATION,
+                        METADATA_ELEMENTS_ONLY),
                 outputSpec(
-                        FEATURE_SPLIT_MANIFEST,
-                        ArtifactType.FEATURE_SPLIT_MANIFEST,
-                        FEATURE_ELEMENTS_ONLY),
+                        METADADA_FEATURE_MANIFEST,
+                        ArtifactType.METADATA_FEATURE_MANIFEST,
+                        METADATA_ELEMENTS_ONLY),
                 outputSpec(
                         FEATURE_IDS_DECLARATION,
                         ArtifactType.FEATURE_IDS_DECLARATION,

@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.publishing;
 
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.API_ELEMENTS;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.FEATURE_ELEMENTS;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.METADATA_ELEMENTS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS;
 
 import com.android.annotations.NonNull;
@@ -58,17 +58,21 @@ public class AndroidArtifacts {
     private static final String TYPE_METADATA = "android-metadata";
 
     // types for feature-split content.
-    private static final String TYPE_FEATURE_SPLIT_DECLARATION = "android-feature-split-decl";
-    private static final String TYPE_FEATURE_SPLIT_MANIFEST = "android-feature-split-manifest";
     private static final String TYPE_FEATURE_IDS_DECLARATION = "android-feature-split-ids";
     private static final String TYPE_FEATURE_APPLICATION_ID = "android-feature-application-id";
     private static final String TYPE_FEATURE_RESOURCE_PKG = "android-feature-res-ap_";
+
+    // types for metadata content.
+    private static final String TYPE_METADATA_FEATURE_DECLARATION = "android-metadata-feature-decl";
+    private static final String TYPE_METADATA_FEATURE_MANIFEST =
+            "android-metadata-feature-manifest";
+    private static final String TYPE_METADATA_APP_ID_DECLARATION = "android-metadata-app-id-decl";
 
     public enum ConsumedConfigType {
         COMPILE_CLASSPATH(API_ELEMENTS, true),
         RUNTIME_CLASSPATH(RUNTIME_ELEMENTS, true),
         ANNOTATION_PROCESSOR(RUNTIME_ELEMENTS, false),
-        FEATURE_CLASSPATH(FEATURE_ELEMENTS, false);
+        METADATA_VALUES(METADATA_ELEMENTS, false);
 
         @NonNull
         private final PublishedConfigType publishedTo;
@@ -93,7 +97,7 @@ public class AndroidArtifacts {
     public enum PublishedConfigType {
         API_ELEMENTS,
         RUNTIME_ELEMENTS,
-        FEATURE_ELEMENTS,
+        METADATA_ELEMENTS,
     }
 
     public enum ArtifactScope {
@@ -136,11 +140,14 @@ public class AndroidArtifacts {
         EXPLODED_AAR(TYPE_EXPLODED_AAR),
 
         // Feature split related artifacts.
-        FEATURE_SPLIT_DECLARATION(TYPE_FEATURE_SPLIT_DECLARATION),
-        FEATURE_SPLIT_MANIFEST(TYPE_FEATURE_SPLIT_MANIFEST),
         FEATURE_IDS_DECLARATION(TYPE_FEATURE_IDS_DECLARATION),
         FEATURE_APPLICATION_ID_DECLARATION(TYPE_FEATURE_APPLICATION_ID),
-        FEATURE_RESOURCE_PKG(TYPE_FEATURE_RESOURCE_PKG);
+        FEATURE_RESOURCE_PKG(TYPE_FEATURE_RESOURCE_PKG),
+
+        // Metadata artifacts
+        METADATA_FEATURE_DECLARATION(TYPE_METADATA_FEATURE_DECLARATION),
+        METADATA_FEATURE_MANIFEST(TYPE_METADATA_FEATURE_MANIFEST),
+        METADATA_APP_ID_DECLARATION(TYPE_METADATA_APP_ID_DECLARATION);
 
         @NonNull
         private final String type;

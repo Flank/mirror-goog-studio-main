@@ -178,7 +178,7 @@ public class FeatureTest {
         try (ApkSubject baseFeatureApk =
                 assertThatApk(baseProject.getFeatureApk(GradleTestProject.ApkType.DEBUG))) {
             baseFeatureApk.exists();
-            baseFeatureApk.containsClass("Lcom/example/android/multiproject/R;");
+            baseFeatureApk.containsClass("Lcom/example/android/multiproject/base/R;");
             baseFeatureApk.containsClass("Lcom/example/android/multiproject/library/R;");
             baseFeatureApk.containsClass("Lcom/example/android/multiproject/library/PersonView;");
             baseFeatureApk.containsClass("Lcom/example/android/multiproject/base/PersonView2;");

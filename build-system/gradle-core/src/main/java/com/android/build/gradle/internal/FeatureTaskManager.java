@@ -29,8 +29,8 @@ import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitApplicationId;
-import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitApplicationIdWriterTask;
+import com.android.build.gradle.internal.tasks.ApplicationId;
+import com.android.build.gradle.internal.tasks.ApplicationIdWriterTask;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclaration;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclarationWriterTask;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitPackageIds;
@@ -317,7 +317,7 @@ public class FeatureTaskManager extends TaskManager {
                                 variantScope, featureSplitDeclarationOutputDirectory));
 
         variantScope.addTaskOutput(
-                TaskOutputHolder.TaskOutputType.FEATURE_SPLIT_DECLARATION,
+                TaskOutputHolder.TaskOutputType.METADATA_FEATURE_DECLARATION,
                 FeatureSplitDeclaration.getOutputFile(featureSplitDeclarationOutputDirectory),
                 featureSplitWriterTaskAndroidTask.getName());
     }
@@ -332,15 +332,15 @@ public class FeatureTaskManager extends TaskManager {
                         "applicationId",
                         variantScope.getVariantConfiguration().getDirName());
 
-        AndroidTask<FeatureSplitApplicationIdWriterTask> writeTask =
+        AndroidTask<ApplicationIdWriterTask> writeTask =
                 androidTasks.create(
                         tasks,
-                        new FeatureSplitApplicationIdWriterTask.ConfigAction(
+                        new ApplicationIdWriterTask.BaseFeatureConfigAction(
                                 variantScope, applicationIdOutputDirectory));
 
         variantScope.addTaskOutput(
                 TaskOutputHolder.TaskOutputType.FEATURE_APPLICATION_ID_DECLARATION,
-                FeatureSplitApplicationId.getOutputFile(applicationIdOutputDirectory),
+                ApplicationId.getOutputFile(applicationIdOutputDirectory),
                 writeTask.getName());
     }
 
@@ -405,7 +405,7 @@ public class FeatureTaskManager extends TaskManager {
                                     variantScope, optionalFeatures.build()));
 
             variantScope.addTaskOutput(
-                    TaskOutputHolder.TaskOutputType.FEATURE_SPLIT_MANIFEST,
+                    TaskOutputHolder.TaskOutputType.METADADA_FEATURE_MANIFEST,
                     BuildOutputs.getMetadataFile(variantScope.getManifestOutputDirectory()),
                     mergeManifestsAndroidTask.getName());
         }

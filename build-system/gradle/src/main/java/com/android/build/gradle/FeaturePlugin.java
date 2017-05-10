@@ -52,10 +52,16 @@ public class FeaturePlugin extends LibraryPlugin {
 
         // create the configuration used to declare the feature split in the base split.
         Configuration featureSplit =
-                project.getConfigurations()
-                        .maybeCreate(VariantDependencies.CONFIG_NAME_FEATURE_SPLIT);
+                project.getConfigurations().maybeCreate(VariantDependencies.CONFIG_NAME_FEATURE);
         featureSplit.setCanBeConsumed(false);
         featureSplit.setCanBeResolved(false);
+
+        // create the configuration used to declare the application id to the base feature.
+        Configuration application =
+                project.getConfigurations()
+                        .maybeCreate(VariantDependencies.CONFIG_NAME_APPLICATION);
+        application.setCanBeConsumed(false);
+        application.setCanBeResolved(false);
     }
 
     @NonNull
