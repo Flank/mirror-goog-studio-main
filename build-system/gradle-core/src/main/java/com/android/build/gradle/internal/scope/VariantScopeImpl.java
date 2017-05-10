@@ -65,6 +65,7 @@ import com.android.build.gradle.internal.publishing.VariantPublishingSpec.Output
 import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
+import com.android.build.gradle.internal.tasks.databinding.DataBindingExportBuildInfoTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingProcessLayoutsTask;
 import com.android.build.gradle.internal.variant.ApplicationVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -218,6 +219,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     private InstantRunTaskManager instantRunTaskManager;
 
     private ConfigurableFileCollection desugarTryWithResourcesRuntimeJar;
+    private AndroidTask<DataBindingExportBuildInfoTask> dataBindingExportBuildInfoTask;
 
     public VariantScopeImpl(
             @NonNull GlobalScope globalScope,
@@ -1871,6 +1873,17 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     public AndroidTask<ProcessAndroidResources> getProcessResourcesTask() {
         return processAndroidResourcesTask;
+    }
+
+    @Override
+    public void setDataBindingExportBuildInfoTask(
+            AndroidTask<DataBindingExportBuildInfoTask> task) {
+        this.dataBindingExportBuildInfoTask = task;
+    }
+
+    @Override
+    public AndroidTask<DataBindingExportBuildInfoTask> getDataBindingExportBuildInfoTask() {
+        return dataBindingExportBuildInfoTask;
     }
 
     @Override

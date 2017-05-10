@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactTyp
 import com.android.build.gradle.internal.publishing.VariantPublishingSpec;
 import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
+import com.android.build.gradle.internal.tasks.databinding.DataBindingExportBuildInfoTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingProcessLayoutsTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.tasks.AidlCompile;
@@ -452,6 +453,10 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
             AndroidTask<ProcessAndroidResources> processAndroidResourcesAndroidTask);
 
     AndroidTask<ProcessAndroidResources> getProcessResourcesTask();
+
+    void setDataBindingExportBuildInfoTask(AndroidTask<DataBindingExportBuildInfoTask> task);
+
+    AndroidTask<DataBindingExportBuildInfoTask> getDataBindingExportBuildInfoTask();
 
     @NonNull
     VariantDependencies getVariantDependencies();
