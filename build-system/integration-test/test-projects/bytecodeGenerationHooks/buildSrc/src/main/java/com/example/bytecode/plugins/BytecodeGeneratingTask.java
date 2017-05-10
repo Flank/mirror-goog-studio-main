@@ -73,8 +73,8 @@ public class BytecodeGeneratingTask extends DefaultTask {
                 try {
                     String name = entry.getName();
 
-                    // do not take directories or non class files
-                    if (entry.isDirectory() || !name.endsWith(".class")) {
+                    // do not take directories or manifest file
+                    if (entry.isDirectory() || name.equals("META-INF/MANIFEST.MF")) {
                         continue;
                     }
 

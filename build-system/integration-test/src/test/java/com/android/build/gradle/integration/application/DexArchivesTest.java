@@ -189,11 +189,11 @@ public class DexArchivesTest {
 
     @NonNull
     private File builderDir() {
-        return project.getIntermediateFile("transforms/dexBuilder/debug");
+        return project.getIntermediateFile("transforms", "dexBuilder", "debug");
     }
 
     @NonNull
     private File mergerDir() {
-        return project.getIntermediateFile("transforms/dexMerger/debug");
+        return project.getIntermediateFile("transforms", "dexMerger", "debug");
     }
 }

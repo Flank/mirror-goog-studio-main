@@ -51,7 +51,10 @@ public abstract class TransformStream {
 
     // FIXME These objects are no immutable....
     private static final PatternSet INCLUDE_CLASSES =
-            new PatternSet().include("**/*.class").include("**/*.jar");
+            new PatternSet()
+                    .include("**/*.class")
+                    .include("**/*.jar")
+                    .include("META-INF/*.kotlin_module");
     private static final PatternSet EXCLUDE_CLASSES = new PatternSet().exclude("**/*.class");
     private static final PatternSet INCLUDE_SO =
             new PatternSet().include("**/*.so").include("**/*.jar");

@@ -54,13 +54,14 @@ public class SingleFeatureTest {
         GradleTestProject featureProject = sProject.getSubproject(":feature");
         checkManifestContents(
                 featureProject.getIntermediateFile(
-                        "manifests/full/feature/debug/AndroidManifest.xml"));
+                        "manifests", "full", "feature", "debug", "AndroidManifest.xml"));
         checkApkContents(featureProject.getFeatureApk(GradleTestProject.ApkType.DEBUG));
 
         // Check the app module output contents.
         GradleTestProject appProject = sProject.getSubproject(":app");
         checkManifestContents(
-                appProject.getIntermediateFile("manifests/full/debug/AndroidManifest.xml"));
+                appProject.getIntermediateFile(
+                        "manifests", "full", "debug", "AndroidManifest.xml"));
         checkApkContents(appProject.getApk(GradleTestProject.ApkType.DEBUG));
     }
 

@@ -682,25 +682,22 @@ public final class GradleTestProject implements TestRule {
 
     /** Return the output directory from Android plugins. */
     public File getOutputDir() {
-        return new File(
-                getTestDir(), Joiner.on(File.separator).join("build", AndroidProject.FD_OUTPUTS));
+        return FileUtils.join(getTestDir(), "build", AndroidProject.FD_OUTPUTS);
     }
 
     /** Return the output directory from Android plugins. */
     public File getIntermediatesDir() {
-        return new File(
-                getTestDir(),
-                Joiner.on(File.separator).join("build", AndroidProject.FD_INTERMEDIATES));
+        return FileUtils.join(getTestDir(), "build", AndroidProject.FD_INTERMEDIATES);
     }
 
     /** Return a File under the output directory from Android plugins. */
-    public File getOutputFile(String path) {
-        return new File(getOutputDir(), path);
+    public File getOutputFile(String... paths) {
+        return FileUtils.join(getOutputDir(), paths);
     }
 
     /** Return a File under the intermediates directory from Android plugins. */
-    public File getIntermediateFile(String path) {
-        return new File(getIntermediatesDir(), path);
+    public File getIntermediateFile(String... paths) {
+        return FileUtils.join(getIntermediatesDir(), paths);
     }
 
     /** Returns the directory to look for profiles in. Defaults to build/profile/ */
@@ -731,9 +728,10 @@ public final class GradleTestProject implements TestRule {
                         .collect(Collectors.toList());
         File apkFile =
                 getOutputFile(
-                        "apk/"
-                                + Joiner.on("/").join(flavorDimensionList)
-                                + "/"
+                        "apk"
+                                + File.separatorChar
+                                + Joiner.on(File.separatorChar).join(flavorDimensionList)
+                                + File.separatorChar
                                 + Joiner.on("-").join(dimensionList)
                                 + SdkConstants.DOT_ANDROID_PACKAGE);
         return _getApk(apkFile);
@@ -863,12 +861,14 @@ public final class GradleTestProject implements TestRule {
         return _getApk(
                 getOutputFile(
                         "apk"
-                                + (apkType.getTestName() != null ? "/" + apkType.getTestName() : "")
-                                + "/"
+                                + (apkType.getTestName() != null
+                                        ? File.separatorChar + apkType.getTestName()
+                                        : "")
+                                + File.separatorChar
                                 + mangleDimensions(dimensions)
-                                + "/"
+                                + File.separatorChar
                                 + apkType.getBuildType()
-                                + "/"
+                                + File.separatorChar
                                 + mangleApkName(
                                         apkType, filterName, ImmutableList.copyOf(dimensions))
                                 + (apkType.isSigned()
@@ -897,12 +897,16 @@ public final class GradleTestProject implements TestRule {
         return _getApk(
                 getOutputFile(
                         "apk"
-                                + (apkType.getTestName() != null ? "/" + apkType.getTestName() : "")
-                                + "/feature/"
+                                + (apkType.getTestName() != null
+                                        ? File.separatorChar + apkType.getTestName()
+                                        : "")
+                                + File.separatorChar
+                                + "feature"
+                                + File.separatorChar
                                 + mangleDimensions(dimensions)
-                                + "/"
+                                + File.separatorChar
                                 + apkType.getBuildType()
-                                + "/"
+                                + File.separatorChar
                                 + mangleApkName(
                                         apkType, filterName, ImmutableList.copyOf(dimensions))
                                 + (apkType.isSigned()
@@ -961,7 +965,7 @@ public final class GradleTestProject implements TestRule {
         dimensionList.add(getName());
         dimensionList.addAll(Arrays.asList(dimensions));
         return new Aar(
-                getOutputFile("aar/" + Joiner.on("-").join(dimensionList) + SdkConstants.DOT_AAR));
+                getOutputFile("aar", Joiner.on("-").join(dimensionList) + SdkConstants.DOT_AAR));
     }
 
     /**
@@ -975,10 +979,9 @@ public final class GradleTestProject implements TestRule {
         dimensionList.addAll(Arrays.asList(dimensions));
         return new Zip(
                 getOutputFile(
-                        FileUtils.join(
-                                "apk",
-                                mangleDimensions(dimensions),
-                                Joiner.on("-").join(dimensionList) + SdkConstants.DOT_ZIP)));
+                        "apk",
+                        mangleDimensions(dimensions),
+                        Joiner.on("-").join(dimensionList) + SdkConstants.DOT_ZIP));
     }
 
     /** Returns a string that contains the gradle buildscript content */

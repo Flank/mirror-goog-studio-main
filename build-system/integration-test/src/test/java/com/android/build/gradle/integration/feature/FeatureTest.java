@@ -79,7 +79,7 @@ public class FeatureTest {
         GradleTestProject featureProject = sProject.getSubproject(":feature");
         File featureSplit =
                 featureProject.getIntermediateFile(
-                        "feature-split/declaration/feature/release/feature-split.json");
+                        "feature-split", "declaration", "feature", "release", "feature-split.json");
         assertThat(featureSplit.exists());
         FeatureSplitDeclaration featureSplitDeclaration =
                 FeatureSplitDeclaration.load(featureSplit);
@@ -89,7 +89,7 @@ public class FeatureTest {
         // Check the feature manifest contains only the feature data.
         File featureManifest =
                 featureProject.getIntermediateFile(
-                        "manifests/full/feature/release/AndroidManifest.xml");
+                        "manifests", "full", "feature", "release", "AndroidManifest.xml");
         assertThat(featureManifest.exists());
         assertThat(featureManifest)
                 .containsAllOf(
@@ -140,7 +140,8 @@ public class FeatureTest {
         // check the base feature declared the list of features and their associated IDs.
         GradleTestProject baseProject = sProject.getSubproject(":baseFeature");
         File idsList =
-                baseProject.getIntermediateFile("feature-split/ids/feature/debug/package_ids.json");
+                baseProject.getIntermediateFile(
+                        "feature-split", "ids", "feature", "debug", "package_ids.json");
         assertThat(idsList.exists());
         FeatureSplitPackageIds packageIds = FeatureSplitPackageIds.load(idsList);
         assertThat(packageIds).isNotNull();
@@ -149,7 +150,7 @@ public class FeatureTest {
         // Check that the base feature manifest contains the expected content.
         File baseFeatureManifest =
                 baseProject.getIntermediateFile(
-                        "manifests/full/feature/release/AndroidManifest.xml");
+                        "manifests", "full", "feature", "release", "AndroidManifest.xml");
         assertThat(baseFeatureManifest.exists());
         assertThat(baseFeatureManifest)
                 .containsAllOf(
@@ -168,7 +169,7 @@ public class FeatureTest {
         try (ZipFileSubject baseFeatureResources =
                 assertThatZip(
                         baseProject.getIntermediateFile(
-                                "res/feature/debug/resources-debugFeature.ap_"))) {
+                                "res", "feature", "debug", "resources-debugFeature.ap_"))) {
             baseFeatureResources.exists();
             baseFeatureResources.contains("AndroidManifest.xml");
             baseFeatureResources.contains("resources.arsc");

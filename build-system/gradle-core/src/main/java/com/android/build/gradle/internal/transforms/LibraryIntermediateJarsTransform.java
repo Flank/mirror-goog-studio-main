@@ -57,6 +57,7 @@ import java.util.regex.Pattern;
 public class LibraryIntermediateJarsTransform extends LibraryBaseTransform {
 
     private static final Pattern CLASS_PATTERN = Pattern.compile(".*\\.class$");
+    private static final Pattern KOTLIN_PATTERN = Pattern.compile("^META-INF/.*\\.kotlin_module$");
     @NonNull
     private final File resJarLocation;
 
@@ -163,8 +164,12 @@ public class LibraryIntermediateJarsTransform extends LibraryBaseTransform {
         FileUtils.deleteIfExists(mainClassLocation);
         FileUtils.mkdirs(mainClassLocation.getParentFile());
 
-        final ZipEntryFilter filter = archivePath -> CLASS_PATTERN.matcher(archivePath).matches() &&
-                checkEntry(excludePatterns, archivePath);
+        // include both the classes and kotlin modules here.
+        final ZipEntryFilter filter =
+                archivePath ->
+                        (CLASS_PATTERN.matcher(archivePath).matches()
+                                        || KOTLIN_PATTERN.matcher(archivePath).matches())
+                                && checkEntry(excludePatterns, archivePath);
         TypedefRemover typedefRemover =
                 typedefRecipe != null ? new TypedefRemover().setTypedefFile(typedefRecipe) : null;
 
@@ -176,6 +181,9 @@ public class LibraryIntermediateJarsTransform extends LibraryBaseTransform {
         FileUtils.deleteIfExists(resJarLocation);
         FileUtils.mkdirs(resJarLocation.getParentFile());
 
+        // Only remove the classes files here. Because the main class jar (above) is only consumed
+        // as a jar of classes, we need to include the kotlin files here as well so that
+        // the file find their way in the APK.
         final ZipEntryFilter filter = archivePath -> !CLASS_PATTERN.matcher(archivePath).matches();
 
         handleJarOutput(resJarInputs, resJarLocation, filter, null);
