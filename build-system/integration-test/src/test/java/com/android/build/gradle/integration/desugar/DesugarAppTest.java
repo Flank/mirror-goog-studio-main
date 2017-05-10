@@ -287,6 +287,19 @@ public class DesugarAppTest {
         }
     }
 
+    @Test
+    public void testFailureIfOldDxAndMinSdk24Plus() throws IOException, InterruptedException {
+        enableDesugar();
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "android.dexOptions.dexInProcess false\n"
+                        + "android.defaultConfig.minSdkVersion 24");
+        GradleBuildResult result =
+                project.executor().expectFailure().withUseDexArchive(false).run("assembleDebug");
+        assertThat(result.getFailureMessage()).contains("not supported when dexing out of process");
+    }
+
     @NonNull
     private List<String> createLibToDesugarAndGetClasses() throws IOException {
         class Utility {

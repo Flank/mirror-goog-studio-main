@@ -2039,7 +2039,7 @@ public abstract class TaskManager {
                 dexingMode.getMinSdkVersion(), "minSdkVersion must be set for dexing mode");
 
         // Support API 24+ features
-        if (!projectOptions.get(BooleanOption.ENABLE_DEX_ARCHIVE)) {
+        if (!usingIncrementalDexing(variantScope)) {
             // variantScope.getMinSdkForDx() may be null here and it is intended (see
             // DexByteCodeConverter#dexOutOfProcess)
             ApiVersion minSdkForDx = variantScope.getMinSdkForDx();
@@ -2057,7 +2057,7 @@ public abstract class TaskManager {
             // If ProGuard will be used, we'll end up with a "fat" jar anyway. If we're using the
             // new dexing pipeline, we'll use the new MainDexListTransform below, so there's no need
             // for merging all classes into a single jar.
-            if (!proguardInPipeline && !projectOptions.get(BooleanOption.ENABLE_DEX_ARCHIVE)) {
+            if (!proguardInPipeline && !usingIncrementalDexing(variantScope)) {
                 // Create a transform to jar the inputs into a single jar. Merge the classes only,
                 // no need to package the resources since they are not used during the computation.
                 JarMergingTransform jarMergingTransform =
@@ -2071,7 +2071,7 @@ public abstract class TaskManager {
             // create the transform that's going to take the code and the proguard keep list
             // from above and compute the main class list.
             Transform multiDexTransform;
-            if (projectOptions.get(BooleanOption.ENABLE_DEX_ARCHIVE)) {
+            if (usingIncrementalDexing(variantScope)) {
                 multiDexTransform = new MainDexListTransform(
                         variantScope,
                         extension.getDexOptions());
@@ -2086,8 +2086,7 @@ public abstract class TaskManager {
         }
 
 
-        if (projectOptions.get(BooleanOption.ENABLE_DEX_ARCHIVE)
-                && variantScope.getVariantConfiguration().getBuildType().isDebuggable()) {
+        if (usingIncrementalDexing(variantScope)) {
             createNewDexTasks(tasks, variantScope, multiDexClassListTask.orElse(null), dexingMode);
         } else {
             createDexTasks(tasks, variantScope, multiDexClassListTask.orElse(null), dexingMode);
@@ -2206,6 +2205,11 @@ public abstract class TaskManager {
                     t.optionalDependsOn(tasks, multiDexClassListTask);
                     variantScope.addColdSwapBuildTask(t);
                 });
+    }
+
+    private boolean usingIncrementalDexing(@NonNull VariantScope variantScope) {
+        return projectOptions.get(BooleanOption.ENABLE_DEX_ARCHIVE)
+                && variantScope.getVariantConfiguration().getBuildType().isDebuggable();
     }
 
     @Nullable
