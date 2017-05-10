@@ -34,7 +34,6 @@ public class SeparateTestWithDependenciesTest {
     @ClassRule
     public static GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("separateTestModuleWithDependencies")
-            .withDependencyChecker(false)  // TODO: Fix for test plugin.
             .create()
 
     @BeforeClass
@@ -46,13 +45,19 @@ public class SeparateTestWithDependenciesTest {
         project.execute("clean", "assemble")
         Apk apk = project.getSubproject('app').getApk("debug")
         assertThatApk(apk).containsClass("Lcom/android/tests/jarDep/JarDependencyUtil;")
+
+        apk = project.getSubproject('app').getApk("minified")
+        assertThatApk(apk).doesNotContainClass("Lcom/android/tests/jarDep/JarDependencyUtil;")
     }
 
 
     @Test
     void "check test app does not contain any minified application's dependent classes"() {
-        project.execute("clean", "assemble")
+        project.execute("clean", ":test:assemble")
         Apk apk = project.getSubproject('test').getApk("debug")
+        assertThatApk(apk).doesNotContainClass("Lcom/android/tests/jarDep/JarDependencyUtil;")
+
+        apk = project.getSubproject('test').getApk("minified")
         assertThatApk(apk).doesNotContainClass("Lcom/android/tests/jarDep/JarDependencyUtil;")
     }
 }

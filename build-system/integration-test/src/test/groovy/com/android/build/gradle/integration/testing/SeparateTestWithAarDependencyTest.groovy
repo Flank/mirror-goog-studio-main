@@ -52,7 +52,6 @@ public class SeparateTestWithAarDependencyTest {
     @ClassRule
     static public GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("separateTestModule")
-            .withDependencyChecker(false)  // TODO: Fix for test plugin.
             .create()
 
     static ModelContainer<AndroidProject> models

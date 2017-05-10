@@ -18,13 +18,12 @@ package com.android.build.gradle.internal;
 
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.APK;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.APK_MAPPING;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.MANIFEST_METADATA;
 
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidConfig;
+import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.CodeShrinker;
 import com.android.build.gradle.internal.scope.GlobalScope;
@@ -33,6 +32,7 @@ import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
 import com.android.build.gradle.internal.test.TestApplicationTestData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.options.ProjectOptions;
+import com.android.build.gradle.tasks.CheckTestedAppObfuscation;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.ProcessTestManifest;
 import com.android.builder.core.AndroidBuilder;
@@ -41,6 +41,7 @@ import com.android.builder.core.VariantType;
 import com.android.builder.profile.Recorder;
 import com.android.builder.testing.ConnectedDeviceProvider;
 import com.android.manifmerger.ManifestMerger2;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
@@ -56,7 +57,6 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
  */
 public class TestApplicationTaskManager extends ApplicationTaskManager {
 
-    private FileCollection mTestTargetMapping = null;
     private FileCollection mTargetManifestConfiguration = null;
 
     public TestApplicationTaskManager(
@@ -154,7 +154,7 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
 
     @Override
     protected boolean isTestedAppObfuscated(@NonNull VariantScope variantScope) {
-        return getTestTargetMapping(variantScope) != null;
+        return variantScope.getCodeShrinker() == CodeShrinker.PROGUARD;
     }
 
     @Override
@@ -165,34 +165,16 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
                     taskFactory,
                     variantScope,
                     CodeShrinker.PROGUARD,
-                    getTestTargetMapping(variantScope));
-        }
-    }
-
-    /** Returns the mapping configuration of the tested app, if it is used */
-    @Nullable
-    private FileCollection getTestTargetMapping(@NonNull VariantScope variantScope){
-        if (mTestTargetMapping == null){
-            mTestTargetMapping =
-                    variantScope
-                            .getVariantDependencies()
-                            .getCompileClasspath()
-                            .getIncoming()
-                            .artifactView(
-                                    config ->
-                                            config.attributes(
-                                                    container ->
-                                                            container.attribute(
-                                                                    ARTIFACT_TYPE,
-                                                                    APK_MAPPING.getType())))
-                            .getFiles();
-        }
-
-        if (mTestTargetMapping.getFiles().isEmpty()) {
-            return null;
-        }
-        else {
-            return mTestTargetMapping;
+                    variantScope.getArtifactFileCollection(
+                            AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
+                            AndroidArtifacts.ArtifactScope.ALL,
+                            AndroidArtifacts.ArtifactType.APK_MAPPING));
+        } else {
+            AndroidTask<CheckTestedAppObfuscation> checkObfuscation =
+                    androidTasks.create(
+                            taskFactory, new CheckTestedAppObfuscation.ConfigAction(variantScope));
+            Preconditions.checkNotNull(variantScope.getJavacTask());
+            variantScope.getJavacTask().dependsOn(taskFactory, checkObfuscation);
         }
     }
 

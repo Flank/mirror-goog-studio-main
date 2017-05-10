@@ -23,5 +23,12 @@ android {
     buildToolsVersion = rootProject.buildToolsVersion
 
     targetProjectPath ':app'
-    targetVariant 'minified'
+
+    buildTypes {
+        minified.initWith(buildTypes.debug)
+        minified {
+            minifyEnabled true
+            useProguard true
+        }
+    }
 }

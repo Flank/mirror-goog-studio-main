@@ -27,12 +27,9 @@ android {
     // create a minified build type
     buildTypes {
         minified.initWith(buildTypes.debug)
-    }
-
-    // and don't do the debug one.
-    variantFilter { variant ->
-        if (variant.buildType.name.equals('debug')) {
-            variant.setIgnore(true);
+        minified {
+            minifyEnabled true
+            useProguard true
         }
     }
 }
