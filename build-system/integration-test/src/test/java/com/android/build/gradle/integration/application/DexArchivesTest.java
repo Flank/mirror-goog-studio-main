@@ -20,6 +20,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 
 import com.android.annotations.NonNull;
 import com.android.build.api.transform.Format;
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.TransformOutputContent;
@@ -127,6 +128,14 @@ public class DexArchivesTest {
         checkIntermediaryDexArchives(getInitialDexEntries());
         MoreTruth.assertThat(project.getApk("debug").getMainDexFile().get())
                 .containsExactlyClassesIn(getInitialDexClasses());
+    }
+
+    @Test
+    public void testForReleaseVariants() throws IOException, InterruptedException {
+        TestFileUtils.appendToFile(project.getBuildFile(), "android.dexOptions.dexInProcess false");
+        GradleBuildResult result = project.executor().run("assembleRelease");
+        assertThat(result.getNotUpToDateTasks()).contains(":transformClassesWithPreDexForRelease");
+        assertThat(result.getNotUpToDateTasks()).contains(":transformDexWithDexForRelease");
     }
 
     private void checkIntermediaryDexArchives(@NonNull Collection<String> dexEntryNames) {
