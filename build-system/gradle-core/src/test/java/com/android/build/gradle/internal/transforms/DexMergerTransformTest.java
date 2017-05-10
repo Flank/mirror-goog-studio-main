@@ -291,7 +291,7 @@ public class DexMergerTransformTest {
         DexArchiveBuilder builder =
                 new DexArchiveBuilder(
                         new DexArchiveBuilderConfig(
-                                4, new DxContext(System.out, System.err), true, 0));
+                                new DxContext(System.out, System.err), true, 0));
 
         try (ClassFileInput input = ClassFileInputs.fromPath(classesInput, p -> true);
                 DexArchive dexArchive = DexArchives.fromInput(dexArchivePath)) {

@@ -86,8 +86,6 @@ class DexArchiveBuilderTransformCallable implements Callable<Void> {
     private static final LoggerWrapper logger =
             LoggerWrapper.getLogger(DexArchiveBuilderTransformCallable.class);
 
-    private static final int NUM_THREADS = PerformanceUtils.getNumThreadsForDexArchives();
-
     @NonNull private final Path rootPath;
     @NonNull private final Predicate<Path> toProcess;
     @NonNull private final Predicate<Path> toRemove;
@@ -230,7 +228,6 @@ class DexArchiveBuilderTransformCallable implements Callable<Void> {
                                 processOutput.getStandardOutput(), processOutput.getErrorOutput());
                 DexArchiveBuilderConfig config =
                         new DexArchiveBuilderConfig(
-                                NUM_THREADS,
                                 dxContext,
                                 optimizedDex,
                                 minSdkVersion);

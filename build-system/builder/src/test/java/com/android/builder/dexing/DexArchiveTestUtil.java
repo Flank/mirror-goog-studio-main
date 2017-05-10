@@ -39,7 +39,6 @@ public final class DexArchiveTestUtil {
 
     public static final String PACKAGE = "test";
 
-    private static final int NUM_THREADS = 4;
     private static DxContext dxContext = new DxContext(System.out, System.err);
 
     /** Converts all class files in the input path the to the dex archive. */
@@ -55,7 +54,7 @@ public final class DexArchiveTestUtil {
         try (DexArchive dexArchive = DexArchives.fromInput(dexArchiveOutput)) {
             ClassFileInput inputs = ClassFileInputs.fromPath(classesInput, e -> true);
             DexArchiveBuilderConfig config =
-                    new DexArchiveBuilderConfig(NUM_THREADS, dxContext, true, minSdkVersion);
+                    new DexArchiveBuilderConfig(dxContext, true, minSdkVersion);
 
             DexArchiveBuilder dexArchiveBuilder = new DexArchiveBuilder(config);
             dexArchiveBuilder.convert(inputs, dexArchive);

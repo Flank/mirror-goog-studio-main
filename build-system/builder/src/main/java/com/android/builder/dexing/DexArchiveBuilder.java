@@ -20,13 +20,16 @@ import com.android.annotations.NonNull;
 import com.android.dx.command.dexer.DxContext;
 import com.android.ide.common.blame.parser.DexParser;
 import com.android.ide.common.internal.WaitableExecutor;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Throwables;
 import com.google.common.base.Verify;
+import com.google.common.collect.Maps;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Converts specified class file inputs to a {@link DexArchive}. To do so, configure the builder in
@@ -59,7 +62,7 @@ public class DexArchiveBuilder {
      */
     public DexArchiveBuilder(@NonNull DexArchiveBuilderConfig config) {
         this.config = config;
-        this.executor = WaitableExecutor.useNewFixedSizeThreadPool(config.getNumThreads());
+        this.executor = WaitableExecutor.useGlobalSharedThreadPool();
     }
 
     /**
@@ -71,9 +74,19 @@ public class DexArchiveBuilder {
             throws IOException {
         ensureOutputArchiveExists(output);
 
-        for (ClassFileEntry entry : input) {
-            processClassFile(entry.relativePath, entry.classFileContent);
+        Map<Integer, Map<Path, byte[]>> bucketizedJobs = Maps.newHashMap();
+        int i = 0;
+        for (ClassFileEntry classFileEntry : input.allEntries()) {
+            int bucketId = (i++) % executor.getParallelism();
+
+            Map<Path, byte[]> jobs = bucketizedJobs.getOrDefault(bucketId, Maps.newHashMap());
+            jobs.put(classFileEntry.relativePath, classFileEntry.classFileContent);
+            bucketizedJobs.put(bucketId, jobs);
         }
+        for (Map<Path, byte[]> job : bucketizedJobs.values()) {
+            processClassFile(job);
+        }
+
         try {
             processOutputs(output);
         } catch (IOException e) {
@@ -85,31 +98,33 @@ public class DexArchiveBuilder {
             if (e instanceof InterruptedException) {
                 Thread.currentThread().interrupt();
             }
-            throw new DexBuilderException("Unable to convert input to dex archive.", e.getCause());
+            throw new DexBuilderException(
+                    "Unable to convert input to dex archive.",
+                    MoreObjects.firstNonNull(e.getCause(), e));
         }
     }
 
     /** Waits for all inputs to be processed, and writes the outputs to the dex archive. */
     private void processOutputs(@NonNull DexArchive output)
             throws IOException, InterruptedException {
-        List<DexArchiveEntry> entries = executor.waitForTasksWithQuickFail(true);
-        for (DexArchiveEntry dexEntry : entries) {
-            Verify.verifyNotNull(dexEntry);
-            try (ByteArrayInputStream dexContent =
-                    new ByteArrayInputStream(dexEntry.getDexFileContent())) {
-                Path dexFilePath =
-                        ClassFileEntry.withDexExtension(dexEntry.getRelativePathInArchive());
-                output.addFile(dexFilePath, dexContent);
+        List<List<DexArchiveEntry>> entries = executor.waitForTasksWithQuickFail(true);
+        for (List<DexArchiveEntry> chunk : entries) {
+            for (DexArchiveEntry dexEntry : chunk) {
+                Verify.verifyNotNull(dexEntry);
+                try (ByteArrayInputStream dexContent =
+                        new ByteArrayInputStream(dexEntry.getDexFileContent())) {
+                    Path dexFilePath =
+                            ClassFileEntry.withDexExtension(dexEntry.getRelativePathInArchive());
+                    output.addFile(dexFilePath, dexContent);
+                }
             }
         }
     }
 
-    private void processClassFile(@NonNull Path relativePath, @NonNull byte[] fileBytes)
-            throws IOException {
+    private void processClassFile(@NonNull Map<Path, byte[]> pathToContent) throws IOException {
         DexArchiveBuilderCallable converterCallable =
                 new DexArchiveBuilderCallable(
-                        relativePath,
-                        fileBytes,
+                        pathToContent,
                         config.getDxContext(),
                         config.getDexOptions(),
                         config.getCfOptions());

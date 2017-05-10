@@ -19,6 +19,7 @@ package com.android.builder.dexing;
 import com.android.annotations.NonNull;
 import java.io.Closeable;
 import java.nio.file.Path;
+import java.util.List;
 
 /**
  * This represents input containing .class files. It is used as an input for the dexing phase.All
@@ -33,4 +34,7 @@ public interface ClassFileInput extends Closeable, Iterable<ClassFileEntry> {
     /** Base path of this input. It can be a directory, or a path to a jar file. */
     @NonNull
     Path getRootPath();
+
+    @NonNull
+    List<ClassFileEntry> allEntries();
 }
