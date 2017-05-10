@@ -34,9 +34,6 @@ import android.view.accessibility.AccessibilityEvent;
 // TODO Have the Window profiler class send events back to Android studio.
 public final class WindowProfilerCallback implements Window.Callback {
 
-    private static final String BACK_UNICODE = "\u25c0";
-    private static final String VOLUME_DOWN_UNICODE = "\u2b07";
-    private static final String VOLUME_UP_UNICODE = "\u2b06";
     private final Window.Callback myRedirectCallback;
 
     public WindowProfilerCallback(Window.Callback redirectCallback) {
@@ -49,21 +46,7 @@ public final class WindowProfilerCallback implements Window.Callback {
 
     @Override
     public boolean dispatchKeyEvent(KeyEvent keyEvent) {
-        String keyString = "";
-        switch (keyEvent.getKeyCode()) {
-            case KeyEvent.KEYCODE_BACK:
-                keyString = BACK_UNICODE;
-                break;
-            case KeyEvent.KEYCODE_VOLUME_DOWN:
-                keyString = VOLUME_DOWN_UNICODE;
-                break;
-            case KeyEvent.KEYCODE_VOLUME_UP:
-                keyString = VOLUME_UP_UNICODE;
-                break;
-            default:
-                keyString = KeyEvent.keyCodeToString(keyEvent.getKeyCode());
-                break;
-        }
+        String keyString = KeyEvent.keyCodeToString(keyEvent.getKeyCode());
         sendKeyEvent(keyString, keyEvent.getDownTime());
         if (myRedirectCallback != null) {
             return myRedirectCallback.dispatchKeyEvent(keyEvent);
