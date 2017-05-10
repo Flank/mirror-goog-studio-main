@@ -199,6 +199,9 @@ public class AaptPackageConfig implements Cloneable {
     /** Dependent feature APK files, including the base feature. */
     @NonNull private ImmutableSet<File> mDependentFeatures;
 
+    /** Whether we should list resource files into one file. */
+    private boolean mListResourceFiles;
+
     /** Creates a new instance of the the package configuration with default values. */
     private AaptPackageConfig() {
         mLibraries = ImmutableList.of();
@@ -461,6 +464,10 @@ public class AaptPackageConfig implements Cloneable {
     @NonNull
     public Set<File> getDependentFeatures() {
         return mDependentFeatures;
+    }
+
+    public boolean isListResourceFiles() {
+        return mListResourceFiles;
     }
 
     /** Builder used to create a {@link AaptPackageConfig}. */
@@ -818,6 +825,19 @@ public class AaptPackageConfig implements Cloneable {
         @NonNull
         public Builder setDependentFeatures(@NonNull Collection<File> dependentFeatures) {
             mConfig.mDependentFeatures = ImmutableSet.copyOf(dependentFeatures);
+            return this;
+        }
+
+
+        /**
+         * Sets whether we should list the resource files into one file.
+         *
+         * @param listResourceFiles whether we should list the resource files into one file.
+         * @return {@code this}
+         */
+        @NonNull
+        public Builder setListResourceFiles(boolean listResourceFiles) {
+            mConfig.mListResourceFiles = listResourceFiles;
             return this;
         }
     }

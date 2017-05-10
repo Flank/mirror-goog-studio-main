@@ -542,7 +542,8 @@ public class ProcessAndroidResources extends IncrementalTask {
                                 .setSplits(getSplits(splitList))
                                 .setPreferredDensity(preferredDensity)
                                 .setPackageId(packageId)
-                                .setDependentFeatures(featurePackagesBuilder.build());
+                                .setDependentFeatures(featurePackagesBuilder.build())
+                                .setListResourceFiles(aaptGen == AaptGeneration.AAPT_V2);
 
                 builder.processResources(aapt, config,
                         generateCode && getEnforceUniquePackageName());
