@@ -10,7 +10,13 @@ dependencies {
     compileOnly libs.guava
 }
 
+project.ext.pomName = 'Device provider library.'
+project.ext.pomDesc = 'Device provider library.'
+
+apply from: "$rootDir/buildSrc/base/publish.gradle"
+
 group = 'com.android.tools.internal.build.test'
 archivesBaseName = 'devicepool'
 version = '0.1'
+
 
