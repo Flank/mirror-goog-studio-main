@@ -496,8 +496,8 @@ public class TestFile {
 
     public static class ManifestTestFile extends LintDetectorTest.TestFile {
         public String pkg = "test.pkg";
-        public int minSdk;
-        public int targetSdk;
+        public String minSdk = "";
+        public String targetSdk = "";
         public String[] permissions;
 
         public ManifestTestFile() {
@@ -505,12 +505,22 @@ public class TestFile {
         }
 
         public ManifestTestFile minSdk(int min) {
-            minSdk = min;
+            minSdk = String.valueOf(min);
+            return this;
+        }
+
+        public ManifestTestFile minSdk(@NonNull String codename) {
+            minSdk = codename;
             return this;
         }
 
         public ManifestTestFile targetSdk(int target) {
-            targetSdk = target;
+            targetSdk = String.valueOf(target);
+            return this;
+        }
+
+        public ManifestTestFile targetSdk(@NonNull String codename) {
+            targetSdk = codename;
             return this;
         }
 
@@ -534,16 +544,13 @@ public class TestFile {
                 sb.append("    package=\"").append(pkg).append("\"\n");
                 sb.append("    android:versionCode=\"1\"\n");
                 sb.append("    android:versionName=\"1.0\" >\n");
-                if (minSdk > 0 || targetSdk > 0) {
+                if (!minSdk.isEmpty() || !targetSdk.isEmpty()) {
                     sb.append("    <uses-sdk ");
-                    if (minSdk > 0) {
-                        sb.append(" android:minSdkVersion=\"").append(Integer.toString(minSdk))
-                                .append("\"");
+                    if (!minSdk.isEmpty()) {
+                        sb.append(" android:minSdkVersion=\"").append(minSdk).append("\"");
                     }
-                    if (targetSdk > 0) {
-                        sb.append(" android:targetSdkVersion=\"")
-                                .append(Integer.toString(targetSdk))
-                                .append("\"");
+                    if (!targetSdk.isEmpty()) {
+                        sb.append(" android:targetSdkVersion=\"").append(targetSdk).append("\"");
                     }
                     sb.append(" />\n");
                 }

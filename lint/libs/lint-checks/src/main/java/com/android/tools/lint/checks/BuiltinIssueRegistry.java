@@ -115,6 +115,8 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(FieldGetterDetector.ISSUE);
         issues.add(FirebaseAnalyticsDetector.INVALID_NAME);
         issues.add(FirebaseMessagingDetector.MISSING_TOKEN_REFRESH);
+        issues.add(FontDetector.FONT_VALIDATION_ERROR);
+        issues.add(FontDetector.FONT_VALIDATION_WARNING);
         issues.add(FullBackupContentDetector.ISSUE);
         issues.add(FragmentDetector.ISSUE);
         issues.add(GetSignaturesDetector.ISSUE);

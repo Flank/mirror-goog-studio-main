@@ -33,7 +33,6 @@ import static com.android.SdkConstants.NEW_ID_PREFIX;
 import static com.android.SdkConstants.STYLE_RESOURCE_PREFIX;
 import static com.android.SdkConstants.TAG_COLOR;
 import static com.android.SdkConstants.TAG_FONT;
-import static com.android.SdkConstants.TAG_FONT_FAMILY;
 import static com.android.SdkConstants.TAG_ITEM;
 import static com.android.SdkConstants.TAG_STYLE;
 import static com.android.SdkConstants.VIEW_INCLUDE;
@@ -149,8 +148,7 @@ public class ResourceCycleDetector extends ResourceXmlDetector {
 
     @Override
     public Collection<String> getApplicableElements() {
-        return Arrays.asList(
-                VIEW_INCLUDE, TAG_STYLE, TAG_COLOR, TAG_ITEM, TAG_FONT_FAMILY, TAG_FONT);
+        return Arrays.asList(VIEW_INCLUDE, TAG_STYLE, TAG_COLOR, TAG_ITEM, TAG_FONT);
     }
 
     private void recordReference(@NonNull ResourceType type, @NonNull String from,
