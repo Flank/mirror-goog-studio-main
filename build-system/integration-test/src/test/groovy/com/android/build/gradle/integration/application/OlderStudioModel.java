@@ -28,8 +28,8 @@ import org.junit.rules.ExpectedException;
 /** Tests for incremental dexing using dex archives. */
 public class OlderStudioModel {
 
-    public static final String THIS_GRADLE_PLUGIN_REQUIRES_STUDIO_2_4_MINIMUM =
-            "This Gradle plugin requires Studio 2.4 minimum";
+    public static final String THIS_GRADLE_PLUGIN_REQUIRES_STUDIO_3_0_MINIMUM =
+            "This Gradle plugin requires Studio 3.0 minimum";
 
     @Rule
     public GradleTestProject project =
@@ -50,7 +50,7 @@ public class OlderStudioModel {
                         return item instanceof RuntimeException
                                 && ((RuntimeException) item)
                                         .getMessage()
-                                        .equals(THIS_GRADLE_PLUGIN_REQUIRES_STUDIO_2_4_MINIMUM);
+                                        .equals(THIS_GRADLE_PLUGIN_REQUIRES_STUDIO_3_0_MINIMUM);
                     }
 
                     @Override
@@ -62,7 +62,7 @@ public class OlderStudioModel {
                         }
 
                         final String message = ((RuntimeException) item).getMessage();
-                        if (!message.equals(THIS_GRADLE_PLUGIN_REQUIRES_STUDIO_2_4_MINIMUM)) {
+                        if (!message.equals(THIS_GRADLE_PLUGIN_REQUIRES_STUDIO_3_0_MINIMUM)) {
                             mismatchDescription.appendText("msg was ").appendValue(message);
                         }
                     }
@@ -71,7 +71,7 @@ public class OlderStudioModel {
                     public void describeTo(Description description) {
                         description.appendValue(
                                 "RuntimeException("
-                                        + THIS_GRADLE_PLUGIN_REQUIRES_STUDIO_2_4_MINIMUM
+                                        + THIS_GRADLE_PLUGIN_REQUIRES_STUDIO_3_0_MINIMUM
                                         + ")");
                     }
                 });

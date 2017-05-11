@@ -241,8 +241,7 @@ public class ModelBuilder implements ToolingModelBuilder {
         }
 
         if (modelLevel < AndroidProject.MODEL_LEVEL_3_VARIANT_OUTPUT_POST_BUILD) {
-            // FIXME move to 3.0
-            throw new RuntimeException("This Gradle plugin requires Studio 2.4 minimum");
+            throw new RuntimeException("This Gradle plugin requires Studio 3.0 minimum");
         }
 
         modelWithFullDependency = AndroidGradleOptions.buildModelWithFullDependencies(project);
