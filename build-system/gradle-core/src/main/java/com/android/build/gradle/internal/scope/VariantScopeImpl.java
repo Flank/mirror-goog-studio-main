@@ -45,7 +45,7 @@ import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.coverage.JacocoReportTask;
-import com.android.build.gradle.internal.dependency.ArtifactCollectionWithTestedArtifact;
+import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact;
 import com.android.build.gradle.internal.dependency.SubtractingArtifactCollection;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.BuildType;
@@ -744,7 +744,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             @Nullable Object generatedBytecodeKey) {
         ArtifactCollection mainCollection = getArtifactCollection(configType, ALL, classesType);
 
-        return new ArtifactCollectionWithTestedArtifact(
+        return ArtifactCollectionWithExtraArtifact.makeExtraCollection(
                 mainCollection,
                 getVariantData().getGeneratedBytecode(generatedBytecodeKey),
                 getProject().getPath());
@@ -831,7 +831,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                     configType,
                     scope,
                     artifactType,
-                    FileCollection::plus,
+                    (mainCollection, testedCollection, unused) ->
+                            mainCollection.plus(testedCollection),
                     (collection, artifactView1) -> collection.minus(artifactView1.getFiles()));
         }
 
@@ -852,9 +853,12 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                     configType,
                     scope,
                     artifactType,
-                    (artifactResults, collection) ->
-                            new ArtifactCollectionWithTestedArtifact(
-                                    artifactResults, collection, getProject().getPath()),
+                    (artifactResults, collection, variantName) ->
+                            ArtifactCollectionWithExtraArtifact.makeExtraCollectionForTest(
+                                    artifactResults,
+                                    collection,
+                                    getProject().getPath(),
+                                    variantName),
                     (artifactResults, artifactView1) ->
                             new SubtractingArtifactCollection(
                                     artifactResults, artifactView1.getArtifacts()));
@@ -1766,6 +1770,11 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         return this;
     }
 
+    @FunctionalInterface
+    public interface TriFunction<T, U, V, R> {
+        R apply(T t, U u, V v);
+    }
+
     /**
      * adds or removes the tested artifact and dependencies to ensure the test build is correct.
      *
@@ -1783,7 +1792,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             @NonNull final ConsumedConfigType configType,
             @NonNull final ArtifactScope artifactScope,
             @NonNull final ArtifactType artifactType,
-            @NonNull final BiFunction<T, FileCollection, T> plusFunction,
+            @NonNull final TriFunction<T, FileCollection, String, T> plusFunction,
             @NonNull final BiFunction<T, ArtifactView, T> minusFunction) {
         // this only handles Android Test, not unit tests.
         VariantType variantType = getVariantConfiguration().getType();
@@ -1818,7 +1827,9 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                         if (testedScope.hasOutput(taskOutputType)) {
                             result =
                                     plusFunction.apply(
-                                            result, testedScope.getOutput(taskOutputType));
+                                            result,
+                                            testedScope.getOutput(taskOutputType),
+                                            testedScope.getFullVariantName());
                         }
                     }
                 }
