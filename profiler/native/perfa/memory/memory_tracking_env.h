@@ -31,6 +31,7 @@
 #include "utils/clock.h"
 #include "utils/log.h"
 #include "utils/producer_consumer_queue.h"
+#include "utils/trie.h"
 
 using profiler::Clock;
 using profiler::proto::BatchAllocationSample;
@@ -118,6 +119,7 @@ class MemoryTrackingEnv {
 
   std::mutex class_data_mutex_;
   ProducerConsumerQueue<AllocationEvent> event_queue_;
+  Trie<long> stack_trie_;
   ClassTagMap class_tag_map_;
   ClassGlobalRefs class_global_refs_;
   ClassData class_data_;
