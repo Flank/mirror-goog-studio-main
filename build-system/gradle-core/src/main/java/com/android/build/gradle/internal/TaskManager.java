@@ -30,6 +30,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.PROGUARD_RULES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.ANNOTATION_PROCESSOR_LIST;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.APK_MAPPING;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.JAVAC;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.MERGED_ASSETS;
@@ -96,6 +97,7 @@ import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
 import com.android.build.gradle.internal.tasks.InstallVariantTask;
 import com.android.build.gradle.internal.tasks.LintCompile;
 import com.android.build.gradle.internal.tasks.MockableAndroidJarTask;
+import com.android.build.gradle.internal.tasks.ProcessAnalyticsTask;
 import com.android.build.gradle.internal.tasks.SigningReportTask;
 import com.android.build.gradle.internal.tasks.SourceSetsTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
@@ -1334,14 +1336,30 @@ public abstract class TaskManager {
     public AndroidTask<? extends JavaCompile> createJavacTask(
             @NonNull final TaskFactory tasks,
             @NonNull final VariantScope scope) {
-        AndroidTask<JavaPreCompileTask> preCompileTask = androidTasks.create(tasks,
-                new JavaPreCompileTask.ConfigAction(scope));
+        File processorListFile =
+                FileUtils.join(
+                        globalScope.getIntermediatesDir(),
+                        "javaPrecompile",
+                        scope.getDirName(),
+                        "annotationProcessors.json");
+
+        AndroidTask<JavaPreCompileTask> preCompileTask =
+                androidTasks.create(
+                        tasks, new JavaPreCompileTask.ConfigAction(scope, processorListFile));
         preCompileTask.dependsOn(tasks, scope.getPreBuildTask());
+        FileCollection processorListFileCollection =
+                scope.addTaskOutput(
+                        ANNOTATION_PROCESSOR_LIST, processorListFile, preCompileTask.getName());
+
+        AndroidTask<ProcessAnalyticsTask> processAnalyticsTask =
+                androidTasks.create(
+                        tasks,
+                        new ProcessAnalyticsTask.ConfigAction(scope, processorListFileCollection));
 
         final AndroidTask<? extends JavaCompile> javacTask =
                 androidTasks.create(tasks, new JavaCompileConfigAction(scope));
         scope.setJavacTask(javacTask);
-        javacTask.dependsOn(tasks, preCompileTask);
+        javacTask.dependsOn(tasks, preCompileTask, processAnalyticsTask);
 
         setupCompileTaskDependencies(tasks, scope, javacTask);
 

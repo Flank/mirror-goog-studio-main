@@ -29,14 +29,14 @@ import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.BaseTask;
 import com.android.build.gradle.tasks.factory.AbstractCompilesUtil;
-import com.android.builder.profile.ProcessProfileWriter;
 import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.google.wireless.android.sdk.stats.AnnotationProcessorInfo;
-import com.google.wireless.android.sdk.stats.GradleBuildVariant;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
@@ -44,13 +44,13 @@ import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.CacheableTask;
+import org.gradle.api.tasks.Classpath;
+import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
 
-/**
- * Tasks to perform necessary action before a JavaCompile.
- */
+/** Tasks to perform necessary action before a JavaCompile. */
+@CacheableTask
 public class JavaPreCompileTask extends BaseTask {
 
     @VisibleForTesting static final String DATA_BINDING_SPEC = "android.databinding.DataBinding";
@@ -58,7 +58,7 @@ public class JavaPreCompileTask extends BaseTask {
     private static final String PROCESSOR_SERVICES =
             "META-INF/services/javax.annotation.processing.Processor";
 
-    private File annotationProcessorOutputFolder;
+    private File processorListFile;
 
     private FileCollection annotationProcessorConfiguration;
 
@@ -66,47 +66,39 @@ public class JavaPreCompileTask extends BaseTask {
 
     private AnnotationProcessorOptions annotationProcessorOptions;
 
-    private VariantScope scope;
+    private boolean dataBindingEnabled;
 
     @VisibleForTesting
-    public void init(
-            @NonNull File annotationProcessorOutputFolder,
+    void init(
+            @NonNull File processorListFile,
             @NonNull FileCollection annotationProcessorConfiguration,
             @NonNull FileCollection compileClasspaths,
             @NonNull AnnotationProcessorOptions annotationProcessorOptions,
-            @NonNull VariantScope variantScope) {
-        this.annotationProcessorOutputFolder = annotationProcessorOutputFolder;
+            boolean dataBindingEnabled) {
+        this.processorListFile = processorListFile;
         this.annotationProcessorConfiguration = annotationProcessorConfiguration;
         this.compileClasspaths = compileClasspaths;
         this.annotationProcessorOptions = annotationProcessorOptions;
-        this.scope = variantScope;
+        this.dataBindingEnabled = dataBindingEnabled;
     }
 
-    @Input
-    public File getAnnotationProcessorOutputFolder() {
-        return annotationProcessorOutputFolder;
+    @OutputFile
+    public File getProcessorListFile() {
+        return processorListFile;
     }
 
-    @InputFiles
+    @Classpath
     public FileCollection getAnnotationProcessorConfiguration() {
         return annotationProcessorConfiguration;
     }
 
-    @InputFiles
+    @Classpath
     public FileCollection getCompileClasspaths() {
         return compileClasspaths;
     }
 
-    @VisibleForTesting
-    public VariantScope getScope() {
-        return scope;
-    }
-
     @TaskAction
     public void preCompile() throws IOException {
-        // Create directory for output of annotation processor.
-        FileUtils.mkdirs(annotationProcessorOutputFolder);
-
         List<String> processors = Lists.newArrayList();
         collectImplicitProcessors(processors);
         boolean grandfathered = includingCompileClasspath() || hasOldAptPlugin();
@@ -123,18 +115,14 @@ public class JavaPreCompileTask extends BaseTask {
         classNames.addAll(annotationProcessorOptions.getClassNames());
 
         // Add a generic reference to data binding, if present.
-        if (getScope().getGlobalScope().getExtension().getDataBinding().isEnabled()) {
+        if (dataBindingEnabled) {
             classNames.add(DATA_BINDING_SPEC);
         }
 
-        String projectPath = getScope().getGlobalScope().getProject().getPath();
-        String variantName = getScope().getFullVariantName();
-        GradleBuildVariant.Builder variant =
-                ProcessProfileWriter.getOrCreateVariant(projectPath, variantName);
-        for (String processorName : classNames) {
-            AnnotationProcessorInfo.Builder builder = AnnotationProcessorInfo.newBuilder();
-            builder.setSpec(processorName);
-            variant.addAnnotationProcessors(builder);
+        FileUtils.deleteIfExists(processorListFile);
+        Gson gson = new GsonBuilder().create();
+        try (FileWriter writer = new FileWriter(processorListFile)) {
+            gson.toJson(classNames, writer);
         }
     }
 
@@ -149,8 +137,9 @@ public class JavaPreCompileTask extends BaseTask {
                     processors.add(file.getName());
                 }
             } else {
-                try {
-                    JarEntry entry = new JarFile(file).getJarEntry(PROCESSOR_SERVICES);
+                try (JarFile jarFile = new JarFile(file)) {
+                    JarEntry entry = jarFile.getJarEntry(PROCESSOR_SERVICES);
+                    //noinspection VariableNotUsedInsideIf
                     if (entry != null) {
                         processors.add(file.getName());
                     }
@@ -170,7 +159,7 @@ public class JavaPreCompileTask extends BaseTask {
         return getProject().getPlugins().hasPlugin(AbstractCompilesUtil.ANDROID_APT_PLUGIN_NAME);
     }
 
-    private void throwException(List<String> processors) throws RuntimeException {
+    private static void throwException(List<String> processors) throws RuntimeException {
         throw new RuntimeException(
                 "Annotation processors must now be declared explicitly.  The following "
                         + "dependencies in the compile classpath are found to contain "
@@ -189,9 +178,11 @@ public class JavaPreCompileTask extends BaseTask {
     public static class ConfigAction implements TaskConfigAction<JavaPreCompileTask> {
 
         private final VariantScope scope;
+        private final File processorListFile;
 
-        public ConfigAction(VariantScope scope) {
+        public ConfigAction(VariantScope scope, File processorListFile) {
             this.scope = scope;
+            this.processorListFile = processorListFile;
         }
 
         @NonNull
@@ -208,16 +199,15 @@ public class JavaPreCompileTask extends BaseTask {
 
         @Override
         public void execute(@NonNull JavaPreCompileTask task) {
-            task.scope = this.scope;
-            task.setVariantName(scope.getFullVariantName());
-            task.annotationProcessorOutputFolder = scope.getAnnotationProcessorOutputDir();
-            task.annotationProcessorOptions =
+            task.init(
+                    processorListFile,
+                    scope.getArtifactFileCollection(ANNOTATION_PROCESSOR, ALL, JAR),
+                    scope.getJavaClasspath(COMPILE_CLASSPATH, CLASSES),
                     scope.getVariantConfiguration()
                             .getJavaCompileOptions()
-                            .getAnnotationProcessorOptions();
-            task.annotationProcessorConfiguration =
-                    scope.getArtifactFileCollection(ANNOTATION_PROCESSOR, ALL, JAR);
-            task.compileClasspaths = scope.getJavaClasspath(COMPILE_CLASSPATH, CLASSES);
+                            .getAnnotationProcessorOptions(),
+                    false);
+            task.setVariantName(scope.getFullVariantName());
         }
     }
 }

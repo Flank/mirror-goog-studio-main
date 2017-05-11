@@ -17,30 +17,20 @@
 package com.android.build.gradle.tasks;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
-import static org.mockito.Mockito.when;
 
-import com.android.build.gradle.AndroidConfig;
-import com.android.build.gradle.api.JavaCompileOptions;
 import com.android.build.gradle.internal.dsl.AnnotationProcessorOptions;
-import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.builder.model.DataBindingOptions;
-import com.android.builder.profile.ProcessProfileWriter;
-import com.android.builder.profile.ProcessProfileWriterFactory;
 import com.google.common.base.Charsets;
-import com.google.common.collect.Sets;
 import com.google.common.io.Files;
-import com.google.wireless.android.sdk.stats.AnnotationProcessorInfo;
-import com.google.wireless.android.sdk.stats.GradleBuildVariant;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import org.gradle.api.Project;
@@ -52,8 +42,6 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
 public class JavaPreCompileTaskTest {
     @ClassRule public static TemporaryFolder temporaryFolder = new TemporaryFolder();
@@ -67,7 +55,7 @@ public class JavaPreCompileTaskTest {
 
     private static final String dependencyWithProcessorJar = "dependencyWithProcessor.jar";
 
-    private static File out;
+    private static File outputFile;
     private static File nonJarFile;
     private static File jar;
     private static File jarWithAnnotationProcessor;
@@ -78,21 +66,8 @@ public class JavaPreCompileTaskTest {
     Configuration processorConfiguration;
     private JavaPreCompileTask task;
 
-    @Mock GlobalScope globalScope;
-
-    @Mock VariantScope variantScope;
-
-    @Mock AndroidConfig extension;
-
-    @Mock DataBindingOptions dataBindingOptions;
-
-    @Mock JavaCompileOptions compileOptions;
-
-    private Set<String> processorNames;
-
     @BeforeClass
     public static void classSetUp() throws IOException {
-        out = temporaryFolder.newFolder();
         directory = temporaryFolder.newFolder();
         directoryWithAnnotationProcessor = temporaryFolder.newFolder();
         File processorMetaInfFile = new File(directoryWithAnnotationProcessor, processorMetaInf);
@@ -118,31 +93,21 @@ public class JavaPreCompileTaskTest {
     @Before
     public void setUp() throws IOException {
         File testDir = temporaryFolder.newFolder();
+        outputFile = temporaryFolder.newFile();
         project = ProjectBuilder.builder().withProjectDir(testDir).build();
         task = project.getTasks().create("test", JavaPreCompileTask.class);
         processorConfiguration = project.getConfigurations().create("annotationProcessor");
-        processorNames = Sets.newHashSet();
-        ProcessProfileWriterFactory.initializeForTests();
-
-        MockitoAnnotations.initMocks(this);
-        when(variantScope.getGlobalScope()).thenReturn(globalScope);
-        when(globalScope.getExtension()).thenReturn(extension);
-        when(globalScope.getProject()).thenReturn(project);
-        when(extension.getDataBinding()).thenReturn(dataBindingOptions);
-        when(variantScope.getFullVariantName()).thenReturn(debugVariantName);
-        when(compileOptions.getAnnotationProcessorOptions())
-                .thenReturn(new AnnotationProcessorOptions());
     }
 
     @Test
     public void checkSuccessForNormalJar() throws IOException {
         FileCollection compileClasspath = project.files(jar, nonJarFile, directory);
         task.init(
-                out,
+                outputFile,
                 processorConfiguration,
                 compileClasspath,
                 new AnnotationProcessorOptions(),
-                variantScope);
+                false);
         task.preCompile();
     }
 
@@ -156,11 +121,11 @@ public class JavaPreCompileTaskTest {
         FileCollection compileClasspath =
                 project.files(jarWithAnnotationProcessor, directoryWithAnnotationProcessor);
         task.init(
-                out,
+                outputFile,
                 processorConfiguration,
                 compileClasspath,
                 new AnnotationProcessorOptions(),
-                variantScope);
+                false);
         task.preCompile();
     }
 
@@ -169,11 +134,11 @@ public class JavaPreCompileTaskTest {
         FileCollection compileClasspath =
                 project.files(jarWithAnnotationProcessor, directoryWithAnnotationProcessor);
         task.init(
-                out,
+                outputFile,
                 processorConfiguration,
                 compileClasspath,
                 new AnnotationProcessorOptions(),
-                variantScope);
+                false);
         try {
             task.preCompile();
             fail("Expected to fail");
@@ -188,7 +153,7 @@ public class JavaPreCompileTaskTest {
         FileCollection compileClasspath = project.files(jarWithAnnotationProcessor);
         AnnotationProcessorOptions options = new AnnotationProcessorOptions();
         options.setIncludeCompileClasspath(false);
-        task.init(out, processorConfiguration, compileClasspath, options, variantScope);
+        task.init(outputFile, processorConfiguration, compileClasspath, options, false);
         task.preCompile();
     }
 
@@ -197,92 +162,66 @@ public class JavaPreCompileTaskTest {
         FileCollection compileClasspath = project.files(jarWithAnnotationProcessor);
         AnnotationProcessorOptions options = new AnnotationProcessorOptions();
         options.setIncludeCompileClasspath(true);
-        task.init(out, processorConfiguration, compileClasspath, options, variantScope);
+        task.init(outputFile, processorConfiguration, compileClasspath, options, false);
         task.preCompile();
     }
 
     @Test
     public void checkClasspathProcessorAddedForMetrics() throws IOException {
-        when(dataBindingOptions.isEnabled()).thenReturn(false);
         FileCollection compileClasspath = project.files(jarWithAnnotationProcessor);
         AnnotationProcessorOptions options = new AnnotationProcessorOptions();
         options.setIncludeCompileClasspath(true); // Disable exception.
-        task.init(out, processorConfiguration, compileClasspath, options, variantScope);
+        task.init(outputFile, processorConfiguration, compileClasspath, options, false);
         task.preCompile();
 
-        GradleBuildVariant.Builder variant =
-                ProcessProfileWriter.getOrCreateVariant(project.getPath(), debugVariantName);
-        assertProcessorNames(variant, dependencyWithProcessorJar);
+        assertProcessorNames(dependencyWithProcessorJar);
     }
 
     @Test
     public void checkExplicitProcessorAddedForMetrics() throws IOException {
-        when(dataBindingOptions.isEnabled()).thenReturn(false);
         FileCollection compileClasspath = project.files();
         AnnotationProcessorOptions options = new AnnotationProcessorOptions();
         options.getClassNames().add(testProcessorName);
-        task.init(out, processorConfiguration, compileClasspath, options, variantScope);
+        task.init(outputFile, processorConfiguration, compileClasspath, options, false);
         task.preCompile();
 
-        GradleBuildVariant.Builder variant =
-                ProcessProfileWriter.getOrCreateVariant(project.getPath(), debugVariantName);
-        assertProcessorNames(variant, testProcessorName);
+        assertProcessorNames(testProcessorName);
     }
 
     @Test
     public void checkDataBindingAddedForMetrics() throws IOException {
-        when(dataBindingOptions.isEnabled()).thenReturn(true);
-
         FileCollection compileClasspath = project.files();
         task.init(
-                out,
+                outputFile,
                 processorConfiguration,
                 compileClasspath,
                 new AnnotationProcessorOptions(),
-                variantScope);
+                true);
         task.preCompile();
 
-        GradleBuildVariant.Builder variant =
-                ProcessProfileWriter.getOrCreateVariant(project.getPath(), debugVariantName);
-        assertProcessorNames(variant, JavaPreCompileTask.DATA_BINDING_SPEC);
+        assertProcessorNames(JavaPreCompileTask.DATA_BINDING_SPEC);
     }
 
     @Test
     public void checkAllProcessorsAddedForMetrics() throws IOException {
-        when(dataBindingOptions.isEnabled()).thenReturn(true);
-
         FileCollection compileClasspath = project.files(jarWithAnnotationProcessor);
         AnnotationProcessorOptions options = new AnnotationProcessorOptions();
         options.setIncludeCompileClasspath(true); // Disable exception.
         options.getClassNames().add(testProcessorName);
 
-        task.init(out, processorConfiguration, compileClasspath, options, variantScope);
+        task.init(outputFile, processorConfiguration, compileClasspath, options, true);
         task.preCompile();
 
-        GradleBuildVariant.Builder variant =
-                ProcessProfileWriter.getOrCreateVariant(project.getPath(), debugVariantName);
         assertProcessorNames(
-                variant,
                 testProcessorName,
                 JavaPreCompileTask.DATA_BINDING_SPEC,
                 dependencyWithProcessorJar);
     }
 
-    private void assertProcessorNames(GradleBuildVariant.Builder variant, String... names)
-            throws IOException {
-        assertNotNull(variant);
-
-        List<AnnotationProcessorInfo> procs = variant.getAnnotationProcessorsList();
-        assertNotNull(procs);
-        assertThat(procs).isNotEmpty();
-
-        List<String> procNames =
-                procs.stream().map(info -> info.getSpec()).collect(Collectors.toList());
-        List<String> expectedNames = Arrays.asList(names);
-
-        procNames.sort(String::compareTo);
-        expectedNames.sort(String::compareTo);
-
-        assertThat(procNames).isEqualTo(expectedNames);
+    private static void assertProcessorNames(String... names) throws IOException {
+        Gson gson = new GsonBuilder().create();
+        FileReader reader = new FileReader(outputFile);
+        List<String> processors = gson.fromJson(reader, new TypeToken<List<String>>() {}.getType());
+        assertThat(processors).containsAllIn(Arrays.asList(names));
     }
 }

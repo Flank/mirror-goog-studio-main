@@ -19,13 +19,11 @@ package com.android.build.gradle.integration.application;
 import static com.android.testutils.truth.MoreTruth.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.SdkConstants;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.tasks.annotations.Extractor;
 import com.android.testutils.apk.Zip;
 import java.io.File;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -152,8 +150,6 @@ public class ExtractAnnotationTest {
         GradleBuildResult result = project.executor().run("assembleDebug");
 
         assertThat(result.getNotUpToDateTasks())
-                .containsExactly(
-                        ":checkDebugManifest",
-                        ":javaPreCompileDebug");
+                .containsExactly(":checkDebugManifest", ":processAnalyticsDebug");
     }
 }
