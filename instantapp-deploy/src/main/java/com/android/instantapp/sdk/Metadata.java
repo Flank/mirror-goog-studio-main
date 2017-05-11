@@ -191,15 +191,15 @@ public class Metadata {
 
     public static class Device {
         // ro.product.manufacturer
-        @Nullable private final String myManufacturer;
+        @NonNull private final String myManufacturer;
         // ro.product.device
-        @Nullable private final String myAndroidDevice;
+        @NonNull private final String myAndroidDevice;
         // ro.build.version.sdk
         @NonNull private final Set<Integer> myApiLevels;
         // ro.product.name
-        @Nullable private final String myProduct;
+        @NonNull private final String myProduct;
         // ro.hardware
-        @Nullable private final String myHardware;
+        @NonNull private final String myHardware;
 
         public Device(
                 @Nullable String manufacturer,
@@ -207,11 +207,11 @@ public class Metadata {
                 @NonNull Set<Integer> apiLevels,
                 @Nullable String product,
                 @Nullable String hardware) {
-            myManufacturer = manufacturer;
-            myAndroidDevice = androidDevice;
+            myManufacturer = manufacturer == null ? "" : manufacturer;
+            myAndroidDevice = androidDevice == null ? "" : androidDevice;
             myApiLevels = apiLevels;
-            myProduct = product;
-            myHardware = hardware;
+            myProduct = product == null ? "" : product;
+            myHardware = hardware == null ? "" : hardware;
         }
 
         @Override
@@ -261,19 +261,12 @@ public class Metadata {
          * @return {@code boolean} indicating if it matches.
          */
         public boolean matches(@NonNull Device other) {
-            return (myManufacturer == null
-                            || (other.myManufacturer != null
-                                    && myManufacturer.compareTo(other.myManufacturer) == 0))
-                    && (myAndroidDevice == null
-                            || (other.myAndroidDevice != null
-                                    && myAndroidDevice.compareTo(other.myAndroidDevice) == 0))
+            return (myManufacturer.isEmpty() || myManufacturer.compareTo(other.myManufacturer) == 0)
+                    && (myAndroidDevice.isEmpty()
+                            || myAndroidDevice.compareTo(other.myAndroidDevice) == 0)
                     && (myApiLevels.isEmpty() || myApiLevels.containsAll(other.myApiLevels))
-                    && (myProduct == null
-                            || (other.myProduct != null
-                                    && myProduct.compareTo(other.myProduct) == 0))
-                    && (myHardware == null
-                            || (other.myHardware != null
-                                    && myHardware.compareTo(other.myHardware) == 0));
+                    && (myProduct.isEmpty() || myProduct.compareTo(other.myProduct) == 0)
+                    && (myHardware.isEmpty() || myHardware.compareTo(other.myHardware) == 0);
         }
     }
 

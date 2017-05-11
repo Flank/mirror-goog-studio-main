@@ -25,6 +25,7 @@ import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.TimeoutException;
 import com.android.instantapp.sdk.InstantAppSdkException;
 import com.android.instantapp.sdk.ManifestParser;
+import com.android.instantapp.sdk.ManifestProtoParser;
 import com.android.instantapp.sdk.Metadata;
 import com.android.sdklib.AndroidVersion;
 import com.google.common.base.Splitter;
@@ -57,11 +58,17 @@ public class ProvisionRunner {
                     ProvisionException.ErrorType.INVALID_SDK,
                     "Path " + instantAppSdk.getAbsolutePath() + " is not valid.");
         }
+        Metadata metadata;
         try {
-            myMetadata = new ManifestParser(instantAppSdk).getMetadata();
+            metadata = new ManifestProtoParser(instantAppSdk).getMetadata();
         } catch (InstantAppSdkException e) {
-            throw new ProvisionException(ProvisionException.ErrorType.INVALID_SDK, e);
+            try {
+                metadata = new ManifestParser(instantAppSdk).getMetadata();
+            } catch (InstantAppSdkException e2) {
+                throw new ProvisionException(ProvisionException.ErrorType.INVALID_SDK, e);
+            }
         }
+        myMetadata = metadata;
         myListener = listener;
         myProvisionCache = new HashMap<>();
     }

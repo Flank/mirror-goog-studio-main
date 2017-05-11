@@ -1,0 +1,64 @@
+apply plugin: 'java'
+apply plugin: 'org.anarres.jarjar'
+apply plugin: 'com.google.protobuf'
+
+repositories {
+    mavenCentral()
+}
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath 'org.anarres.jarjar:jarjar-gradle:+'
+        classpath 'com.google.protobuf:protobuf-gradle-plugin:+'
+    }
+}
+
+archivesBaseName = 'aia-manifest-proto'
+version = '1.0'
+
+ext {
+    protobufVersion = '3.3.0'
+}
+
+configurations {
+    packaging
+}
+
+dependencies {
+    packaging("com.google.protobuf:protobuf-java:$protobufVersion") {
+        transitive false
+    }
+    compile "com.google.protobuf:protobuf-java:$protobufVersion"
+}
+
+sourceSets {
+    main {
+        proto {
+            srcDir 'src'
+        }
+    }
+}
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:$protobufVersion"
+    }
+}
+
+jarjar.repackage('jarjarLibs') {
+    destinationName = archivesBaseName + '-' + version + '-jarjar.jar'
+    from configurations.packaging
+    from files(sourceSets.main.output.classesDir)
+    dependsOn sourceSets.main.output
+    classRename 'com.google.protobuf.**', 'com.google.protobuf3jarjar.@1'
+}
+
+task copy(type: Copy, dependsOn: jarjarLibs) {
+    from           jarjarLibs.outputs
+    destinationDir file("$rootDir/../lib/")
+}
+build.dependsOn copy
