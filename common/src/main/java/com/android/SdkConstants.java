@@ -1120,6 +1120,7 @@ public final class SdkConstants {
     public static final String CONSTRAINT_BARRIER_RIGHT = "right";
     public static final String CONSTRAINT_BARRIER_START = "start";
     public static final String CONSTRAINT_BARRIER_END = "end";
+    public static final String CONSTRAINT_REFERENCED_IDS = "constraint_referenced_ids";
 
     // Tags: Drawables
     public static final String TAG_BITMAP = "bitmap"; //$NON-NLS-1$
