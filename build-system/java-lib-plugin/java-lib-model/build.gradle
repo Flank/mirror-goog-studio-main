@@ -20,7 +20,6 @@ project.ext.apiVersion = rootProject.ext.apiVersion ?: 0
 sourceCompatibility = JavaVersion.VERSION_1_6
 targetCompatibility = JavaVersion.VERSION_1_6
 
-apply from: "$rootDir/buildSrc/base/publish.gradle"
 apply from: "$rootDir/buildSrc/base/javadoc.gradle"
 
 def generated = new File("${project.buildDir}/generated/resources")
