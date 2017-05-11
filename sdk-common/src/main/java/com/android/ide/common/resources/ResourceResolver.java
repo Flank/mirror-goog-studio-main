@@ -437,7 +437,11 @@ public class ResourceResolver extends RenderResources {
 
     private SampleDataManager mSampleDataManager = new SampleDataManager();
 
-    private ResourceValue findSampleDataValue(@NonNull String name) {
+    private ResourceValue findSampleDataValue(@NonNull ResourceUrl url) {
+        // TODO: Remove this once repositories have namespace support
+        // Resource repositories do not support namespaces yet. Because of this
+        // we currently hack the namespace support as part of the item name.
+        String name = (url.namespace == null ? "" : url.namespace + ":") + url.name;
         return Optional.ofNullable(mProjectResources.get(ResourceType.SAMPLE_DATA))
                 .map(t -> t.get(name))
                 .map(ResourceValue::getValue)
@@ -445,7 +449,8 @@ public class ResourceResolver extends RenderResources {
                 .map(
                         lineContent ->
                                 new ResourceValue(
-                                        ResourceUrl.create(null, ResourceType.SAMPLE_DATA, name),
+                                        ResourceUrl.create(
+                                                url.namespace, ResourceType.SAMPLE_DATA, name),
                                         lineContent))
                 .orElse(null);
     }
@@ -463,7 +468,7 @@ public class ResourceResolver extends RenderResources {
             return null;
         } else if (url.type == ResourceType.SAMPLE_DATA) {
             // Sample data resources are only available within the tools namespace
-            return findSampleDataValue(url.name);
+            return findSampleDataValue(url);
         }
 
         // map of ResourceValue for the given type
