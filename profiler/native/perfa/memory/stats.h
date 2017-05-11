@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include <atomic>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 #include "utils/log.h"
@@ -30,6 +31,7 @@ enum MemTag {
   kClassTagMap,
   kClassGlobalRefs,
   kClassData,
+  kMethodIds,
   kMemTagCount,
 };
 
@@ -89,23 +91,30 @@ class TimingStats {
   enum TimingTag {
     kAllocate,
     kFree,
+    kCallstack,
+    kBulkCallstack,
     kTimingTagCount,
   };
 
-  explicit TimingStats() : time_(kTimingTagCount), count_(kTimingTagCount) {}
+  explicit TimingStats()
+      : time_(kTimingTagCount),
+        max_(kTimingTagCount),
+        count_(kTimingTagCount) {}
 
   inline void Track(TimingTag tag, long time) {
 #ifndef NDEBUG
     time_[tag] += time;
     count_[tag]++;
+    atomic_update_max(&(max_[tag]), time);
 #endif
   }
 
   void Print(TimingTag tag) {
     long total = time_[tag].load();
+    long max = max_[tag].load();
     int count = count_[tag].load();
-    Log::V(">> %s: Total=%ld, Count=%d, Average=%ld", ToString(tag), total,
-           count, total / count);
+    Log::V(">> %s: Total=%ld, Count=%d, Max=%ld, Average=%ld", ToString(tag),
+           total, count, max, total / count);
   }
 
  private:
@@ -115,13 +124,18 @@ class TimingStats {
         return "Allocate";
       case kFree:
         return "Free";
+      case kCallstack:
+        return "Callstack";
+      case kBulkCallstack:
+        return "BulkCallstack";
       default:
         return "Unknown";
     }
   }
 
-  std::vector<std::atomic_long> time_;
-  std::vector<std::atomic_int> count_;
+  std::vector<std::atomic<long>> time_;
+  std::vector<std::atomic<long>> max_;
+  std::vector<std::atomic<int>> count_;
 };
 
 namespace tracking {
@@ -130,6 +144,11 @@ template <class Key, class T, MemTag TAG, class Hash = std::hash<Key>,
 using unordered_map =
     std::unordered_map<Key, T, Hash, Pred,
                        TrackingAllocator<std::pair<const Key, T>, TAG>>;
+
+template <class Key, MemTag TAG, class Hash = std::hash<Key>,
+          class KeyEqual = std::equal_to<Key>>
+using unordered_set =
+    std::unordered_set<Key, Hash, KeyEqual, TrackingAllocator<Key, TAG>>;
 
 template <class T, MemTag TAG>
 using vector = std::vector<T, TrackingAllocator<T, TAG>>;

@@ -83,7 +83,8 @@ void EnqueueGcStats(int64_t start_time, int64_t end_time) {
       });
 }
 
-void EnqueueAllocationEvents(const proto::BatchAllocationSample& request) {
+void EnqueueAllocationEvents(proto::BatchAllocationSample& request) {
+  request.set_process_id(getpid());
   Agent::Instance().background_queue()->EnqueueTask([request]() {
     auto mem_stub = Agent::Instance().memory_component()->service_stub();
     ClientContext context;

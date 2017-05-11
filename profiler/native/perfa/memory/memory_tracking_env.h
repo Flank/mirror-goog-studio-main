@@ -22,6 +22,7 @@
 #include <atomic>
 #include <mutex>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 #include "proto/internal_memory.grpc.pb.h"
@@ -32,6 +33,7 @@
 #include "utils/producer_consumer_queue.h"
 
 using profiler::Clock;
+using profiler::proto::BatchAllocationSample;
 using profiler::proto::MemoryControlRequest;
 using profiler::proto::AllocationEvent;
 
@@ -41,10 +43,12 @@ namespace profiler {
 using ClassTagMap = tracking::unordered_map<std::string, long, kClassTagMap>;
 using ClassGlobalRefs = tracking::vector<jobject, kClassGlobalRefs>;
 using ClassData = tracking::vector<AllocationEvent::Klass, kClassData>;
+using MethodIdSet = tracking::unordered_set<long, kMethodIds>;
 #else
 using ClassTagMap = std::unordered_map<std::string, long>;
 using ClassGlobalRefs = std::vector<jobject>;
 using ClassData = std::vector<AllocationEvent::Klass>;
+using MethodIdSet = std::unordered_set<long>;
 #endif
 
 class MemoryTrackingEnv {
@@ -90,7 +94,14 @@ class MemoryTrackingEnv {
   // JVMTI Callback for garbage collection end events.
   static void JNICALL GCFinishCallback(jvmtiEnv* jvmti);
 
+  // Thread to send allocation data to perfd.
   static void JNICALL AllocDataWorker(jvmtiEnv* jvmti, JNIEnv* jni, void* arg);
+
+  // Helper methods for retrieving methods names corresponding to the method_ids
+  // and inserting them into the BatchAllocationSample.
+  static void SetSampleMethods(MemoryTrackingEnv* env, jvmtiEnv* jvmti,
+                               JNIEnv* jni, BatchAllocationSample& sample,
+                               const std::vector<long>& method_ids);
 
   SteadyClock clock_;
   TimingStats timing_stats_;
@@ -110,6 +121,7 @@ class MemoryTrackingEnv {
   ClassTagMap class_tag_map_;
   ClassGlobalRefs class_global_refs_;
   ClassData class_data_;
+  MethodIdSet known_method_ids_;
 };
 
 }  // namespace profiler

@@ -18,6 +18,7 @@
 #include <cassert>
 #include <cstring>
 #include <deque>
+#include <vector>
 
 #include "agent/agent.h"
 #include "agent/support/memory_stats_logger.h"
@@ -48,6 +49,9 @@ constexpr long kDataTransferIntervalNs = Clock::ms_to_ns(500);
 // Investigate whether smaller batches are good enough, or if we
 // should tweak the limit for profilers.
 constexpr int kDataBatchSize = 2000;
+
+// The max depth of callstacks to query per allocation.
+constexpr int kMaxStackDepth = 100;
 }
 
 namespace profiler {
@@ -65,6 +69,8 @@ const char* MemTagToString(MemTag tag) {
       return "ClassGlobalRefs";
     case kClassData:
       return "ClassData";
+    case kMethodIds:
+      return "MethodIds";
     default:
       return "Unknown";
   }
@@ -161,7 +167,6 @@ void MemoryTrackingEnv::StartLiveTracking(int64_t timestamp) {
   error = jvmti_->GetLoadedClasses(&class_count, &classes);
   CheckJvmtiError(jvmti_, error);
   BatchAllocationSample class_sample;
-  class_sample.set_process_id(app_id_);
   for (int i = 0; i < class_count; ++i) {
     ScopedLocalRef<jclass> klass(jni, classes[i]);
 
@@ -171,7 +176,7 @@ void MemoryTrackingEnv::StartLiveTracking(int64_t timestamp) {
     event->set_timestamp(current_capture_time_ns_);
     if (class_sample.events_size() >= kDataBatchSize) {
       profiler::EnqueueAllocationEvents(class_sample);
-      class_sample.clear_events();
+      class_sample = BatchAllocationSample();
     }
   }
   if (class_sample.events_size() > 0) {
@@ -182,7 +187,6 @@ void MemoryTrackingEnv::StartLiveTracking(int64_t timestamp) {
 
   // Tag all objects already allocated on the heap.
   BatchAllocationSample snapshot_sample;
-  snapshot_sample.set_process_id(app_id_);
   jvmtiHeapCallbacks heap_callbacks;
   memset(&heap_callbacks, 0, sizeof(heap_callbacks));
   heap_callbacks.heap_iteration_callback = &HeapIterationCallback;
@@ -190,7 +194,6 @@ void MemoryTrackingEnv::StartLiveTracking(int64_t timestamp) {
       jvmti_->IterateThroughHeap(0, nullptr, &heap_callbacks, &snapshot_sample);
   CheckJvmtiError(jvmti_, error);
   if (snapshot_sample.events_size() > 0) {
-    snapshot_sample.set_timestamp(clock_.GetCurrentTime());
     profiler::EnqueueAllocationEvents(snapshot_sample);
   }
   Log::V("Live objects on heap: %ld", current_object_tag_ - kObjectStartTag);
@@ -384,6 +387,16 @@ void MemoryTrackingEnv::ObjectAllocCallback(jvmtiEnv* jvmti, JNIEnv* jni,
     alloc_data->set_tag(tag);
     alloc_data->set_size(size);
     alloc_data->set_class_tag(itr->second);
+    // Collect stack frames
+    jvmtiFrameInfo frames[kMaxStackDepth];
+    jint count = 0;
+    error = jvmti->GetStackTrace(thread, 0, kMaxStackDepth, frames, &count);
+    CheckJvmtiError(jvmti, error);
+    for (int i = 0; i < count; i++) {
+      long method_id = reinterpret_cast<long>(frames[i].method);
+      alloc_data->add_method_ids(method_id);
+    }
+
     event.set_capture_time(g_env->current_capture_time_ns_);
     event.set_timestamp(g_env->clock_.GetCurrentTime());
     g_env->event_queue_.Push(event);
@@ -424,23 +437,41 @@ void MemoryTrackingEnv::AllocDataWorker(jvmtiEnv* jvmti, JNIEnv* jni,
     int64_t start_time_ns = stopwatch.GetElapsed();
 
     BatchAllocationSample sample;
-    sample.set_process_id(env->app_id_);
-
     // Gather all the data currently in the queue and push to perfd.
     // TODO: investigate whether we need to set time cap for large amount of
     // data.
     std::deque<AllocationEvent> queued_data = env->event_queue_.Drain();
+    std::vector<long> method_ids_to_query;
     while (!queued_data.empty()) {
       AllocationEvent* event = sample.add_events();
       event->CopyFrom(queued_data.front());
       queued_data.pop_front();
+
+      switch (event->event_case()) {
+        case AllocationEvent::kAllocData: {
+          const AllocationEvent::Allocation alloc_data = event->alloc_data();
+          for (int i = 0; i < alloc_data.method_ids_size(); i++) {
+            long id = alloc_data.method_ids(i);
+            if (env->known_method_ids_.emplace(id).second) {
+              method_ids_to_query.push_back(id);
+            }
+          }
+        } break;
+        default:
+          // Do nothing for Klass + Deallocation.
+          break;
+      }
+
       if (sample.events_size() >= kDataBatchSize) {
+        SetSampleMethods(env, jvmti, jni, sample, method_ids_to_query);
         profiler::EnqueueAllocationEvents(sample);
-        sample.clear_events();
+        sample = BatchAllocationSample();
+        method_ids_to_query.clear();
       }
     }
 
     if (sample.events_size() > 0) {
+      SetSampleMethods(env, jvmti, jni, sample, method_ids_to_query);
       profiler::EnqueueAllocationEvents(sample);
     }
 
@@ -456,6 +487,46 @@ void MemoryTrackingEnv::AllocDataWorker(jvmtiEnv* jvmti, JNIEnv* jni,
       usleep(static_cast<uint64_t>(sleep_time_us));
     }
   }
+}
+
+void MemoryTrackingEnv::SetSampleMethods(MemoryTrackingEnv* env,
+                                         jvmtiEnv* jvmti, JNIEnv* jni,
+                                         BatchAllocationSample& sample,
+                                         const std::vector<long>& method_ids) {
+  jvmtiError error;
+  Stopwatch sw;
+  {
+    for (auto id : method_ids) {
+      Stopwatch sw2;
+      {
+        jmethodID method_id = reinterpret_cast<jmethodID>(id);
+
+        char* method_name;
+        error = jvmti->GetMethodName(method_id, &method_name, nullptr, nullptr);
+        CheckJvmtiError(jvmti, error);
+
+        jclass klass;
+        error = jvmti->GetMethodDeclaringClass(method_id, &klass);
+        CheckJvmtiError(jvmti, error);
+        assert(klass != nullptr);
+
+        ScopedLocalRef<jclass> scoped_klass(jni, klass);
+        char* klass_name;
+        error =
+            jvmti->GetClassSignature(scoped_klass.get(), &klass_name, nullptr);
+
+        proto::StackMethod* method = sample.add_methods();
+        method->set_method_id(id);
+        method->set_method_name(method_name);
+        method->set_class_name(klass_name);
+
+        Deallocate(jvmti, method_name);
+        Deallocate(jvmti, klass_name);
+      }
+      env->timing_stats_.Track(TimingStats::kCallstack, sw2.GetElapsed());
+    }
+  }
+  env->timing_stats_.Track(TimingStats::kBulkCallstack, sw.GetElapsed());
 }
 
 }  // namespace profiler

@@ -338,6 +338,18 @@ message BatchAllocationSample {
   // the events list.
   int64 timestamp = 2;
   repeated AllocationEvent events = 3;
+  repeated StackMethod methods = 4;
+}
+
+// Proto format for handling O+ stack method data.
+// TODO: merge with AllocationStack? AllocationStack currently
+// uses bytes as id for an entire stack, but here we are id'ing
+// individual methods. A stack of methods will be encoded separately
+// referencing a list of method_id's.
+message StackMethod {
+  int64 method_id = 1;
+  string class_name = 2;
+  string method_name = 3;
 }
 
 // Proto format for handling O+ allocation data.
@@ -355,16 +367,19 @@ message AllocationEvent {
     int64 tag = 1;
     int64 class_tag = 2;
     int64 size = 3;
-    // Legnth for array objects. For non-arrays, set to -1.
+    // Length for array objects. For non-arrays, set to -1.
     int32 length = 4;
-    // TODO - thread, stack info.
+    // List of method ids corresponding to allocation stack frames
+    // Note - first entry is top of stack.
+    repeated int64 method_ids = 5;
+    // TODO - thread, stack frame location
 
     // Studio-side only so we can store and query data more
     // efficiently. If an allocation has been free, this field
     // would indicate the free timestamps (i.e. the timestamp
     // of the gc event that triggered the deallocation).
     // Note that free_timestamp would be set to Long.MAX_VALUE
-    int64 free_timestamp = 5;
+    int64 free_timestamp = 6;
   }
 
   message Deallocation {
@@ -374,7 +389,7 @@ message AllocationEvent {
   // associates an event with a particular tracking session.
   int64 capture_time = 1;
 
-  // If it is an allocation event, this marks the exact time 
+  // If it is an allocation event, this marks the exact time
   // when the alloc happens. If it is a deallocation event, this
   // should match the last gc end time.
   int64 timestamp = 2;
