@@ -63,16 +63,22 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import org.gradle.api.Project;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.ResolveException;
 import org.gradle.api.artifacts.component.ComponentArtifactIdentifier;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
+import org.gradle.api.artifacts.dsl.DependencyHandler;
+import org.gradle.api.artifacts.query.ArtifactResolutionQuery;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.artifacts.result.ResolvedVariantResult;
 import org.gradle.api.component.Artifact;
 import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier;
+import org.gradle.jvm.JvmLibrary;
+import org.gradle.language.base.artifact.SourcesArtifact;
+import org.gradle.language.java.artifact.JavadocArtifact;
 
 /** For creating dependency graph based on {@link ResolvedArtifactResult}. */
 public class ArtifactDependencyGraph {
@@ -283,9 +289,16 @@ public class ArtifactDependencyGraph {
             }
         }
 
+        // force download the javadoc/source artifacts
+        handleJavadoc(
+                variantScope.getGlobalScope().getProject(),
+                artifacts
+                        .stream()
+                        .map(artifactResult -> artifactResult.getId().getComponentIdentifier())
+                        .collect(Collectors.toList()));
+
         return artifacts;
     }
-
 
     /** Create a level 2 dependency graph. */
     public DependencyGraphs createLevel2DependencyGraph(
@@ -460,6 +473,21 @@ public class ArtifactDependencyGraph {
 
         // just need to register the libraries in the global libraries.
         return new SimpleDependencyGraphsImpl(nodes);
+    }
+
+    private void handleJavadoc(@NonNull Project project, List<ComponentIdentifier> artifacts) {
+
+        final DependencyHandler dependencies = project.getDependencies();
+
+        ArtifactResolutionQuery query = dependencies.createArtifactResolutionQuery();
+        query.forComponents(artifacts);
+
+        @SuppressWarnings("unchecked")
+        Class<? extends Artifact>[] artifactTypesArray =
+                (Class<? extends Artifact>[])
+                        new Class<?>[] {JavadocArtifact.class, SourcesArtifact.class};
+        query.withArtifacts(JvmLibrary.class, artifactTypesArray);
+        query.execute().getResolvedComponents();
     }
 
     private static class HashableResolvedArtifactResult implements ResolvedArtifactResult {
