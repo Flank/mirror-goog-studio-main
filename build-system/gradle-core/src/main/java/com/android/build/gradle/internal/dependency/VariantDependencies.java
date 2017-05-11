@@ -66,8 +66,6 @@ public class VariantDependencies {
     public static final String CONFIG_NAME_ANNOTATION_PROCESSOR = "annotationProcessor";
     public static final String CONFIG_NAME_S_WEAR_APP = "%sWearApp";
     public static final String CONFIG_NAME_S_ANNOTATION_PROCESSOR = "%sAnnotationProcessor";
-    public static final String CONFIG_NAME_JACK_PLUGIN = "jackPlugin";
-    public static final String CONFIG_NAME_S_JACK_PLUGIN = "%sJackPlugin";
 
     public static final String CONFIG_NAME_API = "api";
     public static final String CONFIG_NAME_S_API = "%sApi";
@@ -124,7 +122,6 @@ public class VariantDependencies {
     @NonNull private final Configuration runtimeClasspath;
     @NonNull private final Configuration annotationProcessorConfiguration;
     @NonNull private final Map<AndroidTypeAttr, PublishedConfigurations> publishedConfigurations;
-    @NonNull private final Configuration jackPluginConfiguration;
     @Nullable private final Configuration wearAppConfiguration;
     @Nullable private final Configuration metadataValuesConfiguration;
 
@@ -157,7 +154,6 @@ public class VariantDependencies {
         private final Set<Configuration> apiClasspaths = Sets.newHashSet();
         private final Set<Configuration> runtimeClasspaths = Sets.newHashSet();
         private final Set<Configuration> annotationConfigs = Sets.newHashSet();
-        private final Set<Configuration> jackPluginConfigs = Sets.newHashSet();
         private final Set<Configuration> wearAppConfigs = Sets.newHashSet();
 
         protected Builder(
@@ -221,7 +217,6 @@ public class VariantDependencies {
                 }
 
                 annotationConfigs.add(configs.getByName(sourceSet.getAnnotationProcessorConfigurationName()));
-                jackPluginConfigs.add(configs.getByName(sourceSet.getJackPluginConfigurationName()));
                 wearAppConfigs.add(configs.getByName(sourceSet.getWearAppConfigurationName()));
             }
 
@@ -269,15 +264,6 @@ public class VariantDependencies {
             final AttributeContainer annotationAttributes = annotationProcessor.getAttributes();
             annotationAttributes.attribute(Usage.USAGE_ATTRIBUTE, Usage.FOR_RUNTIME);
             applyVariantAttributes(annotationAttributes, buildType, consumptionFlavorMap);
-
-            Configuration jackPlugin = configurations.maybeCreate("_" + variantName + "JackPlugin");
-            jackPlugin.setVisible(false);
-            jackPlugin.setDescription("Resolved configuration for jack plugins for variant: " + variantName);
-            jackPlugin.setExtendsFrom(jackPluginConfigs);
-            jackPlugin.setCanBeConsumed(false);
-            // the jack plugin is using its dependencies for running the plugins, so we need
-            // all the runtime graph.
-            jackPlugin.getAttributes().attribute(Usage.USAGE_ATTRIBUTE, Usage.FOR_RUNTIME);
 
             final String runtimeClasspathName = variantName + "RuntimeClasspath";
             Configuration runtimeClasspath = configurations.maybeCreate(runtimeClasspathName);
@@ -426,7 +412,6 @@ public class VariantDependencies {
                     runtimeClasspath,
                     publishedConfigurations,
                     annotationProcessor,
-                    jackPlugin,
                     wearApp,
                     metadataValues);
         }
@@ -537,7 +522,6 @@ public class VariantDependencies {
             @NonNull Configuration runtimeClasspath,
             @NonNull Map<AndroidTypeAttr, PublishedConfigurations> publishedConfigurations,
             @NonNull Configuration annotationProcessorConfiguration,
-            @NonNull Configuration jackPluginConfiguration,
             @Nullable Configuration wearAppConfiguration,
             @Nullable Configuration metadataValuesConfiguration) {
         this.variantName = variantName;
@@ -546,7 +530,6 @@ public class VariantDependencies {
         this.runtimeClasspath = runtimeClasspath;
         this.publishedConfigurations = ImmutableMap.copyOf(publishedConfigurations);
         this.annotationProcessorConfiguration = annotationProcessorConfiguration;
-        this.jackPluginConfiguration = jackPluginConfiguration;
         this.wearAppConfiguration = wearAppConfiguration;
         this.metadataValuesConfiguration = metadataValuesConfiguration;
     }
@@ -587,11 +570,6 @@ public class VariantDependencies {
     @NonNull
     public Configuration getAnnotationProcessorConfiguration() {
         return annotationProcessorConfiguration;
-    }
-
-    @NonNull
-    public Configuration getJackPluginConfiguration() {
-        return jackPluginConfiguration;
     }
 
     @Nullable

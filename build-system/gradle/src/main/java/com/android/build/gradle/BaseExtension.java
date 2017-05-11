@@ -301,13 +301,6 @@ public abstract class BaseExtension implements AndroidConfig {
                                         + sourceSet.getName()
                                         + "'.");
 
-                        createConfiguration(
-                                configurations,
-                                sourceSet.getJackPluginConfigurationName(),
-                                String.format(
-                                        "Classpath for the '%s' Jack plugins.",
-                                        sourceSet.getName()));
-
                         sourceSet.setRoot(String.format("src/%s", sourceSet.getName()));
                     }
                 });

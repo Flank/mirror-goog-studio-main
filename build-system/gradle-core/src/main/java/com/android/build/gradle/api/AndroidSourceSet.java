@@ -137,10 +137,9 @@ public interface AndroidSourceSet {
     @NonNull
     String getAnnotationProcessorConfigurationName();
 
-    /**
-     * Returns the name of the Jack plugin classpath for this source set.
-     */
+    /** Returns the name of the Jack plugin classpath for this source set. */
     @NonNull
+    @Deprecated
     String getJackPluginConfigurationName();
 
     /**
