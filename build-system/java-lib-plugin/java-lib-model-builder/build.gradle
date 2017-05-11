@@ -18,4 +18,5 @@ project.ext.pomDesc = 'Gradle plugin to build Java Library modules.'
 
 project.ext.apiVersion = rootProject.ext.apiVersion ?: 0
 
+apply from: "$rootDir/buildSrc/base/publish.gradle"
 apply from: "$rootDir/buildSrc/base/javadoc.gradle"
