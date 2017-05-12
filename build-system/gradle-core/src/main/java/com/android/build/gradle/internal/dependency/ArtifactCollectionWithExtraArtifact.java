@@ -16,10 +16,10 @@
 
 package com.android.build.gradle.internal.dependency;
 
-import android.databinding.tool.util.Preconditions;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.api.TestedComponentIdentifier;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.io.File;
@@ -93,7 +93,7 @@ public class ArtifactCollectionWithExtraArtifact implements ArtifactCollection {
             @NonNull ExtraArtifactType extraArtifactType,
             @NonNull String projectPath,
             @Nullable String variantName) {
-        Preconditions.check(
+        Preconditions.checkState(
                 variantName != null || extraArtifactType != ExtraArtifactType.TEST,
                 "variant name should not be null for test extra type");
         this.parentArtifacts = parentArtifacts;
