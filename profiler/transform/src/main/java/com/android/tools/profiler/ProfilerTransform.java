@@ -49,7 +49,7 @@ public final class ProfilerTransform implements BiConsumer<InputStream, OutputSt
         ClassWriter writer = new ClassWriter(0);
         ClassVisitor visitor = writer;
         visitor = new InitializerAdapter(visitor);
-        visitor = new NetworkingAdapter(visitor);
+        visitor = new HttpURLAdapter(visitor);
         if (OKHTTP_PROFILING_ENABLED) {
             visitor = new OkHttpAdapter(visitor);
         }

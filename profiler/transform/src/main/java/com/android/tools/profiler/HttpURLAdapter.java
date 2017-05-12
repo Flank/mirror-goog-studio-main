@@ -23,12 +23,12 @@ import com.android.tools.profiler.asm.Opcodes;
 /**
  * Wraps all creations of HTTPUrlConnection's with our own version.
  */
-final class NetworkingAdapter extends ClassVisitor implements Opcodes {
+final class HttpURLAdapter extends ClassVisitor implements Opcodes {
 
     static final String URL_CLASS = "java/net/URL";
-    static final String WRAPPER_CLASS = "com/android/tools/profiler/support/network/HttpWrapper";
+    static final String WRAPPER_CLASS = "com/android/tools/profiler/support/network/httpurl/HttpURLWrapper";
 
-    NetworkingAdapter(ClassVisitor classVisitor) {
+    HttpURLAdapter(ClassVisitor classVisitor) {
         super(ASM5, classVisitor);
     }
 

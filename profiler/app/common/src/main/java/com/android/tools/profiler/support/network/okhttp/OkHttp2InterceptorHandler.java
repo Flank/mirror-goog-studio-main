@@ -14,7 +14,11 @@
  * limitations under the License.
  */
 
-package com.android.tools.profiler.support.network;
+package com.android.tools.profiler.support.network.okhttp;
+
+import com.android.tools.profiler.support.network.HttpConnectionTracker;
+import com.android.tools.profiler.support.network.HttpTracker;
+import com.android.tools.profiler.support.network.okhttp.OkHttpInterceptorHandler;
 
 import java.lang.reflect.Method;
 import java.util.Collection;
