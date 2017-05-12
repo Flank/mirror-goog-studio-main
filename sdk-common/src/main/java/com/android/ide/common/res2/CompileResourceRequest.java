@@ -25,20 +25,23 @@ public class CompileResourceRequest {
     private final File out;
     private final String folderName;
     private final boolean pseudoLocalize;
+    private final boolean pngCrunching;
 
     public CompileResourceRequest(@NonNull File in, @NonNull File out, @NonNull String folderName) {
-        this(in, out, folderName, false);
+        this(in, out, folderName, false, true);
     }
 
     public CompileResourceRequest(
             @NonNull File in,
             @NonNull File out,
             @NonNull String folderName,
-            boolean pseudoLocalize) {
+            boolean pseudoLocalize,
+            boolean pngCrunching) {
         this.in = in;
         this.out = out;
         this.folderName = folderName;
         this.pseudoLocalize = pseudoLocalize;
+        this.pngCrunching = pngCrunching;
     }
 
     public File getInput() {
@@ -55,5 +58,9 @@ public class CompileResourceRequest {
 
     public boolean isPseudoLocalize() {
         return pseudoLocalize;
+    }
+
+    public boolean isPngCrunching() {
+        return pngCrunching;
     }
 }

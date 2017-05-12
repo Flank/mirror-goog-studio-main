@@ -125,6 +125,8 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
 
     private final boolean pseudoLocalesEnabled;
 
+    private final boolean crunchPng;
+
     /**
      * Maps resource files to their compiled files. Used to compiled resources that no longer
      * exist.
@@ -147,7 +149,11 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
      * @param resourceCompiler resource compiler, i.e. AAPT
      * @param temporaryDirectory temporary directory for intermediate merged files
      * @param dataBindingExpressionRemover removes data binding expressions from layout files
-     * @param dataBindingLayoutOutputFolder original layout files passed to the data binding task
+     * @param dataBindingLayoutOutputFolder for layout files passed to the data binding task
+     * @param resourceShrinkerOutputFolder for saved uncompiled resources for the resource shrinking
+     *     transform
+     * @param pseudoLocalesEnabled generate resources for pseudo-locales (en-XA and ar-XB)
+     * @param crunchPng should we crunch PNG files
      */
     public MergedResourceWriter(
             @NonNull File rootFolder,
@@ -159,7 +165,8 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
             @Nullable SingleFileProcessor dataBindingExpressionRemover,
             @Nullable File dataBindingLayoutOutputFolder,
             @Nullable File resourceShrinkerOutputFolder,
-            boolean pseudoLocalesEnabled) {
+            boolean pseudoLocalesEnabled,
+            boolean crunchPng) {
         super(rootFolder);
         Preconditions.checkState(
                 (dataBindingExpressionRemover == null) == (dataBindingLayoutOutputFolder == null),
@@ -176,6 +183,7 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
         this.dataBindingLayoutOutputFolder = dataBindingLayoutOutputFolder;
         this.resourceShrinkerOutputFolder = resourceShrinkerOutputFolder;
         this.pseudoLocalesEnabled = pseudoLocalesEnabled;
+        this.crunchPng = crunchPng;
 
         mCompiledFileMapFile = new File(temporaryDirectory, "compile-file-map.properties");
         mCompiledFileMap = new Properties();
@@ -211,6 +219,7 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
                 null,
                 null,
                 null,
+                false,
                 false);
     }
 
@@ -303,7 +312,8 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
                                             fileToCompile,
                                             request.getOutput(),
                                             request.getFolderName(),
-                                            pseudoLocalesEnabled));
+                                            pseudoLocalesEnabled,
+                                            crunchPng));
 
                     outstandingRequests.put(result, request.getInput().getAbsolutePath());
 
@@ -548,7 +558,8 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
                                             outFile,
                                             getRootFolder(),
                                             folderName,
-                                            pseudoLocalesEnabled));
+                                            pseudoLocalesEnabled,
+                                            crunchPng));
 
                     File copyOutput = f.get();
 
