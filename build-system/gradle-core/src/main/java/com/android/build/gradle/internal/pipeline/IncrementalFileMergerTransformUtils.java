@@ -257,7 +257,7 @@ public final class IncrementalFileMergerTransformUtils {
         for (Map.Entry<File, Status> changedFile : changedFiles.entrySet()) {
             RelativeFile rf = new RelativeFile(directoryInput.getFile(), changedFile.getKey());
             FileStatus status = mapStatus(changedFile.getValue());
-            if (status != null) {
+            if (status != null && !rf.getFile().isDirectory()) {
                 builder.put(rf, status);
             }
         }

@@ -55,14 +55,10 @@ public final class MergeOutputWriters {
 
         return new MergeOutputWriter() {
 
-            /**
-             * Is the writer open?
-             */
+            /** Is the writer open? */
             private boolean isOpen = false;
 
-            /**
-             * Have we ensured that the directory has been created?
-             */
+            /** Have we ensured that the directory has been created? */
             private boolean created = false;
 
             @Override
@@ -98,15 +94,27 @@ public final class MergeOutputWriters {
                 Preconditions.checkState(isOpen, "Writer closed");
 
                 File f = toFile(path);
-                Preconditions.checkState(f.isFile(), f.getAbsolutePath() + " is not a file");
+                // it's possible that some folders only containing .class files got removed.
+                // those were never merged in so we just ignore removing a non existent folder.
+                if (!f.exists()) return;
+
+                // since we are notified of folders add/remove by the transform pipeline, handle
+                // folders and files.
+                if (f.isDirectory()) {
+                    try {
+                        FileUtils.deletePath(f);
+                    } catch (IOException e) {
+                        throw new UncheckedIOException(e);
+                    }
+                    return;
+                }
 
                 if (!f.delete()) {
                     throw new UncheckedIOException(
                             new IOException("Cannot delete file " + f.getAbsolutePath()));
                 }
 
-                for (
-                        File dir = f.getParentFile();
+                for (File dir = f.getParentFile();
                         !dir.equals(directory);
                         dir = dir.getParentFile()) {
                     String[] names = dir.list();

@@ -164,7 +164,6 @@ public class ApplicationTaskManager extends TaskManager {
 
                     // Add a task to process the java resources
                     createProcessJavaResTask(tasks, variantScope);
-                    createMergeJavaResTransform(tasks, variantScope);
                 });
 
         recorder.record(
@@ -222,7 +221,6 @@ public class ApplicationTaskManager extends TaskManager {
                 project.getPath(),
                 variantScope.getFullVariantName(),
                 () -> addCompileTask(tasks, variantScope));
-
 
         createStripNativeLibraryTask(tasks, variantScope);
 

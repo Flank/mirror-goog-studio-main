@@ -1661,7 +1661,6 @@ public abstract class TaskManager {
 
         // process java resources
         createProcessJavaResTask(tasks, variantScope);
-        createMergeJavaResTransform(tasks, variantScope);
 
         createAidlTask(tasks, variantScope);
 
@@ -1957,6 +1956,9 @@ public abstract class TaskManager {
         maybeCreateDesugarTask(tasks, variantScope, config.getMinSdkVersion(), transformManager);
 
         AndroidConfig extension = variantScope.getGlobalScope().getExtension();
+
+        // Merge Java Resources.
+        createMergeJavaResTransform(tasks, variantScope);
 
         // ----- External Transforms -----
         // apply all the external transforms.

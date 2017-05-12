@@ -292,7 +292,7 @@ public class OriginalStream extends TransformStream {
                                     Status.NOTCHANGED,
                                     contentTypes,
                                     scopes));
-                } else {
+                } else if (artifactFile.isDirectory()) {
                     directoryInputs.add(
                             new ImmutableDirectoryInput(
                                     getArtifactName(result, duplicates),
