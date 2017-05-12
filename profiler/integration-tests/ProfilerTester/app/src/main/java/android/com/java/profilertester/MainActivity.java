@@ -12,7 +12,7 @@ import android.view.MenuItem;
 
 public class MainActivity extends AppCompatActivity {
 
-    private MainActivityFragment fragment;
+    private MainActivityFragment mFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -21,21 +21,39 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        fragment = (MainActivityFragment) getSupportFragmentManager().findFragmentById(R.id.fragment);
+        mFragment = (MainActivityFragment) getSupportFragmentManager().findFragmentById(R.id.fragment);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
+        FloatingActionButton runButton = (FloatingActionButton) findViewById(R.id.run_button);
+        runButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Snackbar.make(view, "Running", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
-                fragment.testScenario();
+                mFragment.testScenario();
             }
         });
 
-        // Example of a call to a native method
-        TextView tv = (TextView) findViewById(R.id.sample_text);
-        tv.setText("Instructions");
+        FloatingActionButton previousButton = (FloatingActionButton) findViewById(R.id.previous_button);
+        previousButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (!mFragment.scenarioMoveBack()) {
+                    Snackbar.make(view, "Already on first scenario", Snackbar.LENGTH_LONG)
+                            .setAction("Action", null).show();
+                }
+            }
+        });
+
+        FloatingActionButton nextButton = (FloatingActionButton) findViewById(R.id.next_button);
+        nextButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (!mFragment.scenarioMoveForward()) {
+                    Snackbar.make(view, "Already on last scenario", Snackbar.LENGTH_LONG)
+                            .setAction("Action", null).show();
+                }
+            }
+        });
     }
 
     @Override
