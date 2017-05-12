@@ -160,7 +160,6 @@ struct String : public IndexedNode {
   IR_INDEXED_TYPE;
 
   // opaque DEX "string_data_item"
-  //
   slicer::MemView data;
 
   const char* c_str() const {
@@ -221,7 +220,6 @@ struct DebugInfo : public Node {
 
   // original debug info opcodes stream
   // (must be "relocated" when creating a new .dex image)
-  //
   slicer::MemView data;
 };
 

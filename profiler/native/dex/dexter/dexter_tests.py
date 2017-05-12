@@ -45,6 +45,7 @@ test_cases = {
   'compact_cfg'     : { 'args' : '-d --cfg=compact', 'input' : ['*.dex'] },
   'scratch_regs'    : { 'args' : '-d -x stress_scratch_regs', 'input' : ['*.dex'] },
   'regs_usage'      : { 'args' : '-x regs_histogram', 'input' : ['*.dex'] },
+  'code_coverage'   : { 'args' : '-d -x code_coverage', 'input' : ['*.dex'] },
 }
 
 # run a shell command and returns the stdout content
