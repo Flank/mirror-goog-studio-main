@@ -10,7 +10,7 @@ import org.junit.Assert.*
 
 /**
  * Instrumentation test, which will execute on an Android device.
-
+ *
  * @see [Testing documentation](http://d.android.com/tools/testing)
  */
 @RunWith(AndroidJUnit4::class)
@@ -20,11 +20,10 @@ class ExampleInstrumentedTest {
     fun useAppContext() {
         // Context of the app under test.
         val appContext = InstrumentationRegistry.getTargetContext()
-
 <#if isLibraryProject?? && isLibraryProject>
-        assertEquals("${packageName}.test", appContext.getPackageName());
+        assertEquals("${packageName}.test", appContext.packageName)
 <#else>
-        assertEquals("${packageName}", appContext.getPackageName());
+        assertEquals("${packageName}", appContext.packageName)
 </#if>
     }
 }
