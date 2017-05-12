@@ -26,7 +26,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.dependency.ArtifactCollectionWithTestedArtifact;
+import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact;
 import com.android.build.gradle.internal.dependency.ConfigurationDependencyGraphs;
 import com.android.build.gradle.internal.dependency.VariantAttr;
 import com.android.build.gradle.internal.ide.level2.AndroidLibraryImpl;
@@ -250,15 +250,15 @@ public class ArtifactDependencyGraph {
                         AndroidArtifacts.ArtifactType.EXPLODED_AAR);
 
         // because the ArtifactCollection could be a collection over a test variant which ends
-        // up being a ArtifactCollectionWithTestedArtifact, we need to get the actual list
+        // up being a ArtifactCollectionWithExtraArtifact, we need to get the actual list
         // without the tested artifact.
-        if (mainArtifactList instanceof ArtifactCollectionWithTestedArtifact) {
+        if (mainArtifactList instanceof ArtifactCollectionWithExtraArtifact) {
             mainArtifactList =
-                    ((ArtifactCollectionWithTestedArtifact) mainArtifactList).getTestArtifacts();
+                    ((ArtifactCollectionWithExtraArtifact) mainArtifactList).getParentArtifacts();
         }
-        if (externalAarList instanceof ArtifactCollectionWithTestedArtifact) {
+        if (externalAarList instanceof ArtifactCollectionWithExtraArtifact) {
             externalAarList =
-                    ((ArtifactCollectionWithTestedArtifact) externalAarList).getTestArtifacts();
+                    ((ArtifactCollectionWithExtraArtifact) externalAarList).getParentArtifacts();
         }
 
         // collect dependency resolution failures
