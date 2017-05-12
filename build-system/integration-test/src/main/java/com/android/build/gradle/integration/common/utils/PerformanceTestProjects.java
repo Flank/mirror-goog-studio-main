@@ -732,28 +732,30 @@ public class PerformanceTestProjects {
                         project.getTestDir().toPath(),
                         Integer.MAX_VALUE,
                         (path, attrs) -> path.getFileName().toString().equals("build.gradle"));
-        Pattern appPlugin = Pattern.compile("apply plugin:\\s*'com.android.application'");
-        Pattern libPlugin = Pattern.compile("apply plugin:\\s*'com.android.library'");
-        allBuildFiles.forEach(buildGradle -> {
-            String fileContent;
-            try {
-                 fileContent = new String(Files.readAllBytes(buildGradle));
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
-            if (appPlugin.matcher(fileContent).find()
-                    || libPlugin.matcher(fileContent).find()) {
-                try {
-                    TestFileUtils.appendToFile(buildGradle.toFile(),
-                            "\n"
-                                    + "android.defaultConfig.javaCompileOptions {\n"
-                                    + "annotationProcessorOptions.includeCompileClasspath = true\n"
-                                    + "}");
-                } catch (IOException e) {
-                    throw new UncheckedIOException(e);
-                }
-            }
-        });
+        Pattern appPlugin = Pattern.compile("apply plugin:\\s*['\"]com.android.application['\"]");
+        Pattern libPlugin = Pattern.compile("apply plugin:\\s*['\"]com.android.library['\"]");
+        allBuildFiles.forEach(
+                buildGradle -> {
+                    String fileContent;
+                    try {
+                        fileContent = new String(Files.readAllBytes(buildGradle));
+                    } catch (IOException e) {
+                        throw new UncheckedIOException(e);
+                    }
+                    if (appPlugin.matcher(fileContent).find()
+                            || libPlugin.matcher(fileContent).find()) {
+                        try {
+                            TestFileUtils.appendToFile(
+                                    buildGradle.toFile(),
+                                    "\n"
+                                            + "android.defaultConfig.javaCompileOptions {\n"
+                                            + "annotationProcessorOptions.includeCompileClasspath = true\n"
+                                            + "}");
+                        } catch (IOException e) {
+                            throw new UncheckedIOException(e);
+                        }
+                    }
+                });
     }
 
     public static void assertNoSyncErrors(@NonNull Map<String, AndroidProject> models) {
