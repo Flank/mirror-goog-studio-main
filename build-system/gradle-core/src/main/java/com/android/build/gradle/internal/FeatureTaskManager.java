@@ -191,7 +191,6 @@ public class FeatureTaskManager extends TaskManager {
 
                     // Add a task to process the java resources
                     createProcessJavaResTask(tasks, variantScope);
-                    createMergeJavaResTransform(tasks, variantScope);
                 });
 
         recorder.record(
@@ -248,7 +247,6 @@ public class FeatureTaskManager extends TaskManager {
                 project.getPath(),
                 variantScope.getFullVariantName(),
                 () -> addCompileTask(tasks, variantScope));
-
 
         recorder.record(
                 ExecutionType.FEATURE_TASK_MANAGER_CREATE_STRIP_NATIVE_LIBRARY_TASK,
