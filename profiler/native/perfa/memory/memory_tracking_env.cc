@@ -92,6 +92,7 @@ MemoryTrackingEnv* MemoryTrackingEnv::Instance(JavaVM* vm) {
 
 MemoryTrackingEnv::MemoryTrackingEnv(jvmtiEnv* jvmti)
     : jvmti_(jvmti),
+      is_first_tracking_(true),
       is_live_tracking_(false),
       app_id_(getpid()),
       current_capture_time_ns_(-1),
@@ -129,22 +130,38 @@ void MemoryTrackingEnv::Initialize() {
   memory_component->RegisterMemoryControlHandler(std::bind(
       &MemoryTrackingEnv::HandleControlSignal, this, std::placeholders::_1));
   memory_component->OpenControlStream();
+
+  // Start AllocWorkerThread - this is alive for the duration of the agent, but
+  // it only sends data when a tracking session is ongoing.
+  JNIEnv* jni = GetThreadLocalJNI(g_vm);
+  error =
+      jvmti_->RunAgentThread(AllocateJavaThread(jvmti_, jni), &AllocDataWorker,
+                             this, JVMTI_THREAD_MAX_PRIORITY);
+  CheckJvmtiError(jvmti_, error);
 }
 
 /**
  * Starts live allocation tracking. The initialization process involves:
  * - Hooks on requried callbacks for alloc tracking
- * - Tagging all classes that are already loaded
- * - Walk through the heap to tag all existing objects
- * - Sets up a agent thread which offload data back to perfd/studio.
+ * - Tagging all classes that are already loaded and send them to perfd
+ * - Walk through the heap to tag all existing objects and send them to perfd
+ *
+ * Note - Each unique class share the same tag across sessions, while for
+ * instance objects, they are retagged starting from |kObjectStartTag| on each
+ * restart. This is because we aren't listening to free events in between
+ * sessions, so we don't know which tag from a previous session is still alive
+ * without caching an extra set to track what the agent has tagged.
  */
 void MemoryTrackingEnv::StartLiveTracking(int64_t timestamp) {
+  std::lock_guard<std::mutex> lock(tracking_mutex_);
   if (is_live_tracking_) {
     return;
   }
   is_live_tracking_ = true;
   current_capture_time_ns_ = timestamp;
-  event_queue_.Reset();
+  total_live_count_ = 0;
+  total_free_count_ = 0;
+  current_object_tag_ = kObjectStartTag;
 
   // Called from grpc so we need to attach.
   JNIEnv* jni = GetThreadLocalJNI(g_vm);
@@ -152,39 +169,55 @@ void MemoryTrackingEnv::StartLiveTracking(int64_t timestamp) {
 
   // Trigger a GC - this is necessary to clean up any Class objects
   // that are still left behind from the ClassLoad stage, which
-  // we would not get from the GetLoadedClasses below, and we don't
-  // care about them being on the heap.
+  // we would not get from the GetLoadedClasses below, and we want to
+  // ensure they don't stay on the heap during IterateThroughHeap.
   error = jvmti_->ForceGarbageCollection();
   CheckJvmtiError(jvmti_, error);
 
-  // Enable ClassPrepare before hand, to avoid potential race
-  // between tagging all loaded classes and iterating through the heap
-  // below.
-  SetEventNotification(jvmti_, JVMTI_ENABLE, JVMTI_EVENT_CLASS_PREPARE);
+  {
+    std::lock_guard<std::mutex> lock(class_data_mutex_);
+    // If this is the first tracking session. Loop through all the already
+    // loaded classes and tag/register them.
+    if (is_first_tracking_) {
+      is_first_tracking_ = false;
 
-  // Tag all loaded classes and send to perfd.
-  jint class_count = 0;
-  jclass* classes;
-  error = jvmti_->GetLoadedClasses(&class_count, &classes);
-  CheckJvmtiError(jvmti_, error);
-  BatchAllocationSample class_sample;
-  for (int i = 0; i < class_count; ++i) {
-    ScopedLocalRef<jclass> klass(jni, classes[i]);
+      // Enable ClassPrepare beforehand which allows us to capture any
+      // subsequent class loads not returned from GetLoadedClasses.
+      // TODO: this can potentially load a class before GetLoadedClasses
+      // is called. At the moment we ignore duplicated classes, but we should
+      // handle the cases of 1) actual duplicated classes vs 2) same class
+      // loaded by multiple class loaders properly in RegisterNewClass.
+      SetEventNotification(jvmti_, JVMTI_ENABLE, JVMTI_EVENT_CLASS_PREPARE);
+      jint class_count = 0;
+      jclass* classes;
+      error = jvmti_->GetLoadedClasses(&class_count, &classes);
+      CheckJvmtiError(jvmti_, error);
+      for (int i = 0; i < class_count; ++i) {
+        ScopedLocalRef<jclass> klass(jni, classes[i]);
+        RegisterNewClass(jni, klass.get());
+      }
+      Log::V("Loaded classes: %d", class_count);
+      Deallocate(jvmti_, classes);
+    }
 
-    AllocationEvent* event = class_sample.add_events();
-    RegisterNewClass(jni, klass.get(), event);
-    event->set_capture_time(current_capture_time_ns_);
-    event->set_timestamp(current_capture_time_ns_);
-    if (class_sample.events_size() >= kDataBatchSize) {
+    // Send back class data at the beginning of each session. De-duping needs to
+    // be done by the caller as class tags remain unique throughout the app.
+    // TODO: Only send back new classes since the last tracking session.
+    BatchAllocationSample class_sample;
+    for (const AllocationEvent::Klass& klass : class_data_) {
+      AllocationEvent* event = class_sample.add_events();
+      event->mutable_class_data()->CopyFrom(klass);
+      event->set_capture_time(current_capture_time_ns_);
+      event->set_timestamp(current_capture_time_ns_);
+      if (class_sample.events_size() >= kDataBatchSize) {
+        profiler::EnqueueAllocationEvents(class_sample);
+        class_sample = BatchAllocationSample();
+      }
+    }
+    if (class_sample.events_size() > 0) {
       profiler::EnqueueAllocationEvents(class_sample);
-      class_sample = BatchAllocationSample();
     }
   }
-  if (class_sample.events_size() > 0) {
-    profiler::EnqueueAllocationEvents(class_sample);
-  }
-  Log::V("Loaded classes: %d", class_count);
-  Deallocate(jvmti_, classes);
 
   // Tag all objects already allocated on the heap.
   BatchAllocationSample snapshot_sample;
@@ -202,24 +235,27 @@ void MemoryTrackingEnv::StartLiveTracking(int64_t timestamp) {
   // Enable allocation+deallocation callbacks after initial heap walk.
   SetEventNotification(jvmti_, JVMTI_ENABLE, JVMTI_EVENT_VM_OBJECT_ALLOC);
   SetEventNotification(jvmti_, JVMTI_ENABLE, JVMTI_EVENT_OBJECT_FREE);
-
-  // Start AllocWorkerThread
-  error =
-      jvmti_->RunAgentThread(AllocateJavaThread(jvmti_, jni), &AllocDataWorker,
-                             this, JVMTI_THREAD_MAX_PRIORITY);
-  CheckJvmtiError(jvmti_, error);
 }
 
 /**
- * TODO: Stops live allocation tracking by disabling the event notification
- * and removing all global refs that we have created for jclasses.
+ * Stops live allocation tracking.
+ * - Disable allocation callbacks and clear the queued allocation events.
+ * - Class/Method/Stack data are kept around so they can be referenced across
+ *   tracking sessions.
  */
-void MemoryTrackingEnv::StopLiveTracking(int64_t timestamp) {}
+void MemoryTrackingEnv::StopLiveTracking(int64_t timestamp) {
+  std::lock_guard<std::mutex> lock(tracking_mutex_);
+  if (!is_live_tracking_) {
+    return;
+  }
+  is_live_tracking_ = false;
 
-void MemoryTrackingEnv::RegisterNewClass(JNIEnv* jni, jclass klass,
-                                         AllocationEvent* event) {
-  std::lock_guard<std::mutex> lock(class_data_mutex_);
+  SetEventNotification(jvmti_, JVMTI_DISABLE, JVMTI_EVENT_VM_OBJECT_ALLOC);
+  SetEventNotification(jvmti_, JVMTI_DISABLE, JVMTI_EVENT_OBJECT_FREE);
+  event_queue_.Reset();
+}
 
+void MemoryTrackingEnv::RegisterNewClass(JNIEnv* jni, jclass klass) {
   jvmtiError error;
 
   char* sig_mutf8;
@@ -252,15 +288,10 @@ void MemoryTrackingEnv::RegisterNewClass(JNIEnv* jni, jclass klass,
   CheckJvmtiError(jvmti_, error);
 
   // Cache the jclasses so that they will never be gc.
-  // This ensures that any jmethodID/jfieldID will never become
-  // invalid.
-  // TODO: Investigate any memory implications - presumably
-  // the number of classes won't be enormous. (e.g. < 1e6)
+  // This ensures that any jmethodID/jfieldID will never become invalid.
+  // TODO: Investigate any memory implications - presumably the number of
+  // classes won't be enormous. (e.g. < 1e6)
   class_global_refs_.push_back(jni->NewGlobalRef(klass));
-
-  // Copy the klass_data over to the AllocationEvent to
-  // be sent to perfd.
-  event->mutable_class_data()->CopyFrom(klass_data);
 }
 
 void MemoryTrackingEnv::LogGcStart() {
@@ -348,8 +379,10 @@ jint MemoryTrackingEnv::HeapIterationCallback(jlong class_tag, jlong size,
 
 void MemoryTrackingEnv::ClassPrepareCallback(jvmtiEnv* jvmti, JNIEnv* jni,
                                              jthread thread, jclass klass) {
+  std::lock_guard<std::mutex> lock(g_env->class_data_mutex_);
+  g_env->RegisterNewClass(jni, klass);
   AllocationEvent event;
-  g_env->RegisterNewClass(jni, klass, &event);
+  event.mutable_class_data()->CopyFrom(g_env->class_data_.back());
   event.set_capture_time(g_env->current_capture_time_ns_);
   event.set_timestamp(g_env->clock_.GetCurrentTime());
   g_env->event_queue_.Push(event);
@@ -439,72 +472,78 @@ void MemoryTrackingEnv::AllocDataWorker(jvmtiEnv* jvmti, JNIEnv* jni,
   while (true) {
     int64_t start_time_ns = stopwatch.GetElapsed();
 
-    BatchAllocationSample sample;
-    // Gather all the data currently in the queue and push to perfd.
-    // TODO: investigate whether we need to set time cap for large amount of
-    // data.
-    std::deque<AllocationEvent> queued_data = env->event_queue_.Drain();
-    std::vector<long> method_ids_to_query;
-    while (!queued_data.empty()) {
-      AllocationEvent* event = sample.add_events();
-      event->CopyFrom(queued_data.front());
-      queued_data.pop_front();
+    {
+      std::lock_guard<std::mutex> lock(env->tracking_mutex_);
+      if (env->is_live_tracking_) {
+        BatchAllocationSample sample;
+        // Gather all the data currently in the queue and push to perfd.
+        // TODO: investigate whether we need to set time cap for large amount of
+        // data.
+        std::deque<AllocationEvent> queued_data = env->event_queue_.Drain();
+        std::vector<long> method_ids_to_query;
+        while (!queued_data.empty()) {
+          AllocationEvent* event = sample.add_events();
+          event->CopyFrom(queued_data.front());
+          queued_data.pop_front();
 
-      switch (event->event_case()) {
-        case AllocationEvent::kAllocData: {
-          AllocationEvent::Allocation* alloc_data = event->mutable_alloc_data();
-          int stack_size = alloc_data->method_ids_size();
-          std::vector<long> reversed_stack(stack_size);
-          for (int i = 0; i < stack_size; i++) {
-            long id = alloc_data->method_ids(i);
-            reversed_stack[stack_size - i - 1] = id;
-            if (env->known_method_ids_.emplace(id).second) {
-              method_ids_to_query.push_back(id);
-            }
-          }
-
-          // Store and encode the stack into trie.
-          // TODO - consider moving trie storage to perfd?
-          if (stack_size > 0) {
-            auto result = env->stack_trie_.insert(reversed_stack);
-            if (result.second) {
-              // Append the stack info into BatchAllocationSample
-              EncodedStack* encoded_stack = sample.add_stacks();
-              encoded_stack->set_stack_id(result.first);
-              for (int j = stack_size - 1; j >= 0; j--) {
-                // Yet reverse again so first entry is top of stack.
-                encoded_stack->add_method_ids(reversed_stack[j]);
+          switch (event->event_case()) {
+            case AllocationEvent::kAllocData: {
+              AllocationEvent::Allocation* alloc_data =
+                  event->mutable_alloc_data();
+              int stack_size = alloc_data->method_ids_size();
+              std::vector<long> reversed_stack(stack_size);
+              for (int i = 0; i < stack_size; i++) {
+                long id = alloc_data->method_ids(i);
+                reversed_stack[stack_size - i - 1] = id;
+                if (env->known_method_ids_.emplace(id).second) {
+                  method_ids_to_query.push_back(id);
+                }
               }
-            }
 
-            // Only store the leaf index into alloc_data.
-            // The full stack will be looked up from EncodedStack on
-            // studio-side.
-            alloc_data->clear_method_ids();
-            alloc_data->set_stack_id(result.first);
+              // Store and encode the stack into trie.
+              // TODO - consider moving trie storage to perfd?
+              if (stack_size > 0) {
+                auto result = env->stack_trie_.insert(reversed_stack);
+                if (result.second) {
+                  // Append the stack info into BatchAllocationSample
+                  EncodedStack* encoded_stack = sample.add_stacks();
+                  encoded_stack->set_stack_id(result.first);
+                  for (int j = stack_size - 1; j >= 0; j--) {
+                    // Yet reverse again so first entry is top of stack.
+                    encoded_stack->add_method_ids(reversed_stack[j]);
+                  }
+                }
+
+                // Only store the leaf index into alloc_data.
+                // The full stack will be looked up from EncodedStack on
+                // studio-side.
+                alloc_data->clear_method_ids();
+                alloc_data->set_stack_id(result.first);
+              }
+            } break;
+            default:
+              // Do nothing for Klass + Deallocation.
+              break;
           }
-        } break;
-        default:
-          // Do nothing for Klass + Deallocation.
-          break;
-      }
 
-      if (sample.events_size() >= kDataBatchSize) {
-        SetSampleMethods(env, jvmti, jni, sample, method_ids_to_query);
-        profiler::EnqueueAllocationEvents(sample);
-        sample = BatchAllocationSample();
-        method_ids_to_query.clear();
+          if (sample.events_size() >= kDataBatchSize) {
+            SetSampleMethods(env, jvmti, jni, sample, method_ids_to_query);
+            profiler::EnqueueAllocationEvents(sample);
+            sample = BatchAllocationSample();
+            method_ids_to_query.clear();
+          }
+        }
+
+        if (sample.events_size() > 0) {
+          SetSampleMethods(env, jvmti, jni, sample, method_ids_to_query);
+          profiler::EnqueueAllocationEvents(sample);
+        }
+
+        // TODO: re-enable this once VmStatsSampler can be removed in O+
+        // profiler::EnqueueAllocStats(env->total_live_count_,
+        // env->total_free_count_);
       }
     }
-
-    if (sample.events_size() > 0) {
-      SetSampleMethods(env, jvmti, jni, sample, method_ids_to_query);
-      profiler::EnqueueAllocationEvents(sample);
-    }
-
-    // TODO: re-enable this once VmStatsSampler can be completely removed in O+
-    // profiler::EnqueueAllocStats(env->total_live_count_,
-    // env->total_free_count_);
 
     // Sleeps a while before reading from the queue again, so that the agent
     // don't generate too many rpc requests in places with high allocation
