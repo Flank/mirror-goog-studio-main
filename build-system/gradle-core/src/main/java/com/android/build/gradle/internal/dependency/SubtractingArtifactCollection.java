@@ -39,19 +39,17 @@ import org.gradle.api.file.FileCollection;
  */
 public class SubtractingArtifactCollection implements ArtifactCollection {
 
-    @NonNull private final ArtifactCollection testArtifacts;
-    @NonNull private final ArtifactCollection testedArtifacts;
+    @NonNull private final ArtifactCollection mainArtifacts;
+    @NonNull private final ArtifactCollection removedArtifacts;
     @NonNull private final FileCollection fileCollection;
     private Set<ResolvedArtifactResult> artifactResults = null;
 
     public SubtractingArtifactCollection(
-            @NonNull ArtifactCollection testArtifacts,
-            @NonNull ArtifactCollection testedArtifacts) {
-        this.testArtifacts = testArtifacts;
-        this.testedArtifacts = testedArtifacts;
+            @NonNull ArtifactCollection mainArtifact, @NonNull ArtifactCollection removedArtifact) {
+        this.mainArtifacts = mainArtifact;
+        this.removedArtifacts = removedArtifact;
 
-        fileCollection =
-                testArtifacts.getArtifactFiles().minus(testedArtifacts.getArtifactFiles());
+        fileCollection = mainArtifact.getArtifactFiles().minus(removedArtifact.getArtifactFiles());
     }
 
     @Override
@@ -62,16 +60,16 @@ public class SubtractingArtifactCollection implements ArtifactCollection {
     @Override
     public Set<ResolvedArtifactResult> getArtifacts() {
         if (artifactResults == null) {
-            // build a set of componentIdentifier for the tested artifacts.
-            Set<ComponentIdentifier> testedIds = Sets.newHashSet();
-            for (ResolvedArtifactResult artifactResult : testedArtifacts.getArtifacts()) {
-                testedIds.add(artifactResult.getId().getComponentIdentifier());
+            // build a set of componentIdentifier for the removed artifacts.
+            Set<ComponentIdentifier> removedIds = Sets.newHashSet();
+            for (ResolvedArtifactResult artifactResult : removedArtifacts.getArtifacts()) {
+                removedIds.add(artifactResult.getId().getComponentIdentifier());
             }
 
             // build the final list from the main one, filtering our the tested IDs.
             artifactResults = Sets.newLinkedHashSet();
-            for (ResolvedArtifactResult artifactResult : testArtifacts.getArtifacts()) {
-                if (!testedIds.contains(artifactResult.getId().getComponentIdentifier())) {
+            for (ResolvedArtifactResult artifactResult : mainArtifacts.getArtifacts()) {
+                if (!removedIds.contains(artifactResult.getId().getComponentIdentifier())) {
                     artifactResults.add(artifactResult);
                 }
             }
@@ -83,8 +81,8 @@ public class SubtractingArtifactCollection implements ArtifactCollection {
     @Override
     public Collection<Throwable> getFailures() {
         ImmutableList.Builder<Throwable> builder = ImmutableList.builder();
-        builder.addAll(testArtifacts.getFailures());
-        builder.addAll(testedArtifacts.getFailures());
+        builder.addAll(mainArtifacts.getFailures());
+        builder.addAll(removedArtifacts.getFailures());
         return builder.build();
     }
 

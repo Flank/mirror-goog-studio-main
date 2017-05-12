@@ -24,6 +24,7 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.google.common.collect.Maps;
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -32,6 +33,9 @@ import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
+import org.gradle.api.file.FileCollection;
+import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 
 /** Pre build task that does some checks for application variants */
@@ -40,22 +44,26 @@ public class TestPreBuildTask extends DefaultAndroidTask {
     // list of Android only compile and runtime classpath.
     private ArtifactCollection testedRuntimeClasspath;
     private ArtifactCollection testRuntimeClasspath;
-    private VariantScope variantScope;
+    // fake output dir so that the task doesn't run unless an input has changed.
+    private File outputDirectory;
+
+    @InputFiles
+    public FileCollection getTestedRuntimeClasspath() {
+        return testedRuntimeClasspath.getArtifactFiles();
+    }
+
+    @InputFiles
+    public FileCollection getTestRuntimeClasspath() {
+        return testRuntimeClasspath.getArtifactFiles();
+    }
+
+    @OutputDirectory
+    public File getOutputDirectory() {
+        return outputDirectory;
+    }
 
     @TaskAction
     void run() {
-        testedRuntimeClasspath =
-                variantScope
-                        .getTestedVariantData()
-                        .getScope()
-                        .getArtifactCollection(RUNTIME_CLASSPATH, EXTERNAL, CLASSES);
-        testRuntimeClasspath =
-                variantScope.getArtifactCollection(RUNTIME_CLASSPATH, EXTERNAL, CLASSES);
-
-        checkTestAndTestedDependencies();
-    }
-
-    private void checkTestAndTestedDependencies() {
         Set<ResolvedArtifactResult> testedArtifacts = testedRuntimeClasspath.getArtifacts();
         Set<ResolvedArtifactResult> testArtifacts = testRuntimeClasspath.getArtifacts();
 
@@ -136,7 +144,19 @@ public class TestPreBuildTask extends DefaultAndroidTask {
         public void execute(@NonNull TestPreBuildTask task) {
             task.setVariantName(variantScope.getFullVariantName());
 
-            task.variantScope = variantScope;
+            task.testedRuntimeClasspath =
+                    variantScope
+                            .getTestedVariantData()
+                            .getScope()
+                            .getArtifactCollection(RUNTIME_CLASSPATH, EXTERNAL, CLASSES);
+            task.testRuntimeClasspath =
+                    variantScope.getArtifactCollection(RUNTIME_CLASSPATH, EXTERNAL, CLASSES);
+
+            task.outputDirectory =
+                    new File(
+                            variantScope.getGlobalScope().getIntermediatesDir(),
+                            "prebuild/" + variantScope.getVariantConfiguration().getDirName());
+
             variantScope.getVariantData().preBuildTask = task;
         }
     }
