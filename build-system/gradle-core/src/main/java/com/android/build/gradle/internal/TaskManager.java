@@ -1585,7 +1585,6 @@ public abstract class TaskManager {
         createDependencyStreams(tasks, variantScope);
 
         createProcessJavaResTask(tasks, variantScope);
-        createMergeJavaResTransform(tasks, variantScope);
         createCompileAnchorTask(tasks, variantScope);
 
         if (extension.getTestOptions().getUnitTests().isIncludeAndroidResources()) {
@@ -1612,6 +1611,8 @@ public abstract class TaskManager {
         addJavacClassesStream(variantScope);
         setJavaCompilerTask(javacTask, tasks, variantScope);
         javacTask.dependsOn(tasks, testedVariantScope.getJavacTask());
+
+        createMergeJavaResTransform(tasks, variantScope);
 
         createRunUnitTestTask(tasks, variantScope);
 
