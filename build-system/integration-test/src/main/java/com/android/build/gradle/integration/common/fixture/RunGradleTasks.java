@@ -35,7 +35,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import java.io.ByteArrayOutputStream;
-import java.io.Closeable;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.EnumSet;
@@ -172,28 +171,26 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
 
         launcher.addProgressListener(progressListener, OperationType.TASK);
 
-        GradleConnectionException failure;
-
-        // See ProfileCapturer javadoc for explanation.
-        try (Closeable ignored =
-                new ProfileCapturer(benchmarkRecorder, benchmarkMode, profilesDirectory)) {
-            launcher.withArguments(Iterables.toArray(args, String.class));
-            WaitingResultHandler handler = new WaitingResultHandler();
-            launcher.run(handler);
-            failure = handler.waitForResult();
-            GradleBuildResult result =
-                    new GradleBuildResult(stdout, stderr, progressListener.getEvents(), failure);
-            lastBuildResultConsumer.accept(result);
-            if (isExpectingFailure && failure == null) {
-                throw new AssertionError("Expecting build to fail");
-            } else if (!isExpectingFailure && failure != null) {
-                throw failure;
-            }
-            if (!allowStderr && !result.getStderr().isEmpty()) {
-                throw new AssertionError("Unexpected stderr: " + stderr);
-            }
-            return result;
+        ProfileCapturer profiler =
+                new ProfileCapturer(benchmarkRecorder, benchmarkMode, profilesDirectory);
+        launcher.withArguments(Iterables.toArray(args, String.class));
+        WaitingResultHandler handler = new WaitingResultHandler();
+        launcher.run(handler);
+        GradleConnectionException failure = handler.waitForResult();
+        GradleBuildResult result =
+                new GradleBuildResult(stdout, stderr, progressListener.getEvents(), failure);
+        lastBuildResultConsumer.accept(result);
+        if (isExpectingFailure && failure == null) {
+            throw new AssertionError("Expecting build to fail");
+        } else if (!isExpectingFailure && failure != null) {
+            throw failure;
         }
+        if (!allowStderr && !result.getStderr().isEmpty()) {
+            throw new AssertionError("Unexpected stderr: " + stderr);
+        }
+        profiler.recordProfile();
+
+        return result;
     }
 
     private static class CollectingProgressListener implements ProgressListener {

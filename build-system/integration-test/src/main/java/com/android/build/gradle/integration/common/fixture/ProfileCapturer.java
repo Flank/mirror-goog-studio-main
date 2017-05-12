@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+
 package com.android.build.gradle.integration.common.fixture;
 
 import com.android.annotations.NonNull;
@@ -25,7 +26,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
 import com.google.wireless.android.sdk.stats.GradleBuildProfile;
-import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -38,44 +38,37 @@ import java.util.stream.Collectors;
  * <p>If benchmark mode is set:
  *
  * <ol>
- *     <li>Adds an argument to the build to output a profile in a known location.</li>
- *     <li>At the end of the build load the profile proto from the file and package it in a
- *         benchmark proto builder, which is handed to the {@link BenchmarkRecorder}.</li>
- *     <li>The {@link BenchmarkRecorder} is then responsible for populating the benchmark fields
- *         and uploading the proto</li>
+ *   <li>Adds an argument to the build to output a profile in a known location.
+ *   <li>At the end of the build load the profile proto from the file and package it in a benchmark
+ *       proto builder, which is handed to the {@link BenchmarkRecorder}.
+ *   <li>The {@link BenchmarkRecorder} is then responsible for populating the benchmark fields and
+ *       uploading the proto
  * </ol>
- *
- * <p>Intended to be used in a try-with-resources block around a build invocation.
  */
-public class ProfileCapturer implements Closeable {
+public class ProfileCapturer {
 
+    @NonNull private final ImmutableSet<Path> existingProfiles;
     @NonNull private final Path profileDirectory;
     @Nullable private final BenchmarkRecorder benchmarkRecorder;
     @Nullable private final Logging.BenchmarkMode benchmarkMode;
-    @NonNull private final ImmutableSet<Path> existingProfiles;
 
     public ProfileCapturer(
             @Nullable BenchmarkRecorder benchmarkRecorder,
             @Nullable Logging.BenchmarkMode benchmarkMode,
             @NonNull Path profileDirectory)
             throws IOException {
+        Preconditions.checkArgument(
+                benchmarkMode == null || benchmarkRecorder != null,
+                "Need to set a profile manager to record profiles");
         this.benchmarkRecorder = benchmarkRecorder;
         this.benchmarkMode = benchmarkMode;
         this.profileDirectory = profileDirectory;
-        if (benchmarkMode != null && benchmarkRecorder == null) {
-            throw new IllegalStateException("Need to set a profile manager to record profiles");
-        }
-        if (benchmarkMode != null) {
-            this.existingProfiles = getProfiles();
-        } else {
-            this.existingProfiles = ImmutableSet.of();
-        }
-
+        this.existingProfiles = getProfiles();
     }
 
-    @Override
-    public void close() throws IOException {
+    public void recordProfile() throws IOException {
         if (benchmarkMode == null) {
+            // no profile to capture
             return;
         }
         Preconditions.checkNotNull(benchmarkRecorder);
@@ -101,7 +94,7 @@ public class ProfileCapturer implements Closeable {
 
 
     private ImmutableSet<Path> getProfiles() throws IOException {
-        if (!Files.exists(profileDirectory)) {
+        if (benchmarkMode == null || !Files.exists(profileDirectory)) {
             return ImmutableSet.of();
         }
         return ImmutableSet.copyOf(
