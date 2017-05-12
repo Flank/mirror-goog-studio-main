@@ -1845,7 +1845,9 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                     && variantType == VariantType.ANDROID_TEST) {
                 result =
                         minusFunction.apply(
-                                result, testedScope.getArtifactView(configType, ALL, artifactType));
+                                result,
+                                testedScope.getArtifactView(
+                                        configType, artifactScope, artifactType));
             }
         }
 
