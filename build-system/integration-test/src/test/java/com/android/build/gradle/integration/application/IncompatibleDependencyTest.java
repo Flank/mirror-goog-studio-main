@@ -22,26 +22,20 @@ import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import org.junit.AfterClass;
-import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
-/** Assemble tests for dependencyChecker. */
-public class DependencyCheckerTest {
+/** Assemble tests for incompatible dependencies. */
+public class IncompatibleDependencyTest {
 
-    @ClassRule
-    public static GradleTestProject project =
+    @Rule
+    public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
                     .create();
 
-    @AfterClass
-    public static void tearDown() {
-        project = null;
-    }
-
     @Test
-    public void checkHttpComponentsisRemoved() throws Exception {
+    public void checkHttpComponentsIsRemoved() throws Exception {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "\n" + "dependencies.compile 'org.apache.httpcomponents:httpclient:4.1.1'\n");
@@ -64,5 +58,19 @@ public class DependencyCheckerTest {
         //DependencyGraphs compileGraph = appDebug.getMainArtifact().getDependencyGraphs();
         //
         //assertThat(helper.on(compileGraph).withType(JAVA).mapTo(COORDINATES)).isEmpty();
+    }
+
+    @Test
+    public void checkAndroidApiIsRemoved() throws Exception {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n" + "dependencies.compile 'com.google.android:android:4.1.1.4'\n");
+
+        GradleBuildResult result = project.executor().expectFailure().run("assembleDebug");
+
+        // TODO: this error message seems broken as it doesn't include the reason if the rejection.
+        assertThat(result.getFailureMessage())
+                .isEqualTo(
+                        "Could not resolve all files for configuration ':debugCompileClasspath'.");
     }
 }
