@@ -31,7 +31,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import java.io.ByteArrayOutputStream;
-import java.io.Closeable;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Arrays;
@@ -240,9 +239,12 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
 
         GradleConnectionException exception = null;
         // See ProfileCapturer javadoc for explanation.
-        try (Closeable ignored =
-                new ProfileCapturer(benchmarkRecorder, benchmarkMode, profilesDirectory)) {
-            return executor.withArguments(getArguments()).run();
+        try {
+            ProfileCapturer profileCapturer =
+                    new ProfileCapturer(benchmarkRecorder, benchmarkMode, profilesDirectory);
+            ModelContainer<T> result = executor.withArguments(getArguments()).run();
+            profileCapturer.recordProfile();
+            return result;
         } catch (GradleConnectionException e) {
             exception = e;
             throw e;
