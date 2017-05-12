@@ -297,7 +297,8 @@ public class DesugarAppTest {
                         + "android.defaultConfig.minSdkVersion 24");
         GradleBuildResult result =
                 project.executor().expectFailure().withUseDexArchive(false).run("assembleDebug");
-        assertThat(result.getFailureMessage()).contains("not supported when dexing out of process");
+        assertThat(result.getStderr())
+                .contains("Execution failed for task ':transformClassesWithPreDexForDebug'");
     }
 
     @NonNull
