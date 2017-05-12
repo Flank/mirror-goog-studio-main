@@ -34,6 +34,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.PsiNameIdentifierOwner;
+import com.intellij.psi.impl.light.LightElement;
 import java.io.File;
 import java.util.List;
 import org.jetbrains.uast.UCallExpression;
@@ -178,6 +179,17 @@ public class DefaultUastParser extends UastParser {
             file = ioFile;
             contents = getFileContents(containingFile);
         }
+
+        if (range == null) { // e.g. light elements
+            if (element instanceof LightElement) {
+                PsiElement parent = element.getParent();
+                if (parent != null) {
+                    return getLocation(context, parent);
+                }
+            }
+            return Location.create(file);
+        }
+
         return Location.create(file, contents, range.getStartOffset(), range.getEndOffset())
                 .setSource(element);
     }

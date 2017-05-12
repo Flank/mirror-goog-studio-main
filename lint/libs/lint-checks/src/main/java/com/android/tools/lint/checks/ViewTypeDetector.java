@@ -261,7 +261,7 @@ public class ViewTypeDetector extends ResourceXmlDetector implements UastScanner
         }
 
         String castTypeClass = castType.getCanonicalText();
-        if (castTypeClass.equals(CLASS_VIEW)) {
+        if (castTypeClass.equals(CLASS_VIEW) || castTypeClass.equals("kotlin.Unit")) {
             return;
         }
 
@@ -455,7 +455,7 @@ public class ViewTypeDetector extends ResourceXmlDetector implements UastScanner
             @NonNull UElement node,
             @NonNull UExpression resourceReference,
             @Nullable List<ResourceItem> items) {
-        assert tag == null || tags == null; // Should only specify one or the other
+        assert tag == null || tags == null : tag + tags; // Should only specify one or the other
 
         // Common case: they match: quickly check for this and fail if not
         if (castTypeClass.equals(tag) ||
