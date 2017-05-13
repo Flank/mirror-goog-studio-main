@@ -1762,6 +1762,9 @@ public final class SdkConstants {
     public static final String MIPMAP_PREFIX = "@mipmap/"; //$NON-NLS-1$
     public static final String FONT_PREFIX = "@font/"; //$NON-NLS-1$
     public static final String AAPT_ATTR_PREFIX = "@aapt:_aapt/";
+    public static final String SAMPLE_PREFIX = "@sample/";
+
+    public static final String TOOLS_SAMPLE_PREFIX = "@tools:sample/";
 
     public static final String ANDROID_LAYOUT_RESOURCE_PREFIX = "@android:layout/"; //$NON-NLS-1$
     public static final String ANDROID_STYLE_RESOURCE_PREFIX = "@android:style/"; //$NON-NLS-1$
