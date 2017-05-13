@@ -148,7 +148,10 @@ java_test(
         "-Dtest.excludeCategories=com.android.build.gradle.integration.common.category.DeviceTests,com.android.build.gradle.integration.common.category.DeviceTestsQuarantine,com.android.build.gradle.integration.common.category.OnlineTests",
     ],
     shard_count = 8,  # Keep this in sync with logic in our bazel launcher script and CheckAllRunner.
-    tags = ["slow"],
+    tags = [
+        "gradle_integration",
+        "slow",
+    ],
     test_class = "com.android.build.gradle.integration.BazelIntegrationTestsSuite",
     runtime_deps = [
         # Need to put this on the classpath before TestRunner_deploy.jar which contains
