@@ -443,7 +443,7 @@ public class ResourceResolver extends RenderResources {
         // we currently hack the namespace support as part of the item name.
         String name = (url.namespace == null ? "" : url.namespace + ":") + url.name;
         return Optional.ofNullable(mProjectResources.get(ResourceType.SAMPLE_DATA))
-                .map(t -> t.get(name))
+                .map(t -> t.get(SampleDataManager.getResourceNameFromSampleReference(name)))
                 .map(ResourceValue::getValue)
                 .map(content -> mSampleDataManager.getSampleDataLine(name, content))
                 .map(

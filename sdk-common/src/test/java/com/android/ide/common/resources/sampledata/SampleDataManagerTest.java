@@ -44,4 +44,70 @@ public class SampleDataManagerTest {
         assertEquals("One line", manager.getSampleDataLine("res4", oneLine));
         assertEquals("One line", manager.getSampleDataLine("res4", oneLine));
     }
+
+    @Test
+    public void indexReferences() {
+        SampleDataManager manager = new SampleDataManager();
+        String content = "Line A\n" + "Line B\n" + "Line C\n" + "Line D\n" + "Line E";
+
+        assertEquals("Line A", manager.getSampleDataLine("res1", content));
+        assertEquals("Line A", manager.getSampleDataLine("res1[0]", content));
+        assertEquals("Line A", manager.getSampleDataLine("res1[0]", content));
+        assertEquals("Line E", manager.getSampleDataLine("res1[4]", content));
+        // The cursor should be at the same position it was before
+        assertEquals("Line B", manager.getSampleDataLine("res1", content));
+
+        // Out of bounds (wraps around)
+        assertEquals("Line A", manager.getSampleDataLine("res1[5]", content));
+        // Invalid index
+        assertEquals("", manager.getSampleDataLine("res1[-1]", content));
+
+        // String matching (used for searching image file names e.g: @sample/images[biking.png])
+        assertEquals("Line C", manager.getSampleDataLine("res1[C]", content));
+    }
+
+    @Test
+    public void subArrays() {
+        SampleDataManager manager = new SampleDataManager();
+        String content = "Line A\n" + "Line B\n" + "Line C\n" + "Line D\n" + "Line E";
+
+        assertEquals("Line B", manager.getSampleDataLine("res1[1:2]", content));
+        assertEquals("Line C", manager.getSampleDataLine("res1[1:2]", content));
+        assertEquals("Line B", manager.getSampleDataLine("res1[1:2]", content));
+        assertEquals("Line C", manager.getSampleDataLine("res1[1:2]", content));
+
+        // Invalid indexes
+        assertEquals("", manager.getSampleDataLine("res1[-1:2]", content));
+        assertEquals("", manager.getSampleDataLine("res1[2:1]", content));
+
+        // Test only lower bound
+        // Using a different resource name to start a different cursor (it will start again from Line A)
+        assertEquals("Line D", manager.getSampleDataLine("res2[3:]", content));
+        assertEquals("Line E", manager.getSampleDataLine("res2[3:]", content));
+        assertEquals("Line D", manager.getSampleDataLine("res2[3:]", content));
+        assertEquals("", manager.getSampleDataLine("res2[9:]", content));
+
+        // Test only upper bound
+        assertEquals("Line A", manager.getSampleDataLine("res3[:1]", content));
+        assertEquals("Line B", manager.getSampleDataLine("res3[:1]", content));
+        assertEquals("Line A", manager.getSampleDataLine("res3[:1]", content));
+        assertEquals("", manager.getSampleDataLine("res3[:-1]", content));
+    }
+
+    @Test
+    public void resourceNameFromSampleReference() {
+        assertEquals(
+                "resourceName",
+                SampleDataManager.getResourceNameFromSampleReference("resourceName"));
+        assertEquals(
+                "resourceName",
+                SampleDataManager.getResourceNameFromSampleReference("resourceName[50]"));
+        assertEquals(
+                "resourceName",
+                SampleDataManager.getResourceNameFromSampleReference("resourceName[something]"));
+        assertEquals(
+                "resourceName",
+                SampleDataManager.getResourceNameFromSampleReference("resourceName[[]"));
+        assertEquals("", SampleDataManager.getResourceNameFromSampleReference(""));
+    }
 }
