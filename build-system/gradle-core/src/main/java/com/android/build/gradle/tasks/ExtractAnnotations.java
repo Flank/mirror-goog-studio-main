@@ -100,11 +100,6 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
 
     private ArtifactCollection libraries;
 
-    // TODO Is this an input? If it is, we could be mixing up cached results belonging to different variants
-    public BaseVariantData getVariant() {
-        return variant;
-    }
-
     public void setVariant(BaseVariantData variant) {
         this.variant = variant;
     }
@@ -120,7 +115,6 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
         this.bootClasspath = bootClasspath;
     }
 
-    // TODO Do we have JARs in here? Do they constitute a classpath?
     @Classpath
     public FileCollection getLibraries() {
         return libraries.getArtifactFiles();

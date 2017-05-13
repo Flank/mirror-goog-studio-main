@@ -31,14 +31,16 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.function.Supplier;
+import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.api.tasks.TaskAction;
 
-
 @ParallelizableTask
+@CacheableTask
 public class GenerateBuildConfig extends BaseTask {
 
     // ----- PUBLIC TASK API -----
@@ -119,6 +121,7 @@ public class GenerateBuildConfig extends BaseTask {
         return versionCode.get();
     }
 
+    @Internal // handled by getItemValues()
     public List<Object> getItems() {
         return items.get();
     }

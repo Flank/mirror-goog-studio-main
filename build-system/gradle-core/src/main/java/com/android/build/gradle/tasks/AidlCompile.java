@@ -49,17 +49,20 @@ import java.util.Map;
 import java.util.function.Supplier;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.FileTree;
+import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.ParallelizableTask;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.util.PatternSet;
 
-/**
- * Task to compile aidl files. Supports incremental update.
- */
+/** Task to compile aidl files. Supports incremental update. */
 @ParallelizableTask
+@CacheableTask
 public class AidlCompile extends IncrementalTask {
 
     private static final String DEPENDENCY_STORE = "dependency.store";
@@ -81,6 +84,7 @@ public class AidlCompile extends IncrementalTask {
     private FileCollection importDirs;
 
     @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
     public FileTree getSourceFiles() {
         // this is because aidl may be in the same folder as Java and we want to restrict to
         // .aidl files and not java files.
@@ -115,6 +119,7 @@ public class AidlCompile extends IncrementalTask {
     }
 
     @Override
+    @Internal
     protected boolean isIncremental() {
         // TODO fix once dep file parsing is resolved.
         return false;
@@ -141,10 +146,9 @@ public class AidlCompile extends IncrementalTask {
                 new LoggedProcessOutputHandler(getILogger()));
     }
 
-    /**
-     * Returns the import folders.
-     */
+    /** Returns the import folders. */
     @NonNull
+    @Internal
     private List<File> getImportFolders() {
         List<File> fullImportDir = Lists.newArrayList();
         fullImportDir.addAll(getImportDirs().getFiles());
@@ -345,6 +349,7 @@ public class AidlCompile extends IncrementalTask {
     }
 
     @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
     public FileCollection getImportDirs() {
         return importDirs;
     }

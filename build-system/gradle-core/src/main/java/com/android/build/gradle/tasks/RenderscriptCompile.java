@@ -37,16 +37,18 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.ParallelizableTask;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 
-/**
- * Task to compile Renderscript files. Supports incremental update.
- */
+/** Task to compile Renderscript files. Supports incremental update. */
 @ParallelizableTask
+@CacheableTask
 public class RenderscriptCompile extends NdkTask {
 
     // ----- PUBLIC TASK API -----
@@ -118,11 +120,13 @@ public class RenderscriptCompile extends NdkTask {
     }
 
     @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
     public FileCollection getSourceDirs() {
         return sourceDirs;
     }
 
     @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
     public FileCollection getImportDirs() {
         return importDirs;
     }

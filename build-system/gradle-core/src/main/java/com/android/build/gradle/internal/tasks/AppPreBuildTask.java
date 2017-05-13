@@ -25,6 +25,7 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.google.common.collect.Maps;
+import java.io.File;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
@@ -33,28 +34,45 @@ import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
+import org.gradle.api.file.FileCollection;
+import org.gradle.api.tasks.CacheableTask;
+import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.OutputDirectory;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier;
 
 /** Pre build task that does some checks for application variants */
+@CacheableTask
 public class AppPreBuildTask extends DefaultAndroidTask {
 
     // list of Android only compile and runtime classpath.
-    private ArtifactCollection compileClasspath;
-    private ArtifactCollection runtimeClasspath;
-    private VariantScope variantScope;
+    private ArtifactCollection compileManifests;
+    private ArtifactCollection runtimeManifests;
+    private File fakeOutputDirectory;
+
+    @InputFiles
+    @PathSensitive(PathSensitivity.NAME_ONLY)
+    public FileCollection getCompileManifests() {
+        return compileManifests.getArtifactFiles();
+    }
+
+    @InputFiles
+    @PathSensitive(PathSensitivity.NAME_ONLY)
+    public FileCollection getRuntimeManifests() {
+        return runtimeManifests.getArtifactFiles();
+    }
+
+    @OutputDirectory
+    public File getFakeOutputDirectory() {
+        return fakeOutputDirectory;
+    }
 
     @TaskAction
     void run() {
-        compileClasspath = variantScope.getArtifactCollection(COMPILE_CLASSPATH, ALL, MANIFEST);
-        runtimeClasspath = variantScope.getArtifactCollection(RUNTIME_CLASSPATH, ALL, MANIFEST);
-
-        checkAppWithAndroidLibAsCompileOnly();
-    }
-
-    private void checkAppWithAndroidLibAsCompileOnly() {
-        Set<ResolvedArtifactResult> compileArtifacts = compileClasspath.getArtifacts();
-        Set<ResolvedArtifactResult> runtimeArtifacts = runtimeClasspath.getArtifacts();
+        Set<ResolvedArtifactResult> compileArtifacts = compileManifests.getArtifacts();
+        Set<ResolvedArtifactResult> runtimeArtifacts = runtimeManifests.getArtifacts();
 
         // create a map where the key is either the sub-project path, or groupId:artifactId for
         // external dependencies.
@@ -136,7 +154,16 @@ public class AppPreBuildTask extends DefaultAndroidTask {
         public void execute(@NonNull AppPreBuildTask task) {
             task.setVariantName(variantScope.getFullVariantName());
 
-            task.variantScope = variantScope;
+            task.compileManifests =
+                    variantScope.getArtifactCollection(COMPILE_CLASSPATH, ALL, MANIFEST);
+            task.runtimeManifests =
+                    variantScope.getArtifactCollection(RUNTIME_CLASSPATH, ALL, MANIFEST);
+
+            task.fakeOutputDirectory =
+                    new File(
+                            variantScope.getGlobalScope().getIntermediatesDir(),
+                            "prebuild/" + variantScope.getVariantConfiguration().getDirName());
+
             variantScope.getVariantData().preBuildTask = task;
         }
     }

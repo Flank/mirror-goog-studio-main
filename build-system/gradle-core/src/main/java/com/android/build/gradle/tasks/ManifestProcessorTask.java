@@ -23,6 +23,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 import java.io.File;
 import java.util.Map;
+import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 
@@ -39,9 +40,11 @@ public abstract class ManifestProcessorTask extends IncrementalTask {
 
     /** The processed Manifest. */
     @NonNull
+    @Internal
     public abstract File getManifestOutputFile();
 
     @Nullable
+    @Internal
     public abstract File getInstantRunManifestOutputFile();
 
     /**
@@ -51,6 +54,7 @@ public abstract class ManifestProcessorTask extends IncrementalTask {
      * some illegal characters. Such characters are replaced/encoded in this version.
      */
     @Nullable
+    @Internal
     public abstract File getAaptFriendlyManifestOutputFile();
 
     /** The processed Manifest. */

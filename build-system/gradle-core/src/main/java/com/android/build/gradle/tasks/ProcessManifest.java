@@ -43,16 +43,19 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 import org.apache.tools.ant.BuildException;
+import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.ParallelizableTask;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 
-/**
- * a Task that only merge a single manifest with its overlays.
- */
+/** a Task that only merge a single manifest with its overlays. */
 @ParallelizableTask
+@CacheableTask
 public class ProcessManifest extends ManifestProcessorTask {
 
     private Supplier<String> minSdkVersion;
@@ -122,6 +125,7 @@ public class ProcessManifest extends ManifestProcessorTask {
 
     @NonNull
     @Override
+    @Internal
     public File getManifestOutputFile() {
         Preconditions.checkNotNull(splitScope.getMainSplit());
         return FileUtils.join(
@@ -132,12 +136,14 @@ public class ProcessManifest extends ManifestProcessorTask {
 
     @Nullable
     @Override
+    @Internal
     public File getInstantRunManifestOutputFile() {
         return null;
     }
 
     @Nullable
     @Override
+    @Internal
     public File getAaptFriendlyManifestOutputFile() {
         Preconditions.checkNotNull(splitScope.getMainSplit());
         return FileUtils.join(
@@ -164,7 +170,9 @@ public class ProcessManifest extends ManifestProcessorTask {
         return maxSdkVersion.get();
     }
 
-    public VariantConfiguration<CoreBuildType, CoreProductFlavor, CoreProductFlavor> getVariantConfiguration() {
+    @Internal
+    public VariantConfiguration<CoreBuildType, CoreProductFlavor, CoreProductFlavor>
+            getVariantConfiguration() {
         return variantConfiguration;
     }
 
@@ -184,6 +192,7 @@ public class ProcessManifest extends ManifestProcessorTask {
     }
 
     @InputFile
+    @PathSensitive(PathSensitivity.RELATIVE)
     public File getMainManifest() {
         return variantConfiguration.getMainManifest();
     }
@@ -206,6 +215,7 @@ public class ProcessManifest extends ManifestProcessorTask {
     }
 
     @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
     public List<File> getManifestOverlays() {
         return variantConfiguration.getManifestOverlays();
     }

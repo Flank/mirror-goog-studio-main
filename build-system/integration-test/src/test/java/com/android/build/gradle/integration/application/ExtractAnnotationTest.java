@@ -149,7 +149,6 @@ public class ExtractAnnotationTest {
 
         GradleBuildResult result = project.executor().run("assembleDebug");
 
-        assertThat(result.getNotUpToDateTasks())
-                .containsExactly(":checkDebugManifest", ":processAnalyticsDebug");
+        assertThat(result.getNotUpToDateTasks()).containsExactly(":processAnalyticsDebug");
     }
 }

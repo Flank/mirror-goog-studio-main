@@ -30,12 +30,15 @@ import java.io.IOException;
 import java.util.List;
 import java.util.function.Supplier;
 import javax.xml.parsers.ParserConfigurationException;
+import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.api.tasks.TaskAction;
 
 @ParallelizableTask
+@CacheableTask
 public class GenerateResValues extends BaseTask {
 
     // ----- PUBLIC TASK API -----
@@ -53,6 +56,7 @@ public class GenerateResValues extends BaseTask {
 
     // ----- PRIVATE TASK API -----
 
+    @Internal // handled by getItemValues()
     public List<Object> getItems() {
         return items.get();
     }

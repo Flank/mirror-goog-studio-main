@@ -20,34 +20,49 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import java.io.File;
-import org.gradle.api.tasks.InputFile;
+import org.gradle.api.tasks.CacheableTask;
+import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.api.tasks.TaskAction;
 
 /** Class that checks the presence of the manifest. */
 @ParallelizableTask
+@CacheableTask
 public class CheckManifest extends DefaultAndroidTask {
 
     private File manifest;
     private Boolean isOptional;
+    private File fakeOutputDir;
 
     @Optional
-    @InputFile
+    @Input // we don't care about the content, just that the file is there.
     public File getManifest() {
         return manifest;
+    }
+
+    @Input // force rerunning the task if the manifest shows up or disappears.
+    public boolean getManifestPresence() {
+        return manifest != null && manifest.isFile();
     }
 
     public void setManifest(@NonNull File manifest) {
         this.manifest = manifest;
     }
 
+    @Input
     public Boolean getOptional() {
         return isOptional;
     }
 
     public void setOptional(Boolean optional) {
         isOptional = optional;
+    }
+
+    @OutputDirectory
+    public File getFakeOutputDir() {
+        return fakeOutputDir;
     }
 
     @TaskAction
@@ -90,6 +105,11 @@ public class CheckManifest extends DefaultAndroidTask {
             checkManifestTask.setOptional(isManifestOptional);
             checkManifestTask.manifest =
                     scope.getVariantData().getVariantConfiguration().getMainManifest();
+
+            checkManifestTask.fakeOutputDir =
+                    new File(
+                            scope.getGlobalScope().getIntermediatesDir(),
+                            "check-manifest/" + scope.getVariantConfiguration().getDirName());
         }
     }
 }

@@ -16,19 +16,7 @@
 
 package com.android.build.gradle.internal.tasks;
 
-import com.android.builder.Version;
-import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.compile.AbstractCompile;
 
 public abstract class AbstractAndroidCompile extends AbstractCompile{
-    /**
-     * Force tasks to be re-run if the Android plugin version changes.
-     *
-     * @return the plugin version, of the form "x.y.z"
-     */
-    // TODO No need for this, Since Gradle 3.0 the full classpath of the task is tracked as an input automatically
-    @Internal
-    public String getAndroidGradlePluginVersion() {
-        return Version.ANDROID_GRADLE_PLUGIN_VERSION;
-    }
 }
