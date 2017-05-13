@@ -19,7 +19,6 @@ package com.android.build.gradle;
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.api.BaseVariantOutput;
-import com.android.build.gradle.internal.DependencyManager;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.TaskManager;
@@ -103,7 +102,6 @@ public class TestPlugin extends BasePlugin implements Plugin<Project> {
             @NonNull AndroidConfig androidConfig,
             @NonNull SdkHandler sdkHandler,
             @NonNull NdkHandler ndkHandler,
-            @NonNull DependencyManager dependencyManager,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
         return new TestApplicationTaskManager(
@@ -114,7 +112,6 @@ public class TestPlugin extends BasePlugin implements Plugin<Project> {
                 dataBindingBuilder,
                 androidConfig,
                 sdkHandler,
-                dependencyManager,
                 toolingRegistry,
                 recorder);
     }

@@ -27,7 +27,6 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Items;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
-import com.android.build.gradle.internal.DependencyManager;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.Variant;
@@ -71,7 +70,7 @@ public class FlavoredlibTest {
     public void checkExplodedAar() throws Exception {
         File intermediates = FileUtils.join(project.getTestDir(), "app", "build", "intermediates");
         assertThat(intermediates).isDirectory();
-        assertThat(new File(intermediates, DependencyManager.EXPLODED_AAR)).doesNotExist();
+        assertThat(new File(intermediates, "exploded-aar")).doesNotExist();
     }
 
     @Test

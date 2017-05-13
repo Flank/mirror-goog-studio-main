@@ -75,7 +75,6 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
             @NonNull Path buildDotGradleFile,
             @Nullable BenchmarkRecorder benchmarkRecorder,
             @NonNull Path profilesDirectory,
-            boolean dependencyResolutionAtExecution,
             @Nullable String heapSize) {
         this.lastBuildResultConsumer = lastBuildResultConsumer;
         this.projectDirectory = projectDirectory;
@@ -87,11 +86,6 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         if (!buildDotGradleFile.getFileName().toString().equals("build.gradle")) {
             arguments.add("--build-file=" + buildDotGradleFile.toString());
         }
-        arguments.add(
-                "-P"
-                        + BooleanOption.ENABLE_IMPROVED_DEPENDENCY_RESOLUTION.getPropertyName()
-                        + "="
-                        + dependencyResolutionAtExecution);
         this.profilesDirectory = profilesDirectory;
         this.heapSize = heapSize;
         with(StringOption.BUILD_CACHE_DIR, getBuildCacheDir().getAbsolutePath());

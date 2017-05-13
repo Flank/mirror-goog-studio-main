@@ -31,7 +31,6 @@ import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.ApiObjectFactory;
 import com.android.build.gradle.internal.BadPluginException;
 import com.android.build.gradle.internal.BuildCacheUtils;
-import com.android.build.gradle.internal.DependencyManager;
 import com.android.build.gradle.internal.ExecutionConfigurationUtil;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.LoggerWrapper;
@@ -157,8 +156,6 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
 
     private String creator;
 
-    private DependencyManager dependencyManager;
-
     private Recorder threadRecorder;
 
     private boolean hasCreatedTasks = false;
@@ -206,7 +203,6 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
             @NonNull AndroidConfig androidConfig,
             @NonNull SdkHandler sdkHandler,
             @NonNull NdkHandler ndkHandler,
-            @NonNull DependencyManager dependencyManager,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder threadRecorder);
 
@@ -279,12 +275,10 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
         checkGradleVersion();
 
         sdkHandler = new SdkHandler(project, getLogger());
-        dependencyManager = new DependencyManager(project, extraModelInfo, sdkHandler);
 
         if (!project.getGradle().getStartParameter().isOffline()
                 && AndroidGradleOptions.getUseSdkDownload(project)) {
             SdkLibData sdkLibData = SdkLibData.download(getDownloader(), getSettingsController());
-            dependencyManager.setSdkLibData(sdkLibData);
             sdkHandler.setSdkLibData(sdkLibData);
         }
 
@@ -454,7 +448,6 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
                         extension,
                         sdkHandler,
                         ndkHandler,
-                        dependencyManager,
                         registry,
                         threadRecorder);
 

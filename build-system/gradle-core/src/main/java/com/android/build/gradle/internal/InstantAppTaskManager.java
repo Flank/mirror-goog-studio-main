@@ -47,7 +47,6 @@ public class InstantAppTaskManager extends TaskManager {
             @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull AndroidConfig extension,
             @NonNull SdkHandler sdkHandler,
-            @NonNull DependencyManager dependencyManager,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder threadRecorder) {
         super(
@@ -58,7 +57,6 @@ public class InstantAppTaskManager extends TaskManager {
                 dataBindingBuilder,
                 extension,
                 sdkHandler,
-                dependencyManager,
                 toolingRegistry,
                 threadRecorder);
     }

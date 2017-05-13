@@ -71,7 +71,6 @@ public class FeatureTaskManager extends TaskManager {
             @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull AndroidConfig extension,
             @NonNull SdkHandler sdkHandler,
-            @NonNull DependencyManager dependencyManager,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
         super(
@@ -82,7 +81,6 @@ public class FeatureTaskManager extends TaskManager {
                 dataBindingBuilder,
                 extension,
                 sdkHandler,
-                dependencyManager,
                 toolingRegistry,
                 recorder);
     }

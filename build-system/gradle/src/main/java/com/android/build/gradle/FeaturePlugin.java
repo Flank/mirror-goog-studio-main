@@ -18,7 +18,6 @@ package com.android.build.gradle;
 
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.DependencyManager;
 import com.android.build.gradle.internal.MultiTypeTaskManager;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.TaskManager;
@@ -110,7 +109,6 @@ public class FeaturePlugin extends LibraryPlugin {
             @NonNull AndroidConfig androidConfig,
             @NonNull SdkHandler sdkHandler,
             @NonNull NdkHandler ndkHandler,
-            @NonNull DependencyManager dependencyManager,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
         return new MultiTypeTaskManager(
@@ -121,7 +119,6 @@ public class FeaturePlugin extends LibraryPlugin {
                 dataBindingBuilder,
                 androidConfig,
                 sdkHandler,
-                dependencyManager,
                 toolingRegistry,
                 recorder);
     }

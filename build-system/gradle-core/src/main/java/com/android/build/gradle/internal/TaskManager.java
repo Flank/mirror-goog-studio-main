@@ -269,7 +269,6 @@ public abstract class TaskManager {
     @NonNull protected final GlobalScope globalScope;
     @NonNull protected final Recorder recorder;
     @NonNull protected final AndroidTaskRegistry androidTasks;
-    @NonNull private final DependencyManager dependencyManager;
     @NonNull private final Logger logger;
     @Nullable private final FileCache buildCache;
 
@@ -285,7 +284,6 @@ public abstract class TaskManager {
             @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull AndroidConfig extension,
             @NonNull SdkHandler sdkHandler,
-            @NonNull DependencyManager dependencyManager,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
         this.globalScope = globalScope;
@@ -296,7 +294,6 @@ public abstract class TaskManager {
         this.sdkHandler = sdkHandler;
         this.extension = extension;
         this.toolingRegistry = toolingRegistry;
-        this.dependencyManager = dependencyManager;
         this.recorder = recorder;
         this.logger = Logging.getLogger(this.getClass());
         this.androidTasks = new AndroidTaskRegistry();
@@ -312,10 +309,6 @@ public abstract class TaskManager {
 
     public DataBindingBuilder getDataBindingBuilder() {
         return dataBindingBuilder;
-    }
-
-    public DependencyManager getDependencyManager() {
-        return dependencyManager;
     }
 
     /** Creates the tasks for a given BaseVariantData. */
@@ -351,18 +344,6 @@ public abstract class TaskManager {
                     new File(objFolder, "local/" + abi.getName()));
         }
 
-    }
-
-    public void resolveDependencies(
-            @NonNull VariantDependencies variantDeps,
-            @Nullable String testedProjectPath) {
-        Set<AndroidDependency> libsToExplode =
-                dependencyManager.resolveDependencies(
-                        variantDeps,
-                        testedProjectPath,
-                        buildCache,
-                        globalScope.getProjectLevelCache());
-        dependencyManager.processLibraries(libsToExplode, buildCache);
     }
 
     /**

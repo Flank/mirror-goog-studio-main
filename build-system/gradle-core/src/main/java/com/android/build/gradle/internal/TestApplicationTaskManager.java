@@ -67,7 +67,6 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
             @NonNull DataBindingBuilder dataBindingBuilder,
             @NonNull AndroidConfig extension,
             @NonNull SdkHandler sdkHandler,
-            @NonNull DependencyManager dependencyManager,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
             @NonNull Recorder recorder) {
         super(
@@ -78,7 +77,6 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
                 dataBindingBuilder,
                 extension,
                 sdkHandler,
-                dependencyManager,
                 toolingRegistry,
                 recorder);
     }
