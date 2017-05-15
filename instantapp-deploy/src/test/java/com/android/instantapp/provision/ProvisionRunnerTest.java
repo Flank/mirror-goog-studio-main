@@ -124,7 +124,7 @@ public class ProvisionRunnerTest {
         doThrow(new InstallException("Failed.")).when(device).installPackage(any(), eq(true));
         assertProvisionException(device, ProvisionException.ErrorType.INSTALL_FAILED);
         assertEquals(
-                ProvisionRunner.ProvisionState.Step.CHECK_ACCOUNT,
+                ProvisionRunner.ProvisionState.Step.GSERVICES,
                 myProvisionRunner.getCache().get(device).lastSucceeded);
     }
 
