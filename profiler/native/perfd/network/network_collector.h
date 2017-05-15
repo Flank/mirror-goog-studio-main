@@ -21,8 +21,9 @@
 #include "utils/time_value_buffer.h"
 
 #include <atomic>
-#include <memory>
+#include <mutex>
 #include <thread>
+#include <unordered_map>
 #include <vector>
 
 namespace profiler {
@@ -33,41 +34,40 @@ typedef TimeValueBuffer<profiler::proto::NetworkProfilerData>
 // Class that runs in the background, continuously collecting network data
 class NetworkCollector final {
  public:
-  // Each collector for pid specific information, if pid is -1, it is device
-  // network information.
-  NetworkCollector(int pid, int sample_ms, NetworkProfilerBuffer* buffer)
-      : pid_(pid), sample_us_(sample_ms * 1000), buffer_(*buffer) {}
+  NetworkCollector(int sample_ms);
   ~NetworkCollector();
 
-  // Creates a thread that collects and saves network data continually.
-  void Start();
+  // Allocates the given app's buffer and add it for all samplers to start.
+  // If this is the first app, starts the collector's thread.
+  void Start(int32_t pid, NetworkProfilerBuffer *buffer);
 
-  // Stops collecting data and wait for thread exit.
-  void Stop();
-
-  // Return app id that this network collector is for, -1 if for any app.
-  int pid();
+  // Remove the given app from all samplers and deallocate buffer to stop.
+  // If this is the last app, stops the collector's thread.
+  void Stop(int32_t pid);
 
  private:
-  // First reads app uid from file, then creates app network data samplers;
-  // collectors are saved into a vector member variable.
-  void CreateSamplers();
-
   // Continually collects data on a background thread until stopped.
   void Collect();
+  // Stores all started app's network data into buffers, this is called after
+  // all samplers refreshed the data.
+  void StoreDataToBuffer();
 
-  // App pid.
-  int pid_;
   // Sample frequency.
   int sample_us_;
-  // Buffer that holds sample data so far.
-  NetworkProfilerBuffer& buffer_;
   // Thread that network profile operations run on.
   std::thread profiler_thread_;
   // True if profile operations is running, false otherwise.
   std::atomic_bool is_running_{false};
-  // Vector to hold data collectors which may need some steps to create.
+
+  // First reads app uid from file, then creates app network data samplers;
+  // collectors are saved into a vector member variable.
   std::vector<std::unique_ptr<NetworkSampler>> samplers_;
+  // Mapping of app uid to its buffer. A new buffer is added into this map
+  // when profiling for an app starts, and the buffer is removed when
+  // its profiling stops. A buffer holds all of data including traffic bytes,
+  // open connections, and device-wide radio power status.
+  std::unordered_map<uint32_t, NetworkProfilerBuffer*> uid_to_buffers_;
+  mutable std::mutex buffer_mutex_;
 };
 
 }  // namespace profiler

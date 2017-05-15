@@ -15,7 +15,6 @@
  */
 #include "connectivity_sampler.h"
 
-#include "utils/trace.h"
 #include "utils/bash_command.h"
 
 namespace {
@@ -24,10 +23,20 @@ const char* const kDefaultNetworkLabel = "Active default network: ";
 
 namespace profiler {
 
-void ConnectivitySampler::GetData(profiler::proto::NetworkProfilerData* data) {
-  data->mutable_connectivity_data()->set_radio_state(GetRadioState());
-  data->mutable_connectivity_data()->set_default_network_type(
-      GetDefaultNetworkType());
+void ConnectivitySampler::Refresh() {
+  network_type_ = GetDefaultNetworkType();
+  if (network_type_ == proto::ConnectivityData::MOBILE) {
+    radio_state_ = GetRadioState();
+  } else {
+    radio_state_ = profiler::proto::ConnectivityData::UNSPECIFIED;
+  }
+}
+
+proto::NetworkProfilerData ConnectivitySampler::Sample(const uint32_t uid) {
+  proto::NetworkProfilerData data;
+  data.mutable_connectivity_data()->set_default_network_type(network_type_);
+  data.mutable_connectivity_data()->set_radio_state(radio_state_);
+  return data;
 }
 
 proto::ConnectivityData::RadioState ConnectivitySampler::GetRadioState() {

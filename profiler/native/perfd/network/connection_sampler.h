@@ -17,8 +17,10 @@
 #define PERFD_NETWORK_CONNECTION_SAMPLER_H
 
 #include "perfd/network/network_sampler.h"
+#include "proto/network.pb.h"
 
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace profiler {
@@ -27,18 +29,13 @@ namespace profiler {
 // collect the number of both tcp and udp open connections.
 class ConnectionSampler final : public NetworkSampler {
  public:
-  ConnectionSampler(const std::string &uid,
-                    const std::vector<std::string> &files)
-      : files_(files), uid_(atoi(uid.c_str())) {}
-
-  // Read system file to get the number of open connections, and store data in
-  // given {@code NetworkProfilerData}.
-  void GetData(profiler::proto::NetworkProfilerData *data) override;
+  ConnectionSampler(const std::vector<std::string> &files): files_(files) {}
+  // Reads open connections information for all apps using network.
+  void Refresh() override;
+  // Returns a specific app's open connections' number from the latest refresh.
+  proto::NetworkProfilerData Sample(const uint32_t uid) override;
 
  private:
-  // Returns open connection number that is read from a given file.
-  int ReadConnectionNumber(const std::string &file, char *buffer);
-
   // Index indicates the location of app uid(unique id), in the connection
   // system files. One open connection is listed as a line in file. Tokens
   // are joined by whitespace in a line. For example, a connection line is
@@ -58,9 +55,9 @@ class ConnectionSampler final : public NetworkSampler {
   // List of files containing open connection data; for example /proc/net/tcp6.
   // Those files contain multiple apps' information.
   const std::vector<std::string> files_;
-
-  // Unsigned integer that is app uid for parsing file to get connections.
-  const uint32_t uid_;
+  // Mapping of app uid to an app's open connection number. This map stores
+  // latest refreshed data that is read from files.
+  std::unordered_map<uint32_t, uint32_t> connections_;
 };
 
 }  // namespace profiler

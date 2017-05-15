@@ -29,10 +29,16 @@ class ConnectivitySampler final : public NetworkSampler {
                       const std::string &network_type_command)
       : radio_state_command_(radio_state_command),
         network_type_command_(network_type_command) {}
-
-  void GetData(profiler::proto::NetworkProfilerData *data) override;
+  // Read device's connectivity information like selected network type.
+  void Refresh() override;
+  // After |Refresh| is called, this method returns this device's selected
+  // network type is wifi or mobile, if mobile, also returns the mobile radio
+  // power status. Given app uid is ignored and not needed to get device data.
+  proto::NetworkProfilerData Sample(const uint32_t uid = 0) override;
 
  private:
+  // Returns network radio power status when using mobile data, it is not
+  // applicable when using non mobile data like wifi.
   proto::ConnectivityData::RadioState GetRadioState();
 
   // Returns the selected default network type.
@@ -40,6 +46,8 @@ class ConnectivitySampler final : public NetworkSampler {
 
   const std::string radio_state_command_;
   const std::string network_type_command_;
+  proto::ConnectivityData::NetworkType network_type_;
+  proto::ConnectivityData::RadioState radio_state_;
 };
 
 }  // namespace profiler

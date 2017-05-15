@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 #include "connection_sampler.h"
-#include "proto/network.pb.h"
 #include "test/utils.h"
 
 #include <gtest/gtest.h>
@@ -27,22 +26,24 @@ TEST(GetConnectionData, TwoOpenConnectionsWithUidMatched) {
       TestUtils::getNetworkTestData("open_connection_uid_matched1.txt"),
       TestUtils::getNetworkTestData("open_connection_uid_matched2.txt")
   };
-  ConnectionSampler collector("12345", file_names);
-  profiler::proto::NetworkProfilerData data;
-  collector.GetData(&data);
+  ConnectionSampler collector(file_names);
+  collector.Refresh();
+  auto data = collector.Sample(12345);
   EXPECT_TRUE(data.has_connection_data());
   EXPECT_EQ(2, data.connection_data().connection_number());
 }
 
-TEST(GetConnectionData, OpenConnectionWithUidUnmatched) {
+TEST(GetConnectionData, OpenConnectionWithTwoUids) {
   const std::vector<std::string> file_names = {
       TestUtils::getNetworkTestData("open_connection_uid_unmatched.txt")
   };
-  ConnectionSampler collector("12345", file_names);
-  profiler::proto::NetworkProfilerData data;
-  collector.GetData(&data);
-  EXPECT_TRUE(data.has_connection_data());
-  EXPECT_EQ(0, data.connection_data().connection_number());
+  ConnectionSampler collector(file_names);
+  collector.Refresh();
+  auto data = collector.Sample(12345);
+  EXPECT_FALSE(data.has_connection_data());
+  auto data2 = collector.Sample(12340);
+  EXPECT_TRUE(data2.has_connection_data());
+  EXPECT_EQ(1, data2.connection_data().connection_number());
 }
 
 TEST(GetConnectionData, OpenConnectionListeningAllInterfaces) {
@@ -51,9 +52,8 @@ TEST(GetConnectionData, OpenConnectionListeningAllInterfaces) {
         "open_connection_listening_all_interfaces.txt"
       )
   };
-  ConnectionSampler collector("12345", file_names);
-  profiler::proto::NetworkProfilerData data;
-  collector.GetData(&data);
-  EXPECT_TRUE(data.has_connection_data());
-  EXPECT_EQ(0, data.connection_data().connection_number());
+  ConnectionSampler collector(file_names);
+  collector.Refresh();
+  auto data = collector.Sample(12345);
+  EXPECT_FALSE(data.has_connection_data());
 }

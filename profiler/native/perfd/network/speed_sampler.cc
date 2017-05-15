@@ -19,24 +19,34 @@
 
 namespace profiler {
 
-void SpeedSampler::GetData(profiler::proto::NetworkProfilerData *data) {
+void SpeedSampler::Refresh() {
   stats_reader_.Refresh();
+}
 
+proto::NetworkProfilerData SpeedSampler::Sample(const uint32_t uid) {
+  proto::NetworkProfilerData data;
+
+  uint64_t bytes_sent = stats_reader_.bytes_tx(uid);
+  uint64_t bytes_received = stats_reader_.bytes_rx(uid);
+
+  // TODO: Use clock from Daemon::Utilities from profiler component
   SteadyClock clock;
-  auto curr_time = clock.GetCurrentTime();
-
-  if (!tx_speed_converter_) {
-    tx_speed_converter_.reset(new SpeedConverter(curr_time, stats_reader_.bytes_tx()));
-    rx_speed_converter_.reset(new SpeedConverter(curr_time, stats_reader_.bytes_rx()));
+  auto time = clock.GetCurrentTime();
+  if (tx_speed_converters_.find(uid) == tx_speed_converters_.end()) {
+    SpeedConverter tx_converter(time, bytes_sent);
+    SpeedConverter rx_converter(time, bytes_received);
+    tx_speed_converters_.emplace(uid, tx_converter);
+    rx_speed_converters_.emplace(uid, rx_converter);
   }
   else {
-    tx_speed_converter_->Add(curr_time, stats_reader_.bytes_tx());
-    rx_speed_converter_->Add(curr_time, stats_reader_.bytes_rx());
+    tx_speed_converters_.at(uid).Add(time, bytes_sent);
+    rx_speed_converters_.at(uid).Add(time, bytes_received);
   }
 
-  profiler::proto::SpeedData *speed_data = data->mutable_speed_data();
-  speed_data->set_sent(tx_speed_converter_->speed());
-  speed_data->set_received(rx_speed_converter_->speed());
+  profiler::proto::SpeedData *speed_data = data.mutable_speed_data();
+  speed_data->set_sent(tx_speed_converters_.at(uid).speed());
+  speed_data->set_received(rx_speed_converters_.at(uid).speed());
+  return data;
 }
 
 }  // namespace profiler
