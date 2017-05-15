@@ -26,7 +26,6 @@ import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.variant.MultiTypeVariantFactory;
 import com.android.build.gradle.internal.variant.VariantFactory;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.AndroidProject;
@@ -35,7 +34,6 @@ import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import javax.inject.Inject;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.plugins.ExtraPropertiesExtension;
 import org.gradle.internal.reflect.Instantiator;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
@@ -49,11 +47,6 @@ public class FeaturePlugin extends LibraryPlugin {
 
     @Override
     public void apply(@NonNull Project project) {
-        // FIXME: Remove this once aapt2 is re-enabled by default.
-        project.getExtensions()
-                .getByType(ExtraPropertiesExtension.class)
-                .set(BooleanOption.ENABLE_AAPT2.getPropertyName(), true);
-
         super.apply(project);
 
         // create the configuration used to declare the feature split in the base split.
