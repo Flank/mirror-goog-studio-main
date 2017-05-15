@@ -42,6 +42,7 @@ import com.android.ide.common.repository.SdkMavenRepository;
 import com.android.repository.io.FileOpUtils;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
+import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.detector.api.Category;
@@ -869,7 +870,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
         switch (groupId) {
             case SUPPORT_LIB_GROUP_ID:
             case "com.android.support.test": {
-                checkSupportLibraries(context, dependency, cookie);
+                checkSupportLibraries(context, dependency, version, cookie);
 
                 // Check to make sure you have the Android support repository installed
                 File sdkHome = context.getClient().getSdkHome();
@@ -1266,6 +1267,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
     private void checkSupportLibraries(
             @NonNull Context context,
             @NonNull GradleCoordinate dependency,
+            @NonNull GradleVersion version,
             @NonNull Object cookie) {
         String groupId = dependency.getGroupId();
         String artifactId = dependency.getArtifactId();
@@ -1308,13 +1310,40 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             }
         }
 
-        if (minSdkVersion >= 14 && "appcompat-v7".equals(artifactId)
-                && compileSdkVersion >= 1 && compileSdkVersion < 21) {
-            report(context, cookie, DEPENDENCY,
-                    "Using the appcompat library when minSdkVersion >= 14 and "
-                            + "compileSdkVersion < 21 is not necessary");
+        if ("appcompat-v7".equals(artifactId)) {
+            boolean supportLib26Beta = version.isAtLeast(26, 0, 0, "beta", 1, true);
+            boolean compile26Beta = compileSdkVersion >= 26;
+            // It's not actually compileSdkVersion 26, it's using O revision 2 or higher
+            if (compileSdkVersion == 26) {
+                IAndroidTarget buildTarget = context.getProject().getBuildTarget();
+                if (buildTarget != null) {
+                    compile26Beta = buildTarget.getRevision() != 1;
+                }
+            }
+
+            if (supportLib26Beta && !compile26Beta
+                    // We already flag problems when these aren't matching
+                    && compileSdkVersion == version.getMajor()) {
+                reportNonFatalCompatibilityIssue(context, cookie, String.format(
+                    "When using a `compileSdkVersion` older than android-O revision 2, the "
+                            + "support library version must be 26.0.0-alpha1 or lower (was %1$s)",
+                        version));
+            } else if (!supportLib26Beta && compile26Beta) {
+                reportNonFatalCompatibilityIssue(context, cookie,
+                        String.format("When using support library 26.0.0-beta1 or higher, the "
+                            + "`compileSdkVersion` must be the O SDK (revision 2) or higher "
+                                + "(was %1$d)", compileSdkVersion));
+            }
+
+            if (minSdkVersion >= 14 && compileSdkVersion >= 1 && compileSdkVersion < 21) {
+                report(context, cookie, DEPENDENCY,
+                        "Using the appcompat library when minSdkVersion >= 14 and "
+                                + "compileSdkVersion < 21 is not necessary");
+            }
         }
     }
+
+
 
     /**
      * If incrementally editing a single build.gradle file, tracks whether we've already

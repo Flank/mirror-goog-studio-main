@@ -32,6 +32,7 @@ import static com.android.tools.lint.checks.GradleDetector.PLUS;
 import static com.android.tools.lint.checks.GradleDetector.REMOTE_VERSION;
 import static com.android.tools.lint.checks.GradleDetector.STRING_INTEGER;
 import static com.android.tools.lint.checks.GradleDetector.getNamedDependency;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.android.annotations.NonNull;
@@ -41,6 +42,8 @@ import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaLibrary;
 import com.android.ide.common.repository.GradleCoordinate;
 import com.android.ide.common.repository.GradleVersion;
+import com.android.sdklib.AndroidVersion;
+import com.android.sdklib.IAndroidTarget;
 import com.android.testutils.TestUtils;
 import com.android.tools.lint.checks.infrastructure.TestIssueRegistry;
 import com.android.tools.lint.checks.infrastructure.TestLintTask;
@@ -51,6 +54,7 @@ import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
+import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.utils.Pair;
 import com.google.common.collect.Lists;
@@ -1720,6 +1724,130 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 .incremental()
                 .run()
                 .expectClean();
+    }
+
+    public void testOR2RequiresAppCompat26Beta1() throws Exception {
+        // Both versions older than 26 beta: No problem
+        //noinspection all // Sample code
+        lint().files(
+                gradle(""
+                        + "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    compileSdkVersion 25\n"
+                        + "\n"
+                        + "    defaultConfig {\n"
+                        + "        minSdkVersion 15\n"
+                        + "        targetSdkVersion 25\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    compile 'com.android.support:appcompat-v7:25.0.0-rc1'\n"
+                        + "}\n"))
+                .issues(COMPATIBILITY)
+                .client(getClientWithMockPlatformTarget(
+                        new AndroidVersion("25"), 1))
+                .sdkHome(getMockSupportLibraryInstallation())
+                .run()
+                .expectClean();
+
+        // Both versions newer than 26 beta: No problem
+        //noinspection all // Sample code
+        lint().files(
+                gradle(""
+                        + "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    compileSdkVersion \"android-O\"\n"
+                        + "\n"
+                        + "    defaultConfig {\n"
+                        + "        minSdkVersion 15\n"
+                        + "        targetSdkVersion \"O\"\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    compile 'com.android.support:appcompat-v7:26.0.0-beta1'\n"
+                        + "}\n"))
+                .issues(COMPATIBILITY)
+                .client(getClientWithMockPlatformTarget(
+                        new AndroidVersion("26"), 2))
+                .sdkHome(getMockSupportLibraryInstallation())
+                .run()
+                .expectClean();
+
+        // SDK >= O, support library < 26 beta: problem
+        //noinspection all // Sample code
+        lint().files(
+                gradle(""
+                        + "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    compileSdkVersion \"android-O\"\n"
+                        + "\n"
+                        + "    defaultConfig {\n"
+                        + "        minSdkVersion 15\n"
+                        + "        targetSdkVersion \"O\"\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    compile 'com.android.support:appcompat-v7:26.0.0-alpha1'\n"
+                        + "}\n"))
+                .issues(COMPATIBILITY)
+                .client(getClientWithMockPlatformTarget(
+                        new AndroidVersion("26"), 2))
+                .sdkHome(getMockSupportLibraryInstallation())
+                .run()
+                .expect(""
+                        + "build.gradle:13: Error: When using support library 26.0.0-beta1 or higher, the compileSdkVersion must be the O SDK (revision 2) or higher (was 26) [GradleCompatible]\n"
+                        + "    compile 'com.android.support:appcompat-v7:26.0.0-alpha1'\n"
+                        + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "1 errors, 0 warnings\n");
+
+        // SDK < O, support library >= 26 beta: problem
+        //noinspection all // Sample code
+        lint().files(
+                gradle(""
+                        + "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    compileSdkVersion 26\n"
+                        + "\n"
+                        + "    defaultConfig {\n"
+                        + "        minSdkVersion 15\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    compile 'com.android.support:appcompat-v7:26.0.0-beta1'\n"
+                        + "}\n"))
+                .issues(COMPATIBILITY)
+                .client(getClientWithMockPlatformTarget(
+                        new AndroidVersion("26"), 1))
+                .sdkHome(getMockSupportLibraryInstallation())
+                .run()
+                .expect(""
+                        + "build.gradle:12: Error: When using a compileSdkVersion older than android-O revision 2, the support library version must be 26.0.0-alpha1 or lower (was 26.0.0-beta1) [GradleCompatible]\n"
+                        + "    compile 'com.android.support:appcompat-v7:26.0.0-beta1'\n"
+                        + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "1 errors, 0 warnings\n");
+    }
+
+    // Utility for testOR2RequiresAppCompat26Beta1
+    private static com.android.tools.lint.checks.infrastructure.TestLintClient
+            getClientWithMockPlatformTarget(AndroidVersion version, int revision) {
+        return new com.android.tools.lint.checks.infrastructure.TestLintClient() {
+            @Nullable
+            @Override
+            public IAndroidTarget getCompileTarget(@NonNull Project project) {
+                IAndroidTarget target = mock(IAndroidTarget.class);
+                when(target.getRevision()).thenReturn(revision);
+                when(target.getVersion()).thenReturn(version);
+                return target;
+            }
+        };
     }
 
     // -------------------------------------------------------------------------------------------
