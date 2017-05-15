@@ -37,7 +37,7 @@ import java.util.Map;
  *
  * Each method must be called on the thread that initiates the corresponding operation.
  */
-interface HttpConnectionTracker {
+public interface HttpConnectionTracker {
 
     /**
      * Reports an explicit disconnect request

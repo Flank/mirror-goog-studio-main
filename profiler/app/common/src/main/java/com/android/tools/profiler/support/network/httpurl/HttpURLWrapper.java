@@ -13,15 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.profiler.support.network;
+package com.android.tools.profiler.support.network.httpurl;
 
+import javax.net.ssl.HttpsURLConnection;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
-
-import javax.net.ssl.HttpsURLConnection;
 
 
 /**
@@ -29,7 +28,7 @@ import javax.net.ssl.HttpsURLConnection;
  *
  * The calls to the helper methods are injected in a post build bytecode transformation task
  */
-public final class HttpWrapper {
+public final class HttpURLWrapper {
 
     private static URLConnection wrapURLConnectionHelper(URLConnection wrapped) {
         // Skip the helper frames (the helpers are implemented so every path has exactly two helper frames)
@@ -49,7 +48,7 @@ public final class HttpWrapper {
     /**
      * Wraps URL.openConnect() and creates a wrapper class around the returned Http(s)URLConnection
      *
-     * url.openConnection() ⇒ HttpWrapper.wrapURLConnection(url.openConnection())
+     * url.openConnection() ⇒ HttpURLWrapper.wrapURLConnection(url.openConnection())
      */
     @SuppressWarnings("unused") // Called in the ProfilerPlugin via reflection
     public static URLConnection wrapURLConnection(URLConnection wrapped) {
@@ -59,7 +58,7 @@ public final class HttpWrapper {
     /**
      * Wraps URL.openStream()
      *
-     * url.openStream() ⇒ HttpWrapper.wrapOpenStream(url)
+     * url.openStream() ⇒ HttpURLWrapper.wrapOpenStream(url)
      */
     @SuppressWarnings("unused") // Called in the ProfilerPlugin via reflection
     public static InputStream wrapOpenStream(URL url) throws IOException {
@@ -69,7 +68,7 @@ public final class HttpWrapper {
     /**
      * Wraps URL.getContent()
      *
-     * url.getContent() ⇒ HttpWrapper.wrapGetContent(url)
+     * url.getContent() ⇒ HttpURLWrapper.wrapGetContent(url)
      */
     @SuppressWarnings("unused") // Called in the ProfilerPlugin via reflection
     public static Object wrapGetContent(URL url) throws IOException {
@@ -79,7 +78,7 @@ public final class HttpWrapper {
     /**
      * Wraps URL.getContent(Class[] types)
      *
-     * url.getContent(types) ⇒ HttpWrapper.wrapGetContent(url, types)
+     * url.getContent(types) ⇒ HttpURLWrapper.wrapGetContent(url, types)
      */
     @SuppressWarnings("unused") // Called in the ProfilerPlugin via reflection
     public static Object wrapGetContent(URL url, Class[] types) throws IOException {

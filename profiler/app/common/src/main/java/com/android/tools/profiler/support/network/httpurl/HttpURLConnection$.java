@@ -13,89 +13,41 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.profiler.support.network;
+package com.android.tools.profiler.support.network.httpurl;
+
+import com.android.tools.profiler.support.network.HttpConnectionTracker;
+import com.android.tools.profiler.support.network.HttpTracker;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.HttpURLConnection;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.security.Permission;
-import java.security.Principal;
-import java.security.cert.Certificate;
 import java.util.List;
 import java.util.Map;
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLPeerUnverifiedException;
-import javax.net.ssl.SSLSocketFactory;
-
 
 /**
- * Wraps a {@link HttpsURLConnection} instance and delegates the method calls to the wrapped object,
+ * Wraps a {@link HttpURLConnection} instance and delegates the method calls to the wrapped object,
  * injecting calls to report HTTP activity through {@link HttpConnectionTracker}
  *
- * This class is instantiated through one of the {@link HttpWrapper} helper methods
+ * This class is instantiated through one of the {@link HttpURLWrapper} helper methods
  */
 // '$' intentionally used to mimic generated code since we insert this via bytecode instrumentation
 @SuppressWarnings("DollarSignInName")
-final public class HttpsURLConnection$ extends HttpsURLConnection {
+public final class HttpURLConnection$ extends HttpURLConnection {
 
-    private final HttpsURLConnection myWrapped;
+    private final HttpURLConnection myWrapped;
     private final HttpConnectionTracker myConnectionTracker;
 
     private boolean myConnectTracked;
     private InputStream myTrackedInputStream;
 
-    public HttpsURLConnection$(HttpsURLConnection wrapped, StackTraceElement[] callstack) {
+    public HttpURLConnection$(HttpURLConnection wrapped, StackTraceElement[] callstack) {
         super(wrapped.getURL());
         myWrapped = wrapped;
         myConnectionTracker = HttpTracker.trackConnection(url.toString(), callstack);
-    }
-
-    @Override
-    public String getCipherSuite() {
-        return myWrapped.getCipherSuite();
-    }
-
-    @Override
-    public Certificate[] getLocalCertificates() {
-        return myWrapped.getLocalCertificates();
-    }
-
-    @Override
-    public Certificate[] getServerCertificates() throws SSLPeerUnverifiedException {
-        return myWrapped.getServerCertificates();
-    }
-
-    @Override
-    public Principal getPeerPrincipal() throws SSLPeerUnverifiedException {
-        return myWrapped.getPeerPrincipal();
-    }
-
-    @Override
-    public Principal getLocalPrincipal() {
-        return myWrapped.getLocalPrincipal();
-    }
-
-    @Override
-    public void setHostnameVerifier(HostnameVerifier v) {
-        myWrapped.setHostnameVerifier(v);
-    }
-
-    @Override
-    public HostnameVerifier getHostnameVerifier() {
-        return myWrapped.getHostnameVerifier();
-    }
-
-    @Override
-    public void setSSLSocketFactory(SSLSocketFactory sf) {
-        myWrapped.setSSLSocketFactory(sf);
-    }
-
-    @Override
-    public SSLSocketFactory getSSLSocketFactory() {
-        return myWrapped.getSSLSocketFactory();
     }
 
     @Override
@@ -206,8 +158,7 @@ final public class HttpsURLConnection$ extends HttpsURLConnection {
         } catch (IOException e) {
             myConnectionTracker.error(e.toString());
             throw e;
-        }
-        finally {
+        } finally {
             myConnectTracked = true;
         }
     }
@@ -415,4 +366,3 @@ final public class HttpsURLConnection$ extends HttpsURLConnection {
         return myWrapped.toString();
     }
 }
-

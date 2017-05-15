@@ -26,7 +26,7 @@ import java.util.Map;
 /**
  * This is the factory for the {@link HttpConnectionTracker} instances
  */
-final class HttpTracker {
+public final class HttpTracker {
 
     /**
      * Wraps an InputStream to enable the network profiler capturing of response body

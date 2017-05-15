@@ -14,14 +14,16 @@
  * limitations under the License.
  */
 
-package com.android.tools.profiler.support.network;
+package com.android.tools.profiler.support.network.okhttp;
 
 import android.util.Log;
 import com.android.tools.profiler.support.ProfilerService;
+
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
 import java.util.List;
 
+@SuppressWarnings("unused") // Referenced via reflection in OkHttpAdapter
 public final class OkHttpWrapper {
 
     /**
