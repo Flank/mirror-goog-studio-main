@@ -339,6 +339,24 @@ message BatchAllocationSample {
   int64 timestamp = 2;
   repeated AllocationEvent events = 3;
   repeated StackMethod methods = 4;
+  repeated EncodedStack stacks = 5;
+}
+
+// Proto format for storing and transmitting O+ stack data efficiently.
+// The |stack_id| field uniquely identifies a stack within an app, each
+// |method_id| is referenced by StackMethod proto which contains more
+// detailed info about the method.
+message EncodedStack {
+  int32 stack_id = 1;
+  repeated int64 method_ids = 2;
+}
+
+// O+ Proto format containing the full stack data associated with the
+// |stack_id|. Used on Studio-side only to lazy-load the stack
+// info based on the id received and stored from the EncodedStack proto.
+message DecodedStack {
+  int32 stack_id = 1;
+  repeated StackMethod methods = 2;
 }
 
 // Proto format for handling O+ stack method data.
@@ -369,9 +387,6 @@ message AllocationEvent {
     int64 size = 3;
     // Length for array objects. For non-arrays, set to -1.
     int32 length = 4;
-    // List of method ids corresponding to allocation stack frames
-    // Note - first entry is top of stack.
-    repeated int64 method_ids = 5;
     // TODO - thread, stack frame location
 
     // Studio-side only so we can store and query data more
@@ -379,7 +394,17 @@ message AllocationEvent {
     // would indicate the free timestamps (i.e. the timestamp
     // of the gc event that triggered the deallocation).
     // Note that free_timestamp would be set to Long.MAX_VALUE
-    int64 free_timestamp = 6;
+    int64 free_timestamp = 5;
+
+    // Id representing the allocation stack.    
+    int32 stack_id = 6;
+    // Entire list of methods corresponding to the allocation stack.
+    // Note that this is only used for temporary storage in perfa.
+    // When the data is sent from perfa->perfd, the list is encoded
+    // as |stack_id| above, and the encoded data is stored/sent
+    // separately using EncodedStack.
+    // First entry is top of stack.
+    repeated int64 method_ids = 7;
   }
 
   message Deallocation {

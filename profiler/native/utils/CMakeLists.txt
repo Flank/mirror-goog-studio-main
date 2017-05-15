@@ -15,6 +15,7 @@ set(UTILS_SOURCES
     stopwatch.cc
     tokenizer.cc
     trace.cc
+    trie.h
     fs/dir.cc
     fs/disk_file_system.cc
     fs/file.cc
@@ -65,6 +66,7 @@ add_unit_test(profiler_utils_test
               producer_consumer_queue_test.cc
               stopwatch_test.cc
               time_value_buffer_test.cc
+              trie_test.cc
               tokenizer_test.cc
               uid_fetcher_test.cc
               fs/file_system_test.cc)

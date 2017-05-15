@@ -57,6 +57,7 @@ constexpr int kMaxStackDepth = 100;
 namespace profiler {
 
 using proto::BatchAllocationSample;
+using proto::EncodedStack;
 
 // STL container memory tracking for Debug only.
 std::atomic<int64_t> g_max_used[kMemTagCount];
@@ -281,6 +282,7 @@ void MemoryTrackingEnv::LogGcFinish() {
            (long)g_total_used[i].load(), (long)g_max_used[i].load());
   }
   event_queue_.PrintStats();
+  stack_trie_.PrintStats();
   Log::V(">> [MEM AGENT STATS DUMP END]");
 #endif
 }
@@ -449,12 +451,36 @@ void MemoryTrackingEnv::AllocDataWorker(jvmtiEnv* jvmti, JNIEnv* jni,
 
       switch (event->event_case()) {
         case AllocationEvent::kAllocData: {
-          const AllocationEvent::Allocation alloc_data = event->alloc_data();
-          for (int i = 0; i < alloc_data.method_ids_size(); i++) {
-            long id = alloc_data.method_ids(i);
+          AllocationEvent::Allocation* alloc_data = event->mutable_alloc_data();
+          int stack_size = alloc_data->method_ids_size();
+          std::vector<long> reversed_stack(stack_size);
+          for (int i = 0; i < stack_size; i++) {
+            long id = alloc_data->method_ids(i);
+            reversed_stack[stack_size - i - 1] = id;
             if (env->known_method_ids_.emplace(id).second) {
               method_ids_to_query.push_back(id);
             }
+          }
+
+          // Store and encode the stack into trie.
+          // TODO - consider moving trie storage to perfd?
+          if (stack_size > 0) {
+            auto result = env->stack_trie_.insert(reversed_stack);
+            if (result.second) {
+              // Append the stack info into BatchAllocationSample
+              EncodedStack* encoded_stack = sample.add_stacks();
+              encoded_stack->set_stack_id(result.first);
+              for (int j = stack_size - 1; j >= 0; j--) {
+                // Yet reverse again so first entry is top of stack.
+                encoded_stack->add_method_ids(reversed_stack[j]);
+              }
+            }
+
+            // Only store the leaf index into alloc_data.
+            // The full stack will be looked up from EncodedStack on
+            // studio-side.
+            alloc_data->clear_method_ids();
+            alloc_data->set_stack_id(result.first);
           }
         } break;
         default:

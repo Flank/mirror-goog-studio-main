@@ -72,6 +72,7 @@ cc_library(
         "time_value_buffer.h",
         "tokenizer.h",
         "trace.h",
+        "trie.h",
         "uid_fetcher.h",
     ],
     copts = [
@@ -96,6 +97,7 @@ cc_test(
         "stopwatch_test.cc",
         "time_value_buffer_test.cc",
         "tokenizer_test.cc",
+        "trie_test.cc",
         "uid_fetcher_test.cc",
     ],
     copts = [
