@@ -35,11 +35,27 @@ import org.gradle.api.tasks.TaskAction;
 /** Task that writes the application-id file and publishes it. */
 public class ApplicationIdWriterTask extends BaseTask {
 
-    @Input private String applicationId;
+    private String applicationId;
 
-    @InputFiles @Optional private FileCollection packageManifest;
+    private FileCollection packageManifest;
 
-    @OutputDirectory private File outputDirectory;
+    private File outputDirectory;
+
+    @Input
+    public String getApplicationId() {
+        return applicationId;
+    }
+
+    @InputFiles
+    @Optional
+    public FileCollection getPackageManifest() {
+        return packageManifest;
+    }
+
+    @OutputDirectory
+    public File getOutputDirectory() {
+        return outputDirectory;
+    }
 
     @TaskAction
     public void fullTaskAction() throws IOException {
@@ -66,7 +82,7 @@ public class ApplicationIdWriterTask extends BaseTask {
         @NonNull
         @Override
         public String getName() {
-            return variantScope.getTaskName("ApplicationId", "Writer");
+            return variantScope.getTaskName("write", "ApplicationId");
         }
 
         @NonNull
