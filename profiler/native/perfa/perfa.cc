@@ -77,9 +77,9 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
   auto dex_ir = reader.GetIr();
 
   slicer::MethodInstrumenter mi(dex_ir);
-  mi.AddTransformation<slicer::ExitHook>(
-      ir::MethodId("Lcom/android/tools/profiler/support/network/HttpWrapper;",
-                   "wrapURLConnection"));
+  mi.AddTransformation<slicer::ExitHook>(ir::MethodId(
+      "Lcom/android/tools/profiler/support/network/httpurl/HttpURLWrapper;",
+      "wrapURLConnection"));
   if (!mi.InstrumentMethod(ir::MethodId(desc.c_str(), "openConnection",
                                         "()Ljava/net/URLConnection;"))) {
     Log::E("Error instrumenting URL.openConnection");
