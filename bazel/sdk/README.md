@@ -35,15 +35,13 @@ failing due to changed assumptions over time.
 ## Development SDK location
 
 For unit tests and some compile-time dependencies, we provide a read-only SDK in our codebase. After
-you do a `repo sync`, and depending on your OS host, you will have one of three paths pulled down
-into your project.
+you do a `repo sync`, and depending on your OS host, you will your platform specific sdk pulled down in your workspace:
 
 ```
-//prebuilts/studio/sdk/darwin
-//prebuilts/studio/sdk/windows
-//prebuilts/studio/sdk/linux
+//prebuilts/studio/sdk/host
 ```
 
+Note that this is a symlink to the platform dependent directory.
 If you find yourself developing an Android app inside Android Studio, you should _not_ use this SDK
 for that. Instead, you should download a separate, mutable SDK (e.g. in `~/Android/sdk`) which
 you can update and prune to your hearts content.

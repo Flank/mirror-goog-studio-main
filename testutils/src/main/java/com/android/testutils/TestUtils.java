@@ -203,20 +203,12 @@ public class TestUtils {
     /**
      * Returns the SDK directory.
      *
-     * @throws IllegalStateException if the current OS is not supported.
      * @throws IllegalArgumentException if the path results in a file not found.
      * @return a valid File object pointing at the SDK directory.
      */
     @NonNull
     public static File getSdk() {
-        OsType osType = OsType.getHostOs();
-        if (osType == OsType.UNKNOWN) {
-            throw new IllegalStateException(
-                    "SDK test not supported on unknown platform: " + OsType.getOsName());
-        }
-
-        String hostDir = osType.getFolderName();
-        return getWorkspaceFile("prebuilts/studio/sdk/" + hostDir);
+        return getWorkspaceFile("prebuilts/studio/sdk/host");
     }
 
     /**
