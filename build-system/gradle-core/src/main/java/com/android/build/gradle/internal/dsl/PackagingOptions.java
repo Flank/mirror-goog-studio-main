@@ -269,6 +269,7 @@ public class PackagingOptions implements com.android.builder.model.PackagingOpti
      */
     @Override
     @NonNull
+    @Input
     public Set<String> getDoNotStrip() {
         return Sets.newHashSet(doNotStrip);
     }

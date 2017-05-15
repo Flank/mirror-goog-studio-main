@@ -467,7 +467,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                 FileUtils.cleanOutputDir(srcOut);
             }
 
-            symbolOutputDir = getTextSymbolOutputDir();
+            symbolOutputDir = textSymbolOutputDir.get();
             proguardOutputFile = getProguardOutputFile();
             mainDexListProguardOutputFile = getMainDexListProguardOutputFile();
         }
@@ -762,7 +762,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                 // TODO: unify with generateBuilderConfig, compileAidl, and library packaging somehow?
                 processResources
                         .setSourceOutputDir(variantScope.getRClassSourceOutputDir());
-                processResources.setTextSymbolOutputDir(symbolLocation);
+            processResources.textSymbolOutputDir = symbolLocation;
 
             if (variantScope.getCodeShrinker() != null) {
                 processResources.setProguardOutputFile(
@@ -920,15 +920,11 @@ public class ProcessAndroidResources extends IncrementalTask {
         this.sourceOutputDir = sourceOutputDir;
     }
 
-    @OutputDirectory
+    @org.gradle.api.tasks.OutputFile
     @Optional
     @Nullable
-    public File getTextSymbolOutputDir() {
-        return textSymbolOutputDir.get();
-    }
-
-    public void setTextSymbolOutputDir(Supplier<File> textSymbolOutputDir) {
-        this.textSymbolOutputDir = textSymbolOutputDir;
+    public File getTextSymbolOutputFile() {
+        return new File(textSymbolOutputDir.get(), SymbolTable.R_CLASS_NAME + SdkConstants.DOT_TXT);
     }
 
     @org.gradle.api.tasks.OutputFile

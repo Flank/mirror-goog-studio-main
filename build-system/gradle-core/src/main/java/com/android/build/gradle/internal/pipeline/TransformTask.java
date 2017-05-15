@@ -31,6 +31,7 @@ import com.android.builder.profile.Recorder;
 import com.android.ide.common.util.ReferenceHolder;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -48,19 +49,22 @@ import java.util.stream.Collectors;
 import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logger;
+import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectories;
 import org.gradle.api.tasks.OutputFiles;
 import org.gradle.api.tasks.ParallelizableTask;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs;
 
-/**
- * A task running a transform.
- */
+/** A task running a transform. */
 @ParallelizableTask
+@CacheableTask
 public class TransformTask extends StreamBasedTask implements Context {
 
     private Transform transform;
@@ -80,6 +84,7 @@ public class TransformTask extends StreamBasedTask implements Context {
     }
 
     @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
     public List<FileCollection> getSecondaryFileInputs() {
         if (secondaryInputFiles == null) {
             secondaryInputFiles = transform.getSecondaryFiles().stream()
@@ -91,13 +96,26 @@ public class TransformTask extends StreamBasedTask implements Context {
     }
 
     @OutputFiles
-    public Collection<File> getOtherFileOutputs() {
-        return transform.getSecondaryFileOutputs();
+    public Map<String, File> getOtherFileOutputs() {
+
+        ImmutableMap.Builder<String, File> builder = new ImmutableMap.Builder<>();
+        int index = 0;
+        for (File outputFolder : transform.getSecondaryFileOutputs()) {
+            builder.put("otherFileOutput" + Integer.toString(++index), outputFolder);
+        }
+
+        return builder.build();
     }
 
     @OutputDirectories
-    public Collection<File> getOtherFolderOutputs() {
-        return transform.getSecondaryDirectoryOutputs();
+    public Map<String, File> getOtherFolderOutputs() {
+        ImmutableMap.Builder<String, File> builder = new ImmutableMap.Builder<>();
+        int index = 0;
+        for (File outputFolder : transform.getSecondaryDirectoryOutputs()) {
+            builder.put("otherFolderOutput" + Integer.toString(++index), outputFolder);
+        }
+
+        return builder.build();
     }
 
     @Input
@@ -266,12 +284,18 @@ public class TransformTask extends StreamBasedTask implements Context {
                 .collect(Collectors.toList());
     }
 
+    @Internal
     private synchronized Collection<SecondaryFile> getAllSecondaryInputs() {
         if (secondaryFiles == null) {
             ImmutableList.Builder<SecondaryFile> builder = ImmutableList.builder();
             builder.addAll(transform.getSecondaryFiles());
+            //noinspection deprecation
             builder.addAll(
-                    getOldSecondaryInputs().stream().map(SecondaryFile::nonIncremental).iterator());
+                    transform
+                            .getSecondaryFileInputs()
+                            .stream()
+                            .map(SecondaryFile::nonIncremental)
+                            .iterator());
             secondaryFiles = builder.build();
         }
         return secondaryFiles;

@@ -59,7 +59,7 @@ import org.gradle.api.file.RelativePath;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.plugins.BasePlugin;
 import org.gradle.api.tasks.CacheableTask;
-import org.gradle.api.tasks.Classpath;
+import org.gradle.api.tasks.CompileClasspath;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.Optional;
@@ -105,8 +105,7 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
     }
 
     /** Boot classpath: typically android.jar */
-    // TODO This would be better if it returned a FileCollection (but it works now as is)
-    @Classpath
+    @CompileClasspath
     public List<String> getBootClasspath() {
         return bootClasspath.get();
     }
@@ -115,7 +114,7 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
         this.bootClasspath = bootClasspath;
     }
 
-    @Classpath
+    @CompileClasspath
     public FileCollection getLibraries() {
         return libraries.getArtifactFiles();
     }
