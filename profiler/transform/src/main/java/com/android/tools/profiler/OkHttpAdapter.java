@@ -26,7 +26,7 @@ final class OkHttpAdapter extends ClassVisitor implements Opcodes {
     private static final String OKHTTP3_BUILDER_CLASS = "okhttp3/OkHttpClient$Builder";
     private static final String OKHTTP2_CLIENT_CLASS = "com/squareup/okhttp/OkHttpClient";
     private static final String OKHTTP_WRAPPER =
-            "com/android/tools/profiler/support/network/OkHttpWrapper";
+            "com/android/tools/profiler/support/network/okhttp/OkHttpWrapper";
 
     OkHttpAdapter(ClassVisitor classVisitor) {
         super(ASM5, classVisitor);
