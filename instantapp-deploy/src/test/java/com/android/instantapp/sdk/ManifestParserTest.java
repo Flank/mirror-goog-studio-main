@@ -18,7 +18,6 @@ package com.android.instantapp.sdk;
 import static com.android.instantapp.sdk.InstantAppSdkTests.getInstantAppSdk;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -119,9 +118,9 @@ public class ManifestParserTest {
 
         Metadata.Device device = ManifestParser.parseDevice(deviceElement);
 
-        assertNull(device.getHardware());
-        assertNull(device.getAndroidDevice());
-        assertNull(device.getProduct());
+        assertEquals("", device.getHardware());
+        assertEquals("", device.getAndroidDevice());
+        assertEquals("", device.getProduct());
         assertEquals("sony", device.getManufacturer());
         assertThat(device.getApiLevels(), CoreMatchers.hasItems(23, 24, 25));
     }

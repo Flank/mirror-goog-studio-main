@@ -13,5 +13,6 @@ iml_module(
         "//tools/idea/.idea/libraries:Guava[library]",
         "//tools/idea/.idea/libraries:JUnit4[test]",
         "//tools/base/third_party:org.mockito_mockito-core[test]",
+        "//tools/base/instantapp-deploy/lib:aia-manifest-proto",
     ],
 )

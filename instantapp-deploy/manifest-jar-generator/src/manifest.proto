@@ -1,0 +1,127 @@
+syntax = "proto3";
+
+package wireless.android.instantapps.sdk;
+
+// Proto definition of Instant Apps SDK manifest. The manifest contains
+// description of the current SDK, including but not limited to, the version,
+// installing apks and their details, required gservices overrides and supported
+// devices.
+//
+// The proto serialization is read by Android Studio.
+message Manifest {
+  // Integer representation of SDK number. Higher number guarantees a newer SDK.
+  int32 version_code = 1;
+
+  // Human readable SDK version string.
+  string version_name = 2;
+
+  // List of included APKs available for install.
+  repeated ApkVersionInfo apks = 3;
+
+  // List of support libraries included in this SDK.
+  LibraryCompatibility library_compatibility = 4;
+
+  // List of devices that could be provisioned with this SDK.
+  repeated Device enabled_devices = 5;
+
+  // List of gservices overrides that need to be performed.
+  repeated GservicesOverride gservices_overrides = 6;
+}
+
+// Defines device matching rules. The following matching rules are connected
+// using AND logical operator. By default, empty rule matches everything.
+message Device {
+  // ro.product.manufacturer.
+  string manufacturer = 1;
+
+  // ro.product.device
+  string android_device = 2;
+
+  // ro.build.version.sdk, can be multiple possible values.
+  repeated int32 sdk_int = 3;
+
+  // ro.product.name
+  string product = 4;
+
+  // ro.hardware
+  string hardware = 5;
+}
+
+// Defines a Gservices override configuration.
+message GservicesOverride {
+  // Only override the gservices if the device matches.
+  repeated Device device = 1;
+
+  // Overriding key.
+  string key = 2;
+
+  // Value to be set.
+  string value = 3;
+}
+
+// Library that is included in the SDK. This library could determine the
+// compatibility of an SDK with an Instant App binary.
+message LibraryCompatibility {
+  // Matches the one in AndroidManifest.xml of InstantApps API.
+  int32 aia_compat_api_min_version = 1;
+
+  // Defines supported GmsCore APIs.
+  repeated GcoreLibraryCompatibility gcore_compat = 2;
+}
+
+// Information on GmsCore library compatibility
+message GcoreLibraryCompatibility {
+  // GmsCore API module name. Should be a substring of the description
+  // in its build.gradle dependency. For example, plus, awareness, etc.
+  string name = 1;
+
+  // GmsCore version code, where this API is supported.
+  // go/gmscore-version-scheme
+  // Default value should be supervisor's minimum gcore version.
+  int32 minimum_version = 2;
+}
+
+// Describes detailed information about the apk within this SDK.
+message ApkVersionInfo {
+  // Relative path within the SDK that points to this apk file.
+  string path = 1;
+
+  // Supported architecture of this APK
+  Arch arch = 2;
+
+  // Package name of this apk.
+  string package_name = 3;
+
+  // Version code of this apk.
+  int32 version_code = 4;
+
+  // Version name of this apk.
+  string version_name = 5;
+
+  // Supported Android SDK versions. Default to all of them.
+  repeated int32 sdk_int = 6;
+}
+
+// Lists all supported ABIs.
+// See https://developer.android.com/ndk/guides/abis.html#sa
+enum Arch {
+  ALL = 0;
+  ARMEABI = 1;
+  ARMEABI_V7A = 2;
+  ARM64_V8A = 3;
+  X86 = 4;
+  X86_64 = 5;
+  MIPS = 6;
+  MIPS64 = 7;
+}
+
+// Definition to read in gservices pbtxt file.
+message GservicesOverridesList {
+  repeated GservicesOverride override = 1;
+}
+
+// Definition to read in enabled devices pbtxt file.
+message EnabledDevicesList {
+  repeated Device device = 1;
+}
+
