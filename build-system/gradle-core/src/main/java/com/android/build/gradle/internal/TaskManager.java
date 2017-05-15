@@ -61,7 +61,6 @@ import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.coverage.JacocoPlugin;
 import com.android.build.gradle.internal.coverage.JacocoReportTask;
-import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.AbiSplitOptions;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
@@ -165,7 +164,6 @@ import com.android.build.gradle.tasks.RenderscriptCompile;
 import com.android.build.gradle.tasks.ShaderCompile;
 import com.android.build.gradle.tasks.SplitsDiscovery;
 import com.android.build.gradle.tasks.factory.AndroidUnitTest;
-import com.android.build.gradle.tasks.factory.IncrementalSafeguard;
 import com.android.build.gradle.tasks.factory.JacocoAgentConfigAction;
 import com.android.build.gradle.tasks.factory.JavaCompileConfigAction;
 import com.android.build.gradle.tasks.factory.ProcessJavaResConfigAction;
@@ -176,7 +174,6 @@ import com.android.builder.core.DefaultDexOptions;
 import com.android.builder.core.DesugarProcessBuilder;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.core.VariantType;
-import com.android.builder.dependency.level2.AndroidDependency;
 import com.android.builder.dexing.DexingMode;
 import com.android.builder.dexing.DexingType;
 import com.android.builder.model.ApiVersion;
@@ -1337,9 +1334,6 @@ public abstract class TaskManager {
     public AndroidTask<? extends JavaCompile> createJavacTask(
             @NonNull final TaskFactory tasks,
             @NonNull final VariantScope scope) {
-        AndroidTask<IncrementalSafeguard> javacIncrementalSafeguard = androidTasks.create(tasks,
-                new IncrementalSafeguard.ConfigAction(scope));
-
         AndroidTask<JavaPreCompileTask> preCompileTask = androidTasks.create(tasks,
                 new JavaPreCompileTask.ConfigAction(scope));
         preCompileTask.dependsOn(tasks, scope.getPreBuildTask());
@@ -1347,7 +1341,7 @@ public abstract class TaskManager {
         final AndroidTask<? extends JavaCompile> javacTask =
                 androidTasks.create(tasks, new JavaCompileConfigAction(scope));
         scope.setJavacTask(javacTask);
-        javacTask.dependsOn(tasks, javacIncrementalSafeguard, preCompileTask);
+        javacTask.dependsOn(tasks, preCompileTask);
 
         setupCompileTaskDependencies(tasks, scope, javacTask);
 
