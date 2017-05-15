@@ -6,6 +6,7 @@ add_library(profiler_network
             network_cache.cc
             network_collector.cc
             network_service.cc
+            io_network_type_provider.cc
             speed_converter.cc
             speed_sampler.cc)
 

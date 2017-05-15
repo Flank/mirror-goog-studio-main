@@ -16,19 +16,27 @@
 #ifndef PERFD_NETWORK_CONNECTIVITY_SAMPLER_H_
 #define PERFD_NETWORK_CONNECTIVITY_SAMPLER_H_
 
+#include <memory>
 #include <string>
 
-#include "network_sampler.h"
+#include "perfd/network/io_network_type_provider.h"
+#include "perfd/network/network_sampler.h"
 #include "proto/network.pb.h"
 
 namespace profiler {
 
 class ConnectivitySampler final : public NetworkSampler {
  public:
-  ConnectivitySampler(const std::string &radio_state_command,
-                      const std::string &network_type_command)
+  ConnectivitySampler(const std::string &radio_state_command)
+      : ConnectivitySampler(radio_state_command,
+                            std::make_shared<IoNetworkTypeProvider>()) {}
+
+  // Constructor that takes a given network type provider, use for testing.
+  explicit ConnectivitySampler(const std::string &radio_state_command,
+      const std::shared_ptr<NetworkTypeProvider>& network_type_provider)
       : radio_state_command_(radio_state_command),
-        network_type_command_(network_type_command) {}
+        network_type_provider_(network_type_provider) {}
+
   // Read device's connectivity information like selected network type.
   void Refresh() override;
   // After |Refresh| is called, this method returns this device's selected
@@ -41,13 +49,11 @@ class ConnectivitySampler final : public NetworkSampler {
   // applicable when using non mobile data like wifi.
   proto::ConnectivityData::RadioState GetRadioState();
 
-  // Returns the selected default network type.
-  proto::ConnectivityData::NetworkType GetDefaultNetworkType();
-
   const std::string radio_state_command_;
-  const std::string network_type_command_;
-  proto::ConnectivityData::NetworkType network_type_;
   proto::ConnectivityData::RadioState radio_state_;
+
+  std::shared_ptr<NetworkTypeProvider> network_type_provider_;
+  proto::ConnectivityData::NetworkType network_type_;
 };
 
 }  // namespace profiler

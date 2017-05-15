@@ -14,19 +14,23 @@
  * limitations under the License.
  */
 #include "connectivity_sampler.h"
+#include "fake_network_type_provider.h"
 #include "test/utils.h"
 #include "utils/bash_command.h"
 
+#include <memory>
 #include <gtest/gtest.h>
 
 using profiler::ConnectivitySampler;
+using profiler::FakeNetworkTypeProvider;
 using profiler::TestUtils;
 
 TEST(ConnectivitySampler, RadioActive) {
+  auto network_type_mobile = std::make_shared<FakeNetworkTypeProvider>(
+      profiler::proto::ConnectivityData::MOBILE);
   ConnectivitySampler sampler(
     "cat " + TestUtils::getNetworkTestData("connectivity_radio_active.txt"),
-    "cat " + TestUtils::getNetworkTestData(
-        "connectivity_network_type_mobile.txt"));
+    network_type_mobile);
   sampler.Refresh();
   auto data = sampler.Sample();
   EXPECT_TRUE(data.has_connectivity_data());
@@ -35,10 +39,11 @@ TEST(ConnectivitySampler, RadioActive) {
 }
 
 TEST(ConnectivitySampler, RadioIsDefaultValueWhenNetworkIsWifi) {
+  auto network_type_wifi = std::make_shared<FakeNetworkTypeProvider>(
+      profiler::proto::ConnectivityData::WIFI);
   ConnectivitySampler sampler(
     "cat " + TestUtils::getNetworkTestData("connectivity_radio_active.txt"),
-    "cat " + TestUtils::getNetworkTestData("connectivity_network_type_wifi.txt")
-  );
+    network_type_wifi);
   sampler.Refresh();
   auto data = sampler.Sample();
   EXPECT_TRUE(data.has_connectivity_data());
@@ -46,10 +51,11 @@ TEST(ConnectivitySampler, RadioIsDefaultValueWhenNetworkIsWifi) {
 }
 
 TEST(ConnectivitySampler, RadioSleeping) {
+  auto network_type_mobile = std::make_shared<FakeNetworkTypeProvider>(
+      profiler::proto::ConnectivityData::MOBILE);
   ConnectivitySampler sampler(
     "cat " + TestUtils::getNetworkTestData("connectivity_radio_sleeping.txt"),
-    "cat " + TestUtils::getNetworkTestData(
-        "connectivity_network_type_mobile.txt"));
+    network_type_mobile);
   sampler.Refresh();
   auto data = sampler.Sample();
   EXPECT_TRUE(data.has_connectivity_data());
@@ -58,10 +64,11 @@ TEST(ConnectivitySampler, RadioSleeping) {
 }
 
 TEST(ConnectivitySampler, NoRadioState) {
+  auto network_type_mobile = std::make_shared<FakeNetworkTypeProvider>(
+      profiler::proto::ConnectivityData::MOBILE);
   ConnectivitySampler sampler(
     "cat " + TestUtils::getNetworkTestData("connectivity_radio_missing.txt"),
-    "cat " + TestUtils::getNetworkTestData(
-        "connectivity_network_type_mobile.txt"));
+    network_type_mobile);
   sampler.Refresh();
   auto data = sampler.Sample();
   EXPECT_TRUE(data.has_connectivity_data());
@@ -70,10 +77,11 @@ TEST(ConnectivitySampler, NoRadioState) {
 }
 
 TEST(ConnectivitySampler, RadioStateTrueAndFalseMatch) {
+  auto network_type_mobile = std::make_shared<FakeNetworkTypeProvider>(
+      profiler::proto::ConnectivityData::MOBILE);
   ConnectivitySampler sampler("cat " + TestUtils::getNetworkTestData(
     "connectivity_radio_both_false_and_true_exist.txt"),
-    "cat " + TestUtils::getNetworkTestData(
-        "connectivity_network_type_mobile.txt"));
+    network_type_mobile);
   sampler.Refresh();
   auto data = sampler.Sample();
   EXPECT_TRUE(data.has_connectivity_data());
@@ -81,9 +89,10 @@ TEST(ConnectivitySampler, RadioStateTrueAndFalseMatch) {
             data.connectivity_data().radio_state());
 }
 
-TEST(ConnectivitySampler, NoNetworkTypeId) {
-  ConnectivitySampler sampler("", "cat " + TestUtils::getNetworkTestData(
-    "connectivity_no_network_type_id.txt"));
+TEST(ConnectivitySampler, InvalidNetworkTypeFromProvider) {
+  auto network_type_invalid = std::make_shared<FakeNetworkTypeProvider>(
+      profiler::proto::ConnectivityData::INVALID);
+  ConnectivitySampler sampler("", network_type_invalid);
   sampler.Refresh();
   auto data = sampler.Sample();
   EXPECT_TRUE(data.has_connectivity_data());
@@ -91,22 +100,24 @@ TEST(ConnectivitySampler, NoNetworkTypeId) {
             data.connectivity_data().default_network_type());
 }
 
-TEST(ConnectivitySampler, NetworkTypeWifi) {
-  ConnectivitySampler sampler("", "cat " + TestUtils::getNetworkTestData(
-    "connectivity_network_type_wifi.txt"));
-  sampler.Refresh();
-  auto data = sampler.Sample();
-  EXPECT_TRUE(data.has_connectivity_data());
-  EXPECT_EQ(profiler::proto::ConnectivityData::WIFI,
-            data.connectivity_data().default_network_type());
-}
-
-TEST(ConnectivitySampler, NetworkTypeMobile) {
-  ConnectivitySampler sampler("", "cat " + TestUtils::getNetworkTestData(
-    "connectivity_network_type_mobile.txt"));
+TEST(ConnectivitySampler, NetworkTypeMobileFromProvider) {
+  auto network_type_mobile = std::make_shared<FakeNetworkTypeProvider>(
+      profiler::proto::ConnectivityData::MOBILE);
+  ConnectivitySampler sampler("", network_type_mobile);
   sampler.Refresh();
   auto data = sampler.Sample();
   EXPECT_TRUE(data.has_connectivity_data());
   EXPECT_EQ(profiler::proto::ConnectivityData::MOBILE,
+            data.connectivity_data().default_network_type());
+}
+
+TEST(ConnectivitySampler, NetworkTypeWifiFromProvider) {
+  auto network_type_wifi = std::make_shared<FakeNetworkTypeProvider>(
+      profiler::proto::ConnectivityData::WIFI);
+  ConnectivitySampler sampler("", network_type_wifi);
+  sampler.Refresh();
+  auto data = sampler.Sample();
+  EXPECT_TRUE(data.has_connectivity_data());
+  EXPECT_EQ(profiler::proto::ConnectivityData::WIFI,
             data.connectivity_data().default_network_type());
 }

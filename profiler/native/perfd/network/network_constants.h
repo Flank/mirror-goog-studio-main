@@ -44,11 +44,6 @@ class NetworkConstants final {
   static const char *const GetRadioStatusCommand() {
     return "dumpsys network_management";
   }
-
-  // Dumpsys command that is relatively efficient to get default network type.
-  static const char *GetDefaultNetworkTypeCommand() {
-    return "dumpsys connectivity";
-  }
 };
 
 }  // namespace profiler

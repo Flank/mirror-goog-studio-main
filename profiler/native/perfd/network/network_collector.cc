@@ -33,8 +33,7 @@ namespace profiler {
 NetworkCollector::NetworkCollector(int sample_ms)
     : sample_us_(sample_ms * 1000) {
   samplers_.emplace_back(new ConnectivitySampler(
-      NetworkConstants::GetRadioStatusCommand(),
-      NetworkConstants::GetDefaultNetworkTypeCommand()));
+      NetworkConstants::GetRadioStatusCommand()));
   samplers_.emplace_back(
       new SpeedSampler(NetworkConstants::GetTrafficBytesFilePath()));
   samplers_.emplace_back(
