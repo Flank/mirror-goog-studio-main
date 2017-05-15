@@ -69,11 +69,17 @@ public class FeatureTest {
     }
 
     @Test
-    public void build() throws Exception {
-        // Build all the things.
+    public void publishApplicationId() throws Exception {
+        // Call the task to publish the base feature application ID.
         sProject.executor()
                 .with(AaptGeneration.AAPT_V2_JNI)
-                .run("assemble");
+                .run("clean", ":baseFeature:writeDebugFeatureApplicationId");
+    }
+
+    @Test
+    public void build() throws Exception {
+        // Build all the things.
+        sProject.executor().with(AaptGeneration.AAPT_V2_JNI).run("clean", "assemble");
 
         // check the feature declaration file presence.
         GradleTestProject featureProject = sProject.getSubproject(":feature");
@@ -196,9 +202,7 @@ public class FeatureTest {
 
     @Test
     public void testMinimalisticModel() throws Exception {
-        sProject.executor()
-                .with(AaptGeneration.AAPT_V2_JNI)
-                .run("assemble");
+        sProject.executor().with(AaptGeneration.AAPT_V2_JNI).run("clean", "assemble");
 
         // get the initial minimalistic model.
         Map<String, ProjectBuildOutput> multi = sProject.model().getMulti(ProjectBuildOutput.class);
@@ -233,9 +237,7 @@ public class FeatureTest {
 
     @Test
     public void incrementalAllVariantsBuild() throws Exception {
-        sProject.executor()
-                .with(AaptGeneration.AAPT_V2_JNI)
-                .run("assemble");
+        sProject.executor().with(AaptGeneration.AAPT_V2_JNI).run("clean", "assemble");
 
         GradleTestProject featureProject = sProject.getSubproject(":feature");
 
@@ -286,9 +288,7 @@ public class FeatureTest {
 
     @Test
     public void incrementalBuild() throws Exception {
-        sProject.executor()
-                .with(AaptGeneration.AAPT_V2_JNI)
-                .run("assemble");
+        sProject.executor().with(AaptGeneration.AAPT_V2_JNI).run("clean", "assemble");
 
         GradleTestProject featureProject = sProject.getSubproject(":feature");
 

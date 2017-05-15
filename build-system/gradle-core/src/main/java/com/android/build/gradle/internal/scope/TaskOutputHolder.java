@@ -117,7 +117,7 @@ public interface TaskOutputHolder {
         // Project metadata
         METADATA_FEATURE_DECLARATION,
         METADADA_FEATURE_MANIFEST,
-        METADATA_APP_ID,
+        METADATA_APP_ID_DECLARATION,
     }
 
     /**

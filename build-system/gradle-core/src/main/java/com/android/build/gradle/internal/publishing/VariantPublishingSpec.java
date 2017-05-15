@@ -40,7 +40,7 @@ import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutpu
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.MANIFEST_METADATA;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.MERGED_ASSETS;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.METADADA_FEATURE_MANIFEST;
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.METADATA_APP_ID;
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.METADATA_APP_ID_DECLARATION;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.METADATA_FEATURE_DECLARATION;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.PACKAGED_RES;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.PUBLIC_RES;
@@ -123,7 +123,7 @@ public class VariantPublishingSpec {
                         outputSpec(APK, ArtifactType.APK, RUNTIME_ELEMENTS_ONLY),
                         outputSpec(APK_MAPPING, ArtifactType.APK_MAPPING, API_ELEMENTS_ONLY),
                         outputSpec(
-                                METADATA_APP_ID,
+                                METADATA_APP_ID_DECLARATION,
                                 ArtifactType.METADATA_APP_ID_DECLARATION,
                                 METADATA_ELEMENTS_ONLY))
                 .withTestingSpec(

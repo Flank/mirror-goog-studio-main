@@ -507,7 +507,7 @@ public class ApplicationTaskManager extends TaskManager {
                                 variantScope, applicationIdOutputDirectory));
 
         variantScope.addTaskOutput(
-                TaskOutputHolder.TaskOutputType.METADATA_APP_ID,
+                TaskOutputHolder.TaskOutputType.METADATA_APP_ID_DECLARATION,
                 ApplicationId.getOutputFile(applicationIdOutputDirectory),
                 writeTask.getName());
     }
