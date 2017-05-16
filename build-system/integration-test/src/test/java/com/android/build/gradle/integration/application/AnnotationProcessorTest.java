@@ -203,7 +203,6 @@ public class AnnotationProcessorTest {
         // check incrementality.
         GradleBuildResult result = project.executor().run("assembleDebug");
         assertThat(result.getUpToDateTasks()).contains(":app:javaPreCompileDebug");
-        assertThat(result.getNotUpToDateTasks()).contains(":app:processAnalyticsDebug");
     }
 
     @Test

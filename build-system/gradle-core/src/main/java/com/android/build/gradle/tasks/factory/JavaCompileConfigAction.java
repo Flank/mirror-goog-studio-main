@@ -5,6 +5,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JAR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.ANNOTATION_PROCESSOR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.ANNOTATION_PROCESSOR_LIST;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.api.AnnotationProcessorOptions;
@@ -168,5 +169,7 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
                 scope.getAnnotationProcessorOutputDir().getAbsolutePath());
         javacTask.annotationProcessorOutputFolder = scope.getAnnotationProcessorOutputDir();
 
+        javacTask.processorListFile = scope.getOutput(ANNOTATION_PROCESSOR_LIST);
+        javacTask.variantName = scope.getFullVariantName();
     }
 }

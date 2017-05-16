@@ -39,8 +39,7 @@ public class AnalyticsUtilTest {
         checkHaveAllEnumValues(
                 Task.class,
                 AnalyticsUtil::getTaskExecutionType,
-                AnalyticsUtil::getPotentialTaskExecutionTypeName,
-                "com.android.build.gradle.internal.tasks.ProcessAnalyticsTask");
+                AnalyticsUtil::getPotentialTaskExecutionTypeName);
     }
 
     @Test
