@@ -74,7 +74,7 @@ class ProvisionApksInstaller {
         boolean firstGms = true;
         int currentInstalling = 0;
         for (Metadata.ApkInfo apkInfo : myApkInfos) {
-            listener.setProgress(4.0 / 20 + currentInstalling * 12.0 / (20 * myApkInfos.size()));
+            listener.setProgress(8.0 / 20 + currentInstalling * 11.0 / (20 * myApkInfos.size()));
             if (currentInstalling > provisionState.lastInstalled
                     && getVersion(device, apkInfo.getPkgName()) < apkInfo.getVersionCode()) {
                 try {

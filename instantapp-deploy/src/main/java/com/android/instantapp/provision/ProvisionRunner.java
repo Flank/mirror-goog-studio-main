@@ -193,17 +193,6 @@ public class ProvisionRunner {
 
         if (!myListener.isCancelled()
                 && provisionState.lastSucceeded == ProvisionState.Step.CHECK_ACCOUNT) {
-            assert provisionState.arch != null;
-            myListener.printMessage("Installing apks");
-            myListener.logMessage("Installing apks", null);
-            installApks(device, provisionState.arch, apiLevel, provisionState);
-            myListener.logMessage("Apks installed successfully", null);
-            provisionState.lastSucceeded = ProvisionState.Step.INSTALL;
-        }
-        myListener.setProgress(16.0 / 20);
-
-        if (!myListener.isCancelled()
-                && provisionState.lastSucceeded == ProvisionState.Step.INSTALL) {
             assert provisionState.deviceInfo != null;
             myListener.printMessage("Overriding GServices");
             myListener.logMessage("Overriding GServices", null);
@@ -215,10 +204,21 @@ public class ProvisionRunner {
             }
             provisionState.lastSucceeded = ProvisionState.Step.GSERVICES;
         }
-        myListener.setProgress(19.0 / 20);
+        myListener.setProgress(8.0 / 20);
 
         if (!myListener.isCancelled()
                 && provisionState.lastSucceeded == ProvisionState.Step.GSERVICES) {
+            assert provisionState.arch != null;
+            myListener.printMessage("Installing apks");
+            myListener.logMessage("Installing apks", null);
+            installApks(device, provisionState.arch, apiLevel, provisionState);
+            myListener.logMessage("Apks installed successfully", null);
+            provisionState.lastSucceeded = ProvisionState.Step.INSTALL;
+        }
+        myListener.setProgress(19.0 / 20);
+
+        if (!myListener.isCancelled()
+                && provisionState.lastSucceeded == ProvisionState.Step.INSTALL) {
             myListener.logMessage("Setting flags", null);
             if (buildType != null && buildType.compareTo("release-keys") != 0) {
                 setFlags(device);
@@ -260,7 +260,9 @@ public class ProvisionRunner {
                 return Metadata.Arch.create(arch);
             }
         }
-        throw new ProvisionException(ProvisionException.ErrorType.ARCH_NOT_SUPPORTED);
+        throw new ProvisionException(
+                ProvisionException.ErrorType.ARCH_NOT_SUPPORTED,
+                "Detected architectures are: " + architectures);
     }
 
     @NonNull
@@ -281,7 +283,9 @@ public class ProvisionRunner {
         if (myMetadata.isSupportedDevice(deviceInfo)) {
             return deviceInfo;
         }
-        throw new ProvisionException(ProvisionException.ErrorType.DEVICE_NOT_SUPPORTED);
+        throw new ProvisionException(
+                ProvisionException.ErrorType.DEVICE_NOT_SUPPORTED,
+                "Detected device is: " + deviceInfo);
     }
 
     /**
@@ -334,11 +338,11 @@ public class ProvisionRunner {
                                 + " "
                                 + gServicesOverride.getValue(),
                         true);
-                executeShellCommand(device, "am force-stop com.google.android.gms", false);
                 provisionState.lastGService = currentGService;
             }
             currentGService++;
         }
+        executeShellCommand(device, "am force-stop com.google.android.gms", false);
     }
 
     private void setFlags(@NonNull IDevice device) throws ProvisionException {
@@ -346,7 +350,6 @@ public class ProvisionRunner {
                 device,
                 "pm grant com.google.android.instantapps.devman android.permission.READ_EXTERNAL_STORAGE",
                 false);
-        executeShellCommand(device, "am force-stop com.google.android.gms", false);
 
         // Broadcast a Phenotype update
         executeShellCommand(
@@ -355,7 +358,6 @@ public class ProvisionRunner {
                         + "/system/bin com.android.commands.am.Am broadcast "
                         + "-a com.google.android.gms.phenotype.UPDATE",
                 true);
-        executeShellCommand(device, "am force-stop com.google.android.gms", false);
 
         // Make sure that if UrlHandler was disabled before it becomes enabled now
         executeShellCommand(
@@ -364,7 +366,6 @@ public class ProvisionRunner {
                         + "/system/bin com.android.commands.pm.Pm enable "
                         + "com.google.android.instantapps.supervisor/.UrlHandler",
                 true);
-        executeShellCommand(device, "am force-stop com.google.android.gms", false);
 
         // Trigger a domain filter reload. Domain filters need to be populated in order to have an eligible account on the device, and this happens on a
         // loose 24-hour schedule. Developers need AIA on their device right away, and this will cause our GCore module to pull new domain filters.
@@ -395,11 +396,20 @@ public class ProvisionRunner {
             device.executeShellCommand(command, receiver);
             latch.await(timeout, TimeUnit.MILLISECONDS);
         } catch (TimeoutException e) {
-            throw new ProvisionException(ProvisionException.ErrorType.SHELL_TIMEOUT, e);
+            throw new ProvisionException(
+                    ProvisionException.ErrorType.SHELL_TIMEOUT,
+                    "Failed executing command \"" + command + "\".",
+                    e);
         } catch (AdbCommandRejectedException | ShellCommandUnresponsiveException | IOException e) {
-            throw new ProvisionException(ProvisionException.ErrorType.ADB_FAILURE, e);
+            throw new ProvisionException(
+                    ProvisionException.ErrorType.ADB_FAILURE,
+                    "Failed executing command \"" + command + "\".",
+                    e);
         } catch (InterruptedException e) {
-            throw new ProvisionException(ProvisionException.ErrorType.UNKNOWN, e);
+            throw new ProvisionException(
+                    ProvisionException.ErrorType.UNKNOWN,
+                    "Failed executing command \"" + command + "\".",
+                    e);
         }
 
         return receiver.getOutput();
@@ -444,9 +454,9 @@ public class ProvisionRunner {
             CHECK_ARCH,
             CHECK_DEVICE,
             CHECK_ACCOUNT,
-            INSTALL,
             GSERVICES,
-            FINISHED;
+            INSTALL,
+            FINISHED
         }
     }
 
