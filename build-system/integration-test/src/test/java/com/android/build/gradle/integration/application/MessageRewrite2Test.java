@@ -21,7 +21,6 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TemporaryProjectModification;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.utils.FileUtils;
 import com.android.utils.SdkUtils;
 import org.junit.AfterClass;
@@ -51,17 +50,33 @@ public class MessageRewrite2Test {
                 project,
                 it -> {
                     it.replaceInFile(
-                            "src/main/res/values/strings.xml", "default text", "don't work");
-
-                    assertThat(project.file("src/main/res/values/strings.xml"))
-                            .contains(">don't work<");
+                            "src/main/res/values/strings.xml", "default text", "don't <> work");
 
                     GradleBuildResult result =
-                            project.executor()
-                                    .withEnabledAapt2(false)
-                                    .with(BooleanOption.IDE_INVOKED_FROM_IDE, true)
-                                    .expectFailure()
-                                    .run("assembleDebug");
+                            project.executor().expectFailure().run("assembleDebug");
+                    assertThat(result.getStderr())
+                            .contains(
+                                    SdkUtils.escapePropertyValue(
+                                            FileUtils.join(
+                                                    "src",
+                                                    "main",
+                                                    "res",
+                                                    "values",
+                                                    "strings.xml")));
+                });
+
+        project.execute("assembleDebug");
+    }
+
+    @Test
+    public void testErrorInStringsForCompile() throws Exception {
+        TemporaryProjectModification.doTest(
+                project,
+                it -> {
+                    it.replaceInFile("src/main/res/values/strings.xml", "default text", "%s %d");
+
+                    GradleBuildResult result =
+                            project.executor().expectFailure().run("assembleDebug");
                     assertThat(result.getStderr())
                             .contains(
                                     SdkUtils.escapePropertyValue(

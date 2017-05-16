@@ -25,6 +25,12 @@ import com.android.builder.internal.aapt.v1.AaptV1;
 import com.android.builder.internal.aapt.v2.AaptV2Jni;
 import com.android.builder.internal.aapt.v2.OutOfProcessAaptV2;
 import com.android.builder.sdk.TargetInfo;
+import com.android.ide.common.blame.MergingLog;
+import com.android.ide.common.blame.MergingLogRewriter;
+import com.android.ide.common.blame.ParsingProcessOutputHandler;
+import com.android.ide.common.blame.parser.ToolOutputParser;
+import com.android.ide.common.blame.parser.aapt.Aapt2OutputParser;
+import com.android.ide.common.blame.parser.aapt.AaptOutputParser;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.ide.common.process.ProcessOutputHandler;
@@ -62,6 +68,42 @@ public final class AaptGradleFactory {
             @NonNull VariantScope scope,
             @NonNull File intermediateDir) {
         return make(aaptGeneration, builder, true, scope, intermediateDir);
+    }
+
+    /**
+     * Creates a new {@link Aapt} instance based on project configuration.
+     *
+     * @param aaptGeneration which aapt to use
+     * @param builder the android builder project model
+     * @param crunchPng should PNGs be crunched?
+     * @param scope the scope of the variant to use {@code aapt2} with
+     * @param intermediateDir intermediate directory for aapt to use
+     * @param blameLog the merging log for rewriting messages
+     * @return the newly-created instance
+     */
+    @NonNull
+    public static Aapt make(
+            @NonNull AaptGeneration aaptGeneration,
+            @NonNull AndroidBuilder builder,
+            boolean crunchPng,
+            @NonNull VariantScope scope,
+            @NonNull File intermediateDir,
+            @NonNull MergingLog blameLog) {
+        return make(
+                aaptGeneration,
+                builder,
+                blameLog != null
+                        ? new ParsingProcessOutputHandler(
+                                new ToolOutputParser(
+                                        aaptGeneration == AaptGeneration.AAPT_V1
+                                                ? new AaptOutputParser()
+                                                : new Aapt2OutputParser(),
+                                        builder.getLogger()),
+                                new MergingLogRewriter(blameLog::find, builder.getErrorReporter()))
+                        : new LoggedProcessOutputHandler(new FilteringLogger(builder.getLogger())),
+                crunchPng,
+                intermediateDir,
+                scope.getGlobalScope().getExtension().getAaptOptions().getCruncherProcesses());
     }
 
     /**

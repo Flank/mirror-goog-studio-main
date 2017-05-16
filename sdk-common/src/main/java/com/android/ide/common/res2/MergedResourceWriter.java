@@ -144,7 +144,7 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
      * @param rootFolder merged resources directory to write to (e.g. {@code
      *     intermediates/res/merged/debug})
      * @param publicFile File that we should write public.txt to
-     * @param blameLogFolder folder containing merging log
+     * @param blameLog merging log for rewriting error messages
      * @param preprocessor preprocessor for merged resources, such as vector drawable rendering
      * @param resourceCompiler resource compiler, i.e. AAPT
      * @param temporaryDirectory temporary directory for intermediate merged files
@@ -158,7 +158,7 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
     public MergedResourceWriter(
             @NonNull File rootFolder,
             @Nullable File publicFile,
-            @Nullable File blameLogFolder,
+            @Nullable MergingLog blameLog,
             @NonNull ResourcePreprocessor preprocessor,
             @NonNull QueueableResourceCompiler resourceCompiler,
             @NonNull File temporaryDirectory,
@@ -175,7 +175,7 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
 
         mResourceCompiler = resourceCompiler;
         mPublicFile = publicFile;
-        mMergingLog = blameLogFolder != null ? new MergingLog(blameLogFolder) : null;
+        mMergingLog = blameLog;
         mPreprocessor = preprocessor;
         mCompiling = new ConcurrentLinkedDeque<>();
         mTemporaryDirectory = temporaryDirectory;
@@ -212,7 +212,7 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
         return new MergedResourceWriter(
                 rootFolder,
                 publicFile,
-                blameLogFolder,
+                blameLogFolder != null ? new MergingLog(blameLogFolder) : null,
                 preprocessor,
                 QueueableResourceCompiler.NONE,
                 temporaryDirectory,
@@ -257,8 +257,6 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
                                 request.getInput(), mResourceCompiler.compileOutputFor(request));
                     }
 
-
-
                     if (dataBindingExpressionRemover != null
                             && request.getFolderName().startsWith("layout")
                             && request.getInput().getName().endsWith(".xml")) {
@@ -286,6 +284,8 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
                             FileUtils.copyFileToDirectory(request.getInput(), databindingLayoutDir);
 
                             if (mMergingLog != null) {
+                                mMergingLog.logCopy(request.getInput(), strippedLayout);
+
                                 mMergingLog.logCopy(
                                         request.getInput(),
                                         new File(
@@ -552,20 +552,25 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
 
                     Files.write(content, outFile, Charsets.UTF_8);
 
-                    Future<File> f =
-                            mResourceCompiler.compile(
-                                    new CompileResourceRequest(
-                                            outFile,
-                                            getRootFolder(),
-                                            folderName,
-                                            pseudoLocalesEnabled,
-                                            crunchPng));
+                    CompileResourceRequest request =
+                            new CompileResourceRequest(
+                                    outFile,
+                                    getRootFolder(),
+                                    folderName,
+                                    pseudoLocalesEnabled,
+                                    crunchPng);
+
+                    if (blame != null) {
+                        mMergingLog.logSource(
+                                new SourceFile(mResourceCompiler.compileOutputFor(request)), blame);
+
+                        mMergingLog.logSource(new SourceFile(outFile), blame);
+                    }
+
+                    Future<File> f = mResourceCompiler.compile(request);
 
                     File copyOutput = f.get();
 
-                    if (blame != null) {
-                        mMergingLog.logSource(new SourceFile(copyOutput), blame);
-                    }
 
                     if (publicNodes != null && mPublicFile != null) {
                         // Generate public.txt:

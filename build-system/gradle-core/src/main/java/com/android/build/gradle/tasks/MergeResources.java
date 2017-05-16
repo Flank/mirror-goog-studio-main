@@ -34,6 +34,7 @@ import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.model.VectorDrawablesOptions;
 import com.android.builder.png.VectorDrawableRenderer;
+import com.android.ide.common.blame.MergingLog;
 import com.android.ide.common.res2.FileStatus;
 import com.android.ide.common.res2.FileValidity;
 import com.android.ide.common.res2.GeneratedResourceSet;
@@ -166,6 +167,9 @@ public class MergeResources extends IncrementalTask {
 
             // get the merged set and write it down.
             QueueableResourceCompiler resourceCompiler;
+            MergingLog mergingLog =
+                    getBlameLogFolder() != null ? new MergingLog(getBlameLogFolder()) : null;
+
             if (processResources) {
                 resourceCompiler =
                         AaptGradleFactory.make(
@@ -173,7 +177,8 @@ public class MergeResources extends IncrementalTask {
                                 getBuilder(),
                                 crunchPng,
                                 variantScope,
-                                getAaptTempDir());
+                                getAaptTempDir(),
+                                mergingLog);
             } else {
                 resourceCompiler = QueueableResourceCompiler.NONE;
             }
@@ -181,7 +186,7 @@ public class MergeResources extends IncrementalTask {
                     new MergedResourceWriter(
                             destinationDir,
                             getPublicFile(),
-                            getBlameLogFolder(),
+                            mergingLog,
                             preprocessor,
                             resourceCompiler,
                             getIncrementalFolder(),
@@ -254,6 +259,9 @@ public class MergeResources extends IncrementalTask {
 
 
             QueueableResourceCompiler resourceCompiler;
+            MergingLog mergingLog =
+                    getBlameLogFolder() != null ? new MergingLog(getBlameLogFolder()) : null;
+
             if (processResources) {
                 resourceCompiler =
                         AaptGradleFactory.make(
@@ -261,7 +269,8 @@ public class MergeResources extends IncrementalTask {
                                 getBuilder(),
                                 crunchPng,
                                 variantScope,
-                                getAaptTempDir());
+                                getAaptTempDir(),
+                                mergingLog);
             } else {
                 resourceCompiler = QueueableResourceCompiler.NONE;
             }
@@ -270,7 +279,7 @@ public class MergeResources extends IncrementalTask {
                     new MergedResourceWriter(
                             getOutputDir(),
                             getPublicFile(),
-                            getBlameLogFolder(),
+                            mergingLog,
                             preprocessor,
                             resourceCompiler,
                             getIncrementalFolder(),

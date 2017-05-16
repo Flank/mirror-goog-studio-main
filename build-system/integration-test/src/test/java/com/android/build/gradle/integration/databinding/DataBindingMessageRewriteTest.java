@@ -21,7 +21,6 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TemporaryProjectModification;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.utils.FileUtils;
 import com.android.utils.SdkUtils;
 import org.junit.AfterClass;
@@ -56,11 +55,33 @@ public class DataBindingMessageRewriteTest {
                             "<TextView android:id=\"fail\"");
 
                     GradleBuildResult result =
-                            project.executor()
-                                    .withEnabledAapt2(false)
-                                    .with(BooleanOption.IDE_INVOKED_FROM_IDE, true)
-                                    .expectFailure()
-                                    .run("assembleDebug");
+                            project.executor().expectFailure().run("assembleDebug");
+                    assertThat(result.getStderr())
+                            .contains(
+                                    SdkUtils.escapePropertyValue(
+                                            FileUtils.join(
+                                                    "src",
+                                                    "main",
+                                                    "res",
+                                                    "layout",
+                                                    "activity_main.xml")));
+                });
+
+        project.execute("assembleDebug");
+    }
+
+    @Test
+    public void testErrorInLayoutForCompile() throws Exception {
+        TemporaryProjectModification.doTest(
+                project,
+                it -> {
+                    it.replaceInFile(
+                            "src/main/res/layout/activity_main.xml",
+                            "<TextView",
+                            "<TextView boop:id=\"fail\"");
+
+                    GradleBuildResult result =
+                            project.executor().expectFailure().run("assembleDebug");
                     assertThat(result.getStderr())
                             .contains(
                                     SdkUtils.escapePropertyValue(

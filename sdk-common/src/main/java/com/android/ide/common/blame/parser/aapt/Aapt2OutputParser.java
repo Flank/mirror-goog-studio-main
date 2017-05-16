@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.android.ide.common.blame.parser.aapt;
 
 import com.android.annotations.NonNull;
@@ -23,27 +24,10 @@ import com.android.ide.common.blame.parser.util.OutputLineReader;
 import com.android.utils.ILogger;
 import java.util.List;
 
-/**
- * Parses AAPT output.
- */
-public class AaptOutputParser implements PatternAwareOutputParser {
+/** Parses AAPT2 output. */
+public class Aapt2OutputParser implements PatternAwareOutputParser {
 
-    private static final AbstractAaptOutputParser[] PARSERS = {
-            new SkippingHiddenFileParser(),
-            new Error1Parser(),
-            // this needs to be tested before ERROR_2 since they both start with 'ERROR:'
-            new Error6Parser(),
-            new Error2Parser(),
-            new Error3Parser(),
-            new Error4Parser(),
-            new Warning1Parser(),
-            new Error5Parser(),
-            new Error7Parser(),
-            new Error8Parser(),
-            new SkippingWarning2Parser(),
-            new SkippingWarning1Parser(),
-            new BadXmlBlockParser()
-    };
+    private static final AbstractAaptOutputParser[] PARSERS = {new Aapt2ErrorParser()};
 
     @Override
     public boolean parse(
