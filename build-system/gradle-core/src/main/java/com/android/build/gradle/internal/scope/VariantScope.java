@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.external.gson.NativeBuildConfigValue;
 import com.android.build.gradle.internal.InstantRunTaskManager;
+import com.android.build.gradle.internal.PostprocessingActions;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
@@ -47,6 +48,7 @@ import com.android.builder.dexing.DexingType;
 import com.android.sdklib.AndroidVersion;
 import java.io.File;
 import java.util.Collection;
+import java.util.List;
 import java.util.function.Supplier;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Task;
@@ -78,6 +80,18 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     @Nullable
     CodeShrinker getCodeShrinker();
+
+    @NonNull
+    List<File> getProguardFiles();
+
+    @NonNull
+    List<File> getTestProguardFiles();
+
+    @NonNull
+    List<File> getConsumerProguardFiles();
+
+    @Nullable
+    PostprocessingActions getPostprocessingActions();
 
     boolean useResourceShrinker();
 

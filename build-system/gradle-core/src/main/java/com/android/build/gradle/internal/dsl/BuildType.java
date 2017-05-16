@@ -36,7 +36,7 @@ import org.gradle.api.Project;
 import org.gradle.internal.reflect.Instantiator;
 
 /** DSL object to configure build types. */
-@SuppressWarnings({"unused", "WeakerAccess", "UnusedReturnValue"}) // Exposed in the DSL.
+@SuppressWarnings({"unused", "WeakerAccess", "UnusedReturnValue", "Convert2Lambda"})
 public class BuildType extends DefaultBuildType implements CoreBuildType, Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -97,7 +97,7 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
         ndkConfig = instantiator.newInstance(NdkOptions.class);
         externalNativeBuildOptions = instantiator.newInstance(ExternalNativeBuildOptions.class,
                 instantiator);
-        postprocessingOptions = instantiator.newInstance(PostprocessingOptions.class);
+        postprocessingOptions = instantiator.newInstance(PostprocessingOptions.class, project);
     }
 
     @VisibleForTesting
@@ -111,7 +111,7 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
         shaderOptions = new ShaderOptions();
         ndkConfig = new NdkOptions();
         externalNativeBuildOptions = new ExternalNativeBuildOptions();
-        postprocessingOptions = new PostprocessingOptions();
+        postprocessingOptions = new PostprocessingOptions(project);
     }
 
     @Override
@@ -552,10 +552,10 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
     /** Describes how postprocessing was configured. Not to be used from the DSL. */
     @NonNull
     public PostprocessingConfiguration getPostprocessingConfiguration() {
-        // If the user didn't configure anything, pretend the block was used.
+        // If the user didn't configure anything, stick to the old DSL.
         return postprocessingConfiguration != null
                 ? postprocessingConfiguration
-                : PostprocessingConfiguration.POSTPROCESSING_BLOCK;
+                : PostprocessingConfiguration.OLD_DSL;
     }
 
     /**

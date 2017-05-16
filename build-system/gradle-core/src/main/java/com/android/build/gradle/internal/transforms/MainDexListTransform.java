@@ -187,9 +187,8 @@ public class MainDexListTransform extends BaseProguardAction {
 
     private void shrinkWithProguard(@NonNull Collection<File> inputs, @NonNull File outJar)
             throws IOException, ParseException {
-        dontobfuscate();
-        dontoptimize();
-        dontpreverify();
+        configuration.obfuscate = false;
+        configuration.optimize = false;
         dontwarn();
         dontnote();
         forceprocessing();

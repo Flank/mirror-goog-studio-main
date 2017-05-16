@@ -933,6 +933,7 @@ public abstract class BaseExtension implements AndroidConfig {
     @Deprecated
     public File getAdbExe() {
         return getAdbExecutable();
+        // test
     }
 
     public File getDefaultProguardFile(String name) {

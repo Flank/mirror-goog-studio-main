@@ -59,6 +59,10 @@ java_test(
     ],
     resources = glob(["src/test/resources/**"]),
     test_class = "com.android.testutils.JarTestSuite",
+    # Make sure we're running against JUnit 4.12. See https://github.com/bazelbuild/bazel/issues/2146.
+    runtime_deps = [
+        "//tools/base/third_party:junit_junit",
+    ],
     deps = [
         ":gradle",
         "//tools/base/annotations",

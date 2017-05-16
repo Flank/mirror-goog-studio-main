@@ -25,6 +25,8 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.SyncIssue;
+import com.google.common.io.Files;
+import java.nio.charset.StandardCharsets;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -69,5 +71,66 @@ public class PostprocessingTest {
         assertThat(buildTypeContainer.getBuildType().isMinifyEnabled())
                 .named("isMinifyEnabled()")
                 .isTrue();
+    }
+
+    @Test
+    public void actions_oldDsl() throws Exception {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "android.buildTypes.release {\n"
+                        + "minifyEnabled true\n"
+                        + "proguardFiles android.getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'\n"
+                        + "}\n");
+
+        Files.write(
+                "-printconfiguration build/proguard-config.txt",
+                project.file("proguard-rules.pro"),
+                StandardCharsets.UTF_8);
+
+        project.execute("assembleRelease");
+
+        String proguardConfiguration =
+                Files.toString(project.file("build/proguard-config.txt"), StandardCharsets.UTF_8);
+
+        assertThat(proguardConfiguration).contains("-dontoptimize");
+        assertThat(proguardConfiguration).doesNotContain("-dontshrink");
+        assertThat(proguardConfiguration).doesNotContain("-dontobfuscate");
+    }
+
+    @Test
+    public void actions_newDsl() throws Exception {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "android.buildTypes.release.postprocessing {\n"
+                        + "removeUnusedCode true\n"
+                        + "proguardFile 'proguard-rules.pro'\n"
+                        + "}\n");
+
+        Files.write(
+                "-printconfiguration build/proguard-config.txt",
+                project.file("proguard-rules.pro"),
+                StandardCharsets.UTF_8);
+
+        project.execute("assembleRelease");
+
+        String proguardConfiguration =
+                Files.toString(project.file("build/proguard-config.txt"), StandardCharsets.UTF_8);
+
+        assertThat(proguardConfiguration).doesNotContain("-dontshrink");
+        assertThat(proguardConfiguration).contains("-dontoptimize");
+        assertThat(proguardConfiguration).contains("-dontobfuscate");
+
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "android.buildTypes.release.postprocessing.optimizeCode true");
+
+        project.execute("assembleRelease");
+
+        proguardConfiguration =
+                Files.toString(project.file("build/proguard-config.txt"), StandardCharsets.UTF_8);
+
+        assertThat(proguardConfiguration).doesNotContain("-dontshrink");
+        assertThat(proguardConfiguration).doesNotContain("-dontoptimize");
+        assertThat(proguardConfiguration).contains("-dontobfuscate");
     }
 }

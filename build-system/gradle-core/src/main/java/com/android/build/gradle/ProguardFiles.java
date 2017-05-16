@@ -38,7 +38,7 @@ import org.gradle.api.Project;
  */
 public class ProguardFiles {
 
-    private enum ProguardFile {
+    public enum ProguardFile {
         /** Default when not using the "postprocessing" DSL block. */
         DONT_OPTIMIZE("proguard-android.txt"),
 
@@ -52,7 +52,7 @@ public class ProguardFiles {
         NO_ACTIONS("proguard-defaults.txt"),
         ;
 
-        @NonNull final String fileName;
+        @NonNull public final String fileName;
 
         ProguardFile(@NonNull String fileName) {
             this.fileName = fileName;

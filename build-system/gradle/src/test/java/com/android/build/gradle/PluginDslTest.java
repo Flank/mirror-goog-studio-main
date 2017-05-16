@@ -39,8 +39,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import groovy.util.Eval;
 import java.io.File;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -68,9 +66,9 @@ public class PluginDslTest {
     private VariantChecker checker;
     private final TestProjects.Plugin pluginType;
 
-    @Parameterized.Parameters
-    public static Collection<TestProjects.Plugin[]> generateStates() {
-        return ImmutableList.of(new TestProjects.Plugin[] {TestProjects.Plugin.APP});
+    @Parameterized.Parameters(name = "{0}")
+    public static TestProjects.Plugin[] generateStates() {
+        return new TestProjects.Plugin[] {TestProjects.Plugin.APP};
     }
 
     public PluginDslTest(TestProjects.Plugin pluginType) {
@@ -297,7 +295,7 @@ public class PluginDslTest {
                 ImmutableMap.of("appVariants", 12, "unitTests", 12, "androidTests", 6);
         assertEquals(
                 VariantCheckers.countVariants(map),
-                plugin.getVariantManager().getVariantDataList().size());
+                plugin.getVariantManager().getVariantScopes().size());
 
         // we can now call this since the variants/tasks have been created
 
@@ -315,13 +313,14 @@ public class PluginDslTest {
         checker.checkTestedVariant("f2FbDebug", "f2FbDebugAndroidTest", variants, testVariants);
         checker.checkTestedVariant("f2FcDebug", "f2FcDebugAndroidTest", variants, testVariants);
 
-        Map<String, GradleVariantConfiguration> variantMap = getVariantMap();
+        Map<String, VariantScope> variantMap = getVariantMap();
 
         for (String dim1 : ImmutableList.of("f1", "f2")) {
             for (String dim2 : ImmutableList.of("fa", "fb", "fc")) {
                 String variantName =
                         StringHelper.combineAsCamelCase(ImmutableList.of(dim1, dim2, "debug"));
-                GradleVariantConfiguration variant = variantMap.get(variantName);
+                GradleVariantConfiguration variant =
+                        variantMap.get(variantName).getVariantConfiguration();
                 assertThat(
                                 variant.getJavaCompileOptions()
                                         .getAnnotationProcessorOptions()
@@ -431,7 +430,6 @@ public class PluginDslTest {
                 ImmutableList.of("file1.1", "file1.2", "file1.3", "file2.1", "file2.2", "file2.3"));
         expected.put("f1Debug", ImmutableList.of("file2.1", "file2.2", "file2.3"));
         expected.put("f2Release", ImmutableList.of("file1.1", "file1.2", "file1.3"));
-        expected.put("f2Debug", Collections.emptyList());
         expected.put("f2Custom", ImmutableList.of("file3.1"));
         expected.put("f3Custom", ImmutableList.of("file3.1", "file4.1"));
 
@@ -533,7 +531,7 @@ public class PluginDslTest {
                         + "}\n");
         plugin.createAndroidTasks(false);
 
-        Map<String, GradleVariantConfiguration> variantMap = getVariantMap();
+        Map<String, VariantScope> variantMap = getVariantMap();
 
         Map<String, Map<String, String>> expected =
                 ImmutableMap.of(
@@ -548,7 +546,11 @@ public class PluginDslTest {
 
         expected.forEach(
                 (variant, args) ->
-                        assertThat(variantMap.get(variant).getInstrumentationRunnerArguments())
+                        assertThat(
+                                        variantMap
+                                                .get(variant)
+                                                .getVariantConfiguration()
+                                                .getInstrumentationRunnerArguments())
                                 .containsExactlyEntriesIn(args));
     }
 
@@ -594,13 +596,10 @@ public class PluginDslTest {
     }
 
     public void checkProguardFiles(Map<String, List<String>> expected) {
-        Map<String, GradleVariantConfiguration> variantMap = getVariantMap();
+        Map<String, VariantScope> variantMap = getVariantMap();
         expected.forEach(
                 (variantName, expectedFileNames) -> {
-                    Set<File> proguardFiles =
-                            variantMap
-                                    .get(variantName)
-                                    .getProguardFiles(Collections.emptyList());
+                    List<File> proguardFiles = variantMap.get(variantName).getProguardFiles();
                     Set<File> expectedFiles =
                             expectedFileNames
                                     .stream()
@@ -612,10 +611,10 @@ public class PluginDslTest {
                 });
     }
 
-    public Map<String, GradleVariantConfiguration> getVariantMap() {
-        Map<String, GradleVariantConfiguration> result = new HashMap<>();
+    public Map<String, VariantScope> getVariantMap() {
+        Map<String, VariantScope> result = new HashMap<>();
         for (VariantScope variantScope : plugin.getVariantManager().getVariantScopes()) {
-            result.put(variantScope.getFullVariantName(), variantScope.getVariantConfiguration());
+            result.put(variantScope.getFullVariantName(), variantScope);
         }
         return result;
     }

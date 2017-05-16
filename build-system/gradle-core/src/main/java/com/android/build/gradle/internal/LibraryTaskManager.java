@@ -45,8 +45,8 @@ import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.CopyLintConfigAction;
+import com.android.build.gradle.internal.tasks.MergeConsumerProguardFilesConfigAction;
 import com.android.build.gradle.internal.tasks.MergeFileTask;
-import com.android.build.gradle.internal.tasks.MergeProguardFilesConfigAction;
 import com.android.build.gradle.internal.tasks.PackageRenderscriptConfigAction;
 import com.android.build.gradle.internal.transforms.LibraryAarJarsTransform;
 import com.android.build.gradle.internal.transforms.LibraryBaseTransform;
@@ -61,7 +61,6 @@ import com.android.build.gradle.tasks.ExtractAnnotations;
 import com.android.build.gradle.tasks.MergeResources;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
-import com.android.builder.dependency.level2.AndroidDependency;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.profile.Recorder;
 import com.android.utils.FileUtils;
@@ -604,7 +603,7 @@ public class LibraryTaskManager extends TaskManager {
                 getAndroidTasks()
                         .create(
                                 tasks,
-                                new MergeProguardFilesConfigAction(
+                                new MergeConsumerProguardFilesConfigAction(
                                         project, variantScope, outputFile));
 
         variantScope.addTaskOutput(

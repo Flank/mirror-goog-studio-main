@@ -20,26 +20,48 @@ import static com.google.common.base.Verify.verifyNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.VisibleForTesting;
+import com.android.build.gradle.ProguardFiles;
 import com.android.build.gradle.internal.scope.CodeShrinker;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import org.gradle.api.Project;
 
 /** DSL object for configuring postprocessing: removing dead code, obfuscating etc. */
 public class PostprocessingOptions {
     private static final String AUTO = "auto";
+
+    @NonNull private final Project project;
 
     private boolean removeUnusedCode;
     private boolean removeUnusedResources;
     private boolean obfuscate;
     private boolean optimizeCode;
 
-    private List<File> proguardFiles = new ArrayList<>();
-    private List<File> testProguardFiles = new ArrayList<>();
-    private List<File> consumerProguardFiles = new ArrayList<>();
+    private List<File> proguardFiles;
+    private List<File> testProguardFiles;
+    private List<File> consumerProguardFiles;
 
     @Nullable private CodeShrinker codeShrinker;
+
+    public PostprocessingOptions(@NonNull Project project) {
+        this(
+                project,
+                ImmutableList.of(
+                        ProguardFiles.getDefaultProguardFile(
+                                ProguardFiles.ProguardFile.NO_ACTIONS.fileName, project)));
+    }
+
+    @VisibleForTesting
+    PostprocessingOptions(@NonNull Project project, List<File> proguardFiles) {
+        this.project = project;
+        this.proguardFiles = Lists.newArrayList(proguardFiles);
+        this.testProguardFiles = new ArrayList<>();
+        this.consumerProguardFiles = new ArrayList<>();
+    }
 
     public void initWith(PostprocessingOptions that) {
         this.removeUnusedCode = that.isRemoveUnusedCode();
@@ -92,6 +114,16 @@ public class PostprocessingOptions {
         this.proguardFiles = proguardFiles;
     }
 
+    public void proguardFile(Object file) {
+        this.proguardFiles.add(project.file(file));
+    }
+
+    public void proguardFiles(Object... files) {
+        for (Object file : files) {
+            proguardFile(file);
+        }
+    }
+
     public List<File> getTestProguardFiles() {
         return testProguardFiles;
     }
@@ -100,12 +132,32 @@ public class PostprocessingOptions {
         this.testProguardFiles = testProguardFiles;
     }
 
+    public void testProguardFile(Object file) {
+        this.testProguardFiles.add(project.file(file));
+    }
+
+    public void testProguardFiles(Object... files) {
+        for (Object file : files) {
+            testProguardFile(file);
+        }
+    }
+
     public List<File> getConsumerProguardFiles() {
         return consumerProguardFiles;
     }
 
     public void setConsumerProguardFiles(List<File> consumerProguardFiles) {
         this.consumerProguardFiles = consumerProguardFiles;
+    }
+
+    public void consumerProguardFile(Object file) {
+        this.consumerProguardFiles.add(project.file(file));
+    }
+
+    public void consumerProguardFiles(Object... files) {
+        for (Object file : files) {
+            consumerProguardFile(file);
+        }
     }
 
     @NonNull

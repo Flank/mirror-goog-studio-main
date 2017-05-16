@@ -20,7 +20,7 @@ import static com.android.SdkConstants.FD_MERGED;
 import static com.android.SdkConstants.FD_RES;
 import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML;
 import static com.android.build.gradle.internal.TaskManager.DIR_BUNDLES;
-import static com.android.build.gradle.internal.dsl.BuildType.PostprocessingConfiguration.OLD_DSL;
+import static com.android.build.gradle.internal.dsl.BuildType.PostprocessingConfiguration.POSTPROCESSING_BLOCK;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
@@ -37,9 +37,11 @@ import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.ProguardFiles;
 import com.android.build.gradle.external.gson.NativeBuildConfigValue;
 import com.android.build.gradle.internal.InstantRunTaskManager;
 import com.android.build.gradle.internal.LoggerWrapper;
+import com.android.build.gradle.internal.PostprocessingActions;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
@@ -49,6 +51,7 @@ import com.android.build.gradle.internal.dependency.SubtractingArtifactCollectio
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
+import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.dsl.PostprocessingOptions;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
@@ -91,6 +94,7 @@ import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.ErrorReporter;
 import com.android.builder.core.VariantType;
 import com.android.builder.dexing.DexingType;
+import com.android.builder.model.BaseConfig;
 import com.android.builder.model.SyncIssue;
 import com.android.repository.api.ProgressIndicator;
 import com.android.sdklib.AndroidTargetHash;
@@ -114,6 +118,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
@@ -375,7 +380,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         // This may not be the case with the experimental plugin.
         if (coreBuildType instanceof BuildType) {
             BuildType dslBuildType = (BuildType) coreBuildType;
-            if (dslBuildType.getPostprocessingConfiguration() != OLD_DSL) {
+            if (dslBuildType.getPostprocessingConfiguration() == POSTPROCESSING_BLOCK) {
                 return dslBuildType.getPostprocessing();
             }
         }
@@ -484,6 +489,78 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 default:
                     throw new AssertionError("Unknown value " + chosenShrinker);
             }
+        }
+    }
+
+    @NonNull
+    @Override
+    public List<File> getProguardFiles() {
+        List<File> result =
+                gatherProguardFiles(
+                        PostprocessingOptions::getProguardFiles, BaseConfig::getProguardFiles);
+
+        if (getPostprocessingOptionsIfUsed() == null) {
+            // For backwards compatibility, we keep the old behavior: if there are no files
+            // specified, use a default one.
+            if (result.isEmpty()) {
+                result.add(
+                        ProguardFiles.getDefaultProguardFile(
+                                ProguardFiles.ProguardFile.DONT_OPTIMIZE.fileName, getProject()));
+            }
+        }
+
+        return result;
+    }
+
+    @NonNull
+    @Override
+    public List<File> getTestProguardFiles() {
+        return gatherProguardFiles(
+                PostprocessingOptions::getTestProguardFiles, BaseConfig::getTestProguardFiles);
+    }
+
+    @NonNull
+    @Override
+    public List<File> getConsumerProguardFiles() {
+        return gatherProguardFiles(
+                PostprocessingOptions::getConsumerProguardFiles,
+                BaseConfig::getConsumerProguardFiles);
+    }
+
+    @NonNull
+    private List<File> gatherProguardFiles(
+            @NonNull Function<PostprocessingOptions, List<File>> postprocessingGetter,
+            @NonNull Function<BaseConfig, Collection<File>> baseConfigGetter) {
+        List<File> result = new ArrayList<>();
+
+        PostprocessingOptions postprocessingOptions = getPostprocessingOptionsIfUsed();
+        if (postprocessingOptions == null) {
+            GradleVariantConfiguration variantConfiguration = getVariantConfiguration();
+            result.addAll(baseConfigGetter.apply(variantConfiguration.getDefaultConfig()));
+            result.addAll(baseConfigGetter.apply(variantConfiguration.getBuildType()));
+            for (CoreProductFlavor flavor : variantConfiguration.getProductFlavors()) {
+                result.addAll(baseConfigGetter.apply(flavor));
+            }
+        } else {
+            // The postprocessing block is only in the build type for now.
+            result.addAll(postprocessingGetter.apply(postprocessingOptions));
+        }
+
+        return result;
+    }
+
+    @Override
+    @Nullable
+    public PostprocessingActions getPostprocessingActions() {
+        // If the new DSL block is not used, all these flags need to be in the config files.
+        PostprocessingOptions postprocessingOptions = getPostprocessingOptionsIfUsed();
+        if (postprocessingOptions != null) {
+            return PostprocessingActions.create(
+                    postprocessingOptions.isRemoveUnusedCode(),
+                    postprocessingOptions.isObfuscate(),
+                    postprocessingOptions.isOptimizeCode());
+        } else {
+            return null;
         }
     }
 

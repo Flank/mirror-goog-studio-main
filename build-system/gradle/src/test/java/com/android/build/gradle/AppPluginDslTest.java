@@ -17,6 +17,7 @@
 package com.android.build.gradle;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.fail;
 
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.PostprocessingOptions;
@@ -29,8 +30,8 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.OptionalCompilationStep;
 import groovy.util.Eval;
 import java.util.Arrays;
+import org.gradle.api.GradleException;
 import org.gradle.api.Project;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -207,13 +208,42 @@ public class AppPluginDslTest {
     }
 
     @Test
+    public void testPostprocessingBlock_builtInShrinker_dontshrink() throws Exception {
+        PostprocessingOptions postprocessing =
+                android.getBuildTypes().getByName("release").getPostprocessing();
+        postprocessing.setCodeShrinker("android_gradle");
+        assertThat(postprocessing.getCodeShrinker()).isEqualTo("android_gradle");
+
+        plugin.createAndroidTasks(false);
+
+        assertThat(project.getTasks().getNames())
+                .doesNotContain("transformClassesWithAndroidGradleClassShrinkerForRelease");
+    }
+
+    @Test
+    public void testPostprocessingBlock_builtInShrinker_shrinkAndObfuscate() throws Exception {
+        PostprocessingOptions postprocessing =
+                android.getBuildTypes().getByName("release").getPostprocessing();
+        postprocessing.setCodeShrinker("android_gradle");
+        postprocessing.setRemoveUnusedCode(true);
+        postprocessing.setObfuscate(true); // This is set to true, but won't happen.
+
+        try {
+            plugin.createAndroidTasks(false);
+            fail();
+        } catch (GradleException e) {
+            assertThat(e.getMessage()).contains("obfuscating");
+        }
+    }
+
+    @Test
     public void testPostprocessingBlock_mixingDsls_newOld() throws Exception {
         BuildType release = android.getBuildTypes().getByName("release");
         release.getPostprocessing().setCodeShrinker("android_gradle");
 
         try {
             release.setMinifyEnabled(true);
-            Assert.fail();
+            fail();
         } catch (Exception e) {
             assertThat(e.getMessage()).contains("setMinifyEnabled");
         }
@@ -226,7 +256,7 @@ public class AppPluginDslTest {
 
         try {
             release.getPostprocessing().setCodeShrinker("android_gradle");
-            Assert.fail();
+            fail();
         } catch (Exception e) {
             assertThat(e.getMessage()).contains("setMinifyEnabled");
         }
@@ -242,7 +272,7 @@ public class AppPluginDslTest {
 
         try {
             plugin.createAndroidTasks(false);
-            Assert.fail();
+            fail();
         } catch (Exception e) {
             assertThat(e.getMessage()).contains("does not support obfuscating");
         }
