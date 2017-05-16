@@ -2,8 +2,10 @@
 <module relativePaths="true" type="JAVA_MODULE" version="4">
   <component name="NewModuleRootManager" inherit-compiler-output="true">
     <exclude-output />
-    <content url="file://$MODULE_DIR$/../../../../out/build/base/gradle-core/build">
+    <content url="file://$MODULE_DIR$/../../../../out/build/base/gradle-core/build/generated-src">
       <sourceFolder url="file://$MODULE_DIR$/../../../../out/build/base/gradle-core/build/generated-src/antlr/main" isTestSource="false" packagePrefix="com.android.build.gradle.shrinker.parser" generated="true" />
+    </content>
+    <content url="file://$MODULE_DIR$/../../../../out/build/base/gradle-core/build/generated">
       <sourceFolder url="file://$MODULE_DIR$/../../../../out/build/base/gradle-core/build/generated/source/proto/main/java" isTestSource="false" generated="true" />
     </content>
     <content url="file://$MODULE_DIR$">
