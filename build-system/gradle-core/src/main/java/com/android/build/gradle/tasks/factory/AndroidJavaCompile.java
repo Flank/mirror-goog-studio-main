@@ -19,8 +19,11 @@ package com.android.build.gradle.tasks.factory;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
+import com.android.utils.FileUtils;
+import java.io.File;
 import org.gradle.api.JavaVersion;
 import org.gradle.api.tasks.CacheableTask;
+import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs;
 
@@ -31,6 +34,13 @@ public class AndroidJavaCompile extends JavaCompile {
     String compileSdkVersion;
 
     InstantRunBuildContext mInstantRunBuildContext;
+
+    File annotationProcessorOutputFolder;
+
+    @OutputDirectory
+    public File getAnnotationProcessorOutputFolder() {
+        return annotationProcessorOutputFolder;
+    }
 
     @Override
     protected void compile(IncrementalTaskInputs inputs) {
@@ -44,6 +54,9 @@ public class AndroidJavaCompile extends JavaCompile {
                         + "JDK 1.8 or later to compile.");
             }
         }
+
+        // Create directory for output of annotation processor.
+        FileUtils.mkdirs(annotationProcessorOutputFolder);
 
         mInstantRunBuildContext.startRecording(InstantRunBuildContext.TaskType.JAVAC);
         super.compile(inputs);

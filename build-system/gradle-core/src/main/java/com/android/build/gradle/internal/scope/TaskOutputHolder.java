@@ -89,6 +89,9 @@ public interface TaskOutputHolder {
         INSTANT_RUN_MERGED_MANIFESTS,
         MANIFEST_METADATA,
 
+        // List of annotation processors for metrics.
+        ANNOTATION_PROCESSOR_LIST,
+
         // the file that consumers of an AAR can use for additional proguard rules.
         CONSUMER_PROGUARD_FILE,
         DATA_BINDING,

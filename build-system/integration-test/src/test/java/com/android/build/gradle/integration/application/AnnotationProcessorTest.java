@@ -22,6 +22,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.BuildScriptGenerator;
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp;
 import com.android.build.gradle.integration.common.fixture.app.AnnotationProcessorLib;
@@ -182,6 +183,11 @@ public class AnnotationProcessorTest {
         AndroidProject model = project.model().getMulti().getModelMap().get(":app");
         assertThat(ModelHelper.getDebugArtifact(model).getGeneratedSourceFolders())
                 .contains(aptOutputFolder);
+
+        // check incrementality.
+        GradleBuildResult result = project.executor().run("assembleDebug");
+        assertThat(result.getUpToDateTasks()).contains(":app:javaPreCompileDebug");
+        assertThat(result.getNotUpToDateTasks()).contains(":app:processAnalyticsDebug");
     }
 
     /**
