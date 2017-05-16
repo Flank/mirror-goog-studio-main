@@ -19,7 +19,7 @@ package com.android.ide.common.rendering.api;
 /**
  * Log class for actions executed through {@link Bridge} and {@link RenderSession}.
  */
-public class LayoutLog {
+public class LayoutLog implements ILayoutLog {
     /**
      * Prefix for resource warnings/errors. This is not meant to be used as-is by the Layout
      * Library, but is there to help test against a wider type of warning/error.
@@ -149,52 +149,6 @@ public class LayoutLog {
      */
     public static final String TAG_INFO = "info";
 
-    /**
-     * Logs a warning.
-     *
-     * @param tag a tag describing the type of the warning
-     * @param message the message of the warning
-     * @param viewCookie the view cookie where the error generated, if available
-     * @param data an optional data bundle that the client can use to improve the warning display.
-     */
-    public void warning(String tag, String message, Object viewCookie, Object data) {}
-
-    /**
-     * Logs a fidelity warning.
-     *
-     * <p>This type of warning indicates that the render will not be the same as the rendering on a
-     * device due to limitation of the Java rendering API.
-     *
-     * @param tag a tag describing the type of the warning
-     * @param message the message of the warning
-     * @param throwable an optional Throwable that triggered the warning
-     * @param viewCookie the view cookie where the error generated, if available
-     * @param data an optional data bundle that the client can use to improve the warning display.
-     */
-    public void fidelityWarning(
-            String tag, String message, Throwable throwable, Object viewCookie, Object data) {}
-
-    /**
-     * Logs an error.
-     *
-     * @param tag a tag describing the type of the error
-     * @param message the message of the error
-     * @param viewCookie the view cookie where the error generated, if available
-     * @param data an optional data bundle that the client can use to improve the error display.
-     */
-    public void error(String tag, String message, Object viewCookie, Object data) {}
-
-    /**
-     * Logs an error, and the {@link Throwable} that triggered it.
-     *
-     * @param tag a tag describing the type of the error
-     * @param message the message of the error
-     * @param throwable the Throwable that triggered the error
-     * @param viewCookie the view cookie where the error generated, if available
-     * @param data an optional data bundle that the client can use to improve the error display.
-     */
-    public void error(
-            String tag, String message, Throwable throwable, Object viewCookie, Object data) {}
 
     // Old methods that didn't include the support for viewCookie
 
