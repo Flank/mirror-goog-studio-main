@@ -24,8 +24,17 @@ dependencies {
     wearApp project(':${WearprojectName}')
     compile 'com.google.android.gms:play-services-wearable:+'
 </#if>
-<#if isInstantApp && !isBaseFeature>
+<#if isInstantApp>
+  <#if isBaseFeature>
+    <#if monolithicModuleName?has_content>
+    application project(':${monolithicModuleName}')
+    <#else>
+    // TODO: Add dependency to the main application.
+    // application project(':app')
+    </#if>
+  <#else>
     implementation project(':${baseFeatureName}')
+  </#if>
 </#if>
 <#if includeKotlinSupport!false>
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"

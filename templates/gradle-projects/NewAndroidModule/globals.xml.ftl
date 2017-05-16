@@ -25,6 +25,7 @@
     <global id="isBaseFeature" type="boolean" value="false" />
     <global id="instantAppProjectName" type="string" value="instantapp" />
     <global id="monolithicAppProjectName" type="string" value="app" />
+    <global id="monolithicModuleName" type="string" value="" />
     <global id="instantAppPackageName" type="string" value="${packageName}.instantapp" />
 
     <global id="instantAppOut" type="string" value="${escapeXmlAttribute(instantAppDir!'./' + (instantAppProjectName!'instantapp'))}" />
