@@ -62,6 +62,10 @@ proto::NetworkProfilerData ConnectionSampler::Sample(const uint32_t uid) {
   proto::NetworkProfilerData data;
   if (connections_.find(uid) != connections_.end()) {
     data.mutable_connection_data()->set_connection_number(connections_[uid]);
+  } else {
+    // Returns zero if app does not have any open connections, for example
+    // for example when both wifi and mobile radio are turned off.
+    data.mutable_connection_data()->set_connection_number(0);
   }
   return data;
 }
