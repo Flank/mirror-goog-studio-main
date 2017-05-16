@@ -125,8 +125,14 @@ public interface SyncIssue {
      */
     int TYPE_STUDIO_TOO_OLD = 25;
 
+    /**
+     * Indicates that the module contains flavors but that no dimensions have been named. data is
+     * empty.
+     */
+    int TYPE_UNNAMED_FLAVOR_DIMENSION = 26;
+
     /** Highest number assigned to types of {@link SyncIssue}s. */
-    int TYPE_MAX = 25; // increment when adding new types.
+    int TYPE_MAX = 26; // increment when adding new types.
 
     /** Returns the severity of the issue. */
     int getSeverity();

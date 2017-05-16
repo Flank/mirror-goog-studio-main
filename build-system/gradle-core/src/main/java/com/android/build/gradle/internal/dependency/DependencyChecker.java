@@ -340,4 +340,9 @@ public class DependencyChecker implements SyncIssueHandler {
         syncIssues.add(issue);
         return issue;
     }
+
+    @Override
+    public boolean hasSyncIssue(int type) {
+        return syncIssues.stream().anyMatch(syncIssue -> syncIssue.getType() == type);
+    }
 }

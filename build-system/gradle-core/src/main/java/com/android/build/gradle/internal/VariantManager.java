@@ -678,11 +678,14 @@ public class VariantManager implements VariantModel {
         } else {
             // ensure that there is always a dimension
             if (flavorDimensionList == null || flavorDimensionList.isEmpty()) {
-                androidBuilder.getErrorReporter().handleSyncError(
-                        "",
-                        SyncIssue.TYPE_GENERIC,
-                        "Flavor dimension name is now required even with only one dimension."
-                );
+                androidBuilder
+                        .getErrorReporter()
+                        .handleSyncError(
+                                "",
+                                SyncIssue.TYPE_UNNAMED_FLAVOR_DIMENSION,
+                                "All flavors must now belong to a named flavor dimension. "
+                                        + "Learn more at "
+                                        + "https://d.android.com/r/tools/flavorDimensions-missing-error-message.html");
             } else if (flavorDimensionList.size() == 1) {
                 // if there's only one dimension, auto-assign the dimension to all the flavors.
                 String dimensionName = flavorDimensionList.get(0);

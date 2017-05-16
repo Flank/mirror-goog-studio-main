@@ -75,6 +75,7 @@ import com.android.builder.model.VariantBuildOutput;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.GlobalLibraryMap;
 import com.android.ide.common.build.ApkInfo;
+import com.android.utils.Pair;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -443,45 +444,57 @@ public class ModelBuilder implements ToolingModelBuilder {
 
         List<File> extraGeneratedSourceFolders = variantData.getExtraGeneratedSourceFolders();
 
-        Dependencies dependencies;
-        DependencyGraphs dependencyGraphs;
+        final VariantScope scope = variantData.getScope();
 
-        ArtifactDependencyGraph graph = new ArtifactDependencyGraph();
-
-        if (modelLevel >= AndroidProject.MODEL_LEVEL_4_NEW_DEP_MODEL) {
-            dependencies = EMPTY_DEPENDENCIES_IMPL;
-
-            dependencyGraphs =
-                    graph.createLevel2DependencyGraph(
-                            variantData.getScope(), modelWithFullDependency);
-        } else {
-            dependencies = graph.createDependencies(variantData.getScope());
-
-            dependencyGraphs = EMPTY_DEPENDENCY_GRAPH;
-        }
-
-        List<String> failures = graph.collectFailures();
-        if (!failures.isEmpty()) {
-            handleUnresolvedDependencies(failures);
-        }
+        Pair<Dependencies, DependencyGraphs> result = getDependencies(scope);
 
         return new JavaArtifactImpl(
                 variantType.getArtifactName(),
-                variantData.getScope().getAssembleTask().getName(),
-                variantData.getScope().getCompileTask().getName(),
+                scope.getAssembleTask().getName(),
+                scope.getCompileTask().getName(),
                 Sets.newHashSet(taskManager.createMockableJar.getName()),
                 extraGeneratedSourceFolders != null
                         ? extraGeneratedSourceFolders
                         : Collections.emptyList(),
                 (variantData.javacTask != null)
                         ? variantData.javacTask.getDestinationDir()
-                        : variantData.getScope().getJavaOutputDir(),
+                        : scope.getJavaOutputDir(),
                 variantData.getJavaResourcesForUnitTesting(),
                 globalScope.getMockableAndroidJarFile(),
-                dependencies,
-                dependencyGraphs,
+                result.getFirst(),
+                result.getSecond(),
                 sourceProviders.variantSourceProvider,
                 sourceProviders.multiFlavorSourceProvider);
+    }
+
+    @NonNull
+    private Pair<Dependencies, DependencyGraphs> getDependencies(@NonNull VariantScope scope) {
+        Pair<Dependencies, DependencyGraphs> result;
+
+        // If there is a missing flavor dimension then we don't even try to resolve dependencies
+        // as it may fail due to improperly setup configuration attributes.
+        if (extraModelInfo.hasSyncIssue(SyncIssue.TYPE_UNNAMED_FLAVOR_DIMENSION)) {
+            result = Pair.of(EMPTY_DEPENDENCIES_IMPL, EMPTY_DEPENDENCY_GRAPH);
+
+        } else {
+            ArtifactDependencyGraph graph = new ArtifactDependencyGraph();
+
+            if (modelLevel >= AndroidProject.MODEL_LEVEL_4_NEW_DEP_MODEL) {
+                result =
+                        Pair.of(
+                                EMPTY_DEPENDENCIES_IMPL,
+                                graph.createLevel2DependencyGraph(scope, modelWithFullDependency));
+            } else {
+                result = Pair.of(graph.createDependencies(scope), EMPTY_DEPENDENCY_GRAPH);
+            }
+
+            List<String> failures = graph.collectFailures();
+            if (!failures.isEmpty()) {
+                handleUnresolvedDependencies(failures);
+            }
+        }
+
+        return result;
     }
 
     private void handleUnresolvedDependencies(@NonNull List<String> failures) {
@@ -560,24 +573,7 @@ public class ModelBuilder implements ToolingModelBuilder {
                 BuildInfoWriterTask.ConfigAction.getBuildInfoFile(scope),
                 variantConfiguration.getInstantRunSupportStatus());
 
-        DependenciesImpl dependencies;
-        DependencyGraphs dependencyGraphs;
-
-        ArtifactDependencyGraph graph = new ArtifactDependencyGraph();
-        if (modelLevel >= AndroidProject.MODEL_LEVEL_4_NEW_DEP_MODEL) {
-            dependencies = EMPTY_DEPENDENCIES_IMPL;
-
-            dependencyGraphs = graph.createLevel2DependencyGraph(scope, modelWithFullDependency);
-        } else {
-            dependencies = graph.createDependencies(scope);
-
-            dependencyGraphs = EMPTY_DEPENDENCY_GRAPH;
-        }
-
-        List<String> failures = graph.collectFailures();
-        if (!failures.isEmpty()) {
-            handleUnresolvedDependencies(failures);
-        }
+        Pair<Dependencies, DependencyGraphs> dependencies = getDependencies(scope);
 
         return new AndroidArtifactImpl(
                 name,
@@ -604,8 +600,8 @@ public class ModelBuilder implements ToolingModelBuilder {
                         ? variantData.javacTask.getDestinationDir()
                         : scope.getJavaOutputDir(),
                 scope.getVariantData().getJavaResourcesForUnitTesting(),
-                dependencies,
-                dependencyGraphs,
+                dependencies.getFirst(),
+                dependencies.getSecond(),
                 sourceProviders.variantSourceProvider,
                 sourceProviders.multiFlavorSourceProvider,
                 variantConfiguration.getSupportedAbis(),

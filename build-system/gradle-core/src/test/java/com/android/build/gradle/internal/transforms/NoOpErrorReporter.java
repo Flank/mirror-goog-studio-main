@@ -65,4 +65,9 @@ public class NoOpErrorReporter extends ErrorReporter {
             @Nullable String data, int type, int severity, @NonNull String msg) {
         return FAKE_ISSUE;
     }
+
+    @Override
+    public boolean hasSyncIssue(int type) {
+        return false;
+    }
 }
