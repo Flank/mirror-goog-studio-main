@@ -56,6 +56,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -405,25 +406,35 @@ public class ArtifactDependencyGraph {
                 Pattern.compile(".*Could not find ([a-zA-Z0-9:\\-.]+)\\..*", Pattern.DOTALL);
 
         return failures.stream()
-                .map(
+                .flatMap(
                         throwable -> {
+                            List<? extends Throwable> causes;
                             if (throwable instanceof ResolveException) {
-                                throwable = throwable.getCause();
+                                causes = ((ResolveException) throwable).getCauses();
+                            } else {
+                                causes = Collections.singletonList(throwable);
                             }
 
-                            String message = throwable.getMessage();
+                            List<String> messages = new ArrayList<>();
+                            for (Throwable cause : causes) {
+                                String message = cause.getMessage();
 
-                            Matcher m = pattern.matcher(message);
-                            if (m.matches()) {
-                                return m.group(1);
+                                Matcher m = pattern.matcher(message);
+                                if (m.matches()) {
+                                    messages.add(m.group(1));
+                                    continue;
+                                }
+
+                                m = pattern2.matcher(message);
+                                if (m.matches()) {
+                                    messages.add(m.group(1));
+                                    continue;
+                                }
+
+                                messages.add(cause.getMessage());
                             }
 
-                            m = pattern2.matcher(message);
-                            if (m.matches()) {
-                                return m.group(1);
-                            }
-
-                            return throwable.getMessage();
+                            return messages.stream();
                         })
                 .collect(Collectors.toList());
     }
@@ -491,7 +502,7 @@ public class ArtifactDependencyGraph {
     }
 
     private static class HashableResolvedArtifactResult implements ResolvedArtifactResult {
-        @NonNull private ResolvedArtifactResult delegate;
+        @NonNull private final ResolvedArtifactResult delegate;
         private final boolean isJava;
 
         public HashableResolvedArtifactResult(
