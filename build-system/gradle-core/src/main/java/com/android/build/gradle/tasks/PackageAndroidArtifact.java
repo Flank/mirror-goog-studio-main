@@ -48,10 +48,10 @@ import com.android.builder.files.IncrementalRelativeFileSets;
 import com.android.builder.files.RelativeFile;
 import com.android.builder.internal.packaging.IncrementalPackager;
 import com.android.builder.model.AaptOptions;
-import com.android.builder.model.ApiVersion;
 import com.android.builder.packaging.PackagingUtils;
 import com.android.ide.common.build.ApkData;
 import com.android.ide.common.res2.FileStatus;
+import com.android.sdklib.AndroidVersion;
 import com.android.utils.FileUtils;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
@@ -170,7 +170,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
     private PackagingOptions packagingOptions;
 
-    private ApiVersion minSdkVersion;
+    private AndroidVersion minSdkVersion;
 
     protected InstantRunBuildContext instantRunContext;
 
@@ -241,7 +241,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         return this.minSdkVersion.getApiLevel();
     }
 
-    public void setMinSdkVersion(ApiVersion version) {
+    public void setMinSdkVersion(AndroidVersion version) {
         this.minSdkVersion = version;
     }
 

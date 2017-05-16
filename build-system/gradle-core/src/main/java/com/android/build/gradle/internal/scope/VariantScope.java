@@ -44,7 +44,7 @@ import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.build.gradle.tasks.RenderscriptCompile;
 import com.android.builder.dexing.DexingMode;
-import com.android.builder.model.ApiVersion;
+import com.android.sdklib.AndroidVersion;
 import java.io.File;
 import java.util.Collection;
 import java.util.function.Supplier;
@@ -96,7 +96,7 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     DexingMode getDexingMode();
 
     @NonNull
-    ApiVersion getMinSdkVersion();
+    AndroidVersion getMinSdkVersion();
 
     @NonNull
     TransformManager getTransformManager();
@@ -474,7 +474,7 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     /** Min sdk version to pass to dx. This is necessary to allow API 24+ features. */
     @Nullable
-    ApiVersion getMinSdkForDx();
+    AndroidVersion getMinSdkForDx();
 
     @NonNull
     ConfigurableFileCollection getTryWithResourceRuntimeSupportJar();

@@ -29,8 +29,8 @@ import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
 import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.AaptOptions;
-import com.android.builder.model.ApiVersion;
 import com.android.ide.common.build.ApkData;
+import com.android.sdklib.AndroidVersion;
 import java.io.File;
 import java.util.Set;
 import org.gradle.api.Project;
@@ -66,7 +66,7 @@ public class DefaultGradlePackagingScope implements PackagingScope {
 
     @NonNull
     @Override
-    public ApiVersion getMinSdkVersion() {
+    public AndroidVersion getMinSdkVersion() {
         return mVariantScope.getMinSdkVersion();
     }
 

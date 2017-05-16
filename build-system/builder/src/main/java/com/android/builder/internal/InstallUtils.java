@@ -17,8 +17,8 @@
 package com.android.builder.internal;
 
 import com.android.annotations.NonNull;
-import com.android.builder.model.ApiVersion;
 import com.android.builder.testing.api.DeviceConnector;
+import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.utils.ILogger;
 
@@ -26,6 +26,7 @@ public class InstallUtils {
 
     /**
      * Checks whether a device is compatible with a given app minSdkVersion value.
+     *
      * @param device the device
      * @param appMinSdkVersion the minSdkVersion of the app
      * @param logger a logger object
@@ -35,7 +36,7 @@ public class InstallUtils {
      */
     public static boolean checkDeviceApiLevel(
             @NonNull DeviceConnector device,
-            @NonNull ApiVersion appMinSdkVersion,
+            @NonNull AndroidVersion appMinSdkVersion,
             @NonNull ILogger logger,
             @NonNull String projectName,
             @NonNull String variantName) {

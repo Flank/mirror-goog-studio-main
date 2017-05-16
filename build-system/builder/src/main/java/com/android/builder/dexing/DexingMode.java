@@ -19,8 +19,7 @@ package com.android.builder.dexing;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
-import com.android.builder.core.DefaultApiVersion;
-import com.android.builder.model.ApiVersion;
+import com.android.sdklib.AndroidVersion;
 
 /**
  * The mode of dexing, which includes the {@link DexingType} and an optional minimum SDK version
@@ -32,14 +31,14 @@ public final class DexingMode {
     @NonNull private final DexingType dexingType;
 
     /** The optional minimum SDK version associated with the dexing type. */
-    @Nullable private final ApiVersion minSdkVersion;
+    @Nullable private final AndroidVersion minSdkVersion;
 
     public DexingMode(@NonNull DexingType dexingType) {
         this.dexingType = dexingType;
         this.minSdkVersion = null;
     }
 
-    public DexingMode(@NonNull DexingType dexingType, @NonNull ApiVersion minSdkVersion) {
+    public DexingMode(@NonNull DexingType dexingType, @NonNull AndroidVersion minSdkVersion) {
         this.dexingType = dexingType;
         this.minSdkVersion = minSdkVersion;
     }
@@ -59,7 +58,7 @@ public final class DexingMode {
 
     /** Returns the optional minimum SDK version associated with the dexing type. */
     @Nullable
-    public ApiVersion getMinSdkVersion() {
+    public AndroidVersion getMinSdkVersion() {
         return minSdkVersion;
     }
 
@@ -68,6 +67,6 @@ public final class DexingMode {
      */
     @Nullable
     public Integer getMinSdkVersionValue() {
-        return minSdkVersion != null ? DefaultApiVersion.getFeatureLevel(minSdkVersion) : null;
+        return minSdkVersion != null ? minSdkVersion.getFeatureLevel() : null;
     }
 }

@@ -30,13 +30,13 @@ import com.android.builder.files.IncrementalRelativeFileSets;
 import com.android.builder.files.RelativeFile;
 import com.android.builder.internal.packaging.IncrementalPackager;
 import com.android.builder.model.AaptOptions;
-import com.android.builder.model.ApiVersion;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.packaging.PackagerException;
 import com.android.builder.packaging.SigningException;
 import com.android.ide.common.build.ApkData;
 import com.android.ide.common.res2.FileStatus;
 import com.android.ide.common.signing.KeytoolException;
+import com.android.sdklib.AndroidVersion;
 import com.android.utils.FileUtils;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableMap;
@@ -70,7 +70,7 @@ public class PackageSplitAbi extends BaseTask {
 
     private FileCollection jniFolders;
 
-    private ApiVersion minSdkVersion;
+    private AndroidVersion minSdkVersion;
 
     private File incrementalDir;
 
@@ -114,7 +114,7 @@ public class PackageSplitAbi extends BaseTask {
 
     @Input
     public int getMinSdkVersion() {
-        return minSdkVersion.getApiLevel();
+        return minSdkVersion.getFeatureLevel();
     }
 
     @Input

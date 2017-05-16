@@ -34,11 +34,9 @@ import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
-import com.android.builder.core.DefaultApiVersion;
 import com.android.builder.core.ManifestAttributeSupplier;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.core.VariantType;
-import com.android.builder.model.ApiVersion;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.builder.model.SourceProvider;
@@ -131,7 +129,7 @@ public class GradleVariantConfiguration
      * @see VariantConfiguration#getMinSdkVersion()
      */
     @NonNull
-    public ApiVersion getMinSdkVersionWithTargetDeviceApi() {
+    public AndroidVersion getMinSdkVersionWithTargetDeviceApi() {
         Integer targetApiLevel = projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API);
         if (targetApiLevel != null && isMultiDexEnabled() && getBuildType().isDebuggable()) {
             // Consider runtime API passed from the IDE only if multi-dex is enabled and the app is
@@ -141,7 +139,7 @@ public class GradleVariantConfiguration
                             ? Integer.min(getTargetSdkVersion().getApiLevel(), targetApiLevel)
                             : targetApiLevel;
 
-            return new DefaultApiVersion(minVersion);
+            return new AndroidVersion(minVersion);
         } else {
             return super.getMinSdkVersion();
         }

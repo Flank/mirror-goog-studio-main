@@ -29,13 +29,13 @@ import com.android.annotations.NonNull;
 import com.android.build.OutputFile;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.builder.core.DefaultApiVersion;
 import com.android.builder.testing.api.DeviceConnector;
 import com.android.builder.testing.api.DeviceException;
 import com.android.builder.testing.api.DeviceProvider;
 import com.android.ide.common.build.ApkInfo;
 import com.android.ide.common.process.DefaultProcessExecutor;
 import com.android.ide.common.process.ProcessExecutor;
+import com.android.sdklib.AndroidVersion;
 import com.android.utils.StdLogger;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
@@ -93,7 +93,7 @@ public class InstallVariantTaskTest {
                 "project",
                 "variant",
                 new FakeDeviceProvider(ImmutableList.of(deviceConnector)),
-                new DefaultApiVersion(1),
+                new AndroidVersion(1),
                 processExecutor,
                 temporaryFolder.newFile("split_select"),
                 ImmutableList.of(createSingleMainApkOutput(mainOutputFileApk)),

@@ -171,14 +171,12 @@ import com.android.build.gradle.tasks.factory.JavaCompileConfigAction;
 import com.android.build.gradle.tasks.factory.ProcessJavaResConfigAction;
 import com.android.build.gradle.tasks.factory.TestServerTaskConfigAction;
 import com.android.builder.core.AndroidBuilder;
-import com.android.builder.core.DefaultApiVersion;
 import com.android.builder.core.DefaultDexOptions;
 import com.android.builder.core.DesugarProcessBuilder;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.core.VariantType;
 import com.android.builder.dexing.DexingMode;
 import com.android.builder.dexing.DexingType;
-import com.android.builder.model.ApiVersion;
 import com.android.builder.model.DataBindingOptions;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.profile.Recorder;
@@ -188,7 +186,7 @@ import com.android.builder.testing.api.TestServer;
 import com.android.builder.utils.FileCache;
 import com.android.ide.common.build.ApkData;
 import com.android.manifmerger.ManifestMerger2;
-import com.android.sdklib.SdkVersionInfo;
+import com.android.sdklib.AndroidVersion;
 import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
 import com.google.common.base.Joiner;
@@ -2020,14 +2018,13 @@ public abstract class TaskManager {
         // Upgrade from legacy multi-dex to native multi-dex if possible when using with a device
         if (dexingMode.getDexingType() == DexingType.LEGACY_MULTIDEX) {
             if (variantScope.getVariantConfiguration().isMultiDexEnabled()
-                    && DefaultApiVersion.getFeatureLevel(
-                                    variantScope
-                                            .getVariantConfiguration()
-                                            .getMinSdkVersionWithTargetDeviceApi())
+                    && variantScope
+                                    .getVariantConfiguration()
+                                    .getMinSdkVersionWithTargetDeviceApi()
+                                    .getFeatureLevel()
                             >= 21) {
                 // We bump minSdkVersion to 21 (just enough to enable native multi-dex)
-                dexingMode =
-                        new DexingMode(DexingType.NATIVE_MULTIDEX, new DefaultApiVersion(21, null));
+                dexingMode = new DexingMode(DexingType.NATIVE_MULTIDEX, new AndroidVersion(21));
             }
         }
 
@@ -2038,7 +2035,7 @@ public abstract class TaskManager {
         if (!usingIncrementalDexing(variantScope)) {
             // variantScope.getMinSdkForDx() may be null here and it is intended (see
             // DexByteCodeConverter#dexOutOfProcess)
-            ApiVersion minSdkForDx = variantScope.getMinSdkForDx();
+            AndroidVersion minSdkForDx = variantScope.getMinSdkForDx();
             dexingMode =
                     minSdkForDx != null
                             ? new DexingMode(dexingMode.getDexingType(), minSdkForDx)
@@ -2098,32 +2095,26 @@ public abstract class TaskManager {
     private void maybeCreateDesugarTask(
             @NonNull TaskFactory tasks,
             @NonNull VariantScope variantScope,
-            @NonNull ApiVersion minSdk,
+            @NonNull AndroidVersion minSdk,
             @NonNull TransformManager transformManager) {
         if (variantScope.getJava8LangSupportType() == Java8LangSupport.DESUGAR) {
             FileCache userCache = getUserIntermediatesCache();
             FileCache projectCache = getProjectIntermediatesCache();
 
-            int minSdkVersion;
-            if (DefaultApiVersion.isPreview(minSdk)) {
-                //noinspection ConstantConditions - preview always has a codename
-                minSdkVersion = SdkVersionInfo.getApiByPreviewName(minSdk.getCodename(), true);
-            } else {
-                minSdkVersion = minSdk.getApiLevel();
-            }
             DesugarTransform desugarTransform =
                     new DesugarTransform(
                             () -> androidBuilder.getBootClasspath(true),
                             System.getProperty("sun.boot.class.path"),
                             userCache,
                             projectCache,
-                            minSdkVersion,
+                            minSdk.getFeatureLevel(),
                             androidBuilder.getJavaProcessExecutor(),
                             globalScope.getJava8LangSupportJar(),
                             project.getLogger().isEnabled(LogLevel.INFO));
             transformManager.addTransform(tasks, variantScope, desugarTransform);
 
-            if (minSdkVersion < DesugarProcessBuilder.MIN_SUPPORTED_API_TRY_WITH_RESOURCES) {
+            if (minSdk.getFeatureLevel()
+                    < DesugarProcessBuilder.MIN_SUPPORTED_API_TRY_WITH_RESOURCES) {
                 // add runtime classes for try-with-resources support
                 String taskName =
                         variantScope.getTaskName(ExtractTryWithResourcesSupportJar.TASK_NAME);
@@ -2366,7 +2357,7 @@ public abstract class TaskManager {
                 variantScope.getOutput(VariantScope.TaskOutputType.PROCESSED_RES);
 
         variantScope.setInstantRunTaskManager(instantRunTaskManager);
-        ApiVersion minSdkForDx = variantScope.getMinSdkForDx();
+        AndroidVersion minSdkForDx = variantScope.getMinSdkForDx();
         AndroidTask<BuildInfoLoaderTask> buildInfoLoaderTask =
                 instantRunTaskManager.createInstantRunAllTasks(
                         variantScope.getGlobalScope().getExtension().getDexOptions(),
@@ -2377,9 +2368,7 @@ public abstract class TaskManager {
                         instantRunMergedManifests,
                         processedResources,
                         true /* addResourceVerifier */,
-                        minSdkForDx != null
-                                ? DefaultApiVersion.getFeatureLevel(minSdkForDx)
-                                : null);
+                        minSdkForDx != null ? minSdkForDx.getFeatureLevel() : null);
 
         if (variantScope.getSourceGenTask() != null) {
             variantScope.getSourceGenTask().dependsOn(tasks, buildInfoLoaderTask);

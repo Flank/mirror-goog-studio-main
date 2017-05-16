@@ -20,8 +20,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.builder.core.VariantConfiguration;
-import com.android.builder.model.ApiVersion;
 import com.android.builder.testing.TestData;
+import com.android.sdklib.AndroidVersion;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import java.util.Locale;
@@ -85,7 +85,7 @@ public abstract class AbstractTestDataImpl implements TestData {
 
     @NonNull
     @Override
-    public ApiVersion getMinSdkVersion() {
+    public AndroidVersion getMinSdkVersion() {
         return testVariantConfig.getMinSdkVersion();
     }
 
