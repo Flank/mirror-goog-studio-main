@@ -24,7 +24,6 @@ import com.android.annotations.Nullable;
 public enum GpuMode {
     AUTO("auto"),
     HOST("host"),
-    MESA("mesa"),
     SWIFT("guest"),
     OFF("off");
 
@@ -41,7 +40,6 @@ public enum GpuMode {
                 return "Automatic";
             case HOST:
                 return "Hardware - GLES 2.0";
-            case MESA:
             case SWIFT:
                 return "Software - GLES 2.0";
             case OFF:
