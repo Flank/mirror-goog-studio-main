@@ -21,6 +21,7 @@
 
 #include "utils/clock.h"
 #include "utils/current_process.h"
+#include "utils/device_info.h"
 #include "utils/filesystem_notifier.h"
 #include "utils/trace.h"
 
@@ -56,6 +57,10 @@ bool ActivityManager::StartProfiling(const ProfilingMode profiling_mode,
     // Note that '--sampling 0' would direct ART into instrumentation mode.
     // If there's no '--samepling X', instrumentation is used.
     parameters.append("--sampling 1000 ");
+  }
+  if (DeviceInfo::feature_level() >= 26) {
+    // Use streaming output mode on O or greater.
+    parameters.append("--streaming ");
   }
   parameters.append(app_package_name);
   parameters.append(" ");
