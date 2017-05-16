@@ -67,7 +67,7 @@ class MemoryTrackingEnv {
   void Initialize();
   void StartLiveTracking(int64_t timestamp);
   void StopLiveTracking(int64_t timestamp);
-  void RegisterNewClass(JNIEnv* jni, jclass klass, AllocationEvent* event);
+  void RegisterNewClass(JNIEnv* jni, jclass klass);
   void LogGcStart();
   void LogGcFinish();
 
@@ -108,10 +108,12 @@ class MemoryTrackingEnv {
   TimingStats timing_stats_;
 
   jvmtiEnv* jvmti_;
+  bool is_first_tracking_;
   bool is_live_tracking_;
   int32_t app_id_;
   int64_t current_capture_time_ns_;
   int64_t last_gc_start_ns_;
+  std::mutex tracking_mutex_;
   std::atomic<int> total_live_count_;
   std::atomic<int> total_free_count_;
   std::atomic<long> current_class_tag_;
