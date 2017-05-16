@@ -49,6 +49,9 @@ prog [Flags flags, String baseDirectory]
     | ('-ignorewarnings' {GrammarActions.ignoreWarnings($flags);})
     | ('-target' target=NAME {GrammarActions.target(flags, $target.text);})
     | ('-whyareyoukeeping' classSpec=classSpecification { GrammarActions.whyAreYouKeeping(flags, $classSpec.classSpec); })
+    | ('-dontshrink' { GrammarActions.dontShrink(flags); } )
+    | ('-dontoptimize' { GrammarActions.dontOptimize(flags); } )
+    | ('-dontobfuscate' { GrammarActions.dontObfuscate(flags); })
   )*
   EOF
   ;
@@ -72,10 +75,7 @@ private noOpFlag
     | ('-keepclasseswithmembernames' classSpec=classSpecification  )
     | ('-keepattributes' {List<FilterSpecification> attribute_filter = new ArrayList<FilterSpecification>();} filter[attribute_filter, FilterSeparator.ATTRIBUTE] )
     | ('-keeppackagenames' {List<FilterSpecification> package_filter = new ArrayList<FilterSpecification>();} filter[package_filter, FilterSeparator.GENERAL] )
-    | ('-dontshrink' )
-    | ('-dontoptimize'  )
     | ('-dontpreverify'  )
-    | ('-dontobfuscate' )
   )
   ;
 

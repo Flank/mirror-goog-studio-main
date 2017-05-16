@@ -40,9 +40,12 @@ public class Flags {
 
     @NonNull private final List<ClassSpecification> whyAreYouKeepingSpecs = Lists.newArrayList();
 
-    private BytecodeVersion bytecodeVersion = null;
+    @Nullable private BytecodeVersion bytecodeVersion = null;
 
     private boolean ignoreWarnings;
+    private boolean dontShrink;
+    private boolean dontObfuscate;
+    private boolean dontOptimize;
 
     @NonNull
     public List<ClassSpecification> getKeepClassSpecs() {
@@ -138,5 +141,29 @@ public class Flags {
     @Nullable
     public BytecodeVersion getBytecodeVersion() {
         return bytecodeVersion;
+    }
+
+    public boolean isDontShrink() {
+        return dontShrink;
+    }
+
+    public void setDontShrink(boolean dontShrink) {
+        this.dontShrink = dontShrink;
+    }
+
+    public boolean isDontObfuscate() {
+        return dontObfuscate;
+    }
+
+    public void setDontObfuscate(boolean dontObfuscate) {
+        this.dontObfuscate = dontObfuscate;
+    }
+
+    public boolean isDontOptimize() {
+        return dontOptimize;
+    }
+
+    public void setDontOptimize(boolean dontOptimize) {
+        this.dontOptimize = dontOptimize;
     }
 }

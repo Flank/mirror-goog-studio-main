@@ -321,6 +321,18 @@ public class GrammarActions {
         flags.whyAreYouKeeping(classSpecification);
     }
 
+    static void dontOptimize(Flags flags) {
+        flags.setDontOptimize(true);
+    }
+
+    static void dontShrink(Flags flags) {
+        flags.setDontShrink(true);
+    }
+
+    static void dontObfuscate(Flags flags) {
+        flags.setDontObfuscate(true);
+    }
+
     @NonNull
     private static String convertNameToPattern(
             @NonNull String name, @NonNull FilterSeparator separator) {
