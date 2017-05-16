@@ -102,6 +102,7 @@ public class JavaPreCompileTaskTest {
         FileCollection compileClasspath = project.files(jar, nonJarFile, directory);
         task.init(
                 outputFile,
+                "annotationProcessor",
                 processorConfiguration,
                 compileClasspath,
                 new AnnotationProcessorOptions(),
@@ -123,6 +124,7 @@ public class JavaPreCompileTaskTest {
                 project.files(jarWithAnnotationProcessor, directoryWithAnnotationProcessor);
         task.init(
                 outputFile,
+                "annotationProcessor",
                 processorConfiguration,
                 compileClasspath,
                 new AnnotationProcessorOptions(),
@@ -142,6 +144,7 @@ public class JavaPreCompileTaskTest {
                 project.files(jarWithAnnotationProcessor, directoryWithAnnotationProcessor);
         task.init(
                 outputFile,
+                "annotationProcessor",
                 processorConfiguration,
                 compileClasspath,
                 new AnnotationProcessorOptions(),
@@ -160,7 +163,13 @@ public class JavaPreCompileTaskTest {
         FileCollection compileClasspath = project.files(jarWithAnnotationProcessor);
         AnnotationProcessorOptions options = new AnnotationProcessorOptions();
         options.setIncludeCompileClasspath(false);
-        task.init(outputFile, processorConfiguration, compileClasspath, options, false);
+        task.init(
+                outputFile,
+                "annotationProcessor",
+                processorConfiguration,
+                compileClasspath,
+                options,
+                false);
 
         task.preCompile();
 
@@ -172,7 +181,13 @@ public class JavaPreCompileTaskTest {
         FileCollection compileClasspath = project.files(jarWithAnnotationProcessor);
         AnnotationProcessorOptions options = new AnnotationProcessorOptions();
         options.setIncludeCompileClasspath(true);
-        task.init(outputFile, processorConfiguration, compileClasspath, options, false);
+        task.init(
+                outputFile,
+                "annotationProcessor",
+                processorConfiguration,
+                compileClasspath,
+                options,
+                false);
 
         task.preCompile();
 
@@ -184,7 +199,13 @@ public class JavaPreCompileTaskTest {
         AnnotationProcessorOptions options = new AnnotationProcessorOptions();
         project.getDependencies()
                 .add("annotationProcessor", project.files(jarWithAnnotationProcessor));
-        task.init(outputFile, processorConfiguration, project.files(), options, false);
+        task.init(
+                outputFile,
+                "annotationProcessor",
+                processorConfiguration,
+                project.files(),
+                options,
+                false);
         task.preCompile();
 
         assertThat(getProcessorNames()).containsExactly(jarWithAnnotationProcessor.getName());
@@ -195,7 +216,13 @@ public class JavaPreCompileTaskTest {
         FileCollection compileClasspath = project.files();
         AnnotationProcessorOptions options = new AnnotationProcessorOptions();
         options.getClassNames().add(testProcessorName);
-        task.init(outputFile, processorConfiguration, compileClasspath, options, false);
+        task.init(
+                outputFile,
+                "annotationProcessor",
+                processorConfiguration,
+                compileClasspath,
+                options,
+                false);
         task.preCompile();
 
         assertThat(getProcessorNames()).containsExactly(testProcessorName);
@@ -206,6 +233,7 @@ public class JavaPreCompileTaskTest {
         FileCollection compileClasspath = project.files();
         task.init(
                 outputFile,
+                "annotationProcessor",
                 processorConfiguration,
                 compileClasspath,
                 new AnnotationProcessorOptions(),
@@ -222,7 +250,13 @@ public class JavaPreCompileTaskTest {
         options.setIncludeCompileClasspath(true); // Disable exception.
         options.getClassNames().add(testProcessorName);
 
-        task.init(outputFile, processorConfiguration, compileClasspath, options, true);
+        task.init(
+                outputFile,
+                "annotationProcessor",
+                processorConfiguration,
+                compileClasspath,
+                options,
+                true);
         task.preCompile();
 
         assertThat(getProcessorNames())

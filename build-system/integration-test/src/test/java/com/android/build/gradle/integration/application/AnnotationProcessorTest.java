@@ -55,6 +55,7 @@ public class AnnotationProcessorTest {
     public static Collection<Object[]> data() {
         return Arrays.asList(
                 new Object[][] {
+                    //{false},
                     {false}, {true},
                 });
     }
@@ -113,27 +114,42 @@ public class AnnotationProcessorTest {
                         + "    }\n"
                         + "}\n"));
 
-
         sApp.removeFile(sApp.getFile("HelloWorldTest.java"));
-        sApp.addFile(new TestSourceFile(
-                "src/androidTest/java/com/example/hellojni", "HelloWorldTest.java",
-                "package com.example.helloworld;\n" +
-                        "\n" +
-                        "import android.test.ActivityInstrumentationTestCase;\n" +
-                        "\n" +
-                        "public class HelloWorldTest extends ActivityInstrumentationTestCase<HelloWorld> {\n" +
-                        "\n" +
-                        "    public HelloWorldTest() {\n" +
-                        "        super(\"com.example.helloworld\", HelloWorld.class);\n" +
-                        "    }\n" +
-                        "\n" +
-                        "    public void testStringValue() {\n" +
-                        "        assertTrue(\"Hello\".equals(HelloWorld.getString()));\n" +
-                        "    }\n" +
-                        "    public void testProcessor() {\n" +
-                        "        assertTrue(\"Processor\".equals(HelloWorld.getProcessor()));\n" +
-                        "    }\n" +
-                        "}\n"));
+
+        sApp.addFile(
+                new TestSourceFile(
+                        "src/test/java/com/example/helloworld",
+                        "HelloWorldTest.java",
+                        "package com.example.helloworld;\n"
+                                + "import com.example.annotation.ProvideString;\n"
+                                + "\n"
+                                + "@ProvideString\n"
+                                + "public class HelloWorldTest {\n"
+                                + "}\n"));
+
+        sApp.addFile(
+                new TestSourceFile(
+                        "src/androidTest/java/com/example/hellojni",
+                        "HelloWorldAndroidTest.java",
+                        "package com.example.helloworld;\n"
+                                + "\n"
+                                + "import android.test.ActivityInstrumentationTestCase;\n"
+                                + "import com.example.annotation.ProvideString;\n"
+                                + "\n"
+                                + "@ProvideString\n"
+                                + "public class HelloWorldAndroidTest extends ActivityInstrumentationTestCase<HelloWorld> {\n"
+                                + "\n"
+                                + "    public HelloWorldAndroidTest() {\n"
+                                + "        super(\"com.example.helloworld\", HelloWorld.class);\n"
+                                + "    }\n"
+                                + "\n"
+                                + "    public void testStringValue() {\n"
+                                + "        assertTrue(\"Hello\".equals(HelloWorld.getString()));\n"
+                                + "    }\n"
+                                + "    public void testProcessor() {\n"
+                                + "        assertTrue(\"Processor\".equals(HelloWorld.getProcessor()));\n"
+                                + "    }\n"
+                                + "}\n"));
     }
 
     @Before
@@ -188,6 +204,39 @@ public class AnnotationProcessorTest {
         GradleBuildResult result = project.executor().run("assembleDebug");
         assertThat(result.getUpToDateTasks()).contains(":app:javaPreCompileDebug");
         assertThat(result.getNotUpToDateTasks()).contains(":app:processAnalyticsDebug");
+    }
+
+    @Test
+    public void testBuild() throws Exception {
+        if (forComponentPlugin) {
+            Files.append(
+                    "\n"
+                            + "configurations {\n"
+                            + "    testAnnotationProcessor\n"
+                            + "    androidTestAnnotationProcessor\n"
+                            + "}\n",
+                    project.getSubproject(":app").getBuildFile(),
+                    Charsets.UTF_8);
+        }
+        Files.append(
+                "\n"
+                        + "dependencies {\n"
+                        + "    annotationProcessor project(':lib-compiler')\n"
+                        + "    testAnnotationProcessor project(':lib-compiler')\n"
+                        + "    androidTestAnnotationProcessor project(':lib-compiler')\n"
+                        + "    compile project(':lib')\n"
+                        + "}\n",
+                project.getSubproject(":app").getBuildFile(),
+                Charsets.UTF_8);
+
+        project.execute("assembleDebugAndroidTest", "testDebug");
+        File aptOutputFolder = project.getSubproject(":app").file("build/generated/source/apt");
+        assertThat(
+                        new File(
+                                aptOutputFolder,
+                                "androidTest/debug/HelloWorldAndroidTestStringValue.java"))
+                .exists();
+        assertThat(new File(aptOutputFolder, "test/debug/HelloWorldTestStringValue.java")).exists();
     }
 
     /**
