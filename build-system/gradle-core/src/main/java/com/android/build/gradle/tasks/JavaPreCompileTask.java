@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.stream.Collectors;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Classpath;
@@ -100,15 +101,32 @@ public class JavaPreCompileTask extends BaseTask {
     @TaskAction
     public void preCompile() throws IOException {
         List<String> processors = Lists.newArrayList();
-        collectImplicitProcessors(processors);
-        boolean grandfathered = includingCompileClasspath() || hasOldAptPlugin();
-        if (!grandfathered && !processors.isEmpty()) {
-            throwException(processors);
+        boolean grandfathered =
+                annotationProcessorOptions.getIncludeCompileClasspath() != null
+                        || hasOldAptPlugin();
+        Collection<File> compileProcessors = null;
+        if (!grandfathered) {
+            compileProcessors = collectAnnotationProcessors(compileClasspaths);
+            compileProcessors.removeAll(annotationProcessorConfiguration.getFiles());
+            if (!compileProcessors.isEmpty()) {
+                throwException(convertFilesToNames(compileProcessors));
+            }
         }
 
-        // Add the implicitly declared processors, for metrics collection.
+        // Get all the annotation processors for metrics collection.
         Set<String> classNames = Sets.newHashSet();
-        classNames.addAll(processors);
+
+        // Add the annotation processors on classpath only when includeCompileClasspath is true.
+        if (Boolean.TRUE.equals(annotationProcessorOptions.getIncludeCompileClasspath())) {
+            if (compileProcessors == null) {
+                compileProcessors = collectAnnotationProcessors(compileClasspaths);
+            }
+            classNames.addAll(convertFilesToNames(compileProcessors));
+        }
+
+        // Add all annotation processors on the annotation processor configuration.
+        classNames.addAll(
+                convertFilesToNames(collectAnnotationProcessors(annotationProcessorConfiguration)));
 
         // Add the explicitly declared processors.
         // For metrics purposes, we don't care how they include the processor in their build.
@@ -126,22 +144,29 @@ public class JavaPreCompileTask extends BaseTask {
         }
     }
 
-    private void collectImplicitProcessors(List<String> processors) throws IOException {
-        Collection<File> processorPath = annotationProcessorConfiguration.getFiles();
-        for (File file : compileClasspaths) {
-            if (!file.exists() || processorPath.contains(file)) {
+    /**
+     * Returns a List of packages in the configuration believed to contain an annotation processor.
+     *
+     * <p>We assume a package has an annotation processor if it contains the
+     * META-INF/services/javax.annotation.processing.Processor file.
+     */
+    private static List<File> collectAnnotationProcessors(FileCollection configuration)
+            throws IOException {
+        List<File> processors = Lists.newArrayList();
+        for (File file : configuration.getFiles()) {
+            if (!file.exists()) {
                 continue;
             }
             if (file.isDirectory()) {
                 if (new File(file, PROCESSOR_SERVICES).exists()) {
-                    processors.add(file.getName());
+                    processors.add(file);
                 }
             } else {
                 try (JarFile jarFile = new JarFile(file)) {
                     JarEntry entry = jarFile.getJarEntry(PROCESSOR_SERVICES);
                     //noinspection VariableNotUsedInsideIf
                     if (entry != null) {
-                        processors.add(file.getName());
+                        processors.add(file);
                     }
                 } catch (IOException iox) {
                     // Can happen when we encounter a folder instead of a jar; for instance, in sub-modules.
@@ -149,10 +174,11 @@ public class JavaPreCompileTask extends BaseTask {
                 }
             }
         }
+        return processors;
     }
 
-    private boolean includingCompileClasspath() {
-        return annotationProcessorOptions.getIncludeCompileClasspath() != null;
+    private static List<String> convertFilesToNames(Collection<File> files) {
+        return files.stream().map(File::getName).collect(Collectors.toList());
     }
 
     private boolean hasOldAptPlugin() {

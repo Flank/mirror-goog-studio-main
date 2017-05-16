@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.tasks;
 
+import static com.android.testutils.truth.MoreTruth.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
@@ -29,7 +30,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -46,8 +46,6 @@ import org.junit.rules.TemporaryFolder;
 public class JavaPreCompileTaskTest {
     @ClassRule public static TemporaryFolder temporaryFolder = new TemporaryFolder();
 
-    private static final String debugVariantName = "debug";
-
     private static final String processorMetaInf =
             "META-INF/services/javax.annotation.processing.Processor";
 
@@ -55,7 +53,6 @@ public class JavaPreCompileTaskTest {
 
     private static final String dependencyWithProcessorJar = "dependencyWithProcessor.jar";
 
-    private static File outputFile;
     private static File nonJarFile;
     private static File jar;
     private static File jarWithAnnotationProcessor;
@@ -63,8 +60,9 @@ public class JavaPreCompileTaskTest {
     private static File directoryWithAnnotationProcessor;
 
     private Project project;
-    Configuration processorConfiguration;
+    private Configuration processorConfiguration;
     private JavaPreCompileTask task;
+    private File outputFile;
 
     @BeforeClass
     public static void classSetUp() throws IOException {
@@ -108,7 +106,10 @@ public class JavaPreCompileTaskTest {
                 compileClasspath,
                 new AnnotationProcessorOptions(),
                 false);
+
         task.preCompile();
+
+        assertThat(getProcessorNames()).isEmpty();
     }
 
     @Test
@@ -126,7 +127,13 @@ public class JavaPreCompileTaskTest {
                 compileClasspath,
                 new AnnotationProcessorOptions(),
                 false);
+
         task.preCompile();
+
+        assertThat(getProcessorNames())
+                .containsExactly(
+                        jarWithAnnotationProcessor.getName(),
+                        directoryWithAnnotationProcessor.getName());
     }
 
     @Test
@@ -154,7 +161,10 @@ public class JavaPreCompileTaskTest {
         AnnotationProcessorOptions options = new AnnotationProcessorOptions();
         options.setIncludeCompileClasspath(false);
         task.init(outputFile, processorConfiguration, compileClasspath, options, false);
+
         task.preCompile();
+
+        assertThat(getProcessorNames()).isEmpty();
     }
 
     @Test
@@ -163,18 +173,21 @@ public class JavaPreCompileTaskTest {
         AnnotationProcessorOptions options = new AnnotationProcessorOptions();
         options.setIncludeCompileClasspath(true);
         task.init(outputFile, processorConfiguration, compileClasspath, options, false);
+
         task.preCompile();
+
+        assertThat(getProcessorNames()).containsExactly(jarWithAnnotationProcessor.getName());
     }
 
     @Test
-    public void checkClasspathProcessorAddedForMetrics() throws IOException {
-        FileCollection compileClasspath = project.files(jarWithAnnotationProcessor);
+    public void checkProcessorConfigurationAddedForMetrics() throws IOException {
         AnnotationProcessorOptions options = new AnnotationProcessorOptions();
-        options.setIncludeCompileClasspath(true); // Disable exception.
-        task.init(outputFile, processorConfiguration, compileClasspath, options, false);
+        project.getDependencies()
+                .add("annotationProcessor", project.files(jarWithAnnotationProcessor));
+        task.init(outputFile, processorConfiguration, project.files(), options, false);
         task.preCompile();
 
-        assertProcessorNames(dependencyWithProcessorJar);
+        assertThat(getProcessorNames()).containsExactly(jarWithAnnotationProcessor.getName());
     }
 
     @Test
@@ -185,7 +198,7 @@ public class JavaPreCompileTaskTest {
         task.init(outputFile, processorConfiguration, compileClasspath, options, false);
         task.preCompile();
 
-        assertProcessorNames(testProcessorName);
+        assertThat(getProcessorNames()).containsExactly(testProcessorName);
     }
 
     @Test
@@ -199,7 +212,7 @@ public class JavaPreCompileTaskTest {
                 true);
         task.preCompile();
 
-        assertProcessorNames(JavaPreCompileTask.DATA_BINDING_SPEC);
+        assertThat(getProcessorNames()).containsExactly(JavaPreCompileTask.DATA_BINDING_SPEC);
     }
 
     @Test
@@ -212,16 +225,17 @@ public class JavaPreCompileTaskTest {
         task.init(outputFile, processorConfiguration, compileClasspath, options, true);
         task.preCompile();
 
-        assertProcessorNames(
-                testProcessorName,
-                JavaPreCompileTask.DATA_BINDING_SPEC,
-                dependencyWithProcessorJar);
+        assertThat(getProcessorNames())
+                .containsExactly(
+                        testProcessorName,
+                        JavaPreCompileTask.DATA_BINDING_SPEC,
+                        dependencyWithProcessorJar);
     }
 
-    private static void assertProcessorNames(String... names) throws IOException {
+    private List<String> getProcessorNames() throws IOException {
         Gson gson = new GsonBuilder().create();
+        assertThat(outputFile).isFile();
         FileReader reader = new FileReader(outputFile);
-        List<String> processors = gson.fromJson(reader, new TypeToken<List<String>>() {}.getType());
-        assertThat(processors).containsAllIn(Arrays.asList(names));
+        return gson.fromJson(reader, new TypeToken<List<String>>() {}.getType());
     }
 }
