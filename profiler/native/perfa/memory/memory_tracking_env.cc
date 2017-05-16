@@ -268,7 +268,8 @@ void MemoryTrackingEnv::LogGcStart() {
 }
 
 void MemoryTrackingEnv::LogGcFinish() {
-  profiler::EnqueueGcStats(last_gc_start_ns_, clock_.GetCurrentTime());
+// TODO: re-enable this once VmStatsSampler can be completely removed in O+.
+// profiler::EnqueueGcStats(last_gc_start_ns_, clock_.GetCurrentTime());
 
 #ifndef NDEBUG
   Log::V(">> [MEM AGENT STATS DUMP BEGIN]");
@@ -501,7 +502,9 @@ void MemoryTrackingEnv::AllocDataWorker(jvmtiEnv* jvmti, JNIEnv* jni,
       profiler::EnqueueAllocationEvents(sample);
     }
 
-    profiler::EnqueueAllocStats(env->total_live_count_, env->total_free_count_);
+    // TODO: re-enable this once VmStatsSampler can be completely removed in O+
+    // profiler::EnqueueAllocStats(env->total_live_count_,
+    // env->total_free_count_);
 
     // Sleeps a while before reading from the queue again, so that the agent
     // don't generate too many rpc requests in places with high allocation

@@ -68,6 +68,32 @@ JNIEnv* GetThreadLocalJNI(JavaVM* vm);
  */
 jthread AllocateJavaThread(jvmtiEnv* jvmti, JNIEnv* jni);
 
+/**
+ * Given a class signature and method name (in mutf8), returns the corresponding
+ * mangled native method name according to the JNI spec.
+ *
+ * For a "bar" method in "com/example/Foo", this would yield:
+ * Java_com_example_Foo_bar
+ *
+ * TODO: this currently returns only the short version, and does not take
+ * into account overloaded methods, which require to append the mangled method's
+ * signature as well.
+ */
+std::string GetMangledName(const char* klass_signature,
+                           const char* method_name);
+
+/**
+ * Returns the mangled string from the input mutf8 data.
+ * See spec on JNI native method names for more details.
+ */
+std::string MangleForJni(const std::string& mutf8);
+
+/**
+ * Decode a character in modified utf8 into utf16
+ * See spec on Modified utf-8 strings for more details.
+ */
+uint16_t GetUtf16FromMutf8(const char** mutf8_data);
+
 }  // namespace profiler
 
 #endif
