@@ -600,6 +600,7 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
         extension.disableWrite();
 
         ProcessProfileWriter.getProject(project.getPath())
+                .setCompileSdk(extension.getCompileSdkVersion())
                 .setBuildToolsVersion(extension.getBuildToolsRevision().toString());
 
         // setup SDK repositories.
