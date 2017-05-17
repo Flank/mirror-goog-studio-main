@@ -24,8 +24,6 @@ import com.android.ddmlib.IDevice;
 import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.TimeoutException;
 import com.android.instantapp.sdk.InstantAppSdkException;
-import com.android.instantapp.sdk.ManifestParser;
-import com.android.instantapp.sdk.ManifestProtoParser;
 import com.android.instantapp.sdk.Metadata;
 import com.android.sdklib.AndroidVersion;
 import com.google.common.base.Splitter;
@@ -60,13 +58,9 @@ public class ProvisionRunner {
         }
         Metadata metadata;
         try {
-            metadata = new ManifestProtoParser(instantAppSdk).getMetadata();
+            metadata = Metadata.getInstance(instantAppSdk);
         } catch (InstantAppSdkException e) {
-            try {
-                metadata = new ManifestParser(instantAppSdk).getMetadata();
-            } catch (InstantAppSdkException e2) {
-                throw new ProvisionException(ProvisionException.ErrorType.INVALID_SDK, e);
-            }
+            throw new ProvisionException(ProvisionException.ErrorType.INVALID_SDK, e);
         }
         myMetadata = metadata;
         myListener = listener;

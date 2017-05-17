@@ -35,7 +35,7 @@ import org.xml.sax.SAXException;
  * Receives a manifest.xml file representing the metadata of the Instant App SDK and parses it,
  * producing an instance of {@link Metadata}.
  */
-public class ManifestParser {
+class ManifestParser {
     @NonNull private final File myManifestFile;
     @NonNull private final File myApksDirectory;
 
@@ -45,7 +45,7 @@ public class ManifestParser {
      *
      * @param instantAppSdk the folder containing the SDK.
      */
-    public ManifestParser(@NonNull File instantAppSdk) throws InstantAppSdkException {
+    ManifestParser(@NonNull File instantAppSdk) throws InstantAppSdkException {
         myManifestFile = new File(instantAppSdk, "manifest.xml");
         if (!myManifestFile.exists() || !myManifestFile.isFile()) {
             throw new InstantAppSdkException(

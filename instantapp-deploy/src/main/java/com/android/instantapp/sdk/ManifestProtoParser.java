@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 import wireless.android.instantapps.sdk.ManifestOuterClass;
 
 /** Generates an instance of {@link Metadata} based on the proto serialized binary in the sdk. */
-public class ManifestProtoParser {
+class ManifestProtoParser {
     @NonNull private final File myManifestProtoFile;
     @NonNull private final File myApksDirectory;
 
@@ -41,7 +41,7 @@ public class ManifestProtoParser {
      *
      * @param instantAppSdk the folder containing the SDK.
      */
-    public ManifestProtoParser(@NonNull File instantAppSdk) throws InstantAppSdkException {
+    ManifestProtoParser(@NonNull File instantAppSdk) throws InstantAppSdkException {
         myManifestProtoFile = new File(instantAppSdk, "manifest.pb");
         if (!myManifestProtoFile.exists() || !myManifestProtoFile.isFile()) {
             throw new InstantAppSdkException(
@@ -62,7 +62,7 @@ public class ManifestProtoParser {
      */
     @NonNull
     public Metadata getMetadata() throws InstantAppSdkException {
-        ManifestOuterClass.Manifest manifest = null;
+        ManifestOuterClass.Manifest manifest;
         try {
             FileInputStream inputStream = new FileInputStream(myManifestProtoFile);
             manifest = ManifestOuterClass.Manifest.parseFrom(inputStream);

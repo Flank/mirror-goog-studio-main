@@ -101,6 +101,8 @@ public class ManifestParserTest {
         }
 
         assertEquals(1, metadata.getAiaCompatApiMinVersion());
+
+        assertEquals(21, metadata.getMinApiLevelSupported());
     }
 
     @Test
