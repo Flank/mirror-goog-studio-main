@@ -67,7 +67,6 @@ import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.CacheableTask;
-import org.gradle.api.tasks.Classpath;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
@@ -167,12 +166,12 @@ public class MergeResources extends IncrementalTask {
 
             // get the merged set and write it down.
             QueueableResourceCompiler resourceCompiler;
-            if (getProcessResources()) {
+            if (processResources) {
                 resourceCompiler =
                         AaptGradleFactory.make(
                                 aaptGeneration,
                                 getBuilder(),
-                                getCrunchPng(),
+                                crunchPng,
                                 variantScope,
                                 getAaptTempDir());
             } else {
@@ -254,12 +253,12 @@ public class MergeResources extends IncrementalTask {
 
 
             QueueableResourceCompiler resourceCompiler;
-            if (getProcessResources()) {
+            if (processResources) {
                 resourceCompiler =
                         AaptGradleFactory.make(
                                 aaptGeneration,
                                 getBuilder(),
-                                getCrunchPng(),
+                                crunchPng,
                                 variantScope,
                                 getAaptTempDir());
             } else {
@@ -348,7 +347,6 @@ public class MergeResources extends IncrementalTask {
     }
 
     @InputFiles
-    // TODO Confirm that we don't care about where these things are
     @PathSensitive(PathSensitivity.RELATIVE)
     public FileCollection getRenderscriptResOutputDir() {
         return renderscriptResOutputDir;
@@ -360,7 +358,6 @@ public class MergeResources extends IncrementalTask {
     }
 
     @InputFiles
-    // TODO Confirm that we don't care about where these things are
     @PathSensitive(PathSensitivity.RELATIVE)
     public FileCollection getGeneratedResOutputDir() {
         return generatedResOutputDir;
@@ -372,7 +369,6 @@ public class MergeResources extends IncrementalTask {
     }
 
     @InputFiles
-    // TODO Confirm that we don't care about where these things are
     @PathSensitive(PathSensitivity.RELATIVE)
     @Optional
     public FileCollection getMicroApkResDirectory() {
@@ -385,7 +381,6 @@ public class MergeResources extends IncrementalTask {
     }
 
     @InputFiles
-    // TODO Confirm that we don't care about where these things are
     @PathSensitive(PathSensitivity.RELATIVE)
     @Optional
     public FileCollection getExtraGeneratedResFolders() {
@@ -397,9 +392,9 @@ public class MergeResources extends IncrementalTask {
         this.extraGeneratedResFolders = extraGeneratedResFolders;
     }
 
-    // TODO Is this a classpath?
-    @Classpath
     @Optional
+    @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
     public FileCollection getLibraries() {
         if (libraries != null) {
             return libraries.getArtifactFiles();
@@ -419,7 +414,6 @@ public class MergeResources extends IncrementalTask {
     }
 
     @InputFiles
-    // TODO Confirm that we don't care about where these things are
     @PathSensitive(PathSensitivity.RELATIVE)
     public Set<File> getSourceFolderInputs() {
         List<ResourceSet> inputs = sourceFolderInputs.get();
@@ -441,24 +435,14 @@ public class MergeResources extends IncrementalTask {
         this.outputDir = outputDir;
     }
 
-    // TODO This is an input, right?
     @Input
     public boolean getCrunchPng() {
         return crunchPng;
     }
 
-    public void setCrunchPng(boolean crunchPng) {
-        this.crunchPng = crunchPng;
-    }
-
-    // TODO This is an input, right?
     @Input
     public boolean getProcessResources() {
         return processResources;
-    }
-
-    public void setProcessResources(boolean processResources) {
-        this.processResources = processResources;
     }
 
     @Optional
@@ -481,7 +465,6 @@ public class MergeResources extends IncrementalTask {
         this.validateEnabled = validateEnabled;
     }
 
-    // TODO Is this something we want to store in the cached result?
     @OutputDirectory
     @Optional
     public File getBlameLogFolder() {
@@ -492,7 +475,6 @@ public class MergeResources extends IncrementalTask {
         this.blameLogFolder = blameLogFolder;
     }
 
-    // TODO This is an output, right?
     @OutputDirectory
     public File getGeneratedPngsOutputDir() {
         return generatedPngsOutputDir;
@@ -534,14 +516,12 @@ public class MergeResources extends IncrementalTask {
         return aaptGeneration.name();
     }
 
-    // TODO Is this something we want to store in the cached result?
     @OutputDirectory
     @Optional
     public File getDataBindingLayoutOutputFolder() {
         return dataBindingLayoutOutputFolder;
     }
 
-    // TODO Is this something we want to store in the cached result?
     @OutputDirectory
     @Optional
     public File getResourceShrinkerOutputFolder() {
@@ -684,8 +664,8 @@ public class MergeResources extends IncrementalTask {
             if (includeDependencies) {
                 mergeResourcesTask.setBlameLogFolder(scope.getResourceBlameLogDir());
             }
-            mergeResourcesTask.setProcessResources(processResources);
-            mergeResourcesTask.setCrunchPng(extension.getAaptOptions().getCruncherEnabled());
+            mergeResourcesTask.processResources = processResources;
+            mergeResourcesTask.crunchPng = extension.getAaptOptions().getCruncherEnabled();
 
             VectorDrawablesOptions vectorDrawablesOptions = variantData
                     .getVariantConfiguration()

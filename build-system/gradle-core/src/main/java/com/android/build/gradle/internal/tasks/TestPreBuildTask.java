@@ -34,32 +34,42 @@ import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.CacheableTask;
+import org.gradle.api.tasks.Classpath;
 import org.gradle.api.tasks.OutputDirectory;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 
 /** Pre build task that does some checks for application variants */
+@CacheableTask
 public class TestPreBuildTask extends DefaultAndroidTask {
 
     // list of Android only compile and runtime classpath.
     private ArtifactCollection testedRuntimeClasspath;
     private ArtifactCollection testRuntimeClasspath;
     // fake output dir so that the task doesn't run unless an input has changed.
-    private File outputDirectory;
+    private File fakeOutputDirectory;
 
-    @InputFiles
+    // even though the files are jars, we don't care about changes to the files, only if files
+    // are removed or added. We need to find a better way to declare this.
+    @Classpath
+    @PathSensitive(PathSensitivity.NONE)
     public FileCollection getTestedRuntimeClasspath() {
         return testedRuntimeClasspath.getArtifactFiles();
     }
 
-    @InputFiles
+    // even though the files are jars, we don't care about changes to the files, only if files
+    // are removed or added. We need to find a better way to declare this.
+    @Classpath
+    @PathSensitive(PathSensitivity.NONE)
     public FileCollection getTestRuntimeClasspath() {
         return testRuntimeClasspath.getArtifactFiles();
     }
 
     @OutputDirectory
-    public File getOutputDirectory() {
-        return outputDirectory;
+    public File getFakeOutputDirectory() {
+        return fakeOutputDirectory;
     }
 
     @TaskAction
@@ -152,7 +162,7 @@ public class TestPreBuildTask extends DefaultAndroidTask {
             task.testRuntimeClasspath =
                     variantScope.getArtifactCollection(RUNTIME_CLASSPATH, EXTERNAL, CLASSES);
 
-            task.outputDirectory =
+            task.fakeOutputDirectory =
                     new File(
                             variantScope.getGlobalScope().getIntermediatesDir(),
                             "prebuild/" + variantScope.getVariantConfiguration().getDirName());

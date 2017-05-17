@@ -50,13 +50,18 @@ import org.gradle.api.Project;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.ParallelizableTask;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 
 @ParallelizableTask
+@CacheableTask
 public class MergeSourceSetFolders extends IncrementalTask {
 
     // ----- PUBLIC TASK API -----
@@ -86,6 +91,7 @@ public class MergeSourceSetFolders extends IncrementalTask {
     private final FileValidity<AssetSet> fileValidity = new FileValidity<>();
 
     @Override
+    @Internal
     protected boolean isIncremental() {
         return true;
     }
@@ -190,8 +196,9 @@ public class MergeSourceSetFolders extends IncrementalTask {
         }
     }
 
-    @InputFiles
     @Optional
+    @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
     public FileCollection getLibraries() {
         if (libraries != null) {
             return libraries.getArtifactFiles();
@@ -207,6 +214,7 @@ public class MergeSourceSetFolders extends IncrementalTask {
 
     @InputFiles
     @Optional
+    @PathSensitive(PathSensitivity.RELATIVE)
     public FileCollection getShadersOutputDir() {
         return shadersOutputDir;
     }
@@ -218,6 +226,7 @@ public class MergeSourceSetFolders extends IncrementalTask {
 
     @InputFiles
     @Optional
+    @PathSensitive(PathSensitivity.RELATIVE)
     public FileCollection getCopyApk() {
         return copyApk;
     }
@@ -245,6 +254,7 @@ public class MergeSourceSetFolders extends IncrementalTask {
 
     // input list for the source folder based asset folders.
     @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
     public Set<File> getSourceFolderInputs() {
         List<AssetSet> sets = assetSetSupplier.get();
         // collect the files.

@@ -70,18 +70,21 @@ import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.ParallelizableTask;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier;
 
-/**
- * A task that processes the manifest
- */
+/** A task that processes the manifest */
 @ParallelizableTask
+@CacheableTask
 public class MergeManifests extends ManifestProcessorTask {
 
     private Supplier<String> minSdkVersion;
@@ -184,6 +187,7 @@ public class MergeManifests extends ManifestProcessorTask {
 
     @NonNull
     @Override
+    @Internal
     public File getManifestOutputFile() {
         Preconditions.checkNotNull(splitScope.getMainSplit());
         return FileUtils.join(
@@ -194,6 +198,7 @@ public class MergeManifests extends ManifestProcessorTask {
 
     @Nullable
     @Override
+    @Internal
     public File getInstantRunManifestOutputFile() {
         Preconditions.checkNotNull(splitScope.getMainSplit());
         return FileUtils.join(
@@ -204,17 +209,20 @@ public class MergeManifests extends ManifestProcessorTask {
 
     @Nullable
     @Override
+    @Internal
     public File getAaptFriendlyManifestOutputFile() {
         return null;
     }
 
     @Optional
     @InputFile
+    @PathSensitive(PathSensitivity.RELATIVE)
     public File getMainManifest() {
         return variantConfiguration.getMainManifest();
     }
 
     @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
     public List<File> getManifestOverlays() {
         return variantConfiguration.getManifestOverlays();
     }
@@ -318,6 +326,7 @@ public class MergeManifests extends ManifestProcessorTask {
 
     // TODO put somewhere else?
     @NonNull
+    @Internal
     public static String getArtifactName(@NonNull ResolvedArtifactResult artifact) {
         ComponentIdentifier id = artifact.getId().getComponentIdentifier();
         if (id instanceof ProjectComponentIdentifier) {
@@ -367,6 +376,7 @@ public class MergeManifests extends ManifestProcessorTask {
     }
 
     /** Not an input, see {@link #getOptionalFeaturesString()}. */
+    @Internal
     public List<Feature> getOptionalFeatures() {
         return optionalFeatures;
     }
@@ -377,6 +387,7 @@ public class MergeManifests extends ManifestProcessorTask {
         return optionalFeatures.stream().map(Enum::toString).collect(Collectors.toList());
     }
 
+    @Internal
     public VariantConfiguration getVariantConfiguration() {
         return variantConfiguration;
     }
@@ -387,12 +398,14 @@ public class MergeManifests extends ManifestProcessorTask {
     }
 
     @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
     public FileCollection getManifests() {
         return manifests.getArtifactFiles();
     }
 
     @InputFiles
     @Optional
+    @PathSensitive(PathSensitivity.RELATIVE)
     public FileCollection getFeatureManifests() {
         if (featureManifests == null) {
             return null;
@@ -402,18 +415,21 @@ public class MergeManifests extends ManifestProcessorTask {
 
     @InputFiles
     @Optional
+    @PathSensitive(PathSensitivity.RELATIVE)
     public FileCollection getMicroApkManifest() {
         return microApkManifest;
     }
 
     @InputFiles
     @Optional
+    @PathSensitive(PathSensitivity.RELATIVE)
     public FileCollection getCompatibleScreensManifest() {
         return compatibleScreensManifest;
     }
 
     @InputFiles
     @Optional
+    @PathSensitive(PathSensitivity.RELATIVE)
     public FileCollection getPackageManifest() {
         return packageManifest;
     }

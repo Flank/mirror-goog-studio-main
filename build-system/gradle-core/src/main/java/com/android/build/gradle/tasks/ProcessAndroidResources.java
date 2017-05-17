@@ -102,16 +102,21 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
+import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.ParallelizableTask;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.tooling.BuildException;
 
 @ParallelizableTask
+@CacheableTask
 public class ProcessAndroidResources extends IncrementalTask {
 
     private static final Logger LOG = Logging.getLogger(ProcessAndroidResources.class);
@@ -184,6 +189,7 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     @NonNull
     @InputDirectory
+    @PathSensitive(PathSensitivity.RELATIVE)
     public File getResDir() {
         return resDir;
     }
@@ -201,6 +207,7 @@ public class ProcessAndroidResources extends IncrementalTask {
     }
 
     @NonNull
+    @Internal
     private Set<String> getSplits(@NonNull SplitList splitList) throws IOException {
         return SplitList.getSplits(splitList, splitHandlingPolicy);
     }
@@ -618,8 +625,8 @@ public class ProcessAndroidResources extends IncrementalTask {
         return mangledName.contains("-r") ? mangledName : mangledName.replace("-", "-r");
     }
 
-
     @NonNull
+    @Internal
     private List<LibraryInfo> getLibraryInfoList() {
         if (computedLibraryInfo == null) {
             if (symbolFiles != null && manifests != null) {
@@ -868,6 +875,7 @@ public class ProcessAndroidResources extends IncrementalTask {
     }
 
     @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
     public FileCollection getManifestFiles() {
         return manifestFiles;
     }
@@ -878,6 +886,7 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     @Optional
     @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
     public FileCollection getPackageIdsFiles() {
         return packageIdsFiles != null ? packageIdsFiles.getArtifactFiles() : null;
     }
@@ -896,6 +905,7 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     @NonNull
     @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
     public FileCollection getMergedResources() {
         return mergedResources;
     }
@@ -951,12 +961,14 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     @InputFiles
     @Optional
+    @PathSensitive(PathSensitivity.RELATIVE)
     public FileCollection getManifests() {
         return manifests == null ? null : manifests.getArtifactFiles();
     }
 
     @InputFiles
     @Optional
+    @PathSensitive(PathSensitivity.RELATIVE)
     public FileCollection getSymbolFiles() {
         return symbolFiles == null ? null : symbolFiles.getArtifactFiles();
     }
@@ -967,8 +979,6 @@ public class ProcessAndroidResources extends IncrementalTask {
     public String getPackageForR() {
         return packageForR != null ? packageForR.get() : null;
     }
-
-
 
     @Input
     public boolean getEnforceUniquePackageName() {
@@ -984,6 +994,7 @@ public class ProcessAndroidResources extends IncrementalTask {
         return type.name();
     }
 
+    @Internal
     public VariantType getType() {
         return type;
     }
@@ -1035,6 +1046,7 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     @InputFiles
     @NonNull
+    @PathSensitive(PathSensitivity.RELATIVE)
     public FileCollection getFeatureResourcePackages() {
         return featureResourcePackages;
     }
@@ -1050,6 +1062,7 @@ public class ProcessAndroidResources extends IncrementalTask {
     }
 
     @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
     FileCollection getSplitListInput() {
         return splitListInput;
     }

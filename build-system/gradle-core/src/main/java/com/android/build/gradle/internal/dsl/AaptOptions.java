@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 
 /**
@@ -71,6 +72,7 @@ public class AaptOptions implements com.android.builder.model.AaptOptions {
      *
      * <p>See <code>aapt --help</code>
      */
+    @Internal
     public String getIgnoreAssetsPattern() {
         return ignoreAssetsPattern;
     }
@@ -218,6 +220,7 @@ public class AaptOptions implements com.android.builder.model.AaptOptions {
      *
      * @return the number of cruncher processes, {@code 0} to use the default
      */
+    @Internal
     public int getCruncherProcesses() {
         return cruncherProcesses;
     }

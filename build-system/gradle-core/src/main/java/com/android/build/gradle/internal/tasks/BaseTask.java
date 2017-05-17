@@ -39,8 +39,7 @@ public abstract class BaseTask extends DefaultAndroidTask {
      * @throws IllegalStateException if androidBuilder has not been set,
      */
     @NonNull
-    // TODO Is this an input?
-    @Internal
+    @Internal("No influence on output, this is to give access to the build to other classes")
     protected AndroidBuilder getBuilder() {
         Preconditions.checkState(androidBuilder != null,
                 "androidBuilder required for task '%s'.", getName());
@@ -62,8 +61,7 @@ public abstract class BaseTask extends DefaultAndroidTask {
      * @throws IllegalStateException if androidBuilder.targetInfo has not been set,
      */
     @NonNull
-    // TODO Is this an input?
-    @Internal
+    @Internal("No influence on output, this is to give access to the build tools")
     protected BuildToolInfo getBuildTools() {
         TargetInfo targetInfo = getBuilder().getTargetInfo();
         Preconditions.checkState(targetInfo != null,

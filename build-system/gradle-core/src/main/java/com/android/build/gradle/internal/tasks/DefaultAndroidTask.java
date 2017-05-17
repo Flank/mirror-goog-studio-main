@@ -35,15 +35,4 @@ public abstract class DefaultAndroidTask extends DefaultTask {
     public void setVariantName(@Nullable String variantName) {
         this.variantName = variantName;
     }
-
-    /**
-     * Force tasks to be re-run if the Android plugin version changes.
-     *
-     * @return the plugin version, of the form "x.y.z"
-     */
-    // TODO No need for this, Since Gradle 3.0 the full classpath of the task is tracked as an input automatically
-    @Internal
-    public String getAndroidGradlePluginVersion() {
-        return Version.ANDROID_GRADLE_PLUGIN_VERSION;
-    }
 }
