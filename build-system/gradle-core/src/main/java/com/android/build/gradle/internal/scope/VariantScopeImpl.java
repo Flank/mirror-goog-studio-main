@@ -1942,22 +1942,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         return Java8LangSupport.INVALID;
     }
 
-    @Nullable
-    @Override
-    public AndroidVersion getMinSdkForDx() {
-        if (getJava8LangSupportType() != Java8LangSupport.DESUGAR) {
-            return null;
-        }
-
-        AndroidVersion minSdkForDx =
-                getVariantConfiguration().getMinSdkVersionWithTargetDeviceApi();
-        if (minSdkForDx.getFeatureLevel() >= 24) {
-            return minSdkForDx;
-        } else {
-            return null;
-        }
-    }
-
     @NonNull
     @Override
     public ConfigurableFileCollection getTryWithResourceRuntimeSupportJar() {

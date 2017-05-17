@@ -84,19 +84,19 @@ public class PreDexTransform extends Transform {
 
     @NonNull private final DexingMode dexingMode;
 
-    private boolean instantRunMode;
+    private final int minSdkVersion;
 
     public PreDexTransform(
             @NonNull DexOptions dexOptions,
             @NonNull AndroidBuilder androidBuilder,
             @Nullable FileCache buildCache,
             @NonNull DexingMode dexingMode,
-            boolean instantRunMode) {
+            int minSdkVersion) {
         this.dexOptions = dexOptions;
         this.androidBuilder = androidBuilder;
         this.buildCache = buildCache;
         this.dexingMode = dexingMode;
-        this.instantRunMode = instantRunMode;
+        this.minSdkVersion = minSdkVersion;
     }
 
     @NonNull
@@ -147,9 +147,7 @@ public class PreDexTransform extends Transform {
                     getName());
             BuildToolInfo buildTools = targetInfo.getBuildTools();
             params.put("build-tools", buildTools.getRevision().toString());
-            if (dexingMode.getMinSdkVersionValue() != null) {
-                params.put("min-sdk-version", dexingMode.getMinSdkVersionValue());
-            }
+            params.put("min-sdk-version", minSdkVersion);
 
             return params;
         } catch (Exception e) {
@@ -272,7 +270,8 @@ public class PreDexTransform extends Transform {
                                 usedBuildCache,
                                 dexingMode,
                                 dexOptions,
-                                androidBuilder);
+                                androidBuilder,
+                                minSdkVersion);
                 logger.verbose("Adding PreDexCallable for %s : %s", entry.getKey(), action);
                 executor.execute(action);
             }

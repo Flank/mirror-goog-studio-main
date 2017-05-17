@@ -2030,18 +2030,6 @@ public abstract class TaskManager {
 
         Preconditions.checkNotNull(
                 dexingMode.getMinSdkVersion(), "minSdkVersion must be set for dexing mode");
-
-        // Support API 24+ features
-        if (!usingIncrementalDexing(variantScope)) {
-            // variantScope.getMinSdkForDx() may be null here and it is intended (see
-            // DexByteCodeConverter#dexOutOfProcess)
-            AndroidVersion minSdkForDx = variantScope.getMinSdkForDx();
-            dexingMode =
-                    minSdkForDx != null
-                            ? new DexingMode(dexingMode.getDexingType(), minSdkForDx)
-                            : new DexingMode(dexingMode.getDexingType());
-        }
-
         Optional<AndroidTask<TransformTask>> multiDexClassListTask;
 
         if (dexingMode.getDexingType() == DexingType.LEGACY_MULTIDEX) {
@@ -2163,15 +2151,13 @@ public abstract class TaskManager {
         boolean minified = runJavaCodeShrinker(variantScope);
         FileCache userLevelCache = getUserDexCache(minified, dexOptions.getPreDexLibraries());
         FileCache projectLevelCache = getProjectDexCache(minified, dexOptions.getPreDexLibraries());
-        Preconditions.checkNotNull(dexingMode.getMinSdkVersionValue());
         DexArchiveBuilderTransform preDexTransform =
                 new DexArchiveBuilderTransform(
                         dexOptions,
                         variantScope.getGlobalScope().getAndroidBuilder().getErrorReporter(),
                         userLevelCache,
                         projectLevelCache,
-                        variantScope.getInstantRunBuildContext().isInInstantRunMode(),
-                        dexingMode.getMinSdkVersionValue());
+                        variantScope.getMinSdkVersion().getFeatureLevel());
         transformManager
                 .addTransform(tasks, variantScope, preDexTransform)
                 .ifPresent(variantScope::addColdSwapBuildTask);
@@ -2279,7 +2265,7 @@ public abstract class TaskManager {
                             androidBuilder,
                             buildCache,
                             dexingMode,
-                            variantScope.getInstantRunBuildContext().isInInstantRunMode());
+                            variantScope.getMinSdkVersion().getFeatureLevel());
             transformManager.addTransform(tasks, variantScope, preDexTransform)
                     .ifPresent(variantScope::addColdSwapBuildTask);
         }
@@ -2294,7 +2280,8 @@ public abstract class TaskManager {
                             project.files(variantScope.getMainDexListFile()),
                             verifyNotNull(androidBuilder.getTargetInfo(), "Target Info not set."),
                             androidBuilder.getDexByteCodeConverter(),
-                            androidBuilder.getErrorReporter());
+                            androidBuilder.getErrorReporter(),
+                            variantScope.getMinSdkVersion().getFeatureLevel());
             Optional<AndroidTask<TransformTask>> dexTask =
                     transformManager.addTransform(tasks, variantScope, dexTransform);
             // need to manually make dex task depend on MultiDexTransform since there's no stream
@@ -2357,7 +2344,7 @@ public abstract class TaskManager {
                 variantScope.getOutput(VariantScope.TaskOutputType.PROCESSED_RES);
 
         variantScope.setInstantRunTaskManager(instantRunTaskManager);
-        AndroidVersion minSdkForDx = variantScope.getMinSdkForDx();
+        AndroidVersion minSdkForDx = variantScope.getMinSdkVersion();
         AndroidTask<BuildInfoLoaderTask> buildInfoLoaderTask =
                 instantRunTaskManager.createInstantRunAllTasks(
                         variantScope.getGlobalScope().getExtension().getDexOptions(),
@@ -2368,7 +2355,7 @@ public abstract class TaskManager {
                         instantRunMergedManifests,
                         processedResources,
                         true /* addResourceVerifier */,
-                        minSdkForDx != null ? minSdkForDx.getFeatureLevel() : null);
+                        minSdkForDx.getFeatureLevel());
 
         if (variantScope.getSourceGenTask() != null) {
             variantScope.getSourceGenTask().dependsOn(tasks, buildInfoLoaderTask);

@@ -472,10 +472,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     @NonNull
     Java8LangSupport getJava8LangSupportType();
 
-    /** Min sdk version to pass to dx. This is necessary to allow API 24+ features. */
-    @Nullable
-    AndroidVersion getMinSdkForDx();
-
     @NonNull
     ConfigurableFileCollection getTryWithResourceRuntimeSupportJar();
 }

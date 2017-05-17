@@ -505,7 +505,8 @@ public class DexTransformTest {
                         null, // mainDexListFile
                         targetInfo,
                         byteCodeConverter,
-                        mock(ErrorReporter.class));
+                        mock(ErrorReporter.class),
+                        1);
 
         TransformInput transformInput = getTransformInput(preDexedInputs, ImmutableList.of());
         TransformOutputProvider mockTransformOutputProvider = mock(TransformOutputProvider.class);
@@ -534,7 +535,7 @@ public class DexTransformTest {
                         fakeAndroidBuilder,
                         buildCache,
                         new DexingMode(DexingType.MONO_DEX),
-                        false);
+                        1);
 
         TransformInput transformInput = getTransformInput(jarInputs, directoryInputs);
         TransformOutputProvider mockTransformOutputProvider = mock(TransformOutputProvider.class);
@@ -595,7 +596,7 @@ public class DexTransformTest {
                 boolean multiDex,
                 @NonNull DexOptions dexOptions,
                 @NonNull ProcessOutputHandler processOutputHandler,
-                @Nullable Integer minSdkVersion)
+                int minSdkVersion)
                 throws IOException {
             String content =
                     inputFile.isDirectory()
@@ -624,7 +625,7 @@ public class DexTransformTest {
                 @Nullable File mainDexList,
                 @NonNull DexOptions dexOptions,
                 @NonNull ProcessOutputHandler processOutputHandler,
-                @Nullable Integer minSdkVersion)
+                int minSdkVersion)
                 throws IOException, InterruptedException, ProcessException {
             Files.write(
                     "Dexed content", new File(outDexFolder, "classes.dex"), StandardCharsets.UTF_8);

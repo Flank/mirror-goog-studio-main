@@ -97,6 +97,7 @@ class PreDexCallable implements Callable<Void> {
     @NonNull private final DexingMode dexingMode;
     @NonNull private final DexOptions dexOptions;
     @NonNull private final AndroidBuilder androidBuilder;
+    private final int minSdkVersion;
 
     public PreDexCallable(
             @NonNull File from,
@@ -106,7 +107,8 @@ class PreDexCallable implements Callable<Void> {
             @Nullable FileCache buildCache,
             @NonNull DexingMode dexingMode,
             @NonNull DexOptions dexOptions,
-            @NonNull AndroidBuilder androidBuilder) {
+            @NonNull AndroidBuilder androidBuilder,
+            int minSdkVersion) {
         this.from = from;
         this.to = to;
         this.hashes = hashes;
@@ -115,6 +117,7 @@ class PreDexCallable implements Callable<Void> {
         this.dexingMode = dexingMode;
         this.dexOptions = dexOptions;
         this.androidBuilder = androidBuilder;
+        this.minSdkVersion = minSdkVersion;
     }
 
     @Override
@@ -145,7 +148,7 @@ class PreDexCallable implements Callable<Void> {
                             dexingMode.isMultiDex(),
                             dexOptions,
                             outputHandler,
-                            dexingMode.getMinSdkVersionValue());
+                            minSdkVersion);
                 };
 
         // If the build cache is used, run pre-dexing using the cache
@@ -156,7 +159,7 @@ class PreDexCallable implements Callable<Void> {
                             androidBuilder.getTargetInfo().getBuildTools().getRevision(),
                             dexOptions,
                             dexingMode.isMultiDex(),
-                            dexingMode.getMinSdkVersionValue());
+                            minSdkVersion);
             FileCache.QueryResult result;
             try {
                 result = buildCache.createFile(to, buildCacheInputs, preDexLibraryAction);
@@ -206,7 +209,7 @@ class PreDexCallable implements Callable<Void> {
             @NonNull Revision buildToolsRevision,
             @NonNull DexOptions dexOptions,
             boolean multiDex,
-            @Nullable Integer minSdkVersion)
+            int minSdkVersion)
             throws IOException {
         // To use the cache, we need to specify all the inputs that affect the outcome of a pre-dex
         // (see DxDexKey for an exhaustive list of these inputs)
@@ -246,9 +249,7 @@ class PreDexCallable implements Callable<Void> {
                 .putBoolean(FileCacheInputParams.OPTIMIZE.name(), true)
                 .putBoolean(FileCacheInputParams.MULTI_DEX.name(), multiDex);
 
-        if (minSdkVersion != null) {
-            buildCacheInputs.putLong(FileCacheInputParams.MIN_SDK_VERSION.name(), minSdkVersion);
-        }
+        buildCacheInputs.putLong(FileCacheInputParams.MIN_SDK_VERSION.name(), minSdkVersion);
 
         List<String> additionalParams = dexOptions.getAdditionalParameters();
         for (int i = 0; i < additionalParams.size(); i++) {

@@ -99,7 +99,6 @@ public class InstantRunTaskManager {
         this.recorder = recorder;
     }
 
-
     public AndroidTask<BuildInfoLoaderTask> createInstantRunAllTasks(
             DexOptions dexOptions,
             @NonNull Supplier<DexByteCodeConverter> dexByteCodeConverter,
@@ -109,7 +108,7 @@ public class InstantRunTaskManager {
             FileCollection instantRunMergedManifests,
             FileCollection processedResources,
             boolean addDependencyChangeChecker,
-            @Nullable Integer minSdkForDx) {
+            int minSdkForDx) {
         final Project project = variantScope.getGlobalScope().getProject();
 
         TransformVariantScope transformVariantScope = variantScope.getTransformVariantScope();

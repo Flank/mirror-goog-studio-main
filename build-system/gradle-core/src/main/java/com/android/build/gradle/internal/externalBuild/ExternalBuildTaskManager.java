@@ -195,7 +195,7 @@ class ExternalBuildTaskManager {
                         project.files(androidManifestFile),
                         project.files(processedAndroidResourcesFile),
                         false /* addResourceVerifier */,
-                        null);
+                        1);
 
         extractJarsTask.ifPresent(t -> t.dependsOn(tasks, buildInfoLoaderTask));
 
@@ -295,14 +295,7 @@ class ExternalBuildTaskManager {
             @NonNull TransformManager transformManager,
             @NonNull ExternalBuildVariantScope variantScope) {
         AndroidBuilder androidBuilder = externalBuildContext.getAndroidBuilder();
-        InstantRunPatchingPolicy patchingPolicy =
-                variantScope.getInstantRunBuildContext().getPatchingPolicy();
         final DexingMode dexingMode = new DexingMode(DexingType.NATIVE_MULTIDEX);
-        //if (patchingPolicy != null && patchingPolicy.useMultiDex()) {
-        //    dexingMode = DexingMode.NATIVE_MULTIDEX;
-        //} else {
-        //    dexingMode = DexingMode.MONO_DEX;
-        //}
 
         PreDexTransform preDexTransform =
                 new PreDexTransform(
@@ -310,23 +303,8 @@ class ExternalBuildTaskManager {
                         androidBuilder,
                         variantScope.getGlobalScope().getBuildCache(),
                         dexingMode,
-                        variantScope.getInstantRunBuildContext().isInInstantRunMode());
+                        1);
         transformManager.addTransform(tasks, variantScope, preDexTransform);
-
-        //if (dexingMode != DexingMode.NATIVE_MULTIDEX) {
-        //    DexTransform dexTransform =
-        //            new DexTransform(
-        //                    new DefaultDexOptions(),
-        //                    dexingMode,
-        //                    true,
-        //                    null,
-        //                    verifyNotNull(androidBuilder.getTargetInfo(), "Target Info not set."),
-        //                    androidBuilder.getDexByteCodeConverter(),
-        //                    androidBuilder.getErrorReporter(),
-        //                    null);
-        //
-        //    transformManager.addTransform(tasks, variantScope, dexTransform);
-        //}
     }
 
     private static SigningConfig createManifestSigningConfig(

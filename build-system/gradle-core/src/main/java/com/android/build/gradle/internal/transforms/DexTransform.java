@@ -79,6 +79,8 @@ public class DexTransform extends Transform {
     @NonNull private final TargetInfo targetInfo;
     @NonNull private final DexByteCodeConverter dexByteCodeConverter;
     @NonNull private final ErrorReporter errorReporter;
+    private final int minSdkVersion;
+
     public DexTransform(
             @NonNull DexOptions dexOptions,
             @NonNull DexingMode dexingMode,
@@ -86,7 +88,8 @@ public class DexTransform extends Transform {
             @Nullable FileCollection mainDexListFile,
             @NonNull TargetInfo targetInfo,
             @NonNull DexByteCodeConverter dexByteCodeConverter,
-            @NonNull ErrorReporter errorReporter) {
+            @NonNull ErrorReporter errorReporter,
+            int minSdkVersion) {
         this.dexOptions = dexOptions;
         this.dexingMode = dexingMode;
         this.preDexEnabled = preDexEnabled;
@@ -94,6 +97,7 @@ public class DexTransform extends Transform {
         this.targetInfo = targetInfo;
         this.dexByteCodeConverter = dexByteCodeConverter;
         this.errorReporter = errorReporter;
+        this.minSdkVersion = minSdkVersion;
     }
 
     @NonNull
@@ -155,9 +159,7 @@ public class DexTransform extends Transform {
 
             BuildToolInfo buildTools = targetInfo.getBuildTools();
             params.put("build-tools", buildTools.getRevision().toString());
-            if (dexingMode.getMinSdkVersionValue() != null) {
-                params.put("min-sdk-version", dexingMode.getMinSdkVersionValue());
-            }
+            params.put("min-sdk-version", minSdkVersion);
 
             return params;
         } catch (Exception e) {
@@ -217,7 +219,7 @@ public class DexTransform extends Transform {
                     mainDexList,
                     dexOptions,
                     outputHandler,
-                    dexingMode.getMinSdkVersionValue());
+                    minSdkVersion);
         } catch (Exception e) {
             throw new TransformException(e);
         }

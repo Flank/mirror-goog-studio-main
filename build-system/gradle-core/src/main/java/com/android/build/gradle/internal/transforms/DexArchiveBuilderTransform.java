@@ -80,7 +80,6 @@ public class DexArchiveBuilderTransform extends Transform {
     @NonNull private final ErrorReporter errorReporter;
     @Nullable private final FileCache userLevelCache;
     @Nullable private final FileCache projectLevelCache;
-    private boolean instantRunMode;
     @NonNull private final WaitableExecutor executor;
     private final int minSdkVersion;
 
@@ -89,13 +88,11 @@ public class DexArchiveBuilderTransform extends Transform {
             @NonNull ErrorReporter errorReporter,
             @Nullable FileCache userLevelCache,
             @Nullable FileCache projectLevelCache,
-            boolean instantRunMode,
             int minSdkVersion) {
         this.dexOptions = dexOptions;
         this.errorReporter = errorReporter;
         this.userLevelCache = userLevelCache;
         this.projectLevelCache = projectLevelCache;
-        this.instantRunMode = instantRunMode;
         this.minSdkVersion = minSdkVersion;
         this.executor = WaitableExecutor.useGlobalSharedThreadPool();
     }
