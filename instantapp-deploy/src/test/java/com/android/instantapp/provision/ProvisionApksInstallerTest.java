@@ -8,8 +8,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import com.android.ddmlib.IDevice;
-import com.android.instantapp.sdk.InstantAppSdkTests;
 import com.android.instantapp.sdk.Metadata;
+import com.android.instantapp.utils.InstantAppTests;
 import com.android.utils.FileUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -79,8 +79,8 @@ public class ProvisionApksInstallerTest {
     }
 
     @Test
-    public void testAllInstalled() throws Exception {
-        IDevice device = new InstantAppSdkTests.DeviceGenerator().getDevice();
+    public void testAllInstalled() throws Throwable {
+        IDevice device = new InstantAppTests.DeviceGenerator().getDevice();
         myApksInstaller.installAll(
                 device, new ProvisionRunner.ProvisionState(), new ProvisionListener.NullListener());
 
@@ -88,8 +88,8 @@ public class ProvisionApksInstallerTest {
     }
 
     @Test
-    public void testInstallWithCache() throws Exception {
-        IDevice device = new InstantAppSdkTests.DeviceGenerator().getDevice();
+    public void testInstallWithCache() throws Throwable {
+        IDevice device = new InstantAppTests.DeviceGenerator().getDevice();
         ProvisionRunner.ProvisionState provisionState = new ProvisionRunner.ProvisionState();
         provisionState.lastInstalled = 1;
         myApksInstaller.installAll(device, provisionState, new ProvisionListener.NullListener());
@@ -101,7 +101,7 @@ public class ProvisionApksInstallerTest {
     @Test
     public void testNotInstalledWhenVersionIsHigher() throws Throwable {
         IDevice device =
-                new InstantAppSdkTests.DeviceGenerator()
+                new InstantAppTests.DeviceGenerator()
                         .setVersionOfPackage("com.google.android.instantapps.devman", 37)
                         .setVersionOfPackage("com.google.android.gms", 11034440 + 1)
                         .getDevice();

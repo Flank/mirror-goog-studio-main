@@ -15,6 +15,9 @@
  */
 package com.android.instantapp.provision;
 
+import static com.android.instantapp.utils.DeviceUtils.getOsBuildType;
+import static com.android.instantapp.utils.DeviceUtils.isPostO;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
@@ -25,7 +28,6 @@ import com.android.ddmlib.ShellCommandUnresponsiveException;
 import com.android.ddmlib.TimeoutException;
 import com.android.instantapp.sdk.InstantAppSdkException;
 import com.android.instantapp.sdk.Metadata;
-import com.android.sdklib.AndroidVersion;
 import com.google.common.base.Splitter;
 import java.io.File;
 import java.io.IOException;
@@ -229,18 +231,6 @@ public class ProvisionRunner {
         myListener.setProgress(1);
     }
 
-    private static boolean isPostO(@NonNull IDevice device) {
-        AndroidVersion version = device.getVersion();
-
-        // Previews of O have api level 25, so comparing with #isGreaterOrEqualThan(apiLevel) doesn't work here.
-        return version.compareTo(25, "O") >= 0;
-    }
-
-    @Nullable
-    static String getOsBuildType(@NonNull IDevice device) throws ProvisionException {
-        return device.getProperty("ro.build.tags");
-    }
-
     public void clearCache() {
         myProvisionCache.clear();
     }
@@ -383,25 +373,26 @@ public class ProvisionRunner {
         CountDownLatch latch = new CountDownLatch(1);
         CollectingOutputReceiver receiver = new CollectingOutputReceiver(latch);
 
+
         try {
             if (rootRequired) {
                 device.root();
             }
             device.executeShellCommand(command, receiver);
-            latch.await(timeout, TimeUnit.MILLISECONDS);
-        } catch (TimeoutException e) {
+            if (!latch.await(timeout, TimeUnit.MILLISECONDS)) {
+                throw new ProvisionException(
+                        ProvisionException.ErrorType.SHELL_TIMEOUT,
+                        "Failed executing command \"" + command + "\".");
+            }
+        } catch (AdbCommandRejectedException
+                | ShellCommandUnresponsiveException
+                | IOException
+                | TimeoutException
+                | InterruptedException e) {
             throw new ProvisionException(
-                    ProvisionException.ErrorType.SHELL_TIMEOUT,
-                    "Failed executing command \"" + command + "\".",
-                    e);
-        } catch (AdbCommandRejectedException | ShellCommandUnresponsiveException | IOException e) {
-            throw new ProvisionException(
-                    ProvisionException.ErrorType.ADB_FAILURE,
-                    "Failed executing command \"" + command + "\".",
-                    e);
-        } catch (InterruptedException e) {
-            throw new ProvisionException(
-                    ProvisionException.ErrorType.UNKNOWN,
+                    e instanceof InterruptedException
+                            ? ProvisionException.ErrorType.UNKNOWN
+                            : ProvisionException.ErrorType.ADB_FAILURE,
                     "Failed executing command \"" + command + "\".",
                     e);
         }
