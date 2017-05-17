@@ -7,6 +7,5 @@ test --test_env='LC_ALL=en_US.UTF-8'
 test --jvmopt='-Dsun.jnu.encoding=UTF-8'
 test --jvmopt='-Dfile.encoding=UTF-8'
 
-# Keep debug info
-build --javacopt="-g:source,lines,vars"
+build --javacopt="-g:source,lines,vars"  # Keep debug info
 build --javacopt=-Xep:FallThrough:OFF  # enforcing Google style, essentially
