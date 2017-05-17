@@ -29,6 +29,7 @@
 #include "utils/device_info.h"
 #include "utils/file_reader.h"
 #include "utils/log.h"
+#include "utils/package_manager.h"
 #include "utils/process_manager.h"
 #include "utils/socket_utils.h"
 #include "utils/trace.h"
@@ -52,13 +53,22 @@ namespace {
 const char* const kConnectorFileName = "perfd";
 // On-device path of the connector program relative to an app's data folder.
 const char* const kConnectorRelativePath = "./perfd";
+// Name of the jvmti agent library.
+const char* const kAgentLibFileName = "libperfa.so";
+// Name of the jar file containining the java classes (dex'd) which our
+// instrumentation code needs to reference. This jar file will be added to the
+// app via the jvmti agent.
+const char* const kAgentJarFileName = "perfa.jar";
+// Command to attach an jvmti agent. It should be followed with two parameters:
+// 1. the app/package name, 2. the location of the agent so.
+const char* const kAttachAgentCmd = "cmd activity attach-agent";
 
-// Copy connector executable from this process's folder (perfd's folder) to
+// Copy file executable from this process's folder (perfd's folder) to
 // app's data folder.
-void CopyConnectorToAppFolder(const string& app_name) {
+void CopyFileToAppFolder(const string& app_name, const string& file_name) {
   std::ostringstream os;
   os << kRunAsExecutable << " " << app_name << " cp " << CurrentProcess::dir()
-     << kConnectorFileName << " .";
+     << file_name << " .";
   if (system(os.str().c_str()) == -1) {
     perror("system");
     exit(-1);
@@ -90,7 +100,7 @@ void RunConnector(const string& app_name, const string& daemon_address) {
   // Pass the fd as command line argument to connector.
   char buf[32];
   sprintf(buf, "%d", fd);
-  CopyConnectorToAppFolder(app_name);
+  CopyFileToAppFolder(app_name, kConnectorFileName);
   int return_value =
       execl(kRunAsExecutable, kRunAsExecutable, app_name.c_str(),
             kConnectorRelativePath, kConnectCmdLineArg, buf, (char*)nullptr);
@@ -98,6 +108,26 @@ void RunConnector(const string& app_name, const string& daemon_address) {
     perror("execl");
     exit(-1);
   }
+}
+
+// Copy over the agent so and jar to the app's directory and invoke
+// attach-agent.
+bool RunAgent(const string& app_name) {
+  CopyFileToAppFolder(app_name, kAgentJarFileName);
+  CopyFileToAppFolder(app_name, kAgentLibFileName);
+
+  string data_path;
+  string error;
+  PackageManager package_manager;
+  bool success = package_manager.GetAppDataPath(app_name, &data_path, &error);
+  if (success) {
+    std::ostringstream attach_params;
+    attach_params << app_name << " " << data_path << "/" << kAgentLibFileName;
+    BashCommandRunner attach(kAttachAgentCmd);
+    success |= attach.Run(attach_params.str(), &error);
+  }
+
+  return success;
 }
 
 }  // namespace
@@ -203,7 +233,12 @@ Status ProfilerServiceImpl::AttachAgent(
       exit(EXIT_FAILURE);
     } else {
       // parent process
-      response->set_status(profiler::proto::AgentAttachResponse::SUCCESS);
+      if (RunAgent(app_name)) {
+        response->set_status(profiler::proto::AgentAttachResponse::SUCCESS);
+      } else {
+        response->set_status(
+            profiler::proto::AgentAttachResponse::FAILURE_UNKNOWN);
+      }
       return Status::OK;
     }
   }
