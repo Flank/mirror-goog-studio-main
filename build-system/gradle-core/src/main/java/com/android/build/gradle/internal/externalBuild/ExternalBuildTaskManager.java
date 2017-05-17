@@ -51,7 +51,6 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.DefaultDexOptions;
 import com.android.builder.core.DefaultManifestParser;
-import com.android.builder.dexing.DexingMode;
 import com.android.builder.dexing.DexingType;
 import com.android.builder.profile.Recorder;
 import com.android.builder.signing.DefaultSigningConfig;
@@ -295,14 +294,14 @@ class ExternalBuildTaskManager {
             @NonNull TransformManager transformManager,
             @NonNull ExternalBuildVariantScope variantScope) {
         AndroidBuilder androidBuilder = externalBuildContext.getAndroidBuilder();
-        final DexingMode dexingMode = new DexingMode(DexingType.NATIVE_MULTIDEX);
+        final DexingType dexingType = DexingType.NATIVE_MULTIDEX;
 
         PreDexTransform preDexTransform =
                 new PreDexTransform(
                         new DefaultDexOptions(),
                         androidBuilder,
                         variantScope.getGlobalScope().getBuildCache(),
-                        dexingMode,
+                        dexingType,
                         1);
         transformManager.addTransform(tasks, variantScope, preDexTransform);
     }

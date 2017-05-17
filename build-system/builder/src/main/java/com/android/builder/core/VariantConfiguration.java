@@ -23,7 +23,6 @@ import static com.google.common.base.Preconditions.checkState;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.dependency.level2.AndroidDependency;
-import com.android.builder.dexing.DexingMode;
 import com.android.builder.dexing.DexingType;
 import com.android.builder.internal.ClassFieldImpl;
 import com.android.builder.model.AndroidLibrary;
@@ -1777,24 +1776,18 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     }
 
     public boolean isLegacyMultiDexMode() {
-        if (isMultiDexEnabled()) {
-            return getMinSdkVersionValue() < 21;
-        } else {
-            return false;
-        }
+       return getDexingType() == DexingType.LEGACY_MULTIDEX;
     }
 
     @NonNull
-    public DexingMode getDexingMode() {
+    public DexingType getDexingType() {
         AndroidVersion minSdkVersion = getMinSdkVersion();
         if (isMultiDexEnabled()) {
-            return new DexingMode(
-                    minSdkVersion.getFeatureLevel() < 21
-                            ? DexingType.LEGACY_MULTIDEX
-                            : DexingType.NATIVE_MULTIDEX,
-                    minSdkVersion);
+            return minSdkVersion.getFeatureLevel() < 21
+                    ? DexingType.LEGACY_MULTIDEX
+                    : DexingType.NATIVE_MULTIDEX;
         } else {
-            return new DexingMode(DexingType.MONO_DEX, minSdkVersion);
+            return DexingType.MONO_DEX;
         }
     }
 

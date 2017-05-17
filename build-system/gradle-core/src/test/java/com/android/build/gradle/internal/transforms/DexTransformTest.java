@@ -44,7 +44,6 @@ import com.android.builder.core.DefaultDexOptions;
 import com.android.builder.core.DexByteCodeConverter;
 import com.android.builder.core.DexOptions;
 import com.android.builder.core.ErrorReporter;
-import com.android.builder.dexing.DexingMode;
 import com.android.builder.dexing.DexingType;
 import com.android.builder.internal.FakeAndroidTarget;
 import com.android.builder.sdk.TargetInfo;
@@ -500,7 +499,7 @@ public class DexTransformTest {
         DexTransform dexTransform =
                 new DexTransform(
                         new DefaultDexOptions(),
-                        new DexingMode(DexingType.MONO_DEX),
+                        DexingType.MONO_DEX,
                         true,
                         null, // mainDexListFile
                         targetInfo,
@@ -534,7 +533,7 @@ public class DexTransformTest {
                         new DefaultDexOptions(),
                         fakeAndroidBuilder,
                         buildCache,
-                        new DexingMode(DexingType.MONO_DEX),
+                        DexingType.MONO_DEX,
                         1);
 
         TransformInput transformInput = getTransformInput(jarInputs, directoryInputs);

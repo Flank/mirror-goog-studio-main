@@ -43,7 +43,7 @@ import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.build.gradle.tasks.RenderscriptCompile;
-import com.android.builder.dexing.DexingMode;
+import com.android.builder.dexing.DexingType;
 import com.android.sdklib.AndroidVersion;
 import java.io.File;
 import java.util.Collection;
@@ -93,7 +93,7 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     boolean isBaseFeature();
 
     @NonNull
-    DexingMode getDexingMode();
+    DexingType getDexingType();
 
     @NonNull
     AndroidVersion getMinSdkVersion();

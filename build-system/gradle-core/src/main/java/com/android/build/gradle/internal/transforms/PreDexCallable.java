@@ -22,7 +22,7 @@ import com.android.build.gradle.internal.BuildCacheUtils;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.DexOptions;
-import com.android.builder.dexing.DexingMode;
+import com.android.builder.dexing.DexingType;
 import com.android.builder.utils.ExceptionRunnable;
 import com.android.builder.utils.FileCache;
 import com.android.ide.common.process.ProcessOutputHandler;
@@ -94,7 +94,7 @@ class PreDexCallable implements Callable<Void> {
     @NonNull private final Set<String> hashes;
     @NonNull private final ProcessOutputHandler outputHandler;
     @Nullable private final FileCache buildCache;
-    @NonNull private final DexingMode dexingMode;
+    @NonNull private final DexingType dexingType;
     @NonNull private final DexOptions dexOptions;
     @NonNull private final AndroidBuilder androidBuilder;
     private final int minSdkVersion;
@@ -105,7 +105,7 @@ class PreDexCallable implements Callable<Void> {
             @NonNull Set<String> hashes,
             @NonNull ProcessOutputHandler outputHandler,
             @Nullable FileCache buildCache,
-            @NonNull DexingMode dexingMode,
+            @NonNull DexingType dexingType,
             @NonNull DexOptions dexOptions,
             @NonNull AndroidBuilder androidBuilder,
             int minSdkVersion) {
@@ -114,7 +114,7 @@ class PreDexCallable implements Callable<Void> {
         this.hashes = hashes;
         this.outputHandler = outputHandler;
         this.buildCache = buildCache;
-        this.dexingMode = dexingMode;
+        this.dexingType = dexingType;
         this.dexOptions = dexOptions;
         this.androidBuilder = androidBuilder;
         this.minSdkVersion = minSdkVersion;
@@ -139,13 +139,13 @@ class PreDexCallable implements Callable<Void> {
                 () -> {
                     FileUtils.deletePath(to);
                     Files.createParentDirs(to);
-                    if (dexingMode.isMultiDex()) {
+                    if (dexingType.isMultiDex()) {
                         FileUtils.mkdirs(to);
                     }
                     androidBuilder.preDexLibrary(
                             from,
                             to,
-                            dexingMode.isMultiDex(),
+                            dexingType.isMultiDex(),
                             dexOptions,
                             outputHandler,
                             minSdkVersion);
@@ -158,7 +158,7 @@ class PreDexCallable implements Callable<Void> {
                             from,
                             androidBuilder.getTargetInfo().getBuildTools().getRevision(),
                             dexOptions,
-                            dexingMode.isMultiDex(),
+                            dexingType.isMultiDex(),
                             minSdkVersion);
             FileCache.QueryResult result;
             try {

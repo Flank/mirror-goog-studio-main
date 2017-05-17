@@ -31,7 +31,6 @@ import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.builder.core.DexByteCodeConverter;
 import com.android.builder.core.DexOptions;
 import com.android.builder.core.ErrorReporter;
-import com.android.builder.dexing.DexingMode;
 import com.android.builder.dexing.DexingType;
 import com.android.builder.sdk.TargetInfo;
 import com.android.ide.common.blame.Message;
@@ -70,7 +69,7 @@ public class DexTransform extends Transform {
 
     @NonNull private final DexOptions dexOptions;
 
-    @NonNull private final DexingMode dexingMode;
+    @NonNull private final DexingType dexingType;
 
     private boolean preDexEnabled;
 
@@ -83,7 +82,7 @@ public class DexTransform extends Transform {
 
     public DexTransform(
             @NonNull DexOptions dexOptions,
-            @NonNull DexingMode dexingMode,
+            @NonNull DexingType dexingType,
             boolean preDexEnabled,
             @Nullable FileCollection mainDexListFile,
             @NonNull TargetInfo targetInfo,
@@ -91,7 +90,7 @@ public class DexTransform extends Transform {
             @NonNull ErrorReporter errorReporter,
             int minSdkVersion) {
         this.dexOptions = dexOptions;
-        this.dexingMode = dexingMode;
+        this.dexingType = dexingType;
         this.preDexEnabled = preDexEnabled;
         this.mainDexListFile = mainDexListFile;
         this.targetInfo = targetInfo;
@@ -151,7 +150,7 @@ public class DexTransform extends Transform {
             params.put("optimize", true);
             params.put("predex", preDexEnabled);
             params.put("jumbo", dexOptions.getJumboMode());
-            params.put("dexing-mode", dexingMode.getDexingType().name());
+            params.put("dexing-mode", dexingType.name());
             params.put("java-max-heap-size", dexOptions.getJavaMaxHeapSize());
             params.put(
                     "additional-parameters",
@@ -207,15 +206,14 @@ public class DexTransform extends Transform {
             FileUtils.cleanOutputDir(outputDir);
 
             File mainDexList = null;
-            if (mainDexListFile != null
-                    && dexingMode.getDexingType() == DexingType.LEGACY_MULTIDEX) {
+            if (mainDexListFile != null && dexingType == DexingType.LEGACY_MULTIDEX) {
                 mainDexList = mainDexListFile.getSingleFile();
             }
 
             dexByteCodeConverter.convertByteCode(
                     transformInputs,
                     outputDir,
-                    dexingMode.isMultiDex(),
+                    dexingType.isMultiDex(),
                     mainDexList,
                     dexOptions,
                     outputHandler,
