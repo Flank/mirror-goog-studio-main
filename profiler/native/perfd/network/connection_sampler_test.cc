@@ -40,7 +40,8 @@ TEST(GetConnectionData, OpenConnectionWithTwoUids) {
   ConnectionSampler collector(file_names);
   collector.Refresh();
   auto data = collector.Sample(12345);
-  EXPECT_FALSE(data.has_connection_data());
+  EXPECT_TRUE(data.has_connection_data());
+  EXPECT_EQ(0, data.connection_data().connection_number());
   auto data2 = collector.Sample(12340);
   EXPECT_TRUE(data2.has_connection_data());
   EXPECT_EQ(1, data2.connection_data().connection_number());
@@ -55,5 +56,6 @@ TEST(GetConnectionData, OpenConnectionListeningAllInterfaces) {
   ConnectionSampler collector(file_names);
   collector.Refresh();
   auto data = collector.Sample(12345);
-  EXPECT_FALSE(data.has_connection_data());
+  EXPECT_TRUE(data.has_connection_data());
+  EXPECT_EQ(0, data.connection_data().connection_number());
 }
