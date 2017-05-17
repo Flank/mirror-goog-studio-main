@@ -32,30 +32,39 @@ namespace profiler {
 
 NetworkCollector::NetworkCollector(int sample_ms)
     : sample_us_(sample_ms * 1000) {
-  samplers_.emplace_back(
-      new ConnectivitySampler(NetworkConstants::GetRadioStatusCommand(),
-          NetworkConstants::GetDefaultNetworkTypeCommand()));
+  samplers_.emplace_back(new ConnectivitySampler(
+      NetworkConstants::GetRadioStatusCommand(),
+      NetworkConstants::GetDefaultNetworkTypeCommand()));
   samplers_.emplace_back(
       new SpeedSampler(NetworkConstants::GetTrafficBytesFilePath()));
   samplers_.emplace_back(
       new ConnectionSampler(NetworkConstants::GetConnectionFilePaths()));
+
+  is_running_.exchange(true);
+  profiler_thread_ = std::thread(&NetworkCollector::Collect, this);
 }
 
 NetworkCollector::~NetworkCollector() {
-  if (is_running_.exchange(false)) {
-    profiler_thread_.join();
-  }
+  is_running_.exchange(false);
+  profiler_thread_.join();
 }
 
 void NetworkCollector::Collect() {
   SetThreadName("Studio:PollNet");
   while (is_running_.load()) {
-    Trace::Begin("NET:Collect");
-    for (auto &sampler : samplers_) {
-      sampler->Refresh();
+    bool should_sample;
+    {
+      std::lock_guard<std::mutex> lock(buffer_mutex_);
+      should_sample = !uid_to_buffers_.empty();
     }
-    StoreDataToBuffer();
-    Trace::End();
+
+    if (should_sample) {
+      Trace trace("NET:Collect");
+      for (auto &sampler : samplers_) {
+        sampler->Refresh();
+      }
+      StoreDataToBuffer();
+    }
     usleep(sample_us_);
   }
 }
@@ -82,9 +91,6 @@ void NetworkCollector::Start(int32_t pid, NetworkProfilerBuffer *buffer) {
   std::lock_guard<std::mutex> lock(buffer_mutex_);
   if (uid >= 0 && uid_to_buffers_.find(uid) == uid_to_buffers_.end()) {
     uid_to_buffers_.emplace(uid, buffer);
-    if (!is_running_.exchange(true)) {
-      profiler_thread_ = std::thread(&NetworkCollector::Collect, this);
-    }
   }
 }
 
@@ -93,9 +99,6 @@ void NetworkCollector::Stop(int32_t pid) {
   for (auto it = uid_to_buffers_.begin(); it != uid_to_buffers_.end(); it++) {
     if (pid == it->second->pid()) {
       uid_to_buffers_.erase(it);
-      if (uid_to_buffers_.empty() && is_running_.exchange(false)) {
-        profiler_thread_.join();
-      }
       return;
     }
   }
