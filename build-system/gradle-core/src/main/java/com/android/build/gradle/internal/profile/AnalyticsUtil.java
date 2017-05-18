@@ -19,9 +19,11 @@ package com.android.build.gradle.internal.profile;
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.api.transform.Transform;
+import com.android.sdklib.AndroidVersion;
 import com.android.tools.build.gradle.internal.profile.GradleTaskExecutionType;
 import com.android.tools.build.gradle.internal.profile.GradleTransformExecutionType;
 import com.google.common.base.CaseFormat;
+import com.google.wireless.android.sdk.stats.ApiVersion;
 
 /**
  * Utilities to map internal representations of types to analytics.
@@ -69,4 +71,23 @@ public class AnalyticsUtil {
         }
         return CaseFormat.LOWER_CAMEL.to(CaseFormat.UPPER_UNDERSCORE, taskImpl);
     }
+
+    @NonNull
+    public static ApiVersion convert(@NonNull AndroidVersion apiVersion) {
+        ApiVersion.Builder builder = ApiVersion.newBuilder().setApiLevel(apiVersion.getApiLevel());
+        if (apiVersion.getCodename() != null) {
+            builder.setCodename(apiVersion.getCodename());
+        }
+        return builder.build();
+    }
+
+    @NonNull
+    public static ApiVersion convert(@NonNull com.android.builder.model.ApiVersion apiVersion) {
+        ApiVersion.Builder builder = ApiVersion.newBuilder().setApiLevel(apiVersion.getApiLevel());
+        if (apiVersion.getCodename() != null) {
+            builder.setCodename(apiVersion.getCodename());
+        }
+        return builder.build();
+    }
+
 }

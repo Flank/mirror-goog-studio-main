@@ -44,6 +44,7 @@ import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
+import com.android.build.gradle.internal.profile.AnalyticsUtil;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
 import com.android.build.gradle.internal.scope.AndroidTask;
@@ -74,6 +75,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.wireless.android.sdk.stats.ApiVersion;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
 import com.google.wireless.android.sdk.stats.GradleBuildVariant;
 import java.io.File;
@@ -1041,10 +1043,24 @@ public class VariantManager implements VariantModel {
                         ProcessProfileWriter.getOrCreateVariant(
                                         project.getPath(), variantData.getName())
                                 .setIsDebug(variantConfig.getBuildType().isDebuggable())
+                                .setMinSdkVersion(
+                                        AnalyticsUtil.convert(variantConfig.getMinSdkVersion()))
                                 .setMinifyEnabled(variantScope.getCodeShrinker() != null)
                                 .setUseMultidex(variantConfig.isMultiDexEnabled())
                                 .setUseLegacyMultidex(variantConfig.isLegacyMultiDexMode())
                                 .setVariantType(variantData.getType().getAnalyticsVariantType());
+
+                if (variantConfig.getTargetSdkVersion().getApiLevel() > 0) {
+                    profileBuilder.setTargetSdkVersion(
+                            AnalyticsUtil.convert(variantConfig.getTargetSdkVersion()));
+                }
+                if (variantConfig.getMergedFlavor().getMaxSdkVersion() != null) {
+                    profileBuilder.setMaxSdkVersion(
+                            ApiVersion.newBuilder()
+                                    .setApiLevel(
+                                            variantConfig.getMergedFlavor().getMaxSdkVersion()));
+                }
+
                 VariantScope.Java8LangSupport supportType =
                         variantData.getScope().getJava8LangSupportType();
                 if (supportType != VariantScope.Java8LangSupport.INVALID

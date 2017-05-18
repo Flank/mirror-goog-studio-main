@@ -27,6 +27,8 @@ import com.google.protobuf.Timestamp;
 import com.google.protobuf.util.Timestamps;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode;
+import com.google.wireless.android.sdk.stats.GradleBuildProject;
+import com.google.wireless.android.sdk.stats.GradleBuildVariant;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.Rule;
@@ -96,6 +98,13 @@ public class PerformanceInfrastructureTest {
         assertThat(benchmarkResults.get(1).getProfile().getSpanCount()).isGreaterThan(0);
         assertThat(benchmarkResults.get(2).getProfile().getSpanCount()).isGreaterThan(0);
 
+        // Check that the variant info is populated
+        GradleBuildProject aProject = benchmarkResults.get(0).getProfile().getProject(0);
+        assertThat(aProject.getCompileSdk()).isEqualTo("android-24");
+        GradleBuildVariant aVariant = aProject.getVariant(0);
+        assertThat(aVariant.getMinSdkVersion().getApiLevel()).isEqualTo(3);
+        assertThat(aVariant.hasTargetSdkVersion()).named("has target sdk version").isFalse();
+        assertThat(aVariant.hasMaxSdkVersion()).named("has max sdk version").isFalse();
         // Check that the timestamp is written after the build.
         assertThat(benchmarkResults.get(0).getTimestamp().getSeconds())
                 .isAtLeast(minimumTimestamp.getValue().getSeconds());
