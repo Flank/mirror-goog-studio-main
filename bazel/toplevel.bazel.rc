@@ -6,9 +6,6 @@
 test --test_env='LC_ALL=en_US.UTF-8'
 test --jvmopt='-Dsun.jnu.encoding=UTF-8'
 test --jvmopt='-Dfile.encoding=UTF-8'
-# Tests depend on not having a real user name, but bazel now returns the
-# real one. This flag keeps the old behavior of not having a home directory
-test --sandbox_fake_username
 
 build --javacopt="-g:source,lines,vars"  # Keep debug info
 build --javacopt=-Xep:FallThrough:OFF  # enforcing Google style, essentially
