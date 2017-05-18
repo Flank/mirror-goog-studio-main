@@ -19,7 +19,6 @@ package com.android.build.gradle.internal;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.transform.QualifiedContent;
-import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.incremental.BuildInfoLoaderTask;
 import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
@@ -37,6 +36,9 @@ import com.android.build.gradle.internal.transforms.InstantRunSlicer;
 import com.android.build.gradle.internal.transforms.InstantRunTransform;
 import com.android.build.gradle.internal.transforms.InstantRunVerifierTransform;
 import com.android.build.gradle.internal.transforms.NoChangesVerifierTransform;
+import com.android.build.gradle.options.DeploymentDevice;
+import com.android.build.gradle.options.ProjectOptions;
+import com.android.build.gradle.options.StringOption;
 import com.android.build.gradle.tasks.CheckManifestInInstantRunMode;
 import com.android.build.gradle.tasks.PreColdSwapTask;
 import com.android.build.gradle.tasks.fd.FastDeployRuntimeExtractorTask;
@@ -235,21 +237,18 @@ public class InstantRunTaskManager {
         return buildInfoLoaderTask;
     }
 
-
-    /**
-     * Creates all InstantRun related transforms after compilation.
-     */
+    /** Creates all InstantRun related transforms after compilation. */
     @NonNull
     public AndroidTask<PreColdSwapTask> createPreColdswapTask(
-            @NonNull Project project) {
+            @NonNull ProjectOptions projectOptions) {
 
         TransformVariantScope transformVariantScope = variantScope.getTransformVariantScope();
         InstantRunBuildContext context = variantScope.getInstantRunBuildContext();
 
         context.setApiLevel(
-                AndroidGradleOptions.getTargetAndroidVersion(project),
-                AndroidGradleOptions.getBuildTargetAbi(project));
-        context.setDensity(AndroidGradleOptions.getBuildTargetDensity(project));
+                DeploymentDevice.getDeploymentDeviceAndroidVersion(projectOptions),
+                projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI));
+        context.setDensity(projectOptions.get(StringOption.IDE_BUILD_TARGET_DENISTY));
 
         if (transformVariantScope.getGlobalScope().isActive(OptionalCompilationStep.FULL_APK)) {
             context.setVerifierStatus(InstantRunVerifierStatus.FULL_BUILD_REQUESTED);

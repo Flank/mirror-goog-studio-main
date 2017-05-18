@@ -61,6 +61,8 @@ import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.transforms.DexTransform;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
+import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.ExternalNativeBuildTaskUtils;
 import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
@@ -277,7 +279,8 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
         sdkHandler = new SdkHandler(project, getLogger());
 
         if (!project.getGradle().getStartParameter().isOffline()
-                && AndroidGradleOptions.getUseSdkDownload(project)) {
+                && projectOptions.get(BooleanOption.ENABLE_SDK_DOWNLOAD)
+                && !projectOptions.get(BooleanOption.IDE_INVOKED_FROM_IDE)) {
             SdkLibData sdkLibData = SdkLibData.download(getDownloader(), getSettingsController());
             sdkHandler.setSdkLibData(sdkLibData);
         }
@@ -553,12 +556,13 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
                             currentVersion,
                             file.getAbsolutePath(),
                             GRADLE_MIN_VERSION);
-            if (AndroidGradleOptions.overrideGradleVersionCheck(project)) {
+            if (projectOptions.get(BooleanOption.VERSION_CHECK_OVERRIDE_PROPERTY)
+                    || projectOptions.get(BooleanOption.VERSION_CHECK_OVERRIDE_PROPERTY_OLD)) {
                 getLogger().warning(errorMessage);
                 getLogger()
                         .warning(
-                                "As %s is set, continuing anyways.",
-                                AndroidGradleOptions.GRADLE_VERSION_CHECK_OVERRIDE_PROPERTY);
+                                "As %s is set, continuing anyway.",
+                                BooleanOption.VERSION_CHECK_OVERRIDE_PROPERTY.getPropertyName());
             } else {
                 throw new RuntimeException(errorMessage);
             }
@@ -644,9 +648,10 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
         // Read phase may produce IOException if the file can't be read for standard IO reasons.
         // Read phase may produce JsonSyntaxException in the case that the content of the file is
         // corrupt.
-        boolean forceRegeneration = AndroidGradleOptions.refreshExternalNativeModel(project);
+        boolean forceRegeneration =
+                projectOptions.get(BooleanOption.IDE_REFRESH_EXTERNAL_NATIVE_MODEL);
 
-        if (ExternalNativeBuildTaskUtils.shouldRegenerateOutOfDateJsons(project)) {
+        if (ExternalNativeBuildTaskUtils.shouldRegenerateOutOfDateJsons(projectOptions)) {
             threadRecorder.record(
                     ExecutionType.VARIANT_MANAGER_EXTERNAL_NATIVE_CONFIG_VALUES,
                     project.getPath(),
@@ -747,7 +752,8 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
         }
 
         // See if the user disabled the check:
-        if (AndroidGradleOptions.overridePathCheck(project)) {
+        if (projectOptions.get(BooleanOption.OVERRIDE_PATH_CHECK_PROPERTY)
+                || projectOptions.get(BooleanOption.OVERRIDE_PATH_CHECK_PROPERTY_OLD)) {
             return;
         }
 
@@ -761,7 +767,7 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
                         + "cause the build to fail on Windows. Please move your project to a different "
                         + "directory. See http://b.android.com/95744 for details. "
                         + "This warning can be disabled by adding the line '"
-                        + AndroidGradleOptions.OVERRIDE_PATH_CHECK_PROPERTY
+                        + BooleanOption.OVERRIDE_PATH_CHECK_PROPERTY.getPropertyName()
                         + "=true' to gradle.properties file in the project directory.";
 
         throw new StopExecutionException(message);
@@ -789,7 +795,12 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
             @Nullable
             @Override
             public Channel getChannel() {
-                return AndroidGradleOptions.getSdkChannel(project);
+                Integer channel = projectOptions.get(IntegerOption.ANDROID_SDK_CHANNEL);
+                if (channel != null) {
+                    return Channel.create(channel);
+                } else {
+                    return Channel.DEFAULT;
+                }
             }
 
             @NonNull

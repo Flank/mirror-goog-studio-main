@@ -26,12 +26,14 @@ import static com.android.sdklib.BuildToolInfo.PathId.SPLIT_SELECT;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.test.report.ReportType;
 import com.android.build.gradle.internal.test.report.TestReport;
 import com.android.build.gradle.internal.variant.TestVariantData;
+import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.IntegerOption;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.internal.testing.SimpleTestCallable;
 import com.android.builder.sdk.TargetInfo;
 import com.android.builder.testing.ConnectedDeviceProvider;
@@ -319,6 +321,7 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
         @Override
         public void execute(@NonNull DeviceProviderInstrumentTestTask task) {
             Project project = scope.getGlobalScope().getProject();
+            ProjectOptions projectOptions = scope.getGlobalScope().getProjectOptions();
 
             final boolean connected = deviceProvider instanceof ConnectedDeviceProvider;
             String variantName = scope.getTestedVariantData() != null ?
@@ -343,8 +346,7 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
             task.setProcessExecutor(
                     scope.getGlobalScope().getAndroidBuilder().getProcessExecutor());
 
-            boolean shardBetweenDevices =
-                    AndroidGradleOptions.getShardAndroidTestsBetweenDevices(task.getProject());
+            boolean shardBetweenDevices = projectOptions.get(BooleanOption.ENABLE_TEST_SHARDING);
 
             switch (scope.getGlobalScope().getExtension().getTestOptions().getExecutionEnum()) {
                 case ON_DEVICE_ORCHESTRATOR:
@@ -355,8 +357,7 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
                 case HOST:
                     if (shardBetweenDevices) {
                         Integer numShards =
-                                AndroidGradleOptions.getInstrumentationShardCount(
-                                        task.getProject());
+                                projectOptions.get(IntegerOption.ANDROID_TEST_SHARD_COUNT);
                         task.testRunnerFactory =
                                 (splitSelect, processExecutor) ->
                                         new ShardedTestRunner(

@@ -30,7 +30,6 @@ import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.build.api.transform.Transform;
-import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.external.gson.NativeBuildConfigValue;
 import com.android.build.gradle.internal.AndroidConfigHelper;
 import com.android.build.gradle.internal.BuildCacheUtils;
@@ -80,6 +79,7 @@ import com.android.build.gradle.model.internal.AndroidBinaryInternal;
 import com.android.build.gradle.model.internal.AndroidComponentSpecInternal;
 import com.android.build.gradle.model.internal.DefaultAndroidLanguageSourceSet;
 import com.android.build.gradle.model.internal.DefaultJniLibsSourceSet;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.ExternalNativeBuildTaskUtils;
 import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
@@ -664,10 +664,12 @@ public class BaseComponentModelPlugin implements Plugin<Project>, ToolingRegistr
         @Model(NATIVE_BUILD_CONFIG_VALUES)
         public static List<NativeBuildConfigValue> createExternalNativeBuildJsonGenerators(
                 Project project,
+                ProjectOptions projectOptions,
                 AndroidConfig androidExtension,
                 AndroidBuilder androidBuilder,
                 SdkHandler sdkHandler,
-                ModelMap<AndroidComponentSpec> specs) throws IOException, ProcessException {
+                ModelMap<AndroidComponentSpec> specs)
+                throws IOException, ProcessException {
             CoreExternalNativeBuild externalNativeBuild = androidExtension.getExternalNativeBuild();
             ExternalNativeBuildTaskUtils.ExternalNativeBuildProjectPathResolution pathResolution =
                     ExternalNativeBuildTaskUtils.getProjectPath(externalNativeBuild);
@@ -675,7 +677,6 @@ public class BaseComponentModelPlugin implements Plugin<Project>, ToolingRegistr
                 // There is no external native build system.
                 return Lists.newArrayList();
             }
-
 
             // Create and read external native build JSON files depending on what's happening right
             // now.
@@ -697,11 +698,13 @@ public class BaseComponentModelPlugin implements Plugin<Project>, ToolingRegistr
             //      AndroidProject.PROPERTY_BUILD_MODEL_ONLY,
             //      AndroidProject.PROPERTY_REFRESH_EXTERNAL_NATIVE_MODEL are set.
             // Read phase may produce IOException if the file can't be read for standard IO reasons.
-            // Read phase may produce JsonSyntaxException in the case that the content of the file is
+            // Read phase may produce JsonSyntaxException in the case that the content of the file
+            // is
             // corrupt.
             boolean createJsons =
-                    ExternalNativeBuildTaskUtils.shouldRegenerateOutOfDateJsons(project);
-            boolean forceRegeneration = AndroidGradleOptions.refreshExternalNativeModel(project);
+                    ExternalNativeBuildTaskUtils.shouldRegenerateOutOfDateJsons(projectOptions);
+            boolean forceRegeneration =
+                    projectOptions.get(BooleanOption.IDE_REFRESH_EXTERNAL_NATIVE_MODEL);
             final VariantManager variantManager =
                     ((AndroidComponentSpecInternal) specs.get(COMPONENT_NAME)).getVariantManager();
             List<NativeBuildConfigValue> configValues = Lists.newArrayList();

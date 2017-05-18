@@ -22,7 +22,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.AndroidConfig;
-import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.TestAndroidConfig;
 import com.android.build.gradle.api.JavaCompileOptions;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
@@ -31,6 +30,7 @@ import com.android.build.gradle.internal.dsl.CoreNdkOptions;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.options.DeploymentDevice;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
@@ -53,7 +53,6 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import org.gradle.api.Project;
 
 /**
  * Version of {@link com.android.builder.core.VariantConfiguration} that uses the specific
@@ -322,7 +321,7 @@ public class GradleVariantConfiguration
      */
     protected IncrementalMode getIncrementalMode(@NonNull GlobalScope globalScope) {
         if (isInstantRunSupported()
-                && targetDeviceSupportsInstantRun(this, globalScope.getProject())
+                && targetDeviceSupportsInstantRun(this, globalScope.getProjectOptions())
                 && globalScope.isActive(OptionalCompilationStep.INSTANT_DEV)) {
             return IncrementalMode.FULL;
         }
@@ -330,10 +329,11 @@ public class GradleVariantConfiguration
     }
 
     private static boolean targetDeviceSupportsInstantRun(
-            @NonNull GradleVariantConfiguration config, @NonNull Project project) {
+            @NonNull GradleVariantConfiguration config, @NonNull ProjectOptions projectOptions) {
         if (config.isLegacyMultiDexMode()) {
             // We don't support legacy multi-dex on Dalvik.
-            return AndroidGradleOptions.getTargetAndroidVersion(project).getFeatureLevel()
+            return DeploymentDevice.getDeploymentDeviceAndroidVersion(projectOptions)
+                            .getFeatureLevel()
                     >= AndroidVersion.ART_RUNTIME.getFeatureLevel();
         }
 

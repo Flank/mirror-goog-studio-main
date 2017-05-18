@@ -36,6 +36,7 @@ import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.managed.NdkAbiOptions;
 import com.android.build.gradle.model.internal.AndroidBinaryInternal;
 import com.android.build.gradle.model.internal.AndroidComponentSpecInternal;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.AndroidProject;
 import com.google.common.collect.Multimap;
@@ -127,6 +128,7 @@ public class ComponentModelBuilder implements ToolingModelBuilder {
                 new ModelPath(ModelConstants.JNILIBS_DEPENDENCIES),
                 multimapModelType(String.class, NativeDependencyResolveResult.class));
         GlobalScope globalScope = registry.realize(ModelConstants.GLOBAL_SCOPE, GlobalScope.class);
+        ProjectOptions projectOptions = new ProjectOptions(globalScope.getProject());
 
         int projectType = isApplication ? AndroidProject.PROJECT_TYPE_APP
                 : AndroidProject.PROJECT_TYPE_LIBRARY;

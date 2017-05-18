@@ -21,7 +21,6 @@ import static org.junit.Assert.assertNotNull;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.integration.common.category.OnlineTests;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
@@ -29,6 +28,7 @@ import com.android.build.gradle.integration.common.fixture.RunGradleTasks;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.SdkHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.options.IntegerOption;
 import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.repository.GradleCoordinate;
 import com.android.ide.common.repository.MavenRepositories;
@@ -71,11 +71,12 @@ public class SdkAutoDownloadTest {
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder()
-                    .fromTestApp(HelloWorldJniApp.builder()
-                            .withNativeDir("cpp")
-                            .useCppSource(true)
-                            .build())
-                    .addGradleProperties(AndroidGradleOptions.ANDROID_SDK_CHANNEL +"=3")
+                    .fromTestApp(
+                            HelloWorldJniApp.builder()
+                                    .withNativeDir("cpp")
+                                    .useCppSource(true)
+                                    .build())
+                    .addGradleProperties(IntegerOption.ANDROID_SDK_CHANNEL.getPropertyName() + "=3")
                     .create();
 
     private File mSdkHome;

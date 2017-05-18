@@ -21,7 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
 
 @Immutable
-public class SigningOptions {
+public final class SigningOptions {
 
     /**
      * Reads the override signing options from the project properties.

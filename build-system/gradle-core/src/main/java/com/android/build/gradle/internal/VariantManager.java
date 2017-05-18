@@ -25,7 +25,6 @@ import static org.gradle.api.internal.artifacts.ArtifactAttributes.ARTIFACT_FORM
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidConfig;
-import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.TestAndroidConfig;
 import com.android.build.gradle.TestedAndroidConfig;
 import com.android.build.gradle.api.AndroidSourceSet;
@@ -59,6 +58,7 @@ import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.SigningOptions;
+import com.android.build.gradle.options.StringOption;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.DefaultManifestParser;
 import com.android.builder.core.DefaultProductFlavor;
@@ -993,7 +993,8 @@ public class VariantManager implements VariantModel {
         Action<com.android.build.api.variant.VariantFilter> variantFilterAction =
                 extension.getVariantFilter();
 
-        final String restrictedProject = AndroidGradleOptions.getRestrictVariantProject(project);
+        final String restrictedProject =
+                projectOptions.get(StringOption.IDE_RESTRICT_VARIANT_PROJECT);
         final boolean restrictVariants = restrictedProject != null;
 
         // compare the project name if the type is not a lib.
@@ -1003,7 +1004,7 @@ public class VariantManager implements VariantModel {
             projectMatch =
                     variantType != VariantType.LIBRARY
                             && project.getPath().equals(restrictedProject);
-            restrictedVariantName = AndroidGradleOptions.getRestrictVariantName(project);
+            restrictedVariantName = projectOptions.get(StringOption.IDE_RESTRICT_VARIANT_NAME);
         } else {
             projectMatch = false;
             restrictedVariantName = null;

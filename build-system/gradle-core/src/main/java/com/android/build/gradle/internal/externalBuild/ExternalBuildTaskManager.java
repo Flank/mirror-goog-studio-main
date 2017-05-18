@@ -198,8 +198,8 @@ class ExternalBuildTaskManager {
 
         extractJarsTask.ifPresent(t -> t.dependsOn(tasks, buildInfoLoaderTask));
 
-        AndroidTask<PreColdSwapTask> preColdswapTask = instantRunTaskManager
-                .createPreColdswapTask(project);
+        AndroidTask<PreColdSwapTask> preColdswapTask =
+                instantRunTaskManager.createPreColdswapTask(globalScope.getProjectOptions());
 
         if (variantScope.getInstantRunBuildContext().getPatchingPolicy()
                 != InstantRunPatchingPolicy.PRE_LOLLIPOP) {

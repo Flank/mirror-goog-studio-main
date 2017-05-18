@@ -20,11 +20,12 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.external.gson.NativeBuildConfigValue;
 import com.android.build.gradle.external.gson.NativeLibraryValue;
 import com.android.build.gradle.external.gson.PlainFileGsonTypeAdaptor;
 import com.android.build.gradle.internal.model.CoreExternalNativeBuild;
+import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.process.BuildCommandException;
 import com.android.ide.common.process.ProcessException;
@@ -49,7 +50,6 @@ import java.util.Collection;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
-import org.gradle.api.Project;
 
 /**
  * Shared utility methods for dealing with external native build tasks.
@@ -122,14 +122,12 @@ public class ExternalNativeBuildTaskUtils {
         return configValues;
     }
 
-    /**
-     * Return true if we should regenerate out-of-date JSON files.
-     */
-    public static boolean shouldRegenerateOutOfDateJsons(@NonNull Project project) {
-        return AndroidGradleOptions.buildModelOnly(project)
-                || AndroidGradleOptions.buildModelOnlyAdvanced(project)
-                || AndroidGradleOptions.invokedFromIde(project)
-                || AndroidGradleOptions.refreshExternalNativeModel(project);
+    /** Return true if we should regenerate out-of-date JSON files. */
+    public static boolean shouldRegenerateOutOfDateJsons(@NonNull ProjectOptions options) {
+        return options.get(BooleanOption.IDE_BUILD_MODEL_ONLY)
+                || options.get(BooleanOption.IDE_BUILD_MODEL_ONLY_ADVANCED)
+                || options.get(BooleanOption.IDE_INVOKED_FROM_IDE)
+                || options.get(BooleanOption.IDE_REFRESH_EXTERNAL_NATIVE_MODEL);
     }
 
     public static boolean isExternalNativeBuildEnabled(@NonNull CoreExternalNativeBuild config) {
