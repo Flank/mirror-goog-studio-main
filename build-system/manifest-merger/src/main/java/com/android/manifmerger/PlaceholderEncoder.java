@@ -18,6 +18,11 @@ package com.android.manifmerger;
 
 import com.android.annotations.NonNull;
 import java.util.regex.Matcher;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  * encode all non resolved placeholders key names.
@@ -25,29 +30,40 @@ import java.util.regex.Matcher;
 public class PlaceholderEncoder {
 
     /**
-     * Visits a document's entire tree and check each attribute for a placeholder existence.
-     * If one is found, encode its name so tools like aapt will not object invalid characters and
-     * such.
+     * Visits a document's entire tree and check each attribute for a placeholder existence. If one
+     * is found, encode its name so tools like aapt will not object invalid characters and such.
+     *
      * <p>
      *
-     * @param xmlDocument the xml document to visit
+     * @param document the document to visit
      */
-    public static void visit(@NonNull XmlDocument xmlDocument) {
-
-        visit(xmlDocument.getRootNode());
+    public static void visit(@NonNull Document document) {
+        visit(document.getDocumentElement());
     }
 
-    private static void visit(@NonNull XmlElement xmlElement) {
-
-        for (XmlAttribute xmlAttribute : xmlElement.getAttributes()) {
-            Matcher matcher = PlaceholderHandler.PATTERN.matcher(xmlAttribute.getValue());
-            if (matcher.matches()) {
-                String encodedValue = "dollar_openBracket_" + matcher.group(2) + "_closeBracket";
-                xmlAttribute.getXml().setValue(encodedValue);
+    /**
+     * Visits an element's entire tree and checks each attribute for a placeholder existence. If one
+     * is found, encode its name so tools like aapt will not object invalid characters and such.
+     *
+     * <p>
+     *
+     * @param element the element to visit
+     */
+    private static void visit(@NonNull Element element) {
+        NodeList childNodes = element.getChildNodes();
+        for (int i = 0; i < childNodes.getLength(); i++) {
+            Node childNode = childNodes.item(i);
+            if (childNode instanceof Element) {
+                visit((Element) childNode);
+            } else if (childNode instanceof Attr) {
+                Attr attr = (Attr) childNode;
+                Matcher matcher = PlaceholderHandler.PATTERN.matcher(attr.getValue());
+                if (matcher.matches()) {
+                    String encodedValue =
+                            "dollar_openBracket_" + matcher.group(2) + "_closeBracket";
+                    attr.setValue(encodedValue);
+                }
             }
-        }
-        for (XmlElement childElement : xmlElement.getMergeableElements()) {
-            visit(childElement);
         }
     }
 }
