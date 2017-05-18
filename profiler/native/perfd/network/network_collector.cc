@@ -89,7 +89,7 @@ void NetworkCollector::StoreDataToBuffer() {
 void NetworkCollector::Start(int32_t pid, NetworkProfilerBuffer *buffer) {
   int uid = UidFetcher::GetUid(pid);
   std::lock_guard<std::mutex> lock(buffer_mutex_);
-  if (uid >= 0 && uid_to_buffers_.find(uid) == uid_to_buffers_.end()) {
+  if (uid >= 0) {
     uid_to_buffers_.emplace(uid, buffer);
   }
 }
