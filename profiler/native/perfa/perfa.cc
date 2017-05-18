@@ -281,7 +281,6 @@ void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni) {
   BindJNIMethod(jni,
                 "com/android/tools/profiler/support/profilers/EventProfiler",
                 "sendRotationEvent", "(I)V");
-
   jclass service =
       jni->FindClass("com/android/tools/profiler/support/ProfilerService");
   jmethodID initialize = jni->GetStaticMethodID(service, "initialize", "()V");
