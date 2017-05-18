@@ -33,7 +33,7 @@
     <orderEntry type="module" module-name="gradle-experimental" />
     <orderEntry type="module" module-name="apkzlib" />
     <orderEntry type="module" module-name="instant-run-instrumentation" />
-    <orderEntry type="module" module-name="apksig" />
+    <orderEntry type="module" module-name="apksig" exported="" />
     <orderEntry type="library" name="commons-lang" level="project" />
     <orderEntry type="module" module-name="sdklib-base" />
     <orderEntry type="module" module-name="repository" />

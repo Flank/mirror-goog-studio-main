@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.common.utils;
 
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -31,9 +32,7 @@ public class JacocoAgent {
     }
 
     public static String getJvmArg() {
-        String buildDir = System.getenv("TEST_TMPDIR");
-        buildDir = (buildDir == null) ? "build" : buildDir;
-
+        File buildDir = GradleTestProject.BUILD_DIR;
         File jacocoAgent = new File(buildDir, "jacoco/agent.jar");
         if (!jacocoAgent.isFile()) {
             try {
