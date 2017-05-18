@@ -66,7 +66,9 @@ public class CheckAllRunner extends FilterableParameterized {
 
     public CheckAllRunner(Class klass) throws Throwable {
         super(klass);
-        setScheduler(new ThreadPoolScheduler());
+        if (!TestUtils.runningFromBazel()) {
+            setScheduler(new ThreadPoolScheduler());
+        }
     }
 }
 
