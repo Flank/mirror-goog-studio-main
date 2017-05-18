@@ -67,7 +67,7 @@ TEST(ActivityManagerTest, SamplingStart) {
                       Return(true)));
   TestActivityManager manager{std::move(bash)};
   manager.StartProfiling(ActivityManager::ProfilingMode::SAMPLING,
-                         kTestPackageName, &trace_path, &output_string);
+                         kTestPackageName, 1000, &trace_path, &output_string);
   EXPECT_THAT(cmd, StartsWith(kAmExecutable));
   EXPECT_THAT(cmd, HasSubstr(kProfileStart));
   EXPECT_THAT(cmd, HasSubstr(kTestPackageName));
@@ -90,7 +90,7 @@ TEST(ActivityManagerTest, InstrumentStart) {
                       Return(true)));
   TestActivityManager manager{std::move(bash)};
   manager.StartProfiling(ActivityManager::ProfilingMode::INSTRUMENTED,
-                         kTestPackageName, &trace_path, &output_string);
+                         kTestPackageName, 1000, &trace_path, &output_string);
   EXPECT_THAT(cmd, StartsWith(kAmExecutable));
   EXPECT_THAT(cmd, HasSubstr(kProfileStart));
   EXPECT_THAT(cmd, HasSubstr(kTestPackageName));

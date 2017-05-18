@@ -173,6 +173,7 @@ grpc::Status CpuServiceImpl::StartProfilingApp(
       mode = ActivityManager::INSTRUMENTED;
     }
     success = manager->StartProfiling(mode, request->app_pkg_name(),
+                                      request->sampling_interval_us(),
                                       &trace_path_, &error);
   }
 
