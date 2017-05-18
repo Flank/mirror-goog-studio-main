@@ -44,7 +44,6 @@ import com.android.tools.fd.client.InstantRunBuildInfo;
 import com.android.tools.fd.client.InstantRunClient;
 import com.google.common.base.Charsets;
 import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -117,7 +116,7 @@ public final class InstantRunTestUtils {
             assertThat(info.getArtifacts()).hasSize(1);
             InstantRunArtifact artifact = info.getArtifacts().get(0);
             assertThat(artifact.type).isEqualTo(InstantRunArtifactType.MAIN);
-            device.installPackage(artifact.file.getAbsolutePath(), true /*reinstall*/);
+            device.installPackage(artifact.file.getAbsolutePath(), true /*reinstall*/, "-t");
             return;
         }
 
@@ -135,10 +134,14 @@ public final class InstantRunTestUtils {
                     throw new AssertionError("Unexpected artifact to install: " + artifact);
             }
         }
+        List<String> installOptions = Lists.newArrayList("-t");
+        if (info.isPatchBuild()) {
+            installOptions.add("-p");
+        }
         device.installPackages(
                 apkFiles,
                 true /*reinstall*/,
-                info.isPatchBuild() ? ImmutableList.of("-p") : ImmutableList.of(),
+                installOptions,
                 DEFAULT_ADB_TIMEOUT_MSEC,
                 MILLISECONDS);
     }

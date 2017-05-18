@@ -190,9 +190,4 @@ public class Adb implements TestRule {
     private static AndroidDebugBridge getBridge() {
         return sAdbGetter.get();
     }
-
-
-    public static String getInjectToDeviceProviderProperty(@NonNull IDevice device) {
-        return "-Pcom.android.test.devicepool.serial=" + device.getSerialNumber();
-    }
 }

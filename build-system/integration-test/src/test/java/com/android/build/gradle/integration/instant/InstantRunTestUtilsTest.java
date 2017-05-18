@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.instant;
 
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.eq;
@@ -57,7 +58,7 @@ public class InstantRunTestUtilsTest {
                                 new InstantRunArtifact(
                                         InstantRunArtifactType.MAIN, new File("test"), "1")));
         InstantRunTestUtils.doInstall(device, info);
-        verify(device).installPackage(any(), anyBoolean());
+        verify(device).installPackage(any(), anyBoolean(), anyString());
         verifyNoMoreInteractions(device);
     }
 

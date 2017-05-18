@@ -22,6 +22,7 @@ import groovy.transform.CompileStatic
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.junit.ClassRule
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.experimental.categories.Category
 
@@ -50,7 +51,7 @@ class ApplibtestTest {
         project.execute("lint")
     }
 
-    @Test
+    @Ignore("http://b/38411800")
     @Category(DeviceTests.class)
     void connectedCheck() {
         project.executeConnectedCheck()

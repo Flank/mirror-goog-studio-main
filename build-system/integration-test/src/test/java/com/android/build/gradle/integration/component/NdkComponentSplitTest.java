@@ -27,12 +27,13 @@ import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher;
 import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.SigningHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.options.StringOption;
 import com.android.ddmlib.IDevice;
 import com.android.testutils.apk.Apk;
-import com.google.common.collect.ImmutableList;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -126,12 +127,13 @@ public class NdkComponentSplitTest {
         SigningHelper.assertApkSignaturesVerify(x86Apk);
     }
 
-    @Test
+    @Ignore("http://b/38419063")
     @Category(DeviceTests.class)
     public void connectedAndroidTest() throws Exception {
         project.execute("assembleDebug", "assembleDebugAndroidTest");
         IDevice device = adb.getDevice(AndroidVersionMatcher.thatUsesArt());
-        project.executeConnectedCheck(
-                ImmutableList.of(Adb.getInjectToDeviceProviderProperty(device)));
+        project.executor()
+                .with(StringOption.DEVICE_POOL_SERIAL, device.getSerialNumber())
+                .executeConnectedCheck();
     }
 }

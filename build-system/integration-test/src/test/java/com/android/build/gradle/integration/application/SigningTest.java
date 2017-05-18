@@ -422,7 +422,7 @@ public class SigningTest {
         device.uninstallPackage("com.example.helloworld");
         device.uninstallPackage("com.example.helloworld.test");
         project.executor()
-                .withArgument(Adb.getInjectToDeviceProviderProperty(device))
+                .with(StringOption.DEVICE_POOL_SERIAL, device.getSerialNumber())
                 .run(GradleTestProject.DEVICE_TEST_TASK);
     }
 
