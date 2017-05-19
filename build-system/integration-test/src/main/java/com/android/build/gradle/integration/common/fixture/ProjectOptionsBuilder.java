@@ -45,8 +45,6 @@ public class ProjectOptionsBuilder {
 
         // TODO: enable by default
         booleans.put(BooleanOption.ENABLE_DEX_ARCHIVE, true);
-        booleans.put(BooleanOption.ENABLE_NEW_RESOURCE_PROCESSING, true);
-        booleans.put(BooleanOption.ENABLE_AAPT2, true);
     }
 
     List<String> getArguments() {
