@@ -1,5 +1,6 @@
 apply plugin: 'com.android.application'
 apply from: "../../commonHeader.gradle"
+apply from: "../../commonLocalRepo.gradle"
 
 android {
     compileSdkVersion rootProject.latestCompileSdk

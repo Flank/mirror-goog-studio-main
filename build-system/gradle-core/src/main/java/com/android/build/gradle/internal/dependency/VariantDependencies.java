@@ -329,7 +329,7 @@ public class VariantDependencies {
                     // not extend from anything. It's mostly there to access the artifacts from
                     // another project but it shouldn't bring any dependencies with it.
                     if (variantType == VariantType.LIBRARY) {
-                        runtimeElements.setExtendsFrom(runtimeClasspaths);
+                        runtimeElements.extendsFrom(runtimeClasspath);
                     }
 
                     Configuration apiElements =

@@ -20,6 +20,7 @@ import com.android.annotations.Nullable;
 import java.util.Set;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.ResolvedArtifact;
 
@@ -53,42 +54,27 @@ public class JacocoPlugin implements Plugin<Project> {
      * Creates the configurations used by plugin.
      */
     private void addJacocoConfigurations() {
-        this.project
-                .getConfigurations()
-                .create(
+        Configuration config = this.project.getConfigurations().create(AGENT_CONFIGURATION_NAME);
+
+        config.setVisible(false);
+        config.setTransitive(true);
+        config.setCanBeConsumed(false);
+        config.setDescription("The Jacoco agent to use to get coverage data.");
+
+        project.getDependencies()
+                .add(
                         AGENT_CONFIGURATION_NAME,
-                        configuration -> {
-                            configuration.setVisible(false);
-                            configuration.setTransitive(true);
-                            configuration.setCanBeConsumed(false);
-                            configuration.setDescription(
-                                    "The Jacoco agent to use to get coverage data.");
-                            configuration.defaultDependencies(
-                                    dependencies ->
-                                            dependencies.add(
-                                                    project.getDependencies()
-                                                            .create(
-                                                                    "org.jacoco:org.jacoco.agent:"
-                                                                            + getJacocoVersion())));
-                        });
-        this.project
-                .getConfigurations()
-                .create(
-                        ANT_CONFIGURATION_NAME,
-                        configuration -> {
-                            configuration.setVisible(false);
-                            configuration.setTransitive(true);
-                            configuration.setCanBeConsumed(false);
-                            configuration.setDescription(
-                                    "The Jacoco ant tasks to use to get execute Gradle tasks.");
-                            configuration.defaultDependencies(
-                                    dependencies ->
-                                            dependencies.add(
-                                                    project.getDependencies()
-                                                            .create(
-                                                                    "org.jacoco:org.jacoco.ant:"
-                                                                            + getJacocoVersion())));
-                        });
+                        "org.jacoco:org.jacoco.agent:" + getJacocoVersion() + ":runtime");
+
+        config = this.project.getConfigurations().create(ANT_CONFIGURATION_NAME);
+
+        config.setVisible(false);
+        config.setTransitive(true);
+        config.setCanBeConsumed(false);
+        config.setDescription("The Jacoco ant tasks to use to get execute Gradle tasks.");
+
+        project.getDependencies()
+                .add(ANT_CONFIGURATION_NAME, "org.jacoco:org.jacoco.ant:" + getJacocoVersion());
     }
 
     @Nullable
