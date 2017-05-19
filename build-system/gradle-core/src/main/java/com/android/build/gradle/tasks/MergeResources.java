@@ -188,7 +188,8 @@ public class MergeResources extends IncrementalTask {
                             dataBindingExpressionRemover,
                             dataBindingLayoutOutputFolder,
                             resourceShrinkerOutputFolder,
-                            pseudoLocalesEnabled);
+                            pseudoLocalesEnabled,
+                            getCrunchPng());
 
             merger.mergeData(writer, false /*doCleanUp*/);
 
@@ -276,7 +277,8 @@ public class MergeResources extends IncrementalTask {
                             dataBindingExpressionRemover,
                             dataBindingLayoutOutputFolder,
                             resourceShrinkerOutputFolder,
-                            pseudoLocalesEnabled);
+                            pseudoLocalesEnabled,
+                            getCrunchPng());
 
             merger.mergeData(writer, false /*doCleanUp*/);
             // No exception? Write the known state.

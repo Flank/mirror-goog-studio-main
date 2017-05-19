@@ -151,6 +151,7 @@ public class MergeResourceWriterWithCompilerTest {
                         null,
                         null,
                         null,
+                        false,
                         false);
 
         /*
@@ -181,6 +182,7 @@ public class MergeResourceWriterWithCompilerTest {
                         null,
                         null,
                         null,
+                        false,
                         false);
 
         mResourceItems.get(name).setRemoved();

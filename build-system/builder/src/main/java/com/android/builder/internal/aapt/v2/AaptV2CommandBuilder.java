@@ -61,6 +61,10 @@ public final class AaptV2CommandBuilder {
         if (request.isPseudoLocalize()) {
             parameters.add("--pseudo-localize");
         }
+        
+        if (!request.isPngCrunching()) {
+            parameters.add("--no-crunch");
+        }
 
         parameters.add("-o", request.getOutput().getAbsolutePath());
         parameters.add(request.getInput().getAbsolutePath());
