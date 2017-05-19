@@ -98,7 +98,7 @@ public class ResourceDirectoryParser {
 
         Arrays.sort(resourceDirectories, Comparator.comparing(File::getName));
 
-        DocumentBuilder documentBuilder = null;
+        DocumentBuilder documentBuilder;
         DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
         try {
             documentBuilder = documentBuilderFactory.newDocumentBuilder();
@@ -164,15 +164,15 @@ public class ResourceDirectoryParser {
                 Document domTree;
                 try {
                     domTree = documentBuilder.parse(maybeResourceFile);
-                } catch (SAXException|IOException e) {
+                    SymbolTable parsedXml = ResourceValuesXmlParser.parse(domTree, idProvider);
+
+                    parsedXml.allSymbols().forEach(s -> addIfNotExisting(builder, s));
+                } catch (SAXException | IOException | IllegalArgumentException e) {
                     throw new ResourceDirectoryParseException(
                             "Failed to parse XML resource file '"
                                     + maybeResourceFile.getAbsolutePath()
                                     + "'", e);
                 }
-
-                SymbolTable parsedXml = ResourceValuesXmlParser.parse(domTree, idProvider);
-                parsedXml.allSymbols().forEach(s -> addIfNotExisting(builder, s));
             } else {
                 // We do not need to validate the filenames of files inside the {@code values}
                 // directory as they do not get parsed into Symbols; but we need to validate the

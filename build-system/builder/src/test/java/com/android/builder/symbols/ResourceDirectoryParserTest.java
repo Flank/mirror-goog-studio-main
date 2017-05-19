@@ -16,7 +16,9 @@
 
 package com.android.builder.symbols;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
 import com.android.utils.FileUtils;
@@ -141,5 +143,26 @@ public class ResourceDirectoryParserTest {
                         .build();
 
         assertEquals(expected, parsed);
+    }
+
+    @Test
+    public void failWithException() throws Exception {
+        File directory = temporaryFolder.newFolder();
+
+        String values =
+                ""
+                        + "<resources>"
+                        + "  <color name=\"a\">#000000</color>"
+                        + "  <color name=\"a\">#000000</color>"
+                        + "</resources>";
+
+        make(values.getBytes(), directory, "values/col.xml");
+
+        try {
+            ResourceDirectoryParser.parseDirectory(directory, IdProvider.sequential());
+            fail();
+        } catch (ResourceDirectoryParseException e) {
+            assertThat(e.getMessage()).contains("/values/col.xml");
+        }
     }
 }
