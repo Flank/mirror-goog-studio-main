@@ -59,6 +59,11 @@ public class BuildTypeTest {
 
                     @Override
                     public void receiveMessage(@NonNull Message message) {}
+
+                    @Override
+                    public boolean hasSyncIssue(int type) {
+                        return false;
+                    }
                 };
     }
 

@@ -153,6 +153,11 @@ public class ExtraModelInfo extends ErrorReporter {
         return issue;
     }
 
+    @Override
+    public boolean hasSyncIssue(int type) {
+        return syncIssues.values().stream().anyMatch(issue -> issue.getType() == type);
+    }
+
     private static boolean isDependencyIssue(int type) {
         switch (type) {
             case SyncIssue.TYPE_UNRESOLVED_DEPENDENCY:

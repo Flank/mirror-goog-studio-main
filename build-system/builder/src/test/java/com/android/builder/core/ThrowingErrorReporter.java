@@ -34,6 +34,11 @@ public class ThrowingErrorReporter extends ErrorReporter {
     }
 
     @Override
+    public boolean hasSyncIssue(int type) {
+        throw new RuntimeException("fake");
+    }
+
+    @Override
     public void receiveMessage(@NonNull Message message) {
         throw new RuntimeException("fake");
     }

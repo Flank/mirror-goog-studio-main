@@ -113,6 +113,12 @@ public class TaskTestUtils {
         public void receiveMessage(@NonNull Message message) {
             // do nothing
         }
+
+        @Override
+        public boolean hasSyncIssue(int type) {
+            return syncIssue != null && syncIssue.getType() == type;
+        }
+
     }
 
     public static final class FakeRecorder implements Recorder {

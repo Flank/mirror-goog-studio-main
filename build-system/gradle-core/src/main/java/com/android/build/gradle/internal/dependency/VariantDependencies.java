@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.builder.core.ErrorReporter;
 import com.android.builder.core.VariantType;
+import com.android.builder.model.SyncIssue;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -439,17 +440,17 @@ public class VariantDependencies {
             List<CoreProductFlavor> productFlavors = variantConfiguration.getProductFlavors();
             Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> map = Maps.newHashMapWithExpectedSize(productFlavors.size());
 
+            // during a sync, it's possible that the flavors don't have dimension names because
+            // the variant manager is lenient about it.
+            // In that case we're going to avoid resolving the dependencies anyway, so we can just
+            // skip this.
+            if (errorReporter.hasSyncIssue(SyncIssue.TYPE_UNNAMED_FLAVOR_DIMENSION)) {
+                return map;
+            }
+
             // first go through the product flavors and add matching attributes
             for (CoreProductFlavor f : productFlavors) {
-                if (f.getDimension() == null) {
-                    throw new RuntimeException(
-                            "All flavors must now belong to a named flavor dimension. "
-                                    + "The flavor '"
-                                    + f.getName()
-                                    + "' is not assigned to a flavor dimension. "
-                                    + "Learn more at "
-                                    + "https://d.android.com/r/tools/flavorDimensions-missing-error-message.html");
-                }
+                assert f.getDimension() != null;
                 map.put(Attribute.of(f.getDimension(), ProductFlavorAttr.class), ProductFlavorAttr.of(f.getName()));
             }
 

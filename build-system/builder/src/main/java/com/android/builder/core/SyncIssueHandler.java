@@ -41,4 +41,6 @@ public interface SyncIssueHandler {
      */
     @NonNull
     SyncIssue handleIssue(@Nullable String data, int type, int severity, @NonNull String msg);
+
+    boolean hasSyncIssue(int type);
 }
