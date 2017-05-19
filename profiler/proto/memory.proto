@@ -61,7 +61,12 @@ service MemoryService {
   // This returns a snapshot of all objects that have been allocated and free_data
   // within the request's start and end times. Note that if an object is allocated
   // and collected within the time range, it would not be included in the result.
-  rpc GetAllocationSnaphot(AllocationSnapshotRequest)
+  rpc GetAllocations(AllocationSnapshotRequest)
+      returns (BatchAllocationSample) {}
+
+  // O+ studio-side only: Grabs the allocation classes and callstack info for
+  // GetAllocations results.
+  rpc GetAllocationContexts(AllocationSnapshotRequest)
       returns (BatchAllocationSample) {}
 
   rpc ForceGarbageCollection(ForceGarbageCollectionRequest)
@@ -329,7 +334,7 @@ message AllocationSnapshotRequest {
 }
 
 // Batched AllocationEvents to minimize number of grpc
-// calls comapred to transferring them individually.
+// calls compared to transferring them individually.
 message BatchAllocationSample {
   int32 process_id = 1;
   // From Perfa->Perfd and Perfd->Studio, this marks the
@@ -389,26 +394,26 @@ message AllocationEvent {
     int32 length = 4;
     // TODO - thread, stack frame location
 
-    // Studio-side only so we can store and query data more
-    // efficiently. If an allocation has been free, this field
-    // would indicate the free timestamps (i.e. the timestamp
-    // of the gc event that triggered the deallocation).
-    // Note that free_timestamp would be set to Long.MAX_VALUE
-    int64 free_timestamp = 5;
+    // Id representing the allocation stack.
+    int32 stack_id = 5;
 
-    // Id representing the allocation stack.    
-    int32 stack_id = 6;
     // Entire list of methods corresponding to the allocation stack.
     // Note that this is only used for temporary storage in perfa.
     // When the data is sent from perfa->perfd, the list is encoded
     // as |stack_id| above, and the encoded data is stored/sent
     // separately using EncodedStack.
     // First entry is top of stack.
-    repeated int64 method_ids = 7;
+    repeated int64 method_ids = 6;
   }
 
   message Deallocation {
     int64 tag = 1;
+    // The following are host/client-side only (e.g. Studio-only).
+    int64 class_tag = 2;
+    int64 alloc_time = 3;
+    int64 size = 4;
+    // Length for array objects. For non-arrays, set to -1.
+    int32 length = 5;
   }
 
   // associates an event with a particular tracking session.
