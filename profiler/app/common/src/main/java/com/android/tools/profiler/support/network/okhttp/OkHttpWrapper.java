@@ -18,39 +18,30 @@ package com.android.tools.profiler.support.network.okhttp;
 
 import android.util.Log;
 import com.android.tools.profiler.support.ProfilerService;
-
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
+import java.util.ArrayList;
 import java.util.List;
 
-@SuppressWarnings("unused") // Referenced via reflection in OkHttpAdapter
+@SuppressWarnings("unused") // This class and all methods referenced via reflection
 public final class OkHttpWrapper {
 
     /**
      * Adds okhttp3 Interceptor to an {@code OkHttpClient.Builder} if it does not contain one.
      *
-     * <p>Reflection code equals to {@code builder.addNetworkInterceptor(proxy);}
+     * <p>Reflection code equals to {@code builder.addNetworkInterceptor(interceptor);}
      */
-    @SuppressWarnings("unused") // Called in the ProfilerPlugin via reflection
     public static void addOkHttp3Interceptor(Object builder) {
-        Class<?> interceptorClass;
-        try {
-            interceptorClass =
-                    Class.forName(
-                            "okhttp3.Interceptor", false, builder.getClass().getClassLoader());
-        } catch (ClassNotFoundException e) {
-            Log.e(ProfilerService.STUDIO_PROFILER, "Failed to find Interceptor class");
+        Object interceptor = newOkHttp3Interceptor();
+        if (interceptor == null) {
             return;
         }
-        Object proxy =
-                Proxy.newProxyInstance(
-                        interceptorClass.getClassLoader(),
-                        new Class[] {interceptorClass},
-                        new OkHttp3InterceptorHandler());
+
         try {
+            Class<?> interceptorClass = ((Proxy) interceptor).getClass().getInterfaces()[0];
             builder.getClass()
                     .getDeclaredMethod("addNetworkInterceptor", interceptorClass)
-                    .invoke(builder, proxy);
+                    .invoke(builder, interceptor);
         } catch (NoSuchMethodException ignored) {
             Log.e(ProfilerService.STUDIO_PROFILER, "Failed to find addNetworkInterceptor method");
         } catch (IllegalAccessException ignored) {
@@ -61,28 +52,36 @@ public final class OkHttpWrapper {
     }
 
     /**
+     * Adds an okhttp3 Interceptor to a {@code List<Interceptor>}, returning a copy of the list with
+     * the interceptor added (or the original list if our interceptor was already in the list).
+     */
+    public static List appendOkHttp3Interceptor(List interceptors) {
+        for (Object interceptor : interceptors) {
+            if (Proxy.isProxyClass(interceptor.getClass())) {
+                // We already added ourselves, so abort early
+                return interceptors;
+            }
+        }
+
+        ArrayList list = new ArrayList(interceptors);
+        Object interceptor = newOkHttp3Interceptor();
+        if (interceptor != null) {
+            list.add(interceptor);
+        }
+        return list;
+    }
+
+    /**
      * Adds okhttp2 Interceptor during {@code OkHttpClient} construction.
      *
-     * <p>Reflection code equals to {@code networkInterceptors().add(proxy);}
+     * <p>Reflection code equals to {@code networkInterceptors().add(interceptor);}
      */
-    @SuppressWarnings("unused") // Called in the ProfilerPlugin via reflection
     public static void addOkHttp2Interceptor(Object client) {
-        Class<?> interceptorClass;
-        try {
-            interceptorClass =
-                    Class.forName(
-                            "com.squareup.okhttp.Interceptor",
-                            false,
-                            client.getClass().getClassLoader());
-        } catch (ClassNotFoundException e) {
-            Log.e(ProfilerService.STUDIO_PROFILER, "Failed to find Interceptor class");
+        Object interceptor = newOkHttp2Interceptor();
+        if (interceptor == null) {
             return;
         }
-        Object proxy =
-                Proxy.newProxyInstance(
-                        interceptorClass.getClassLoader(),
-                        new Class[] {interceptorClass},
-                        new OkHttp2InterceptorHandler());
+
         try {
             List list =
                     (List)
@@ -91,7 +90,7 @@ public final class OkHttpWrapper {
                                     .invoke(client);
             assert list.isEmpty()
                     : String.format("Unexpected network interceptor list of size %d", list.size());
-            list.add(interceptorClass.cast(proxy));
+            list.add(interceptor);
         } catch (NoSuchMethodException ignored) {
             Log.e(ProfilerService.STUDIO_PROFILER, "Failed to find networkInterceptors method");
         } catch (IllegalAccessException ignored) {
@@ -100,4 +99,61 @@ public final class OkHttpWrapper {
             Log.e(ProfilerService.STUDIO_PROFILER, "Failed to invoke networkInterceptors method");
         }
     }
+
+    /**
+     * Adds an okhttp2 Interceptor to a {@code List<Interceptor>}, returning a copy of the list with
+     * the interceptor added (or the original list if our interceptor was already in the list).
+     */
+    public static List appendOkHttp2Interceptor(List interceptors) {
+        for (Object interceptor : interceptors) {
+            if (Proxy.isProxyClass(interceptor.getClass())) {
+                // We already added ourselves, so abort early
+                return interceptors;
+            }
+        }
+
+        ArrayList list = new ArrayList(interceptors);
+        Object interceptor = newOkHttp2Interceptor();
+        if (interceptor != null) {
+            list.add(interceptor);
+        }
+        return list;
+    }
+
+    private static Object newOkHttp3Interceptor() {
+        Class<?> interceptorClass;
+        try {
+            interceptorClass =
+                    Class.forName(
+                            "okhttp3.Interceptor",
+                            false,
+                            Thread.currentThread().getContextClassLoader());
+        } catch (ClassNotFoundException e) {
+            Log.e(ProfilerService.STUDIO_PROFILER, "Failed to find Interceptor class");
+            return null;
+        }
+        return Proxy.newProxyInstance(
+                interceptorClass.getClassLoader(),
+                new Class[] {interceptorClass},
+                new OkHttp3InterceptorHandler());
+    }
+
+    private static Object newOkHttp2Interceptor() {
+        Class<?> interceptorClass;
+        try {
+            interceptorClass =
+                    Class.forName(
+                            "com.squareup.okhttp.Interceptor",
+                            false,
+                            Thread.currentThread().getContextClassLoader());
+        } catch (ClassNotFoundException e) {
+            Log.e(ProfilerService.STUDIO_PROFILER, "Failed to find Interceptor class");
+            return null;
+        }
+        return Proxy.newProxyInstance(
+                interceptorClass.getClassLoader(),
+                new Class[] {interceptorClass},
+                new OkHttp2InterceptorHandler());
+    }
+
 }

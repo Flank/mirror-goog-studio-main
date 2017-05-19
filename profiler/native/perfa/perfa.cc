@@ -58,43 +58,107 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
                                const unsigned char* class_data,
                                jint* new_class_data_len,
                                unsigned char** new_class_data) {
-  if (class_being_redefined == nullptr || strcmp(name, "java/net/URL") != 0) {
-    return;
+  bool transformed = true;
+  if (strcmp(name, "java/net/URL") == 0) {
+    dex::Reader reader(class_data, class_data_len);
+    // The tooling interface will specify class names like "java/net/URL"
+    // however, in .dex these classes are stored using the "Ljava/net/URL;"
+    // format.
+    std::string desc = "L" + std::string(name) + ";";
+    auto class_index = reader.FindClassIndex(desc.c_str());
+    if (class_index == dex::kNoIndex) {
+      Log::V("Could not find class index for %s", name);
+      return;
+    }
+
+    reader.CreateClassIr(class_index);
+    auto dex_ir = reader.GetIr();
+
+    slicer::MethodInstrumenter mi(dex_ir);
+    mi.AddTransformation<slicer::ExitHook>(ir::MethodId(
+        "Lcom/android/tools/profiler/support/network/httpurl/HttpURLWrapper;",
+        "wrapURLConnection"));
+    if (!mi.InstrumentMethod(ir::MethodId(desc.c_str(), "openConnection",
+                                          "()Ljava/net/URLConnection;"))) {
+      Log::E("Error instrumenting URL.openConnection");
+    }
+
+    size_t new_image_size = 0;
+    dex::u1* new_image = nullptr;
+    dex::Writer writer(dex_ir);
+
+    JvmtiAllocator allocator(jvmti_env);
+    new_image = writer.CreateImage(&allocator, &new_image_size);
+
+    *new_class_data_len = new_image_size;
+    *new_class_data = new_image;
+  } else if (strcmp(name, "okhttp3/OkHttpClient") == 0) {
+    dex::Reader reader(class_data, class_data_len);
+    std::string desc = "L" + std::string(name) + ";";
+    auto class_index = reader.FindClassIndex(desc.c_str());
+    if (class_index == dex::kNoIndex) {
+      Log::V("Could not find class index for %s", name);
+      return;
+    }
+
+    reader.CreateClassIr(class_index);
+    auto dex_ir = reader.GetIr();
+
+    slicer::MethodInstrumenter mi(dex_ir);
+    mi.AddTransformation<slicer::ExitHook>(ir::MethodId(
+        "Lcom/android/tools/profiler/support/network/okhttp/OkHttpWrapper;",
+        "appendOkHttp3Interceptor"));
+    if (!mi.InstrumentMethod(ir::MethodId(desc.c_str(), "networkInterceptors",
+                                          "()Ljava/util/List;"))) {
+      Log::E("Error instrumenting OkHttp3 OkHttpClient");
+    }
+
+    size_t new_image_size = 0;
+    dex::u1* new_image = nullptr;
+    dex::Writer writer(dex_ir);
+
+    JvmtiAllocator allocator(jvmti_env);
+    new_image = writer.CreateImage(&allocator, &new_image_size);
+
+    *new_class_data_len = new_image_size;
+    *new_class_data = new_image;
+  } else if (strcmp(name, "com/squareup/okhttp/OkHttpClient") == 0) {
+    dex::Reader reader(class_data, class_data_len);
+    std::string desc = "L" + std::string(name) + ";";
+    auto class_index = reader.FindClassIndex(desc.c_str());
+    if (class_index == dex::kNoIndex) {
+      Log::V("Could not find class index for %s", name);
+      return;
+    }
+
+    reader.CreateClassIr(class_index);
+    auto dex_ir = reader.GetIr();
+
+    slicer::MethodInstrumenter mi(dex_ir);
+    mi.AddTransformation<slicer::ExitHook>(ir::MethodId(
+        "Lcom/android/tools/profiler/support/network/okhttp/OkHttpWrapper;",
+        "appendOkHttp2Interceptor"));
+    if (!mi.InstrumentMethod(ir::MethodId(desc.c_str(), "networkInterceptors",
+                                          "()Ljava/util/List;"))) {
+      Log::E("Error instrumenting OkHttp2 OkHttpClient");
+    }
+
+    size_t new_image_size = 0;
+    dex::u1* new_image = nullptr;
+    dex::Writer writer(dex_ir);
+
+    JvmtiAllocator allocator(jvmti_env);
+    new_image = writer.CreateImage(&allocator, &new_image_size);
+
+    *new_class_data_len = new_image_size;
+    *new_class_data = new_image;
+  } else {
+    transformed = false;
   }
 
-  dex::Reader reader(class_data, class_data_len);
-  // The tooling interface will specify class names like "java/net/URL"
-  // however, in .dex these classes are stored using the "Ljava/net/URL;"
-  // format.
-  std::string desc = "L" + std::string(name) + ";";
-  auto class_index = reader.FindClassIndex(desc.c_str());
-  if (class_index == dex::kNoIndex) {
-    Log::V("Could not find");
-    return;
+  if (transformed) {
+    Log::V("Transformed class: %s", name);
   }
-
-  reader.CreateClassIr(class_index);
-  auto dex_ir = reader.GetIr();
-
-  slicer::MethodInstrumenter mi(dex_ir);
-  mi.AddTransformation<slicer::ExitHook>(ir::MethodId(
-      "Lcom/android/tools/profiler/support/network/httpurl/HttpURLWrapper;",
-      "wrapURLConnection"));
-  if (!mi.InstrumentMethod(ir::MethodId(desc.c_str(), "openConnection",
-                                        "()Ljava/net/URLConnection;"))) {
-    Log::E("Error instrumenting URL.openConnection");
-  }
-
-  size_t new_image_size = 0;
-  dex::u1* new_image = nullptr;
-  dex::Writer writer(dex_ir);
-
-  JvmtiAllocator allocator(jvmti_env);
-  new_image = writer.CreateImage(&allocator, &new_image_size);
-
-  *new_class_data_len = new_image_size;
-  *new_class_data = new_image;
-  Log::V("Transformed class: %s", name);
 }
 
 void BindJNIMethod(JNIEnv* jni, const char* class_name, const char* method_name,
@@ -163,9 +227,24 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
                   jvmti_env->SetEventCallbacks(&callbacks, sizeof(callbacks)));
 
   // Sample instrumentation
-  jclass klass = jni_env->FindClass("java/net/URL");
-  jclass classes[] = {klass};
-  CheckJvmtiError(jvmti_env, jvmti_env->RetransformClasses(1, classes));
+  std::vector<jclass> classes;
+  classes.push_back(jni_env->FindClass("java/net/URL"));
+
+  jint class_count;
+  jclass* loaded_classes;
+  char* sig_mutf8;
+  jvmti_env->GetLoadedClasses(&class_count, &loaded_classes);
+  for (int i = 0; i < class_count; ++i) {
+    jvmti_env->GetClassSignature(loaded_classes[i], &sig_mutf8, nullptr);
+    if (strcmp(sig_mutf8, "Lokhttp3/OkHttpClient;") == 0) {
+      classes.push_back(loaded_classes[i]);
+    } else if (strcmp(sig_mutf8, "Lcom/squareup/okhttp/OkHttpClient;") == 0) {
+      classes.push_back(loaded_classes[i]);
+    }
+  }
+
+  CheckJvmtiError(jvmti_env,
+                  jvmti_env->RetransformClasses(classes.size(), &classes[0]));
 
   MemoryTrackingEnv::Instance(vm);
 
