@@ -23,6 +23,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.external.gson.NativeBuildConfigValue;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.core.Abi;
@@ -60,7 +61,6 @@ import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.Optional;
-import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.OutputFiles;
 
 /**
@@ -455,32 +455,60 @@ public abstract class ExternalNativeJsonGenerator {
      */
     @Nullable
     private static Collection<String> getUserRequestedAbiFilters(
-            @NonNull NativeBuildSystem buildSystem,
-            @NonNull GradleVariantConfiguration variantConfig) {
+            @NonNull NativeBuildSystem buildSystem, @NonNull VariantScope variantScope) {
 
-        Set<String> externalNativeBuildAbiFilters = getExternalNativeBuildAbiFilters(buildSystem,
-                variantConfig);
+        // Filters from android.externalNativeBuild.xxx.abiFilters
+        Set<String> externalNativeAbiFilters =
+                emptySetToNull(
+                        getExternalNativeBuildAbiFilters(
+                                buildSystem, variantScope.getVariantConfiguration()));
 
-        // These are the abis from ndk.abiFilters that will be packaged. If they exist then we
-        // don't need to build anything besides these (intersect with
+        // These are the abis from android.ndk.abiFilters that will be packaged. If they exist then
+        // we don't need to build anything besides these (intersect with
         // externalNativeBuild.xxx.abiFilters)
-        Set<String> ndkAbiFilters = variantConfig.getNdkConfig().getAbiFilters();
-        if (ndkAbiFilters == null || ndkAbiFilters.isEmpty()) {
-            // There was no ndk.abiFilters so use the build system specific abiFilters.
-            return externalNativeBuildAbiFilters.isEmpty() ? null : externalNativeBuildAbiFilters;
+        Set<String> abiFilters =
+                filterAbis(
+                        externalNativeAbiFilters,
+                        emptySetToNull(
+                                variantScope
+                                        .getVariantConfiguration()
+                                        .getNdkConfig()
+                                        .getAbiFilters()));
+
+        // Filters from splits.
+        AndroidConfig extension = variantScope.getGlobalScope().getExtension();
+        if (extension.getSplits().getAbi().isEnable()) {
+            abiFilters = filterAbis(abiFilters, extension.getSplits().getAbiFilters());
         }
 
-        // At this point, there are some ndk.abiFilters. If there are no build system specific
-        // abi filters then just return ndk.abiFilters.
-        if (externalNativeBuildAbiFilters.isEmpty()) {
-            return ndkAbiFilters;
-        }
+        return abiFilters;
+    }
 
-        // At this point, there are both ndk.abiFilters and specific build system abiFilters.
-        // We want to build the intersection of these. However, if the intersection is empty then
-        // we don't want to build anything at all.
-        externalNativeBuildAbiFilters.retainAll(ndkAbiFilters);
-        return externalNativeBuildAbiFilters;
+    /**
+     * Normalize ABI list.
+     *
+     * <p>An empty ABI filter list can mean include all ABIs. This method converts an empty list to
+     * null such that the returned filters can be used by methods where an empty ABI filter list is
+     * used to represent filter out all ABI.
+     */
+    @Nullable
+    private static Set<String> emptySetToNull(@Nullable Set<String> abiFilters) {
+        if (abiFilters != null && abiFilters.isEmpty()) {
+            return null;
+        }
+        return abiFilters;
+    }
+
+    @Nullable
+    private static Set<String> filterAbis(
+            @Nullable Set<String> abis, @Nullable Set<String> filters) {
+        if (filters == null) {
+            return abis;
+        }
+        if (abis == null) {
+            return filters;
+        }
+        return Sets.intersection(abis, filters);
     }
 
     /**
@@ -564,8 +592,7 @@ public abstract class ExternalNativeJsonGenerator {
         int minSdkVersionApiLevel = minSdkVersion == null ? 1 : minSdkVersion.getApiLevel();
 
         // Get the filters specified in the DSL. Will be null if we should build all known ABIs.
-        Collection<String> userRequestedAbis =
-                getUserRequestedAbiFilters(buildSystem, variantConfig);
+        Collection<String> userRequestedAbis = getUserRequestedAbiFilters(buildSystem, scope);
 
         // These are ABIs that are available on the current platform
         Collection<Abi> validAbis =
@@ -665,7 +692,8 @@ public abstract class ExternalNativeJsonGenerator {
     }
 
     @NonNull
-    @OutputDirectory
+    // This should not be annotated with @OutputDirectory because getNativeBuildConfigurationsJsons
+    // is already annotated with @OutputFiles
     public File getJsonFolder() {
         return jsonFolder;
     }

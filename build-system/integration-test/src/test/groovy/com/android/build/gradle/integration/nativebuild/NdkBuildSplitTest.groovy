@@ -129,7 +129,7 @@ android {
 
         assertThat(model).isNotNull();
         assertThat(model.name).isEqualTo("project");
-        assertThat(model.artifacts).hasSize(42);
+        assertThat(model.artifacts).hasSize(24);  // # of ABI (4) * # of variants (6)
         assertThat(model.fileExtensions).hasSize(1);
 
 
