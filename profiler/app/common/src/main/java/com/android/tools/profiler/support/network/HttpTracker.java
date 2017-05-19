@@ -192,7 +192,8 @@ public final class HttpTracker {
 
             StringBuilder s = new StringBuilder();
             for (StackTraceElement e : callstack) {
-                s.append(String.format("%s\n", e.toString()));
+                s.append(e);
+                s.append('\n');
             }
 
             onPreConnect(myId, url, s.toString());
@@ -220,11 +221,11 @@ public final class HttpTracker {
 
             StringBuilder s = new StringBuilder();
             for (Map.Entry<String, List<String>> e : fields.entrySet()) {
-                s.append(String.format("%s = ", e.getKey()));
+                s.append(e.getKey()).append(" = ");
                 for (String val : e.getValue()) {
-                    s.append(String.format("%s; ", val));
+                    s.append(val).append("; ");
                 }
-                s.append("\n");
+                s.append('\n');
             }
             trackThread();
             onRequest(myId, method, s.toString());
@@ -235,11 +236,11 @@ public final class HttpTracker {
 
             StringBuilder s = new StringBuilder();
             for (Map.Entry<String, List<String>> e : fields.entrySet()) {
-                s.append(String.format("%s = ", e.getKey()));
+                s.append(e.getKey()).append(" = ");
                 for (String val : e.getValue()) {
-                    s.append(String.format("%s; ", val));
+                    s.append(val).append("; ");
                 }
-                s.append("\n");
+                s.append('\n');
             }
             onResponse(myId, response, s.toString());
             trackThread();
