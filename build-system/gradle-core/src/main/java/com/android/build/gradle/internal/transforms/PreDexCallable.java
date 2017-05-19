@@ -22,7 +22,7 @@ import com.android.build.gradle.internal.BuildCacheUtils;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.DexOptions;
-import com.android.builder.dexing.DexingMode;
+import com.android.builder.dexing.DexingType;
 import com.android.builder.utils.ExceptionRunnable;
 import com.android.builder.utils.FileCache;
 import com.android.ide.common.process.ProcessOutputHandler;
@@ -94,9 +94,10 @@ class PreDexCallable implements Callable<Void> {
     @NonNull private final Set<String> hashes;
     @NonNull private final ProcessOutputHandler outputHandler;
     @Nullable private final FileCache buildCache;
-    @NonNull private final DexingMode dexingMode;
+    @NonNull private final DexingType dexingType;
     @NonNull private final DexOptions dexOptions;
     @NonNull private final AndroidBuilder androidBuilder;
+    private final int minSdkVersion;
 
     public PreDexCallable(
             @NonNull File from,
@@ -104,17 +105,19 @@ class PreDexCallable implements Callable<Void> {
             @NonNull Set<String> hashes,
             @NonNull ProcessOutputHandler outputHandler,
             @Nullable FileCache buildCache,
-            @NonNull DexingMode dexingMode,
+            @NonNull DexingType dexingType,
             @NonNull DexOptions dexOptions,
-            @NonNull AndroidBuilder androidBuilder) {
+            @NonNull AndroidBuilder androidBuilder,
+            int minSdkVersion) {
         this.from = from;
         this.to = to;
         this.hashes = hashes;
         this.outputHandler = outputHandler;
         this.buildCache = buildCache;
-        this.dexingMode = dexingMode;
+        this.dexingType = dexingType;
         this.dexOptions = dexOptions;
         this.androidBuilder = androidBuilder;
+        this.minSdkVersion = minSdkVersion;
     }
 
     @Override
@@ -136,16 +139,16 @@ class PreDexCallable implements Callable<Void> {
                 () -> {
                     FileUtils.deletePath(to);
                     Files.createParentDirs(to);
-                    if (dexingMode.isMultiDex()) {
+                    if (dexingType.isMultiDex()) {
                         FileUtils.mkdirs(to);
                     }
                     androidBuilder.preDexLibrary(
                             from,
                             to,
-                            dexingMode.isMultiDex(),
+                            dexingType.isMultiDex(),
                             dexOptions,
                             outputHandler,
-                            dexingMode.getMinSdkVersionValue());
+                            minSdkVersion);
                 };
 
         // If the build cache is used, run pre-dexing using the cache
@@ -155,8 +158,8 @@ class PreDexCallable implements Callable<Void> {
                             from,
                             androidBuilder.getTargetInfo().getBuildTools().getRevision(),
                             dexOptions,
-                            dexingMode.isMultiDex(),
-                            dexingMode.getMinSdkVersionValue());
+                            dexingType.isMultiDex(),
+                            minSdkVersion);
             FileCache.QueryResult result;
             try {
                 result = buildCache.createFile(to, buildCacheInputs, preDexLibraryAction);
@@ -206,7 +209,7 @@ class PreDexCallable implements Callable<Void> {
             @NonNull Revision buildToolsRevision,
             @NonNull DexOptions dexOptions,
             boolean multiDex,
-            @Nullable Integer minSdkVersion)
+            int minSdkVersion)
             throws IOException {
         // To use the cache, we need to specify all the inputs that affect the outcome of a pre-dex
         // (see DxDexKey for an exhaustive list of these inputs)
@@ -246,9 +249,7 @@ class PreDexCallable implements Callable<Void> {
                 .putBoolean(FileCacheInputParams.OPTIMIZE.name(), true)
                 .putBoolean(FileCacheInputParams.MULTI_DEX.name(), multiDex);
 
-        if (minSdkVersion != null) {
-            buildCacheInputs.putLong(FileCacheInputParams.MIN_SDK_VERSION.name(), minSdkVersion);
-        }
+        buildCacheInputs.putLong(FileCacheInputParams.MIN_SDK_VERSION.name(), minSdkVersion);
 
         List<String> additionalParams = dexOptions.getAdditionalParameters();
         for (int i = 0; i < additionalParams.size(); i++) {

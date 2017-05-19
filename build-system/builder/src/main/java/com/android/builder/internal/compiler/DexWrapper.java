@@ -92,9 +92,7 @@ public class DexWrapper {
         args.optimize = true;
         args.numThreads = MoreObjects.firstNonNull(dexOptions.getThreadCount(), 4);
         args.forceJumbo = dexOptions.getJumboMode();
-        if (processBuilder.getMinSdkVersion() != null) {
-            args.minSdkVersion = processBuilder.getMinSdkVersion();
-        }
+        args.minSdkVersion = processBuilder.getMinSdkVersion();
 
         args.parseFlags(Iterables.toArray(dexOptions.getAdditionalParameters(), String.class));
         args.makeOptionsObjects();

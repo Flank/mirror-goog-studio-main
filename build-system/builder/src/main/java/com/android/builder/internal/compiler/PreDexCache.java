@@ -87,7 +87,7 @@ public class PreDexCache extends PreProcessCache<DxDexKey> {
             boolean multiDex,
             @NonNull DexOptions dexOptions,
             @NonNull ProcessOutputHandler processOutputHandler,
-            @Nullable Integer minSdkVersion)
+            int minSdkVersion)
             throws IOException, ProcessException, InterruptedException {
         checkState(!multiDex || outFile.isDirectory());
         checkState(builder.getTargetInfo() != null);

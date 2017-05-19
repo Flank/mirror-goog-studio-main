@@ -26,7 +26,6 @@ import static com.android.manifmerger.ManifestMerger2.Invoker;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.apkzlib.zfile.ApkCreatorFactory;
@@ -56,8 +55,6 @@ import com.android.builder.symbols.SymbolTable;
 import com.android.builder.symbols.SymbolUtils;
 import com.android.ide.common.process.CachedProcessOutputHandler;
 import com.android.ide.common.process.JavaProcessExecutor;
-import com.android.ide.common.process.JavaProcessInfo;
-import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessExecutor;
 import com.android.ide.common.process.ProcessInfo;
@@ -1296,7 +1293,7 @@ public class AndroidBuilder {
             boolean multiDex,
             @NonNull DexOptions dexOptions,
             @NonNull ProcessOutputHandler processOutputHandler,
-            @Nullable Integer minSdkVersion)
+            int minSdkVersion)
             throws IOException, InterruptedException, ProcessException {
         checkState(mTargetInfo != null,
                 "Cannot call preDexLibrary() before setTargetInfo() is called.");
@@ -1337,7 +1334,7 @@ public class AndroidBuilder {
             boolean multiDex,
             @NonNull DexOptions dexOptions,
             @NonNull ProcessOutputHandler processOutputHandler,
-            @Nullable Integer minSdkVersion)
+            int minSdkVersion)
             throws ProcessException, IOException, InterruptedException {
         checkNotNull(inputFile, "inputFile cannot be null.");
         checkNotNull(outFile, "outFile cannot be null.");

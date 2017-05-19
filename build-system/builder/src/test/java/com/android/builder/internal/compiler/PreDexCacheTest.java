@@ -272,7 +272,7 @@ public class PreDexCacheTest {
                         false /*multidex*/,
                         dexOptions,
                         new FakeProcessOutputHandler(),
-                        null);
+                        1);
 
         checkOutputFile(content, output);
     }
@@ -306,7 +306,7 @@ public class PreDexCacheTest {
                                                 false /*multidex*/,
                                                 dexOptions,
                                                 new FakeProcessOutputHandler(),
-                                                null);
+                                                1);
                             } catch (Exception ignored) {
 
                             }
@@ -374,7 +374,7 @@ public class PreDexCacheTest {
                                                 false /*multidex*/,
                                                 dexOptions,
                                                 new FakeProcessOutputHandler(),
-                                                null);
+                                                1);
                             } catch (Exception ignored) {
 
                             }
@@ -430,7 +430,7 @@ public class PreDexCacheTest {
                         false /*multidex*/,
                         dexOptions,
                         new FakeProcessOutputHandler(),
-                        null);
+                        1);
 
         reloadCache();
 
@@ -444,7 +444,7 @@ public class PreDexCacheTest {
                         false /*multidex*/,
                         dexOptions,
                         new FakeProcessOutputHandler(),
-                        null);
+                        1);
 
         assertEquals(0, PreDexCache.getCache().getMisses());
         assertEquals(1, PreDexCache.getCache().getHits());
@@ -483,7 +483,7 @@ public class PreDexCacheTest {
                         false /*multidex*/,
                         firstRunOptions,
                         new FakeProcessOutputHandler(),
-                        null);
+                        1);
 
         checkOutputFile(content, output);
 
@@ -503,7 +503,7 @@ public class PreDexCacheTest {
                         false /*multidex*/,
                         secondRunOptions,
                         new FakeProcessOutputHandler(),
-                        null);
+                        1);
 
         // check the output
         checkOutputFile(content, output2);

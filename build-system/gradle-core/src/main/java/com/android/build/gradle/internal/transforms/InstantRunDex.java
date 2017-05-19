@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.transforms;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.QualifiedContent;
@@ -80,14 +79,14 @@ public class InstantRunDex extends Transform {
 
     @NonNull
     private final InstantRunVariantScope variantScope;
-    @Nullable private final Integer minSdkForDx;
+    private final int minSdkForDx;
 
     public InstantRunDex(
             @NonNull InstantRunVariantScope transformVariantScope,
             @NonNull Supplier<DexByteCodeConverter> dexByteCodeConverter,
             @NonNull DexOptions dexOptions,
             @NonNull Logger logger,
-            @Nullable Integer minSdkForDx) {
+            int minSdkForDx) {
         this.variantScope = transformVariantScope;
         this.dexByteCodeConverter = dexByteCodeConverter;
         this.dexOptions = dexOptions;
@@ -269,9 +268,7 @@ public class InstantRunDex extends Transform {
         params.put(
                 "restartDexRequested",
                 variantScope.getGlobalScope().isActive(OptionalCompilationStep.RESTART_ONLY));
-        if (minSdkForDx != null) {
-            params.put("minSdkForDx", minSdkForDx);
-        }
+        params.put("minSdkForDx", minSdkForDx);
         return params.build();
     }
 

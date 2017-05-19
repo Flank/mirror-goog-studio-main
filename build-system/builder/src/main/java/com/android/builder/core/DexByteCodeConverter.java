@@ -109,7 +109,7 @@ public class DexByteCodeConverter {
             @Nullable File mainDexList,
             @NonNull DexOptions dexOptions,
             @NonNull ProcessOutputHandler processOutputHandler,
-            @Nullable Integer minSdkVersion)
+            int minSdkVersion)
             throws IOException, InterruptedException, ProcessException {
         checkNotNull(inputs, "inputs cannot be null.");
         checkNotNull(outDexFolder, "outDexFolder cannot be null.");
@@ -179,17 +179,6 @@ public class DexByteCodeConverter {
             @NonNull final DexOptions dexOptions,
             @NonNull final ProcessOutputHandler processOutputHandler)
             throws ProcessException, InterruptedException {
-        if (builder.getMinSdkVersion() != null) {
-            errorReporter.handleSyncError(
-                    null,
-                    SyncIssue.TYPE_GENERIC,
-                    "Java 8 language features that require min API level 24 and above "
-                            + "(see https://d.android.com/r/tools/java-8-support-message.html) are "
-                            + "not supported when dexing out of process.\n"
-                            + "Please switch to dexing in process.");
-            return;
-        }
-
         final String submission = Joiner.on(',').join(builder.getInputs());
         mLogger.verbose("Dexing out-of-process : %1$s", submission);
         try {
@@ -212,6 +201,17 @@ public class DexByteCodeConverter {
             }
             mLogger.verbose("Dexing %1$s took %2$s.", submission, stopwatch.toString());
         } catch (Exception e) {
+            if (builder.getMinSdkVersion() >= 24
+                    && !DexProcessBuilder.isMinSdkVersionSupported(mTargetInfo.getBuildTools())) {
+                mLogger.warning(
+                        "If you are unable to fix the underlying cause of error, dx "
+                                + "might have failed because default or static interface methods "
+                                + "(requiring minimum sdk version 24), or signature-polymorphic "
+                                + "methods (requiring minimum sdk version 26) are used.\n"
+                                + "Please switch to dexing in process or update the build tools to "
+                                + "%s.",
+                        DexProcessBuilder.DX_OUT_OF_PROCESS_MIN_SDK_SUPPORT);
+            }
             throw new ProcessException(e);
         }
     }

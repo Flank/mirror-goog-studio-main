@@ -34,7 +34,7 @@ import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.DexOptions;
-import com.android.builder.dexing.DexingMode;
+import com.android.builder.dexing.DexingType;
 import com.android.builder.sdk.TargetInfo;
 import com.android.builder.utils.FileCache;
 import com.android.ide.common.blame.Message;
@@ -82,21 +82,21 @@ public class PreDexTransform extends Transform {
 
     @Nullable private final FileCache buildCache;
 
-    @NonNull private final DexingMode dexingMode;
+    @NonNull private final DexingType dexingType;
 
-    private boolean instantRunMode;
+    private final int minSdkVersion;
 
     public PreDexTransform(
             @NonNull DexOptions dexOptions,
             @NonNull AndroidBuilder androidBuilder,
             @Nullable FileCache buildCache,
-            @NonNull DexingMode dexingMode,
-            boolean instantRunMode) {
+            @NonNull DexingType dexingType,
+            int minSdkVersion) {
         this.dexOptions = dexOptions;
         this.androidBuilder = androidBuilder;
         this.buildCache = buildCache;
-        this.dexingMode = dexingMode;
-        this.instantRunMode = instantRunMode;
+        this.dexingType = dexingType;
+        this.minSdkVersion = minSdkVersion;
     }
 
     @NonNull
@@ -134,7 +134,7 @@ public class PreDexTransform extends Transform {
 
             params.put("optimize", true);
             params.put("jumbo", dexOptions.getJumboMode());
-            params.put("multidex-mode", dexingMode.getDexingType().name());
+            params.put("multidex-mode", dexingType.name());
             params.put("java-max-heap-size", dexOptions.getJavaMaxHeapSize());
             params.put(
                     "additional-parameters",
@@ -147,9 +147,7 @@ public class PreDexTransform extends Transform {
                     getName());
             BuildToolInfo buildTools = targetInfo.getBuildTools();
             params.put("build-tools", buildTools.getRevision().toString());
-            if (dexingMode.getMinSdkVersionValue() != null) {
-                params.put("min-sdk-version", dexingMode.getMinSdkVersionValue());
-            }
+            params.put("min-sdk-version", minSdkVersion);
 
             return params;
         } catch (Exception e) {
@@ -270,9 +268,10 @@ public class PreDexTransform extends Transform {
                                 hashes,
                                 outputHandler,
                                 usedBuildCache,
-                                dexingMode,
+                                dexingType,
                                 dexOptions,
-                                androidBuilder);
+                                androidBuilder,
+                                minSdkVersion);
                 logger.verbose("Adding PreDexCallable for %s : %s", entry.getKey(), action);
                 executor.execute(action);
             }
@@ -325,8 +324,8 @@ public class PreDexTransform extends Transform {
                         qualifiedContent.getName(),
                         TransformManager.CONTENT_DEX,
                         qualifiedContent.getScopes(),
-                        dexingMode.isMultiDex() ? Format.DIRECTORY : Format.JAR);
-        if (dexingMode.isMultiDex()) {
+                        dexingType.isMultiDex() ? Format.DIRECTORY : Format.JAR);
+        if (dexingType.isMultiDex()) {
             FileUtils.mkdirs(contentLocation);
         } else {
             FileUtils.mkdirs(contentLocation.getParentFile());
@@ -344,10 +343,10 @@ public class PreDexTransform extends Transform {
     }
 
     @NonNull
-    static String getFilename(@NonNull File inputFile, @NonNull DexingMode dexingMode) {
+    static String getFilename(@NonNull File inputFile, @NonNull DexingType dexingType) {
         // If multidex is enabled, this name will be used for a folder and classes*.dex files will
         // inside of it.
-        String suffix = dexingMode.isMultiDex() ? "" : SdkConstants.DOT_JAR;
+        String suffix = dexingType.isMultiDex() ? "" : SdkConstants.DOT_JAR;
         return FileUtils.getDirectoryNameForJar(inputFile) + suffix;
     }
 }

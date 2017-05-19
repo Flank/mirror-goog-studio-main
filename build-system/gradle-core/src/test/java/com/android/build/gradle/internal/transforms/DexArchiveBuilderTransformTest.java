@@ -206,12 +206,7 @@ public class DexArchiveBuilderTransformTest {
     private DexArchiveBuilderTransform getTransform(
             @Nullable FileCache userCache, @Nullable FileCache projectCache) {
         return new DexArchiveBuilderTransform(
-                new DefaultDexOptions(),
-                new NoOpErrorReporter(),
-                userCache,
-                projectCache,
-                false,
-                0);
+                new DefaultDexOptions(), new NoOpErrorReporter(), userCache, projectCache, 1);
     }
 
     @NonNull

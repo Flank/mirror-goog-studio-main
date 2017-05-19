@@ -24,6 +24,7 @@ import com.android.ide.common.process.JavaProcessInfo;
 import com.android.ide.common.process.ProcessEnvBuilder;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessInfoBuilder;
+import com.android.repository.Revision;
 import com.android.sdklib.BuildToolInfo;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -37,12 +38,20 @@ import java.util.Set;
  */
 public class DexProcessBuilder extends ProcessEnvBuilder<DexProcessBuilder> {
 
+    static final String DX_OUT_OF_PROCESS_MIN_SDK_SUPPORT = "26.0.0-rc2";
+
     @NonNull private final File outputFile;
     private boolean verbose = false;
     private boolean multiDex = false;
     @Nullable private File mainDexList = null;
     @NonNull private Set<File> inputs = Sets.newHashSet();
-    @Nullable private Integer minSdkVersion;
+    private int minSdkVersion;
+
+    /** Returns if specifying min sdk version is supported by dx in the build tools. */
+    public static boolean isMinSdkVersionSupported(@NonNull BuildToolInfo buildToolInfo) {
+        return buildToolInfo.getRevision().compareTo(
+                Revision.parseRevision(DX_OUT_OF_PROCESS_MIN_SDK_SUPPORT)) >= 0;
+    }
 
     public DexProcessBuilder(@NonNull File outputFile) {
         this.outputFile = outputFile;
@@ -78,13 +87,12 @@ public class DexProcessBuilder extends ProcessEnvBuilder<DexProcessBuilder> {
         return this;
     }
 
-    @Nullable
-    public Integer getMinSdkVersion() {
+    public int getMinSdkVersion() {
         return minSdkVersion;
     }
 
     @NonNull
-    public DexProcessBuilder setMinSdkVersion(@Nullable Integer minSdkVersion) {
+    public DexProcessBuilder setMinSdkVersion(int minSdkVersion) {
         this.minSdkVersion = minSdkVersion;
         return this;
     }
@@ -166,6 +174,10 @@ public class DexProcessBuilder extends ProcessEnvBuilder<DexProcessBuilder> {
         }
 
         builder.addArgs("--output", outputFile.getAbsolutePath());
+
+        if (isMinSdkVersionSupported(buildToolInfo)) {
+            builder.addArgs("--min-sdk-version", Integer.toString(getMinSdkVersion()));
+        }
 
         // input
         builder.addArgs(getFilesToAdd());
