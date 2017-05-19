@@ -43,6 +43,13 @@
         default="true"
         help="If true, the activity will have an IOT_LAUNCHER intent filter, making it the one activity launched when the Android Things device initiates. Only one activity on the device can have this intent filter." />
 
+    <parameter
+        id="packageName"
+        name="Package name"
+        type="string"
+        constraints="package"
+        default="com.mycompany.myapp" />
+
     <!-- 128x128 thumbnails relative to template.xml -->
     <thumbs>
         <!-- default thumbnail is required -->
