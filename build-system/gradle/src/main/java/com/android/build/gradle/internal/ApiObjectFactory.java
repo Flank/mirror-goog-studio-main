@@ -94,6 +94,7 @@ public class ApiObjectFactory {
                                         .getGlobalScope()
                                         .getProject()
                                         .container(VariantOutput.class));
+                createVariantOutput(androidTestVariantData, androidTestVariant);
 
                 ((TestedAndroidConfig) extension).getTestVariants().add(androidTestVariant);
                 ((TestedVariant) variantApi).setTestVariant(androidTestVariant);
