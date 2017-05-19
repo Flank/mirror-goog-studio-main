@@ -3,7 +3,7 @@ load("//tools/base/bazel:utils.bzl", "platform_filegroup")
 filegroup(
     name = "licenses",
     srcs = glob(
-        include = ["host/licenses/*"],
+        include = ["*/licenses/**"],
     ),
     visibility = ["//visibility:public"],
 )
@@ -29,21 +29,21 @@ filegroup(
 filegroup(
     name = "build-tools/26.0.0-rc1",
     srcs = glob(
-        include = ["host/build-tools/26.0.0-rc1/**"],
+        include = ["*/build-tools/26.0.0-rc1/**"],
     ),
 )
 
 filegroup(
     name = "build-tools/25.0.2",
     srcs = glob(
-        include = ["host/build-tools/25.0.2/**"],
+        include = ["*/build-tools/25.0.2/**"],
     ),
 )
 
 filegroup(
     name = "build-tools/25.0.0",
     srcs = glob(
-        include = ["host/build-tools/25.0.0/**"],
+        include = ["*/build-tools/25.0.0/**"],
     ),
     visibility = [
         "//tools/base/build-system/gradle:__pkg__",
@@ -53,7 +53,7 @@ filegroup(
 filegroup(
     name = "build-tools/24.0.3",
     srcs = glob(
-        include = ["host/build-tools/24.0.3/**"],
+        include = ["*/build-tools/24.0.3/**"],
     ),
     visibility = [
         "//tools/base/build-system/integration-test:__pkg__",
@@ -63,7 +63,7 @@ filegroup(
 filegroup(
     name = "platform-tools",
     srcs = glob(
-        include = ["host/platform-tools/**"],
+        include = ["*/platform-tools/**"],
     ),
     visibility = ["//visibility:public"],
 )
@@ -78,7 +78,7 @@ filegroup(
     name = "navigation-runtime_0.0.1-SNAPSHOT",
     srcs = glob(
         include = [
-            "host/extras/m2repository/com/android/support/navigation/navigation-runtime/0.0.1-SNAPSHOT/**",
+            "*/extras/m2repository/com/android/support/navigation/navigation-runtime/0.0.1-SNAPSHOT/**",
         ],
     ),
 )
@@ -93,8 +93,8 @@ filegroup(
     name = "constraint-layout_1.0.2",
     srcs = glob(
         include = [
-            "host/extras/m2repository/com/android/support/constraint/constraint-layout/1.0.2/**",
-            "host/extras/m2repository/com/android/support/constraint/constraint-layout-solver/1.0.2/**",
+            "*/extras/m2repository/com/android/support/constraint/constraint-layout/1.0.2/**",
+            "*/extras/m2repository/com/android/support/constraint/constraint-layout-solver/1.0.2/**",
         ],
     ),
 )
@@ -108,7 +108,7 @@ filegroup(
 filegroup(
     name = "support_25.3.0",
     srcs = glob([
-        "host/extras/android/m2repository/com/android/support/*/25.3.0/**",
+        "*/extras/android/m2repository/com/android/support/*/25.3.0/**",
     ]),
 )
 
@@ -121,7 +121,7 @@ filegroup(
 filegroup(
     name = "uiautomator_2.1.1",
     srcs = glob([
-        "host/extras/android/m2repository/com/android/support/test/uiautomator/uiautomator-v18/2.1.1/**",
+        "*/extras/android/m2repository/com/android/support/test/uiautomator/uiautomator-v18/2.1.1/**",
     ]),
 )
 
@@ -133,18 +133,18 @@ filegroup(
 
 filegroup(
     name = "gms_9.6.1",
-    srcs = glob(["host/extras/google/m2repository/com/google/android/gms/*/9.6.1/**"]),
+    srcs = glob(["*/extras/google/m2repository/com/google/android/gms/*/9.6.1/**"]),
 )
 
 filegroup(
     name = "databinding_latest",
-    srcs = glob(["host/extras/android/m2repository/com/android/databinding/*/1.3.1/**"]),
+    srcs = glob(["*/extras/android/m2repository/com/android/databinding/*/1.3.1/**"]),
     visibility = ["//visibility:public"],
 )
 
 filegroup(
     name = "multidex",
-    srcs = glob(["host/extras/android/m2repository/com/android/support/multidex*/1.0.1/**"]),
+    srcs = glob(["*/extras/android/m2repository/com/android/support/multidex*/1.0.1/**"]),
     visibility = ["//visibility:public"],
 )
 
@@ -162,7 +162,7 @@ filegroup(
 
 java_import(
     name = "platforms/latest_jar",
-    jars = glob(["host/platforms/android-25/android.jar"]),
+    jars = glob(["*/platforms/android-25/android.jar"]),
     neverlink = 1,
     visibility = [
         "//tools/base/build-system/instant-run-instrumentation:__pkg__",
@@ -172,7 +172,7 @@ java_import(
 
 filegroup(
     name = "typos",
-    srcs = glob(["host/tools/support/typos-*.txt"]),
+    srcs = glob(["*/tools/support/typos-*.txt"]),
     visibility = ["//visibility:public"],
 )
 
@@ -218,7 +218,7 @@ filegroup(
 
 filegroup(
     name = "add-ons/addon-google_apis-google-24",
-    srcs = glob(["host/add-ons/addon-google_apis-google-24/**"]),
+    srcs = glob(["*/add-ons/addon-google_apis-google-24/**"]),
 )
 
 filegroup(
@@ -231,8 +231,8 @@ filegroup(
     name = "espresso-2.2.2",
     srcs = glob(
         include = [
-            "host/extras/android/m2repository/com/android/support/test/espresso/espresso-core/2.2.2/**",
-            "host/extras/android/m2repository/com/android/support/test/espresso/espresso-idling-resource/2.2.2/**",
+            "*/extras/android/m2repository/com/android/support/test/espresso/espresso-core/2.2.2/**",
+            "*/extras/android/m2repository/com/android/support/test/espresso/espresso-idling-resource/2.2.2/**",
         ],
     ),
 )
@@ -247,36 +247,36 @@ filegroup(
     name = "test-runner-0.5",
     srcs = glob(
         include = [
-            "host/extras/android/m2repository/com/android/support/test/exposed-instrumentation-api-publish/0.5/**",
-            "host/extras/android/m2repository/com/android/support/test/rules/0.5/**",
-            "host/extras/android/m2repository/com/android/support/test/runner/0.5/**",
+            "*/extras/android/m2repository/com/android/support/test/exposed-instrumentation-api-publish/0.5/**",
+            "*/extras/android/m2repository/com/android/support/test/rules/0.5/**",
+            "*/extras/android/m2repository/com/android/support/test/runner/0.5/**",
         ],
     ),
 )
 
 filegroup(
     name = "docs",
-    srcs = glob(["host/docs/**"]),
+    srcs = glob(["*/docs/**"]),
     visibility = ["//visibility:public"],
 )
 
 filegroup(
     name = "ndk-bundle",
-    srcs = glob(["host/ndk-bundle/**"]),
+    srcs = glob(["*/ndk-bundle/**"]),
     visibility = ["//visibility:public"],
 )
 
 filegroup(
     name = "cmake",
     srcs = glob(
-        include = ["host/cmake/**"],
-        exclude = ["host/cmake/**/Help/**"],
+        include = ["*/cmake/**"],
+        exclude = ["*/cmake/**/Help/**"],
     ),
     visibility = ["//visibility:public"],
 )
 
 filegroup(
     name = "sources",
-    srcs = glob(["host/sources/**"]),
+    srcs = glob(["*/sources/**"]),
     visibility = ["//visibility:public"],
 )
