@@ -229,9 +229,13 @@ public class BasicTest {
     @Category(DeviceTests.class)
     public void install() throws Exception {
         adb.exclusiveAccess();
-        project.execute("installDebug", "uninstallAll");
-        // b/37498215 - Try again.  Behavior may be different when tasks are up-to-date.
-        project.execute("installDebug", "uninstallAll");
+        try {
+            project.execute("installDebug", "uninstallAll");
+            // b/37498215 - Try again.  Behavior may be different when tasks are up-to-date.
+            project.execute("installDebug");
+        } finally {
+            project.execute("uninstallAll");
+        }
     }
 
     @Test

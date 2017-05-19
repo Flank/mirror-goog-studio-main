@@ -45,7 +45,7 @@ public class SdkHelper {
 
     @NonNull
     public static File getAdb() {
-        File adb = FileUtils.join(findSdkDir(), FD_PLATFORM_TOOLS, FN_ADB);
+        File adb = FileUtils.join(GradleTestProject.getAndroidHome(), FD_PLATFORM_TOOLS, FN_ADB);
         if (!adb.exists()) {
             throw new RuntimeException("Unable to find adb.");
         }

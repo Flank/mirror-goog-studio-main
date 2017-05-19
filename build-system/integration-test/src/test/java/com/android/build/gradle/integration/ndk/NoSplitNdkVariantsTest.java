@@ -26,6 +26,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.options.StringOption;
 import com.android.ddmlib.IDevice;
 import com.android.testutils.apk.Apk;
 import java.io.File;
@@ -158,7 +159,7 @@ public class NoSplitNdkVariantsTest {
         String taskName = abis.contains("x86") ?
                 "devicePoolX86DebugAndroidTest" : "devicePoolArmDebugAndroidTest";
         project.executor()
-                .withArgument(Adb.getInjectToDeviceProviderProperty(testDevice))
+                .with(StringOption.DEVICE_POOL_SERIAL, testDevice.getSerialNumber())
                 .run(taskName);
     }
 }

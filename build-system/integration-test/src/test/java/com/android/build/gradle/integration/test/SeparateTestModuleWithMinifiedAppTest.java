@@ -26,6 +26,7 @@ import com.android.build.gradle.integration.common.utils.ZipHelper;
 import com.android.utils.FileUtils;
 import java.io.File;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -67,7 +68,7 @@ public class SeparateTestModuleWithMinifiedAppTest {
                 .isEqualTo("com.android.tests.a.a");
     }
 
-    @Test
+    @Ignore("http://b/38419063")
     @Category(DeviceTests.class)
     public void checkRunOnDevice() throws Exception {
         adb.exclusiveAccess();

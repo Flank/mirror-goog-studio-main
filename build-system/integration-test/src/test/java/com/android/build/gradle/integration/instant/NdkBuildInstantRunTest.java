@@ -27,6 +27,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TemporaryProjectModification;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.integration.common.utils.UninstallOnClose;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.build.gradle.options.StringOption;
 import com.android.builder.model.AndroidProject;
@@ -43,6 +44,7 @@ import com.android.utils.StdLogger;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
+import java.io.Closeable;
 import java.io.File;
 import java.nio.file.Path;
 import org.junit.Before;
@@ -158,35 +160,35 @@ public class NdkBuildInstantRunTest {
     @Category(DeviceTests.class)
     public void checkItRunsOnDevice() throws Exception {
         IDevice device = adb.getDevice(thatUsesArt());
-        AndroidProject model = project.model().getSingle().getOnlyModel();
-        InstantRun instantRunModel = InstantRunTestUtils.getInstantRunModel(model);
-        project.executor()
-                .withInstantRun(
-                        new AndroidVersion(device.getVersion().getApiLevel(), null),
-                        OptionalCompilationStep.RESTART_ONLY)
-                .run("assembleDebug");
-        InstantRunBuildInfo info = InstantRunTestUtils.loadContext(instantRunModel);
-        device.uninstallPackage("com.example.hellojni");
-        InstantRunTestUtils.doInstall(device, info);
+        try (Closeable ignored = new UninstallOnClose(device, "com.example.hellojni")) {
+            AndroidProject model = project.model().getSingle().getOnlyModel();
+            InstantRun instantRunModel = InstantRunTestUtils.getInstantRunModel(model);
+            project.executor()
+                    .withInstantRun(
+                            new AndroidVersion(device.getVersion().getApiLevel(), null),
+                            OptionalCompilationStep.RESTART_ONLY)
+                    .run("assembleDebug");
+            InstantRunBuildInfo info = InstantRunTestUtils.loadContext(instantRunModel);
+            device.uninstallPackage("com.example.hellojni");
+            InstantRunTestUtils.doInstall(device, info);
 
-        // Run app
-        InstantRunTestUtils.unlockDevice(device);
+            // Run app
+            InstantRunTestUtils.unlockDevice(device);
 
-        InstantRunTestUtils.runApp(device, "com.example.hellojni/.HelloJni");
+            InstantRunTestUtils.runApp(device, "com.example.hellojni/.HelloJni");
 
-        long token = PackagingUtils.computeApplicationHash(model.getBuildFolder());
+            long token = PackagingUtils.computeApplicationHash(model.getBuildFolder());
 
-        //Connect to device
-        InstantRunClient client =
-                new InstantRunClient(
-                        "com.example.hellojni",
-                        iLogger,
-                        token,
-                        PORTS.get(NdkBuildInstantRunTest.class.getSimpleName()));
+            // Connect to device
+            InstantRunClient client =
+                    new InstantRunClient(
+                            "com.example.hellojni",
+                            iLogger,
+                            token,
+                            PORTS.get(NdkBuildInstantRunTest.class.getSimpleName()));
 
-        // Give the app a chance to start
-        InstantRunTestUtils.waitForAppStart(client, device);
-
-        device.uninstallPackage("com.example.hellojni");
+            // Give the app a chance to start
+            InstantRunTestUtils.waitForAppStart(client, device);
+        }
     }
 }

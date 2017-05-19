@@ -47,6 +47,9 @@ public enum StringOption implements Option<String> {
 
     // Profiler plugin
     IDE_ANDROID_CUSTOM_CLASS_TRANSFORMS("android.advanced.profiling.transforms"),
+
+    // Testing
+    DEVICE_POOL_SERIAL("com.android.test.devicepool.serial"),
     ;
 
     @NonNull private final String propertyName;

@@ -41,6 +41,7 @@ import com.google.common.io.Resources;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -89,13 +90,13 @@ public class ResourcesSwapTest {
         assertThatZip(artifact.file).doesNotContain("classes.dex");
     }
 
-    @Test
+    @Ignore("http://b/38419063")
     @Category(DeviceTests.class)
     public void swapResourcesDeviceTest_dalvik() throws Exception {
         doDeviceTest(adb.getDevice(AndroidVersionMatcher.thatUsesDalvik()));
     }
 
-    @Test
+    @Ignore("http://b/38419063")
     @Category(DeviceTests.class)
     public void swapResourcesDeviceTest_art() throws Exception {
         doDeviceTest(adb.getDevice(AndroidVersionMatcher.thatUsesArt()));

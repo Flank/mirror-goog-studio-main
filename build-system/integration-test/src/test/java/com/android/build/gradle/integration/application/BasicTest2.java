@@ -386,7 +386,11 @@ public class BasicTest2 {
     public void install() throws Exception {
         project.execute("assembleDebug");
         adb.exclusiveAccess();
-        project.execute("installDebug", "uninstallAll");
+        try {
+            project.execute("installDebug");
+        } finally {
+            project.execute("uninstallAll");
+        }
     }
 
     @Test

@@ -23,8 +23,10 @@ import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher;
+import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.IntegerOption;
+import com.android.build.gradle.options.StringOption;
 import com.android.ddmlib.IDevice;
-import com.google.common.collect.ImmutableList;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -61,10 +63,10 @@ public class ConnectedCheckTest {
         project.execute("assembleDebug", "assembleDebugAndroidTest");
         IDevice device = adb.getDevice(AndroidVersionMatcher.anyAndroidVersion());
         // Provide a single device to check.
-        project.executeConnectedCheck(
-                ImmutableList.of(
-                        "-Pandroid.androidTest.shardBetweenDevices=true",
-                        Adb.getInjectToDeviceProviderProperty(device)));
+        project.executor()
+                .with(BooleanOption.ENABLE_TEST_SHARDING, true)
+                .with(StringOption.DEVICE_POOL_SERIAL, device.getSerialNumber())
+                .executeConnectedCheck();
         GradleBuildResult result = project.getBuildResult();
         String stdout = result.getStdout();
         assertThat(stdout).contains("will shard tests into 1 shards");
@@ -79,11 +81,11 @@ public class ConnectedCheckTest {
     public void connectedCheckIn7Shards() throws Exception {
         project.execute("assembleDebug", "assembleDebugAndroidTest");
         adb.exclusiveAccess();
-        GradleBuildResult result = project.executor().withArguments(
-                ImmutableList.of(
-                        "-Pandroid.androidTest.shardBetweenDevices=true",
-                        "-Pandroid.androidTest.numShards=7"))
-                .run("connectedCheck");
+        GradleBuildResult result =
+                project.executor()
+                        .with(BooleanOption.ENABLE_TEST_SHARDING, true)
+                        .with(IntegerOption.ANDROID_TEST_SHARD_COUNT, 7)
+                        .run("connectedCheck");
         assertThat(result.getStdout()).contains("will shard tests into 7 shards");
     }
 }

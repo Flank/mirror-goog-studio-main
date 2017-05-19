@@ -26,6 +26,7 @@ import groovy.transform.CompileStatic
 import org.junit.AfterClass
 import org.junit.BeforeClass
 import org.junit.ClassRule
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.experimental.categories.Category
 
@@ -177,7 +178,7 @@ class AndroidTestResourcesTest {
         assertFalse(checkLayoutInR(project, 2, 3))
     }
 
-    @Test
+    @Ignore("http://b/38419063")
     @Category(DeviceTests.class)
     public void "check test layout can be used in device tests"() {
         appProject.executeConnectedCheck()

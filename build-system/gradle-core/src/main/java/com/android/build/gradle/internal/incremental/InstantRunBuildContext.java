@@ -893,7 +893,8 @@ public class InstantRunBuildContext {
 
         //noinspection VariableNotUsedInsideIf
         if (patchingPolicy != null) {
-            instantRun.setAttribute(ATTR_API_LEVEL, String.valueOf(getAndroidVersion()));
+            instantRun.setAttribute(
+                    ATTR_API_LEVEL, String.valueOf(getAndroidVersion().getFeatureLevel()));
             if (density != null) {
                 instantRun.setAttribute(ATTR_DENSITY, density);
             }
