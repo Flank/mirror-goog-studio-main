@@ -22,9 +22,28 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
 
+/**
+ * This class handles the element selection for sample data sources. The class receives the full
+ * content of the sample data and, depending on the resource name, allow for two different
+ * selectors:
+ *
+ * <ul>
+ *   <li>Cursor selection: This class keeps a cursor associated to the resource name that moves in
+ *       each call. If only the resource name or a subarray selectors are given, the cursor is used.
+ *   <li>Index selection: Elements can be referred by position (e.g. [4]) or by string match (e.g.
+ *       [hiking.png])
+ * </ul>
+ */
 public class SampleDataManager {
     public static final String SUBARRAY_SEPARATOR = ":";
+    /**
+     * This splitter is used to split back the content into lines. The content is generated always
+     * with \n as new line separator.
+     */
+    private static final Splitter NEW_LINE_SPLITTER = Splitter.on(Pattern.compile("\r?\n"));
+
     /**
      * Holds the current cursor position for the sample data file so a consistent view is provided
      * for a given resolver (i.e. entries are not repeated and they are different for each element).
@@ -35,7 +54,8 @@ public class SampleDataManager {
      * Returns a line of sample data content from the given content and fileName. The resourceName
      * is used to track the current cursor position within that file.
      */
-    public String getSampleDataLineFromCursor(
+    @NonNull
+    private String getSampleDataLineFromCursor(
             @NonNull String resourceName, @NonNull List<String> content) {
         if (content.isEmpty()) {
             return "";
@@ -53,17 +73,30 @@ public class SampleDataManager {
     }
 
     /**
-     * Returns a line of sample data content from the given content and fileName. The resourceName
+     * Returns a line of sample data content from the given content and fileName. The resource name
      * is used to track the current cursor position within that file.
+     *
+     * @param resourcePath The resource path consists of the resource name plus an optional array
+     *     selector. Arrays selectors can point at specific elements [4] or use string matching
+     *     [biking.png] (this will match elements ending with "biking.png"). Selectors also allow
+     *     for sub-arrays like:
+     *     <ul>
+     *       <li>[:3] Selects elements from 0 up to the 3rd element
+     *       <li>[2:] Selects the elements from the second position on
+     *       <li>[10:20] Selects elements from position 10 up to position 20
+     *     </ul>
+     *
+     * @param content The content of the data source
      */
-    public String getSampleDataLine(@NonNull String resourceName, @NonNull String content) {
+    @NonNull
+    public String getSampleDataLine(@NonNull String resourcePath, @NonNull String content) {
         if (content.isEmpty()) {
             return "";
         }
 
         // TODO: Move this to the Sample Data ResourceValue so we do not need to do it
         //       in every call.
-        List<String> contentList = Splitter.on(System.lineSeparator()).splitToList(content);
+        List<String> contentList = NEW_LINE_SPLITTER.splitToList(content);
 
         // Trim the last line if it's empty (since it's usually unintended)
         if (contentList.get(contentList.size() - 1).isEmpty()) {
@@ -71,12 +104,12 @@ public class SampleDataManager {
         }
 
         // Parse any possible index reference
-        int openBracket = resourceName.indexOf('[');
+        int openBracket = resourcePath.indexOf('[');
         if (openBracket != -1) {
             // Contains an index
-            int closeBracket = resourceName.indexOf(']');
+            int closeBracket = resourcePath.indexOf(']');
             if (closeBracket != -1 && closeBracket > openBracket + 1) {
-                String indexValue = resourceName.substring(openBracket + 1, closeBracket);
+                String indexValue = resourcePath.substring(openBracket + 1, closeBracket);
 
                 if (indexValue.contains(SUBARRAY_SEPARATOR)) {
                     contentList = getContentSubArray(contentList, indexValue);
@@ -96,11 +129,11 @@ public class SampleDataManager {
                     }
                 }
 
-                resourceName = resourceName.substring(0, openBracket);
+                resourcePath = resourcePath.substring(0, openBracket);
             }
         }
 
-        return getSampleDataLineFromCursor(resourceName, contentList);
+        return getSampleDataLineFromCursor(resourcePath, contentList);
     }
 
     @NonNull
