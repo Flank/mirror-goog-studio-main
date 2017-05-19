@@ -171,8 +171,9 @@ java_test(
     jvm_flags = [
         "-Dtest.suite.jar=automatic-tests.jar",
     ],
+    shard_count = 8,  # Keep this in sync with logic in our bazel launcher script and CheckAllRunner.
     tags = [
-        "exclusive",
+        "gradle_integration",
         "slow",
     ],
     test_class = "com.android.build.gradle.integration.BazelIntegrationTestsSuite",
