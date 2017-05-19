@@ -41,7 +41,8 @@ class ActivityManager {
   // Calling start twice in a row (without a stop) will result in an error.
   bool StartProfiling(const ProfilingMode profiling_mode,
                       const std::string &app_package_name,
-                      std::string *trace_path, std::string *error_string);
+                      int sampling_interval, std::string *trace_path,
+                      std::string *error_string);
 
   // Stops ongoing profiling. If no profiling was ongoing, this function is a
   // no-op.

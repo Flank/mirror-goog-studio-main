@@ -15,9 +15,9 @@
  */
 #include "activity_manager.h"
 
+#include <sys/stat.h>
 #include <iostream>
 #include <sstream>
-#include <sys/stat.h>
 
 #include "utils/clock.h"
 #include "utils/current_process.h"
@@ -38,8 +38,8 @@ ActivityManager::ActivityManager()
 
 bool ActivityManager::StartProfiling(const ProfilingMode profiling_mode,
                                      const string &app_package_name,
-                                     string *trace_path,
-                                     string *error_string) {
+                                     int sampling_interval_us,
+                                     string *trace_path, string *error_string) {
   Trace trace("CPU:StartProfiling ART");
   std::lock_guard<std::mutex> lock(profiled_lock_);
 
@@ -50,22 +50,20 @@ bool ActivityManager::StartProfiling(const ProfilingMode profiling_mode,
   *trace_path = this->GenerateTracePath(app_package_name);
 
   // Run command via actual am.
-  string parameters;
-  parameters.append("profile start ");
+  std::ostringstream parameters;
+  parameters << "profile start ";
   if (profiling_mode == ActivityManager::SAMPLING) {
     // A sample interval in microseconds is required after '--sampling'.
     // Note that '--sampling 0' would direct ART into instrumentation mode.
-    // If there's no '--samepling X', instrumentation is used.
-    parameters.append("--sampling 1000 ");
+    // If there's no '--sampling X', instrumentation is used.
+    parameters << "--sampling " << sampling_interval_us << " ";
   }
   if (DeviceInfo::feature_level() >= 26) {
     // Use streaming output mode on O or greater.
-    parameters.append("--streaming ");
+    parameters << "--streaming ";
   }
-  parameters.append(app_package_name);
-  parameters.append(" ");
-  parameters.append(*trace_path);
-  if(!bash_->Run(parameters, error_string)) {
+  parameters << app_package_name << " " << *trace_path;
+  if (!bash_->Run(parameters.str(), error_string)) {
     *error_string = "Unable to run profile start command";
     return false;
   }
@@ -80,7 +78,8 @@ bool ActivityManager::StopProfiling(const string &app_package_name,
 
   // Start monitoring trace events (to catch close) so this method only returns
   // when the generation of the trace file is finished.
-  FileSystemNotifier notifier(GetProfiledAppTracePath(app_package_name), FileSystemNotifier::CLOSE);
+  FileSystemNotifier notifier(GetProfiledAppTracePath(app_package_name),
+                              FileSystemNotifier::CLOSE);
 
   RemoveProfiledApp(app_package_name);
 
@@ -88,7 +87,6 @@ bool ActivityManager::StopProfiling(const string &app_package_name,
     *error_string = "Unable to monitor trace file for completion";
     return false;
   }
-
 
   // Run stop command via actual am.
   string parameters;
@@ -131,30 +129,30 @@ std::string ActivityManager::GenerateTracePath(
 }
 
 ActivityManager *ActivityManager::Instance() {
-  static ActivityManager* instance = new ActivityManager();
+  static ActivityManager *instance = new ActivityManager();
   return instance;
 }
 
-bool ActivityManager::IsAppProfiled(const std::string& app_package_name) const{
+bool ActivityManager::IsAppProfiled(const std::string &app_package_name) const {
   return profiled_.find(app_package_name) != profiled_.end();
 }
 
-void ActivityManager::AddProfiledApp(const std::string& app_package_name, const std::string& trace_path) {
+void ActivityManager::AddProfiledApp(const std::string &app_package_name,
+                                     const std::string &trace_path) {
   ArtOnGoingProfiling profilingEntry;
   profilingEntry.trace_path = trace_path;
   profilingEntry.app_pkg_name = app_package_name;
   profiled_[app_package_name] = profilingEntry;
 }
 
-void ActivityManager::RemoveProfiledApp(const std::string& app_package_name) {
+void ActivityManager::RemoveProfiledApp(const std::string &app_package_name) {
   profiled_.erase(app_package_name);
 }
 
-string ActivityManager::GetProfiledAppTracePath(const std::string& app_package_name) const {
+string ActivityManager::GetProfiledAppTracePath(
+    const std::string &app_package_name) const {
   auto it = profiled_.find(app_package_name);
   return it->second.trace_path;
 }
-
-
 
 }  // namespace profiler
