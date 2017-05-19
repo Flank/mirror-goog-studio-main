@@ -53,7 +53,12 @@ public class CrashlyticsTest {
                         + "}\n"
                         + ""
                         + "android {\n"
-                        + "    defaultConfig.minSdkVersion 16");
+                        + "    defaultConfig.minSdkVersion 16\n"
+                        + "    buildTypes.debug {\n"
+                        + "        // Enable crashlytics for test variants\n"
+                        + "        ext.enableCrashlytics = true\n"
+                        + "    }\n"
+                        + "");
 
         TestFileUtils.searchAndReplace(
                 project.file("src/main/AndroidManifest.xml"),
