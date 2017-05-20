@@ -29,34 +29,42 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
 
+/** Utility class for parsing sample data JSON files. */
 public class SampleDataJsonParser {
-    private final JsonObject myRootObject;
+    private static final Logger LOG = Logger.getLogger(SampleDataJsonParser.class.getSimpleName());
+    private static final Splitter PATH_SPLITTER = Splitter.on('/').omitEmptyStrings().trimResults();
+    private static final Joiner NEW_LINE_JOINER = Joiner.on('\n');
+
+    @NonNull private final JsonObject myRootObject;
 
     private SampleDataJsonParser(@NonNull JsonObject rootObject) {
         myRootObject = rootObject;
     }
 
-    public static SampleDataJsonParser parse(Reader reader) {
+    public static SampleDataJsonParser parse(@NonNull Reader reader) {
         JsonParser parser = new JsonParser();
         try {
             return new SampleDataJsonParser(parser.parse(reader).getAsJsonObject());
-        } catch (Throwable ignored) {
+        } catch (Throwable e) {
+            LOG.throwing("SampleDataJsonParser", "parse", e);
         }
         return null;
     }
 
+    /** Returns the content selected using the path */
     @NonNull
-    public byte[] getContentFromPath(String path) {
-        ImmutableList<String> pathItems =
-                ImmutableList.copyOf(
-                        Splitter.on('/').omitEmptyStrings().trimResults().splitToList(path));
+    public byte[] getContentFromPath(@NonNull String path) {
+        ImmutableList<String> pathItems = ImmutableList.copyOf(PATH_SPLITTER.splitToList(path));
         ArrayList<String> content = new ArrayList<>();
         visitElementAndGetContent(myRootObject, pathItems, content);
 
-        return Joiner.on('\n').join(content).getBytes(Charsets.UTF_8);
+        return NEW_LINE_JOINER.join(content).getBytes(Charsets.UTF_8);
     }
 
+    /** Returns all the possible paths that lead to an array within the JSON file */
+    @NonNull
     public Set<String> getPossiblePaths() {
         Set<String> paths = new HashSet<>();
         visitElementAndGetPath(myRootObject, "", paths);
