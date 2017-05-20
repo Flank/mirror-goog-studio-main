@@ -56,6 +56,7 @@ import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.TestVariantFactory;
 import com.android.build.gradle.internal.variant.TestedVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.SigningOptions;
 import com.android.builder.core.AndroidBuilder;
@@ -581,9 +582,9 @@ public class VariantManager implements VariantModel {
         }
 
         // default is created by the java base plugin, so mark it as not consumable here.
-        // TODO we need to disable this because the apt plugin fails otherwise (for now at least).
-        //project.getConfigurations().getByName("compile").setCanBeResolved(false);
-        //project.getConfigurations().getByName("default").setCanBeConsumed(false);
+        if (!Boolean.TRUE.equals(projectOptions.get(BooleanOption.IDE_BUILD_MODEL_ONLY))) {
+            project.getConfigurations().getByName("default").setCanBeConsumed(false);
+        }
 
         AttributesSchema schema = dependencies.getAttributesSchema();
         // default configure attribute resolution for the build type attribute
