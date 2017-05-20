@@ -17,8 +17,8 @@
 package com.android.builder.merge;
 
 import com.android.annotations.NonNull;
+import com.google.common.io.Closer;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.List;
 
 /**
@@ -27,11 +27,15 @@ import java.util.List;
 public interface StreamMergeAlgorithm {
 
     /**
-     * Merges streams in {@code from} to the stream {@code to}.
+     * Merges the given streams.
      *
      * @param path the OS-independent path being merged
-     * @param from the source streams; must contains at least one element
-     * @param to the destination file
+     * @param streams the source streams; must contain at least one element
+     * @param closer the closer that will close the source streams and the merged stream (an
+     *     implementation of this method will register the streams to be closed with this closer)
+     * @return the merged stream
      */
-    void merge(@NonNull String path, @NonNull List<InputStream> from, @NonNull OutputStream to);
+    @NonNull
+    InputStream merge(
+            @NonNull String path, @NonNull List<InputStream> streams, @NonNull Closer closer);
 }

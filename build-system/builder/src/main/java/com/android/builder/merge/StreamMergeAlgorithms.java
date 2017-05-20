@@ -18,12 +18,8 @@ package com.android.builder.merge;
 
 import com.android.annotations.NonNull;
 import com.google.common.base.Preconditions;
-import com.google.common.io.ByteStreams;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
+import com.google.common.io.Closer;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.UncheckedIOException;
 import java.util.List;
 import java.util.function.Function;
 
@@ -38,32 +34,16 @@ public final class StreamMergeAlgorithms {
     private StreamMergeAlgorithms() {}
 
     /**
-     * Copies an input stream to the output stream.
-     *
-     * @param input the input stream
-     * @param output the output stream
-     */
-    private static void copy(@NonNull InputStream input, @NonNull OutputStream output) {
-        try {
-            ByteStreams.copy(input, output);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-    }
-
-    /**
      * Algorithm that copies the content of the first stream.
      *
      * @return the algorithm
      */
     @NonNull
     public static StreamMergeAlgorithm pickFirst() {
-        return (
-                @NonNull String path,
-                @NonNull List<InputStream> from,
-                @NonNull OutputStream to) -> {
+        return (@NonNull String path, @NonNull List<InputStream> from, @NonNull Closer closer) -> {
             Preconditions.checkArgument(!from.isEmpty(), "from.isEmpty()");
-            copy(from.get(0), to);
+            from.forEach(closer::register);
+            return from.get(0);
         };
     }
 
@@ -74,23 +54,11 @@ public final class StreamMergeAlgorithms {
      */
     @NonNull
     public static StreamMergeAlgorithm concat() {
-        return (
-                @NonNull String path,
-                @NonNull List<InputStream> from,
-                @NonNull OutputStream to) -> from.forEach(stream -> {
-                    try {
-                        byte[] data = ByteStreams.toByteArray(stream);
-                        ByteStreams.copy(new ByteArrayInputStream(data), to);
-                        if (data.length > 0 && data[data.length - 1] != '\n') {
-                            /*
-                             * 'data' does not end with a UNIX newline. Append one.
-                             */
-                            to.write('\n');
-                        }
-                    } catch (IOException e) {
-                        throw new UncheckedIOException(e);
-                    }
-                });
+        return (@NonNull String path, @NonNull List<InputStream> from, @NonNull Closer closer) -> {
+            InputStream mergedStream = new CombinedInputStream(from, true);
+            closer.register(mergedStream);
+            return mergedStream;
+        };
     }
 
     /**
@@ -100,17 +68,18 @@ public final class StreamMergeAlgorithms {
      * @return the algorithm
      */
     public static StreamMergeAlgorithm acceptOnlyOne() {
-        return (
-                @NonNull String path,
-                @NonNull List<InputStream> from,
-                @NonNull OutputStream to) -> {
+        return (@NonNull String path, @NonNull List<InputStream> from, @NonNull Closer closer) -> {
             Preconditions.checkArgument(!from.isEmpty(), "from.isEmpty()");
+            from.forEach(closer::register);
             if (from.size() > 1) {
-                throw new DuplicateRelativeFileException("More than one file was found with "
-                        + "OS independent path '" + path + "'");
+                throw new DuplicateRelativeFileException(
+                        "More than one file was found with "
+                                + "OS independent path '"
+                                + path
+                                + "'");
             }
 
-            copy(from.get(0), to);
+            return from.get(0);
         };
     }
 
@@ -125,12 +94,10 @@ public final class StreamMergeAlgorithms {
     @NonNull
     public static StreamMergeAlgorithm select(@NonNull
             Function<String, StreamMergeAlgorithm> select) {
-        return (@NonNull String path,
-                @NonNull List<InputStream> from,
-                @NonNull OutputStream to) -> {
+        return (@NonNull String path, @NonNull List<InputStream> from, @NonNull Closer closer) -> {
             StreamMergeAlgorithm algorithm = select.apply(path);
             assert algorithm != null;
-            algorithm.merge(path, from, to);
+            return algorithm.merge(path, from, closer);
         };
     }
 }

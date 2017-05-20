@@ -16,15 +16,18 @@
 
 package com.android.builder.merge;
 
-import static org.junit.Assert.assertArrayEquals;
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.ByteStreams;
+import com.google.common.io.Closer;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.function.Function;
 import org.junit.Test;
 import org.mockito.Matchers;
@@ -32,11 +35,8 @@ import org.mockito.Mockito;
 
 public class StreamMergeAlgorithmsTests {
 
-    /**
-     * Receives the output of merging.
-     */
-    @NonNull
-    private ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
+    /** The stream after merging. */
+    private InputStream mergedStream;
 
     /**
      * Transforms a two dimensional array of data into a list of input streams, each returning an
@@ -46,7 +46,7 @@ public class StreamMergeAlgorithmsTests {
      * @return a list with as many elements as {@code data}
      */
     @NonNull
-    private ImmutableList<InputStream> makeInputs(@NonNull byte[][] data) {
+    private static ImmutableList<InputStream> makeInputs(@NonNull byte[][] data) {
         Preconditions.checkArgument(data.length > 0);
 
         ImmutableList.Builder<InputStream> builder = ImmutableList.builder();
@@ -58,45 +58,62 @@ public class StreamMergeAlgorithmsTests {
     }
 
     @Test
-    public void pickFirstOneFile() {
+    public void pickFirstOneFile() throws IOException {
         StreamMergeAlgorithm pickFirst = StreamMergeAlgorithms.pickFirst();
-        pickFirst.merge("foo", makeInputs(new byte [][] { { 1, 2, 3 } }), bytesOut);
-        assertArrayEquals(new byte[] { 1, 2, 3 }, bytesOut.toByteArray());
+        List<InputStream> inputStreams = makeInputs(new byte[][] {{1, 2, 3}});
+        try (Closer closer = Closer.create()) {
+            mergedStream = pickFirst.merge("foo", inputStreams, closer);
+            assertThat(mergedStream).isSameAs(inputStreams.get(0));
+        }
     }
 
     @Test
-    public void pickFirstTwoFiles() {
+    public void pickFirstTwoFiles() throws IOException {
         StreamMergeAlgorithm pickFirst = StreamMergeAlgorithms.pickFirst();
-        pickFirst.merge("foo", makeInputs(new byte [][] { { 1, 2, 3 }, { 4, 5, 6 } }), bytesOut);
-        assertArrayEquals(new byte[] { 1, 2, 3 }, bytesOut.toByteArray());
+        List<InputStream> inputStreams = makeInputs(new byte[][] {{1, 2, 3}, {4, 5, 6}});
+        try (Closer closer = Closer.create()) {
+            mergedStream = pickFirst.merge("foo", inputStreams, closer);
+            assertThat(mergedStream).isSameAs(inputStreams.get(0));
+        }
     }
 
     @Test
-    public void concatOneFile() {
+    public void concatOneFile() throws IOException {
         StreamMergeAlgorithm concat = StreamMergeAlgorithms.concat();
-        concat.merge("foo", makeInputs(new byte [][] { { 1, 2, 3 } }), bytesOut);
-        assertArrayEquals(new byte[] { 1, 2, 3, '\n' }, bytesOut.toByteArray());
+        List<InputStream> inputStreams = makeInputs(new byte[][] {{1, 2, 3}});
+        try (Closer closer = Closer.create()) {
+            mergedStream = concat.merge("foo", inputStreams, closer);
+            assertThat(ByteStreams.toByteArray(mergedStream)).isEqualTo(new byte[] {1, 2, 3});
+        }
     }
 
     @Test
-    public void concatTwoFiles() {
+    public void concatTwoFiles() throws IOException {
         StreamMergeAlgorithm concat = StreamMergeAlgorithms.concat();
-        concat.merge("foo", makeInputs(new byte [][] { { 1, 2, 3 }, { 4, 5, 6 } }), bytesOut);
-        assertArrayEquals(new byte[] { 1, 2, 3, '\n', 4, 5, 6, '\n' }, bytesOut.toByteArray());
+        List<InputStream> inputStreams =
+                makeInputs(new byte[][] {{1, 2}, {}, {3, 4, '\n'}, {5, 6}});
+        try (Closer closer = Closer.create()) {
+            mergedStream = concat.merge("foo", inputStreams, closer);
+            assertThat(ByteStreams.toByteArray(mergedStream))
+                    .isEqualTo(new byte[] {1, 2, '\n', 3, 4, '\n', 5, 6});
+        }
     }
 
     @Test
-    public void acceptOnlyOneOneFile() {
+    public void acceptOnlyOneOneFile() throws IOException {
         StreamMergeAlgorithm acceptOne = StreamMergeAlgorithms.acceptOnlyOne();
-        acceptOne.merge("foo", makeInputs(new byte[][] { { 1, 2, 3 } }), bytesOut);
-        assertArrayEquals(new byte[] { 1, 2, 3 }, bytesOut.toByteArray());
+        List<InputStream> inputStreams = makeInputs(new byte[][] {{1, 2, 3}});
+        try (Closer closer = Closer.create()) {
+            mergedStream = acceptOne.merge("foo", inputStreams, closer);
+            assertThat(mergedStream).isSameAs(inputStreams.get(0));
+        }
     }
 
     @Test
-    public void acceptOnlyOneTwoFiles() {
+    public void acceptOnlyOneTwoFiles() throws IOException {
         StreamMergeAlgorithm acceptOne = StreamMergeAlgorithms.acceptOnlyOne();
-        try {
-            acceptOne.merge("foo", makeInputs(new byte[][]{ { 1, 2, 3 }, { 4, 5, 6 } }), bytesOut);
+        try (Closer closer = Closer.create()) {
+            acceptOne.merge("foo", makeInputs(new byte[][] {{1, 2, 3}, {4, 5, 6}}), closer);
             fail();
         } catch (DuplicateRelativeFileException e) {
             /*
@@ -106,7 +123,7 @@ public class StreamMergeAlgorithmsTests {
     }
 
     @Test
-    public void select() {
+    public void select() throws IOException {
         StreamMergeAlgorithm alg1 = Mockito.mock(StreamMergeAlgorithm.class);
         StreamMergeAlgorithm alg2 = Mockito.mock(StreamMergeAlgorithm.class);
         Function<String, StreamMergeAlgorithm> f = (p -> p.equals("foo")? alg1 : alg2);
@@ -114,20 +131,17 @@ public class StreamMergeAlgorithmsTests {
         StreamMergeAlgorithm select = StreamMergeAlgorithms.select(f);
 
         ImmutableList<InputStream> inputs = makeInputs(new byte[][] { { 1, 2, 3 } });
-        select.merge("foo", inputs, bytesOut);
+        try (Closer closer = Closer.create()) {
+            select.merge("foo", inputs, closer);
 
-        Mockito.verify(alg1).merge(
-                Matchers.eq("foo"),
-                Matchers.same(inputs),
-                Matchers.same(bytesOut));
-        Mockito.verifyZeroInteractions(alg2);
+            Mockito.verify(alg1)
+                    .merge(Matchers.eq("foo"), Matchers.same(inputs), Matchers.same(closer));
+            Mockito.verifyZeroInteractions(alg2);
 
-        select.merge("bar", inputs, bytesOut);
-        Mockito.verifyZeroInteractions(alg1);
-        Mockito.verify(alg2).merge(
-                Matchers.eq("bar"),
-                Matchers.same(inputs),
-                Matchers.same(bytesOut));
-
+            select.merge("bar", inputs, closer);
+            Mockito.verifyZeroInteractions(alg1);
+            Mockito.verify(alg2)
+                    .merge(Matchers.eq("bar"), Matchers.same(inputs), Matchers.same(closer));
+        }
     }
 }
