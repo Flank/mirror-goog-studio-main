@@ -57,9 +57,11 @@ import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionTyp
 import java.io.File;
 import java.util.Optional;
 import java.util.Set;
+import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.attributes.AttributeContainer;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.bundling.Jar;
@@ -385,9 +387,9 @@ public class ApplicationTaskManager extends TaskManager {
     protected void postJavacCreation(
             @NonNull final TaskFactory tasks, @NonNull VariantScope scope) {
         final FileCollection javacOutput = scope.getOutput(JAVAC);
-        final FileCollection preJavacGeneratedBC =
+        final FileCollection preJavacGeneratedBytecode =
                 scope.getVariantData().getAllPreJavacGeneratedBytecode();
-        final FileCollection postJavacGeneratedBC =
+        final FileCollection postJavacGeneratedBytecode =
                 scope.getVariantData().getAllPostJavacGeneratedBytecode();
 
         // Create the classes artifact for uses by external test modules.
@@ -418,8 +420,8 @@ public class ApplicationTaskManager extends TaskManager {
                             @Override
                             public void execute(@NonNull Jar task) {
                                 task.from(javacOutput);
-                                task.from(preJavacGeneratedBC);
-                                task.from(postJavacGeneratedBC);
+                                task.from(preJavacGeneratedBytecode);
+                                task.from(postJavacGeneratedBytecode);
                                 task.setDestinationDir(dest);
                                 task.setArchiveName("classes.jar");
                             }
@@ -434,8 +436,8 @@ public class ApplicationTaskManager extends TaskManager {
         ConfigurableFileCollection fileCollection =
                 scope.createAnchorOutput(TaskOutputHolder.AnchorOutputType.CLASSES_FOR_UNIT_TESTS);
         fileCollection.from(javacOutput);
-        fileCollection.from(preJavacGeneratedBC);
-        fileCollection.from(postJavacGeneratedBC);
+        fileCollection.from(preJavacGeneratedBytecode);
+        fileCollection.from(postJavacGeneratedBytecode);
     }
 
     @Override
@@ -470,19 +472,15 @@ public class ApplicationTaskManager extends TaskManager {
         if (!Boolean.TRUE.equals(unbundledWearApp)
                 && variantConfiguration.getBuildType().isEmbedMicroApp()) {
             Configuration wearApp = variantData.getVariantDependency().getWearAppConfiguration();
+            assert wearApp != null : "Wear app with no wearApp configuration";
             if (!wearApp.getAllDependencies().isEmpty()) {
-                createGenerateMicroApkDataTask(
-                        tasks,
-                        scope,
+                Action<AttributeContainer> setApkArtifact =
+                        container -> container.attribute(ARTIFACT_TYPE, APK.getType());
+                FileCollection files =
                         wearApp.getIncoming()
-                                .artifactView(
-                                        config -> {
-                                            config.attributes(
-                                                    container ->
-                                                            container.attribute(
-                                                                    ARTIFACT_TYPE, APK.getType()));
-                                        })
-                                .getFiles());
+                                .artifactView(config -> config.attributes(setApkArtifact))
+                                .getFiles();
+                createGenerateMicroApkDataTask(tasks, scope, files);
             }
         } else {
             if (Boolean.TRUE.equals(unbundledWearApp)) {

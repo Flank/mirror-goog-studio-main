@@ -1,7 +1,16 @@
 apply from: "../commonHeader.gradle"
-buildscript { apply from: "../commonBuildScript.gradle" }
+
+buildscript {
+    apply from: "../commonHeader.gradle"  // for $kotlinVersion
+    apply from: "../commonBuildScript.gradle"
+
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$rootProject.kotlinVersion"
+    }
+}
 
 apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
 
 apply from: "../commonLocalRepo.gradle"
 
@@ -17,6 +26,8 @@ android {
 }
 
 dependencies {
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$rootProject.kotlinVersion"
+
     testCompile 'junit:junit:4.12'
     testCompile 'org.mockito:mockito-core:2.7.1'
     testCompile 'org.jdeferred:jdeferred-android-aar:1.2.3'
