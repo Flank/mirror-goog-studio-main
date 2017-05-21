@@ -16,8 +16,6 @@
 
 package com.android.tools.profiler.support.network.okhttp;
 
-import android.util.Log;
-import com.android.tools.profiler.support.ProfilerService;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
@@ -43,11 +41,8 @@ public final class OkHttpWrapper {
                     .getDeclaredMethod("addNetworkInterceptor", interceptorClass)
                     .invoke(builder, interceptor);
         } catch (NoSuchMethodException ignored) {
-            Log.e(ProfilerService.STUDIO_PROFILER, "Failed to find addNetworkInterceptor method");
         } catch (IllegalAccessException ignored) {
-            Log.e(ProfilerService.STUDIO_PROFILER, "Failed to access addNetworkInterceptor method");
         } catch (InvocationTargetException ignored) {
-            Log.e(ProfilerService.STUDIO_PROFILER, "Failed to invoke addNetworkInterceptor method");
         }
     }
 
@@ -92,11 +87,8 @@ public final class OkHttpWrapper {
                     : String.format("Unexpected network interceptor list of size %d", list.size());
             list.add(interceptor);
         } catch (NoSuchMethodException ignored) {
-            Log.e(ProfilerService.STUDIO_PROFILER, "Failed to find networkInterceptors method");
         } catch (IllegalAccessException ignored) {
-            Log.e(ProfilerService.STUDIO_PROFILER, "Failed to access networkInterceptors method");
         } catch (InvocationTargetException ignored) {
-            Log.e(ProfilerService.STUDIO_PROFILER, "Failed to invoke networkInterceptors method");
         }
     }
 
@@ -129,7 +121,6 @@ public final class OkHttpWrapper {
                             false,
                             Thread.currentThread().getContextClassLoader());
         } catch (ClassNotFoundException e) {
-            Log.e(ProfilerService.STUDIO_PROFILER, "Failed to find Interceptor class");
             return null;
         }
         return Proxy.newProxyInstance(
@@ -147,7 +138,6 @@ public final class OkHttpWrapper {
                             false,
                             Thread.currentThread().getContextClassLoader());
         } catch (ClassNotFoundException e) {
-            Log.e(ProfilerService.STUDIO_PROFILER, "Failed to find Interceptor class");
             return null;
         }
         return Proxy.newProxyInstance(
@@ -155,5 +145,4 @@ public final class OkHttpWrapper {
                 new Class[] {interceptorClass},
                 new OkHttp2InterceptorHandler());
     }
-
 }
