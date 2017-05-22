@@ -40,7 +40,7 @@ class Transformation {
 // an explicit "this" argument for non-static methods.
 class EntryHook : public Transformation {
  public:
-  EntryHook(const ir::MethodId& hook_method_id) : hook_method_id_(hook_method_id) {
+  explicit EntryHook(const ir::MethodId& hook_method_id) : hook_method_id_(hook_method_id) {
     // hook method signature is generated automatically
     CHECK(hook_method_id_.signature == nullptr);
   }
@@ -56,7 +56,7 @@ class EntryHook : public Transformation {
 // original return value and it may return a new return value.
 class ExitHook : public Transformation {
  public:
-  ExitHook(const ir::MethodId& hook_method_id) : hook_method_id_(hook_method_id) {
+  explicit ExitHook(const ir::MethodId& hook_method_id) : hook_method_id_(hook_method_id) {
     // hook method signature is generated automatically
     CHECK(hook_method_id_.signature == nullptr);
   }
@@ -90,7 +90,7 @@ class DetourVirtualInvoke : public Transformation {
 // Allocates scratch registers without doing a full register allocation
 class AllocateScratchRegs : public Transformation {
  public:
-  AllocateScratchRegs(int allocate_count, bool allow_renumbering = true)
+  explicit AllocateScratchRegs(int allocate_count, bool allow_renumbering = true)
     : allocate_count_(allocate_count), allow_renumbering_(allow_renumbering) {
     CHECK(allocate_count > 0);
   }
@@ -131,7 +131,7 @@ class AllocateScratchRegs : public Transformation {
 //
 class MethodInstrumenter {
  public:
-  MethodInstrumenter(std::shared_ptr<ir::DexFile> dex_ir) : dex_ir_(dex_ir) {}
+  explicit MethodInstrumenter(std::shared_ptr<ir::DexFile> dex_ir) : dex_ir_(dex_ir) {}
 
   // No copy/move semantics
   MethodInstrumenter(const MethodInstrumenter&) = delete;

@@ -326,6 +326,111 @@ void StressScratchRegs(std::shared_ptr<ir::DexFile> dex_ir) {
   }
 }
 
+// Sample code coverage instrumentation: on the entry of every
+// basic block, inject a call to a tracing method:
+//
+//   CodeCoverage.TraceBasicBlock(block_id)
+//
+void CodeCoverage(std::shared_ptr<ir::DexFile> dex_ir) {
+  ir::Builder builder(dex_ir);
+  slicer::AllocateScratchRegs alloc_regs(1);
+  int basic_block_id = 1;
+
+  constexpr const char* kTracerClass = "LCodeCoverage;";
+
+  // create the tracing method declaration
+  std::vector<ir::Type*> param_types { builder.GetType("I") };
+  auto ir_proto =
+      builder.GetProto(builder.GetType("V"),
+                       builder.GetTypeList(param_types));
+  auto ir_method_decl =
+      builder.GetMethodDecl(builder.GetAsciiString("TraceBasicBlock"),
+                            ir_proto,
+                            builder.GetType(kTracerClass));
+
+  // instrument every method (except for the tracer class methods)
+  for (auto& ir_method : dex_ir->encoded_methods) {
+    if (ir_method->code == nullptr) {
+      continue;
+    }
+
+    // don't instrument the methods of the tracer class
+    if (std::strcmp(ir_method->decl->parent->descriptor->c_str(), kTracerClass) == 0) {
+      continue;
+    }
+
+    lir::CodeIr code_ir(ir_method.get(), dex_ir);
+    lir::ControlFlowGraph cfg(&code_ir, true);
+
+    // allocate a scratch register
+    //
+    // NOTE: we're assuming this does not change the CFG!
+    //   (this is the case here, but transformations which
+    //    alter the basic blocks boundaries or the code flow
+    //    would invalidate existing CFGs)
+    //
+    alloc_regs.Apply(&code_ir);
+    dex::u4 scratch_reg = *alloc_regs.ScratchRegs().begin();
+
+    // TODO: handle very "high" registers
+    if (scratch_reg > 0xff) {
+      printf("WARNING: can't instrument method %s.%s%s\n",
+             ir_method->decl->parent->Decl().c_str(),
+             ir_method->decl->name->c_str(),
+             ir_method->decl->prototype->Signature().c_str());
+      continue;
+    }
+
+    auto tracing_method = code_ir.Alloc<lir::Method>(ir_method_decl, ir_method_decl->orig_index);
+
+    // instrument each basic block entry point
+    for (const auto& block : cfg.basic_blocks) {
+      // generate the map of basic blocks
+      printf("%8u: mi=%u s=%u e=%u\n",
+             static_cast<dex::u4>(basic_block_id),
+             ir_method->decl->orig_index,
+             block.region.first->offset,
+             block.region.last->offset);
+
+      // find first bytecode in the basic block
+      lir::Instruction* trace_point = nullptr;
+      for (auto instr = block.region.first; instr != nullptr; instr = instr->next) {
+        trace_point = dynamic_cast<lir::Bytecode*>(instr);
+        if (trace_point != nullptr || instr == block.region.last) {
+          break;
+        }
+      }
+      CHECK(trace_point != nullptr);
+
+      // special case: don't separate 'move-result-<kind>' from the preceding invoke
+      auto opcode = static_cast<lir::Bytecode*>(trace_point)->opcode;
+      if (opcode == dex::OP_MOVE_RESULT ||
+          opcode == dex::OP_MOVE_RESULT_WIDE ||
+          opcode == dex::OP_MOVE_RESULT_OBJECT) {
+        trace_point = trace_point->next;
+      }
+
+      // arg_reg = block_id
+      auto load_block_id = code_ir.Alloc<lir::Bytecode>();
+      load_block_id->opcode = dex::OP_CONST;
+      load_block_id->operands.push_back(code_ir.Alloc<lir::VReg>(scratch_reg));
+      load_block_id->operands.push_back(code_ir.Alloc<lir::Const32>(basic_block_id));
+      code_ir.instructions.InsertBefore(trace_point, load_block_id);
+
+      // call the tracing method
+      auto trace_call = code_ir.Alloc<lir::Bytecode>();
+      trace_call->opcode = dex::OP_INVOKE_STATIC_RANGE;
+      trace_call->operands.push_back(code_ir.Alloc<lir::VRegRange>(scratch_reg, 1));
+      trace_call->operands.push_back(tracing_method);
+      code_ir.instructions.InsertBefore(trace_point, trace_call);
+
+      ++basic_block_id;
+    }
+
+    code_ir.Assemble();
+  }
+}
+
 // Stress the roundtrip: EncodedMethod -> MethodId -> FindMethod -> EncodedMethod
 // NOTE: until we start indexing methods this test is slow on debug builds + large .dex images
 void StressFindMethod(std::shared_ptr<ir::DexFile> dex_ir) {
@@ -394,6 +499,7 @@ std::map<std::string, Experiment> experiments_registry = {
     { "stress_find_method", &StressFindMethod },
     { "stress_scratch_regs", &StressScratchRegs },
     { "regs_histogram", &RegsHistogram },
+    { "code_coverage", &CodeCoverage },
 };
 
 // Lists all the registered experiments
