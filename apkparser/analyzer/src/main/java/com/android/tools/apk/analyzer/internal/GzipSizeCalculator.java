@@ -37,7 +37,7 @@ public class GzipSizeCalculator implements ApkSizeCalculator {
 
     public GzipSizeCalculator() {}
 
-    private void verify(@NonNull Path apk) {
+    private static void verify(@NonNull Path apk) {
         try (ZipFile zf = new ZipFile(apk.toFile())) {
             // just verifying that this is a valid zip file
         } catch (IOException e) {
