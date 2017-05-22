@@ -448,21 +448,35 @@ class ManifestModel {
                 AttributeModel.newModel(SdkConstants.ATTR_NAME)),
 
         /**
-         * Permission (contained in manifest).
-         * <br>
-         * <b>See also : </b>
-         * {@link <a href=http://developer.android.com/guide/topics/manifest/permission-element.html>
-         *     Permission Xml documentation</a>}
-         *
+         * Permission (contained in manifest). <br>
+         * <b>See also : </b> {@link <a
+         * href=http://developer.android.com/guide/topics/manifest/permission-element.html>
+         * Permission Xml documentation</a>}
          */
-        PERMISSION(MergeType.MERGE, DEFAULT_NAME_ATTRIBUTE_RESOLVER,
+        PERMISSION(
+                MergeType.MERGE,
+                DEFAULT_NAME_ATTRIBUTE_RESOLVER,
                 AttributeModel.newModel(SdkConstants.ATTR_NAME),
                 AttributeModel.newModel("protectionLevel")
                         .setDefaultValue("normal")
                         // TODO : this will need to be populated from
                         // sdk/platforms/android-19/data/res/values.attrs_manifest.xml
-                        .setOnReadValidator(new MultiValueValidator(
-                                "normal", "dangerous", "signature", "signatureOrSystem"))),
+                        .setOnReadValidator(
+                                new MultiValueValidator(
+                                        "normal",
+                                        "dangerous",
+                                        "signature",
+                                        "signatureOrSystem",
+                                        "privileged",
+                                        "system",
+                                        "development",
+                                        "appop",
+                                        "pre23",
+                                        "installer",
+                                        "verifier",
+                                        "preinstalled",
+                                        "setup",
+                                        "ephemeral"))),
 
         /**
          * Permission-tree (contained in manifest).
