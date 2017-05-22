@@ -737,33 +737,36 @@ public class XmlElement extends OrphanXmlElement {
         // compare children
         @NonNull List<Node> expectedChildren = filterUninterestingNodes(getXml().getChildNodes());
         @NonNull List<Node> actualChildren = filterUninterestingNodes(otherNode.getXml().getChildNodes());
-        if (expectedChildren.size() != actualChildren.size()) {
+        int actualChildrenSize = actualChildren.size();
+        if (expectedChildren.size() != actualChildrenSize) {
 
-            if (expectedChildren.size() > actualChildren.size()) {
+            if (expectedChildren.size() > actualChildrenSize) {
                 // missing some.
                 @NonNull List<String> missingChildrenNames =
                         Lists.transform(expectedChildren, NODE_TO_NAME);
                 missingChildrenNames.removeAll(Lists.transform(actualChildren, NODE_TO_NAME));
-                return Optional.of(String.format(
-                        "%1$s: Number of children do not match up: "
-                                + "expected %2$d versus %3$d at %4$s, missing %5$s",
-                        getId(),
-                        expectedChildren.size(),
-                        actualChildren.size(),
-                        otherNode.printPosition(),
-                        Joiner.on(",").join(missingChildrenNames)));
+                return Optional.of(
+                        String.format(
+                                "%1$s: Number of children do not match up: "
+                                        + "expected %2$d versus %3$d at %4$s, missing %5$s",
+                                getId(),
+                                expectedChildren.size(),
+                                actualChildrenSize,
+                                otherNode.printPosition(),
+                                Joiner.on(",").join(missingChildrenNames)));
             } else {
                 // extra ones.
                 @NonNull List<String> extraChildrenNames = Lists.transform(actualChildren, NODE_TO_NAME);
-                extraChildrenNames.removeAll(Lists.transform(expectedChildren, NODE_TO_NAME));
-                return Optional.of(String.format(
-                        "%1$s: Number of children do not match up: "
-                                + "expected %2$d versus %3$d at %4$s, extra elements found : %5$s",
-                        getId(),
-                        expectedChildren.size(),
-                        actualChildren.size(),
-                        otherNode.printPosition(),
-                        Joiner.on(",").join(expectedChildren)));
+                Lists.transform(expectedChildren, NODE_TO_NAME).forEach(extraChildrenNames::remove);
+                return Optional.of(
+                        String.format(
+                                "%1$s: Number of children do not match up: "
+                                        + "expected %2$d versus %3$d at %4$s, extra elements found : %5$s",
+                                getId(),
+                                expectedChildren.size(),
+                                actualChildrenSize,
+                                otherNode.printPosition(),
+                                Joiner.on(",").join(extraChildrenNames)));
             }
         }
         for (Node expectedChild : expectedChildren) {
