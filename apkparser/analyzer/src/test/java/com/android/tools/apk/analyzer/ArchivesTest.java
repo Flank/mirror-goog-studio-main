@@ -61,6 +61,21 @@ public class ArchivesTest {
     }
 
     @Test
+    public void open_pathWithSpaces() throws IOException {
+        byte[] apkData = Files.readAllBytes(TestResources.getFile("/test.apk").toPath());
+
+        FileSystem memFs = Jimfs.newFileSystem(Configuration.windows());
+
+        Path folder = Files.createDirectory(memFs.getPath("foo with spaces"));
+        Path apk = folder.resolve("foo with spaces.apk");
+        Files.write(apk, apkData, StandardOpenOption.CREATE);
+
+        try (Archive archive = Archives.open(apk)) {
+            assertThat(archive).isNotNull();
+        }
+    }
+
+    @Test
     public void binaryXml_manifest() {
         assertThat(archive.isBinaryXml(fs.getPath("/AndroidManifest.xml"), new byte[] {0x3, 0x0}))
                 .isTrue();

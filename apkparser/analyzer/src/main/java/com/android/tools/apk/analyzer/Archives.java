@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.tools.apk.analyzer.internal.AndroidArtifact;
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
@@ -30,15 +29,7 @@ public class Archives {
 
     @NonNull
     public static Archive open(@NonNull Path archive) throws IOException {
-        URI uri;
-        try {
-            uri = new URI("jar", archive.toUri().toString(), null);
-        } catch (URISyntaxException e) {
-            String msg =
-                    "Unexpected error while constructing the path to the artifact's file system";
-            throw new IllegalStateException(msg, e);
-        }
-
+        URI uri = URI.create("jar:" + archive.toUri().toString());
         FileSystem fileSystem = FileSystems.newFileSystem(uri, Collections.emptyMap());
         return new AndroidArtifact(archive, fileSystem);
     }
