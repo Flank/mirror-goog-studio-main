@@ -57,7 +57,7 @@ import java.util.regex.Pattern;
 public class LibraryIntermediateJarsTransform extends LibraryBaseTransform {
 
     private static final Pattern CLASS_PATTERN = Pattern.compile(".*\\.class$");
-    private static final Pattern KOTLIN_PATTERN = Pattern.compile("^META-INF/.*\\.kotlin_module$");
+    private static final Pattern META_INF_PATTERN = Pattern.compile("^META-INF/.*$");
     @NonNull
     private final File resJarLocation;
 
@@ -164,11 +164,14 @@ public class LibraryIntermediateJarsTransform extends LibraryBaseTransform {
         FileUtils.deleteIfExists(mainClassLocation);
         FileUtils.mkdirs(mainClassLocation.getParentFile());
 
-        // include both the classes and kotlin modules here.
+        // Include both the classes and META-INF files in there as it can be used during
+        // compilation. For instance, META-INF pattern will include files like service loaders
+        // for annotation processors, or kotlin modules. Both of them are needed by the consuming
+        // compiler.
         final ZipEntryFilter filter =
                 archivePath ->
                         (CLASS_PATTERN.matcher(archivePath).matches()
-                                        || KOTLIN_PATTERN.matcher(archivePath).matches())
+                                        || META_INF_PATTERN.matcher(archivePath).matches())
                                 && checkEntry(excludePatterns, archivePath);
         TypedefRemover typedefRemover =
                 typedefRecipe != null ? new TypedefRemover().setTypedefFile(typedefRecipe) : null;
@@ -182,7 +185,7 @@ public class LibraryIntermediateJarsTransform extends LibraryBaseTransform {
         FileUtils.mkdirs(resJarLocation.getParentFile());
 
         // Only remove the classes files here. Because the main class jar (above) is only consumed
-        // as a jar of classes, we need to include the kotlin files here as well so that
+        // as a jar of classes, we need to include the META-INF files here as well so that
         // the file find their way in the APK.
         final ZipEntryFilter filter = archivePath -> !CLASS_PATTERN.matcher(archivePath).matches();
 
