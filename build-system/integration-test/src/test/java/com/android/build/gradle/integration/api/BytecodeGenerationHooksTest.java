@@ -97,6 +97,9 @@ public class BytecodeGenerationHooksTest {
                 true,
                 "library/build/intermediates/intermediate-jars/debug/classes.jar",
                 "jar/build/libs/jar.jar");
+
+        // verify source folders
+        checkSourceFolders(result, "SourceFoldersApi(:app:debug): ", "app/src/custom/java");
     }
 
     @Test
@@ -211,5 +214,31 @@ public class BytecodeGenerationHooksTest {
         } else {
             TruthHelper.assertThat(lines).containsAllIn(deps);
         }
+    }
+
+    private static void checkSourceFolders(
+            GradleBuildResult result, String prefix, String... dependencies) {
+        String stdout = result.getStdout();
+        Iterable<String> stdoutlines =
+                Splitter.on(SdkUtils.getLineSeparator()).omitEmptyStrings().split(stdout);
+        List<String> lines = Lists.newArrayList(stdoutlines);
+
+        lines =
+                lines.stream()
+                        .filter(s -> s.startsWith(prefix))
+                        .map(s -> s.substring(prefix.length()))
+                        .collect(Collectors.toList());
+
+        File projectDir = project.getTestDir();
+
+        List<String> deps =
+                Arrays.stream(dependencies)
+                        .map(
+                                s ->
+                                        new File(projectDir, FileUtils.toSystemDependentPath(s))
+                                                .getAbsolutePath())
+                        .collect(Collectors.toList());
+
+        TruthHelper.assertThat(lines).containsAllIn(deps);
     }
 }

@@ -136,9 +136,10 @@ public abstract class BaseVariantData implements TaskContainer {
 
     public Task obfuscationTask;
 
-    private List<ConfigurableFileTree> javaSources;
+    private ImmutableList<ConfigurableFileTree> defaultJavaSources;
 
     private List<File> extraGeneratedSourceFolders;
+    private List<ConfigurableFileTree> extraGeneratedSourceFileTrees;
     private final ConfigurableFileCollection extraGeneratedResFolders;
     private Map<Object, FileCollection> preJavacGeneratedBytecodeMap;
     private FileCollection preJavacGeneratedBytecodeLatest;
@@ -371,22 +372,22 @@ public abstract class BaseVariantData implements TaskContainer {
     }
 
     public void registerJavaGeneratingTask(@NonNull Task task, @NonNull File... generatedSourceFolders) {
-        Preconditions.checkNotNull(javacTask);
-        sourceGenTask.dependsOn(task);
-
-        for (File f : generatedSourceFolders) {
-            javacTask.source(f);
-        }
-
-        addJavaSourceFoldersToModel(generatedSourceFolders);
+        registerJavaGeneratingTask(task, Arrays.asList(generatedSourceFolders));
     }
 
     public void registerJavaGeneratingTask(@NonNull Task task, @NonNull Collection<File> generatedSourceFolders) {
         Preconditions.checkNotNull(javacTask);
         sourceGenTask.dependsOn(task);
 
+        final Project project = scope.getGlobalScope().getProject();
+        if (extraGeneratedSourceFileTrees == null) {
+            extraGeneratedSourceFileTrees = new ArrayList<>();
+        }
+
         for (File f : generatedSourceFolders) {
-            javacTask.source(f);
+            ConfigurableFileTree fileTree = project.fileTree(f).builtBy(task);
+            extraGeneratedSourceFileTrees.add(fileTree);
+            javacTask.source(fileTree);
         }
 
         addJavaSourceFoldersToModel(generatedSourceFolders);
@@ -630,94 +631,85 @@ public abstract class BaseVariantData implements TaskContainer {
     }
 
     /**
-     * Computes the user specified Java sources to use for compilation.
+     * Computes the Java sources to use for compilation.
      *
-     * Every entry is a ConfigurableFileTree instance to enable incremental java compilation.
+     * <p>Every entry is a ConfigurableFileTree instance to enable incremental java compilation.
      */
     @NonNull
-    public List<ConfigurableFileTree> getUserJavaSources() {
+    public List<ConfigurableFileTree> getJavaSources() {
+        if (extraGeneratedSourceFileTrees == null || extraGeneratedSourceFileTrees.isEmpty()) {
+            return getDefaultJavaSources();
+        }
+
         // Build the list of source folders.
         ImmutableList.Builder<ConfigurableFileTree> sourceSets = ImmutableList.builder();
 
-        // First the actual source folders.
-        List<SourceProvider> providers = variantConfiguration.getSortedSourceProviders();
-        for (SourceProvider provider : providers) {
-            sourceSets.addAll(((AndroidSourceSet) provider).getJava().getSourceDirectoryTrees());
-        }
+        // First the default source folders.
+        sourceSets.addAll(getDefaultJavaSources());
+
+        // then the third party ones
+        sourceSets.addAll(extraGeneratedSourceFileTrees);
 
         return sourceSets.build();
     }
 
-
     /**
-     * Computes the Java sources to use for compilation.
+     * Computes the default java sources: source sets and generated sources.
      *
-     * Every entry is a ConfigurableFileTree instance to enable incremental java compilation.
+     * <p>Every entry is a ConfigurableFileTree instance to enable incremental java compilation.
      */
     @NonNull
-    public List<ConfigurableFileTree> getJavaSources() {
-        if (javaSources == null) {
+    private List<ConfigurableFileTree> getDefaultJavaSources() {
+        if (defaultJavaSources == null) {
+            Project project = scope.getGlobalScope().getProject();
             // Build the list of source folders.
             ImmutableList.Builder<ConfigurableFileTree> sourceSets = ImmutableList.builder();
 
             // First the actual source folders.
-            sourceSets.addAll(getUserJavaSources());
+            List<SourceProvider> providers = variantConfiguration.getSortedSourceProviders();
+            for (SourceProvider provider : providers) {
+                sourceSets.addAll(
+                        ((AndroidSourceSet) provider).getJava().getSourceDirectoryTrees());
+            }
 
             // then all the generated src folders.
-            sourceSets.addAll(getGeneratedJavaSources());
+            if (scope.getProcessResourcesTask() != null) {
+                sourceSets.add(
+                        project.fileTree(scope.getRClassSourceOutputDir())
+                                .builtBy(scope.getProcessResourcesTask().getName()));
+            }
 
-            javaSources = sourceSets.build();
+            // for the other, there's no duplicate so no issue.
+            if (scope.getGenerateBuildConfigTask() != null) {
+                sourceSets.add(
+                        project.fileTree(scope.getBuildConfigSourceOutputDir())
+                                .builtBy(scope.getGenerateBuildConfigTask().getName()));
+            }
+
+            if (scope.getAidlCompileTask() != null) {
+                sourceSets.add(
+                        project.fileTree(scope.getAidlSourceOutputDir())
+                                .builtBy(scope.getAidlCompileTask().getName()));
+            }
+
+            if (scope.getGlobalScope().getExtension().getDataBinding().isEnabled()
+                    && scope.getDataBindingExportBuildInfoTask() != null) {
+                sourceSets.add(
+                        project.fileTree(scope.getClassOutputForDataBinding())
+                                .builtBy(scope.getDataBindingExportBuildInfoTask().getName()));
+            }
+
+            if (!variantConfiguration.getRenderscriptNdkModeEnabled()
+                    && scope.getRenderscriptCompileTask() != null) {
+                sourceSets.add(
+                        project.fileTree(scope.getRenderscriptSourceOutputDir())
+                                .builtBy(scope.getRenderscriptCompileTask().getName()));
+            }
+
+            defaultJavaSources = sourceSets.build();
         }
 
-        return javaSources;
-    }
-
-    /**
-     * Computes the generated Java sources to use for compilation.
-     *
-     * Every entry is a ConfigurableFileTree instance to enable incremental java compilation.
-     */
-    @NonNull
-    public List<ConfigurableFileTree> getGeneratedJavaSources() {
-        Project project = scope.getGlobalScope().getProject();
-        // Build the list of source folders.
-        ImmutableList.Builder<ConfigurableFileTree> sourceSets = ImmutableList.builder();
-
-        // then all the generated src folders.
-        if (scope.getProcessResourcesTask() != null) {
-            sourceSets.add(
-                    project.fileTree(scope.getRClassSourceOutputDir())
-                            .builtBy(scope.getProcessResourcesTask().getName()));
-        }
-
-        // for the other, there's no duplicate so no issue.
-        if (scope.getGenerateBuildConfigTask() != null) {
-            sourceSets.add(
-                    project.fileTree(scope.getBuildConfigSourceOutputDir())
-                            .builtBy(scope.getGenerateBuildConfigTask().getName()));
-        }
-
-        if (scope.getAidlCompileTask() != null) {
-            sourceSets.add(
-                    project.fileTree(scope.getAidlSourceOutputDir())
-                            .builtBy(scope.getAidlCompileTask().getName()));
-        }
-
-        if (scope.getGlobalScope().getExtension().getDataBinding().isEnabled()
-                && scope.getDataBindingExportBuildInfoTask() != null) {
-            sourceSets.add(
-                    project.fileTree(scope.getClassOutputForDataBinding())
-                            .builtBy(scope.getDataBindingExportBuildInfoTask().getName()));
-        }
-
-        if (!variantConfiguration.getRenderscriptNdkModeEnabled()
-                && scope.getRenderscriptCompileTask() != null) {
-            sourceSets.add(
-                    project.fileTree(scope.getRenderscriptSourceOutputDir())
-                            .builtBy(scope.getRenderscriptCompileTask().getName()));
-        }
-
-        return sourceSets.build();
+        return defaultJavaSources;
     }
 
     /**
