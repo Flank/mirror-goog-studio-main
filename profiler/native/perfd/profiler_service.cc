@@ -63,9 +63,27 @@ const char* const kAgentJarFileName = "perfa.jar";
 // 1. the app/package name, 2. the location of the agent so.
 const char* const kAttachAgentCmd = "cmd activity attach-agent";
 
+// Delete file executable from app's data folder.
+void DeleteFileFromAppFolder(const string& app_name, const string& file_name) {
+  std::ostringstream os;
+  os << kRunAsExecutable << " " << app_name << " rm -f " << file_name;
+  if (system(os.str().c_str()) == -1) {
+    perror("system");
+    exit(-1);
+  }
+}
+
 // Copy file executable from this process's folder (perfd's folder) to
 // app's data folder.
 void CopyFileToAppFolder(const string& app_name, const string& file_name) {
+  // Remove old agent first to avoid attaching mismatched version of agent.
+  //
+  // If old agent exists and it fails to copy the new one, the app would attach
+  // the old one and some weird bugs may occur.
+  // After removing old agent, the app would fail to attach the agent with a
+  // 'file not found' error.
+  DeleteFileFromAppFolder(app_name, file_name);
+
   std::ostringstream os;
   os << kRunAsExecutable << " " << app_name << " cp " << CurrentProcess::dir()
      << file_name << " .";
