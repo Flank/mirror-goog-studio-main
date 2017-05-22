@@ -16,8 +16,10 @@
 
 package com.android.builder.files;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.android.apkzlib.zip.ZFile;
 import com.android.ide.common.res2.FileStatus;
@@ -285,13 +287,38 @@ public class IncrementalRelativeFileSetsTest {
                                 f1, FileStatus.NEW,
                                 bar, FileStatus.NEW),
                         cache,
-                        new HashSet<>());
+                        new HashSet<>(),
+                        IncrementalRelativeFileSets.FileDeletionPolicy
+                                .ASSUME_NO_DELETED_DIRECTORIES);
 
         assertEquals(2, set.size());
         assertTrue(set.containsKey(expectedF0));
         assertTrue(set.containsKey(expectedF1));
         assertEquals(FileStatus.NEW, set.get(expectedF0));
         assertEquals(FileStatus.NEW, set.get(expectedF1));
+    }
+
+    @Test
+    public void makingFromBaseFilesRejectsDeletedFiles() throws Exception {
+        File foo = temporaryFolder.newFolder("foo");
+        File bar = new File(foo, "bar");
+
+        FileCacheByPath cache = new FileCacheByPath(temporaryFolder.newFolder());
+        try {
+            IncrementalRelativeFileSets.makeFromBaseFiles(
+                    Collections.singleton(temporaryFolder.getRoot()),
+                    ImmutableMap.of(bar, FileStatus.REMOVED),
+                    cache,
+                    new HashSet<>(),
+                    IncrementalRelativeFileSets.FileDeletionPolicy.DISALLOW_FILE_DELETIONS);
+            fail("Expected IllegalStateException");
+        } catch (IllegalStateException e) {
+            assertThat(e)
+                    .hasMessage(
+                            String.format(
+                                    "Changes include a deleted file ('%s'), which is not allowed.",
+                                    bar.getAbsolutePath()));
+        }
     }
 
     @Test

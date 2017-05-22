@@ -28,6 +28,7 @@ import com.android.annotations.Nullable;
 import com.android.apkzlib.zip.StoredEntry;
 import com.android.apkzlib.zip.ZFile;
 import com.android.builder.files.FileCacheByPath;
+import com.android.builder.files.IncrementalRelativeFileSets;
 import com.android.ide.common.res2.FileStatus;
 import com.android.utils.FileUtils;
 import com.android.utils.Pair;
@@ -420,7 +421,9 @@ public class LazyIncrementalFileMergerInputTest {
                             "foo",
                             ImmutableSet.copyOf(inputs),
                             expected.getFirst(),
-                            cache);
+                            cache,
+                            IncrementalRelativeFileSets.FileDeletionPolicy
+                                    .ASSUME_NO_DELETED_DIRECTORIES);
 
             assertEquals(expected.getSecond().size(), input.getUpdatedPaths().size());
 

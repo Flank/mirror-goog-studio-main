@@ -297,22 +297,23 @@ public final class IncrementalRelativeFileSets {
     }
 
     /**
-     * Builds an incremental relative file set from a set of modified files. If the modified
-     * file is in a base directory, then it is placed as a relative file in the resulting data set.
-     * If the modified file is itself a base file, then it is treated as a zip file.
+     * Builds an incremental relative file set from a set of modified files. If the modified file is
+     * in a base directory, then it is placed as a relative file in the resulting data set. If the
+     * modified file is itself a base file, then it is treated as a zip file.
      *
-     * <p>If there are new zip files, then all files in the zip are added to the result data set.
-     * If there are deleted or updated zips, then the relative incremental changes are added to the
+     * <p>If there are new zip files, then all files in the zip are added to the result data set. If
+     * there are deleted or updated zips, then the relative incremental changes are added to the
      * data set. To allow detecting incremental changes in zips, the provided cache is used.
      *
      * @param baseFiles the files; all entries must exist and be either directories or zip files
      * @param updates the files updated in the directories or base zip files updated
      * @param cache the file cache where to find old versions of zip files
      * @param cacheUpdates receives all runnables that will update the cache; running all runnables
-     * placed in this set will ensure that a second invocation of this method reports no changes
-     * for zip files; the updates are reported as deferrable runnables instead of immediately run
-     * in this method to allow not changing the cache contents if something else fails and we want
-     * to restore the previous state
+     *     placed in this set will ensure that a second invocation of this method reports no changes
+     *     for zip files; the updates are reported as deferrable runnables instead of immediately
+     *     run in this method to allow not changing the cache contents if something else fails and
+     *     we want to restore the previous state
+     * @param fileDeletionPolicy the policy for file deletions
      * @return the data
      * @throws IOException failed to read a zip file
      */
@@ -321,7 +322,8 @@ public final class IncrementalRelativeFileSets {
             @NonNull Collection<File> baseFiles,
             @NonNull Map<File, FileStatus> updates,
             @NonNull FileCacheByPath cache,
-            @NonNull Set<Runnable> cacheUpdates)
+            @NonNull Set<Runnable> cacheUpdates,
+            @NonNull FileDeletionPolicy fileDeletionPolicy)
             throws IOException {
         for (File f : baseFiles) {
             Preconditions.checkArgument(f.exists(), "!f.exists()");
@@ -332,6 +334,14 @@ public final class IncrementalRelativeFileSets {
 
             File file = fileUpdate.getKey();
             FileStatus status = fileUpdate.getValue();
+
+            if (fileDeletionPolicy == FileDeletionPolicy.DISALLOW_FILE_DELETIONS) {
+                Preconditions.checkState(
+                        status != FileStatus.REMOVED,
+                        String.format(
+                                "Changes include a deleted file ('%s'), which is not allowed.",
+                                file.getAbsolutePath()));
+            }
 
             if (baseFiles.contains(file)) {
                 relativeUpdates.putAll(fromZip(file, cache, cacheUpdates));
@@ -360,5 +370,23 @@ public final class IncrementalRelativeFileSets {
         }
 
         return ImmutableMap.copyOf(relativeUpdates);
+    }
+
+    /**
+     * Policy for file deletions.
+     *
+     * <p>For incremental tasks, currently Gradle does not provide information about whether a
+     * deletion is done on a normal file or a directory. Therefore, we use this class to either
+     * assume deletions to be done on normal files, or not allow deletions at all.
+     *
+     * <p>TODO: Once Gradle provides this information, we should remove this class and its usages.
+     */
+    public enum FileDeletionPolicy {
+
+        /** Deletions are assumed to be done on normal files, not directories. */
+        ASSUME_NO_DELETED_DIRECTORIES,
+
+        /** Deletions of files or directories are not allowed. */
+        DISALLOW_FILE_DELETIONS
     }
 }
