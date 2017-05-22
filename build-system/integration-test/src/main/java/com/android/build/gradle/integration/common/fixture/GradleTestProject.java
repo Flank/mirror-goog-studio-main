@@ -55,6 +55,8 @@ import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -138,9 +140,13 @@ public final class GradleTestProject implements TestRule {
                             "tools/base/build-system/integration-test/test-projects");
             assertThat(TEST_PROJECT_DIR).isDirectory();
 
-            String buildDirPath = System.getenv("TEST_TMPDIR");
-            assertNotNull("$TEST_TMPDIR is not set", buildDirPath);
-            BUILD_DIR = new File(buildDirPath);
+            if (BuildSystem.get() == BuildSystem.IDEA) {
+                BUILD_DIR = new File(TestUtils.getWorkspaceRoot(), "out/gradle-integration-tests");
+            } else {
+                String buildDirPath = System.getenv("TEST_TMPDIR");
+                assertNotNull("$TEST_TMPDIR is not set", buildDirPath);
+                BUILD_DIR = new File(buildDirPath);
+            }
             OUT_DIR = new File(BUILD_DIR, "tests");
             ANDROID_SDK_HOME = new File(BUILD_DIR, "ANDROID_SDK_HOME");
 
@@ -473,9 +479,10 @@ public final class GradleTestProject implements TestRule {
                 generateCommonHeader(),
                 new File(testDir.getParent(), COMMON_HEADER),
                 StandardCharsets.UTF_8);
-        Files.copy(
-                new File(TEST_PROJECT_DIR, COMMON_BUILD_SCRIPT),
-                new File(testDir.getParent(), COMMON_BUILD_SCRIPT));
+        Files.write(
+                generateCommonBuildScript(),
+                new File(testDir.getParent(), COMMON_BUILD_SCRIPT),
+                StandardCharsets.UTF_8);
 
         if (testProject != null) {
             testProject.write(
@@ -516,6 +523,7 @@ public final class GradleTestProject implements TestRule {
                         DEFAULT_COMPILE_SDK_VERSION,
                         false,
                         DEFAULT_KOTLIN_PLUGIN_VERSION);
+
         if (withDependencyChecker) {
             result =
                     result
@@ -573,25 +581,87 @@ public final class GradleTestProject implements TestRule {
 
     @NonNull
     public static List<Path> getLocalRepositories() {
-        List<Path> repos = new ArrayList<>();
+        return BuildSystem.get().getLocalRepositories();
+    }
 
-        String customRepo = System.getenv(ENV_CUSTOM_REPO);
-        if (customRepo != null) {
-            // We're running under Gradle.
-            // TODO: support USE_EXTERNAL_REPO
-            for (String path : Splitter.on(File.pathSeparatorChar).split(customRepo)) {
-                repos.add(Paths.get(path));
+    private enum BuildSystem {
+        GRADLE {
+            @NonNull
+            @Override
+            List<Path> getLocalRepositories() {
+                String customRepo = System.getenv(ENV_CUSTOM_REPO);
+                // TODO: support USE_EXTERNAL_REPO
+                ImmutableList.Builder<Path> repos = ImmutableList.builder();
+                for (String path : Splitter.on(File.pathSeparatorChar).split(customRepo)) {
+                    repos.add(Paths.get(path));
+                }
+                return repos.build();
             }
-        } else {
-            // We're running under Bazel. Make sure the setup is there.
-            assertThat(BazelIntegrationTestsSuite.OFFLINE_REPO)
-                    .named("Offline repo unzipped by BazelIntegrationTestsSuite.")
-                    .isDirectory();
+        },
+        BAZEL {
+            @NonNull
+            @Override
+            List<Path> getLocalRepositories() {
+                return ImmutableList.<Path>builder()
+                        .add(BazelIntegrationTestsSuite.OFFLINE_REPO)
+                        .add(BazelIntegrationTestsSuite.PREBUILTS_REPO)
+                        .build();
+            }
+        },
+        IDEA {
+            @NonNull
+            @Override
+            List<Path> getLocalRepositories() {
+                return ImmutableList.of(
+                        TestUtils.getWorkspaceFile("prebuilts/tools/common/m2/repository")
+                                .toPath());
+                // The classes build by idea and jars are added separately.
+            }
 
-            repos.add(BazelIntegrationTestsSuite.OFFLINE_REPO);
-            repos.add(BazelIntegrationTestsSuite.PREBUILTS_REPO);
+            @Override
+            String getCommonBuildScriptContent() throws IOException {
+                StringBuilder buildScript =
+                        new StringBuilder(
+                                "\n"
+                                        + "def commonScriptFolder = buildscript.sourceFile.parent\n"
+                                        + "apply from: \"$commonScriptFolder/commonVersions.gradle\", to: rootProject.ext\n"
+                                        + "\n"
+                                        + "project.buildscript { buildscript ->\n"
+                                        + "    apply from: \"$commonScriptFolder/commonLocalRepo.gradle\", to:buildscript\n"
+                                        + "    dependencies {"
+                                        + "        classpath files(");
+
+                for (URL url :
+                        ((URLClassLoader) GradleTestProject.class.getClassLoader()).getURLs()) {
+                    buildScript.append("                '").append(url.getFile()).append("',\n");
+                }
+                buildScript.append("        )\n" + "    }\n" + "}");
+                return buildScript.toString();
+            }
+        },
+        ;
+
+        @NonNull
+        abstract List<Path> getLocalRepositories();
+
+        String getCommonBuildScriptContent() throws IOException {
+            return Files.toString(
+                    new File(TEST_PROJECT_DIR, COMMON_BUILD_SCRIPT), StandardCharsets.UTF_8);
         }
-        return repos;
+
+        static BuildSystem get() {
+            if (TestUtils.runningFromBazel()) {
+                return BAZEL;
+            } else if (System.getenv(ENV_CUSTOM_REPO) != null) {
+                return GRADLE;
+            } else {
+                return IDEA;
+            }
+        }
+    }
+
+    public static String generateCommonBuildScript() throws IOException {
+        return BuildSystem.get().getCommonBuildScriptContent();
     }
 
     @NonNull

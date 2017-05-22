@@ -973,7 +973,7 @@ public class AndroidBuilder {
 
         String aidl = buildToolInfo.getPath(BuildToolInfo.PathId.AIDL);
         if (aidl == null || !new File(aidl).isFile()) {
-            throw new IllegalStateException("aidl is missing");
+            throw new IllegalStateException("aidl is missing from '" + aidl + "'");
         }
 
         List<File> fullImportList = Lists.newArrayListWithCapacity(
