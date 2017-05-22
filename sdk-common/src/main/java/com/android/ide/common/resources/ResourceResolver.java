@@ -444,7 +444,9 @@ public class ResourceResolver extends RenderResources {
         String name = (url.namespace == null ? "" : url.namespace + ":") + url.name;
         return Optional.ofNullable(mProjectResources.get(ResourceType.SAMPLE_DATA))
                 .map(t -> t.get(SampleDataManager.getResourceNameFromSampleReference(name)))
-                .map(ResourceValue::getValue)
+                .filter(SampleDataResourceValue.class::isInstance)
+                .map(SampleDataResourceValue.class::cast)
+                .map(SampleDataResourceValue::getValueAsLines)
                 .map(content -> mSampleDataManager.getSampleDataLine(name, content))
                 .map(
                         lineContent ->

@@ -17,12 +17,11 @@ package com.android.ide.common.resources.sampledata;
 
 import com.android.annotations.NonNull;
 import com.google.common.base.Splitter;
-import java.util.Collections;
+import com.google.common.collect.ImmutableList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.regex.Pattern;
 
 /**
  * This class handles the element selection for sample data sources. The class receives the full
@@ -38,11 +37,6 @@ import java.util.regex.Pattern;
  */
 public class SampleDataManager {
     public static final String SUBARRAY_SEPARATOR = ":";
-    /**
-     * This splitter is used to split back the content into lines. The content is generated always
-     * with \n as new line separator.
-     */
-    private static final Splitter NEW_LINE_SPLITTER = Splitter.on(Pattern.compile("\r?\n"));
 
     /**
      * Holds the current cursor position for the sample data file so a consistent view is provided
@@ -86,17 +80,14 @@ public class SampleDataManager {
      *       <li>[10:20] Selects elements from position 10 up to position 20
      *     </ul>
      *
-     * @param content The content of the data source
+     * @param contentList The content of the data source
      */
     @NonNull
-    public String getSampleDataLine(@NonNull String resourcePath, @NonNull String content) {
-        if (content.isEmpty()) {
+    public String getSampleDataLine(
+            @NonNull String resourcePath, @NonNull ImmutableList<String> contentList) {
+        if (contentList.isEmpty()) {
             return "";
         }
-
-        // TODO: Move this to the Sample Data ResourceValue so we do not need to do it
-        //       in every call.
-        List<String> contentList = NEW_LINE_SPLITTER.splitToList(content);
 
         // Trim the last line if it's empty (since it's usually unintended)
         if (contentList.get(contentList.size() - 1).isEmpty()) {
@@ -137,11 +128,11 @@ public class SampleDataManager {
     }
 
     @NonNull
-    private static List<String> getContentSubArray(
-            @NonNull List<String> content, @NonNull String value) {
+    private static ImmutableList<String> getContentSubArray(
+            @NonNull ImmutableList<String> contentList, @NonNull String value) {
         if (SUBARRAY_SEPARATOR.equals(value)) {
             // No indexes
-            return content;
+            return contentList;
         }
 
         List<String> subArrayIndexes = Splitter.on(SUBARRAY_SEPARATOR).limit(2).splitToList(value);
@@ -151,12 +142,12 @@ public class SampleDataManager {
         String top = subArrayIndexes.get(1);
         try {
             int bottomIndex = bottom.isEmpty() ? 0 : Integer.parseUnsignedInt(bottom);
-            int topIndex = top.isEmpty() ? content.size() - 1 : Integer.parseUnsignedInt(top);
-            return content.subList(bottomIndex, topIndex + 1);
+            int topIndex = top.isEmpty() ? contentList.size() - 1 : Integer.parseUnsignedInt(top);
+            return contentList.subList(bottomIndex, topIndex + 1);
         } catch (Throwable ignored) {
             // Invalid index
         }
-        return Collections.emptyList();
+        return ImmutableList.of();
     }
 
     @NonNull

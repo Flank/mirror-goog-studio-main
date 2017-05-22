@@ -17,6 +17,7 @@ package com.android.ide.common.resources.sampledata;
 
 import static org.junit.Assert.*;
 
+import com.google.common.collect.ImmutableList;
 import org.junit.Test;
 
 public class SampleDataManagerTest {
@@ -27,7 +28,7 @@ public class SampleDataManagerTest {
     @Test
     public void sampleDataLine() throws Exception {
         SampleDataManager manager = new SampleDataManager();
-        String content = "Line 1\n" + "\n" + "Line 3";
+        ImmutableList<String> content = ImmutableList.of("Line 1", "", "Line 3");
 
         assertEquals("Line 1", manager.getSampleDataLine("res1", content));
         assertEquals("Line 1", manager.getSampleDataLine("res2", content));
@@ -36,11 +37,11 @@ public class SampleDataManagerTest {
         assertEquals("Line 1", manager.getSampleDataLine("res1", content));
         assertEquals("", manager.getSampleDataLine("res2", content));
 
-        String emptyContent = "";
+        ImmutableList<String> emptyContent = ImmutableList.of();
         assertEquals("", manager.getSampleDataLine("res3", emptyContent));
         assertEquals("", manager.getSampleDataLine("res3", emptyContent));
 
-        String oneLine = "One line\n";
+        ImmutableList<String> oneLine = ImmutableList.of("One line");
         assertEquals("One line", manager.getSampleDataLine("res4", oneLine));
         assertEquals("One line", manager.getSampleDataLine("res4", oneLine));
     }
@@ -48,7 +49,8 @@ public class SampleDataManagerTest {
     @Test
     public void indexReferences() {
         SampleDataManager manager = new SampleDataManager();
-        String content = "Line A\n" + "Line B\n" + "Line C\n" + "Line D\n" + "Line E";
+        ImmutableList<String> content =
+                ImmutableList.of("Line A", "Line B", "Line C", "Line D", "Line E");
 
         assertEquals("Line A", manager.getSampleDataLine("res1", content));
         assertEquals("Line A", manager.getSampleDataLine("res1[0]", content));
@@ -69,7 +71,8 @@ public class SampleDataManagerTest {
     @Test
     public void subArrays() {
         SampleDataManager manager = new SampleDataManager();
-        String content = "Line A\n" + "Line B\n" + "Line C\n" + "Line D\n" + "Line E";
+        ImmutableList<String> content =
+                ImmutableList.of("Line A", "Line B", "Line C", "Line D", "Line E");
 
         assertEquals("Line B", manager.getSampleDataLine("res1[1:2]", content));
         assertEquals("Line C", manager.getSampleDataLine("res1[1:2]", content));
