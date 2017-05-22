@@ -24,9 +24,7 @@ import java.io.File;
  */
 public interface JavaArtifact extends BaseArtifact {
 
-    /**
-     * Path to the mockable platform jar generated for this {@link JavaArtifact}, if present.
-     */
+    /** Path to the mockable platform jar generated for this {@link JavaArtifact}, if present. */
     @Nullable
     File getMockablePlatformJar();
 }

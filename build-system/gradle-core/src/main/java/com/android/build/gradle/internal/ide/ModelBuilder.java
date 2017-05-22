@@ -87,6 +87,7 @@ import com.google.common.collect.Sets;
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -448,6 +449,10 @@ public class ModelBuilder implements ToolingModelBuilder {
 
         Pair<Dependencies, DependencyGraphs> result = getDependencies(scope);
 
+        Set<File> additionalTestClasses = new HashSet<>();
+        additionalTestClasses.addAll(variantData.getAllPreJavacGeneratedBytecode().getFiles());
+        additionalTestClasses.addAll(variantData.getAllPostJavacGeneratedBytecode().getFiles());
+
         return new JavaArtifactImpl(
                 variantType.getArtifactName(),
                 scope.getAssembleTask().getName(),
@@ -459,6 +464,7 @@ public class ModelBuilder implements ToolingModelBuilder {
                 (variantData.javacTask != null)
                         ? variantData.javacTask.getDestinationDir()
                         : scope.getJavaOutputDir(),
+                additionalTestClasses,
                 variantData.getJavaResourcesForUnitTesting(),
                 globalScope.getMockableAndroidJarFile(),
                 result.getFirst(),
@@ -575,6 +581,10 @@ public class ModelBuilder implements ToolingModelBuilder {
 
         Pair<Dependencies, DependencyGraphs> dependencies = getDependencies(scope);
 
+        Set<File> additionalTestClasses = new HashSet<>();
+        additionalTestClasses.addAll(variantData.getAllPreJavacGeneratedBytecode().getFiles());
+        additionalTestClasses.addAll(variantData.getAllPostJavacGeneratedBytecode().getFiles());
+
         return new AndroidArtifactImpl(
                 name,
                 scope.getGlobalScope().getProjectBaseName()
@@ -599,6 +609,7 @@ public class ModelBuilder implements ToolingModelBuilder {
                 (variantData.javacTask != null)
                         ? variantData.javacTask.getDestinationDir()
                         : scope.getJavaOutputDir(),
+                additionalTestClasses,
                 scope.getVariantData().getJavaResourcesForUnitTesting(),
                 dependencies.getFirst(),
                 dependencies.getSecond(),

@@ -23,11 +23,11 @@ import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaArtifact;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.model.level2.DependencyGraphs;
+import com.google.common.base.Objects;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -37,10 +37,8 @@ import java.util.Set;
 public final class JavaArtifactImpl extends BaseArtifactImpl implements JavaArtifact, Serializable {
     private static final long serialVersionUID = 1L;
 
-    private final Set<String> ideSetupTaskNames;
-
-    @Nullable
-    private final File mockablePlatformJar;
+    @NonNull private final Set<String> ideSetupTaskNames;
+    @Nullable private final File mockablePlatformJar;
 
     public static JavaArtifactImpl clone(
             @NonNull JavaArtifact javaArtifact, int modelLevel, boolean modelWithFullDependency) {
@@ -54,6 +52,7 @@ public final class JavaArtifactImpl extends BaseArtifactImpl implements JavaArti
                 javaArtifact.getIdeSetupTaskNames(),
                 javaArtifact.getGeneratedSourceFolders(),
                 javaArtifact.getClassesFolder(),
+                javaArtifact.getAdditionalClassesFolders(),
                 javaArtifact.getJavaResourcesFolder(),
                 javaArtifact.getMockablePlatformJar(),
                 ArtifactDependencyGraph.clone(javaArtifact.getDependencies(), modelLevel),
@@ -70,17 +69,27 @@ public final class JavaArtifactImpl extends BaseArtifactImpl implements JavaArti
             @NonNull Iterable<String> ideSetupTaskNames,
             @NonNull Collection<File> generatedSourceFolders,
             @NonNull File classesFolder,
+            @NonNull Set<File> additionalClassesFolders,
             @NonNull File javaResourcesFolder,
             @Nullable File mockablePlatformJar,
             @NonNull Dependencies compileDependencies,
             @NonNull DependencyGraphs dependencyGraphs,
             @Nullable SourceProvider variantSourceProvider,
             @Nullable SourceProvider multiFlavorSourceProviders) {
-        super(name, assembleTaskName, compileTaskName,
-                classesFolder, javaResourcesFolder, compileDependencies, dependencyGraphs,
-                variantSourceProvider, multiFlavorSourceProviders, generatedSourceFolders);
-        this.ideSetupTaskNames = Sets.newHashSet(ideSetupTaskNames);
+        super(
+                name,
+                assembleTaskName,
+                compileTaskName,
+                classesFolder,
+                additionalClassesFolders,
+                javaResourcesFolder,
+                compileDependencies,
+                dependencyGraphs,
+                variantSourceProvider,
+                multiFlavorSourceProviders,
+                generatedSourceFolders);
         this.mockablePlatformJar = mockablePlatformJar;
+        this.ideSetupTaskNames = Sets.newHashSet(ideSetupTaskNames);
     }
 
     @NonNull
@@ -107,12 +116,12 @@ public final class JavaArtifactImpl extends BaseArtifactImpl implements JavaArti
             return false;
         }
         JavaArtifactImpl that = (JavaArtifactImpl) o;
-        return Objects.equals(ideSetupTaskNames, that.ideSetupTaskNames) &&
-                Objects.equals(mockablePlatformJar, that.mockablePlatformJar);
+        return Objects.equal(ideSetupTaskNames, that.ideSetupTaskNames)
+                && Objects.equal(mockablePlatformJar, that.mockablePlatformJar);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), ideSetupTaskNames, mockablePlatformJar);
+        return Objects.hashCode(super.hashCode(), ideSetupTaskNames, mockablePlatformJar);
     }
 }
