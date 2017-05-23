@@ -163,8 +163,9 @@ grpc::Status CpuServiceImpl::StartProfilingApp(
   string error;
 
   if (request->profiler_type() == CpuProfilerType::SIMPLE_PERF) {
-    success = simplerperf_manager_.StartProfiling(request->app_pkg_name(),
-                                                  &trace_path_, &error);
+    success = simplerperf_manager_.StartProfiling(
+        request->app_pkg_name(), request->sampling_interval_us(), &trace_path_,
+        &error);
   } else {
     // TODO: Move the activity manager to the daemon.
     // It should be shared with everything in perfd.
