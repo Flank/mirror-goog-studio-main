@@ -4,10 +4,14 @@ import com.android.build.gradle.*;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.api.SourceKind;
 import java.io.File;
+import java.util.List;
+import org.gradle.api.DefaultTask;
 import org.gradle.api.DomainObjectSet;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.file.ConfigurableFileTree;
 
 /**
  * Simple plugin that register a bytecode generating task
@@ -76,8 +80,37 @@ public class CompilerPlugin implements Plugin<Project> {
 
     private <T extends BaseVariant> void processVariants(
             DomainObjectSet<T> variants, File sourceJar, File postJavacJar) {
+
+        File folder = project.file("src/custom/java");
+        Task findTask = project.getTasks().findByName("generateCustomTaskForTesting");
+        if (findTask == null) {
+            findTask = project.getTasks().create("generateCustomTaskForTesting", DefaultTask.class);
+        }
+
+        // need to be final because lambda below
+        Task sourceTask = findTask;
+
         variants.all(
                 variant -> {
+                    if (postJavacJar != null) {
+                        variant.registerJavaGeneratingTask(sourceTask, folder);
+                    }
+
+                    // get the source folders.
+                    List<ConfigurableFileTree> sourceFolders =
+                            variant.getSourceFolders(SourceKind.JAVA);
+
+                    // output the source folder gotten by the API
+                    for (ConfigurableFileTree fileTree : sourceFolders) {
+                        System.out.println(
+                                "SourceFoldersApi("
+                                        + project.getPath()
+                                        + ":"
+                                        + variant.getName()
+                                        + "): "
+                                        + fileTree.getDir());
+                    }
+
                     // figure out the output.
                     File outputDir =
                             project.file(
@@ -100,8 +133,7 @@ public class CompilerPlugin implements Plugin<Project> {
                                             "generateBytecodeFor" + variant.getName(),
                                             BytecodeGeneratingTask.class,
                                             task -> {
-                                                task.setSourceFolders(
-                                                        variant.getSourceFolders(SourceKind.JAVA));
+                                                task.setSourceFolders(sourceFolders);
                                                 task.setSourceJar(sourceJar);
                                                 task.setOutputDir(outputDir);
                                                 task.setClasspath(
@@ -129,9 +161,7 @@ public class CompilerPlugin implements Plugin<Project> {
                                                 "generateBytecode2For" + variant.getName(),
                                                 BytecodeGeneratingTask.class,
                                                 task -> {
-                                                    task.setSourceFolders(
-                                                            variant.getSourceFolders(
-                                                                    SourceKind.JAVA));
+                                                    task.setSourceFolders(sourceFolders);
                                                     task.setSourceJar(postJavacJar);
                                                     task.setOutputDir(outputDir2);
                                                 });
