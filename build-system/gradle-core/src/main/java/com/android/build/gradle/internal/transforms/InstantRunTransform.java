@@ -49,6 +49,8 @@ import com.android.ide.common.internal.WaitableExecutor;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
+import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -162,6 +164,9 @@ public class InstantRunTransform extends Transform {
     @Override
     public void transform(@NonNull TransformInvocation invocation)
             throws IOException, TransformException, InterruptedException {
+        Collection<File> jarFiles = TransformInputUtil.getJarFiles(invocation.getInputs());
+        Preconditions.checkState(
+                jarFiles.isEmpty(), "Unexpected inputs: " + Joiner.on(", ").join(jarFiles));
         InstantRunBuildContext buildContext = transformScope.getInstantRunBuildContext();
         buildContext.startRecording(InstantRunBuildContext.TaskType.INSTANT_RUN_TRANSFORM);
         try {
