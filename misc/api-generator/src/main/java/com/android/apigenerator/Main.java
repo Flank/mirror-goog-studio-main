@@ -29,11 +29,10 @@ import java.util.TreeMap;
  */
 public class Main {
     public static void main(String[] args) {
-
         boolean error = false;
         int minApi = 1;
         int currentApi = -1;
-        String currentCodenName = null;
+        String currentCodename = null;
         File currentJar = null;
         List<String> patterns = new ArrayList<String>();
         String outPath = null;
@@ -64,7 +63,7 @@ public class Main {
             } else if (arg.equals("--current-codename")) {
                 i++;
                 if (i < args.length) {
-                    currentCodenName = args[i];
+                    currentCodename = args[i];
                 } else {
                     System.err.println("Missing codename after " + arg);
                     error = true;
@@ -127,7 +126,7 @@ public class Main {
         }
 
         // The SDK version number
-        if (currentCodenName != null && !"REL".equals(currentCodenName)) {
+        if (currentCodename != null && !"REL".equals(currentCodename)) {
             currentApi++;
         }
 
@@ -137,8 +136,8 @@ public class Main {
         }
 
         AndroidJarReader reader = new AndroidJarReader(patterns, minApi, currentJar, currentApi);
-        Map<String, ApiClass> classes = reader.getClasses();
-        if (!createApiFile(new File(outPath), classes)) {
+        Api api = reader.getApi();
+        if (!createApiFile(new File(outPath), api)) {
             System.exit(1);
         }
     }
@@ -161,12 +160,12 @@ public class Main {
 
     /**
      * Creates the simplified diff-based API level.
+     *
      * @param outFile the output file
-     * @param classes the classes to write
+     * @param api the api to write
      */
-    private static boolean createApiFile(File outFile, Map<String, ApiClass> classes) {
-
-        PrintStream ps = null;
+    private static boolean createApiFile(File outFile, Api api) {
+        PrintStream stream = null;
         try {
             File parentFile = outFile.getParentFile();
             if (!parentFile.exists()) {
@@ -176,20 +175,15 @@ public class Main {
                     return false;
                 }
             }
-            ps = new PrintStream(outFile, "UTF-8");
-            ps.println("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
-            ps.println("<api version=\"2\">");
-            TreeMap<String, ApiClass> map = new TreeMap<String, ApiClass>(classes);
-            for (ApiClass theClass : map.values()) {
-                (theClass).print(ps);
-            }
-            ps.println("</api>");
+            stream = new PrintStream(outFile, "UTF-8");
+            stream.println("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
+            api.print(stream);
         } catch (Exception e) {
             e.printStackTrace();
             return false;
         } finally {
-            if (ps != null) {
-                ps.close();
+            if (stream != null) {
+                stream.close();
             }
         }
 
