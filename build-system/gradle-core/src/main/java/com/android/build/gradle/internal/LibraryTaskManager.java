@@ -194,7 +194,9 @@ public class LibraryTaskManager extends TaskManager {
                             variantScope,
                             () -> variantBundleDir,
                             variantScope.getProcessResourcePackageOutputDirectory(),
-                            MergeType.PACKAGE,
+                            // TODO: Switch to package where possible so we stop merging resources
+                            // in libraries.
+                            MergeType.MERGE,
                             globalScope.getProjectBaseName());
 
                     // process java resources only, the merge is setup after
