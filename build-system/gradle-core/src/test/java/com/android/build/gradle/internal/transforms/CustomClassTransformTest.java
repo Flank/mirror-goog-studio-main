@@ -103,7 +103,7 @@ public class CustomClassTransformTest {
         transform = new CustomClassTransform(jar.getPath());
     }
 
-    private static File addFakeClass(File file, String name, String content) throws IOException {
+    private static File addFakeFile(File file, String name, String content) throws IOException {
         if (file.getName().endsWith(".jar")) {
             Map<String, String> env = new HashMap<>();
             env.put("create", "true");
@@ -131,12 +131,12 @@ public class CustomClassTransformTest {
         for (Path file : Files.newDirectoryStream(in)) {
 
             Path outFile = out.resolve(file.getFileName());
-            Truth.assertThat(Files.exists(outFile)).named(outFile.toString()).isTrue();
-            Truth.assertThat(outs).contains(file.getFileName().toString());
             if (Files.isDirectory(file)) {
+                Truth.assertThat(outs).contains(file.getFileName().toString());
                 Truth.assertThat(Files.isDirectory(outFile)).isTrue();
                 assertValidTransform(file, outFile);
             } else if (file.toString().endsWith(".jar")) {
+                Truth.assertThat(outs).contains(file.getFileName().toString());
                 Truth.assertThat(outFile.toString().endsWith(".jar")).isTrue();
                 URI inUri = URI.create("jar:" + file.toUri());
                 URI outUri = URI.create("jar:" + outFile.toUri());
@@ -149,11 +149,13 @@ public class CustomClassTransformTest {
                         assertValidTransform(inRoots.get(i), outRoots.get(i));
                     }
                 }
-
-            } else {
+            } else if (file.toString().endsWith(".class")) {
+                Truth.assertThat(outs).contains(file.getFileName().toString());
                 String before = new String(Files.readAllBytes(file), Charsets.UTF_8);
                 String after = new String(Files.readAllBytes(outFile), Charsets.UTF_8);
                 Truth.assertThat(after).isEqualTo(before + "*");
+            } else {
+                Truth.assertThat(Files.exists(outFile)).named(outFile.toString()).isFalse();
             }
             outs.remove(file.getFileName().toString());
         }
@@ -197,17 +199,27 @@ public class CustomClassTransformTest {
         File in = temporaryFolder.newFolder("in");
         File out = temporaryFolder.newFolder("out");
         File dir = new File(in, "dir");
-        File jar = new File(in, "jar.jar");
+        File jar1 = new File(in, "jar1.jar");
+        File jar2 = new File(in, "jar2.jar");
 
-        addFakeClass(dir, "a.class", "A");
-        addFakeClass(dir, "b/c.class", "C");
-        addFakeClass(dir, "b/d.class", "D");
-        addFakeClass(dir, "c/d/e.class", "E");
-        addFakeClass(jar, "j.class", "J");
-        addFakeClass(jar, "k.class", "K");
+        addFakeFile(dir, "a.class", "A");
+        addFakeFile(dir, "b/c.class", "C");
+        addFakeFile(dir, "b/d.class", "D");
+        addFakeFile(dir, "c/d/e.class", "E");
+        addFakeFile(jar1, "j.class", "J");
+        addFakeFile(jar1, "k.class", "K");
+        addFakeFile(jar1, "x.xml", "X");
+        addFakeFile(jar2, "l.class", "L");
+        addFakeFile(jar2, "m.class", "M");
+        addFakeFile(jar2, "x.xml", "X");
 
         List<TransformInput> transformInput =
-                createTransformInputs(dir, ImmutableMap.of(), ImmutableMap.of(jar, Status.ADDED));
+                createTransformInputs(
+                        dir,
+                        ImmutableMap.of(),
+                        ImmutableMap.of(
+                                jar1, Status.ADDED,
+                                jar2, Status.ADDED));
         TransformOutputProvider transformOutput = createTransformOutput(out);
         TransformInvocation invocation =
                 new TransformInvocationBuilder(context)
@@ -225,39 +237,39 @@ public class CustomClassTransformTest {
         File out = temporaryFolder.newFolder("out");
         File dir = new File(in, "dir");
 
-        File notchanged = addFakeClass(dir, "a.class", "A");
-        File added = addFakeClass(dir, "b/c.class", "C");
+        File notchanged = addFakeFile(dir, "a.class", "A");
+        File added = addFakeFile(dir, "b/c.class", "C");
         File removed = new File(dir, "d.class");
-        File changed = addFakeClass(dir, "e.class", "E");
+        File changed = addFakeFile(dir, "e.class", "E");
 
         File notChangedJar = new File(in, "jar0.jar");
-        addFakeClass(notChangedJar, "j0.class", "J0");
-        addFakeClass(notChangedJar, "k0.class", "K0");
+        addFakeFile(notChangedJar, "j0.class", "J0");
+        addFakeFile(notChangedJar, "k0.class", "K0");
 
         File addedJar = new File(in, "jar1.jar");
-        addFakeClass(addedJar, "j1.class", "J1");
-        addFakeClass(addedJar, "k1.class", "K1");
+        addFakeFile(addedJar, "j1.class", "J1");
+        addFakeFile(addedJar, "k1.class", "K1");
 
         File changedJar = new File(in, "jar2.jar");
-        addFakeClass(changedJar, "j2.class", "J2");
-        addFakeClass(changedJar, "k2.class", "K2");
+        addFakeFile(changedJar, "j2.class", "J2");
+        addFakeFile(changedJar, "k2.class", "K2");
 
         // Set up the expected output initial state
-        addFakeClass(out, "dir/a.class", "A*");
-        addFakeClass(out, "dir/d.class", "D*");
-        addFakeClass(out, "dir/e.class", "OLD*");
+        addFakeFile(out, "dir/a.class", "A*");
+        addFakeFile(out, "dir/d.class", "D*");
+        addFakeFile(out, "dir/e.class", "OLD*");
 
         File notChangedJarOut = new File(out, "jar0.jar");
-        addFakeClass(notChangedJarOut, "j0.class", "J0*");
-        addFakeClass(notChangedJarOut, "k0.class", "K0*");
+        addFakeFile(notChangedJarOut, "j0.class", "J0*");
+        addFakeFile(notChangedJarOut, "k0.class", "K0*");
 
         File changedJarOut = new File(out, "jar2.jar");
-        addFakeClass(changedJarOut, "j2.class", "J2OLD*");
-        addFakeClass(changedJarOut, "k2.class", "K2OLD*");
+        addFakeFile(changedJarOut, "j2.class", "J2OLD*");
+        addFakeFile(changedJarOut, "k2.class", "K2OLD*");
 
         File removedJar = new File(out, "jar3.jar");
-        addFakeClass(removedJar, "j3.class", "GONE*");
-        addFakeClass(removedJar, "k3.class", "GONE*");
+        addFakeFile(removedJar, "j3.class", "GONE*");
+        addFakeFile(removedJar, "k3.class", "GONE*");
 
         TransformOutputProvider transformOutput = createTransformOutput(out);
         ImmutableMap<File, Status> files =
