@@ -24,6 +24,7 @@ import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.build.gradle.tasks.PackageAndroidArtifact;
 import com.android.ide.common.build.ApkData;
 import com.google.common.base.MoreObjects;
+import java.io.File;
 import org.gradle.api.Task;
 
 /**
@@ -52,6 +53,18 @@ public class ApkVariantOutputImpl extends BaseVariantOutputImpl implements ApkVa
     @Override
     public PackageAndroidArtifact getPackageApplication() {
         return taskContainer.getTaskByType(PackageAndroidArtifact.class);
+    }
+
+    @NonNull
+    @Override
+    public File getOutputFile() {
+        PackageAndroidArtifact packageAndroidArtifact = getPackageApplication();
+        if (packageAndroidArtifact != null) {
+            return new File(
+                    packageAndroidArtifact.getOutputDirectory(), apkData.getOutputFileName());
+        } else {
+            return super.getOutputFile();
+        }
     }
 
     @Nullable
