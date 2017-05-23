@@ -18,10 +18,12 @@ package com.android.apkzlib.utils;
 
 import static org.junit.Assert.assertTrue;
 
+import com.android.apkzlib.zip.ZFile;
 import com.android.testutils.TestResources;
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteSource;
 import com.google.common.io.Resources;
+import java.io.ByteArrayInputStream;
 import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
@@ -104,6 +106,22 @@ public final class ApkZFileTestUtils {
         while (getFreshTimestamp() <= currentTimestamp) {
             Thread.sleep(100);
         }
+    }
+
+    /*
+     * Adds a basic compiled AndroidManifest to the given ZFile containing minSdkVersion equal 15
+     * and targetSdkVersion equal 25.
+     */
+    public static void addAndroidManifest(ZFile zf) throws IOException {
+        zf.add("AndroidManifest.xml", new ByteArrayInputStream(getAndroidManifest()));
+    }
+
+    /*
+     * Provides a basic compiled AndroidManifest containing minSdkVersion equal 15 and
+     * targetSdkVersion equal 25.
+     */
+    public static byte[] getAndroidManifest() throws IOException {
+        return ApkZFileTestUtils.getResourceBytes("/testData/packaging/AndroidManifest.xml").read();
     }
 
     /**
