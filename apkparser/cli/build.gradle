@@ -1,0 +1,57 @@
+apply plugin: 'java'
+apply plugin: 'jacoco-tools-base'
+apply plugin: 'sdk-java-lib'
+
+dependencies {
+    compile(libs.jopt)
+    compile project(':base:apkparser:apkanalyzer')
+}
+
+sourceSets {
+    main.resources.srcDir 'src/main/java'
+    test.resources.srcDir 'src/test/java'
+}
+
+test {
+    maxParallelForks = Runtime.runtime.availableProcessors() / 2
+}
+
+task analyzerStartScripts(type: CreateStartScripts) {
+    classpath = project.getTasks().getAt(JavaPlugin.JAR_TASK_NAME).getOutputs().getFiles().plus(
+            project.getConfigurations().getByName("runtime"))
+    outputDir new File(project.getBuildDir(), "scripts")
+
+    description "Creates OS specific scripts to start the apkanalyzer CLI"
+    mainClassName = 'com.android.tools.apk.analyzer.ApkAnalyzerCli'
+    applicationName = 'apkanalyzer'
+    defaultJvmOpts = ["-Dcom.android.sdklib.toolsdir=MY_APP_HOME"]
+
+    doLast {
+        unixScript.text = unixScript.text.replace('MY_APP_HOME', '\$APP_HOME')
+        windowsScript.text = windowsScript.text.replace('MY_APP_HOME', '%~dp0\\..')
+    }
+}
+
+
+sdk {
+    common(mac, linux) {
+        item(new File(analyzerStartScripts.outputDir, "apkanalyzer")) {
+            into "bin"
+            notice null
+            builtBy 'analyzerStartScripts'
+        }
+    }
+    windows {
+        item(new File(analyzerStartScripts.outputDir, "apkanalyzer")) {
+            into "bin"
+            notice null
+            builtBy 'analyzerStartScripts'
+        }
+    }
+}
+
+// configure the manifest of the sdkJar task.
+sdkJar.manifest.attributes("Main-Class": "com.android.tools.apk.analyzer.ApkAnalyzerCli")
+
+project.ext.pomName = 'Android APK Analyzer tool'
+project.ext.pomDesc = 'Command line APK inspection tool'

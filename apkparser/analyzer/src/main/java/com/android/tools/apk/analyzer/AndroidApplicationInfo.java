@@ -16,7 +16,16 @@
 package com.android.tools.apk.analyzer;
 
 import com.android.annotations.NonNull;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class AndroidApplicationInfo {
     public static final AndroidApplicationInfo UNKNOWN =
@@ -25,12 +34,39 @@ public class AndroidApplicationInfo {
     @NonNull public final String packageId;
     @NonNull public final String versionName;
     public final long versionCode;
+    private final Map<String, String> usesFeature;
+    private final Set<String> usesFeatureNotRequired;
+
+    private static final Pattern impliedFeaturePattern =
+            Pattern.compile("uses-implied-feature: name='(.+)' reason='(.+)'");
+    private static final Pattern packagePattern =
+            Pattern.compile(
+                    "package: name='(.*)' versionCode='(.*)' versionName='(.*)' platformBuildVersionName='(.*)'");
+    private final Set<String> permissions;
 
     private AndroidApplicationInfo(
             @NonNull String packageId, @NonNull String versionName, long versionCode) {
         this.packageId = packageId;
         this.versionName = versionName;
         this.versionCode = versionCode;
+        usesFeature = ImmutableMap.of();
+        usesFeatureNotRequired = ImmutableSet.of();
+        permissions = ImmutableSet.of();
+    }
+
+    public AndroidApplicationInfo(
+            @NonNull String packageId,
+            @NonNull String versionName,
+            long versionCode,
+            Map<String, String> usesFeature,
+            Set<String> usesFeatureNotRequired,
+            Set<String> permissions) {
+        this.packageId = packageId;
+        this.versionName = versionName;
+        this.versionCode = versionCode;
+        this.usesFeature = usesFeature;
+        this.usesFeatureNotRequired = usesFeatureNotRequired;
+        this.permissions = permissions;
     }
 
     @NonNull
@@ -80,5 +116,101 @@ public class AndroidApplicationInfo {
                 packageId == null ? "unknown" : packageId,
                 versionName == null ? "?" : versionName,
                 versionCode);
+    }
+
+
+    public static AndroidApplicationInfo parseBadging(@NonNull List<String> output) {
+        Builder builder = new Builder();
+        for (String line : output) {
+            line = line.trim();
+            if (line.startsWith("package:")) {
+                // e.g: package: name='com.example' versionCode='1' versionName='1.0' platformBuildVersionName=''
+                Matcher matcher = packagePattern.matcher(line);
+                if (matcher.matches()) {
+                    builder.setPackageId(matcher.group(1));
+                    builder.setVersionCode(Long.parseLong(matcher.group(2)));
+                    builder.setVersionName(matcher.group(3));
+                }
+            } else if (line.startsWith("uses-feature:")) {
+                String name = line.substring("uses-feature: name='".length(), line.length() - 1);
+                builder.addFeature(name);
+            } else if (line.startsWith("uses-implied-feature:")) {
+                Matcher matcher = impliedFeaturePattern.matcher(line);
+                if (matcher.matches()) {
+                    builder.addImpliedFeature(matcher.group(1), matcher.group(2));
+                }
+            } else if (line.startsWith("uses-feature-not-required:")) {
+                String name =
+                        line.substring(
+                                "uses-feature-not-required: name='".length(), line.length() - 1);
+                builder.addFeatureNotRequired(name);
+            } else if (line.startsWith("uses-permission:")) {
+                String name = line.substring("uses-permission: name='".length(), line.length() - 1);
+                builder.addPermission(name);
+            }
+        }
+
+        return builder.build();
+    }
+
+    public Map<String, String> getUsesFeature() {
+        return usesFeature;
+    }
+
+    public Set<String> getUsesFeatureNotRequired() {
+        return usesFeatureNotRequired;
+    }
+
+    public Set<String> getPermissions() {
+        return permissions;
+    }
+
+    private static class Builder {
+        public String packageId;
+        public String versionName;
+        public long versionCode;
+        private final Map<String, String> usesFeature = new HashMap<>();
+        private final Set<String> usesFeatureNotRequired = new HashSet<>();
+        private final Set<String> permissions = new HashSet<>();
+
+        public void setPackageId(@NonNull String packageId) {
+            this.packageId = packageId;
+        }
+
+        public void setVersionName(@NonNull String versionName) {
+            this.versionName = versionName;
+        }
+
+        public void setVersionCode(long versionCode) {
+            this.versionCode = versionCode;
+        }
+
+        public void addFeature(@NonNull String name) {
+            if (!usesFeature.containsKey(name)) {
+                usesFeature.put(name, null);
+            }
+        }
+
+        public void addImpliedFeature(@NonNull String name, @NonNull String reason) {
+            usesFeature.put(name, reason);
+        }
+
+        public void addFeatureNotRequired(@NonNull String name) {
+            usesFeatureNotRequired.add(name);
+        }
+
+        public AndroidApplicationInfo build() {
+            return new AndroidApplicationInfo(
+                    packageId == null ? "unknown" : packageId,
+                    versionName == null ? "?" : versionName,
+                    versionCode,
+                    Collections.unmodifiableMap(usesFeature),
+                    Collections.unmodifiableSet(usesFeatureNotRequired),
+                    Collections.unmodifiableSet(permissions));
+        }
+
+        public void addPermission(String name) {
+            permissions.add(name);
+        }
     }
 }

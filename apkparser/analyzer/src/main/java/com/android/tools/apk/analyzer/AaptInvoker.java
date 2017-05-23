@@ -17,7 +17,6 @@ package com.android.tools.apk.analyzer;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.ide.common.process.BaseProcessOutputHandler;
 import com.android.ide.common.process.CachedProcessOutputHandler;
 import com.android.ide.common.process.DefaultProcessExecutor;
@@ -35,11 +34,8 @@ import java.util.Arrays;
 import java.util.List;
 
 public class AaptInvoker {
-    /** Exit code when aapt exits successfully. */
-    public static final int SUCCESS = 0;
-
-    private final Path aapt;
-    private final DefaultProcessExecutor processExecutor;
+    @NonNull private final Path aapt;
+    @NonNull private final DefaultProcessExecutor processExecutor;
 
     public AaptInvoker(@NonNull AndroidSdkHandler sdkHandler, @NonNull ILogger logger) {
         aapt = getPathToAapt(sdkHandler, logger);
@@ -85,19 +81,23 @@ public class AaptInvoker {
         return invokeAaptWithParameters(apk, xmlResourcePath, "dump", "xmltree");
     }
 
+    @NonNull
+    public List<String> dumpBadging(@NonNull File apk) throws ProcessException {
+        return invokeAaptWithParameters("dump", "badging", apk.toString());
+    }
+
     /**
      * @return the path to aapt from the latest version of build tools that is installed, null if
      *     there are no build tools
      * @param sdkHandler pass in a configured sdkHandler to locate aapt
      */
-    @Nullable
-    private static Path getPathToAapt(AndroidSdkHandler sdkHandler, ILogger logger) {
+    @NonNull
+    private static Path getPathToAapt(@NonNull AndroidSdkHandler sdkHandler, ILogger logger) {
         BuildToolInfo latestBuildTool =
                 sdkHandler.getLatestBuildTool(new LoggerProgressIndicatorWrapper(logger), true);
         if (latestBuildTool == null) {
-            return null;
+            throw new IllegalStateException("Cannot locate latest build tools");
         }
-
         return latestBuildTool.getLocation().toPath().resolve(SdkConstants.FN_AAPT);
     }
 }

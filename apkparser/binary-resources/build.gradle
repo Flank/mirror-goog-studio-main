@@ -1,0 +1,17 @@
+apply plugin: 'java'
+apply plugin: 'sdk-java-lib'
+
+dependencies {
+    compile(libs.guava)
+    compile(libs.findbugs_jsr)
+    compile project(':base:annotations')
+}
+
+sourceSets {
+    main.resources.srcDir 'src/main/java'
+    test.resources.srcDir 'src/test/java'
+}
+
+project.ext.pomName = 'Binary Resources parser'
+project.ext.pomDesc = 'Library for parsing the resources.arsc file'
+

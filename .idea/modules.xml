@@ -10,6 +10,7 @@
       <module fileurl="file://$PROJECT_DIR$/../analytics-library/testing/analytics-testing-base.iml" filepath="$PROJECT_DIR$/../analytics-library/testing/analytics-testing-base.iml" group="analytics-library" />
       <module fileurl="file://$PROJECT_DIR$/../analytics-library/tracker/analytics-tracker-base.iml" filepath="$PROJECT_DIR$/../analytics-library/tracker/analytics-tracker-base.iml" group="analytics-library" />
       <module fileurl="file://$PROJECT_DIR$/apkparser/analyzer/analyzer-base.iml" filepath="$PROJECT_DIR$/apkparser/analyzer/analyzer-base.iml" group="base/apkparser" />
+      <module fileurl="file://$PROJECT_DIR$/apkparser/cli/analyzer-cli.iml" filepath="$PROJECT_DIR$/apkparser/cli/analyzer-cli.iml" group="base/apkparser" />
       <module fileurl="file://$PROJECT_DIR$/annotations/android-annotations.iml" filepath="$PROJECT_DIR$/annotations/android-annotations.iml" group="base" />
       <module fileurl="file://$PROJECT_DIR$/../apksig/apksig.iml" filepath="$PROJECT_DIR$/../apksig/apksig.iml" />
       <module fileurl="file://$PROJECT_DIR$/apkzlib/apkzlib.iml" filepath="$PROJECT_DIR$/apkzlib/apkzlib.iml" group="base" />
