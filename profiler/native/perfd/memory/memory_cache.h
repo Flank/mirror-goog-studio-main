@@ -16,6 +16,7 @@
 #ifndef MEMORY_CACHE_H_
 #define MEMORY_CACHE_H_
 
+#include <climits>
 #include <mutex>
 #include <string>
 
@@ -31,7 +32,7 @@ namespace profiler {
 class MemoryCache {
  public:
   // Indicates that a heap dump is in progress.
-  static const int64_t kUnfinishedTimestamp = -1;
+  static const int64_t kUnfinishedTimestamp = LLONG_MAX;
 
   // TODO consider configuring cache sizes independently.
   explicit MemoryCache(const Clock& clock, FileCache* file_cache,

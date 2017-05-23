@@ -200,7 +200,9 @@ void MemoryCache::LoadMemoryData(int64_t start_time_exl, int64_t end_time_inc,
     if ((start_time > start_time_exl && start_time <= end_time_inc) ||
         (end_time > start_time_exl && end_time <= end_time_inc)) {
       response->add_allocations_info()->CopyFrom(info);
-      end_timestamp = std::max({start_time, end_time, end_timestamp});
+      int64_t info_max_time =
+          end_time == kUnfinishedTimestamp ? start_time : end_time;
+      end_timestamp = std::max({info_max_time, end_timestamp});
     }
   }
 
@@ -213,7 +215,9 @@ void MemoryCache::LoadMemoryData(int64_t start_time_exl, int64_t end_time_inc,
     if ((start_time > start_time_exl && start_time <= end_time_inc) ||
         (end_time > start_time_exl && end_time <= end_time_inc)) {
       response->add_heap_dump_infos()->CopyFrom(info);
-      end_timestamp = std::max({start_time, end_time, end_timestamp});
+      int64_t info_max_time =
+          end_time == kUnfinishedTimestamp ? start_time : end_time;
+      end_timestamp = std::max({info_max_time, end_timestamp});
     }
   }
 
