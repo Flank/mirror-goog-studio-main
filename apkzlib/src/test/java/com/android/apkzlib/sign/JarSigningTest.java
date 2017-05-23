@@ -34,6 +34,7 @@ import java.security.cert.X509Certificate;
 import java.util.Base64;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -296,6 +297,7 @@ public class JarSigningTest {
         }
     }
 
+    @Ignore
     @Test
     public void openSignedJarDoesNotForcesWriteifSignatureIsNotCorrect() throws Exception {
         File zipFile = new File(mTemporaryFolder.getRoot(), "a.zip");
