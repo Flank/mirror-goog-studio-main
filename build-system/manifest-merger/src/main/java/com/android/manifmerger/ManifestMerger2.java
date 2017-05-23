@@ -42,6 +42,7 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 
@@ -1246,6 +1247,10 @@ public class ManifestMerger2 {
             return thisAsT();
         }
 
+        /** Regular expression defining legal feature split name. */
+        private static final Pattern FEATURE_NAME_PATTERN =
+                Pattern.compile("[a-zA-Z0-9][a-zA-Z0-9-]*");
+
         /**
          * Specify the feature name for feature merging.
          *
@@ -1254,7 +1259,14 @@ public class ManifestMerger2 {
          */
         @NonNull
         public Invoker setFeatureName(@NonNull String featureName) {
-            mFeatureName = featureName.replaceAll("[^a-zA-Z]", "");
+            mFeatureName = featureName.replaceAll("[^a-zA-Z0-9-]", "");
+            if (!FEATURE_NAME_PATTERN.matcher(mFeatureName).matches()) {
+                throw new IllegalArgumentException(
+                        "FeatureName must follow "
+                                + FEATURE_NAME_PATTERN.pattern()
+                                + " regex, found "
+                                + featureName);
+            }
             return thisAsT();
         }
 

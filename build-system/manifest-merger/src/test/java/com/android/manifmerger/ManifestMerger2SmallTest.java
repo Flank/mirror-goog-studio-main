@@ -888,6 +888,39 @@ public class ManifestMerger2SmallTest {
                         .getNodeValue());
     }
 
+    @Test
+    public void testFeatureSplitValidation() throws Exception {
+        File inputFile = inputAsFile("testFeatureSplitOption", "</manifest>\n");
+        MockLog mockLog = new MockLog();
+        ManifestMerger2.Invoker invoker =
+                ManifestMerger2.newMerger(
+                        inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION);
+        validateFeatureName(invoker, "-split12", false);
+        validateFeatureName(invoker, ":-split12", false);
+        validateFeatureName(invoker, ":split12", true);
+        validateFeatureName(invoker, ":split-12", true);
+        validateFeatureName(invoker, ":split_12", true);
+        validateFeatureName(invoker, ":foo:split_12", true);
+        validateFeatureName(invoker, ":SPLIT", true);
+        validateFeatureName(invoker, ":-SPLIT", false);
+    }
+
+    public static void validateFeatureName(
+            ManifestMerger2.Invoker invoker, String featureName, boolean isValid) throws Exception {
+        try {
+            invoker.setFeatureName(featureName);
+        } catch (IllegalArgumentException e) {
+            if (isValid) {
+                fail("Unexpected exception throw " + e.getMessage());
+            }
+            assertTrue(e.getMessage().contains("FeatureName"));
+            return;
+        }
+        if (!isValid) {
+            fail("Expected Exception not thrown");
+        }
+    }
+
     public static Optional<Node> getChildByName(@NonNull Node parent, @NonNull String localName) {
         NodeList childNodes = parent.getChildNodes();
         for (int i=0; i<childNodes.getLength(); i++) {
