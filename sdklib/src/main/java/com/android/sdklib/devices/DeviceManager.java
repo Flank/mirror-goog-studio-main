@@ -19,15 +19,18 @@ package com.android.sdklib.devices;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.prefs.AndroidLocation;
+import com.android.repository.api.LocalPackage;
+import com.android.repository.api.RepoManager;
 import com.android.repository.io.FileOp;
-import com.android.repository.io.FileOpUtils;
 import com.android.resources.Keyboard;
 import com.android.resources.KeyboardState;
 import com.android.resources.Navigation;
 import com.android.sdklib.internal.avd.AvdManager;
 import com.android.sdklib.internal.avd.HardwareProperties;
+import com.android.sdklib.repository.AndroidSdkHandler;
+import com.android.sdklib.repository.LoggerProgressIndicatorWrapper;
 import com.android.sdklib.repository.PkgProps;
+import com.android.sdklib.repository.meta.DetailsTypes;
 import com.android.utils.ILogger;
 import com.google.common.base.Charsets;
 import com.google.common.collect.HashBasedTable;
@@ -46,16 +49,11 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
@@ -81,6 +79,7 @@ public class DeviceManager {
     private final Object mLock = new Object();
     private final List<DevicesChangedListener> sListeners = new ArrayList<DevicesChangedListener>();
     private final File mOsSdkPath;
+    private final AndroidSdkHandler mSdkHandler;
 
     public enum DeviceFilter {
         /** getDevices() flag to list default devices from the bundled devices.xml definitions. */
@@ -115,17 +114,10 @@ public class DeviceManager {
     /**
      * Creates a new instance of {@link DeviceManager}, using the user's android folder.
      *
-     * @see #createInstance(File, File, ILogger, FileOp)
+     * @see #createInstance(AndroidSdkHandler, ILogger)
      */
     public static DeviceManager createInstance(@Nullable File sdkLocation, @NonNull ILogger log) {
-        File androidFolder;
-        try {
-            androidFolder = new File(AndroidLocation.getFolder());
-        } catch (AndroidLocation.AndroidLocationException e) {
-            androidFolder = null;
-        }
-
-        return createInstance(sdkLocation, androidFolder, log, FileOpUtils.create());
+        return createInstance(AndroidSdkHandler.getInstance(sdkLocation), log);
     }
 
     /**
@@ -137,33 +129,27 @@ public class DeviceManager {
      * @param log SDK logger instance. Should be non-null.
      */
     public static DeviceManager createInstance(
-            @Nullable File sdkLocation,
-            @Nullable File androidFolder,
-            @NonNull ILogger log,
-            @NonNull FileOp fop) {
+            @NonNull AndroidSdkHandler sdkHandler,
+            @NonNull ILogger log) {
         // TODO consider using a cache and reusing the same instance of the device manager
         // for the same manager/log combo.
-        return new DeviceManager(sdkLocation, androidFolder, log, fop);
+        return new DeviceManager(sdkHandler, log);
     }
 
     /**
      * Creates a new instance of DeviceManager.
      *
-     * @param osSdkPath Path to the current SDK. If null or invalid, vendor devices are ignored.
-     * @param androidFolder Path to the user's android folder. If null or invalid, user devices
-     *                      are ignored.
+     * @param sdkHandler The AndroidSdkHandler to use.
      * @param log SDK logger instance. Should be non-null.
-     * @param fop {@link FileOp} used for file I/O.
      */
     private DeviceManager(
-            @Nullable File osSdkPath,
-            @Nullable File androidFolder,
-            @NonNull ILogger log,
-            @NonNull FileOp fop) {
-        mOsSdkPath = osSdkPath;
-        mAndroidFolder = androidFolder;
+            @NonNull AndroidSdkHandler sdkHandler,
+            @NonNull ILogger log) {
+        mSdkHandler = sdkHandler;
+        mOsSdkPath = sdkHandler.getLocation();
+        mAndroidFolder = sdkHandler.getAndroidFolder();
         mLog = log;
-        mFop = fop;
+        mFop = sdkHandler.getFileOp();
     }
 
     /**
@@ -391,34 +377,23 @@ public class DeviceManager {
             if (mOsSdkPath == null) {
                 return false;
             }
+            // Load device definitions from the system image directories.
+            // Load in increasing order of Android version. This way, if there is a conflict,
+            // we'll retain the definitions from the higher API level. The file in the higher
+            // API directory is probably newer and more accurate.
+            LoggerProgressIndicatorWrapper progress = new LoggerProgressIndicatorWrapper(mLog);
 
-            // Load devices from tagged system-images
-            // Path pattern is /sdk/system-images/<platform-N>/<tag>/<abi>/devices.xml
-
-            File sysImgFolder = new File(mOsSdkPath, SdkConstants.FD_SYSTEM_IMAGES);
-
-            for (File platformFolder : mFop.listFiles(sysImgFolder)) {
-                if (!mFop.isDirectory(platformFolder)) {
-                    continue;
-                }
-
-                for (File tagFolder : mFop.listFiles(platformFolder)) {
-                    if (!mFop.isDirectory(tagFolder)) {
-                        continue;
-                    }
-
-                    for (File abiFolder : mFop.listFiles(tagFolder)) {
-                        if (!mFop.isDirectory(abiFolder)) {
-                            continue;
-                        }
-
-                        File deviceXml = new File(abiFolder, SdkConstants.FN_DEVICES_XML);
-                        if (mFop.isFile(deviceXml)) {
-                            mSysImgDevices.putAll(loadDevices(deviceXml));
-                        }
-                    }
-                }
-            }
+            RepoManager mgr = mSdkHandler.getSdkManager(progress);
+            mgr.loadSynchronously(RepoManager.DEFAULT_EXPIRATION_PERIOD_MS, progress, null, null);
+            mgr.getPackages().getLocalPackages().values().stream()
+              .filter(pkg -> pkg.getTypeDetails() instanceof DetailsTypes.SysImgDetailsType)
+              .sorted(Comparator.comparing(pkg -> ((DetailsTypes.SysImgDetailsType)pkg.getTypeDetails()).getAndroidVersion()))
+              .forEach(pkg -> {
+                  File deviceXml = new File(pkg.getLocation(), SdkConstants.FN_DEVICES_XML);
+                  if (mFop.isFile(deviceXml)) {
+                      mSysImgDevices.putAll(loadDevices(deviceXml));
+                  }
+              });
             return true;
         }
     }

@@ -16,6 +16,7 @@ import com.android.sdklib.devices.Device;
 import com.android.sdklib.devices.DeviceManager;
 import com.android.sdklib.devices.Software;
 import com.android.sdklib.devices.State;
+import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.utils.StdLogger;
 import com.google.common.collect.Lists;
 import java.util.Arrays;
@@ -26,7 +27,7 @@ import junit.framework.TestCase;
 public class HardwareConfigHelperTest extends TestCase {
     private static DeviceManager getDeviceManager() {
         return DeviceManager.createInstance(
-                null, null, new StdLogger(StdLogger.Level.INFO), new MockFileOp());
+                new AndroidSdkHandler(null, null, new MockFileOp()), new StdLogger(StdLogger.Level.INFO));
     }
 
     public void testNexus() {
