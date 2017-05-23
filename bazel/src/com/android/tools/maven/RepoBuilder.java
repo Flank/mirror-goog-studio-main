@@ -17,20 +17,28 @@
 package com.android.tools.maven;
 
 import com.android.tools.utils.Zipper;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
+import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.jar.Attributes;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
+import java.util.jar.JarOutputStream;
+import java.util.jar.Manifest;
 import java.util.zip.ZipOutputStream;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Parent;
@@ -50,7 +58,9 @@ import org.eclipse.aether.artifact.DefaultArtifact;
  * <p>After the zip argument the arguments are a sequence of "pom" + list of artifacts.
  */
 public class RepoBuilder {
-
+    private static final Attributes.Name PLUGIN_VERSION = new Attributes.Name("Plugin-Version");
+    private static final ImmutableSet<String> VERSIONED_ARTIFACTS =
+            ImmutableSet.of("gradle", "gradle-experimental");
 
     public static void main(String[] args) throws Exception {
         System.exit(new RepoBuilder().run(Arrays.asList(args)));
@@ -102,13 +112,43 @@ public class RepoBuilder {
                 } else {
                     assert model != null;
                     String path = mRepo.relativize(mRepo.getArtifactPath(model, classifier)).toString();
-                    zipper.addFileToZip(file, out, path, false);
+                    if (model.getGroupId().equals("com.android.tools.build")
+                            && (VERSIONED_ARTIFACTS.contains(model.getArtifactId()))) {
+                        // Inject the Plugin-Version manifest attribute into the jar.
+                        try (JarFile jarFile = new JarFile(file)) {
+                            Manifest manifest = jarFile.getManifest();
+                            manifest.getMainAttributes().put(PLUGIN_VERSION, model.getVersion());
+
+                            ByteArrayOutputStream newJar = new ByteArrayOutputStream();
+
+                            try (JarOutputStream jor = new JarOutputStream(newJar, manifest)) {
+                                for (JarEntry jarEntry : Collections.list(jarFile.entries())) {
+                                    if (isManifest(jarEntry)) {
+                                        continue;
+                                    }
+                                    jor.putNextEntry(jarEntry);
+                                    ByteStreams.copy(jarFile.getInputStream(jarEntry), jor);
+                                }
+                            }
+
+                            zipper.addEntryToZip(
+                                    new ByteArrayInputStream(newJar.toByteArray()), out, path);
+                        }
+
+                    } else {
+                        zipper.addFileToZip(file, out, path, false);
+                    }
                 }
             }
             out.flush();
         }
 
         return 0;
+    }
+
+    private static boolean isManifest(JarEntry jarEntry) {
+        //noinspection StringToUpperCaseOrToLowerCaseWithoutLocale - this is not human readable.
+        return jarEntry.getName().toUpperCase().equals("META-INF/MANIFEST.MF");
     }
 
     private static Options parseOptions(Iterator<String> it) throws IOException {
