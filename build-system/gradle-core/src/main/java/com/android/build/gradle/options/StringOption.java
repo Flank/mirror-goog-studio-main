@@ -23,7 +23,7 @@ import com.android.builder.model.AndroidProject;
 public enum StringOption implements Option<String> {
     BUILD_CACHE_DIR("android.buildCacheDir"),
 
-    IDE_BUILD_TARGET_DENISTY(AndroidProject.PROPERTY_BUILD_DENSITY),
+    IDE_BUILD_TARGET_DENSITY(AndroidProject.PROPERTY_BUILD_DENSITY),
     IDE_BUILD_TARGET_ABI(AndroidProject.PROPERTY_BUILD_ABI),
 
     IDE_RESTRICT_VARIANT_PROJECT(AndroidProject.PROPERTY_RESTRICT_VARIANT_PROJECT),

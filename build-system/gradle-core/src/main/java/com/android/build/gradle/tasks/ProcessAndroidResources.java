@@ -802,7 +802,7 @@ public class ProcessAndroidResources extends IncrementalTask {
 
             ProjectOptions projectOptions = variantScope.getGlobalScope().getProjectOptions();
             processResources.buildTargetDensity =
-                    projectOptions.get(StringOption.IDE_BUILD_TARGET_DENISTY);
+                    projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY);
 
             processResources.setMergeBlameLogFolder(
                     variantScope.getResourceBlameLogDir());

@@ -32,15 +32,16 @@ import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import org.gradle.api.logging.Logger;
@@ -198,11 +199,6 @@ public class InstantRunBuildContext {
         }
 
         @NonNull
-        public Stream<Artifact> getArtifactsForType(@NonNull FileType type) {
-            return artifacts.stream().filter(artifact -> artifact.getType().equals(type));
-        }
-
-        @NonNull
         public InstantRunVerifierStatus getVerifierStatus() {
             return verifierStatus;
         }
@@ -210,11 +206,6 @@ public class InstantRunBuildContext {
         @NonNull
         public InstantRunBuildMode getBuildMode() {
             return buildMode;
-        }
-
-        @Nullable
-        public InstantRunVerifierStatus getEligibilityStatus() {
-            return eligibilityStatus;
         }
     }
 
@@ -276,26 +267,34 @@ public class InstantRunBuildContext {
         }
     }
 
-    private final long[] taskStartTime = new long[TaskType.values().length];
-    private final long[] taskDurationInMs = new long[TaskType.values().length];
-    private InstantRunPatchingPolicy patchingPolicy;
-    /** Null until setApiLevel is called. */
-    @Nullable private AndroidVersion androidVersion = null;
+    @NonNull private final long[] taskStartTime = new long[TaskType.values().length];
+    @NonNull private final long[] taskDurationInMs = new long[TaskType.values().length];
+    @NonNull private final InstantRunPatchingPolicy patchingPolicy;
+    @NonNull private final AndroidVersion androidVersion;
 
-    private String density = null;
-    private String abi = null;
-    private final Build currentBuild;
-    private final TreeMap<Long, Build> previousBuilds = new TreeMap<>();
+    @Nullable private final String density;
+    @Nullable private final String abi;
+    @NonNull private final Build currentBuild;
+    @NonNull private final TreeMap<Long, Build> previousBuilds = new TreeMap<>();
     private final boolean isInstantRunMode;
-    private final AtomicLong token = new AtomicLong(0);
-    private boolean buildHasFailed = false;
+    @NonNull private final AtomicLong token = new AtomicLong(0);
+    @NonNull private final AtomicBoolean buildHasFailed = new AtomicBoolean(false);
 
-    public InstantRunBuildContext(boolean isInstantRunMode) {
-        this(defaultBuildIdAllocator, isInstantRunMode);
+    public InstantRunBuildContext(
+            boolean isInstantRunMode,
+            @NonNull AndroidVersion androidVersion,
+            @Nullable String targetAbi,
+            @Nullable String density) {
+        this(defaultBuildIdAllocator, isInstantRunMode, androidVersion, targetAbi, density);
     }
 
     @VisibleForTesting
-    InstantRunBuildContext(@NonNull BuildIdAllocator buildIdAllocator, boolean isInstantRunMode) {
+    InstantRunBuildContext(
+            @NonNull BuildIdAllocator buildIdAllocator,
+            boolean isInstantRunMode,
+            @NonNull AndroidVersion androidVersion,
+            @Nullable String targetAbi,
+            @Nullable String density) {
         currentBuild =
                 new Build(
                         buildIdAllocator.allocatedBuildId(),
@@ -303,6 +302,10 @@ public class InstantRunBuildContext {
                         InstantRunBuildMode.HOT_WARM,
                         null /* eligibilityStatus */);
         this.isInstantRunMode = isInstantRunMode;
+        this.androidVersion = androidVersion;
+        this.patchingPolicy = InstantRunPatchingPolicy.getPatchingPolicy(androidVersion);
+        this.abi = targetAbi;
+        this.density = density;
     }
 
     public boolean isInInstantRunMode() {
@@ -310,11 +313,11 @@ public class InstantRunBuildContext {
     }
 
     public void setBuildHasFailed() {
-        buildHasFailed = true;
+        buildHasFailed.set(true);
     }
 
     public boolean getBuildHasFailed() {
-        return buildHasFailed;
+        return buildHasFailed.get();
     }
 
     /**
@@ -388,11 +391,6 @@ public class InstantRunBuildContext {
         return currentBuild.getVerifierStatus();
     }
 
-    @Nullable
-    public InstantRunVerifierStatus getInstantRunEligibilityStatus() {
-        return currentBuild.getEligibilityStatus();
-    }
-
     /**
      * Returns true if the verifier did not find any incompatible changes for InstantRun or was not
      * run due to no code changes.
@@ -403,16 +401,9 @@ public class InstantRunBuildContext {
         return currentBuild.buildMode == InstantRunBuildMode.HOT_WARM;
     }
 
-    public void setApiLevel(@NonNull AndroidVersion androidVersion, @Nullable String targetAbi) {
-        this.androidVersion = androidVersion;
-        // cache the patching policy.
-        this.patchingPolicy = InstantRunPatchingPolicy.getPatchingPolicy(this.androidVersion);
-        this.abi = targetAbi;
-    }
-
+    @NonNull
     public AndroidVersion getAndroidVersion() {
-        return Preconditions.checkNotNull(
-                androidVersion, "setApiLevel should be called before any other actions.");
+        return androidVersion;
     }
 
     @Nullable
@@ -420,11 +411,7 @@ public class InstantRunBuildContext {
         return density;
     }
 
-    public void setDensity(@Nullable String density) {
-        this.density = density;
-    }
-
-    @Nullable
+    @NonNull
     public InstantRunPatchingPolicy getPatchingPolicy() {
         return patchingPolicy;
     }
@@ -449,8 +436,8 @@ public class InstantRunBuildContext {
 
         // validate the patching policy and the received file type to record the file or not.
         // RELOAD and MAIN are always record.
-        if (patchingPolicy != null &&
-                fileType != FileType.RELOAD_DEX
+        if (isInInstantRunMode()
+                && fileType != FileType.RELOAD_DEX
                 && fileType != FileType.MAIN
                 && fileType != FileType.RESOURCES) {
             switch (patchingPolicy) {
@@ -619,7 +606,6 @@ public class InstantRunBuildContext {
         // so deployment can be successful.
         boolean inMultiAPKOnBefore24 =
                 patchingPolicy == InstantRunPatchingPolicy.MULTI_APK
-                        && androidVersion != null
                         && androidVersion.getFeatureLevel() < 24;
         if (inMultiAPKOnBefore24) {
             LOG.debug("Adding split main if a split is present as deploying to a device < 24");
@@ -745,7 +731,7 @@ public class InstantRunBuildContext {
         loadFromDocument(XmlUtils.parseDocument(persistedState, false));
     }
 
-    private void loadFromDocument(@NonNull Document document) {
+    private synchronized void loadFromDocument(@NonNull Document document) {
         Element instantRun = document.getDocumentElement();
 
         if (!(Version.ANDROID_GRADLE_PLUGIN_VERSION.equals(
@@ -827,7 +813,7 @@ public class InstantRunBuildContext {
     }
 
     /** Close all activities related to InstantRun. */
-    public void close() {
+    public synchronized void close() {
         // add the current build to the list of builds to be persisted.
         previousBuilds.put(currentBuild.buildId, currentBuild);
 
@@ -872,10 +858,16 @@ public class InstantRunBuildContext {
 
         Document document = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
         toXml(document, persistenceMode);
-        return XmlPrettyPrinter.prettyPrint(document, true);
+        String xml = XmlPrettyPrinter.prettyPrint(document, true);
+        LOG.debug(
+                "build-info.xml save version :  {} patching : {} content : \n {} ",
+                androidVersion,
+                patchingPolicy,
+                xml);
+        return xml;
     }
 
-    private Element toXml(Document document, PersistenceMode persistenceMode) {
+    private void toXml(Document document, PersistenceMode persistenceMode) {
         Element instantRun = document.createElement(TAG_INSTANT_RUN);
         document.appendChild(instantRun);
 
@@ -891,8 +883,12 @@ public class InstantRunBuildContext {
             instantRun.appendChild(taskTypeNode);
         }
 
+        if (LOG.isDebugEnabled()) {
+            instantRun.setAttribute("pid", ManagementFactory.getRuntimeMXBean().getName());
+            instantRun.setAttribute("version", androidVersion.getApiString());
+        }
         //noinspection VariableNotUsedInsideIf
-        if (patchingPolicy != null) {
+        if (isInInstantRunMode()) {
             instantRun.setAttribute(
                     ATTR_API_LEVEL, String.valueOf(getAndroidVersion().getFeatureLevel()));
             if (density != null) {
@@ -927,7 +923,6 @@ public class InstantRunBuildContext {
             default:
                 throw new RuntimeException("PersistenceMode not handled" + persistenceMode);
         }
-        return instantRun;
     }
 
     /**

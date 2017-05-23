@@ -69,8 +69,8 @@ public class BuildInfoTasksTest {
 
     private void initialFailedBuild() throws IOException {
         Project project = createProject();
-        InstantRunBuildContext context = new InstantRunBuildContext(true);
-        context.setApiLevel(new AndroidVersion(23, null), null);
+        InstantRunBuildContext context =
+                new InstantRunBuildContext(true, new AndroidVersion(23, null), null, null);
         runLoaderTask(project, context);
 
         context.addChangedFile(FileType.RESOURCES, new File("resources-debug.ap_"));
@@ -81,8 +81,8 @@ public class BuildInfoTasksTest {
 
     private void secondPassingBuild() throws IOException {
         Project project = createProject();
-        InstantRunBuildContext context = new InstantRunBuildContext(true);
-        context.setApiLevel(new AndroidVersion(23, null), null);
+        InstantRunBuildContext context =
+                new InstantRunBuildContext(true, new AndroidVersion(23, null), null, null);
 
         runLoaderTask(project, context);
 

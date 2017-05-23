@@ -167,7 +167,7 @@ public class BasicTest {
     public void checkDensityAndResourceConfigs() throws Exception {
         project.executor()
                 .withInstantRun(new AndroidVersion(23, null), OptionalCompilationStep.RESTART_ONLY)
-                .with(StringOption.IDE_BUILD_TARGET_DENISTY, "xxhdpi")
+                .with(StringOption.IDE_BUILD_TARGET_DENSITY, "xxhdpi")
                 .run("assembleDebug");
     }
 

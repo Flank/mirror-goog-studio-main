@@ -245,11 +245,6 @@ public class InstantRunTaskManager {
         TransformVariantScope transformVariantScope = variantScope.getTransformVariantScope();
         InstantRunBuildContext context = variantScope.getInstantRunBuildContext();
 
-        context.setApiLevel(
-                DeploymentDevice.getDeploymentDeviceAndroidVersion(projectOptions),
-                projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI));
-        context.setDensity(projectOptions.get(StringOption.IDE_BUILD_TARGET_DENISTY));
-
         if (transformVariantScope.getGlobalScope().isActive(OptionalCompilationStep.FULL_APK)) {
             context.setVerifierStatus(InstantRunVerifierStatus.FULL_BUILD_REQUESTED);
         } else if (transformVariantScope.getGlobalScope().isActive(
