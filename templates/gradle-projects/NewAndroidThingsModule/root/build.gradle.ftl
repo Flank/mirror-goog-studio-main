@@ -3,6 +3,9 @@ apply plugin: 'com.android.library'
 <#else>
 apply plugin: 'com.android.application'
 </#if>
+<#if includeKotlinSupport!false>
+apply plugin: 'kotlin-android'
+</#if>
 
 android {
     compileSdkVersion <#if buildApiString?matches("^\\d+$")>${buildApiString}<#else>'${buildApiString}'</#if>
@@ -57,4 +60,7 @@ dependencies {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
     provided 'com.google.android.things:androidthings:+'
+<#if includeKotlinSupport!false>
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
+</#if>
 }

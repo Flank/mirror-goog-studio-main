@@ -11,6 +11,8 @@
     <global id="buildToolsVersion" value="18.0.1" />
     <global id="gradlePluginVersion" value="0.6.+" />
     <global id="unitTestsSupported" type="boolean" value="${(compareVersions(gradlePluginVersion, '1.1.0') >= 0)?string}" />
+    <global id="generateKotlin" type="boolean"
+            value="${((includeKotlinSupport!false) || (language!'Java')?string == 'Kotlin')?string}" />
 
     <global id="isLibraryProject" type="boolean" value="${(isLibraryProject!false)?string}" />
     <global id="isApplicationProject" type="boolean" value="${(!(isLibraryProject!false))?string}" />

@@ -13,12 +13,22 @@
                    to="${escapeXmlAttribute(manifestOut)}/AndroidManifest.xml" />
     <instantiate from="root/res/values/strings.xml.ftl"
                    to="${escapeXmlAttribute(resOut)}/values/strings.xml" />
+<#if generateKotlin>
+    <instantiate from="root/test/app_package/ExampleInstrumentedTest.kt.ftl"
+                   to="${escapeXmlAttribute(testOut)}/ExampleInstrumentedTest.kt" />
+<#else>
     <instantiate from="root/test/app_package/ExampleInstrumentedTest.java.ftl"
                    to="${escapeXmlAttribute(testOut)}/ExampleInstrumentedTest.java" />
+</#if>
 
 <#if unitTestsSupported>
+<#if generateKotlin>
+    <instantiate from="root/test/app_package/ExampleUnitTest.kt.ftl"
+                   to="${escapeXmlAttribute(unitTestOut)}/ExampleUnitTest.kt" />
+<#else>
     <instantiate from="root/test/app_package/ExampleUnitTest.java.ftl"
                    to="${escapeXmlAttribute(unitTestOut)}/ExampleUnitTest.java" />
+</#if>
     <dependency mavenUrl="junit:junit:4.12" gradleConfiguration="testCompile" />
 </#if>
 
@@ -36,7 +46,7 @@
                    to="${escapeXmlAttribute(projectOut)}/proguard-rules.pro" />
 </#if>
 
-<#if !isLibraryProject && generateLayout>
+<#if !isLibraryProject && generateLayout!false>
     <instantiate from="root/res/values/styles.xml.ftl"
                    to="${escapeXmlAttribute(resOut)}/values/styles.xml" />
     <#if buildApi gte 22>
