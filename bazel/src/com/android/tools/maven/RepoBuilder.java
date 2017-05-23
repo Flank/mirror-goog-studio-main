@@ -29,6 +29,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipOutputStream;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Parent;
@@ -84,6 +86,12 @@ public class RepoBuilder {
             Zipper zipper = new Zipper();
             Model model = null;
             for (String inputFile : options.files) {
+                String classifier = null;
+                if (inputFile.contains(":")) {
+                    String[] classified = inputFile.split(":");
+                    inputFile = classified[0];
+                    classifier = classified[1];
+                }
                 File file = new File(inputFile);
                 if (inputFile.endsWith(".pom")) {
                     Path pomFile = file.toPath();
@@ -93,13 +101,7 @@ public class RepoBuilder {
                     zipper.addFileToZip(file, out, path, false);
                 } else {
                     assert model != null;
-                    String path;
-                    if (inputFile.endsWith("-src.jar") || inputFile.endsWith("-sources.jar")) {
-                        path = mRepo.relativize(mRepo.getSourceArtifactPath(model)).toString();
-                    } else {
-                        path = mRepo.relativize(mRepo.getArtifactPath(model)).toString();
-                    }
-
+                    String path = mRepo.relativize(mRepo.getArtifactPath(model, classifier)).toString();
                     zipper.addFileToZip(file, out, path, false);
                 }
             }
