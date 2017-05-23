@@ -17,13 +17,15 @@
 package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.dsl.Splits;
 import com.android.build.gradle.internal.scope.SplitList;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.BaseTask;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterators;
+import com.google.common.collect.Iterables;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -50,15 +52,18 @@ import org.gradle.api.tasks.TaskAction;
  */
 public class SplitsDiscovery extends BaseTask {
 
-    FileCollection mergedResourcesFolders;
+    @Nullable FileCollection mergedResourcesFolders;
     Set<String> densityFilters;
     boolean densityAuto;
     Set<String> languageFilters;
     boolean languageAuto;
     Set<String> abiFilters;
+    boolean resConfigAuto;
     Collection<String> resourceConfigs;
 
     @InputFiles
+    @Optional
+    @Nullable
     FileCollection getMergedResourcesFolders() {
         return mergedResourcesFolders;
     }
@@ -93,6 +98,11 @@ public class SplitsDiscovery extends BaseTask {
     }
 
     @Input
+    public boolean isResConfigAuto() {
+        return resConfigAuto;
+    }
+
+    @Input
     Collection<String> getResourceConfigs() {
         return resourceConfigs;
     }
@@ -107,10 +117,10 @@ public class SplitsDiscovery extends BaseTask {
     @TaskAction
     void taskAction() throws IOException {
 
-        Set<File> mergedResourcesFolderFiles = getMergedResourcesFolders().getFiles();
+        Set<File> mergedResourcesFolderFiles =
+                mergedResourcesFolders != null ? mergedResourcesFolders.getFiles() : null;
         Collection<String> resConfigs = resourceConfigs;
-        if (resourceConfigs.size() == 1
-                && Iterators.getOnlyElement(resourceConfigs.iterator()).equals("auto")) {
+        if (resConfigAuto) {
             resConfigs = discoverListOfResourceConfigsNotDensities();
         }
         SplitList.save(
@@ -125,17 +135,20 @@ public class SplitsDiscovery extends BaseTask {
     /**
      * Gets the list of filter values for a filter type either from the user specified build.gradle
      * settings or through a discovery mechanism using folders names.
+     *
      * @param resourceFolders the list of source folders to discover from.
      * @param filterType the filter type
      * @return a possibly empty list of filter value for this filter type.
      */
     @NonNull
     private Set<String> getFilters(
-            @NonNull Iterable<File> resourceFolders,
-            @NonNull DiscoverableFilterType filterType) {
+            @Nullable Iterable<File> resourceFolders, @NonNull DiscoverableFilterType filterType) {
 
         Set<String> filtersList = new HashSet<>();
         if (filterType.isAuto(this)) {
+            Preconditions.checkNotNull(
+                    resourceFolders,
+                    "Merged resources must be supplied to perform automatic discovery of splits.");
             filtersList.addAll(getAllFilters(resourceFolders, filterType.folderPrefix));
         } else {
             filtersList.addAll(filterType.getConfiguredFilters(this));
@@ -146,6 +159,9 @@ public class SplitsDiscovery extends BaseTask {
     @NonNull
     public List<String> discoverListOfResourceConfigsNotDensities() {
         List<String> resFoldersOnDisk = new ArrayList<>();
+        Preconditions.checkNotNull(
+                mergedResourcesFolders,
+                "Merged resources must be supplied to perform automatic discovery of resource configs.");
         resFoldersOnDisk.addAll(
                 getAllFilters(
                         mergedResourcesFolders, DiscoverableFilterType.LANGUAGE.folderPrefix));
@@ -153,14 +169,16 @@ public class SplitsDiscovery extends BaseTask {
     }
 
     /**
-     * Discover all sub-folders of all the resource folders which names are
-     * starting with one of the provided prefixes.
+     * Discover all sub-folders of all the resource folders which names are starting with one of the
+     * provided prefixes.
+     *
      * @param resourceFolders the list of resource folders
      * @param prefixes the list of prefixes to look for folders.
      * @return a possibly empty list of folders.
      */
     @NonNull
-    private static List<String> getAllFilters(Iterable<File> resourceFolders, String... prefixes) {
+    private static List<String> getAllFilters(
+            @NonNull Iterable<File> resourceFolders, @NonNull String... prefixes) {
         List<String> providedResFolders = new ArrayList<>();
         for (File resFolder : resourceFolders) {
             File[] subResFolders = resFolder.listFiles();
@@ -242,10 +260,8 @@ public class SplitsDiscovery extends BaseTask {
             }
         };
 
-        /**
-         * Sets the folder prefix that filter specific resources must start with.
-         */
-        private String folderPrefix;
+        /** The folder prefix that filter specific resources must start with. */
+        private final String folderPrefix;
 
         DiscoverableFilterType(String folderPrefix) {
             this.folderPrefix = folderPrefix;
@@ -304,13 +320,22 @@ public class SplitsDiscovery extends BaseTask {
             if (splits.getAbi().isEnable()) {
                 task.abiFilters = splits.getAbiFilters();
             }
-            task.mergedResourcesFolders =
-                    variantScope.getOutput(VariantScope.TaskOutputType.MERGED_RES);
+
             task.resourceConfigs =
                     variantScope
                             .getVariantConfiguration()
                             .getMergedFlavor()
                             .getResourceConfigurations();
+
+            task.resConfigAuto =
+                    task.resourceConfigs.size() == 1
+                            && Iterables.getOnlyElement(task.resourceConfigs).equals("auto");
+
+            // Only consume the merged resources if auto is being used.
+            if (task.densityAuto || task.languageAuto || task.resConfigAuto) {
+                task.mergedResourcesFolders =
+                        variantScope.getOutput(VariantScope.TaskOutputType.MERGED_RES);
+            }
         }
     }
 }
