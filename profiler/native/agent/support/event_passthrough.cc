@@ -175,12 +175,6 @@ Java_com_android_tools_profiler_support_profilers_EventProfiler_sendActivitySave
 }
 
 JNIEXPORT void JNICALL
-Java_com_android_tools_profiler_support_activity_ActivityWrapper_sendActivityOnRestart(
-    JNIEnv* env, jobject thiz, jstring jname, jint jhash) {
-  EnqueueActivityEvent(env, jname, ActivityStateData::RESTARTED, jhash);
-}
-
-JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_profilers_EventProfiler_sendFragmentAdded(
     JNIEnv* env, jobject thiz, jstring jname, jint jhash, jint activity_hash) {
   EnqueueFragmentEvent(env, jname, ActivityStateData::ADDED, jhash,
