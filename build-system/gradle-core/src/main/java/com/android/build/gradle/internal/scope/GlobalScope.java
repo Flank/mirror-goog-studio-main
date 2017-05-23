@@ -182,7 +182,11 @@ public class GlobalScope extends TaskOutputHolderImpl
             if (getExtension().getTestOptions().getUnitTests().isReturnDefaultValues()) {
                 suffix.append(".default-values");
             }
-            suffix.append(".v2"); // Does not contain Android resources or assets.
+
+            // v2: Does not contain Android resources or assets.
+            // v3: Provides implementations of native methods.
+            suffix.append(".v3");
+
             suffix.append(".jar");
 
             File outDir =
