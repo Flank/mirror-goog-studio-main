@@ -21,11 +21,11 @@ import com.android.tools.apk.analyzer.ArchiveNode;
 import java.nio.file.Path;
 
 public class ApkDiffEntry implements ApkEntry {
-    @NonNull private final String myName;
-    @Nullable private final ArchiveNode myOldFile;
-    @Nullable private final ArchiveNode myNewFile;
-    private final long myOldSize;
-    private final long myNewSize;
+    @NonNull private final String name;
+    @Nullable private final ArchiveNode oldFile;
+    @Nullable private final ArchiveNode newFile;
+    private final long oldSize;
+    private final long newSize;
 
     ApkDiffEntry(
             @NonNull String name,
@@ -36,37 +36,37 @@ public class ApkDiffEntry implements ApkEntry {
         if (oldFile == null && newFile == null) {
             throw new IllegalArgumentException("Both files can't be null");
         }
-        this.myName = name;
-        this.myOldFile = oldFile;
-        this.myNewFile = newFile;
-        this.myOldSize = oldSize;
-        this.myNewSize = newSize;
+        this.name = name;
+        this.oldFile = oldFile;
+        this.newFile = newFile;
+        this.oldSize = oldSize;
+        this.newSize = newSize;
     }
 
     @Override
     @NonNull
     public String getName() {
-        return myName;
+        return name;
     }
 
     @Override
     @NonNull
     public Path getPath() {
-        assert myOldFile != null || myNewFile != null;
-        return myOldFile != null ? myOldFile.getData().getPath() : myNewFile.getData().getPath();
+        assert oldFile != null || newFile != null;
+        return oldFile != null ? oldFile.getData().getPath() : newFile.getData().getPath();
     }
 
     @Override
     public long getSize() {
-        return myNewSize - myOldSize;
+        return newSize - oldSize;
     }
 
     public long getOldSize() {
-        return myOldSize;
+        return oldSize;
     }
 
     public long getNewSize() {
-        return myNewSize;
+        return newSize;
     }
 
     public static long getOldSize(@NonNull ApkEntry apkEntry) {

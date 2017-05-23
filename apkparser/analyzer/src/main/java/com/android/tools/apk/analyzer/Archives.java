@@ -16,15 +16,21 @@
 
 package com.android.tools.apk.analyzer;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.annotations.VisibleForTesting;
 import com.android.tools.apk.analyzer.internal.AndroidArtifact;
 import com.android.tools.apk.analyzer.internal.ZipArtifact;
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.TreeTraverser;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.stream.StreamSupport;
 
 public class Archives {
 
@@ -45,5 +51,27 @@ public class Archives {
         URI uri = URI.create("jar:" + archive.toUri().toString());
         FileSystem fileSystem = FileSystems.newFileSystem(uri, Collections.emptyMap());
         return new AndroidArtifact(archive, fileSystem);
+    }
+
+    @VisibleForTesting
+    public static Archive getFirstManifestArchive(@NonNull ArchiveNode input) {
+        FluentIterable<ArchiveNode> bfsIterable =
+                new TreeTraverser<ArchiveNode>() {
+                    @Override
+                    public Iterable<ArchiveNode> children(@NonNull ArchiveNode root) {
+                        return root.getChildren();
+                    }
+                }.breadthFirstTraversal(input);
+
+        return StreamSupport.stream(bfsIterable.spliterator(), false)
+                .map(node -> node.getData().getArchive())
+                .distinct()
+                .filter(
+                        archive ->
+                                Files.exists(
+                                        archive.getContentRoot()
+                                                .resolve(SdkConstants.FN_ANDROID_MANIFEST_XML)))
+                .findFirst()
+                .orElse(null);
     }
 }

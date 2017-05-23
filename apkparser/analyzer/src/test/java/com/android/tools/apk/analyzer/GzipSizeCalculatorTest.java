@@ -26,30 +26,30 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class GzipSizeCalculatorTest {
-    private ApkSizeCalculator myCalculator;
-    private Path myApk;
+    private ApkSizeCalculator calculator;
+    private Path apk;
 
     @Before
     public void setup() {
-        myApk = TestResources.getFile("/test.apk").toPath();
-        myCalculator = new GzipSizeCalculator();
+        apk = TestResources.getFile("/test.apk").toPath();
+        calculator = new GzipSizeCalculator();
     }
 
     @Test
     public void getFullApkDownloadSize() {
         long expected = 502; // gzip -9 test.apk; ls -l test.apk.gz
-        assertThat(myCalculator.getFullApkDownloadSize(myApk)).isEqualTo(expected);
+        assertThat(calculator.getFullApkDownloadSize(apk)).isEqualTo(expected);
     }
 
     @Test
     public void getFullApkRawSize() {
         long expected = 960; // ls -l test.apk
-        assertThat(myCalculator.getFullApkRawSize(myApk)).isEqualTo(expected);
+        assertThat(calculator.getFullApkRawSize(apk)).isEqualTo(expected);
     }
 
     @Test
     public void getDownloadSizePerFile() {
-        Map<String, Long> downloadSizePerFile = myCalculator.getDownloadSizePerFile(myApk);
+        Map<String, Long> downloadSizePerFile = calculator.getDownloadSizePerFile(apk);
 
         // The expected values can be seen via unzip -lv resources/test.apk
         // Note: for this test apk, the re-compressing at "zip -9" actually has no impact.
@@ -61,7 +61,7 @@ public class GzipSizeCalculatorTest {
 
     @Test
     public void getRawSizePerFile() {
-        Map<String, Long> rawSizePerFile = myCalculator.getRawSizePerFile(myApk);
+        Map<String, Long> rawSizePerFile = calculator.getRawSizePerFile(apk);
 
         // The expected values can be seen via unzip -lv resources/test.apk
         assertThat(rawSizePerFile.get("/AndroidManifest.xml")).isEqualTo(11);

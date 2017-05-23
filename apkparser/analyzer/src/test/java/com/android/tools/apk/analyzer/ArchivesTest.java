@@ -17,15 +17,14 @@
 package com.android.tools.apk.analyzer;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 import com.android.testutils.TestResources;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import java.io.IOException;
-import java.nio.file.FileSystem;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
+import java.nio.file.*;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -73,6 +72,28 @@ public class ArchivesTest {
         try (Archive archive = Archives.open(apk)) {
             assertThat(archive).isNotNull();
         }
+    }
+
+
+    @Test
+    public void getFirstManifestArchive_apk() throws IOException {
+        Archive archive = Archives.open(getArchivePath("1.apk"));
+        ArchiveNode node = ArchiveTreeStructure.create(archive);
+        Archive archive2 = Archives.getFirstManifestArchive(node);
+        assertEquals(archive, archive2);
+    }
+
+    @Test
+    public void getFirstManifestArchive_bundle() throws IOException {
+        Archive archive = Archives.open(getArchivePath("bundle.zip"));
+        ArchiveNode node = ArchiveTreeStructure.create(archive);
+        Archive archive2 = Archives.getFirstManifestArchive(node);
+        assertNotEquals(archive, archive2);
+        assertEquals(node.getChildren().get(0).getData().getArchive(), archive2);
+    }
+
+    private static Path getArchivePath(String s) {
+        return TestResources.getFile("/" + s).toPath();
     }
 
     @Test
