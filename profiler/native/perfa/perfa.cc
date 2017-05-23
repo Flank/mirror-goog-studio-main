@@ -186,15 +186,101 @@ void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni) {
   agent_lib_path.append("/perfa.jar");
   jvmti->AddToBootstrapClassLoaderSearch(agent_lib_path.c_str());
 
-  // We need to manually bind these two methods, because they are called from a
-  // thread that spanws
-  // in the "initialize" call, and the agent functions are only available after
-  // attaching.
-  // We will remove this once the tracking is done via JVMTI.
+  // TODO: Removed these once the auto-JNI-binding feature becomes
+  // available in all published O system images.
+  BindJNIMethod(jni,
+                "com/android/tools/profiler/support/network/"
+                "HttpTracker$InputStreamTracker",
+                "onClose", "(J)V");
+  BindJNIMethod(jni,
+                "com/android/tools/profiler/support/network/"
+                "HttpTracker$InputStreamTracker",
+                "onReadBegin", "(J)V");
+  BindJNIMethod(jni,
+                "com/android/tools/profiler/support/network/"
+                "HttpTracker$InputStreamTracker",
+                "reportBytes", "(J[B)V");
+  BindJNIMethod(jni,
+                "com/android/tools/profiler/support/network/"
+                "HttpTracker$OutputStreamTracker",
+                "onClose", "(J)V");
+  BindJNIMethod(jni,
+                "com/android/tools/profiler/support/network/"
+                "HttpTracker$OutputStreamTracker",
+                "onWriteBegin", "(J)V");
+  BindJNIMethod(
+      jni, "com/android/tools/profiler/support/network/HttpTracker$Connection",
+      "nextId", "()J");
+  BindJNIMethod(
+      jni, "com/android/tools/profiler/support/network/HttpTracker$Connection",
+      "trackThread", "(JLjava/lang/String;J)V");
+  BindJNIMethod(
+      jni, "com/android/tools/profiler/support/network/HttpTracker$Connection",
+      "onPreConnect", "(JLjava/lang/String;Ljava/lang/String;)V");
+  BindJNIMethod(
+      jni, "com/android/tools/profiler/support/network/HttpTracker$Connection",
+      "onRequestBody", "(J)V");
+  BindJNIMethod(
+      jni, "com/android/tools/profiler/support/network/HttpTracker$Connection",
+      "onRequest", "(JLjava/lang/String;Ljava/lang/String;)V");
+  BindJNIMethod(
+      jni, "com/android/tools/profiler/support/network/HttpTracker$Connection",
+      "onResponse", "(JLjava/lang/String;Ljava/lang/String;)V");
+  BindJNIMethod(
+      jni, "com/android/tools/profiler/support/network/HttpTracker$Connection",
+      "onResponseBody", "(J)V");
+  BindJNIMethod(
+      jni, "com/android/tools/profiler/support/network/HttpTracker$Connection",
+      "onDisconnect", "(J)V");
+  BindJNIMethod(
+      jni, "com/android/tools/profiler/support/network/HttpTracker$Connection",
+      "onError", "(JLjava/lang/String;)V");
+
   BindJNIMethod(jni, "com/android/tools/profiler/support/memory/VmStatsSampler",
                 "logAllocStats", "(II)V");
   BindJNIMethod(jni, "com/android/tools/profiler/support/memory/VmStatsSampler",
                 "logGcStats", "()V");
+
+  BindJNIMethod(
+      jni, "com/android/tools/profiler/support/event/InputConnectionWrapper",
+      "sendKeyboardEvent", "(Ljava/lang/String;)V");
+  BindJNIMethod(
+      jni, "com/android/tools/profiler/support/event/WindowProfilerCallback",
+      "sendTouchEvent", "(IJ)V");
+  BindJNIMethod(
+      jni, "com/android/tools/profiler/support/event/WindowProfilerCallback",
+      "sendKeyEvent", "(Ljava/lang/String;J)V");
+
+  BindJNIMethod(jni,
+                "com/android/tools/profiler/support/profilers/EventProfiler",
+                "sendActivityCreated", "(Ljava/lang/String;I)V");
+  BindJNIMethod(jni,
+                "com/android/tools/profiler/support/profilers/EventProfiler",
+                "sendActivityStarted", "(Ljava/lang/String;I)V");
+  BindJNIMethod(jni,
+                "com/android/tools/profiler/support/profilers/EventProfiler",
+                "sendActivityResumed", "(Ljava/lang/String;I)V");
+  BindJNIMethod(jni,
+                "com/android/tools/profiler/support/profilers/EventProfiler",
+                "sendActivityPaused", "(Ljava/lang/String;I)V");
+  BindJNIMethod(jni,
+                "com/android/tools/profiler/support/profilers/EventProfiler",
+                "sendActivityStopped", "(Ljava/lang/String;I)V");
+  BindJNIMethod(jni,
+                "com/android/tools/profiler/support/profilers/EventProfiler",
+                "sendActivitySaved", "(Ljava/lang/String;I)V");
+  BindJNIMethod(jni,
+                "com/android/tools/profiler/support/profilers/EventProfiler",
+                "sendActivityDestroyed", "(Ljava/lang/String;I)V");
+  BindJNIMethod(jni,
+                "com/android/tools/profiler/support/profilers/EventProfiler",
+                "sendFragmentAdded", "(Ljava/lang/String;II)V");
+  BindJNIMethod(jni,
+                "com/android/tools/profiler/support/profilers/EventProfiler",
+                "sendFragmentRemoved", "(Ljava/lang/String;II)V");
+  BindJNIMethod(jni,
+                "com/android/tools/profiler/support/profilers/EventProfiler",
+                "sendRotationEvent", "(I)V");
 
   jclass service =
       jni->FindClass("com/android/tools/profiler/support/ProfilerService");
