@@ -115,6 +115,19 @@ public class MavenRepository {
         return getPath(new DefaultArtifact(group, artifact, extension, version));
     }
 
+    private Path getPath(String group, String artifact, String classifier, String extension, String version) {
+        return getPath(new DefaultArtifact(group, artifact, classifier, extension, version));
+    }
+
+    public Path getArtifactPath(Model model, String classifier) {
+        return getPath(
+                model.getGroupId(),
+                model.getArtifactId(),
+                classifier,
+                getArtifactExtension(model),
+                model.getVersion());
+    }
+
     public Path getArtifactPath(Model model) {
         return getPath(
                 model.getGroupId(),

@@ -3,27 +3,32 @@ load(":functions.bzl", "explicit_target", "create_option_file")
 def _maven_pom_impl(ctx):
   # Contains both *.jar and *.aar files.
   jars = set()
-  # Source jars
-  srcjars = set()
+  # classfied jars. Sources are in clsjars["sources"]
+  clsjars = {} # classifier -> set(jars)
+  clsjars["sources"] = set()
 
   if ctx.attr.library:
-    if (ctx.attr.file):
+    if ctx.attr.file:
       fail("Cannot set both file and library for a maven_pom.")
     jars = jars | set([jar.class_jar for jar in ctx.attr.library.java.outputs.jars])
-    srcjars = srcjars | ctx.attr.library.java.source_jars
+    clsjars["sources"] = clsjars["sources"] | ctx.attr.library.java.source_jars
+    for classifier, library in zip(ctx.attr.classifiers, ctx.attr.classified_libraries):
+      if classifier not in clsjars:
+        clsjars[classifier] = set()
+      clsjars[classifier] += set([jar.class_jar for jar in library.java.outputs.jars])
 
   if ctx.attr.file:
-    if (ctx.attr.library):
+    if ctx.attr.library or ctx.attr.classified_libraries:
       fail("Cannot set both file and library for a maven_pom.")
     jars = jars | ctx.attr.file.files
 
   parent_poms = set([], order="compile")
   parent_jars = {}
-  parent_srcjars = {}
+  parent_clsjars = {} # pom -> classifier -> set(jars)
 
   deps_poms = set([], order="compile")
   deps_jars = {}
-  deps_srcjars = {}
+  deps_clsjars = {} # pom -> classifier -> set(jars)
 
   # Transitive deps through the parent attribute
   if ctx.attr.parent:
@@ -33,14 +38,14 @@ def _maven_pom_impl(ctx):
     parent_jars += ctx.attr.parent.maven.parent.jars
     parent_jars += ctx.attr.parent.maven.deps.jars
     parent_jars += {ctx.file.parent: ctx.attr.parent.maven.jars}
-    parent_srcjars += ctx.attr.parent.maven.parent.srcjars
-    parent_srcjars += ctx.attr.parent.maven.deps.srcjars
-    parent_srcjars += {ctx.file.parent: ctx.attr.parent.maven.srcjars}
+    parent_clsjars += ctx.attr.parent.maven.parent.clsjars
+    parent_clsjars += ctx.attr.parent.maven.deps.clsjars
+    parent_clsjars += {ctx.file.parent: ctx.attr.parent.maven.clsjars}
   else:
     if hasattr(ctx.attr.source, "maven"):
       parent_poms = ctx.attr.source.maven.parent.poms
       parent_jars = ctx.attr.source.maven.parent.jars
-      parent_srcjars = ctx.attr.source.maven.parent.srcjars
+      parent_clsjars = ctx.attr.source.maven.parent.clsjars
 
   # Transitive deps through deps
   if ctx.attr.deps:
@@ -51,14 +56,14 @@ def _maven_pom_impl(ctx):
       deps_jars += label.maven.parent.jars
       deps_jars += label.maven.deps.jars
       deps_jars += {label.maven.pom: label.maven.jars}
-      deps_srcjars += label.maven.parent.srcjars
-      deps_srcjars += label.maven.deps.srcjars
-      deps_srcjars += {label.maven.pom: label.maven.srcjars}
+      deps_clsjars += label.maven.parent.clsjars
+      deps_clsjars += label.maven.deps.clsjars
+      deps_clsjars += {label.maven.pom: label.maven.clsjars}
   else:
     if hasattr(ctx.attr.source, "maven"):
       deps_poms = ctx.attr.source.maven.deps.poms
       deps_jars = ctx.attr.source.maven.deps.jars
-      deps_srcjars = ctx.attr.source.maven.deps.srcjars
+      deps_clsjars = ctx.attr.source.maven.deps.clsjars
 
   inputs = [];
   args = []
@@ -98,16 +103,16 @@ def _maven_pom_impl(ctx):
     parent = struct(
       poms = parent_poms,
       jars = parent_jars,
-      srcjars = parent_srcjars,
+      clsjars = parent_clsjars,
     ),
     deps = struct(
       poms = deps_poms,
       jars = deps_jars,
-      srcjars = deps_srcjars,
+      clsjars = deps_clsjars,
     ),
     pom = ctx.outputs.pom,
     jars = jars,
-    srcjars = srcjars,
+    clsjars = clsjars,
   ))
 
 
@@ -117,6 +122,13 @@ maven_pom = rule(
     "deps": attr.label_list(),
     "library": attr.label(
         allow_files = True
+    ),
+    "classifiers": attr.string_list(
+      default = [],
+    ),
+    "classified_libraries": attr.label_list(
+        allow_files = True,
+        default = [],
     ),
     "file": attr.label(
         allow_files = True
@@ -193,16 +205,29 @@ def maven_java_library(name,
   )
 
 # A java_import rule extended with pom and parent attributes for maven libraries.
-def maven_java_import(name, pom, visibility=None, **kwargs):
+def maven_java_import(name, pom, classifiers=[], visibility=None, jars=[], **kwargs):
   native.java_import(
     name = name,
     visibility = visibility,
+    jars = jars,
     **kwargs
   )
+
+  classified_libraries = []
+  for classifier in classifiers:
+    native.java_import(
+      name = classifier + "-" + name,
+      visibility = visibility,
+      jars = [jar.replace(".jar", "-" + classifier + ".jar") for jar in jars],
+      **kwargs
+    )
+    classified_libraries += [classifier + "-" + name]
 
   maven_pom(
     name = name + "_maven",
     library = name,
+    classifiers = classifiers,
+    classified_libraries = classified_libraries,
     visibility = visibility,
     source = pom,
   )
@@ -226,33 +251,40 @@ def _maven_repo_impl(ctx):
 
   seen = {}
   inputs = []
+  args = []
   for artifact in ctx.attr.artifacts:
     if not seen.get(artifact.maven.pom):
       for pom in artifact.maven.parent.poms:
         jars = artifact.maven.parent.jars[pom]
         if not seen.get(pom):
           inputs += [pom] + list(jars)
-          if include_sources:
-            srcjars = artifact.maven.parent.srcjars[pom]
-            inputs += list(srcjars)
+          args += [pom.path] + [jar.path for jar in list(jars)]
+          clsjars = artifact.maven.parent.clsjars[pom]
+          for classifier in clsjars:
+            inputs += list(clsjars[classifier])
+            args += [jar.path + ":" + classifier for jar in list(clsjars[classifier])]
           seen += {pom: True}
       inputs += [artifact.maven.pom] + list(artifact.maven.jars)
-      if include_sources:
-        inputs += list(artifact.maven.srcjars)
+      args += [artifact.maven.pom.path] + [jar.path for jar in list(artifact.maven.jars)]
+      for classifier in artifact.maven.clsjars:
+        inputs += list(artifact.maven.clsjars[classifier])
+        args += [jar.path + ":" + classifier for jar in list(artifact.maven.clsjars[classifier])]
 
       seen += {artifact.maven.pom: True}
       for pom in artifact.maven.deps.poms:
         jars = artifact.maven.deps.jars[pom]
         if not seen.get(pom):
           inputs += [pom] + list(jars)
+          args += [pom.path] + [jar.path for jar in list(jars)]
           if include_sources:
-            srcjars = artifact.maven.deps.srcjars[pom]
-            inputs += list(srcjars)
+            clsjars = artifact.maven.deps.clsjars[pom]
+            inputs += list(clsjars[classifier])
+            args += [jar.path + ":" + classifier for jar in list(clsjars[classifier])]
           seen += {pom: True}
 
   # Execute the command
   option_file = create_option_file(ctx, ctx.outputs.repo.path + ".lst",
-    "\n".join([file.path for file in inputs]))
+    "\n".join(args))
 
   ctx.action(
     inputs = inputs + [option_file],
