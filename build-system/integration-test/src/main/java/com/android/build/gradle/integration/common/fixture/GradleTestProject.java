@@ -104,7 +104,7 @@ public final class GradleTestProject implements TestRule {
     public static final String UPCOMING_BUILD_TOOL_VERSION = "25.0.0";
     public static final String REMOTE_TEST_PROVIDER = System.getenv().get("REMOTE_TEST_PROVIDER");
 
-    public static final String DEFAULT_KOTLIN_PLUGIN_VERSION = "1.1.2-4";
+    public static final String DEFAULT_KOTLIN_PLUGIN_VERSION = "1.0.5";
 
     public static final String DEVICE_PROVIDER_NAME =
             REMOTE_TEST_PROVIDER != null ? REMOTE_TEST_PROVIDER : BuilderConstants.CONNECTED;
