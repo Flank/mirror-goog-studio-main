@@ -499,7 +499,8 @@ public class ProcessAndroidResources extends IncrementalTask {
                         manifestFile,
                         srcOut,
                         symbolOutputDir,
-                        proguardOutputFile);
+                        proguardOutputFile,
+                        getInputResourcesDir().getSingleFile());
             } else {
 
                 Aapt aapt =
