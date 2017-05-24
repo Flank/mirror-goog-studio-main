@@ -52,28 +52,30 @@ public final class OkHttp3Interceptor implements InvocationHandler {
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         if ("intercept".equals(method.getName())) {
+            Interceptor$.Chain$ chain = new Interceptor$.Chain$(args[0]);
+            Request$ request = chain.request();
+            Response$ response = chain.proceed(request);
             try {
-                Response$ response = intercept(new Interceptor$.Chain$(args[0]));
-                return response.obj;
+                response = track(request, response);
             } catch (NoSuchMethodException ignored) {
             } catch (IllegalAccessException ignored) {
             } catch (InvocationTargetException ignored) {
             } catch (ClassNotFoundException ignored) {
             } catch (IOException ignored) {
             }
+
+            return response.obj;
         }
         return method.invoke(proxy, args);
     }
 
-    private Response$ intercept(Interceptor$.Chain$ chain)
+    private Response$ track(Request$ request, Response$ response)
             throws NoSuchMethodException, IllegalAccessException, InvocationTargetException,
                     ClassNotFoundException, IOException {
-        Request$ request = chain.request();
         HttpConnectionTracker tracker =
                 HttpTracker.trackConnection(
                         request.url().toString(), OkHttpUtils.getCallstack(OKHTTP3_PACKAGE));
         tracker.trackRequest(request.method(), request.headers().toMultimap());
-        Response$ response = chain.proceed(request);
 
         Map<String, List<String>> fields = response.headers().toMultimap();
         fields.put(
