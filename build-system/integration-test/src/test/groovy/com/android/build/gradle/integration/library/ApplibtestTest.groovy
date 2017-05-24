@@ -51,7 +51,7 @@ class ApplibtestTest {
         project.execute("lint")
     }
 
-    @Ignore("http://b/38411800")
+    @Test
     @Category(DeviceTests.class)
     void connectedCheck() {
         project.executeConnectedCheck()
