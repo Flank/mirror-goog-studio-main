@@ -268,8 +268,8 @@ public class CustomClassTransform extends Transform {
                 ZipOutputStream zos = new ZipOutputStream(fos)) {
             ZipEntry entry = zis.getNextEntry();
             while (entry != null) {
-                zos.putNextEntry(new ZipEntry(entry.getName()));
                 if (!entry.isDirectory() && entry.getName().endsWith(SdkConstants.DOT_CLASS)) {
+                    zos.putNextEntry(new ZipEntry(entry.getName()));
                     apply(function, zis, zos);
                 } else {
                     // Do not copy resources
