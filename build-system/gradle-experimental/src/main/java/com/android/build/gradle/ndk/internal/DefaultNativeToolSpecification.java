@@ -27,11 +27,13 @@ public class DefaultNativeToolSpecification implements NativeToolSpecification {
 
     private static final List<String> CPP_FLAGS = ImmutableList.of("-fno-rtti", "-fno-exceptions");
 
-    private static final List<String> LD_FLAGS = ImmutableList.of(
-            "-Wl,--no-undefined",
-            "-Wl,-z,noexecstack",
-            "-Wl,-z,relro",
-            "-Wl,-z,now");
+    private static final List<String> LD_FLAGS =
+            ImmutableList.of(
+                    "-Wl,--no-undefined",
+                    "-Wl,-z,noexecstack",
+                    "-Wl,-z,relro",
+                    "-Wl,-z,now",
+                    "-Wl,--warn-shared-textrel");
 
     @Override
     public Iterable<String> getCFlags() {
