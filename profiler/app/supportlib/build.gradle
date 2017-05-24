@@ -33,7 +33,6 @@ if (!androidJar.exists()) {
 }
 
 configurations {
-    provided
     aar
     jni
 }
@@ -44,14 +43,13 @@ compileJava {
 }
 
 dependencies {
-    provided files(androidJar)
+    compileOnly files(androidJar)
     jni project(path: ":native", configuration: "supportjni")
     testCompile 'junit:junit:4.12'
 }
 
 sourceSets {
     main {
-        compileClasspath += configurations.provided
         java { srcDir "${rootProject.projectDir}/app/common/src/main/java" }
     }
 }
