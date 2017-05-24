@@ -169,14 +169,6 @@ public class DefaultGradlePackagingScope implements PackagingScope {
         return mGlobalScope.getProject();
     }
 
-    @NonNull
-    @Override
-    public File getOutputPackageFile(File destinationDir, String projectBaseName, ApkData apkData) {
-        ApkVariantData apkVariantData = (ApkVariantData) mVariantScope.getVariantData();
-        String suffix = apkVariantData.isSigned() ? DOT_ANDROID_PACKAGE : "-unsigned.apk";
-        return new File(destinationDir, projectBaseName + "-" + apkData.getBaseName() + suffix);
-    }
-
     @Override
     public String getProjectBaseName() {
         return mGlobalScope.getProjectBaseName();

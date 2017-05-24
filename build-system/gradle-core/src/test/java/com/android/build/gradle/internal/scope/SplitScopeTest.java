@@ -52,7 +52,7 @@ public class SplitScopeTest {
     @Test
     public void testPersistence() throws IOException {
         SplitScope splitScope = new SplitScope(SplitHandlingPolicy.PRE_21_POLICY);
-        SplitFactory splitFactory = new SplitFactory(variantConfiguration, splitScope);
+        SplitFactory splitFactory = new SplitFactory("project", variantConfiguration, splitScope);
 
         splitFactory.addUniversalApk();
         ApkData densityApkData =

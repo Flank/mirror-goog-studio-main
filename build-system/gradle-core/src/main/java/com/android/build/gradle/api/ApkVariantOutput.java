@@ -84,6 +84,9 @@ public interface ApkVariantOutput extends BaseVariantOutput {
      */
     String getFilter(OutputFile.FilterType filterType);
 
+    /** Returns the output file name for this variant output. */
+    String getOutputFileName();
+
     /**
      * Sets the output file name for this variant output.
      *

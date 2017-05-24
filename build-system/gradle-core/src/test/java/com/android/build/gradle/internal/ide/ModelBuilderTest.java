@@ -63,6 +63,8 @@ import org.mockito.MockitoAnnotations;
 /** Tests for the {@link com.android.build.gradle.internal.ide.ModelBuilder} */
 public class ModelBuilderTest {
 
+    private static final String PROJECT = "project";
+
     @Mock GlobalScope globalScope;
     @Mock AndroidBuilder androidBuilder;
     @Mock VariantManager variantManager;
@@ -145,7 +147,7 @@ public class ModelBuilderTest {
         Files.createParentDirs(apkOutput);
         Files.write("some apk", apkOutput, Charsets.UTF_8);
 
-        SplitFactory splitFactory = new SplitFactory(variantConfiguration, splitScope);
+        SplitFactory splitFactory = new SplitFactory(PROJECT, variantConfiguration, splitScope);
         splitScope.addOutputForSplit(
                 TaskOutputHolder.TaskOutputType.APK, splitFactory.addMainApk(), apkOutput);
         splitScope.save(ImmutableList.of(TaskOutputHolder.TaskOutputType.APK), variantOutputFolder);
@@ -185,7 +187,7 @@ public class ModelBuilderTest {
 
         when(variantManager.getVariantScopes()).thenReturn(ImmutableList.of(variantScope));
         SplitScope splitScope = new SplitScope(SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY);
-        SplitFactory splitFactory = new SplitFactory(variantConfiguration, splitScope);
+        SplitFactory splitFactory = new SplitFactory(PROJECT, variantConfiguration, splitScope);
 
         File variantOutputFolder = new File(apkLocation, FileUtils.join("variant", "name"));
 
@@ -199,7 +201,8 @@ public class ModelBuilderTest {
 
             splitScope.addOutputForSplit(
                     TaskOutputHolder.TaskOutputType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT,
-                    splitFactory.addConfigurationSplit(VariantOutput.FilterType.DENSITY, "hdpi"),
+                    splitFactory.addConfigurationSplit(
+                            VariantOutput.FilterType.DENSITY, "hdpi", apkOutput.getName()),
                     apkOutput);
         }
         splitScope.save(
@@ -262,7 +265,7 @@ public class ModelBuilderTest {
             Files.createParentDirs(apkOutput);
             Files.write("some apk", apkOutput, Charsets.UTF_8);
 
-            SplitFactory splitFactory = new SplitFactory(variantConfiguration, splitScope);
+            SplitFactory splitFactory = new SplitFactory(PROJECT, variantConfiguration, splitScope);
             splitScope.addOutputForSplit(
                     TaskOutputHolder.TaskOutputType.APK, splitFactory.addMainApk(), apkOutput);
             splitScope.save(
@@ -326,7 +329,7 @@ public class ModelBuilderTest {
         Files.createParentDirs(apkOutput);
         Files.write("some apk", apkOutput, Charsets.UTF_8);
 
-        SplitFactory splitFactory = new SplitFactory(variantConfiguration, splitScope);
+        SplitFactory splitFactory = new SplitFactory(PROJECT, variantConfiguration, splitScope);
         splitScope.addOutputForSplit(
                 TaskOutputHolder.TaskOutputType.APK, splitFactory.addMainApk(), apkOutput);
         splitScope.save(ImmutableList.of(TaskOutputHolder.TaskOutputType.APK), variantOutputFolder);

@@ -103,7 +103,7 @@ public abstract class ApkData implements ApkInfo, VariantOutput {
         this.versionName = versionName;
     }
 
-    public void setOutputFileName(String outputFileName) {
+    public void setOutputFileName(@NonNull String outputFileName) {
         this.outputFileName = outputFileName;
     }
 
@@ -116,7 +116,7 @@ public abstract class ApkData implements ApkInfo, VariantOutput {
         return versionName;
     }
 
-    @Nullable
+    @NonNull
     public String getOutputFileName() {
         return outputFileName;
     }
@@ -133,13 +133,17 @@ public abstract class ApkData implements ApkInfo, VariantOutput {
     @NonNull
     @Override
     public OutputFile getMainOutputFile() {
-        throw new RuntimeException("Not valid.");
+        throw new UnsupportedOperationException(
+                "getMainOutputFile is no longer supported.  Use getOutputFileName if you need to "
+                        + "determine the file name of the output.");
     }
 
     @NonNull
     @Override
     public Collection<? extends OutputFile> getOutputs() {
-        throw new RuntimeException("Not valid.");
+        throw new UnsupportedOperationException(
+                "getOutputs is no longer supported.  Use getOutputFileName if you need to "
+                        + "determine the file name of the output.");
     }
 
     @NonNull

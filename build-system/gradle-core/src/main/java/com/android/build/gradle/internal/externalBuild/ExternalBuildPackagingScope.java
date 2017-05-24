@@ -31,7 +31,6 @@ import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
 import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.AaptOptions;
-import com.android.ide.common.build.ApkData;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.StringHelper;
 import com.google.devtools.build.lib.rules.android.apkmanifest.ExternalBuildApkManifest;
@@ -78,12 +77,6 @@ public class ExternalBuildPackagingScope implements PackagingScope {
     @Override
     public AndroidBuilder getAndroidBuilder() {
         return mExternalBuildContext.getAndroidBuilder();
-    }
-
-    @NonNull
-    @Override
-    public File getOutputPackageFile(File destinationDir, String projectBaseName, ApkData apkData) {
-        return getMainOutputFile().getOutputFile();
     }
 
     @Override

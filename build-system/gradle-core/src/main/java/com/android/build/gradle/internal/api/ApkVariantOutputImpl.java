@@ -91,6 +91,11 @@ public class ApkVariantOutputImpl extends BaseVariantOutputImpl implements ApkVa
     }
 
     @Override
+    public String getOutputFileName() {
+        return apkData.getOutputFileName();
+    }
+
+    @Override
     public void setOutputFileName(String outputFileName) {
         apkData.setOutputFileName(outputFileName);
     }

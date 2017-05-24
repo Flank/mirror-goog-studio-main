@@ -16,7 +16,10 @@
 
 package com.android.build.gradle.integration.application;
 
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import java.io.IOException;
@@ -46,7 +49,7 @@ public class VariantApiPropertiesTest {
                         + "    }\n"
                         + "    flavorDimensions 'dimension'\n"
                         + "    productFlavors {\n"
-                        + "         flavor1 {\n"
+                        + "        flavor1 {\n"
                         + "            javaCompileOptions.annotationProcessorOptions {\n"
                         + "                className 'Bar'\n"
                         + "                argument 'value', 'flavor1Arg'\n"
@@ -63,5 +66,40 @@ public class VariantApiPropertiesTest {
                         + "}\n");
 
         project.executor().run("help");
+    }
+
+    @Test
+    public void checkOutputFileName() throws IOException, InterruptedException {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "android {\n"
+                        + "    buildTypes {\n"
+                        + "        debug {\n"
+                        + "            javaCompileOptions.annotationProcessorOptions {\n"
+                        + "                className 'Foo'\n"
+                        + "                argument 'value', 'debugArg'\n"
+                        + "            }\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "    flavorDimensions 'dimension'\n"
+                        + "    productFlavors {\n"
+                        + "        flavor1 {\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "    applicationVariants.all { variant ->\n"
+                        + "        if (variant.name == 'flavor1Debug') {\n"
+                        + "            assert variant.outputs.first().outputFileName == 'project-flavor1-debug.apk'\n"
+                        + "            def outputFileName = variant.outputs.first().outputFileName\n"
+                        + "            variant.outputs.first().outputFileName = outputFileName.replace('flavor1', \"flavor1-${variant.versionName}\")\n"
+                        + "        }\n"
+                        + "        if (variant.name == 'flavor1Release') {\n"
+                        + "            assert variant.outputs.first().outputFileName == 'project-flavor1-release-unsigned.apk'\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}\n");
+
+        project.executor().run("assembleFlavor1Debug");
+        assertThat(project.getApk(ApkType.DEBUG, "flavor1")).doesNotExist();
+        assertThat(project.getApk("1.0", ApkType.DEBUG, "flavor1")).exists();
     }
 }
