@@ -25,17 +25,16 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidConfig;
-import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.options.ProjectOptions;
+import com.android.build.gradle.options.StringOption;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.builder.utils.FileCache;
 import com.android.utils.FileUtils;
 import com.google.common.base.CharMatcher;
-import com.google.common.base.MoreObjects;
 import com.google.common.base.Suppliers;
 import java.io.File;
 import java.util.Set;
@@ -217,9 +216,8 @@ public class GlobalScope extends TaskOutputHolderImpl
      */
     @NonNull
     public File getApkLocation() {
-        return MoreObjects.firstNonNull(
-                AndroidGradleOptions.getApkLocation(project),
-                getDefaultApkLocation());
+        String override = projectOptions.get(StringOption.IDE_APK_LOCATION);
+        return override != null ? project.file(override) : getDefaultApkLocation();
     }
 
     @Override

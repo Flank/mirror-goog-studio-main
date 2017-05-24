@@ -54,7 +54,6 @@ import com.android.build.api.transform.QualifiedContent.DefaultContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.Transform;
 import com.android.build.gradle.AndroidConfig;
-import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.ProguardFiles;
 import com.android.build.gradle.api.AnnotationProcessorOptions;
 import com.android.build.gradle.api.JavaCompileOptions;
@@ -190,6 +189,7 @@ import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -629,7 +629,7 @@ public abstract class TaskManager {
             optionalFeatures.add(ManifestMerger2.Invoker.Feature.DEBUGGABLE);
         }
 
-        if (AndroidGradleOptions.getAdvancedProfilingTransforms(project).length > 0
+        if (!getAdvancedProfilingTransforms(projectOptions).isEmpty()
                 && variantScope.getVariantConfiguration().getBuildType().isDebuggable()) {
             optionalFeatures.add(ManifestMerger2.Invoker.Feature.ADVANCED_PROFILING);
         }
@@ -655,6 +655,15 @@ public abstract class TaskManager {
         if (variantScope.getMicroApkTask() != null) {
             processManifestTask.dependsOn(tasks, variantScope.getMicroApkTask());
         }
+    }
+
+    @NonNull
+    private static List<String> getAdvancedProfilingTransforms(@NonNull ProjectOptions options) {
+        String string = options.get(StringOption.IDE_ANDROID_CUSTOM_CLASS_TRANSFORMS);
+        if (string == null) {
+            return ImmutableList.of();
+        }
+        return Splitter.on(',').splitToList(string);
     }
 
     /** Creates the merge manifests task. */
@@ -1974,7 +1983,7 @@ public abstract class TaskManager {
         }
 
         // ----- Android studio profiling transforms
-        for (String jar : AndroidGradleOptions.getAdvancedProfilingTransforms(project)) {
+        for (String jar : getAdvancedProfilingTransforms(projectOptions)) {
             if (variantScope.getVariantConfiguration().getBuildType().isDebuggable()
                     && variantData.getType().equals(VariantType.DEFAULT)
                     && jar != null) {
@@ -1995,8 +2004,8 @@ public abstract class TaskManager {
             AndroidTask<DefaultTask> allActionsAnchorTask =
                     createInstantRunAllActionsTasks(tasks, variantScope);
             assert variantScope.getInstantRunTaskManager() != null;
-            preColdSwapTask = variantScope.getInstantRunTaskManager()
-                    .createPreColdswapTask(project);
+            preColdSwapTask =
+                    variantScope.getInstantRunTaskManager().createPreColdswapTask(projectOptions);
             preColdSwapTask.dependsOn(tasks, allActionsAnchorTask);
 
             if (InstantRunPatchingPolicy.PRE_LOLLIPOP

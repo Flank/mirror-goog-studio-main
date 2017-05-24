@@ -34,7 +34,6 @@ import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
-import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.incremental.IncrementalChangeVisitor;
 import com.android.build.gradle.internal.incremental.IncrementalSupportVisitor;
@@ -45,6 +44,7 @@ import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.InstantRunVariantScope;
+import com.android.build.gradle.options.DeploymentDevice;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.FileUtils;
@@ -90,8 +90,8 @@ public class InstantRunTransform extends Transform {
         this.transformScope = transformScope;
         this.executor = executor;
         this.targetPlatformApi =
-                AndroidGradleOptions.getTargetAndroidVersion(
-                        transformScope.getGlobalScope().getProject());
+                DeploymentDevice.getDeploymentDeviceAndroidVersion(
+                        transformScope.getGlobalScope().getProjectOptions());
     }
 
     @NonNull

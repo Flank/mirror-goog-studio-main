@@ -37,7 +37,6 @@ import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.external.gson.NativeBuildConfigValue;
 import com.android.build.gradle.internal.InstantRunTaskManager;
 import com.android.build.gradle.internal.LoggerWrapper;
@@ -72,6 +71,7 @@ import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.TestedVariantData;
 import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.DeploymentDevice;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
@@ -1654,7 +1654,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         File annotationsJar = sdkHandler.getSdkLoader().getSdkInfo(LOGGER).getAnnotationsJar();
 
         AndroidVersion targetDeviceVersion =
-                AndroidGradleOptions.getTargetAndroidVersion(getGlobalScope().getProject());
+                DeploymentDevice.getDeploymentDeviceAndroidVersion(
+                        getGlobalScope().getProjectOptions());
 
         if (targetDeviceVersion.equals(androidBuilderTarget.getVersion())) {
             // Compile SDK and the target device match, re-use the target that we have already

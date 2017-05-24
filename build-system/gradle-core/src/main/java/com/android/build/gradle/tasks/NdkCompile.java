@@ -18,12 +18,10 @@ package com.android.build.gradle.tasks;
 
 import static com.android.SdkConstants.CURRENT_PLATFORM;
 import static com.android.SdkConstants.PLATFORM_WINDOWS;
-import static com.android.build.gradle.AndroidGradleOptions.USE_DEPRECATED_NDK;
 import static com.android.build.gradle.options.LongOption.DEPRECATED_NDK_COMPILE_LEASE;
 import static com.android.build.gradle.options.NdkLease.DEPRECATED_NDK_COMPILE_LEASE_DAYS;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.AndroidGradleOptions;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreNdkOptions;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
@@ -31,6 +29,7 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NdkTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.variant.BaseVariantData;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.NdkLease;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.ide.common.process.ProcessException;
@@ -105,6 +104,8 @@ public class NdkCompile extends NdkTask {
     private boolean ndkCygwinMode;
 
     private boolean isForTesting;
+
+    private boolean isUseDeprecatedNdkFlag;
 
     private boolean isDeprecatedNdkCompileLeaseExpired;
 
@@ -186,6 +187,11 @@ public class NdkCompile extends NdkTask {
         return isDeprecatedNdkCompileLeaseExpired;
     }
 
+    @Input
+    public boolean isUseDeprecatedNdkFlag() {
+        return isUseDeprecatedNdkFlag;
+    }
+
     @SkipWhenEmpty
     @InputFiles
     public FileTree getSource() {
@@ -210,14 +216,14 @@ public class NdkCompile extends NdkTask {
                 sourceFileTree.matching(new PatternSet().exclude("**/*.h")).getFiles();
         File makefile = getGeneratedMakefile();
 
-        if (AndroidGradleOptions.useDeprecatedNdk(getProject())) {
+        if (isUseDeprecatedNdkFlag) {
             writeMakefile(sourceFiles, makefile);
             throw new RuntimeException(
                     String.format(
                             "Error: Flag %s is no longer supported and will be removed in the next "
                                     + "version of Android Studio.  Please switch to a supported "
                                     + "build system.\n%s",
-                            USE_DEPRECATED_NDK,
+                            BooleanOption.ENABLE_DEPRECATED_NDK.getPropertyName(),
                             getAlternativesAndLeaseNotice(makefile, "#ndkCompile")));
         }
         if (isDeprecatedNdkCompileLeaseExpired) {
@@ -453,6 +459,11 @@ public class NdkCompile extends NdkTask {
             ndkCompile.setNdkDirectory(
                     variantScope.getGlobalScope().getSdkHandler().getNdkFolder());
             ndkCompile.setForTesting(variantData.getType().isForTesting());
+            ndkCompile.isUseDeprecatedNdkFlag =
+                    variantScope
+                            .getGlobalScope()
+                            .getProjectOptions()
+                            .get(BooleanOption.ENABLE_DEPRECATED_NDK);
             ndkCompile.isDeprecatedNdkCompileLeaseExpired =
                     NdkLease.isDeprecatedNdkCompileLeaseExpired(
                             variantScope.getGlobalScope().getProjectOptions());

@@ -45,6 +45,7 @@ import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.build.gradle.internal.pipeline.TransformInvocationBuilder;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.utils.FileUtils;
@@ -60,7 +61,6 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
-import org.gradle.api.Project;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -85,9 +85,6 @@ public class InstantRunTransformTest {
 
     @Mock InstantRunBuildContext buildContext;
 
-    @Mock
-    Project project;
-
     @Mock WaitableExecutor executor;
 
     @Rule
@@ -99,7 +96,7 @@ public class InstantRunTransformTest {
         AndroidBuilder mockBuilder = Mockito.mock(AndroidBuilder.class);
         when(mockBuilder.getBootClasspath(true)).thenReturn(ImmutableList.of());
         when(globalScope.getAndroidBuilder()).thenReturn(mockBuilder);
-        when(globalScope.getProject()).thenReturn(project);
+        when(globalScope.getProjectOptions()).thenReturn(new ProjectOptions(ImmutableMap.of()));
         when(variantScope.getGlobalScope()).thenReturn(globalScope);
         when(variantScope.getInstantRunBuildContext()).thenReturn(buildContext);
         when(variantScope.getInstantRunBootClasspath()).thenReturn(ImmutableList.of());
