@@ -162,7 +162,7 @@ public class ResourceDirectoryParserTest {
             ResourceDirectoryParser.parseDirectory(directory, IdProvider.sequential());
             fail();
         } catch (ResourceDirectoryParseException e) {
-            assertThat(e.getMessage()).contains("/values/col.xml");
+            assertThat(e.getMessage()).contains(FileUtils.join("values", "col.xml"));
         }
     }
 }
