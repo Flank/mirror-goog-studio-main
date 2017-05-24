@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -296,7 +296,7 @@ public class PlaybackOverlayFragment extends android.support.v17.leanback.app.Pl
             item.setStudio(mItems.get(mCurrentItem).getStudio());
         }
         if (SHOW_IMAGE) {
-            updateVideoImage(mItems.get(mCurrentItem).getCardImageURI().toString());
+            updateVideoImage(mItems.get(mCurrentItem).getCardImageUrl());
         }
         mRowsAdapter.notifyArrayItemRangeChanged(0, 1);
         mPlaybackControlsRow.setTotalTime(getDuration());
