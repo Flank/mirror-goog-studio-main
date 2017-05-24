@@ -28,8 +28,8 @@ import com.android.tools.profiler.support.event.WindowProfilerCallback;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -43,6 +43,7 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
     private Set<Activity> myActivities = new HashSet<Activity>();
     private int myCurrentRotation = UNINITIALIZED_ROTATION;
     private volatile boolean myInitialized = false;
+
     public EventProfiler() {
         initialize();
         initalizeInputConnection();
@@ -52,21 +53,28 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
     // TODO: Revisit how we expose enum state to native. This is consistent with
     // other profiler components, however we may want to expose the proto enum to java.
     private native void sendActivityCreated(String name, int hashCode);
+
     private native void sendActivityStarted(String name, int hashCode);
+
     private native void sendActivityResumed(String name, int hashCode);
+
     private native void sendActivityPaused(String name, int hashCode);
+
     private native void sendActivityStopped(String name, int hashCode);
+
     private native void sendActivitySaved(String name, int hashCode);
+
     private native void sendActivityDestroyed(String name, int hashCode);
+
     private native void sendFragmentAdded(String name, int hashCode, int activityHash);
 
     private native void sendFragmentRemoved(String name, int hashCode, int activityHash);
+
     private native void sendRotationEvent(int rotationValue);
 
     /**
      * This class handles updating the callback for any activities that are activated or created. We
-     * construct a new wrapper around the callback because an application can have multiple
-     * windows.
+     * construct a new wrapper around the callback because an application can have multiple windows.
      *
      * @param activity The activity we get the window of and set the callback on.
      */
@@ -75,7 +83,7 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
         //TODO Verify the order of this is fixed, can this happen before the users onActivityCreated, or is it always
         // after?
         Window window = activity.getWindow();
-        if(!WindowProfilerCallback.class.isInstance(window.getCallback())) {
+        if (!WindowProfilerCallback.class.isInstance(window.getCallback())) {
             window.setCallback(new WindowProfilerCallback(window.getCallback()));
         }
     }
@@ -134,17 +142,14 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
                                         Log.e(
                                                 ProfilerService.STUDIO_PROFILER,
                                                 "Failed to get ActivityThread class");
-
                                     } catch (NoSuchMethodException ex) {
                                         Log.e(
                                                 ProfilerService.STUDIO_PROFILER,
                                                 "Failed to find currentApplication method");
-
                                     } catch (IllegalAccessException ex) {
                                         Log.e(
                                                 ProfilerService.STUDIO_PROFILER,
                                                 "Insufficient privileges to get application handle");
-
                                     } catch (InvocationTargetException ex) {
                                         Log.e(
                                                 ProfilerService.STUDIO_PROFILER,
@@ -165,6 +170,7 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
                             }
                         });
         initThread.start();
+        captureCurrentActivityState();
     }
 
     private void initalizeInputConnection() {
@@ -173,6 +179,59 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
         // to intercept strings / keys sent from the softkeybaord to the application.
         Thread inputConnectionPoller = new Thread(new InputConnectionHandler());
         inputConnectionPoller.start();
+    }
+
+    // This change will look at the ActivityThread and find any stored activities.
+    // If they are not paused it will send a resume event to perfd.
+    // This ensures that a delayed attachment will capture the current state of the
+    // world and show the proper events with JVMTI.
+    private void captureCurrentActivityState() {
+        try {
+            Class activityThreadClass = Class.forName("android.app.ActivityThread");
+            Object activityThread =
+                    activityThreadClass.getMethod("currentActivityThread").invoke(null);
+            Field activitiesField = activityThreadClass.getDeclaredField("mActivities");
+            activitiesField.setAccessible(true);
+            Object activitiesObject = activitiesField.get(activityThread);
+            // Verify the object is a map as we expect, if it is not log an error.
+            // The map is an inernal collection of IBinder to ActivityClientRecord
+            if (Map.class.isAssignableFrom(activitiesObject.getClass())) {
+                Map<Object, Object> activities = (Map<Object, Object>) activitiesObject;
+                for (Object activityRecord : activities.values()) {
+                    Class activityRecordClass = activityRecord.getClass();
+                    Field pausedField = activityRecordClass.getDeclaredField("paused");
+                    pausedField.setAccessible(true);
+                    if (!pausedField.getBoolean(activityRecord)) {
+                        Field activityField = activityRecordClass.getDeclaredField("activity");
+                        activityField.setAccessible(true);
+                        Object activityObject = activityField.get(activityRecord);
+                        if (activitiesObject != null && activityObject instanceof Activity) {
+                            onActivityResumed((Activity) activityObject);
+                        }
+                    }
+                }
+            } else {
+                Log.v(
+                        ProfilerService.STUDIO_PROFILER,
+                        String.format(
+                                "Failed to assign mActivities map: %s",
+                                activitiesObject.getClass()));
+            }
+        } catch (ClassNotFoundException ex) {
+            Log.e(ProfilerService.STUDIO_PROFILER, "Failed to get ActivityThread class");
+        } catch (NoSuchMethodException ex) {
+            Log.e(ProfilerService.STUDIO_PROFILER, "Failed to find currentActivityThread method");
+        } catch (IllegalAccessException ex) {
+            Log.e(
+                    ProfilerService.STUDIO_PROFILER,
+                    "Insufficient privileges to get activity information");
+        } catch (InvocationTargetException ex) {
+            Log.e(
+                    ProfilerService.STUDIO_PROFILER,
+                    "Failed to call static function currentActivityThread");
+        } catch (NoSuchFieldException ex) {
+            Log.e(ProfilerService.STUDIO_PROFILER, "Failed to get field: " + ex);
+        }
     }
 
     @Override
