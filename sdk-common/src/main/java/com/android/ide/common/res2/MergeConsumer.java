@@ -22,11 +22,9 @@ import com.android.ide.common.blame.Message;
 import com.android.ide.common.blame.SourceFile;
 import com.android.ide.common.blame.SourceFilePosition;
 import com.android.ide.common.blame.SourcePosition;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Throwables;
-
 import java.io.File;
-
 import javax.xml.parsers.DocumentBuilderFactory;
 
 /**
@@ -49,14 +47,16 @@ public interface MergeConsumer<I extends DataItem> {
         }
 
         private ConsumerException(@NonNull Throwable cause, @NonNull SourceFile file) {
-            super(cause, new Message(
-                    Message.Kind.ERROR,
-                    Objects.firstNonNull(
-                            cause.getLocalizedMessage(),
-                            cause.getClass().getCanonicalName()),
-                    Throwables.getStackTraceAsString(cause),
-                    RESOURCE_ASSET_MERGER_TOOL_NAME,
-                    new SourceFilePosition(file, SourcePosition.UNKNOWN)));
+            super(
+                    cause,
+                    new Message(
+                            Message.Kind.ERROR,
+                            MoreObjects.firstNonNull(
+                                    cause.getLocalizedMessage(),
+                                    cause.getClass().getCanonicalName()),
+                            Throwables.getStackTraceAsString(cause),
+                            RESOURCE_ASSET_MERGER_TOOL_NAME,
+                            new SourceFilePosition(file, SourcePosition.UNKNOWN)));
         }
     }
 

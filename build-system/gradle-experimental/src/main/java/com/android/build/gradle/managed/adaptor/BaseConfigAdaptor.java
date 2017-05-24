@@ -21,7 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.builder.internal.ClassFieldImpl;
 import com.android.builder.model.BaseConfig;
 import com.android.builder.model.ClassField;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -61,7 +61,7 @@ public class BaseConfigAdaptor implements BaseConfig {
                             cf.getName(),
                             cf.getValue(),
                             ImmutableSet.copyOf(cf.getAnnotations()),
-                            Objects.firstNonNull(cf.getDocumentation(), "")));
+                            MoreObjects.firstNonNull(cf.getDocumentation(), "")));
         }
         return builder.build();
     }
@@ -77,8 +77,9 @@ public class BaseConfigAdaptor implements BaseConfig {
                             cf.getType(),
                             cf.getName(),
                             cf.getValue(),
-                            Objects.firstNonNull(cf.getAnnotations(), ImmutableSet.<String>of()),
-                            Objects.firstNonNull(cf.getDocumentation(), "")));
+                            MoreObjects.firstNonNull(
+                                    cf.getAnnotations(), ImmutableSet.<String>of()),
+                            MoreObjects.firstNonNull(cf.getDocumentation(), "")));
         }
         return builder.build();
     }

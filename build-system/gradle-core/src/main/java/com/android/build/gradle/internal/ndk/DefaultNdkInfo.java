@@ -28,7 +28,7 @@ import com.android.sdklib.AndroidVersion;
 import com.android.utils.FileUtils;
 import com.android.utils.ImmutableCollectors;
 import com.android.utils.Pair;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.google.gson.Gson;
@@ -473,12 +473,13 @@ public class DefaultNdkInfo implements NdkInfo {
             @NonNull Stl stl,
             @NonNull String stlVersion,
             @NonNull Abi abi) {
-        StlSpecification spec = new DefaultStlSpecificationFactory().create(
-                stl,
-                Objects.firstNonNull(
-                        stlVersion,
-                        getDefaultToolchainVersion(Toolchain.GCC, abi)),
-                abi);
+        StlSpecification spec =
+                new DefaultStlSpecificationFactory()
+                        .create(
+                                stl,
+                                MoreObjects.firstNonNull(
+                                        stlVersion, getDefaultToolchainVersion(Toolchain.GCC, abi)),
+                                abi);
         return new DefaultStlNativeToolSpecification(this, spec, stl);
     }
 

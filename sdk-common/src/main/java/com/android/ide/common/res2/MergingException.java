@@ -24,17 +24,15 @@ import com.android.ide.common.blame.SourceFile;
 import com.android.ide.common.blame.SourceFilePosition;
 import com.android.ide.common.blame.SourcePosition;
 import com.google.common.base.Joiner;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-
-import org.xml.sax.SAXParseException;
-
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
+import org.xml.sax.SAXParseException;
 
 /**
  * Exception for errors during merging.
@@ -108,8 +106,10 @@ public class MergingException extends Exception {
         public MergingException build() {
             if (mCause != null) {
                 if (mMessageText == null) {
-                    mMessageText = Objects.firstNonNull(
-                            mCause.getLocalizedMessage(), mCause.getClass().getCanonicalName());
+                    mMessageText =
+                            MoreObjects.firstNonNull(
+                                    mCause.getLocalizedMessage(),
+                                    mCause.getClass().getCanonicalName());
                 }
                 if (mPosition == SourcePosition.UNKNOWN && mCause instanceof SAXParseException) {
                     SAXParseException exception = (SAXParseException) mCause;
@@ -131,7 +131,7 @@ public class MergingException extends Exception {
                     new Message(
                             Kind.ERROR,
                             mMessageText,
-                            Objects.firstNonNull(mOriginalMessageText, mMessageText),
+                            MoreObjects.firstNonNull(mOriginalMessageText, mMessageText),
                             RESOURCE_ASSET_MERGER_TOOL_NAME,
                             new SourceFilePosition(mFile, mPosition)));
         }

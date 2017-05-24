@@ -17,7 +17,6 @@
 package com.android.ide.common.res2;
 
 import static com.android.ide.common.res2.ResourceFile.ATTR_QUALIFIER;
-import static com.google.common.base.Objects.firstNonNull;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
@@ -32,6 +31,7 @@ import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 import com.android.utils.ILogger;
 import com.android.utils.SdkUtils;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.io.File;
@@ -114,7 +114,8 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
     @Override
     protected ResourceFile createFileAndItemsFromXml(@NonNull File file, @NonNull Node fileNode)
             throws MergingException {
-        String qualifier = firstNonNull(NodeUtils.getAttribute(fileNode, ATTR_QUALIFIER), "");
+        String qualifier =
+                MoreObjects.firstNonNull(NodeUtils.getAttribute(fileNode, ATTR_QUALIFIER), "");
         String typeAttr = NodeUtils.getAttribute(fileNode, SdkConstants.ATTR_TYPE);
         FolderConfiguration folderConfiguration = FolderConfiguration.getConfigForQualifierString(qualifier);
         if (folderConfiguration == null) {

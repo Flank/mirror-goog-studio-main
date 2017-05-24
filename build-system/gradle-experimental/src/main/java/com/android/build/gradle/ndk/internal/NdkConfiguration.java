@@ -32,7 +32,7 @@ import com.android.build.gradle.managed.NdkConfig;
 import com.android.build.gradle.model.NativeSourceSet;
 import com.android.build.gradle.tasks.MergeNativeLibrariesConfigAction;
 import com.android.utils.StringHelper;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -199,7 +199,7 @@ public class NdkConfiguration {
                 NativeToolSpecificationFactory.create(
                         ndkHandler,
                         binary.getTargetPlatform(),
-                        Objects.firstNonNull(ndkConfig.getDebuggable(), false)),
+                        MoreObjects.firstNonNull(ndkConfig.getDebuggable(), false)),
                 binary);
 
         // Add flags defined in NdkConfig

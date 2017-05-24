@@ -90,10 +90,22 @@ maven_java_library(
 )
 
 maven_java_library(
-    name = "com.google.guava_guava",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/guava/guava/19.0:jar",
+    name = "com.google.errorprone_error_prone_annotations",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/errorprone/error_prone_annotations/2.0.18:jar",
     visibility = ["//visibility:public"],
     exports = [],
+)
+
+maven_java_library(
+    name = "com.google.guava_guava",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/guava/guava/22.0:jar",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":com.google.code.findbugs_jsr305",
+        ":com.google.errorprone_error_prone_annotations",
+        ":com.google.j2objc_j2objc-annotations",
+        ":org.codehaus.mojo_animal-sniffer-annotations",
+    ],
 )
 
 maven_java_library(
@@ -121,6 +133,13 @@ maven_java_library(
         ":com.fasterxml.jackson.core_jackson-core",
         ":com.google.http-client_google-http-client",
     ],
+)
+
+maven_java_library(
+    name = "com.google.j2objc_j2objc-annotations",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/j2objc/j2objc-annotations/1.1:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
 )
 
 maven_java_library(
@@ -628,6 +647,13 @@ maven_java_library(
 maven_java_library(
     name = "org.codehaus.groovy_groovy-all",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/codehaus/groovy/groovy-all/2.4.11:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+maven_java_library(
+    name = "org.codehaus.mojo_animal-sniffer-annotations",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/codehaus/mojo/animal-sniffer-annotations/1.14:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )

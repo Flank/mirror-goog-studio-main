@@ -26,7 +26,7 @@ import com.android.build.gradle.internal.dsl.CoreNdkOptions;
 import com.android.build.gradle.internal.dsl.CoreShaderOptions;
 import com.android.build.gradle.managed.BuildType;
 import com.android.builder.model.SigningConfig;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 
 /**
  * An adaptor to convert a BuildType to a CoreBuildType.
@@ -58,7 +58,7 @@ public class BuildTypeAdaptor extends BaseConfigAdaptor implements CoreBuildType
 
     @Override
     public boolean isJniDebuggable() {
-        return Objects.firstNonNull(buildType.getNdk().getDebuggable(), false);
+        return MoreObjects.firstNonNull(buildType.getNdk().getDebuggable(), false);
     }
 
     @Override
