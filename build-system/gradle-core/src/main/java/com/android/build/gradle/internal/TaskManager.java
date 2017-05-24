@@ -2114,7 +2114,7 @@ public abstract class TaskManager {
                 transformManager.addStream(
                         OriginalStream.builder(project, "runtime-deps-try-with-resources")
                                 .addContentTypes(TransformManager.CONTENT_CLASS)
-                                .addScope(Scope.PROJECT)
+                                .addScope(Scope.EXTERNAL_LIBRARIES)
                                 .setFileCollection(
                                         variantScope.getTryWithResourceRuntimeSupportJar())
                                 .build());
