@@ -156,7 +156,13 @@ public final class AaptV2CommandBuilder {
         builder.add("-o", resourceOutputApk);
 
         if (config.getProguardOutputFile() != null) {
-            //builder.add("--proguard", config.getProguardOutputFile().getAbsolutePath());
+            builder.add("--proguard", config.getProguardOutputFile().getAbsolutePath());
+        }
+
+        if (config.getMainDexListProguardOutputFile() != null) {
+            builder.add(
+                    "--proguard-main-dex",
+                    config.getMainDexListProguardOutputFile().getAbsolutePath());
         }
 
         if (config.getSplits() != null) {
