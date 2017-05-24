@@ -80,7 +80,6 @@ public final class OkHttp3Interceptor implements InvocationHandler {
                 "response-status-code",
                 Collections.singletonList(Integer.toString(response.code())));
         tracker.trackResponse("", fields);
-        tracker.trackResponseBody(response.body().source().inputStream());
 
         BufferedSource$ source =
                 Okio$.buffer(
