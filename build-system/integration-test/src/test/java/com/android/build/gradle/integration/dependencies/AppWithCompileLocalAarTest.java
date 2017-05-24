@@ -32,7 +32,6 @@ import com.google.common.truth.Truth;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -70,7 +69,6 @@ public class AppWithCompileLocalAarTest {
         modelContainer = null;
     }
 
-    @Ignore
     @Test
     public void checkModelContainsLocalAar() throws Exception {
         LibraryGraphHelper helper = new LibraryGraphHelper(modelContainer);
