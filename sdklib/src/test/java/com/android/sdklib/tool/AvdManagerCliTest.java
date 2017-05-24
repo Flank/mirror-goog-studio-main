@@ -189,6 +189,7 @@ public class AvdManagerCliTest {
                 false,
                 false,
                 mLogger);
+        File moved = new File(AVD_LOCATION, "moved");
         mCli.run(
                 new String[] {
                     "move",
@@ -196,7 +197,7 @@ public class AvdManagerCliTest {
                     "--name",
                     "testAvd1",
                     "-p",
-                    new File(AVD_LOCATION, "moved").getAbsolutePath(),
+                    moved.getAbsolutePath(),
                     "-r",
                     "newName"
                 });
@@ -204,7 +205,7 @@ public class AvdManagerCliTest {
         assertEquals(1, mAvdManager.getAllAvds().length);
 
         AvdInfo info = mAvdManager.getAvd("newName", true);
-        assertEquals("/avd/moved", info.getDataFolderPath());
+        assertEquals(moved.getAbsolutePath(), info.getDataFolderPath());
     }
 
     @Test
@@ -242,13 +243,13 @@ public class AvdManagerCliTest {
         assertEquals(
                 "P Available Android Virtual Devices:\n"
                         + "P     Name: testAvd1\n"
-                        + "P     Path: /avd/test1\n"
+                        + "P     Path: " + new File("/avd/test1").getAbsolutePath() + "\n"
                         + "P   Target: Google APIs (Google)\n"
                         + "P           Based on: Android 7.1.1 (Nougat)"
                         + "P  Tag/ABI: google_apis/x86\n"
                         + "P ---------\n"
                         + "P     Name: testAvd2\n"
-                        + "P     Path: /avd/test2\n"
+                        + "P     Path: " + new File("/avd/test2").getAbsolutePath() + "\n"
                         + "P   Target: Google APIs\n"
                         + "P           Based on: Android 7+ (O)"
                         + "P  Tag/ABI: android-wear/armeabi-v7a\n",
