@@ -829,26 +829,6 @@ public class AndroidBuilder {
             }
 
             RGeneration.generateRForLibraries(mainSymbols, depSymbolTables, sourceOut, finalIds);
-
-
-            if (!(aapt instanceof AaptV1)) {
-                // Generate manifest_keep.txt for main dex when using AAPT2
-                if (aaptConfig.getMainDexListProguardOutputFile() != null) {
-                    java.nio.file.Files.write(
-                            aaptConfig.getMainDexListProguardOutputFile().toPath(),
-                            SymbolUtils.generateMainDexKeepRules(
-                                    SymbolUtils.parseManifest(aaptConfig.getManifestFile())));
-                }
-
-                // Generate aapt_rules.txt for when using AAPT2 (AAPT2 sometimes produces wrong
-                // output).
-                if (aaptConfig.getProguardOutputFile() != null) {
-                    java.nio.file.Files.write(
-                            aaptConfig.getProguardOutputFile().toPath(),
-                            SymbolUtils.generateMinifyKeepRules(
-                                    SymbolUtils.parseManifest(aaptConfig.getManifestFile())));
-                }
-            }
         }
     }
 
