@@ -441,14 +441,14 @@ maven_java_library(
 
 maven_java_library(
     name = "net.sf.proguard_proguard-base",
-    export_artifact = "//prebuilts/tools/common/m2/repository/net/sf/proguard/proguard-base/5.3.2:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/net/sf/proguard/proguard-base/5.3.3:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
 
 maven_java_library(
     name = "net.sf.proguard_proguard-gradle",
-    export_artifact = "//prebuilts/tools/common/m2/repository/net/sf/proguard/proguard-gradle/5.3.2:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/net/sf/proguard/proguard-gradle/5.3.3:jar",
     visibility = ["//visibility:public"],
     exports = [":net.sf.proguard_proguard-base"],
 )
@@ -620,7 +620,7 @@ maven_java_library(
 
 maven_java_library(
     name = "org.codehaus.groovy_groovy-all",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/codehaus/groovy/groovy-all/2.4.7:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/codehaus/groovy/groovy-all/2.4.10:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
