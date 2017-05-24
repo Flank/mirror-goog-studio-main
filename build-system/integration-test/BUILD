@@ -475,6 +475,7 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/org/codehaus/plexus/plexus-utils/1.5.15:jar",
         "//prebuilts/tools/common/m2/repository/org/hamcrest/hamcrest-integration/1.3:jar",
         "//prebuilts/tools/common/m2/repository/org/hamcrest/hamcrest-library/1.3:jar",
+        "//prebuilts/tools/common/m2/repository/org/jacoco/org.jacoco.agent/0.7.4.201502262128:jar",
         "//prebuilts/tools/common/m2/repository/org/javassist/javassist/3.19.0-GA:jar",
         "//prebuilts/tools/common/m2/repository/org/jboss/forge/roaster/roaster-api/2.18.7.Final:jar",
         "//prebuilts/tools/common/m2/repository/org/jboss/forge/roaster/roaster-jdt/2.18.7.Final:jar",
@@ -523,6 +524,5 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/xpp3/xpp3_min/1.1.4c:jar",
         "//tools/base/testing-infrastructure/device-pool/device-provider",  # TODO: neverlink
         "//tools/base/third_party:junit_junit",
-        "//tools/base/third_party:org.jacoco_org.jacoco.agent",
     ],
 )

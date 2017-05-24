@@ -15,15 +15,12 @@
  */
 package com.android.build.gradle.internal.transforms;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.Format;
 import com.android.build.api.transform.QualifiedContent;
-import com.android.build.api.transform.SecondaryFile;
 import com.android.build.api.transform.Status;
 import com.android.build.api.transform.Transform;
 import com.android.build.api.transform.TransformException;
@@ -32,14 +29,12 @@ import com.android.build.api.transform.TransformInvocation;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.utils.FileUtils;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import org.jacoco.core.instr.Instrumenter;
@@ -50,11 +45,7 @@ import org.jacoco.core.runtime.OfflineInstrumentationAccessGenerator;
  */
 public class JacocoTransform extends Transform {
 
-    private final File jacocoAgent;
-
-    public JacocoTransform(@NonNull  final File jacocoAgent) {
-        this.jacocoAgent = jacocoAgent;
-    }
+    public JacocoTransform() {}
 
     @NonNull
     @Override
@@ -75,12 +66,6 @@ public class JacocoTransform extends Transform {
         return Sets.immutableEnumSet(QualifiedContent.Scope.PROJECT);
     }
 
-    @NonNull
-    @Override
-    public Collection<SecondaryFile> getSecondaryFiles() {
-        return ImmutableList.of(SecondaryFile.nonIncremental(jacocoAgent));
-    }
-
     @Override
     public boolean isIncremental() {
         return true;
@@ -89,12 +74,6 @@ public class JacocoTransform extends Transform {
     @Override
     public void transform(@NonNull TransformInvocation invocation)
             throws IOException, TransformException, InterruptedException {
-        // This task requires the jacocoagent.jar to be in the transform stream.  Checking the
-        // jacocoagent.jar exists indicates the tasks dependency is setup correctly.
-        checkState(jacocoAgent.isFile());
-
-        checkNotNull(invocation.getOutputProvider(),
-                "Missing output object for transform " + getName());
 
         for (TransformInput input : invocation.getInputs()) {
             // we don't want jar inputs.

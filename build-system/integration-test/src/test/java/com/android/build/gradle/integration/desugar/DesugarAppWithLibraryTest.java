@@ -40,6 +40,11 @@ public class DesugarAppWithLibraryTest {
     @Before
     public void setUp() throws IOException {
         TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\nsubprojects {\n"
+                        + "    apply from: \"$rootDir/../commonLocalRepo.gradle\"\n"
+                        + "}\n");
+        TestFileUtils.appendToFile(
                 project.getSubproject("app").getBuildFile(),
                 "android.compileOptions {\n"
                         + "    sourceCompatibility 1.8\n"
