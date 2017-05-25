@@ -47,7 +47,6 @@ public class SplitsDiscoveryTest {
     SplitsDiscovery task;
     File outputFile;
 
-    @Mock FileCollection mergedFolders;
     @Mock FileCollection outputs;
 
     @Before
@@ -60,7 +59,6 @@ public class SplitsDiscoveryTest {
         project = ProjectBuilder.builder().withProjectDir(testDir).build();
 
         task = project.getTasks().create("test", SplitsDiscovery.class);
-        task.mergedResourcesFolders = mergedFolders;
         task.persistedList = outputFile;
         task.resourceConfigs = ImmutableSet.of();
     }
@@ -69,7 +67,6 @@ public class SplitsDiscoveryTest {
     public void tearDown() {
         project = null;
         task = null;
-        mergedFolders = null;
     }
 
     @Test
