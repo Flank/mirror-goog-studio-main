@@ -3,7 +3,7 @@
 
     <dependency mavenUrl="com.android.support:appcompat-v7:+"/>
     <dependency mavenUrl="com.android.support:leanback-v17:+"/>
-    <dependency mavenUrl="com.github.bumptech.glide:glide:3.4.+"/>
+    <dependency mavenUrl="com.github.bumptech.glide:glide:3.7.0"/>
 
     <merge from="root/AndroidManifest.xml.ftl"
              to="${escapeXmlAttribute(manifestOut)}/AndroidManifest.xml" />

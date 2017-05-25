@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -22,11 +22,9 @@ import java.net.URISyntaxException;
 
 /*
  * Movie class represents video entity with title, description, image thumbs and video url.
- *
  */
 public class Movie implements Serializable {
     static final long serialVersionUID = 727566175075960653L;
-    private static long count = 0;
     private long id;
     private String title;
     private String description;
@@ -37,14 +35,6 @@ public class Movie implements Serializable {
     private String category;
 
     public Movie() {
-    }
-
-    public static long getCount() {
-        return count;
-    }
-
-    public static void incCount() {
-        count++;
     }
 
     public long getId() {
@@ -111,23 +101,6 @@ public class Movie implements Serializable {
         this.category = category;
     }
 
-    public URI getBackgroundImageURI() {
-        try {
-            Log.d("BACK MOVIE: ", bgImageUrl);
-            return new URI(getBackgroundImageUrl());
-        } catch (URISyntaxException e) {
-            Log.d("URI exception: ", bgImageUrl);
-            return null;
-        }
-    }
-
-    public URI getCardImageURI() {
-        try {
-            return new URI(getCardImageUrl());
-        } catch (URISyntaxException e) {
-            return null;
-        }
-    }
 
     @Override
     public String toString() {
@@ -136,7 +109,6 @@ public class Movie implements Serializable {
                 ", title='" + title + '\'' +
                 ", videoUrl='" + videoUrl + '\'' +
                 ", backgroundImageUrl='" + bgImageUrl + '\'' +
-                ", backgroundImageURI='" + getBackgroundImageURI().toString() + '\'' +
                 ", cardImageUrl='" + cardImageUrl + '\'' +
                 '}';
     }

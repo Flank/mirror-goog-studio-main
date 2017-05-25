@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
@@ -65,7 +65,7 @@ public class ${mainFragment} extends BrowseFragment {
     private Drawable mDefaultBackground;
     private DisplayMetrics mMetrics;
     private Timer mBackgroundTimer;
-    private URI mBackgroundURI;
+    private String mBackgroundUri;
     private BackgroundManager mBackgroundManager;
 
     @Override
@@ -185,7 +185,7 @@ public class ${mainFragment} extends BrowseFragment {
                         ${detailsActivity}.SHARED_ELEMENT_NAME).toBundle();
                 getActivity().startActivity(intent, bundle);
             } else if (item instanceof String) {
-                if (((String) item).indexOf(getString(R.string.error_fragment)) >= 0) {
+                if (((String) item).contains(getString(R.string.error_fragment))) {
                     Intent intent = new Intent(getActivity(), BrowseErrorActivity.class);
                     startActivity(intent);
                 } else {
@@ -201,7 +201,7 @@ public class ${mainFragment} extends BrowseFragment {
         public void onItemSelected(Presenter.ViewHolder itemViewHolder, Object item,
                                    RowPresenter.ViewHolder rowViewHolder, Row row) {
             if (item instanceof Movie) {
-                mBackgroundURI = ((Movie) item).getBackgroundImageURI();
+                mBackgroundUri = ((Movie) item).getBackgroundImageUrl();
                 startBackgroundTimer();
             }
 
@@ -241,9 +241,7 @@ public class ${mainFragment} extends BrowseFragment {
             mHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    if (mBackgroundURI != null) {
-                        updateBackground(mBackgroundURI.toString());
-                    }
+                    updateBackground(mBackgroundUri);
                 }
             });
 
