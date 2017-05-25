@@ -25,7 +25,6 @@ import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutpu
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.APK_MAPPING;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.APP_CLASSES;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.CONSUMER_PROGUARD_FILE;
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.EXPLODED_AAR;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.FEATURE_APPLICATION_ID_DECLARATION;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.FEATURE_IDS_DECLARATION;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.FEATURE_RESOURCE_PKG;
@@ -166,11 +165,7 @@ public class VariantPublishingSpec {
                                 RUNTIME_ELEMENTS_ONLY),
                         outputSpec(LIBRARY_JNI, ArtifactType.JNI, RUNTIME_ELEMENTS_ONLY),
                         // FIXME: we need a different publishing config with a CHECK Usage for this.
-                        outputSpec(LINT_JAR, ArtifactType.LINT, API_AND_RUNTIME_ELEMENTS),
-                        // types for querying only. Not publishable.
-                        // FIXME once we only support level 2 sync, then this can be not publishable
-                        outputSpec(
-                                EXPLODED_AAR, ArtifactType.EXPLODED_AAR, API_AND_RUNTIME_ELEMENTS))
+                        outputSpec(LINT_JAR, ArtifactType.LINT, API_AND_RUNTIME_ELEMENTS))
                 .withTestingSpec(
                         VariantType.UNIT_TEST,
                         // unit test need CLASSES_FOR_UNIT_TESTS instead of LIBRARY_CLASSES to get access to
