@@ -34,6 +34,8 @@ sourceSets {
 }
 
 dependencies {
+    compileOnly libs.auto_value
+
     compile project(':base:builder')
     compile project(':base:lint')
     compile project(':base:uast')

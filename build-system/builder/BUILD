@@ -36,18 +36,18 @@ maven_java_library(
     ],
     javacopts = ["-Xep:MissingCasesInEnumSwitch:WARN"],
     plugins = [
-        ":auto-value-plugin",
+        "//tools/base/build-system:auto-value-plugin",
     ],
     pom = ":pom",
     resource_strip_prefix = "tools/base/build-system/builder",
     resources = [":resources"],
     visibility = ["//visibility:public"],
     deps = [
-        ":com.google.auto.value_auto-value_neverlink",
         "//tools/analytics-library/protos/src/main/proto",
         "//tools/analytics-library/shared:tools.analytics-shared",
         "//tools/analytics-library/tracker:tools.analytics-tracker",
         "//tools/base/annotations",
+        "//tools/base/build-system:com.google.auto.value_auto-value_neverlink",
         "//tools/base/build-system:tools.apksig",
         "//tools/base/build-system:tools.builder-test-api",
         "//tools/base/build-system:tools.manifest-merger",
@@ -115,19 +115,4 @@ java_test(
         "//tools/base/third_party:org.mockito_mockito-core",
         "//tools/base/third_party:org.ow2.asm_asm",
     ],
-)
-
-java_plugin(
-    name = "auto-value-plugin",
-    processor_class = "com.google.auto.value.processor.AutoValueProcessor",
-    deps = [
-        "//tools/base/third_party:com.google.auto.value_auto-value",
-    ],
-)
-
-# Compile-time only dependency on the auto-value.
-java_library(
-    name = "com.google.auto.value_auto-value_neverlink",
-    neverlink = 1,
-    exports = ["//tools/base/third_party:com.google.auto.value_auto-value"],
 )

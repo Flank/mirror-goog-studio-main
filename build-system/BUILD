@@ -156,3 +156,20 @@ maven_pom(
     group = "com.android.tools.build",
     source = "//tools/buildSrc/base:build_version",
 )
+
+java_plugin(
+    name = "auto-value-plugin",
+    processor_class = "com.google.auto.value.processor.AutoValueProcessor",
+    visibility = ["//tools/base/build-system:__subpackages__"],
+    deps = [
+        "//tools/base/third_party:com.google.auto.value_auto-value",
+    ],
+)
+
+# Compile-time only dependency on the auto-value.
+java_library(
+    name = "com.google.auto.value_auto-value_neverlink",
+    neverlink = 1,
+    visibility = ["//tools/base/build-system:__subpackages__"],
+    exports = ["//tools/base/third_party:com.google.auto.value_auto-value"],
+)
