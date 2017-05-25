@@ -20,10 +20,12 @@ import static com.google.common.truth.TruthJUnit.assume;
 
 import com.android.testutils.TestResources;
 import com.android.tools.device.internal.adb.AdbTestUtils;
+import com.android.tools.device.internal.adb.AdbVersion;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -68,15 +70,23 @@ public class OsProcessRunnerTest {
 
     @Test
     public void getStderr_isValid() throws IOException, InterruptedException {
-        List<String> cmd = Arrays.asList(AdbTestUtils.getPathToAdb().toString(), "invalid-command");
+        Path pathToAdb = AdbTestUtils.getPathToAdb();
+        List<String> cmd = Arrays.asList(pathToAdb.toString(), "invalid-command");
         ProcessBuilder pb = new ProcessBuilder(cmd);
 
         OsProcessRunner runner = new OsProcessRunner();
         runner.start(pb);
         assertThat(runner.waitFor(10, TimeUnit.SECONDS)).isTrue();
 
-        assertThat(runner.getStderr()).isNotEmpty();
-        assertThat(runner.getStdout()).isEmpty();
+        // 1.0.39+ of adb print the help message on stdout
+        AdbVersion adbVersion = AdbVersion.get(pathToAdb);
+        if (adbVersion.micro >= 39) {
+            assertThat(runner.getStdout()).isNotEmpty();
+            assertThat(runner.getStderr()).isEmpty();
+        } else {
+            assertThat(runner.getStderr()).isNotEmpty();
+            assertThat(runner.getStdout()).isEmpty();
+        }
     }
 
     @Test

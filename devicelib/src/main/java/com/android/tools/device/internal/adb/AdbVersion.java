@@ -28,7 +28,7 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-final class AdbVersion implements Comparable<AdbVersion> {
+public final class AdbVersion implements Comparable<AdbVersion> {
     static final AdbVersion UNKNOWN = new AdbVersion(-1, -1, -1);
 
     /**
