@@ -1,8 +1,8 @@
 package android.com.java.profilertester;
 
 import android.com.java.profilertester.cpu.CpuAsyncTask;
-import android.com.java.profilertester.evnet.EmptyActivity;
-import android.com.java.profilertester.evnet.EventConfigurations;
+import android.com.java.profilertester.event.EmptyActivity;
+import android.com.java.profilertester.event.EventConfigurations;
 import android.com.java.profilertester.memory.MemoryAsyncTask;
 import android.com.java.profilertester.network.NetworkAsyncTask;
 import android.content.Intent;

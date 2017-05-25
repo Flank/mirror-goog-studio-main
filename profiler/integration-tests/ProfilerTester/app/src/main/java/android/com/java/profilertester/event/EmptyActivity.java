@@ -1,4 +1,4 @@
-package android.com.java.profilertester.evnet;
+package android.com.java.profilertester.event;
 
 import android.app.Activity;
 import android.com.java.profilertester.R;

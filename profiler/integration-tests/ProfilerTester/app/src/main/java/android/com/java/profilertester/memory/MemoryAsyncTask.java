@@ -31,6 +31,7 @@ public class MemoryAsyncTask extends AsyncTask<Integer, Void, Void> {
         for (int i = 0; i < ITERATION_COUNT; ++i) {
             long start = System.currentTimeMillis();
             table[i] = new char[DELTA_SIZE];
+            Arrays.fill(table[i], 'x');
             TimeUnit.MILLISECONDS.sleep(PERIOD_TIME * 1000 - (int)(System.currentTimeMillis() - start));
         }
     }
