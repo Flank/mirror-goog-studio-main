@@ -27,7 +27,7 @@ package com.android.utils;
  * @param <S> The type of the first value
  * @param <T> The type of the second value
  */
-public class Pair<S,T> {
+public final class Pair<S,T> {
     private final S mFirst;
     private final T mSecond;
 
