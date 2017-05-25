@@ -6,6 +6,7 @@ iml_module(
     name = "studio.sdk-common",
     srcs = ["src/main/java"],
     tags = ["managed"],
+    resources = ["src/main/resources"],
     test_resources = ["src/test/resources"],
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
@@ -41,6 +42,7 @@ iml_module(
 kotlin_library(
     name = "tools.sdk-common",
     srcs = ["src/main/java"],
+    resources = glob(["src/main/resources/**"]),
     pom = ":pom",
     visibility = ["//visibility:public"],
     deps = [

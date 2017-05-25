@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<com.android.support.test.espresso>
+  <espresso-core versions="2.2.2,2.3-alpha"/>
+  <espresso-web versions="2.2.2,2.3-alpha"/>
+  <espresso-intents versions="2.2.2,2.3-alpha"/>
+  <espresso-contrib versions="2.2.2,2.3-alpha"/>
+  <espresso-idling-resource versions="2.2.2,2.3-alpha"/>
+</com.android.support.test.espresso>
+

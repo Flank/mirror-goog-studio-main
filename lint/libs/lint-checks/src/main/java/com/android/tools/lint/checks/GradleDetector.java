@@ -19,6 +19,7 @@ import static com.android.SdkConstants.FD_BUILD_TOOLS;
 import static com.android.SdkConstants.GRADLE_PLUGIN_MINIMUM_VERSION;
 import static com.android.SdkConstants.GRADLE_PLUGIN_RECOMMENDED_VERSION;
 import static com.android.SdkConstants.SUPPORT_LIB_GROUP_ID;
+import static com.android.ide.common.repository.GoogleMavenRepository.MAVEN_GOOGLE_CACHE_DIR_KEY;
 import static com.android.ide.common.repository.GradleCoordinate.COMPARE_PLUS_HIGHER;
 import static com.android.tools.lint.checks.ManifestDetector.TARGET_NEWER;
 import static com.android.tools.lint.detector.api.LintUtils.guessGradleLocation;
@@ -34,6 +35,7 @@ import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.MavenCoordinates;
 import com.android.builder.model.Variant;
+import com.android.ide.common.repository.GoogleMavenRepository;
 import com.android.ide.common.repository.GradleCoordinate;
 import com.android.ide.common.repository.GradleCoordinate.RevisionComponent;
 import com.android.ide.common.repository.GradleVersion;
@@ -51,6 +53,7 @@ import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LintFix;
+import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
@@ -61,14 +64,9 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
-import java.net.URL;
-import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.util.Collection;
 import java.util.Collections;
@@ -562,10 +560,8 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                             LintFix fix = fix().data(gc);
                             report(context, valueCookie, PLUS, message, fix);
                         }
-                        if (!dependency.startsWith(SdkConstants.GRADLE_PLUGIN_NAME) ||
-                                !checkGradlePluginDependency(context, gc, valueCookie)) {
-                            checkDependency(context, gc, isResolved, valueCookie);
-                        }
+
+                        checkDependency(context, gc, isResolved, valueCookie);
                     }
                 }
             }
@@ -913,14 +909,13 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
 
             case "com.android.tools.build": {
                 if ("gradle".equals(artifactId)) {
-                    try {
-                        GradleVersion v = GradleVersion.parse(GRADLE_PLUGIN_RECOMMENDED_VERSION);
-                        if (!v.isPreview()) {
-                            newerVersion = getNewerVersion(version, v);
-                        }
-                    } catch (IllegalArgumentException e) {
-                        context.log(e, null);
+                    if (checkGradlePluginDependency(context, dependency, cookie)) {
+                        return;
                     }
+
+                    // If it's available in maven.google.com, fetch latest available version
+                    newerVersion = GradleVersion.max(version,
+                            getGoogleMavenRepoVersion(context, dependency));
                 }
                 break;
             }
@@ -1008,12 +1003,48 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
         newerVersion = GradleVersion.max(newerVersion, getHighestKnownVersion(context.getClient(),
                 dependency));
 
+        // If it's available in maven.google.com, fetch latest available version
+        newerVersion = GradleVersion.max(newerVersion,
+                getGoogleMavenRepoVersion(context, dependency));
+
         if (newerVersion != null && newerVersion.compareTo(version) > 0) {
             String versionString = newerVersion.toString();
             String message = getNewerVersionAvailableMessage(dependency, versionString);
             LintFix fix = !isResolved ? getUpdateDependencyFix(revision, versionString) : null;
             report(context, cookie, issue, message, fix);
         }
+    }
+
+    @VisibleForTesting
+    static GoogleMavenRepository googleMavenRepository;
+
+    @Nullable
+    private static GradleVersion getGoogleMavenRepoVersion(@NonNull Context context,
+            @NonNull GradleCoordinate dependency) {
+        synchronized (GradleDetector.class) {
+            if (googleMavenRepository == null) {
+                LintClient client = context.getClient();
+                File cacheDir = client.getCacheDir(MAVEN_GOOGLE_CACHE_DIR_KEY, true);
+                googleMavenRepository = new GoogleMavenRepository(cacheDir) {
+                    @Nullable
+                    @Override
+                    public byte[] readUrlData(@NonNull String url, int timeout) {
+                        try {
+                            return LintUtils.readUrlData(client, url, timeout);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+
+                    @Override
+                    public void error(@NonNull Throwable throwable, @Nullable String message) {
+                        client.log(throwable, message);
+                    }
+                };
+            }
+        }
+
+        return googleMavenRepository.findVersion(dependency, dependency.isPreview());
     }
 
     protected File getGradleUserHome() {
@@ -1131,8 +1162,15 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
         }
         query.append("&wt=json");
 
-        String response = readUrlData(client, dependency, query.toString());
-        if (response == null) {
+        String response;
+        try {
+            response = LintUtils.readUrlDataAsString(client, query.toString(), 20000);
+            if (response == null) {
+                return null;
+            }
+        } catch (IOException ioe) {
+            client.log(ioe, "Could not connect to maven central to look up the " +
+                    "latest available version for %1$s", dependency);
             return null;
         }
 
@@ -1198,66 +1236,17 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
         return null;
     }
 
-    /**
-     * Normally null; used for testing
-     */
-    @Nullable
-    @VisibleForTesting
-    static Map<String, String> sMockData;
-
-    @Nullable
-    private static String readUrlData(
-            @NonNull LintClient client,
-            @NonNull GradleCoordinate dependency,
-            @NonNull String query) {
-        // For unit testing: avoid network as well as unexpected new versions
-        if (sMockData != null) {
-            String value = sMockData.get(query);
-            assert value != null : query;
-            return value;
-        }
-
-        try {
-            URL url = new URL(query);
-
-            URLConnection connection = client.openConnection(url);
-            if (connection == null) {
-                return null;
-            }
-            try {
-                InputStream is = connection.getInputStream();
-                if (is == null) {
-                    return null;
-                }
-                try (BufferedReader reader = new BufferedReader(new InputStreamReader(is, UTF_8))) {
-                    StringBuilder sb = new StringBuilder(500);
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        sb.append(line);
-                        sb.append('\n');
-                    }
-
-                    return sb.toString();
-                }
-            } finally {
-                client.closeConnection(connection);
-            }
-        } catch (IOException ioe) {
-            client.log(ioe, "Could not connect to maven central to look up the " +
-                    "latest available version for %1$s", dependency);
-            return null;
-        }
-    }
-
     private boolean checkGradlePluginDependency(Context context, GradleCoordinate dependency,
             Object cookie) {
-        GradleCoordinate latestPlugin = GradleCoordinate.parseCoordinateString(
-                SdkConstants.GRADLE_PLUGIN_NAME +
-                        GRADLE_PLUGIN_MINIMUM_VERSION);
-        if (COMPARE_PLUS_HIGHER.compare(dependency, latestPlugin) < 0) {
+        GradleCoordinate minimum = GradleCoordinate.parseCoordinateString(
+                SdkConstants.GRADLE_PLUGIN_NAME + GRADLE_PLUGIN_MINIMUM_VERSION);
+        if (minimum != null && COMPARE_PLUS_HIGHER.compare(dependency, minimum) < 0) {
+            GradleVersion recommended = GradleVersion.max(
+                    getGoogleMavenRepoVersion(context, minimum),
+                    GradleVersion.tryParse(GRADLE_PLUGIN_RECOMMENDED_VERSION));
             String message = "You must use a newer version of the Android Gradle plugin. The "
                     + "minimum supported version is " + GRADLE_PLUGIN_MINIMUM_VERSION +
-                    " and the recommended version is " + GRADLE_PLUGIN_RECOMMENDED_VERSION;
+                    " and the recommended version is " +  recommended;
             report(context, cookie, GRADLE_PLUGIN_COMPATIBILITY, message);
             return true;
         }

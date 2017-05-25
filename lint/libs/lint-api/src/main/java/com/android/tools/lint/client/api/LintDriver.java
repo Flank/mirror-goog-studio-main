@@ -2481,10 +2481,17 @@ public class LintDriver {
             return mDelegate.findResource(relativePath);
         }
 
+        @SuppressWarnings("deprecation") // forwarding required API
         @Override
         @Nullable
         public File getCacheDir(boolean create) {
             return mDelegate.getCacheDir(create);
+        }
+
+        @Nullable
+        @Override
+        public File getCacheDir(@Nullable String name, boolean create) {
+            return mDelegate.getCacheDir(name, create);
         }
 
         @Override
@@ -2649,6 +2656,12 @@ public class LintDriver {
         @Override
         public URLConnection openConnection(@NonNull URL url) throws IOException {
             return mDelegate.openConnection(url);
+        }
+
+        @Nullable
+        @Override
+        public URLConnection openConnection(@NonNull URL url, int timeout) throws IOException {
+            return mDelegate.openConnection(url, timeout);
         }
 
         @Override

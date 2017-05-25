@@ -26,6 +26,7 @@ public class AlwaysShowActionDetectorTest extends AbstractCheckTest {
     }
 
     public void testXmlMenus() throws Exception {
+        //noinspection all // Sample code
         String expected = ""
                 + "res/menu-land/actions.xml:6: Warning: Prefer \"ifRoom\" instead of \"always\" [AlwaysShowAction]\n"
                 + "        android:showAsAction=\"always|collapseActionView\"\n"
@@ -34,7 +35,6 @@ public class AlwaysShowActionDetectorTest extends AbstractCheckTest {
                 + "    res/menu-land/actions.xml:18: <No location-specific message\n"
                 + "    res/menu-land/actions.xml:54: <No location-specific message\n"
                 + "0 errors, 1 warnings\n";
-        //noinspection all // Sample code
         lint().files(
                 xml("res/menu-land/actions.xml", ""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"

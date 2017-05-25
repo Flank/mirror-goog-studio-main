@@ -382,11 +382,47 @@ public abstract class LintClient {
      * @return a suitable location for storing cache files, which may be null if
      *         the create flag was false, or if for some reason the directory
      *         could not be created
+     * @deprecated Use {@link #getCacheDir(String, boolean)} instead
      */
+    @Deprecated
     @Nullable
     public File getCacheDir(boolean create) {
+        return getCacheDir(null, create);
+    }
+
+    /**
+     * Returns a suitable location for storing cache files of a given named
+     * type. The named type is typically created as a directory within the shared
+     * cache directory. For example, from the command line, lint will typically store
+     * its cache files in ~/.android/cache/. In order to avoid files colliding,
+     * caches that create a lot of files should provide a specific name such that
+     * the cache is isolated to a sub directory.
+     * <p>
+     * Note that in some cases lint may interpret that name to provide an alternate
+     * cache. For example, when lint runs in the IDE it normally uses the same
+     * cache as lint on the command line (~/.android/cache), but specifically for
+     * the cache for maven.google.com repository versions, it will instead point to
+     * the same cache directory as the IDE is already using for non-lint purposes,
+     * in order to share data that may already exist there.
+     * <p>
+     * Note that the cache directory may not exist. You can override the default location
+     * using {@code $ANDROID_SDK_CACHE_DIR} (though note that specific
+     * lint integrations may not honor that environment variable; for example,
+     * in Gradle the cache directory will <b>always</b> be build/intermediates/lint-cache/.)
+     *
+     * @param create if true, attempt to create the cache dir if it does not
+     *            exist
+     * @return a suitable location for storing cache files, which may be null if
+     *         the create flag was false, or if for some reason the directory
+     *         could not be created
+     */
+    @Nullable
+    public File getCacheDir(@Nullable String name, boolean create) {
         String path = System.getenv("ANDROID_SDK_CACHE_DIR");
         if (path != null) {
+            if (name != null) {
+                path += File.separator + name;
+            }
             File dir = new File(path);
             if (create && !dir.exists()) {
                 if (!dir.mkdirs()) {
@@ -398,6 +434,9 @@ public abstract class LintClient {
 
         String home = System.getProperty("user.home");
         String relative = ".android" + File.separator + "cache";
+        if (name != null) {
+            relative += File.separator + name;
+        }
         File dir = new File(home, relative);
         if (create && !dir.exists()) {
             if (!dir.mkdirs()) {
@@ -1221,7 +1260,28 @@ public abstract class LintClient {
      */
     @Nullable
     public URLConnection openConnection(@NonNull URL url) throws IOException {
-        return url.openConnection();
+        return openConnection(url, 0);
+    }
+
+    /**
+     * Opens a URL connection.
+     *
+     * Clients such as IDEs can override this to for example consider the user's IDE proxy
+     * settings.
+     *
+     * @param url     the URL to read
+     * @param timeout the timeout to apply for HTTP connections (or 0 to wait indefinitely)
+     * @return a {@link URLConnection} or null
+     * @throws IOException if any kind of IO exception occurs including timeouts
+     */
+    @Nullable
+    public URLConnection openConnection(@NonNull URL url, int timeout) throws IOException {
+        URLConnection connection = url.openConnection();
+        if (timeout > 0) {
+            connection.setConnectTimeout(timeout);
+            connection.setReadTimeout(timeout);
+        }
+        return connection;
     }
 
     /** Closes a connection previously returned by {@link #openConnection(URL)} */

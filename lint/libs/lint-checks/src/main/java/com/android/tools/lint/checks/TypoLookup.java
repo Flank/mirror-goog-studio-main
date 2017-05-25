@@ -155,7 +155,7 @@ public class TypoLookup {
         if (LintUtils.endsWith(name, DOT_XML)) {
             name = name.substring(0, name.length() - DOT_XML.length());
         }
-        File cacheDir = client.getCacheDir(true/*create*/);
+        File cacheDir = client.getCacheDir(null, true);
         if (cacheDir == null) {
             cacheDir = xmlFile.getParentFile();
         }

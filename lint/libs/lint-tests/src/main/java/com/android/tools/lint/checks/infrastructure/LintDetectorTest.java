@@ -755,6 +755,19 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
             return file.getPath().replace(File.separatorChar, '/'); // stable tests
         }
 
+        @Nullable
+        @Override
+        public File getCacheDir(@Nullable String name, boolean create) {
+            File cacheDir = super.getCacheDir(name, create);
+            // Separate test caches from user's normal caches
+            cacheDir = new File(cacheDir, "unit-tests");
+            if (create) {
+                //noinspection ResultOfMethodCallIgnored
+                cacheDir.mkdirs();
+            }
+            return cacheDir;
+        }
+
         @Override
         public String getSuperClass(@NonNull Project project, @NonNull String name) {
             String superClass = LintDetectorTest.this.getSuperClass(project, name);
