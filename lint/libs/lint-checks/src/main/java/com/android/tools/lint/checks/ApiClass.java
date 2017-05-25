@@ -21,7 +21,10 @@ import static com.android.SdkConstants.CONSTRUCTOR_NAME;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.utils.Pair;
-import com.google.common.collect.Lists;
+import com.google.common.collect.Iterables;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -31,22 +34,30 @@ import java.util.Set;
 /**
  * Represents a class and its methods/fields.
  *
- * {@link #getSince()} gives the API level it was introduced.
+ * <p>{@link #getSince()} gives the API level it was introduced.
  *
- * {@link #getMethod} returns when the method was introduced.
- * {@link #getField} returns when the field was introduced.
+ * <p>{@link #getMethod} returns the API level when the method was introduced.
+ *
+ * <p>{@link #getField} returns the API level when the field was introduced.
  */
-public class ApiClass implements Comparable<ApiClass> {
+final class ApiClass implements Comparable<ApiClass> {
     private final String mName;
     private final int mSince;
     private final int mDeprecatedIn;
+    private final int mRemovedIn;
 
-    private final List<Pair<String, Integer>> mSuperClasses = Lists.newArrayList();
-    private final List<Pair<String, Integer>> mInterfaces = Lists.newArrayList();
+    private final List<Pair<String, Integer>> mSuperClasses = new ArrayList<>();
+    private final List<Pair<String, Integer>> mInterfaces = new ArrayList<>();
 
     private final Map<String, Integer> mFields = new HashMap<>();
     private final Map<String, Integer> mMethods = new HashMap<>();
-    private final Map<String, Integer> mDeprecatedMembersIn = new HashMap<>();
+    /* Deprecated fields and methods and the API levels when they were deprecated. */
+    @Nullable private Map<String, Integer> mMembersDeprecatedIn;
+    /**
+     * Removed fields, methods, superclasses and interfaces and the API levels when they were
+     * removed.
+     */
+    @Nullable private Map<String, Integer> mElementsRemovedIn;
 
     // Persistence data: Used when writing out binary data in ApiLookup
     List<String> members;
@@ -57,10 +68,11 @@ public class ApiClass implements Comparable<ApiClass> {
     int memberIndexStart;    // entry in index for first member
     int memberIndexLength;   // number of entries
 
-    ApiClass(String name, int since, int deprecatedIn) {
+    ApiClass(String name, int since, int deprecatedIn, int removedIn) {
         mName = name;
         mSince = since;
         mDeprecatedIn = deprecatedIn;
+        mRemovedIn = removedIn;
     }
 
     /**
@@ -80,18 +92,28 @@ public class ApiClass implements Comparable<ApiClass> {
     }
 
     /**
-     * Returns the API level a method was deprecated in, or 0 if the method is not deprecated
+     * Returns the API level the class was deprecated in, or 0 if the class is not deprecated.
      *
-     * @return the API level a method was deprecated in, or 0 if the method is not deprecated
+     * @return the API level the class was deprecated in, or 0 if the class is not deprecated
      */
     int getDeprecatedIn() {
         return mDeprecatedIn;
     }
 
     /**
-     * Returns when a field was added, or Integer.MAX_VALUE if it doesn't exist.
+     * Returns the API level the class was removed in, or 0 if the class was not removed.
+     *
+     * @return the API level the class was removed in, or 0 if the class was not removed
+     */
+    int getRemovedIn() {
+        return mRemovedIn;
+    }
+
+    /**
+     * Returns the API level when a field was added, or 0 if it doesn't exist.
+     *
      * @param name the name of the field.
-     * @param info the corresponding info
+     * @param info the information about the rest of the API
      */
     int getField(String name, Api info) {
         // The field can come from this class or from a super class or an interface
@@ -107,90 +129,120 @@ public class ApiClass implements Comparable<ApiClass> {
         // Present in B in API 11
         // Present in C in API 7.
         // The answer is 10, which is when C became an interface
-        int min = Integer.MAX_VALUE;
-        Integer i = mFields.get(name);
-        if (i != null) {
-            min = i;
-        }
+        int apiLevel = getValueWithDefault(mFields, name, 0);
 
-        // now look at the super classes
-        for (Pair<String, Integer> superClassPair : mSuperClasses) {
+        // Look at the super classes and interfaces.
+        for (Pair<String, Integer> superClassPair : Iterables.concat(mSuperClasses, mInterfaces)) {
             ApiClass superClass = info.getClass(superClassPair.getFirst());
             if (superClass != null) {
-                i = superClass.getField(name, info);
-                int tmp = superClassPair.getSecond() > i ? superClassPair.getSecond() : i;
-                if (tmp < min) {
-                    min = tmp;
+                int i = superClass.getField(name, info);
+                if (i != 0) {
+                    int tmp = Math.max(superClassPair.getSecond(), i);
+                    if (apiLevel == 0 || tmp < apiLevel) {
+                        apiLevel = tmp;
+                    }
                 }
             }
         }
 
-        // now look at the interfaces
-        for (Pair<String, Integer> superClassPair : mInterfaces) {
-            ApiClass superClass = info.getClass(superClassPair.getFirst());
-            if (superClass != null) {
-                i = superClass.getField(name, info);
-                int tmp = superClassPair.getSecond() > i ? superClassPair.getSecond() : i;
-                if (tmp < min) {
-                    min = tmp;
-                }
-            }
-        }
-
-        return min;
+        return apiLevel;
     }
 
     /**
-     * Returns when a field was deprecated, or 0 if it's not deprecated
+     * Returns when a field or a method was deprecated, or 0 if it's not deprecated.
      *
      * @param name the name of the field.
-     * @param info the corresponding info
+     * @param info the information about the rest of the API
      */
-    int getMemberDeprecatedIn(String name, Api info) {
-        int deprecatedIn = findMemberDeprecatedIn(name, info);
-        return deprecatedIn < Integer.MAX_VALUE ? deprecatedIn : 0;
-    }
-
-    private int findMemberDeprecatedIn(String name, Api info) {
+    int getMemberDeprecatedIn(@NonNull String name, Api info) {
         // This follows the same logic as getField/getMethod.
         // However, it also incorporates deprecation versions from the class.
-        int min = Integer.MAX_VALUE;
-        Integer i = mDeprecatedMembersIn.get(name);
-        if (i != null) {
-            min = i;
-        }
+        int apiLevel = getValueWithDefault(mMembersDeprecatedIn, name, 0);
 
-        // now look at the super classes
-        for (Pair<String, Integer> superClassPair : mSuperClasses) {
+        // Look at the super classes and interfaces.
+        for (Pair<String, Integer> superClassPair : Iterables.concat(mSuperClasses, mInterfaces)) {
             ApiClass superClass = info.getClass(superClassPair.getFirst());
             if (superClass != null) {
-                i = superClass.findMemberDeprecatedIn(name, info);
-                int tmp = superClassPair.getSecond() > i ? superClassPair.getSecond() : i;
-                if (tmp < min) {
-                    min = tmp;
+                int i = superClass.getMemberDeprecatedIn(name, info);
+                if (i != 0) {
+                    int tmp = Math.max(superClassPair.getSecond(), i);
+                    if (apiLevel == 0 || tmp < apiLevel) {
+                        apiLevel = tmp;
+                    }
                 }
             }
         }
 
-        // now look at the interfaces
-        for (Pair<String, Integer> superClassPair : mInterfaces) {
-            ApiClass superClass = info.getClass(superClassPair.getFirst());
-            if (superClass != null) {
-                i = superClass.findMemberDeprecatedIn(name, info);
-                int tmp = superClassPair.getSecond() > i ? superClassPair.getSecond() : i;
-                if (tmp < min) {
-                    min = tmp;
-                }
-            }
-        }
-
-        return min;
+        return apiLevel == 0
+                ? mDeprecatedIn
+                : mDeprecatedIn == 0 ? apiLevel : Math.min(apiLevel, mDeprecatedIn);
     }
 
     /**
-     * Returns when a method was added, or Integer.MAX_VALUE if it doesn't exist.
-     * This goes through the super class to find method only present there.
+     * Returns the API level when a field or a method was removed, or 0 if it's not removed.
+     *
+     * @param name the name of the field or method
+     * @param info the information about the rest of the API
+     */
+    int getMemberRemovedIn(@NonNull String name, Api info) {
+        int removedIn = getMemberRemovedInInternal(name, info);
+        return removedIn == Integer.MAX_VALUE ? mRemovedIn : removedIn > 0 ? removedIn : 0;
+    }
+
+    /**
+     * Returns the API level when a field or a method was removed, or Integer.MAX_VALUE if it's not
+     * removed, or -1 if the field or method never existed in this class or its super classes and
+     * interfaces.
+     *
+     * @param name the name of the field or method
+     * @param info the information about the rest of the API
+     */
+    private int getMemberRemovedInInternal(String name, Api info) {
+        int apiLevel = getValueWithDefault(mElementsRemovedIn, name, Integer.MAX_VALUE);
+        if (apiLevel == Integer.MAX_VALUE) {
+            if (mMethods.containsKey(name) || mFields.containsKey(name)) {
+                return mRemovedIn == 0 ? Integer.MAX_VALUE : mRemovedIn;
+            }
+            apiLevel = -1; // Never existed in this class.
+        }
+
+        // Look at the super classes and interfaces.
+        for (Pair<String, Integer> superClassPair : Iterables.concat(mSuperClasses, mInterfaces)) {
+            String superClassName = superClassPair.getFirst();
+            int superClassRemovedIn =
+                    getValueWithDefault(mElementsRemovedIn, superClassName, Integer.MAX_VALUE);
+            if (superClassRemovedIn > apiLevel) {
+                ApiClass superClass = info.getClass(superClassName);
+                if (superClass != null) {
+                    int i = superClass.getMemberRemovedInInternal(name, info);
+                    if (i != -1) {
+                        int tmp = Math.min(superClassRemovedIn, i);
+                        if (tmp > apiLevel) {
+                            apiLevel = tmp;
+                        }
+                    }
+                }
+            }
+        }
+
+        return apiLevel;
+    }
+
+    private int getValueWithDefault(
+            @Nullable Map<String, Integer> map, @NonNull String key, int defaultValue) {
+        if (map == null) {
+            return defaultValue;
+        }
+        Integer value = map.get(key);
+        return value == null ? defaultValue : value;
+    }
+
+    /**
+     * Returns the API level when a method was added, or 0 if it doesn't exist. This goes through
+     * the super class and interfaces to find method only present there.
+     *
      * @param methodSignature the method signature
+     * @param info the information about the rest of the API
      */
     int getMethod(String methodSignature, Api info) {
         // The method can come from this class or from a super class.
@@ -206,54 +258,36 @@ public class ApiClass implements Comparable<ApiClass> {
         // Present in B in API 11
         // Present in C in API 7.
         // The answer is 10, which is when C became the super class.
-        int min = Integer.MAX_VALUE;
-        Integer i = mMethods.get(methodSignature);
-        if (i != null) {
-            min = i;
-
-            // Constructors aren't inherited
-            if (methodSignature.startsWith(CONSTRUCTOR_NAME)) {
-                return i;
-            }
-        }
-
-        // now look at the super classes
-        for (Pair<String, Integer> superClassPair : mSuperClasses) {
-            ApiClass superClass = info.getClass(superClassPair.getFirst());
-            if (superClass != null) {
-                i = superClass.getMethod(methodSignature, info);
-                int tmp = superClassPair.getSecond() > i ? superClassPair.getSecond() : i;
-                if (tmp < min) {
-                    min = tmp;
+        int apiLevel = getValueWithDefault(mMethods, methodSignature, 0);
+        // Constructors aren't inherited.
+        if (!methodSignature.startsWith(CONSTRUCTOR_NAME)) {
+            // Look at the super classes and interfaces.
+            for (Pair<String, Integer> pair : Iterables.concat(mSuperClasses, mInterfaces)) {
+                ApiClass superClass = info.getClass(pair.getFirst());
+                if (superClass != null) {
+                    int i = superClass.getMethod(methodSignature, info);
+                    if (i != 0) {
+                        int tmp = Math.max(pair.getSecond(), i);
+                        if (apiLevel == 0 || tmp < apiLevel) {
+                            apiLevel = tmp;
+                        }
+                    }
                 }
             }
         }
 
-        // now look at the interfaces classes
-        for (Pair<String, Integer> interfacePair : mInterfaces) {
-            ApiClass superClass = info.getClass(interfacePair.getFirst());
-            if (superClass != null) {
-                i = superClass.getMethod(methodSignature, info);
-                int tmp = interfacePair.getSecond() > i ? interfacePair.getSecond() : i;
-                if (tmp < min) {
-                    min = tmp;
-                }
-            }
-        }
-
-        return min;
+        return apiLevel;
     }
 
-    void addField(String name, int since, int deprecatedIn) {
+    void addField(String name, int since, int deprecatedIn, int removedIn) {
         Integer i = mFields.get(name);
         assert i == null;
         mFields.put(name, since);
-        if (deprecatedIn > 0) {
-            mDeprecatedMembersIn.put(name, deprecatedIn);
-        }
+        addToDeprecated(name, deprecatedIn);
+        addToRemoved(name, removedIn);
     }
 
-    void addMethod(String name, int since, int deprecatedIn) {
+    void addMethod(String name, int since, int deprecatedIn, int removedIn) {
         // Strip off the method type at the end to ensure that the code which
         // produces inherited methods doesn't get confused and end up multiple entries.
         // For example, java/nio/Buffer has the method "array()Ljava/lang/Object;",
@@ -268,17 +302,18 @@ public class ApiClass implements Comparable<ApiClass> {
         Integer i = mMethods.get(name);
         assert i == null || i == since : i;
         mMethods.put(name, since);
-        if (deprecatedIn > 0) {
-            mDeprecatedMembersIn.put(name, deprecatedIn);
-        }
+        addToDeprecated(name, deprecatedIn);
+        addToRemoved(name, removedIn);
     }
 
-    void addSuperClass(String superClass, int since) {
+    void addSuperClass(String superClass, int since, int removedIn) {
         addToArray(mSuperClasses, superClass, since);
+        addToRemoved(superClass, removedIn);
     }
 
-    void addInterface(String interfaceClass, int since) {
+    void addInterface(String interfaceClass, int since, int removedIn) {
         addToArray(mInterfaces, interfaceClass, since);
+        addToRemoved(interfaceClass, removedIn);
     }
 
     static void addToArray(List<Pair<String, Integer>> list, String name, int value) {
@@ -292,6 +327,24 @@ public class ApiClass implements Comparable<ApiClass> {
 
         list.add(Pair.of(name, value));
 
+    }
+
+    private void addToDeprecated(String name, int deprecatedIn) {
+        if (deprecatedIn > 0) {
+            if (mMembersDeprecatedIn == null) {
+                mMembersDeprecatedIn = new HashMap<>();
+            }
+            mMembersDeprecatedIn.put(name, deprecatedIn);
+        }
+    }
+
+    private void addToRemoved(String name, int removedIn) {
+        if (removedIn > 0) {
+            if (mElementsRemovedIn == null) {
+                mElementsRemovedIn = new HashMap<>();
+            }
+            mElementsRemovedIn.put(name, removedIn);
+        }
     }
 
     @Nullable
@@ -320,10 +373,9 @@ public class ApiClass implements Comparable<ApiClass> {
     }
 
     /**
-     * Returns the set of all methods, including inherited
-     * ones.
+     * Returns the set of all methods, including inherited ones.
      *
-     * @param info the api to look up super classes from
+     * @param info the API to look up super classes from
      * @return a set containing all the members fields
      */
     Set<String> getAllMethods(Api info) {
@@ -333,48 +385,39 @@ public class ApiClass implements Comparable<ApiClass> {
         return members;
     }
 
+    @NonNull
     List<Pair<String, Integer>> getInterfaces() {
         return mInterfaces;
     }
 
+    @NonNull
     List<Pair<String, Integer>> getSuperClasses() {
         return mSuperClasses;
     }
 
     private void addAllMethods(Api info, Set<String> set, boolean includeConstructors) {
-        if (!includeConstructors) {
+        if (includeConstructors) {
+            set.addAll(mMethods.keySet());
+        } else {
             for (String method : mMethods.keySet()) {
                 if (!method.startsWith(CONSTRUCTOR_NAME)) {
                     set.add(method);
                 }
             }
-        } else {
-            for (String method : mMethods.keySet()) {
-                set.add(method);
-            }
         }
 
-        for (Pair<String, Integer> superClass : mSuperClasses) {
-            ApiClass clz = info.getClass(superClass.getFirst());
-            if (clz != null) {
-                clz.addAllMethods(info, set, false);
-            }
-        }
-
-        // Get methods from implemented interfaces as well;
-        for (Pair<String, Integer> superClass : mInterfaces) {
-            ApiClass clz = info.getClass(superClass.getFirst());
-            if (clz != null) {
-                clz.addAllMethods(info, set, false);
+        for (Pair<String, Integer> superClass : Iterables.concat(mSuperClasses, mInterfaces)) {
+            ApiClass cls = info.getClass(superClass.getFirst());
+            if (cls != null) {
+                cls.addAllMethods(info, set, false);
             }
         }
     }
 
     /**
-     * Returns the set of all fields, including inherited
-     * ones.
+     * Returns the set of all fields, including inherited ones.
      *
-     * @param info the api to look up super classes from
+     * @param info the API to look up super classes from
      * @return a set containing all the fields
      */
     Set<String> getAllFields(Api info) {
@@ -385,22 +428,75 @@ public class ApiClass implements Comparable<ApiClass> {
     }
 
     private void addAllFields(Api info, Set<String> set) {
-        for (String field : mFields.keySet()) {
-            set.add(field);
+        set.addAll(mFields.keySet());
+
+        for (Pair<String, Integer> superClass : Iterables.concat(mSuperClasses, mInterfaces)) {
+            ApiClass cls = info.getClass(superClass.getFirst());
+            assert cls != null : superClass.getSecond();
+            cls.addAllFields(info, set);
+        }
+    }
+
+    private void addRemovedFields(Api info, Set<String> set) {
+        set.addAll(mFields.keySet());
+
+        for (Pair<String, Integer> superClass : Iterables.concat(mSuperClasses, mInterfaces)) {
+            ApiClass cls = info.getClass(superClass.getFirst());
+            assert cls != null : superClass.getSecond();
+            cls.addAllFields(info, set);
+        }
+    }
+
+    /**
+     * Returns all removed fields, including inherited ones.
+     *
+     * @param info the API to look up super classes from
+     * @return a collection containing all removed fields
+     */
+    @NonNull
+    Collection<ApiMember> getAllRemovedFields(Api info) {
+        Set<String> fields = getAllFields(info);
+        if (fields.isEmpty()) {
+            return Collections.emptySet();
         }
 
-        for (Pair<String, Integer> superClass : mSuperClasses) {
-            ApiClass clz = info.getClass(superClass.getFirst());
-            assert clz != null : superClass.getSecond();
-            clz.addAllFields(info, set);
+        List<ApiMember> removedFields = new ArrayList<>();
+        for (String fieldName : fields) {
+            int removedIn = getMemberRemovedIn(fieldName, info);
+            if (removedIn > 0) {
+                int since = getField(fieldName, info);
+                assert since > 0;
+                int deprecatedIn = getMemberDeprecatedIn(fieldName, info);
+                removedFields.add(new ApiMember(fieldName, since, deprecatedIn, removedIn));
+            }
+        }
+        return removedFields;
+    }
+
+    /**
+     * Returns all removed fields, including inherited ones.
+     *
+     * @param info the API to look up super classes from
+     * @return a collection containing all removed fields
+     */
+    @NonNull
+    Collection<ApiMember> getAllRemovedMethods(Api info) {
+        Set<String> methods = getAllMethods(info);
+        if (methods.isEmpty()) {
+            return Collections.emptySet();
         }
 
-        // Get methods from implemented interfaces as well;
-        for (Pair<String, Integer> superClass : mInterfaces) {
-            ApiClass clz = info.getClass(superClass.getFirst());
-            assert clz != null : superClass.getSecond();
-            clz.addAllFields(info, set);
+        List<ApiMember> removedMethods = new ArrayList<>();
+        for (String methodSignature : methods) {
+            int removedIn = getMemberRemovedIn(methodSignature, info);
+            if (removedIn > 0) {
+                int since = getMethod(methodSignature, info);
+                assert since > 0;
+                int deprecatedIn = getMemberDeprecatedIn(methodSignature, info);
+                removedMethods.add(new ApiMember(methodSignature, since, deprecatedIn, removedIn));
+            }
         }
+        return removedMethods;
     }
 
     @Override
@@ -433,16 +529,16 @@ public class ApiClass implements Comparable<ApiClass> {
             }
 
             for (Pair<String, Integer> superClass : mSuperClasses) {
-                ApiClass clz = info.getClass(superClass.getFirst());
-                assert clz != null : superClass.getSecond();
-                if (clz != null) {
-                    Integer superSince = clz.getField(field, info);
+                ApiClass cls = info.getClass(superClass.getFirst());
+                assert cls != null : superClass.getSecond();
+                if (cls != null) {
+                    Integer superSince = cls.getField(field, info);
                     if (superSince == Integer.MAX_VALUE) {
                         continue;
                     }
 
                     if (superSince != null && superSince > since) {
-                        String declaredIn = clz.findFieldDeclaration(info, field);
+                        String declaredIn = cls.findFieldDeclaration(info, field);
                         System.out.println("Field " + getName() + "#" + field + " has api="
                                 + since + " but parent " + declaredIn + " provides it as "
                                 + superSince);
@@ -453,15 +549,15 @@ public class ApiClass implements Comparable<ApiClass> {
 
             // Get methods from implemented interfaces as well;
             for (Pair<String, Integer> superClass : mInterfaces) {
-                ApiClass clz = info.getClass(superClass.getFirst());
-                assert clz != null : superClass.getSecond();
-                if (clz != null) {
-                    Integer superSince = clz.getField(field, info);
+                ApiClass cls = info.getClass(superClass.getFirst());
+                assert cls != null : superClass.getSecond();
+                if (cls != null) {
+                    Integer superSince = cls.getField(field, info);
                     if (superSince == Integer.MAX_VALUE) {
                         continue;
                     }
                     if (superSince != null && superSince > since) {
-                        String declaredIn = clz.findFieldDeclaration(info, field);
+                        String declaredIn = cls.findFieldDeclaration(info, field);
                         System.out.println("Field " + getName() + "#" + field + " has api="
                                 + since + " but parent " + declaredIn + " provides it as "
                                 + superSince);
@@ -477,10 +573,10 @@ public class ApiClass implements Comparable<ApiClass> {
             return getName();
         }
         for (Pair<String, Integer> superClass : mSuperClasses) {
-            ApiClass clz = info.getClass(superClass.getFirst());
-            assert clz != null : superClass.getSecond();
-            if (clz != null) {
-                String declaredIn = clz.findFieldDeclaration(info, name);
+            ApiClass cls = info.getClass(superClass.getFirst());
+            assert cls != null : superClass.getSecond();
+            if (cls != null) {
+                String declaredIn = cls.findFieldDeclaration(info, name);
                 if (declaredIn != null) {
                     return declaredIn;
                 }
@@ -489,10 +585,10 @@ public class ApiClass implements Comparable<ApiClass> {
 
         // Get methods from implemented interfaces as well;
         for (Pair<String, Integer> superClass : mInterfaces) {
-            ApiClass clz = info.getClass(superClass.getFirst());
-            assert clz != null : superClass.getSecond();
-            if (clz != null) {
-                String declaredIn = clz.findFieldDeclaration(info, name);
+            ApiClass cls = info.getClass(superClass.getFirst());
+            assert cls != null : superClass.getSecond();
+            if (cls != null) {
+                String declaredIn = cls.findFieldDeclaration(info, name);
                 if (declaredIn != null) {
                     return declaredIn;
                 }

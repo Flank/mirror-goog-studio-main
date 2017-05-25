@@ -157,6 +157,61 @@ public class ApiLookupTest extends AbstractCheckTest {
         assertEquals(9, mDb.getClassDeprecatedIn("org/xml/sax/Parser"));
     }
 
+    public void testRemovedFields() {
+        // Not removed
+        assertEquals(-1, mDb.getFieldRemovedIn("android/Manifest$permission", "GET_PACKAGE_SIZE"));
+        // Field only has since > 1, no removal
+        assertEquals(9, mDb.getFieldVersion("android/Manifest$permission", "NFC"));
+
+        // Removed
+        assertEquals(
+                23, mDb.getFieldRemovedIn("android/Manifest$permission", "ACCESS_MOCK_LOCATION"));
+        // Field both removed and since > 1
+        assertEquals(
+                23, mDb.getFieldRemovedIn("android/Manifest$permission", "AUTHENTICATE_ACCOUNTS"));
+    }
+
+    public void testRemovedCalls() {
+        // Not removed
+        assertEquals(-1, mDb.getCallRemovedIn("android/app/Activity", "enterPictureInPictureMode",
+                "(Landroid/app/PictureInPictureArgs;)Z"));
+        // Moved to an interface
+        assertEquals(
+                -1, mDb.getCallRemovedIn("android/database/sqlite/SQLiteDatabase", "close", "()V"));
+        // Removed
+        assertEquals(11, mDb.getCallRemovedIn("android/app/Activity", "setPersistent", "(Z)V"));
+    }
+
+    public void testGetRemovedFields() {
+        Collection<ApiMember> removedFields = mDb.getRemovedFields("android/Manifest$permission");
+        assertTrue(removedFields.contains(new ApiMember("ACCESS_MOCK_LOCATION", 1, 0, 23)));
+        assertTrue(removedFields.contains(new ApiMember("FLASHLIGHT", 1, 0, 24)));
+        assertTrue(removedFields.contains(new ApiMember("READ_SOCIAL_STREAM", 15, 21, 23)));
+        assertTrue(removedFields.stream().noneMatch(member -> member.getSignature().equals("NFC")));
+    }
+
+    public void testGetRemovedCalls() {
+        Collection<ApiMember> removedMethods = mDb.getRemovedCalls("android/app/Activity");
+        assertTrue(removedMethods.contains(new ApiMember("getInstanceCount()", 1, 0, 11)));
+        assertTrue(removedMethods.contains(new ApiMember("setPersistent(Z)", 1, 0, 11)));
+        assertTrue(
+                removedMethods.stream().noneMatch(member -> member.getSignature().equals("NFC")));
+
+        removedMethods = mDb.getRemovedCalls("android/database/sqlite/SQLiteProgram");
+        assertTrue(
+                removedMethods.contains(new ApiMember("compile(Ljava/lang/String;Z)", 1, 0, 16)));
+        // Method moved to a super class
+        assertTrue(removedMethods.stream()
+                .noneMatch(member -> member.getSignature().equals("close()")));
+    }
+
+    public void testRemovedClasses() {
+        // Not removed
+        assertEquals(-1, mDb.getClassRemovedIn("android/app/Fragment"));
+        // Removed
+        assertEquals(24, mDb.getClassRemovedIn("android/graphics/AvoidXfermode"));
+    }
+
     public void testInheritInterfaces() {
         // The onPreferenceStartFragment is inherited via the
         // android/preference/PreferenceFragment$OnPreferenceStartFragmentCallback
