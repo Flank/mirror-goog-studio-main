@@ -85,7 +85,7 @@ public class InjectedAbiAndDensitySplitTest {
     public void checkAbiAndDensity() throws Exception {
         sProject.executor()
                 .with(StringOption.IDE_BUILD_TARGET_ABI, "armeabi-v7a")
-                .with(StringOption.IDE_BUILD_TARGET_DENISTY, "ldpi")
+                .with(StringOption.IDE_BUILD_TARGET_DENSITY, "ldpi")
                 .run("clean", "assembleDebug");
 
         Apk apk;
@@ -109,7 +109,7 @@ public class InjectedAbiAndDensitySplitTest {
     @Test
     public void checkOnlyDensity() throws Exception {
         sProject.executor()
-                .with(StringOption.IDE_BUILD_TARGET_DENISTY, "ldpi")
+                .with(StringOption.IDE_BUILD_TARGET_DENSITY, "ldpi")
                 .run("clean", "assembleDebug");
 
         assertThat(sProject.getApk("armeabi-v7a", ApkType.DEBUG).exists());

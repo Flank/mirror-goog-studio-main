@@ -299,7 +299,7 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
         }
 
         if (density != null) {
-            with(StringOption.IDE_BUILD_TARGET_DENISTY, density.getResourceValue());
+            with(StringOption.IDE_BUILD_TARGET_DENSITY, density.getResourceValue());
         }
 
         Set<OptionalCompilationStep> steps = EnumSet.of(OptionalCompilationStep.INSTANT_DEV);

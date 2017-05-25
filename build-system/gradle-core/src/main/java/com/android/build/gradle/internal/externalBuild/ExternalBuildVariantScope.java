@@ -26,6 +26,9 @@ import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TransformGlobalScope;
 import com.android.build.gradle.internal.scope.TransformVariantScope;
 import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
+import com.android.build.gradle.options.DeploymentDevice;
+import com.android.build.gradle.options.ProjectOptions;
+import com.android.build.gradle.options.StringOption;
 import com.android.builder.core.ManifestAttributeSupplier;
 import com.android.builder.model.AaptOptions;
 import com.android.ide.common.build.ApkData;
@@ -47,7 +50,7 @@ import org.gradle.api.Project;
     private final TransformGlobalScope globalScope;
     private final File outputRootFolder;
     private final ExternalBuildContext externalBuildContext;
-    private final InstantRunBuildContext mInstantRunBuildContext = new InstantRunBuildContext(true);
+    private final InstantRunBuildContext mInstantRunBuildContext;
     private final AaptOptions aaptOptions;
     private final ManifestAttributeSupplier manifestAttributeSupplier;
     private final SplitScope splitScope;
@@ -64,6 +67,13 @@ import org.gradle.api.Project;
         this.externalBuildContext = externalBuildContext;
         this.aaptOptions = aaptOptions;
         this.manifestAttributeSupplier = manifestAttributeSupplier;
+        ProjectOptions projectOptions = globalScope.getProjectOptions();
+        this.mInstantRunBuildContext =
+                new InstantRunBuildContext(
+                        true,
+                        DeploymentDevice.getDeploymentDeviceAndroidVersion(projectOptions),
+                        projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI),
+                        projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY));
         this.splitScope = new SplitScope(SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY, apkDatas);
     }
 

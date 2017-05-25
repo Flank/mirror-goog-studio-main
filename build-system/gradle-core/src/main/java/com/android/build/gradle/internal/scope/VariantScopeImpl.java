@@ -228,9 +228,13 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         this.transformManager = transformManager;
         this.variantData = variantData;
         this.variantPublishingSpec = VariantPublishingSpec.getVariantSpec(variantData.getType());
+        ProjectOptions projectOptions = globalScope.getProjectOptions();
         this.instantRunBuildContext =
                 new InstantRunBuildContext(
-                        variantData.getVariantConfiguration().isInstantRunBuild(globalScope));
+                        variantData.getVariantConfiguration().isInstantRunBuild(globalScope),
+                        DeploymentDevice.getDeploymentDeviceAndroidVersion(projectOptions),
+                        projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI),
+                        projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY));
 
         validatePostprocessingOptions();
     }
@@ -524,7 +528,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         }
 
         return !Strings.isNullOrEmpty(projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI))
-                || !Strings.isNullOrEmpty(projectOptions.get(StringOption.IDE_BUILD_TARGET_DENISTY))
+                || !Strings.isNullOrEmpty(projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY))
                 || projectOptions.get(IntegerOption.IDE_TARGET_DEVICE_API) != null
                 || globalScope.getAndroidBuilder().isPreviewTarget()
                 || getMinSdkVersion().getCodename() != null

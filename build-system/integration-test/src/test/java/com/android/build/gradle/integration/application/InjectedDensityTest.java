@@ -88,7 +88,7 @@ public class InjectedDensityTest {
 
     private void checkFilteredBuild() throws Exception {
         project.executor()
-                .with(StringOption.IDE_BUILD_TARGET_DENISTY, "xxhdpi")
+                .with(StringOption.IDE_BUILD_TARGET_DENSITY, "xxhdpi")
                 .run("assembleDebug");
         Apk debug = project.getApk(GradleTestProject.ApkType.DEBUG);
         assertThat(debug)
