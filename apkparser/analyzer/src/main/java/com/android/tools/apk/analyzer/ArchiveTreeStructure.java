@@ -89,7 +89,7 @@ public class ArchiveTreeStructure {
                                 tempFolder.resolve(contentRoot.relativize(childPath).toString());
                         Files.createDirectories(tempFile.getParent());
                         Files.copy(childPath, tempFile);
-                        Archive tempArchive = Archives.open(tempFile);
+                        Archive tempArchive = Archives.openInnerZip(tempFile);
                         ArchiveTreeNode newArchiveNode = (ArchiveTreeNode) create(tempArchive);
                         childNode = new ArchiveTreeNode(new ArchiveEntry(tempArchive, childPath));
                         for (ArchiveNode archiveNodeChild : newArchiveNode.getChildren()) {
@@ -135,11 +135,10 @@ public class ArchiveTreeStructure {
                                                                     .toString()
                                                                     .endsWith(ext))) {
                                 updateRawFileSizes(node, calculator);
-                            } else {
-                                Long rawFileSize = rawFileSizes.get(data.getPath().toString());
-                                if (rawFileSize != null) {
-                                    data.setRawFileSize(rawFileSize);
-                                }
+                            }
+                            Long rawFileSize = rawFileSizes.get(data.getPath().toString());
+                            if (rawFileSize != null) {
+                                data.setRawFileSize(rawFileSize);
                             }
                         });
 
@@ -180,12 +179,11 @@ public class ArchiveTreeStructure {
                                                                     .toString()
                                                                     .endsWith(ext))) {
                                 updateDownloadFileSizes(node, calculator);
-                            } else {
-                                Long downloadFileSize =
-                                        downloadFileSizes.get(data.getPath().toString());
-                                if (downloadFileSize != null) {
-                                    data.setDownloadFileSize(downloadFileSize);
-                                }
+                            }
+                            Long downloadFileSize =
+                                    downloadFileSizes.get(data.getPath().toString());
+                            if (downloadFileSize != null) {
+                                data.setDownloadFileSize(downloadFileSize);
                             }
                         });
 

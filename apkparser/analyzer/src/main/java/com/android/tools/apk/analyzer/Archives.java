@@ -18,6 +18,7 @@ package com.android.tools.apk.analyzer;
 
 import com.android.annotations.NonNull;
 import com.android.tools.apk.analyzer.internal.AndroidArtifact;
+import com.android.tools.apk.analyzer.internal.ZipArtifact;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.FileSystem;
@@ -29,6 +30,18 @@ public class Archives {
 
     @NonNull
     public static Archive open(@NonNull Path archive) throws IOException {
+        URI uri = URI.create("jar:" + archive.toUri().toString());
+        FileSystem fileSystem = FileSystems.newFileSystem(uri, Collections.emptyMap());
+        //we assume this is an AIA bundle, which we give special handling
+        if (archive.getFileName().toString().toLowerCase().endsWith(".zip")) {
+            return new ZipArtifact(archive, fileSystem);
+        } else {
+            return new AndroidArtifact(archive, fileSystem);
+        }
+    }
+
+    @NonNull
+    static Archive openInnerZip(@NonNull Path archive) throws IOException {
         URI uri = URI.create("jar:" + archive.toUri().toString());
         FileSystem fileSystem = FileSystems.newFileSystem(uri, Collections.emptyMap());
         return new AndroidArtifact(archive, fileSystem);
