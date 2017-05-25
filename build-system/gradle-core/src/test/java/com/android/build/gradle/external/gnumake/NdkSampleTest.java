@@ -368,7 +368,10 @@ public class NdkSampleTest {
         checkOutputsHaveWhitelistedExtensions(actualConfig);
 
         String testPathString = androidMkPath.toString();
-
+        // actualResults contains JSon as text. JSon escapes back slash with a second backslash.
+        // Backslash is also the directory separator on Windows. In order to properly replace
+        // {testPath} we must follow the JSon escaping rule.
+        testPathString = testPathString.replace("\\", "\\\\");
         actualResult = actualResult.replace(testPathString, "{testPath}");
         actualConfig = new Gson().fromJson(actualResult, NativeBuildConfigValue.class);
 
