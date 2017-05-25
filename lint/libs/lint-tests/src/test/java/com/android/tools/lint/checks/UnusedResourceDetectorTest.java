@@ -16,7 +16,6 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.checks.MissingClassDetector.MISSING;
 import static com.android.tools.lint.checks.infrastructure.ProjectDescription.Type.LIBRARY;
 
 import com.android.tools.lint.checks.infrastructure.ProjectDescription;
@@ -880,6 +879,82 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                                 + "        tools:shrinkMode=\"strict\"\n"
                                 + "        tools:keep=\"@raw/used,@layout/my_layout\" />\n")
                 ));
+    }
+
+    public void testReferenceFromDataBinding() throws Exception {
+        // Regression test for https://issuetracker.google.com/38213600
+        lint().files(
+                // Data binding layout
+                xml("res/layout/added_view.xml", ""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<layout xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
+                        + "    <TextView\n"
+                        + "        android:layout_width=\"match_parent\"\n"
+                        + "        android:layout_height=\"match_parent\"\n"
+                        + "        android:orientation=\"vertical\"\n"
+                        + "        android:text=\"Hello World\"/>\n"
+                        + "</layout>"),
+                xml("res/layout/added_view2.xml", ""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<layout xmlns:android=\"http://schemas.android.com/apk/res/android\">\n"
+                        + "    <data class=\".IndependentLibraryBinding\">\n"
+                        + "    </data>\n"
+                        + "    <TextView\n"
+                        + "        android:layout_width=\"match_parent\"\n"
+                        + "        android:layout_height=\"match_parent\"\n"
+                        + "        android:orientation=\"vertical\"\n"
+                        + "        android:text=\"Hello World\"/>\n"
+                        + "</layout>"),
+                // Only usage: data binding class
+                java(""
+                        + "package my.pkg;\n"
+                        + "\n"
+                        + "import android.view.LayoutInflater;\n"
+                        + "\n"
+                        + "public class Ref {\n"
+                        + "    public void test(LayoutInflater inflater){\n"
+                        + "        final AddedViewBinding addedView = AddedViewBinding.inflate(inflater, null, true);\n"
+                        + "        final AddedViewBinding addedView = IndependentLibraryBinding.inflate(inflater, null, true);\n"
+                        + "    }\n"
+                        + "}\n"),
+                // Stubs to make type resolution work in test without actual data binding
+                // code-gen and data binding runtime libraries
+                java(""
+                        + "package my.pkg;\n"
+                        + "\n"
+                        + "abstract class AddedViewBinding extends android.databinding.ViewDataBinding {\n"
+                        + "    public AddedViewBinding(android.databinding.DataBindingComponent bindingComponent,\n"
+                        + "                             android.view.View root, int localFieldCount) {\n"
+                        + "        super(bindingComponent, root, localFieldCount);\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    public static AddedViewBinding inflate(android.view.LayoutInflater inflater, \n"
+                        + "                                           android.view.ViewGroup root, \n"
+                        + "                                           boolean attachToRoot) {\n"
+                        + "        return null;\n"
+                        + "    }\n"
+                        + "}\n"),
+                java(""
+                        + "package my.pkg;\n"
+                        + "\n"
+                        + "abstract class IndependentLibraryBinding extends android.databinding.ViewDataBinding {\n"
+                        + "    public IndependentLibraryBinding(android.databinding.DataBindingComponent bindingComponent,\n"
+                        + "                             android.view.View root, int localFieldCount) {\n"
+                        + "        super(bindingComponent, root, localFieldCount);\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    public static IndependentLibraryBinding inflate(android.view.LayoutInflater inflater, \n"
+                        + "                                           android.view.ViewGroup root, \n"
+                        + "                                           boolean attachToRoot) {\n"
+                        + "        return null;\n"
+                        + "    }\n"
+                        + "}\n"),
+                java(""
+                        + "package android.databinding;\n"
+                        + "public abstract class ViewDataBinding {\n"
+                        + "}"))
+                .run()
+                .expectClean();
     }
 
     @SuppressWarnings("all") // Sample code

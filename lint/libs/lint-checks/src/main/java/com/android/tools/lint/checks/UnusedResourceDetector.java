@@ -16,15 +16,20 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.SdkConstants.ATTR_CLASS;
 import static com.android.SdkConstants.ATTR_DISCARD;
 import static com.android.SdkConstants.ATTR_KEEP;
 import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.ATTR_SHRINK_MODE;
 import static com.android.SdkConstants.DOT_JAVA;
 import static com.android.SdkConstants.DOT_XML;
+import static com.android.SdkConstants.TAG_DATA;
+import static com.android.SdkConstants.TAG_LAYOUT;
 import static com.android.SdkConstants.TOOLS_PREFIX;
 import static com.android.SdkConstants.XMLNS_PREFIX;
 import static com.android.utils.SdkUtils.endsWithIgnoreCase;
+import static com.android.utils.XmlUtils.getFirstSubTagTagByName;
+import static com.android.utils.XmlUtils.getNextTagByName;
 import static com.google.common.base.Charsets.UTF_8;
 
 import com.android.annotations.NonNull;
@@ -39,6 +44,7 @@ import com.android.builder.model.Variant;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 import com.android.tools.lint.checks.ResourceUsageModel.Resource;
+import com.android.tools.lint.client.api.UElementHandler;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector.BinaryResourceScanner;
@@ -57,9 +63,13 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
 import com.android.utils.XmlUtils;
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
+import com.intellij.psi.PsiClass;
+import com.intellij.psi.PsiElement;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
@@ -71,6 +81,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.jetbrains.uast.UElement;
+import org.jetbrains.uast.USimpleNameReferenceExpression;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
@@ -111,8 +122,11 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements UastS
             IMPLEMENTATION)
             .setEnabledByDefault(false);
 
-    private final UnusedResourceDetectorUsageModel mModel =
-            new UnusedResourceDetectorUsageModel();
+    private final UnusedResourceDetectorUsageModel model = new UnusedResourceDetectorUsageModel();
+
+    // Map from data-binding ViewBinding classes (base names, not fully qualified names)
+    // to corresponding layout resource names, if any
+    private Map<String,String> bindingClasses;
 
     /**
      * Whether the resource detector will look for inactive resources (e.g. resource and code
@@ -159,7 +173,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements UastS
                     // doesn't yet have this ResourceType in its enum.
                     continue;
                 }
-                Resource resource = mModel.declareResource(type, name, null);
+                Resource resource = model.declareResource(type, name, null);
                 resource.recordLocation(location);
             }
         }
@@ -183,9 +197,9 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements UastS
             }
 
             addDynamicResources(context);
-            mModel.processToolsAttributes();
+            model.processToolsAttributes();
 
-            List<Resource> unusedResources = mModel.findUnused();
+            List<Resource> unusedResources = model.findUnused();
             Set<Resource> unused = Sets.newHashSetWithExpectedSize(unusedResources.size());
             for (Resource resource : unusedResources) {
                 if (resource.isDeclared()
@@ -208,7 +222,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements UastS
             }
 
             if (!unused.isEmpty()) {
-                mModel.unused = unused;
+                model.unused = unused;
 
                 // Request another pass, and in the second pass we'll gather location
                 // information for all declaration locations we've found
@@ -219,14 +233,14 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements UastS
 
             // Report any resources that we (for some reason) could not find a declaration
             // location for
-            Collection<Resource> unused = mModel.unused;
+            Collection<Resource> unused = model.unused;
             if (!unused.isEmpty()) {
                 // Final pass: we may have marked a few resource declarations with
                 // tools:ignore; we don't check that on every single element, only those
                 // first thought to be unused. We don't just remove the elements explicitly
                 // marked as unused, we revisit everything transitively such that resources
                 // referenced from the ignored/kept resource are also kept.
-                unused = mModel.findUnused(Lists.newArrayList(unused));
+                unused = model.findUnused(Lists.newArrayList(unused));
                 if (unused.isEmpty()) {
                     return;
                 }
@@ -384,7 +398,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements UastS
                 } else if (file.getName().endsWith(DOT_JAVA)) {
                     try {
                         String java = Files.toString(file, UTF_8);
-                        mModel.tokenizeJavaCode(java);
+                        model.tokenizeJavaCode(java);
                     } catch (Throwable ignore) {
                         // Tolerate parsing errors etc in these files; they're user
                         // sources, and this is even for inactive source sets.
@@ -420,9 +434,9 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements UastS
                     if (isXml) {
                         String xml = Files.toString(file, UTF_8);
                         Document document = XmlUtils.parseDocument(xml, true);
-                        mModel.visitXmlDocument(file, folderType, document);
+                        model.visitXmlDocument(file, folderType, document);
                     } else {
-                        mModel.visitBinaryResource(folderType, file);
+                        model.visitBinaryResource(folderType, file);
                     }
                 } catch (Throwable ignore) {
                     // Tolerate parsing errors etc in these files; they're user
@@ -463,11 +477,11 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements UastS
 
     @Override
     public void checkBinaryResource(@NonNull ResourceContext context) {
-        mModel.context = context;
+        model.context = context;
         try {
-            mModel.visitBinaryResource(context.getResourceFolderType(), context.file);
+            model.visitBinaryResource(context.getResourceFolderType(), context.file);
         } finally {
-            mModel.context = null;
+            model.context = null;
         }
     }
 
@@ -475,13 +489,64 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements UastS
 
     @Override
     public void visitDocument(@NonNull XmlContext context, @NonNull Document document) {
-        mModel.context = mModel.xmlContext = context;
+        model.context = model.xmlContext = context;
         try {
-            mModel.visitXmlDocument(context.file, context.getResourceFolderType(),
-                    document);
+            ResourceFolderType folderType = context.getResourceFolderType();
+            model.visitXmlDocument(context.file, folderType, document);
+
+            // Data binding layout? If so look for usages of the binding class too
+            Element root = document.getDocumentElement();
+            if (folderType == ResourceFolderType.LAYOUT && root != null
+                    && TAG_LAYOUT.equals(root.getTagName())) {
+                if (bindingClasses == null) {
+                    bindingClasses = Maps.newHashMap();
+                }
+                String fileName = context.file.getName();
+                String resourceName = LintUtils.getBaseName(fileName);
+                Element data = getFirstSubTagTagByName(root, TAG_DATA);
+                String bindingClass = null;
+                while (data != null) {
+                    bindingClass = data.getAttribute(ATTR_CLASS);
+                    if (bindingClass != null) {
+                        int dot = bindingClass.lastIndexOf('.');
+                        bindingClass = bindingClass.substring(dot + 1);
+                        break;
+                    }
+                    data = getNextTagByName(data, TAG_DATA);
+                }
+                if (bindingClass == null) {
+                    // See ResourceBundle#getFullBindingClass
+                    bindingClass = toClassName(resourceName) + "Binding";
+                }
+                bindingClasses.put(bindingClass, resourceName);
+            }
+
         } finally {
-            mModel.context = mModel.xmlContext = null;
+            model.context = model.xmlContext = null;
         }
+    }
+
+    // Copy from android.databinding.tool.util.ParserHelper:
+    public static String toClassName(String name) {
+        StringBuilder builder = new StringBuilder();
+        for (String item : name.split("[_-]")) {
+            builder.append(capitalize(item));
+        }
+        return builder.toString();
+    }
+
+    // Copy from android.databinding.tool.util.StringUtils: using
+    // this instead of IntelliJ's more flexible method to ensure
+    // we compute the same names as data-binding generated code
+    private static String capitalize(String string) {
+        if (Strings.isNullOrEmpty(string)) {
+            return string;
+        }
+        char ch = string.charAt(0);
+        if (Character.isTitleCase(ch)) {
+            return string;
+        }
+        return Character.toTitleCase(ch) + string.substring(1);
     }
 
     // ---- Implements UastScanner ----
@@ -495,8 +560,44 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements UastS
     public void visitResourceReference(@NonNull JavaContext context, @NonNull UElement node,
             @NonNull ResourceType type, @NonNull String name, boolean isFramework) {
         if (!isFramework) {
-            ResourceUsageModel.markReachable(mModel.addResource(type, name, null));
+            ResourceUsageModel.markReachable(model.addResource(type, name, null));
         }
+    }
+
+    @Nullable
+    @Override
+    public List<Class<? extends UElement>> getApplicableUastTypes() {
+        return Collections.singletonList(USimpleNameReferenceExpression.class);
+    }
+
+    @Nullable
+    @Override
+    public UElementHandler createUastHandler(@NonNull final JavaContext context) {
+        // If using data binding we also have to look for references to the
+        // ViewBinding classes which could be implicit usages of layout resources
+        if (bindingClasses == null) {
+            return null;
+        }
+
+        return new UElementHandler() {
+            @Override
+            public void visitSimpleNameReferenceExpression(
+                    USimpleNameReferenceExpression expression) {
+
+                String name = expression.getIdentifier();
+                String resourceName = bindingClasses.get(name);
+                if (resourceName != null) {
+                    // Make sure it's really a binding class
+                    PsiElement resolved = expression.resolve();
+                    if (resolved instanceof PsiClass
+                            && context.getEvaluator().extendsClass((PsiClass) resolved,
+                            "android.databinding.ViewDataBinding", true)) {
+                        ResourceUsageModel.markReachable(model.getResource(ResourceType.LAYOUT,
+                                resourceName));
+                    }
+                }
+            }
+        };
     }
 
     private static class UnusedResourceDetectorUsageModel extends ResourceUsageModel {
