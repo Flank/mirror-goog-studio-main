@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,17 +14,18 @@
  * limitations under the License.
  */
 
-package com.android.builder.model;
+package com.android.tests
 
-import com.android.annotations.Nullable;
-import java.io.File;
+import org.junit.Test
+import org.junit.Assert.*
 
-/**
- * The information for a generated Java artifact.
- */
-public interface JavaArtifact extends BaseArtifact {
+class TestInKotlin {
+    @Test
+    fun passesInKotlin() {
+        // Use Java classes:
+        assertEquals("production code", Foo().foo())
 
-    /** Path to the mockable platform jar generated for this {@link JavaArtifact}, if present. */
-    @Nullable
-    File getMockablePlatformJar();
+        // Use Kotlin classes:
+        assertEquals("kotlin data class", KotlinDataClass().name)
+    }
 }

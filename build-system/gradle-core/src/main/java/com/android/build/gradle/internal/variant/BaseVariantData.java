@@ -331,6 +331,7 @@ public abstract class BaseVariantData implements TaskContainer {
         return allPreJavacGeneratedBytecode;
     }
 
+    @NonNull
     public FileCollection getAllPostJavacGeneratedBytecode() {
         return allPostJavacGeneratedBytecode;
     }

@@ -15,9 +15,10 @@
  */
 
 package com.android.build.gradle.integration.testing
+
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import org.junit.AfterClass
-import org.junit.ClassRule
+import com.android.build.gradle.integration.common.utils.TestFileUtils
+import org.junit.Rule
 import org.junit.Test
 
 import static com.android.build.gradle.integration.testing.JUnitResults.Outcome.PASSED
@@ -27,30 +28,23 @@ import static com.google.common.truth.Truth.assertThat
  * Meta-level tests for the app-level unit testing support. Checks the default values mode.
  */
 class UnitTestingSupportTest {
-    @ClassRule
-    public static GradleTestProject appProject = GradleTestProject.builder()
+    @Rule
+    public GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("unitTesting")
             .create()
 
-    @ClassRule
-    public static GradleTestProject libProject = GradleTestProject.builder()
-            .fromTestProject("unitTestingLibraryModules")
-            .create()
-
-    @AfterClass
-    public static void freeResources() throws Exception {
-        appProject = null
-        libProject = null
-    }
-
     @Test
     public void appProject() throws Exception {
-        doTestProject(appProject)
+        doTestProject(project)
     }
 
     @Test
     public void libProject() throws Exception {
-        doTestProject(libProject)
+        TestFileUtils.searchAndReplace(
+                project.buildFile,
+                "com.android.application",
+                "com.android.library")
+        doTestProject(project)
     }
 
     private static void doTestProject(GradleTestProject project) {
@@ -65,7 +59,6 @@ class UnitTestingSupportTest {
 
             checkResults(
                     unitTestXml,
-                    ["thisIsIgnored"],
                     [
                             "aarDependencies",
                             "commonsLogging",
@@ -73,6 +66,7 @@ class UnitTestingSupportTest {
                             "exceptions",
                             "instanceFields",
                             "javaResourcesOnClasspath",
+                            "kotlinProductionCode",
                             "mockFinalClass",
                             "mockFinalMethod",
                             "mockInnerClass",
@@ -80,19 +74,28 @@ class UnitTestingSupportTest {
                             "prodRClass",
                             "referenceProductionCode",
                             "taskConfiguration",
-                    ], project)
+                    ],
+                    ["thisIsIgnored"],
+                    project)
 
             checkResults(
                     "build/test-results/${dirName}/TEST-com.android.tests.NonStandardName.xml",
+                    ["passingTest"],
                     [],
-                    ["passingTest"], project)
+                    project)
+
+            checkResults(
+                    "build/test-results/${dirName}/TEST-com.android.tests.TestInKotlin.xml",
+                    ["passesInKotlin"],
+                    [],
+                    project)
         }
     }
 
     private static void checkResults(
             String xmlPath,
-            ArrayList<String> ignored,
             ArrayList<String> passed,
+            ArrayList<String> ignored,
             GradleTestProject project) {
         def results = new JUnitResults(project.file(xmlPath))
         assertThat(results.allTestCases).containsExactlyElementsIn(ignored + passed)

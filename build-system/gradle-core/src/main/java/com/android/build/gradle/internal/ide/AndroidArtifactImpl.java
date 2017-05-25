@@ -92,6 +92,7 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
             @NonNull List<File> generatedSourceFolders,
             @NonNull List<File> generatedResourceFolders,
             @NonNull File classesFolder,
+            @NonNull Set<File> additionalClassFolders,
             @NonNull File javaResourcesFolder,
             @NonNull Dependencies compileDependencies,
             @NonNull DependencyGraphs dependencyGraphs,
@@ -104,10 +105,17 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
             @NonNull InstantRun instantRun,
             @NonNull BuildOutputSupplier<Collection<BuildOutput>> splitOutputsSupplier,
             @NonNull BuildOutputSupplier<Collection<BuildOutput>> manifestSupplier) {
-        super(name, assembleTaskName, compileTaskName,
-                classesFolder, javaResourcesFolder,
-                compileDependencies, dependencyGraphs,
-                variantSourceProvider, multiFlavorSourceProviders,
+        super(
+                name,
+                assembleTaskName,
+                compileTaskName,
+                classesFolder,
+                additionalClassFolders,
+                javaResourcesFolder,
+                compileDependencies,
+                dependencyGraphs,
+                variantSourceProvider,
+                multiFlavorSourceProviders,
                 generatedSourceFolders);
 
         this.baseName = baseName;

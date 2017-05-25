@@ -22,9 +22,11 @@ import com.android.build.gradle.integration.common.fixture.app.TransformOutputCo
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.pipeline.SubStream;
 import com.android.utils.FileUtils;
+import com.google.common.collect.Lists;
 import com.google.common.truth.Truth;
 import java.io.File;
 import java.io.IOException;
+import java.util.function.Predicate;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -64,11 +66,15 @@ public class JacocoWithKotlinTest {
                 FileUtils.join(project.getIntermediatesDir(), "transforms", "jacoco", "debug");
         TransformOutputContent content = new TransformOutputContent(outputDir);
 
-        SubStream stream = content.getSingleStream();
-        Truth.assertThat(
-                        FileUtils.getAllFiles(content.getLocation(stream))
+        Predicate<SubStream> containsHelloWorld =
+                subStream ->
+                        FileUtils.getAllFiles(content.getLocation(subStream))
                                 .transform(File::getName)
-                                .toList())
-                .contains("HelloWorld.class");
+                                .contains("HelloWorld.class");
+
+        // There's one stream for Java classes and one for Kotlin classes. Exactly one should
+        // contain HelloWorld.
+        Truth.assertThat(Lists.newArrayList(content).stream().filter(containsHelloWorld).count())
+                .isEqualTo(1);
     }
 }

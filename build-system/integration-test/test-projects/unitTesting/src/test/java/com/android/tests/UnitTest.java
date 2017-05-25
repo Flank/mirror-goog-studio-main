@@ -8,19 +8,17 @@ import android.app.Application;
 import android.bluetooth.BluetoothAdapter;
 import android.content.SyncResult;
 import android.content.SyncStats;
-import android.util.ArrayMap;
 import android.os.AsyncTask;
 import android.os.Debug;
 import android.os.PowerManager;
-
+import android.util.ArrayMap;
+import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.net.URL;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.Ignore;
 import org.junit.Test;
-
-import java.lang.reflect.Field;
-import java.io.InputStream;
-import java.net.URL;
 
 public class UnitTest {
     @Test
@@ -171,5 +169,11 @@ public class UnitTest {
     public void commonsLogging() {
         Log log = LogFactory.getLog(getClass());
         log.info("I can use commons-logging!");
+    }
+
+    @Test
+    public void kotlinProductionCode() {
+        KotlinDataClass kotlinDataClass = new KotlinDataClass("name from Java");
+        assertEquals("name from Java", kotlinDataClass.getName());
     }
 }

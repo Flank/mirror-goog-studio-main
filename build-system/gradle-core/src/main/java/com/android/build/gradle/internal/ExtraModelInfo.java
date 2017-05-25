@@ -53,6 +53,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import java.io.File;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -336,12 +337,21 @@ public class ExtraModelInfo extends ErrorReporter {
                     String.format("Artifact with name %1$s is not of type JAVA", name));
         }
 
-        JavaArtifact artifact = new JavaArtifactImpl(
-                name, assembleTaskName, javaCompileTaskName,
-                ideSetupTaskNames, generatedSourceFolders, classesFolder, javaResourcesFolder, null,
-                new ConfigurationDependencies(configuration),
-                new ConfigurationDependencyGraphs(configuration),
-                sourceProvider, null);
+        JavaArtifact artifact =
+                new JavaArtifactImpl(
+                        name,
+                        assembleTaskName,
+                        javaCompileTaskName,
+                        ideSetupTaskNames,
+                        generatedSourceFolders,
+                        classesFolder,
+                        Collections.emptySet(),
+                        javaResourcesFolder,
+                        null,
+                        new ConfigurationDependencies(configuration),
+                        new ConfigurationDependencyGraphs(configuration),
+                        sourceProvider,
+                        null);
 
         extraJavaArtifacts.put(variant.getName(), artifact);
     }

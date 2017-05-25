@@ -15,6 +15,7 @@
  */
 
 package com.android.build.gradle.integration.application
+
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.ArtifactMetaData
@@ -35,10 +36,10 @@ class UnitTestingModelTest {
     @Rule
     public GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("unitTestingComplexProject")
-            .create();
+            .create()
 
     @Test
-    public void "Unit testing artifacts are included in the model"() {
+    void "Unit testing artifacts are included in the model"() {
         // Build the project, so we can verify paths in the model exist.
         project.execute("test")
 
@@ -54,6 +55,9 @@ class UnitTestingModelTest {
         assert unitTestMetadata.type == ArtifactMetaData.TYPE_JAVA
 
         for (variant in model.variants) {
+            assertThat(variant.mainArtifact.additionalClassesFolders)
+                    .containsExactly(project.file("app/build/tmp/kotlin-classes/$variant.name"))
+
             def unitTestArtifacts = variant.extraJavaArtifacts.findAll {
                 it.name == ARTIFACT_UNIT_TEST
             }
@@ -79,6 +83,9 @@ class UnitTestingModelTest {
                     .isNotEqualTo(variant.mainArtifact.classesFolder)
             assertThat(unitTestArtifact.javaResourcesFolder)
                     .isNotEqualTo(variant.mainArtifact.javaResourcesFolder)
+
+            assertThat(unitTestArtifact.additionalClassesFolders)
+                    .containsExactly(project.file("app/build/tmp/kotlin-classes/${variant.name}UnitTest"))
         }
 
         def sourceProvider = model.defaultConfig
@@ -92,7 +99,7 @@ class UnitTestingModelTest {
     }
 
     @Test
-    public void flavors() throws Exception {
+    void flavors() throws Exception {
         project.getSubproject("app").buildFile << """
 android {
     flavorDimensions 'foo'

@@ -38,7 +38,6 @@ import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.reporting.ConfigurableReport;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
-import org.gradle.api.tasks.TaskInputs;
 import org.gradle.api.tasks.testing.Test;
 import org.gradle.api.tasks.testing.TestTaskReports;
 
@@ -50,23 +49,18 @@ public class AndroidUnitTest extends Test {
     private FileCollection resCollection;
     private FileCollection assetsCollection;
 
+    /** All test classes, from both Java and Kotlin. */
+    private FileCollection testClasses;
+
     /**
      * Returns the test class files.
      *
-     * <p>This is the special case we need to handle - if getCandidateClassFiles is called
-     * too early, i.e. before the task is fully configured, return an empty FileTree. The
-     * default is to create a FileTree using getTestClassesDir(), but that creates a
-     * FileTree with a null root, which fails later on.
-     *
-     * @see ConfigAction#configureSources(AndroidUnitTest)
+     * <p>Because test classes may come from additional bytecode sources (e.g. Kotlin), we need to
+     * override this.
      */
     @Override
     public FileTree getCandidateClassFiles() {
-        if (getTestClassesDir() == null) {
-            return getProject().files().getAsFileTree();
-        } else {
-            return super.getCandidateClassFiles();
-        }
+        return testClasses.getAsFileTree();
     }
 
     @InputFiles
@@ -119,9 +113,7 @@ public class AndroidUnitTest extends Test {
                             + testedVariantData.getVariantConfiguration().getFullName()
                             + " build.");
 
-            runTestsTask.setTestClassesDir(scope.getJavaOutputDir());
-
-            configureSources(runTestsTask);
+            runTestsTask.testClasses = scope.getOutput(CLASSES_FOR_UNIT_TESTS);
 
             runTestsTask.setClasspath(computeClasspath());
 
@@ -184,17 +176,6 @@ public class AndroidUnitTest extends Test {
             // dependencies.
             collection.from(scope.getGlobalScope().getOutput(TaskOutputType.MOCKABLE_JAR));
             return collection;
-        }
-
-        /**
-         * Sets task inputs. Normally this is done by JavaBasePlugin, but in our case this is too
-         * early and candidate class files are not known yet. So we call this here, once we know
-         * the class files.
-         *
-         * @see AndroidUnitTest#getCandidateClassFiles()
-         */
-        private static TaskInputs configureSources(@NonNull AndroidUnitTest runTestsTask) {
-            return runTestsTask.getInputs().file(runTestsTask.getCandidateClassFiles()).skipWhenEmpty();
         }
     }
 }

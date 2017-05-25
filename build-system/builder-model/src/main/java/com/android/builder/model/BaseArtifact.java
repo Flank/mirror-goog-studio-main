@@ -56,6 +56,9 @@ public interface BaseArtifact {
     @NonNull
     File getClassesFolder();
 
+    /** Folders with additional classes registered by third-party plugins like Kotlin. */
+    Set<File> getAdditionalClassesFolders();
+
     /**
      * Returns the folder containing resource files that classes form this artifact expect to find
      * on the classpath.

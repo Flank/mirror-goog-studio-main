@@ -20,6 +20,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.GregorianCalendar;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -51,10 +53,7 @@ public class Zipper {
     }
 
     public void addFileToZip(File file, ZipOutputStream out, String name, boolean delete) throws IOException {
-        ZipEntry entry = new ZipEntry(file.isDirectory() ? name + "/" : name);
-        // Bazel adds two seconds (the minimum delta representable in some file systems) to .jars, we use
-        // the exact same delta.
-        entry.setTime(DOS_EPOCH + 2);
+        ZipEntry entry = createZipEntry(file.isDirectory() ? name + "/" : name);
 
         if (file.isDirectory()) {
             out.putNextEntry(entry);
@@ -69,15 +68,34 @@ public class Zipper {
         } else {
             out.putNextEntry(entry);
             try (FileInputStream in = new FileInputStream(file)) {
-                int k;
-                while ((k = in.read(mBuffer)) != -1) {
-                    out.write(mBuffer, 0, k);
-                }
+                copy(in, out);
             }
             out.closeEntry();
         }
         if (delete) {
             file.delete();
         }
+    }
+
+    private void copy(InputStream in, OutputStream out) throws IOException {
+        int k;
+        while ((k = in.read(mBuffer)) != -1) {
+            out.write(mBuffer, 0, k);
+        }
+    }
+
+    private static ZipEntry createZipEntry(String entryName) {
+        ZipEntry entry = new ZipEntry(entryName);
+        // Bazel adds two seconds (the minimum delta representable in some file systems) to .jars, we use
+        // the exact same delta.
+        entry.setTime(DOS_EPOCH + 2);
+        return entry;
+    }
+
+    public void addEntryToZip(InputStream content, ZipOutputStream out, String name)
+            throws IOException {
+        ZipEntry zipEntry = createZipEntry(name);
+        out.putNextEntry(zipEntry);
+        copy(content, out);
     }
 }
