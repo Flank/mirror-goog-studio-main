@@ -232,35 +232,8 @@ public class ProcessAndroidResources extends IncrementalTask {
             return;
         }
 
-        // FIX ME : the code below should move to the SplitsDiscoveryTask that should persist
-        // the list of splits and their enabled/disabled state.
-
-        // comply when the IDE restricts the full splits we should produce
-        Density density = Density.getEnum(buildTargetDensity);
-
         List<ApkData> splitsToGenerate =
-                buildTargetAbi == null
-                        ? splitScope.getApkDatas()
-                        : SplitOutputMatcher.computeBestOutput(
-                                splitScope.getApkDatas(),
-                                supportedAbis,
-                                density == null ? -1 : density.getDpiValue(),
-                                Arrays.asList(Strings.nullToEmpty(buildTargetAbi).split(",")));
-
-        if (splitsToGenerate.isEmpty()) {
-            throw new RuntimeException(
-                    "Cannot build for ABI \'"
-                            + buildTargetAbi
-                            + "\'"
-                            + ", no suitable splits configured : "
-                            + Joiner.on(", ")
-                                    .join(
-                                            splitScope
-                                                    .getApkDatas()
-                                                    .stream()
-                                                    .map(ApkData::getFilterName)
-                                                    .collect(Collectors.toList())));
-        }
+                getSplitsToGenerate(splitScope, supportedAbis, buildTargetAbi, buildTargetDensity);
 
         for (ApkData apkData : splitScope.getApkDatas()) {
             if (!splitsToGenerate.contains(apkData)) {
@@ -666,6 +639,56 @@ public class ProcessAndroidResources extends IncrementalTask {
         }
 
         return libraryInfoList;
+    }
+
+    @NonNull
+    public static List<ApkData> getSplitsToGenerate(
+            @NonNull SplitScope splitScope,
+            @Nullable Set<String> supportedAbis,
+            @Nullable String buildTargetAbi,
+            @Nullable String buildTargetDensity) {
+        if (buildTargetAbi != null
+                && supportedAbis != null
+                && !supportedAbis.isEmpty()
+                && !supportedAbis.contains(buildTargetAbi)) {
+            throw new IllegalArgumentException(
+                    "Cannot build for "
+                            + buildTargetAbi
+                            + " when supportedAbis are "
+                            + Joiner.on(",").join(supportedAbis));
+        }
+
+        // FIX ME : the code below should move to the SplitsDiscoveryTask that should persist
+        // the list of splits and their enabled/disabled state.
+
+        // comply when the IDE restricts the full splits we should produce
+        Density density = Density.getEnum(buildTargetDensity);
+
+        List<ApkData> splitsToGenerate =
+                buildTargetAbi == null
+                        ? splitScope.getApkDatas()
+                        : SplitOutputMatcher.computeBestOutput(
+                                splitScope.getApkDatas(),
+                                supportedAbis,
+                                density == null ? -1 : density.getDpiValue(),
+                                Arrays.asList(Strings.nullToEmpty(buildTargetAbi).split(",")));
+
+        if (splitsToGenerate.isEmpty()) {
+            throw new RuntimeException(
+                    "Cannot build for ABI \'"
+                            + buildTargetAbi
+                            + "\'"
+                            + ", no suitable splits configured : "
+                            + Joiner.on(", ")
+                                    .join(
+                                            splitScope
+                                                    .getApkDatas()
+                                                    .stream()
+                                                    .map(ApkData::getFilterName)
+                                                    .collect(Collectors.toList())));
+        }
+
+        return splitsToGenerate;
     }
 
     public static class ConfigAction implements TaskConfigAction<ProcessAndroidResources> {
