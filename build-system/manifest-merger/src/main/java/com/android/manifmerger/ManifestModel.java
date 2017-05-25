@@ -427,12 +427,15 @@ class ManifestModel {
          */
         META_DATA(MergeType.MERGE, DEFAULT_NAME_ATTRIBUTE_RESOLVER),
 
+        /** Child packages declaration (contained in manifest) */
+        PACKAGE(
+                MergeType.MERGE,
+                new AttributeBasedNodeKeyResolver(null /* nameSpace */, SdkConstants.ATTR_PACKAGE)),
         /**
-         * Path-permission (contained in provider)
-         * <br>
-         * <b>See also : </b>
-         * {@link <a href=http://developer.android.com/guide/topics/manifest/path-permission-element.html>
-         *     Meta-data Xml documentation</a>}
+         * Path-permission (contained in provider) <br>
+         * <b>See also : </b> {@link <a
+         * href=http://developer.android.com/guide/topics/manifest/path-permission-element.html>
+         * Meta-data Xml documentation</a>}
          */
         PATH_PERMISSION(MergeType.MERGE, DEFAULT_NO_KEY_NODE_RESOLVER),
 
