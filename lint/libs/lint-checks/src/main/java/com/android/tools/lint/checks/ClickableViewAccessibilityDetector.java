@@ -37,6 +37,7 @@ import com.intellij.psi.PsiClassType;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiType;
+import com.intellij.psi.PsiTypeParameter;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -111,6 +112,19 @@ public class ClickableViewAccessibilityDetector extends Detector implements Uast
         PsiClass viewClass = ((PsiClassType) type).resolve();
         if (viewClass == null) {
             return;
+        }
+
+        // As of Android O findViewById is of generic type and the type resolver returns
+        // a type parameter; we really want the resolved typed instead
+        if (viewClass instanceof PsiTypeParameter) {
+            type = node.getReceiverType();
+            if (!(type instanceof PsiClassType)) {
+                return;
+            }
+            viewClass = ((PsiClassType) type).resolve();
+            if (viewClass == null) {
+                return;
+            }
         }
 
         // Ignore abstract classes.

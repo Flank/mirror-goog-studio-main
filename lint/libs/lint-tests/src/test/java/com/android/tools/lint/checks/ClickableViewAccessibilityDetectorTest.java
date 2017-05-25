@@ -626,4 +626,32 @@ public class ClickableViewAccessibilityDetectorTest extends AbstractCheckTest {
                         + "                                ~~~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 4 warnings\n");
     }
+
+    public void testGenericFindViewById() throws Exception {
+        //noinspection all // Sample code
+        lint().files(
+                manifest().minSdk(10),
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "import android.view.View;\n"
+                        + "\n"
+                        + "public class OView {\n"
+                        + "    public final <T extends View> T findViewById(int id) { return null; }\n"
+                        + "}\n"),
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "import android.view.View;\n"
+                        + "\n"
+                        + "public class MyView extends OView {\n"
+                        + "    public void test(int id) {\n"
+                        + "        View view = findViewById(id);\n"
+                        + "        assert view != null;\n"
+                        + "        view.setOnTouchListener((view1, motionEvent) -> view1.performClick());\n"
+                        + "    }\n"
+                        + "}\n"))
+                .run()
+                .expectClean();
+    }
 }
