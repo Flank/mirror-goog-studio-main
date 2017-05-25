@@ -149,6 +149,7 @@ java_test(
     ],
     shard_count = 8,  # Keep this in sync with logic in our bazel launcher script and CheckAllRunner.
     tags = [
+        "block-network",
         "gradle_integration",
         "slow",
     ],
@@ -173,6 +174,7 @@ java_test(
     ],
     shard_count = 8,  # Keep this in sync with logic in our bazel launcher script and CheckAllRunner.
     tags = [
+        "block-network",
         "gradle_integration",
         "slow",
     ],
