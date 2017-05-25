@@ -15,17 +15,18 @@
  */
 
 package com.android.build.gradle.integration.application
+
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.SyncIssue
 import groovy.transform.CompileStatic
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
+
 /**
  * General Model tests
  */
@@ -77,4 +78,23 @@ dependencies {
                 'foo:bar:+')
     }
 
+    @Test
+    public void unresolvedMultipleDependencies() {
+        project.getBuildFile() << """
+dependencies {
+    compile 'foo:bar:+'
+    compile 'bar:foo:1.2.3'
+}
+"""
+        AndroidProject model = project.model().ignoreSyncIssues().getSingle().getOnlyModel()
+        assertThat(model).hasIssueSize(2)
+        assertThat(model).hasIssue(
+                SyncIssue.SEVERITY_ERROR,
+                SyncIssue.TYPE_UNRESOLVED_DEPENDENCY,
+                'foo:bar:+')
+        assertThat(model).hasIssue(
+                SyncIssue.SEVERITY_ERROR,
+                SyncIssue.TYPE_UNRESOLVED_DEPENDENCY,
+                'bar:foo:1.2.3')
+    }
 }
