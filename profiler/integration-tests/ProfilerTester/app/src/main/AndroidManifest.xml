@@ -22,7 +22,7 @@
         </activity>
 
         <activity
-            android:name=".evnet.EmptyActivity"
+            android:name=".event.EmptyActivity"
             android:label="EmptyActivity">
         </activity>
     </application>
