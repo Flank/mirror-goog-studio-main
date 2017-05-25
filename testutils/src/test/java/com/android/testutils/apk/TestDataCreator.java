@@ -25,6 +25,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import org.jf.dexlib2.Opcodes;
 import org.jf.dexlib2.writer.builder.DexBuilder;
 import org.jf.dexlib2.writer.io.MemoryDataStore;
 
@@ -99,7 +100,7 @@ public class TestDataCreator {
     }
 
     static byte[] dexFile(@NonNull String className) throws IOException {
-        DexBuilder dexBuilder = DexBuilder.makeDexBuilder();
+        DexBuilder dexBuilder = new DexBuilder(Opcodes.getDefault());
 
         dexBuilder.internClassDef(
                 "L" + className.replace('.', '/') + ";",

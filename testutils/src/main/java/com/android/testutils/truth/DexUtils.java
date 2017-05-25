@@ -32,7 +32,7 @@ import org.jf.dexlib2.dexbacked.DexBackedDexFile;
 public final class DexUtils {
 
     @SuppressWarnings("deprecation") // currently studio is using an older version of the lib
-    private static final Opcodes DEX_LIB_OPCODES = new Opcodes(24);
+    private static final Opcodes DEX_LIB_OPCODES = Opcodes.forApi(24);
 
     private DexUtils() {
     }
