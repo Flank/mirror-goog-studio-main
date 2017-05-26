@@ -23,6 +23,13 @@ maven_java_library(
 )
 
 maven_java_library(
+    name = "com.beust_jcommander",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/beust/jcommander/1.64:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+maven_java_library(
     name = "com.fasterxml.jackson.core_jackson-core",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/fasterxml/jackson/core/jackson-core/2.1.3:jar",
     visibility = ["//visibility:public"],
@@ -192,13 +199,6 @@ maven_java_library(
 maven_java_library(
     name = "com.squareup_javawriter",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/squareup/javawriter/2.5.0:jar",
-    visibility = ["//visibility:public"],
-    exports = [],
-)
-
-maven_java_library(
-    name = "commons-cli_commons-cli",
-    export_artifact = "//prebuilts/tools/common/m2/repository/commons-cli/commons-cli/1.2:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -855,8 +855,20 @@ maven_java_library(
 )
 
 maven_java_library(
+    name = "org.smali_baksmali",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/smali/baksmali/2.2.0:jar",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":com.beust_jcommander",
+        ":com.google.guava_guava",
+        ":org.smali_dexlib2",
+        ":org.smali_util",
+    ],
+)
+
+maven_java_library(
     name = "org.smali_dexlib2",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/smali/dexlib2/2.1.3:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/smali/dexlib2/2.2.0:jar",
     visibility = ["//visibility:public"],
     exports = [
         ":com.google.code.findbugs_jsr305",
@@ -867,11 +879,11 @@ maven_java_library(
 
 maven_java_library(
     name = "org.smali_util",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/smali/util/2.1.3:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/smali/util/2.2.0:jar",
     visibility = ["//visibility:public"],
     exports = [
+        ":com.beust_jcommander",
         ":com.google.code.findbugs_jsr305",
         ":com.google.guava_guava",
-        ":commons-cli_commons-cli",
     ],
 )
