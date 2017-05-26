@@ -25,7 +25,7 @@ import org.eclipse.aether.util.graph.selector.OptionalDependencySelector;
 import org.eclipse.aether.util.graph.selector.ScopeDependencySelector;
 
 /** Constructs Aether objects. */
-class AetherUtils {
+public class AetherUtils {
     static final RemoteRepository MAVEN_CENTRAL =
             new RemoteRepository.Builder(
                             "Maven Central", "default", "https://repo1.maven.org/maven2/")
@@ -35,7 +35,7 @@ class AetherUtils {
             new RemoteRepository.Builder("JCenter", "default", "http://jcenter.bintray.com/")
                     .build();
 
-    static final ImmutableList<RemoteRepository> REPOSITORIES =
+    public static final ImmutableList<RemoteRepository> REPOSITORIES =
             ImmutableList.of(MAVEN_CENTRAL, JCENTER);
 
     private AetherUtils() {}
@@ -73,7 +73,8 @@ class AetherUtils {
         return session;
     }
 
-    static AndDependencySelector buildDependencySelector(ImmutableList<Exclusion> exclusions) {
+    public static AndDependencySelector buildDependencySelector(
+            ImmutableList<Exclusion> exclusions) {
         return new AndDependencySelector(
                 new OptionalDependencySelector(),
                 new ScopeDependencySelector(

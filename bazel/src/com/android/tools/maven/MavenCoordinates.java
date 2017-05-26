@@ -16,14 +16,13 @@
 
 package com.android.tools.maven;
 
-import org.apache.maven.model.Model;
-
 import java.util.regex.Pattern;
+import org.apache.maven.model.Model;
 
 public class MavenCoordinates {
     static final Pattern MAVEN_COORDINATES = Pattern.compile("^([^:]+):([^:]+):(.+)$");
 
-    static boolean isMavenCoordinate(String s) {
+    public static boolean isMavenCoordinate(String s) {
         return MAVEN_COORDINATES.matcher(s).matches();
     }
 
