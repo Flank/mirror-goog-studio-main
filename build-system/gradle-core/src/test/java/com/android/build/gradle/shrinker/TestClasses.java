@@ -3373,7 +3373,7 @@ class TestClasses implements Opcodes {
     }
 
     static byte[] emptyClass(String name) throws Exception {
-        return TestClassesGenerator.emptyClass(name);
+        return TestClassesGenerator.emptyClass("test", name);
     }
 
     static byte[] classWithEmptyMethods(String className, String... namesAndDescriptors)

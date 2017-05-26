@@ -94,10 +94,19 @@ public abstract class AbstractShrinker<T> {
             return false;
         } else {
             return className.startsWith("java/")
-                    || (className.startsWith("android/")
-                            && !className.contains("/databinding/")
-                            // Match android/support and android/preview/support, possibly others.
-                            && !className.contains("/support/"));
+                    || className.startsWith("android/view/")
+                    || className.startsWith("android/content/")
+                    || className.startsWith("android/graphics/")
+                    || className.startsWith("android/os/")
+                    || className.startsWith("android/widget/")
+                    || className.startsWith("android/app/")
+                    || className.startsWith("android/util/")
+                    || className.startsWith("android/net/")
+                    || className.startsWith("android/database/")
+                    || className.startsWith("android/animation/")
+                    || className.startsWith("android/preference/")
+                    || className.startsWith("android/media/")
+                    || className.startsWith("android/text/");
         }
     }
 

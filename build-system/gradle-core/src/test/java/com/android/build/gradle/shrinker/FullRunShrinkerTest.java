@@ -16,12 +16,14 @@
 
 package com.android.build.gradle.shrinker;
 
+import static com.android.testutils.truth.MoreTruth.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.api.transform.Status;
 import com.android.build.gradle.shrinker.TestClasses.InnerClasses;
 import com.android.build.gradle.shrinker.TestClasses.Interfaces;
 import com.android.build.gradle.shrinker.TestClasses.Reflection;
+import com.android.testutils.TestClassesGenerator;
 import com.android.utils.FileUtils;
 import com.android.utils.Pair;
 import com.google.common.collect.ImmutableMap;
@@ -490,7 +492,8 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
         assertMembersLeft("MyImpl", "<init>:()V", "doSomething:(Ljava/lang/Object;)V");
         assertClassSkipped("MyCharSequence");
 
-        assertDoesNotImplement("MyImpl", "test/MyInterface");
+        File classFile = getOutputClassFile("MyImpl");
+        assertThat(getInterfaceNames(classFile)).doesNotContain("test/MyInterface");
     }
 
     @Test
@@ -518,7 +521,8 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
         assertMembersLeft("MyImpl", "<init>:()V", "someOtherMethod:()V");
         assertClassSkipped("MyCharSequence");
 
-        assertDoesNotImplement("MyImpl", "test/MyInterface");
+        File classFile = getOutputClassFile("MyImpl");
+        assertThat(getInterfaceNames(classFile)).doesNotContain("test/MyInterface");
     }
 
     @Test
@@ -1702,6 +1706,31 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
         assertMembersLeft(
                 "Lambdas", "<init>:()V", "makeSamObject:()V", "lambda$makeSamObject$0:(I)V");
         assertMembersLeft("SamType");
+    }
+
+    @Test
+    public void room_databaseSubclass() throws Exception {
+        File roomDatabaseClassFile =
+                FileUtils.join(
+                        mAppClassesDir,
+                        "android",
+                        "arch",
+                        "persistence",
+                        "room",
+                        "RoomDatabase.class");
+        Files.createParentDirs(roomDatabaseClassFile);
+        Files.write(
+                TestClassesGenerator.emptyClass("android/arch/persistence/room", "RoomDatabase"),
+                roomDatabaseClassFile);
+        Files.write(
+                TestClassesGenerator.emptyClass(
+                        "test", "AppDatabase", "android/arch/persistence/room/RoomDatabase"),
+                new File(mTestPackageDir, "SamType.class"));
+
+        fullRun("AppDatabase", "<init>:()V");
+
+        assertMembersLeft("AppDatabase", "<init>:()V");
+        assertThat(getOutputClassFile("android/arch/persistence/room", "RoomDatabase")).isFile();
     }
 
     protected static void checkBytecodeVersion(File classFile, int version) throws IOException {

@@ -40,18 +40,17 @@ import org.objectweb.asm.MethodVisitor;
 /** A class generator used to create classes that can be used in tests. */
 public final class TestClassesGenerator {
 
-    /** Generates an empty class. */
-    public static byte[] emptyClass(String name) throws Exception {
-        return emptyClass("test", name);
-    }
-
     /** Generates an empty class in the specified package. */
     public static byte[] emptyClass(@NonNull String pkg, @NonNull String name) throws Exception {
+        return emptyClass(pkg, name, "java/lang/Object");
+    }
 
+    public static byte[] emptyClass(
+            @NonNull String pkg, @NonNull String name, @NonNull String superName) {
         ClassWriter cw = new ClassWriter(0);
         MethodVisitor mv;
 
-        cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, pkg + "/" + name, null, "java/lang/Object", null);
+        cw.visit(V1_6, ACC_PUBLIC + ACC_SUPER, pkg + "/" + name, null, superName, null);
 
         {
             mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);

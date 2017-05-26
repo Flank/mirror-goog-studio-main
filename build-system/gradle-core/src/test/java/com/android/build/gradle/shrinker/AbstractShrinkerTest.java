@@ -28,8 +28,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.Format;
-import com.android.build.api.transform.QualifiedContent.ContentType;
-import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformOutputProvider;
@@ -69,31 +67,24 @@ import org.slf4j.LoggerFactory;
 
 /** Common code for testing shrinker runs. */
 public abstract class AbstractShrinkerTest {
-
     @Rule public TemporaryFolder tmpDir = new TemporaryFolder();
-
     protected File mTestPackageDir;
-
+    protected File mAppClassesDir;
     protected File mOutDir;
-
     protected Collection<TransformInput> mInputs;
-
     protected File mIncrementalDir;
-
     protected TransformOutputProvider mOutput;
-
     protected DirectoryInput mDirectoryInput;
-
-    protected final ShrinkerLogger mShrinkerLogger =
-            new ShrinkerLogger(Collections.emptyList(), LoggerFactory.getLogger(getClass()));
-
-    protected int mExpectedWarnings;
-
     protected FullRunShrinker<String> mFullRunShrinker;
+    protected ShrinkerLogger mShrinkerLogger;
+    protected int mExpectedWarnings;
 
     @Before
     public void setUp() throws Exception {
+        mShrinkerLogger =
+                new ShrinkerLogger(Collections.emptyList(), LoggerFactory.getLogger(getClass()));
         mTestPackageDir = tmpDir.newFolder("app-classes", "test");
+        mAppClassesDir = mTestPackageDir.getParentFile();
         File classDir = new File(tmpDir.getRoot(), "app-classes");
         mOutDir = tmpDir.newFolder("out");
         mIncrementalDir = tmpDir.newFolder("incremental");
@@ -108,8 +99,8 @@ public abstract class AbstractShrinkerTest {
         // on inputs.
         when(mOutput.getContentLocation(
                         Mockito.anyString(),
-                        Mockito.anySetOf(ContentType.class),
-                        Mockito.anySetOf(Scope.class),
+                        Mockito.any(),
+                        Mockito.any(),
                         Mockito.any(Format.class)))
                 .thenReturn(mOutDir);
 
@@ -147,12 +138,6 @@ public abstract class AbstractShrinkerTest {
     protected void assertImplements(String className, String interfaceName) throws IOException {
         File classFile = getOutputClassFile(className);
         assertThat(getInterfaceNames(classFile)).contains(interfaceName);
-    }
-
-    protected void assertDoesNotImplement(String className, String interfaceName)
-            throws IOException {
-        File classFile = getOutputClassFile(className);
-        assertThat(getInterfaceNames(classFile)).doesNotContain(interfaceName);
     }
 
     protected static Set<String> getInterfaceNames(File classFile) throws IOException {
@@ -245,8 +230,13 @@ public abstract class AbstractShrinkerTest {
     }
 
     @NonNull
-    protected File getOutputClassFile(String className) {
-        return FileUtils.join(mOutDir, "test", className + ".class");
+    protected File getOutputClassFile(@NonNull String className) {
+        return getOutputClassFile("test", className);
+    }
+
+    @NonNull
+    protected File getOutputClassFile(@NonNull String packageName, @NonNull String className) {
+        return FileUtils.join(mOutDir, packageName, className + ".class");
     }
 
     @NonNull

@@ -448,7 +448,8 @@ public class IncrementalShrinkerTest extends AbstractShrinkerTest {
         assertMembersLeft(
                 "Main", "<init>:()V", "buildMyImpl:()Ltest/MyImpl;", "main:(Ltest/MyImpl;)V");
         assertMembersLeft("MyImpl", "<init>:()V", "doSomething:(Ljava/lang/Object;)V");
-        assertDoesNotImplement("MyImpl", "test/MyInterface");
+        File classFile = getOutputClassFile("MyImpl");
+        assertThat(getInterfaceNames(classFile)).doesNotContain("test/MyInterface");
     }
 
     @Test
@@ -463,7 +464,8 @@ public class IncrementalShrinkerTest extends AbstractShrinkerTest {
         assertMembersLeft(
                 "Main", "<init>:()V", "buildMyImpl:()Ltest/MyImpl;", "main:(Ltest/MyImpl;)V");
         assertMembersLeft("MyImpl", "<init>:()V", "doSomething:(Ljava/lang/Object;)V");
-        assertDoesNotImplement("MyImpl", "test/MyInterface");
+        File classFile = getOutputClassFile("MyImpl");
+        assertThat(getInterfaceNames(classFile)).doesNotContain("test/MyInterface");
         assertClassSkipped("MyInterface");
 
         Files.write(Interfaces.main(true), new File(mTestPackageDir, "Main.class"));
