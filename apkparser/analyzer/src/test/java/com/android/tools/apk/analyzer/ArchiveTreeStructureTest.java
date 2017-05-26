@@ -110,11 +110,11 @@ public class ArchiveTreeStructureTest {
                                     entry.getPath());
                         });
         String expected =
-                "19         /\n"
+                "170        /\n"
                         + "6          /res/\n"
                         + "6          /res/anim/\n"
                         + "6          /res/anim/fade.xml\n"
-                        + "2          /instant-run.zip\n"
+                        + "153        /instant-run.zip\n"
                         + "2          /instant-run/\n"
                         + "2          /instant-run/classes1.dex\n"
                         + "11         /AndroidManifest.xml";
@@ -137,11 +137,11 @@ public class ArchiveTreeStructureTest {
                                     entry.getPath());
                         });
         String expected =
-                "23         /\n"
+                "172        /\n"
                         + "8          /res/\n"
                         + "8          /res/anim/\n"
                         + "8          /res/anim/fade.xml\n"
-                        + "4          /instant-run.zip\n"
+                        + "153        /instant-run.zip\n"
                         + "4          /instant-run/\n"
                         + "4          /instant-run/classes1.dex\n"
                         + "11         /AndroidManifest.xml";
@@ -168,14 +168,14 @@ public class ArchiveTreeStructureTest {
                                     entry.getPath());
                         });
         String expected =
-                "19         /\n"
+                "170        /\n"
+                        + "153        /instant-run.zip\n"
+                        + "2          /instant-run/\n"
+                        + "2          /instant-run/classes1.dex\n"
                         + "11         /AndroidManifest.xml\n"
                         + "6          /res/\n"
                         + "6          /res/anim/\n"
-                        + "6          /res/anim/fade.xml\n"
-                        + "2          /instant-run.zip\n"
-                        + "2          /instant-run/\n"
-                        + "2          /instant-run/classes1.dex";
+                        + "6          /res/anim/fade.xml";
         assertThat(actual).isEqualTo(expected);
     }
 
