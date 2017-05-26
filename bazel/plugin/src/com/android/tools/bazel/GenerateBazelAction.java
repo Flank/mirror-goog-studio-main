@@ -42,9 +42,6 @@ import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.Chunk;
 import com.intellij.util.PathUtil;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.jps.model.java.JavaSourceRootType;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -52,9 +49,13 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.jps.model.java.JavaSourceRootType;
 
 
 public class GenerateBazelAction extends AnAction {
+    private static final String KOTLIN_RUNTIME = "KotlinJavaRuntime";
+
     public GenerateBazelAction() {
         super("Generate Bazel files");
     }
@@ -155,9 +156,9 @@ public class GenerateBazelAction extends AnAction {
                     // A dependency to a jar file
                     LibraryOrderEntry libraryEntry = (LibraryOrderEntry) orderEntry;
                     Package libPkg = librariesPkg;
-                    List<String> scopes = new LinkedList<>();
+                    List<ImlModule.Tag> scopes = new LinkedList<>();
                     if (libraryEntry.getScope().equals(DependencyScope.TEST)) {
-                        scopes.add("test");
+                        scopes.add(ImlModule.Tag.TEST);
                     }
 
                     JavaLibrary namedLib = null;
@@ -166,6 +167,13 @@ public class GenerateBazelAction extends AnAction {
                         namedLib = libraries.get(libName.toLowerCase());
                         if (namedLib == null) {
                             namedLib = new JavaLibrary(libPkg, libName);
+                            if (KOTLIN_RUNTIME.equals(libName)) {
+                                namedLib.addDependency(
+                                        new JavaImport(
+                                                bazel.findPackage("tools/base/bazel"),
+                                                "kotlin-runtime"),
+                                        true);
+                            }
                             libraries.put(libName.toLowerCase(), namedLib);
                         }
                     }
@@ -216,7 +224,7 @@ public class GenerateBazelAction extends AnAction {
                                             module.rule.addDependency(imp, libraryEntry.isExported(), scopes);
                                         }
                                     }
-                                } else {
+                                } else if (!KOTLIN_RUNTIME.equals(library.getName())) {
                                     System.err.println("Cannot find file for: " + libFile);
                                 }
                             }
@@ -232,11 +240,11 @@ public class GenerateBazelAction extends AnAction {
                     ModuleOrderEntry entry = (ModuleOrderEntry) orderEntry;
                     Module dep = entry.getModule();
                     BazelModule bazelModuleDep = imlToBazel.get(dep);
-                    List<String> scopes = new LinkedList<>();
-                    scopes.add("module");
+                    List<ImlModule.Tag> scopes = new LinkedList<>();
+                    scopes.add(ImlModule.Tag.MODULE);
                     // TODO: Figure out how to add test if we depend on a multi-module rule
                     if (bazelModuleDep.isSingle() && entry.getScope().equals(DependencyScope.TEST)) {
-                        scopes.add("test");
+                        scopes.add(ImlModule.Tag.TEST);
                     }
                     if (bazelModuleDep != module) {
                         module.rule.addDependency(bazelModuleDep.rule, entry.isExported(), scopes);
