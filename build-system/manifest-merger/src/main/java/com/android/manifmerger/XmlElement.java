@@ -738,19 +738,20 @@ public class XmlElement extends OrphanXmlElement {
         @NonNull List<Node> expectedChildren = filterUninterestingNodes(getXml().getChildNodes());
         @NonNull List<Node> actualChildren = filterUninterestingNodes(otherNode.getXml().getChildNodes());
         int actualChildrenSize = actualChildren.size();
-        if (expectedChildren.size() != actualChildrenSize) {
+        int expectedChildrenSize = expectedChildren.size();
+        if (expectedChildrenSize != actualChildrenSize) {
 
-            if (expectedChildren.size() > actualChildrenSize) {
+            if (expectedChildrenSize > actualChildrenSize) {
                 // missing some.
                 @NonNull List<String> missingChildrenNames =
                         Lists.transform(expectedChildren, NODE_TO_NAME);
-                missingChildrenNames.removeAll(Lists.transform(actualChildren, NODE_TO_NAME));
+                Lists.transform(actualChildren, NODE_TO_NAME).forEach(missingChildrenNames::remove);
                 return Optional.of(
                         String.format(
                                 "%1$s: Number of children do not match up: "
                                         + "expected %2$d versus %3$d at %4$s, missing %5$s",
                                 getId(),
-                                expectedChildren.size(),
+                                expectedChildrenSize,
                                 actualChildrenSize,
                                 otherNode.printPosition(),
                                 Joiner.on(",").join(missingChildrenNames)));
@@ -763,7 +764,7 @@ public class XmlElement extends OrphanXmlElement {
                                 "%1$s: Number of children do not match up: "
                                         + "expected %2$d versus %3$d at %4$s, extra elements found : %5$s",
                                 getId(),
-                                expectedChildren.size(),
+                                expectedChildrenSize,
                                 actualChildrenSize,
                                 otherNode.printPosition(),
                                 Joiner.on(",").join(extraChildrenNames)));
