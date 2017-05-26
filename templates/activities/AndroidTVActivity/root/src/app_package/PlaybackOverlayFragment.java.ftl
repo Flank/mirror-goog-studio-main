@@ -108,7 +108,7 @@ public class PlaybackOverlayFragment extends android.support.v17.leanback.app.Pl
         mSelectedMovie = (Movie) getActivity()
                 .getIntent().getSerializableExtra(${detailsActivity}.MOVIE);
 
-        List<Movie> movies = MovieList.list;
+        List<Movie> movies = MovieList.getList();
 
         for (int j = 0; j < movies.size(); j++) {
             mItems.add(movies.get(j));
