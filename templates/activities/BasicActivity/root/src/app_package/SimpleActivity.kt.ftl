@@ -62,5 +62,5 @@ class ${activityClass} : ${superClass}() {
         return super.onOptionsItemSelected(item)
     }
 </#if>
-<#include "../../../../common/jni_code_snippet.java.ftl">
+<#include "../../../../common/jni_code_snippet.kt.ftl">
 }
