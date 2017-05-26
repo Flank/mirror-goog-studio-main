@@ -15,7 +15,7 @@
  */
 package com.android.ide.common.fonts
 
-import java.util.*
+import java.util.Objects
 
 const val DEFAULT_WEIGHT = 400
 const val DEFAULT_WIDTH = 100

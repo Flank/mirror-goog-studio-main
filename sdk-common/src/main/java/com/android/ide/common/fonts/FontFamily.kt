@@ -16,7 +16,9 @@
 package com.android.ide.common.fonts
 
 import com.google.common.collect.ImmutableList
-import java.util.*
+import java.util.Collections
+import java.util.Comparator
+import java.util.Objects
 
 const val FILE_PROTOCOL_START = "file://"
 const val HTTPS_PROTOCOL_START = "https://"
