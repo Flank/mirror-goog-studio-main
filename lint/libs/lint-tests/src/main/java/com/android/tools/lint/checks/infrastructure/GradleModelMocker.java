@@ -697,6 +697,22 @@ public class GradleModelMocker {
             } else {
                 error("Unexpected flavor context " + context);
             }
+        } else if (line.startsWith("versionNameSuffix ")) {
+            String name = getUnquotedValue(key);
+            ProductFlavor flavor = getFlavorFromContext(context);
+            if (flavor != null) {
+                when(flavor.getVersionNameSuffix()).thenReturn(name);
+            } else {
+                error("Unexpected flavor context " + context);
+            }
+        } else if (line.startsWith("applicationIdSuffix ")) {
+            String name = getUnquotedValue(key);
+            ProductFlavor flavor = getFlavorFromContext(context);
+            if (flavor != null) {
+                when(flavor.getApplicationIdSuffix()).thenReturn(name);
+            } else {
+                error("Unexpected flavor context " + context);
+            }
         } else if (key.startsWith("android.resourcePrefix ")) {
             String value = getUnquotedValue(key);
             when(project.getResourcePrefix()).thenReturn(value);

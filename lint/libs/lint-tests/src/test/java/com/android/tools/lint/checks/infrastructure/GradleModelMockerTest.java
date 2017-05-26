@@ -184,6 +184,8 @@ public class GradleModelMockerTest {
                 + "            flavorDimension \"releaseType\"\n"
                 + "            resConfig \"en\"\n"
                 + "            resConfigs \"nodpi\", \"hdpi\"\n"
+                + "            versionNameSuffix \"-beta\"\n"
+                + "            applicationIdSuffix '.beta'\n"
                 + "        }\n"
                 + "        normal { flavorDimension \"releaseType\" }\n"
                 + "        free { flavorDimension \"pricing\" }\n"
@@ -212,6 +214,10 @@ public class GradleModelMockerTest {
         assertThat(beta.getResourceConfigurations()).containsExactly("en", "nodpi", "hdpi");
         ProductFlavor defaultConfig = findProductFlavor(mocker, "defaultConfig");
         assertThat(defaultConfig.getResourceConfigurations()).containsExactly("mdpi");
+
+        // Suffix handling
+        assertThat(beta.getApplicationIdSuffix()).isEqualTo(".beta");
+        assertThat(beta.getVersionNameSuffix()).isEqualTo("-beta");
     }
 
     @Test
