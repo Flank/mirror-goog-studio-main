@@ -477,7 +477,7 @@ public class PluginDslTest {
             assertFalse(mockableJarFile.getAbsolutePath().contains(":"));
         }
 
-        assertEquals("mockable-Google-Inc.-Google-APIs-24.v2.jar", mockableJarFile.getName());
+        assertEquals("mockable-Google-Inc.-Google-APIs-24.v3.jar", mockableJarFile.getName());
     }
 
     @Test
