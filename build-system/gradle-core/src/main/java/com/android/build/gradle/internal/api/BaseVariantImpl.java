@@ -43,6 +43,7 @@ import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
+import org.gradle.api.DomainObjectCollection;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.ArtifactCollection;
@@ -116,7 +117,7 @@ public abstract class BaseVariantImpl implements BaseVariant {
 
     @NonNull
     @Override
-    public Collection<BaseVariantOutput> getOutputs() {
+    public DomainObjectCollection<BaseVariantOutput> getOutputs() {
         return outputs;
     }
 

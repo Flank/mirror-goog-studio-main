@@ -31,6 +31,7 @@ import com.android.builder.model.SourceProvider;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
+import org.gradle.api.DomainObjectCollection;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.Configuration;
@@ -90,7 +91,7 @@ public interface BaseVariant {
      * @return a non-null list of variants.
      */
     @NonNull
-    Collection<BaseVariantOutput> getOutputs();
+    DomainObjectCollection<BaseVariantOutput> getOutputs();
 
     /**
      * Returns the {@link com.android.builder.core.DefaultBuildType} for this build variant.
