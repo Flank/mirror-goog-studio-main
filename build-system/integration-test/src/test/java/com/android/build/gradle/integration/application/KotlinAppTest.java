@@ -17,19 +17,16 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.category.SmokeTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.testutils.apk.Apk;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
+import java.io.IOException;
+import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -37,39 +34,50 @@ import org.junit.experimental.categories.Category;
 /** Assemble tests for kotlin. */
 @Category(SmokeTests.class)
 public class KotlinAppTest {
-    @ClassRule
-    public static GradleTestProject project =
+    @Rule
+    public GradleTestProject project =
             GradleTestProject.builder().fromTestProject("kotlinApp").create();
 
     @Rule public Adb adb = new Adb();
 
-    public static AndroidProject model;
-
-    @BeforeClass
-    public static void getModel() throws Exception {
-        model = project.executeAndReturnModel("clean", "assembleDebug").getOnlyModel();
-    }
-
-    @AfterClass
-    public static void cleanUp() {
+    @After
+    public void cleanUp() {
         project = null;
-        model = null;
     }
 
     @Test
-    public void projectModel() {
-        assertFalse("Library Project", model.isLibrary());
-        assertEquals("Project Type", AndroidProject.PROJECT_TYPE_APP, model.getProjectType());
-        assertEquals(
-                "Compile Target", GradleTestProject.getCompileSdkHash(), model.getCompileTarget());
+    public void projectModel() throws IOException {
+        AndroidProject model = project.model().getSingle().getOnlyModel();
+        assertThat(model.isLibrary()).named("library project").isFalse();
+        assertThat(model.getProjectType())
+                .named("Project Type")
+                .isEqualTo(AndroidProject.PROJECT_TYPE_APP);
+        assertThat(model.getCompileTarget())
+                .named("Compile Target")
+                .isEqualTo(GradleTestProject.getCompileSdkHash());
     }
 
     @Test
     public void apkContents() throws Exception {
-        Apk apk = project.getApk("debug");
-        assertNotNull(apk);
+        project.executor().run("clean", "assembleDebug");
+        Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
+        assertThat(apk).isNotNull();
         assertThat(apk).containsResource("layout/activity_layout.xml");
         assertThat(apk).containsMainClass("Lcom/example/android/kotlin/MainActivity;");
+    }
+
+    @Test
+    public void dataBindingEnabled() throws IOException, InterruptedException {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "android.dataBinding.enabled = true\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    compile \"com.android.support:support-v4:${rootProject.supportLibVersion}\"\n"
+                        + "}\n");
+
+        project.executor().run("clean", "assembleDebug");
     }
 
     @Test

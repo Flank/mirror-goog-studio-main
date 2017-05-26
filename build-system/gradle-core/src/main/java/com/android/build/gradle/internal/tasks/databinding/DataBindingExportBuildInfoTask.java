@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.tasks.databinding;
 
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 
@@ -32,6 +33,7 @@ import java.util.stream.Collectors;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.tasks.Classpath;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.InputFiles;
@@ -73,7 +75,7 @@ public class DataBindingExportBuildInfoTask extends DefaultTask {
         this.xmlProcessor = xmlProcessor;
     }
 
-    @InputFiles
+    @Classpath
     public FileCollection getCompilerClasspath() {
         return compilerClasspath.get();
     }
@@ -147,8 +149,11 @@ public class DataBindingExportBuildInfoTask extends DefaultTask {
             task.setSdkDir(variantScope.getGlobalScope().getSdkHandler().getSdkFolder());
             task.setXmlOutFolder(variantScope.getLayoutInfoOutputForDataBinding());
 
+            // we need the external classpath, so we don't want to use scope.getClassPath as that
+            // includes internal (to the module) classpath in case there's registered bytecode
+            // generator (kotlin) which can trigger a cyclic dependencies.
             task.compilerClasspath =
-                    () -> variantScope.getJavaClasspath(COMPILE_CLASSPATH, CLASSES);
+                    () -> variantScope.getArtifactFileCollection(COMPILE_CLASSPATH, ALL, CLASSES);
 
             task.compilerSources =
                     () -> variantData.getJavaSources().stream()
