@@ -38,6 +38,7 @@ import com.android.builder.model.SourceProvider;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
+import org.gradle.api.DomainObjectCollection;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.Configuration;
@@ -98,7 +99,7 @@ public interface BaseTestedVariant extends BaseVariant, TestedVariant {
 
         @NonNull
         @Override
-        public Collection<BaseVariantOutput> getOutputs() {
+        public DomainObjectCollection<BaseVariantOutput> getOutputs() {
             return variant.getOutputs();
         }
 
