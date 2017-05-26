@@ -268,12 +268,6 @@ public final class AaptV2CommandBuilder {
 
         builder.add("--no-version-vectors");
 
-        if (config.getBaseFeature() != null) {
-            throw new AaptException(
-                    "Feature-splits are not supported in AAPT2 yet. "
-                            + "Use -Pandroid.enableAapt2=false flag to use AAPT1 instead.");
-        }
-
         return builder.build();
     }
 }

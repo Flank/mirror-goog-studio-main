@@ -340,16 +340,6 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
         // intentionally, for the support library to consume. Leave them alone.
         builder.addArgs("--no-version-vectors");
 
-        // Add the feature-split configuration if needed.
-        if (config.getBaseFeature() != null) {
-            builder.addArgs("--feature-of", config.getBaseFeature().getAbsolutePath());
-            // --feature-after requires --feature-of to be set so these are only parsed if base
-            // feature was set.
-            for (File previousFeature : config.getPreviousFeatures()) {
-                builder.addArgs("--feature-after", previousFeature.getAbsolutePath());
-            }
-        }
-
         return builder;
     }
 

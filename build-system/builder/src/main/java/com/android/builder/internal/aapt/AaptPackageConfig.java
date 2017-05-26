@@ -181,18 +181,6 @@ public class AaptPackageConfig implements Cloneable {
     @Nullable
     private VariantType mVariantType;
 
-    /**
-     * Base feature APK file.
-     */
-    @Nullable
-    private File mBaseFeature;
-
-    /**
-     * Previously compiled feature APK files.
-     */
-    @NonNull
-    private ImmutableSet<File> mPreviousFeatures;
-
     /** Package ID for the feature split. */
     @Nullable private Integer mPackageId;
 
@@ -207,7 +195,6 @@ public class AaptPackageConfig implements Cloneable {
         mLibraries = ImmutableList.of();
         mVerbose = false;
         mResourceConfigs = ImmutableSet.of();
-        mPreviousFeatures = ImmutableSet.of();
         mDependentFeatures = ImmutableSet.of();
     }
 
@@ -424,26 +411,6 @@ public class AaptPackageConfig implements Cloneable {
     @Nullable
     public VariantType getVariantType() {
         return mVariantType;
-    }
-
-    /**
-     * Obtains the base feature APK file.
-     *
-     * @return the base feature APK file, {@code null} if not set
-     */
-    @Nullable
-    public File getBaseFeature() {
-        return mBaseFeature;
-    }
-
-    /**
-     * Obtains the previously compiled feature APK files.
-     *
-     * @return the previously compiled feature APK files
-     */
-    @NonNull
-    public Set<File> getPreviousFeatures() {
-        return mPreviousFeatures;
     }
 
     /**
@@ -777,30 +744,6 @@ public class AaptPackageConfig implements Cloneable {
         @NonNull
         public Builder setCustomPackageForR(@Nullable String packageForR) {
             mConfig.mPackageForR = packageForR;
-            return this;
-        }
-
-        /**
-         * Sets the base feature APK file.
-         *
-         * @param baseFeature the base feature APK file.
-         * @return {@code this}
-         */
-        @NonNull
-        public Builder setBaseFeature(@Nullable File baseFeature) {
-            mConfig.mBaseFeature = baseFeature;
-            return this;
-        }
-
-        /**
-         * Sets the previously compiled feature APK files.
-         *
-         * @param previousFeatures the previously compiled feature APK files.
-         * @return {@code this}
-         */
-        @NonNull
-        public Builder setPreviousFeatures(@NonNull Collection<File> previousFeatures) {
-            mConfig.mPreviousFeatures = ImmutableSet.copyOf(previousFeatures);
             return this;
         }
 
