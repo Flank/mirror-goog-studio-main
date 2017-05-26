@@ -33,5 +33,5 @@ android {
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
+    ${getConfigurationName("compile")} fileTree(dir: 'libs', include: ['*.jar'])
 }

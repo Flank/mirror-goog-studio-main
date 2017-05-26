@@ -609,8 +609,9 @@ public class GradleModelMocker {
         } else if (line.equals("apply plugin: 'com.android.instantapp'")) {
             when(project.getProjectType()).thenReturn(AndroidProject.PROJECT_TYPE_INSTANTAPP);
             return;
-        } else if (line.equals("apply plugin: 'java'")) {
-            warn("Can't apply java plugin: There is no builder-model for Java currently");
+        } else if (line.equals("apply plugin: 'java'")
+                || line.equals("apply plugin: 'java-library'")) {
+            warn("Can't apply java/java-library plugins: There are no builder-model for Java currently");
             return;
         } else if (context.equals("buildscript.repositories")
                 || context.equals("allprojects.repositories")) {

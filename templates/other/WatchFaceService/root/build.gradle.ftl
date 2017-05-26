@@ -5,5 +5,5 @@ android {
 }
 
 dependencies {
-  provided 'com.google.android.wearable:wearable:+'
+  ${getConfigurationName("provided")} 'com.google.android.wearable:wearable:+'
 }

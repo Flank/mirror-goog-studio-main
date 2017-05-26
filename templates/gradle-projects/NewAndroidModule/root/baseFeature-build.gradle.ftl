@@ -6,5 +6,5 @@ apply plugin: 'com.android.feature'
 dependencies {
   application project (':${monolithicAppProjectName}')
   feature project(':${projectName}')
-  <#if backwardsCompatibility!true>compile 'com.android.support:appcompat-v7:${buildApi}.+'</#if>
+  <#if backwardsCompatibility!true>${getConfigurationName("compile")} 'com.android.support:appcompat-v7:${buildApi}.+'</#if>
 }
