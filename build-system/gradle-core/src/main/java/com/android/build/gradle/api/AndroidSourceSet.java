@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.api;
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import groovy.lang.Closure;
 
 /**
@@ -101,10 +100,8 @@ public interface AndroidSourceSet {
     @Deprecated
     String getProvidedConfigurationName();
 
-    /**
-     * Returns the name of the api configuration for this source set.
-     */
-    @Nullable
+    /** Returns the name of the api configuration for this source set. */
+    @NonNull
     String getApiConfigurationName();
 
     /**

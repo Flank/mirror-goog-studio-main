@@ -25,7 +25,6 @@ import static org.gradle.api.internal.artifacts.ArtifactAttributes.ARTIFACT_FORM
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidConfig;
-import com.android.build.gradle.TestAndroidConfig;
 import com.android.build.gradle.TestedAndroidConfig;
 import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
@@ -777,7 +776,7 @@ public class VariantManager implements VariantModel {
                     dimensionName);
         }
 
-        createCompoundSourceSets(productFlavorList, variantConfig, sourceSetsContainer);
+        createCompoundSourceSets(productFlavorList, variantConfig, sourceSetsContainer, null);
 
         // Add the container of dependencies.
         // The order of the libraries is important, in descending order:
@@ -845,24 +844,32 @@ public class VariantManager implements VariantModel {
         }
 
 
-        final String testedProjectPath = extension instanceof TestAndroidConfig ?
-                ((TestAndroidConfig) extension).getTargetProjectPath() :
-                null;
-
         return variantData;
     }
 
-    private static void createCompoundSourceSets(
+    private void createCompoundSourceSets(
             @NonNull List<? extends ProductFlavor> productFlavorList,
-            GradleVariantConfiguration variantConfig,
-            NamedDomainObjectContainer<AndroidSourceSet> sourceSetsContainer) {
-        if (!productFlavorList.isEmpty() && !variantConfig.getType().isSingleBuildType()) {
+            @NonNull GradleVariantConfiguration variantConfig,
+            @NonNull NamedDomainObjectContainer<AndroidSourceSet> sourceSetsContainer,
+            @Nullable BaseVariantData testedVariantData) {
+        if (!productFlavorList.isEmpty() /* && !variantConfig.getType().isSingleBuildType()*/) {
             DefaultAndroidSourceSet variantSourceSet =
                     (DefaultAndroidSourceSet) sourceSetsContainer.maybeCreate(
                             computeSourceSetName(
                                     variantConfig.getFullName(),
                                     variantConfig.getType()));
             variantConfig.setVariantSourceProvider(variantSourceSet);
+
+            if (testedVariantData != null) {
+                DefaultAndroidSourceSet testedSourceProvider =
+                        (DefaultAndroidSourceSet)
+                                testedVariantData
+                                        .getVariantConfiguration()
+                                        .getVariantSourceProvider();
+
+                VariantDimensionData.makeTestExtendMain(
+                        testedSourceProvider, variantSourceSet, project.getConfigurations());
+            }
         }
 
         if (productFlavorList.size() > 1) {
@@ -872,6 +879,17 @@ public class VariantManager implements VariantModel {
                                     variantConfig.getFlavorName(),
                                     variantConfig.getType()));
             variantConfig.setMultiFlavorSourceProvider(multiFlavorSourceSet);
+
+            if (testedVariantData != null) {
+                DefaultAndroidSourceSet testedSourceProvider =
+                        (DefaultAndroidSourceSet)
+                                testedVariantData
+                                        .getVariantConfiguration()
+                                        .getMultiFlavorSourceProvider();
+
+                VariantDimensionData.makeTestExtendMain(
+                        testedSourceProvider, multiFlavorSourceSet, project.getConfigurations());
+            }
         }
     }
 
@@ -938,9 +956,7 @@ public class VariantManager implements VariantModel {
         }
 
         createCompoundSourceSets(
-                productFlavorList,
-                testVariantConfig,
-                extension.getSourceSets());
+                productFlavorList, testVariantConfig, extension.getSourceSets(), testedVariantData);
 
         // create the internal storage for this variant.
         TestVariantData testVariantData =

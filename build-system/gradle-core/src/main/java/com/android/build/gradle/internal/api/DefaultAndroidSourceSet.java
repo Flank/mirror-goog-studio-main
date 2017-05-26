@@ -39,7 +39,6 @@ import static com.android.build.gradle.internal.dependency.VariantDependencies.C
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.build.gradle.api.AndroidSourceDirectorySet;
 import com.android.build.gradle.api.AndroidSourceFile;
 import com.android.build.gradle.api.AndroidSourceSet;
@@ -129,7 +128,7 @@ public class DefaultAndroidSourceSet implements AndroidSourceSet, SourceProvider
         return displayName;
     }
 
-    @Nullable
+    @NonNull
     @Override
     public String getApiConfigurationName() {
         if (name.equals(SourceSet.MAIN_SOURCE_SET_NAME)) {

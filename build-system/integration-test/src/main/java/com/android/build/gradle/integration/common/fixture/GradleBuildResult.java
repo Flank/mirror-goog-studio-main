@@ -23,9 +23,12 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.truth.GradleOutputFileSubject;
 import com.android.build.gradle.integration.common.truth.GradleOutputFileSubjectFactory;
 import com.android.build.gradle.integration.common.truth.TaskStateList;
+import com.android.utils.SdkUtils;
 import com.google.api.client.repackaged.com.google.common.base.Preconditions;
 import com.google.api.client.repackaged.com.google.common.base.Throwables;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.List;
@@ -115,6 +118,13 @@ public class GradleBuildResult {
     @NonNull
     public String getStdout() {
         return stdout;
+    }
+
+    @NonNull
+    public List<String> getStdoutAsLines() {
+        Iterable<String> stdoutlines =
+                Splitter.on(SdkUtils.getLineSeparator()).omitEmptyStrings().split(stdout);
+        return Lists.newArrayList(stdoutlines);
     }
 
     @NonNull

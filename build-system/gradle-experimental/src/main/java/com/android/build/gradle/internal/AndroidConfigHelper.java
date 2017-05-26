@@ -84,7 +84,8 @@ public class AndroidConfigHelper {
                 sourceSet -> {
                     ConfigurationContainer configurations = project.getConfigurations();
 
-                    final String implementationName = sourceSet.getImplementationConfigurationName();
+                    final String implementationName =
+                            sourceSet.getImplementationConfigurationName();
                     final String runtimeOnlyName = sourceSet.getRuntimeOnlyConfigurationName();
                     final String compileOnlyName = sourceSet.getCompileOnlyConfigurationName();
 
@@ -93,73 +94,106 @@ public class AndroidConfigHelper {
                     // due to compatibility with other plugins and with Gradle sync,
                     // we have to keep 'compile' as resolvable.
                     // TODO Fix this in gradle sync.
-                    Configuration compile = createConfiguration(
-                            configurations,
-                            compileName,
-                            String.format(CONFIG_DESC_OLD, "Compile", sourceSet.getName(), implementationName),
-                            "compile".equals(compileName) || "testCompile".equals(compileName) /*canBeResolved*/);
-                    compile.getAllDependencies().whenObjectAdded(
-                            new DeprecatedConfigurationAction(project, compile, implementationName));
+                    Configuration compile =
+                            createConfiguration(
+                                    configurations,
+                                    compileName,
+                                    String.format(
+                                            CONFIG_DESC_OLD,
+                                            "Compile",
+                                            sourceSet.getName(),
+                                            implementationName),
+                                    "compile".equals(compileName)
+                                            || "testCompile".equals(compileName) /*canBeResolved*/);
+                    compile.getAllDependencies()
+                            .whenObjectAdded(
+                                    new DeprecatedConfigurationAction(
+                                            project, compile, implementationName));
 
                     String packageConfigDescription;
                     if (publishPackage) {
-                        packageConfigDescription = String.format(CONFIG_DESC_OLD, "Publish", sourceSet.getName(), runtimeOnlyName);
+                        packageConfigDescription =
+                                String.format(
+                                        CONFIG_DESC_OLD,
+                                        "Publish",
+                                        sourceSet.getName(),
+                                        runtimeOnlyName);
                     } else {
-                        packageConfigDescription = String.format(CONFIG_DESC_OLD, "Apk", sourceSet.getName(), runtimeOnlyName);
+                        packageConfigDescription =
+                                String.format(
+                                        CONFIG_DESC_OLD,
+                                        "Apk",
+                                        sourceSet.getName(),
+                                        runtimeOnlyName);
                     }
 
-                    Configuration apk = createConfiguration(
-                            configurations,
-                            sourceSet.getPackageConfigurationName(),
-                            packageConfigDescription);
-                    apk.getAllDependencies().whenObjectAdded(
-                            new DeprecatedConfigurationAction(project, apk, runtimeOnlyName));
+                    Configuration apk =
+                            createConfiguration(
+                                    configurations,
+                                    sourceSet.getPackageConfigurationName(),
+                                    packageConfigDescription);
+                    apk.getAllDependencies()
+                            .whenObjectAdded(
+                                    new DeprecatedConfigurationAction(
+                                            project, apk, runtimeOnlyName));
 
-                    Configuration provided = createConfiguration(
-                            configurations,
-                            sourceSet.getProvidedConfigurationName(),
-                            String.format(CONFIG_DESC_OLD, "Provided", sourceSet.getName(), compileOnlyName));
-                    provided.getAllDependencies().whenObjectAdded(
-                            new DeprecatedConfigurationAction(project, provided, compileOnlyName));
+                    Configuration provided =
+                            createConfiguration(
+                                    configurations,
+                                    sourceSet.getProvidedConfigurationName(),
+                                    String.format(
+                                            CONFIG_DESC_OLD,
+                                            "Provided",
+                                            sourceSet.getName(),
+                                            compileOnlyName));
+                    provided.getAllDependencies()
+                            .whenObjectAdded(
+                                    new DeprecatedConfigurationAction(
+                                            project, provided, compileOnlyName));
 
                     // then the new configurations.
                     String apiName = sourceSet.getApiConfigurationName();
-                    Configuration api = null;
-                    if (apiName != null) {
-                        api = createConfiguration(
-                                configurations,
-                                apiName,
-                                String.format(CONFIG_DESC, "API", sourceSet.getName()));
-                        api.extendsFrom(compile);
-                    }
+                    Configuration api =
+                            createConfiguration(
+                                    configurations,
+                                    apiName,
+                                    String.format(CONFIG_DESC, "API", sourceSet.getName()));
+                    api.extendsFrom(compile);
 
-                    Configuration implementation = createConfiguration(
-                            configurations,
-                            implementationName,
-                            String.format(CONFIG_DESC, "Implementation only", sourceSet.getName()));
-                    if (api != null) {
-                        implementation.extendsFrom(api);
-                    }
+                    Configuration implementation =
+                            createConfiguration(
+                                    configurations,
+                                    implementationName,
+                                    String.format(
+                                            CONFIG_DESC,
+                                            "Implementation only",
+                                            sourceSet.getName()));
+                    implementation.extendsFrom(api);
 
-                    Configuration runtimeOnly = createConfiguration(
-                            configurations,
-                            runtimeOnlyName,
-                            String.format(CONFIG_DESC, "Runtime only", sourceSet.getName()));
+                    Configuration runtimeOnly =
+                            createConfiguration(
+                                    configurations,
+                                    runtimeOnlyName,
+                                    String.format(
+                                            CONFIG_DESC, "Runtime only", sourceSet.getName()));
                     runtimeOnly.extendsFrom(apk);
 
-                    Configuration compileOnly = createConfiguration(
-                            configurations,
-                            compileOnlyName,
-                            String.format(CONFIG_DESC, "Compile only", sourceSet.getName()));
+                    Configuration compileOnly =
+                            createConfiguration(
+                                    configurations,
+                                    compileOnlyName,
+                                    String.format(
+                                            CONFIG_DESC, "Compile only", sourceSet.getName()));
                     compileOnly.extendsFrom(provided);
 
                     // then the secondary configurations.
-                    Configuration wearConfig = createConfiguration(
-                            configurations,
-                            sourceSet.getWearAppConfigurationName(),
-                            "Link to a wear app to embed for object '"
-                                    + sourceSet.getName()
-                                    + "'.");
+                    Configuration wearConfig =
+                            createConfiguration(
+                                    configurations,
+                                    sourceSet.getWearAppConfigurationName(),
+                                    "Link to a wear app to embed for object '"
+                                            + sourceSet.getName()
+                                            + "'.");
 
                     createConfiguration(
                             configurations,
