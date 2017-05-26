@@ -48,6 +48,9 @@ public final class NonFinalPluginExpiry {
      * @throws RuntimeException if the plugin is a non final plugin older than 40 days.
      */
     public static void verifyRetirementAge() {
+        // disable the time bomb for now.
+        if (true) return;
+
         URLClassLoader cl = (URLClassLoader) NonFinalPluginExpiry.class.getClassLoader();
         try (InputStream inputStream = cl.findResource("META-INF/MANIFEST.MF").openStream()) {
             verifyRetirementAge(
