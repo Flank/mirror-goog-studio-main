@@ -52,6 +52,9 @@ constexpr int kDataBatchSize = 2000;
 
 // The max depth of callstacks to query per allocation.
 constexpr int kMaxStackDepth = 100;
+
+// Const tag used for simply tracking object alloc/free counts.
+constexpr int kObjectCountTag = -1;
 }
 
 namespace profiler {
@@ -126,6 +129,16 @@ void MemoryTrackingEnv::Initialize() {
   SetEventNotification(jvmti_, JVMTI_ENABLE,
                        JVMTI_EVENT_GARBAGE_COLLECTION_FINISH);
 
+  // Enable object/alloc events so we can track object count. Note that we
+  // do a full heap walk first to counts that are already on the heap.
+  jvmtiHeapCallbacks heap_callbacks;
+  memset(&heap_callbacks, 0, sizeof(heap_callbacks));
+  heap_callbacks.heap_iteration_callback = &HeapIterationCallback;
+  error = jvmti_->IterateThroughHeap(0, nullptr, &heap_callbacks, nullptr);
+  CheckJvmtiError(jvmti_, error);
+  SetEventNotification(jvmti_, JVMTI_ENABLE, JVMTI_EVENT_VM_OBJECT_ALLOC);
+  SetEventNotification(jvmti_, JVMTI_ENABLE, JVMTI_EVENT_OBJECT_FREE);
+
   auto memory_component = Agent::Instance().memory_component();
   memory_component->RegisterMemoryControlHandler(std::bind(
       &MemoryTrackingEnv::HandleControlSignal, this, std::placeholders::_1));
@@ -157,16 +170,22 @@ void MemoryTrackingEnv::StartLiveTracking(int64_t timestamp) {
   if (is_live_tracking_) {
     return;
   }
-  is_live_tracking_ = true;
-  current_capture_time_ns_ = timestamp;
-  total_live_count_ = 0;
-  total_free_count_ = 0;
-  current_object_tag_ = kObjectStartTag;
 
   // Called from grpc so we need to attach.
   JNIEnv* jni = GetThreadLocalJNI(g_vm);
   jvmtiError error;
 
+  // Disables the alloc/free events as we are resetting the object count.
+  // IterateThroughHeap will count all objects that are live - this avoids
+  // double counting objects created between here and IterateThroughHeap.
+  SetEventNotification(jvmti_, JVMTI_DISABLE, JVMTI_EVENT_VM_OBJECT_ALLOC);
+  SetEventNotification(jvmti_, JVMTI_DISABLE, JVMTI_EVENT_OBJECT_FREE);
+
+  is_live_tracking_ = true;
+  current_capture_time_ns_ = timestamp;
+  total_live_count_ = 0;
+  total_free_count_ = 0;
+  current_object_tag_ = kObjectStartTag;
   // Trigger a GC - this is necessary to clean up any Class objects
   // that are still left behind from the ClassLoad stage, which
   // we would not get from the GetLoadedClasses below, and we want to
@@ -249,9 +268,6 @@ void MemoryTrackingEnv::StopLiveTracking(int64_t timestamp) {
     return;
   }
   is_live_tracking_ = false;
-
-  SetEventNotification(jvmti_, JVMTI_DISABLE, JVMTI_EVENT_VM_OBJECT_ALLOC);
-  SetEventNotification(jvmti_, JVMTI_DISABLE, JVMTI_EVENT_OBJECT_FREE);
   event_queue_.Reset();
 }
 
@@ -299,8 +315,7 @@ void MemoryTrackingEnv::LogGcStart() {
 }
 
 void MemoryTrackingEnv::LogGcFinish() {
-// TODO: re-enable this once VmStatsSampler can be completely removed in O+.
-// profiler::EnqueueGcStats(last_gc_start_ns_, clock_.GetCurrentTime());
+  profiler::EnqueueGcStats(last_gc_start_ns_, clock_.GetCurrentTime());
 
 #ifndef NDEBUG
   Log::V(">> [MEM AGENT STATS DUMP BEGIN]");
@@ -339,6 +354,10 @@ jint MemoryTrackingEnv::HeapIterationCallback(jlong class_tag, jlong size,
                                               jlong* tag_ptr, jint length,
                                               void* user_data) {
   g_env->total_live_count_++;
+  if (!g_env->is_live_tracking_) {
+    *tag_ptr = kObjectCountTag;
+    return JVMTI_VISIT_OBJECTS;
+  }
 
   BatchAllocationSample* sample = (BatchAllocationSample*)user_data;
 
@@ -392,6 +411,10 @@ void MemoryTrackingEnv::ObjectAllocCallback(jvmtiEnv* jvmti, JNIEnv* jni,
                                             jthread thread, jobject object,
                                             jclass klass, jlong size) {
   g_env->total_live_count_++;
+  if (!g_env->is_live_tracking_) {
+    jvmti->SetTag(object, kObjectCountTag);
+    return;
+  }
 
   jvmtiError error;
 
@@ -442,6 +465,9 @@ void MemoryTrackingEnv::ObjectAllocCallback(jvmtiEnv* jvmti, JNIEnv* jni,
 
 void MemoryTrackingEnv::ObjectFreeCallback(jvmtiEnv* jvmti, jlong tag) {
   g_env->total_free_count_++;
+  if (!g_env->is_live_tracking_) {
+    return;
+  }
 
   Stopwatch sw;
   {
@@ -538,11 +564,11 @@ void MemoryTrackingEnv::AllocDataWorker(jvmtiEnv* jvmti, JNIEnv* jni,
           SetSampleMethods(env, jvmti, jni, sample, method_ids_to_query);
           profiler::EnqueueAllocationEvents(sample);
         }
-
-        // TODO: re-enable this once VmStatsSampler can be removed in O+
-        // profiler::EnqueueAllocStats(env->total_live_count_,
-        // env->total_free_count_);
       }
+
+      // Always sends object count stats.
+      profiler::EnqueueAllocStats(env->total_live_count_,
+                                  env->total_free_count_);
     }
 
     // Sleeps a while before reading from the queue again, so that the agent
