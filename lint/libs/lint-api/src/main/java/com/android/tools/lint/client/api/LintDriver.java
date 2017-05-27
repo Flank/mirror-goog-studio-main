@@ -2304,7 +2304,8 @@ public class LintDriver {
 
             Configuration configuration = context.getConfiguration();
             if (!configuration.isEnabled(issue)) {
-                if (issue != IssueRegistry.PARSER_ERROR && issue != IssueRegistry.LINT_ERROR) {
+                if (issue != IssueRegistry.PARSER_ERROR && issue != IssueRegistry.LINT_ERROR &&
+                        issue != IssueRegistry.BASELINE) {
                     mDelegate.log(null, "Incorrect detector reported disabled issue %1$s",
                             issue.toString());
                 }

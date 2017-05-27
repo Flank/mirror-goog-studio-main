@@ -17,6 +17,7 @@
 package com.android.build.gradle.tasks;
 
 import static com.android.SdkConstants.VALUE_FALSE;
+import static com.android.SdkConstants.VALUE_TRUE;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
@@ -254,6 +255,9 @@ public class Lint extends BaseTask {
                     Reporter reporter = Reporter.createXmlReporter(client, baselineFile, true);
                     reporter.write(stats, mergedWarnings);
                     System.err.println("Created baseline file " + baselineFile);
+                    if (VALUE_TRUE.equals(System.getProperty("lint.baselines.continue"))) {
+                        return;
+                    }
                     System.err.println("(Also breaking build in case this was not intentional.)");
                     String message = ""
                             + "Created baseline file " + baselineFile + "\n"
@@ -264,7 +268,10 @@ public class Lint extends BaseTask {
                             + "\n"
                             + "If not, investigate the baseline path in the lintOptions config\n"
                             + "or verify that the baseline file has been checked into version\n"
-                            + "control.\n";
+                            + "control.\n"
+                            + "\n"
+                            + "You can set the system property lint.baselines.continue=true\n"
+                            + "if you want to create many missing baselines in one go.";
                     throw new GradleException(message);
                 }
             }
@@ -351,7 +358,7 @@ public class Lint extends BaseTask {
         if (!report || fatalOnly) {
             flags.setQuiet(true);
         }
-        flags.setWriteBaselineIfMissing(report);
+        flags.setWriteBaselineIfMissing(report && !fatalOnly);
 
         Pair<List<Warning>,LintBaseline> warnings;
         try {

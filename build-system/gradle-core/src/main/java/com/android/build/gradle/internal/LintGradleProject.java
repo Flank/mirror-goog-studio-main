@@ -49,7 +49,6 @@ import org.gradle.api.artifacts.FileCollectionDependency;
 import org.gradle.api.artifacts.ProjectDependency;
 import org.gradle.api.file.SourceDirectorySet;
 import org.gradle.api.plugins.ExtraPropertiesExtension;
-import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.plugins.PluginContainer;
 import org.gradle.api.tasks.SourceSet;
@@ -818,8 +817,7 @@ public class LintGradleProject extends Project {
         }
 
         @Nullable
-        private AndroidProject getAndroidProject(@NonNull LintGradleClient client,
-                @NonNull org.gradle.api.Project gradleProject) {
+        private AndroidProject getAndroidProject(@NonNull org.gradle.api.Project gradleProject) {
             AndroidProject androidProject = gradleProjects.get(gradleProject);
             if (androidProject == null) {
                 androidProject = createAndroidProject(gradleProject);
@@ -834,7 +832,7 @@ public class LintGradleProject extends Project {
                 @NonNull LintGradleClient lintClient,
                 @NonNull org.gradle.api.Project gradleProject,
                 @NonNull String variantName) {
-            AndroidProject androidProject = getAndroidProject(lintClient, gradleProject);
+            AndroidProject androidProject = getAndroidProject(gradleProject);
             if (androidProject != null) {
                 Collection<Variant> variants = androidProject.getVariants();
                 for (Variant variant : variants) {
@@ -938,8 +936,7 @@ public class LintGradleProject extends Project {
 
                 // Dependencies
                 ConfigurationContainer configurations = gradleProject.getConfigurations();
-                Configuration compile = configurations.getByName(JavaPlugin.COMPILE_CONFIGURATION_NAME);
-                if (compile != null) {
+                for (Configuration compile : configurations) {
                     for (Dependency dependency : compile.getDependencies()) {
                         if (dependency instanceof ProjectDependency) {
                             org.gradle.api.Project p =
@@ -1034,8 +1031,7 @@ public class LintGradleProject extends Project {
             // look up from Gradle project directly
             List<String> processedProjects = null;
             ConfigurationContainer configurations = gradleProject.getConfigurations();
-            Configuration compile = configurations.getByName(JavaPlugin.COMPILE_CONFIGURATION_NAME);
-            if (compile != null) {
+            for (Configuration compile : configurations) {
                 for (Dependency dependency : compile.getDependencies()) {
                     if (dependency instanceof ProjectDependency) {
                         org.gradle.api.Project p =
