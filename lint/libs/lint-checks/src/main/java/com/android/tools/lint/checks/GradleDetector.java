@@ -1330,9 +1330,9 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                         version));
             } else if (!supportLib26Beta && compile26Beta) {
                 reportNonFatalCompatibilityIssue(context, cookie,
-                        String.format("When using support library 26.0.0-beta1 or higher, the "
-                            + "`compileSdkVersion` must be the O SDK (revision 2) or higher "
-                                + "(was %1$d)", compileSdkVersion));
+                        String.format("When using a `compileSdkVersion` android-O revision 2 "
+                              + "or higher, the support library version should be 26.0.0-beta1 "
+                              + "or higher (was %1$s)", version));
             }
 
             if (minSdkVersion >= 14 && compileSdkVersion >= 1 && compileSdkVersion < 21) {
