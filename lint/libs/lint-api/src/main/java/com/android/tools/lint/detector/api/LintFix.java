@@ -30,7 +30,6 @@ import java.util.Map;
 import java.util.Set;
 import org.intellij.lang.annotations.Language;
 import org.jetbrains.annotations.Nls;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * A <b>description</b> of a quickfix for a lint warning, which provides
@@ -593,7 +592,7 @@ public class LintFix {
             return map.get(key);
         }
 
-        @NotNull
+        @NonNull
         @Override
         public Iterator iterator() {
             return map.values().iterator();

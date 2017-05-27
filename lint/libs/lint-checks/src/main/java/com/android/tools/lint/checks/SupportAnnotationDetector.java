@@ -174,7 +174,6 @@ import org.w3c.dom.NodeList;
  * express, e.g. for {@code @CheckReturn} it makes sure the return value is used,
  * for {@code ColorInt} it ensures that a proper color integer is passed in, etc.
  */
-@SuppressWarnings("WeakerAccess")
 public class SupportAnnotationDetector extends Detector implements UastScanner {
 
     public static final Implementation IMPLEMENTATION
@@ -2344,6 +2343,28 @@ public class SupportAnnotationDetector extends Detector implements UastScanner {
                 return;
             }
 
+            String LINT_TRACE_TYPEDEF_ERRORS = "LINT_TRACE_TYPEDEF_ERRORS";
+            if (System.getenv(LINT_TRACE_TYPEDEF_ERRORS) != null ||
+                    System.getProperty(LINT_TRACE_TYPEDEF_ERRORS) != null) {
+                StringBuilder sb = new StringBuilder();
+                sb.append("Lint: Found typedef error:\n");
+                sb.append("Lint:  value=").append(value).append("\n");
+                sb.append("Lint:  argument=").append(argument).append("\n");
+                sb.append("Lint:  argument.class=").append(argument.getClass()).append("\n");
+                sb.append("Lint:  allowed=");
+                sb.append(listAllowedValues(argument, initializers));
+                sb.append("\n");
+                sb.append("Lint:  allowed.details=");
+                for (UExpression allowedValue : initializers) {
+                    sb.append(allowedValue.toString());
+                    sb.append(":");
+                    sb.append(allowedValue.getClass());
+                    sb.append("; ");
+                }
+                sb.append("\n");
+
+                context.getClient().log(Severity.INFORMATIONAL, null, sb.toString());
+            }
             reportTypeDef(context, argument, errorNode, flag,
                     initializers, allAnnotations);
         }

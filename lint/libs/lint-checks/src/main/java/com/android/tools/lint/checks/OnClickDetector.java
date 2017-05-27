@@ -59,7 +59,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.uast.UClass;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
@@ -141,7 +140,7 @@ public class OnClickDetector extends LayoutDetector implements Detector.UastScan
     }
 
     @Nullable
-    private static String validateJavaIdentifier(@NotNull String text) {
+    private static String validateJavaIdentifier(@NonNull String text) {
         if (LintUtils.isJavaKeyword(text)) {
             return "cannot be a Java keyword";
         }

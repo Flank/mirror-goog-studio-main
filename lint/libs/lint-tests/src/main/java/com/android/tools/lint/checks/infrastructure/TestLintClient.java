@@ -91,10 +91,14 @@ import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.intellij.psi.PsiErrorElement;
 import com.intellij.psi.util.PsiTreeUtil;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringWriter;
 import java.lang.reflect.Field;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -134,7 +138,7 @@ public class TestLintClient extends LintCliClient {
         flags.getReporters().add(reporter);
     }
 
-    void setLintTask(@Nullable TestLintTask task) {
+    protected void setLintTask(@Nullable TestLintTask task) {
         if (task != null && task.optionSetter != null) {
             task.optionSetter.set(flags);
         }
@@ -354,6 +358,19 @@ public class TestLintClient extends LintCliClient {
         }
 
         return new TestProject(this, dir, referenceDir, description, mocker);
+    }
+
+    @Nullable
+    @Override
+    public File getCacheDir(@Nullable String name, boolean create) {
+        File cacheDir = super.getCacheDir(name, create);
+        // Separate test caches from user's normal caches
+        cacheDir = new File(cacheDir, "unit-tests");
+        if (create) {
+            //noinspection ResultOfMethodCallIgnored
+            cacheDir.mkdirs();
+        }
+        return cacheDir;
     }
 
     @NonNull
@@ -998,6 +1015,36 @@ public class TestLintClient extends LintCliClient {
         }
 
         return testSourceFolders;
+    }
+
+    @Nullable
+    @Override
+    public URLConnection openConnection(@NonNull URL url, int timeout) throws IOException {
+        if (task.mockNetworkData != null) {
+            String query = url.toExternalForm();
+            byte[] bytes = task.mockNetworkData.get(query);
+            if (bytes != null) {
+                return new URLConnection(url) {
+                    @Override
+                    public void connect() throws IOException {
+                    }
+
+                    @Override
+                    public InputStream getInputStream() throws IOException {
+                        return new ByteArrayInputStream(bytes);
+                    }
+                };
+            }
+        }
+
+        if (!task.allowNetworkAccess) {
+            fail("Lint detector test attempted to read from the network. Normally this means "
+                    + "that you have forgotten to set up mock data (calling networkData() on the "
+                    + "lint task) or the URL no longer matches. The URL encountered was " +
+                    url);
+        }
+
+        return super.openConnection(url, timeout);
     }
 
     public static class TestProject extends Project {

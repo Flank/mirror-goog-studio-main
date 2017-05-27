@@ -95,6 +95,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.google.common.io.ByteStreams;
 import com.intellij.ide.util.JavaAnonymousClassesHelper;
 import com.intellij.pom.java.LanguageLevel;
 import com.intellij.psi.CommonClassNames;
@@ -115,7 +116,10 @@ import com.intellij.psi.util.ClassUtil;
 import com.intellij.psi.util.PsiTreeUtil;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.CharacterCodingException;
@@ -1969,6 +1973,46 @@ public class LintUtils {
         }
 
         return false;
+    }
+
+    /** Reads the data from the given URL, with an optional timeout (in milliseconds) */
+    @Nullable
+    public static byte[] readUrlData(
+            @NonNull LintClient client,
+            @NonNull String query,
+            int timeout) throws IOException {
+        URL url = new URL(query);
+
+        URLConnection connection = client.openConnection(url, timeout);
+        if (connection == null) {
+            return null;
+        }
+        try {
+            InputStream is = connection.getInputStream();
+            if (is == null) {
+                return null;
+            }
+            return ByteStreams.toByteArray(is);
+        } finally {
+            client.closeConnection(connection);
+        }
+    }
+
+    /**
+     * Reads the data from the given URL, with an optional timeout (in milliseconds),
+     * and returns it as a UTF-8 encoded String
+     */
+    @Nullable
+    public static String readUrlDataAsString(
+            @NonNull LintClient client,
+            @NonNull String query,
+            int timeout) throws IOException {
+        byte[] bytes = readUrlData(client, query, timeout);
+        if (bytes != null) {
+            return new String(bytes, Charsets.UTF_8);
+        } else {
+            return null;
+        }
     }
 
     @SafeVarargs

@@ -232,7 +232,7 @@ public class ApiLookup {
             return null;
         }
 
-        File cacheDir = client.getCacheDir(true/*create*/);
+        File cacheDir = client.getCacheDir(null, true);
         if (cacheDir == null) {
             cacheDir = xmlFile.getParentFile();
         }

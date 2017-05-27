@@ -34,6 +34,7 @@ import com.android.tools.lint.checks.infrastructure.TestFile.GradleTestFile;
 import com.android.tools.lint.checks.infrastructure.TestFile.JavaTestFile;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.client.api.JarFileIssueRegistry;
+import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.LintListener;
 import com.android.tools.lint.detector.api.Context;
@@ -47,6 +48,7 @@ import com.android.tools.lint.detector.api.Severity;
 import com.android.utils.NullLogger;
 import com.android.utils.Pair;
 import com.android.utils.SdkUtils;
+import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.ObjectArrays;
@@ -56,6 +58,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -100,6 +103,8 @@ public class TestLintTask {
     boolean requireCompileSdk;
     boolean runCompatChecks = true;
     boolean vital;
+    Map<String, byte[]> mockNetworkData;
+    boolean allowNetworkAccess;
 
     /** Creates a new lint test task */
     public TestLintTask() {
@@ -863,6 +868,48 @@ public class TestLintTask {
      */
     public TestLintTask runCompatChecks(boolean runCompatChecks) {
         this.runCompatChecks = runCompatChecks;
+        return this;
+    }
+
+    /**
+     * Provides mock data to feed back to the URL connection if a detector calls
+     * {@link LintClient#openConnection(URL)} and then attempts to read data from
+     * that connection
+     */
+    @NonNull
+    public TestLintTask networkData(@NonNull String url, @NonNull byte[] data) {
+        if (mockNetworkData == null) {
+            mockNetworkData = Maps.newHashMap();
+        }
+        mockNetworkData.put(url, data);
+        return this;
+    }
+
+    /**
+     * Provides mock data to feed back to the URL connection if a detector calls
+     * {@link LintClient#openConnection(URL, int)} and then attempts to read data from
+     * that connection.
+     *
+     * @return this, for constructor chaining
+     */
+    @NonNull
+    public TestLintTask networkData(@NonNull String url, @NonNull String data) {
+        return networkData(url, data.getBytes(Charsets.UTF_8));
+    }
+
+    /**
+     * Normally lint will refuse to access the network (via the
+     * {@link LintClient#openConnection(URL, int)} API; it cannot prevent detectors
+     * from directly access networking libraries on its own). This is because
+     * from tests you normally want to provide mock data instead. If you deliberately
+     * want to access the network (perhaps because you have your own deeper mocking
+     * framework) you can turn this on.
+     *
+     * @param allowNetworkAccess whether network access should be allowed (default is false)
+     * @return this, for constructor chaining
+     */
+    public TestLintTask allowNetworkAccess(boolean allowNetworkAccess) {
+        this.allowNetworkAccess = allowNetworkAccess;
         return this;
     }
 

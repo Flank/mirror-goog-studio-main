@@ -215,7 +215,7 @@ public class ApiLookupTest extends AbstractCheckTest {
         ApiLookup lookup;
 
         // Real cache:
-        mCacheDir = createClient().getCacheDir(true);
+        mCacheDir = createClient().getCacheDir(null, true);
         mLogBuffer.setLength(0);
         lookup = ApiLookup.get(new LookupTestClient());
         assertEquals(11, lookup.getFieldVersion("android/R$attr", "actionMenuTextAppearance"));
@@ -371,8 +371,9 @@ public class ApiLookupTest extends AbstractCheckTest {
 
     private final class LookupTestClient extends ToolsBaseTestLintClient {
         @SuppressWarnings("ResultOfMethodCallIgnored")
+        @Nullable
         @Override
-        public File getCacheDir(boolean create) {
+        public File getCacheDir(@Nullable String name, boolean create) {
             assertNotNull(mCacheDir);
             if (create && !mCacheDir.exists()) {
                 mCacheDir.mkdirs();

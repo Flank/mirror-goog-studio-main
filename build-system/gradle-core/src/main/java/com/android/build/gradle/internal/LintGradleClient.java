@@ -169,16 +169,19 @@ public class LintGradleClient extends LintCliClient {
         return super.getSdkHome();
     }
 
-    @Override
     @Nullable
-    public File getCacheDir(boolean create) {
-        File dir = new File(gradleProject.getRootProject().getBuildDir(),
-                FD_INTERMEDIATES + separator + "lint-cache"); //$NON-NLS-1$
+    @Override
+    public File getCacheDir(@Nullable String name, boolean create) {
+        String relative = FD_INTERMEDIATES + separator + "lint-cache";
+        if (name != null) {
+            relative += File.separator + name;
+        }
+        File dir = new File(gradleProject.getRootProject().getBuildDir(), relative);
         if (dir.exists() || create && dir.mkdirs()) {
             return dir;
         }
 
-        return super.getCacheDir(create);
+        return super.getCacheDir(name, create);
     }
 
     @Override
