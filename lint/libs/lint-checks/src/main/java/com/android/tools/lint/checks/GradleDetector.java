@@ -292,6 +292,28 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             IMPLEMENTATION)
             .addMoreInfo("https://developer.android.com/studio/publish/versioning.html");
 
+    /** Dev mode is no longer relevant */
+    public static final Issue DEV_MODE_OBSOLETE = Issue.create(
+            "DevModeObsolete",
+            "Dev Mode Obsolete",
+            "In the past, our documentation recommended creating a `dev` product flavor with " +
+            "has a minSdkVersion of 21, in order to enable multidexing to speed up builds " +
+            "significantly during development.\n" +
+            "\n" +
+            "That workaround is no longer necessary, and it has some serious downsides, such " +
+            "as breaking API access checking (since the true `minSdkVersion` is no longer " +
+            "known.)\n" +
+            "\n" +
+            "In recent versions of the IDE and the Gradle plugin, the IDE automatically passes " +
+            "the API level of the connected device used for deployment, and if that device " +
+            "is at least API 21, then multidexing is automatically turned on, meaning that " +
+            "you get the same speed benefits as the `dev` product flavor but without the " +
+            "downsides.",
+            Category.PERFORMANCE,
+            2,
+            Severity.WARNING,
+            IMPLEMENTATION);
+
     /** The Gradle plugin ID for Android applications */
     public static final String APP_PLUGIN_ID = "com.android.application";
     /** The Gradle plugin ID for Android libraries */
@@ -335,11 +357,17 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
     protected static boolean isInterestingBlock(
             @NonNull String parent,
             @Nullable String parentParent) {
-        return parent.equals("defaultConfig")
-                || parent.equals("android")
-                || parent.equals("dependencies")
-                || parent.equals("repositories")
-                || parentParent != null && parentParent.equals("buildTypes");
+        switch (parent) {
+            case "defaultConfig":
+            case "android":
+            case "dependencies":
+            case "repositories":
+                return true;
+            case "dev":
+                return "productFlavors".equals(parentParent);
+            default:
+                return "buildTypes".equals(parentParent);
+        }
     }
 
     protected static boolean isInterestingStatement(
@@ -354,16 +382,21 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             @SuppressWarnings("UnusedParameters")
             @NonNull String parent,
             @Nullable String parentParent) {
-        return property.equals("targetSdkVersion")
-                || property.equals("buildToolsVersion")
-                || property.equals("versionName")
-                || property.equals("versionCode")
-                || property.equals("compileSdkVersion")
-                || property.equals("minSdkVersion")
-                || property.equals("applicationIdSuffix")
-                || property.equals("packageName")
-                || property.equals("packageNameSuffix")
-                || parent.equals("dependencies");
+        switch (property) {
+            case "targetSdkVersion":
+            case "buildToolsVersion":
+            case "versionName":
+            case "versionCode":
+            case "compileSdkVersion":
+            case "minSdkVersion":
+            case "applicationIdSuffix":
+            case "packageName":
+            case "packageNameSuffix":
+                //|| ) {
+                return true;
+            default:
+                return parent.equals("dependencies");
+        }
     }
 
     protected void checkOctal(
@@ -576,6 +609,15 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                 String message = "Application ID suffix should probably start with a \".\"";
                 report(context, valueCookie, PATH, message);
             }
+        } else if (property.equals("minSdkVersion")
+                && parent.equals("dev")
+                && "21".equals(value)
+                // Don't flag this error from Gradle; users invoking lint from Gradle may
+                // still want dev mode for command line usage
+                && !LintClient.CLIENT_GRADLE.equals(LintClient.getClientName())) {
+            report(context, statementCookie, DEV_MODE_OBSOLETE,
+                    "You no longer need a `dev` mode to enable multi-dexing during "
+                            + "development, and this can break API version checks");
         }
     }
 

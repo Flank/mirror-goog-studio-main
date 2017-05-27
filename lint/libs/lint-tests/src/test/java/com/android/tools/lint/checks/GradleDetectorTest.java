@@ -23,6 +23,7 @@ import static com.android.tools.lint.checks.GradleDetector.BUNDLED_GMS;
 import static com.android.tools.lint.checks.GradleDetector.COMPATIBILITY;
 import static com.android.tools.lint.checks.GradleDetector.DEPENDENCY;
 import static com.android.tools.lint.checks.GradleDetector.DEPRECATED;
+import static com.android.tools.lint.checks.GradleDetector.DEV_MODE_OBSOLETE;
 import static com.android.tools.lint.checks.GradleDetector.GRADLE_GETTER;
 import static com.android.tools.lint.checks.GradleDetector.GRADLE_PLUGIN_COMPATIBILITY;
 import static com.android.tools.lint.checks.GradleDetector.HIGH_APP_VERSION_CODE;
@@ -1864,6 +1865,34 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 return target;
             }
         };
+    }
+
+    public void testDevVariantNotNeeded() {
+        String expected = ""
+                + "build.gradle:9: Warning: You no longer need a dev mode to enable multi-dexing during development, and this can break API version checks [DevModeObsolete]\n"
+                + "            minSdkVersion 21\n"
+                + "            ~~~~~~~~~~~~~~~~\n"
+                + "0 errors, 1 warnings\n";
+        lint().files(
+                gradle(""
+                        + "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    productFlavors {\n"
+                        + "        // When building a variant that uses this flavor, the following configurations\n"
+                        + "        // override those in the defaultConfig block.\n"
+                        + "        dev {\n"
+                        + "            // To avoid using legacy multidex, set minSdkVersion to 21 or higher.\n"
+                        + "            minSdkVersion 21\n"
+                        + "            versionNameSuffix \"-dev\"\n"
+                        + "            applicationIdSuffix '.dev'\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}\n"))
+                .issues(DEV_MODE_OBSOLETE)
+                .incremental()
+                .run()
+                .expect(expected);
     }
 
     // -------------------------------------------------------------------------------------------
