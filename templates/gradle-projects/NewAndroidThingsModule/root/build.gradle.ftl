@@ -55,12 +55,12 @@ android {
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    androidTestCompile('com.android.support.test.espresso:espresso-core:${espressoVersion!"+"}', {
+    ${getConfigurationName("compile")} fileTree(dir: 'libs', include: ['*.jar'])
+    ${getConfigurationName("androidTestCompile")} ('com.android.support.test.espresso:espresso-core:${espressoVersion!"+"}', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
-    provided 'com.google.android.things:androidthings:+'
+    ${getConfigurationName("provided")} 'com.google.android.things:androidthings:+'
 <#if includeKotlinSupport!false>
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
+    ${getConfigurationName("compile")} "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
 </#if>
 }
