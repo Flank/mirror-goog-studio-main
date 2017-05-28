@@ -2307,20 +2307,30 @@ public class SupportAnnotationDetector extends Detector implements UastScanner {
 
             UCallExpression initializerExpression = (UCallExpression) allowed;
             List<UExpression> initializers = initializerExpression.getValueArguments();
+            PsiElement psiValue = null;
+            if (value instanceof PsiElement) {
+                psiValue = (PsiElement)value;
+            }
+
             for (UExpression expression : initializers) {
                 if (expression instanceof ULiteralExpression) {
                     if (value.equals(((ULiteralExpression)expression).getValue())) {
                         return;
                     }
+                } else if (psiValue == null) {
+                    // We're checking here such that we can assume psiValue is not null
+                    // below
+                    //noinspection UnnecessaryContinue
+                    continue;
                 } else if (expression instanceof ExternalReferenceExpression) {
                     PsiElement resolved = UastLintUtils.resolve(
                             (ExternalReferenceExpression) expression, argument);
-                    if (resolved != null && resolved.equals(value)) {
+                    if (resolved != null && resolved.isEquivalentTo(psiValue)) {
                         return;
                     }
                 } else if (expression instanceof UReferenceExpression) {
                     PsiElement resolved = ((UReferenceExpression) expression).resolve();
-                    if (resolved != null && resolved.equals(value)) {
+                    if (resolved != null && resolved.isEquivalentTo(psiValue)) {
                         return;
                     }
                 }
@@ -2343,28 +2353,6 @@ public class SupportAnnotationDetector extends Detector implements UastScanner {
                 return;
             }
 
-            String LINT_TRACE_TYPEDEF_ERRORS = "LINT_TRACE_TYPEDEF_ERRORS";
-            if (System.getenv(LINT_TRACE_TYPEDEF_ERRORS) != null ||
-                    System.getProperty(LINT_TRACE_TYPEDEF_ERRORS) != null) {
-                StringBuilder sb = new StringBuilder();
-                sb.append("Lint: Found typedef error:\n");
-                sb.append("Lint:  value=").append(value).append("\n");
-                sb.append("Lint:  argument=").append(argument).append("\n");
-                sb.append("Lint:  argument.class=").append(argument.getClass()).append("\n");
-                sb.append("Lint:  allowed=");
-                sb.append(listAllowedValues(argument, initializers));
-                sb.append("\n");
-                sb.append("Lint:  allowed.details=");
-                for (UExpression allowedValue : initializers) {
-                    sb.append(allowedValue.toString());
-                    sb.append(":");
-                    sb.append(allowedValue.getClass());
-                    sb.append("; ");
-                }
-                sb.append("\n");
-
-                context.getClient().log(Severity.INFORMATIONAL, null, sb.toString());
-            }
             reportTypeDef(context, argument, errorNode, flag,
                     initializers, allAnnotations);
         }

@@ -511,6 +511,25 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                 ));
     }
 
+    public void testTypeDef37324044() {
+        // Regression test for issue 37324044
+        lint().files(
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "import java.util.Calendar;\n"
+                        + "\n"
+                        + "public class IntDefTest {\n"
+                        + "    public void test() {\n"
+                        + "        Calendar.getInstance().get(Calendar.DAY_OF_MONTH);\n"
+                        + "    }\n"
+                        + "}\n"),
+                mSupportClasspath,
+                mSupportJar)
+                .run()
+                .expectClean();
+    }
+
     public void testColorInt() throws Exception {
         // Needs updated annotations!
         assertEquals((SDK_ANNOTATIONS_AVAILABLE ? ""

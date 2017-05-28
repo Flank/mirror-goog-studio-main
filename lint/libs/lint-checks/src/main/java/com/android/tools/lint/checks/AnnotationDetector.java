@@ -91,7 +91,6 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import org.jetbrains.uast.UAnnotation;
 import org.jetbrains.uast.UCallExpression;
@@ -935,14 +934,7 @@ public class AnnotationDetector extends Detector implements UastScanner {
 
     private static boolean removeFieldFromList(@NonNull List<Object> fields,
             @NonNull PsiField resolvedField) {
-        ListIterator<Object> iterator = fields.listIterator();
-        String resolvedName = resolvedField.getName();
-        PsiClass resolvedCls = resolvedField.getContainingClass();
-        String resolvedClsName = resolvedCls != null ?
-                resolvedCls.getQualifiedName() : null;
-        while (iterator.hasNext()) {
-            Object field = iterator.next();
-
+        for (Object field : fields) {
             // We can't just call .equals here because the annotation
             // we are comparing against may be either a PsiFieldImpl
             // (for a local annotation) or a ClsFieldImpl (for an annotation
@@ -953,17 +945,7 @@ public class AnnotationDetector extends Detector implements UastScanner {
                 continue;
             }
             PsiField candidateField = (PsiField) field;
-            if (resolvedName != null
-                    && !resolvedName.equals(candidateField.getName())) {
-                continue;
-            }
-            PsiClass candidateCls = candidateField.getContainingClass();
-            if (candidateCls == null) {
-                continue;
-            }
-            if (Objects.equals(resolvedClsName,
-                    candidateCls.getQualifiedName())) {
-                iterator.remove();
+            if (candidateField.isEquivalentTo(resolvedField)) {
                 return true;
             }
         }
