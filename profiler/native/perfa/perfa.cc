@@ -236,11 +236,6 @@ void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni) {
       jni, "com/android/tools/profiler/support/network/HttpTracker$Connection",
       "onError", "(JLjava/lang/String;)V");
 
-  BindJNIMethod(jni, "com/android/tools/profiler/support/memory/VmStatsSampler",
-                "logAllocStats", "(II)V");
-  BindJNIMethod(jni, "com/android/tools/profiler/support/memory/VmStatsSampler",
-                "logGcStats", "()V");
-
   BindJNIMethod(
       jni, "com/android/tools/profiler/support/event/InputConnectionWrapper",
       "sendKeyboardEvent", "(Ljava/lang/String;)V");
