@@ -1818,7 +1818,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 .sdkHome(getMockSupportLibraryInstallation())
                 .run()
                 .expect(""
-                        + "build.gradle:13: Error: When using support library 26.0.0-beta1 or higher, the compileSdkVersion must be the O SDK (revision 2) or higher (was 26) [GradleCompatible]\n"
+                        + "build.gradle:13: Error: When using a compileSdkVersion android-O revision 2 or higher, the support library version should be 26.0.0-beta1 or higher (was 26.0.0-alpha1) [GradleCompatible]\n"
                         + "    compile 'com.android.support:appcompat-v7:26.0.0-alpha1'\n"
                         + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings\n");
