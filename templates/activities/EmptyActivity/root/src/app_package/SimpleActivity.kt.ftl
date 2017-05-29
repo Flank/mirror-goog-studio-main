@@ -3,7 +3,7 @@ package ${packageName}
 import ${superClassFqcn}
 import android.os.Bundle
 <#if includeCppSupport!false>
-import android.widget.TextView
+import kotlinx.android.synthetic.main.${layoutName}.*
 </#if>
 
 class ${activityClass} : ${superClass}() {

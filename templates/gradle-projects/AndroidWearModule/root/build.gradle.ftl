@@ -1,8 +1,10 @@
+<#import "root://activities/common/kotlin_macros.ftl" as kt>
 <#if isLibraryProject?? && isLibraryProject>
 apply plugin: 'com.android.library'
 <#else>
 apply plugin: 'com.android.application'
 </#if>
+<@kt.addKotlinPlugins />
 
 android {
     compileSdkVersion <#if buildApiString?matches("^\\d+$")>${buildApiString}<#else>'${buildApiString}'</#if>
@@ -34,4 +36,5 @@ android {
 
 dependencies {
     ${getConfigurationName("compile")} fileTree(dir: 'libs', include: ['*.jar'])
+    <@kt.addKotlinDependencies />
 }

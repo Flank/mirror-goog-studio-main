@@ -25,9 +25,15 @@
     <instantiate from="root/res/layout/blank_activity.xml.ftl"
             to="${escapeXmlAttribute(resOut)}/layout/${layoutName}.xml" />
 
+<#if generateKotlin>
+    <instantiate from="root/src/app_package/BlankActivity.kt.ftl"
+                   to="${escapeXmlAttribute(srcOut)}/${activityClass}.kt" />
+    <open file="${escapeXmlAttribute(srcOut)}/${activityClass}.kt" />
+<#else>
     <instantiate from="root/src/app_package/BlankActivity.java.ftl"
                    to="${escapeXmlAttribute(srcOut)}/${activityClass}.java" />
-
     <open file="${escapeXmlAttribute(srcOut)}/${activityClass}.java" />
+</#if>
+
     <open file="${escapeXmlAttribute(resOut)}/layout/${layoutName}.xml" />
 </recipe>

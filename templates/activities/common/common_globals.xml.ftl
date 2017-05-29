@@ -61,6 +61,5 @@
     <global id="simpleName" value="${activityToLayout(activityClass!'')}" />
     <global id="relativePackage" value="<#if relativePackage?has_content>${relativePackage}<#else>${packageName}</#if>" />
     <global id="generateKotlin" type="boolean"
-            value="${(((includeKotlinSupport!false) || (language!'Java')?string == 'Kotlin')
-                   && !(buildApi == 26 && (buildApiRevision!0) != 1))?string}" />
+            value="${(((includeKotlinSupport!false) || (language!'Java')?string == 'Kotlin'))?string}" />
 </globals>
