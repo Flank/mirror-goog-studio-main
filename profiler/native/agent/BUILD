@@ -1,6 +1,7 @@
 cc_binary(
     name = "libsupportjni.so",
     linkshared = 1,
+    visibility = ["//visibility:public"],
     deps = [
         ":agent",
     ],

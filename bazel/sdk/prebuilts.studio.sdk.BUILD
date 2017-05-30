@@ -14,6 +14,18 @@ filegroup(
     visibility = ["//visibility:public"],
 )
 
+java_import(
+    name = "dxlib-preview",
+    jars = glob(["*/build-tools/26.0.0-rc1/lib/dx.jar"]),
+)
+
+java_binary(
+    name = "dx-preview",
+    main_class = "com.android.dx.command.Main",
+    visibility = ["//visibility:public"],
+    runtime_deps = [":dxlib-preview"],
+)
+
 filegroup(
     name = "build-tools/latest",
     srcs = [":build-tools/25.0.2"],
@@ -167,6 +179,7 @@ java_import(
     visibility = [
         "//tools/base/build-system/instant-run-instrumentation:__pkg__",
         "//tools/base/instant-run/instant-run-server:__pkg__",
+        "//tools/base/profiler/app:__pkg__",
     ],
 )
 
