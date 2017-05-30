@@ -1,4 +1,4 @@
-apply plugin: 'java-library'
+apply plugin: 'java'
 
 dependencies {
     ${getConfigurationName("compile")} fileTree(dir: 'libs', include: ['*.jar'])
