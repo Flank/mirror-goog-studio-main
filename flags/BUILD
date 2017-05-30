@@ -4,9 +4,9 @@ iml_module(
     name = "studio.flags",
     srcs = ["src/main/java"],
     tags = ["managed"],
-    test_resources = ["src/test/resources"],
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
+    # do not sort: must match IML order
     deps = [
         "//tools/base/annotations:studio.android-annotations[module]",
         "//tools/idea/.idea/libraries:Guava[test]",

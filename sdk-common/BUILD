@@ -5,8 +5,8 @@ load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 iml_module(
     name = "studio.sdk-common",
     srcs = ["src/main/java"],
-    tags = ["managed"],
     resources = ["src/main/resources"],
+    tags = ["managed"],
     test_resources = ["src/test/resources"],
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],
@@ -18,7 +18,6 @@ iml_module(
         "//tools/base/sdklib:studio.sdklib",
         "//tools/idea/.idea/libraries:kxml2",
         "//tools/idea/.idea/libraries:gson",
-        "//tools/idea/.idea/libraries:KotlinJavaRuntime",
     ],
     # do not sort: must match IML order
     deps = [
@@ -42,8 +41,8 @@ iml_module(
 kotlin_library(
     name = "tools.sdk-common",
     srcs = ["src/main/java"],
-    resources = glob(["src/main/resources/**"]),
     pom = ":pom",
+    resources = glob(["src/main/resources/**"]),
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/annotations",
@@ -98,7 +97,6 @@ java_test(
     test_class = "com.android.testutils.JarTestSuite",
     runtime_deps = [
         ":tools.testlib",
-
         # TODO: These dependencies should NOT be required, but they are for now...
         ":tools.sdk-common",
         "//tools/base/annotations",
