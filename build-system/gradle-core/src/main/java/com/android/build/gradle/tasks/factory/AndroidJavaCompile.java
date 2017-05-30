@@ -16,13 +16,26 @@
 
 package com.android.build.gradle.tasks.factory;
 
+import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
+import com.android.builder.profile.ProcessProfileWriter;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.FileUtils;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
+import com.google.wireless.android.sdk.stats.AnnotationProcessorInfo;
+import com.google.wireless.android.sdk.stats.GradleBuildVariant;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.util.List;
 import org.gradle.api.JavaVersion;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.CacheableTask;
+import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs;
@@ -36,6 +49,15 @@ public class AndroidJavaCompile extends JavaCompile {
     InstantRunBuildContext mInstantRunBuildContext;
 
     File annotationProcessorOutputFolder;
+
+    FileCollection processorListFile;
+
+    String variantName;
+
+    @InputFiles
+    public FileCollection getProcessorListFile() {
+        return processorListFile;
+    }
 
     @OutputDirectory
     public File getAnnotationProcessorOutputFolder() {
@@ -55,12 +77,35 @@ public class AndroidJavaCompile extends JavaCompile {
             }
         }
 
+        processAnalytics();
+
         // Create directory for output of annotation processor.
         FileUtils.mkdirs(annotationProcessorOutputFolder);
 
         mInstantRunBuildContext.startRecording(InstantRunBuildContext.TaskType.JAVAC);
         super.compile(inputs);
         mInstantRunBuildContext.stopRecording(InstantRunBuildContext.TaskType.JAVAC);
+    }
+
+    /** Read the processorListFile to add annotation processors used to analytics. */
+    @VisibleForTesting
+    void processAnalytics() {
+        Gson gson = new GsonBuilder().create();
+        List<String> classNames;
+        try (FileReader reader = new FileReader(processorListFile.getSingleFile())) {
+            classNames = gson.fromJson(reader, new TypeToken<List<String>>() {}.getType());
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+
+        String projectPath = getProject().getPath();
+        GradleBuildVariant.Builder variant =
+                ProcessProfileWriter.getOrCreateVariant(projectPath, variantName);
+        for (String processorName : classNames) {
+            AnnotationProcessorInfo.Builder builder = AnnotationProcessorInfo.newBuilder();
+            builder.setSpec(processorName);
+            variant.addAnnotationProcessors(builder);
+        }
     }
 
     private boolean isPostN() {

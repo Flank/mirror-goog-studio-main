@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.tasks;
+package com.android.build.gradle.tasks.factory;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -35,8 +35,8 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-/** Test for ProcessAnalyticsTask */
-public class ProcessAnalyticsTaskTest {
+/** Test for AndroidJavaCompileTest. */
+public class AndroidJavaCompileTest {
     private static final String VARIANT_NAME = "variant";
 
     @ClassRule public static TemporaryFolder temporaryFolder = new TemporaryFolder();
@@ -52,11 +52,12 @@ public class ProcessAnalyticsTaskTest {
 
     @Test
     public void processAnalyticsEmptyList() throws IOException {
-        ProcessAnalyticsTask task = project.getTasks().create("test", ProcessAnalyticsTask.class);
+        AndroidJavaCompile task = project.getTasks().create("test", AndroidJavaCompile.class);
 
         File inputFile = temporaryFolder.newFile();
         Files.write(inputFile.toPath(), "[]".getBytes("utf-8"));
-        task.init(VARIANT_NAME, project.files(inputFile));
+        task.variantName = VARIANT_NAME;
+        task.processorListFile = project.files(inputFile);
 
         task.processAnalytics();
 
@@ -66,11 +67,12 @@ public class ProcessAnalyticsTaskTest {
 
     @Test
     public void processAnalyticsMultipleProcessors() throws IOException {
-        ProcessAnalyticsTask task = project.getTasks().create("test", ProcessAnalyticsTask.class);
+        AndroidJavaCompile task = project.getTasks().create("test", AndroidJavaCompile.class);
 
         File inputFile = temporaryFolder.newFile();
         Files.write(inputFile.toPath(), "[\"processor1\", \"processor2\"]".getBytes("utf-8"));
-        task.init(VARIANT_NAME, project.files(inputFile));
+        task.variantName = VARIANT_NAME;
+        task.processorListFile = project.files(inputFile);
         task.processAnalytics();
         Collection<String> processorNames = getProcessorList();
         assertThat(processorNames).containsExactly("processor1", "processor2");
