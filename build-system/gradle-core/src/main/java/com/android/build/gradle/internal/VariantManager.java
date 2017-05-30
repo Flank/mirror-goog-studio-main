@@ -580,48 +580,12 @@ public class VariantManager implements VariantModel {
                     });
         }
 
-        // default is created by the java base plugin, so mark it as not consumable here.
-        if (!Boolean.TRUE.equals(projectOptions.get(BooleanOption.IDE_BUILD_MODEL_ONLY))) {
-            project.getConfigurations().getByName("default").setCanBeConsumed(false);
-        }
-
         AttributesSchema schema = dependencies.getAttributesSchema();
-        // default configure attribute resolution for the build type attribute
-        schema.attribute(BuildTypeAttr.ATTRIBUTE).getCompatibilityRules().assumeCompatibleWhenMissing();
-        // and for the Usage attribute
-        schema.attribute(Usage.USAGE_ATTRIBUTE).getCompatibilityRules().assumeCompatibleWhenMissing();
         // type for aar vs split.
         final AttributeMatchingStrategy<AndroidTypeAttr> androidTypeAttrStrategy =
                 schema.attribute(AndroidTypeAttr.ATTRIBUTE);
-        androidTypeAttrStrategy.getCompatibilityRules().assumeCompatibleWhenMissing();
         androidTypeAttrStrategy.getCompatibilityRules().add(AndroidTypeAttrCompatRule.class);
         androidTypeAttrStrategy.getDisambiguationRules().add(AndroidTypeAttrDisambRule.class);
-
-        // variant name as an attribute, this is to get the variant name on the consumption side.
-        schema.attribute(VariantAttr.ATTRIBUTE)
-                .getCompatibilityRules()
-                .assumeCompatibleWhenMissing();
-
-        // same for flavors, both for user-declared flavors and for attributes created from
-        // absent flavor matching
-        // First gather the list of attributes
-        final Set<Attribute<ProductFlavorAttr>> dimensionAttributes = new HashSet<>();
-
-        List<String> flavorDimensionList = extension.getFlavorDimensionList();
-        if (flavorDimensionList != null) {
-            for (String dimension : flavorDimensionList) {
-                dimensionAttributes.add(Attribute.of(dimension, ProductFlavorAttr.class));
-            }
-        }
-
-        // this already contains the attribute name rather than just the dimension name.
-        dimensionAttributes.addAll(extension.getFlavorSelection().keySet());
-
-        // then set a default resolution strategy. It's fine if an attribute in the consumer is
-        // missing from the producer
-        for (Attribute<ProductFlavorAttr> dimensionAttribute : dimensionAttributes) {
-            schema.attribute(dimensionAttribute).getCompatibilityRules().assumeCompatibleWhenMissing();
-        }
     }
 
     private static final class AndroidTypeAttrCompatRule

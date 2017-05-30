@@ -16,10 +16,13 @@
 
 package com.android.build.gradle.integration.dependencies;
 
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
+import com.android.builder.model.SyncIssue;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import java.io.IOException;
@@ -70,6 +73,11 @@ public class BuildTypeMismatchTest {
 
     @Test
     public void checkModel() throws IOException {
-        GetAndroidModelAction.ModelContainer<AndroidProject> models = project.model().getMulti();
+        GetAndroidModelAction.ModelContainer<AndroidProject> models =
+                project.model().ignoreSyncIssues().getMulti();
+
+        AndroidProject appModel = models.getModelMap().get(":app");
+        assertThat(appModel)
+                .hasSingleIssue(SyncIssue.SEVERITY_ERROR, SyncIssue.TYPE_UNRESOLVED_DEPENDENCY);
     }
 }

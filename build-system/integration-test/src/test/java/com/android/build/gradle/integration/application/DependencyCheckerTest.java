@@ -51,7 +51,7 @@ public class DependencyCheckerTest {
         // TODO: this error message seems broken as it doesn't include the reason if the rejection.
         assertThat(result.getFailureMessage())
                 .isEqualTo(
-                        "Could not resolve all dependencies for configuration ':debugCompileClasspath'.");
+                        "Could not resolve all files for configuration ':debugCompileClasspath'.");
 
         // FIXME we should also check the model, but due to lack of leniency, it's not possible right now.
         //
