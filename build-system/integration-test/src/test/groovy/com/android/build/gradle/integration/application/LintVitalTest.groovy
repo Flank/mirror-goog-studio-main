@@ -62,6 +62,15 @@ android {
     }
 
     @Test
+    public void runningLintSkipLintVital() {
+        GradleBuildResult result =
+                project.executor().expectFailure().run("lint");
+        assertThat(result.getFailureMessage()).contains("Lint found errors");
+        TruthHelper.assertThat(result.getTask(":lintVitalRelease")).wasSkipped();
+        TruthHelper.assertThat(result.getTask(":lint")).failed();
+    }
+
+    @Test
     public void fatalLintCheckFailsBuild() {
         GradleBuildResult result =
                 project.executor().expectFailure().run("assembleRelease");

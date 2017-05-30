@@ -192,7 +192,6 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import groovy.lang.Closure;
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
@@ -203,7 +202,6 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
@@ -213,7 +211,6 @@ import org.gradle.api.artifacts.ConfigurationVariant;
 import org.gradle.api.artifacts.PublishArtifact;
 import org.gradle.api.attributes.Attribute;
 import org.gradle.api.attributes.AttributeContainer;
-import org.gradle.api.execution.TaskExecutionGraph;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.LogLevel;
@@ -1713,6 +1710,13 @@ public abstract class TaskManager {
         variantLintCheck.dependsOn(tasks, LINT_COMPILE, scope.getJavacTask());
     }
 
+    /** Returns the full path of a task given its name. */
+    private String getTaskPath(String taskName) {
+        return project.getRootProject() == project
+                ? ':' + taskName
+                : project.getPath() + ':' + taskName;
+    }
+
     private void maybeCreateLintVitalTask(
             @NonNull TaskFactory tasks, @NonNull ApkVariantData variantData) {
         if (variantData.getVariantConfiguration().getBuildType().isDebuggable()
@@ -1731,7 +1735,7 @@ public abstract class TaskManager {
                 .getTaskGraph()
                 .whenReady(
                         taskGraph -> {
-                            if (taskGraph.hasTask(LINT)) {
+                            if (taskGraph.hasTask(getTaskPath(LINT))) {
                                 project.getTasks()
                                         .getByName(lintReleaseCheck.getName())
                                         .setEnabled(false);
@@ -1822,20 +1826,18 @@ public abstract class TaskManager {
         //TODO: move to mustRunAfter once is stable.
         if (!reportTasks.isEmpty() && project.getGradle().getStartParameter()
                 .isContinueOnFailure()) {
-            project.getGradle().getTaskGraph().whenReady(new Closure<Void>(this, this) {
-                public void doCall(TaskExecutionGraph taskGraph) {
-                    for (String reportTask : reportTasks) {
-                        if (taskGraph.hasTask(reportTask)) {
-                            tasks.named(reportTask, new Action<Task>() {
-                                @Override
-                                public void execute(Task task) {
-                                    ((AndroidReportTask) task).setWillRun();
+            project.getGradle()
+                    .getTaskGraph()
+                    .whenReady(
+                            taskGraph -> {
+                                for (String reportTask : reportTasks) {
+                                    if (taskGraph.hasTask(getTaskPath(reportTask))) {
+                                        tasks.named(
+                                                reportTask,
+                                                task -> ((AndroidReportTask) task).setWillRun());
+                                    }
                                 }
                             });
-                        }
-                    }
-                }
-            });
         }
     }
 
