@@ -47,6 +47,8 @@ import com.android.build.gradle.internal.transforms.InstantRunSliceSplitApkBuild
 import com.android.build.gradle.internal.variant.ApplicationVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
+import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.AndroidJarTask;
 import com.android.builder.core.AndroidBuilder;
@@ -365,7 +367,8 @@ public class ApplicationTaskManager extends TaskManager {
                             AaptGeneration.fromProjectOptions(projectOptions),
                             packagingScope.getAaptOptions(),
                             new File(packagingScope.getInstantRunSplitApkOutputFolder(), "slices"),
-                            packagingScope.getInstantRunSupportDir());
+                            packagingScope.getInstantRunSupportDir(),
+                            globalScope.getProjectOptions().get(OptionalBooleanOption.SERIAL_AAPT2));
 
             Optional<AndroidTask<TransformTask>> transformTaskAndroidTask = variantScope
                     .getTransformManager().addTransform(tasks, variantScope, slicesApkBuilder);
