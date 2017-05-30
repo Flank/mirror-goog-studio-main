@@ -135,9 +135,8 @@ java_binary(
 
 java_library(
     name = "maven",
-    srcs = glob(["src/**/maven/*.java"]),
+    srcs = glob(["src/com/android/tools/maven/**/*.java"]),
     deps = [
-        ":utils",
         "//tools/base/third_party:com.google.code.findbugs_jsr305",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:org.apache.maven_maven-aether-provider",
@@ -148,55 +147,93 @@ java_library(
 
 java_binary(
     name = "pom_generator",
+    srcs = ["src/com/android/tools/binaries/PomGenerator.java"],
     jvm_flags = ["-Xmx1g"],
-    main_class = "com.android.tools.maven.PomGenerator",
+    main_class = "com.android.tools.binaries.PomGenerator",
     visibility = ["//visibility:public"],
     runtime_deps = [
-        ":maven",
         "//prebuilts/tools/common/m2/repository/org/slf4j/slf4j-simple/1.7.2:jar",
+    ],
+    deps = [
+        ":maven",
+        "//tools/base/third_party:com.google.guava_guava",
+        "//tools/base/third_party:org.apache.maven_maven-aether-provider",
     ],
 )
 
 java_binary(
     name = "repo_builder",
-    main_class = "com.android.tools.maven.RepoBuilder",
+    srcs = ["src/com/android/tools/binaries/RepoBuilder.java"],
+    main_class = "com.android.tools.binaries.RepoBuilder",
     visibility = ["//visibility:public"],
     runtime_deps = [
-        ":maven",
         "//prebuilts/tools/common/m2/repository/org/slf4j/slf4j-simple/1.7.2:jar",
+    ],
+    deps = [
+        ":maven",
+        ":utils",
+        "//tools/base/third_party:com.google.guava_guava",
+        "//tools/base/third_party:org.apache.maven_maven-aether-provider",
     ],
 )
 
 # See README.md
 java_binary(
     name = "java_import_generator",
-    main_class = "com.android.tools.maven.JavaImportGenerator",
+    srcs = ["src/com/android/tools/binaries/JavaImportGenerator.java"],
+    main_class = "com.android.tools.binaries.JavaImportGenerator",
     visibility = ["//visibility:public"],
     runtime_deps = [
-        ":maven",
         "//prebuilts/tools/common/m2/repository/org/slf4j/slf4j-simple/1.7.2:jar",
+    ],
+    deps = [
+        ":maven",
+        ":utils",
+        "//tools/base/third_party:com.google.code.findbugs_jsr305",
+        "//tools/base/third_party:com.google.guava_guava",
+        "//tools/base/third_party:org.apache.maven_maven-aether-provider",
     ],
 )
 
 # See README.md
 java_binary(
     name = "third_party_build_generator",
-    main_class = "com.android.tools.maven.ThirdPartyBuildGenerator",
+    srcs = [
+        "src/com/android/tools/binaries/JavaImportGenerator.java",
+        "src/com/android/tools/binaries/ThirdPartyBuildGenerator.java",
+    ],
+    main_class = "com.android.tools.binaries.ThirdPartyBuildGenerator",
     visibility = ["//visibility:public"],
     runtime_deps = [
-        ":maven",
         "//prebuilts/tools/common/m2/repository/org/slf4j/slf4j-simple/1.7.2:jar",
+    ],
+    deps = [
+        ":maven",
+        ":utils",
+        "//tools/base/third_party:com.google.code.findbugs_jsr305",
+        "//tools/base/third_party:com.google.guava_guava",
+        "//tools/base/third_party:org.apache.maven_maven-aether-provider",
     ],
 )
 
 # See README.md
 java_binary(
     name = "add_dependency",
-    main_class = "com.android.tools.maven.AddDependency",
+    srcs = [
+        "src/com/android/tools/binaries/AddDependency.java",
+        "src/com/android/tools/binaries/JavaImportGenerator.java",
+    ],
+    main_class = "com.android.tools.binaries.AddDependency",
     visibility = ["//visibility:public"],
     runtime_deps = [
-        ":maven",
         "//prebuilts/tools/common/m2/repository/org/slf4j/slf4j-simple/1.7.2:jar",
+    ],
+    deps = [
+        ":maven",
+        ":utils",
+        "//tools/base/third_party:com.google.code.findbugs_jsr305",
+        "//tools/base/third_party:com.google.guava_guava",
+        "//tools/base/third_party:org.apache.maven_maven-aether-provider",
     ],
 )
 

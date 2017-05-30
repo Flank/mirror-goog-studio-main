@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package com.android.tools.maven;
+package com.android.tools.binaries;
 
+import com.android.tools.maven.MavenRepository;
 import com.android.tools.utils.Zipper;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;

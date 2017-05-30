@@ -22,7 +22,7 @@ import org.eclipse.aether.version.Version;
  *
  * <p>It also makes sure that explicitly requested dependencies end up using the versions requested.
  */
-class HighestVersionSelector extends VersionSelector {
+public class HighestVersionSelector extends VersionSelector {
 
     private static final Ordering<ConflictResolver.ConflictItem> VERSION_ORDERING =
             Ordering.natural().onResultOf(HighestVersionSelector::getVersion);

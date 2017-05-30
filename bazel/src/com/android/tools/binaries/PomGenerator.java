@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package com.android.tools.maven;
+package com.android.tools.binaries;
 
+import com.android.tools.maven.MavenCoordinates;
 import com.google.common.base.Splitter;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -82,6 +83,7 @@ public class PomGenerator {
         String group = null;
         String artifact = null;
         String version = null;
+        boolean export = false;
         Iterator<String> it = args.iterator();
         while (it.hasNext()) {
             String arg = it.next();
@@ -104,19 +106,39 @@ public class PomGenerator {
                 version = it.next();
             } else if (arg.equals("--exclusion")) {
                 exclusions.putAll(it.next(), Splitter.on(',').split(it.next()));
+            } else if (arg.equals("-x")) {
+                export = true;
             }
         }
         if (out == null) {
             System.err.println("Output file must be specified.");
             return;
         }
-        generatePom(in, out, deps, group, artifact, version);
+        generatePom(in, out, deps, group, artifact, version, export);
     }
 
-    private void generatePom(File in, File out, List<File> pomDependencies, String group,
-            String artifact, String version) throws Exception {
-        // Avoid any manipulation if it is a copy:
-        if (in != null && out != null && pomDependencies == null && group == null && artifact == null && version == null) {
+    /**
+     * Writes the pom file in {@code out}, based on {@code in}. If there are no attributes to modify
+     * from the original file, or if the {@code export} flag is forced, then the file input file is
+     * copied as-is.
+     */
+    private void generatePom(
+            File in,
+            File out,
+            List<File> pomDependencies,
+            String group,
+            String artifact,
+            String version,
+            boolean export)
+            throws Exception {
+        // Avoid any manipulation if it is an export:
+        if ((in != null
+                        && out != null
+                        && pomDependencies == null
+                        && group == null
+                        && artifact == null
+                        && version == null)
+                || export) {
             Files.copy(in.toPath(), out.toPath());
             return;
         }

@@ -76,6 +76,8 @@ def _maven_pom_impl(ctx):
   # Output file
   args += ["-o", ctx.outputs.pom.path]
 
+  args += ["-x"] if ctx.attr.export_pom else []
+
   # Overrides
   if ctx.attr.group:
     args += ["--group", ctx.attr.group]
@@ -123,6 +125,7 @@ maven_pom = rule(
     "library": attr.label(
         allow_files = True
     ),
+    "export_pom": attr.label(),
     "classifiers": attr.string_list(
       default = [],
     ),
@@ -202,6 +205,7 @@ def maven_java_library(name,
     library = export_artifact if export_artifact else name,
     visibility = visibility,
     source = explicit_target(export_artifact) + "_maven" if export_artifact else pom,
+    export_pom = explicit_target(export_artifact) + "_maven" if export_artifact else None,
   )
 
 # A java_import rule extended with pom and parent attributes for maven libraries.
