@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <recipe>
     <mkdir at="${escapeXmlAttribute(projectOut)}/libs" />
+    <mkdir at="${escapeXmlAttribute(resOut)}/drawable" />
 
     <merge from="root/settings.gradle.ftl"
              to="${escapeXmlAttribute(topOut)}/settings.gradle" />
