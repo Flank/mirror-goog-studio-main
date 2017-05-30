@@ -27,9 +27,6 @@ import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.Dex;
 import com.android.testutils.apk.Zip;
 import com.android.utils.FileUtils;
-import com.android.utils.SdkUtils;
-import com.google.common.base.Splitter;
-import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
@@ -188,10 +185,7 @@ public class BytecodeGenerationHooksTest {
 
     private static void checkDependencies(
             GradleBuildResult result, String prefix, boolean exactly, String... dependencies) {
-        String stdout = result.getStdout();
-        Iterable<String> stdoutlines =
-                Splitter.on(SdkUtils.getLineSeparator()).omitEmptyStrings().split(stdout);
-        List<String> lines = Lists.newArrayList(stdoutlines);
+        List<String> lines = result.getStdoutAsLines();
 
         lines =
                 lines.stream()
@@ -218,10 +212,7 @@ public class BytecodeGenerationHooksTest {
 
     private static void checkSourceFolders(
             GradleBuildResult result, String prefix, String... dependencies) {
-        String stdout = result.getStdout();
-        Iterable<String> stdoutlines =
-                Splitter.on(SdkUtils.getLineSeparator()).omitEmptyStrings().split(stdout);
-        List<String> lines = Lists.newArrayList(stdoutlines);
+        List<String> lines = result.getStdoutAsLines();
 
         lines =
                 lines.stream()

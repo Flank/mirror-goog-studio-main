@@ -138,10 +138,9 @@ public class FlavorsTest {
                 assertThat(androidArtifact.getMultiFlavorSourceProvider())
                         .named("MultiFlavor SourceProvider for " + androidArtifact.getName())
                         .isNotNull();
-                // No per-variant source providers for android tests.
                 assertThat(androidArtifact.getVariantSourceProvider())
                         .named("Variant SourceProvider for " + androidArtifact.getName())
-                        .isNull();
+                        .isNotNull();
             }
         }
     }

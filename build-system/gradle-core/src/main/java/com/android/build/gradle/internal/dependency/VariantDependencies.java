@@ -255,7 +255,7 @@ public class VariantDependencies {
             compileAttributes.attribute(AndroidTypeAttr.ATTRIBUTE, consumeType);
 
             Configuration annotationProcessor =
-                    configurations.maybeCreate("_" + variantName + "AnnotationProcessor");
+                    configurations.maybeCreate(variantName + "AnnotationProcessorClasspath");
             annotationProcessor.setVisible(false);
             annotationProcessor.setDescription("Resolved configuration for annotation-processor for variant: " + variantName);
             annotationProcessor.setExtendsFrom(annotationConfigs);

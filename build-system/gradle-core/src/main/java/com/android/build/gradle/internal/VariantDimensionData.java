@@ -70,7 +70,7 @@ public class VariantDimensionData {
         }
     }
 
-    private static void makeTestExtendMain(
+    public static void makeTestExtendMain(
             @NonNull DefaultAndroidSourceSet mainSourceSet,
             @NonNull DefaultAndroidSourceSet testSourceSet,
             @NonNull ConfigurationContainer configurations) {
@@ -78,10 +78,6 @@ public class VariantDimensionData {
                 configurations,
                 mainSourceSet::getImplementationConfigurationName,
                 testSourceSet::getImplementationConfigurationName);
-        linkConfiguration(
-                configurations,
-                mainSourceSet::getCompileOnlyConfigurationName,
-                testSourceSet::getCompileOnlyConfigurationName);
         linkConfiguration(
                 configurations,
                 mainSourceSet::getRuntimeOnlyConfigurationName,
