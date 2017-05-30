@@ -29,17 +29,33 @@ public class DexElementNodeTest {
         ConcreteNode(@NonNull String name, boolean allowsChildren) {
             super(name, allowsChildren);
         }
+
+        @Override
+        public long getSize() {
+            return 0;
+        }
     }
 
     private static class AnotherNode extends DexElementNode {
         AnotherNode(@NonNull String name, boolean allowsChildren) {
             super(name, allowsChildren);
         }
+
+        @Override
+        public long getSize() {
+            return 0;
+        }
     }
 
     @Test
     public void getChildByTypeTest() throws IOException {
-        DexElementNode node = new DexElementNode("root", true) {};
+        DexElementNode node =
+                new DexElementNode("root", true) {
+                    @Override
+                    public long getSize() {
+                        return 0;
+                    }
+                };
         ConcreteNode childNode = new ConcreteNode("name_1", false);
         ConcreteNode childNode2 = new ConcreteNode("name_2", false);
 
@@ -61,7 +77,13 @@ public class DexElementNodeTest {
 
     @Test
     public void sortTest() throws IOException {
-        DexElementNode node = new DexElementNode("root", true) {};
+        DexElementNode node =
+                new DexElementNode("root", true) {
+                    @Override
+                    public long getSize() {
+                        return 0;
+                    }
+                };
         ConcreteNode childNode = new ConcreteNode("name_2", false);
         ConcreteNode childNode2 = new ConcreteNode("name_1", false);
 
@@ -79,4 +101,7 @@ public class DexElementNodeTest {
         assertEquals(childNode4, node.getChildAt(2));
         assertEquals(childNode3, node.getChildAt(3));
     }
+
+
 }
+

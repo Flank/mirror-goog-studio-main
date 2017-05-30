@@ -20,11 +20,11 @@ import com.android.annotations.Nullable;
 import com.android.tools.apk.analyzer.dex.PackageTreeCreator;
 import com.android.tools.proguard.ProguardMap;
 import com.android.tools.proguard.ProguardSeedsMap;
-import javax.swing.*;
 import org.jf.dexlib2.iface.reference.TypeReference;
 import org.jf.dexlib2.immutable.reference.ImmutableTypeReference;
 
 public class DexClassNode extends DexElementNode {
+    private long size = 0;
 
     public DexClassNode(@NonNull String displayName, @Nullable ImmutableTypeReference reference) {
         super(displayName, true, reference);
@@ -43,6 +43,23 @@ public class DexClassNode extends DexElementNode {
             }
         }
         return super.isSeed(seedsMap, map, checkChildren);
+    }
+
+    @Override
+    public long getSize() {
+        long size = this.size;
+        for (int i = 0, n = getChildCount(); i < n; i++) {
+            DexElementNode node = getChildAt(i);
+            //defined child nodes are already counted in size
+            if (!node.isDefined()) {
+                size += node.getSize();
+            }
+        }
+        return size;
+    }
+
+    public void setSize(long size) {
+        this.size = size;
     }
 
     @Nullable

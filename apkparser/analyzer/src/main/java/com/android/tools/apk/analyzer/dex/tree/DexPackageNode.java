@@ -22,12 +22,21 @@ import org.jf.dexlib2.iface.reference.TypeReference;
 import org.jf.dexlib2.immutable.reference.ImmutableTypeReference;
 
 public class DexPackageNode extends DexElementNode {
-
     @Nullable private final String packageName;
 
     public DexPackageNode(@NonNull String name, @Nullable String packageName) {
         super(name, true);
         this.packageName = packageName;
+    }
+
+    @Override
+    public long getSize() {
+        long size = 0;
+        for (int i = 0, n = getChildCount(); i < n; i++) {
+            DexElementNode node = getChildAt(i);
+            size += node.getSize();
+        }
+        return size;
     }
 
     @NonNull

@@ -28,7 +28,7 @@ import org.jf.dexlib2.immutable.reference.ImmutableReference;
 public abstract class DexElementNode extends DefaultMutableTreeNode {
 
     @NonNull private final String name;
-    @Nullable private final Reference reference;
+    @Nullable private final ImmutableReference reference;
     private boolean defined;
     private boolean removed;
     private int methodReferencesCount;
@@ -142,4 +142,13 @@ public abstract class DexElementNode extends DefaultMutableTreeNode {
     protected void setMethodDefinitionsCount(int methodDefinitionsCount) {
         this.methodDefinitionsCount = methodDefinitionsCount;
     }
+
+    /**
+     * Returns the private size of this dex node, i.e. size that can not shared with other nodes.
+     * Example of shared size that is not included in this value: strings in the string pool,
+     * annotation sets.
+     *
+     * @return private size of node in bytes
+     */
+    public abstract long getSize();
 }
