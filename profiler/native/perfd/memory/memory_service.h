@@ -78,10 +78,10 @@ class MemoryServiceImpl final
       const ::profiler::proto::LegacyAllocationEventsRequest* request,
       ::profiler::proto::LegacyAllocationEventsResponse* response) override;
 
-  ::grpc::Status ListLegacyAllocationContexts(
+  ::grpc::Status GetLegacyAllocationContexts(
       ::grpc::ServerContext* context,
       const ::profiler::proto::LegacyAllocationContextsRequest* request,
-      ::profiler::proto::LegacyAllocationContextsResponse* response) override;
+      ::profiler::proto::AllocationContextsResponse* response) override;
 
   ::grpc::Status GetLegacyAllocationDump(
       ::grpc::ServerContext* context,

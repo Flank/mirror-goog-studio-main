@@ -20,6 +20,7 @@
 #include "proto/internal_memory.grpc.pb.h"
 #include "utils/trace.h"
 
+using profiler::proto::AllocationContextsResponse;
 using profiler::proto::AllocationsInfo;
 using profiler::proto::DumpDataResponse;
 using profiler::proto::DumpDataRequest;
@@ -33,7 +34,6 @@ using profiler::proto::MemoryStopResponse;
 using profiler::proto::MemoryRequest;
 using profiler::proto::MemoryData;
 using profiler::proto::LegacyAllocationContextsRequest;
-using profiler::proto::LegacyAllocationContextsResponse;
 using profiler::proto::LegacyAllocationEventsRequest;
 using profiler::proto::LegacyAllocationEventsResponse;
 using profiler::proto::ListHeapDumpInfosResponse;
@@ -204,10 +204,10 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(
 
 #undef PROFILER_MEMORY_SERVICE_RETURN_IF_NOT_FOUND
 
-::grpc::Status MemoryServiceImpl::ListLegacyAllocationContexts(
+::grpc::Status MemoryServiceImpl::GetLegacyAllocationContexts(
     ::grpc::ServerContext* context,
     const LegacyAllocationContextsRequest* request,
-    LegacyAllocationContextsResponse* response) {
+    AllocationContextsResponse* response) {
   return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED,
                         "Not implemented on device");
 }
