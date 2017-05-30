@@ -549,9 +549,6 @@ public class LibraryTaskManager extends TaskManager {
 
         variantScope.getAssembleTask().dependsOn(tasks, bundle);
 
-        // FIXME remove this once we have a better API to build the model.
-        variantScope.addTaskOutput(TaskOutputType.EXPLODED_AAR, variantBundleDir, bundle.getName());
-
         // if the variant is the default published, then publish the aar
         // FIXME: only generate the tasks if this is the default published variant?
         if (extension.getDefaultPublishConfig().equals(variantConfig.getFullName())) {

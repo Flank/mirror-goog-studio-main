@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.builder.dependency.level2.Dependency;
 import com.android.builder.dependency.level2.ExtractedDependency;
 import com.android.builder.model.level2.Library;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import java.io.File;
 import java.io.Serializable;
@@ -34,8 +35,6 @@ public final class ModuleLibraryImpl implements Library, Serializable {
 
     @NonNull
     private final String address;
-    @NonNull
-    private final File artifactFile;
     @Nullable
     private final String projectPath;
     @Nullable
@@ -43,11 +42,9 @@ public final class ModuleLibraryImpl implements Library, Serializable {
 
     public ModuleLibraryImpl(
             @NonNull String address,
-            @NonNull File artifactFile,
             @Nullable String projectPath,
             @Nullable String variant) {
         this.address = address;
-        this.artifactFile = artifactFile;
         this.projectPath = projectPath;
         this.variant = variant;
     }
@@ -55,7 +52,6 @@ public final class ModuleLibraryImpl implements Library, Serializable {
     public ModuleLibraryImpl(@NonNull Dependency dependency) {
         this(
                 dependency.getAddress().toString(),
-                dependency.getArtifactFile(),
                 dependency.getProjectPath(),
                 dependency instanceof ExtractedDependency
                         ? ((ExtractedDependency) dependency).getVariant()
@@ -77,7 +73,8 @@ public final class ModuleLibraryImpl implements Library, Serializable {
     @NonNull
     @Override
     public File getArtifact() {
-        return artifactFile;
+        throw new UnsupportedOperationException(
+                "getArtifact() cannot be called when getType() returns LIBRARY_MODULE");
     }
 
     @Nullable
@@ -200,13 +197,21 @@ public final class ModuleLibraryImpl implements Library, Serializable {
         }
         ModuleLibraryImpl that = (ModuleLibraryImpl) o;
         return Objects.equals(address, that.address) &&
-                Objects.equals(artifactFile, that.artifactFile) &&
                 Objects.equals(projectPath, that.projectPath) &&
                 Objects.equals(variant, that.variant);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(address, projectPath, artifactFile, variant);
+        return Objects.hash(address, projectPath, variant);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("address", address)
+                .add("projectPath", projectPath)
+                .add("variant", variant)
+                .toString();
     }
 }

@@ -135,10 +135,6 @@ public class AndroidArtifacts {
         APK_METADATA(TYPE_METADATA),
         APK(TYPE_APK),
 
-        // types for querying only. Not publishable.
-        // FIXME once we only support level 2 sync, then this can be not publishable
-        EXPLODED_AAR(TYPE_EXPLODED_AAR),
-
         // Feature split related artifacts.
         FEATURE_IDS_DECLARATION(TYPE_FEATURE_IDS_DECLARATION),
         FEATURE_APPLICATION_ID_DECLARATION(TYPE_FEATURE_APPLICATION_ID),
@@ -147,7 +143,11 @@ public class AndroidArtifacts {
         // Metadata artifacts
         METADATA_FEATURE_DECLARATION(TYPE_METADATA_FEATURE_DECLARATION),
         METADATA_FEATURE_MANIFEST(TYPE_METADATA_FEATURE_MANIFEST),
-        METADATA_APP_ID_DECLARATION(TYPE_METADATA_APP_ID_DECLARATION);
+        METADATA_APP_ID_DECLARATION(TYPE_METADATA_APP_ID_DECLARATION),
+
+        // types for querying only. Not publishable.
+        AAR(TYPE_AAR),
+        EXPLODED_AAR(TYPE_EXPLODED_AAR);
 
         @NonNull
         private final String type;

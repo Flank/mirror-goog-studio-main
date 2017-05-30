@@ -34,6 +34,7 @@ import static com.android.utils.FileUtils.relativePossiblyNonExistingPath;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.level2.Library;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.Serializable;
@@ -49,7 +50,6 @@ public final class AndroidLibraryImpl implements Library, Serializable {
 
     @NonNull
     private final String address;
-    @Nullable private final File artifactFile;
     @NonNull
     private final File folder;
     @NonNull
@@ -57,11 +57,9 @@ public final class AndroidLibraryImpl implements Library, Serializable {
 
     public AndroidLibraryImpl(
             @NonNull String address,
-            @Nullable File artifactFile,
             @NonNull File folder,
             @NonNull Collection<File> localJarOverride) {
         this.address = address;
-        this.artifactFile = artifactFile;
         this.folder = folder;
         // TODO Fix me once we are always extracting AARs during sync.
         localJarPath = Lists.newArrayListWithCapacity(localJarOverride.size());
@@ -84,11 +82,7 @@ public final class AndroidLibraryImpl implements Library, Serializable {
     @NonNull
     @Override
     public File getArtifact() {
-        if (artifactFile == null) {
-            throw new UnsupportedOperationException(
-                    "getArtifact() cannot be called when getType() returns ANDROID_LIBRARY");
-        }
-        return artifactFile;
+        return folder;
     }
 
     @NonNull
@@ -199,13 +193,21 @@ public final class AndroidLibraryImpl implements Library, Serializable {
         }
         AndroidLibraryImpl that = (AndroidLibraryImpl) o;
         return Objects.equals(address, that.address) &&
-                Objects.equals(artifactFile, that.artifactFile) &&
                 Objects.equals(folder, that.folder) &&
                 Objects.equals(localJarPath, that.localJarPath);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(address, artifactFile, folder, localJarPath);
+        return Objects.hash(address, folder, localJarPath);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("address", address)
+                .add("folder", folder)
+                .add("localJarPath", localJarPath)
+                .toString();
     }
 }
