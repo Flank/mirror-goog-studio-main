@@ -49,16 +49,6 @@ public final class ModuleLibraryImpl implements Library, Serializable {
         this.variant = variant;
     }
 
-    public ModuleLibraryImpl(@NonNull Dependency dependency) {
-        this(
-                dependency.getAddress().toString(),
-                dependency.getProjectPath(),
-                dependency instanceof ExtractedDependency
-                        ? ((ExtractedDependency) dependency).getVariant()
-                        : null);
-        Preconditions.checkNotNull(dependency.getProjectPath());
-    }
-
     @Override
     public int getType() {
         return LIBRARY_MODULE;

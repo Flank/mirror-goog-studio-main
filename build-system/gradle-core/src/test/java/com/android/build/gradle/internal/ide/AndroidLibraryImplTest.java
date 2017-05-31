@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.ide;
 
-import com.android.builder.dependency.level2.AndroidDependency;
+import com.android.builder.dependency.MavenCoordinatesImpl;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import nl.jqno.equalsverifier.EqualsVerifier;
@@ -28,20 +28,20 @@ public class AndroidLibraryImplTest {
     public void equals() throws Exception {
         EqualsVerifier.forClass(AndroidLibraryImpl.class)
                 .withRedefinedSuperclass()
-                .withCachedHashCode("hashcode", "computeHashCode",
+                .withCachedHashCode(
+                        "hashcode",
+                        "computeHashCode",
                         new AndroidLibraryImpl(
-                                AndroidDependency.createLocalTestedAarLibrary(
-                                new File("red"),
-                                    "",
-                                    "",
-                                new File("")),
-                                false /*provided*/,
-                                false /*skipped*/,
+                                new MavenCoordinatesImpl("g", "a", "unspecified"),
+                                "",
+                                new File("bundle"),
+                                new File("folder"),
+                                null,
+                                false,
+                                false,
                                 ImmutableList.of(),
                                 ImmutableList.of(),
-                                ImmutableList.of())
-
-                        )
+                                ImmutableList.of()))
                 .verify();
     }
 }
