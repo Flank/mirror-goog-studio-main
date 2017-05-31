@@ -72,7 +72,7 @@ public final class BitmapGeneratorTests {
                             options.sourceImage,
                             Math.round(width * sourceAssetScale),
                             Math.round(height * sourceAssetScale));
-            BufferedImage newSource = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+            BufferedImage newSource = AssetUtil.newArgbBufferedImage(width, height);
             Graphics2D g = (Graphics2D) newSource.getGraphics();
             AssetUtil.drawCentered(g, scaledImage, new Rectangle(0, 0, width, height));
             g.dispose();
@@ -119,7 +119,8 @@ public final class BitmapGeneratorTests {
                     } else {
                         String goldenText =
                                 CharStreams.toString(new InputStreamReader(is, Charsets.UTF_8));
-                        assertThat(text).isEqualTo(goldenText);
+                        assertThat(text.replace("\r\n", "\n"))
+                                .isEqualTo(goldenText.replace("\r\n", "\n"));
                     }
                 }
             }
@@ -216,8 +217,8 @@ public final class BitmapGeneratorTests {
         assertThat(image.getType()).isEqualTo(BufferedImage.TYPE_INT_ARGB);
 
         if (goldenImage.getType() != BufferedImage.TYPE_INT_ARGB) {
-            BufferedImage temp = new BufferedImage(goldenImage.getWidth(), goldenImage.getHeight(),
-                    BufferedImage.TYPE_INT_ARGB);
+            BufferedImage temp =
+                    AssetUtil.newArgbBufferedImage(goldenImage.getWidth(), goldenImage.getHeight());
             temp.getGraphics().drawImage(goldenImage, 0, 0, null);
             goldenImage = temp;
         }
@@ -232,8 +233,7 @@ public final class BitmapGeneratorTests {
         // goldenImage = blur(goldenImage, 6);
         // image = blur(image, 6);
 
-        BufferedImage deltaImage =
-                new BufferedImage(3 * imageWidth, imageHeight, BufferedImage.TYPE_INT_ARGB);
+        BufferedImage deltaImage = AssetUtil.newArgbBufferedImage(3 * imageWidth, imageHeight);
         Graphics g = deltaImage.getGraphics();
 
         // Compute delta map
