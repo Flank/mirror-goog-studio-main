@@ -560,6 +560,14 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
                                     pseudoLocalesEnabled,
                                     crunchPng);
 
+                    // If we are going to shrink resources, the resource shrinker needs to have the
+                    // final merged uncompiled file.
+                    if (resourceShrinkerOutputFolder != null) {
+                        File typeDir = new File(resourceShrinkerOutputFolder, folderName);
+                        FileUtils.mkdirs(typeDir);
+                        FileUtils.copyFileToDirectory(outFile, typeDir);
+                    }
+
                     if (blame != null) {
                         mMergingLog.logSource(
                                 new SourceFile(mResourceCompiler.compileOutputFor(request)), blame);
@@ -567,9 +575,7 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
                         mMergingLog.logSource(new SourceFile(outFile), blame);
                     }
 
-                    Future<File> f = mResourceCompiler.compile(request);
-
-                    File copyOutput = f.get();
+                    mResourceCompiler.compile(request).get();
 
 
                     if (publicNodes != null && mPublicFile != null) {
@@ -609,7 +615,20 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
                     ResourceFolderType.VALUES.getName() + RES_QUALIFIER_SEP + key :
                     ResourceFolderType.VALUES.getName();
 
-            removeOutFile(FileUtils.join(getRootFolder(), folderName, folderName + DOT_XML));
+            if (resourceShrinkerOutputFolder != null) {
+                removeOutFile(
+                        FileUtils.join(
+                                resourceShrinkerOutputFolder, folderName, folderName + DOT_XML));
+            }
+
+            // Remove the intermediate (compiled) values file.
+            removeOutFile(
+                    mResourceCompiler.compileOutputFor(
+                            new CompileResourceRequest(
+                                    FileUtils.join(
+                                            getRootFolder(), folderName, folderName + DOT_XML),
+                                    getRootFolder(),
+                                    folderName)));
         }
     }
 
@@ -626,7 +645,8 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
         if (compiledFilePath != null) {
             return new File(compiledFilePath);
         } else {
-            return FileUtils.join(getRootFolder(), getFolderName(resourceItem), file.getName());
+            return mResourceCompiler.compileOutputFor(
+                    new CompileResourceRequest(file, getRootFolder(), getFolderName(resourceItem)));
         }
     }
 
@@ -650,6 +670,14 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
         removeOutFile(toRemove);
     }
 
+    private void removeFileFromResourceShrinkerOutputFolder(@NonNull ResourceItem resourceItem) {
+        File originalFile = resourceItem.getFile();
+        File resTypeDir =
+                new File(resourceShrinkerOutputFolder, originalFile.getParentFile().getName());
+        File toRemove = new File(resTypeDir, originalFile.getName());
+        removeOutFile(toRemove);
+    }
+
     /**
      * Removes a file that already exists in the out res folder. This has to be a non value file.
      *
@@ -662,6 +690,10 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
         if (dataBindingExpressionRemover != null) {
             // The file could have possibly been a layout file with data binding.
             removeLayoutFileFromDataBindingOutputFolder(resourceItem);
+        }
+        if (resourceShrinkerOutputFolder != null) {
+            // The file was copied for the resource shrinking and needs to be removed from there.
+            removeFileFromResourceShrinkerOutputFolder(resourceItem);
         }
         return removeOutFile(fileToRemove);
     }

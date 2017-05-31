@@ -452,6 +452,9 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
 
     private ListenableFuture<File> copyFile(@NonNull CompileResourceRequest request)
             throws AaptException {
+        Preconditions.checkArgument(request.getInput().isFile(), "!file.isFile()");
+        Preconditions.checkArgument(request.getOutput().isDirectory(), "!output.isDirectory()");
+
         File outFile = compileOutputFor(request);
         try {
             FileUtils.copyFile(request.getInput(), outFile);
@@ -497,9 +500,6 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
     @NonNull
     @Override
     public File compileOutputFor(@NonNull CompileResourceRequest request) {
-        Preconditions.checkArgument(request.getInput().isFile(), "!file.isFile()");
-        Preconditions.checkArgument(request.getOutput().isDirectory(), "!output.isDirectory()");
-
         File parentDir = new File(request.getOutput(), request.getFolderName());
         FileUtils.mkdirs(parentDir);
 
