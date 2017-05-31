@@ -147,7 +147,7 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     private VariantType type;
 
-    @NonNull private AaptGeneration aaptGeneration;
+    private AaptGeneration aaptGeneration;
 
     private boolean debuggable;
 
@@ -209,7 +209,7 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     private SplitFactory splitFactory;
 
-    private boolean enableNewResourceProcessing;
+    private boolean bypassAapt;
 
     private boolean enableAapt2;
 
@@ -465,7 +465,7 @@ public class ProcessAndroidResources extends IncrementalTask {
         try {
             // If the new resources flag is enabled and if we are dealing with a library process
             // resources through the new parsers
-            if (enableNewResourceProcessing && this.type.equals(VariantType.LIBRARY)) {
+            if (bypassAapt) {
 
                 // Get symbol table of resources of the library
                 SymbolTable symbolTable =
@@ -478,12 +478,11 @@ public class ProcessAndroidResources extends IncrementalTask {
                         generateCode && getEnforceUniquePackageName(),
                         packageForR,
                         manifestFile,
-                        srcOut,
-                        symbolOutputDir,
+                        Preconditions.checkNotNull(srcOut),
+                        Preconditions.checkNotNull(symbolOutputDir),
                         proguardOutputFile,
                         getInputResourcesDir().getSingleFile());
             } else {
-
                 Aapt aapt =
                         AaptGradleFactory.make(
                                 aaptGeneration,
@@ -742,11 +741,23 @@ public class ProcessAndroidResources extends IncrementalTask {
                     AaptGeneration.fromProjectOptions(
                             variantScope.getGlobalScope().getProjectOptions());
 
-            processResources.setEnableNewResourceProcessing(
-                    variantScope
+            if (variantScope
                             .getGlobalScope()
                             .getProjectOptions()
-                            .get(ENABLE_NEW_RESOURCE_PROCESSING));
+                            .get(ENABLE_NEW_RESOURCE_PROCESSING)
+                    && variantData.getType() == VariantType.LIBRARY) {
+                Preconditions.checkState(
+                        sourceTaskOutputType == TaskManager.MergeType.PACKAGE,
+                        "source output type should be PACKAGE",
+                        sourceTaskOutputType);
+                processResources.bypassAapt = true;
+            } else {
+                Preconditions.checkState(
+                        sourceTaskOutputType == TaskManager.MergeType.MERGE,
+                        "source output type should be MERGE",
+                        sourceTaskOutputType);
+            }
+
             processResources.setEnableAapt2(
                     variantScope
                             .getGlobalScope()
@@ -815,9 +826,6 @@ public class ProcessAndroidResources extends IncrementalTask {
             processResources.setManifestFiles(
                     variantScope.getOutput(processResources.taskInputType));
 
-            Preconditions.checkState(
-                    sourceTaskOutputType == TaskManager.MergeType.MERGE,
-                    "Support for not merging resources in libraries not implemented yet.");
             processResources.inputResourcesDir =
                     variantScope.getOutput(sourceTaskOutputType.getOutputType());
 
@@ -1003,10 +1011,6 @@ public class ProcessAndroidResources extends IncrementalTask {
         return enforceUniquePackageName;
     }
 
-    public void setEnforceUniquePackageName(boolean enforceUniquePackageName) {
-        this.enforceUniquePackageName = enforceUniquePackageName;
-    }
-
     @Input
     public String getTypeAsString() {
         return type.name();
@@ -1098,12 +1102,8 @@ public class ProcessAndroidResources extends IncrementalTask {
     }
 
     @Input
-    public boolean isEnabledNewResourceProcessing() {
-        return enableNewResourceProcessing;
-    }
-
-    public void setEnableNewResourceProcessing(boolean enableNewResourceProcessing) {
-        this.enableNewResourceProcessing = enableNewResourceProcessing;
+    public boolean bypassAapt() {
+        return bypassAapt;
     }
 
     @Input

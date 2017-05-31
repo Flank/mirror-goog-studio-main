@@ -45,14 +45,14 @@ import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
 
 /** Helper methods related to Symbols and resource processing. */
-public class SymbolUtils {
+public final class SymbolUtils {
 
     /**
      * Processes the symbol table and generates necessary files: R.txt, R.java and proguard rules
      * ({@code aapt_rules.txt}). Afterwards generates {@code R.java} for all libraries the main
      * library depends on.
      *
-     * @param mainSymbolTable table with symbols of resources for the library
+     * @param librarySymbols table with symbols of resources for the library.
      * @param libraries libraries which this library depends on
      * @param enforceUniquePackageName should the package name be unique in the project
      * @param mainPackageName package name of this library
@@ -63,7 +63,7 @@ public class SymbolUtils {
      * @param mergedResources directory containing merged resources
      */
     public static void processLibraryMainSymbolTable(
-            @NonNull SymbolTable mainSymbolTable,
+            @NonNull final SymbolTable librarySymbols,
             @NonNull List<LibraryInfo> libraries,
             boolean enforceUniquePackageName,
             @Nullable String mainPackageName,
@@ -92,23 +92,32 @@ public class SymbolUtils {
             }
         }
 
-        // finalIds set to false since this method should only be used for libraries.
-        boolean finalIds = false;
-
-        mainSymbolTable = mainSymbolTable.rename(mainPackageName);
+        // Get symbol tables of the libraries we depend on.
+        Set<SymbolTable> depSymbolTables =
+                loadDependenciesSymbolTables(libraries, enforceUniquePackageName, mainPackageName);
+        // This will produce a symbol table with conflicting IDs but that doesn't matter for
+        // compilation.
+        // Use a map keyed by the symbol name and type to de-duplicate symbols coming from
+        // libraries.
+        HashMap<String, Symbol> symbols = new HashMap<>();
+        symbols.putAll(librarySymbols.getSymbols());
+        for (SymbolTable depSymbolTable : depSymbolTables) {
+            symbols.putAll(depSymbolTable.getSymbols());
+        }
+        SymbolTable mainSymbolTable =
+                SymbolTable.builder()
+                        .tablePackage(mainPackageName)
+                        .addAll(symbols.values())
+                        .build();
 
         // Generate R.txt file.
         generateRTxt(mainSymbolTable, symbolsOut);
 
         // Generate R.java file.
-        SymbolIo.exportToJava(mainSymbolTable, sourceOut, finalIds);
-
-        // Get symbol tables of the libraries we depend on.
-        Set<SymbolTable> depSymbolTables =
-                loadDependenciesSymbolTables(libraries, enforceUniquePackageName, mainPackageName);
+        SymbolIo.exportToJava(mainSymbolTable, sourceOut, false);
 
         // Generate the R.java files for each individual library.
-        RGeneration.generateRForLibraries(mainSymbolTable, depSymbolTables, sourceOut, finalIds);
+        RGeneration.generateRForLibraries(mainSymbolTable, depSymbolTables, sourceOut, false);
     }
 
     /**
@@ -168,10 +177,9 @@ public class SymbolUtils {
      */
     @NonNull
     public static String getPackageNameFromManifest(@NonNull File manifestFile) throws IOException {
-        AndroidManifestParser parser = new AndroidManifestParser();
         ManifestData manifestData;
         try {
-            manifestData = parser.parse(new FileWrapper(manifestFile));
+            manifestData = AndroidManifestParser.parse(new FileWrapper(manifestFile));
         } catch (SAXException | IOException e) {
             throw new IOException(
                     "Failed to parse android manifest XML file at path: '"
@@ -337,9 +345,8 @@ public class SymbolUtils {
     }
 
     public static ManifestData parseManifest(@NonNull File manifestFile) throws IOException {
-        AndroidManifestParser parser = new AndroidManifestParser();
         try {
-            return parser.parse(new FileWrapper(manifestFile));
+            return AndroidManifestParser.parse(new FileWrapper(manifestFile));
         } catch (SAXException | IOException e) {
             throw new IOException(
                     "Failed to parse android manifest XML file at path: '"
@@ -361,5 +368,12 @@ public class SymbolUtils {
     @NonNull
     public static String canonicalizeValueResourceName(@NonNull String name) {
         return CharMatcher.anyOf(".:").replaceFrom(name, "_");
+    }
+
+    public static enum SymbolTableGenerationMode {
+        /** The main symbol table loaded from a merge of all the libraries. */
+        FROM_MERGED_RESOURCES,
+        /** The main symbol table was loaded from the resources in this library. */
+        ONLY_PACKAGED_RESOURCES,
     }
 }
