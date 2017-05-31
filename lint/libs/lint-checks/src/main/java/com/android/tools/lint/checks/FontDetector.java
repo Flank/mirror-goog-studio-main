@@ -17,24 +17,32 @@ package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.ANDROID_NS_NAME;
 import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.APPCOMPAT_LIB_ARTIFACT_ID;
 import static com.android.SdkConstants.APP_PREFIX;
 import static com.android.SdkConstants.ATTR_FONT_PROVIDER_AUTHORITY;
 import static com.android.SdkConstants.ATTR_FONT_PROVIDER_CERTS;
 import static com.android.SdkConstants.ATTR_FONT_PROVIDER_PACKAGE;
 import static com.android.SdkConstants.ATTR_FONT_PROVIDER_QUERY;
 import static com.android.SdkConstants.AUTO_URI;
+import static com.android.SdkConstants.SUPPORT_LIB_GROUP_ID;
 import static com.android.SdkConstants.TAG_FONT;
 import static com.android.SdkConstants.TAG_FONT_FAMILY;
+import static com.android.ide.common.repository.GradleCoordinate.COMPARE_PLUS_LOWER;
 import static com.android.tools.lint.detector.api.LintUtils.coalesce;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.builder.model.AndroidLibrary;
+import com.android.builder.model.Dependencies;
+import com.android.builder.model.MavenCoordinates;
+import com.android.builder.model.Variant;
 import com.android.ide.common.fonts.FontDetail;
 import com.android.ide.common.fonts.FontFamily;
 import com.android.ide.common.fonts.FontLoader;
 import com.android.ide.common.fonts.FontProvider;
 import com.android.ide.common.fonts.MutableFontDetail;
 import com.android.ide.common.fonts.QueryParser;
+import com.android.ide.common.repository.GradleCoordinate;
 import com.android.resources.ResourceFolderType;
 import com.android.sdklib.AndroidVersion;
 import com.android.tools.lint.detector.api.Category;
@@ -84,6 +92,9 @@ public class FontDetector extends ResourceXmlDetector {
                     IMPLEMENTATION).addMoreInfo(
                     "https://developer.android.com/guide/topics/text/downloadable-fonts.html");
 
+    public static final GradleCoordinate MIN_APPSUPPORT_VERSION = new GradleCoordinate(
+      SUPPORT_LIB_GROUP_ID, APPCOMPAT_LIB_ARTIFACT_ID, "26.0.0-beta1");
+
     protected FontLoader mFontLoader;
 
     @Override
@@ -125,36 +136,40 @@ public class FontDetector extends ResourceXmlDetector {
         Element fontTag = XmlUtils.getFirstSubTagTagByName(element, TAG_FONT);
 
         AndroidVersion minSdk = context.getMainProject().getMinSdkVersion();
+        boolean downloadableFontFile = coalesce(firstAndroidAttribute, firstAppAttribute) != null;
 
-        reportConflictingContent(context, firstAndroidAttribute, firstAppAttribute, fontTag);
-        if (minSdk.getApiLevel() >= 26) {
-            reportUnexpectedAttributeNamespace(context, firstAppAttribute, ANDROID_NS_NAME);
-        }
-        if (1 < minSdk.getFeatureLevel() && minSdk.getFeatureLevel() <= 25) {
-            reportUnexpectedAttributeNamespace(context, firstAndroidAttribute, APP_PREFIX);
-        }
-        FontProvider provider = reportUnknownProvider(context, authority, appAuthority);
-        if (provider != null) {
-            reportUnknownPackage(context, androidPackage, appPackage, provider);
-            reportQueryProblem(context, query, appQuery, provider);
-        }
-        if (1 < minSdk.getApiLevel() && minSdk.getApiLevel() <= 25) {
-            reportMissingAppAttribute(
-                    context,
-                    firstAppAttribute,
-                    missingAppAttributes,
-                    AUTO_URI,
-                    APP_PREFIX,
-                    provider);
-        }
-        if (minSdk.getFeatureLevel() >= 26) {
-            reportMissingAppAttribute(
-                    context,
-                    firstAndroidAttribute,
-                    missingAndroidAttributes,
-                    ANDROID_URI,
-                    ANDROID_NS_NAME,
-                    provider);
+        if (downloadableFontFile) {
+            checkSupportLibraryVersion(context, element);
+            reportMisplacedFontTag(context, fontTag);
+            if (minSdk.getApiLevel() >= 26) {
+                reportUnexpectedAttributeNamespace(context, firstAppAttribute, ANDROID_NS_NAME);
+            }
+            if (1 < minSdk.getFeatureLevel() && minSdk.getFeatureLevel() <= 25) {
+                reportUnexpectedAttributeNamespace(context, firstAndroidAttribute, APP_PREFIX);
+            }
+            FontProvider provider = reportUnknownProvider(context, authority, appAuthority);
+            if (provider != null) {
+                reportUnknownPackage(context, androidPackage, appPackage, provider);
+                reportQueryProblem(context, query, appQuery, provider);
+            }
+            if (1 < minSdk.getApiLevel() && minSdk.getApiLevel() <= 25) {
+                reportMissingAppAttribute(
+                        context,
+                        firstAppAttribute,
+                        missingAppAttributes,
+                        AUTO_URI,
+                        APP_PREFIX,
+                        provider);
+            }
+            if (minSdk.getFeatureLevel() >= 26) {
+                reportMissingAppAttribute(
+                        context,
+                        firstAndroidAttribute,
+                        missingAndroidAttributes,
+                        ANDROID_URI,
+                        ANDROID_NS_NAME,
+                        provider);
+            }
         }
     }
 
@@ -183,12 +198,35 @@ public class FontDetector extends ResourceXmlDetector {
         return missing;
     }
 
-    private static void reportConflictingContent(
+    private static void checkSupportLibraryVersion(@NonNull XmlContext context,
+      @NonNull Element element) {
+        Variant variant = context.getMainProject().getCurrentVariant();
+        if (variant == null) {
+            return;
+        }
+        Dependencies dependencies = variant.getMainArtifact().getDependencies();
+        for (AndroidLibrary library : dependencies.getLibraries()) {
+            MavenCoordinates rc = library.getResolvedCoordinates();
+            if (SUPPORT_LIB_GROUP_ID.equals(rc.getGroupId()) &&
+              APPCOMPAT_LIB_ARTIFACT_ID.equals(rc.getArtifactId())) {
+                GradleCoordinate version = new GradleCoordinate(
+                  SUPPORT_LIB_GROUP_ID, APPCOMPAT_LIB_ARTIFACT_ID, rc.getVersion());
+                if (COMPARE_PLUS_LOWER.compare(version, MIN_APPSUPPORT_VERSION) < 0) {
+                    String message = "Using version " + version.getRevision()
+                            + " of the " + APPCOMPAT_LIB_ARTIFACT_ID
+                            + " library. Required version for using downloadable fonts: "
+                            + MIN_APPSUPPORT_VERSION.getRevision() + " or higher.";
+                    LintFix fix = fix().data(APPCOMPAT_LIB_ARTIFACT_ID);
+                    reportError(context, element, message, fix);
+                }
+            }
+        }
+    }
+
+    private static void reportMisplacedFontTag(
             @NonNull XmlContext context,
-            @Nullable Attr firstAndroidAttribute,
-            @Nullable Attr firstAppAttribute,
             @Nullable Element fontTag) {
-        if ((firstAndroidAttribute != null || firstAppAttribute != null) && fontTag != null) {
+        if (fontTag != null) {
             LintFix fix = fix().replace().with("").build();
             reportError(context, fontTag,
                     "A downloadable font cannot have a `<font>` sub tag", fix);

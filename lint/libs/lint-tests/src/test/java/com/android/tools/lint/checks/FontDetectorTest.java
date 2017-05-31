@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.SdkConstants.APPCOMPAT_LIB_ARTIFACT_ID;
 import static com.android.ide.common.fonts.FontProviderKt.GOOGLE_FONT_AUTHORITY;
 import static com.android.ide.common.fonts.FontProviderKt.GOOGLE_FONT_CERTIFICATE;
 import static com.android.ide.common.fonts.FontProviderKt.GOOGLE_FONT_DEVELOPMENT_CERTIFICATE;
@@ -23,9 +24,16 @@ import static com.android.ide.common.fonts.FontProviderKt.GOOGLE_FONT_NAME;
 import static com.android.ide.common.fonts.FontProviderKt.GOOGLE_FONT_PACKAGE_NAME;
 import static com.android.ide.common.fonts.FontProviderKt.GOOGLE_FONT_URL;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.fonts.FontLoader;
 import com.android.testutils.TestUtils;
+import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
+import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.LintFix;
+import com.android.tools.lint.detector.api.Location;
+import com.android.tools.lint.detector.api.Severity;
 import com.intellij.openapi.util.io.FileUtil;
 import java.io.File;
 import java.io.IOException;
@@ -77,6 +85,47 @@ public class FontDetectorTest extends AbstractCheckTest {
                 .run()
                 .expect(expected)
                 .expectFixDiffs(expectedFix);
+    }
+
+    public void testAppCompatVersion() throws Exception {
+        String expected =
+                ""
+                        + "res/font/font1.xml:2: Error: Using version 26.0.0-alpha7' of the appcompat-v7 library. Required version for using downloadable fonts: 26.0.0-beta1 or higher. [FontValidationError]\n"
+                        + "<font-family xmlns:app=\"http://schemas.android.com/apk/res-auto\"\n"
+                        + "^\n"
+                        + "1 errors, 0 warnings\n";
+        //noinspection all // Sample code
+        lint().files(
+                manifest().minSdk(25),
+                xml(
+                        "res/font/font1.xml",
+                        ""
+                                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                + "<font-family xmlns:app=\"http://schemas.android.com/apk/res-auto\"\n"
+                                + "    app:fontProviderAuthority=\"com.google.android.gms.fonts\"\n"
+                                + "    app:fontProviderQuery=\"Monserrat\"\n"
+                                + "    app:fontProviderPackage=\"com.google.android.gms\"\n"
+                                + "    app:fontProviderCerts=\"@array/certs\">\n"
+                                + "</font-family>"
+                                + "\n"),
+                gradle(""
+                        + "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    compile 'com.android.support:appcompat-v7:26.0.0-alpha7\"'\n"
+                        + "}"))
+                .checkMessage(this::checkReportedError)
+                .run()
+                .expect(expected);
+    }
+
+    @Override
+    protected void checkReportedError(@NonNull Context context, @NonNull Issue issue,
+            @NonNull Severity severity, @NonNull Location location, @NonNull String message,
+            @Nullable LintFix fixData) {
+        assertTrue(fixData instanceof LintFix.DataMap);
+        LintFix.DataMap map = (LintFix.DataMap) fixData;
+        assertEquals(map.get(String.class), APPCOMPAT_LIB_ARTIFACT_ID);
     }
 
     public void testAppAttributesPresentOnApi26() throws Exception {

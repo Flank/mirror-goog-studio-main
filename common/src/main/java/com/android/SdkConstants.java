@@ -2153,7 +2153,9 @@ public final class SdkConstants {
     public static final String SUPPORT_LIB_GROUP_ID = "com.android.support";
     public static final String SUPPORT_LIB_ARTIFACT = "com.android.support:support-v4";
     public static final String DESIGN_LIB_ARTIFACT = "com.android.support:design";
-    public static final String APPCOMPAT_LIB_ARTIFACT = "com.android.support:appcompat-v7";
+    public static final String APPCOMPAT_LIB_ARTIFACT_ID = "appcompat-v7";
+    public static final String APPCOMPAT_LIB_ARTIFACT =
+            SUPPORT_LIB_GROUP_ID + ":" + APPCOMPAT_LIB_ARTIFACT_ID;
     public static final String CARD_VIEW_LIB_ARTIFACT = "com.android.support:cardview-v7";
     public static final String GRID_LAYOUT_LIB_ARTIFACT = "com.android.support:gridlayout-v7";
     public static final String RECYCLER_VIEW_LIB_ARTIFACT = "com.android.support:recyclerview-v7";
