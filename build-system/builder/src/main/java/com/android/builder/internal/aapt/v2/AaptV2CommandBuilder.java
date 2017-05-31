@@ -266,10 +266,7 @@ public final class AaptV2CommandBuilder {
             throw new AaptException("Dependent features configured but no package ID was set.");
         }
 
-        // Disables automatic versioning of vector drawables.
         builder.add("--no-version-vectors");
-        // Disables other types automatic versioning.
-        builder.add("--no-auto-version");
 
         return builder.build();
     }
