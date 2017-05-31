@@ -17,7 +17,7 @@
 package com.android.tools.profiler.support.network.okhttp;
 
 import com.android.tools.profiler.support.network.okhttp.reflection.okhttp2.OkHttpClient$;
-import java.lang.reflect.InvocationTargetException;
+import com.android.tools.profiler.support.util.StudioLog;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,28 +28,30 @@ public final class OkHttp2Wrapper {
      *
      * <p>This is the entry-point for compile-time BCI.
      */
+    @SuppressWarnings("unchecked")
     public static void addInterceptorToClient(Object client) {
         try {
             new OkHttpClient$(client).networkInterceptors().add(OkHttp2Interceptor.create().obj);
-        } catch (NoSuchMethodException ignored) {
-        } catch (InvocationTargetException ignored) {
-        } catch (IllegalAccessException ignored) {
-        } catch (ClassNotFoundException ignored) {
+        } catch (Exception ex) {
+            StudioLog.e(
+                    "Could not add an OkHttp2 profiler interceptor during OkHttpClient construction",
+                    ex);
         }
     }
 
     /**
      * Adds an okhttp2 Interceptor to a {@code List<Interceptor>}, returning a copy of the list with
-     * the interceptor added.
+     * the interceptor added at the beginning of the list.
      *
      * <p>This is the entry-point for runtime (JVMTI) BCI.
      */
     @SuppressWarnings("unchecked")
-    public static List appendInterceptor(List interceptors) {
+    public static List insertInterceptor(List interceptors) {
         ArrayList list = new ArrayList(interceptors);
         try {
-            list.add(OkHttp2Interceptor.create().obj);
-        } catch (ClassNotFoundException ignored) {
+            list.add(0, OkHttp2Interceptor.create().obj);
+        } catch (ClassNotFoundException ex) {
+            StudioLog.e("Could not insert an OkHttp2 profiler interceptor", ex);
         }
         return list;
     }

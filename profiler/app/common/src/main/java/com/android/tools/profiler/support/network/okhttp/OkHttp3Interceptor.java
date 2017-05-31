@@ -21,6 +21,7 @@ import com.android.tools.profiler.support.network.HttpTracker;
 import com.android.tools.profiler.support.network.okhttp.reflection.okhttp3.*;
 import com.android.tools.profiler.support.network.okhttp.reflection.okio.BufferedSource$;
 import com.android.tools.profiler.support.network.okhttp.reflection.okio.Okio$;
+import com.android.tools.profiler.support.util.StudioLog;
 import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
@@ -55,11 +56,8 @@ public final class OkHttp3Interceptor implements InvocationHandler {
             Response$ response = chain.proceed(request);
             try {
                 response = track(request, response);
-            } catch (NoSuchMethodException ignored) {
-            } catch (IllegalAccessException ignored) {
-            } catch (InvocationTargetException ignored) {
-            } catch (ClassNotFoundException ignored) {
-            } catch (IOException ignored) {
+            } catch (Exception ex) {
+                StudioLog.e("Could not track an OkHttp3 request/response", ex);
             }
 
             return response.obj;

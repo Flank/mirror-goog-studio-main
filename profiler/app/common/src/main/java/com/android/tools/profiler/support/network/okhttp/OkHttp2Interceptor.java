@@ -21,12 +21,16 @@ import com.android.tools.profiler.support.network.HttpTracker;
 import com.android.tools.profiler.support.network.okhttp.reflection.okhttp2.*;
 import com.android.tools.profiler.support.network.okhttp.reflection.okio.BufferedSource$;
 import com.android.tools.profiler.support.network.okhttp.reflection.okio.Okio$;
+import com.android.tools.profiler.support.util.StudioLog;
 import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.util.*;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 public final class OkHttp2Interceptor implements InvocationHandler {
     private static final String OKHTTP2_PACKAGE = "com.squareup.okhttp.";
@@ -52,11 +56,8 @@ public final class OkHttp2Interceptor implements InvocationHandler {
             Response$ response = chain.proceed(request);
             try {
                 response = track(request, response);
-            } catch (NoSuchMethodException ignored) {
-            } catch (IllegalAccessException ignored) {
-            } catch (InvocationTargetException ignored) {
-            } catch (ClassNotFoundException ignored) {
-            } catch (IOException ignored) {
+            } catch (Exception ex) {
+                StudioLog.e("Could not track an OkHttp2 request/response", ex);
             }
 
             return response.obj;
