@@ -32,11 +32,14 @@ public class AetherUtils {
                     .build();
 
     static final RemoteRepository JCENTER =
-            new RemoteRepository.Builder("JCenter", "default", "http://jcenter.bintray.com/")
+            new RemoteRepository.Builder("JCenter", "default", "https://jcenter.bintray.com/")
                     .build();
 
+    static final RemoteRepository GOOGLE =
+            new RemoteRepository.Builder("Google", "default", "https://maven.google.com/").build();
+
     public static final ImmutableList<RemoteRepository> REPOSITORIES =
-            ImmutableList.of(MAVEN_CENTRAL, JCENTER);
+            ImmutableList.of(MAVEN_CENTRAL, JCENTER, GOOGLE);
 
     private AetherUtils() {}
 
