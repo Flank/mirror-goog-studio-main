@@ -181,7 +181,7 @@ def allConnectedTestTasks = [
 
 
 configure(allConnectedTestTasks) {
-    testClassesDir = sourceSets.test.output.classesDir
+    testClassesDirs = sourceSets.test.output.classesDirs
     classpath = sourceSets.test.runtimeClasspath
 
     description =
@@ -231,7 +231,7 @@ configure([connectedIntegrationTestQuarantine, connectedIntegrationTestPrebuilts
 task performanceTest(type: Test) {
     include "com/android/build/gradle/integration/performance/**"
 
-    testClassesDir = sourceSets.test.output.classesDir
+    testClassesDirs = sourceSets.test.output.classesDirs
     classpath = sourceSets.test.runtimeClasspath
 
     description =
@@ -242,7 +242,7 @@ task performanceTest(type: Test) {
     environment = testEnvironment
 
     reports {
-        junitXml.destination "${project.buildDir}/perf-results"
+        junitXml.destination project.file("${project.buildDir}/perf-results")
     }
     outputs.upToDateWhen { false }
 
