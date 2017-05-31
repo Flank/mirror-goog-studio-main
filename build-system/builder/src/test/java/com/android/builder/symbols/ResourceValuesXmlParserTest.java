@@ -494,4 +494,35 @@ public class ResourceValuesXmlParserTest {
 
         assertThat(actual).isEqualTo(expected);
     }
+
+    @Test
+    public void parseEnumBeforeId() throws Exception {
+        String xml =
+                ""
+                        + "<resources>"
+                        + "<attr name=\"a0\" format=\"reference|color\"/>"
+                        + "<attr name=\"a1\">"
+                        + "  <enum name=\"enum1\" value=\"0\"/>"
+                        + "  <enum name=\"enum2\" value=\"1\"/>"
+                        + "</attr>"
+                        + "<id name=\"enum1\"/>"
+                        + "<id name=\"nonEnumId\"/>"
+                        + "</resources>";
+        SymbolTable table =
+                ResourceValuesXmlParser.parse(
+                        XmlUtils.parseDocument(xml, false), IdProvider.sequential());
+
+        // We should ignore all elements declared under "attr", except for "enum" which is turned
+        // into an "id" Symbol.
+        SymbolTable expected =
+                SymbolTable.builder()
+                        .add(SymbolTestUtils.createSymbol("attr", "a0", "int", "1"))
+                        .add(SymbolTestUtils.createSymbol("attr", "a1", "int", "4"))
+                        .add(SymbolTestUtils.createSymbol("id", "enum1", "int", "5"))
+                        .add(SymbolTestUtils.createSymbol("id", "nonEnumId", "int", "6"))
+                        .add(SymbolTestUtils.createSymbol("id", "enum2", "int", "3"))
+                        .build();
+
+        assertThat(table).isEqualTo(expected);
+    }
 }

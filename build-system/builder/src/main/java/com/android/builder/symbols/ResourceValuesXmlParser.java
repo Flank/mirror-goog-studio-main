@@ -161,13 +161,20 @@ public final class ResourceValuesXmlParser {
         }
 
         SymbolTable.Builder builder = SymbolTable.builder();
+        List<Symbol> enumSymbols = new ArrayList();
 
         Node current = root.getFirstChild();
         while (current != null) {
             if (current.getNodeType() == Node.ELEMENT_NODE) {
-                parseChild((Element) current, builder, idProvider);
+                parseChild((Element) current, builder, idProvider, enumSymbols);
             }
             current = current.getNextSibling();
+        }
+
+        for (Symbol enumSymbol : enumSymbols) {
+            if (!builder.contains(enumSymbol)) {
+                builder.add(enumSymbol);
+            }
         }
         return builder.build();
     }
@@ -182,7 +189,8 @@ public final class ResourceValuesXmlParser {
     private static void parseChild(
             @NonNull Element child,
             @NonNull SymbolTable.Builder builder,
-            @NonNull IdProvider idProvider) {
+            @NonNull IdProvider idProvider,
+            @NonNull List<Symbol> enumSymbols) {
 
         String name = SymbolUtils.canonicalizeValueResourceName(getMandatoryAttr(child, "name"));
         String type = child.getTagName();
@@ -233,11 +241,11 @@ public final class ResourceValuesXmlParser {
                 break;
             case DECLARE_STYLEABLE:
                 // We also need to find all the attributes declared under declare styleable.
-                parseDeclareStyleable(child, idProvider, name, builder);
+                parseDeclareStyleable(child, idProvider, name, builder, enumSymbols);
                 break;
             case ATTR:
                 // We also need to find all the enums declared under attr (if there are any).
-                parseAttr(child, idProvider, name, builder);
+                parseAttr(child, idProvider, name, builder, enumSymbols);
                 break;
             case PUBLIC:
                 // Doesn't declare a resource.
@@ -264,7 +272,8 @@ public final class ResourceValuesXmlParser {
             @NonNull Element declareStyleable,
             @NonNull IdProvider idProvider,
             @NonNull String name,
-            @NonNull SymbolTable.Builder builder) {
+            @NonNull SymbolTable.Builder builder,
+            @NonNull List<Symbol> enumSymbols) {
         List<String> attrValues = new ArrayList<>();
 
         Node attrNode = declareStyleable.getFirstChild();
@@ -293,7 +302,7 @@ public final class ResourceValuesXmlParser {
                     SymbolUtils.canonicalizeValueResourceName(
                             getMandatoryAttr(attrElement, "name"));
 
-            parseAttr(attrElement, idProvider, attrName, builder);
+            parseAttr(attrElement, idProvider, attrName, builder, enumSymbols);
 
             String attrValue = Integer.toString(idProvider.next());
 
@@ -331,7 +340,8 @@ public final class ResourceValuesXmlParser {
             @NonNull Element attr,
             @NonNull IdProvider idProvider,
             @NonNull String name,
-            @NonNull SymbolTable.Builder builder) {
+            @NonNull SymbolTable.Builder builder,
+            @NonNull List<Symbol> enumSymbols) {
 
         Node enumNode = attr.getFirstChild();
         while (enumNode != null) {
@@ -360,9 +370,7 @@ public final class ResourceValuesXmlParser {
                             SymbolJavaType.INT,
                             Integer.toString(idProvider.next()));
 
-            if (!builder.contains(newEnum)) {
-                builder.add(newEnum);
-            }
+            enumSymbols.add(newEnum);
             enumNode = enumNode.getNextSibling();
         }
 
