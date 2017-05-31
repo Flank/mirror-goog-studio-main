@@ -68,6 +68,12 @@ service CpuService {
   }
 }
 
+enum CpuProfilerType {
+  UNSPECIFIED_PROFILER = 0;
+  ART = 1;
+  SIMPLE_PERF = 2;
+}
+
 // Requests all the traces that overlap with a time range.
 message GetTraceInfoRequest {
   int32 process_id = 1;
@@ -84,12 +90,7 @@ message GetTraceInfoResponse {
 // and should be returned if its time overlaps with the
 // one defined in a GetTraceInfoRequest.
 message TraceInfo {
-  enum Profiler {
-    UNSPECIFIED = 0;
-    ART = 1;
-    SIMPLE_PERF = 2;
-  }
-  Profiler profiler = 1;
+  CpuProfilerType profiler_type = 1;
   int64 from_timestamp = 2;  // inclusive
   int64 to_timestamp = 3;    // inclusive
   int32 trace_id = 4;
@@ -175,13 +176,8 @@ message CpuProfilingAppStartRequest {
     SAMPLED = 1;
     INSTRUMENTED = 2;
   }
-  enum Profiler {
-    UNSPECIFIED = 0;
-    ART = 1;
-    SIMPLE_PERF = 2;
-  }
   Mode mode = 3;
-  Profiler profiler = 4;
+  CpuProfilerType profiler_type = 4;
   // When using ART, the size of the in-memory buffer that holds tracing data.
   int32 buffer_size_in_mb = 5;
   // When using sampling, the sampling interval in microseconds.
@@ -205,12 +201,7 @@ message CpuProfilingAppStartResponse {
 message CpuProfilingAppStopRequest {
   string app_pkg_name = 1;
   Session session = 2;
-  enum Profiler {
-    UNSPECIFIED = 0;
-    ART = 1;
-    SIMPLE_PERF = 2;
-  }
-  Profiler profiler = 3;
+  CpuProfilerType profiler_type = 3;
 }
 
 message CpuProfilingAppStopResponse {
