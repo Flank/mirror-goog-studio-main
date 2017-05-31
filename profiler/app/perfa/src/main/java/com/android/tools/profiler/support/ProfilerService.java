@@ -23,9 +23,6 @@ import java.util.List;
 /** WIP: This is the JVMTI version of the profiler service. */
 @SuppressWarnings("unused") // This class is used via instrumentation
 public class ProfilerService {
-
-    public static final String STUDIO_PROFILER = "StudioProfiler";
-
     private static ProfilerService sInstance;
     private final List<ProfilerComponent> mComponents;
 

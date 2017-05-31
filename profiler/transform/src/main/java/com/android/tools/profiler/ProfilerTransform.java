@@ -42,7 +42,9 @@ public final class ProfilerTransform implements BiConsumer<InputStream, OutputSt
     private static final boolean OKHTTP_PROFILING_ENABLED =
             "true".equals(PROPERTIES.getProperty("android.profiler.okhttp.enabled"));
 
-    private static final Logger LOG = Logger.getLogger(ProfilerTransform.class.getName());
+    private static Logger getLog() {
+        return Logger.getLogger(ProfilerTransform.class.getName());
+    }
 
     @Override
     public void accept(InputStream in, OutputStream out) {
@@ -70,9 +72,9 @@ public final class ProfilerTransform implements BiConsumer<InputStream, OutputSt
             try (InputStream inputStream = new FileInputStream(propertiesFile)) {
                 properties.load(inputStream);
             } catch (FileNotFoundException e) {
-                LOG.warning("Profiler properties file cannot be found.");
+                getLog().warning("Profiler properties file cannot be found.");
             } catch (IOException e) {
-                LOG.warning("Profiler properties file is not read properly.");
+                getLog().warning("Profiler properties file is not read properly.");
             }
         }
         return properties;
