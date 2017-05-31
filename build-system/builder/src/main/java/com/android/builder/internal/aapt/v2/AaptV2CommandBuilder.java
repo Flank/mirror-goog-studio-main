@@ -66,6 +66,7 @@ public final class AaptV2CommandBuilder {
             parameters.add("--no-crunch");
         }
 
+        parameters.add("--legacy");
         parameters.add("-o", request.getOutput().getAbsolutePath());
         parameters.add(request.getInput().getAbsolutePath());
 

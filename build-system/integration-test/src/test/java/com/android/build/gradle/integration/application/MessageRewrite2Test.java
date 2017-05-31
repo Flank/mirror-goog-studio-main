@@ -70,10 +70,12 @@ public class MessageRewrite2Test {
 
     @Test
     public void testErrorInStringsForCompile() throws Exception {
+        // Incorrect strings.xml should cause AAPT to throw an error and we should rewrite it to
+        // point to the original file.
         TemporaryProjectModification.doTest(
                 project,
                 it -> {
-                    it.replaceInFile("src/main/res/values/strings.xml", "default text", "%s %d");
+                    it.replaceInFile("src/main/res/values/strings.xml", "default text", "<%s %d>");
 
                     GradleBuildResult result =
                             project.executor().expectFailure().run("assembleDebug");
@@ -86,6 +88,15 @@ public class MessageRewrite2Test {
                                                     "res",
                                                     "values",
                                                     "strings.xml")));
+                });
+
+        // AAPT1 and AAPT2 (with the legacy flag) should allow multiple substitutions specified in a
+        // non=positional format - an error should not be thrown.
+        TemporaryProjectModification.doTest(
+                project,
+                it -> {
+                    it.replaceInFile("src/main/res/values/strings.xml", "default text", "%s %d");
+                    project.executor().run("assembleDebug");
                 });
 
         project.execute("assembleDebug");
