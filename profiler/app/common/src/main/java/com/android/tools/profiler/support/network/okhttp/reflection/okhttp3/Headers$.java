@@ -18,7 +18,7 @@ package com.android.tools.profiler.support.network.okhttp.reflection.okhttp3;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 public class Headers$ {
     public final Object obj;
@@ -27,10 +27,16 @@ public class Headers$ {
         this.obj = headers;
     }
 
-    public Map<String, List<String>> toMultimap()
+    public Set<String> names()
             throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         //noinspection unchecked
-        return (Map<String, List<String>>)
-                obj.getClass().getDeclaredMethod("toMultimap").invoke(obj);
+        return (Set<String>) obj.getClass().getDeclaredMethod("names").invoke(obj);
+    }
+
+    public List<String> values(String name)
+            throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        //noinspection unchecked
+        return (List<String>)
+                obj.getClass().getDeclaredMethod("values", String.class).invoke(obj, name);
     }
 }
