@@ -25,7 +25,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.EXTERNAL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.DATA_BINDING;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.DATA_BINDING_ARTIFACT;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JAVA_RES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.JNI;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.PROGUARD_RULES;
@@ -211,7 +211,6 @@ import org.gradle.api.artifacts.ConfigurationVariant;
 import org.gradle.api.artifacts.PublishArtifact;
 import org.gradle.api.attributes.Attribute;
 import org.gradle.api.attributes.AttributeContainer;
-import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
@@ -219,7 +218,6 @@ import org.gradle.api.logging.Logging;
 import org.gradle.api.plugins.BasePlugin;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.plugins.JavaPlugin;
-import org.gradle.api.tasks.Copy;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.compile.JavaCompile;
@@ -264,7 +262,6 @@ public abstract class TaskManager {
     @Nullable private final FileCache buildCache;
 
     // Tasks. TODO: remove the mutable state from here.
-    private AndroidTask<Copy> jacocoAgentTask;
     public AndroidTask<MockableAndroidJarTask> createMockableJar;
 
     public TaskManager(
@@ -298,6 +295,7 @@ public abstract class TaskManager {
         return false;
     }
 
+    @NonNull
     public DataBindingBuilder getDataBindingBuilder() {
         return dataBindingBuilder;
     }
@@ -518,20 +516,20 @@ public abstract class TaskManager {
         // data binding related artifacts for external libs
         if (extension.getDataBinding().isEnabled()) {
             transformManager.addStream(
-                    OriginalStream.builder(project, "ext-libs-data-binding")
+                    OriginalStream.builder(project, "sub-project-data-binding")
                             .addContentTypes(TransformManager.DATA_BINDING_ARTIFACT)
                             .addScope(Scope.SUB_PROJECTS)
                             .setArtifactCollection(
                                     variantScope.getArtifactCollection(
-                                            COMPILE_CLASSPATH, MODULE, DATA_BINDING))
+                                            COMPILE_CLASSPATH, MODULE, DATA_BINDING_ARTIFACT))
                             .build());
             transformManager.addStream(
-                    OriginalStream.builder(project, "ext-libs-databinding")
+                    OriginalStream.builder(project, "ext-libs-data-binding")
                             .addContentTypes(TransformManager.DATA_BINDING_ARTIFACT)
                             .addScope(Scope.EXTERNAL_LIBRARIES)
                             .setArtifactCollection(
                                     variantScope.getArtifactCollection(
-                                            COMPILE_CLASSPATH, EXTERNAL, DATA_BINDING))
+                                            COMPILE_CLASSPATH, EXTERNAL, DATA_BINDING_ARTIFACT))
                             .build());
         }
 
@@ -1361,7 +1359,12 @@ public abstract class TaskManager {
         postJavacCreation(tasks, scope);
 
         if (extension.getDataBinding().isEnabled()) {
-            javacTask.optionalDependsOn(tasks, scope.getDataBindingMergeArtifactsTask());
+            // the data binding artifact is created by the annotation processor, so we register this
+            // task output (which also publishes it) with javac as the generating task.
+            scope.addTaskOutput(
+                    TaskOutputHolder.TaskOutputType.DATA_BINDING_ARTIFACT,
+                    scope.getBundleFolderForDataBinding(),
+                    javacTask.getName());
         }
 
         return javacTask;
@@ -1615,9 +1618,6 @@ public abstract class TaskManager {
     public void createAndroidTestVariantTasks(@NonNull TaskFactory tasks,
             @NonNull TestVariantData variantData) {
         VariantScope variantScope = variantData.getScope();
-
-        final BaseVariantData testedVariantData =
-                (BaseVariantData) variantData.getTestedVariantData();
 
         createAnchorTasks(tasks, variantScope);
 
@@ -2413,25 +2413,28 @@ public abstract class TaskManager {
             }
         }
         setDataBindingAnnotationProcessorParams(variantScope);
-        AndroidTask<TransformTask> existing = variantScope
-                .getDataBindingMergeArtifactsTask();
-        if (existing != null) {
-            return;
-        }
-        Optional<AndroidTask<TransformTask>> dataBindingMergeTask;
-        dataBindingMergeTask = variantScope
-                .getTransformManager()
-                .addTransform(tasks, variantScope,
-                        new DataBindingMergeArtifactsTransform(getLogger(), variantScope));
-        if (dataBindingMergeTask.isPresent()) {
-            final AndroidTask<TransformTask> task = dataBindingMergeTask.get();
-            variantScope.setDataBindingMergeArtifactsTask(task);
 
-            variantScope.addTaskOutput(
-                    TaskOutputHolder.TaskOutputType.DATA_BINDING,
-                    variantScope.getBundleFolderForDataBinding(),
-                    task.getName());
-        }
+        File outFolder =
+                new File(
+                        variantScope.getBuildFolderForDataBindingCompiler(),
+                        DataBindingBuilder.ARTIFACT_FILES_DIR_FROM_LIBS);
+
+
+        Optional<AndroidTask<TransformTask>> dataBindingMergeTask;
+        dataBindingMergeTask =
+                variantScope
+                        .getTransformManager()
+                        .addTransform(
+                                tasks,
+                                variantScope,
+                                new DataBindingMergeArtifactsTransform(getLogger(), outFolder));
+
+        dataBindingMergeTask.ifPresent(
+                task ->
+                        variantScope.addTaskOutput(
+                                TaskOutputHolder.TaskOutputType.DATA_BINDING_DEPENDENCY_ARTIFACTS,
+                                outFolder,
+                                task.getName()));
     }
 
     protected void createDataBindingTasksIfNecessary(@NonNull TaskFactory tasks,
@@ -2541,7 +2544,8 @@ public abstract class TaskManager {
         boolean signedApk = variantData.isSigned();
 
         GradleVariantConfiguration variantConfiguration = variantScope.getVariantConfiguration();
-        /**
+
+        /*
          * PrePackaging step class that will look if the packaging of the main FULL_APK split is
          * necessary when running in InstantRun mode. In InstantRun mode targeting an api 23 or
          * above device, resources are packaged in the main split FULL_APK. However when a warm swap
@@ -2598,8 +2602,7 @@ public abstract class TaskManager {
                                 manifestType,
                                 variantScope.getSplitScope(),
                                 taskOutputType));
-        ConfigurableFileCollection apks =
-                variantScope.addTaskOutput(taskOutputType, outputDirectory, packageApp.getName());
+        variantScope.addTaskOutput(taskOutputType, outputDirectory, packageApp.getName());
 
         AndroidTask<PackageApplication> packageInstantRunResources = null;
 
@@ -2677,11 +2680,10 @@ public abstract class TaskManager {
                             new CopyOutputs.ConfigAction(
                                     new DefaultGradlePackagingScope(variantScope),
                                     finalApkLocation));
-            apks =
-                    variantScope.addTaskOutput(
-                            TaskOutputHolder.TaskOutputType.APK,
-                            finalApkLocation,
-                            copyOutputsTask.getName());
+            variantScope.addTaskOutput(
+                    TaskOutputHolder.TaskOutputType.APK,
+                    finalApkLocation,
+                    copyOutputsTask.getName());
             variantScope.getAssembleTask().dependsOn(tasks, copyOutputsTask);
         }
 
@@ -2963,17 +2965,15 @@ public abstract class TaskManager {
     }
 
     public void createReportTasks(TaskFactory tasks, final List<VariantScope> variantScopes) {
-        AndroidTask<DependencyReportTask> dependencyReportTask =
-                androidTasks.create(
-                        tasks,
-                        "androidDependencies",
-                        DependencyReportTask.class,
-                        task -> {
-                            task.setDescription(
-                                    "Displays the Android dependencies of the project.");
-                            task.setVariants(variantScopes);
-                            task.setGroup(ANDROID_GROUP);
-                        });
+        androidTasks.create(
+                tasks,
+                "androidDependencies",
+                DependencyReportTask.class,
+                task -> {
+                    task.setDescription("Displays the Android dependencies of the project.");
+                    task.setVariants(variantScopes);
+                    task.setGroup(ANDROID_GROUP);
+                });
 
         androidTasks.create(
                 tasks,

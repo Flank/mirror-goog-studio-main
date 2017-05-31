@@ -6,6 +6,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.ANNOTATION_PROCESSOR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.ANNOTATION_PROCESSOR_LIST;
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.DATA_BINDING_DEPENDENCY_ARTIFACTS;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.api.AnnotationProcessorOptions;
@@ -30,7 +31,7 @@ import org.gradle.api.file.FileCollection;
 public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaCompile> {
     private static final ILogger LOG = LoggerWrapper.getLogger(JavaCompileConfigAction.class);
 
-    @NonNull private VariantScope scope;
+    @NonNull private final VariantScope scope;
 
     public JavaCompileConfigAction(@NonNull VariantScope scope) {
         this.scope = scope;
@@ -168,6 +169,15 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
         javacTask.getOptions().getCompilerArgs().add(
                 scope.getAnnotationProcessorOutputDir().getAbsolutePath());
         javacTask.annotationProcessorOutputFolder = scope.getAnnotationProcessorOutputDir();
+
+        // if data binding is enabled and this variant has merged dependency artifacts, then
+        // make the javac task depend on them. (test variants don't do the merge so they
+        // could not have the artifacts)
+        if (scope.getGlobalScope().getExtension().getDataBinding().isEnabled()
+                && scope.hasOutput(DATA_BINDING_DEPENDENCY_ARTIFACTS)) {
+            javacTask.dataBindingDependencyArtifacts =
+                    scope.getOutput(DATA_BINDING_DEPENDENCY_ARTIFACTS);
+        }
 
         javacTask.processorListFile = scope.getOutput(ANNOTATION_PROCESSOR_LIST);
         javacTask.variantName = scope.getFullVariantName();

@@ -231,6 +231,12 @@ public interface BaseTestedVariant extends BaseVariant, TestedVariant {
 
         @NonNull
         @Override
+        public FileCollection getDataBindingDependencyArtifacts() {
+            return variant.getDataBindingDependencyArtifacts();
+        }
+
+        @NonNull
+        @Override
         public NdkCompile getNdkCompile() {
             return variant.getNdkCompile();
         }

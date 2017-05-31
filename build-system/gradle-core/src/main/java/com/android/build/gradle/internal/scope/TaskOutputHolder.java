@@ -94,7 +94,12 @@ public interface TaskOutputHolder {
 
         // the file that consumers of an AAR can use for additional proguard rules.
         CONSUMER_PROGUARD_FILE,
-        DATA_BINDING,
+
+        // the data binding artifact for a library that gets published with the aar
+        DATA_BINDING_ARTIFACT,
+        // the merged data binding artifacts from all the dependencies
+        DATA_BINDING_DEPENDENCY_ARTIFACTS,
+
         LINT_JAR,
 
         // the zip file output of the extract annotation class.

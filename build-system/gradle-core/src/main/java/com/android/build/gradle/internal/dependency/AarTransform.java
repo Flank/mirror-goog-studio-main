@@ -70,7 +70,7 @@ public class AarTransform extends ArtifactTransform {
             ArtifactType.ANNOTATIONS,
             ArtifactType.PUBLIC_RES,
             ArtifactType.SYMBOL_LIST,
-            ArtifactType.DATA_BINDING,
+            ArtifactType.DATA_BINDING_ARTIFACT,
         };
     }
 
@@ -120,7 +120,7 @@ public class AarTransform extends ArtifactTransform {
             case SYMBOL_LIST:
                 file = new File(input, FN_RESOURCE_TEXT);
                 break;
-            case DATA_BINDING:
+            case DATA_BINDING_ARTIFACT:
                 file = new File(input, DataBindingBuilder.DATA_BINDING_ROOT_FOLDER_IN_AAR);
                 break;
             default:
