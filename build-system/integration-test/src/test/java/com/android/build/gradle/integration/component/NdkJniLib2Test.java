@@ -134,7 +134,6 @@ public class NdkJniLib2Test {
                 + "}\n");
 
         GradleBuildResult result = project.executor()
-                .withArgument("--dry-run") // Just checking task order.  Don't need to actually run.
                 .run(":app:assembleDebug");
         assertThat(result.getTask(":app:linkEmptyArmeabiDebugSharedLibrary"))
                 .wasExecuted();

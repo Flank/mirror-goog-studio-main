@@ -33,7 +33,6 @@ import com.google.common.base.Preconditions;
 import java.io.File;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.file.FileTree;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.reporting.ConfigurableReport;
 import org.gradle.api.tasks.InputFiles;
@@ -48,20 +47,6 @@ public class AndroidUnitTest extends Test {
 
     private FileCollection resCollection;
     private FileCollection assetsCollection;
-
-    /** All test classes, from both Java and Kotlin. */
-    private FileCollection testClasses;
-
-    /**
-     * Returns the test class files.
-     *
-     * <p>Because test classes may come from additional bytecode sources (e.g. Kotlin), we need to
-     * override this.
-     */
-    @Override
-    public FileTree getCandidateClassFiles() {
-        return testClasses.getAsFileTree();
-    }
 
     @InputFiles
     @Optional
@@ -113,7 +98,7 @@ public class AndroidUnitTest extends Test {
                             + testedVariantData.getVariantConfiguration().getFullName()
                             + " build.");
 
-            runTestsTask.testClasses = scope.getOutput(CLASSES_FOR_UNIT_TESTS);
+            runTestsTask.setTestClassesDirs(scope.getOutput(CLASSES_FOR_UNIT_TESTS));
 
             runTestsTask.setClasspath(computeClasspath());
 

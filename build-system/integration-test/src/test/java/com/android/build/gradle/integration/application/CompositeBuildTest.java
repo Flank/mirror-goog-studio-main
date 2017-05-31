@@ -33,7 +33,6 @@ import org.junit.Rule;
 import org.junit.Test;
 
 /** Integration test for composite build. */
-@Ignore("https://issuetracker.google.com/issues/38176743")
 public class CompositeBuildTest {
 
     @Rule
