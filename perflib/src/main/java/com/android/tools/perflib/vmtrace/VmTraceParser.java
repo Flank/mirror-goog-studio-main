@@ -16,18 +16,14 @@
 
 package com.android.tools.perflib.vmtrace;
 
-import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.ddmlib.ByteBufferUtil;
 import com.google.common.base.Charsets;
-import com.google.common.collect.Maps;
 import com.google.common.io.Closeables;
 import com.google.common.primitives.UnsignedInts;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.Map;
-import java.util.Set;
 
 public class VmTraceParser {
     private static final int TRACE_MAGIC = 0x574f4c53; // 'SLOW'
@@ -38,22 +34,22 @@ public class VmTraceParser {
     private static final String HEADER_END = "*end";
 
     private static final String KEY_CLOCK = "clock";
-    private static final String KEY_DATA_OVERFLOW = "data-file-overflow";
-    private static final String KEY_VM = "vm";
-    private static final String KEY_ELAPSED_TIME_US = "elapsed-time-usec";
 
     private final File mTraceFile;
 
-    private final VmTraceData.Builder mTraceDataBuilder;
-    private VmTraceData mTraceData;
+    private final VmTraceHandler mTraceDataHandler;
 
-    public VmTraceParser(File traceFile) {
+    private int mVersion;
+
+    private VmClockType mVmClockType;
+
+    public VmTraceParser(File traceFile, VmTraceHandler traceHandler) {
         if (!traceFile.exists()) {
             throw new IllegalArgumentException(
                     "Trace file " + traceFile.getAbsolutePath() + " does not exist.");
         }
         mTraceFile = traceFile;
-        mTraceDataBuilder = new VmTraceData.Builder();
+        mTraceDataHandler = traceHandler;
     }
 
     public void parse() throws IOException {
@@ -66,15 +62,6 @@ public class VmTraceParser {
             buffer = ByteBufferUtil.mapFile(mTraceFile, headerLength, ByteOrder.LITTLE_ENDIAN);
         }
         parseData(buffer);
-        computeTimingStatistics();
-    }
-
-    public VmTraceData getTraceData() {
-        if (mTraceData == null) {
-            mTraceData = mTraceDataBuilder.build();
-        }
-
-        return mTraceData;
     }
 
     private static boolean isStreamingTrace(File file) throws IOException {
@@ -140,7 +127,8 @@ public class VmTraceParser {
 
                 switch (mode) {
                     case PARSE_VERSION:
-                        mTraceDataBuilder.setVersion(Integer.decode(line));
+                        mVersion = Integer.decode(line);
+                        mTraceDataHandler.setVersion(mVersion);
                         mode = PARSE_OPTIONS;
                         break;
                     case PARSE_THREADS:
@@ -173,24 +161,18 @@ public class VmTraceParser {
         if (tokens.length == 2) {
             String key = tokens[0];
             String value = tokens[1];
+            mTraceDataHandler.setProperty(key, value);
 
             if (key.equals(KEY_CLOCK)) {
                 if (value.equals("thread-cpu")) {
-                    mTraceDataBuilder.setVmClockType(VmTraceData.VmClockType.THREAD_CPU);
+                    mVmClockType = VmClockType.THREAD_CPU;
                 } else if (value.equals("wall")) {
-                    mTraceDataBuilder.setVmClockType(VmTraceData.VmClockType.WALL);
+                    mVmClockType = VmClockType.WALL;
                 } else if (value.equals("dual")) {
-                    mTraceDataBuilder.setVmClockType(VmTraceData.VmClockType.DUAL);
+                    mVmClockType = VmClockType.DUAL;
                 }
-            } else if (key.equals(KEY_DATA_OVERFLOW)) {
-                mTraceDataBuilder.setDataFileOverflow(Boolean.parseBoolean(value));
-            } else if (key.equals(KEY_VM)) {
-                mTraceDataBuilder.setVm(value);
-            } else if (key.equals(KEY_ELAPSED_TIME_US)) {
-                mTraceDataBuilder.setElapsedTimeUs(Long.parseLong(value));
-            } else {
-                mTraceDataBuilder.setProperty(key, value);
             }
+
         }
     }
 
@@ -204,7 +186,7 @@ public class VmTraceParser {
         try {
             int id = Integer.decode(line.substring(0, index));
             String name = line.substring(index).trim();
-            mTraceDataBuilder.addThread(id, name);
+            mTraceDataHandler.addThread(id, name);
         } catch (NumberFormatException ignored) {
         }
     }
@@ -239,8 +221,8 @@ public class VmTraceParser {
             }
         }
 
-        mTraceDataBuilder.addMethod(id, new MethodInfo(id, className, methodName, signature,
-                pathname, lineNumber));
+        mTraceDataHandler.addMethod(
+                id, new MethodInfo(id, className, methodName, signature, pathname, lineNumber));
     }
 
     private String constructPathname(String className, String pathname) {
@@ -285,8 +267,7 @@ public class VmTraceParser {
     private void parseMethodTraceData(ByteBuffer buffer, int recordSize) {
         int methodId;
         int threadId;
-        int version = mTraceDataBuilder.getVersion();
-        VmTraceData.VmClockType vmClockType = mTraceDataBuilder.getVmClockType();
+        int version = mVersion;
         while (buffer.hasRemaining()) {
             int threadTime;
             int globalTime;
@@ -296,7 +277,7 @@ public class VmTraceParser {
             threadId = version == 1 ? buffer.get() : buffer.getShort();
             methodId = buffer.getInt();
 
-            switch (vmClockType) {
+            switch (mVmClockType) {
                 case WALL:
                     globalTime = buffer.getInt();
                     threadTime = globalTime;
@@ -336,8 +317,8 @@ public class VmTraceParser {
             }
             methodId &= ~0x03;
 
-            mTraceDataBuilder.addMethodAction(threadId, UnsignedInts.toLong(methodId), methodAction,
-                    threadTime, globalTime);
+            mTraceDataHandler.addMethodAction(
+                    threadId, UnsignedInts.toLong(methodId), methodAction, threadTime, globalTime);
         }
     }
 
@@ -357,10 +338,11 @@ public class VmTraceParser {
         validateMagic(buffer.getInt());
         // read version
         int version = buffer.getShort();
-        if (version != mTraceDataBuilder.getVersion()) {
-            String msg = String.format(
-                    "Error: version number mismatch; got %d in data header but %d in options\n",
-                    version, mTraceData.getVersion());
+        if (version != mVersion) {
+            String msg =
+                    String.format(
+                            "Error: version number mismatch; got %d in data header but %d in options\n",
+                            version, mVersion);
             throw new RuntimeException(msg);
         }
         validateTraceVersion(version);
@@ -369,7 +351,7 @@ public class VmTraceParser {
         int offsetToData = buffer.getShort() - 16;
 
         // read startWhen
-        mTraceDataBuilder.setStartTimeUs(buffer.getLong());
+        mTraceDataHandler.setStartTimeUs(buffer.getLong());
 
         // read record size
         int recordSize;
@@ -415,25 +397,6 @@ public class VmTraceParser {
         }
     }
 
-    private void computeTimingStatistics() {
-        VmTraceData data = getTraceData();
-
-        ProfileDataBuilder builder = new ProfileDataBuilder();
-        for (ThreadInfo thread : data.getThreads()) {
-            Call c = thread.getTopLevelCall();
-            if (c == null) {
-                continue;
-            }
-
-            builder.computeCallStats(c, null, thread);
-        }
-
-        for (Long methodId : builder.getMethodsWithProfileData()) {
-            MethodInfo method = data.getMethod(methodId);
-            method.setProfileData(builder.getProfileData(methodId));
-        }
-    }
-
     /**
      * Traces obtained using streaming mode have a different format than the ones that are not. This
      * class contains a method to parse streaming traces as well as some auxiliary methods.
@@ -453,7 +416,7 @@ public class VmTraceParser {
 
         /**
          * Parses the streaming trace file. This method reads a streaming trace file, sets the
-         * header properties to {@link #mTraceDataBuilder}, and returns a {@link ByteBuffer}
+         * header properties to {@link #mTraceDataHandler}, and returns a {@link ByteBuffer}
          * containing the data file header and the method trace data corresponding to the trace.
          */
         private ByteBuffer parse() throws IOException {
@@ -469,7 +432,8 @@ public class VmTraceParser {
                 validateTraceVersion(version);
                 writeNumberLE(version, 2);
                 // Set the version in the trace data builder
-                mTraceDataBuilder.setVersion(version);
+                mVersion = version;
+                mTraceDataHandler.setVersion(version);
 
                 // Read the offset and copy it to data file header
                 int offsetToData = readNumberLE(2) - 16;
@@ -512,7 +476,7 @@ public class VmTraceParser {
                                 int tid = readNumberLE(2);
                                 int threadLineLength = readNumberLE(2);
                                 String name = readString(threadLineLength);
-                                mTraceDataBuilder.addThread(tid, name);
+                                mTraceDataHandler.addThread(tid, name);
                             } else if (code == PARSE_SUMMARY) {
                                 int summaryLength = readNumberLE(4);
                                 String summary = readString(summaryLength);
@@ -614,40 +578,5 @@ public class VmTraceParser {
         }
     }
 
-    private static class ProfileDataBuilder {
-        /** Maps method ids to their corresponding method data builders */
-        private final Map<Long, MethodProfileData.Builder> mBuilderMap = Maps.newHashMap();
 
-        public void computeCallStats(Call c, Call parent, ThreadInfo thread) {
-            long methodId = c.getMethodId();
-            MethodProfileData.Builder builder = getProfileDataBuilder(methodId);
-            builder.addCallTime(c, parent, thread);
-            builder.incrementInvocationCount(c, parent, thread);
-            if (c.isRecursive()) {
-                builder.setRecursive();
-            }
-
-            for (Call callee: c.getCallees()) {
-                computeCallStats(callee, c, thread);
-            }
-        }
-
-        @NonNull
-        private MethodProfileData.Builder getProfileDataBuilder(long methodId) {
-            MethodProfileData.Builder builder = mBuilderMap.get(methodId);
-            if (builder == null) {
-                builder = new MethodProfileData.Builder();
-                mBuilderMap.put(methodId, builder);
-            }
-            return builder;
-        }
-
-        public Set<Long> getMethodsWithProfileData() {
-            return mBuilderMap.keySet();
-        }
-
-        public MethodProfileData getProfileData(Long methodId) {
-            return mBuilderMap.get(methodId).build();
-        }
-    }
 }

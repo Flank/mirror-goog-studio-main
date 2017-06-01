@@ -25,7 +25,6 @@ import com.android.tools.perflib.vmtrace.ThreadInfo;
 import com.android.tools.perflib.vmtrace.VmTraceData;
 import com.android.tools.perflib.vmtrace.VmTraceParser;
 import com.google.common.collect.Iterables;
-
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.FlowLayout;
@@ -35,7 +34,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
-
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JCheckBox;
@@ -85,14 +83,15 @@ public class TraceView {
     }
 
     private static VmTraceData getVmTraceData(String tracePath) {
-        VmTraceParser parser = new VmTraceParser(getFile(tracePath));
+        VmTraceData.Builder dataBuilder = new VmTraceData.Builder();
+        VmTraceParser parser = new VmTraceParser(getFile(tracePath), dataBuilder);
         try {
             parser.parse();
         } catch (IOException e) {
             fail("Unexpected error while reading tracing file: " + tracePath);
         }
 
-        return parser.getTraceData();
+        return dataBuilder.build();
     }
 
     private static File getFile(String path) {
