@@ -410,6 +410,10 @@ public class ArtifactDependencyGraph {
                                 false, /* isSkipped */
                                 false)); /* isProvided */
             } else {
+                if (artifact.isWrappedModule()) {
+                    // force external dependency mode.
+                    projectPath = null;
+                }
                 //noinspection VariableNotUsedInsideIf
                 androidLibraries.add(
                         new com.android.build.gradle.internal.ide.AndroidLibraryImpl(
