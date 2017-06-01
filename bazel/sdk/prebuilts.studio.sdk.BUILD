@@ -255,6 +255,21 @@ filegroup(
 )
 
 filegroup(
+    name = "wearable_latest",
+    srcs = [":wearable-2.0.1"],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "wearable-2.0.1",
+    srcs = glob(
+        include = [
+            "*/extras/google/m2repository/com/google/android/wearable/wearable/2.0.1/**",
+        ],
+    ),
+)
+
+filegroup(
     name = "docs",
     srcs = glob(["*/docs/**"]),
     visibility = ["//visibility:public"],
