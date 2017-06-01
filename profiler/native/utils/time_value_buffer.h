@@ -49,7 +49,7 @@ class TimeValueBuffer {
   }
 
   // Returns data only (without timestamps) for the given range
-  // [time_from, time_to).
+  // (time_from, time_to].
   std::vector<T> GetValues(const int64_t time_from,
                            const int64_t time_to) const {
     std::vector<TimeValue<T>> items = GetItems(time_from, time_to);
@@ -60,14 +60,14 @@ class TimeValueBuffer {
     return result;
   }
 
-  // Returns time values within the given range [time_from, time_to).
+  // Returns time values within the given range (time_from, time_to].
   std::vector<TimeValue<T>> GetItems(const int64_t time_from,
                                      const int64_t time_to) const {
     std::lock_guard<std::mutex> lock(values_mutex_);
     std::vector<TimeValue<T>> result;
     for (size_t i = 0; i < values_.size(); i++) {
       const auto& value = values_.Get(i);
-      if (value.time >= time_from && value.time < time_to) {
+      if (value.time > time_from && value.time <= time_to) {
         result.push_back(value);
       }
     }
