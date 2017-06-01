@@ -14,5 +14,6 @@
     <orderEntry type="module" module-name="android-annotations" exported="" />
     <orderEntry type="module" module-name="annotations" />
     <orderEntry type="module" module-name="common" />
+    <orderEntry type="library" name="Guava" level="project" />
   </component>
 </module>

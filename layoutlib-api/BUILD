@@ -31,6 +31,7 @@ maven_java_library(
     deps = [
         "//tools/base/annotations",
         "//tools/base/common:tools.common",
+        "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:com.intellij_annotations",
         "//tools/base/third_party:net.sf.kxml_kxml2",
     ],
