@@ -40,10 +40,6 @@ public final class JavaLibraryImpl implements Library, Serializable {
         this.artifactFile = artifactFile;
     }
 
-    public JavaLibraryImpl(@NonNull JavaDependency javaDependency) {
-        this(javaDependency.getAddress().toString(), javaDependency.getArtifactFile());
-    }
-
     @Override
     public int getType() {
         return LIBRARY_JAVA;

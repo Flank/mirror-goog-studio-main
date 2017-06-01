@@ -50,16 +50,18 @@ public final class AndroidLibraryImpl implements Library, Serializable {
 
     @NonNull
     private final String address;
-    @NonNull
-    private final File folder;
+    @NonNull private final File artifact;
+    @NonNull private final File folder;
     @NonNull
     private final List<String> localJarPath;
 
     public AndroidLibraryImpl(
             @NonNull String address,
+            @NonNull File artifact,
             @NonNull File folder,
             @NonNull Collection<File> localJarOverride) {
         this.address = address;
+        this.artifact = artifact;
         this.folder = folder;
         // TODO Fix me once we are always extracting AARs during sync.
         localJarPath = Lists.newArrayListWithCapacity(localJarOverride.size());
@@ -82,7 +84,7 @@ public final class AndroidLibraryImpl implements Library, Serializable {
     @NonNull
     @Override
     public File getArtifact() {
-        return folder;
+        return artifact;
     }
 
     @NonNull
@@ -192,20 +194,22 @@ public final class AndroidLibraryImpl implements Library, Serializable {
             return false;
         }
         AndroidLibraryImpl that = (AndroidLibraryImpl) o;
-        return Objects.equals(address, that.address) &&
-                Objects.equals(folder, that.folder) &&
-                Objects.equals(localJarPath, that.localJarPath);
+        return Objects.equals(address, that.address)
+                && Objects.equals(artifact, that.artifact)
+                && Objects.equals(folder, that.folder)
+                && Objects.equals(localJarPath, that.localJarPath);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(address, folder, localJarPath);
+        return Objects.hash(address, artifact, folder, localJarPath);
     }
 
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
                 .add("address", address)
+                .add("artifact", artifact)
                 .add("folder", folder)
                 .add("localJarPath", localJarPath)
                 .toString();

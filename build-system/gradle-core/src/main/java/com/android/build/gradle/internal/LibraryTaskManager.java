@@ -559,14 +559,6 @@ public class LibraryTaskManager extends TaskManager {
             project.getArtifacts().add("archives", bundle);
         }
 
-        // configure the variant to be testable.
-        variantConfig.setOutput(
-                AndroidDependency.createLocalTestedAarLibrary(
-                        bundle.getArchivePath(),
-                        variantScope.getFullVariantName(),
-                        project.getPath(),
-                        variantBundleDir));
-
         recorder.record(
                 ExecutionType.LIB_TASK_MANAGER_CREATE_LINT_TASK,
                 projectPath,

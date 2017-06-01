@@ -33,7 +33,6 @@ import static com.android.SdkConstants.FN_RESOURCE_TEXT;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
-import com.android.builder.dependency.level2.AndroidDependency;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.MavenCoordinates;
@@ -55,8 +54,8 @@ final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibrary, Se
 
     @Nullable
     private final String variant;
-    @NonNull
-    private final File folder;
+    @NonNull private final File bundle;
+    @NonNull private final File folder;
     @NonNull
     private final List<AndroidLibrary> androidLibraries;
     @NonNull
@@ -69,6 +68,7 @@ final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibrary, Se
     AndroidLibraryImpl(
             @NonNull MavenCoordinates coordinates,
             @Nullable String projectPath,
+            @NonNull File bundle,
             @NonNull File extractedFolder,
             @Nullable String variant,
             boolean isProvided,
@@ -81,27 +81,9 @@ final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibrary, Se
         this.javaLibraries = ImmutableList.copyOf(javaLibraries);
         this.localJars = ImmutableList.copyOf(localJavaLibraries);
         this.variant = variant;
+        this.bundle = bundle;
         this.folder = extractedFolder;
         hashcode = computeHashCode();
-    }
-
-    AndroidLibraryImpl(
-            @NonNull AndroidDependency clonedLibrary,
-            boolean isProvided,
-            boolean isSkipped,
-            @NonNull List<AndroidLibrary> androidLibraries,
-            @NonNull Collection<JavaLibrary> javaLibraries,
-            @NonNull Collection<File> localJavaLibraries) {
-        this(
-                clonedLibrary.getCoordinates(),
-                clonedLibrary.getProjectPath(),
-                clonedLibrary.getExtractedFolder(),
-                clonedLibrary.getVariant(),
-                isProvided,
-                isSkipped,
-                ImmutableList.copyOf(androidLibraries),
-                ImmutableList.copyOf(javaLibraries),
-                ImmutableList.copyOf(localJavaLibraries));
     }
 
     @Nullable
@@ -113,9 +95,7 @@ final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibrary, Se
     @NonNull
     @Override
     public File getBundle() {
-        // even though we don't have a bundle, we have to return something, otherwise the IDE
-        // will freak out.
-        return new File("this is not the bundle path");
+        return bundle;
     }
 
     @NonNull
@@ -241,11 +221,12 @@ final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibrary, Se
             return false;
         }
 
-        return Objects.equal(variant, that.variant) &&
-                Objects.equal(folder, that.folder) &&
-                Objects.equal(androidLibraries, that.androidLibraries) &&
-                Objects.equal(javaLibraries, that.javaLibraries) &&
-                Objects.equal(localJars, that.localJars);
+        return Objects.equal(variant, that.variant)
+                && Objects.equal(bundle, that.bundle)
+                && Objects.equal(folder, that.folder)
+                && Objects.equal(androidLibraries, that.androidLibraries)
+                && Objects.equal(javaLibraries, that.javaLibraries)
+                && Objects.equal(localJars, that.localJars);
     }
 
     @Override
@@ -257,6 +238,7 @@ final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibrary, Se
         return Objects.hashCode(
                 super.hashCode(),
                 variant,
+                bundle,
                 folder,
                 androidLibraries,
                 javaLibraries,
@@ -269,6 +251,7 @@ final class AndroidLibraryImpl extends LibraryImpl implements AndroidLibrary, Se
                 .add("name", getName())
                 .add("project", getProject())
                 .add("variant", variant)
+                .add("bundle", bundle)
                 .add("folder", folder)
                 .add("androidLibraries", androidLibraries)
                 .add("javaLibraries", javaLibraries)

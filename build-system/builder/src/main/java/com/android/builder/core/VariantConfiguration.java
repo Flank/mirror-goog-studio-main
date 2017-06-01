@@ -120,12 +120,6 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      */
     private final VariantConfiguration<T, D, F> mTestedConfig;
 
-    /**
-     * An optional output that is only valid if the type is Type#LIBRARY so that the test
-     * for the library can use the library as if it was a normal dependency.
-     */
-    private AndroidDependency mOutput;
-
     @NonNull
     private ProductFlavor mMergedFlavor;
 
@@ -604,33 +598,6 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     @Nullable
     public SourceProvider getMultiFlavorSourceProvider() {
         return mMultiFlavorSourceProvider;
-    }
-
-    /**
-     * Sets the output of this variant. This is required when the variant is a library so that
-     * the variant that tests this library can properly include the tested library in its own
-     * package.
-     *
-     * @param output the output of the library as an AndroidLibrary that will provides the
-     *               location of all the created items.
-     * @return the config object
-     */
-    @NonNull
-    public VariantConfiguration setOutput(AndroidDependency output) {
-        mOutput = output;
-        return this;
-    }
-
-    /**
-     * Returns the {@link AndroidLibrary} that this library variant produces. Used so that
-     * related test variants can use it as a dependency. Returns null if this is not a library
-     * variant.
-     *
-     * @see #mOutput
-     */
-    @Nullable
-    public AndroidDependency getOutput() {
-        return mOutput;
     }
 
     @NonNull

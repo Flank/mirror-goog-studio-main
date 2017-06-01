@@ -60,43 +60,6 @@ public final class AndroidDependency extends ExtractedDependency {
 
     private final int hashCode;
 
-    public static AndroidDependency createLocalTestedAarLibrary(
-            @NonNull File artifactFile,
-            @NonNull String name,
-            @Nullable String projectPath,
-            @NonNull File extractedFolder) {
-        return new AndroidDependency(
-                artifactFile,
-                new MavenCoordinatesImpl(
-                        "__tested_library__",
-                        artifactFile.getPath(),
-                        "unspecified"),
-                name,
-                projectPath,
-                extractedFolder,
-                extractedFolder, /*jarsRootFolder*/
-                null, /*variant*/
-                true /*IsSubModule*/);
-    }
-
-    public static AndroidDependency createStagedAarLibrary(
-            @NonNull File artifactFile,
-            @NonNull MavenCoordinates coordinates,
-            @NonNull String name,
-            @Nullable String projectPath,
-            @NonNull File extractedFolder,
-            @Nullable String variant) {
-        return new AndroidDependency(
-                artifactFile,
-                coordinates,
-                name,
-                projectPath,
-                extractedFolder,
-                extractedFolder, /*jarsRootFolder*/
-                variant,
-                true /*IsSubModule*/);
-    }
-
     public static AndroidDependency createExplodedAarLibrary(
             @NonNull File artifactFile,
             @NonNull MavenCoordinates coordinates,
