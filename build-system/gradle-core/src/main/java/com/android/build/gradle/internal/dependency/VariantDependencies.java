@@ -132,9 +132,6 @@ public class VariantDependencies {
      */
     private boolean annotationsPresent;
 
-    @NonNull
-    private DependencyChecker checker;
-
     public static final class Builder {
         @NonNull private final Project project;
         @NonNull private final ErrorReporter errorReporter;
@@ -399,16 +396,8 @@ public class VariantDependencies {
             checkOldConfigurations(
                     configurations, "_" + variantName + "Publish", runtimeClasspathName);
 
-            DependencyChecker checker = new DependencyChecker(
-                    project.getPath().equals(":") ? project.getName() : project.getPath(),
-                    variantName,
-                    errorReporter,
-                    variantType,
-                    testedVariantType);
-
             return new VariantDependencies(
                     variantName,
-                    checker,
                     compileClasspath,
                     runtimeClasspath,
                     publishedConfigurations,
@@ -518,7 +507,6 @@ public class VariantDependencies {
 
     private VariantDependencies(
             @NonNull String variantName,
-            @NonNull DependencyChecker dependencyChecker,
             @NonNull Configuration compileClasspath,
             @NonNull Configuration runtimeClasspath,
             @NonNull Map<AndroidTypeAttr, PublishedConfigurations> publishedConfigurations,
@@ -526,7 +514,6 @@ public class VariantDependencies {
             @Nullable Configuration wearAppConfiguration,
             @Nullable Configuration metadataValuesConfiguration) {
         this.variantName = variantName;
-        this.checker = dependencyChecker;
         this.compileClasspath = compileClasspath;
         this.runtimeClasspath = runtimeClasspath;
         this.publishedConfigurations = ImmutableMap.copyOf(publishedConfigurations);
@@ -581,11 +568,6 @@ public class VariantDependencies {
     @Nullable
     public Configuration getMetadataValuesConfiguration() {
         return metadataValuesConfiguration;
-    }
-
-    @NonNull
-    public DependencyChecker getChecker() {
-        return checker;
     }
 
     //FIXME remove this.

@@ -35,7 +35,6 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.scope.VariantScopeImpl;
 import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
-import com.android.build.gradle.internal.tasks.PrepareDependenciesTask;
 import com.android.build.gradle.tasks.AidlCompile;
 import com.android.build.gradle.tasks.BinaryFileProviderTask;
 import com.android.build.gradle.tasks.ExternalNativeBuildTask;
@@ -97,7 +96,6 @@ public abstract class BaseVariantData implements TaskContainer {
     private final VariantScope scope;
 
     public Task preBuildTask;
-    public PrepareDependenciesTask prepareDependenciesTask;
 
     public Task sourceGenTask;
     public Task resourceGenTask;
