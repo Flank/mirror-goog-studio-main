@@ -24,6 +24,7 @@ import java.nio.ByteBuffer;
 public final class RawImage {
     public int version;
     public int bpp;
+    public int colorSpace;
     public int size;
     public int width;
     public int height;
@@ -37,6 +38,11 @@ public final class RawImage {
     public int alpha_length;
 
     public byte[] data;
+
+    // These values must match the values defined in frameworks/base/cmds/screencap
+    public static final int COLOR_SPACE_UNKNOWN = 0;
+    public static final int COLOR_SPACE_SRGB = 1;
+    public static final int COLOR_SPACE_DISPLAY_P3 = 2;
 
     /**
      * Reads the header of a RawImage from a {@link ByteBuffer}.
@@ -66,8 +72,11 @@ public final class RawImage {
             this.blue_length = 5;
             this.alpha_offset = 0;
             this.alpha_length = 0;
-        } else if (version == 1) {
+        } else if (version == 1 || version == 2) {
             this.bpp = buf.getInt();
+            if (version == 2) {
+                this.colorSpace = buf.getInt();
+            }
             this.size = buf.getInt();
             this.width = buf.getInt();
             this.height = buf.getInt();
@@ -122,6 +131,8 @@ public final class RawImage {
                 return 3; // size, width, height
             case 1:
                 return 12; // bpp, size, width, height, 4*(length, offset)
+            case 2:
+                return 13; // bpp, colorSpace, size, width, height, 4*(length, offset)
         }
 
         return 0;
@@ -135,6 +146,7 @@ public final class RawImage {
         RawImage rotated = new RawImage();
         rotated.version = this.version;
         rotated.bpp = this.bpp;
+        rotated.colorSpace = this.colorSpace;
         rotated.size = this.size;
         rotated.red_offset = this.red_offset;
         rotated.red_length = this.red_length;

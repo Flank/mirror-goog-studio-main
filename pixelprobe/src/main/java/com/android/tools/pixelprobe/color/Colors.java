@@ -212,12 +212,37 @@ public final class Colors {
         byte[] data = profile.getData(ICC_Profile.icSigProfileDescriptionTag);
         if (data == null) return "";
 
-        // bytes 0-3  signature
-        // bytes 4-7  offset to tag data
-        // bytes 8-11 data length
-        int length = data[8] << 24 | data[9] << 16 | data[10] << 8 | data[11];
-
         try {
+            // multiLocalizedUnicodeType
+            if (data[0] == 'm' &&
+                data[1] == 'l' &&
+                data[2] == 'u' &&
+                data[3] == 'c') {
+                // next 4 bytes are reserved
+                // number of records
+                int count = data[8] << 24 | data[9] << 16 | data[10] << 8 | data[11];
+                int index = 12;
+                for (int i = 0; i < count; i++) {
+                    // next 4 bytes are the record size, always 12
+                    index += 4;
+                    // language code followed by country code
+                    String locale = new String(data, index, 4, "US-ASCII");
+                    index += 4;
+                    if (locale.startsWith("en")) {
+                        int length = data[index++] << 24 | data[index++] << 16 | data[index++] << 8 | data[index++];
+                        int offset = data[index++] << 24 | data[index++] << 16 | data[index++] << 8 | data[index++];
+                        index += (offset - index);
+                        // subtract 2 for the null terminator
+                        return new String(data, index, Math.max(0, length - 2), "UTF-16BE");
+                    }
+                }
+            }
+
+            // bytes 0-3  signature
+            // bytes 4-7  offset to tag data
+            // bytes 8-11 data length
+            int length = data[8] << 24 | data[9] << 16 | data[10] << 8 | data[11];
+
             // Skip the null terminator
             return new String(data, 12, length - 1, "US-ASCII");
         } catch (UnsupportedEncodingException e) {
