@@ -22,7 +22,6 @@ import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TemporaryProjectModification;
 import com.android.utils.FileUtils;
-import com.android.utils.SdkUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -56,13 +55,7 @@ public class MessageRewrite2Test {
                             project.executor().expectFailure().run("assembleDebug");
                     assertThat(result.getStderr())
                             .contains(
-                                    SdkUtils.escapePropertyValue(
-                                            FileUtils.join(
-                                                    "src",
-                                                    "main",
-                                                    "res",
-                                                    "values",
-                                                    "strings.xml")));
+                                    FileUtils.join("src", "main", "res", "values", "strings.xml"));
                 });
 
         project.execute("assembleDebug");
@@ -79,13 +72,7 @@ public class MessageRewrite2Test {
                             project.executor().expectFailure().run("assembleDebug");
                     assertThat(result.getStderr())
                             .contains(
-                                    SdkUtils.escapePropertyValue(
-                                            FileUtils.join(
-                                                    "src",
-                                                    "main",
-                                                    "res",
-                                                    "values",
-                                                    "strings.xml")));
+                                    FileUtils.join("src", "main", "res", "values", "strings.xml"));
                 });
 
         project.execute("assembleDebug");

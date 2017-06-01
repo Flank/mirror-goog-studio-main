@@ -491,7 +491,8 @@ public class VectorDrawableTest {
     @Test
     public void defaultDensitiesWork() throws Exception {
         // Remove the lines that configure generated densities.
-        TestFileUtils.searchAndReplace(project.getBuildFile(), "generatedDensities.*\n", "");
+        TestFileUtils.searchAndReplace(
+                project.getBuildFile(), "generatedDensities.*" + System.lineSeparator(), "");
 
         project.executor().with(aaptGeneration).run("clean", "assembleDebug");
         Apk apk = project.getApk("debug");
