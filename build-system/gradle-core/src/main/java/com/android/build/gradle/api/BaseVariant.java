@@ -246,6 +246,16 @@ public interface BaseVariant {
     @NonNull
     ArtifactCollection getCompileClasspathArtifacts(@Nullable Object key);
 
+    /**
+     * Returns the file and task dependency of the folder containing all the merged data-binding
+     * artifacts coming from the dependency.
+     *
+     * <p>If data-binding is not enabled the file collection will be empty.
+     *
+     * @return the file collection containing the folder or nothing.
+     */
+    @NonNull
+    FileCollection getDataBindingDependencyArtifacts();
 
     /** Returns the NDK Compilation task. */
     @NonNull

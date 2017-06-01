@@ -61,13 +61,11 @@ import org.gradle.api.tasks.compile.JavaCompile;
  */
 public abstract class BaseVariantImpl implements BaseVariant {
 
-    @NonNull
-    protected AndroidBuilder androidBuilder;
+    @NonNull protected final AndroidBuilder androidBuilder;
 
-    @NonNull
-    protected ReadOnlyObjectProvider readOnlyObjectProvider;
+    @NonNull protected final ReadOnlyObjectProvider readOnlyObjectProvider;
 
-    @NonNull protected NamedDomainObjectContainer<BaseVariantOutput> outputs;
+    @NonNull protected final NamedDomainObjectContainer<BaseVariantOutput> outputs;
 
     BaseVariantImpl(
             @NonNull AndroidBuilder androidBuilder,
@@ -364,6 +362,18 @@ public abstract class BaseVariantImpl implements BaseVariant {
                         AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                         AndroidArtifacts.ArtifactType.CLASSES,
                         generatorKey);
+    }
+
+    @NonNull
+    @Override
+    public FileCollection getDataBindingDependencyArtifacts() {
+        VariantScope scope = getVariantData().getScope();
+        if (scope.hasOutput(TaskOutputHolder.TaskOutputType.DATA_BINDING_DEPENDENCY_ARTIFACTS)) {
+            return scope.getOutput(
+                    TaskOutputHolder.TaskOutputType.DATA_BINDING_DEPENDENCY_ARTIFACTS);
+        }
+
+        return scope.getGlobalScope().getProject().files();
     }
 
     @Override

@@ -49,7 +49,7 @@ public class AndroidArtifacts {
     private static final String TYPE_PUBLIC_RES = "android-public-res";
     private static final String TYPE_SYMBOL = "android-symbol";
     private static final String TYPE_PROGUARD_RULES = "android-proguad";
-    private static final String TYPE_DATA_BINDING = "android-databinding";
+    private static final String TYPE_DATA_BINDING_ARTIFACT = "android-databinding";
     private static final String TYPE_EXPLODED_AAR = "android-exploded-aar";
     private static final String TYPE_JAR = "jar";
 
@@ -116,7 +116,7 @@ public class AndroidArtifacts {
         // API only elements.
         AIDL(TYPE_AIDL),
         RENDERSCRIPT(TYPE_RENDERSCRIPT),
-        DATA_BINDING(TYPE_DATA_BINDING),
+        DATA_BINDING_ARTIFACT(TYPE_DATA_BINDING_ARTIFACT),
 
         // runtime only elements
         JAVA_RES(TYPE_JAVA_RES),

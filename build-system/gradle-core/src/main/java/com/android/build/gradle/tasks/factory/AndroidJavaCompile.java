@@ -36,6 +36,7 @@ import org.gradle.api.JavaVersion;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs;
@@ -54,6 +55,8 @@ public class AndroidJavaCompile extends JavaCompile {
 
     String variantName;
 
+    FileCollection dataBindingDependencyArtifacts;
+
     @InputFiles
     public FileCollection getProcessorListFile() {
         return processorListFile;
@@ -62,6 +65,12 @@ public class AndroidJavaCompile extends JavaCompile {
     @OutputDirectory
     public File getAnnotationProcessorOutputFolder() {
         return annotationProcessorOutputFolder;
+    }
+
+    @InputFiles
+    @Optional
+    public FileCollection getDataBindingDependencyArtifacts() {
+        return dataBindingDependencyArtifacts;
     }
 
     @Override

@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.transforms;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.Mockito.when;
 
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
@@ -31,10 +30,7 @@ import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.gradle.internal.pipeline.TransformInvocationBuilder;
-import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeArtifactsTransform;
-import com.android.builder.core.AndroidBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -60,7 +56,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 /**
@@ -71,12 +66,6 @@ public class DataBindingMergeArtifactsTransformTest {
 
     @Mock
     Context context;
-
-    @Mock
-    VariantScope variantScope;
-
-    @Mock
-    GlobalScope globalScope;
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
@@ -89,14 +78,7 @@ public class DataBindingMergeArtifactsTransformTest {
     @Before
     public void setUpMock() throws IOException {
         MockitoAnnotations.initMocks(this);
-        File tmpBuildOutFolder = temporaryFolder.newFolder();
-        expectedOutFolder = new File(tmpBuildOutFolder,
-                DataBindingBuilder.ARTIFACT_FILES_DIR_FROM_LIBS);
-        AndroidBuilder mockBuilder = Mockito.mock(AndroidBuilder.class);
-        when(mockBuilder.getBootClasspath(true)).thenReturn(ImmutableList.of());
-        when(globalScope.getAndroidBuilder()).thenReturn(mockBuilder);
-        when(variantScope.getGlobalScope()).thenReturn(globalScope);
-        when(variantScope.getBuildFolderForDataBindingCompiler()).thenReturn(tmpBuildOutFolder);
+        expectedOutFolder = temporaryFolder.newFolder();
     }
 
     @Test
@@ -275,7 +257,7 @@ public class DataBindingMergeArtifactsTransformTest {
 
     private void createAndInvoke(TransformInvocation invocation)
             throws TransformException, InterruptedException, IOException {
-        new DataBindingMergeArtifactsTransform(logger, variantScope).transform(invocation);
+        new DataBindingMergeArtifactsTransform(logger, expectedOutFolder).transform(invocation);
     }
 
     private File createJarFile(String fileName, List<String> files) throws IOException {

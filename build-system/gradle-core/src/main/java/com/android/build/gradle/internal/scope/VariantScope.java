@@ -402,11 +402,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     void setDataBindingProcessLayoutsTask(
             @Nullable AndroidTask<DataBindingProcessLayoutsTask> dataBindingProcessLayoutsTask);
 
-    void setDataBindingMergeArtifactsTask(
-            @Nullable AndroidTask<TransformTask> mergeArtifactsTask);
-
-    AndroidTask<TransformTask> getDataBindingMergeArtifactsTask();
-
     AndroidTask<Sync> getProcessJavaResourcesTask();
 
     void setProcessJavaResourcesTask(AndroidTask<Sync> processJavaResourcesTask);

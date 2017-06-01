@@ -146,22 +146,16 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @NonNull private final VariantPublishingSpec variantPublishingSpec;
 
-    @NonNull private GlobalScope globalScope;
-    @NonNull private BaseVariantData variantData;
-    private ErrorReporter errorReporter;
-    @NonNull
-    private TransformManager transformManager;
-    @Nullable
-    private Collection<Object> ndkBuildable;
-    @Nullable
-    private Collection<File> ndkSoFolder;
-    @Nullable
-    private File ndkObjFolder;
-    @NonNull
-    private Map<Abi, File> ndkDebuggableLibraryFolders = Maps.newHashMap();
+    @NonNull private final GlobalScope globalScope;
+    @NonNull private final BaseVariantData variantData;
+    @NonNull private final ErrorReporter errorReporter;
+    @NonNull private final TransformManager transformManager;
+    @Nullable private Collection<Object> ndkBuildable;
+    @Nullable private Collection<File> ndkSoFolder;
+    @Nullable private File ndkObjFolder;
+    @NonNull private final Map<Abi, File> ndkDebuggableLibraryFolders = Maps.newHashMap();
 
-    @Nullable
-    private File mergeResourceOutputDir;
+    @Nullable private File mergeResourceOutputDir;
 
     // Tasks
     private AndroidTask<DefaultTask> assembleTask;
@@ -174,36 +168,29 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     private AndroidTask<RenderscriptCompile> renderscriptCompileTask;
     private AndroidTask<AidlCompile> aidlCompileTask;
-    @Nullable
-    private AndroidTask<MergeResources> mergeResourcesTask;
-    @Nullable
-    private AndroidTask<MergeSourceSetFolders> mergeAssetsTask;
+    @Nullable private AndroidTask<MergeResources> mergeResourcesTask;
+    @Nullable private AndroidTask<MergeSourceSetFolders> mergeAssetsTask;
     private AndroidTask<GenerateBuildConfig> generateBuildConfigTask;
 
     private AndroidTask<Sync> processJavaResourcesTask;
     private AndroidTask<TransformTask> mergeJavaResourcesTask;
 
-    @Nullable
-    private AndroidTask<DataBindingProcessLayoutsTask> dataBindingProcessLayoutsTask;
-    @Nullable
-    private AndroidTask<TransformTask> dataBindingMergeBindingArtifactsTask;
+    @Nullable private AndroidTask<DataBindingProcessLayoutsTask> dataBindingProcessLayoutsTask;
 
-    @Nullable
-    private AndroidTask<? extends JavaCompile> javacTask;
+    @Nullable private AndroidTask<? extends JavaCompile> javacTask;
 
     // empty anchor compile task to set all compilations tasks as dependents.
     private AndroidTask<Task> compileTask;
 
     private AndroidTask<GenerateApkDataTask> microApkTask;
 
-    @Nullable
-    private AndroidTask<ExternalNativeBuildTask> externalNativeBuild;
+    @Nullable private AndroidTask<ExternalNativeBuildTask> externalNativeBuild;
 
-    @Nullable
-    private ExternalNativeJsonGenerator externalNativeJsonGenerator;
+    @Nullable private ExternalNativeJsonGenerator externalNativeJsonGenerator;
 
     @NonNull
-    private List<NativeBuildConfigValue> externalNativeBuildConfigValues = Lists.newArrayList();
+    private final List<NativeBuildConfigValue> externalNativeBuildConfigValues =
+            Lists.newArrayList();
 
     /**
      * This is an instance of {@link JacocoReportTask} in android test variants, an umbrella
@@ -627,18 +614,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     public void setDataBindingProcessLayoutsTask(
             @Nullable AndroidTask<DataBindingProcessLayoutsTask> dataBindingProcessLayoutsTask) {
         this.dataBindingProcessLayoutsTask = dataBindingProcessLayoutsTask;
-    }
-
-    @Override
-    public void setDataBindingMergeArtifactsTask(
-            @Nullable AndroidTask<TransformTask> mergeArtifactsTask) {
-        this.dataBindingMergeBindingArtifactsTask = mergeArtifactsTask;
-    }
-
-    @Nullable
-    @Override
-    public AndroidTask<TransformTask> getDataBindingMergeArtifactsTask() {
-        return dataBindingMergeBindingArtifactsTask;
     }
 
     @Override
@@ -1650,10 +1625,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         SdkHandler sdkHandler = getGlobalScope().getSdkHandler();
         AndroidBuilder androidBuilder = globalScope.getAndroidBuilder();
         IAndroidTarget androidBuilderTarget = androidBuilder.getTarget();
-
-        Preconditions.checkState(
-                androidBuilderTarget != null,
-                "AndroidBuilder target not initialized.");
 
         File annotationsJar = sdkHandler.getSdkLoader().getSdkInfo(LOGGER).getAnnotationsJar();
 

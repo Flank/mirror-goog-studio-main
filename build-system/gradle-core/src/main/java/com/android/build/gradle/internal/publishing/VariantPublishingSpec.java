@@ -152,8 +152,8 @@ public class VariantPublishingSpec {
                         outputSpec(
                                 RENDERSCRIPT_HEADERS, ArtifactType.RENDERSCRIPT, API_ELEMENTS_ONLY),
                         outputSpec(
-                                TaskOutputType.DATA_BINDING,
-                                ArtifactType.DATA_BINDING,
+                                TaskOutputType.DATA_BINDING_ARTIFACT,
+                                ArtifactType.DATA_BINDING_ARTIFACT,
                                 API_ELEMENTS_ONLY),
                         outputSpec(LIBRARY_CLASSES, ArtifactType.CLASSES, API_AND_RUNTIME_ELEMENTS),
                         outputSpec(
