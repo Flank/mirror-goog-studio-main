@@ -38,7 +38,6 @@ maven_java_library(
         "org.jacoco:org.jacoco.core": ["org.ow2.asm:asm-debug-all"],
         "org.jacoco:org.jacoco.report": ["org.ow2.asm:asm-debug-all"],
     },
-    javacopts = ["-Xep:MissingCasesInEnumSwitch:WARN"],
     plugins = [
         "//tools/base/build-system:auto-value-plugin",
     ],

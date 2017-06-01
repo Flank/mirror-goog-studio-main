@@ -93,6 +93,9 @@ public class DataBindingMergeArtifactsTransform extends Transform {
             directoryInput.getChangedFiles().forEach((file, status) -> {
                 if (isResource(file.getName())) {
                     switch (status) {
+                        case NOTCHANGED:
+                            // Ignore
+                            break;
                         case ADDED:
                         case CHANGED:
                             try {
@@ -111,6 +114,9 @@ public class DataBindingMergeArtifactsTransform extends Transform {
         }));
         inputs.forEach(input -> input.getJarInputs().forEach(jarInput -> {
             switch (jarInput.getStatus()) {
+                case NOTCHANGED:
+                    // Ignore
+                    break;
                 case ADDED:
                 case CHANGED:
                     try {

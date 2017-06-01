@@ -761,7 +761,7 @@ public class ResourceUsageAnalyzer {
 
                 element.setAttribute(ATTR_NAME, name);
                 element.setAttribute(ATTR_TYPE, resource.type.getName());
-                String text = null;
+                final String text;
                 switch (resource.type) {
                     case BOOL:
                         text = "true";
@@ -771,6 +771,9 @@ public class ResourceUsageAnalyzer {
                         break;
                     case INTEGER:
                         text = "0";
+                        break;
+                    default:
+                        text = null;
                         break;
                 }
                 element.setTextContent(text);
