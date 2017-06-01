@@ -673,9 +673,11 @@ public class XmlElementTest extends TestCase {
         Optional<XmlDocument> result = refDocument.merge(otherDocument, mergingReportBuilder);
         assertTrue(result.isPresent());
         // run the instruction cleaner to get rid of all unwanted attributes, nodes.
-        XmlDocument resultDocument = ToolsInstructionsCleaner.cleanToolsReferences(
+        ToolsInstructionsCleaner.cleanToolsReferences(
                 ManifestMerger2.MergeType.APPLICATION,
-                result.get(), mergingReportBuilder.getLogger());
+                result.get().getXml(),
+                mergingReportBuilder.getLogger());
+        XmlDocument resultDocument = result.get().reparse();
 
         Optional<XmlElement> activityOne = resultDocument.getRootNode()
                 .getNodeByTypeAndKey(ManifestModel.NodeTypes.ACTIVITY,

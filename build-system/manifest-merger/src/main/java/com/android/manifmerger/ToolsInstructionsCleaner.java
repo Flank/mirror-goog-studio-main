@@ -20,13 +20,14 @@ import static com.android.manifmerger.MergingReport.Result.ERROR;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
 import com.android.utils.ILogger;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.List;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -50,25 +51,20 @@ public class ToolsInstructionsCleaner {
     /**
      * Cleans all attributes belonging to the {@link com.android.SdkConstants#TOOLS_URI} namespace.
      *
-     * @param document the xml document to clean
+     * @param document the document to clean
      * @param logger logger to use in case of errors and warnings.
      * @return the cleaned document or null if an error occurred.
      */
-    @Nullable
-    public static XmlDocument cleanToolsReferences(
+    public static Optional<Document> cleanToolsReferences(
             @NonNull ManifestMerger2.MergeType mergeType,
-            @NonNull XmlDocument document,
+            @NonNull Document document,
             @NonNull ILogger logger) {
 
         Preconditions.checkNotNull(document);
         Preconditions.checkNotNull(logger);
-        MergingReport.Result result = cleanToolsReferences(
-                mergeType,
-                document.getRootNode().getXml(),
-                logger);
-        return result == MergingReport.Result.SUCCESS
-            ? document.reparse()
-            : null;
+        MergingReport.Result result =
+                cleanToolsReferences(mergeType, document.getDocumentElement(), logger);
+        return result == MergingReport.Result.SUCCESS ? Optional.of(document) : Optional.absent();
     }
 
     @NonNull

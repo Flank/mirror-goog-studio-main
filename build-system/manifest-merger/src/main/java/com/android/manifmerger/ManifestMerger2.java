@@ -24,6 +24,9 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
+import com.android.ide.common.xml.XmlFormatPreferences;
+import com.android.ide.common.xml.XmlFormatStyle;
+import com.android.ide.common.xml.XmlPrettyPrinter;
 import com.android.utils.ILogger;
 import com.android.utils.Pair;
 import com.google.common.base.Optional;
@@ -39,12 +42,16 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  * merges android manifest files, idempotent.
@@ -282,10 +289,30 @@ public class ManifestMerger2 {
 
         finalMergedDocument.clearNodeNamespaces();
 
-        // finally optional features handling.
-        processOptionalFeatures(finalMergedDocument, mergingReportBuilder);
+        // process optional features which still need access to XmlDocument layer.
+        if (finalMergedDocument != null) {
+            if (mOptionalFeatures.contains(Invoker.Feature.EXTRACT_FQCNS)) {
+                extractFqcns(finalMergedDocument);
+            }
+            if (!mOptionalFeatures.contains(Invoker.Feature.SKIP_BLAME)) {
+                try {
+                    mergingReportBuilder.setMergedDocument(
+                            MergingReport.MergedManifestKind.BLAME,
+                            mergingReportBuilder.blame(finalMergedDocument));
+                } catch (Exception e) {
+                    mLogger.error(e, "Error while saving blame file, build will continue");
+                }
+            }
+        }
+
 
         mergingReportBuilder.setFinalPackageName(finalMergedDocument.getPackageName());
+        mergingReportBuilder.setMergedXmlDocument(
+                MergingReport.MergedManifestKind.MERGED, finalMergedDocument);
+
+        // finally optional features handling.
+        processOptionalFeatures(finalMergedDocument.getXml(), mergingReportBuilder);
+
         MergingReport mergingReport = mergingReportBuilder.build();
 
         if (mReportFile.isPresent()) {
@@ -295,207 +322,205 @@ public class ManifestMerger2 {
         return mergingReport;
     }
 
+    /**
+     * Processes optional features which are not already handled in merge()
+     *
+     * @param document the resulting document after merging
+     * @param mergingReport the merging report builder
+     */
     private void processOptionalFeatures(
-            @Nullable XmlDocument document,
-            @NonNull MergingReport.Builder mergingReport) {
+            @Nullable Document document, @NonNull MergingReport.Builder mergingReport) {
         if (document == null) {
             return;
         }
 
         // perform tools: annotations removal if requested.
         if (mOptionalFeatures.contains(Invoker.Feature.REMOVE_TOOLS_DECLARATIONS)) {
-            document = ToolsInstructionsCleaner.cleanToolsReferences(mMergeType, document, mLogger);
+            ToolsInstructionsCleaner.cleanToolsReferences(mMergeType, document, mLogger);
         }
-        if (document != null) {
-            if (mOptionalFeatures.contains(Invoker.Feature.EXTRACT_FQCNS)) {
-                extractFcqns(document);
-            }
 
-            if (mOptionalFeatures.contains(Invoker.Feature.ADVANCED_PROFILING)) {
-                mergingReport.setMergedDocument(
-                        MergingReport.MergedManifestKind.MERGED,
-                        addInternetPermission(document).prettyPrint());
-            }
+        if (mOptionalFeatures.contains(Invoker.Feature.ADVANCED_PROFILING)) {
+            addInternetPermission(document);
+        }
 
-            mergingReport.setMergedXmlDocument(
-              MergingReport.MergedManifestKind.MERGED, document);
-            if (!mOptionalFeatures.contains(Invoker.Feature.SKIP_XML_STRING)) {
-                mergingReport.setMergedDocument(
-                  MergingReport.MergedManifestKind.MERGED, document.prettyPrint());
-            }
+        if (mOptionalFeatures.contains(Invoker.Feature.TEST_ONLY)) {
+            addTestOnlyAttribute(document);
+        }
 
-            if (mOptionalFeatures.contains(Invoker.Feature.TEST_ONLY)) {
-                mergingReport.setMergedDocument(
-                        MergingReport.MergedManifestKind.MERGED,
-                        addTestOnlyAttribute(document).prettyPrint());
-            }
+        if (mOptionalFeatures.contains(Invoker.Feature.DEBUGGABLE)) {
+            addDebuggableAttribute(document);
+        }
 
-            if (mOptionalFeatures.contains(Invoker.Feature.DEBUGGABLE)) {
-                mergingReport.setMergedDocument(
-                        MergingReport.MergedManifestKind.MERGED,
-                        addDebuggableAttribute(document).prettyPrint());
-            }
+        if (!mOptionalFeatures.contains(Invoker.Feature.SKIP_XML_STRING)) {
+            mergingReport.setMergedDocument(
+                    MergingReport.MergedManifestKind.MERGED,
+                    XmlPrettyPrinter.prettyPrint(
+                            document,
+                            XmlFormatPreferences.defaults(),
+                            XmlFormatStyle.get(document.getDocumentElement()),
+                            null, /* endOfLineSeparator */
+                            false /* endWithNewLine */));
+        }
 
-            if (!mOptionalFeatures.contains(Invoker.Feature.SKIP_BLAME)) {
-                try {
-                    mergingReport.setMergedDocument(MergingReport.MergedManifestKind.BLAME,
-                                                    mergingReport.blame(document));
-                }
-                catch (Exception e) {
-                    mLogger.error(e, "Error while saving blame file, build will continue");
-                }
-            }
+        if (mOptionalFeatures.contains(Invoker.Feature.MAKE_AAPT_SAFE)) {
+            PlaceholderEncoder.visit(document);
+            mergingReport.setMergedDocument(
+                    MergingReport.MergedManifestKind.AAPT_SAFE,
+                    XmlPrettyPrinter.prettyPrint(
+                            document,
+                            XmlFormatPreferences.defaults(),
+                            XmlFormatStyle.get(document.getDocumentElement()),
+                            null, /* endOfLineSeparator */
+                            false /* endWithNewLine */));
+        }
 
-            if (mOptionalFeatures.contains(Invoker.Feature.MAKE_AAPT_SAFE)) {
-                PlaceholderEncoder.visit(document);
-                mergingReport.setMergedDocument(
-                        MergingReport.MergedManifestKind.AAPT_SAFE,
-                        document.prettyPrint());
-            }
+        // Always save the pre InstantRun state in case some APT plugins require it.
+        if (mOptionalFeatures.contains(Invoker.Feature.INSTANT_RUN_REPLACEMENT)) {
+            instantRunReplacement(document);
+            mergingReport.setMergedDocument(
+                    MergingReport.MergedManifestKind.INSTANT_RUN,
+                    XmlPrettyPrinter.prettyPrint(
+                            document,
+                            XmlFormatPreferences.defaults(),
+                            XmlFormatStyle.get(document.getDocumentElement()),
+                            null, /* endOfLineSeparator */
+                            false /* endWithNewLine */));
+        }
 
-            // Always save the pre InstantRun state in case some APT plugins require it.
-            if (mOptionalFeatures.contains(Invoker.Feature.INSTANT_RUN_REPLACEMENT)) {
-                mergingReport.setMergedDocument(
-                        MergingReport.MergedManifestKind.INSTANT_RUN,
-                        instantRunReplacement(document).prettyPrint());
-            }
-
-            if (mOptionalFeatures.contains(Invoker.Feature.ADD_FEATURE_SPLIT_INFO)) {
-                boolean transitionalAttributes =
-                        mOptionalFeatures.contains(
-                                Invoker.Feature.TRANSITIONAL_FEATURE_SPLIT_ATTRIBUTES);
-                mergingReport.setMergedDocument(
-                        MergingReport.MergedManifestKind.MERGED,
-                        addFeatureSplitAttributes(document, mFeatureName, transitionalAttributes)
-                                .prettyPrint());
-            }
+        if (mOptionalFeatures.contains(Invoker.Feature.ADD_FEATURE_SPLIT_INFO)) {
+            boolean transitionalAttributes =
+                    mOptionalFeatures.contains(
+                            Invoker.Feature.TRANSITIONAL_FEATURE_SPLIT_ATTRIBUTES);
+            addFeatureSplitAttributes(document, mFeatureName, transitionalAttributes);
+            mergingReport.setMergedDocument(
+                    MergingReport.MergedManifestKind.MERGED,
+                    XmlPrettyPrinter.prettyPrint(
+                            document,
+                            XmlFormatPreferences.defaults(),
+                            XmlFormatStyle.get(document.getDocumentElement()),
+                            null, /* endOfLineSeparator */
+                            false /* endWithNewLine */));
         }
     }
 
     /**
      * Set android:testOnly="true" to ensure APK will be rejected by the Play store.
+     *
+     * @param document the document for which the testOnly attribute should be set to true.
      */
-    @NonNull
-    private static XmlDocument addTestOnlyAttribute(XmlDocument document) {
-        Optional<XmlElement> applicationOptional = document
-                .getByTypeAndKey(ManifestModel.NodeTypes.APPLICATION, null /* keyValue */);
-        if (applicationOptional.isPresent()) {
-            XmlElement application = applicationOptional.get();
-            setAndroidAttribute(application.getXml(),
-                                SdkConstants.ATTR_TEST_ONLY,
-                                SdkConstants.VALUE_TRUE);
+    private static void addTestOnlyAttribute(@NonNull Document document) {
+        Element manifest = document.getDocumentElement();
+        ImmutableList<Element> applicationElements =
+                getChildElementsByName(manifest, SdkConstants.TAG_APPLICATION);
+        if (!applicationElements.isEmpty()) {
+            // assumes just 1 application element among manifest's immediate children.
+            Element application = applicationElements.get(0);
+            setAndroidAttribute(application, SdkConstants.ATTR_TEST_ONLY, SdkConstants.VALUE_TRUE);
         }
-        return document.reparse();
-    }
-
-    /** Set android:debuggable="true" */
-    @NonNull
-    private static XmlDocument addDebuggableAttribute(XmlDocument document) {
-        Optional<XmlElement> applicationOptional =
-                document.getByTypeAndKey(ManifestModel.NodeTypes.APPLICATION, null /* keyValue */);
-        if (applicationOptional.isPresent()) {
-            XmlElement application = applicationOptional.get();
-            setAndroidAttribute(
-                    application.getXml(), SdkConstants.ATTR_DEBUGGABLE, SdkConstants.VALUE_TRUE);
-        }
-        return document.reparse();
     }
 
     /**
-     * Set android:splitName attribute to <code>featureName</code> for every activity, service and
-     * provider elements. Set featureSplit attribute to <code>featureName</code> for the manifest
-     * element.
+     * Set android:debuggable="true"
+     *
+     * @param document the document for which the debuggable attribute should be set to true.
      */
-    @NonNull
-    private static XmlDocument addFeatureSplitAttributes(
-            XmlDocument document, String featureName, boolean transitionalAttributes) {
-        Optional<XmlElement> applicationOptional =
-                document.getByTypeAndKey(ManifestModel.NodeTypes.APPLICATION, null /* keyValue */);
-        if (applicationOptional.isPresent()) {
-            addFeatureSplitAttributes(
-                    applicationOptional.get(),
-                    featureName,
-                    ManifestModel.NodeTypes.ACTIVITY,
-                    transitionalAttributes);
-            addFeatureSplitAttributes(
-                    applicationOptional.get(),
-                    featureName,
-                    ManifestModel.NodeTypes.SERVICE,
-                    transitionalAttributes);
-            addFeatureSplitAttributes(
-                    applicationOptional.get(),
-                    featureName,
-                    ManifestModel.NodeTypes.PROVIDER,
-                    transitionalAttributes);
+    private static void addDebuggableAttribute(@NonNull Document document) {
+        Element manifest = document.getDocumentElement();
+        ImmutableList<Element> applicationElements =
+                getChildElementsByName(manifest, SdkConstants.TAG_APPLICATION);
+        if (!applicationElements.isEmpty()) {
+            // assumes just 1 application element among manifest's immediate children.
+            Element application = applicationElements.get(0);
+            setAndroidAttribute(application, SdkConstants.ATTR_DEBUGGABLE, SdkConstants.VALUE_TRUE);
         }
-
-        if (transitionalAttributes) {
-            document.getRootNode().getXml().setAttribute(SdkConstants.ATTR_SPLIT, featureName);
-        } else {
-            document.getRootNode()
-                    .getXml()
-                    .setAttribute(SdkConstants.ATTR_FEATURE_SPLIT, featureName);
-        }
-
-        return document.reparse();
     }
 
     /**
-     * Set android:splitName attribute to <code>featureName</code> for every element of type <code>
-     * nodeType</code> under the <code>applicationElement</code> element.
+     * Set "android:splitName" or "android:split" attributes to <code>featureName</code> for every
+     * activity, service and provider elements. Set "featureSplit" or "split" attribute to <code>
+     * featureName</code> for the manifest element.
+     *
+     * @param document the document whose attributes are changed
+     * @param featureName the value all of the changed attributes are set to
+     * @param transitionalAttributes boolean, determines names of changed attributes
      */
     private static void addFeatureSplitAttributes(
-            XmlElement applicationElement,
-            String featureName,
-            ManifestModel.NodeTypes nodeType,
-            boolean transitionalAttributes) {
-        ImmutableList<XmlElement> nodeElements = applicationElement.getAllNodesByType(nodeType);
-        for (XmlElement xmlElement : nodeElements) {
-            if (transitionalAttributes) {
-                xmlElement.getXml().setAttribute(SdkConstants.ATTR_SPLIT, featureName);
-            } else {
-                setAndroidAttribute(xmlElement.getXml(), SdkConstants.ATTR_SPLIT_NAME, featureName);
+            Document document, String featureName, boolean transitionalAttributes) {
+        // first update attribute in manifest element
+        Element manifest = document.getDocumentElement();
+        if (manifest == null) {
+            return;
+        }
+        String attributeName =
+                transitionalAttributes ? SdkConstants.ATTR_SPLIT : SdkConstants.ATTR_FEATURE_SPLIT;
+        manifest.setAttribute(attributeName, featureName);
+        // then update attributes in the application element's child elements
+        ImmutableList<Element> applicationElements =
+                getChildElementsByName(manifest, SdkConstants.TAG_APPLICATION);
+        if (applicationElements.isEmpty()) {
+            return;
+        }
+        // assumes just 1 application element among manifest's immediate children.
+        Element application = applicationElements.get(0);
+        List<String> elementNamesToUpdate =
+                Arrays.asList(
+                        SdkConstants.TAG_ACTIVITY,
+                        SdkConstants.TAG_SERVICE,
+                        SdkConstants.TAG_PROVIDER);
+        for (String elementName : elementNamesToUpdate) {
+            ImmutableList<Element> elementsToUpdate =
+                    getChildElementsByName(application, elementName);
+            for (Element elementToUpdate : elementsToUpdate) {
+                if (transitionalAttributes) {
+                    elementToUpdate.setAttribute(SdkConstants.ATTR_SPLIT, featureName);
+                } else {
+                    setAndroidAttribute(elementToUpdate, SdkConstants.ATTR_SPLIT_NAME, featureName);
+                }
             }
         }
     }
 
-    @NonNull
-    private static XmlDocument instantRunReplacement(XmlDocument document) {
-        Optional<XmlElement> applicationOptional = document
-                .getByTypeAndKey(ManifestModel.NodeTypes.APPLICATION, null /* keyValue */);
-        if (applicationOptional.isPresent()) {
-            XmlElement application = applicationOptional.get();
-            setAttributeToTrue(application.getXml(), SdkConstants.ATTR_ENABLED);
-            setAttributeToTrue(application.getXml(), SdkConstants.ATTR_HAS_CODE);
-            addIrContentProvider(document, application);
-        } else {
+    /**
+     * Adds attributes and provider element to document's application element for instant run.
+     *
+     * @param document the document which gets edited.
+     */
+    private static void instantRunReplacement(@NonNull Document document) {
+        Element manifest = document.getDocumentElement();
+        ImmutableList<Element> applicationElements =
+                getChildElementsByName(manifest, SdkConstants.TAG_APPLICATION);
+        if (applicationElements.isEmpty()) {
             throw new RuntimeException("Application not defined in AndroidManifest.xml");
         }
-        return document.reparse();
+        // assumes just 1 application element among manifest's immediate children.
+        Element application = applicationElements.get(0);
+        setAttributeToTrue(application, SdkConstants.ATTR_ENABLED);
+        setAttributeToTrue(application, SdkConstants.ATTR_HAS_CODE);
+        addIrContentProvider(document, application);
     }
 
-    @NonNull
-    private static XmlDocument addInternetPermission(XmlDocument document) {
+    /**
+     * Adds internet permission to document if not already present.
+     *
+     * @param document the document which gets edited if necessary.
+     */
+    private static void addInternetPermission(@NonNull Document document) {
         String permission = "android.permission.INTERNET";
-        ImmutableList<XmlElement> usesPermissions =
-                document.getRootNode().getAllNodesByType(ManifestModel.NodeTypes.USES_PERMISSION);
-        boolean found = false;
-        for (XmlElement usesPermission : usesPermissions) {
-            Optional<XmlAttribute> attribute =
-                    usesPermission.getAttribute(XmlNode.fromXmlName("android:name"));
-            if (attribute.isPresent() && attribute.get().getValue().equals(permission)) {
-                found = true;
-                break;
+        Element manifest = document.getDocumentElement();
+        ImmutableList<Element> usesPermissions =
+                getChildElementsByName(manifest, SdkConstants.TAG_USES_PERMISSION);
+        for (Element usesPermission : usesPermissions) {
+            if (permission.equals(
+                    usesPermission.getAttributeNS(
+                            SdkConstants.ANDROID_URI, SdkConstants.ATTR_NAME))) {
+                return;
             }
         }
-        if (!found) {
-            Element uses = document.getXml().createElement(SdkConstants.TAG_USES_PERMISSION);
-            // Add the node to the document before setting the attribute to make sure
-            // the namespace prefix is found correctly.
-            document.getRootNode().getXml().appendChild(uses);
-            setAndroidAttribute(uses, SdkConstants.ATTR_NAME, permission);
-        }
-        return document.reparse();
+        Element uses = document.createElement(SdkConstants.TAG_USES_PERMISSION);
+        // Add the node to the document before setting the attribute to make sure
+        // the namespace prefix is found correctly.
+        document.getDocumentElement().appendChild(uses);
+        setAndroidAttribute(uses, SdkConstants.ATTR_NAME, permission);
     }
 
     /**
@@ -517,16 +542,22 @@ public class ManifestMerger2 {
         }
     }
 
-    private static void addIrContentProvider(XmlDocument document, XmlElement application) {
-        // <provider
-        //     android:name="com.android.tools.fd.runtime.InstantRunContentProvider"
-        //     android:authorities="com.android.tools.fd.runtime.InstantRunContentProvider"
-        //     android:multiprocess="true" />
-        Element cp = document.getXml().createElement(SdkConstants.TAG_PROVIDER);
+    /**
+     * Adds a provider element as a child of the document's application element, as shown here:
+     * <provider android:name="com.android.tools.fd.runtime.InstantRunContentProvider"
+     * android:authorities="com.android.tools.fd.runtime.InstantRunContentProvider"
+     * android:multiprocess="true" />
+     *
+     * @param document the document to add the provider element to
+     * @param application the application element to add the provider element to
+     */
+    private static void addIrContentProvider(
+            @NonNull Document document, @NonNull Element application) {
+        Element cp = document.createElement(SdkConstants.TAG_PROVIDER);
         setAndroidAttribute(cp, SdkConstants.ATTR_NAME, BOOTSTRAP_INSTANT_RUN_CONTENT_PROVIDER);
         // Qualify authority as unique so that multiple IR app packages installed on a single
         // device do not conflict.
-        String pkg = document.getXml().getDocumentElement().getAttribute(SdkConstants.ATTR_PACKAGE);
+        String pkg = document.getDocumentElement().getAttribute(SdkConstants.ATTR_PACKAGE);
         if (pkg == null) {
             throw new RuntimeException("no package name set");
         }
@@ -535,7 +566,7 @@ public class ManifestMerger2 {
         // Multiprocess so we start in every process and decide on our own how to handle
         // having multiple processes
         setAndroidAttribute(cp, SdkConstants.ATTR_MULTIPROCESS, SdkConstants.VALUE_TRUE);
-        application.getXml().appendChild(cp);
+        application.appendChild(cp);
     }
 
     /**
@@ -587,8 +618,30 @@ public class ManifestMerger2 {
     }
 
     /**
-     * Returns the {@link FileStreamProvider} used by this manifest merger. Use this
-     * to read files if you need to access the content of a {@link XmlDocument}.
+     * Returns a list of elements which are the immediate children of the given element and have the
+     * given name.
+     *
+     * @param element the immediate parent of any elements in the returned list
+     * @param name the name of any elements in the returned list
+     * @return the list (possibly empty) of children elements with the given name
+     */
+    @NonNull
+    private static ImmutableList<Element> getChildElementsByName(
+            @NonNull Element element, @NonNull String name) {
+        ImmutableList.Builder<Element> childListBuilder = ImmutableList.builder();
+        NodeList childNodes = element.getChildNodes();
+        for (int i = 0; i < childNodes.getLength(); i++) {
+            Node childNode = childNodes.item(i);
+            if (childNode instanceof Element && name.equals(childNode.getNodeName())) {
+                childListBuilder.add((Element) childNode);
+            }
+        }
+        return childListBuilder.build();
+    }
+
+    /**
+     * Returns the {@link FileStreamProvider} used by this manifest merger. Use this to read files
+     * if you need to access the content of a {@link XmlDocument}.
      */
     @SuppressWarnings("unused") // Allow future library usage, if necessary
     @NonNull
@@ -638,21 +691,23 @@ public class ManifestMerger2 {
     /**
      * shorten all fully qualified class name that belong to the same package as the manifest's
      * package attribute value.
+     *
      * @param finalMergedDocument the AndroidManifest.xml document.
      */
-    private static void extractFcqns(@NonNull XmlDocument finalMergedDocument) {
-        extractFcqns(finalMergedDocument.getPackageName(), finalMergedDocument.getRootNode());
+    private static void extractFqcns(@NonNull XmlDocument finalMergedDocument) {
+        extractFqcns(finalMergedDocument.getPackageName(), finalMergedDocument.getRootNode());
     }
 
     /**
-     * shorten recursively all attributes that are package dependent of the passed nodes and all
-     * its child nodes.
+     * shorten recursively all attributes that are package dependent of the passed nodes and all its
+     * child nodes.
+     *
      * @param packageName the manifest package name.
      * @param xmlElement the xml element to process recursively.
      */
-    private static void extractFcqns(@NonNull String packageName, @NonNull XmlElement xmlElement) {
+    private static void extractFqcns(@NonNull String packageName, @NonNull XmlElement xmlElement) {
         for (XmlAttribute xmlAttribute : xmlElement.getAttributes()) {
-            if (xmlAttribute.getModel() !=null && xmlAttribute.getModel().isPackageDependent()) {
+            if (xmlAttribute.getModel() != null && xmlAttribute.getModel().isPackageDependent()) {
                 String value = xmlAttribute.getValue();
                 if (value.startsWith(packageName) &&
                         value.charAt(packageName.length()) == '.') {
@@ -661,24 +716,26 @@ public class ManifestMerger2 {
             }
         }
         for (XmlElement child : xmlElement.getMergeableElements()) {
-            extractFcqns(packageName, child);
+            extractFqcns(packageName, child);
         }
     }
 
     /**
      * Load an xml file and perform placeholder substitution
-     * @param manifestInfo the android manifest information like if it is a library, an
-     *                     overlay or a main manifest file.
+     *
+     * @param manifestInfo the android manifest information like if it is a library, an overlay or a
+     *     main manifest file.
      * @param selectors all the libraries selectors
      * @param mergingReportBuilder the merging report to store events and errors.
      * @return a loaded manifest info.
-     * @throws MergeFailureException
+     * @throws MergeFailureException if the merging cannot be completed successfully.
      */
     @NonNull
     private LoadedManifestInfo load(
             @NonNull ManifestInfo manifestInfo,
             @NonNull KeyResolver<String> selectors,
-            @NonNull MergingReport.Builder mergingReportBuilder) throws MergeFailureException {
+            @NonNull MergingReport.Builder mergingReportBuilder)
+            throws MergeFailureException {
 
         File xmlFile = manifestInfo.mLocation;
         XmlDocument xmlDocument;
