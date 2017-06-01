@@ -24,9 +24,12 @@ import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
+import com.android.builder.model.Dependencies;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
+import com.google.common.collect.Iterables;
 import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.ClassRule;
@@ -49,7 +52,7 @@ public class LocalAarTest {
     }
 
     @Test
-    public void model() throws IOException {
+    public void checkLevel4Model() throws IOException {
         GetAndroidModelAction.ModelContainer<AndroidProject> models = project.model().getMulti();
 
         AndroidProject appModel = models.getModelMap().get(":app");
@@ -63,6 +66,28 @@ public class LocalAarTest {
         final LibraryGraphHelper.Items compileDependencyItems = helper.on(dependencyGraphs);
         assertThat(compileDependencyItems.withType(ANDROID).asLibraries()).hasSize(1);
         assertThat(compileDependencyItems.withType(MODULE).asLibraries()).isEmpty();
+    }
+
+    @Test
+    public void checkLevel3Model() throws IOException {
+        GetAndroidModelAction.ModelContainer<AndroidProject> models =
+                project.model()
+                        .level(AndroidProject.MODEL_LEVEL_3_VARIANT_OUTPUT_POST_BUILD)
+                        .getMulti();
+
+        AndroidProject appModel = models.getModelMap().get(":app");
+
+        Variant debugVariant = ModelHelper.getVariant(appModel.getVariants(), "debug");
+
+        Dependencies deps = debugVariant.getMainArtifact().getDependencies();
+
+        assertThat(deps.getProjects()).isEmpty();
+        assertThat(deps.getJavaLibraries()).isEmpty();
+        assertThat(deps.getLibraries()).hasSize(1);
+        AndroidLibrary lib = Iterables.getOnlyElement(deps.getLibraries());
+
+        // this should be seen as an external dependency.
+        assertThat(lib.getProject()).isNull();
     }
 
     @Test
