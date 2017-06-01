@@ -100,7 +100,7 @@ public class PerformanceInfrastructureTest {
 
         // Check that the variant info is populated
         GradleBuildProject aProject = benchmarkResults.get(0).getProfile().getProject(0);
-        assertThat(aProject.getCompileSdk()).isEqualTo("android-24");
+        assertThat(aProject.getCompileSdk()).isEqualTo(GradleTestProject.getCompileSdkHash());
         GradleBuildVariant aVariant = aProject.getVariant(0);
         assertThat(aVariant.getMinSdkVersion().getApiLevel()).isEqualTo(3);
         assertThat(aVariant.hasTargetSdkVersion()).named("has target sdk version").isFalse();
