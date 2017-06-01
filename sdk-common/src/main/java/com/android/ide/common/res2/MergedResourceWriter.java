@@ -30,6 +30,7 @@ import com.android.ide.common.blame.SourceFile;
 import com.android.ide.common.blame.SourceFilePosition;
 import com.android.ide.common.blame.SourcePosition;
 import com.android.ide.common.internal.PngException;
+import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
 import com.android.utils.FileUtils;
@@ -46,6 +47,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -66,7 +68,8 @@ import org.w3c.dom.Node;
  * A {@link MergeWriter} for assets, using {@link ResourceItem}. Also takes care of compiling
  * resources and stripping data binding from layout files.
  */
-public class MergedResourceWriter extends MergeWriter<ResourceItem> {
+public class MergedResourceWriter
+        extends MergeWriter<ResourceItem, MergedResourceWriter.FileGenerationParameters> {
 
     @NonNull
     private final ResourcePreprocessor mPreprocessor;
@@ -156,6 +159,7 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
      * @param crunchPng should we crunch PNG files
      */
     public MergedResourceWriter(
+            @NonNull WorkerExecutorFacade<FileGenerationParameters> workerExecutor,
             @NonNull File rootFolder,
             @Nullable File publicFile,
             @Nullable MergingLog blameLog,
@@ -167,7 +171,7 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
             @Nullable File resourceShrinkerOutputFolder,
             boolean pseudoLocalesEnabled,
             boolean crunchPng) {
-        super(rootFolder);
+        super(rootFolder, workerExecutor);
         Preconditions.checkState(
                 (dataBindingExpressionRemover == null) == (dataBindingLayoutOutputFolder == null),
                 "Both dataBindingExpressionRemover and dataBindingLayoutOutputFolder need to be "
@@ -210,6 +214,15 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
             @NonNull ResourcePreprocessor preprocessor,
             @NonNull File temporaryDirectory) {
         return new MergedResourceWriter(
+                new WorkerExecutorFacade<FileGenerationParameters>() {
+                    @Override
+                    public void submit(FileGenerationParameters parameter) {
+                        new FileGenerationWorkAction(parameter).run();
+                    }
+
+                    @Override
+                    public void await() {}
+                },
                 rootFolder,
                 publicFile,
                 blameLogFolder != null ? new MergingLog(blameLogFolder) : null,
@@ -383,29 +396,61 @@ public class MergedResourceWriter extends MergeWriter<ResourceItem> {
             // This is a single value file or a set of generated files. Only write it if the state
             // is TOUCHED.
             if (item.isTouched()) {
-                getExecutor()
-                        .execute(
-                                () -> {
-                                    File file = item.getFile();
-                                    String folderName = getFolderName(item);
+                File file = item.getFile();
+                String folderName = getFolderName(item);
 
-                                    // TODO : make this also a request and use multi-threading for generation.
-                                    if (type == DataFile.FileType.GENERATED_FILES) {
-                                        try {
-                                            mPreprocessor.generateFile(
-                                                    file, item.getSource().getFile());
-                                        } catch (Exception e) {
-                                            throw new ConsumerException(
-                                                    e, item.getSource().getFile());
-                                        }
-                                    }
+                // TODO : make this also a request and use multi-threading for generation.
+                if (type == DataFile.FileType.GENERATED_FILES) {
+                    try {
+                        FileGenerationParameters workItem =
+                                new FileGenerationParameters(item, mPreprocessor);
+                        if (workItem.resourceItem.getSource() != null) {
+                            getExecutor().submit(workItem);
+                        }
+                    } catch (Exception e) {
+                        throw new ConsumerException(e, item.getSource().getFile());
+                    }
+                }
 
-                                    // enlist a new crunching request.
-                                    mCompileResourceRequests.add(
-                                            new CompileResourceRequest(
-                                                    file, getRootFolder(), folderName));
-                                    return null;
-                                });
+                // enlist a new crunching request.
+                mCompileResourceRequests.add(
+                        new CompileResourceRequest(file, getRootFolder(), folderName));
+            }
+        }
+    }
+
+    public static class FileGenerationParameters implements Serializable {
+        public final ResourceItem resourceItem;
+        public final ResourcePreprocessor resourcePreprocessor;
+
+        private FileGenerationParameters(
+                ResourceItem resourceItem, ResourcePreprocessor resourcePreprocessor) {
+            this.resourceItem = resourceItem;
+            this.resourcePreprocessor = resourcePreprocessor;
+        }
+    }
+
+    public static class FileGenerationWorkAction implements Runnable {
+
+        private final FileGenerationParameters workItem;
+
+        public FileGenerationWorkAction(FileGenerationParameters workItem) {
+            this.workItem = workItem;
+        }
+
+        @Override
+        public void run() {
+            try {
+                workItem.resourcePreprocessor.generateFile(
+                        workItem.resourceItem.getFile(),
+                        workItem.resourceItem.getSource().getFile());
+            } catch (Exception e) {
+                throw new RuntimeException(
+                        "Error while processing "
+                                + workItem.resourceItem.getSource().getFile()
+                                + " : "
+                                + e.getMessage(),
+                        e);
             }
         }
     }

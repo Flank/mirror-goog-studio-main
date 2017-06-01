@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.annotations.NonNull;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
+import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.resources.ResourceType;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
@@ -136,12 +137,25 @@ public class MergeResourceWriterWithCompilerTest {
         addAndDeleteFile("f2.xml");
     }
 
+    private WorkerExecutorFacade<MergedResourceWriter.FileGenerationParameters> facade =
+            new WorkerExecutorFacade<MergedResourceWriter.FileGenerationParameters>() {
+
+                @Override
+                public void submit(MergedResourceWriter.FileGenerationParameters parameter) {
+                    new MergedResourceWriter.FileGenerationWorkAction(parameter).run();
+                }
+
+                @Override
+                public void await() {}
+            };
+
     public void addAndDeleteFile(@NonNull String name) throws Exception {
         mRoot = mTemporaryFolder.newFolder();
         File tmpFolder = mTemporaryFolder.newFolder();
 
         MergedResourceWriter writer =
                 new MergedResourceWriter(
+                        facade,
                         mRoot,
                         null,
                         null,
@@ -173,6 +187,7 @@ public class MergeResourceWriterWithCompilerTest {
          */
         writer =
                 new MergedResourceWriter(
+                        facade,
                         mRoot,
                         null,
                         null,

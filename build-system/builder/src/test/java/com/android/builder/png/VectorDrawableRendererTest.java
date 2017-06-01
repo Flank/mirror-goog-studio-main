@@ -54,7 +54,7 @@ public class VectorDrawableRendererTest {
     public void setUp() throws Exception {
         mDensities = ImmutableSet.of(Density.HIGH, Density.MEDIUM, Density.LOW);
         mOutput = new File("output");
-        mRenderer = new VectorDrawableRenderer(19, mOutput, mDensities, new NullLogger());
+        mRenderer = new VectorDrawableRenderer(19, mOutput, mDensities, NullLogger::new);
         mRes = tmpFolder.newFolder("app", "src", "main", "res");
     }
 
@@ -79,8 +79,9 @@ public class VectorDrawableRendererTest {
 
     @Test
     public void noDensities() throws Exception {
-        mRenderer = new VectorDrawableRenderer(
-                19, mOutput, Collections.<Density>emptySet(), new NullLogger());
+        mRenderer =
+                new VectorDrawableRenderer(
+                        19, mOutput, Collections.<Density>emptySet(), NullLogger::new);
         File drawable = new File(mRes, "drawable");
         File input = new File(drawable, "icon.xml");
 
@@ -288,7 +289,7 @@ public class VectorDrawableRendererTest {
 
     @Test
     public void needsPreprocessing_minSdk() throws Exception {
-        mRenderer = new VectorDrawableRenderer(21, mOutput, mDensities, new NullLogger());
+        mRenderer = new VectorDrawableRenderer(21, mOutput, mDensities, NullLogger::new);
         File drawable = new File(mRes, "drawable");
         File input = new File(drawable, "icon.xml");
 

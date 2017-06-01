@@ -38,6 +38,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.function.Supplier;
 import javax.imageio.ImageIO;
 
 /**
@@ -47,7 +48,7 @@ public class VectorDrawableRenderer implements ResourcePreprocessor {
     /** Projects with minSdk set to this or higher don't need to generate PNGs. */
     public static final int MIN_SDK_WITH_VECTOR_SUPPORT = 21;
 
-    private final ILogger mLogger;
+    private final Supplier<ILogger> mLogger;
     private final int mMinSdk;
     private final File mOutputDir;
     private final Collection<Density> mDensities;
@@ -56,11 +57,11 @@ public class VectorDrawableRenderer implements ResourcePreprocessor {
             int minSdk,
             File outputDir,
             Collection<Density> densities,
-            ILogger logger) {
+            Supplier<ILogger> loggerSupplier) {
         mMinSdk = minSdk;
         mOutputDir = outputDir;
         mDensities = densities;
-        mLogger = logger;
+        mLogger = loggerSupplier;
     }
 
     @Override
@@ -131,10 +132,10 @@ public class VectorDrawableRenderer implements ResourcePreprocessor {
         if (isXml(toBeGenerated)) {
             Files.copy(original, toBeGenerated);
         } else {
-            mLogger.verbose(
-                    "Generating PNG: [%s] from [%s]",
-                    toBeGenerated.getAbsolutePath(),
-                    original.getAbsolutePath());
+            mLogger.get()
+                    .verbose(
+                            "Generating PNG: [%s] from [%s]",
+                            toBeGenerated.getAbsolutePath(), original.getAbsolutePath());
 
             FolderConfiguration folderConfiguration = getFolderConfiguration(toBeGenerated);
             checkState(folderConfiguration.getDensityQualifier() != null);

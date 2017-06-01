@@ -17,22 +17,23 @@
 package com.android.ide.common.res2;
 
 import com.android.annotations.NonNull;
-import com.android.ide.common.internal.WaitableExecutor;
+import com.android.ide.common.workers.WorkerExecutorFacade;
 import java.io.File;
+import java.io.Serializable;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-/**
- * A {@link MergeConsumer} that writes the result on the disk.
- */
-public abstract class MergeWriter<I extends DataItem> implements MergeConsumer<I> {
+/** A {@link MergeConsumer} that writes the result on the disk. */
+public abstract class MergeWriter<I extends DataItem, U extends Serializable>
+        implements MergeConsumer<I> {
 
     @NonNull
     private final File mRootFolder;
-    @NonNull private final WaitableExecutor mExecutor;
+    @NonNull private final WorkerExecutorFacade<U> mExecutor;
 
-    public MergeWriter(@NonNull File rootFolder) {
+    public MergeWriter(
+            @NonNull File rootFolder, @NonNull WorkerExecutorFacade<U> workerExecutorFacade) {
         mRootFolder = rootFolder;
-        mExecutor = WaitableExecutor.useGlobalSharedThreadPool();
+        mExecutor = workerExecutorFacade;
     }
 
     @Override
@@ -44,7 +45,7 @@ public abstract class MergeWriter<I extends DataItem> implements MergeConsumer<I
         try {
             postWriteAction();
 
-            getExecutor().waitForTasksWithQuickFail(true);
+            getExecutor().await();
         } catch (ConsumerException e) {
             throw e;
         } catch (Exception e) {
@@ -54,13 +55,13 @@ public abstract class MergeWriter<I extends DataItem> implements MergeConsumer<I
 
     /**
      * Called after all the items have been added/removed. This is called by {@link #end()}.
-     * @throws ConsumerException
+     *
+     * @throws ConsumerException wrapper for any underlying exception.
      */
-    protected void postWriteAction() throws ConsumerException {
-    }
+    protected void postWriteAction() throws ConsumerException {}
 
     @NonNull
-    protected WaitableExecutor getExecutor() {
+    protected WorkerExecutorFacade<U> getExecutor() {
         return mExecutor;
     }
 

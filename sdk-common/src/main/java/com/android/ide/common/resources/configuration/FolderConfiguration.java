@@ -25,7 +25,7 @@ import com.android.resources.ScreenOrientation;
 import com.google.common.base.Objects;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterators;
-
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -34,10 +34,10 @@ import java.util.Locale;
 
 
 /**
- * Represents the configuration for Resource Folders. All the properties have a default
- * value which means that the property is not set.
+ * Represents the configuration for Resource Folders. All the properties have a default value which
+ * means that the property is not set.
  */
-public final class FolderConfiguration implements Comparable<FolderConfiguration> {
+public final class FolderConfiguration implements Comparable<FolderConfiguration>, Serializable {
 
     @NonNull
     private static final ResourceQualifier[] DEFAULT_QUALIFIERS;

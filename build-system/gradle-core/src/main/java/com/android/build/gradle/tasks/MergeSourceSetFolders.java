@@ -37,6 +37,7 @@ import com.android.ide.common.res2.FileStatus;
 import com.android.ide.common.res2.FileValidity;
 import com.android.ide.common.res2.MergedAssetWriter;
 import com.android.ide.common.res2.MergingException;
+import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.utils.FileUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -46,6 +47,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
+import javax.inject.Inject;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
@@ -59,6 +61,7 @@ import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
+import org.gradle.workers.WorkerExecutor;
 
 @ParallelizableTask
 @CacheableTask
@@ -90,6 +93,13 @@ public class MergeSourceSetFolders extends IncrementalTask {
 
     private final FileValidity<AssetSet> fileValidity = new FileValidity<>();
 
+    private final WorkerExecutorFacade<MergedAssetWriter.AssetWorkParameters> workerExecutor;
+
+    @Inject
+    public MergeSourceSetFolders(WorkerExecutor workerExecutor) {
+        this.workerExecutor = new WorkerExecutorAdapter<>(workerExecutor, AssetWorkAction.class);
+    }
+
     @Override
     @Internal
     protected boolean isIncremental() {
@@ -115,7 +125,7 @@ public class MergeSourceSetFolders extends IncrementalTask {
             }
 
             // get the merged set and write it down.
-            MergedAssetWriter writer = new MergedAssetWriter(destinationDir);
+            MergedAssetWriter writer = new MergedAssetWriter(destinationDir, workerExecutor);
 
             merger.mergeData(writer, false /*doCleanUp*/);
 
@@ -180,7 +190,7 @@ public class MergeSourceSetFolders extends IncrementalTask {
                 }
             }
 
-            MergedAssetWriter writer = new MergedAssetWriter(getOutputDir());
+            MergedAssetWriter writer = new MergedAssetWriter(getOutputDir(), workerExecutor);
 
             merger.mergeData(writer, false /*doCleanUp*/);
 
@@ -193,6 +203,21 @@ public class MergeSourceSetFolders extends IncrementalTask {
         } finally {
             // some clean up after the task to help multi variant/module builds.
             fileValidity.clear();
+        }
+    }
+
+    public static class AssetWorkAction implements Runnable {
+
+        private final MergedAssetWriter.AssetWorkAction workAction;
+
+        @Inject
+        public AssetWorkAction(MergedAssetWriter.AssetWorkParameters workItem) {
+            workAction = new MergedAssetWriter.AssetWorkAction(workItem);
+        }
+
+        @Override
+        public void run() {
+            workAction.run();
         }
     }
 
@@ -240,11 +265,6 @@ public class MergeSourceSetFolders extends IncrementalTask {
     @Optional
     public String getIgnoreAssets() {
         return ignoreAssets;
-    }
-
-    @VisibleForTesting
-    void setIgnoreAssets(String ignoreAssets) {
-        this.ignoreAssets = ignoreAssets;
     }
 
     @VisibleForTesting

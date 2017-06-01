@@ -18,37 +18,65 @@ package com.android.ide.common.res2;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.google.common.base.Preconditions;
-
 import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.zip.GZIPInputStream;
 
-/**
- * A {@link MergeWriter} for assets, using {@link AssetItem}.
- */
-public class MergedAssetWriter extends MergeWriter<AssetItem> {
+/** A {@link MergeWriter} for assets, using {@link AssetItem}. */
+public class MergedAssetWriter
+        extends MergeWriter<AssetItem, MergedAssetWriter.AssetWorkParameters> {
 
-    public MergedAssetWriter(@NonNull File rootFolder) {
-        super(rootFolder);
+    public MergedAssetWriter(@NonNull File rootFolder, @NonNull WorkerExecutorFacade facade) {
+        super(rootFolder, facade);
     }
 
     @Override
     public void addItem(@NonNull final AssetItem item) throws ConsumerException {
         // Only write it if the state is TOUCHED.
         if (item.isTouched()) {
-            getExecutor().execute(() -> {
+            getExecutor().submit(new AssetWorkParameters(item, getRootFolder()));
+        }
+    }
+
+    public static class AssetWorkParameters implements Serializable {
+        public final AssetItem assetItem;
+        public final File rootFolder;
+
+        private AssetWorkParameters(@NonNull AssetItem assetItem, @NonNull File rootFolder) {
+            this.assetItem = assetItem;
+            this.rootFolder = rootFolder;
+        }
+    }
+
+    public static class AssetWorkAction implements Runnable {
+
+        private final AssetItem item;
+        private final File rootFolder;
+
+        public AssetWorkAction(AssetWorkParameters parameters) {
+            this.item = parameters.assetItem;
+            this.rootFolder = parameters.rootFolder;
+        }
+
+        @Override
+        public void run() {
+            try {
                 AssetFile assetFile = Preconditions.checkNotNull(item.getSource());
 
                 Path fromFile = assetFile.getFile().toPath();
 
                 // the out file is computed from the item key since that includes the
                 // relative folder.
-                Path toFile = new File(getRootFolder(),
-                        item.getKey().replace('/', File.separatorChar)).toPath();
+                Path toFile =
+                        new File(rootFolder, item.getKey().replace('/', File.separatorChar))
+                                .toPath();
 
                 Files.createDirectories(toFile.getParent());
 
@@ -62,8 +90,9 @@ public class MergedAssetWriter extends MergeWriter<AssetItem> {
                 } else {
                     Files.copy(fromFile, toFile, StandardCopyOption.REPLACE_EXISTING);
                 }
-                return null;
-            });
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 

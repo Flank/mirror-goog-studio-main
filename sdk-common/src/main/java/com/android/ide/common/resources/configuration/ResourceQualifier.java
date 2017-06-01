@@ -19,13 +19,14 @@ package com.android.ide.common.resources.configuration;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import java.io.Serializable;
 
 /**
  * Base class for resource qualifiers.
  *
- * The resource qualifier classes are designed as immutable.
+ * <p>The resource qualifier classes are designed as immutable.
  */
-public abstract class ResourceQualifier implements Comparable<ResourceQualifier> {
+public abstract class ResourceQualifier implements Comparable<ResourceQualifier>, Serializable {
 
     /**
      * Returns the human readable name of the qualifier.

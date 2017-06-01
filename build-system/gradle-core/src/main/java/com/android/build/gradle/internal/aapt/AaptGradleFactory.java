@@ -88,7 +88,7 @@ public final class AaptGradleFactory {
             boolean crunchPng,
             @NonNull VariantScope scope,
             @NonNull File intermediateDir,
-            @NonNull MergingLog blameLog) {
+            @Nullable MergingLog blameLog) {
         return make(
                 aaptGeneration,
                 builder,
