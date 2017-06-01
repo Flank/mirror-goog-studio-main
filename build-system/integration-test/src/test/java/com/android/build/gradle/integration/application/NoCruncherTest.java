@@ -16,14 +16,13 @@
 
 package com.android.build.gradle.integration.application;
 
-import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 import static com.android.testutils.truth.MoreTruth.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertTrue;
+import static com.google.common.truth.Truth.assertThat;
 
+import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -39,59 +38,33 @@ public class NoCruncherTest {
                     .create();
 
     @Test
-    public void testPngFilesWereNotCrunchedByAapt() throws Exception {
-        noPngCrunch.executor().withEnabledAapt2(false).run("clean", "assembleDebug");
-
-        File srcFile = noPngCrunch.file("src/main/res/drawable/icon.png");
-        File destFile =
-                noPngCrunch.file(
-                        "build/" + FD_INTERMEDIATES + "/res/merged/debug/drawable/icon.png");
-
-        // assert size are unchanged.
-        assertTrue(srcFile.exists());
-        assertTrue(destFile.exists());
-        assertEquals(srcFile.length(), destFile.length());
-
-        // check the png files is changed.
-        srcFile = noPngCrunch.file("src/main/res/drawable/lib_bg.9.png");
-        destFile =
-                noPngCrunch.file(
-                        "build/" + FD_INTERMEDIATES + "/res/merged/debug/drawable/lib_bg.9.png");
-
-        // assert size are changed.
-        assertTrue(srcFile.exists());
-        assertTrue(destFile.exists());
-        assertNotSame(srcFile.length(), destFile.length());
+    public void testWithAapt() throws Exception {
+        checkNotCrunched(false);
     }
 
     @Test
-    public void testPngFilesWereGeneratedByAapt2() throws Exception {
-        // When using AAPT2 the intermediate files are in the ".flat" format,so we cannot check if
-        // they are crunched or not. We can only check they are generated and exist.
-        noPngCrunch.executor().withEnabledAapt2(true).run("clean", "assembleDebug");
+    public void testWithAapt2() throws Exception {
+        checkNotCrunched(true);
+    }
 
-        File srcFile = noPngCrunch.file("src/main/res/drawable/icon.png");
-        File destFile =
-                noPngCrunch.file(
-                        "build/" + FD_INTERMEDIATES + "/res/merged/debug/drawable_icon.png.flat");
+    private void checkNotCrunched(boolean enableAapt2) throws Exception {
+        noPngCrunch.executor().withEnabledAapt2(enableAapt2).run("clean", "assembleDebug");
+        // Check crunchable PNG is not crunched
+        checkResource("drawable/icon.png", false);
+        checkResource("drawable/lib_bg.9.png", true);
+    }
 
-        // Check that the intermediate file was generated.
+    private void checkResource(@NonNull String fileName, boolean shouldBeProcessed)
+            throws IOException {
+        Path srcFile = noPngCrunch.file("src/main/res/" + fileName).toPath();
+        Path destFile = noPngCrunch.getApk(GradleTestProject.ApkType.DEBUG).getResource(fileName);
         assertThat(srcFile).exists();
         assertThat(destFile).exists();
 
-        srcFile = noPngCrunch.file("src/main/res/drawable/lib_bg.9.png");
-        destFile =
-                noPngCrunch.file(
-                        "build/"
-                                + FD_INTERMEDIATES
-                                + "/res/merged/debug/drawable_lib_bg.9.png.flat");
-
-        // Check the png files exists.
-        assertTrue(srcFile.exists());
-        assertTrue(destFile.exists());
-
-        // Check if the file is in the APK.
-        Path apkPng = noPngCrunch.getApk("debug").getResource("drawable/lib_bg.9.png");
-        assertThat(apkPng).exists();
+        if (shouldBeProcessed) {
+            assertThat(Files.readAllBytes(destFile)).isNotEqualTo(Files.readAllBytes(srcFile));
+        } else {
+            assertThat(destFile).hasContents(Files.readAllBytes(srcFile));
+        }
     }
 }

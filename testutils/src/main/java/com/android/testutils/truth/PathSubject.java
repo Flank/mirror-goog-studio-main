@@ -19,8 +19,10 @@ package com.android.testutils.truth;
 import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.Subject;
 import com.google.common.truth.SubjectFactory;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 
 /**
  * Truth support for validating java.nio.file.Path.
@@ -72,6 +74,22 @@ public class PathSubject extends Subject<PathSubject, Path> {
     public void isExecutable() {
         if (!Files.isExecutable(getSubject())) {
             fail("is not executable");
+        }
+    }
+
+    public void hasContents(byte[] expectedContents) throws IOException {
+        exists();
+        try {
+            byte[] contents = Files.readAllBytes(getSubject());
+            if (!Arrays.equals(contents, expectedContents)) {
+                failWithBadResults(
+                        "contains",
+                        "byte[" + expectedContents.length + "]",
+                        "is",
+                        "byte[" + contents.length + "]");
+            }
+        } catch (IOException e) {
+            failWithRawMessage("Unable to read %s", getSubject());
         }
     }
 }
