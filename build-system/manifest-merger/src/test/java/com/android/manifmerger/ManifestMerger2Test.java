@@ -119,6 +119,7 @@ public class ManifestMerger2Test {
                 "85_child_packages_with_merging",
                 "86_delimiter_separated_values",
                 "87_delimiter_separated_values_errors",
+                "88_multi_app_elements_strange_order.xml",
             };
 
 
