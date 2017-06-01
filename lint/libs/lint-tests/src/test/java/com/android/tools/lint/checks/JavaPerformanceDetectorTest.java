@@ -426,6 +426,16 @@ public class JavaPerformanceDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
+    public void testNoSparseArrayOutsideAndroid() throws Exception {
+        //noinspection all // Sample code
+        lint().files(
+                manifest().minSdk(17),
+                mLongSparseArray,
+                gradle("apply plugin: 'java'\n"))
+                .run()
+                .expectClean();
+    }
+
     public void testUseValueOfOnArrays() throws Exception {
         //noinspection all // Sample code
         lint().files(
