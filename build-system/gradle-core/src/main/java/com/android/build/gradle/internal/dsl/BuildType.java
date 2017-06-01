@@ -79,6 +79,8 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
 
     private boolean shrinkResources = false;
     private Boolean useProguard;
+    private Boolean crunchPngs;
+    private boolean isCrunchPngsDefault = true;
 
     public BuildType(
             @NonNull String name,
@@ -152,6 +154,7 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
         if (BuilderConstants.DEBUG.equals(getName())) {
             setDebuggable(true);
             setEmbedMicroApp(false);
+            isCrunchPngsDefault = false;
 
             assert debugSigningConfig != null;
             setSigningConfig(debugSigningConfig);
@@ -178,29 +181,21 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
         externalNativeBuildOptions._initWith(thatBuildType.getExternalNativeBuildOptions());
         useProguard = thatBuildType.isUseProguard();
         postprocessingOptions.initWith(((BuildType) that).getPostprocessing());
+        crunchPngs = thatBuildType.isCrunchPngs();
+        //noinspection deprecation Must still be copied.
+        isCrunchPngsDefault = thatBuildType.isCrunchPngsDefault();
     }
 
-    public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + getJackOptions().hashCode();
-        result = 31 * result + javaCompileOptions.hashCode();
-        result = 31 * result + (shrinkResources ? 1 : 0);
-        return result;
-    }
-
+    /** Override as DSL objects have no reason to be compared for equality. */
     @Override
-    @SuppressWarnings("RedundantIfStatement")
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof BuildType)) return false;
-        if (!super.equals(o)) return false;
-        BuildType other = (BuildType) o;
-        if (!ndkConfig.equals(other.ndkConfig)) return false;
-        if (!jackOptions.equals(other.jackOptions)) return false;
-        if (!javaCompileOptions.equals(other.javaCompileOptions)) return false;
-        if (shrinkResources != other.isShrinkResources()) return false;
+    public int hashCode() {
+        return System.identityHashCode(this);
+    }
 
-        return true;
+    /** Override as DSL objects have no reason to be compared for equality. */
+    @Override
+    public boolean equals(Object o) {
+        return this == o;
     }
 
     // -- DSL Methods. TODO remove once the instantiator does what I expect it to do.
@@ -525,6 +520,35 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
         this.useProguard = useProguard;
     }
 
+    /**
+     * Whether to crunch PNGs.
+     *
+     * <p>This will reduce the size of the APK if PNGs resources are not already optimally
+     * compressed, at the cost of extra time to build.
+     *
+     * <p>PNG crunching is enabled by default in the release build type and disabled by default in
+     * the debug build type.
+     */
+    @Override
+    public Boolean isCrunchPngs() {
+        return crunchPngs;
+    }
+
+    public void setCrunchPngs(Boolean crunchPngs) {
+        this.crunchPngs = crunchPngs;
+    }
+
+    /*
+     * (Non javadoc): Whether png crunching should be enabled if not explicitly overridden.
+     *
+     * Can be removed once the AaptOptions crunch method is removed.
+     */
+    @Override
+    @Deprecated
+    public boolean isCrunchPngsDefault() {
+        return isCrunchPngsDefault;
+    }
+
     public void jarJarRuleFile(@NonNull Object file) {
         getJarJarRuleFiles().add(project.file(file));
     }
@@ -597,10 +621,10 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
     }
 
     @Override
-    public DefaultBuildType initWith(com.android.builder.model.BuildType that) {
+    public BuildType initWith(com.android.builder.model.BuildType that) {
         dslChecksEnabled.set(false);
         try {
-            return super.initWith(that);
+            return (BuildType) super.initWith(that);
         } finally {
             dslChecksEnabled.set(true);
         }

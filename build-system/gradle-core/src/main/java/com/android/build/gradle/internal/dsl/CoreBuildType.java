@@ -49,4 +49,11 @@ public interface CoreBuildType extends BuildType {
     /** @deprecated Use {@link VariantScope#getCodeShrinker()} instead. */
     @Deprecated
     Boolean isUseProguard();
+
+    @Nullable
+    Boolean isCrunchPngs();
+
+    /** @deprecated Can go away once {@link AaptOptions#cruncherEnabled} is removed. */
+    @Deprecated
+    boolean isCrunchPngsDefault();
 }

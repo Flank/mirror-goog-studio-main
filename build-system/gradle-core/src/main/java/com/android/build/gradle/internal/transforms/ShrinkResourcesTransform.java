@@ -213,7 +213,6 @@ public class ShrinkResourcesTransform extends Transform {
                                 aaptOptions.getNoCompress() != null
                                         ? Joiner.on(":").join(aaptOptions.getNoCompress())
                                         : "",
-                                aaptOptions.getCruncherEnabled(),
                                 aaptOptions.getFailOnMissingConfigEntry(),
                                 aaptOptions.getAdditionalParameters() != null
                                         ? Joiner.on(":").join(aaptOptions.getAdditionalParameters())

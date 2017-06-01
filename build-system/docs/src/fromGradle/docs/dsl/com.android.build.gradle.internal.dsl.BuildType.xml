@@ -6,6 +6,7 @@
                 <tr><td>Name</td></tr>
             </thead>
             <tr><td>applicationIdSuffix</td></tr>
+            <tr><td>crunchPngs</td></tr>
             <tr><td>debuggable</td></tr>
             <tr><td>embedMicroApp</td></tr>
             <tr><td>javaCompileOptions</td></tr>

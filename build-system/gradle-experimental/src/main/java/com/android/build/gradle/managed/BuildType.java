@@ -33,6 +33,19 @@ public interface BuildType extends BaseConfig {
     void setDebuggable(boolean isDebuggable);
 
     /**
+     * Whether to crunch PNGs.
+     *
+     * <p>This will reduce the size of the APK if PNGs resources are not already optimally
+     * compressed, at the cost of extra time to build.
+     *
+     * <p>PNG crunching is enabled by default in the release build type and disabled by default in
+     * the debug build type.
+     */
+    Boolean getCrunchPngs();
+
+    void setCrunchPngs(Boolean isCrunchPngs);
+
+    /**
      * Returns whether the build type is configured to be build with support for code coverage.
      *
      * @return true if code coverage is enabled.

@@ -738,7 +738,7 @@ public class MergeResources extends IncrementalTask {
                 mergeResourcesTask.setBlameLogFolder(scope.getResourceBlameLogDir());
             }
             mergeResourcesTask.processResources = processResources;
-            mergeResourcesTask.crunchPng = extension.getAaptOptions().getCruncherEnabled();
+            mergeResourcesTask.crunchPng = scope.isCrunchPngs();
 
             VectorDrawablesOptions vectorDrawablesOptions = variantData
                     .getVariantConfiguration()

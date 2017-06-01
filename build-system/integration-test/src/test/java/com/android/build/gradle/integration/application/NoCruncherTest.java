@@ -21,6 +21,8 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType;
+import com.android.build.gradle.integration.common.fixture.TemporaryProjectModification;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -38,26 +40,59 @@ public class NoCruncherTest {
                     .create();
 
     @Test
-    public void testWithAapt() throws Exception {
-        checkNotCrunched(false);
+    public void checkNotCrunched() throws Exception {
+        noPngCrunch.executor().run("assembleDebug", "assembleRelease");
+        // Check "crunchable" PNG is not crunched
+        checkResource(ApkType.DEBUG, "drawable/icon.png", false);
+        checkResource(ApkType.DEBUG, "drawable/lib_bg.9.png", true);
+        checkResource(ApkType.RELEASE, "drawable/icon.png", false);
+        checkResource(ApkType.RELEASE, "drawable/lib_bg.9.png", true);
     }
 
     @Test
-    public void testWithAapt2() throws Exception {
-        checkNotCrunched(true);
+    public void checkAapt1() throws Exception {
+        noPngCrunch.executor().withEnabledAapt2(false).run("assembleDebug");
+        // Check "crunchable" PNG is not crunched
+        checkResource(ApkType.DEBUG, "drawable/icon.png", false);
+        checkResource(ApkType.DEBUG, "drawable/lib_bg.9.png", true);
     }
 
-    private void checkNotCrunched(boolean enableAapt2) throws Exception {
-        noPngCrunch.executor().withEnabledAapt2(enableAapt2).run("clean", "assembleDebug");
-        // Check crunchable PNG is not crunched
-        checkResource("drawable/icon.png", false);
-        checkResource("drawable/lib_bg.9.png", true);
+    @Test
+    public void checkBuildTypeDefaultsEnable() throws Exception {
+        TemporaryProjectModification.doTest(
+                noPngCrunch,
+                projectModification -> {
+                    projectModification.replaceInFile(
+                            "build.gradle", "cruncherEnabled = false", "//cruncherEnabled = false");
+                    noPngCrunch.executor().run("assembleDebug", "assembleRelease", "assembleQa");
+                    checkResource(ApkType.DEBUG, "drawable/icon.png", false);
+                    checkResource(ApkType.RELEASE, "drawable/icon.png", true);
+                    // QA is debuggable, but inits from release, so the cruncher is default enabled.
+                    checkResource(ApkType.of("qa", false), "drawable/icon.png", true);
+                });
     }
 
-    private void checkResource(@NonNull String fileName, boolean shouldBeProcessed)
+    @Test
+    public void checkBuildTypeOverride() throws Exception {
+        TemporaryProjectModification.doTest(
+                noPngCrunch,
+                projectModification -> {
+                    projectModification.replaceInFile(
+                            "build.gradle", "cruncherEnabled = false", "//cruncherEnabled = false");
+                    // QA is debuggable, but inits from release, so the cruncher is default enabled,
+                    // but is is explicitly disabled here.
+                    projectModification.replaceInFile(
+                            "build.gradle", "// crunchPngs false", "crunchPngs false");
+                    noPngCrunch.executor().run("assembleQa");
+                    checkResource(ApkType.of("qa", false), "drawable/icon.png", false);
+                });
+    }
+
+    private static void checkResource(
+            @NonNull ApkType apkType, @NonNull String fileName, boolean shouldBeProcessed)
             throws IOException {
         Path srcFile = noPngCrunch.file("src/main/res/" + fileName).toPath();
-        Path destFile = noPngCrunch.getApk(GradleTestProject.ApkType.DEBUG).getResource(fileName);
+        Path destFile = noPngCrunch.getApk(apkType).getResource(fileName);
         assertThat(srcFile).exists();
         assertThat(destFile).exists();
 

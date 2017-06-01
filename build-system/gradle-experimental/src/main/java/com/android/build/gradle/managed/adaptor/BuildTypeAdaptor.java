@@ -45,6 +45,12 @@ public class BuildTypeAdaptor extends BaseConfigAdaptor implements CoreBuildType
         return buildType.getDebuggable();
     }
 
+    @Nullable
+    @Override
+    public Boolean isCrunchPngs() {
+        return buildType.getCrunchPngs();
+    }
+
     @Override
     public boolean isTestCoverageEnabled() {
         return buildType.getTestCoverageEnabled();
@@ -118,6 +124,12 @@ public class BuildTypeAdaptor extends BaseConfigAdaptor implements CoreBuildType
     @Override
     public CoreShaderOptions getShaders() {
         return new ShaderOptionsAdaptor(buildType.getShaders());
+    }
+
+    @Deprecated
+    @Override
+    public boolean isCrunchPngsDefault() {
+        return true;
     }
 
     @Override

@@ -431,6 +431,24 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         return true;
     }
 
+    @Override
+    public boolean isCrunchPngs() {
+        // If set for this build type, respect that.
+        Boolean buildTypeOverride = getVariantConfiguration().getBuildType().isCrunchPngs();
+        if (buildTypeOverride != null) {
+            return buildTypeOverride;
+        }
+        // Otherwise, if set globally, respect that.
+        Boolean globalOverride =
+                globalScope.getExtension().getAaptOptions().getCruncherEnabledOverride();
+        if (globalOverride != null) {
+            return globalOverride;
+        }
+        // If not overridden, use the default from the build type.
+        //noinspection deprecation TODO: Remove once the global cruncher enabled flag goes away.
+        return getVariantConfiguration().getBuildType().isCrunchPngsDefault();
+    }
+
     @Nullable
     @Override
     public File getResourceShrinkerInputFolder() {

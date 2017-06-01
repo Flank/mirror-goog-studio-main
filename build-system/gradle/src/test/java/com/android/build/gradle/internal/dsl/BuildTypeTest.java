@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.dsl;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -102,30 +101,6 @@ public class BuildTypeTest {
                     original.getUseJack();
                     original.getPostprocessingConfiguration();
                 });
-    }
-
-    @Test
-    public void testInitWith_equals() {
-        BuildType original = new BuildType("foo", project, errorReporter);
-
-        // change every value from their default.
-        original.setDebuggable(true);
-        original.setJniDebuggable(true);
-        original.setRenderscriptDebuggable(true);
-        original.setRenderscriptOptimLevel(0);
-        original.setApplicationIdSuffix("foo");
-        original.setVersionNameSuffix("foo");
-        original.setMinifyEnabled(true);
-        original.setSigningConfig(new SigningConfig("blah"));
-        original.setZipAlignEnabled(false);
-        original.setShrinkResources(true);
-        original.getJackOptions().setEnabled(Boolean.FALSE);
-        original.ndk(ndk -> ndk.abiFilters("x86"));
-
-        BuildType copy = new BuildType(original.getName(), project, errorReporter);
-        copy.initWith(original);
-
-        assertEquals(original, copy);
     }
 
     private com.android.builder.model.BuildType getBuildTypeWithName(String name) {

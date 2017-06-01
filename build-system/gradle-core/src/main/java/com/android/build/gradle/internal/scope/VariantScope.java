@@ -95,6 +95,8 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     boolean useResourceShrinker();
 
+    boolean isCrunchPngs();
+
     @Nullable
     File getResourceShrinkerInputFolder();
 

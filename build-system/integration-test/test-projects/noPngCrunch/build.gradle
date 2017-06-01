@@ -19,4 +19,14 @@ android {
         minSdkVersion 16
         targetSdkVersion 16
     }
+
+    buildTypes {
+        qa {
+            initWith(release)
+            debuggable true
+            // crunchPngs false
+        }
+    }
+
+    lintOptions.checkReleaseBuilds = false
 }

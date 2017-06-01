@@ -38,7 +38,7 @@ public class AaptOptions implements com.android.builder.model.AaptOptions {
     @Nullable
     private List<String> noCompressList;
 
-    private boolean cruncherEnabled = true;
+    @Nullable private Boolean cruncherEnabled;
 
     private boolean failOnMissingConfigEntry = false;
 
@@ -119,21 +119,33 @@ public class AaptOptions implements com.android.builder.model.AaptOptions {
                 + "now always enabled.");
     }
 
-    /**
-     * Enables or disables PNG crunching.
-     */
     public void setCruncherEnabled(boolean value) {
         cruncherEnabled = value;
     }
 
     /**
-     * Returns true if the PNGs should be crunched, false otherwise.
+     * Whether to crunch PNGs.
+     *
+     * <p>This will reduce the size of the APK if PNGs resources are not already optimally
+     * compressed, at the cost of extra time to build.
+     *
+     * <p>PNG crunching is enabled by default in the release build type and disabled by default in
+     * the debug build type.
+     *
+     * <p>This is replaced by {@link BuildType#isCrunchPngs()}.
      */
-    @Input
+    @Deprecated
     public boolean getCruncherEnabled() {
+        // Simulate true if unset. This is not really correct, but changing it to be a tri-state
+        // nullable Boolean is potentially a breaking change if the getter was being used by build
+        // scripts or third party plugins.
+        return cruncherEnabled == null ? true : cruncherEnabled;
+    }
+
+    public Boolean getCruncherEnabledOverride() {
         return cruncherEnabled;
     }
-    
+
     /**
      * Whether to use the new cruncher.
      */
