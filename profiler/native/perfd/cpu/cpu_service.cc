@@ -30,6 +30,7 @@ using grpc::StatusCode;
 using profiler::proto::CpuDataRequest;
 using profiler::proto::CpuDataResponse;
 using profiler::proto::CpuProfilerData;
+using profiler::proto::CpuProfilerType;
 using profiler::proto::CpuProfilingAppStartRequest;
 using profiler::proto::CpuProfilingAppStartResponse;
 using profiler::proto::CpuProfilingAppStopRequest;
@@ -161,7 +162,7 @@ grpc::Status CpuServiceImpl::StartProfilingApp(
   bool success = false;
   string error;
 
-  if (request->profiler() == CpuProfilingAppStartRequest::SIMPLE_PERF) {
+  if (request->profiler_type() == CpuProfilerType::SIMPLE_PERF) {
     success = simplerperf_manager_.StartProfiling(request->app_pkg_name(),
                                                   &trace_path_, &error);
   } else {
@@ -194,7 +195,7 @@ grpc::Status CpuServiceImpl::StopProfilingApp(
     CpuProfilingAppStopResponse* response) {
   string error;
   bool success = false;
-  if (request->profiler() == CpuProfilingAppStopRequest::SIMPLE_PERF) {
+  if (request->profiler_type() == CpuProfilerType::SIMPLE_PERF) {
     success =
         simplerperf_manager_.StopProfiling(request->app_pkg_name(), &error);
   } else {  // Profiler is ART
