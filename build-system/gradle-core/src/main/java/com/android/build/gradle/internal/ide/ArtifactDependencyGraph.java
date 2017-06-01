@@ -423,11 +423,29 @@ public class ArtifactDependencyGraph {
         ImmutableList.Builder<AndroidLibrary> androidLibraries = ImmutableList.builder();
         ImmutableList.Builder<JavaLibrary> javaLibrary = ImmutableList.builder();
 
+        // get the runtime artifact. We only care about the ComponentIdentifier so we don't
+        // need to call getAllArtifacts() which computes a lot more many things.
+        // Instead just get all the jars to get all the dependencies.
+        ArtifactCollection runtimeArtifactCollection =
+                computeArtifactList(
+                        variantScope,
+                        RUNTIME_CLASSPATH,
+                        AndroidArtifacts.ArtifactScope.ALL,
+                        AndroidArtifacts.ArtifactType.JAR);
+        // build a list of the artifacts
+        Set<ComponentIdentifier> runtimeIdentifiers =
+                new HashSet<>(runtimeArtifactCollection.getArtifacts().size());
+        for (ResolvedArtifactResult result : runtimeArtifactCollection.getArtifacts()) {
+            runtimeIdentifiers.add(result.getId().getComponentIdentifier());
+        }
+
         Set<HashableResolvedArtifactResult> artifacts =
                 getAllArtifacts(variantScope, COMPILE_CLASSPATH);
 
         for (HashableResolvedArtifactResult artifact : artifacts) {
             ComponentIdentifier id = artifact.getId().getComponentIdentifier();
+
+            boolean isProvided = !runtimeIdentifiers.contains(id);
 
             boolean isSubproject = id instanceof ProjectComponentIdentifier;
             String projectPath =
@@ -447,7 +465,7 @@ public class ArtifactDependencyGraph {
                                 null, /* requestedCoordinates */
                                 checkNotNull(sMavenCoordinatesCache.get(artifact)),
                                 false, /* isSkipped */
-                                false)); /* isProvided */
+                                isProvided));
             } else {
                 if (artifact.isWrappedModule()) {
                     // force external dependency mode.
@@ -465,7 +483,7 @@ public class ArtifactDependencyGraph {
                                                 .getFile(), // fallback so that the value is non-null
                                 artifact.getFile(), /*exploded folder*/
                                 getVariant(artifact),
-                                false, /* dependencyItem.isProvided() */
+                                isProvided,
                                 false, /* dependencyItem.isSkipped() */
                                 ImmutableList.of(), /* androidLibraries */
                                 ImmutableList.of(), /* javaLibraries */
