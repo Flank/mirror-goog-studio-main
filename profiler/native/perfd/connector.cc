@@ -24,8 +24,13 @@
 namespace {
 
 // Try to connect to agent a few times before giving up.
-// TODO: Find a fallback solution.
-const int kRetryMaxTime = 3;
+// The time when the agent starts creating and listening from the socket
+// |kAgentSocketName| can vary quite a bit. For example, an app can be stuck on
+// waiting for debugger to attach.
+// TODO: Find a fallback solution. Currently the agent blocks until it receives
+// a fd from the connector. We should implement a time-out and retry protocol
+// on the agent-side.
+const int kRetryMaxCount = 20;
 // Interval between retry to connect to agent, in microseconds.
 const int kRetryIntervalUs = profiler::Clock::ms_to_us(500);
 
@@ -54,7 +59,7 @@ void SendDaemonSocketFdToAgent(const char *agent_socket_name,
       usleep(kRetryIntervalUs);
       retry++;
     }
-  } while (result == -1 && retry <= kRetryMaxTime);
+  } while (result == -1 && retry <= kRetryMaxCount);
 
   if (result != -1) {
     profiler::SendFdThroughFd(daemon_socket_fd, through_fd);
