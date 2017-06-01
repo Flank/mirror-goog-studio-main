@@ -34,21 +34,22 @@
 #include "utils/trie.h"
 
 using profiler::Clock;
+using profiler::proto::AllocatedClass;
+using profiler::proto::AllocationEvent;
 using profiler::proto::BatchAllocationSample;
 using profiler::proto::MemoryControlRequest;
-using profiler::proto::AllocationEvent;
 
 namespace profiler {
 
 #ifndef NDEBUG
 using ClassTagMap = tracking::unordered_map<std::string, long, kClassTagMap>;
 using ClassGlobalRefs = tracking::vector<jobject, kClassGlobalRefs>;
-using ClassData = tracking::vector<AllocationEvent::Klass, kClassData>;
+using ClassData = tracking::vector<AllocatedClass, kClassData>;
 using MethodIdSet = tracking::unordered_set<long, kMethodIds>;
 #else
 using ClassTagMap = std::unordered_map<std::string, long>;
 using ClassGlobalRefs = std::vector<jobject>;
-using ClassData = std::vector<AllocationEvent::Klass>;
+using ClassData = std::vector<AllocatedClass>;
 using MethodIdSet = std::unordered_set<long>;
 #endif
 

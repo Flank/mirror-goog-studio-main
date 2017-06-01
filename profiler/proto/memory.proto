@@ -314,16 +314,39 @@ message AllocatedClass {
   string class_name = 2;
 }
 
+// Proto format for handling stack data for both pre-O and O+.
 message AllocationStack {
   message StackFrame {
-    string class_name = 1;
-    string method_name = 2;
-    string file_name = 3;
-    int32 line_number = 4;
+    // O+ only for uniquely idenfitying a method.
+    int64 method_id = 1;
+
+    string class_name = 2;
+    string method_name = 3;
+
+    // Pre-O only. File name info is unavailable in JVMTI.
+    // TODO: investigate/feature request.
+    string file_name = 4;
+
+    // TODO: currently this is pre-O only. We get the instruction
+    // location in JVMTI but we need to convert it back to line number
+    // and encoding it with the prefix tree before sending it back.
+    int32 line_number = 5;
   }
 
   int32 stack_id = 1;
   repeated StackFrame stack_frames = 2;
+}
+
+// Proto format for storing and transmitting O+ stack data efficiently.
+// The |stack_id| field uniquely identifies a stack within an app, each
+// |method_id| is referenced by AllocationStack.StackFrame which contains
+// detailed info about the method.
+message EncodedAllocationStack {
+  // The time when this stack was first seen. It should match the first
+  // AllocationEvent::Allocation that generated the stack.
+  int64 timestamp = 1;
+  int32 stack_id = 2;
+  repeated int64 method_ids = 3;
 }
 
 message AllocationSnapshotRequest {
@@ -352,50 +375,16 @@ message BatchAllocationSample {
   // the events list.
   int64 timestamp = 2;
   repeated AllocationEvent events = 3;
-  repeated StackMethod methods = 4;
-  repeated EncodedStack stacks = 5;
-}
 
-// Proto format for storing and transmitting O+ stack data efficiently.
-// The |stack_id| field uniquely identifies a stack within an app, each
-// |method_id| is referenced by StackMethod proto which contains more
-// detailed info about the method.
-message EncodedStack {
-  int32 stack_id = 1;
-  repeated int64 method_ids = 2;
-}
-
-// O+ Proto format containing the full stack data associated with the
-// |stack_id|. Used on Studio-side only to lazy-load the stack
-// info based on the id received and stored from the EncodedStack proto.
-message DecodedStack {
-  int32 stack_id = 1;
-  repeated StackMethod methods = 2;
-}
-
-// Proto format for handling O+ stack method data.
-// TODO: merge with AllocationStack? AllocationStack currently
-// uses bytes as id for an entire stack, but here we are id'ing
-// individual methods. A stack of methods will be encoded separately
-// referencing a list of method_id's.
-message StackMethod {
-  int64 method_id = 1;
-  string class_name = 2;
-  string method_name = 3;
+  // The following two fields are used for transfering stack info
+  // from device to studio only. Within studio, stack info are
+  // retrieved via GetAllocationContexts.
+  repeated AllocationStack.StackFrame methods = 4;
+  repeated EncodedAllocationStack stacks = 5;
 }
 
 // Proto format for handling O+ allocation data.
 message AllocationEvent {
-  // Special case for java/lang/Class object allocations.
-  // Note that a Klass event is expected to precede
-  // any Allocation which references its class via
-  // the class_tag field.
-  // TODO: switched to AllocatedClass
-  message Klass {
-    int64 tag = 1;
-    string name = 2;
-  }
-
   message Allocation {
     int64 tag = 1;
     int64 class_tag = 2;
@@ -435,7 +424,11 @@ message AllocationEvent {
   int64 timestamp = 2;
 
   oneof event {
-    Klass class_data = 3;
+    // Special case for java/lang/Class object allocations.
+    // Note that a Klass event is expected to precede
+    // any Allocation which references its class via
+    // the class_tag field.
+    AllocatedClass class_data = 3;
     Allocation alloc_data = 4;
     Deallocation free_data = 5;
   }
