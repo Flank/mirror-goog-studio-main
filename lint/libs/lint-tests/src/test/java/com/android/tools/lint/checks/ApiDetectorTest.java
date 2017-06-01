@@ -2361,6 +2361,17 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testTryWithResourcesOutsideAndroid() {
+        lint().files(
+                manifest().minSdk(1),
+                tryWithResources,
+                multiCatch,
+                gradle("apply plugin: 'java'\n"))
+                .checkMessage(this::checkReportedError)
+                .run()
+                .expectClean();
+    }
+
     public void testTryWithResourcesOldGradlePlugin() {
         String expected = ""
                 + "src/main/java/test/pkg/TryWithResources.java:9: Error: Try-with-resources requires API level 19 (current min is 1) [NewApi]\n"

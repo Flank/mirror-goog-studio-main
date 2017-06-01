@@ -962,6 +962,9 @@ public class ApiDetector extends ResourceXmlDetector
         if (mApiDatabase == null || context.isTestSource()) {
             return null;
         }
+        if (!context.getMainProject().isAndroidProject()) {
+            return null;
+        }
         return new ApiVisitor(context);
     }
 

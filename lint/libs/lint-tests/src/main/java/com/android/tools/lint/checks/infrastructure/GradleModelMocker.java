@@ -123,6 +123,8 @@ public class GradleModelMocker {
     private boolean allowUnrecognizedConstructs;
     private boolean fullDependencies;
     private JavaCompileOptions compileOptions;
+    private boolean javaPlugin;
+    private boolean javaLibraryPlugin;
 
     public GradleModelMocker(@Language("Groovy") String gradle) {
         this.gradle = gradle;
@@ -198,6 +200,16 @@ public class GradleModelMocker {
             initialized = true;
             initialize();
         }
+    }
+
+    /** Whether the Gradle file applied the java plugin */
+    public boolean hasJavaPlugin() {
+        return javaPlugin;
+    }
+
+    /** Whether the Gradle file applied the java-library plugin */
+    public boolean hasJavaLibraryPlugin() {
+        return javaLibraryPlugin;
     }
 
     public AndroidProject getProject() {
@@ -609,9 +621,11 @@ public class GradleModelMocker {
         } else if (line.equals("apply plugin: 'com.android.instantapp'")) {
             when(project.getProjectType()).thenReturn(AndroidProject.PROJECT_TYPE_INSTANTAPP);
             return;
-        } else if (line.equals("apply plugin: 'java'")
-                || line.equals("apply plugin: 'java-library'")) {
-            warn("Can't apply java/java-library plugins: There are no builder-model for Java currently");
+        } else if (line.equals("apply plugin: 'java'")) {
+            javaPlugin = true;
+            return;
+        } else if (line.equals("apply plugin: 'java-library'")) {
+            javaLibraryPlugin = true;
             return;
         } else if (context.equals("buildscript.repositories")
                 || context.equals("allprojects.repositories")) {

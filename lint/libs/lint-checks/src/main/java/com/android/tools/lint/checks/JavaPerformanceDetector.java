@@ -464,6 +464,9 @@ public class JavaPerformanceDetector extends Detector implements Detector.UastSc
          * SparseArray call instead
          */
         private void checkHashMap(@NonNull UCallExpression node) {
+            if (!mContext.getProject().isAndroidProject()) {
+                return;
+            }
             List<PsiType> types = node.getTypeArguments();
             if (types.size() == 2) {
                 PsiType first = types.get(0);

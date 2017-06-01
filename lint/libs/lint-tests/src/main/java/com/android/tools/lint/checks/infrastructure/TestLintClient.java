@@ -356,6 +356,9 @@ public class TestLintClient extends LintCliClient {
                 mocker.setVariantName(task.variantName);
             }
         }
+        if (mocker != null && (mocker.hasJavaPlugin() || mocker.hasJavaLibraryPlugin())) {
+            description.type(ProjectDescription.Type.JAVA);
+        }
 
         return new TestProject(this, dir, referenceDir, description, mocker);
     }
@@ -1081,12 +1084,20 @@ public class TestLintClient extends LintCliClient {
 
         @Override
         public boolean isLibrary() {
+            if (mocker != null && mocker.hasJavaLibraryPlugin()) {
+                return true;
+            }
+
             return super.isLibrary()  || projectDescription != null
                     && projectDescription.type == ProjectDescription.Type.LIBRARY;
         }
 
         @Override
         public boolean isAndroidProject() {
+            if (mocker != null && (mocker.hasJavaPlugin() || mocker.hasJavaLibraryPlugin())) {
+                return false;
+            }
+
             return projectDescription == null ||
                     projectDescription.type != ProjectDescription.Type.JAVA;
         }
