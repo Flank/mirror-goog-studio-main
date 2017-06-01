@@ -16,15 +16,16 @@
 
 package com.android.tools.profiler.support.profilers;
 
-import android.app.*;
+import android.app.Activity;
+import android.app.Application;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.*;
+import android.view.Display;
+import android.view.Window;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
-import com.android.tools.profiler.support.ProfilerService;
 import com.android.tools.profiler.support.event.InputConnectionWrapper;
 import com.android.tools.profiler.support.event.WindowProfilerCallback;
+import com.android.tools.profiler.support.util.StudioLog;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -126,33 +127,23 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
                                                                 .getMethod("currentApplication")
                                                                 .invoke(null);
                                         if (app != null) {
-                                            Log.v(
-                                                    ProfilerService.STUDIO_PROFILER,
-                                                    "Acquiring Application for Events");
+                                            StudioLog.v("Acquiring Application for Events");
                                             myInitialized = true;
                                             app.registerActivityLifecycleCallbacks(profiler);
                                             break;
                                         } else if (!logErrorOnce) {
-                                            Log.e(
-                                                    ProfilerService.STUDIO_PROFILER,
-                                                    "Failed to capture application");
+                                            StudioLog.e("Failed to capture application");
                                             logErrorOnce = true;
                                         }
                                     } catch (ClassNotFoundException ex) {
-                                        Log.e(
-                                                ProfilerService.STUDIO_PROFILER,
-                                                "Failed to get ActivityThread class");
+                                        StudioLog.e("Failed to get ActivityThread class");
                                     } catch (NoSuchMethodException ex) {
-                                        Log.e(
-                                                ProfilerService.STUDIO_PROFILER,
-                                                "Failed to find currentApplication method");
+                                        StudioLog.e("Failed to find currentApplication method");
                                     } catch (IllegalAccessException ex) {
-                                        Log.e(
-                                                ProfilerService.STUDIO_PROFILER,
+                                        StudioLog.e(
                                                 "Insufficient privileges to get application handle");
                                     } catch (InvocationTargetException ex) {
-                                        Log.e(
-                                                ProfilerService.STUDIO_PROFILER,
+                                        StudioLog.e(
                                                 "Failed to call static function currentApplication");
                                     }
 
@@ -211,26 +202,21 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
                     }
                 }
             } else {
-                Log.v(
-                        ProfilerService.STUDIO_PROFILER,
+                StudioLog.v(
                         String.format(
                                 "Failed to assign mActivities map: %s",
                                 activitiesObject.getClass()));
             }
         } catch (ClassNotFoundException ex) {
-            Log.e(ProfilerService.STUDIO_PROFILER, "Failed to get ActivityThread class");
+            StudioLog.e("Failed to get ActivityThread class");
         } catch (NoSuchMethodException ex) {
-            Log.e(ProfilerService.STUDIO_PROFILER, "Failed to find currentActivityThread method");
+            StudioLog.e("Failed to find currentActivityThread method");
         } catch (IllegalAccessException ex) {
-            Log.e(
-                    ProfilerService.STUDIO_PROFILER,
-                    "Insufficient privileges to get activity information");
+            StudioLog.e("Insufficient privileges to get activity information");
         } catch (InvocationTargetException ex) {
-            Log.e(
-                    ProfilerService.STUDIO_PROFILER,
-                    "Failed to call static function currentActivityThread");
+            StudioLog.e("Failed to call static function currentActivityThread");
         } catch (NoSuchFieldException ex) {
-            Log.e(ProfilerService.STUDIO_PROFILER, "Failed to get field: " + ex);
+            StudioLog.e("Failed to get field", ex);
         }
     }
 
@@ -326,15 +312,15 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
                     }
                 }
             } catch (InterruptedException ex) {
-                Log.e(ProfilerService.STUDIO_PROFILER, "InputConnectionHandler interrupted");
+                StudioLog.e("InputConnectionHandler interrupted");
             } catch (NoSuchMethodException ex) {
-                Log.e(ProfilerService.STUDIO_PROFILER, "No such method: " + ex.getMessage());
+                StudioLog.e("No such method", ex);
             } catch (NoSuchFieldException ex) {
-                Log.e(ProfilerService.STUDIO_PROFILER, "No such field: " + ex.getMessage());
+                StudioLog.e("No such field", ex);
             } catch (IllegalAccessException ex) {
-                Log.e(ProfilerService.STUDIO_PROFILER, "No Access: " + ex.getMessage());
+                StudioLog.e("No Access", ex);
             } catch (InvocationTargetException ex) {
-                Log.e(ProfilerService.STUDIO_PROFILER, "Invalid object: " + ex.getMessage());
+                StudioLog.e("Invalid object", ex);
             }
         }
     }
