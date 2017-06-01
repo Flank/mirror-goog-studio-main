@@ -86,6 +86,11 @@ public class TestFileUtils {
     public static void searchAndReplace(
             @NonNull Path file, @NonNull String search, @NonNull String replace)
             throws IOException {
+        // Handle patterns that use unix-style line endings even on Windows where the test
+        // projects are checked out with Windows-style endings.
+        search = toSystemLineEndings(search);
+        replace = toSystemLineEndings(replace);
+
         String content = new String(java.nio.file.Files.readAllBytes(file));
         String newContent = content.replaceAll(search, replace);
         assertNotEquals(
@@ -101,6 +106,10 @@ public class TestFileUtils {
         }
 
         java.nio.file.Files.write(file, newContent.getBytes());
+    }
+
+    private static String toSystemLineEndings(@NonNull String input) {
+        return input.replace("\r", "").replace("\n", System.lineSeparator());
     }
 
     /**
