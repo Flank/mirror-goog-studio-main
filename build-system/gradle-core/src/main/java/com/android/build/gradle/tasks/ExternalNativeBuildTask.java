@@ -39,6 +39,7 @@ import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
@@ -412,6 +413,7 @@ public class ExternalNativeBuildTask extends BaseTask {
                                     Joiner.on(", ").join(generator.getAbis().stream()
                                             .map(Abi::getName)
                                             .collect(Collectors.toList()))));
+                    task.setNativeBuildConfigurationsJsons(ImmutableList.of());
                 } else {
                     // Take the first JSON that matched the build configuration
                     task.setNativeBuildConfigurationsJsons(
