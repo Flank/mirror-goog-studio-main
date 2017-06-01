@@ -786,33 +786,38 @@ public class ResourceUsageAnalyzer {
 
     @Nullable
     private Resource getResourceByJarPath(String path) {
+        if (!path.startsWith("res/")) {
+            return null;
+        }
+
         // Jars use forward slash paths, not File.separator
-        if (path.startsWith("res/")) {
-            int folderStart = 4; // "res/".length
-            int folderEnd = path.indexOf('/', folderStart);
-            if (folderEnd != -1) {
-                String folderName = path.substring(folderStart, folderEnd);
-                ResourceFolderType folderType = ResourceFolderType.getFolderType(folderName);
-                if (folderType != null) {
-                    int nameStart = folderEnd + 1;
-                    int nameEnd = path.indexOf('.', nameStart);
-                    if (nameEnd == -1) {
-                        nameEnd = path.length();
-                    }
-                    if (nameEnd != -1) {
-                        String name = path.substring(nameStart, nameEnd);
-                        List<ResourceType> types =
-                                FolderTypeRelationship.getRelatedResourceTypes(folderType);
-                        for (ResourceType type : types) {
-                            if (type != ResourceType.ID) {
-                                Resource resource = mModel.getResource(type, name);
-                                if (resource != null) {
-                                    return resource;
-                                }
-                            }
-                        }
-                    }
-                }
+        int folderStart = 4; // "res/".length
+        int folderEnd = path.indexOf('/', folderStart);
+        if (folderEnd == -1) {
+            return null;
+        }
+
+        String folderName = path.substring(folderStart, folderEnd);
+        ResourceFolderType folderType = ResourceFolderType.getFolderType(folderName);
+        if (folderType == null) {
+            return null;
+        }
+
+        int nameStart = folderEnd + 1;
+        int nameEnd = path.indexOf('.', nameStart);
+        if (nameEnd == -1) {
+            nameEnd = path.length();
+        }
+
+        String name = path.substring(nameStart, nameEnd);
+        for (ResourceType type : FolderTypeRelationship.getRelatedResourceTypes(folderType)) {
+            if (type == ResourceType.ID) {
+                continue;
+            }
+
+            Resource resource = mModel.getResource(type, name);
+            if (resource != null) {
+                return resource;
             }
         }
 
