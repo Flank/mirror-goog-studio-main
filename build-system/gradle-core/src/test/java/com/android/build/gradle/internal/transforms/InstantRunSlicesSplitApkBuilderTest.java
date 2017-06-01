@@ -115,7 +115,8 @@ public class InstantRunSlicesSplitApkBuilderTest {
                         AaptGeneration.AAPT_V2_JNI,
                         aaptOptions,
                         outputDirectory.getRoot(),
-                        supportDirectory.getRoot()) {
+                        supportDirectory.getRoot(),
+                        false /* runAapt2Serially */) {
                     @Override
                     @NonNull
                     protected File generateSplitApk(@NonNull DexFiles dexFiles)

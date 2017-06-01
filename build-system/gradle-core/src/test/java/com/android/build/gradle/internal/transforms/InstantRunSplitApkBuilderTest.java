@@ -100,7 +100,8 @@ public class InstantRunSplitApkBuilderTest {
                         AaptGeneration.AAPT_V2_JNI,
                         aaptOptions,
                         outputDirectory.getRoot(),
-                        supportDirectory.getRoot()) {
+                        supportDirectory.getRoot(),
+                        false /* runAapt2Serially */) {
                     @Override
                     protected Aapt getAapt() {
                         return aapt;
@@ -220,7 +221,8 @@ public class InstantRunSplitApkBuilderTest {
                         AaptGeneration.AAPT_V2_JNI,
                         aaptOptions,
                         outputDirectory.getRoot(),
-                        supportDirectory.getRoot()) {
+                        supportDirectory.getRoot(),
+                        false /* runAapt2Serially */) {
                     @Override
                     protected Aapt getAapt() {
                         return aapt;

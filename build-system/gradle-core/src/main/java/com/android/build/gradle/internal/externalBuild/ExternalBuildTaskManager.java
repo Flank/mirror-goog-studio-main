@@ -251,7 +251,8 @@ class ExternalBuildTaskManager {
                         AaptGeneration.fromProjectOptions(globalScope.getProjectOptions()),
                         packagingScope.getAaptOptions(),
                         packagingScope.getInstantRunSplitApkOutputFolder(),
-                        packagingScope.getInstantRunSupportDir());
+                        packagingScope.getInstantRunSupportDir(),
+                        null /* runAapt2Serially */);
 
         Optional<AndroidTask<TransformTask>> transformTaskAndroidTask =
                 transformManager.addTransform(tasks, variantScope, slicesApkBuilder);
