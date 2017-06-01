@@ -18,10 +18,7 @@ package com.android.tools.profiler.support.network.okhttp;
 
 import com.android.tools.profiler.support.network.HttpConnectionTracker;
 import com.android.tools.profiler.support.network.HttpTracker;
-import com.android.tools.profiler.support.network.okhttp.reflection.okhttp3.Interceptor$;
-import com.android.tools.profiler.support.network.okhttp.reflection.okhttp3.Request$;
-import com.android.tools.profiler.support.network.okhttp.reflection.okhttp3.Response$;
-import com.android.tools.profiler.support.network.okhttp.reflection.okhttp3.ResponseBody$;
+import com.android.tools.profiler.support.network.okhttp.reflection.okhttp3.*;
 import com.android.tools.profiler.support.network.okhttp.reflection.okio.BufferedSource$;
 import com.android.tools.profiler.support.network.okhttp.reflection.okio.Okio$;
 import java.io.IOException;
@@ -30,6 +27,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -75,9 +73,9 @@ public final class OkHttp3Interceptor implements InvocationHandler {
         HttpConnectionTracker tracker =
                 HttpTracker.trackConnection(
                         request.url().toString(), OkHttpUtils.getCallstack(OKHTTP3_PACKAGE));
-        tracker.trackRequest(request.method(), request.headers().toMultimap());
+        tracker.trackRequest(request.method(), toMultimap(request.headers()));
 
-        Map<String, List<String>> fields = response.headers().toMultimap();
+        Map<String, List<String>> fields = toMultimap(response.headers());
         fields.put(
                 "response-status-code",
                 Collections.singletonList(Integer.toString(response.code())));
@@ -92,4 +90,14 @@ public final class OkHttp3Interceptor implements InvocationHandler {
                         response.body().contentType(), response.body().contentLength(), source);
         return response.newBuilder().body(body).build();
     }
+
+    private Map<String, List<String>> toMultimap(Headers$ headers)
+            throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+        Map<String, List<String>> fields = new LinkedHashMap<String, List<String>>();
+        for (String name : headers.names()) {
+            fields.put(name, headers.values(name));
+        }
+        return fields;
+    }
+
 }
