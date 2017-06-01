@@ -347,6 +347,23 @@ public class DesugarAppTest {
                 .contains("Execution failed for task ':transformClassesWithPreDexForDebug'");
     }
 
+    @Test
+    public void testUpToDateForIncCompileTasks() throws IOException, InterruptedException {
+        enableDesugar();
+        project.execute("assembleDebug");
+
+        Path newSource = project.getMainSrcDir().toPath().resolve("test").resolve("Data.java");
+        Files.createDirectories(newSource.getParent());
+        Files.write(newSource, ImmutableList.of("package test;", "public class Data {}"));
+        GradleBuildResult result = project.executor().run("assembleDebug");
+
+        assertThat(result.getUpToDateTasks())
+                .containsAllIn(
+                        ImmutableList.of(
+                                ":extractJava8LangSupportJar",
+                                ":extractTryWithResourcesSupportJarDebug"));
+    }
+
     @NonNull
     private List<String> createLibToDesugarAndGetClasses() throws IOException {
         class Utility {
