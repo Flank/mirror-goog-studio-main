@@ -111,6 +111,7 @@ import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiField;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiLiteral;
+import com.intellij.psi.PsiMember;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiModifier;
 import com.intellij.psi.PsiModifierList;
@@ -1792,7 +1793,7 @@ public class ApiDetector extends ResourceXmlDetector
         }
 
         // Look for @RequiresApi in modifier lists
-        private boolean checkRequiresApi(UCallExpression expression, PsiMethod method,
+        private boolean checkRequiresApi(UElement expression, PsiMember member,
                     PsiModifierList modifierList) {
             for (PsiAnnotation annotation : modifierList.getAnnotations()) {
                 if (REQUIRES_API_ANNOTATION.equals(annotation.getQualifiedName())) {
@@ -1819,14 +1820,14 @@ public class ApiDetector extends ResourceXmlDetector
 
                             Location location;
                             if (UastExpressionUtils.isConstructorCall(expression)
-                                    && expression.getClassReference() != null) {
+                                    && ((UCallExpression)expression).getClassReference() != null) {
                                 location = mContext.getRangeLocation(expression, 0,
-                                        expression.getClassReference(), 0);
+                                        ((UCallExpression)expression).getClassReference(), 0);
                             } else {
                                 location = mContext.getNameLocation(expression);
                             }
 
-                            String fqcn = method.getName();
+                            String fqcn = member.getName();
                             String message = String.format(
                                 "Call requires API level %1$d (current min is %2$d): `%3$s`",
                                 api, Math.max(minSdk, getTargetApi(expression)), fqcn);
@@ -2010,6 +2011,17 @@ public class ApiDetector extends ResourceXmlDetector
             if (owner == null) {
                 return;
             }
+
+            // Enforce @RequiresApi
+            PsiModifierList modifierList = field.getModifierList();
+            if (!checkRequiresApi(node, field, modifierList)) {
+                modifierList = containingClass.getModifierList();
+                if (modifierList != null) {
+                    checkRequiresApi(node, field, modifierList);
+                }
+            }
+
+
             int api = mApiDatabase.getFieldVersion(owner, name);
             if (api != -1) {
                 int minSdk = getMinSdk(mContext);
