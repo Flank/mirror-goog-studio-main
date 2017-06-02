@@ -42,7 +42,7 @@ using std::string;
 
 namespace profiler {
 
-const char* SimplePerfManager::kSimpleperfExecutable = "simpleperf";
+const char *SimplePerfManager::kSimpleperfExecutable = "simpleperf";
 
 SimplePerfManager::~SimplePerfManager() {
   string error;
@@ -53,7 +53,8 @@ SimplePerfManager::~SimplePerfManager() {
 
 bool SimplePerfManager::EnableProfiling(std::string *error) const {
   // By default, linuxSE disallow profiling. This enables it.
-  // simpleperf already has CTS tests ensuring the following command running successfully.
+  // simpleperf already has CTS tests ensuring the following command running
+  // successfully.
   string enable_profiling_output;
   BashCommandRunner enable_profiling("setprop");
   bool enable_profiling_result =
@@ -138,8 +139,9 @@ bool SimplePerfManager::StartProfiling(const std::string &app_pkg_name,
       string data_filepath = entry.app_dir + "/" + entry.output_prefix + ".dat";
 
       execlp("run-as", "run-as", app_pkg_name.c_str(),
-             simple_perf_binary_abspath.c_str(), "record", "--call-graph", "fp",
-             "-o", data_filepath.c_str(), "-p", string_pid.str().c_str(), NULL);
+             simple_perf_binary_abspath.c_str(), "record", "--call-graph",
+             "dwarf", "-o", data_filepath.c_str(), "-p",
+             string_pid.str().c_str(), NULL);
       exit(EXIT_FAILURE);
       break;  // Useless break but makes compiler happy.
     }
@@ -362,4 +364,4 @@ bool SimplePerfManager::WaitForSimplerPerf(
   }
   return true;
 }
-} // namespace profiler
+}  // namespace profiler
