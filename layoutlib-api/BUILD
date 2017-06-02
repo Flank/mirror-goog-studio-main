@@ -20,6 +20,7 @@ iml_module(
         "//tools/base/annotations:studio.android-annotations[module]",
         "//tools/idea/platform/annotations[module]",
         "//tools/base/common:studio.common[module]",
+        "//tools/idea/.idea/libraries:Guava",
     ],
 )
 
