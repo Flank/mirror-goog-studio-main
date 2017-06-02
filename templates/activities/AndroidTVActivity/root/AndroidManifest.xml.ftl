@@ -36,7 +36,7 @@
         </activity>
 
         <activity android:name="${packageName}.${detailsActivity}" />
-        <activity android:name="PlaybackOverlayActivity" />
+        <activity android:name="PlaybackActivity" />
         <activity android:name="BrowseErrorActivity" />
 
     </application>
