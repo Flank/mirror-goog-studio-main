@@ -22,6 +22,7 @@ import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestPr
 import com.android.build.gradle.integration.common.utils.AssumeUtil
 import com.android.build.gradle.integration.common.utils.TestFileUtils
 import com.android.testutils.apk.Apk
+import com.android.utils.FileUtils
 import com.google.common.io.Files
 import groovy.transform.CompileStatic
 import org.junit.Before
@@ -245,5 +246,71 @@ class VectorDrawableTest_Library {
         assertThat(apk).containsResource("drawable-hdpi-v4/lib_vector.png")
         assertThat(apk).containsResource("drawable-xhdpi-v4/lib_vector.png")
         assertThat(apk).doesNotContainResource("drawable/lib_vector.xml")
+    }
+
+    @Test
+    public void "App generated resource overrides library generated resource"() throws Exception {
+        def app = project.getSubproject(":app")
+        def lib = project.getSubproject(":lib")
+        String blue = "#00ffff"
+        String red = "#ff0000"
+
+        app.file("src/main/res/drawable/my_vector.xml") << VECTOR_XML_CONTENT.replace(red, blue)
+        lib.file("src/main/res/drawable/my_vector.xml") << VECTOR_XML_CONTENT
+
+        project.execute(":app:assembleDebug")
+
+        File generatedXmlApp =
+                FileUtils.join(
+                        app.getTestDir(),
+                        "build",
+                        "generated",
+                        "res", "pngs",
+                        "debug",
+                        "drawable-anydpi-v21",
+                        "my_vector.xml")
+
+        File generatedXmlLib =
+                FileUtils.join(
+                        lib.getTestDir(),
+                        "build",
+                        "generated",
+                        "res",
+                        "pngs",
+                        "debug",
+                        "drawable-anydpi-v21",
+                        "my_vector.xml")
+
+        assertThat(generatedXmlApp).isNotSameAs(generatedXmlLib)
+
+        // Library color should be red and should be overridden in the app by the color blue.
+        assertThat(generatedXmlApp).contains(blue)
+        assertThat(generatedXmlApp).doesNotContain(red)
+        assertThat(generatedXmlLib).contains(red)
+        assertThat(generatedXmlLib).doesNotContain(blue)
+
+        File generatedPngApp =
+                FileUtils.join(
+                        app.getTestDir(),
+                        "build",
+                        "generated",
+                        "res", "pngs",
+                        "debug",
+                        "drawable-hdpi",
+                        "my_vector.png")
+
+        File generatedPngLib =
+                FileUtils.join(
+                        lib.getTestDir(),
+                        "build",
+                        "generated",
+                        "res",
+                        "pngs",
+                        "debug",
+                        "drawable-hdpi",
+                        "my_vector.png")
+
+        // Check the generated PNGs too, just to be safe.
+        assertThat(generatedPngApp).isNotSameAs(generatedPngLib)
     }
 }
