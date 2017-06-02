@@ -3946,6 +3946,48 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         + "2 errors, 0 warnings\n");
     }
 
+    public void testRequiresApiOnFields() {
+        // Regression test for issue 37124805
+        //noinspection all // Sample code
+        lint().files(
+                manifest().minSdk(15),
+                java("" +
+                        "package test.pkg;\n" +
+                        "\n" +
+                        "import android.support.annotation.RequiresApi;\n" +
+                        "import android.util.Log;\n" +
+                        "\n" +
+                        "public class RequiresApiFieldTest {\n" +
+                        "    @RequiresApi(24)\n" +
+                        "    private int Method24() {\n" +
+                        "        return 42;\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    @RequiresApi(24)\n" +
+                        "    private static final int Field24 = 42;\n" +
+                        "\n" +
+                        "    private void ReferenceMethod24() {\n" +
+                        "        Log.d(\"zzzz\", \"ReferenceField24: \" + Method24());\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    private void ReferenceField24() {\n" +
+                        "        Log.d(\"zzzz\", \"ReferenceField24: \" + Field24);\n" +
+                        "    }\n" +
+                        "}\n"),
+                mSupportClasspath,
+                mSupportJar)
+                .checkMessage(this::checkReportedError)
+                .run()
+                .expect("" +
+                        "src/test/pkg/RequiresApiFieldTest.java:16: Error: Call requires API level 24 (current min is 15): Method24 [NewApi]\n" +
+                        "        Log.d(\"zzzz\", \"ReferenceField24: \" + Method24());\n" +
+                        "                                             ~~~~~~~~\n" +
+                        "src/test/pkg/RequiresApiFieldTest.java:20: Error: Call requires API level 24 (current min is 15): Field24 [NewApi]\n" +
+                        "        Log.d(\"zzzz\", \"ReferenceField24: \" + Field24);\n" +
+                        "                                             ~~~~~~~\n" +
+                        "2 errors, 0 warnings\n");
+    }
+
     public void testDrawableThemeReferences() {
         // Regression test for
         // https://code.google.com/p/android/issues/detail?id=199597
