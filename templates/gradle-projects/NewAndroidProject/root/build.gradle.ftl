@@ -3,7 +3,7 @@
 buildscript {
     <#if includeKotlinSupport!false>ext.kotlin_version = '${kotlinVersion}'</#if>
     repositories {
-        maven { url 'https://maven.google.com' }
+        google()
         jcenter()
     }
     dependencies {
@@ -17,7 +17,7 @@ buildscript {
 
 allprojects {
     repositories {
-        maven { url 'https://maven.google.com' }
+        google()
         jcenter()
 <#if includeKotlinSupport!false>
         mavenCentral()
