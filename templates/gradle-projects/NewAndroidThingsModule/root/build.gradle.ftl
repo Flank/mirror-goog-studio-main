@@ -1,11 +1,10 @@
+<#import "root://activities/common/kotlin_macros.ftl" as kt>
 <#if isLibraryProject>
 apply plugin: 'com.android.library'
 <#else>
 apply plugin: 'com.android.application'
 </#if>
-<#if includeKotlinSupport!false>
-apply plugin: 'kotlin-android'
-</#if>
+<@kt.addKotlinPlugins />
 
 android {
     compileSdkVersion <#if buildApiString?matches("^\\d+$")>${buildApiString}<#else>'${buildApiString}'</#if>
@@ -60,7 +59,5 @@ dependencies {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
     ${getConfigurationName("provided")} 'com.google.android.things:androidthings:+'
-<#if includeKotlinSupport!false>
-    ${getConfigurationName("compile")} "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
-</#if>
+    <@kt.addKotlinDependencies />
 }

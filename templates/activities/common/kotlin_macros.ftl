@@ -1,17 +1,15 @@
-<#-- Macros used for kotlin code
-Note 1: Build API 26 R2 introduces generics that requires the template
-to be modified for kotlin.
-Note 2: buildApiRevision is set only for preview releases so will be 0
-for a public release. Here (buildApiRevision!0) != 1 is to ensure that this
-code continues to work after 26 is final.
--->
-<#macro findViewById id type="View">
+<#-- Macro used to add the necessary dependencies to support kotlin to
+an app build.gradle -->
+
+<#macro addKotlinPlugins>
+<#if includeKotlinSupport!false>
 <#compress>
-<#if buildApi gt 26 ||
-    (buildApi == 26 && (buildApiRevision!0) != 1)>
-findViewById<${type}>(${id})
-<#else>
-findViewById(${id})<#if type != "View"> as ${type}</#if>
-</#if>
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
 </#compress>
+</#if>
+</#macro>
+
+<#macro addKotlinDependencies>
+<#if includeKotlinSupport!false>${getConfigurationName("compile")} "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"</#if>
 </#macro>
