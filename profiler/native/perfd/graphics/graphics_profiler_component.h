@@ -37,7 +37,6 @@ class GraphicsProfilerComponent final : public ProfilerComponent {
 
  private:
   GraphicsServiceImpl public_service_;
-
   // Mapping "app/activity"->GraphicsCollector.
   std::map<std::string, GraphicsCollector> collectors_;
 };

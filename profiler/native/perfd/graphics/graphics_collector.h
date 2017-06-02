@@ -21,20 +21,31 @@
 #include <string>
 #include <thread>
 
+#include "perfd/graphics/graphics_cache.h"
+#include "perfd/graphics/graphics_framestats_sampler.h"
 #include "proto/graphics.grpc.pb.h"
 #include "utils/clock.h"
 
 namespace profiler {
 
 class GraphicsCollector {
+ private:
+  // Default collection interval is 250 milliseconds, i.e., 0.25 second.
+  static constexpr int64_t kSleepNs = Clock::ms_to_ns(250);
+  // Buffer for 10 seconds to prevent lost frames.
+  static const int64_t kSecondsToBuffer = 10;
+  // There can be at most ~60 frames in a second.
+  static constexpr int64_t kSamplesCount = kSecondsToBuffer * 60;
+
  public:
-  // Creates a collector that runs in the background continuously collecting
-  // graphics data.
+  // Creates a collector that runs in the background collecting graphics data
+  // every |kSleepNs| nanoseconds.
   // |app_and_activity_name| should be formatted as app name + "/" + activity
   // name.
   GraphicsCollector(const std::string &app_and_activity_name,
                     const Clock &clock)
-      : app_and_activity_name_(app_and_activity_name) {}
+      : graphics_cache_(clock, kSamplesCount),
+        app_and_activity_name_(app_and_activity_name) {}
 
   ~GraphicsCollector();
 
@@ -51,10 +62,18 @@ class GraphicsCollector {
   // Return the app and activity string this graphics collector will monitor.
   std::string app_and_activity_name();
 
+  GraphicsCache &graphics_cache() { return graphics_cache_; }
+
  private:
   // Collects and saves Graphics sampling data continually.
   void Collect();
 
+  // Cache where collected data will be saved.
+  GraphicsCache graphics_cache_;
+  // Thread that sampling operations run on.
+  std::thread sampler_thread_;
+  // Holder of sampler operations.
+  GraphicsFrameStatsSampler graphics_frame_stats_sampler_;
   // True if sampling operations is running.
   std::atomic_bool is_running_{false};
   // "app/activity" name combination

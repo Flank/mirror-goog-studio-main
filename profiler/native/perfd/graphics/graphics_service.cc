@@ -27,28 +27,47 @@ using profiler::proto::GraphicsStopResponse;
 namespace profiler {
 
 grpc::Status GraphicsServiceImpl::StartMonitoringApp(
-    ::grpc::ServerContext *context, const GraphicsStartRequest *request,
+    grpc::ServerContext *context, const GraphicsStartRequest *request,
     GraphicsStartResponse *response) {
   std::string app_and_package_name =
       request->app_package_name() + "/" + request->activity_name();
-  GetCollector(app_and_package_name);
-  // TODO: Implement start monitoring
-  return ::grpc::Status::OK;
+  GraphicsCollector *collector = GetCollector(app_and_package_name);
+  if (!collector->IsRunning()) {
+    collector->Start();
+  }
+  response->set_status(GraphicsStartResponse::SUCCESS);
+  return grpc::Status::OK;
 }
 
 grpc::Status GraphicsServiceImpl::StopMonitoringApp(
-    ::grpc::ServerContext *context, const GraphicsStopRequest *request,
+    grpc::ServerContext *context, const GraphicsStopRequest *request,
     GraphicsStopResponse *response) {
-  // TODO: Implement stop monitoring
-  return ::grpc::Status::OK;
+  std::string app_and_package_name =
+      request->app_package_name() + "/" + request->activity_name();
+  auto got = collectors_.find(app_and_package_name);
+  if (got != collectors_.end() && got->second.IsRunning()) {
+    got->second.Stop();
+  }
+  response->set_status(GraphicsStopResponse::SUCCESS);
+  return grpc::Status::OK;
 }
 
-grpc::Status GraphicsServiceImpl::GetData(::grpc::ServerContext *context,
+grpc::Status GraphicsServiceImpl::GetData(grpc::ServerContext *context,
                                           const GraphicsDataRequest *request,
                                           GraphicsDataResponse *response) {
   Trace trace("GRAPHICS:GetData");
-  // TODO: Implement get data
-  return ::grpc::Status::OK;
+  std::string app_and_package_name =
+      request->app_package_name() + "/" + request->activity_name();
+  auto result = collectors_.find(app_and_package_name);
+  if (result == collectors_.end()) {
+    return grpc::Status(
+        grpc::StatusCode::NOT_FOUND,
+        "The graphics collector for the specified package name and activity has"
+        " not been started yet.");
+  }
+  result->second.graphics_cache().LoadGraphicsData(
+      request->start_timestamp(), request->end_timestamp(), response);
+  return grpc::Status::OK;
 }
 
 GraphicsCollector *GraphicsServiceImpl::GetCollector(

@@ -19,15 +19,15 @@
 #include <grpc++/grpc++.h>
 #include <map>
 
-#include "perfd/graphics/graphics_collector.h"
 #include "perfd/daemon.h"
+#include "perfd/graphics/graphics_collector.h"
 #include "proto/graphics.grpc.pb.h"
 #include "utils/clock.h"
 
 namespace profiler {
 
 class GraphicsServiceImpl final
-    : public ::profiler::proto::GraphicsService::Service {
+    : public profiler::proto::GraphicsService::Service {
  public:
   GraphicsServiceImpl(Daemon::Utilities *utilities,
                       std::map<std::string, GraphicsCollector> *collectors)
@@ -36,19 +36,19 @@ class GraphicsServiceImpl final
   virtual ~GraphicsServiceImpl() = default;
 
   grpc::Status StartMonitoringApp(
-      ::grpc::ServerContext *context,
+      grpc::ServerContext *context,
       const profiler::proto::GraphicsStartRequest *request,
-      ::profiler::proto::GraphicsStartResponse *response) override;
+      profiler::proto::GraphicsStartResponse *response) override;
 
   grpc::Status StopMonitoringApp(
-      ::grpc::ServerContext *context,
+      grpc::ServerContext *context,
       const profiler::proto::GraphicsStopRequest *request,
-      ::profiler::proto::GraphicsStopResponse *response) override;
+      profiler::proto::GraphicsStopResponse *response) override;
 
   grpc::Status GetData(
-      ::grpc::ServerContext *context,
-      const ::profiler::proto::GraphicsDataRequest *request,
-      ::profiler::proto::GraphicsDataResponse *response) override;
+      grpc::ServerContext *context,
+      const profiler::proto::GraphicsDataRequest *request,
+      profiler::proto::GraphicsDataResponse *response) override;
 
  private:
   // Return the GraphicsCollector associated with the |app_and_activity_name|.
