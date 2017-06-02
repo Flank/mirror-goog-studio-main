@@ -264,7 +264,7 @@ filegroup(
     name = "wearable-2.0.1",
     srcs = glob(
         include = [
-            "*/extras/google/m2repository/com/google/android/wearable/wearable/2.0.1/**",
+            "*/extras/google/m2repository/com/google/android/*/wearable/2.0.1/**",
         ],
     ),
 )
