@@ -16,6 +16,13 @@ maven_java_library(
 )
 
 maven_java_library(
+    name = "com.android.tools.build_transform-api",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/android/tools/build/transform-api/2.0.0-deprecated-use-gradle-api:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+maven_java_library(
     name = "com.android.tools.external.lombok_lombok-ast",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/android/tools/external/lombok/lombok-ast/0.2.3:jar",
     visibility = ["//visibility:public"],

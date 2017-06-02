@@ -39,10 +39,9 @@ dependencies {
     compile project(':base:builder')
     compile project(':base:lint')
     compile project(':base:uast')
-    // TODO: Switch to remote dependency once the empty deprecated transform-api is published
-    compile project(':base:transform-api')
     compile project(':base:gradle-api')
     compile project(':dataBinding:compilerCommon')
+    compile libs.transform_api_deprecated
     compile libs.asm
     compile libs.asm_analysis
     compile libs.asm_commons
