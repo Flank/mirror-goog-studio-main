@@ -15,10 +15,11 @@
 package ${packageName};
 
 import android.content.Intent;
-import android.graphics.drawable.Drawable;
+import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.support.v17.leanback.app.BackgroundManager;
+import android.os.Handler;
 import android.support.v17.leanback.app.DetailsFragment;
+import android.support.v17.leanback.app.DetailsFragmentBackgroundController;
 import android.support.v17.leanback.widget.Action;
 import android.support.v17.leanback.widget.ArrayObjectAdapter;
 import android.support.v17.leanback.widget.ClassPresenterSelector;
@@ -36,7 +37,6 @@ import android.support.v17.leanback.widget.Row;
 import android.support.v17.leanback.widget.RowPresenter;
 import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.content.ContextCompat;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -69,26 +69,25 @@ public class ${detailsFragment} extends DetailsFragment {
     private ArrayObjectAdapter mAdapter;
     private ClassPresenterSelector mPresenterSelector;
 
-    private BackgroundManager mBackgroundManager;
-    private Drawable mDefaultBackground;
-    private DisplayMetrics mMetrics;
+    private DetailsFragmentBackgroundController mDetailsBackground;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         Log.d(TAG, "onCreate DetailsFragment");
         super.onCreate(savedInstanceState);
 
-        prepareBackgroundManager();
+        mDetailsBackground = new DetailsFragmentBackgroundController(this);
 
         mSelectedMovie =
                 (Movie) getActivity().getIntent() .getSerializableExtra(${detailsActivity}.MOVIE);
         if (mSelectedMovie != null) {
-            setupAdapter();
+            mPresenterSelector = new ClassPresenterSelector();
+            mAdapter = new ArrayObjectAdapter(mPresenterSelector);
             setupDetailsOverviewRow();
             setupDetailsOverviewRowPresenter();
-            setupMovieListRow();
-            setupMovieListRowPresenter();
-            updateBackground(mSelectedMovie.getBackgroundImageUrl());
+            setupRelatedMovieListRow();
+            setAdapter(mAdapter);
+            initializeBackground(mSelectedMovie);
             setOnItemViewClickedListener(new ItemViewClickedListener());
         } else {
             Intent intent = new Intent(getActivity(), MainActivity.class);
@@ -96,43 +95,21 @@ public class ${detailsFragment} extends DetailsFragment {
         }
     }
 
-    @Override
-    public void onStop() {
-        super.onStop();
-    }
-
-    private void prepareBackgroundManager() {
-        mBackgroundManager = BackgroundManager.getInstance(getActivity());
-        mBackgroundManager.attach(getActivity().getWindow());
-        <#if minApiLevel gte 23>
-        mDefaultBackground =
-                ContextCompat.getDrawable(getContext(), R.drawable.default_background);
-        <#else>
-        mDefaultBackground =
-                ContextCompat.getDrawable(getActivity(), R.drawable.default_background);
-        </#if>
-        mMetrics = new DisplayMetrics();
-        getActivity().getWindowManager().getDefaultDisplay().getMetrics(mMetrics);
-    }
-
-    protected void updateBackground(String uri) {
+    private void initializeBackground(Movie data) {
+        mDetailsBackground.enableParallax();
         Glide.with(getActivity())
-                .load(uri)
+                .load(data.getBackgroundImageUrl())
+                .asBitmap()
                 .centerCrop()
-                .error(mDefaultBackground)
-                .into(new SimpleTarget<GlideDrawable>(mMetrics.widthPixels, mMetrics.heightPixels) {
+                .error(R.drawable.default_background)
+                .into(new SimpleTarget<Bitmap>() {
                     @Override
-                    public void onResourceReady(GlideDrawable resource,
-                                                GlideAnimation<? super GlideDrawable> glideAnimation) {
-                        mBackgroundManager.setDrawable(resource);
+                    public void onResourceReady(Bitmap bitmap,
+                                                GlideAnimation<? super Bitmap> glideAnimation) {
+                        mDetailsBackground.setCoverBitmap(bitmap);
+                        mAdapter.notifyArrayItemRangeChanged(0, mAdapter.size());
                     }
                 });
-    }
-
-    private void setupAdapter() {
-        mPresenterSelector = new ClassPresenterSelector();
-        mAdapter = new ArrayObjectAdapter(mPresenterSelector);
-        setAdapter(mAdapter);
     }
 
     private void setupDetailsOverviewRow() {
@@ -221,7 +198,7 @@ public class ${detailsFragment} extends DetailsFragment {
         mPresenterSelector.addClassPresenter(DetailsOverviewRow.class, detailsPresenter);
     }
 
-    private void setupMovieListRow() {
+    private void setupRelatedMovieListRow() {
         String subcategories[] = {getString(R.string.related_movies)};
         List<Movie> list = MovieList.getList();
 
@@ -237,9 +214,6 @@ public class ${detailsFragment} extends DetailsFragment {
             HeaderItem header = new HeaderItem(0, subcategories[0], null);
         </#if>
         mAdapter.add(new ListRow(header, listRowAdapter));
-    }
-
-    private void setupMovieListRowPresenter() {
         mPresenterSelector.addClassPresenter(ListRow.class, new ListRowPresenter());
     }
 
@@ -252,9 +226,6 @@ public class ${detailsFragment} extends DetailsFragment {
                 Log.d(TAG, "Item: " + item.toString());
                 Intent intent = new Intent(getActivity(), ${detailsActivity}.class);
                 intent.putExtra(getResources().getString(R.string.movie), mSelectedMovie);
-                intent.putExtra(getResources().getString(R.string.should_start), true);
-                startActivity(intent);
-
 
                 Bundle bundle = ActivityOptionsCompat.makeSceneTransitionAnimation(
                         getActivity(),
