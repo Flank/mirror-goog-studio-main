@@ -216,28 +216,32 @@ public class ResourceEvaluator {
         } else if (element instanceof UParenthesizedExpression) {
             UParenthesizedExpression parenthesizedExpression = (UParenthesizedExpression) element;
             return getResource(parenthesizedExpression.getExpression());
-        } else if (allowDereference && element instanceof UQualifiedReferenceExpression) {
-            UQualifiedReferenceExpression qualifiedExpression = (UQualifiedReferenceExpression) element;
-            UExpression selector = qualifiedExpression.getSelector();
-            if ((selector instanceof UCallExpression)) {
-                UCallExpression call = (UCallExpression) selector;
-                PsiMethod function = call.resolve();
-                PsiClass containingClass = UastUtils.getContainingClass(function);
-                if (function != null && containingClass != null) {
-                    String qualifiedName = containingClass.getQualifiedName();
-                    String name = call.getMethodName();
-                    if ((CLASS_RESOURCES.equals(qualifiedName)
-                            || CLASS_CONTEXT.equals(qualifiedName)
-                            || CLASS_FRAGMENT.equals(qualifiedName)
-                            || CLASS_V4_FRAGMENT.equals(qualifiedName)
-                            || CLS_TYPED_ARRAY.equals(qualifiedName))
-                            && name != null
-                            && name.startsWith("get")) {
-                        List<UExpression> args = call.getValueArguments();
-                        if (!args.isEmpty()) {
-                            return getResource(args.get(0));
-                        }
+        } else if (element instanceof UCallExpression) {
+            UCallExpression call = (UCallExpression) element;
+            PsiMethod function = call.resolve();
+            PsiClass containingClass = UastUtils.getContainingClass(function);
+            if (function != null && containingClass != null) {
+                String qualifiedName = containingClass.getQualifiedName();
+                String name = call.getMethodName();
+                if ((CLASS_RESOURCES.equals(qualifiedName)
+                                || CLASS_CONTEXT.equals(qualifiedName)
+                                || CLASS_FRAGMENT.equals(qualifiedName)
+                                || CLASS_V4_FRAGMENT.equals(qualifiedName)
+                                || CLS_TYPED_ARRAY.equals(qualifiedName))
+                        && name != null
+                        && name.startsWith("get")) {
+                    List<UExpression> args = call.getValueArguments();
+                    if (!args.isEmpty()) {
+                        return getResource(args.get(0));
                     }
+                }
+            }
+        } else if (allowDereference && element instanceof UQualifiedReferenceExpression) {
+            UExpression selector = ((UQualifiedReferenceExpression) element).getSelector();
+            if (selector instanceof UCallExpression) {
+                ResourceUrl url = getResource(selector);
+                if (url != null) {
+                    return url;
                 }
             }
         }
@@ -250,8 +254,7 @@ public class ResourceEvaluator {
             PsiElement resolved = ((UReferenceExpression) element).resolve();
             if (resolved instanceof PsiVariable) {
                 PsiVariable variable = (PsiVariable) resolved;
-                UElement lastAssignment = UastLintUtils.findLastAssignment(
-                                variable, element);
+                UElement lastAssignment = UastLintUtils.findLastAssignment(variable, element);
 
                 if (lastAssignment != null) {
                     return getResource(lastAssignment);

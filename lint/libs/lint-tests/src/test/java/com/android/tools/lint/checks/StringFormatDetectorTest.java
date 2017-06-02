@@ -1668,7 +1668,7 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
             + "        String hello2 = getResources().getString(R.string.hello2);\n"
             + "        String output2 = String.format(hello2, target, \"How are you\");\n"
             + "        setContentView(R.layout.main);\n"
-            + "        String score = getResources().getString(R.string.score);\n"
+            + "        String score = getString(R.string.score);\n"
             + "        int points = 50;\n"
             + "        boolean won = true;\n"
             + "        String output3 = String.format(score, points);\n"
