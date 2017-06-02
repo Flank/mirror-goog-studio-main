@@ -16,8 +16,10 @@
 package com.android.tools.device.internal.adb;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.VisibleForTesting;
 import com.android.tools.device.internal.ProcessRunner;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -25,6 +27,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
@@ -33,10 +36,18 @@ import java.util.logging.Logger;
 class AdbServerLauncher implements Launcher {
     private final Path adb;
     private final ProcessRunner runner;
+    private final Map<String, String> env;
 
     public AdbServerLauncher(@NonNull Path adb, @NonNull ProcessRunner runner) {
+        this(adb, runner, ImmutableMap.of());
+    }
+
+    @VisibleForTesting
+    public AdbServerLauncher(
+            @NonNull Path adb, @NonNull ProcessRunner runner, @NonNull Map<String, String> env) {
         this.adb = adb;
         this.runner = runner;
+        this.env = env;
     }
 
     @NonNull
@@ -53,11 +64,13 @@ class AdbServerLauncher implements Launcher {
 
         ProcessBuilder pb = new ProcessBuilder(cmd);
         pb.environment().put("ADB_LIBUSB", useLibUsb ? "1" : "0");
+        env.forEach((key, value) -> pb.environment().put(key, value));
 
         Logger logger = Logger.getLogger(getClass().getName());
         if (logger.isLoggable(Level.FINE)) {
             logger.fine("Launching adb: " + Joiner.on(" ").join(cmd));
             logger.fine("  ADB_LIBUSB=" + pb.environment().get("ADB_LIBUSB"));
+            env.forEach((key, value) -> logger.fine(String.format("  %1$s=%2$s", key, value)));
         }
 
         Process process = runner.start(pb);

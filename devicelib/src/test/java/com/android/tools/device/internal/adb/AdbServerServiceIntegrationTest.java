@@ -19,6 +19,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.tools.device.internal.OsProcessRunner;
 import com.android.tools.device.internal.adb.commands.ServerVersion;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.UnsignedInteger;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -39,7 +40,9 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 /**
  * This is an integration test for the {@link AdbServerService} class. It ensures that the service
@@ -51,6 +54,10 @@ import org.junit.Test;
 public class AdbServerServiceIntegrationTest {
     private static ConsoleHandler handler;
     private ExecutorService executor;
+
+    // When run under a sandboxed environment, $HOME may not exist. adb however relies on $HOME
+    // being present and valid. So we explicitly set $HOME to some temporary folder
+    @Rule public TemporaryFolder temporaryHome = new TemporaryFolder();
 
     /**
      * Sets up the logging system to print out logs at all levels, but in a simplified format. For
@@ -115,7 +122,10 @@ public class AdbServerServiceIntegrationTest {
         AdbServerOptions options =
                 new AdbServerOptions(getFreePort(), AdbConstants.DEFAULT_HOST, true);
         Launcher launcher =
-                new AdbServerLauncher(AdbTestUtils.getPathToAdb(), new OsProcessRunner(executor));
+                new AdbServerLauncher(
+                        AdbTestUtils.getPathToAdb(),
+                        new OsProcessRunner(executor),
+                        ImmutableMap.of("HOME", temporaryHome.getRoot().getAbsolutePath()));
         AdbServerService service =
                 new AdbServerService(options, launcher, new SocketProbe(), executor);
 
