@@ -28,10 +28,10 @@ import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutpu
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.FEATURE_APPLICATION_ID_DECLARATION;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.FEATURE_IDS_DECLARATION;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.FEATURE_RESOURCE_PKG;
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.FULL_JAR;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.JAVAC;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.JAVA_RES;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.LIBRARY_CLASSES;
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.LIBRARY_CLASSES_AS_JAR;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.LIBRARY_JAVA_RES;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.LIBRARY_JNI;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.LIBRARY_MANIFEST;
@@ -156,8 +156,7 @@ public class VariantPublishingSpec {
                                 ArtifactType.DATA_BINDING_ARTIFACT,
                                 API_ELEMENTS_ONLY),
                         outputSpec(LIBRARY_CLASSES, ArtifactType.CLASSES, API_AND_RUNTIME_ELEMENTS),
-                        outputSpec(
-                                LIBRARY_CLASSES_AS_JAR, ArtifactType.JAR, API_AND_RUNTIME_ELEMENTS),
+                        outputSpec(FULL_JAR, ArtifactType.JAR, API_AND_RUNTIME_ELEMENTS),
                         outputSpec(LIBRARY_JAVA_RES, ArtifactType.JAVA_RES, RUNTIME_ELEMENTS_ONLY),
                         outputSpec(
                                 CONSUMER_PROGUARD_FILE,

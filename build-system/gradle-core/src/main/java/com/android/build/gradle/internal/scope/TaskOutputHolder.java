@@ -41,9 +41,6 @@ public interface TaskOutputHolder {
         JAVAC,
         // packaged classes for AAR intermediate publishing
         LIBRARY_CLASSES,
-        // same as LIBRARY_CLASSES but published as a jar.
-        // FIXME remove when we can get the model w/o querying for jars.
-        LIBRARY_CLASSES_AS_JAR,
         // the packaged classes published by APK modules.
         APP_CLASSES,
 
@@ -52,6 +49,9 @@ public interface TaskOutputHolder {
         JAVA_RES,
         // packaged java res for aar intermediate publishing
         LIBRARY_JAVA_RES,
+
+        // Full jar with both classes and java res.
+        FULL_JAR,
 
         // --- android res ---
         // output of the resource merger ready for aapt.
