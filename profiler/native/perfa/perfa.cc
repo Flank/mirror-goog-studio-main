@@ -107,7 +107,7 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
     slicer::MethodInstrumenter mi(dex_ir);
     mi.AddTransformation<slicer::ExitHook>(ir::MethodId(
         "Lcom/android/tools/profiler/support/network/okhttp/OkHttp3Wrapper;",
-        "appendInterceptor"));
+        "insertInterceptor"));
     if (!mi.InstrumentMethod(ir::MethodId(desc.c_str(), "networkInterceptors",
                                           "()Ljava/util/List;"))) {
       Log::E("Error instrumenting OkHttp3 OkHttpClient");
@@ -137,7 +137,7 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
     slicer::MethodInstrumenter mi(dex_ir);
     mi.AddTransformation<slicer::ExitHook>(ir::MethodId(
         "Lcom/android/tools/profiler/support/network/okhttp/OkHttp2Wrapper;",
-        "appendInterceptor"));
+        "insertInterceptor"));
     if (!mi.InstrumentMethod(ir::MethodId(desc.c_str(), "networkInterceptors",
                                           "()Ljava/util/List;"))) {
       Log::E("Error instrumenting OkHttp2 OkHttpClient");

@@ -17,7 +17,7 @@
 package com.android.tools.profiler.support.network.okhttp;
 
 import com.android.tools.profiler.support.network.okhttp.reflection.okhttp3.OkHttpClient$;
-import java.lang.reflect.InvocationTargetException;
+import com.android.tools.profiler.support.util.StudioLog;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,32 +25,33 @@ import java.util.List;
 public final class OkHttp3Wrapper {
 
     /**
-     * Adds okhttp3 Interceptor to an {@code OkHttpClient.Builder}.
+     * Adds okhttp3 Interceptor to an {@code OkHttpClient.Builder} as soon as it is constructed.
      *
      * <p>This is the intended entry-point for compile-time BCI.
      */
     public static void addInterceptorToBuilder(Object builder) {
         try {
             new OkHttpClient$.Builder$(builder).addNetworkInterceptor(OkHttp3Interceptor.create());
-        } catch (NoSuchMethodException ignored) {
-        } catch (InvocationTargetException ignored) {
-        } catch (IllegalAccessException ignored) {
-        } catch (ClassNotFoundException ignored) {
+        } catch (Exception ex) {
+            StudioLog.e(
+                    "Could not add an OkHttp3 profiler interceptor during OkHttpClient construction",
+                    ex);
         }
     }
 
     /**
      * Adds an okhttp3 Interceptor to a {@code List<Interceptor>}, returning a copy of the list with
-     * the interceptor added.
+     * the interceptor added at the beginning of the list.
      *
      * <p>This is the entry-point for runtime (JVMTI) BCI.
      */
     @SuppressWarnings("unchecked")
-    public static List appendInterceptor(List interceptors) {
+    public static List insertInterceptor(List interceptors) {
         ArrayList list = new ArrayList(interceptors);
         try {
-            list.add(OkHttp3Interceptor.create().obj);
-        } catch (ClassNotFoundException ignored) {
+            list.add(0, OkHttp3Interceptor.create().obj);
+        } catch (ClassNotFoundException ex) {
+            StudioLog.e("Could not insert an OkHttp3 profiler interceptor", ex);
         }
         return list;
     }

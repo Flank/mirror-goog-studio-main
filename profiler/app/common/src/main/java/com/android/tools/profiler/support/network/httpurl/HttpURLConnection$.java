@@ -17,7 +17,6 @@ package com.android.tools.profiler.support.network.httpurl;
 
 import com.android.tools.profiler.support.network.HttpConnectionTracker;
 import com.android.tools.profiler.support.network.HttpTracker;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -90,7 +89,12 @@ public final class HttpURLConnection$ extends HttpURLConnection {
         // but since we don't have hooks inside that class, we need to call it ourselves here, to
         // ensure the event is tracked.
         if (!myConnectTracked) {
-            getInputStream();
+            try {
+                getInputStream();
+            } catch (Exception ignored) {
+                // We don't want to cause an exception to potentially be thrown as an unexpected
+                // side-effect to calling getResponseCode
+            }
         }
         return myWrapped.getResponseCode();
     }
