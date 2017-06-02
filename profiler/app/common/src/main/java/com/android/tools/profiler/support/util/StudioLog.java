@@ -17,38 +17,38 @@
 package com.android.tools.profiler.support.util;
 
 import android.util.Log;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Class to call instead of Android {@link Log}.
  *
- * <p>Note that you should call these logs very sparingly, only for important events that will
- * likely only happen once. In other words, do not log any calls that have the potential to spam the
- * user's console.
+ * <p>In order to avoid spamming the user's console, messages will only print once per unique
+ * instance.
  */
 public final class StudioLog {
     private static final String TAG = "StudioProfiler";
-
-    public static void d(String msg) {
-        Log.d(TAG, msg);
-    }
-
-    public static void d(String msg, Throwable tr) {
-        Log.d(TAG, msg, tr);
-    }
+    private static final Set<Integer> SEEN_MSG_HASHCODES = new HashSet<Integer>();
+    private static final String ERROR_HEADER =
+            "Studio Profilers encountered an unexpected error. "
+                    + "Consider reporting a bug, including logcat output below.\n"
+                    + "See also: https://developer.android.com/studio/report-bugs.html#studio-bugs\n\n";
 
     public static void e(String msg) {
-        Log.e(TAG, msg);
+        if (SEEN_MSG_HASHCODES.add(msg.hashCode())) {
+            Log.e(TAG, ERROR_HEADER + msg);
+        }
     }
 
     public static void e(String msg, Throwable tr) {
-        Log.e(TAG, msg, tr);
+        if (SEEN_MSG_HASHCODES.add(msg.hashCode())) {
+            Log.e(TAG, ERROR_HEADER + msg, tr);
+        }
     }
 
     public static void v(String msg) {
-        Log.v(TAG, msg);
-    }
-
-    public static void v(String msg, Throwable tr) {
-        Log.v(TAG, msg, tr);
+        if (SEEN_MSG_HASHCODES.add(msg.hashCode())) {
+            Log.v(TAG, msg);
+        }
     }
 }
