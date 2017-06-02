@@ -27,8 +27,15 @@ public final class MovieList {
             "Category Five",
     };
 
-    public static List<Movie> list;
+    private static List<Movie> list;
     private static long count = 0;
+
+    public static List<Movie> getList() {
+        if( list == null ) {
+            list = setupMovies();
+        }
+        return list;
+    }
 
     public static List<Movie> setupMovies() {
         list = new ArrayList<>();

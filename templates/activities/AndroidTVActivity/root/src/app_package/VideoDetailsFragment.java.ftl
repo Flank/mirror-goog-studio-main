@@ -23,7 +23,8 @@ import android.support.v17.leanback.widget.Action;
 import android.support.v17.leanback.widget.ArrayObjectAdapter;
 import android.support.v17.leanback.widget.ClassPresenterSelector;
 import android.support.v17.leanback.widget.DetailsOverviewRow;
-import android.support.v17.leanback.widget.DetailsOverviewRowPresenter;
+import android.support.v17.leanback.widget.FullWidthDetailsOverviewRowPresenter;
+import android.support.v17.leanback.widget.FullWidthDetailsOverviewSharedElementHelper;
 import android.support.v17.leanback.widget.HeaderItem;
 import android.support.v17.leanback.widget.ImageCardView;
 import android.support.v17.leanback.widget.ListRow;
@@ -34,6 +35,7 @@ import android.support.v17.leanback.widget.Presenter;
 import android.support.v17.leanback.widget.Row;
 import android.support.v17.leanback.widget.RowPresenter;
 import android.support.v4.app.ActivityOptionsCompat;
+import android.support.v4.content.ContextCompat;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.widget.Toast;
@@ -78,8 +80,8 @@ public class ${detailsFragment} extends DetailsFragment {
 
         prepareBackgroundManager();
 
-        mSelectedMovie = (Movie) getActivity().getIntent()
-                .getSerializableExtra(${detailsActivity}.MOVIE);
+        mSelectedMovie =
+                (Movie) getActivity().getIntent() .getSerializableExtra(${detailsActivity}.MOVIE);
         if (mSelectedMovie != null) {
             setupAdapter();
             setupDetailsOverviewRow();
@@ -102,7 +104,13 @@ public class ${detailsFragment} extends DetailsFragment {
     private void prepareBackgroundManager() {
         mBackgroundManager = BackgroundManager.getInstance(getActivity());
         mBackgroundManager.attach(getActivity().getWindow());
-        mDefaultBackground = getResources().getDrawable(R.drawable.default_background);
+        <#if minApiLevel gte 23>
+        mDefaultBackground =
+                ContextCompat.getDrawable(getContext(), R.drawable.default_background);
+        <#else>
+        mDefaultBackground =
+                ContextCompat.getDrawable(getActivity(), R.drawable.default_background);
+        </#if>
         mMetrics = new DisplayMetrics();
         getActivity().getWindowManager().getDefaultDisplay().getMetrics(mMetrics);
     }
@@ -130,11 +138,17 @@ public class ${detailsFragment} extends DetailsFragment {
     private void setupDetailsOverviewRow() {
         Log.d(TAG, "doInBackground: " + mSelectedMovie.toString());
         final DetailsOverviewRow row = new DetailsOverviewRow(mSelectedMovie);
-        row.setImageDrawable(getResources().getDrawable(R.drawable.default_background));
-        int width = Utils.convertDpToPixel(getActivity()
-                .getApplicationContext(), DETAIL_THUMB_WIDTH);
-        int height = Utils.convertDpToPixel(getActivity()
-                .getApplicationContext(), DETAIL_THUMB_HEIGHT);
+        <#if minApiLevel gte 23>
+        row.setImageDrawable(
+                ContextCompat.getDrawable(getContext(), R.drawable.default_background));
+        <#else>
+        row.setImageDrawable(
+                ContextCompat.getDrawable(getActivity(), R.drawable.default_background));
+        </#if>
+        int width =
+                Utils.convertDpToPixel(getActivity().getApplicationContext(), DETAIL_THUMB_WIDTH);
+        int height =
+                Utils.convertDpToPixel(getActivity().getApplicationContext(), DETAIL_THUMB_HEIGHT);
         Glide.with(getActivity())
                 .load(mSelectedMovie.getCardImageUrl())
                 .centerCrop()
@@ -150,26 +164,47 @@ public class ${detailsFragment} extends DetailsFragment {
                     }
                 });
 
-        row.addAction(new Action(ACTION_WATCH_TRAILER, getResources().getString(
-                R.string.watch_trailer_1), getResources().getString(R.string.watch_trailer_2)));
-        row.addAction(new Action(ACTION_RENT, getResources().getString(R.string.rent_1),
-                getResources().getString(R.string.rent_2)));
-        row.addAction(new Action(ACTION_BUY, getResources().getString(R.string.buy_1),
-                getResources().getString(R.string.buy_2)));
+        ArrayObjectAdapter actionAdapter = new ArrayObjectAdapter();
+
+        actionAdapter.add(
+                new Action(
+                        ACTION_WATCH_TRAILER,
+                        getResources().getString(R.string.watch_trailer_1),
+                        getResources().getString(R.string.watch_trailer_2)));
+        actionAdapter.add(
+                new Action(
+                        ACTION_RENT,
+                        getResources().getString(R.string.rent_1),
+                        getResources().getString(R.string.rent_2)));
+        actionAdapter.add(
+                new Action(
+                        ACTION_BUY,
+                        getResources().getString(R.string.buy_1),
+                        getResources().getString(R.string.buy_2)));
+        row.setActionsAdapter(actionAdapter);
 
         mAdapter.add(row);
     }
 
     private void setupDetailsOverviewRowPresenter() {
-        // Set detail background and style.
-        DetailsOverviewRowPresenter detailsPresenter =
-                new DetailsOverviewRowPresenter(new DetailsDescriptionPresenter());
-        detailsPresenter.setBackgroundColor(getResources().getColor(R.color.selected_background));
-        detailsPresenter.setStyleLarge(true);
+        // Set detail background.
+        FullWidthDetailsOverviewRowPresenter detailsPresenter =
+                new FullWidthDetailsOverviewRowPresenter(new DetailsDescriptionPresenter());
+        <#if minApiLevel gte 23>
+        detailsPresenter.setBackgroundColor(
+                ContextCompat.getColor(getContext(), R.color.selected_background));
+        <#else>
+        detailsPresenter.setBackgroundColor(
+                ContextCompat.getColor(getActivity(), R.color.selected_background));
+        </#if>
 
         // Hook up transition element.
-        detailsPresenter.setSharedElementEnterTransition(getActivity(),
-                ${detailsActivity}.SHARED_ELEMENT_NAME);
+        FullWidthDetailsOverviewSharedElementHelper sharedElementHelper =
+                new FullWidthDetailsOverviewSharedElementHelper();
+        sharedElementHelper.setSharedElementEnterTransition(
+                getActivity(), ${detailsActivity}.SHARED_ELEMENT_NAME);
+        detailsPresenter.setListener(sharedElementHelper);
+        detailsPresenter.setParticipatingEntranceTransition(true);
 
         detailsPresenter.setOnActionClickedListener(new OnActionClickedListener() {
             @Override
@@ -188,7 +223,7 @@ public class ${detailsFragment} extends DetailsFragment {
 
     private void setupMovieListRow() {
         String subcategories[] = {getString(R.string.related_movies)};
-        List<Movie> list = MovieList.list;
+        List<Movie> list = MovieList.getList();
 
         Collections.shuffle(list);
         ArrayObjectAdapter listRowAdapter = new ArrayObjectAdapter(new CardPresenter());
@@ -214,7 +249,6 @@ public class ${detailsFragment} extends DetailsFragment {
                                   RowPresenter.ViewHolder rowViewHolder, Row row) {
 
             if (item instanceof Movie) {
-                Movie movie = (Movie) item;
                 Log.d(TAG, "Item: " + item.toString());
                 Intent intent = new Intent(getActivity(), ${detailsActivity}.class);
                 intent.putExtra(getResources().getString(R.string.movie), mSelectedMovie);
