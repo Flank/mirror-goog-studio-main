@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/bazel.iml" filepath="$PROJECT_DIR$/bazel.iml" />
+      <module fileurl="file://$PROJECT_DIR$/iml-to-bazel.iml" filepath="$PROJECT_DIR$/iml-to-bazel.iml" />
     </modules>
   </component>
 </project>
