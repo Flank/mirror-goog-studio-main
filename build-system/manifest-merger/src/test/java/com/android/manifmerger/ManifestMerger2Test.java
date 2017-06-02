@@ -117,6 +117,8 @@ public class ManifestMerger2Test {
                 "82_remove_tools_nodes",
                 "84_child_packages",
                 "85_child_packages_with_merging",
+                "86_delimiter_separated_values",
+                "87_delimiter_separated_values_errors",
             };
 
 

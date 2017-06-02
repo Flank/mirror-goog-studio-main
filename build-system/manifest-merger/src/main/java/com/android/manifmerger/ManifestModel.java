@@ -20,7 +20,7 @@ import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.ATTR_PACKAGE;
 import static com.android.manifmerger.AttributeModel.Hexadecimal32BitsWithMinimumValue;
-import static com.android.manifmerger.AttributeModel.MultiValueValidator;
+import static com.android.manifmerger.AttributeModel.SeparatedValuesValidator;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -465,7 +465,8 @@ class ManifestModel {
                         // TODO : this will need to be populated from
                         // sdk/platforms/android-19/data/res/values.attrs_manifest.xml
                         .setOnReadValidator(
-                                new MultiValueValidator(
+                                new SeparatedValuesValidator(
+                                        SdkConstants.VALUE_DELIMITER_PIPE,
                                         "normal",
                                         "dangerous",
                                         "signature",

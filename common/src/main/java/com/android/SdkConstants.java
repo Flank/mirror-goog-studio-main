@@ -1577,6 +1577,9 @@ public final class SdkConstants {
     public static final String VALUE_DISABLED = "disabled"; //$NON-NLS-1$
     public static final String VALUE_CLAMP = "clamp"; //$NON-NLS-1$
 
+    // Value delimiters: Manifest
+    public static final String VALUE_DELIMITER_PIPE = "|"; //$NON-NLS-1$
+
     // Menus
     public static final String ATTR_CHECKABLE = "checkable";
     public static final String ATTR_CHECKABLE_BEHAVIOR = "checkableBehavior";

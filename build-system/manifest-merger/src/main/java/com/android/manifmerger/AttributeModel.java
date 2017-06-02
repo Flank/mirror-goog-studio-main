@@ -19,6 +19,9 @@ package com.android.manifmerger;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -380,6 +383,53 @@ class AttributeModel {
                     )
             );
             return false;
+        }
+    }
+
+    /**
+     * A {@link com.android.manifmerger.AttributeModel.Validator} for verifying that each value in a
+     * string of delimiter-separated values is an acceptable value, and that there's at least one
+     * value in the string of delimiter-separated values.
+     */
+    static class SeparatedValuesValidator implements Validator {
+
+        @NonNull private final ImmutableList<String> multiValuesList;
+        @NonNull private final String delimiter;
+
+        SeparatedValuesValidator(@NonNull String delimiter, @NonNull String... multiValues) {
+            this.multiValuesList = ImmutableList.copyOf(multiValues);
+            this.delimiter = delimiter;
+        }
+
+        @Override
+        public boolean validates(
+                @NonNull MergingReport.Builder mergingReport,
+                @NonNull XmlAttribute attribute,
+                @NonNull String value) {
+            boolean result = true;
+            List<String> delimitedValues = Arrays.asList(value.split(Pattern.quote(delimiter)));
+            if (delimitedValues.isEmpty()) {
+                result = false;
+            }
+            for (String delimitedValue : delimitedValues) {
+                if (!multiValuesList.contains(delimitedValue)) {
+                    result = false;
+                    break;
+                }
+            }
+            if (!result) {
+                attribute.addMessage(
+                        mergingReport,
+                        MergingReport.Record.Severity.ERROR,
+                        String.format(
+                                "Invalid value for attribute %1$s at %2$s, value=(%3$s), "
+                                        + "acceptable delimiter-separated values are (%4$s)",
+                                attribute.getId(),
+                                attribute.printPosition(),
+                                value,
+                                Joiner.on(delimiter).join(multiValuesList)));
+            }
+            return result;
         }
     }
 
