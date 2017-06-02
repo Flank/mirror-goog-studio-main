@@ -34,6 +34,7 @@ iml_module(
         "//tools/idea/java/java-psi-impl[module]",
         "//tools/base/build-system:studio.manifest-merger[module]",
         "//tools/idea/.idea/libraries:uast",
+        "//tools/idea/.idea/libraries:KotlinJavaRuntime",
     ],
 )
 
@@ -79,7 +80,11 @@ iml_module(
     tags = ["managed"],
     visibility = ["//visibility:public"],
     exports = ["//tools/base/lint:studio.lint-api"],
-    deps = ["//tools/base/lint:studio.lint-api[module]"],
+    # do not sort: must match IML order
+    deps = [
+        "//tools/base/lint:studio.lint-api[module]",
+        "//tools/idea/.idea/libraries:KotlinJavaRuntime",
+    ],
 )
 
 maven_java_library(
