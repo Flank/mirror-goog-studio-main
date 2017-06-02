@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.builder.core.DesugarProcessBuilder;
 import com.android.utils.FileUtils;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -32,7 +33,7 @@ public class ExtractJava8LangSupportJar extends DefaultAndroidTask {
 
     public static final String TASK_NAME = "extractJava8LangSupportJar";
 
-    @OutputFile private ConfigurableFileCollection outputLocation;
+    private ConfigurableFileCollection outputLocation;
 
     @TaskAction
     public void run() throws IOException {
@@ -43,6 +44,11 @@ public class ExtractJava8LangSupportJar extends DefaultAndroidTask {
             FileUtils.cleanOutputDir(outputLocation.getSingleFile().getParentFile());
             Files.copy(in, outputLocation.getSingleFile().toPath());
         }
+    }
+
+    @OutputFile
+    public File getOutputLocation() {
+        return outputLocation.getSingleFile();
     }
 
     public static class ConfigAction implements TaskConfigAction<ExtractJava8LangSupportJar> {
