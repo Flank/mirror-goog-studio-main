@@ -23,6 +23,7 @@ using profiler::Clock;
 using profiler::TimeValue;
 using profiler::TimeValueBuffer;
 
+const int64_t t0 = Clock::s_to_ns(0);
 const int64_t t1 = Clock::s_to_ns(1);
 const int64_t t2 = Clock::s_to_ns(2);
 const int64_t t3 = Clock::s_to_ns(3);
@@ -67,11 +68,11 @@ TEST(TimeValueBuffer, DataForQueryTimeRange) {
 
   std::vector<TimeFloat> items = buffer.GetItems(t1, t2);
   EXPECT_EQ(1u, items.size());
-  EXPECT_EQ(t1, items.at(0).time);
-  EXPECT_EQ(10, items.at(0).value);
+  EXPECT_EQ(t2, items.at(0).time);
+  EXPECT_EQ(20, items.at(0).value);
 
   items.clear();
-  items = buffer.GetItems(t1, t3);
+  items = buffer.GetItems(t0, t2);
   EXPECT_EQ(2u, items.size());
   EXPECT_EQ(t1, items.at(0).time);
   EXPECT_EQ(10, items.at(0).value);
@@ -95,10 +96,10 @@ TEST(TimeValueBuffer, GetValuesRetrievesDataDirectly) {
 
   std::vector<float> values = buffer.GetValues(t1, t2);
   EXPECT_EQ(1u, values.size());
-  EXPECT_EQ(10, values.at(0));
+  EXPECT_EQ(20, values.at(0));
 
   values.clear();
-  values = buffer.GetValues(t1, t3);
+  values = buffer.GetValues(t0, t2);
   EXPECT_EQ(2u, values.size());
   EXPECT_EQ(10, values.at(0));
   EXPECT_EQ(20, values.at(1));
