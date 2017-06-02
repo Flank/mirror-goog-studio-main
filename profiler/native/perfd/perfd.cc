@@ -72,10 +72,11 @@ int main(int argc, char** argv) {
   profiler::GraphicsProfilerComponent graphics_component{&daemon.utilities()};
   daemon.RegisterComponent(&graphics_component);
 
+  auto agent_config = profiler::Config::Instance().GetAgentConfig();
   if (profiler::DeviceInfo::feature_level() >= 26 &&
       // TODO: remove the check on argument after agent uses only JVMTI to
       // instrument bytecode on O+ devices.
-      argc >= 2 && strcmp(argv[1], "-use_jvmti") == 0) {
+      agent_config.use_jvmti()) {
     // For O and newer devices, use a Unix abstract socket.
     // Since we are building a gRPC server, we need a special prefix to inform
     // gRPC that this is a Unix socket name.

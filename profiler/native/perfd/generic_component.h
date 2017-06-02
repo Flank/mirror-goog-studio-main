@@ -18,8 +18,8 @@
 
 #include <unordered_map>
 
-#include "perfd/daemon.h"
 #include "perfd/agent_service.h"
+#include "perfd/daemon.h"
 #include "perfd/profiler_component.h"
 #include "perfd/profiler_service.h"
 

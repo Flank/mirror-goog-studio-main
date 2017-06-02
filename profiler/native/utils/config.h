@@ -16,6 +16,8 @@
 #ifndef UTILS_CONFIG_H_
 #define UTILS_CONFIG_H_
 
+#include "proto/agent_service.grpc.pb.h"
+
 namespace profiler {
 
 // This is a Unix abstract socket name that designates an abstract socket of
@@ -29,6 +31,21 @@ const char* const kAgentSocketName = "@AndroidStudioProfilerAgent";
 
 // Address used for legacy devices (Nougat or older).
 const char* const kServerAddress = "127.0.0.1:12389";
+
+const char* const kConfigFilePath = "/data/local/tmp/perfd/agent.config";
+
+class Config {
+ public:
+  static Config& Instance();
+
+  const proto::AgentConfig& GetAgentConfig() const { return agent_config_; }
+
+ private:
+  explicit Config(const char* file_path);
+  ~Config() = delete;
+
+  proto::AgentConfig agent_config_;
+};
 
 }  // namespace profiler
 

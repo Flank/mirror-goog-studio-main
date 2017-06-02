@@ -19,11 +19,13 @@
 #include <dlfcn.h>
 #include <unistd.h>
 #include <algorithm>
+#include <string>
 
 #include "agent/agent.h"
 #include "jvmti_helper.h"
 #include "memory/memory_tracking_env.h"
 #include "scoped_local_ref.h"
+#include "utils/config.h"
 #include "utils/log.h"
 
 #include "dex/slicer/instrumentation.h"
@@ -50,6 +52,14 @@ class JvmtiAllocator : public dex::Writer::Allocator {
  private:
   jvmtiEnv* jvmti_env_;
 };
+
+// Retrieve the app's data directory path
+static std::string GetAppDataPath() {
+  Dl_info dl_info;
+  dladdr((void*)Agent_OnAttach, &dl_info);
+  std::string so_path(dl_info.dli_fname);
+  return so_path.substr(0, so_path.find_last_of('/') + 1);
+}
 
 void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
                                jclass class_being_redefined, jobject loader,
@@ -177,13 +187,10 @@ void BindJNIMethod(JNIEnv* jni, const char* class_name, const char* method_name,
   }
 }
 
-void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni) {
+void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni, bool log_live_alloc_count) {
   // Load in perfa.jar which should be in to data/data.
-  Dl_info dl_info;
-  dladdr((void*)Agent_OnAttach, &dl_info);
-  std::string so_path(dl_info.dli_fname);
-  std::string agent_lib_path(so_path.substr(0, so_path.find_last_of('/')));
-  agent_lib_path.append("/perfa.jar");
+  std::string agent_lib_path(GetAppDataPath());
+  agent_lib_path.append("perfa.jar");
   jvmti->AddToBootstrapClassLoaderSearch(agent_lib_path.c_str());
 
   // TODO: Removed these once the auto-JNI-binding feature becomes
@@ -236,6 +243,9 @@ void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni) {
       jni, "com/android/tools/profiler/support/network/HttpTracker$Connection",
       "onError", "(JLjava/lang/String;)V");
 
+  BindJNIMethod(jni, "com/android/tools/profiler/support/memory/VmStatsSampler",
+                "logAllocStats", "(II)V");
+
   BindJNIMethod(
       jni, "com/android/tools/profiler/support/event/InputConnectionWrapper",
       "sendKeyboardEvent", "(Ljava/lang/String;)V");
@@ -276,10 +286,11 @@ void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni) {
   BindJNIMethod(jni,
                 "com/android/tools/profiler/support/profilers/EventProfiler",
                 "sendRotationEvent", "(I)V");
+
   jclass service =
       jni->FindClass("com/android/tools/profiler/support/ProfilerService");
-  jmethodID initialize = jni->GetStaticMethodID(service, "initialize", "()V");
-  jni->CallStaticVoidMethod(service, initialize);
+  jmethodID initialize = jni->GetStaticMethodID(service, "initialize", "(Z)V");
+  jni->CallStaticVoidMethod(service, initialize, !log_live_alloc_count);
 }
 
 extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
@@ -291,10 +302,11 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
 
   Log::V("StudioProfilers agent attached.");
 
+  auto agent_config = profiler::Config::Instance().GetAgentConfig();
   Agent::Instance(Agent::SocketType::kAbstractSocket);
 
   JNIEnv* jni_env = GetThreadLocalJNI(vm);
-  LoadDex(jvmti_env, jni_env);
+  LoadDex(jvmti_env, jni_env, agent_config.use_live_alloc());
 
   SetAllCapabilities(jvmti_env);
   jvmti_env->SetEventNotificationMode(
@@ -326,7 +338,7 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
   CheckJvmtiError(jvmti_env,
                   jvmti_env->RetransformClasses(classes.size(), &classes[0]));
 
-  MemoryTrackingEnv::Instance(vm);
+  MemoryTrackingEnv::Instance(vm, agent_config.use_live_alloc());
 
   return JNI_OK;
 }
