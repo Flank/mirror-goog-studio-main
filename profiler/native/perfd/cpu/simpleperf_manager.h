@@ -48,8 +48,8 @@ class SimplePerfManager {
   // |trace_path| is also set to where the trace file will be made available
   // once profiling of this app is stopped. To call this method on an already
   // profiled app is a noop.
-  bool StartProfiling(const std::string &app_pkg_name, std::string *trace_path,
-                      std::string *error);
+  bool StartProfiling(const std::string &app_pkg_name, int sampling_interval_us,
+                      std::string *trace_path, std::string *error);
   bool StopProfiling(const std::string &app_pkg_name, std::string *error);
 
  private:

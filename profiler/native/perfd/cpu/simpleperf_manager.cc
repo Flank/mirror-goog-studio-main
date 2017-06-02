@@ -68,6 +68,7 @@ bool SimplePerfManager::EnableProfiling(std::string *error) const {
 }
 
 bool SimplePerfManager::StartProfiling(const std::string &app_pkg_name,
+                                       int sampling_interval_us,
                                        std::string *trace_path,
                                        std::string *error) {
   std::lock_guard<std::mutex> lock(start_stop_mutex_);
@@ -136,12 +137,17 @@ bool SimplePerfManager::StartProfiling(const std::string &app_pkg_name,
       std::stringstream string_pid;
       string_pid << pid;
 
+      int one_sec_in_us = 1000000;
+      std::stringstream samples_per_sec;
+      samples_per_sec << one_sec_in_us / sampling_interval_us;
+
       string data_filepath = entry.app_dir + "/" + entry.output_prefix + ".dat";
 
       execlp("run-as", "run-as", app_pkg_name.c_str(),
              simple_perf_binary_abspath.c_str(), "record", "--call-graph",
              "dwarf", "-o", data_filepath.c_str(), "-p",
-             string_pid.str().c_str(), NULL);
+             string_pid.str().c_str(), "-f", samples_per_sec.str().c_str(),
+             NULL);
       exit(EXIT_FAILURE);
       break;  // Useless break but makes compiler happy.
     }
