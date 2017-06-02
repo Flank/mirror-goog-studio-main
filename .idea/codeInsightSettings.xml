@@ -5,11 +5,15 @@
       <name>com.sun</name>
       <name>java.awt.List</name>
       <name>junit.framework</name>
+      <name>org.gradle.internal.impldep</name>
       <name>org.gradle.jarjar</name>
       <name>org.jetbrains.annotations.NotNull</name>
       <name>org.jetbrains.annotations.Nullable</name>
       <name>org.mockito.MockitoAnnotations.Mock</name>
       <name>org.testng</name>
+      <name>javax.annotation.Nullable</name>
+      <name>javax.annotation.RegEx</name>
+      <name>org.gradle.api.Nullable</name>
     </excluded-names>
   </component>
 </project>

@@ -30,5 +30,6 @@
     <orderEntry type="module" module-name="sdklib-base" />
     <orderEntry type="module" module-name="testutils" scope="TEST" />
     <orderEntry type="module" module-name="dx" />
+    <orderEntry type="library" scope="TEST" name="KotlinJavaRuntime" level="project" />
   </component>
 </module>
