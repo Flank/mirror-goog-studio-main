@@ -1,7 +1,0 @@
-Active default network: 502
-
-Current Networks:
-NetworkAgentInfo{ ni{[type: WIFI[] - WIFI, state: CONNECTED/CONNECTED, isConnectedToProvisioningNetwork: false]}  network{513}  lp{{InterfaceName: wlan0  nc{[ Transports: WIFI Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN LinkUpBandwidth>=1048576Kbps LinkDnBandwidth>=1048576Kbps]}  Score{60}  everValidated{true}  lastValidated{true}  created{true}  explicitlySelected{false} }
-    Requests:
-      NetworkRequest [ id=1, legacyType=-1, [ Capabilities: INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN] ]
-NetworkAgentInfo{ ni{[type: MOBILE[LTE] - MOBILE_IMS, state: CONNECTED/CONNECTED, isAvailable: true]}  network{502}  lp{{InterfaceName: rmnet0 Domains: null MTU: 0 TcpBufferSizes: 1048576,3145728,4194304,524288,1572864,2097152}}  nc{[ Transports: CELLULAR Capabilities: MMS&SUPL&DUN&FOTA&IMS&IA&INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN&BIP LinkUpBandwidth>=51200Kbps LinkDnBandwidth>=102400Kbps Specifier: <6>]}  Score{50}  everValidated{true}  lastValidated{true}  created{true}  explicitlySelected{false} }
