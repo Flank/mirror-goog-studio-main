@@ -51,16 +51,26 @@ public final class OkHttp3Interceptor implements InvocationHandler {
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         if ("intercept".equals(method.getName())) {
-            Interceptor$.Chain$ chain = new Interceptor$.Chain$(args[0]);
-            Request$ request = chain.request();
-            Response$ response = chain.proceed(request);
             try {
-                response = track(request, response);
-            } catch (Exception ex) {
-                StudioLog.e("Could not track an OkHttp3 request/response", ex);
+                Interceptor$.Chain$ chain = new Interceptor$.Chain$(args[0]);
+                Request$ request = chain.request();
+                Response$ response = chain.proceed(request);
+                try {
+                    response = track(request, response);
+                } catch (Exception ex) {
+                    StudioLog.e("Could not track an OkHttp3 request/response", ex);
+                }
+                return response.obj;
+            } catch (InvocationTargetException ex) {
+                // The method we're proxying here has a signature that says it only throws
+                // IOException. However, Request$ and Response$ wrap any thrown exceptions in an
+                // InvocationTargetException. Then, if Proxy#invoke sees an exception that doesn't
+                // match the original function signature, it in turn throws its own
+                // UndeclaredThrowableException. All of this is naturally confusing to OkHttp. To
+                // avoid this, we throw the underlying exception here, which should either be an
+                // IOException or a RuntimeException.
+                throw ex.getTargetException();
             }
-
-            return response.obj;
         }
         return method.invoke(proxy, args);
     }
