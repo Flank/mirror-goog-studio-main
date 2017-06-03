@@ -24,6 +24,7 @@ import com.android.ddmlib.Log.LogLevel;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.google.common.io.Closeables;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -79,6 +80,7 @@ public final class AndroidDebugBridge {
     private static boolean sInitialized = false;
     private static boolean sClientSupport;
     private static boolean sUseLibusb;
+    private static Map<String, String> sEnv; // env vars to set while launching adb
 
     /** Full path to adb. */
     private String mAdbOsLocation = null;
@@ -210,16 +212,18 @@ public final class AndroidDebugBridge {
      * @see DdmPreferences
      */
     public static synchronized void init(boolean clientSupport) {
-        init(clientSupport, false);
+        init(clientSupport, false, ImmutableMap.of());
     }
 
-    public static synchronized void init(boolean clientSupport, boolean useLibusb) {
+    public static synchronized void init(
+            boolean clientSupport, boolean useLibusb, @NonNull Map<String, String> env) {
         if (sInitialized) {
             throw new IllegalStateException("AndroidDebugBridge.init() has already been called.");
         }
         sInitialized = true;
         sClientSupport = clientSupport;
         sUseLibusb = useLibusb;
+        sEnv = env;
 
         // Determine port and instantiate socket address.
         initAdbSocketAddr();
@@ -876,6 +880,7 @@ public final class AndroidDebugBridge {
             ProcessBuilder processBuilder = new ProcessBuilder(command);
             Map<String, String> env = processBuilder.environment();
             env.put("ADB_LIBUSB", sUseLibusb ? "1" : "0");
+            sEnv.forEach(env::put);
             if (DdmPreferences.getUseAdbHost()) {
                 String adbHostValue = DdmPreferences.getAdbHostValue();
                 if (adbHostValue != null && !adbHostValue.isEmpty()) {
