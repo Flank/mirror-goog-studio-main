@@ -52,8 +52,8 @@ service MemoryService {
       returns (LegacyAllocationEventsResponse) {}
   // Pre-O only: Returns class names and callstacks info associated with the
   // ids provided in the request.
-  rpc ListLegacyAllocationContexts(LegacyAllocationContextsRequest)
-      returns (LegacyAllocationContextsResponse) {}
+  rpc GetLegacyAllocationContexts(LegacyAllocationContextsRequest)
+      returns (AllocationContextsResponse) {}
   // Pre-O only: Used by Studio only for exporting legacy tracking data.
   rpc GetLegacyAllocationDump(DumpDataRequest) returns (DumpDataResponse) {}
 
@@ -66,8 +66,8 @@ service MemoryService {
 
   // O+ studio-side only: Grabs the allocation classes and callstack info for
   // GetAllocations results.
-  rpc GetAllocationContexts(AllocationSnapshotRequest)
-      returns (BatchAllocationSample) {}
+  rpc GetAllocationContexts(AllocationContextsRequest)
+      returns (AllocationContextsResponse) {}
 
   rpc ForceGarbageCollection(ForceGarbageCollectionRequest)
       returns (ForceGarbageCollectionResponse) {}
@@ -277,44 +277,53 @@ message LegacyAllocationEventsResponse {
 }
 
 message LegacyAllocationEvent {
-  // tracking_start_time associates an event with a
-  // particular tracking session.
+  // capture_time associates with a particular tracking session.
   // TODO: include endTime for de-allocation tracking
-  int64 tracking_start_time = 1;
+  int64 capture_time = 1;
   int64 timestamp = 2;
   int32 size = 3;
-  int32 threadId = 4;
-  int32 allocatedClassId = 5;
-  bytes allocationStackId = 6;
+  int32 thread_id = 4;
+  int64 class_id = 5;
+  int32 stack_id = 6;
 }
 
 message LegacyAllocationContextsRequest {
   int32 process_id = 1;
   Session session = 2;
-  repeated int32 classIds = 3;
-  repeated bytes stackIds = 4;
+  repeated int64 class_ids = 3;
+  repeated int32 stack_ids = 4;
 }
 
-message LegacyAllocationContextsResponse {
-  repeated AllocatedClass allocated_classes = 1;
-  repeated AllocationStack allocation_stacks = 2;
+message AllocationContextsRequest {
+  int32 process_id = 1;
+  Session session = 2;
+  int64 start_time = 3;
+  int64 end_time = 4;
+}
+
+message AllocationContextsResponse {
+  // O+ only. Records the timestamp of the latest class/stack
+  // entry returned by the response.
+  int64 timestamp = 1;
+  repeated AllocatedClass allocated_classes = 2;
+  repeated AllocationStack allocation_stacks = 3;
 }
 
 message AllocatedClass {
-  int32 classId = 1;
-  string className = 2;
+  int64 class_id = 1;
+  string class_name = 2;
 }
 
 message AllocationStack {
   message StackFrame {
-    string className = 1;
-    string methodName = 2;
-    string fileName = 3;
-    int32 lineNumber = 4;
+    string class_name = 1;
+    string method_name = 2;
+    string file_name = 3;
+    int32 line_number = 4;
   }
 
-  bytes stackId = 1;
-  repeated StackFrame stackFrames = 2;
+  int32 stack_id = 1;
+  repeated StackFrame stack_frames = 2;
 }
 
 message AllocationSnapshotRequest {
@@ -381,6 +390,7 @@ message AllocationEvent {
   // Note that a Klass event is expected to precede
   // any Allocation which references its class via
   // the class_tag field.
+  // TODO: switched to AllocatedClass
   message Klass {
     int64 tag = 1;
     string name = 2;
