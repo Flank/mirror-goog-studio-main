@@ -93,6 +93,41 @@ public class DependencyExtensionTest {
                     "lollipopDemoImplementation",
                     "lollipopDemoDebugImplementation");
 
+    private static final ListMultimap<String, String> testCompileToRaw =
+            mapWithSingleKey(
+                    "lollipopDemoDebugUnitTestCompileClasspath",
+                    "compile",
+                    "testCompile",
+                    "testImplementation",
+                    "implementation",
+                    "lollipopImplementation",
+                    "testLollipopImplementation",
+                    "debugImplementation",
+                    "testDebugImplementation",
+                    "demoImplementation",
+                    "testDemoImplementation",
+                    "lollipopDemoImplementation",
+                    "testLollipopDemoImplementation",
+                    "lollipopDemoDebugImplementation",
+                    "testLollipopDemoDebugImplementation");
+    private static final ListMultimap<String, String> testRuntimeToRaw =
+            mapWithSingleKey(
+                    "lollipopDemoDebugUnitTestRuntimeClasspath",
+                    "compile",
+                    "testCompile",
+                    "testImplementation",
+                    "implementation",
+                    "lollipopImplementation",
+                    "testLollipopImplementation",
+                    "debugImplementation",
+                    "testDebugImplementation",
+                    "demoImplementation",
+                    "testDemoImplementation",
+                    "lollipopDemoImplementation",
+                    "testLollipopDemoImplementation",
+                    "lollipopDemoDebugImplementation",
+                    "testLollipopDemoDebugImplementation");
+
     // forbidden relationship
     private static final ListMultimap<String, String> forbiddenVariantToRaw =
             mapOf(
@@ -147,6 +182,8 @@ public class DependencyExtensionTest {
         checkValidExtensions(compileToRaw, actual);
         checkValidExtensions(runtimeToRaw, actual);
         checkValidExtensions(testToProd, actual);
+        checkValidExtensions(testCompileToRaw, actual);
+        checkValidExtensions(testRuntimeToRaw, actual);
 
         checkInvalidExtensions(forbiddenVariantToRaw, actual);
         checkInvalidExtensions(forbiddenTestToProd, actual);
@@ -161,6 +198,8 @@ public class DependencyExtensionTest {
         checkValidExtensions(compileToRaw, actual);
         checkValidExtensions(runtimeToRaw, actual);
         checkValidExtensions(testToProd, actual);
+        checkValidExtensions(testCompileToRaw, actual);
+        checkValidExtensions(testRuntimeToRaw, actual);
 
         checkInvalidExtensions(forbiddenVariantToRaw, actual);
         checkInvalidExtensions(forbiddenTestToProd, actual);

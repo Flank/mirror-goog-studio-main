@@ -33,11 +33,8 @@ import com.android.build.gradle.internal.api.VariantFilter;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dependency.AarTransform;
 import com.android.build.gradle.internal.dependency.AndroidTypeAttr;
-import com.android.build.gradle.internal.dependency.BuildTypeAttr;
 import com.android.build.gradle.internal.dependency.ExtractAarTransform;
 import com.android.build.gradle.internal.dependency.JarTransform;
-import com.android.build.gradle.internal.dependency.ProductFlavorAttr;
-import com.android.build.gradle.internal.dependency.VariantAttr;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
@@ -54,7 +51,6 @@ import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.TestVariantFactory;
 import com.android.build.gradle.internal.variant.TestedVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.SigningOptions;
 import com.android.build.gradle.options.StringOption;
@@ -81,7 +77,6 @@ import com.google.wireless.android.sdk.stats.GradleBuildVariant;
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -92,14 +87,12 @@ import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
-import org.gradle.api.attributes.Attribute;
 import org.gradle.api.attributes.AttributeCompatibilityRule;
 import org.gradle.api.attributes.AttributeDisambiguationRule;
 import org.gradle.api.attributes.AttributeMatchingStrategy;
 import org.gradle.api.attributes.AttributesSchema;
 import org.gradle.api.attributes.CompatibilityCheckDetails;
 import org.gradle.api.attributes.MultipleCandidatesDetails;
-import org.gradle.api.attributes.Usage;
 import org.gradle.api.file.ConfigurableFileCollection;
 
 /**
@@ -419,11 +412,12 @@ public class VariantManager implements VariantModel {
     /** Create tasks for the specified variant. */
     public void createTasksForVariantData(
             final TaskFactory tasks, final VariantScope variantScope) {
-        BaseVariantData variantData = variantScope.getVariantData();
-        VariantType variantType = variantData.getType();
+        final BaseVariantData variantData = variantScope.getVariantData();
+        final VariantType variantType = variantData.getType();
 
-        final BuildTypeData buildTypeData =
-                buildTypes.get(variantScope.getVariantConfiguration().getBuildType().getName());
+        final GradleVariantConfiguration variantConfig = variantScope.getVariantConfiguration();
+
+        final BuildTypeData buildTypeData = buildTypes.get(variantConfig.getBuildType().getName());
         if (buildTypeData.getAssembleTask() == null) {
             buildTypeData.setAssembleTask(taskManager.createAssembleTask(tasks, buildTypeData));
         }
@@ -439,28 +433,47 @@ public class VariantManager implements VariantModel {
 
         createAssembleTaskForVariantData(tasks, variantData);
         if (variantType.isForTesting()) {
-            final GradleVariantConfiguration testVariantConfig =
-                    variantScope.getVariantConfiguration();
             final BaseVariantData testedVariantData =
                     (BaseVariantData) ((TestVariantData) variantData).getTestedVariantData();
             final VariantType testedVariantType = testedVariantData.getVariantConfiguration().getType();
 
             // Add the container of dependencies, the order of the libraries is important.
             // In descending order: build type (only for unit test), flavors, defaultConfig.
-            List<DefaultAndroidSourceSet> testVariantSourceSets = Lists.newArrayListWithExpectedSize(
-                    2 + testVariantConfig.getProductFlavors().size());
 
+            // Add the container of dependencies.
+            // The order of the libraries is important, in descending order:
+            // variant-specific, build type (, multi-flavor, flavor1, flavor2, ..., defaultConfig.
+            // variant-specific if the full combo of flavors+build type. Does not exist if no flavors.
+            // multi-flavor is the combination of all flavor dimensions. Does not exist if <2 dimension.
+            List<CoreProductFlavor> testProductFlavors = variantConfig.getProductFlavors();
+            List<DefaultAndroidSourceSet> testVariantSourceSets =
+                    Lists.newArrayListWithExpectedSize(4 + testProductFlavors.size());
+
+            // 1. add the variant-specific if applicable.
+            if (!testProductFlavors.isEmpty()) {
+                testVariantSourceSets.add(
+                        (DefaultAndroidSourceSet) variantConfig.getVariantSourceProvider());
+            }
+
+            // 2. the build type.
             DefaultAndroidSourceSet buildTypeConfigurationProvider =
-                    buildTypes.get(testVariantConfig.getBuildType().getName())
-                            .getTestSourceSet(variantType);
+                    buildTypeData.getTestSourceSet(variantType);
             if (buildTypeConfigurationProvider != null) {
                 testVariantSourceSets.add(buildTypeConfigurationProvider);
             }
 
-            for (CoreProductFlavor productFlavor : testVariantConfig.getProductFlavors()) {
-                ProductFlavorData<CoreProductFlavor> data =
-                        productFlavors.get(productFlavor.getName());
-                testVariantSourceSets.add(data.getTestSourceSet(variantType));
+            // 3. the multi-flavor combination
+            if (testProductFlavors.size() > 1) {
+                testVariantSourceSets.add(
+                        (DefaultAndroidSourceSet) variantConfig.getMultiFlavorSourceProvider());
+            }
+
+            // 4. the flavors.
+            for (ProductFlavor productFlavor : testProductFlavors) {
+                testVariantSourceSets.add(
+                        this.productFlavors
+                                .get(productFlavor.getName())
+                                .getTestSourceSet(variantType));
             }
 
             // now add the default config
@@ -471,7 +484,7 @@ public class VariantManager implements VariantModel {
             // VariantDependencies is computed here instead of when the VariantData was created.
             VariantDependencies.Builder builder =
                     VariantDependencies.builder(
-                                    project, androidBuilder.getErrorReporter(), testVariantConfig)
+                                    project, androidBuilder.getErrorReporter(), variantConfig)
                             .setConsumeType(
                                     getConsumeType(
                                             testedVariantData.getVariantConfiguration().getType()))
@@ -485,8 +498,7 @@ public class VariantManager implements VariantModel {
             final VariantDependencies variantDep = builder.build();
             variantData.setVariantDependency(variantDep);
 
-            if (variantType == VariantType.ANDROID_TEST &&
-                    testVariantConfig.isLegacyMultiDexMode()) {
+            if (variantType == VariantType.ANDROID_TEST && variantConfig.isLegacyMultiDexMode()) {
                 project.getDependencies().add(
                         variantDep.getCompileClasspath().getName(), COM_ANDROID_SUPPORT_MULTIDEX_INSTRUMENTATION);
                 project.getDependencies().add(
