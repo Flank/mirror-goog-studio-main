@@ -1,27 +1,16 @@
 apply plugin: 'java'
 
-group = 'com.android.tools.external.com-intellij'
+group = 'com.android.tools.external.org-jetbrains'
 archivesBaseName = 'uast'
-version = '171.4249.33'
-
-dependencies {
-    compile 'org.jetbrains.trove4j:trove4j:20160824'
-}
+version = rootProject.ext.baseVersion
 
 jar {
-    // IntelliJ core
-    from zipTree("../../../../../prebuilts/tools/common/intellij-core/171.4249.32/intellij-core.jar")
-    from zipTree("../../../../../prebuilts/tools/common/intellij-core/171.4249.32/picocontainer.jar")
-    from zipTree("../../../../../prebuilts/tools/common/intellij-core/171.4249.32/annotations.jar")
-    from zipTree("../../../../../prebuilts/tools/common/intellij-core/171.4249.32/asm-all.jar")
-
-    // UAST
     from zipTree("../../../../../prebuilts/tools/common/uast/1.0/uast-common-1.0.jar")
     from zipTree("../../../../../prebuilts/tools/common/uast/1.0/uast-java-1.0.jar")
 }
 
-project.ext.pomName = 'IntelliJ IDEA Core and AST APIs'
-project.ext.pomDesc = 'IntelliJ IDEA Core and AST APIs'
+project.ext.pomName = 'Unified AST'
+project.ext.pomDesc = 'Unified AST'
 
 apply from: "$rootDir/buildSrc/base/publish.gradle"
 apply from: "$rootDir/buildSrc/base/bintray.gradle"
