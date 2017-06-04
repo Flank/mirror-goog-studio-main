@@ -283,7 +283,7 @@ public class LeakDetector extends Detector implements Detector.UastScanner {
                 if (methodBody == null) {
                     continue;
                 }
-                Ref<Boolean> assignedToAppContext = new Ref<>();
+                Ref<Boolean> assignedToAppContext = new Ref<>(false);
 
                 methodBody.accept(new AbstractUastVisitor() {
                     @Override

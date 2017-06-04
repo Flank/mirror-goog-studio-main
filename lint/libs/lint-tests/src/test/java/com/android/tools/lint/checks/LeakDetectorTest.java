@@ -257,6 +257,35 @@ public class LeakDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testNoAssignAppContext() {
+        // Regression test for 62318813; prior to this fix this code would trigger
+        // an NPE in lint
+
+        //noinspection all // Sample code
+        lint().files(
+                java(""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "import android.content.Context;\n"
+                        + "\n"
+                        + "public class StaticFieldTest {\n"
+                        + "    public static Context context;\n"
+                        + "\n"
+                        + "    public StaticFieldTest(Context c) {\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    public StaticFieldTest() {\n"
+                        + "        context = null;\n"
+                        + "    }\n"
+                        + "}\n"))
+                .run()
+                .expect(""
+                        + "src/test/pkg/StaticFieldTest.java:6: Warning: Do not place Android context classes in static fields; this is a memory leak (and also breaks Instant Run) [StaticFieldLeak]\n"
+                        + "    public static Context context;\n"
+                        + "           ~~~~~~\n"
+                        + "0 errors, 1 warnings\n");
+    }
+
     public void testLifeCycle() {
         //noinspection all // Sample code
         lint().files(
