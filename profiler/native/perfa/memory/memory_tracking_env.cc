@@ -59,8 +59,9 @@ constexpr int kObjectCountTag = -1;
 
 namespace profiler {
 
+using proto::AllocationStack;
 using proto::BatchAllocationSample;
-using proto::EncodedStack;
+using proto::EncodedAllocationStack;
 
 // STL container memory tracking for Debug only.
 std::atomic<int64_t> g_max_used[kMemTagCount];
@@ -223,7 +224,7 @@ void MemoryTrackingEnv::StartLiveTracking(int64_t timestamp) {
     // be done by the caller as class tags remain unique throughout the app.
     // TODO: Only send back new classes since the last tracking session.
     BatchAllocationSample class_sample;
-    for (const AllocationEvent::Klass& klass : class_data_) {
+    for (const AllocatedClass& klass : class_data_) {
       AllocationEvent* event = class_sample.add_events();
       event->mutable_class_data()->CopyFrom(klass);
       event->set_capture_time(current_capture_time_ns_);
@@ -282,20 +283,20 @@ void MemoryTrackingEnv::RegisterNewClass(JNIEnv* jni, jclass klass) {
   Deallocate(jvmti_, sig_mutf8);
 
   long tag = 0;
-  AllocationEvent::Klass klass_data;
+  AllocatedClass klass_data;
   auto itr = class_tag_map_.find(klass_name);
   if (itr != class_tag_map_.end()) {
     // We have a class from multiple class loaders.
     // TODO treat them as separate classes.
     // For now, let them share the same tag.
     tag = itr->second;
-    klass_data.set_tag(tag);
-    klass_data.set_name(klass_name);
+    klass_data.set_class_id(tag);
+    klass_data.set_class_name(klass_name);
 
   } else {
     tag = GetNextClassTag();
-    klass_data.set_tag(tag);
-    klass_data.set_name(klass_name);
+    klass_data.set_class_id(tag);
+    klass_data.set_class_name(klass_name);
     class_tag_map_.emplace(std::make_pair(klass_name, tag));
     class_data_.push_back(klass_data);
     assert(class_data_.size() == tag);
@@ -367,7 +368,7 @@ jint MemoryTrackingEnv::HeapIterationCallback(jlong class_tag, jlong size,
 
   // Class tag starts at 1, thus the offset in its vector position.
   const auto class_data = g_env->class_data_[class_tag - 1];
-  if (class_data.name().compare(kClassClass) == 0) {
+  if (class_data.class_name().compare(kClassClass) == 0) {
     // Skip Class objects as they should already be tagged.
     // TODO account for their sizes in Ljava/lang/Class;
     // Alternatively, perform the bookkeeping on Studio side.
@@ -517,22 +518,24 @@ void MemoryTrackingEnv::AllocDataWorker(jvmtiEnv* jvmti, JNIEnv* jni,
               AllocationEvent::Allocation* alloc_data =
                   event->mutable_alloc_data();
               int stack_size = alloc_data->method_ids_size();
-              std::vector<long> reversed_stack(stack_size);
-              for (int i = 0; i < stack_size; i++) {
-                long id = alloc_data->method_ids(i);
-                reversed_stack[stack_size - i - 1] = id;
-                if (env->known_method_ids_.emplace(id).second) {
-                  method_ids_to_query.push_back(id);
-                }
-              }
 
               // Store and encode the stack into trie.
               // TODO - consider moving trie storage to perfd?
               if (stack_size > 0) {
+                std::vector<long> reversed_stack(stack_size);
+                for (int i = 0; i < stack_size; i++) {
+                  long id = alloc_data->method_ids(i);
+                  reversed_stack[stack_size - i - 1] = id;
+                  if (env->known_method_ids_.emplace(id).second) {
+                    method_ids_to_query.push_back(id);
+                  }
+                }
+
                 auto result = env->stack_trie_.insert(reversed_stack);
                 if (result.second) {
                   // Append the stack info into BatchAllocationSample
-                  EncodedStack* encoded_stack = sample.add_stacks();
+                  EncodedAllocationStack* encoded_stack = sample.add_stacks();
+                  encoded_stack->set_timestamp(event->timestamp());
                   encoded_stack->set_stack_id(result.first);
                   for (int j = stack_size - 1; j >= 0; j--) {
                     // Yet reverse again so first entry is top of stack.
@@ -609,7 +612,7 @@ void MemoryTrackingEnv::SetSampleMethods(MemoryTrackingEnv* env,
         error =
             jvmti->GetClassSignature(scoped_klass.get(), &klass_name, nullptr);
 
-        proto::StackMethod* method = sample.add_methods();
+        AllocationStack::StackFrame* method = sample.add_methods();
         method->set_method_id(id);
         method->set_method_name(method_name);
         method->set_class_name(klass_name);
