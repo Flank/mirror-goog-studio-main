@@ -645,11 +645,7 @@ class AvdManagerCli extends CommandLineParser {
             mSdkLog.warning(e.getMessage());
             androidFolder = null;
         }
-        return DeviceManager.createInstance(
-                new File(mOsSdkFolder),
-                androidFolder,
-                mSdkLog,
-                mSdkHandler.getFileOp());
+        return DeviceManager.createInstance(mSdkHandler, mSdkLog);
     }
 
     private String getValidImagePaths() {

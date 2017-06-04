@@ -19,8 +19,8 @@ package com.android.sdklib.devices;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.repository.impl.meta.TypeDetails;
-import com.android.repository.io.FileOpUtils;
 import com.android.repository.testframework.FakePackage;
+import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.resources.Keyboard;
 import com.android.resources.Navigation;
 import com.android.sdklib.TempSdkManager;
@@ -31,12 +31,12 @@ import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.IdDisplay;
 import com.android.sdklib.repository.meta.DetailsTypes;
 import com.android.sdklib.repository.targets.SystemImage;
-import com.android.testutils.MockLog;
 import java.io.File;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.stream.Collectors;
+import com.android.testutils.NoErrorsOrWarningsLogger;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -51,7 +51,7 @@ public class DeviceManagerTest {
 
     private DeviceManager dm;
 
-    private MockLog log;
+    private NoErrorsOrWarningsLogger log;
 
     @Before
     public void setUp() {
@@ -59,13 +59,11 @@ public class DeviceManagerTest {
     }
 
     private DeviceManager createDeviceManager() {
-        log = sdkManager.getLog();
+        log = new NoErrorsOrWarningsLogger();
         AndroidSdkHandler sdkHandler = sdkManager.getSdkHandler();
         return DeviceManager.createInstance(
-                sdkHandler.getLocation(),
-                sdkHandler.getAndroidFolder(),
-                log,
-                FileOpUtils.create());
+                sdkHandler,
+                log);
     }
 
     /**
@@ -79,11 +77,9 @@ public class DeviceManagerTest {
     public final void testGetDevices_Default() {
         // no user devices defined in the test's custom .android home folder
         assertThat(dm.getDevices(DeviceFilter.USER)).isEmpty();
-        assertThat(log.getMessages()).isEmpty();
 
         // no system-images devices defined in the SDK by default
         assertThat(dm.getDevices(DeviceFilter.SYSTEM_IMAGES)).isEmpty();
-        assertThat(log.getMessages()).isEmpty();
 
         // this list comes from devices.xml bundled in the JAR
         // cf /sdklib/src/main/java/com/android/sdklib/devices/devices.xml
@@ -93,7 +89,6 @@ public class DeviceManagerTest {
                 "3.7\" FWVGA slider", "3.7\" WVGA (Nexus One)", "4\" WVGA (Nexus S)",
                 "4.65\" 720p (Galaxy Nexus)", "4.7\" WXGA", "5.1\" WVGA", "5.4\" FWVGA",
                 "7\" WSVGA (Tablet)");
-        assertThat(log.getMessages()).isEmpty();
 
         assertThat(dm.getDevice("2.7in QVGA", "Generic").getDisplayName()).isEqualTo("2.7\" QVGA");
 
@@ -105,7 +100,6 @@ public class DeviceManagerTest {
                 "Nexus 4", "Nexus 5", "Nexus 5X", "Nexus 6", "Nexus 6P", "Nexus 7",
                 "Nexus 7 (2012)", "Nexus 9", "Nexus One", "Nexus S", "Pixel C",
                 "Pixel", "Pixel XL");
-        assertThat(log.getMessages()).isEmpty();
 
         assertThat(dm.getDevice("Nexus One", "Google").getDisplayName()).isEqualTo("Nexus One");
 
@@ -119,7 +113,6 @@ public class DeviceManagerTest {
                 "Galaxy Nexus", "Nexus 10", "Nexus 4", "Nexus 5", "Nexus 5X", "Nexus 6", "Nexus 6P",
                 "Nexus 7", "Nexus 7 (2012)", "Nexus 9", "Nexus One", "Nexus S", "Pixel C",
                 "Pixel", "Pixel XL");
-        assertThat(log.getMessages()).isEmpty();
     }
 
     @Test
@@ -127,12 +120,9 @@ public class DeviceManagerTest {
         // get a definition from the bundled devices.xml file
         Device d1 = dm.getDevice("7in WSVGA (Tablet)", "Generic");
         assertThat(d1.getDisplayName()).isEqualTo("7\" WSVGA (Tablet)");
-        assertThat(log.getMessages()).isEmpty();
-
         // get a definition from the bundled nexus.xml file
         Device d2 = dm.getDevice("Nexus One", "Google");
         assertThat(d2.getDisplayName()).isEqualTo("Nexus One");
-        assertThat(log.getMessages()).isEmpty();
     }
 
     @Test
@@ -152,7 +142,6 @@ public class DeviceManagerTest {
 
         assertThat(dm.getDevice("MyCustomTablet", "OEM").getDisplayName())
                 .isEqualTo("My Custom Tablet");
-        assertThat(log.getMessages()).isEmpty();
 
         // create a new device manager, forcing it reload all files
         dm = null;
@@ -160,16 +149,13 @@ public class DeviceManagerTest {
 
         assertThat(dm2.getDevice("MyCustomTablet", "OEM").getDisplayName())
                 .isEqualTo("My Custom Tablet");
-        assertThat(log.getMessages()).isEmpty();
 
         // 1 user device defined in the test's custom .android home folder
         assertThat(listDisplayNames(dm2.getDevices(DeviceFilter.USER)))
                 .containsExactly("My Custom Tablet");
-        assertThat(log.getMessages()).isEmpty();
 
         // no system-images devices defined in the SDK by default
         assertThat(dm2.getDevices(DeviceFilter.SYSTEM_IMAGES)).isEmpty();
-        assertThat(log.getMessages()).isEmpty();
 
         // this list comes from devices.xml bundled in the JAR
         // cf /sdklib/src/main/java/com/android/sdklib/devices/devices.xml
@@ -179,7 +165,6 @@ public class DeviceManagerTest {
                 "3.7\" FWVGA slider", "3.7\" WVGA (Nexus One)", "4\" WVGA (Nexus S)",
                 "4.65\" 720p (Galaxy Nexus)", "4.7\" WXGA", "5.1\" WVGA", "5.4\" FWVGA",
                 "7\" WSVGA (Tablet)");
-        assertThat(log.getMessages()).isEmpty();
 
         // this list comes from the nexus.xml bundled in the JAR
         // cf /sdklib/src/main/java/com/android/sdklib/devices/nexus.xml
@@ -189,7 +174,6 @@ public class DeviceManagerTest {
                 "Nexus 4", "Nexus 5", "Nexus 5X", "Nexus 6", "Nexus 6P", "Nexus 7",
                 "Nexus 7 (2012)", "Nexus 9", "Nexus One", "Nexus S", "Pixel C",
                 "Pixel", "Pixel XL");
-        assertThat(log.getMessages()).isEmpty();
 
         assertThat(listDisplayNames(dm2.getDevices(DeviceManager.ALL_DEVICES))).containsExactly(
                 "10.1\" WXGA (Tablet)", "2.7\" QVGA", "2.7\" QVGA slider",
@@ -201,26 +185,37 @@ public class DeviceManagerTest {
                 "Galaxy Nexus", "My Custom Tablet", "Nexus 10", "Nexus 4", "Nexus 5", "Nexus 5X",
                 "Nexus 6", "Nexus 6P", "Nexus 7", "Nexus 7 (2012)", "Nexus 9", "Nexus One",
                 "Nexus S", "Pixel C", "Pixel", "Pixel XL");
-
-        assertThat(log.getMessages()).isEmpty();
     }
 
     @Test
     public final void testGetDevices_SysImgDevice() throws Exception {
-        // this adds a devices.xml with one device
-        sdkManager.makeSystemImageFolder("tag-1", "x86");
+
+        File location = sdkManager.getSdkHandler().getLocation();
+        FakePackage.FakeLocalPackage p = new FakePackage.FakeLocalPackage("dummy");
+
+        // Create a system image directory with one device
+        DetailsTypes.AddonDetailsType details = AndroidSdkHandler.getAddonModule()
+                .createLatestFactory().createAddonDetailsType();
+        details.setApiLevel(22);
+        details.setVendor(SystemImage.DEFAULT_TAG);
+        p.setTypeDetails((TypeDetails) details);
+        SystemImage imageWithDevice = new SystemImage(
+                new File(location, "system-images/android-22/tag-1/x86"),
+                IdDisplay.create("tag-1", "tag-1"),
+                IdDisplay.create("OEM", "Tag 1 OEM"),
+                "x86", new File[]{}, p);
+
+        sdkManager.makeSystemImageFolder(imageWithDevice, "tag-1");
 
         // no user devices defined in the test's custom .android home folder
         assertThat(dm.getDevices(DeviceFilter.USER)).isEmpty();
-        assertThat(log.getMessages()).isEmpty();
 
         // find the system-images specific device added by makeSystemImageFolder above
         // using both the getDevices() API and the device-specific getDevice() API.
         assertThat(listDisplayNames(dm.getDevices(DeviceFilter.SYSTEM_IMAGES)))
                 .containsExactly("Mock Tag 1 Device Name");
-        assertThat(log.getMessages()).isEmpty();
 
-        assertThat(dm.getDevice("MockDevice-tag-1", "Mock Tag 1 OEM").getDisplayName())
+        assertThat(dm.getDevice("tag-1", "OEM").getDisplayName())
                 .isEqualTo("Mock Tag 1 Device Name");
 
         // this list comes from devices.xml bundled in the JAR
@@ -231,7 +226,6 @@ public class DeviceManagerTest {
                 "3.7\" FWVGA slider", "3.7\" WVGA (Nexus One)", "4\" WVGA (Nexus S)",
                 "4.65\" 720p (Galaxy Nexus)", "4.7\" WXGA", "5.1\" WVGA", "5.4\" FWVGA",
                 "7\" WSVGA (Tablet)");
-        assertThat(log.getMessages()).isEmpty();
 
         // this list comes from the nexus.xml bundled in the JAR
         // cf /sdklib/src/main/java/com/android/sdklib/devices/nexus.xml
@@ -241,7 +235,6 @@ public class DeviceManagerTest {
                 "Nexus 4", "Nexus 5", "Nexus 5X", "Nexus 6", "Nexus 6P", "Nexus 7",
                 "Nexus 7 (2012)", "Nexus 9", "Nexus One", "Nexus S", "Pixel C",
                 "Pixel", "Pixel XL");
-        assertThat(log.getMessages()).isEmpty();
 
         assertThat(listDisplayNames(dm.getDevices(DeviceManager.ALL_DEVICES))).containsExactly(
                 "10.1\" WXGA (Tablet)", "2.7\" QVGA", "2.7\" QVGA slider",
@@ -253,7 +246,6 @@ public class DeviceManagerTest {
                 "Galaxy Nexus", "Mock Tag 1 Device Name", "Nexus 10", "Nexus 4", "Nexus 5",
                 "Nexus 5X", "Nexus 6", "Nexus 6P", "Nexus 7", "Nexus 7 (2012)", "Nexus 9",
                 "Nexus One", "Nexus S", "Pixel C", "Pixel", "Pixel XL");
-        assertThat(log.getMessages()).isEmpty();
     }
 
     @Test
@@ -325,40 +317,65 @@ public class DeviceManagerTest {
     public final void testDeviceOverrides() throws Exception {
         File location = sdkManager.getSdkHandler().getLocation();
         FakePackage.FakeLocalPackage p = new FakePackage.FakeLocalPackage("dummy");
-        DetailsTypes.AddonDetailsType details = AndroidSdkHandler.getAddonModule()
+
+        // Create a local DeviceManager, get the number of devices, and verify one device
+        DeviceManager localDeviceManager = createDeviceManager();
+        int count = localDeviceManager.getDevices(EnumSet.allOf(DeviceFilter.class)).size();
+        Device localDevice = localDeviceManager.getDevice("wear_round", "Google");
+        assertThat(localDevice.getDisplayName()).isEqualTo("Android Wear Round");
+
+        // Create two system image directories with different definitions of the
+        // device that we just checked. The version in android-25 should override
+        // the other two versions.
+        DetailsTypes.AddonDetailsType details22 = AndroidSdkHandler.getAddonModule()
                 .createLatestFactory().createAddonDetailsType();
-        details.setApiLevel(22);
-        details.setVendor(SystemImage.DEFAULT_TAG);
-        p.setTypeDetails((TypeDetails) details);
-        SystemImage imageWithDevice = new SystemImage(
+        details22.setApiLevel(22);
+        details22.setVendor(SystemImage.DEFAULT_TAG);
+        p.setTypeDetails((TypeDetails) details22);
+        SystemImage imageWithDevice22 = new SystemImage(
                 new File(location, "system-images/android-22/android-wear/x86"),
                 IdDisplay.create("android-wear", "android-wear"),
-                IdDisplay.create("Google", "Google1"),
+                IdDisplay.create("Google", "Google"),
                 "x86", new File[]{}, p);
-        DeviceManager manager = createDeviceManager();
-        int count = manager.getDevices(EnumSet.allOf(DeviceFilter.class)).size();
-        Device d = manager.getDevice("wear_round", "Google");
-        assertThat(d.getDisplayName()).isEqualTo("Android Wear Round");
+        sdkManager.makeSystemImageFolder(imageWithDevice22, "wear_round");
 
-        sdkManager.makeSystemImageFolder(imageWithDevice, "wear_round");
-        manager = createDeviceManager();
+        DetailsTypes.AddonDetailsType details25 = AndroidSdkHandler.getAddonModule()
+          .createLatestFactory().createAddonDetailsType();
+        details25.setApiLevel(25);
+        details25.setVendor(SystemImage.DEFAULT_TAG);
+        p.setTypeDetails((TypeDetails) details25);
+        SystemImage imageWithDevice25 = new SystemImage(
+                new File(location, "system-images/android-25/android-wear/x86"),
+                IdDisplay.create("android-wear", "android-wear"),
+                IdDisplay.create("Google", "Google"),
+                "arm", new File[]{}, p);
+        sdkManager.makeSystemImageFolder(imageWithDevice25, "wear_round");
 
-        d = manager.getDevice("wear_round", "Google");
-        assertThat(d.getDisplayName()).isEqualTo("Mock Android wear Device Name");
+        // Re-create the local DeviceManager using the new directory,
+        // fetch the device, and verify that it is the right one.
+        FakeProgressIndicator progress = new FakeProgressIndicator();
+        sdkManager.getSdkHandler().getSdkManager(progress).markLocalCacheInvalid();
+        localDeviceManager = createDeviceManager();
 
-        Device d1 = dm.getDevice("wear_round", "Google");
+        localDevice = localDeviceManager.getDevice("wear_round", "Google");
+        // (The "Android wear" part comes from the tag "android-wear")
+        assertThat(localDevice.getDisplayName()).isEqualTo("Mock Android wear Device Name");
+        assertThat(localDevice.getDefaultState().getHardware().getCpu()).isEqualTo("arm");
 
-        Builder b = new Device.Builder(d1);
+        // Change the name of that device and add it to our local DeviceManager again
+        Device dmDevice = dm.getDevice("wear_round", "Google");
+        Builder b = new Device.Builder(dmDevice);
         b.setName("Custom");
+        localDeviceManager.addUserDevice(b.build());
+        localDeviceManager.saveUserDevices();
 
-        Device d2 = b.build();
+        // Fetch the device from our local DeviceManager and verify
+        // that it has the updated name
+        localDevice = localDeviceManager.getDevice("wear_round", "Google");
+        assertThat(localDevice.getDisplayName()).isEqualTo("Custom");
 
-        manager.addUserDevice(d2);
-        manager.saveUserDevices();
-
-        d = manager.getDevice("wear_round", "Google");
-        assertThat(d.getDisplayName()).isEqualTo("Custom");
-        assertThat(manager.getDevices(EnumSet.allOf(DeviceFilter.class)).size()).isEqualTo(count);
+        // Verify that the total number of devices is unchanged
+        assertThat(localDeviceManager.getDevices(EnumSet.allOf(DeviceFilter.class)).size()).isEqualTo(count);
     }
 
     @Test

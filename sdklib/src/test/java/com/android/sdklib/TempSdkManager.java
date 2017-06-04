@@ -67,8 +67,7 @@ import java.util.List;
  */
 public class TempSdkManager extends ExternalResource {
 
-    private static final String TARGET_DIR_NAME_0 = "v0_0";
-
+    private static final String TARGET_DIR_NAME_0 = "android-0";
     private final String mTestName;
 
     private File mFakeSdk;
@@ -186,6 +185,7 @@ public class TempSdkManager extends ExternalResource {
           systemImage.getTag().getId(),
           systemImage.getAbiType(),
           deviceId,
+          systemImage.getAndroidVersion().getApiString(),
           vendor);
     }
 
@@ -210,7 +210,7 @@ public class TempSdkManager extends ExternalResource {
         }
         sysImgDir = new File(sysImgDir, abiType);
 
-        makeFakeSysImgInternal(sysImgDir, tagId, abiType, null, null);
+        makeFakeSysImgInternal(sysImgDir, tagId, abiType, null, null, null);
         return sysImgDir;
     }
 
@@ -274,8 +274,10 @@ public class TempSdkManager extends ExternalResource {
      * Utility to create a fake sys image in the system-images folder.
      *
      * "modern" (as in "not legacy") system-images follow that path pattern:
-     * $SDK/system-images/platform-N/abi/source.properties $SDK/system-images/platform-N/abi/userdata.img
-     * or $SDK/system-images/platform-N/tag/abi/source.properties $SDK/system-images/platform-N/tag/abi/userdata.img
+     * $SDK/system-images/platform-N/abi/source.properties
+     * $SDK/system-images/platform-N/abi/userdata.img
+     * $SDK/system-images/platform-N/tag/abi/source.properties
+     * $SDK/system-images/platform-N/tag/abi/userdata.img
      *
      * The tag id is optional and was only introduced in API 20 / Tools 22.6. The platform-N and the
      * tag folder names are irrelevant as the info from source.properties matters most.
@@ -285,6 +287,7 @@ public class TempSdkManager extends ExternalResource {
             @Nullable String tagId,
             @NonNull String abiType,
             @Nullable String deviceId,
+            @Nullable String apiLevel,
             @Nullable String deviceMfg) throws Exception {
         sysImgDir.mkdirs();
         new File(sysImgDir, "userdata.img").createNewFile();
@@ -298,7 +301,7 @@ public class TempSdkManager extends ExternalResource {
             String tagDisplay = LocalSysImgPkgInfo.tagIdToDisplay(tagId);
             createSourceProps(sysImgDir,
                     PkgProps.PKG_REVISION, "0",
-                    PkgProps.VERSION_API_LEVEL, "0",
+                    PkgProps.VERSION_API_LEVEL, apiLevel,
                     PkgProps.SYS_IMG_TAG_ID, tagId,
                     PkgProps.SYS_IMG_TAG_DISPLAY, tagDisplay,
                     PkgProps.SYS_IMG_ABI, abiType,
@@ -405,7 +408,7 @@ public class TempSdkManager extends ExternalResource {
     }
 
     private static void makeBuildTools(File sdkDir) throws IOException {
-        for (String revision : new String[]{"3.0.0", "3.0.1", "18.3.4 rc5"}) {
+        for (String revision : new String[]{"3.0.0", "3.0.1", "18.3.4-rc5"}) {
             createFakeBuildTools(sdkDir, "ANY", revision);
         }
     }

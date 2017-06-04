@@ -1252,12 +1252,7 @@ public class AvdManager {
     private DeviceManager getDeviceManager(ILogger logger) {
         DeviceManager manager = mDeviceManagers.get(logger);
         if (manager == null) {
-            manager =
-                    DeviceManager.createInstance(
-                            mSdkHandler.getLocation(),
-                            mSdkHandler.getAndroidFolder(),
-                            logger,
-                            mFop);
+            manager = DeviceManager.createInstance(mSdkHandler, logger);
             manager.registerListener(mDeviceManagers::clear);
             mDeviceManagers.put(logger, manager);
         }
