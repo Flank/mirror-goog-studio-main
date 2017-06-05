@@ -350,8 +350,20 @@ public class MergeResources extends IncrementalTask {
                 generatedSets.add(generatedSet);
             }
 
-            // Put all generated sets at the start of the list.
-            processedInputs.addAll(0, generatedSets);
+            // We want to keep the order of the inputs. Given inputs:
+            // (A, B, C, D)
+            // We want to get:
+            // (A-generated, A, B-generated, B, C-generated, C, D-generated, D).
+            // Therefore, when later in {@link DataMerger} we look for sources going through the
+            // list backwards, B-generated will take priority over A (but not B).
+            // A real life use-case would be if an app module generated resource overrode a library
+            // module generated resource (existing not in generated but bundled dir at this stage):
+            // (lib, app debug, app main)
+            // We will get:
+            // (lib generated, lib, app debug generated, app debug, app main generated, app main)
+            for (int i = 0; i < generatedSets.size(); ++i) {
+                processedInputs.add(2 * i, generatedSets.get(i));
+            }
         }
 
         return processedInputs;
