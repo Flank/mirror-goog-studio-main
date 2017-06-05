@@ -289,29 +289,28 @@ public class ManifestMerger2 {
 
         finalMergedDocument.clearNodeNamespaces();
 
-        // process optional features which still need access to XmlDocument layer.
-        if (finalMergedDocument != null) {
-            if (mOptionalFeatures.contains(Invoker.Feature.EXTRACT_FQCNS)) {
-                extractFqcns(finalMergedDocument);
-            }
-            if (!mOptionalFeatures.contains(Invoker.Feature.SKIP_BLAME)) {
-                try {
-                    mergingReportBuilder.setMergedDocument(
-                            MergingReport.MergedManifestKind.BLAME,
-                            mergingReportBuilder.blame(finalMergedDocument));
-                } catch (Exception e) {
-                    mLogger.error(e, "Error while saving blame file, build will continue");
-                }
-            }
+        // extract fully qualified class names before handling other optional features.
+        if (mOptionalFeatures.contains(Invoker.Feature.EXTRACT_FQCNS)) {
+            extractFqcns(finalMergedDocument);
         }
 
+        // handle optional features which don't need access to XmlDocument layer.
+        processOptionalFeatures(finalMergedDocument.getXml(), mergingReportBuilder);
+
+        // call blame after other optional features handled.
+        if (!mOptionalFeatures.contains(Invoker.Feature.SKIP_BLAME)) {
+            try {
+                mergingReportBuilder.setMergedDocument(
+                        MergingReport.MergedManifestKind.BLAME,
+                        mergingReportBuilder.blame(finalMergedDocument));
+            } catch (Exception e) {
+                mLogger.error(e, "Error while saving blame file, build will continue");
+            }
+        }
 
         mergingReportBuilder.setFinalPackageName(finalMergedDocument.getPackageName());
         mergingReportBuilder.setMergedXmlDocument(
                 MergingReport.MergedManifestKind.MERGED, finalMergedDocument);
-
-        // finally optional features handling.
-        processOptionalFeatures(finalMergedDocument.getXml(), mergingReportBuilder);
 
         MergingReport mergingReport = mergingReportBuilder.build();
 
