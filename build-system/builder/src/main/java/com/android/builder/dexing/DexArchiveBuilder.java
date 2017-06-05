@@ -17,121 +17,61 @@
 package com.android.builder.dexing;
 
 import com.android.annotations.NonNull;
-import com.android.dx.command.dexer.DxContext;
-import com.android.ide.common.blame.parser.DexParser;
-import com.android.ide.common.internal.WaitableExecutor;
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Throwables;
 import com.google.common.base.Verify;
-import com.google.common.collect.Maps;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Map;
 
 /**
- * Converts specified class file inputs to a {@link DexArchive}. To do so, configure the builder in
- * a constructor, and invoke {@link #convert(ClassFileInput, DexArchive)} method that will trigger
- * the actual conversion.
+ * An abstract dex archive builder that converts input class files to dex files that are written to
+ * dex archive. This class contains the logic for reading the class files from the input, {@link
+ * ClassFileInput}, and writing the output to a {@link DexArchive}. Implementation of conversion
+ * from the class files to dex files is left to the sub-classes. To trigger the conversion, create
+ * an instance of this class, and invoke {@link #convert(ClassFileInput, DexArchive)}.
  */
-public class DexArchiveBuilder {
+public abstract class DexArchiveBuilder {
 
-    /** Exception thrown if something goes wrong when building a dex archive. */
-    public static class DexBuilderException extends RuntimeException {
-
-        public DexBuilderException(String message, Throwable cause) {
-            super(message, cause);
-        }
-    }
-
-    @NonNull private final DexArchiveBuilderConfig config;
-    @NonNull private final WaitableExecutor executor;
-
-    /**
-     * Creates instance that is configured for processing .class input files, and producing a dex
-     * archive. For configuring it, please take a look at {@link DexArchiveBuilderConfig} which
-     * contains relevant options.
-     *
-     * <p>{@link DxContext} specified in the config will be used for all conversions. We do not use
-     * anything but standard and error output from this object, so by reusing it, we will skip
-     * creating unnecessary objects.
-     *
-     * @param config contains setup for this builder
-     */
-    public DexArchiveBuilder(@NonNull DexArchiveBuilderConfig config) {
-        this.config = config;
-        this.executor = WaitableExecutor.useGlobalSharedThreadPool();
+    /** Creates an instance that is using dx to convert class files to dex files. */
+    @NonNull
+    public static DexArchiveBuilder createDxDexBuilder(@NonNull DexArchiveBuilderConfig config) {
+        return new DxDexArchiveBuilder(config);
     }
 
     /**
-     * Converts the .CLASS file inputs specified in the {@link #config} to the .DEX format. Class
-     * files are read from the specified class file input object, while the output is written to the
-     * specified dex archive.
+     * Converts the specified input, and writes it to the output dex archive. If dex archive does
+     * not exist, it will be created. If it exists, entries will be added or replaced.
      */
     public void convert(@NonNull ClassFileInput input, @NonNull DexArchive output)
-            throws IOException {
-        ensureOutputArchiveExists(output);
-
-        Map<Integer, Map<Path, byte[]>> bucketizedJobs = Maps.newHashMap();
-        int i = 0;
-        for (ClassFileEntry classFileEntry : input.allEntries()) {
-            int bucketId = (i++) % executor.getParallelism();
-
-            Map<Path, byte[]> jobs = bucketizedJobs.getOrDefault(bucketId, Maps.newHashMap());
-            jobs.put(classFileEntry.relativePath, classFileEntry.classFileContent);
-            bucketizedJobs.put(bucketId, jobs);
-        }
-        for (Map<Path, byte[]> job : bucketizedJobs.values()) {
-            processClassFile(job);
-        }
-
+            throws DexArchiveBuilderException {
         try {
-            processOutputs(output);
+            ensureOutputArchiveExists(output);
+            List<DexArchiveEntry> convertedEntries = convertClassFileInput(input);
+            writeToArchive(convertedEntries, output);
         } catch (IOException e) {
-            throw e;
-        } catch (Exception e) {
-            config.getDxContext().err.println(DexParser.DX_UNEXPECTED_EXCEPTION);
-            config.getDxContext().err.println(Throwables.getRootCause(e).getMessage());
-            config.getDxContext().err.print(Throwables.getStackTraceAsString(e));
-            if (e instanceof InterruptedException) {
-                Thread.currentThread().interrupt();
-            }
-            throw new DexBuilderException(
-                    "Unable to convert input to dex archive.",
-                    MoreObjects.firstNonNull(e.getCause(), e));
+            throw new DexArchiveBuilderException(e);
         }
     }
 
-    /** Waits for all inputs to be processed, and writes the outputs to the dex archive. */
-    private void processOutputs(@NonNull DexArchive output)
-            throws IOException, InterruptedException {
-        List<List<DexArchiveEntry>> entries = executor.waitForTasksWithQuickFail(true);
-        for (List<DexArchiveEntry> chunk : entries) {
-            for (DexArchiveEntry dexEntry : chunk) {
-                Verify.verifyNotNull(dexEntry);
-                try (ByteArrayInputStream dexContent =
-                        new ByteArrayInputStream(dexEntry.getDexFileContent())) {
-                    Path dexFilePath =
-                            ClassFileEntry.withDexExtension(dexEntry.getRelativePathInArchive());
-                    output.addFile(dexFilePath, dexContent);
-                }
+    @NonNull
+    protected abstract List<DexArchiveEntry> convertClassFileInput(@NonNull ClassFileInput input);
+
+    private static void writeToArchive(
+            @NonNull List<DexArchiveEntry> entries, @NonNull DexArchive output) throws IOException {
+        for (DexArchiveEntry dexEntry : entries) {
+            Verify.verifyNotNull(dexEntry);
+            try (ByteArrayInputStream dexContent =
+                    new ByteArrayInputStream(dexEntry.getDexFileContent())) {
+                Path dexFilePath =
+                        ClassFileEntry.withDexExtension(dexEntry.getRelativePathInArchive());
+                output.addFile(dexFilePath, dexContent);
             }
         }
     }
 
-    private void processClassFile(@NonNull Map<Path, byte[]> pathToContent) throws IOException {
-        DexArchiveBuilderCallable converterCallable =
-                new DexArchiveBuilderCallable(
-                        pathToContent,
-                        config.getDxContext(),
-                        config.getDexOptions(),
-                        config.getCfOptions());
-        executor.execute(converterCallable);
-    }
-
-    private void ensureOutputArchiveExists(@NonNull DexArchive dexArchive) throws IOException {
+    private static void ensureOutputArchiveExists(@NonNull DexArchive dexArchive)
+            throws IOException {
         if (Files.notExists(dexArchive.getRootPath())) {
             if (ClassFileInputs.jarMatcher.matches(dexArchive.getRootPath())) {
                 Files.createDirectories(dexArchive.getRootPath().getParent());

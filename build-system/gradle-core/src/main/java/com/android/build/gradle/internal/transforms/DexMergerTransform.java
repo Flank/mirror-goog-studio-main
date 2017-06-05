@@ -34,8 +34,8 @@ import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.builder.core.ErrorReporter;
+import com.android.builder.dexing.DexMergerTool;
 import com.android.builder.dexing.DexingType;
-import com.android.dx.Version;
 import com.android.ide.common.blame.Message;
 import com.android.ide.common.blame.ParsingProcessOutputHandler;
 import com.android.ide.common.blame.parser.DexParser;
@@ -51,7 +51,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
@@ -97,15 +96,18 @@ public class DexMergerTransform extends Transform {
 
     @NonNull private final DexingType dexingType;
     @Nullable private final FileCollection mainDexListFile;
+    @NonNull private final DexMergerTool dexMerger;
     @NonNull private final ErrorReporter errorReporter;
     @NonNull private final ForkJoinPool forkJoinPool = ForkJoinPool.commonPool();
 
     public DexMergerTransform(
             @NonNull DexingType dexingType,
             @Nullable FileCollection mainDexListFile,
-            @NonNull ErrorReporter errorReporter) {
+            @NonNull ErrorReporter errorReporter,
+            @NonNull DexMergerTool dexMerger) {
         this.dexingType = dexingType;
         this.mainDexListFile = mainDexListFile;
+        this.dexMerger = dexMerger;
         Preconditions.checkState(
                 (dexingType == DexingType.LEGACY_MULTIDEX) == (mainDexListFile != null),
                 "Main dex list must only be set when in legacy multidex");
@@ -151,7 +153,7 @@ public class DexMergerTransform extends Transform {
     public Map<String, Object> getParameterInputs() {
         Map<String, Object> params = Maps.newHashMapWithExpectedSize(2);
         params.put("dexing-type", dexingType.name());
-        params.put("dx-version", Version.VERSION);
+        params.put("dex-merger-tool", dexMerger.name());
 
         return params;
     }
@@ -234,13 +236,11 @@ public class DexMergerTransform extends Transform {
         // this deletes and creates the dir for the output
         FileUtils.cleanOutputDir(outputDir);
 
-        Set<String> mainDexClasses;
+        Path mainDexClasses;
         if (mainDexListFile == null) {
             mainDexClasses = null;
         } else {
-            mainDexClasses = Sets.newHashSet();
-            Path mainDexListPath = mainDexListFile.getSingleFile().toPath();
-            mainDexClasses.addAll(Files.readAllLines(mainDexListPath));
+            mainDexClasses = mainDexListFile.getSingleFile().toPath();
         }
 
         return ImmutableList.of(
@@ -371,7 +371,8 @@ public class DexMergerTransform extends Transform {
      * @param output the process output that dx will output to.
      * @param dexOutputDir the directory to output dexes to
      * @param dexArchives the dex archive inputs
-     * @param mainDexList the list of classes to keep in the main dex. Must be set <em>if and only
+     * @param mainDexList the list of classes to keep in the main dex. Must be set <em>if and
+     *     only</em> legacy multidex mode is used.
      * @return the {@link ForkJoinTask} instance for the submission.
      */
     @NonNull
@@ -379,10 +380,16 @@ public class DexMergerTransform extends Transform {
             @NonNull ProcessOutput output,
             @NonNull File dexOutputDir,
             @NonNull Collection<Path> dexArchives,
-            @Nullable Set<String> mainDexList) {
+            @Nullable Path mainDexList) {
         DexMergerTransformCallable callable =
                 new DexMergerTransformCallable(
-                        dexingType, output, dexOutputDir, dexArchives, mainDexList, forkJoinPool);
+                        dexingType,
+                        output,
+                        dexOutputDir,
+                        dexArchives,
+                        mainDexList,
+                        forkJoinPool,
+                        dexMerger);
         return forkJoinPool.submit(callable);
     }
 

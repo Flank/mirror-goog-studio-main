@@ -31,6 +31,7 @@ import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
 import com.android.build.gradle.internal.pipeline.TransformInvocationBuilder;
 import com.android.builder.core.DefaultDexOptions;
+import com.android.builder.dexing.DexerTool;
 import com.android.builder.utils.FileCache;
 import com.android.testutils.TestInputsGenerator;
 import com.android.testutils.truth.MoreTruth;
@@ -199,7 +200,7 @@ public class DexArchiveBuilderTransformTest {
     @NonNull
     private DexArchiveBuilderTransform getTransform(@Nullable FileCache userCache) {
         return new DexArchiveBuilderTransform(
-                new DefaultDexOptions(), new NoOpErrorReporter(), userCache, 1);
+                new DefaultDexOptions(), new NoOpErrorReporter(), userCache, 0, DexerTool.DX);
     }
 
     @NonNull

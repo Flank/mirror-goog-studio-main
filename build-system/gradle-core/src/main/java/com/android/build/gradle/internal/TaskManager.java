@@ -2148,7 +2148,8 @@ public abstract class TaskManager {
                         dexOptions,
                         variantScope.getGlobalScope().getAndroidBuilder().getErrorReporter(),
                         userLevelCache,
-                        variantScope.getMinSdkVersion().getFeatureLevel());
+                        variantScope.getMinSdkVersion().getFeatureLevel(),
+                        variantScope.getDexer());
         transformManager
                 .addTransform(tasks, variantScope, preDexTransform)
                 .ifPresent(variantScope::addColdSwapBuildTask);
@@ -2159,7 +2160,8 @@ public abstract class TaskManager {
                         dexingType == DexingType.LEGACY_MULTIDEX
                                 ? project.files(variantScope.getMainDexListFile())
                                 : null,
-                        variantScope.getGlobalScope().getAndroidBuilder().getErrorReporter());
+                        variantScope.getGlobalScope().getAndroidBuilder().getErrorReporter(),
+                        variantScope.getDexMerger());
         Optional<AndroidTask<TransformTask>> dexTask =
                 transformManager.addTransform(tasks, variantScope, dexTransform);
         // need to manually make dex task depend on MultiDexTransform since there's no stream

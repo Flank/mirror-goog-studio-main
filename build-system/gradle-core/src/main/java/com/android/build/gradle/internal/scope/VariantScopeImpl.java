@@ -93,6 +93,8 @@ import com.android.builder.core.BootClasspathBuilder;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.ErrorReporter;
 import com.android.builder.core.VariantType;
+import com.android.builder.dexing.DexMergerTool;
+import com.android.builder.dexing.DexerTool;
 import com.android.builder.dexing.DexingType;
 import com.android.builder.model.BaseConfig;
 import com.android.builder.model.SyncIssue;
@@ -1807,7 +1809,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         return AndroidSdkHandler.getInstance(sdkLocation)
                 .getAndroidTargetManager(progressIndicator)
                 .getTargetFromHashString(targetHash, progressIndicator);
-}
+    }
 
     @Override
     public void setExternalNativeBuildTask(
@@ -2058,5 +2060,17 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this).addValue(getFullVariantName()).toString();
+    }
+
+    @NonNull
+    @Override
+    public DexerTool getDexer() {
+        return DexerTool.DX;
+    }
+
+    @NonNull
+    @Override
+    public DexMergerTool getDexMerger() {
+        return DexMergerTool.DX;
     }
 }

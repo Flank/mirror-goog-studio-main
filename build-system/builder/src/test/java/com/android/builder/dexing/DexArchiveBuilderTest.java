@@ -52,8 +52,8 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 /**
- * Tests for the {@link DexArchiveBuilder} that processes the class files and outputs dex archives.
- * It tests all possible combinations of class input formats and dex output formats.
+ * Tests for the {@link DxDexArchiveBuilder} that processes the class files and outputs dex
+ * archives. It tests all possible combinations of class input formats and dex output formats.
  */
 @RunWith(Parameterized.class)
 public class DexArchiveBuilderTest {
@@ -220,7 +220,7 @@ public class DexArchiveBuilderTest {
         try {
             DexArchiveTestUtil.convertClassesToDexArchive(input, output);
             fail();
-        } catch (DexArchiveBuilder.DexBuilderException | IOException e) {
+        } catch (DexArchiveBuilderException | IOException e) {
             // it should fail
         }
     }
@@ -337,7 +337,7 @@ public class DexArchiveBuilderTest {
         try {
             DexArchiveTestUtil.convertClassesToDexArchive(classesDir, output, 0);
             fail("Default and static interface method should require min sdk 24.");
-        } catch (DexArchiveBuilder.DexBuilderException ignored) {
+        } catch (DexArchiveBuilderException ignored) {
             Truth.assertThat(Throwables.getStackTraceAsString(ignored))
                     .contains(
                             "default or static interface method used without "

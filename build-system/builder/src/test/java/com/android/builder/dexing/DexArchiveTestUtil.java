@@ -54,9 +54,9 @@ public final class DexArchiveTestUtil {
         try (DexArchive dexArchive = DexArchives.fromInput(dexArchiveOutput)) {
             ClassFileInput inputs = ClassFileInputs.fromPath(classesInput, e -> true);
             DexArchiveBuilderConfig config =
-                    new DexArchiveBuilderConfig(dxContext, true, minSdkVersion);
+                    new DexArchiveBuilderConfig(dxContext, true, minSdkVersion, DexerTool.DX);
 
-            DexArchiveBuilder dexArchiveBuilder = new DexArchiveBuilder(config);
+            DxDexArchiveBuilder dexArchiveBuilder = new DxDexArchiveBuilder(config);
             dexArchiveBuilder.convert(inputs, dexArchive);
         }
     }
@@ -77,21 +77,21 @@ public final class DexArchiveTestUtil {
     }
 
     public static void mergeMonoDex(@NonNull Collection<Path> dexArchives, @NonNull Path outputDir)
-            throws IOException, InterruptedException {
+            throws IOException, InterruptedException, DexArchiveMergerException {
         implMergeDexes(dexArchives, outputDir, DexingType.MONO_DEX, null);
     }
 
     public static void mergeLegacyDex(
             @NonNull Collection<Path> dexArchives,
             @NonNull Path outputDir,
-            @NonNull Set<String> mainDexList)
-            throws IOException, InterruptedException {
+            @NonNull Path mainDexList)
+            throws IOException, InterruptedException, DexArchiveMergerException {
         implMergeDexes(dexArchives, outputDir, DexingType.LEGACY_MULTIDEX, mainDexList);
     }
 
     public static void mergeNativeDex(
             @NonNull Collection<Path> dexArchives, @NonNull Path outputDir)
-            throws IOException, InterruptedException {
+            throws IOException, InterruptedException, DexArchiveMergerException {
         implMergeDexes(dexArchives, outputDir, DexingType.NATIVE_MULTIDEX, null);
     }
 
@@ -150,15 +150,15 @@ public final class DexArchiveTestUtil {
             @NonNull Collection<Path> inputs,
             @NonNull Path outputDir,
             @NonNull DexingType dexingType,
-            @Nullable Set<String> mainDexList)
-            throws IOException, InterruptedException {
+            @Nullable Path mainDexList)
+            throws IOException, InterruptedException, DexArchiveMergerException {
         Preconditions.checkState(
                 (dexingType == DexingType.LEGACY_MULTIDEX) == (mainDexList != null),
                 "Main Dex list must be set if and only if legacy multidex is enabled.");
 
-        DexMergerConfig config = new DexMergerConfig(dexingType, dxContext);
-        DexArchiveMerger merger = new DexArchiveMerger(config, ForkJoinPool.commonPool());
+        DexArchiveMerger merger =
+                DexArchiveMerger.createDxDexMerger(dxContext, ForkJoinPool.commonPool());
         Files.createDirectory(outputDir);
-        merger.merge(inputs, outputDir, mainDexList);
+        merger.mergeDexArchives(inputs, outputDir, mainDexList, dexingType);
     }
 }

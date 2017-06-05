@@ -34,6 +34,8 @@ import com.android.builder.dexing.DexArchive;
 import com.android.builder.dexing.DexArchiveBuilder;
 import com.android.builder.dexing.DexArchiveBuilderConfig;
 import com.android.builder.dexing.DexArchives;
+import com.android.builder.dexing.DexMergerTool;
+import com.android.builder.dexing.DexerTool;
 import com.android.builder.dexing.DexingType;
 import com.android.dx.command.dexer.DxContext;
 import com.android.testutils.TestInputsGenerator;
@@ -251,7 +253,8 @@ public class DexMergerTransformTest {
         } else {
             collection = null;
         }
-        return new DexMergerTransform(dexingType, collection, new NoOpErrorReporter());
+        return new DexMergerTransform(
+                dexingType, collection, new NoOpErrorReporter(), DexMergerTool.DX);
     }
 
     @NonNull
@@ -289,9 +292,9 @@ public class DexMergerTransformTest {
 
         // now convert to dex archive
         DexArchiveBuilder builder =
-                new DexArchiveBuilder(
+                DexArchiveBuilder.createDxDexBuilder(
                         new DexArchiveBuilderConfig(
-                                new DxContext(System.out, System.err), true, 0));
+                                new DxContext(System.out, System.err), true, 0, DexerTool.DX));
 
         try (ClassFileInput input = ClassFileInputs.fromPath(classesInput, p -> true);
                 DexArchive dexArchive = DexArchives.fromInput(dexArchivePath)) {
