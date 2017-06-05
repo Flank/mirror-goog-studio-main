@@ -21,6 +21,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Publ
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS;
 
 import com.android.annotations.NonNull;
+import org.gradle.api.artifacts.type.ArtifactTypeDefinition;
 import org.gradle.api.attributes.Attribute;
 
 /**
@@ -33,6 +34,7 @@ public class AndroidArtifacts {
     // types for main artifacts
     public static final String TYPE_AAR = "aar";
     private static final String TYPE_APK = "apk";
+    private static final String TYPE_JAR = ArtifactTypeDefinition.JAR_TYPE;
 
     // types for AAR content
     private static final String TYPE_CLASSES = "android-classes";
@@ -51,7 +53,6 @@ public class AndroidArtifacts {
     private static final String TYPE_PROGUARD_RULES = "android-proguad";
     private static final String TYPE_DATA_BINDING_ARTIFACT = "android-databinding";
     private static final String TYPE_EXPLODED_AAR = "android-exploded-aar";
-    private static final String TYPE_JAR = "jar";
 
     // types for additional artifacts to go with APK
     private static final String TYPE_MAPPING = "android-mapping";
