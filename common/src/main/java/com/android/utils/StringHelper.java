@@ -16,26 +16,24 @@
 
 package com.android.utils;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.google.common.base.Splitter;
+import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Pattern;
 
-/**
- */
 public class StringHelper {
+
+    private static final CharMatcher CR = CharMatcher.is('\r');
+    private static final Pattern LF = Pattern.compile("\n", Pattern.LITERAL);
 
     @NonNull
     public static String capitalize(@NonNull String string) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(string.substring(0, 1).toUpperCase(Locale.US)).append(string.substring(1));
-
-        return sb.toString();
+        return string.substring(0, 1).toUpperCase(Locale.US) + string.substring(1);
     }
 
     @NonNull
@@ -96,21 +94,6 @@ public class StringHelper {
     }
 
     /**
-     * Split a single command line into individual commands with platform specific rules.
-     *
-     * @param commandLine the command line to be split
-     * @return the list of individual commands
-     */
-    @NonNull
-    public static List<String> splitCommandLine(@NonNull String commandLine) {
-
-        if (System.getProperty("os.name").startsWith("Windows"))
-            return StringHelperWindows.splitCommandLine(commandLine);
-        else
-            return StringHelperPOSIX.splitCommandLine(commandLine);
-    }
-
-    /**
      * Quote and join a list of tokens with platform specific rules.
      *
      * @param tokens the token to be quoted and joined
@@ -118,10 +101,9 @@ public class StringHelper {
      */
     @NonNull
     public static String quoteAndJoinTokens(@NonNull List<String> tokens) {
-        if (System.getProperty("os.name").startsWith("Windows"))
+        if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS)
             return StringHelperWindows.quoteAndJoinTokens(tokens);
-        else
-            return StringHelperPOSIX.quoteAndJoinTokens(tokens);
+        else return StringHelperPOSIX.quoteAndJoinTokens(tokens);
     }
 
     /**
@@ -132,9 +114,17 @@ public class StringHelper {
      */
     @NonNull
     public static List<String> tokenizeString(@NonNull String string) {
-        if (System.getProperty("os.name").startsWith("Windows"))
+        if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS)
             return StringHelperWindows.tokenizeString(string);
-        else
-            return StringHelperPOSIX.tokenizeString(string);
+        else return StringHelperPOSIX.tokenizeString(string);
+    }
+
+    public static String toSystemLineSeparator(@NonNull String input) {
+        return toLineSeparator(System.lineSeparator(), input);
+    }
+
+    private static String toLineSeparator(String separator, @NonNull String input) {
+        String unixStyle = CR.matchesAnyOf(input) ? CR.removeFrom(input) : input;
+        return separator.equals("\n") ? unixStyle : LF.matcher(unixStyle).replaceAll("\r\n");
     }
 }

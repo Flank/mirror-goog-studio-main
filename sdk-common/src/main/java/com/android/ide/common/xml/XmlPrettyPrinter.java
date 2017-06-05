@@ -94,7 +94,7 @@ public class XmlPrettyPrinter {
         mPrefs = prefs;
         mStyle = style;
         if (lineSeparator == null) {
-            lineSeparator = SdkUtils.getLineSeparator();
+            lineSeparator = System.lineSeparator();
         }
         mLineSeparator = lineSeparator;
     }
@@ -230,8 +230,12 @@ public class XmlPrettyPrinter {
      */
     @NonNull
     public static String prettyPrint(@NonNull Node node, boolean endWithNewline) {
-        return prettyPrint(node, XmlFormatPreferences.defaults(), XmlFormatStyle.get(node),
-                SdkUtils.getLineSeparator(), endWithNewline);
+        return prettyPrint(
+                node,
+                XmlFormatPreferences.defaults(),
+                XmlFormatStyle.get(node),
+                System.lineSeparator(),
+                endWithNewline);
     }
 
     /**

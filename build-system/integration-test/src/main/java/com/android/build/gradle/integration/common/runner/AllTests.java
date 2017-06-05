@@ -19,8 +19,12 @@ package com.android.build.gradle.integration.common.runner;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.google.common.collect.Lists;
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import org.junit.Test;
 import org.junit.runners.Suite;
@@ -33,34 +37,33 @@ import org.junit.runners.model.RunnerBuilder;
 public class AllTests extends Suite {
     private static final String DEFAULT_CLASSPATH_PROPERTY = "java.class.path";
 
-    public AllTests(Class<?> clazz, RunnerBuilder builder) throws InitializationError {
+    public AllTests(Class<?> clazz, RunnerBuilder builder) throws InitializationError, IOException {
         super(builder, clazz, findTestClasses());
     }
 
     /**
      * Find all test classes.
      *
-     * Inspect all classes in classpath and include all classes that contains methods annotated with
-     * <code>@Test</code>.
+     * <p>Inspect all classes in classpath and include all classes that contains methods annotated
+     * with <code>@Test</code>.
      */
-    private static Class<?>[] findTestClasses() {
+    private static Class<?>[] findTestClasses() throws IOException {
         String classPaths = System.getProperty(DEFAULT_CLASSPATH_PROPERTY);
         final String separator = System.getProperty("path.separator");
         List<Class<?>> classes = Lists.newArrayList();
         for (String classPath : classPaths.split(separator)) {
-            File classPathDir = new File(classPath);
+            Path classPathDir = Paths.get(classPath);
             // Currently only support classes in .class files.  Add support for .jar if necessary.
-            if (classPathDir.isDirectory()) {
+            if (Files.isDirectory(classPathDir)) {
                 findTestClassesInDirectory(classes, classPathDir);
             }
         }
         return classes.toArray(new Class<?>[classes.size()]);
     }
 
-    /**
-     * Find all test classes in a directory.
-     */
-    private static void findTestClassesInDirectory(List<Class<?>> classes,File base) {
+    /** Find all test classes in a directory. */
+    private static void findTestClassesInDirectory(List<Class<?>> classes, Path base)
+            throws IOException {
         for (String filename : TestFileUtils.listFiles(base)) {
             if (!filename.endsWith(".class")) {
                 continue;

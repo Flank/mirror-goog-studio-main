@@ -21,7 +21,6 @@ import com.android.ide.common.blame.SourcePosition;
 import com.android.ide.common.xml.XmlFormatPreferences;
 import com.android.ide.common.xml.XmlFormatStyle;
 import com.android.ide.common.xml.XmlPrettyPrinter;
-import com.android.utils.SdkUtils;
 import com.google.common.base.Optional;
 import java.io.IOException;
 import javax.xml.parsers.ParserConfigurationException;
@@ -91,7 +90,7 @@ public class XmlLoaderTest extends TestCase {
         String prettyPrinted = XmlPrettyPrinter
                 .prettyPrint(xmlDocument.getXml(), XmlFormatPreferences.defaults(),
                         XmlFormatStyle.get(xmlDocument.getRootNode().getXml()), null, false);
-        assertEquals(input, prettyPrinted.replace(SdkUtils.getLineSeparator(), "\n"));
+        assertEquals(input, prettyPrinted.replace(System.lineSeparator(), "\n"));
     }
 
     public void testToolsPrefix() throws IOException, SAXException, ParserConfigurationException {

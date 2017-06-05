@@ -41,7 +41,6 @@ import com.android.builder.model.SyncIssue;
 import com.android.ide.common.blame.Message;
 import com.android.ide.common.blame.MessageJsonSerializer;
 import com.android.ide.common.blame.SourceFilePosition;
-import com.android.utils.SdkUtils;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
@@ -225,7 +224,7 @@ public class ExtraModelInfo extends ErrorReporter {
 
         String rawMessage = message.getRawMessage();
         if (!message.getText().equals(message.getRawMessage())) {
-            String separator = SdkUtils.getLineSeparator();
+            String separator = System.lineSeparator();
             errorStringBuilder.append("\n    ")
                     .append(rawMessage.replace(separator, separator + "    "));
         }

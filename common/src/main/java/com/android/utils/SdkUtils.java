@@ -16,11 +16,18 @@
 
 package com.android.utils;
 
+import static com.android.SdkConstants.DOT_9PNG;
+import static com.android.SdkConstants.DOT_BMP;
+import static com.android.SdkConstants.DOT_GIF;
+import static com.android.SdkConstants.DOT_JPEG;
+import static com.android.SdkConstants.DOT_JPG;
+import static com.android.SdkConstants.DOT_PNG;
+import static com.android.SdkConstants.DOT_WEBP;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -29,14 +36,6 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.List;
 import java.util.Properties;
-
-import static com.android.SdkConstants.DOT_WEBP;
-import static com.android.SdkConstants.DOT_PNG;
-import static com.android.SdkConstants.DOT_GIF;
-import static com.android.SdkConstants.DOT_9PNG;
-import static com.android.SdkConstants.DOT_JPEG;
-import static com.android.SdkConstants.DOT_JPG;
-import static com.android.SdkConstants.DOT_BMP;
 
 /** Miscellaneous utilities used by the Android SDK tools */
 public class SdkUtils {
@@ -99,29 +98,6 @@ public class SdkUtils {
      */
     public static boolean startsWithIgnoreCase(@NonNull String string, @NonNull String prefix) {
         return string.regionMatches(true /* ignoreCase */, 0, prefix, 0, prefix.length());
-    }
-
-    /** For use by {@link #getLineSeparator()} */
-    private static String sLineSeparator;
-
-    /**
-     * Returns the default line separator to use.
-     * <p>
-     * NOTE: If you have an associated IDocument (Eclipse), it is better to call
-     * TextUtilities#getDefaultLineDelimiter(IDocument) since that will
-     * allow (for example) editing a \r\n-delimited document on a \n-delimited
-     * platform and keep a consistent usage of delimiters in the file.
-     *
-     * @return the delimiter string to use
-     */
-    @NonNull
-    public static String getLineSeparator() {
-        if (sLineSeparator == null) {
-            // This is guaranteed to exist:
-            sLineSeparator = System.getProperty("line.separator"); //$NON-NLS-1$
-        }
-
-        return sLineSeparator;
     }
 
     /**
@@ -367,7 +343,7 @@ public class SdkUtils {
             int end = s.length();
 
             // Writer inserts trailing newline
-            String lineSeparator = SdkUtils.getLineSeparator();
+            String lineSeparator = System.lineSeparator();
             if (s.endsWith(lineSeparator)) {
                 end -= lineSeparator.length();
             }
