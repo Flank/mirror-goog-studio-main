@@ -29,6 +29,7 @@ import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
+import com.android.build.gradle.internal.PostprocessingActions;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.shrinker.AbstractShrinker.CounterSet;
@@ -71,16 +72,14 @@ public class BuiltInShrinkerTransform extends ProguardConfigurable {
 
     private final Set<File> platformJars;
     private final File incrementalDir;
-    private final List<String> dontwarnLines;
-    private final List<String> keepLines;
+    private final List<String> addtionalLines;
 
     public BuiltInShrinkerTransform(@NonNull VariantScope scope) {
         super(scope);
         this.platformJars = ImmutableSet.copyOf(
                 scope.getGlobalScope().getAndroidBuilder().getBootClasspath(true));
         this.incrementalDir = scope.getIncrementalDir(scope.getTaskName(NAME));
-        this.dontwarnLines = Lists.newArrayList();
-        this.keepLines = Lists.newArrayList();
+        this.addtionalLines = Lists.newArrayList();
     }
 
     @NonNull
@@ -219,15 +218,8 @@ public class BuiltInShrinkerTransform extends ProguardConfigurable {
     private String getAdditionalConfigString() {
         StringBuilder sb = new StringBuilder();
 
-        for (String keepLine : keepLines) {
-            sb.append("-keep ");
-            sb.append(keepLine);
-            sb.append("\n");
-        }
-
-        for (String dontWarn : dontwarnLines) {
-            sb.append("-dontwarn ");
-            sb.append(dontWarn);
+        for (String line : addtionalLines) {
+            sb.append(line);
             sb.append("\n");
         }
 
@@ -300,11 +292,17 @@ public class BuiltInShrinkerTransform extends ProguardConfigurable {
 
     @Override
     public void keep(@NonNull String keep) {
-        this.keepLines.add(keep);
+        this.addtionalLines.add("-keep " + keep);
     }
 
     @Override
     public void dontwarn(@NonNull String dontwarn) {
-        this.dontwarnLines.add(dontwarn);
+        this.addtionalLines.add("-dontwarn " + dontwarn);
+    }
+
+    @Override
+    public void setActions(@NonNull PostprocessingActions actions) {
+        // The built-in shrinker supports only one "action" (shrinking), and the transform should
+        // not be created if shrinking is not desired.
     }
 }

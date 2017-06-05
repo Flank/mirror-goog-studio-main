@@ -150,12 +150,14 @@ public abstract class BaseConfigImpl implements Serializable, BaseConfig {
      * Returns ProGuard configuration files to be used.
      *
      * <p>There are 2 default rules files
+     *
      * <ul>
-     *     <li>proguard-android.txt
-     *     <li>proguard-android-optimize.txt
+     *   <li>proguard-android.txt
+     *   <li>proguard-android-optimize.txt
      * </ul>
-     * <p>They are located in the SDK. Using <code>getDefaultProguardFile(String filename)</code> will return the
-     * full path to the files. They are identical except for enabling optimizations.
+     *
+     * <p>They are located in the SDK. Using <code>getDefaultProguardFile(String filename)</code>
+     * will return the full path to the files. They are identical except for enabling optimizations.
      *
      * <p>See similarly named methods to specify the files.
      */

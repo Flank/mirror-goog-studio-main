@@ -36,9 +36,9 @@ public class ProguardParserTest_DefaultRules extends AbstractShrinkerTest {
 
     @Test
     public void testAllWhitelistedFiles() throws Exception {
-        for (String name : ProguardFiles.DEFAULT_PROGUARD_WHITELIST) {
+        for (String name : ProguardFiles.KNOWN_FILE_NAMES) {
             File rulesFile = tmpDir.newFile(name);
-            ProguardFiles.extractBundledProguardFile(name, rulesFile);
+            ProguardFiles.createProguardFile(name, rulesFile);
             fullRun(parseKeepRules(Files.toString(rulesFile, StandardCharsets.UTF_8)));
             assertClassSkipped("Main");
         }

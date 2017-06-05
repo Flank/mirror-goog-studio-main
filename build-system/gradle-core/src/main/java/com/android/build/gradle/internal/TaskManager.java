@@ -54,7 +54,6 @@ import com.android.build.api.transform.QualifiedContent.DefaultContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.Transform;
 import com.android.build.gradle.AndroidConfig;
-import com.android.build.gradle.ProguardFiles;
 import com.android.build.gradle.api.AnnotationProcessorOptions;
 import com.android.build.gradle.api.JavaCompileOptions;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
@@ -192,6 +191,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
@@ -228,7 +228,6 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
  */
 public abstract class TaskManager {
 
-    public static final String DEFAULT_PROGUARD_CONFIG_FILE = "proguard-android.txt";
     public static final String DIR_BUNDLES = "bundles";
     public static final String INSTALL_GROUP = "Install";
     public static final String BUILD_GROUP = BasePlugin.BUILD_GROUP;
@@ -2823,8 +2822,7 @@ public abstract class TaskManager {
             transform.setConfigurationFiles(
                     project.files(
                             TaskInputHelper.bypassFileCallable(
-                                    testedVariantData.getVariantConfiguration()
-                                            ::getTestProguardFiles)));
+                                    testedVariantData.getScope()::getTestProguardFiles)));
 
             // register the mapping file which may or may not exists (only exist if obfuscation)
             // is enabled.
@@ -2837,7 +2835,7 @@ public abstract class TaskManager {
             transform.setConfigurationFiles(
                     project.files(
                             TaskInputHelper.bypassFileCallable(
-                                    variantConfig::getTestProguardFiles)));
+                                    variantScope::getTestProguardFiles)));
             transform.applyTestedMapping(mappingFileCollection);
         } else {
             applyProguardConfig(transform, variantScope);
@@ -2871,8 +2869,7 @@ public abstract class TaskManager {
 
     private static void applyProguardDefaultsForTest(ProGuardTransform transform) {
         // Don't remove any code in tested app.
-        transform.dontshrink();
-        transform.dontoptimize();
+        transform.setActions(PostprocessingActions.create(false, true, false));
 
         // We can't call dontobfuscate, since that would make ProGuard ignore the mapping file.
         transform.keep("class * {*;}");
@@ -2925,37 +2922,35 @@ public abstract class TaskManager {
     private void applyProguardConfig(
             ProguardConfigurable transform,
             VariantScope scope) {
-        final BaseVariantData variantData = scope.getVariantData();
-        final GradleVariantConfiguration variantConfig = scope.getVariantConfiguration();
+        GradleVariantConfiguration variantConfig = scope.getVariantConfiguration();
+
+        PostprocessingActions postprocessingActions = scope.getPostprocessingActions();
+        if (postprocessingActions != null) {
+            transform.setActions(postprocessingActions);
+        }
+
+        Supplier<Collection<File>> proguardConfigFiles =
+                () -> {
+                    Set<File> proguardFiles = Sets.newHashSet(scope.getProguardFiles());
+
+                    // Use the first output when looking for the proguard rule output of
+                    // the aapt task. The different outputs are not different in a way that
+                    // makes this rule file different per output.
+                    proguardFiles.add(scope.getProcessAndroidResourcesProguardOutputFile());
+                    return proguardFiles;
+                };
+
         transform.setConfigurationFiles(
                 project.files(
-                        TaskInputHelper.bypassFileCallable(
-                                () -> {
-                                    Set<File> proguardFiles =
-                                            variantConfig.getProguardFiles(
-                                                    Collections.singletonList(
-                                                            ProguardFiles.getDefaultProguardFile(
-                                                                    TaskManager
-                                                                            .DEFAULT_PROGUARD_CONFIG_FILE,
-                                                                    project)));
-
-                                    // use the first output when looking for the proguard rule output of
-                                    // the aapt task. The different outputs are not different in a way that
-                                    // makes this rule file different per output.
-                                    proguardFiles.add(
-                                            variantData
-                                                    .getScope()
-                                                    .getProcessAndroidResourcesProguardOutputFile());
-                                    return proguardFiles;
-                                }),
+                        TaskInputHelper.bypassFileCallable(proguardConfigFiles),
                         scope.getArtifactFileCollection(RUNTIME_CLASSPATH, ALL, PROGUARD_RULES)));
 
-        if (variantData.getType() == LIBRARY) {
+        if (scope.getVariantData().getType() == LIBRARY) {
             transform.keep("class **.R");
             transform.keep("class **.R$*");
         }
 
-        if (variantData.getVariantConfiguration().isTestCoverageEnabled()) {
+        if (variantConfig.isTestCoverageEnabled()) {
             // when collecting coverage, don't remove the JaCoCo runtime
             transform.keep("class com.vladium.** {*;}");
             transform.keep("class org.jacoco.** {*;}");

@@ -48,6 +48,7 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.LibraryRequest;
 import com.android.builder.model.SourceProvider;
+import com.android.builder.model.SyncIssue;
 import com.android.builder.sdk.TargetInfo;
 import com.android.builder.testing.api.DeviceProvider;
 import com.android.builder.testing.api.TestServer;
@@ -82,14 +83,13 @@ import org.gradle.internal.reflect.Instantiator;
  * <p>This is never used directly. Instead,
  *
  * <ul>
- * <li>Plugin <code>com.android.application</code> uses {@link AppExtension}
- * <li>Plugin <code>com.android.library</code> uses {@link LibraryExtension}
- * <li>Plugin <code>com.android.test</code> uses {@link TestExtension}
+ *   <li>Plugin {@code com.android.application} uses {@link AppExtension}.
+ *   <li>Plugin {@code com.android.library} uses {@link LibraryExtension}.
+ *   <li>Plugin {@code com.android.test} uses {@link TestExtension}.
  * </ul>
  */
-// All the public methods are meant to be exposed in the DSL.
-// We can't yet lambdas in this class (yet), because the DSL reference generator doesn't understand
-// them.
+// All the public methods are meant to be exposed in the DSL. We can't use lambdas in this class
+// (yet), because the DSL reference generator doesn't understand them.
 @SuppressWarnings({"UnnecessaryInheritDoc", "WeakerAccess", "unused", "Convert2Lambda"})
 public abstract class BaseExtension implements AndroidConfig {
 
@@ -432,8 +432,8 @@ public abstract class BaseExtension implements AndroidConfig {
     }
 
     /**
-     * Sets the compile SDK version, based on full SDK version string, e.g.
-     * <code>android-21</code> for Lollipop.
+     * Sets the compile SDK version, based on full SDK version string, e.g. {@code android-21} for
+     * Lollipop.
      */
     public void compileSdkVersion(String version) {
         checkWritability();
@@ -893,6 +893,7 @@ public abstract class BaseExtension implements AndroidConfig {
         return target;
     }
 
+    @NonNull
     @Override
     public Revision getBuildToolsRevision() {
         return buildToolsRevision;
@@ -932,9 +933,14 @@ public abstract class BaseExtension implements AndroidConfig {
     @Deprecated
     public File getAdbExe() {
         return getAdbExecutable();
+        // test
     }
 
     public File getDefaultProguardFile(String name) {
+        if (!ProguardFiles.KNOWN_FILE_NAMES.contains(name)) {
+            extraModelInfo.handleSyncError(
+                    null, SyncIssue.TYPE_GENERIC, ProguardFiles.UNKNOWN_FILENAME_MESSAGE);
+        }
         return ProguardFiles.getDefaultProguardFile(name, project);
     }
 

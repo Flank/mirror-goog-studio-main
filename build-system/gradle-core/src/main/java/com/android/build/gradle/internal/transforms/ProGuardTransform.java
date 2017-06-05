@@ -42,12 +42,14 @@ import com.android.builder.tasks.Job;
 import com.android.builder.tasks.JobContext;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import org.gradle.api.file.FileCollection;
@@ -135,6 +137,15 @@ public class ProGuardTransform extends BaseProguardAction {
     @Override
     public Collection<File> getSecondaryFileOutputs() {
         return secondaryFileOutputs;
+    }
+
+    @NonNull
+    @Override
+    public Map<String, Object> getParameterInputs() {
+        return ImmutableMap.of(
+                "shrink", configuration.shrink,
+                "obfuscate", configuration.obfuscate,
+                "optimize", configuration.optimize);
     }
 
     @Override

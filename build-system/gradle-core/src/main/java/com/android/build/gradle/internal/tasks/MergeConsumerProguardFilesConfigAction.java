@@ -23,13 +23,13 @@ import java.io.File;
 import org.gradle.api.Project;
 
 /** Configuration action for a merge-Proguard-files task. */
-public class MergeProguardFilesConfigAction implements TaskConfigAction<MergeFileTask> {
+public class MergeConsumerProguardFilesConfigAction implements TaskConfigAction<MergeFileTask> {
 
     @NonNull private final Project project;
     @NonNull private final VariantScope variantScope;
     @NonNull private final File outputFile;
 
-    public MergeProguardFilesConfigAction(
+    public MergeConsumerProguardFilesConfigAction(
             @NonNull Project project,
             @NonNull VariantScope variantScope,
             @NonNull File outputFile) {
@@ -41,7 +41,7 @@ public class MergeProguardFilesConfigAction implements TaskConfigAction<MergeFil
     @NonNull
     @Override
     public String getName() {
-        return variantScope.getTaskName("merge", "ProguardFiles");
+        return variantScope.getTaskName("merge", "ConsumerProguardFiles");
     }
 
     @NonNull
@@ -54,8 +54,7 @@ public class MergeProguardFilesConfigAction implements TaskConfigAction<MergeFil
     public void execute(@NonNull MergeFileTask mergeProguardFiles) {
         mergeProguardFiles.setVariantName(variantScope.getVariantConfiguration().getFullName());
         mergeProguardFiles.setInputFiles(
-                project.files(variantScope.getVariantConfiguration().getConsumerProguardFiles())
-                        .getFiles());
+                project.files(variantScope.getConsumerProguardFiles()).getFiles());
         mergeProguardFiles.setOutputFile(outputFile);
     }
 }

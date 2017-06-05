@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.transforms;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.PostprocessingActions;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
@@ -89,18 +90,6 @@ public abstract class BaseProguardAction extends ProguardConfigurable {
                 classSpecification));
     }
 
-    public void dontshrink() {
-        configuration.shrink = false;
-    }
-
-    public void dontobfuscate() {
-        configuration.obfuscate = false;
-    }
-
-    public void dontoptimize() {
-        configuration.optimize = false;
-    }
-
     public void dontpreverify() {
         configuration.preverify = false;
     }
@@ -119,6 +108,13 @@ public abstract class BaseProguardAction extends ProguardConfigurable {
 
         //noinspection unchecked
         configuration.warn.addAll(ListUtil.commaSeparatedList(dontwarn));
+    }
+
+    @Override
+    public void setActions(@NonNull PostprocessingActions actions) {
+        configuration.obfuscate = actions.isObfuscate();
+        configuration.optimize = actions.isOptimize();
+        configuration.shrink = actions.isRemoveUnusedCode();
     }
 
     public void dontwarn() {

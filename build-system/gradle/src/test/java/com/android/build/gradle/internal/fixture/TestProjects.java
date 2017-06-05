@@ -74,6 +74,12 @@ public class TestProjects {
         public Class<? extends BaseExtension> getExtensionClass() {
             return extensionClass;
         }
+
+
+        @Override
+        public String toString() {
+            return pluginName;
+        }
     }
 
     private static final String MANIFEST_TEMPLATE =

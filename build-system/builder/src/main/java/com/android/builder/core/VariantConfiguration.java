@@ -1624,65 +1624,6 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         return signingConfig != null && signingConfig.isSigningReady();
     }
 
-    /**
-     * Returns the proguard config files coming from the project.
-     *
-     * Does not include proguard config from dependencies.
-     *
-     * @return a non null list of proguard files.
-     */
-    @NonNull
-    public Set<File> getProguardFiles(List<File> defaultProguardConfig) {
-        Set<File> fullList = Sets.newLinkedHashSet();
-
-        // add the config files from the build type, main config and flavors
-        fullList.addAll(mDefaultConfig.getProguardFiles());
-        fullList.addAll(mBuildType.getProguardFiles());
-
-        for (F flavor : mFlavors) {
-            fullList.addAll(flavor.getProguardFiles());
-        }
-
-        if (fullList.isEmpty()) {
-            fullList.addAll(defaultProguardConfig);
-        }
-
-        return fullList;
-    }
-
-    /**
-     * Returns the proguard config files to be used for the test APK.
-     */
-    @NonNull
-    public Set<File> getTestProguardFiles() {
-        Set<File> fullList = Sets.newLinkedHashSet();
-
-        // add the config files from the build type, main config and flavors
-        fullList.addAll(mDefaultConfig.getTestProguardFiles());
-        fullList.addAll(mBuildType.getTestProguardFiles());
-
-        for (F flavor : mFlavors) {
-            fullList.addAll(flavor.getTestProguardFiles());
-        }
-
-        return fullList;
-    }
-
-    @NonNull
-    public List<Object> getConsumerProguardFiles() {
-        List<Object> fullList = Lists.newArrayList();
-
-        // add the config files from the build type, main config and flavors
-        fullList.addAll(mDefaultConfig.getConsumerProguardFiles());
-        fullList.addAll(mBuildType.getConsumerProguardFiles());
-
-        for (F flavor : mFlavors) {
-            fullList.addAll(flavor.getConsumerProguardFiles());
-        }
-
-        return fullList;
-    }
-
     public boolean isTestCoverageEnabled() {
         return mBuildType.isTestCoverageEnabled();
     }
