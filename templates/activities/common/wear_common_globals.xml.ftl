@@ -15,6 +15,5 @@
             <global id="appManifestOut" value="${appManifestDir}" />
         </#if>
     </#if>
-    <global id="generateKotlin" type="boolean"
-            value="${((includeKotlinSupport!false) || (language!'Java')?string == 'Kotlin')?string}" />
+    <#include "root://activities/common/kotlin_globals.xml.ftl" />
 </globals>

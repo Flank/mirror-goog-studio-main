@@ -11,9 +11,6 @@
     <global id="buildToolsVersion" value="18.0.1" />
     <global id="gradlePluginVersion" value="0.6.+" />
     <global id="unitTestsSupported" type="boolean" value="${(compareVersions(gradlePluginVersion, '1.1.0') >= 0)?string}" />
-    <global id="generateKotlin" type="boolean"
-            value="${((includeKotlinSupport!false) || (language!'Java')?string == 'Kotlin')?string}" />
-
     <global id="isLibraryProject" type="boolean" value="${(!(isInstantApp!false) && (isLibraryProject!false))?string}" />
     <global id="isApplicationProject" type="boolean" value="${(!(isInstantApp!false) && !(isLibraryProject!false))?string}" />
     <global id="isInstantAppProject" type="boolean" value="${(!(isInstantApp!false) && !(isLibraryProject!false))?string}" />
@@ -32,4 +29,5 @@
     <global id="monolithicAppOut" type="string" value="${escapeXmlAttribute(monolithicAppDir!'./' + (monolithicAppProjectName!'app'))}" />
     <global id="baseFeatureOut" type="string" value="${escapeXmlAttribute(baseFeatureDir!'./base')}" />
     <global id="baseFeatureResOut" type="string" value="${escapeXmlAttribute(baseFeatureResDir!'./base/src/main/res')}" />
+    <#include "root://activities/common/kotlin_globals.xml.ftl" />
 </globals>

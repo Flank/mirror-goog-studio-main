@@ -8,4 +8,5 @@
     <global id="resOut" value="${resDir}" />
     <global id="buildToolsVersion" value="19.1.0" />
     <global id="gradlePluginVersion" value="0.12.+" />
+    <#include "root://activities/common/kotlin_globals.xml.ftl" />
 </globals>
