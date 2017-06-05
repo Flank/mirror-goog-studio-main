@@ -17,38 +17,56 @@
 package com.android.tools.profiler.support.util;
 
 import android.util.Log;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Class to call instead of Android {@link Log}.
  *
- * <p>In order to avoid spamming the user's console, messages will only print once per unique
- * instance.
+ * <p>In order to avoid spamming the user's console, messages will be rate-limited by their
+ * hashcode, and a message may be dropped if it is sent too frequently.
  */
 public final class StudioLog {
     private static final String TAG = "StudioProfiler";
-    private static final Set<Integer> SEEN_MSG_HASHCODES = new HashSet<Integer>();
+    /** Only send one log message per this rate-limited time duration. */
+    private static final long RATE_LIMIT_NS = TimeUnit.MINUTES.toNanos(1);
+
+    /** Map of a message's hashcode to the nanosecond timestamp that the message was logged. */
+    private static final Map<Integer, Long> MSG_TIMESTAMPS_NS = new HashMap<Integer, Long>();
+
     private static final String ERROR_HEADER =
             "Studio Profilers encountered an unexpected error. "
                     + "Consider reporting a bug, including logcat output below.\n"
                     + "See also: https://developer.android.com/studio/report-bugs.html#studio-bugs\n\n";
 
     public static void e(String msg) {
-        if (SEEN_MSG_HASHCODES.add(msg.hashCode())) {
+        if (allowLog(msg)) {
             Log.e(TAG, ERROR_HEADER + msg);
         }
     }
 
     public static void e(String msg, Throwable tr) {
-        if (SEEN_MSG_HASHCODES.add(msg.hashCode())) {
+        if (allowLog(msg)) {
             Log.e(TAG, ERROR_HEADER + msg, tr);
         }
     }
 
     public static void v(String msg) {
-        if (SEEN_MSG_HASHCODES.add(msg.hashCode())) {
+        if (allowLog(msg)) {
             Log.v(TAG, msg);
+        }
+    }
+
+    private static boolean allowLog(String msg) {
+        long now = System.nanoTime();
+        int msgHash = msg.hashCode();
+        Long timestamp = MSG_TIMESTAMPS_NS.get(msgHash);
+        if (timestamp == null || timestamp + RATE_LIMIT_NS < now) {
+            MSG_TIMESTAMPS_NS.put(msgHash, now);
+            return true;
+        } else {
+            return false;
         }
     }
 }
