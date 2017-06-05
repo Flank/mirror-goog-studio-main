@@ -15,9 +15,12 @@ iml_module(
         "//prebuilts/tools/common/archive-patcher:explainer",
         "//prebuilts/tools/common/archive-patcher:generator",
         "//prebuilts/tools/common/archive-patcher:shared",
+        "//tools/idea/.idea/libraries:dexlib2",
+        "//tools/idea/.idea/libraries:baksmali",
         "//tools/base/testutils:studio.testutils[module, test]",
         "//tools/idea/.idea/libraries:JUnit4[test]",
         "//tools/idea/.idea/libraries:truth[test]",
         "//tools/idea/.idea/libraries:jimfs[test]",
+        "//tools/base/apkparser:studio.binary-resources[module]",
     ],
 )

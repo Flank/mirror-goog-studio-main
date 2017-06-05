@@ -13,27 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.tools.apk.analyzer.internal;
+package com.android.tools.apk.analyzer.dex;
 
 import com.android.annotations.NonNull;
-import com.android.tools.apk.analyzer.ArchiveNode;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import org.jf.dexlib2.Opcodes;
+import org.jf.dexlib2.dexbacked.DexBackedDexFile;
 
-public class ApkFileByFileEntry extends ApkDiffEntry {
-    private final long diffSize;
+public final class DexFiles {
+    private DexFiles() {}
 
-    public ApkFileByFileEntry(
-            @NonNull String name,
-            ArchiveNode oldFile,
-            ArchiveNode newFile,
-            long oldSize,
-            long newSize,
-            long diffSize) {
-        super(name, oldFile, newFile, oldSize, newSize);
-        this.diffSize = diffSize;
+    @NonNull
+    public static DexBackedDexFile getDexFile(@NonNull Path p) throws IOException {
+        return getDexFile(Files.readAllBytes(p));
     }
 
-    @Override
-    public long getSize() {
-        return diffSize;
+    @NonNull
+    public static DexBackedDexFile getDexFile(@NonNull byte[] contents) {
+        return new DexBackedDexFile(Opcodes.forApi(15), contents);
     }
 }
