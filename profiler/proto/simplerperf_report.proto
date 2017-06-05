@@ -61,10 +61,17 @@ message File {
   repeated string symbol = 3;
 }
 
+message Thread {
+  int32 thread_id = 1;
+  int32 process_id = 2;
+  string thread_name = 3;
+}
+
 message Record {
   oneof record_data {
     Sample sample = 1;
     LostSituation lost = 2;
     File file = 3;
+    Thread thread = 4;
   }
 }
