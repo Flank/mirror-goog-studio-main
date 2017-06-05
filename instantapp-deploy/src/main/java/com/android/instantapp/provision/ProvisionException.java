@@ -59,6 +59,8 @@ public class ProvisionException extends Exception {
                 return "The provided SDK file is not valid.";
             case INSTALL_FAILED:
                 return "Installing APK failed.";
+            case UNINSTALL_FAILED:
+                return "Uninstalling APK failed.";
             case CANCELLED:
                 return "Cancelled by the user.";
             case UNKNOWN:
@@ -83,6 +85,7 @@ public class ProvisionException extends Exception {
         ADB_FAILURE,
         INVALID_SDK,
         INSTALL_FAILED,
+        UNINSTALL_FAILED,
         CANCELLED,
         UNKNOWN
     }

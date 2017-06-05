@@ -118,6 +118,7 @@ public class ProvisionRunner {
             case DEVICE_NOT_SUPPORTED:
             case NO_GOOGLE_ACCOUNT:
             case INVALID_SDK:
+            case UNINSTALL_FAILED:
             case CANCELLED:
                 return false;
             case SHELL_TIMEOUT:
