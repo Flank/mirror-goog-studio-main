@@ -265,5 +265,23 @@
     <inspection_tool class="XmlUnboundNsPrefix" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="XmlUnusedNamespaceDeclaration" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="XmlWrongRootElement" enabled="false" level="ERROR" enabled_by_default="false" />
+    <inspection_tool class="SSBasedInspection" enabled="true" level="WARNING" enabled_by_default="false">
+      <searchConfiguration name="String.getBytes() is current locale-dependant, use String.getBytes(Charset) instead" text="$s$.getBytes()" recursive="false" caseInsensitive="true" type="JAVA">
+        <constraint name="String" within="" contains="" />
+        <constraint name="myTexts" within="" contains="" />
+        <constraint name="s" script="&quot;&quot;" nameOfExprType="java.lang.String" exprTypeWithinHierarchy="true" within="" contains="" />
+      </searchConfiguration>
+      <searchConfiguration name="anonymous Timer is discouraged, please supply name" text="new java.util.Timer()" recursive="false" caseInsensitive="true" type="JAVA">
+        <constraint name="myDir" within="" contains="" />
+        <constraint name="__context__" target="true" within="" contains="" />
+        <constraint name="t" within="" contains="" />
+      </searchConfiguration>
+      <searchConfiguration name="anonymous Timer(daemon) is discouraged, please supply name" text="new java.util.Timer($b$)" recursive="false" caseInsensitive="true" type="JAVA">
+        <constraint name="myDir" within="" contains="" />
+        <constraint name="__context__" target="true" within="" contains="" />
+        <constraint name="t" within="" contains="" />
+        <constraint name="b" nameOfExprType="boolean" exprTypeWithinHierarchy="true" within="" contains="" />
+      </searchConfiguration>
+    </inspection_tool>
   </profile>
 </component>
