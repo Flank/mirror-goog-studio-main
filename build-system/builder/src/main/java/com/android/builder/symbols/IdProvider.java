@@ -17,6 +17,7 @@
 package com.android.builder.symbols;
 
 import com.android.annotations.NonNull;
+import com.android.resources.ResourceType;
 
 /** Provides IDs for resource assignment. It is essentially a supplier of unique integer values. */
 public interface IdProvider {
@@ -26,24 +27,24 @@ public interface IdProvider {
      *
      * @return an ID that has never been returned from this provider.
      */
-    int next();
+    int next(ResourceType resourceType);
 
     /**
      * Obtains a new ID provider that provides sequential IDs.
      *
-     * @return a provider
+     * <p>The generated IDs follow the usual aapt format of {@code PPTTNNNN}.
      */
     @NonNull
     static IdProvider sequential() {
         return new IdProvider() {
-            int next = 1;
+            private short[] next = new short[ResourceType.values().length];
 
             @Override
-            public int next() {
-                int r = next;
-                next++;
-                return r;
+            public int next(ResourceType resourceType) {
+                int typeIndex = resourceType.ordinal();
+                return (0x7f << 24) | ((typeIndex + 1) << 16) | ++next[typeIndex];
             }
         };
     }
+
 }

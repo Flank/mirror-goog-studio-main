@@ -237,7 +237,7 @@ public final class ResourceValuesXmlParser {
                                 resourceType,
                                 name,
                                 SymbolJavaType.INT,
-                                Integer.toString(idProvider.next())));
+                                Integer.toString(idProvider.next(resourceType))));
                 break;
             case DECLARE_STYLEABLE:
                 // We also need to find all the attributes declared under declare styleable.
@@ -304,7 +304,7 @@ public final class ResourceValuesXmlParser {
 
             parseAttr(attrElement, idProvider, attrName, builder, enumSymbols);
 
-            String attrValue = Integer.toString(idProvider.next());
+            String attrValue = Integer.toString(idProvider.next(ResourceType.STYLEABLE));
 
             Symbol newStyleable =
                     Symbol.createSymbol(
@@ -368,7 +368,7 @@ public final class ResourceValuesXmlParser {
                             SymbolUtils.canonicalizeValueResourceName(
                                     getMandatoryAttr(enumElement, "name")),
                             SymbolJavaType.INT,
-                            Integer.toString(idProvider.next()));
+                            Integer.toString(idProvider.next(ResourceType.ID)));
 
             enumSymbols.add(newEnum);
             enumNode = enumNode.getNextSibling();
@@ -379,7 +379,7 @@ public final class ResourceValuesXmlParser {
                         ResourceType.ATTR,
                         name,
                         SymbolJavaType.INT,
-                        Integer.toString(idProvider.next()));
+                        Integer.toString(idProvider.next(ResourceType.ATTR)));
 
         if (!builder.contains(newAttr)) {
             builder.add(newAttr);

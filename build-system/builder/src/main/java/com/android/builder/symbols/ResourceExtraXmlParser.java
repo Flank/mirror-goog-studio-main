@@ -116,7 +116,7 @@ public class ResourceExtraXmlParser {
                             ResourceType.ID,
                             SymbolUtils.canonicalizeValueResourceName(name),
                             SymbolJavaType.INT,
-                            Integer.toString(idProvider.next()));
+                            Integer.toString(idProvider.next(ResourceType.ID)));
             if (!builder.contains(newSymbol)) {
                 builder.add(newSymbol);
             }

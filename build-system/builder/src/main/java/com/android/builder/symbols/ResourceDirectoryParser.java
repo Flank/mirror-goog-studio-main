@@ -197,7 +197,7 @@ public class ResourceDirectoryParser {
                                 resourceType,
                                 symbolName,
                                 SymbolJavaType.INT,
-                                Integer.toString(idProvider.next())));
+                                Integer.toString(idProvider.next(resourceType))));
 
                 if (FolderTypeRelationship.isIdGeneratingFolderType(folderResourceType)
                         && SdkUtils.endsWithIgnoreCase(fileName, DOT_XML)) {
@@ -236,7 +236,7 @@ public class ResourceDirectoryParser {
     @NonNull
     private static String getNameWithoutExtensions(@NonNull String filename) {
         // Find the *first* dot.
-        int dotIndex = filename.indexOf(".");
+        int dotIndex = filename.indexOf('.');
         return (dotIndex > 0) ? filename.substring(0, dotIndex) : filename;
     }
 
