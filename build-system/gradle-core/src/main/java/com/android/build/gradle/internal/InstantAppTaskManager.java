@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.tasks.InstantAppProvisionTask;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.BundleInstantApp;
 import com.android.builder.core.AndroidBuilder;
@@ -86,6 +87,15 @@ public class InstantAppTaskManager extends TaskManager {
 
         // FIXME: Stop creating a dummy task just to make the IDE sync shut up.
         tasks.create(variantScope.getTaskName("dummy"));
+
+        // TODO: create task for side loading instant app.
+    }
+
+    @Override
+    public void createTasksBeforeEvaluate(@NonNull TaskFactory tasks) {
+        super.createTasksBeforeEvaluate(tasks);
+
+        getAndroidTasks().create(tasks, new InstantAppProvisionTask.ConfigAction(globalScope));
     }
 
     @NonNull
