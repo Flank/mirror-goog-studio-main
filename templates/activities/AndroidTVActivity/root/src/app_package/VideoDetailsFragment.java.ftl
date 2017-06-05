@@ -14,6 +14,7 @@
 
 package ${packageName};
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -145,10 +146,8 @@ public class ${detailsFragment} extends DetailsFragment {
         row.setImageDrawable(
                 ContextCompat.getDrawable(getActivity(), R.drawable.default_background));
         </#if>
-        int width =
-                Utils.convertDpToPixel(getActivity().getApplicationContext(), DETAIL_THUMB_WIDTH);
-        int height =
-                Utils.convertDpToPixel(getActivity().getApplicationContext(), DETAIL_THUMB_HEIGHT);
+        int width = convertDpToPixel(getActivity().getApplicationContext(), DETAIL_THUMB_WIDTH);
+        int height = convertDpToPixel(getActivity().getApplicationContext(), DETAIL_THUMB_HEIGHT);
         Glide.with(getActivity())
                 .load(mSelectedMovie.getCardImageUrl())
                 .centerCrop()
@@ -241,6 +240,11 @@ public class ${detailsFragment} extends DetailsFragment {
 
     private void setupMovieListRowPresenter() {
         mPresenterSelector.addClassPresenter(ListRow.class, new ListRowPresenter());
+    }
+
+    public int convertDpToPixel(Context context, int dp) {
+        float density = context.getResources().getDisplayMetrics().density;
+        return Math.round((float) dp * density);
     }
 
     private final class ItemViewClickedListener implements OnItemViewClickedListener {

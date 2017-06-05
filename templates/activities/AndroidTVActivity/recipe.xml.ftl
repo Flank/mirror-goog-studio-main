@@ -14,20 +14,9 @@
     <merge from="root/res/values/colors.xml.ftl"
              to="${escapeXmlAttribute(resOut)}/values/colors.xml" />
 
-    <merge from="root/res/values/themes.xml.ftl"
-             to="${escapeXmlAttribute(resOut)}/values/themes.xml" />
-
     <copy from="root/res/drawable"
                 to="${escapeXmlAttribute(resOut)}/drawable" />
-    <copy from="root/res/drawable-hdpi"
-                to="${escapeXmlAttribute(resOut)}/drawable-hdpi" />
-    <copy from="root/res/drawable-mdpi"
-                to="${escapeXmlAttribute(resOut)}/drawable-mdpi" />
-    <copy from="root/res/drawable-xhdpi"
-                to="${escapeXmlAttribute(resOut)}/drawable-xhdpi" />
-    <copy from="root/res/drawable-xxhdpi"
-                to="${escapeXmlAttribute(resOut)}/drawable-xxhdpi" />
-
+    
     <instantiate from="root/res/layout/activity_main.xml.ftl"
                   to="${escapeXmlAttribute(resOut)}/layout/${layoutName}.xml" />
 
@@ -66,9 +55,6 @@
 
     <instantiate from="root/src/app_package/PlaybackOverlayFragment.java.ftl"
                   to="${escapeXmlAttribute(srcOut)}/PlaybackOverlayFragment.java" />
-
-    <instantiate from="root/src/app_package/Utils.java.ftl"
-                  to="${escapeXmlAttribute(srcOut)}/Utils.java" />
 
     <instantiate from="root/src/app_package/ErrorFragment.java.ftl"
                   to="${escapeXmlAttribute(srcOut)}/ErrorFragment.java" />
