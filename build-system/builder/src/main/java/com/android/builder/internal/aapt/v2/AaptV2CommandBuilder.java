@@ -16,6 +16,7 @@
 
 package com.android.builder.internal.aapt.v2;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.builder.core.VariantType;
 import com.android.builder.internal.aapt.AaptException;
@@ -38,6 +39,7 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Builds the command lines for use with {@code aapt2}.
@@ -61,9 +63,14 @@ public final class AaptV2CommandBuilder {
         if (request.isPseudoLocalize()) {
             parameters.add("--pseudo-localize");
         }
-        
+
         if (!request.isPngCrunching()) {
-            parameters.add("--no-crunch");
+            // Only pass --no-crunch for png files and not for 9-patch files as that breaks them.
+            String lowerName = request.getInput().getPath().toLowerCase(Locale.US);
+            if (lowerName.endsWith(SdkConstants.DOT_PNG)
+                    && !lowerName.endsWith(SdkConstants.DOT_9PNG)) {
+                parameters.add("--no-crunch");
+            }
         }
 
         parameters.add("--legacy");

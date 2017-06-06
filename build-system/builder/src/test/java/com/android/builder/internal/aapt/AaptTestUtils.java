@@ -26,6 +26,7 @@ import com.google.common.base.Strings;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
 import java.io.File;
+import java.io.IOException;
 import org.junit.rules.TemporaryFolder;
 
 /**
@@ -42,12 +43,21 @@ public class AaptTestUtils {
      */
     @NonNull
     public static File getTestPng(@NonNull TemporaryFolder temporaryFolder) throws Exception {
-        File drawables = new File(temporaryFolder.getRoot(), "drawable");
-        FileUtils.mkdirs(drawables);
-        File dstPng = new File(drawables, "lena.png");
-        Resources.asByteSource(Resources.getResource("testData/aapt/lena.png"))
-                .copyTo(Files.asByteSink(dstPng));
-        return dstPng;
+        return setUpResourceStructure(
+                "testData/aapt/lorem-lena.png", temporaryFolder, "drawable", "lena.png");
+    }
+
+    /**
+     * Obtains a 9 patch PNG for testing.
+     *
+     * @param temporaryFolder the temporary folder where temporary files should be placed
+     * @return a file with a 9 patch PNG in a {@code drawables} folder
+     * @throws Exception failed to create the PNG
+     */
+    @NonNull
+    public static File getTest9Patch(@NonNull TemporaryFolder temporaryFolder) throws Exception {
+        return setUpResourceStructure(
+                "testData/aapt/9patch.9.png", temporaryFolder, "drawable", "9patch.9.png");
     }
 
     /**
@@ -60,12 +70,11 @@ public class AaptTestUtils {
     @NonNull
     public static File getTestPngWithLongFileName(@NonNull TemporaryFolder temporaryFolder)
             throws Exception {
-        File drawables = new File(temporaryFolder.getRoot(), "drawable");
-        FileUtils.mkdirs(drawables);
-        File dstPng = new File(drawables, Strings.repeat("a", 230) + ".png");
-        Resources.asByteSource(Resources.getResource("testData/aapt/lena.png"))
-                .copyTo(Files.asByteSink(dstPng));
-        return dstPng;
+        return setUpResourceStructure(
+                "testData/aapt/lena.png",
+                temporaryFolder,
+                "drawable",
+                Strings.repeat("a", 230) + ".png");
     }
 
     /**
@@ -128,5 +137,18 @@ public class AaptTestUtils {
         }
 
         return outputDir;
+    }
+
+    private static File setUpResourceStructure(
+            @NonNull String resourcePath,
+            @NonNull TemporaryFolder temporaryFolder,
+            @NonNull String directoryName,
+            @NonNull String fileName)
+            throws IOException {
+        File directory = new File(temporaryFolder.getRoot(), directoryName);
+        FileUtils.mkdirs(directory);
+        File file = new File(directory, fileName);
+        Resources.asByteSource(Resources.getResource(resourcePath)).copyTo(Files.asByteSink(file));
+        return file;
     }
 }
