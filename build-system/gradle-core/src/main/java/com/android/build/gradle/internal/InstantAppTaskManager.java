@@ -29,7 +29,6 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.BundleInstantApp;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.profile.Recorder;
-import com.android.utils.FileUtils;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
 import java.io.File;
 import java.util.Set;
@@ -70,10 +69,7 @@ public class InstantAppTaskManager extends TaskManager {
                 project.getPath(),
                 variantScope.getFullVariantName(),
                 () -> {
-                    File bundleDir =
-                            FileUtils.join(
-                                    globalScope.getApkLocation(),
-                                    variantScope.getVariantConfiguration().getDirName());
+                    File bundleDir = variantScope.getApkLocation();
                     AndroidTask<BundleInstantApp> bundleTask =
                             getAndroidTasks()
                                     .create(

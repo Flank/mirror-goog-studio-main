@@ -1434,6 +1434,34 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         }
     }
 
+    /**
+     * Obtains the location where APKs should be placed.
+     *
+     * @return the location for APKs
+     */
+    @NonNull
+    @Override
+    public File getApkLocation() {
+        String override = globalScope.getProjectOptions().get(StringOption.IDE_APK_LOCATION);
+
+        File baseDirectory =
+                override != null && variantData.getType() != VariantType.FEATURE
+                        ? globalScope.getProject().file(override)
+                        : getDefaultApkLocation();
+
+        return new File(baseDirectory, getVariantConfiguration().getDirName());
+    }
+
+    /**
+     * Obtains the default location for APKs.
+     *
+     * @return the default location for APKs
+     */
+    @NonNull
+    private File getDefaultApkLocation() {
+        return FileUtils.join(globalScope.getBuildDir(), FD_OUTPUTS, "apk");
+    }
+
     private AndroidTask<? extends ManifestProcessorTask> manifestProcessorTask;
 
     @Override

@@ -84,7 +84,6 @@ public class ModelBuilderTest {
 
         MockitoAnnotations.initMocks(this);
         apkLocation = temporaryFolder.newFolder("apk");
-        when(globalScope.getApkLocation()).thenReturn(apkLocation);
 
         modelBuilder =
                 new ModelBuilder(
@@ -113,7 +112,7 @@ public class ModelBuilderTest {
                 Mockito.mock(GradleVariantConfiguration.class);
         when(variantConfiguration.getDirName()).thenReturn("variant/name");
 
-        VariantScope variantScope = createVariantScope("variantName");
+        VariantScope variantScope = createVariantScope("variantName", "variant/name");
         createVariantData(variantScope, variantConfiguration);
         when(variantManager.getVariantScopes()).thenReturn(ImmutableList.of(variantScope));
 
@@ -136,7 +135,7 @@ public class ModelBuilderTest {
                 Mockito.mock(GradleVariantConfiguration.class);
         when(variantConfiguration.getDirName()).thenReturn("variant/name");
 
-        VariantScope variantScope = createVariantScope("variantName");
+        VariantScope variantScope = createVariantScope("variantName", "variant/name");
         createVariantData(variantScope, variantConfiguration);
 
         when(variantManager.getVariantScopes()).thenReturn(ImmutableList.of(variantScope));
@@ -182,7 +181,7 @@ public class ModelBuilderTest {
                 Mockito.mock(GradleVariantConfiguration.class);
         when(variantConfiguration.getDirName()).thenReturn("variant/name");
 
-        VariantScope variantScope = createVariantScope("variantName");
+        VariantScope variantScope = createVariantScope("variantName", "variant/name");
         createVariantData(variantScope, variantConfiguration);
 
         when(variantManager.getVariantScopes()).thenReturn(ImmutableList.of(variantScope));
@@ -255,7 +254,7 @@ public class ModelBuilderTest {
             when(variantConfiguration.getDirName()).thenReturn("variant/name" + i);
 
             String variantName = "variantName" + i;
-            VariantScope variantScope = createVariantScope(variantName);
+            VariantScope variantScope = createVariantScope(variantName, "variant/name" + i);
             expectedVariantNames.add(variantName);
             createVariantData(variantScope, variantConfiguration);
 
@@ -308,13 +307,13 @@ public class ModelBuilderTest {
                 Mockito.mock(GradleVariantConfiguration.class);
         when(variantConfiguration.getDirName()).thenReturn("variant/name");
 
-        VariantScope variantScope = createVariantScope("variantName");
+        VariantScope variantScope = createVariantScope("variantName", "variant/name");
         BaseVariantData variantData = createVariantData(variantScope, variantConfiguration);
 
         GradleVariantConfiguration testVariantConfiguration =
                 Mockito.mock(GradleVariantConfiguration.class);
         when(testVariantConfiguration.getDirName()).thenReturn("test/name");
-        VariantScope testVariantScope = createVariantScope("testVariant");
+        VariantScope testVariantScope = createVariantScope("testVariant", "test/name");
         BaseVariantData testVariantData =
                 createVariantData(testVariantScope, testVariantConfiguration);
         when(testVariantData.getType()).thenReturn(VariantType.UNIT_TEST);
@@ -367,10 +366,11 @@ public class ModelBuilderTest {
         return variantData;
     }
 
-    private VariantScope createVariantScope(String variantName) {
+    private VariantScope createVariantScope(String variantName, String dirName) {
         VariantScope variantScope = Mockito.mock(VariantScope.class);
         when(variantScope.getFullVariantName()).thenReturn(variantName);
         when(variantScope.getGlobalScope()).thenReturn(globalScope);
+        when(variantScope.getApkLocation()).thenReturn(new File(apkLocation, dirName));
         return variantScope;
     }
 

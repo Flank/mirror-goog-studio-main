@@ -359,6 +359,9 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     @NonNull
     File getManifestOutputDirectory();
 
+    @NonNull
+    File getApkLocation();
+
     AndroidTask<? extends ManifestProcessorTask> getManifestProcessorTask();
 
     void setManifestProcessorTask(

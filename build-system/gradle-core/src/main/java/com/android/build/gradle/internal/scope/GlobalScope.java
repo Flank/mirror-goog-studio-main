@@ -203,27 +203,6 @@ public class GlobalScope extends TaskOutputHolderImpl
         return new File(getBuildDir(), FD_OUTPUTS);
     }
 
-    /**
-     * Obtains the default location for APKs.
-     *
-     * @return the default location for APKs
-     */
-    @NonNull
-    private File getDefaultApkLocation() {
-        return FileUtils.join(getBuildDir(), FD_OUTPUTS, "apk");
-    }
-
-    /**
-     * Obtains the location where APKs should be placed.
-     *
-     * @return the location for APKs
-     */
-    @NonNull
-    public File getApkLocation() {
-        String override = projectOptions.get(StringOption.IDE_APK_LOCATION);
-        return override != null ? project.file(override) : getDefaultApkLocation();
-    }
-
     @Override
     public boolean isActive(OptionalCompilationStep step) {
         return optionalCompilationSteps.contains(step);

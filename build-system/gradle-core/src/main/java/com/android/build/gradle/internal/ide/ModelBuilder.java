@@ -639,17 +639,11 @@ public class ModelBuilder implements ToolingModelBuilder {
                                 VariantScope.TaskOutputType.APK,
                                 VariantScope.TaskOutputType.ABI_PACKAGED_SPLIT,
                                 VariantScope.TaskOutputType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT),
-                        ImmutableList.of(
-                                new File(
-                                        variantData.getScope().getGlobalScope().getApkLocation(),
-                                        variantData.getVariantConfiguration().getDirName())));
+                        ImmutableList.of(variantData.getScope().getApkLocation()));
             case INSTANTAPP:
                 return new BuildOutputsSupplier(
                         ImmutableList.of(VariantScope.TaskOutputType.INSTANTAPP_BUNDLE),
-                        ImmutableList.of(
-                                new File(
-                                        variantData.getScope().getGlobalScope().getApkLocation(),
-                                        variantData.getVariantConfiguration().getDirName())));
+                        ImmutableList.of(variantData.getScope().getApkLocation()));
             case LIBRARY:
                 ApkInfo mainApkInfo =
                         ApkInfo.of(VariantOutput.OutputType.MAIN, ImmutableList.of(), 0);
@@ -662,10 +656,7 @@ public class ModelBuilder implements ToolingModelBuilder {
             case ANDROID_TEST:
                 return new BuildOutputsSupplier(
                         ImmutableList.of(VariantScope.TaskOutputType.APK),
-                        ImmutableList.of(
-                                new File(
-                                        variantData.getScope().getGlobalScope().getApkLocation(),
-                                        variantData.getVariantConfiguration().getDirName())));
+                        ImmutableList.of(variantData.getScope().getApkLocation()));
             case UNIT_TEST:
                 return (BuildOutputSupplier<Collection<BuildOutput>>)
                         () ->

@@ -2569,8 +2569,7 @@ public abstract class TaskManager {
 
         FileCollection manifests = variantScope.getOutput(manifestType);
         // this is where the final APKs will be located.
-        File finalApkLocation =
-                new File(globalScope.getApkLocation(), variantConfiguration.getDirName());
+        File finalApkLocation = variantScope.getApkLocation();
         // if we are not dealing with possible splits, we can generate in the final folder
         // directly.
         File outputDirectory =
