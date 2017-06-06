@@ -21,6 +21,7 @@ import com.android.tools.bazel.model.Package;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
+import com.google.common.io.Files;
 import com.intellij.compiler.CompilerConfiguration;
 import com.intellij.compiler.CompilerConfigurationImpl;
 import com.intellij.compiler.ModuleCompilerUtil;
@@ -30,6 +31,7 @@ import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.PlatformDataKeys;
 import com.intellij.openapi.compiler.options.ExcludeEntryDescription;
 import com.intellij.openapi.compiler.options.ExcludesConfiguration;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.Project;
@@ -37,7 +39,6 @@ import com.intellij.openapi.roots.*;
 import com.intellij.openapi.roots.libraries.Library;
 import com.intellij.openapi.util.AsyncResult;
 import com.intellij.openapi.util.io.FileUtil;
-import com.intellij.openapi.vfs.JarFileSystem;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.Chunk;
@@ -55,6 +56,8 @@ import org.jetbrains.jps.model.java.JavaSourceRootType;
 
 public class GenerateBazelAction extends AnAction {
     private static final String KOTLIN_RUNTIME = "KotlinJavaRuntime";
+    private static final String KOTLIN_TEST = "KotlinTest";
+    private static final Logger LOG = Logger.getInstance(GenerateBazelAction.class);
 
     public GenerateBazelAction() {
         super("Generate Bazel files");
@@ -62,6 +65,7 @@ public class GenerateBazelAction extends AnAction {
 
     public void actionPerformed(AnActionEvent event) {
         final Project project = event.getData(PlatformDataKeys.PROJECT);
+        assert project != null;
 
         ConsoleDialog dialog = new ConsoleDialog(project, "Generating BUILD files...");
         AsyncResult<Boolean> result = dialog.showAndGetOk();
@@ -70,7 +74,7 @@ public class GenerateBazelAction extends AnAction {
             generate(project, dialog.getWriter(), new StudioConfiguration());
         } catch (Throwable e) {
             e.printStackTrace(dialog.getWriter());
-            e.printStackTrace();
+            LOG.error(e);
         } finally {
             result.getResult();
         }
@@ -80,6 +84,7 @@ public class GenerateBazelAction extends AnAction {
     private void generate(Project project, PrintWriter progress, Configuration config) throws IOException {
         File workspace = findWorkspace(project);
         Workspace bazel = new Workspace(workspace);
+        Package toolsBaseBazel = bazel.findPackage("tools/base/bazel");
 
         final ExcludesConfiguration excludesConfiguration = CompilerConfiguration.getInstance(project).getExcludedEntriesConfiguration();
         ExcludeEntryDescription[] excludeEntries = excludesConfiguration.getExcludeEntryDescriptions();
@@ -108,6 +113,7 @@ public class GenerateBazelAction extends AnAction {
                     VirtualFile root = folder.getFile();
                     if (root != null) {
                         String sourceLocalPath = PathUtil.getLocalPath(root);
+                        assert sourceLocalPath != null;
                         File sourceDirectory = new File(sourceLocalPath);
                         String relativePath = FileUtil.getRelativePath(pkg.getPackageDir(), sourceDirectory);
 
@@ -144,10 +150,6 @@ public class GenerateBazelAction extends AnAction {
 
         // 2nd pass: Dependencies.
         for (BazelModule module : modules) {
-
-            String rel = FileUtil.getRelativePath(workspace, module.getBaseDir());
-            Package pkg = bazel.findPackage(rel);
-
             File librariesDir = new File(VfsUtil.virtualToIoFile(project.getBaseDir()), ".idea/libraries");
             Package librariesPkg = bazel.findPackage(FileUtil.getRelativePath(workspace, librariesDir));
 
@@ -155,7 +157,6 @@ public class GenerateBazelAction extends AnAction {
                 if (orderEntry instanceof LibraryOrderEntry) {
                     // A dependency to a jar file
                     LibraryOrderEntry libraryEntry = (LibraryOrderEntry) orderEntry;
-                    Package libPkg = librariesPkg;
                     List<ImlModule.Tag> scopes = new LinkedList<>();
                     if (libraryEntry.getScope().equals(DependencyScope.TEST)) {
                         scopes.add(ImlModule.Tag.TEST);
@@ -163,16 +164,20 @@ public class GenerateBazelAction extends AnAction {
 
                     JavaLibrary namedLib = null;
                     if (!libraryEntry.isModuleLevel()) {
-                        String libName = libraryEntry.getLibraryName().replaceAll(":","_");
+                        //noinspection ConstantConditions - getLibraryName() is not null for module-level libraries.
+                        String libName = libraryEntry.getLibraryName().replaceAll(":", "_");
                         namedLib = libraries.get(libName.toLowerCase());
                         if (namedLib == null) {
-                            namedLib = new JavaLibrary(libPkg, libName);
-                            if (KOTLIN_RUNTIME.equals(libName)) {
-                                namedLib.addDependency(
-                                        new JavaImport(
-                                                bazel.findPackage("tools/base/bazel"),
-                                                "kotlin-runtime"),
-                                        true);
+                            namedLib = new JavaLibrary(librariesPkg, libName);
+                            switch (libName) {
+                                case KOTLIN_RUNTIME:
+                                    namedLib.addDependency(
+                                            new JavaImport(toolsBaseBazel, "kotlin-runtime"), true);
+                                    break;
+                                case KOTLIN_TEST:
+                                    namedLib.addDependency(
+                                            new JavaImport(toolsBaseBazel, "kotlin-test"), true);
+                                    break;
                             }
                             libraries.put(libName.toLowerCase(), namedLib);
                         }
@@ -183,14 +188,14 @@ public class GenerateBazelAction extends AnAction {
                         VirtualFile[] files = library.getFiles(OrderRootType.CLASSES);
                         for (VirtualFile libFile : files) {
                             if (libFile.getFileType() instanceof ArchiveFileType) {
-                                VirtualFile jar = JarFileSystem.getInstance().getVirtualFileForJar(libFile);
-                                if (jar != null) {
-                                    if (jar.getName().endsWith("-sources.jar")) {
+                                File jarFile = VfsUtil.virtualToIoFile(libFile);
+                                if (Files.getFileExtension(jarFile.getName()).equals("jar")) {
+                                    if (jarFile.getName().endsWith("-sources.jar")) {
                                         continue;
                                     }
 
-                                    File jarFile = VfsUtil.virtualToIoFile(jar);
                                     String relJar = FileUtil.getRelativePath(workspace, jarFile);
+                                    assert relJar != null;
                                     JavaImport imp = imports.get(relJar);
                                     if (imp == null) {
                                         String label = config.mapImportJar(relJar);
@@ -201,8 +206,11 @@ public class GenerateBazelAction extends AnAction {
                                             imp = new JavaImport(jarPkg, pkgAndTarget.target);
                                             imports.put(relJar, imp);
                                         } else if (jarPkg != null) {
-                                            String packageRelative = FileUtil.getRelativePath(
-                                                    jarPkg.getPackageDir(), new File(jar.getPath()));
+                                            String packageRelative =
+                                                    FileUtil.getRelativePath(
+                                                            jarPkg.getPackageDir(), jarFile);
+                                            assert packageRelative != null;
+
                                             // TODO: Fix all these dependencies correctly
                                             String target;
                                             if (relJar.startsWith("prebuilts/tools/common/m2")) {
@@ -213,8 +221,8 @@ public class GenerateBazelAction extends AnAction {
                                             imp = new JavaImport(jarPkg, target);
                                             imp.addJar(packageRelative);
                                             imports.put(relJar, imp);
-                                        } else {
-                                            System.err.println("Cannot find package for:" + relJar);
+                                        } else if (!isKotlinRelated(library)) {
+                                            LOG.error("Cannot find package for:" + relJar);
                                         }
                                     }
                                     if (imp != null) {
@@ -224,8 +232,8 @@ public class GenerateBazelAction extends AnAction {
                                             module.rule.addDependency(imp, libraryEntry.isExported(), scopes);
                                         }
                                     }
-                                } else if (!KOTLIN_RUNTIME.equals(library.getName())) {
-                                    System.err.println("Cannot find file for: " + libFile);
+                                } else if (!isKotlinRelated(library)) {
+                                    LOG.error("Cannot find file for: " + libFile);
                                 }
                             }
                         }
@@ -233,7 +241,7 @@ public class GenerateBazelAction extends AnAction {
                             module.rule.addDependency(namedLib, libraryEntry.isExported(), scopes);
                         }
                     } else {
-                        System.err.println("No library for entry " + libraryEntry);
+                        LOG.error("No library for entry " + libraryEntry);
                     }
                 } else if (orderEntry instanceof ModuleOrderEntry) {
                     // A dependency to another module
@@ -275,6 +283,14 @@ public class GenerateBazelAction extends AnAction {
         progress.append("Done.\n");
     }
 
+    /**
+     * Checks if the given library has something to do with Kotlin. BUILD files don't point to
+     * Kotlin jars bundled with the IJ plugin, instead we use jars from prebuilts.
+     */
+    private boolean isKotlinRelated(Library library) {
+        return KOTLIN_RUNTIME.equals(library.getName()) || KOTLIN_TEST.equals(library.getName());
+    }
+
     private File findWorkspace(Project project) {
         File dir = VfsUtil.virtualToIoFile(project.getBaseDir());
         while (dir != null && !new File(dir, "WORKSPACE").exists()) {
@@ -301,10 +317,10 @@ public class GenerateBazelAction extends AnAction {
     }
 
     private class Label {
-        public final String pkg;
-        public final String target;
+        final String pkg;
+        final String target;
 
-        public Label(String label) {
+        Label(String label) {
             if (label.startsWith("@")) {
                 int endOfRepo = label.indexOf("//");
                 if (endOfRepo < 0) {
