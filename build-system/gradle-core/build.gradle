@@ -169,3 +169,12 @@ javadoc {
 javadoc {
     classpath += configurations.provided
 }
+
+// setup annotation processor output directory
+File generatedSources = new File(project.buildDir, 'generated/generated')
+tasks.compileJava {
+    doFirst {
+        generatedSources.mkdirs()
+    }
+    options.compilerArgs += ['-s', generatedSources]
+}
