@@ -156,9 +156,11 @@ message Device {
   string serial = 3; // unique ID for this device
   string version = 4; // e.g. '5.1.1', '8.0.0'
   int32 api_level = 5; // e.g. 19, 25
+  string codename = 10; // Identifies preview versions by API letter (e.g. 'O'), or '' for release
   // |feature_level| will either be the same as |api_level| or |api_level + 1| if the current
   // device is a preview version. Code should check against |feature_level|, not |api_level|, to
-  // see if a feature is available in the framework or not.
+  // see if a feature is available in the framework or not. If |feature_level != api_level|, then
+  // |codename| will also be set.
   int32 feature_level = 6;
   string boot_id = 7; // unique ID regenerated each boot time
   bool is_emulator = 8;
