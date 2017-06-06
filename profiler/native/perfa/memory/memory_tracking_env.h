@@ -42,19 +42,27 @@ using profiler::proto::MemoryControlRequest;
 namespace profiler {
 
 #ifndef NDEBUG
-using ClassTagMap = tracking::unordered_map<std::string, long, kClassTagMap>;
+using ClassTagMap = tracking::unordered_map<std::string, int32_t, kClassTagMap>;
 using ClassGlobalRefs = tracking::vector<jobject, kClassGlobalRefs>;
 using ClassData = tracking::vector<AllocatedClass, kClassData>;
-using MethodIdSet = tracking::unordered_set<long, kMethodIds>;
+using MethodIdSet = tracking::unordered_set<int64_t, kMethodIds>;
 #else
-using ClassTagMap = std::unordered_map<std::string, long>;
+using ClassTagMap = std::unordered_map<std::string, int32_t>;
 using ClassGlobalRefs = std::vector<jobject>;
 using ClassData = std::vector<AllocatedClass>;
-using MethodIdSet = std::unordered_set<long>;
+using MethodIdSet = std::unordered_set<int64_t>;
 #endif
 
 class MemoryTrackingEnv {
  public:
+  // POD for encoding the method/instruction location data into trie.
+  struct FrameInfo {
+    int64_t method_id, location_id;
+    inline bool operator==(const FrameInfo& other) const {
+      return method_id == other.method_id && location_id == other.location_id;
+    }
+  };
+
   static MemoryTrackingEnv* Instance(JavaVM* vm, bool log_live_alloc_count);
 
  private:
@@ -72,8 +80,8 @@ class MemoryTrackingEnv {
   void LogGcStart();
   void LogGcFinish();
 
-  long GetNextClassTag() { return current_class_tag_++; }
-  long GetNextObjectTag() { return current_object_tag_++; }
+  int32_t GetNextClassTag() { return current_class_tag_++; }
+  int64_t GetNextObjectTag() { return current_object_tag_++; }
 
   void HandleControlSignal(const MemoryControlRequest* request);
 
@@ -99,11 +107,15 @@ class MemoryTrackingEnv {
   // Thread to send allocation data to perfd.
   static void JNICALL AllocDataWorker(jvmtiEnv* jvmti, JNIEnv* jni, void* arg);
 
-  // Helper methods for retrieving methods names corresponding to the method_ids
+  // Helper method for retrieving methods names corresponding to the method_ids
   // and inserting them into the BatchAllocationSample.
   static void SetSampleMethods(MemoryTrackingEnv* env, jvmtiEnv* jvmti,
                                JNIEnv* jni, BatchAllocationSample& sample,
-                               const std::vector<long>& method_ids);
+                               const std::vector<int64_t>& method_ids);
+
+  // Helper method for retrieivng line number.
+  static int32_t FindLineNumber(MemoryTrackingEnv* env, jvmtiEnv* jvmti,
+                                int64_t method_id, int64_t location_id);
 
   SteadyClock clock_;
   TimingStats timing_stats_;
@@ -116,14 +128,14 @@ class MemoryTrackingEnv {
   int64_t current_capture_time_ns_;
   int64_t last_gc_start_ns_;
   std::mutex tracking_mutex_;
-  std::atomic<int> total_live_count_;
-  std::atomic<int> total_free_count_;
-  std::atomic<long> current_class_tag_;
-  std::atomic<long> current_object_tag_;
+  std::atomic<int64_t> total_live_count_;
+  std::atomic<int64_t> total_free_count_;
+  std::atomic<int32_t> current_class_tag_;
+  std::atomic<int64_t> current_object_tag_;
 
   std::mutex class_data_mutex_;
   ProducerConsumerQueue<AllocationEvent> event_queue_;
-  Trie<long> stack_trie_;
+  Trie<FrameInfo> stack_trie_;
   ClassTagMap class_tag_map_;
   ClassGlobalRefs class_global_refs_;
   ClassData class_data_;

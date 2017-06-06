@@ -34,24 +34,25 @@ static JavaVM* g_vm;
 static profiler::MemoryTrackingEnv* g_env;
 
 // Start tag of Class objects - use 1 as 0 represents no tag.
-constexpr long kClassStartTag = 1;
+constexpr int32_t kClassStartTag = 1;
+
 // Start tag of all other instance objects
 // This assume enough buffer for the number of classes that are in an
-// application.
-constexpr long kObjectStartTag = 1e6;
+// application. (64K - 1 which is plenty?)
+constexpr int32_t kObjectStartTag = 1 << 16;
 
 const char* kClassClass = "Ljava/lang/Class;";
 
 // Wait time between sending alloc data to perfd/studio.
-constexpr long kDataTransferIntervalNs = Clock::ms_to_ns(500);
+constexpr int64_t kDataTransferIntervalNs = Clock::ms_to_ns(500);
 
 // TODO looks like we are capped by a protobuf message size limit.
 // Investigate whether smaller batches are good enough, or if we
 // should tweak the limit for profilers.
-constexpr int kDataBatchSize = 2000;
+constexpr int32_t kDataBatchSize = 2000;
 
 // The max depth of callstacks to query per allocation.
-constexpr int kMaxStackDepth = 100;
+constexpr int32_t kMaxStackDepth = 100;
 }
 
 namespace profiler {
@@ -169,14 +170,6 @@ void MemoryTrackingEnv::StartLiveTracking(int64_t timestamp) {
   // Called from grpc so we need to attach.
   JNIEnv* jni = GetThreadLocalJNI(g_vm);
   jvmtiError error;
-
-  // Trigger a GC - this is necessary to clean up any Class objects
-  // that are still left behind from the ClassLoad stage, which
-  // we would not get from the GetLoadedClasses below, and we want to
-  // ensure they don't stay on the heap during IterateThroughHeap.
-  error = jvmti_->ForceGarbageCollection();
-  CheckJvmtiError(jvmti_, error);
-
   {
     std::lock_guard<std::mutex> lock(class_data_mutex_);
     // If this is the first tracking session. Loop through all the already
@@ -191,6 +184,7 @@ void MemoryTrackingEnv::StartLiveTracking(int64_t timestamp) {
       // handle the cases of 1) actual duplicated classes vs 2) same class
       // loaded by multiple class loaders properly in RegisterNewClass.
       SetEventNotification(jvmti_, JVMTI_ENABLE, JVMTI_EVENT_CLASS_PREPARE);
+
       jint class_count = 0;
       jclass* classes;
       error = jvmti_->GetLoadedClasses(&class_count, &classes);
@@ -222,6 +216,15 @@ void MemoryTrackingEnv::StartLiveTracking(int64_t timestamp) {
     }
   }
 
+  // Trigger a GC - this is necessary to clean up any Class objects
+  // that are still left behind from the ClassLoad stage, which
+  // we would not get from the GetLoadedClasses, and we want to
+  // ensure they don't stay on the heap during IterateThroughHeap.
+  error = jvmti_->ForceGarbageCollection();
+  // x2 to be double sure. GC itself can cause class loads...
+  error = jvmti_->ForceGarbageCollection();
+  CheckJvmtiError(jvmti_, error);
+
   // Tag all objects already allocated on the heap.
   BatchAllocationSample snapshot_sample;
   jvmtiHeapCallbacks heap_callbacks;
@@ -233,7 +236,6 @@ void MemoryTrackingEnv::StartLiveTracking(int64_t timestamp) {
   if (snapshot_sample.events_size() > 0) {
     profiler::EnqueueAllocationEvents(snapshot_sample);
   }
-  Log::V("Live objects on heap: %ld", current_object_tag_ - kObjectStartTag);
 
   // Enable allocation+deallocation callbacks after initial heap walk.
   SetEventNotification(jvmti_, JVMTI_ENABLE, JVMTI_EVENT_VM_OBJECT_ALLOC);
@@ -267,7 +269,7 @@ void MemoryTrackingEnv::RegisterNewClass(JNIEnv* jni, jclass klass) {
   std::string klass_name = sig_mutf8;
   Deallocate(jvmti_, sig_mutf8);
 
-  long tag = 0;
+  int32_t tag = 0;
   AllocatedClass klass_data;
   auto itr = class_tag_map_.find(klass_name);
   if (itr != class_tag_map_.end()) {
@@ -292,7 +294,7 @@ void MemoryTrackingEnv::RegisterNewClass(JNIEnv* jni, jclass klass) {
   // Cache the jclasses so that they will never be gc.
   // This ensures that any jmethodID/jfieldID will never become invalid.
   // TODO: Investigate any memory implications - presumably the number of
-  // classes won't be enormous. (e.g. < 1e6)
+  // classes won't be enormous. (e.g. < (1<<16))
   class_global_refs_.push_back(jni->NewGlobalRef(klass));
 }
 
@@ -312,7 +314,7 @@ void MemoryTrackingEnv::LogGcFinish() {
   Log::V(">> Memory(bytes)");
   for (int i = 0; i < kMemTagCount; i++) {
     Log::V(">> %s: Total=%ld, Max=%ld", MemTagToString((MemTag)i),
-           (long)g_total_used[i].load(), (long)g_max_used[i].load());
+           g_total_used[i].load(), g_max_used[i].load());
   }
   event_queue_.PrintStats();
   stack_trie_.PrintStats();
@@ -357,7 +359,7 @@ jint MemoryTrackingEnv::HeapIterationCallback(jlong class_tag, jlong size,
     return JVMTI_VISIT_OBJECTS;
   }
 
-  long tag = g_env->GetNextObjectTag();
+  int64_t tag = g_env->GetNextObjectTag();
   *tag_ptr = tag;
 
   AllocationEvent* event = sample->add_events();
@@ -411,7 +413,7 @@ void MemoryTrackingEnv::ObjectAllocCallback(jvmtiEnv* jvmti, JNIEnv* jni,
     return;
   }
 
-  long tag = g_env->GetNextObjectTag();
+  int64_t tag = g_env->GetNextObjectTag();
   error = jvmti->SetTag(object, tag);
   CheckJvmtiError(jvmti, error);
 
@@ -430,8 +432,11 @@ void MemoryTrackingEnv::ObjectAllocCallback(jvmtiEnv* jvmti, JNIEnv* jni,
     error = jvmti->GetStackTrace(thread, 0, kMaxStackDepth, frames, &count);
     CheckJvmtiError(jvmti, error);
     for (int i = 0; i < count; i++) {
-      long method_id = reinterpret_cast<long>(frames[i].method);
+      int64_t method_id = reinterpret_cast<int64_t>(frames[i].method);
+      // jlocation is just a jlong.
+      int64_t location_id = reinterpret_cast<jlong>(frames[i].location);
       alloc_data->add_method_ids(method_id);
+      alloc_data->add_location_ids(location_id);
     }
 
     event.set_capture_time(g_env->current_capture_time_ns_);
@@ -481,7 +486,7 @@ void MemoryTrackingEnv::AllocDataWorker(jvmtiEnv* jvmti, JNIEnv* jni,
         // TODO: investigate whether we need to set time cap for large amount of
         // data.
         std::deque<AllocationEvent> queued_data = env->event_queue_.Drain();
-        std::vector<long> method_ids_to_query;
+        std::vector<int64_t> method_ids_to_query;
         while (!queued_data.empty()) {
           AllocationEvent* event = sample.add_events();
           event->CopyFrom(queued_data.front());
@@ -492,16 +497,18 @@ void MemoryTrackingEnv::AllocDataWorker(jvmtiEnv* jvmti, JNIEnv* jni,
               AllocationEvent::Allocation* alloc_data =
                   event->mutable_alloc_data();
               int stack_size = alloc_data->method_ids_size();
+              assert(stack_size == alloc_data->location_ids_size());
 
               // Store and encode the stack into trie.
               // TODO - consider moving trie storage to perfd?
               if (stack_size > 0) {
-                std::vector<long> reversed_stack(stack_size);
+                std::vector<FrameInfo> reversed_stack(stack_size);
                 for (int i = 0; i < stack_size; i++) {
-                  long id = alloc_data->method_ids(i);
-                  reversed_stack[stack_size - i - 1] = id;
-                  if (env->known_method_ids_.emplace(id).second) {
-                    method_ids_to_query.push_back(id);
+                  int64_t method = alloc_data->method_ids(i);
+                  int64_t location = alloc_data->location_ids(i);
+                  reversed_stack[stack_size - i - 1] = {method, location};
+                  if (env->known_method_ids_.emplace(method).second) {
+                    method_ids_to_query.push_back(method);
                   }
                 }
 
@@ -511,9 +518,13 @@ void MemoryTrackingEnv::AllocDataWorker(jvmtiEnv* jvmti, JNIEnv* jni,
                   EncodedAllocationStack* encoded_stack = sample.add_stacks();
                   encoded_stack->set_timestamp(event->timestamp());
                   encoded_stack->set_stack_id(result.first);
+                  // Yet reverse again so first entry is top of stack.
                   for (int j = stack_size - 1; j >= 0; j--) {
-                    // Yet reverse again so first entry is top of stack.
-                    encoded_stack->add_method_ids(reversed_stack[j]);
+                    int32_t line_number =
+                        FindLineNumber(env, jvmti, reversed_stack[j].method_id,
+                                       reversed_stack[j].location_id);
+                    encoded_stack->add_method_ids(reversed_stack[j].method_id);
+                    encoded_stack->add_line_numbers(line_number);
                   }
                 }
 
@@ -521,6 +532,7 @@ void MemoryTrackingEnv::AllocDataWorker(jvmtiEnv* jvmti, JNIEnv* jni,
                 // The full stack will be looked up from EncodedStack on
                 // studio-side.
                 alloc_data->clear_method_ids();
+                alloc_data->clear_location_ids();
                 alloc_data->set_stack_id(result.first);
               }
             } break;
@@ -561,10 +573,9 @@ void MemoryTrackingEnv::AllocDataWorker(jvmtiEnv* jvmti, JNIEnv* jni,
   }
 }
 
-void MemoryTrackingEnv::SetSampleMethods(MemoryTrackingEnv* env,
-                                         jvmtiEnv* jvmti, JNIEnv* jni,
-                                         BatchAllocationSample& sample,
-                                         const std::vector<long>& method_ids) {
+void MemoryTrackingEnv::SetSampleMethods(
+    MemoryTrackingEnv* env, jvmtiEnv* jvmti, JNIEnv* jni,
+    BatchAllocationSample& sample, const std::vector<int64_t>& method_ids) {
   jvmtiError error;
   Stopwatch sw;
   {
@@ -599,6 +610,38 @@ void MemoryTrackingEnv::SetSampleMethods(MemoryTrackingEnv* env,
     }
   }
   env->timing_stats_.Track(TimingStats::kBulkCallstack, sw.GetElapsed());
+}
+
+int32_t MemoryTrackingEnv::FindLineNumber(MemoryTrackingEnv* env,
+                                          jvmtiEnv* jvmti, int64_t method_id,
+                                          int64_t location_id) {
+  int32_t line_number = -1;
+  // Ignore native methods
+  if (location_id != -1) {
+    Stopwatch sw;
+    jint entry_count = 0;
+    jvmtiLineNumberEntry* line_number_entry = nullptr;
+    jmethodID method = reinterpret_cast<jmethodID>(method_id);
+    // TODO: Cache known line number tables?
+    jvmtiError error =
+        jvmti->GetLineNumberTable(method, &entry_count, &line_number_entry);
+    if (CheckJvmtiError(jvmti, error)) {
+      return line_number;
+    }
+
+    for (int i = 0; i < entry_count; i++) {
+      jvmtiLineNumberEntry entry = line_number_entry[i];
+      if (entry.start_location > location_id) {
+        break;
+      }
+      line_number = entry.line_number;
+    }
+
+    Deallocate(jvmti, line_number_entry);
+    env->timing_stats_.Track(TimingStats::kLineNumber, sw.GetElapsed());
+  }
+
+  return line_number;
 }
 
 }  // namespace profiler

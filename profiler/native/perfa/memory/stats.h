@@ -93,6 +93,7 @@ class TimingStats {
     kFree,
     kCallstack,
     kBulkCallstack,
+    kLineNumber,
     kTimingTagCount,
   };
 
@@ -128,6 +129,8 @@ class TimingStats {
         return "Callstack";
       case kBulkCallstack:
         return "BulkCallstack";
+      case kLineNumber:
+        return "LineNumber";
       default:
         return "Unknown";
     }
