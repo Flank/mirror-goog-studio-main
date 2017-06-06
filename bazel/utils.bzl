@@ -1,5 +1,5 @@
-def singlejar(name, jars, **kwargs):
-  jar_name = "lib" + name + ".jar"
+def singlejar(name, jars, jar_name=None, **kwargs):
+  jar_name = jar_name if jar_name else "lib" + name + ".jar"
   native.genrule(
     name = name + ".genrule",
     srcs = jars,

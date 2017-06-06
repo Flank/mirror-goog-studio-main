@@ -1,5 +1,5 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 
 iml_module(
@@ -67,10 +67,17 @@ maven_pom(
     source = "//tools/buildSrc/base:base_version",
 )
 
-kotlin_library(
-    name = "tools.testlib",
+kotlin_test(
+    name = "tools.tests",
     srcs = ["src/test/java"],
+    data = ["//prebuilts/studio/sdk:platform-tools"],
+    jvm_flags = ["-Dtest.suite.jar=tools.tests.jar"],
+    resources = glob(["src/test/resources/**"]),
+    test_class = "com.android.testutils.JarTestSuite",
     visibility = ["//visibility:public"],
+    runtime_deps = [
+        "//tools/base/third_party:org.bouncycastle_bcpkix-jdk15on",
+    ],
     deps = [
         ":tools.sdk-common",
         "//tools/base/annotations",
@@ -83,37 +90,7 @@ kotlin_library(
         "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:com.google.code.gson_gson",
         "//tools/base/third_party:com.google.truth_truth",
-        "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:org.easymock_easymock",
         "//tools/base/third_party:org.mockito_mockito-core",
-    ],
-)
-
-java_test(
-    name = "tools.tests",
-    data = ["//prebuilts/studio/sdk:platform-tools"],
-    jvm_flags = ["-Dtest.suite.jar=tools.testlib.jar"],
-    resources = glob(["src/test/resources/**"]),
-    test_class = "com.android.testutils.JarTestSuite",
-    runtime_deps = [
-        ":tools.testlib",
-        # TODO: These dependencies should NOT be required, but they are for now...
-        ":tools.sdk-common",
-        "//tools/base/annotations",
-        "//tools/base/build-system:tools.builder-test-api",
-        "//tools/base/build-system/builder-model",
-        "//tools/base/common:tools.common",
-        "//tools/base/layoutlib-api:tools.layoutlib-api",
-        "//tools/base/repository:tools.repository",
-        "//tools/base/sdklib:tools.sdklib",
-        "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:com.google.code.gson_gson",
-        "//tools/base/third_party:com.google.truth_truth",
-        "//tools/base/third_party:junit_junit",
-        "//tools/base/third_party:org.bouncycastle_bcpkix-jdk15on",
-        "//tools/base/third_party:org.bouncycastle_bcprov-jdk15on",
-        "//tools/base/third_party:org.easymock_easymock",
-        "//tools/base/third_party:org.mockito_mockito-core",
-        "//tools/idea/.idea/libraries:KotlinJavaRuntime",
     ],
 )

@@ -60,32 +60,45 @@ kotlin_jar = rule(
     implementation = _kotlin_jar_impl,
 )
 
-def kotlin_library(name, srcs, javacopts=None, resources=[], deps=[], pom=None, visibility=None):
+def kotlin_library(name, srcs, javacopts=None, resources=[], deps=[], pom=None, visibility=None, jar_name=None, **kwargs):
   kotlins = native.glob([src + "/**/*.kt" for src in srcs])
   javas = native.glob([src + "/**/*.java" for src in srcs])
 
-  kotlin_name = name + ".kotlin"
-  targets = [kotlin_name]
-  kotlin_jar(
-      name = kotlin_name,
-      srcs = srcs,
-      inputs = kotlins + javas,
-      deps = deps,
-  )
+  if not kotlins and not javas:
+    print("No sources found for kotlin_library " + name)
 
+
+  targets = []
+  kdeps = []
+  if kotlins:
+    kotlin_name = name + ".kotlin"
+    targets += [kotlin_name]
+    kdeps += [":lib" + kotlin_name + ".jar"]
+    kotlin_jar(
+        name = kotlin_name,
+        srcs = srcs,
+        inputs = kotlins + javas,
+        deps = deps,
+        visibility = visibility,
+    )
+
+  java_name = name + ".java"
   if javas:
-    java_name = name + ".java"
     targets += [java_name]
     native.java_library(
         name = java_name,
         srcs = javas,
         javacopts = javacopts,
         resources = resources,
-        deps = [":lib" + kotlin_name + ".jar"] + deps,
+        deps = kdeps + deps,
+        visibility = visibility,
+        **kwargs
     )
 
   singlejar(
       name = name,
+      jar_name = jar_name,
+      runtime_deps = deps + ["//tools/base/bazel:kotlin-runtime"],
       jars = [":lib" + target + ".jar" for target in targets],
       visibility = visibility,
   )
@@ -98,3 +111,27 @@ def kotlin_library(name, srcs, javacopts=None, resources=[], deps=[], pom=None, 
       visibility = visibility,
       source = pom,
     )
+
+
+def kotlin_test(name, srcs, deps=[], runtime_deps=[], visibility=None, **kwargs):
+  kotlin_library(
+    name = name + ".testlib",
+    srcs = srcs,
+    deps = deps,
+    runtime_deps = runtime_deps,
+    jar_name = name + ".jar",
+    visibility = visibility,
+  )
+
+  native.java_test(
+      name = name + ".test",
+      runtime_deps = [
+          ":" + name + ".testlib",
+      ],
+      **kwargs
+  )
+
+  native.test_suite(
+      name = name,
+      tests = [name + ".test"],
+  )
