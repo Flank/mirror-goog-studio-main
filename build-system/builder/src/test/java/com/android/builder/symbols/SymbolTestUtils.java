@@ -52,4 +52,13 @@ public final class SymbolTestUtils {
                         javaType),
                 value);
     }
+
+    /** @see #createSymbol(String, String, String, String) */
+    public static Symbol createSymbol(
+            @NonNull String resourceType,
+            @NonNull String name,
+            @NonNull String javaType,
+            int numericValue) {
+        return createSymbol(resourceType, name, javaType, String.valueOf(numericValue));
+    }
 }

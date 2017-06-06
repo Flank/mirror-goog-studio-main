@@ -103,10 +103,10 @@ public class ResourceDirectoryParserTest {
 
         SymbolTable expected =
                 SymbolTable.builder()
-                        .add(SymbolTestUtils.createSymbol("drawable", "bar", "int", "1"))
-                        .add(SymbolTestUtils.createSymbol("drawable", "foo", "int", "2"))
-                        .add(SymbolTestUtils.createSymbol("raw", "bar", "int", "5"))
-                        .add(SymbolTestUtils.createSymbol("raw", "foo", "int", "4"))
+                        .add(SymbolTestUtils.createSymbol("drawable", "bar", "int", 0x7f_09_0001))
+                        .add(SymbolTestUtils.createSymbol("drawable", "foo", "int", 0x7f_09_0002))
+                        .add(SymbolTestUtils.createSymbol("raw", "bar", "int", 0x7f_14_0002))
+                        .add(SymbolTestUtils.createSymbol("raw", "foo", "int", 0x7f_14_0001))
                         .build();
 
         assertEquals(expected, parsed);
@@ -137,9 +137,9 @@ public class ResourceDirectoryParserTest {
 
         SymbolTable expected =
                 SymbolTable.builder()
-                        .add(SymbolTestUtils.createSymbol("color", "a", "int", "1"))
-                        .add(SymbolTestUtils.createSymbol("color", "b", "int", "2"))
-                        .add(SymbolTestUtils.createSymbol("color", "c", "int", "4"))
+                        .add(SymbolTestUtils.createSymbol("color", "a", "int", 0x7f_06_0001))
+                        .add(SymbolTestUtils.createSymbol("color", "b", "int", 0x7f_06_0002))
+                        .add(SymbolTestUtils.createSymbol("color", "c", "int", 0x7f_06_0004))
                         .build();
 
         assertEquals(expected, parsed);
