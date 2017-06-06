@@ -67,6 +67,17 @@ public interface BaseConfig {
     Map<String, ClassField> getResValues();
 
     /**
+     * Map of the manual flavor selection.
+     *
+     * <p>To learn more, read <a href="d.android.com/r/tools/use-flavorSelection.html">Select
+     * default flavors for missing dimensions</a>.
+     *
+     * @return a non-null map of (dimension, value)
+     */
+    @NonNull
+    Map<String, String> getFlavorSelections();
+
+    /**
      * Returns the collection of proguard rule files.
      *
      * <p>These files are only applied to the production code.

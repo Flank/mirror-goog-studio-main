@@ -22,10 +22,8 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.dependency.level2.AndroidDependency;
 import com.android.builder.dexing.DexingType;
 import com.android.builder.internal.ClassFieldImpl;
-import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.model.BuildType;
 import com.android.builder.model.ClassField;
@@ -38,12 +36,14 @@ import com.android.sdklib.AndroidVersion;
 import com.android.utils.StringHelper;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -1604,6 +1604,15 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         }
 
         return fullList;
+    }
+
+    @NonNull
+    public Map<String, String> getFlavorSelections() {
+        Map<String, String> map = new HashMap<>();
+        // put the merged flavor first so that it gets overridden with the build type entries.
+        map.putAll(mMergedFlavor.getFlavorSelections());
+        map.putAll(mBuildType.getFlavorSelections());
+        return ImmutableMap.copyOf(map);
     }
 
     @Nullable

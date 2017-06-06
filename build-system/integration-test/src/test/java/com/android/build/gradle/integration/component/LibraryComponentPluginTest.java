@@ -69,7 +69,7 @@ public class LibraryComponentPluginTest {
                         + "\n"
                         + "model {\n"
                         + "    android {\n"
-                        + "        flavorSelection[\"pricing\"] = \"free\"\n"
+                        + "        defaultConfig.flavorSelections[\"pricing\"] = \"free\"\n"
                         + "    }\n"
                         + "}\n");
 
