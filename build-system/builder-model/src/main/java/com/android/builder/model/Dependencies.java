@@ -17,31 +17,12 @@
 package com.android.builder.model;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import java.util.Collection;
 
 /**
  * A set of dependencies for an {@link AndroidArtifact}.
  */
 public interface Dependencies {
-
-    /**
-     * The list of Android atom dependencies.
-     *
-     * <p>The list contains direct dependencies only, which themselves contain their transitive
-     * dependencies.
-     *
-     * <p>This is only valid for versions 2.3 and 2.4. On version 2.5+ this is empty.
-     *
-     * <p>Atoms can not be external dependencies, so {@link Library#getProject()} never returns
-     * null.
-     *
-     * @return the list of atoms.
-     * @since 2.3
-     */
-    @NonNull
-    @Deprecated
-    Collection<AndroidAtom> getAtoms();
 
     /**
      * The list of Android library dependencies.
@@ -90,17 +71,4 @@ public interface Dependencies {
     @NonNull
     @Deprecated
     Collection<String> getProjects();
-
-    /**
-     * Returns the base atom, if applicable.
-     *
-     * <p>This is only valid for versions 2.3 and 2.4. On version 2.5+ this is null.
-     *
-     * @return the base atom. Or null if this artifact is the base atom or there is no base atom,
-     *     this will be the case when the module is not part of an instant app.
-     * @since 2.3
-     */
-    @Nullable
-    @Deprecated
-    AndroidAtom getBaseAtom();
 }
