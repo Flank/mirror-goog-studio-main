@@ -192,7 +192,6 @@ public final class ResourceValuesXmlParser {
             @NonNull IdProvider idProvider,
             @NonNull List<Symbol> enumSymbols) {
 
-        String name = SymbolUtils.canonicalizeValueResourceName(getMandatoryAttr(child, "name"));
         String type = child.getTagName();
         if (type.equals(SdkConstants.TAG_ITEM)) {
             type = child.getAttribute(SdkConstants.ATTR_TYPE);
@@ -209,6 +208,13 @@ public final class ResourceValuesXmlParser {
             throw new ResourceValuesXmlParseException(
                     "Unknown resource value XML element '" + type + "'");
         }
+
+        if (resourceType == ResourceType.PUBLIC) {
+            // Doesn't declare a resource.
+            return;
+        }
+
+        String name = SymbolUtils.canonicalizeValueResourceName(getMandatoryAttr(child, "name"));
 
         switch (resourceType) {
             case ANIM:
@@ -248,8 +254,7 @@ public final class ResourceValuesXmlParser {
                 parseAttr(child, idProvider, name, builder, enumSymbols);
                 break;
             case PUBLIC:
-                // Doesn't declare a resource.
-                break;
+                throw new AssertionError("Already checked above.");
             default:
                 throw new ResourceValuesXmlParseException(
                         "Unknown resource value XML element '" + type + "'");

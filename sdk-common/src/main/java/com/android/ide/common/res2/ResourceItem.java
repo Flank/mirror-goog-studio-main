@@ -478,7 +478,10 @@ public class ResourceItem extends DataItem<ResourceFile>
                                 new ResourceValue(getResourceUrl(isFrameworks), mLibraryName));
                 break;
             default:
-                value = parseValue(new ResourceValue(getResourceUrl(isFrameworks), mLibraryName));
+                value =
+                        parseValue(
+                                new ResourceValue(
+                                        getResourceUrl(isFrameworks), null, mLibraryName));
                 break;
         }
 

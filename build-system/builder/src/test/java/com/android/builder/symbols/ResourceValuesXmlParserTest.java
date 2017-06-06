@@ -479,6 +479,7 @@ public class ResourceValuesXmlParserTest {
                         + "    <style name=\"foo_style\">idk</style>\n"
                         + "    <item type=\"transition\" name=\"foo_transition\">idk</item>\n"
                         + "    <item type=\"xml\" name=\"foo_xml\">idk</item>\n"
+                        + "    <public />\n"
                         + "</resources>";
 
         SymbolTable actual =

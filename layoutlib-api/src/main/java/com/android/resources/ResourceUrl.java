@@ -56,7 +56,7 @@ public class ResourceUrl {
             boolean framework,
             boolean create,
             boolean theme) {
-        if (name.isEmpty()) {
+        if (name.isEmpty() && type != ResourceType.PUBLIC) {
             throw new IllegalArgumentException("Resource name cannot be empty.");
         }
 
