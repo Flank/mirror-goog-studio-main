@@ -150,8 +150,8 @@ class PreOSideLoader implements InstantAppSideLoader.Installer {
                             if (message.contains(installTokenIdentifier)) {
                                 if (message.contains("LOAD_SUCCESS")) {
                                     succeeded.set(true);
+                                    latch.countDown();
                                 }
-                                latch.countDown();
                             }
                         }
                     }
