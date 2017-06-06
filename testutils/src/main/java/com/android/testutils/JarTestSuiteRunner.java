@@ -27,11 +27,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
@@ -40,7 +36,9 @@ import java.util.zip.ZipInputStream;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import org.junit.Test;
+import org.junit.runner.Description;
 import org.junit.runner.RunWith;
+import org.junit.runner.manipulation.Sorter;
 import org.junit.runners.Suite;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.RunnerBuilder;
@@ -56,6 +54,25 @@ public class JarTestSuiteRunner extends Suite {
 
     public JarTestSuiteRunner(Class<?> suiteClass, RunnerBuilder builder) throws InitializationError, ClassNotFoundException, IOException {
         super(builder, suiteClass, getTestClasses(suiteClass));
+        final String seed = System.getProperty("test.seed");
+        if (seed != null) {
+            randomizeTestOrder(Long.parseLong(seed));
+        }
+    }
+
+    private void randomizeTestOrder(long seed) {
+        Map<Description, Integer> values = new HashMap<>();
+        Random random = new Random(seed);
+        assign(getDescription(), random, values);
+        super.sort(new Sorter(Comparator.comparingInt(values::get)));
+    }
+
+    private static void assign(
+            Description description, Random random, Map<Description, Integer> values) {
+        values.put(description, random.nextInt());
+        for (Description child : description.getChildren()) {
+            assign(child, random, values);
+        }
     }
 
     private static Class<?>[] getTestClasses(Class<?> suiteClass) throws ClassNotFoundException, IOException {
