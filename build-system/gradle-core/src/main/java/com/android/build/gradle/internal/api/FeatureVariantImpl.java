@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.internal.variant.FeatureVariantData;
 import com.android.builder.core.AndroidBuilder;
 import org.gradle.api.NamedDomainObjectContainer;
+import org.gradle.api.model.ObjectFactory;
 
 /**
  * implementation of the {@link FeatureVariant} interface around a {@link FeatureVariantData}
@@ -42,10 +43,11 @@ public class FeatureVariantImpl extends ApkVariantImpl implements FeatureVariant
 
     public FeatureVariantImpl(
             @NonNull FeatureVariantData variantData,
+            @NonNull ObjectFactory objectFactory,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull ReadOnlyObjectProvider readOnlyObjectProvider,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> outputs) {
-        super(androidBuilder, readOnlyObjectProvider, outputs);
+        super(objectFactory, androidBuilder, readOnlyObjectProvider, outputs);
         this.variantData = variantData;
     }
 

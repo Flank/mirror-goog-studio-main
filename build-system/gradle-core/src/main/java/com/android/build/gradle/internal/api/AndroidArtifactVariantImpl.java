@@ -25,6 +25,7 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.SigningConfig;
 import java.util.Set;
 import org.gradle.api.NamedDomainObjectContainer;
+import org.gradle.api.model.ObjectFactory;
 
 /**
  * Implementation of the {@link AndroidArtifactVariant} interface around a
@@ -33,10 +34,11 @@ import org.gradle.api.NamedDomainObjectContainer;
 public abstract class AndroidArtifactVariantImpl extends BaseVariantImpl implements AndroidArtifactVariant {
 
     protected AndroidArtifactVariantImpl(
+            @NonNull ObjectFactory objectFactory,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull ReadOnlyObjectProvider immutableObjectProvider,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> outputs) {
-        super(androidBuilder, immutableObjectProvider, outputs);
+        super(objectFactory, androidBuilder, immutableObjectProvider, outputs);
     }
 
     @NonNull

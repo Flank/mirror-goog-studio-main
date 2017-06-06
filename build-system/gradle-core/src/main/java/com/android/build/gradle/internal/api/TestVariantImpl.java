@@ -25,6 +25,7 @@ import com.android.builder.core.AndroidBuilder;
 import java.util.List;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.NamedDomainObjectContainer;
+import org.gradle.api.model.ObjectFactory;
 
 /**
  * implementation of the {@link TestVariant} interface around an {@link TestVariantData} object.
@@ -42,10 +43,11 @@ public class TestVariantImpl extends ApkVariantImpl implements TestVariant {
     public TestVariantImpl(
             @NonNull TestVariantData variantData,
             @NonNull BaseVariant testedVariantData,
+            @NonNull ObjectFactory objectFactory,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull ReadOnlyObjectProvider readOnlyObjectProvider,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> outputs) {
-        super(androidBuilder, readOnlyObjectProvider, outputs);
+        super(objectFactory, androidBuilder, readOnlyObjectProvider, outputs);
         this.variantData = variantData;
         this.testedVariantData = testedVariantData;
     }

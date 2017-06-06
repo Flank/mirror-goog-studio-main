@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.variant.InstallableVariantData;
 import com.android.builder.core.AndroidBuilder;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.NamedDomainObjectContainer;
+import org.gradle.api.model.ObjectFactory;
 
 /**
  * Implementation of an installable variant.
@@ -30,10 +31,11 @@ import org.gradle.api.NamedDomainObjectContainer;
 public abstract class InstallableVariantImpl extends AndroidArtifactVariantImpl implements InstallableVariant {
 
     protected InstallableVariantImpl(
+            @NonNull ObjectFactory objectFactory,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull ReadOnlyObjectProvider immutableObjectProvider,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> outputs) {
-        super(androidBuilder, immutableObjectProvider, outputs);
+        super(objectFactory, androidBuilder, immutableObjectProvider, outputs);
     }
 
     @NonNull

@@ -613,7 +613,11 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
                     variantManager.createAndroidTasks();
                     ApiObjectFactory apiObjectFactory =
                             new ApiObjectFactory(
-                                    androidBuilder, extension, variantFactory, instantiator);
+                                    androidBuilder,
+                                    extension,
+                                    variantFactory,
+                                    instantiator,
+                                    project.getObjects());
                     for (VariantScope variantScope : variantManager.getVariantScopes()) {
                         BaseVariantData variantData = variantScope.getVariantData();
                         apiObjectFactory.create(variantData);

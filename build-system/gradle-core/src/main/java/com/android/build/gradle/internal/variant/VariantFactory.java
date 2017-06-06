@@ -35,6 +35,7 @@ import com.android.builder.profile.Recorder;
 import java.util.Collection;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
+import org.gradle.api.model.ObjectFactory;
 import org.gradle.internal.reflect.Instantiator;
 
 /**
@@ -59,6 +60,7 @@ public interface VariantFactory {
     @Nullable
     default BaseVariantImpl createVariantApi(
             @NonNull Instantiator instantiator,
+            @NonNull ObjectFactory objectFactory,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull BaseVariantData variantData,
             @NonNull ReadOnlyObjectProvider readOnlyObjectProvider) {
@@ -71,6 +73,7 @@ public interface VariantFactory {
         return instantiator.newInstance(
                 implementationClass,
                 variantData,
+                objectFactory,
                 androidBuilder,
                 readOnlyObjectProvider,
                 variantData

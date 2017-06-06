@@ -44,6 +44,7 @@ import org.gradle.api.artifacts.ResolutionStrategy;
 import org.gradle.api.attributes.Attribute;
 import org.gradle.api.attributes.AttributeContainer;
 import org.gradle.api.attributes.Usage;
+import org.gradle.api.model.ObjectFactory;
 
 /**
  * Object that represents the dependencies of variant.
@@ -230,6 +231,8 @@ public class VariantDependencies {
         public VariantDependencies build() {
             Preconditions.checkNotNull(consumeType);
 
+            ObjectFactory factory = project.getObjects();
+
             String variantName = variantConfiguration.getFullName();
             VariantType variantType = variantConfiguration.getType();
             String buildType = variantConfiguration.getBuildType().getName();
@@ -279,7 +282,7 @@ public class VariantDependencies {
             Configuration wearApp = null;
             if (publishTypes != null
                     && publishTypes.length == 1
-                    && publishTypes[0] == AndroidTypeAttr.TYPE_APK) {
+                    && publishTypes[0].getName().equals(AndroidTypeAttr.APK)) {
                 wearApp = configurations.maybeCreate(variantName + "WearBundling");
                 wearApp.setDescription(
                         "Resolved Configuration for wear app bundling for variant: " + variantName);
@@ -289,7 +292,9 @@ public class VariantDependencies {
                 applyVariantAttributes(wearAttributes, buildType, consumptionFlavorMap);
                 // because the APK is published to Runtime, then we need to make sure this one consumes RUNTIME as well.
                 wearAttributes.attribute(Usage.USAGE_ATTRIBUTE, Usage.FOR_RUNTIME);
-                wearAttributes.attribute(AndroidTypeAttr.ATTRIBUTE, AndroidTypeAttr.TYPE_APK);
+                wearAttributes.attribute(
+                        AndroidTypeAttr.ATTRIBUTE,
+                        factory.named(AndroidTypeAttr.class, AndroidTypeAttr.APK));
             }
 
             Map<AndroidTypeAttr, PublishedConfigurations> publishedConfigurations =
@@ -317,7 +322,7 @@ public class VariantDependencies {
                             runtimeElements.getAttributes();
                     applyVariantAttributes(
                             runtimeElementsAttributes, buildType, publicationFlavorMap);
-                    VariantAttr variantNameAttr = VariantAttr.of(variantName);
+                    VariantAttr variantNameAttr = factory.named(VariantAttr.class, variantName);
                     runtimeElementsAttributes.attribute(VariantAttr.ATTRIBUTE, variantNameAttr);
                     runtimeElementsAttributes.attribute(Usage.USAGE_ATTRIBUTE, Usage.FOR_RUNTIME);
                     runtimeElementsAttributes.attribute(AndroidTypeAttr.ATTRIBUTE, publishType);
@@ -356,7 +361,8 @@ public class VariantDependencies {
                         applyVariantAttributes(
                                 metadataElementsAttributes, buildType, publicationFlavorMap);
                         metadataElementsAttributes.attribute(
-                                AndroidTypeAttr.ATTRIBUTE, AndroidTypeAttr.TYPE_METADATA);
+                                AndroidTypeAttr.ATTRIBUTE,
+                                factory.named(AndroidTypeAttr.class, AndroidTypeAttr.METADATA));
                         metadataElementsAttributes.attribute(
                                 VariantAttr.ATTRIBUTE, variantNameAttr);
                     }
@@ -382,7 +388,8 @@ public class VariantDependencies {
                         final AttributeContainer featureMetadataAttributes =
                                 metadataValues.getAttributes();
                         featureMetadataAttributes.attribute(
-                                AndroidTypeAttr.ATTRIBUTE, AndroidTypeAttr.TYPE_METADATA);
+                                AndroidTypeAttr.ATTRIBUTE,
+                                factory.named(AndroidTypeAttr.class, AndroidTypeAttr.METADATA));
                         applyVariantAttributes(
                                 featureMetadataAttributes, buildType, consumptionFlavorMap);
                     }
@@ -437,10 +444,15 @@ public class VariantDependencies {
                 return map;
             }
 
+            final ObjectFactory objectFactory = project.getObjects();
+
             // first go through the product flavors and add matching attributes
             for (CoreProductFlavor f : productFlavors) {
                 assert f.getDimension() != null;
-                map.put(Attribute.of(f.getDimension(), ProductFlavorAttr.class), ProductFlavorAttr.of(f.getName()));
+
+                map.put(
+                        Attribute.of(f.getDimension(), ProductFlavorAttr.class),
+                        objectFactory.named(ProductFlavorAttr.class, f.getName()));
             }
 
             // then go through the override or new attributes.
@@ -451,11 +463,13 @@ public class VariantDependencies {
             return map;
         }
 
-        private static void applyVariantAttributes(
+        private void applyVariantAttributes(
                 @NonNull AttributeContainer attributeContainer,
                 @NonNull String buildType,
                 @NonNull Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> flavorMap) {
-            attributeContainer.attribute(BuildTypeAttr.ATTRIBUTE, BuildTypeAttr.of(buildType));
+            attributeContainer.attribute(
+                    BuildTypeAttr.ATTRIBUTE,
+                    project.getObjects().named(BuildTypeAttr.class, buildType));
             for (Map.Entry<Attribute<ProductFlavorAttr>, ProductFlavorAttr> entry : flavorMap.entrySet()) {
                 attributeContainer.attribute(entry.getKey(), entry.getValue());
             }

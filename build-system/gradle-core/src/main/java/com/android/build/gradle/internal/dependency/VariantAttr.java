@@ -16,54 +16,9 @@
 
 package com.android.build.gradle.internal.dependency;
 
-import com.android.annotations.NonNull;
-import com.google.common.base.MoreObjects;
-import com.google.common.collect.Interner;
-import com.google.common.collect.Interners;
-import java.util.Objects;
 import org.gradle.api.attributes.Attribute;
 
 /** Type for Variant attributes in Gradle's configuration objects. */
-public class VariantAttr implements org.gradle.api.Named {
-    private static final Interner<VariantAttr> interner = Interners.newStrongInterner();
-
-    public static final Attribute<VariantAttr> ATTRIBUTE = Attribute.of(VariantAttr.class);
-
-    public static VariantAttr of(String name) {
-        return interner.intern(new VariantAttr(name));
-    }
-
-    @NonNull private final String name;
-
-    private VariantAttr(@NonNull String name) {
-        this.name = name;
-    }
-
-    @NonNull
-    @Override
-    public String getName() {
-        return name;
-    }
-
-    @Override
-    public String toString() {
-        return MoreObjects.toStringHelper(this).add("name", name).toString();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        VariantAttr that = (VariantAttr) o;
-        return Objects.equals(name, that.name);
-    }
-
-    @Override
-    public int hashCode() {
-        return name.hashCode();
-    }
+public interface VariantAttr extends org.gradle.api.Named {
+    Attribute<VariantAttr> ATTRIBUTE = Attribute.of(VariantAttr.class);
 }

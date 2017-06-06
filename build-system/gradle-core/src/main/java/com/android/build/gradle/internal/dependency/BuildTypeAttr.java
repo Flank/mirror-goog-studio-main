@@ -16,59 +16,10 @@
 
 package com.android.build.gradle.internal.dependency;
 
-import com.android.annotations.NonNull;
-import com.google.common.base.MoreObjects;
-import com.google.common.collect.Interner;
-import com.google.common.collect.Interners;
-import java.util.Objects;
 import org.gradle.api.attributes.Attribute;
 
-/**
- * Type for Build Type attributes in Gradle's configuration objects.
- */
-public class BuildTypeAttr implements org.gradle.api.Named {
-    private static final Interner<BuildTypeAttr> interner = Interners.newStrongInterner();
+/** Type for Build Type attributes in Gradle's configuration objects. */
+public interface BuildTypeAttr extends org.gradle.api.Named {
 
-    public static final Attribute<BuildTypeAttr> ATTRIBUTE = Attribute.of(BuildTypeAttr.class);
-
-    public static BuildTypeAttr of(String name) {
-        return interner.intern(new BuildTypeAttr(name));
-    }
-
-    @NonNull
-    private final String name;
-
-    private BuildTypeAttr(@NonNull String name) {
-        this.name = name;
-    }
-
-    @NonNull
-    @Override
-    public String getName() {
-        return name;
-    }
-
-    @Override
-    public String toString() {
-        return MoreObjects.toStringHelper(this)
-                .add("name", name)
-                .toString();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        BuildTypeAttr that = (BuildTypeAttr) o;
-        return Objects.equals(name, that.name);
-    }
-
-    @Override
-    public int hashCode() {
-        return name.hashCode();
-    }
+    Attribute<BuildTypeAttr> ATTRIBUTE = Attribute.of(BuildTypeAttr.class);
 }
