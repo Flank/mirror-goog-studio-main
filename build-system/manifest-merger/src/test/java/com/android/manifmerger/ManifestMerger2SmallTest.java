@@ -189,6 +189,53 @@ public class ManifestMerger2SmallTest {
     }
 
     @Test
+    public void testToolsInLibrariesNotMain() throws Exception {
+        // Test that BLAME merged document still created when tools: annotations
+        // are used in library manifests but not in the main manifest.
+        MockLog mockLog = new MockLog();
+        String xml =
+                ""
+                        + "<manifest\n"
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    package=\"com.example.app1\">\n"
+                        + "\n"
+                        + "    <application android:label=\"@string/lib_name\" />\n"
+                        + "\n"
+                        + "</manifest>";
+
+        File inputFile = inputAsFile("testToolsInLibrariesNotMain", xml);
+
+        String libraryInput =
+                ""
+                        + "<manifest\n"
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                        + "    package=\"com.example.lib1\">\n"
+                        + "\n"
+                        + "    <application android:label=\"@string/lib_name\">\n"
+                        + "       <activity tools:node=\"removeAll\">\n"
+                        + "        </activity>\n"
+                        + "    </application>"
+                        + "\n"
+                        + "</manifest>";
+
+        File libFile = inputAsFile("testToolsInLibrariesNotMain", libraryInput);
+
+        try {
+            MergingReport mergingReport =
+                    ManifestMerger2.newMerger(
+                                    inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
+                            .withFeatures(ManifestMerger2.Invoker.Feature.REMOVE_TOOLS_DECLARATIONS)
+                            .addLibraryManifest(libFile)
+                            .merge();
+            assertNotNull(mergingReport.getMergedDocument(MergedManifestKind.BLAME));
+        } finally {
+            assertTrue(inputFile.delete());
+            assertTrue(libFile.delete());
+        }
+    }
+
+    @Test
     public void testToolsAnnotationPresence() throws Exception {
 
         MockLog mockLog = new MockLog();
