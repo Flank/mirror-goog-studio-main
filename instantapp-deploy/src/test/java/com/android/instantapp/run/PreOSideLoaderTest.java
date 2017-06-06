@@ -117,4 +117,23 @@ public class PreOSideLoaderTest {
             assertEquals(InstantAppRunException.ErrorType.ADB_FAILURE, e.getErrorType());
         }
     }
+
+    @Test
+    public void testReadIapkSucceedsWhenIMessageBeforeLoadSuccess() throws Throwable {
+        UUID installToken = UUID.randomUUID();
+        File zip = new File("zip");
+        IDevice device =
+                new InstantAppTests.DeviceGenerator()
+                        .setOnline()
+                        .setLogcat(
+                                Lists.newArrayList(
+                                        "[ 05-31 21:21:37.562  2775: 3670 I/IapkLoadService ]\nOTHER MESSAGE token="
+                                                + installToken,
+                                        "[ 05-31 21:21:37.562  2775: 3670 I/IapkLoadService ]\nLOAD_SUCCESS token="
+                                                + installToken))
+                        .getDevice();
+        PreOSideLoader installer = new PreOSideLoader(zip, new RunListener.NullListener());
+        installer.readIapk(device, "path/to/folder", installToken);
+        // Checking no exception is thrown
+    }
 }
