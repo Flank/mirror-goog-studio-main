@@ -17,9 +17,11 @@
 package com.android.builder.internal.aapt.v2;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.builder.internal.aapt.AaptException;
 import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.builder.internal.aapt.AbstractAapt;
+import com.android.builder.utils.FileCache;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessOutput;
@@ -29,14 +31,21 @@ import com.android.tools.aapt2.Aapt2Jni;
 import com.android.tools.aapt2.Aapt2RenamingConventions;
 import com.android.tools.aapt2.Aapt2Result;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
+import com.google.common.hash.HashCode;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 /**
@@ -48,15 +57,24 @@ public class AaptV2Jni extends AbstractAapt {
     @NonNull private final File intermediateDir;
     @NonNull private final ProcessOutputHandler processOutputHandler;
     @NonNull private final WaitableExecutor executor;
+    @NonNull private final Aapt2Jni aapt2Jni;
 
     /** Creates a new entry point to {@code aapt2} using the jni bindings. */
     public AaptV2Jni(
             @NonNull File intermediateDir,
             @NonNull WaitableExecutor executor,
-            @NonNull ProcessOutputHandler processOutputHandler) {
+            @NonNull ProcessOutputHandler processOutputHandler,
+            @Nullable FileCache fileCache)
+            throws IOException {
         this.intermediateDir = intermediateDir;
         this.executor = executor;
         this.processOutputHandler = processOutputHandler;
+
+        if (fileCache != null) {
+            this.aapt2Jni = new Aapt2Jni(new FileCacheAapt2JniCache(fileCache));
+        } else {
+            this.aapt2Jni = new Aapt2Jni(new TempDirCache());
+        }
     }
 
     @NonNull
@@ -71,7 +89,7 @@ public class AaptV2Jni extends AbstractAapt {
             }
         }
         List<String> args = AaptV2CommandBuilder.makeLink(config, intermediateDir);
-        Aapt2Result aapt2Result = Aapt2Jni.link(args);
+        Aapt2Result aapt2Result = aapt2Jni.link(args);
         writeMessages(processOutputHandler, aapt2Result.getMessages());
 
         if (aapt2Result.getReturnCode() == 0) {
@@ -87,7 +105,7 @@ public class AaptV2Jni extends AbstractAapt {
         return executor.execute(
                 () -> {
                     List<String> args = AaptV2CommandBuilder.makeCompile(request);
-                    Aapt2Result aapt2Result = Aapt2Jni.compile(args);
+                    Aapt2Result aapt2Result = aapt2Jni.compile(args);
                     writeMessages(processOutputHandler, aapt2Result.getMessages());
                     if (aapt2Result.getReturnCode() == 0) {
                         return new File(
@@ -165,6 +183,81 @@ public class AaptV2Jni extends AbstractAapt {
             processOutputHandler.handleOutput(output);
         } catch (ProcessException e) {
             throw new AaptException(e, "Unexpected error handling AAPT output");
+        }
+    }
+
+    private static class FileCacheAapt2JniCache implements Aapt2Jni.Cache {
+
+        @NonNull private final FileCache fileCache;
+
+        FileCacheAapt2JniCache(@NonNull FileCache fileCache) {
+            this.fileCache = fileCache;
+        }
+
+        @NonNull
+        @Override
+        public Path getCachedDirectory(
+                @NonNull HashCode hashCode, @NonNull Aapt2Jni.Creator creator) throws IOException {
+            FileCache.Inputs inputs =
+                    new FileCache.Inputs.Builder(FileCache.Command.EXTRACT_AAPT2_JNI)
+                            .putString("hashcode", hashCode.toString())
+                            .build();
+            FileCache.QueryResult result;
+            try {
+                result =
+                        fileCache.createFileInCacheIfAbsent(
+                                inputs,
+                                file -> {
+                                    Files.createDirectory(file.toPath());
+                                    creator.create(file.toPath());
+                                });
+            } catch (ExecutionException e) {
+                throw new IOException("Failed to create AAPT2 jni cache entry", e);
+            }
+            return Preconditions.checkNotNull(result.getCachedFile()).toPath();
+        }
+    }
+
+    private static class TempDirCache implements Aapt2Jni.Cache {
+
+        @NonNull
+        @Override
+        public Path getCachedDirectory(
+                @NonNull HashCode hashCode, @NonNull Aapt2Jni.Creator creator) throws IOException {
+            Path tempDir = Files.createTempDirectory("aapt2_");
+            creator.create(tempDir);
+
+            /*
+             * Add a hook to delete the directory and all files when the JVM exits. We can't do that
+             * before because of the DLL being locked on Windows.
+             */
+            Runtime.getRuntime()
+                    .addShutdownHook(
+                            new Thread(
+                                    () -> {
+                                        try {
+                                            Files.walkFileTree(tempDir, new RecursiveDelete());
+                                        } catch (IOException ignored) {
+                                            // well, we tried
+                                        }
+                                    }));
+            return tempDir;
+        }
+
+        private static class RecursiveDelete extends SimpleFileVisitor<Path> {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                    throws IOException {
+                Files.delete(file);
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult postVisitDirectory(Path dir, IOException exc)
+                    throws IOException {
+                Files.delete(dir);
+                return FileVisitResult.CONTINUE;
+            }
         }
     }
 }

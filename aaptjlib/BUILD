@@ -29,6 +29,7 @@ fileset(
 
 DEPS = [
     "//tools/base/annotations",
+    "//tools/base/common:tools.common",
     "//tools/base/third_party:com.google.auto.value_auto-value",
     "//tools/base/third_party:com.google.code.findbugs_jsr305",
     "//tools/base/third_party:com.google.guava_guava",
@@ -68,6 +69,8 @@ java_test(
         ":aaptjlib",
         "//tools/base/annotations",
         "//tools/base/third_party:com.google.guava_guava",
+        "//tools/base/third_party:com.google.jimfs_jimfs",
+        "//tools/base/third_party:com.google.truth_truth",
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:org.mockito_mockito-core",
     ],

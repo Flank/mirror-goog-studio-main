@@ -18,19 +18,13 @@ package com.android.build.gradle.internal.aapt;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.v1.AaptV1;
 import com.android.builder.internal.aapt.v2.AaptV2Jni;
 import com.android.builder.internal.aapt.v2.OutOfProcessAaptV2;
 import com.android.builder.sdk.TargetInfo;
-import com.android.ide.common.blame.MergingLog;
-import com.android.ide.common.blame.MergingLogRewriter;
-import com.android.ide.common.blame.ParsingProcessOutputHandler;
-import com.android.ide.common.blame.parser.ToolOutputParser;
-import com.android.ide.common.blame.parser.aapt.Aapt2OutputParser;
-import com.android.ide.common.blame.parser.aapt.AaptOutputParser;
+import com.android.builder.utils.FileCache;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.ide.common.process.ProcessOutputHandler;
@@ -41,6 +35,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -57,108 +52,8 @@ public final class AaptGradleFactory {
      *
      * @param aaptGeneration which aapt to use
      * @param builder the android builder project model
-     * @param scope the scope of the variant to use {@code aapt2} with
-     * @param intermediateDir intermediate directory for aapt to use
-     * @return the newly-created instance
-     */
-    @NonNull
-    public static Aapt make(
-            @NonNull AaptGeneration aaptGeneration,
-            @NonNull AndroidBuilder builder,
-            @NonNull VariantScope scope,
-            @NonNull File intermediateDir) {
-        return make(aaptGeneration, builder, true, scope, intermediateDir);
-    }
-
-    /**
-     * Creates a new {@link Aapt} instance based on project configuration.
-     *
-     * @param aaptGeneration which aapt to use
-     * @param builder the android builder project model
-     * @param crunchPng should PNGs be crunched?
-     * @param scope the scope of the variant to use {@code aapt2} with
-     * @param intermediateDir intermediate directory for aapt to use
-     * @param blameLog the merging log for rewriting messages
-     * @return the newly-created instance
-     */
-    @NonNull
-    public static Aapt make(
-            @NonNull AaptGeneration aaptGeneration,
-            @NonNull AndroidBuilder builder,
-            boolean crunchPng,
-            @NonNull VariantScope scope,
-            @NonNull File intermediateDir,
-            @Nullable MergingLog blameLog) {
-        return make(
-                aaptGeneration,
-                builder,
-                blameLog != null
-                        ? new ParsingProcessOutputHandler(
-                                new ToolOutputParser(
-                                        aaptGeneration == AaptGeneration.AAPT_V1
-                                                ? new AaptOutputParser()
-                                                : new Aapt2OutputParser(),
-                                        builder.getLogger()),
-                                new MergingLogRewriter(blameLog::find, builder.getErrorReporter()))
-                        : new LoggedProcessOutputHandler(new FilteringLogger(builder.getLogger())),
-                crunchPng,
-                intermediateDir,
-                scope.getGlobalScope().getExtension().getAaptOptions().getCruncherProcesses());
-    }
-
-    /**
-     * Creates a new {@link Aapt} instance based on project configuration.
-     *
-     * @param aaptGeneration which aapt to use
-     * @param builder the android builder project model
-     * @param crunchPng should PNGs be crunched?
-     * @param scope the scope of the variant to use {@code aapt2} with
-     * @param intermediateDir intermediate directory for aapt to use
-     * @return the newly-created instance
-     */
-    @NonNull
-    public static Aapt make(
-            @NonNull AaptGeneration aaptGeneration,
-            @NonNull AndroidBuilder builder,
-            boolean crunchPng,
-            @NonNull VariantScope scope,
-            @NonNull File intermediateDir) {
-        return make(
-                aaptGeneration,
-                builder,
-                new LoggedProcessOutputHandler(new FilteringLogger(builder.getLogger())),
-                crunchPng,
-                intermediateDir,
-                scope.getGlobalScope().getExtension().getAaptOptions().getCruncherProcesses());
-    }
-
-    /**
-     * Creates a new {@link Aapt} instance based on project configuration.
-     *
-     * @param aaptGeneration which aapt to use
-     * @param builder the android builder project model
-     * @param crunchPng should PNGs be crunched?
-     * @param intermediateDir intermediate directory for aapt to use
-     * @param cruncherProcesses the number of cruncher processes to use, if cruncher processes are
-     *     used
-     * @return the newly-created instance
-     */
-    @NonNull
-    public static Aapt make(
-            @NonNull AaptGeneration aaptGeneration,
-            @NonNull AndroidBuilder builder,
-            boolean crunchPng,
-            @NonNull File intermediateDir,
-            int cruncherProcesses) {
-        return make(aaptGeneration, builder, null, crunchPng, intermediateDir, cruncherProcesses);
-    }
-
-    /**
-     * Creates a new {@link Aapt} instance based on project configuration.
-     *
-     * @param aaptGeneration which aapt to use
-     * @param builder the android builder project model
      * @param outputHandler the output handler to use
+     * @param fileCache the cache to use for AAPT2 jni.
      * @param crunchPng should PNGs be crunched?
      * @param intermediateDir intermediate directory for aapt to use
      * @param cruncherProcesses the number of cruncher processes to use, if cruncher processes are
@@ -170,9 +65,11 @@ public final class AaptGradleFactory {
             @NonNull AaptGeneration aaptGeneration,
             @NonNull AndroidBuilder builder,
             @Nullable ProcessOutputHandler outputHandler,
+            @Nullable FileCache fileCache,
             boolean crunchPng,
             @NonNull File intermediateDir,
-            int cruncherProcesses) {
+            int cruncherProcesses)
+            throws IOException {
         TargetInfo target = builder.getTargetInfo();
         Preconditions.checkNotNull(target, "target == null");
         BuildToolInfo buildTools = target.getBuildTools();
@@ -202,16 +99,15 @@ public final class AaptGradleFactory {
                 return new AaptV2Jni(
                         intermediateDir,
                         WaitableExecutor.useGlobalSharedThreadPool(),
-                        teeOutputHandler);
+                        teeOutputHandler,
+                        fileCache);
             default:
                 throw new IllegalArgumentException("unknown aapt generation" + aaptGeneration);
         }
     }
 
-    /**
-     * Logger that downgrades some warnings to info level.
-     */
-    private static class FilteringLogger implements ILogger {
+    /** Logger that downgrades some warnings to info level. */
+    public static class FilteringLogger implements ILogger {
 
         /**
          * Ignored warnings in the aapt messages.
@@ -226,13 +122,12 @@ public final class AaptGradleFactory {
         @NonNull
         private final ILogger mDelegate;
 
-
         /**
          * Creates a new logger.
          *
          * @param delegate the logger ot delegate messages to
          */
-        private FilteringLogger(@NonNull ILogger delegate) {
+        public FilteringLogger(@NonNull ILogger delegate) {
             mDelegate = delegate;
         }
 

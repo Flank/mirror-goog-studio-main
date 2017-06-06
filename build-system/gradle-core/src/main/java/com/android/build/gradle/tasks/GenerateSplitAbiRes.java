@@ -28,11 +28,14 @@ import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.BaseTask;
+import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.core.VariantType;
 import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptPackageConfig;
+import com.android.builder.utils.FileCache;
 import com.android.ide.common.build.ApkData;
+import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.ide.common.process.ProcessException;
 import com.android.utils.FileUtils;
 import com.google.common.base.CharMatcher;
@@ -71,6 +74,7 @@ public class GenerateSplitAbiRes extends BaseTask {
     private SplitFactory splitFactory;
     private VariantType variantType;
     private VariantScope variantScope;
+    private FileCache fileCache;
 
     @Input
     public String getApplicationId() {
@@ -117,7 +121,6 @@ public class GenerateSplitAbiRes extends BaseTask {
     public AaptOptions getAaptOptions() {
         return aaptOptions;
     }
-
 
     @TaskAction
     protected void doFullTaskAction() throws IOException, InterruptedException, ProcessException {
@@ -178,15 +181,24 @@ public class GenerateSplitAbiRes extends BaseTask {
                 fileWriter.flush();
             }
 
+            AndroidBuilder builder = getBuilder();
             Aapt aapt =
                     AaptGradleFactory.make(
                             aaptGeneration,
-                            getBuilder(),
-                            variantScope,
+                            builder,
+                            new LoggedProcessOutputHandler(
+                                    new AaptGradleFactory.FilteringLogger(builder.getLogger())),
+                            fileCache,
+                            true,
                             FileUtils.mkdirs(
                                     new File(
                                             variantScope.getIncrementalDir(getName()),
-                                            "aapt-temp")));
+                                            "aapt-temp")),
+                            variantScope
+                                    .getGlobalScope()
+                                    .getExtension()
+                                    .getAaptOptions()
+                                    .getCruncherProcesses());
             AaptPackageConfig.Builder aaptConfig = new AaptPackageConfig.Builder();
             aaptConfig
                     .setManifestFile(tmpFile)
@@ -246,6 +258,7 @@ public class GenerateSplitAbiRes extends BaseTask {
             generateSplitAbiRes.versionName = config.getVersionName();
             generateSplitAbiRes.aaptGeneration =
                     AaptGeneration.fromProjectOptions(scope.getGlobalScope().getProjectOptions());
+            generateSplitAbiRes.fileCache = scope.getGlobalScope().getBuildCache();
 
             generateSplitAbiRes.variantScope = scope;
             generateSplitAbiRes.variantType = config.getType();

@@ -22,6 +22,7 @@ import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.profile.ThreadRecorder;
 import com.android.builder.utils.FileCache;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
@@ -48,6 +49,8 @@ public class ExternalBuildPlugin implements Plugin<Project> {
         ProfilerInitializer.init(project, projectOptions);
 
         FileCache buildCache = BuildCacheUtils.createBuildCacheIfEnabled(project, projectOptions);
+
+        Preconditions.checkNotNull(buildCache);
 
         ExternalBuildGlobalScope globalScope =
                 new ExternalBuildGlobalScope(project, projectOptions, buildCache);

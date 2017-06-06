@@ -337,6 +337,7 @@ public class ApplicationTaskManager extends TaskManager {
                             project,
                             variantScope.getInstantRunBuildContext(),
                             variantScope.getGlobalScope().getAndroidBuilder(),
+                            variantScope.getGlobalScope().getBuildCache(),
                             packagingScope,
                             packagingScope.getSigningConfig(),
                             AaptGeneration.fromProjectOptions(projectOptions),
@@ -359,13 +360,16 @@ public class ApplicationTaskManager extends TaskManager {
                             project,
                             variantScope.getInstantRunBuildContext(),
                             variantScope.getGlobalScope().getAndroidBuilder(),
+                            variantScope.getGlobalScope().getBuildCache(),
                             packagingScope,
                             packagingScope.getSigningConfig(),
                             AaptGeneration.fromProjectOptions(projectOptions),
                             packagingScope.getAaptOptions(),
                             new File(packagingScope.getInstantRunSplitApkOutputFolder(), "slices"),
                             packagingScope.getInstantRunSupportDir(),
-                            globalScope.getProjectOptions().get(OptionalBooleanOption.SERIAL_AAPT2));
+                            globalScope
+                                    .getProjectOptions()
+                                    .get(OptionalBooleanOption.SERIAL_AAPT2));
 
             Optional<AndroidTask<TransformTask>> transformTaskAndroidTask = variantScope
                     .getTransformManager().addTransform(tasks, variantScope, slicesApkBuilder);

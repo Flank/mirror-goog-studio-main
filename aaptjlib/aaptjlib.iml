@@ -20,5 +20,8 @@
     <orderEntry type="library" name="jsr305" level="project" />
     <orderEntry type="library" name="Guava" level="project" />
     <orderEntry type="library" name="auto-value-1.3" level="project" />
+    <orderEntry type="module" module-name="common" />
+    <orderEntry type="library" name="truth" level="project" />
+    <orderEntry type="library" name="jimfs" level="project" />
   </component>
 </module>

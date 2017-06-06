@@ -67,6 +67,7 @@ import com.android.builder.symbols.ResourceDirectoryParser;
 import com.android.builder.symbols.SymbolIo;
 import com.android.builder.symbols.SymbolTable;
 import com.android.builder.symbols.SymbolUtils;
+import com.android.builder.utils.FileCache;
 import com.android.ide.common.blame.MergingLog;
 import com.android.ide.common.blame.MergingLogRewriter;
 import com.android.ide.common.blame.ParsingProcessOutputHandler;
@@ -94,6 +95,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -171,6 +173,8 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     private TaskOutputHolder.TaskOutputType taskInputType;
 
+    @Nullable private FileCache fileCache;
+
     @Input
     public TaskOutputHolder.TaskOutputType getTaskInputType() {
         return taskInputType;
@@ -216,7 +220,7 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     // FIX-ME : make me incremental !
     @Override
-    protected void doFullTaskAction() throws IOException {
+    protected void doFullTaskAction() throws IOException, ExecutionException {
 
         WaitableExecutor executor = WaitableExecutor.useGlobalSharedThreadPool();
 
@@ -499,6 +503,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                                 aaptGeneration,
                                 builder,
                                 processOutputHandler,
+                                fileCache,
                                 true,
                                 FileUtils.mkdirs(new File(getIncrementalFolder(), "aapt-temp")),
                                 aaptOptions.getCruncherProcesses());
@@ -740,6 +745,7 @@ public class ProcessAndroidResources extends IncrementalTask {
             final GradleVariantConfiguration config = variantData.getVariantConfiguration();
 
             processResources.setAndroidBuilder(variantScope.getGlobalScope().getAndroidBuilder());
+            processResources.fileCache = variantScope.getGlobalScope().getBuildCache();
             processResources.setVariantName(config.getFullName());
             processResources.resPackageOutputFolder = resPackageOutputFolder;
             processResources.aaptGeneration = AaptGeneration.fromProjectOptions(projectOptions);

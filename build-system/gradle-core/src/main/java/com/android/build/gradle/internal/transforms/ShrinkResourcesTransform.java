@@ -53,7 +53,9 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptPackageConfig;
+import com.android.builder.utils.FileCache;
 import com.android.ide.common.build.ApkData;
+import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
 import com.google.common.base.Verify;
@@ -100,6 +102,7 @@ public class ShrinkResourcesTransform extends Transform {
     @NonNull private final BaseVariantData variantData;
 
     @NonNull private final AndroidBuilder androidBuilder;
+    @Nullable private final FileCache fileCache;
     @NonNull private final Logger logger;
 
     @NonNull private final File sourceDir;
@@ -126,9 +129,11 @@ public class ShrinkResourcesTransform extends Transform {
             @NonNull FileCollection uncompressedResources,
             @NonNull File compressedResources,
             @NonNull AndroidBuilder androidBuilder,
+            @Nullable FileCache fileCache,
             @NonNull AaptGeneration aaptGeneration,
             @NonNull FileCollection splitListInput,
             @NonNull Logger logger) {
+        this.fileCache = fileCache;
         VariantScope variantScope = variantData.getScope();
         GlobalScope globalScope = variantScope.getGlobalScope();
         GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
@@ -357,11 +362,21 @@ public class ShrinkResourcesTransform extends Transform {
                         AaptGradleFactory.make(
                                 aaptGeneration,
                                 androidBuilder,
-                                variantData.getScope(),
+                                new LoggedProcessOutputHandler(
+                                        new AaptGradleFactory.FilteringLogger(
+                                                androidBuilder.getLogger())),
+                                fileCache,
+                                true,
                                 FileUtils.mkdirs(
                                         new File(
                                                 invocation.getContext().getTemporaryDir(),
-                                                "temp-aapt")));
+                                                "temp-aapt")),
+                                variantData
+                                        .getScope()
+                                        .getGlobalScope()
+                                        .getExtension()
+                                        .getAaptOptions()
+                                        .getCruncherProcesses());
 
                 AaptPackageConfig.Builder aaptPackageConfig =
                         new AaptPackageConfig.Builder()

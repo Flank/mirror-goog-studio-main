@@ -26,23 +26,31 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.junit.Rule;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 public class CompileTest {
 
-    @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
+    @ClassRule public static TemporaryFolder temporaryFolder = new TemporaryFolder();
+
+    private static Aapt2Jni aapt2Jni;
+
+    @BeforeClass
+    public static void createJniBinding() throws Exception {
+        aapt2Jni = Aapt2TestFactory.get(temporaryFolder);
+    }
 
     @Test
     public void compilePng() throws Exception {
         Path drawable = temporaryFolder.newFolder("drawable").toPath();
         Path lena = drawable.resolve("lena.png");
-        Path out = temporaryFolder.newFolder("out").toPath();
+        Path out = temporaryFolder.newFolder().toPath();
 
         Aapt2TestFiles.writeLenaPng(lena);
 
-        Aapt2Result result = Aapt2Jni.compile(Arrays.asList("-o", out.toString(), lena.toString()));
+        Aapt2Result result = aapt2Jni.compile(Arrays.asList("-o", out.toString(), lena.toString()));
         assertEquals(0, result.getReturnCode());
         assertTrue(result.getMessages().isEmpty());
         Path expectedOut = out.resolve(Aapt2RenamingConventions.compilationRename(lena.toFile()));
@@ -53,12 +61,12 @@ public class CompileTest {
     public void compileXml() throws Exception {
         Path values = temporaryFolder.newFolder("values-w820dp").toPath();
         Path strings = values.resolve("strings-w820dp.xml");
-        Path out = temporaryFolder.newFolder("out").toPath();
+        Path out = temporaryFolder.newFolder().toPath();
 
         Aapt2TestFiles.writeStringsXml(strings);
 
         Aapt2Result result =
-                Aapt2Jni.compile(Arrays.asList("-o", out.toString(), strings.toString()));
+                aapt2Jni.compile(Arrays.asList("-o", out.toString(), strings.toString()));
         assertEquals(0, result.getReturnCode());
         assertTrue(result.getMessages().isEmpty());
         Path expectedOut =
@@ -70,7 +78,7 @@ public class CompileTest {
     public void compileXmlWithError() throws Exception {
         Path values = temporaryFolder.newFolder("values").toPath();
         Path strings = values.resolve("strings.xml");
-        Path out = temporaryFolder.newFolder("out").toPath();
+        Path out = temporaryFolder.newFolder().toPath();
 
         List<String> lines = new ArrayList<>();
         lines.add("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
@@ -79,7 +87,7 @@ public class CompileTest {
         Files.write(strings, lines, StandardCharsets.UTF_8);
 
         Aapt2Result result =
-                Aapt2Jni.compile(Arrays.asList("-o", out.toString(), strings.toString()));
+                aapt2Jni.compile(Arrays.asList("-o", out.toString(), strings.toString()));
         assertEquals(1, result.getReturnCode());
         assertEquals(1, result.getMessages().size());
         assertEquals("xml parser error: unclosed token", result.getMessages().get(0).getMessage());

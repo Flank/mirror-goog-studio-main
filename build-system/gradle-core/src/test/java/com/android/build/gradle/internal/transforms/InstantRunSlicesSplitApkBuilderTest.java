@@ -42,6 +42,7 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.internal.aapt.AaptOptions;
 import com.android.builder.packaging.PackagerException;
 import com.android.builder.sdk.TargetInfo;
+import com.android.builder.utils.FileCache;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.signing.KeytoolException;
 import com.android.sdklib.BuildToolInfo;
@@ -84,8 +85,9 @@ public class InstantRunSlicesSplitApkBuilderTest {
     @Rule public TemporaryFolder outputDirectory = new TemporaryFolder();
     @Rule public TemporaryFolder supportDirectory = new TemporaryFolder();
     @Rule public TemporaryFolder dexFileFolder = new TemporaryFolder();
+    @Rule public TemporaryFolder fileCacheDirectory = new TemporaryFolder();
 
-
+    FileCache fileCache;
     InstantRunSliceSplitApkBuilder instantRunSliceSplitApkBuilder;
     final List<InstantRunSplitApkBuilder.DexFiles> dexFilesList =
             new CopyOnWriteArrayList<>();
@@ -103,19 +105,21 @@ public class InstantRunSlicesSplitApkBuilderTest {
 
     @Before
     public void setup() {
+        fileCache = FileCache.getInstanceWithSingleProcessLocking(fileCacheDirectory.getRoot());
         instantRunSliceSplitApkBuilder =
                 new InstantRunSliceSplitApkBuilder(
                         logger,
                         project,
                         buildContext,
                         androidBuilder,
+                        fileCache,
                         packagingScope,
                         coreSigningConfig,
                         AaptGeneration.AAPT_V2_JNI,
                         new AaptOptions(null, false, null),
                         outputDirectory.getRoot(),
-                        supportDirectory.getRoot(),
-                        false /* runAapt2Serially */) {
+                        supportDirectory.getRoot(), /* runAapt2Serially */
+                        false) {
                     @Override
                     @NonNull
                     protected File generateSplitApk(@NonNull DexFiles dexFiles)
