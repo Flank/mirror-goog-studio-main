@@ -18,18 +18,18 @@ package com.android.tools.device.internal.adb;
 
 import com.android.annotations.NonNull;
 import java.io.IOException;
-import java.net.Socket;
+import java.nio.channels.SocketChannel;
 
-class SocketConnection extends StreamConnection {
-    private final Socket socket;
+class SocketConnection extends ChannelConnection {
+    private final SocketChannel channel;
 
-    public SocketConnection(@NonNull Socket socket) throws IOException {
-        super(socket.getInputStream(), socket.getOutputStream());
-        this.socket = socket;
+    public SocketConnection(@NonNull SocketChannel channel) throws IOException {
+        super(channel, channel);
+        this.channel = channel;
     }
 
     @Override
     public void close() throws IOException {
-        socket.close();
+        channel.close();
     }
 }

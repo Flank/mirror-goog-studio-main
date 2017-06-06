@@ -50,4 +50,4 @@ public enum ConnectionState {
 
         throw new IllegalArgumentException("Unknown connection state: " + name);
     }
-};
+}
