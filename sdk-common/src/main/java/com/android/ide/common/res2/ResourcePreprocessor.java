@@ -18,12 +18,11 @@ package com.android.ide.common.res2;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Collection;
 
-/**
- * Provides functionality the resource merger needs for preprocessing resources during merge.
- */
-public interface ResourcePreprocessor {
+/** Provides functionality the resource merger needs for preprocessing resources during merge. */
+public interface ResourcePreprocessor extends Serializable {
     /** Checks if the given file should be replaced by N generated files. */
     boolean needsPreprocessing(File file);
 

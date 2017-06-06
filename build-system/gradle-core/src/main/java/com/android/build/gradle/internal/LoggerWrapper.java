@@ -19,6 +19,8 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.res2.MergingException;
 import com.android.utils.ILogger;
+import java.io.Serializable;
+import java.util.function.Supplier;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
@@ -102,6 +104,34 @@ public class LoggerWrapper implements ILogger {
 
         } else {
             logger.log(logLevel, String.format(s, objects));
+        }
+    }
+
+    /**
+     * Return a {@link Supplier} for an instance of {@link ILogger} for the given class c.
+     *
+     * @param c the class' used to provide a logger name
+     * @return the {@link Supplier} for a logger instance.
+     */
+    public static Supplier<ILogger> supplierFor(Class<?> c) {
+        return new LoggerSupplier(c);
+    }
+
+    private static class LoggerSupplier implements Supplier<ILogger>, Serializable {
+
+        private final Class<?> clazz;
+        private ILogger logger = null;
+
+        private LoggerSupplier(Class<?> clazz) {
+            this.clazz = clazz;
+        }
+
+        @Override
+        public synchronized ILogger get() {
+            if (logger == null) {
+                logger = new LoggerWrapper(Logging.getLogger(clazz));
+            }
+            return logger;
         }
     }
 }

@@ -22,26 +22,27 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import java.io.File;
+import java.io.Serializable;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
 /**
  * A data item is the most elementary merge unit in the data merging process. Data items will
- * generally belong to a {@link DataFile} although, temporarily during the merge process data
- * items may not be associated to any data file. This will happen when data items are moved from
- * one file to another.
+ * generally belong to a {@link DataFile} although, temporarily during the merge process data items
+ * may not be associated to any data file. This will happen when data items are moved from one file
+ * to another.
  *
  * <p>Data items can represent entire files, <em>e.g.</em>, a PNG file, or they can represent
- * individual entries in a file, <em>e.g.</em>, a string in a strings file.</p>
+ * individual entries in a file, <em>e.g.</em>, a string in a strings file.
  *
- * <p>Data items have three markers that represent its "state": touched, removed and written.
- * A touched data is a data item that needs to be examined in the merge process. A removed data
- * item is a data item that has been removed from its file. A written data item is a data item
- * that has been changed or added.</p>
+ * <p>Data items have three markers that represent its "state": touched, removed and written. A
+ * touched data is a data item that needs to be examined in the merge process. A removed data item
+ * is a data item that has been removed from its file. A written data item is a data item that has
+ * been changed or added.
  *
  * @param <F> the type of data file the item belongs to
  */
-abstract class DataItem<F extends DataFile> {
+abstract class DataItem<F extends DataFile> implements Serializable {
     /** Bit flag marking {@link #mStatus} as touched. */
     private static final int MASK_TOUCHED = 0x01;
 

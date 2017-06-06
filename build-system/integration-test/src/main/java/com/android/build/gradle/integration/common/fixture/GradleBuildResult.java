@@ -99,7 +99,14 @@ public class GradleBuildResult {
                 return throwable.getCause().getMessage();
             } else if (throwableType.equals(PlaceholderException.class.getName())) {
                 if (throwable.toString().startsWith(TaskExecutionException.class.getName())) {
-                    return throwable.getCause().getMessage();
+                    Throwable cause = throwable;
+                    // there can be several levels of PlaceholderException when dealing with
+                    // Worker API failures.
+                    while (cause.getClass().getName().equals(PlaceholderException.class.getName())
+                            && cause.getCause() != null) {
+                        cause = cause.getCause();
+                    }
+                    return cause.getMessage();
                 }
             }
         }

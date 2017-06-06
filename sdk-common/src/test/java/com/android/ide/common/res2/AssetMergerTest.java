@@ -23,26 +23,22 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.android.SdkConstants;
+import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.testutils.NoErrorsOrWarningsLogger;
 import com.android.testutils.TestResources;
 import com.android.testutils.TestUtils;
-import com.android.testutils.truth.MoreTruth;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ListMultimap;
 import com.google.common.io.Files;
-import com.google.common.truth.Truth;
-
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class AssetMergerTest extends BaseTestCase {
 
@@ -50,6 +46,18 @@ public class AssetMergerTest extends BaseTestCase {
     public final TemporaryFolder mTemporaryFolder = new TemporaryFolder();
 
     private static AssetMerger sAssetMerger = null;
+
+    private static WorkerExecutorFacade<MergedAssetWriter.AssetWorkParameters> facade =
+            new WorkerExecutorFacade<MergedAssetWriter.AssetWorkParameters>() {
+
+                @Override
+                public void submit(MergedAssetWriter.AssetWorkParameters parameter) {
+                    new MergedAssetWriter.AssetWorkAction(parameter).run();
+                }
+
+                @Override
+                public void await() {}
+            };
 
     @Test
     public void testMergeByCount() throws Exception {
@@ -114,7 +122,7 @@ public class AssetMergerTest extends BaseTestCase {
 
         Path outputFolder = mTemporaryFolder.newFolder().toPath();
 
-        MergedAssetWriter writer = new MergedAssetWriter(outputFolder.toFile());
+        MergedAssetWriter writer = new MergedAssetWriter(outputFolder.toFile(), facade);
         merger.mergeData(writer, false /*doCleanUp*/);
 
         assertThat(outputFolder.resolve("asset.txt").toFile())
@@ -128,7 +136,9 @@ public class AssetMergerTest extends BaseTestCase {
 
         File folder = TestUtils.createTempDirDeletedOnExit();
         merger.writeBlobTo(
-                folder, new MergedAssetWriter(TestUtils.createTempDirDeletedOnExit()), false);
+                folder,
+                new MergedAssetWriter(TestUtils.createTempDirDeletedOnExit(), facade),
+                false);
 
         AssetMerger loadedMerger = new AssetMerger();
         loadedMerger.loadFromBlob(folder, true /*incrementalState*/);
@@ -138,7 +148,6 @@ public class AssetMergerTest extends BaseTestCase {
 
     /**
      * Tests the path replacement in the merger.xml file loaded from testData/
-     * @throws Exception
      */
     @Test
     public void testLoadingTestPathReplacement() throws Exception {
@@ -260,7 +269,7 @@ public class AssetMergerTest extends BaseTestCase {
         File resFolder = getFolderCopy(new File(root, "assetOut"));
 
         // write the content of the resource merger.
-        MergedAssetWriter writer = new MergedAssetWriter(resFolder);
+        MergedAssetWriter writer = new MergedAssetWriter(resFolder, facade);
         assetMerger.mergeData(writer, false /*doCleanUp*/);
 
         // Check the content by checking the colors. All files should be green
@@ -293,7 +302,9 @@ public class AssetMergerTest extends BaseTestCase {
         // write merger1 on disk to test writing empty AssetSets.
         File folder = TestUtils.createTempDirDeletedOnExit();
         merger1.writeBlobTo(
-                folder, new MergedAssetWriter(TestUtils.createTempDirDeletedOnExit()), false);
+                folder,
+                new MergedAssetWriter(TestUtils.createTempDirDeletedOnExit(), facade),
+                false);
 
         // reload it
         AssetMerger loadedMerger = new AssetMerger();
@@ -400,9 +411,6 @@ public class AssetMergerTest extends BaseTestCase {
      * the data is an array of sets.
      *
      * Each set is [ setName, folder1, folder2, ...]
-     *
-     * @param data
-     * @return
      */
     private static AssetMerger createMerger(String[][] data) {
         AssetMerger merger = new AssetMerger();
@@ -446,7 +454,7 @@ public class AssetMergerTest extends BaseTestCase {
 
         File folder = TestUtils.createTempDirDeletedOnExit();
 
-        MergedAssetWriter writer = new MergedAssetWriter(folder);
+        MergedAssetWriter writer = new MergedAssetWriter(folder, facade);
         assetMerger.mergeData(writer, false /*doCleanUp*/);
 
         return folder;
