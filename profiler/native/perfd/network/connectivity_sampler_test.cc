@@ -25,7 +25,7 @@ using profiler::ConnectivitySampler;
 using profiler::FakeNetworkTypeProvider;
 using profiler::TestUtils;
 
-TEST(ConnectivitySampler, RadioActive) {
+TEST(ConnectivitySampler, RadioInHighEnergyState) {
   auto network_type_mobile = std::make_shared<FakeNetworkTypeProvider>(
       profiler::proto::ConnectivityData::MOBILE);
   ConnectivitySampler sampler(
@@ -34,7 +34,7 @@ TEST(ConnectivitySampler, RadioActive) {
   sampler.Refresh();
   auto data = sampler.Sample();
   EXPECT_TRUE(data.has_connectivity_data());
-  EXPECT_EQ(profiler::proto::ConnectivityData::ACTIVE,
+  EXPECT_EQ(profiler::proto::ConnectivityData::HIGH,
             data.connectivity_data().radio_state());
 }
 
@@ -50,16 +50,16 @@ TEST(ConnectivitySampler, RadioIsDefaultValueWhenNetworkIsWifi) {
   EXPECT_EQ(0, data.connectivity_data().radio_state());
 }
 
-TEST(ConnectivitySampler, RadioSleeping) {
+TEST(ConnectivitySampler, RadioInLowEnergyState) {
   auto network_type_mobile = std::make_shared<FakeNetworkTypeProvider>(
       profiler::proto::ConnectivityData::MOBILE);
   ConnectivitySampler sampler(
-    "cat " + TestUtils::getNetworkTestData("connectivity_radio_sleeping.txt"),
+    "cat " + TestUtils::getNetworkTestData("connectivity_radio_inactive.txt"),
     network_type_mobile);
   sampler.Refresh();
   auto data = sampler.Sample();
   EXPECT_TRUE(data.has_connectivity_data());
-  EXPECT_EQ(profiler::proto::ConnectivityData::SLEEPING,
+  EXPECT_EQ(profiler::proto::ConnectivityData::LOW,
             data.connectivity_data().radio_state());
 }
 
@@ -85,7 +85,7 @@ TEST(ConnectivitySampler, RadioStateTrueAndFalseMatch) {
   sampler.Refresh();
   auto data = sampler.Sample();
   EXPECT_TRUE(data.has_connectivity_data());
-  EXPECT_EQ(profiler::proto::ConnectivityData::SLEEPING,
+  EXPECT_EQ(profiler::proto::ConnectivityData::LOW,
             data.connectivity_data().radio_state());
 }
 
