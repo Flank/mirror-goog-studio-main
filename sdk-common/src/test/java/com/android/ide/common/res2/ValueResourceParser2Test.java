@@ -238,5 +238,10 @@ public class ValueResourceParser2Test extends BaseTestCase {
         // Make sure the name is invalid, so it cannot conflict with anything the user would type.
         assertNotNull(
                 ValueResourceNameValidator.getErrorText(publicTag.getName(), publicTag.getType()));
+
+        ResourceValue resourceValue = publicTag.getResourceValue(false);
+        assertNotNull(resourceValue);
+        assertEquals(ResourceType.PUBLIC, resourceValue.getResourceType());
+        assertEquals("", resourceValue.getValue());
     }
 }
