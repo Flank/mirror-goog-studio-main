@@ -758,8 +758,10 @@ public class MergeResources extends IncrementalTask {
 
             Set<String> generatedDensities = vectorDrawablesOptions.getGeneratedDensities();
 
+            // Collections.<String>emptySet() is used intentionally instead of Collections.emptySet()
+            // to keep compatibility with javac 1.8.0_45 used by ab/
             mergeResourcesTask.setGeneratedDensities(
-                    MoreObjects.firstNonNull(generatedDensities, Collections.emptySet()));
+                    MoreObjects.firstNonNull(generatedDensities, Collections.<String>emptySet()));
 
             mergeResourcesTask.setDisableVectorDrawables(
                     (vectorDrawablesOptions.getUseSupportLibrary() != null
