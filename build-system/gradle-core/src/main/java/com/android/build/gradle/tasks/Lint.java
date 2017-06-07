@@ -402,11 +402,13 @@ public class Lint extends BaseTask {
         ext.set(
                 AndroidProject.PROPERTY_BUILD_MODEL_ONLY_VERSIONED,
                 Integer.toString(AndroidProject.MODEL_LEVEL_3_VARIANT_OUTPUT_POST_BUILD));
+        ext.set(AndroidProject.PROPERTY_BUILD_MODEL_DISABLE_SRC_DOWNLOAD, true);
 
         try {
             return (AndroidProject) modelBuilder.buildAll(modelName, gradleProject);
         } finally {
             ext.set(AndroidProject.PROPERTY_BUILD_MODEL_ONLY_VERSIONED, null);
+            ext.set(AndroidProject.PROPERTY_BUILD_MODEL_DISABLE_SRC_DOWNLOAD, null);
         }
     }
 
