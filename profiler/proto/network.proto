@@ -74,9 +74,12 @@ message ConnectionData { int32 connection_number = 1; }
 message ConnectivityData {
   enum RadioState {
     UNSPECIFIED = 0;
-    ACTIVE = 1;
-    IDLE = 2;
-    SLEEPING = 3;
+    // The radio is in a high-energy state, having recently sent out some
+    // network traffic
+    HIGH = 1;
+    // The radio is in a low-energy state, having powered down after a period
+    // of inactivity.
+    LOW = 3; // Set to 3 for backwards-compatibility reasons
   }
 
   RadioState radio_state = 1;

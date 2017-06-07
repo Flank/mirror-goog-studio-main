@@ -42,10 +42,10 @@ proto::ConnectivityData::RadioState ConnectivitySampler::GetRadioState() {
     size_t start = line.find("mNetworkActive=");
     if (start != std::string::npos) {
       if (line.find("mNetworkActive=true", start) != std::string::npos) {
-        return profiler::proto::ConnectivityData::ACTIVE;
+        return profiler::proto::ConnectivityData::HIGH;
       }
       else if (line.find("mNetworkActive=false", start) != std::string::npos) {
-        return profiler::proto::ConnectivityData::SLEEPING;
+        return profiler::proto::ConnectivityData::LOW;
       }
     }
   }
