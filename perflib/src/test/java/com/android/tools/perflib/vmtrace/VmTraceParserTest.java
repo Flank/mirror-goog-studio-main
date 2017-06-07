@@ -28,13 +28,14 @@ import junit.framework.TestCase;
 public class VmTraceParserTest extends TestCase {
     public void testParseHeader() throws IOException {
         File f = getFile("/header.trace");
-        VmTraceParser parser = new VmTraceParser(f);
+        VmTraceData.Builder dataBuilder = new VmTraceData.Builder();
+        VmTraceParser parser = new VmTraceParser(f, dataBuilder);
         parser.parseHeader(f);
-        VmTraceData traceData = parser.getTraceData();
+        VmTraceData traceData = dataBuilder.build();
 
         assertEquals(3, traceData.getVersion());
         assertTrue(traceData.isDataFileOverflow());
-        assertEquals(VmTraceData.VmClockType.DUAL, traceData.getVmClockType());
+        assertEquals(VmClockType.DUAL, traceData.getVmClockType());
         assertEquals(4713089, traceData.getElapsedTimeUs());
         assertEquals("dalvik", traceData.getVm());
 
@@ -341,7 +342,7 @@ public class VmTraceParserTest extends TestCase {
         // data-file-overflow=false
         assertFalse(traceData.isDataFileOverflow());
         // clock=dual
-        assertEquals(VmTraceData.VmClockType.DUAL, traceData.getVmClockType());
+        assertEquals(VmClockType.DUAL, traceData.getVmClockType());
         // elapsed-time-usec=53498073
         assertEquals(53498073, traceData.getElapsedTimeUs());
         // clock-call-overhead-nsec=10934
@@ -366,9 +367,10 @@ public class VmTraceParserTest extends TestCase {
     }
 
     private VmTraceData getVmTraceData(String traceFilePath) throws IOException {
-        VmTraceParser parser = new VmTraceParser(getFile(traceFilePath));
+        VmTraceData.Builder dataBuilder = new VmTraceData.Builder();
+        VmTraceParser parser = new VmTraceParser(getFile(traceFilePath), dataBuilder);
         parser.parse();
-        return parser.getTraceData();
+        return dataBuilder.build();
     }
 
     private File getFile(String path) {
