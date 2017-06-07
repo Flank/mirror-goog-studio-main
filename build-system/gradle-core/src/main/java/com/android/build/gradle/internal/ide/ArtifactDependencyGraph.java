@@ -59,12 +59,14 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -152,7 +154,8 @@ public class ArtifactDependencyGraph {
         return variantAttr == null ? null : variantAttr.getName();
     }
 
-    private static String computeAddress(@NonNull HashableResolvedArtifactResult artifact) {
+    @NonNull
+    public static String computeAddress(@NonNull HashableResolvedArtifactResult artifact) {
         ComponentIdentifier id = artifact.getId().getComponentIdentifier();
         if (id instanceof ProjectComponentIdentifier) {
             String variant = getVariant(artifact);
@@ -237,9 +240,10 @@ public class ArtifactDependencyGraph {
      * HashableResolvedArtifactResult#getDependencyType()} and {@link
      * HashableResolvedArtifactResult#isWrappedModule()} fields have been setup properly.
      */
-    private Set<HashableResolvedArtifactResult> getAllArtifacts(
+    public static Set<HashableResolvedArtifactResult> getAllArtifacts(
             @NonNull VariantScope variantScope,
-            @NonNull AndroidArtifacts.ConsumedConfigType consumedConfigType) {
+            @NonNull AndroidArtifacts.ConsumedConfigType consumedConfigType,
+            @Nullable Consumer<Collection<Throwable>> failureConsumer) {
         // we need to figure out the following:
         // - Is it an external dependency or a sub-project?
         // - Is it an android or a java dependency
@@ -286,7 +290,9 @@ public class ArtifactDependencyGraph {
 
 
         // collect dependency resolution failures
-        failures.addAll(allArtifactList.getFailures());
+        if (failureConsumer != null) {
+            failureConsumer.accept(allArtifactList.getFailures());
+        }
 
         // build a list of wrapped AAR, and a map of all the exploded-aar artifacts
         Set<ComponentIdentifier> wrapperModules = new HashSet<>();
@@ -379,7 +385,10 @@ public class ArtifactDependencyGraph {
         List<GraphItem> compileItems = Lists.newArrayList();
 
         Set<HashableResolvedArtifactResult> compileArtifacts =
-                getAllArtifacts(variantScope, COMPILE_CLASSPATH);
+                getAllArtifacts(
+                        variantScope,
+                        COMPILE_CLASSPATH,
+                        ArtifactDependencyGraph.this.failures::addAll);
 
         for (HashableResolvedArtifactResult artifact : compileArtifacts) {
             compileItems.add(new GraphItemImpl(computeAddress(artifact), ImmutableList.of()));
@@ -406,7 +415,10 @@ public class ArtifactDependencyGraph {
         List<GraphItem> runtimeItems = Lists.newArrayList();
 
         Set<HashableResolvedArtifactResult> runtimeArtifacts =
-                getAllArtifacts(variantScope, RUNTIME_CLASSPATH);
+                getAllArtifacts(
+                        variantScope,
+                        RUNTIME_CLASSPATH,
+                        ArtifactDependencyGraph.this.failures::addAll);
 
         for (HashableResolvedArtifactResult artifact : runtimeArtifacts) {
             runtimeItems.add(new GraphItemImpl(computeAddress(artifact), ImmutableList.of()));
@@ -459,7 +471,10 @@ public class ArtifactDependencyGraph {
         }
 
         Set<HashableResolvedArtifactResult> artifacts =
-                getAllArtifacts(variantScope, COMPILE_CLASSPATH);
+                getAllArtifacts(
+                        variantScope,
+                        COMPILE_CLASSPATH,
+                        ArtifactDependencyGraph.this.failures::addAll);
 
         for (HashableResolvedArtifactResult artifact : artifacts) {
             ComponentIdentifier id = artifact.getId().getComponentIdentifier();
@@ -632,7 +647,7 @@ public class ArtifactDependencyGraph {
         query.execute().getResolvedComponents();
     }
 
-    enum DependencyType {
+    public enum DependencyType {
         JAVA(EXT_JAR),
         ANDROID(EXT_AAR);
 
@@ -650,7 +665,7 @@ public class ArtifactDependencyGraph {
 
 
 
-    private static class HashableResolvedArtifactResult implements ResolvedArtifactResult {
+    public static class HashableResolvedArtifactResult implements ResolvedArtifactResult {
         @NonNull private final ResolvedArtifactResult delegate;
         @NonNull private final DependencyType dependencyType;
         private final boolean wrappedModule;
