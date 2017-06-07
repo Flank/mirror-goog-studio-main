@@ -1,13 +1,17 @@
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
 
-maven_java_library(
+kotlin_library(
     name = "cli",
     # TODO: move resources out of java?
-    srcs = glob(["src/main/java/**/*.java"]),
+    srcs = ["src/main/java"],
     pom = ":pom",
     resources = glob(
         include = ["src/main/java/**"],
-        exclude = ["src/main/java/**/*.java"],
+        exclude = [
+            "src/main/java/**/*.java",
+            "src/main/java/**/*.kt",
+        ],
     ),
     visibility = ["//visibility:public"],
     deps = [

@@ -1,5 +1,6 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
 
 iml_module(
     name = "studio.lint-api",
@@ -38,14 +39,17 @@ iml_module(
     ],
 )
 
-maven_java_library(
+kotlin_library(
     name = "tools.lint-api",
     # TODO: move resources out of java?
-    srcs = glob(["libs/lint-api/src/main/java/**/*.java"]),
+    srcs = ["libs/lint-api/src/main/java"],
     pom = "lint-api.pom",
     resources = glob(
         include = ["libs/lint-api/src/main/java/**"],
-        exclude = ["libs/lint-api/src/main/java/**/*.java"],
+        exclude = [
+            "libs/lint-api/src/main/java/**/*.java",
+            "libs/lint-api/src/main/java/**/*.kt",
+        ],
     ),
     visibility = ["//visibility:public"],
     deps = [
@@ -87,14 +91,17 @@ iml_module(
     ],
 )
 
-maven_java_library(
+kotlin_library(
     name = "tools.lint-checks",
     # TODO: move resources out of java?
-    srcs = glob(["libs/lint-checks/src/main/java/**/*.java"]),
+    srcs = ["libs/lint-checks/src/main/java"],
     pom = "lint-checks.pom",
     resources = glob(
         include = ["libs/lint-checks/src/main/java/**"],
-        exclude = ["libs/lint-checks/src/main/java/**/*.java"],
+        exclude = [
+            "libs/lint-checks/src/main/java/**/*.java",
+            "libs/lint-checks/src/main/java/**/*.kt",
+        ],
     ),
     visibility = ["//visibility:public"],
     deps = [
@@ -108,6 +115,7 @@ maven_java_library(
         "//tools/base/repository:tools.repository",
         "//tools/base/sdk-common:tools.sdk-common",
         "//tools/base/sdklib:tools.sdklib",
+        "//tools/base/third_party:com.android.tools.external.lombok_lombok-ast",
         "//tools/base/third_party:com.google.code.gson_gson",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:net.sf.kxml_kxml2",

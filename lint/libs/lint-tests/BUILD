@@ -1,6 +1,8 @@
-java_library(
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
+
+kotlin_library(
     name = "lint-tests",
-    srcs = glob(["src/main/java/**/*.java"]),
+    srcs = ["src/main/java"],
     visibility = ["//visibility:public"],
     deps = [
         "//prebuilts/tools/common/intellij-core:intellij-core-171.4249.32",
@@ -25,9 +27,9 @@ java_library(
     ],
 )
 
-java_test(
+kotlin_test(
     name = "tests",
-    srcs = glob(["src/test/java/**/*.java"]),
+    srcs = ["src/test/java"],
     data = [
         "//prebuilts/studio/sdk:platform-tools",
         "//prebuilts/studio/sdk:platforms/latest",
@@ -47,6 +49,7 @@ java_test(
         "//prebuilts/tools/common/m2/repository/org/mockito/mockito-all/1.9.5:jar",
         "//prebuilts/tools/common/uast:uast-171.4249.32",
         "//tools/base/annotations",
+        "//tools/base/build-system:tools.manifest-merger",
         "//tools/base/build-system/builder-model",
         "//tools/base/common:tools.common",
         "//tools/base/layoutlib-api:tools.layoutlib-api",
@@ -61,6 +64,7 @@ java_test(
         "//tools/base/third_party:com.google.code.gson_gson",
         "//tools/base/third_party:com.google.truth_truth",
         "//tools/base/third_party:com.intellij_annotations",
+        "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:net.sf.kxml_kxml2",
         "//tools/base/third_party:org.codehaus.groovy_groovy-all",
         "//tools/base/third_party:org.eclipse.jdt.core.compiler_ecj",

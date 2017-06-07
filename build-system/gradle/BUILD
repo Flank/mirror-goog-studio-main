@@ -1,5 +1,6 @@
 load("//tools/base/bazel:bazel.bzl", "fileset")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
 
 fileset(
     name = "resources",
@@ -10,9 +11,9 @@ fileset(
     },
 )
 
-maven_java_library(
+kotlin_library(
     name = "gradle",
-    srcs = glob(["src/main/java/**/*.java"]),
+    srcs = ["src/main/java"],
     pom = ":pom",
     resource_strip_prefix = "tools/base/build-system/gradle",
     resources = [":resources"],
@@ -43,9 +44,9 @@ maven_pom(
     source = "//tools/buildSrc/base:build_version",
 )
 
-java_test(
+kotlin_test(
     name = "tests",
-    srcs = glob(["src/test/java/**/*.java"]),
+    srcs = ["src/test/java"],
     data = [
         "//prebuilts/studio/sdk:add-ons/addon-google_apis-google-latest",
         "//prebuilts/studio/sdk:build-tools/25.0.0",
