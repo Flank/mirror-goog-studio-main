@@ -30,20 +30,25 @@ import com.google.wireless.android.sdk.stats.GradleBuildProjectMetrics;
 import java.io.File;
 import java.io.IOException;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.tasks.CacheableTask;
+import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.ParallelizableTask;
 
 /** Task to package an Android application (APK). */
 @ParallelizableTask
+@CacheableTask
 public class PackageApplication extends PackageAndroidArtifact {
 
     TaskOutputHolder.TaskOutputType expectedOutputType;
 
     @Override
+    @Internal
     protected VariantScope.TaskOutputType getTaskOutputType() {
         return expectedOutputType;
     }
 
     @Override
+    @Internal
     protected boolean isIncremental() {
         return true;
     }
@@ -69,6 +74,7 @@ public class PackageApplication extends PackageAndroidArtifact {
     }
 
     @Nullable
+    @Internal
     private static Long getSize(@Nullable File file) {
         if (file == null) {
             return null;

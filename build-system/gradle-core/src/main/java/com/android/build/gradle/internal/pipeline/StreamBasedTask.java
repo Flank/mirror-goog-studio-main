@@ -28,6 +28,8 @@ import org.gradle.api.file.FileTree;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 
 /**
  * A base task with stream fields that properly use Gradle's input/output annotations to
@@ -43,12 +45,14 @@ public class StreamBasedTask extends BaseTask {
 
     @NonNull
     @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
     public Iterable<FileTree> getStreamInputs() {
         if (allInputs == null) {
             allInputs =
                     concat(consumedInputStreams.stream(), referencedInputStreams.stream())
                             .map(TransformStream::getAsFileTree)
                             .collect(Collectors.toList());
+
         }
 
         return allInputs;

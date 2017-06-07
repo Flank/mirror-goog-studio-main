@@ -37,6 +37,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
+import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
@@ -45,10 +46,11 @@ import org.gradle.api.tasks.TaskAction;
 
 
 /**
- * Task to generate a manifest snippet that just contains a compatible-screens
- * node with the given density and the given list of screen sizes.
+ * Task to generate a manifest snippet that just contains a compatible-screens node with the given
+ * density and the given list of screen sizes.
  */
 @ParallelizableTask
+@CacheableTask
 public class CompatibleScreensManifest extends DefaultAndroidTask {
 
     private Set<String> screenSizes;

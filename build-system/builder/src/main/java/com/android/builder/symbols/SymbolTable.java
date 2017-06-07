@@ -41,10 +41,8 @@ import javax.lang.model.SourceVersion;
 @AutoValue
 public abstract class SymbolTable {
 
-    /**
-     * Name of {@code R} class.
-     */
-    static final String R_CLASS_NAME = "R";
+    /** Name of {@code R} class. */
+    public static final String R_CLASS_NAME = "R";
 
     /**
      * Creates a new symbol table.

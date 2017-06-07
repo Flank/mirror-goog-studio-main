@@ -35,7 +35,7 @@ import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.CacheableTask;
-import org.gradle.api.tasks.Classpath;
+import org.gradle.api.tasks.CompileClasspath;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
@@ -53,7 +53,7 @@ public class TestPreBuildTask extends DefaultAndroidTask {
 
     // even though the files are jars, we don't care about changes to the files, only if files
     // are removed or added. We need to find a better way to declare this.
-    @Classpath
+    @CompileClasspath
     @PathSensitive(PathSensitivity.NONE)
     public FileCollection getTestedRuntimeClasspath() {
         return testedRuntimeClasspath.getArtifactFiles();
@@ -61,7 +61,7 @@ public class TestPreBuildTask extends DefaultAndroidTask {
 
     // even though the files are jars, we don't care about changes to the files, only if files
     // are removed or added. We need to find a better way to declare this.
-    @Classpath
+    @CompileClasspath
     @PathSensitive(PathSensitivity.NONE)
     public FileCollection getTestRuntimeClasspath() {
         return testRuntimeClasspath.getArtifactFiles();

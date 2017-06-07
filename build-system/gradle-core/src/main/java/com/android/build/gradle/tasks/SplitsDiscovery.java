@@ -35,21 +35,25 @@ import java.util.List;
 import java.util.Set;
 import joptsimple.internal.Strings;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFile;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 
 /**
  * Variant scoped task.
  *
- * Task that will populate the {@link SplitList} variant scoped object keeping the list of pure
+ * <p>Task that will populate the {@link SplitList} variant scoped object keeping the list of pure
  * splits that should be built for this variant.
  *
- * The task will also persist the list of splits in a gson file for consumption on subsequent
+ * <p>The task will also persist the list of splits in a gson file for consumption on subsequent
  * builds when there is no input changes to avoid rerunning it.
  */
+@CacheableTask
 public class SplitsDiscovery extends BaseTask {
 
     @Nullable FileCollection mergedResourcesFolders;
@@ -64,6 +68,7 @@ public class SplitsDiscovery extends BaseTask {
     @InputFiles
     @Optional
     @Nullable
+    @PathSensitive(PathSensitivity.RELATIVE)
     FileCollection getMergedResourcesFolders() {
         return mergedResourcesFolders;
     }

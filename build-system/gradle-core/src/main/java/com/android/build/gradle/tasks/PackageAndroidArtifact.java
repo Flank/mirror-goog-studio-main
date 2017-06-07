@@ -84,6 +84,8 @@ import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 
 /** Abstract task to package an Android artifact. */
 public abstract class PackageAndroidArtifact extends IncrementalTask {
@@ -93,11 +95,13 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
     // ----- PUBLIC TASK API -----
 
     @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
     public FileCollection getManifests() {
         return manifests;
     }
 
     @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
     public FileCollection getResourceFiles() {
         return resourceFiles;
     }
@@ -130,12 +134,14 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
     @InputFiles
     @Optional
+    @PathSensitive(PathSensitivity.RELATIVE)
     public FileCollection getJavaResourceFiles() {
         return javaResourceFiles;
     }
 
     @InputFiles
     @Optional
+    @PathSensitive(PathSensitivity.RELATIVE)
     public FileCollection getJniFolders() {
         return jniFolders;
     }
@@ -148,11 +154,13 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
     @InputFiles
     @Optional
+    @PathSensitive(PathSensitivity.RELATIVE)
     public FileCollection getDexFolders() {
         return dexFolders;
     }
 
     @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
     public FileCollection getAssets() {
         return assets;
     }
