@@ -89,6 +89,19 @@ public class FeatureTaskManager extends TaskManager {
     @Override
     public void createTasksForVariantScope(
             @NonNull final TaskFactory tasks, @NonNull final VariantScope variantScope) {
+        // Ensure the compile SDK is at least 26 (O).
+        final AndroidVersion androidVersion =
+                AndroidTargetHash.getVersionFromHash(
+                        variantScope.getGlobalScope().getExtension().getCompileSdkVersion());
+        if (androidVersion == null
+                || androidVersion.getApiLevel() < AndroidVersion.VersionCodes.O) {
+            String message = "Feature modules require compileSdkVersion set to 26 or higher.";
+            if (androidVersion != null) {
+                message += " compileSdkVersion is set to " + androidVersion.getApiString();
+            }
+            throw new GradleException(message);
+        }
+
         BaseVariantData variantData = variantScope.getVariantData();
         assert variantData instanceof FeatureVariantData;
 
@@ -379,17 +392,7 @@ public class FeatureTaskManager extends TaskManager {
             optionalFeatures.add(ManifestMerger2.Invoker.Feature.INSTANT_RUN_REPLACEMENT);
         }
 
-        // FIXME: This is temporary until we enforce usage of compile SDK 26 on features.
-        final AndroidVersion androidVersion =
-                AndroidTargetHash.getVersionFromHash(
-                        variantScope.getGlobalScope().getExtension().getCompileSdkVersion());
-        final boolean preO =
-                androidVersion != null
-                        && androidVersion.getApiLevel() < AndroidVersion.VersionCodes.O;
-
-        if (!preO) {
-            optionalFeatures.add(ManifestMerger2.Invoker.Feature.TARGET_SANDBOX_VERSION);
-        }
+        optionalFeatures.add(ManifestMerger2.Invoker.Feature.TARGET_SANDBOX_VERSION);
 
         AndroidTask<? extends ManifestProcessorTask> mergeManifestsAndroidTask;
         if (variantScope.isBaseFeature()) {
@@ -402,11 +405,6 @@ public class FeatureTaskManager extends TaskManager {
         } else {
             // Non-base split. Publish the feature manifest.
             optionalFeatures.add(ManifestMerger2.Invoker.Feature.ADD_FEATURE_SPLIT_INFO);
-
-            if (preO) {
-                optionalFeatures.add(
-                        ManifestMerger2.Invoker.Feature.TRANSITIONAL_FEATURE_SPLIT_ATTRIBUTES);
-            }
 
             mergeManifestsAndroidTask =
                     androidTasks.create(
@@ -494,9 +492,7 @@ public class FeatureTaskManager extends TaskManager {
             boolean useAaptToGenerateLegacyMultidexMainDexProguardRules,
             @NonNull MergeType sourceTaskOutputType,
             @NonNull String baseName) {
-        // TODO: we need a better way to determine if we are dealing with a base split or not.
         if (scope.isBaseFeature()) {
-            // Base feature split.
             return super.createProcessAndroidResourcesConfigAction(
                     scope,
                     symbolLocation,
@@ -506,7 +502,6 @@ public class FeatureTaskManager extends TaskManager {
                     sourceTaskOutputType,
                     baseName);
         } else {
-            // Non-base feature split.
             return new ProcessAndroidResources.FeatureSplitConfigAction(
                     scope,
                     symbolLocation,
