@@ -51,7 +51,6 @@ import com.android.manifmerger.ManifestProvider;
 import com.android.manifmerger.MergingReport;
 import com.android.manifmerger.XmlDocument;
 import com.android.utils.FileUtils;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -183,28 +182,6 @@ public class MergeManifests extends ManifestProcessorTask {
         splitScope.save(
                 ImmutableList.of(VariantScope.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS),
                 getInstantRunManifestOutputDirectory());
-    }
-
-    @NonNull
-    @Override
-    @Internal
-    public File getManifestOutputFile() {
-        Preconditions.checkNotNull(splitScope.getMainSplit());
-        return FileUtils.join(
-                getManifestOutputDirectory(),
-                splitScope.getMainSplit().getDirName(),
-                SdkConstants.ANDROID_MANIFEST_XML);
-    }
-
-    @Nullable
-    @Override
-    @Internal
-    public File getInstantRunManifestOutputFile() {
-        Preconditions.checkNotNull(splitScope.getMainSplit());
-        return FileUtils.join(
-                getInstantRunManifestOutputDirectory(),
-                splitScope.getMainSplit().getDirName(),
-                SdkConstants.ANDROID_MANIFEST_XML);
     }
 
     @Nullable

@@ -537,8 +537,7 @@ public class LibraryTaskManager extends TaskManager {
                 // generateSources depends on them. When generateSourcesOnly is injected they are
                 // needed explicitly, as bundle no longer depends on compileJava
                 variantScope.getAidlCompileTask().getName(),
-                variantScope.getMergeAssetsTask().getName(),
-                variantScope.getManifestProcessorTask().getName());
+                variantScope.getMergeAssetsTask().getName());
         bundle.dependsOn(variantScope.getNdkBuildable());
 
         bundle.setDescription("Assembles a bundle containing the library in " +
@@ -546,6 +545,7 @@ public class LibraryTaskManager extends TaskManager {
         bundle.setDestinationDir(variantScope.getOutputBundleFile().getParentFile());
         bundle.setArchiveName(variantScope.getOutputBundleFile().getName());
         bundle.setExtension(BuilderConstants.EXT_LIB_ARCHIVE);
+        bundle.from(variantScope.getOutput(TaskOutputType.LIBRARY_MANIFEST));
         bundle.from(variantBundleDir);
         bundle.from(
                 FileUtils.join(

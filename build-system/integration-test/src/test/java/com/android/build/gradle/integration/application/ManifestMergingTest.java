@@ -60,13 +60,19 @@ public class ManifestMergingTest {
     @Test
     public void checkManifestMergingForLibraries() throws Exception {
         libsTest.execute("clean", "build");
-        File fileOutput = libsTest.
-                file("libapp/build/" + FD_INTERMEDIATES + "/bundles/debug/AndroidManifest.xml");
+        File fileOutput =
+                libsTest.file(
+                        "libapp/build/"
+                                + FD_INTERMEDIATES
+                                + "/manifests/full/debug/AndroidManifest.xml");
 
         assertThat(fileOutput).isFile();
 
-        fileOutput = libsTest.
-                file("libapp/build/" + FD_INTERMEDIATES + "/bundles/release/AndroidManifest.xml");
+        fileOutput =
+                libsTest.file(
+                        "libapp/build/"
+                                + FD_INTERMEDIATES
+                                + "/manifests/full/release/AndroidManifest.xml");
 
         assertThat(fileOutput).isFile();
 

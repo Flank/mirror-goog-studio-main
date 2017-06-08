@@ -1415,14 +1415,12 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         switch (getVariantConfiguration().getType()) {
             case DEFAULT:
             case FEATURE:
+            case LIBRARY:
                 return FileUtils.join(
                         getGlobalScope().getIntermediatesDir(),
                         "manifests",
                         "full",
                         getVariantConfiguration().getDirName());
-            case LIBRARY:
-                // FIXME: this does not seem right.
-                return getBaseBundleDir();
             case ANDROID_TEST:
                 return FileUtils.join(
                         getGlobalScope().getIntermediatesDir(),
@@ -1430,7 +1428,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                         getVariantConfiguration().getDirName());
             default:
                 throw new RuntimeException(
-                        "getManifestOutputFile called for an unexpected variant.");
+                        "getManifestOutputDirectory called for an unexpected variant.");
         }
     }
 
