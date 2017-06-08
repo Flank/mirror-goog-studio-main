@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.AndroidAsciiReportRenderer;
+import com.android.build.gradle.internal.AndroidDependenciesRenderer;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.google.common.collect.Ordering;
 import java.io.IOException;
@@ -31,9 +31,9 @@ import org.gradle.internal.logging.text.StyledTextOutputFactory;
 
 public class DependencyReportTask extends DefaultTask {
 
-    private AndroidAsciiReportRenderer renderer = new AndroidAsciiReportRenderer();
+    private final AndroidDependenciesRenderer renderer = new AndroidDependenciesRenderer();
 
-    private Set<VariantScope> variants = new HashSet<>();
+    private final Set<VariantScope> variants = new HashSet<>();
 
     @TaskAction
     public void generate() throws IOException {
@@ -45,7 +45,7 @@ public class DependencyReportTask extends DefaultTask {
 
         for (VariantScope variant : sortedVariants) {
             renderer.startVariant(variant);
-            renderer.render();
+            renderer.render(variant);
         }
     }
 
