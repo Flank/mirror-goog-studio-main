@@ -87,6 +87,7 @@ public final class SdkConstants {
 
     /** intermediate publishing between projects */
     public static final String FN_INTERMEDIATE_RES_JAR = "res.jar";                   //$NON-NLS-1$
+    public static final String FN_INTERMEDIATE_FULL_JAR = "full.jar"; //$NON-NLS-1$
 
     /** list of splits for a variant */
     public static final String FN_SPLIT_LIST = "split-list.gson";                     //$NON-NLS-1$

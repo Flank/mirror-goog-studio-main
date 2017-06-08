@@ -34,42 +34,24 @@ import org.junit.experimental.categories.Category;
 public class LibraryComponentPluginTest {
 
     @Rule
-    public GradleTestProject project = GradleTestProject.builder()
-            .fromTestApp(new HelloWorldLibraryApp())
-            .useExperimentalGradleVersion(true)
-            .create();
+    public GradleTestProject project =
+            GradleTestProject.builder()
+                    .fromTestApp(HelloWorldLibraryApp.forExperimentalPlugin())
+                    .useExperimentalGradleVersion(true)
+                    .create();
 
 
     @Test
     public void checkBuildConfigFileIsIncluded() throws Exception {
-        appendToFile(project.getSubproject("app").getBuildFile(),
-                "apply plugin: \"com.android.model.application\"\n"
-                + "\n"
-                + "dependencies {\n"
-                + "    compile project(\":lib\")\n"
-                + "}\n"
-                + "\n"
-                + "model {\n"
-                + "    android {\n"
-                + "        compileSdkVersion " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n"
-                + "        buildToolsVersion \"" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "\"\n"
-                + "    }\n"
-                + "}\n");
-
-        appendToFile(project.getSubproject("lib").getBuildFile(),
-                "apply plugin: \"com.android.model.library\"\n"
-                + "\n"
-                + "dependencies {\n"
-                + "    /* Depend on annotations to trigger the creation of the ExtractAnnotations task */\n"
-                + "    compile 'com.android.support:support-annotations:" + GradleTestProject.SUPPORT_LIB_VERSION + "'\n"
-                + "}\n"
-                + "\n"
-                + "model {\n"
-                + "    android {\n"
-                + "        compileSdkVersion " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n"
-                + "        buildToolsVersion \"" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "\"\n"
-                + "    }\n"
-                + "}\n");
+        appendToFile(
+                project.getSubproject("lib").getBuildFile(),
+                "\n"
+                        + "dependencies {\n"
+                        + "    /* Depend on annotations to trigger the creation of the ExtractAnnotations task */\n"
+                        + "    compile 'com.android.support:support-annotations:"
+                        + GradleTestProject.SUPPORT_LIB_VERSION
+                        + "'\n"
+                        + "}\n");
 
         project.execute("assemble");
         Aar releaseAar = project.getSubproject("lib").getAar("release");
@@ -80,37 +62,27 @@ public class LibraryComponentPluginTest {
     public void checkMultiFlavorDependencies() throws Exception {
         appendToFile(
                 project.getSubproject("app").getBuildFile(),
-                "apply plugin: \"com.android.model.application\"\n"
-                        + "\n"
+                "\n"
                         + "dependencies {\n"
                         + "    compile project(path: \":lib\")\n"
                         + "}\n"
                         + "\n"
                         + "model {\n"
                         + "    android {\n"
-                        + "        compileSdkVersion "
-                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-                        + "\n"
-                        + "        buildToolsVersion \""
-                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
-                        + "\"\n"
                         + "        flavorSelection[\"pricing\"] = \"free\"\n"
                         + "    }\n"
                         + "}\n");
 
         GradleTestProject lib = project.getSubproject("lib");
-        appendToFile(lib.getBuildFile(),
-                "apply plugin: \"com.android.model.library\"\n"
-                        + "\n"
+        appendToFile(
+                lib.getBuildFile(),
+                "\n"
                         + "configurations {\n"
                         + "    freeDebug\n"
                         + "}\n"
                         + "\n"
                         + "model {\n"
                         + "    android {\n"
-                        + "        compileSdkVersion " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n"
-                        + "        buildToolsVersion \"" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "\"\n"
-                        + "\n"
                         + "        productFlavors {\n"
                         + "            create(\"free\") {\n"
                         + "                dimension \"pricing\"\n"

@@ -39,7 +39,8 @@ public class AnalyticsUtilTest {
         checkHaveAllEnumValues(
                 Task.class,
                 AnalyticsUtil::getTaskExecutionType,
-                AnalyticsUtil::getPotentialTaskExecutionTypeName);
+                AnalyticsUtil::getPotentialTaskExecutionTypeName,
+                "com.android.build.gradle.tasks.ZipMergingTask");
     }
 
     @Test

@@ -22,6 +22,7 @@ import static com.android.SdkConstants.FD_JNI;
 import static com.android.SdkConstants.FD_RES;
 import static com.android.SdkConstants.FN_ANNOTATIONS_ZIP;
 import static com.android.SdkConstants.FN_CLASSES_JAR;
+import static com.android.SdkConstants.FN_INTERMEDIATE_FULL_JAR;
 import static com.android.SdkConstants.FN_INTERMEDIATE_RES_JAR;
 import static com.android.SdkConstants.FN_PUBLIC_TXT;
 import static com.android.SdkConstants.LIBS_FOLDER;
@@ -59,6 +60,7 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.AidlCompile;
 import com.android.build.gradle.tasks.ExtractAnnotations;
 import com.android.build.gradle.tasks.MergeResources;
+import com.android.build.gradle.tasks.ZipMergingTask;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.model.SyncIssue;
@@ -406,9 +408,9 @@ public class LibraryTaskManager extends TaskManager {
                         }
 
                         // Now add transforms for intermediate publishing (projects to projects).
-                        File intermediateFolder = variantScope.getIntermediateJarOutputFolder();
-                        File mainClassJar = new File(intermediateFolder, FN_CLASSES_JAR);
-                        File mainResJar = new File(intermediateFolder, FN_INTERMEDIATE_RES_JAR);
+                        File jarOutputFolder = variantScope.getIntermediateJarOutputFolder();
+                        File mainClassJar = new File(jarOutputFolder, FN_CLASSES_JAR);
+                        File mainResJar = new File(jarOutputFolder, FN_INTERMEDIATE_RES_JAR);
                         LibraryIntermediateJarsTransform intermediateTransform =
                                 new LibraryIntermediateJarsTransform(
                                         mainClassJar,
@@ -429,10 +431,6 @@ public class LibraryTaskManager extends TaskManager {
                                             TaskOutputType.LIBRARY_CLASSES,
                                             mainClassJar,
                                             t.getName());
-                                    variantScope.addTaskOutput(
-                                            TaskOutputType.LIBRARY_CLASSES_AS_JAR,
-                                            mainClassJar,
-                                            t.getName());
                                     // publish the res jar
                                     variantScope.addTaskOutput(
                                             TaskOutputType.LIBRARY_JAVA_RES,
@@ -440,11 +438,24 @@ public class LibraryTaskManager extends TaskManager {
                                             t.getName());
                                 });
 
+                        // Create a jar with both classes and java resources.  This artifact is not
+                        // used by the Android application plugin and the task usually don't need to
+                        // be executed.  The artifact is useful for other Gradle users who needs the
+                        // 'jar' artifact as API dependency.
+                        File mainFullJar = new File(jarOutputFolder, FN_INTERMEDIATE_FULL_JAR);
+                        AndroidTask<ZipMergingTask> zipMerger =
+                                androidTasks.create(
+                                        tasks,
+                                        new ZipMergingTask.ConfigAction(variantScope, mainFullJar));
+
+                        variantScope.addTaskOutput(
+                                TaskOutputType.FULL_JAR, mainFullJar, zipMerger.getName());
+
                         // now add a transform that will take all the native libs and package
                         // them into an intermediary folder. This processes only the PROJECT
                         // scope
                         // we publish this folder but the content is written in $ROOT/lib/...
-                        final File intermediateJniLibsFolder = new File(intermediateFolder, FD_JNI);
+                        final File intermediateJniLibsFolder = new File(jarOutputFolder, FD_JNI);
 
                         LibraryJniLibsTransform intermediateJniTransform =
                                 new LibraryJniLibsTransform(
