@@ -70,6 +70,8 @@ def main():
     # Insert the flag right after "test".
     args.insert(bazel_command_index(args) + 1, '--local_test_jobs=' + str(test_jobs))
     print('Running with {} local test jobs.'.format(test_jobs))
+  elif bazel_command(args) == 'info':
+    print("bazel-cpu-count: " + str(count_bazel_CPUs()))
 
   sys.exit(subprocess.call([bazel] + args, env=env))
 
@@ -114,6 +116,27 @@ def bazel_command(args):
   if index is None:
     return None
   return args[index]
+
+
+"""
+Calculates the CPU count like bazel. Only used for
+information purposes. See:
+https://github.com/bazelbuild/bazel/blob/master/src/main/java/com/google/devtools/build/lib/actions/LocalHostCapacity.java#L39
+"""
+def count_bazel_CPUs():
+  if sys.platform == 'darwin':
+    logical = int(os.popen2("sysctl -n hw.logicalcpu")[1].read())
+    physical = int(os.popen2("sysctl -n hw.physicalcpu")[1].read())
+  elif sys.platform == 'win32':
+    logical = physical = multiprocessing.cpu_count()
+  else: # Linux
+    logical = int(os.popen2("cat /proc/cpuinfo | grep \"^processor\" | wc -l")[1].read())
+    cpu_count = int(os.popen2("cat /proc/cpuinfo | grep \"^physical id\" | sort -u | wc -l")[1].read())
+    core_count = int(os.popen2("cat /proc/cpuinfo | grep \"^core id\" | sort -u | wc -l")[1].read())
+    physical = (cpu_count if cpu_count else logical) * (core_count if core_count else 1)
+
+  hyperthreading = (logical != physical);
+  return logical * (0.6 if hyperthreading else 1.0)
 
 if __name__ == '__main__':
   main()
