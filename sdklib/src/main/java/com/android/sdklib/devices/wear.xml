@@ -39,7 +39,7 @@
             </d:sensors>
             <d:mic>true</d:mic>
             <d:keyboard>qwerty</d:keyboard>
-            <d:nav>dpad</d:nav>
+            <d:nav>nonav</d:nav>
             <d:ram unit="MiB">512</d:ram>
             <d:buttons>hard</d:buttons>
             <d:internal-storage unit="KiB">
@@ -129,7 +129,7 @@
             </d:sensors>
             <d:mic>true</d:mic>
             <d:keyboard>qwerty</d:keyboard>
-            <d:nav>dpad</d:nav>
+            <d:nav>nonav</d:nav>
             <d:ram unit="MiB">512</d:ram>
             <d:buttons>hard</d:buttons>
             <d:internal-storage unit="KiB">
@@ -224,7 +224,7 @@
             </d:sensors>
             <d:mic>true</d:mic>
             <d:keyboard>qwerty</d:keyboard>
-            <d:nav>dpad</d:nav>
+            <d:nav>nonav</d:nav>
             <d:ram unit="MiB">512</d:ram>
             <d:buttons>hard</d:buttons>
             <d:internal-storage unit="KiB">7811891</d:internal-storage>
