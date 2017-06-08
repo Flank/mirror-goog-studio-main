@@ -1814,7 +1814,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                         + "}\n"))
                 .issues(COMPATIBILITY)
                 .client(getClientWithMockPlatformTarget(
-                        new AndroidVersion("26"), 2))
+                        new AndroidVersion("O"), 2))
                 .sdkHome(getMockSupportLibraryInstallation())
                 .run()
                 .expect(""
@@ -1830,7 +1830,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                         + "apply plugin: 'com.android.application'\n"
                         + "\n"
                         + "android {\n"
-                        + "    compileSdkVersion 26\n"
+                        + "    compileSdkVersion 'android-O'\n"
                         + "\n"
                         + "    defaultConfig {\n"
                         + "        minSdkVersion 15\n"
@@ -1842,7 +1842,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                         + "}\n"))
                 .issues(COMPATIBILITY)
                 .client(getClientWithMockPlatformTarget(
-                        new AndroidVersion("26"), 1))
+                        new AndroidVersion("O"), 1))
                 .sdkHome(getMockSupportLibraryInstallation())
                 .run()
                 .expect(""
@@ -1850,6 +1850,31 @@ public class GradleDetectorTest extends AbstractCheckTest {
                         + "    compile 'com.android.support:appcompat-v7:26.0.0-beta1'\n"
                         + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "1 errors, 0 warnings\n");
+
+        // Using SDK 26 final with 26.0.0-beta2 // ok
+        //noinspection all // Sample code
+        lint().files(
+                gradle(""
+                        + "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    compileSdkVersion 'android-O'\n"
+                        + "\n"
+                        + "    defaultConfig {\n"
+                        + "        minSdkVersion 15\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    compile 'com.android.support:appcompat-v7:26.0.0-beta2'\n"
+                        + "}\n"))
+                .issues(COMPATIBILITY)
+                .client(getClientWithMockPlatformTarget(
+                        // Using apiLevel implies version.isPreview is false
+                        new AndroidVersion("26"), 1))
+                .sdkHome(getMockSupportLibraryInstallation())
+                .run()
+                .expectClean();
     }
 
     // Utility for testOR2RequiresAppCompat26Beta1
