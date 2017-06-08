@@ -27,7 +27,6 @@ import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.repository.AndroidSdkHandler;
-import com.android.testutils.TestUtils;
 import com.android.utils.FileUtils;
 import java.io.File;
 
@@ -40,12 +39,12 @@ public class SdkHelper {
      * Returns the SDK folder as built from the Android source tree.
      */
     public static File findSdkDir() {
-        return TestUtils.getSdk();
+        return GradleTestProject.getAndroidHome();
     }
 
     @NonNull
     public static File getAdb() {
-        File adb = FileUtils.join(GradleTestProject.getAndroidHome(), FD_PLATFORM_TOOLS, FN_ADB);
+        File adb = FileUtils.join(findSdkDir(), FD_PLATFORM_TOOLS, FN_ADB);
         if (!adb.exists()) {
             throw new RuntimeException("Unable to find adb.");
         }
