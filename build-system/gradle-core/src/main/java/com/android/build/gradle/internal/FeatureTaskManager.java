@@ -373,6 +373,18 @@ public class FeatureTaskManager extends TaskManager {
             optionalFeatures.add(ManifestMerger2.Invoker.Feature.INSTANT_RUN_REPLACEMENT);
         }
 
+        // FIXME: This is temporary until we enforce usage of compile SDK 26 on features.
+        final AndroidVersion androidVersion =
+                AndroidTargetHash.getVersionFromHash(
+                        variantScope.getGlobalScope().getExtension().getCompileSdkVersion());
+        final boolean preO =
+                androidVersion != null
+                        && androidVersion.getApiLevel() < AndroidVersion.VersionCodes.O;
+
+        if (!preO) {
+            optionalFeatures.add(ManifestMerger2.Invoker.Feature.TARGET_SANDBOX_VERSION);
+        }
+
         AndroidTask<? extends ManifestProcessorTask> mergeManifestsAndroidTask;
         if (variantScope.isBaseFeature()) {
             // Base split. Merge all the dependent libraries and the other splits.
@@ -385,12 +397,7 @@ public class FeatureTaskManager extends TaskManager {
             // Non-base split. Publish the feature manifest.
             optionalFeatures.add(ManifestMerger2.Invoker.Feature.ADD_FEATURE_SPLIT_INFO);
 
-            // FIXME: This is temporary until we enforce usage of compile SDK 26 on features.
-            final AndroidVersion androidVersion =
-                    AndroidTargetHash.getVersionFromHash(
-                            variantScope.getGlobalScope().getExtension().getCompileSdkVersion());
-            if (androidVersion != null
-                    && androidVersion.getApiLevel() < AndroidVersion.VersionCodes.O) {
+            if (preO) {
                 optionalFeatures.add(
                         ManifestMerger2.Invoker.Feature.TRANSITIONAL_FEATURE_SPLIT_ATTRIBUTES);
             }

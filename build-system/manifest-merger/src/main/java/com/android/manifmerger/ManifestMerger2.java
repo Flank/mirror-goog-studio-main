@@ -400,6 +400,18 @@ public class ManifestMerger2 {
                             null, /* endOfLineSeparator */
                             false /* endWithNewLine */));
         }
+
+        if (mOptionalFeatures.contains(Invoker.Feature.TARGET_SANDBOX_VERSION)) {
+            addTargetSandboxVersionAttribute(document);
+            mergingReport.setMergedDocument(
+                    MergingReport.MergedManifestKind.MERGED,
+                    XmlPrettyPrinter.prettyPrint(
+                            document,
+                            XmlFormatPreferences.defaults(),
+                            XmlFormatStyle.get(document.getDocumentElement()),
+                            null, /* endOfLineSeparator */
+                            false /* endWithNewLine */));
+        }
     }
 
     /**
@@ -477,6 +489,19 @@ public class ManifestMerger2 {
                 }
             }
         }
+    }
+
+    /**
+     * Set "android:targetSandboxVersion" attribute to 2 for the manifest element.
+     *
+     * @param document the document whose attributes are changes
+     */
+    private static void addTargetSandboxVersionAttribute(@NonNull Document document) {
+        Element manifest = document.getDocumentElement();
+        if (manifest == null) {
+            return;
+        }
+        setAndroidAttribute(manifest, SdkConstants.ATTR_TARGET_SANDBOX_VERSION, "2");
     }
 
     /**
@@ -1147,7 +1172,10 @@ public class ManifestMerger2 {
             TRANSITIONAL_FEATURE_SPLIT_ATTRIBUTES,
 
             /** Set the android:debuggable flag to the application. */
-            DEBUGGABLE
+            DEBUGGABLE,
+
+            /** Set the android:targetSandboxVersion attribute. */
+            TARGET_SANDBOX_VERSION
         }
 
         /**
