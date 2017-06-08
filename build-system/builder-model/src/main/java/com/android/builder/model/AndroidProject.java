@@ -37,6 +37,9 @@ public interface AndroidProject {
     // Sent by Studio 2.4+. Additional model feature trigger on a case by case basis
     // Value is simply true to enable.
     String PROPERTY_BUILD_MODEL_FEATURE_FULL_DEPENDENCIES = "android.injected.build.model.feature.full.dependencies";
+    // property to disable source download during model sync. This is used for lint.
+    String PROPERTY_BUILD_MODEL_DISABLE_SRC_DOWNLOAD =
+            "android.injected.build.model.disable.src.download";
 
     // Sent by Studio 2.2+
     // This property will enable compatibility checks between Android Studio and the Android

@@ -68,6 +68,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.ResolveException;
@@ -238,7 +239,7 @@ public class ArtifactDependencyGraph {
      */
     private Set<HashableResolvedArtifactResult> getAllArtifacts(
             @NonNull VariantScope variantScope,
-            AndroidArtifacts.ConsumedConfigType consumedConfigType) {
+            @NonNull AndroidArtifacts.ConsumedConfigType consumedConfigType) {
         // we need to figure out the following:
         // - Is it an external dependency or a sub-project?
         // - Is it an android or a java dependency
@@ -346,14 +347,6 @@ public class ArtifactDependencyGraph {
                             result, dependencyType, isWrappedModule, aarResult));
         }
 
-        // force download the javadoc/source artifacts
-        handleJavadoc(
-                variantScope.getGlobalScope().getProject(),
-                artifacts
-                        .stream()
-                        .map(artifactResult -> artifactResult.getId().getComponentIdentifier())
-                        .collect(Collectors.toList()));
-
         return artifacts;
     }
 
@@ -378,18 +371,32 @@ public class ArtifactDependencyGraph {
 
     /** Create a level 2 dependency graph. */
     public DependencyGraphs createLevel2DependencyGraph(
-            @NonNull VariantScope variantScope, boolean withFullDependency) {
+            @NonNull VariantScope variantScope,
+            boolean withFullDependency,
+            boolean downloadSources) {
+        final Project project = variantScope.getGlobalScope().getProject();
+
         List<GraphItem> compileItems = Lists.newArrayList();
 
-        Set<HashableResolvedArtifactResult> artifacts =
+        Set<HashableResolvedArtifactResult> compileArtifacts =
                 getAllArtifacts(variantScope, COMPILE_CLASSPATH);
 
-        for (HashableResolvedArtifactResult artifact : artifacts) {
+        for (HashableResolvedArtifactResult artifact : compileArtifacts) {
             compileItems.add(new GraphItemImpl(computeAddress(artifact), ImmutableList.of()));
             sLibraryCache.get(artifact);
         }
 
         if (!withFullDependency) {
+            // force download the javadoc/source artifacts of the compile classpath only.
+            if (downloadSources) {
+                handleJavadoc(
+                        project,
+                        compileArtifacts
+                                .stream()
+                                .map(artifact -> artifact.getId().getComponentIdentifier())
+                                .collect(Collectors.toSet()));
+            }
+
             return new SimpleDependencyGraphsImpl(compileItems);
         }
 
@@ -398,14 +405,24 @@ public class ArtifactDependencyGraph {
 
         List<GraphItem> runtimeItems = Lists.newArrayList();
 
-        artifacts = getAllArtifacts(variantScope, RUNTIME_CLASSPATH);
+        Set<HashableResolvedArtifactResult> runtimeArtifacts =
+                getAllArtifacts(variantScope, RUNTIME_CLASSPATH);
 
-        for (HashableResolvedArtifactResult artifact : artifacts) {
+        for (HashableResolvedArtifactResult artifact : runtimeArtifacts) {
             runtimeItems.add(new GraphItemImpl(computeAddress(artifact), ImmutableList.of()));
             sLibraryCache.get(artifact);
         }
         List<GraphItem> providedItems = Lists.newArrayList(compileItems);
         providedItems.removeAll(runtimeItems);
+
+        // force download the javadoc/source artifacts of both scopes
+        if (downloadSources) {
+            handleJavadoc(
+                    project,
+                    Stream.concat(compileArtifacts.stream(), runtimeArtifacts.stream())
+                            .map(artifact -> artifact.getId().getComponentIdentifier())
+                            .collect(Collectors.toSet()));
+        }
 
         return new FullDependencyGraphsImpl(
                 compileItems,
@@ -418,7 +435,9 @@ public class ArtifactDependencyGraph {
     }
 
     /** Create a level 1 dependency list. */
-    public DependenciesImpl createDependencies(VariantScope variantScope) {
+    @NonNull
+    public DependenciesImpl createDependencies(
+            @NonNull VariantScope variantScope, boolean downloadSources) {
         ImmutableList.Builder<String> projects = ImmutableList.builder();
         ImmutableList.Builder<AndroidLibrary> androidLibraries = ImmutableList.builder();
         ImmutableList.Builder<JavaLibrary> javaLibrary = ImmutableList.builder();
@@ -490,6 +509,17 @@ public class ArtifactDependencyGraph {
                                 ImmutableList.of())); /*localJarOverride */
             }
         }
+
+        // force download the javadoc/source artifacts of the compile classpath only.
+        if (downloadSources) {
+            handleJavadoc(
+                    variantScope.getGlobalScope().getProject(),
+                    artifacts
+                            .stream()
+                            .map(artifact -> artifact.getId().getComponentIdentifier())
+                            .collect(Collectors.toSet()));
+        }
+
 
         return new DependenciesImpl(
                 androidLibraries.build(), javaLibrary.build(), projects.build());
@@ -587,8 +617,8 @@ public class ArtifactDependencyGraph {
         return new SimpleDependencyGraphsImpl(nodes);
     }
 
-    private void handleJavadoc(@NonNull Project project, List<ComponentIdentifier> artifacts) {
-
+    private static void handleJavadoc(
+            @NonNull Project project, @NonNull Set<ComponentIdentifier> artifacts) {
         final DependencyHandler dependencies = project.getDependencies();
 
         ArtifactResolutionQuery query = dependencies.createArtifactResolutionQuery();
