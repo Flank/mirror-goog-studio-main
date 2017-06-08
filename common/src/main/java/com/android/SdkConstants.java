@@ -1169,6 +1169,7 @@ public final class SdkConstants {
     public static final String ATTR_EXTRACT_NATIVE_LIBS = "extractNativeLibs";
     public static final String ATTR_SPLIT_NAME = "splitName";
     public static final String ATTR_FEATURE_SPLIT = "featureSplit";
+    public static final String ATTR_TARGET_SANDBOX_VERSION = "targetSandboxVersion";
 
     // Attributes: Resources
     public static final String ATTR_ATTR = "attr";

@@ -952,6 +952,37 @@ public class ManifestMerger2SmallTest {
         validateFeatureName(invoker, ":-SPLIT", false);
     }
 
+    @Test
+    public void testTargetSandboxVersionOption() throws Exception {
+        String xml =
+                ""
+                        + "<manifest\n"
+                        + "    package=\"com.foo.example\""
+                        + "    xmlns:t=\"http://schemas.android.com/apk/res/android\">\n"
+                        + "    <application t:name=\".applicationOne\">\n"
+                        + "        <activity t:name=\"activityOne\"/>\n"
+                        + "    </application>\n"
+                        + "</manifest>";
+
+        File inputFile = inputAsFile("testTargetSandboxVersionOption", xml);
+
+        MockLog mockLog = new MockLog();
+        MergingReport mergingReport =
+                ManifestMerger2.newMerger(inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION)
+                        .withFeatures(ManifestMerger2.Invoker.Feature.TARGET_SANDBOX_VERSION)
+                        .merge();
+
+        assertTrue(mergingReport.getResult().isSuccess());
+        Document xmlDocument = parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
+        assertEquals(
+                "2",
+                xmlDocument
+                        .getDocumentElement()
+                        .getAttributeNS(
+                                SdkConstants.NS_RESOURCES,
+                                SdkConstants.ATTR_TARGET_SANDBOX_VERSION));
+    }
+
     public static void validateFeatureName(
             ManifestMerger2.Invoker invoker, String featureName, boolean isValid) throws Exception {
         try {
