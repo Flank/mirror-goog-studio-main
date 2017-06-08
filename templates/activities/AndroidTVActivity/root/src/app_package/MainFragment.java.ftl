@@ -14,7 +14,6 @@
 
 package ${packageName};
 
-import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 import java.util.Timer;
@@ -128,7 +127,6 @@ public class ${mainFragment} extends BrowseFragment {
         mRowsAdapter.add(new ListRow(gridHeader, gridRowAdapter));
 
         setAdapter(mRowsAdapter);
-
     }
 
     private void prepareBackgroundManager() {
@@ -204,7 +202,6 @@ public class ${mainFragment} extends BrowseFragment {
                 mBackgroundUri = ((Movie) item).getBackgroundImageUrl();
                 startBackgroundTimer();
             }
-
         }
     }
 
@@ -244,7 +241,6 @@ public class ${mainFragment} extends BrowseFragment {
                     updateBackground(mBackgroundUri);
                 }
             });
-
         }
     }
 
