@@ -6,6 +6,9 @@
 
     <dependency mavenUrl="com.google.android.support:wearable:+" />
     <dependency mavenUrl="com.google.android.gms:play-services-wearable:+" />
+    <dependency mavenUrl="com.android.support:percent:+" />
+    <dependency mavenUrl="com.android.support:support-v4:+" />
+    <dependency mavenUrl="com.android.support:recyclerview-v7:+" />
 
     <mkdir at="${escapeXmlAttribute(projectOut)}/libs" />
 
