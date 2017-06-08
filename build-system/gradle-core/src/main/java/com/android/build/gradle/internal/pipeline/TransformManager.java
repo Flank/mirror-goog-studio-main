@@ -478,8 +478,6 @@ public class TransformManager extends FilterableStreamCollection {
                             Scope.EXTERNAL_LIBRARIES.name());
             if (!scopes.contains(Scope.EXTERNAL_LIBRARIES)) {
                 errorReporter.handleSyncError(null, SyncIssue.TYPE_GENERIC, message);
-            } else {
-                errorReporter.handleSyncWarning(null, SyncIssue.TYPE_GENERIC, message);
             }
         }
 
@@ -492,8 +490,6 @@ public class TransformManager extends FilterableStreamCollection {
                             Scope.EXTERNAL_LIBRARIES.name());
             if (!scopes.contains(Scope.EXTERNAL_LIBRARIES)) {
                 errorReporter.handleSyncError(null, SyncIssue.TYPE_GENERIC, message);
-            } else {
-                errorReporter.handleSyncWarning(null, SyncIssue.TYPE_GENERIC, message);
             }
         }
     }
