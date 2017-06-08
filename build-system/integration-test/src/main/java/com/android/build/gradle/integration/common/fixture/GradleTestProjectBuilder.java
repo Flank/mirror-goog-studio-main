@@ -204,17 +204,17 @@ public final class GradleTestProjectBuilder {
 
     /** Add all files in a directory to an AndroidTestApp. */
     private static void addAllFiles(AndroidTestApp app, File projectDir) {
-        for (String filePath : TestFileUtils.listFiles(projectDir)) {
-            File file = new File(filePath);
-            try {
+        try {
+            for (String filePath : TestFileUtils.listFiles(projectDir.toPath())) {
+                File file = new File(filePath);
                 app.addFile(
                         new TestSourceFile(
                                 file.getParent(),
                                 file.getName(),
                                 Files.toByteArray(new File(projectDir, filePath))));
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
             }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
     }
 }

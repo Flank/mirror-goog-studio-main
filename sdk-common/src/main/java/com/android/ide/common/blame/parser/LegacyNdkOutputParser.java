@@ -22,10 +22,8 @@ import com.android.ide.common.blame.SourceFilePosition;
 import com.android.ide.common.blame.SourcePosition;
 import com.android.ide.common.blame.parser.util.OutputLineReader;
 import com.android.utils.ILogger;
-import com.android.utils.SdkUtils;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
-
 import java.io.File;
 import java.util.List;
 import java.util.Locale;
@@ -157,7 +155,7 @@ public class LegacyNdkOutputParser implements PatternAwareOutputParser {
                                 StringBuilder buf = new StringBuilder();
                                 for (String m : messageList) {
                                     if (buf.length() > 0) {
-                                        buf.append(SdkUtils.getLineSeparator());
+                                        buf.append(System.lineSeparator());
                                     }
                                     buf.append(m);
                                 }

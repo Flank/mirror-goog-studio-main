@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.integration.common.fixture.app;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.android.annotations.NonNull;
 import com.google.common.base.Joiner;
 import com.google.common.io.Files;
@@ -31,9 +33,9 @@ public class TestSourceFile {
     private final byte[] content;
 
     public TestSourceFile(@NonNull String parent, @NonNull String name, @NonNull byte[] content) {
-        this.parent = parent;
-        this.name = name;
-        this.content = content;
+        this.parent = checkNotNull(parent);
+        this.name = checkNotNull(name);
+        this.content = checkNotNull(content);
     }
 
     public TestSourceFile(@NonNull String parent, @NonNull String name, @NonNull String content) {

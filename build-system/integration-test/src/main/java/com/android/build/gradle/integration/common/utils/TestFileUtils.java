@@ -23,15 +23,15 @@ import static org.junit.Assert.assertTrue;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.utils.FileUtils;
+import com.android.utils.StringHelper;
 import com.google.common.base.Charsets;
-import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
 import com.google.common.hash.Hashing;
-import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -42,24 +42,14 @@ import java.util.stream.Collectors;
  */
 public class TestFileUtils {
 
-    /**
-     * Return a list of relative path of the files in a directory.
-     */
-    public static List<String> listFiles(@NonNull File base) {
+    /** Return a list of relative path of the files in a directory. */
+    public static List<String> listFiles(@NonNull Path base) throws IOException {
         assertThat(base).isDirectory();
 
-        List<String> fileList = Lists.newArrayList();
-        for (File file : Files.fileTreeTraverser().preOrderTraversal(base).filter(
-                f -> {
-                    // we want to skip directories and symlinks, so isFile is the best check.
-                    return f != null && f.isFile();
-                })) {
-            assertThat(file.toString()).startsWith(base.toString());
-            String fileName = file.toString().substring(base.toString().length());
-            fileList.add(fileName);
-
-        }
-        return fileList;
+        return Files.walk(base)
+                .filter(Files::isRegularFile)
+                .map(path -> path.toString().substring(base.toString().length()))
+                .collect(Collectors.toList());
     }
 
     public static void checkContent(File file, String expectedContent) throws IOException {
@@ -69,7 +59,7 @@ public class TestFileUtils {
     public static void checkContent(File file, Iterable<String> expectedContents) throws IOException {
         assertThat(file).isFile();
 
-        String contents = Files.toString(file, Charsets.UTF_8);
+        String contents = new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8);
         for (String expectedContent : expectedContents) {
             assertTrue("File '" + file.getAbsolutePath() + "' does not contain: " + expectedContent,
                     contents.contains(expectedContent));
@@ -88,8 +78,8 @@ public class TestFileUtils {
             throws IOException {
         // Handle patterns that use unix-style line endings even on Windows where the test
         // projects are checked out with Windows-style endings.
-        search = toSystemLineEndings(search);
-        replace = toSystemLineEndings(replace);
+        search = StringHelper.toSystemLineSeparator(search);
+        replace = StringHelper.toSystemLineSeparator(replace);
 
         String content = new String(java.nio.file.Files.readAllBytes(file));
         String newContent = content.replaceAll(search, replace);
@@ -108,10 +98,6 @@ public class TestFileUtils {
         java.nio.file.Files.write(file, newContent.getBytes());
     }
 
-    private static String toSystemLineEndings(@NonNull String input) {
-        return input.replace("\r", "").replace("\n", System.lineSeparator());
-    }
-
     /**
      * Replace a line from a file with another line.
      * @param file file to change
@@ -122,15 +108,12 @@ public class TestFileUtils {
             @NonNull  File file,
             int lineNumber,
             @NonNull String line) throws IOException {
-        List<String> lines = Files.readLines(file, Charsets.UTF_8);
+        List<String> lines = Files.readAllLines(file.toPath(), Charsets.UTF_8);
 
         lines.add(lineNumber, line);
         lines.remove(lineNumber - 1);
 
-        Files.write(
-                Joiner.on(System.getProperty("line.separator")).join(lines),
-                file,
-                Charsets.UTF_8);
+        Files.write(file.toPath(), lines, StandardCharsets.UTF_8);
     }
 
     public static void addMethod(
@@ -141,7 +124,11 @@ public class TestFileUtils {
     }
 
     public static void appendToFile(@NonNull File file, @NonNull String content) throws IOException {
-        Files.append(System.lineSeparator() + content, file, Charset.defaultCharset());
+        Files.write(
+                file.toPath(),
+                (System.lineSeparator() + content).getBytes(StandardCharsets.UTF_8),
+                StandardOpenOption.APPEND,
+                StandardOpenOption.CREATE);
     }
 
     /**
