@@ -16,7 +16,6 @@
 
 package com.android.tools.lint.checks;
 
-
 import com.android.annotations.NonNull;
 import java.io.File;
 import java.io.FileInputStream;
@@ -37,36 +36,21 @@ import org.xml.sax.SAXException;
  *
  */
 public class Api {
-
     /**
      * Parses simplified API file.
      * @param apiFile the file to read
      * @return a new ApiInfo
      */
     public static Api parseApi(File apiFile) {
-        InputStream inputStream = null;
-        try {
-            inputStream = new FileInputStream(apiFile);
+        try (InputStream inputStream = new FileInputStream(apiFile)) {
             SAXParserFactory parserFactory = SAXParserFactory.newInstance();
             SAXParser parser = parserFactory.newSAXParser();
             ApiParser apiParser = new ApiParser();
             parser.parse(inputStream, apiParser);
             inputStream.close();
             return new Api(apiParser.getClasses(), apiParser.getPackages());
-        } catch (ParserConfigurationException e) {
+        } catch (ParserConfigurationException | SAXException | IOException e) {
             e.printStackTrace();
-        } catch (SAXException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            if (inputStream != null) {
-                try {
-                    inputStream.close();
-                } catch (IOException e) {
-                    // ignore
-                }
-            }
         }
 
         return null;
