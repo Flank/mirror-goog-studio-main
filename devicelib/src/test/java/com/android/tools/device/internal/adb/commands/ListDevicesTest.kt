@@ -75,12 +75,12 @@ class ListDevicesTest {
         }
 
     }
+}
 
-    private fun createOkayResponse(payload: String): ByteArray {
-        val sb = StringBuilder()
-        sb.append("OKAY")
-        sb.append(String.format(Locale.US, "%04X", payload.length))
-        sb.append(payload)
-        return sb.toString().toByteArray(Charsets.UTF_8)
-    }
+fun createOkayResponse(payload: String): ByteArray {
+    val sb = StringBuilder()
+    sb.append("OKAY")
+    sb.append(String.format(Locale.US, "%04X", payload.length))
+    sb.append(payload)
+    return sb.toString().toByteArray(Charsets.UTF_8)
 }
