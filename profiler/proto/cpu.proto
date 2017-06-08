@@ -112,6 +112,8 @@ message GetTraceResponse {
   }
   Status status = 1;
   bytes data = 2;
+  // Type of the profiler used to obtain the trace.
+  CpuProfilerType profiler_type = 3;
 }
 
 // Requests profiler data from the app with ID being |process_id|, in the time range
