@@ -17,19 +17,19 @@
 package com.android.build.gradle.internal.ide;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.concurrency.Immutable;
+import com.android.annotations.Nullable;
+import com.android.builder.model.AndroidAtom;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaLibrary;
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableSet;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
-
-/** Implementation of {@link com.android.builder.model.Dependencies} interface */
-@Immutable
+/** */
 public class DependenciesImpl implements Dependencies, Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -48,6 +48,12 @@ public class DependenciesImpl implements Dependencies, Serializable {
 
     @NonNull
     @Override
+    public Collection<AndroidAtom> getAtoms() {
+        return ImmutableSet.of();
+    }
+
+    @NonNull
+    @Override
     public Collection<AndroidLibrary> getLibraries() {
         return libraries;
     }
@@ -62,6 +68,12 @@ public class DependenciesImpl implements Dependencies, Serializable {
     @Override
     public List<String> getProjects() {
         return projects;
+    }
+
+    @Nullable
+    @Override
+    public AndroidAtom getBaseAtom() {
+        return null;
     }
 
     @Override
