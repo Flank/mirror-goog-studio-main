@@ -1347,7 +1347,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             // It's not actually compileSdkVersion 26, it's using O revision 2 or higher
             if (compileSdkVersion == 26) {
                 IAndroidTarget buildTarget = context.getProject().getBuildTarget();
-                if (buildTarget != null) {
+                if (buildTarget != null && buildTarget.getVersion().isPreview()) {
                     compile26Beta = buildTarget.getRevision() != 1;
                 }
             }
