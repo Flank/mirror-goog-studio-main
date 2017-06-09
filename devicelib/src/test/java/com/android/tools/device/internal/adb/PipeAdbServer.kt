@@ -17,12 +17,14 @@
 package com.android.tools.device.internal.adb
 
 import com.android.tools.device.internal.ScopedThreadNameRunnable
+import com.google.common.primitives.Bytes
 import java.io.Closeable
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.channels.Pipe
 import java.nio.channels.ReadableByteChannel
 import java.nio.channels.WritableByteChannel
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.ForkJoinPool
 
 class PipeAdbServer : Closeable {
@@ -35,7 +37,7 @@ class PipeAdbServer : Closeable {
     val responseSource: ReadableByteChannel = outPipe.source()
     private val responseSink = outPipe.sink()
 
-    val commandBuffer = mutableListOf<Byte>()
+    val commandBuffer = CopyOnWriteArrayList<Byte>()
 
     init {
         ForkJoinPool.commonPool().submit(
@@ -66,6 +68,12 @@ class PipeAdbServer : Closeable {
         outPipe.sink().writeFully(ByteBuffer.wrap(data))
     }
 
+    fun waitForCommand(command: String) {
+        do {
+            val receivedCommand = Bytes.toArray(commandBuffer).toString(Charsets.UTF_8)
+        } while (receivedCommand != command)
+    }
+
     override fun close() {
         commandSource.close()
         commandSink.close()
@@ -80,4 +88,3 @@ private fun MutableList<Byte>.addAll(elements: ByteBuffer) {
         add(elements.get())
     }
 }
-
