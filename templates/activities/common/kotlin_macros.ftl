@@ -2,7 +2,7 @@
 an app build.gradle -->
 
 <#macro addKotlinPlugins>
-<#if includeKotlinSupport!false>
+<#if generateKotlin>
 <#compress>
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
@@ -11,5 +11,5 @@ apply plugin: 'kotlin-android-extensions'
 </#macro>
 
 <#macro addKotlinDependencies>
-<#if includeKotlinSupport!false>${getConfigurationName("compile")} "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"</#if>
+<#if generateKotlin>${getConfigurationName("compile")} "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"</#if>
 </#macro>

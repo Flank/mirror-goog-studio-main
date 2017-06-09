@@ -33,8 +33,14 @@
     <open file="${escapeXmlAttribute(resOut)}/layout/${layoutName}.xml" />
 </#if>
 
+<#if generateKotlin>
+    <instantiate from="root/src/app_package/ScrollActivity.kt.ftl"
+                   to="${escapeXmlAttribute(srcOut)}/${activityClass}.kt" />
+    <open file="${escapeXmlAttribute(srcOut)}/${activityClass}.kt" />
+<#else>
     <instantiate from="root/src/app_package/ScrollActivity.java.ftl"
                    to="${escapeXmlAttribute(srcOut)}/${activityClass}.java" />
-
     <open file="${escapeXmlAttribute(srcOut)}/${activityClass}.java" />
+</#if>
+
 </recipe>
