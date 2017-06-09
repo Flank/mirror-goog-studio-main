@@ -61,13 +61,21 @@ android {
         manifest.write(manifestLines.join(System.getProperty("line.separator")))
     }
 
+    /**
+     * Because :lintVitalRelease is quite an expensive operation, there is logic in it that skips
+     * its execution if :lint is present in the task graph (as :lintVitalRelease is a subset of what
+     * :lint does, there's no point in doing both).
+     */
     @Test
-    public void runningLintSkipLintVital() {
+    public void runningLintSkipsLintVital() {
         GradleBuildResult result =
-                project.executor().expectFailure().run("lint");
-        assertThat(result.getFailureMessage()).contains("Lint found errors");
-        TruthHelper.assertThat(result.getTask(":lintVitalRelease")).wasSkipped();
-        TruthHelper.assertThat(result.getTask(":lint")).failed();
+                project.executor().expectFailure().run("lintVitalRelease", "lint")
+        TruthHelper.assertThat(result.getTask(":lintVitalRelease")).wasSkipped()
+
+        // We make this assertion to ensure that :lint is actually run and runs as expected. Without
+        // this, it's possible that we break the execution in some other way and the test still
+        // passes.
+        TruthHelper.assertThat(result.getTask(":lint")).failed()
     }
 
     @Test
