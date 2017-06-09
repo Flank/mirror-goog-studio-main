@@ -21,10 +21,12 @@ import com.android.tools.device.internal.adb.ChannelConnection
 import com.google.common.base.Charsets
 import com.google.common.primitives.Bytes
 import com.google.common.truth.Truth.assertThat
+import org.junit.Ignore
 import org.junit.Test
 
 class KillServerTest {
     @Test
+    @Ignore // flaky
     fun execute_killCommand() {
         PipeAdbServer().use { server ->
             ChannelConnection(server.responseSource, server.commandSink).use { connection ->
