@@ -243,15 +243,19 @@ public class AvdManagerCliTest {
         assertEquals(
                 "P Available Android Virtual Devices:\n"
                         + "P     Name: testAvd1\n"
-                        + "P     Path: " + new File("/avd/test1").getAbsolutePath() + "\n"
+                        + "P     Path: "
+                        + new File("/avd/test1").getAbsolutePath()
+                        + "\n"
                         + "P   Target: Google APIs (Google)\n"
                         + "P           Based on: Android 7.1.1 (Nougat)"
                         + "P  Tag/ABI: google_apis/x86\n"
                         + "P ---------\n"
                         + "P     Name: testAvd2\n"
-                        + "P     Path: " + new File("/avd/test2").getAbsolutePath() + "\n"
+                        + "P     Path: "
+                        + new File("/avd/test2").getAbsolutePath()
+                        + "\n"
                         + "P   Target: Google APIs\n"
-                        + "P           Based on: Android 7+ (O)"
+                        + "P           Based on: Android 8.0 (O)"
                         + "P  Tag/ABI: android-wear/armeabi-v7a\n",
                 Joiner.on("").join(mLogger.getMessages()));
     }

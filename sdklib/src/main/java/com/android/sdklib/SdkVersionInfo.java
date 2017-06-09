@@ -31,9 +31,7 @@ public class SdkVersionInfo {
      */
     public static final int HIGHEST_KNOWN_API = 26;
 
-    /**
-     * Like {@link #HIGHEST_KNOWN_API} but does not include preview platforms
-     */
+    /** Like {@link #HIGHEST_KNOWN_API} but does not include preview platforms */
     public static final int HIGHEST_KNOWN_STABLE_API = 25;
 
     /**
@@ -124,7 +122,8 @@ public class SdkVersionInfo {
             case 23: return "6.0";
             case 24: return "7.0";
             case 25: return "7.1.1";
-            case 26: return "7+";
+            case 26:
+                return "8.0";
             // If you add more versions here, also update #getBuildCodes and
             // #HIGHEST_KNOWN_API
 

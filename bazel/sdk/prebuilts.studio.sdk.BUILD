@@ -156,7 +156,7 @@ filegroup(
 
 filegroup(
     name = "platforms/latest-preview",
-    srcs = [":platforms/android-O"],
+    srcs = [":platforms/android-26"],
     visibility = ["//visibility:public"],
 )
 
@@ -179,7 +179,7 @@ filegroup(
 # Version-specific rule left private in hopes we can depend on platforms/latest instead.
 # TODO: Migrate the packages below that depend on specific versions.
 platform_filegroup(
-    name = "platforms/android-O",
+    name = "platforms/android-26",
 )
 
 platform_filegroup(
