@@ -222,6 +222,8 @@ public class MergeResources extends IncrementalTask {
             System.out.println(e.getMessage());
             merger.cleanBlob(getIncrementalFolder());
             throw new ResourceException(e.getMessage(), e);
+        } finally {
+            cleanup();
         }
     }
 
@@ -315,8 +317,7 @@ public class MergeResources extends IncrementalTask {
             merger.cleanBlob(getIncrementalFolder());
             throw new ResourceException(e.getMessage(), e);
         } finally {
-            // some clean up after the task to help multi variant/module builds.
-            fileValidity.clear();
+            cleanup();
         }
     }
 
@@ -415,6 +416,18 @@ public class MergeResources extends IncrementalTask {
         }
 
         return processedInputs;
+    }
+
+    /**
+     * Release resource sets not needed any more, otherwise they will waste heap space for the
+     * duration of the build.
+     *
+     * <p>This might be called twice when an incremental build falls back to a full one.
+     */
+    private void cleanup() {
+        fileValidity.clear();
+        sourceFolderInputs = null;
+        processedInputs = null;
     }
 
     @InputFiles
