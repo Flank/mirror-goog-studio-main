@@ -6,6 +6,7 @@ cc_library(
         "activity_manager.cc",
         "background_queue.cc",
         "bash_command.cc",
+        "config.cc",
         "current_process.cc",
         "device_info.cc",
         "file_descriptor_utils.cc",
@@ -78,6 +79,9 @@ cc_library(
     copts = [
         "-Itools/base/profiler/native",
         "-I$(GENDIR)/tools/base/profiler",
+    ],
+    deps = [
+        "//tools/base/profiler/proto:profiler_cc_proto",
     ],
 )
 

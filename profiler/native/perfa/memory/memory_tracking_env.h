@@ -55,10 +55,10 @@ using MethodIdSet = std::unordered_set<long>;
 
 class MemoryTrackingEnv {
  public:
-  static MemoryTrackingEnv* Instance(JavaVM* vm);
+  static MemoryTrackingEnv* Instance(JavaVM* vm, bool log_live_alloc_count);
 
  private:
-  explicit MemoryTrackingEnv(jvmtiEnv* jvmti);
+  explicit MemoryTrackingEnv(jvmtiEnv* jvmti, bool log_live_alloc_count);
 
   // Environment is alive through the app's lifetime, don't bother cleaning up.
   ~MemoryTrackingEnv() = delete;
@@ -109,6 +109,7 @@ class MemoryTrackingEnv {
   TimingStats timing_stats_;
 
   jvmtiEnv* jvmti_;
+  bool log_live_alloc_count_;
   bool is_first_tracking_;
   bool is_live_tracking_;
   int32_t app_id_;

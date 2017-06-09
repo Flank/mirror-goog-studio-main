@@ -2,6 +2,7 @@ set(UTILS_SOURCES
     activity_manager.cc
     background_queue.cc
     bash_command.cc
+    config.cc
     current_process.cc
     device_info.cc
     file_cache.cc
@@ -44,11 +45,8 @@ endif()
 add_library(profiler_utils
             ${UTILS_SOURCES})
 
-# Ensures symbols related to <android/log.h> are linked
-if(ANDROID)
-  target_link_libraries(profiler_utils
-                        log)
-endif()
+target_link_libraries(profiler_utils
+                      profiler_protos)
 
 if (TRACE_OUTPUT)
     target_compile_definitions(profiler_utils PRIVATE TRACE_OUTPUT=1)

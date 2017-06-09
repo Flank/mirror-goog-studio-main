@@ -34,8 +34,12 @@ public final class VmStatsSampler extends Thread {
     private int mPreviousGcCount;
     private int mPreviousThreadLocalAllocCount;
 
-    public VmStatsSampler() {
+    // Whether the sampler should monitor and log garbage collection events.
+    private boolean mLogGc;
+
+    public VmStatsSampler(boolean logGc) {
         super(NAME);
+        mLogGc = logGc;
     }
 
     @Override
@@ -64,7 +68,9 @@ public final class VmStatsSampler extends Thread {
                 int allocatedCount = Debug.getGlobalAllocCount() - threadAllocatedCount;
                 logAllocStats(allocatedCount, freedCount);
                 if (gcCount - mPreviousGcCount > 0) {
-                    logGcStats();
+                    if (mLogGc) {
+                        logGcStats();
+                    }
                     mPreviousGcCount = gcCount;
                 }
 

@@ -55,7 +55,7 @@ public class ProfilerService {
     public ProfilerService() {
         mComponents = new ArrayList<ProfilerComponent>();
         mComponents.add(new EventProfiler());
-        mComponents.add(new MemoryProfiler());
+        mComponents.add(new MemoryProfiler(true));
 
         // TODO handle shutdown properly
     }

@@ -28,3 +28,13 @@ service AgentService {
 
 message HeartBeatResponse {
 }
+
+// Proto used for configuring perfd + perfa.
+// The message itself is created and pushed to device from Studio
+// and can be access via profiler::Config::Instance().
+message AgentConfig {
+  // equivalent to profiler.jvmti flag in Studio
+  bool use_jvmti = 1;
+  // equivalent ot profiler.livealloc flag in Studio
+  bool use_live_alloc = 2;
+}

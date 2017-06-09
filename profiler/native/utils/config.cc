@@ -14,17 +14,24 @@
  * limitations under the License.
  */
 
-package com.android.tools.profiler.support.profilers;
+#include "config.h"
 
-import com.android.tools.profiler.support.memory.VmStatsSampler;
+#include <fstream>
+#include "utils/log.h"
 
-public class MemoryProfiler implements ProfilerComponent {
+namespace profiler {
 
-    VmStatsSampler mVmStatsSampler;
-
-    public MemoryProfiler(boolean logGc) {
-        mVmStatsSampler = new VmStatsSampler(logGc);
-        mVmStatsSampler.start();
-        // TODO handle shutdown properly
-    }
+Config& Config::Instance() {
+  static Config* instance = new Config(kConfigFilePath);
+  return *instance;
 }
+
+Config::Config(const char* file_path) {
+  std::fstream input(file_path, std::ios::in | std::ios::binary);
+  if (!agent_config_.ParseFromIstream(&input)) {
+    Log::V("Failed to parse config from %s", file_path);
+  }
+  input.close();
+}
+
+}  // namespace profiler
