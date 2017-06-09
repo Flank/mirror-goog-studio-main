@@ -278,9 +278,16 @@ public class GenerateBazelAction extends AnAction {
             }
         }
 
-        progress.append("Saving BUILD files...\n");
-        bazel.generate(progress);
-        progress.append("Done.\n");
+        progress.println("Updating BUILD files...");
+        CountingListener listener = new CountingListener(progress);
+        bazel.generate(listener);
+
+        if (listener.getUpdatedPackages() == 0) {
+            progress.println("OK: No changes needed.");
+        } else {
+            progress.println(
+                    String.format("ATTENTION: %d files updated.", listener.getUpdatedPackages()));
+        }
     }
 
     /**
@@ -316,7 +323,7 @@ public class GenerateBazelAction extends AnAction {
         return mapBuilder.build();
     }
 
-    private class Label {
+    private static class Label {
         final String pkg;
         final String target;
 
@@ -344,6 +351,25 @@ public class GenerateBazelAction extends AnAction {
                 ? pkg.substring(pkg.lastIndexOf('/') + 1)
                 // Target name is what's after colon:
                 : suffix.substring(1);
+        }
+    }
+
+    private static class CountingListener implements Workspace.GenerationListener {
+        private final PrintWriter printWriter;
+        private int updatedPackages = 0;
+
+        private CountingListener(PrintWriter printWriter) {
+            this.printWriter = printWriter;
+        }
+
+        @Override
+        public void packageUpdated(String packageName) {
+            updatedPackages++;
+            printWriter.append("Updated ").append(packageName).append("/BUILD").println();
+        }
+
+        int getUpdatedPackages() {
+            return updatedPackages;
         }
     }
 }

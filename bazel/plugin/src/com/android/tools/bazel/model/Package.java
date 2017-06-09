@@ -61,7 +61,7 @@ public class Package {
         return buildDotBazelFile.isFile() ? buildDotBazelFile : new File(dir, "BUILD");
     }
 
-    public void generate(PrintWriter progress) throws IOException {
+    public void generate(Workspace.GenerationListener listener) throws IOException {
         if (workspace == null) return;
 
         boolean hasRules = false;
@@ -90,7 +90,7 @@ public class Package {
             String before = Files.toString(build, StandardCharsets.UTF_8);
             String after = Files.toString(tmp, StandardCharsets.UTF_8);
             if (!before.equals(after)) {
-                progress.append("Updated " + name + "/BUILD\n");
+                listener.packageUpdated(name);
                 LOG.info("Build file changed: " + name);
                 LOG.info("idea diff " + build.getAbsolutePath() + " " + tmp.getAbsolutePath());
                 Files.copy(tmp, build);

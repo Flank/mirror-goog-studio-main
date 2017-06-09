@@ -20,7 +20,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.Map;
 import org.jetbrains.annotations.NotNull;
 
@@ -33,9 +32,9 @@ public class Workspace {
         this.directory = directory;
     }
 
-    public void generate(PrintWriter progress) throws IOException {
+    public void generate(GenerationListener listener) throws IOException {
         for (Package pkg : packages.values()) {
-            pkg.generate(progress);
+            pkg.generate(listener);
         }
     }
 
@@ -73,5 +72,9 @@ public class Workspace {
         }
         File parent = dir.getParentFile();
         return (parent == null) ? null : findBuildDirectory(parent);
+    }
+
+    public interface GenerationListener {
+        void packageUpdated(String packageName);
     }
 }
