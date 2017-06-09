@@ -138,7 +138,7 @@ groovy_jar(
 
 java_test(
     name = "tests",
-    timeout = "eternal",
+    size = "enormous",
     data = TEST_DATA,
     jvm_flags = [
         "-Dtest.suite.jar=tests.jar",
@@ -150,7 +150,6 @@ java_test(
     shard_count = 8,  # Keep this in sync with logic in our bazel launcher script and CheckAllRunner.
     tags = [
         "block-network",
-        "cpu:3",
         "gradle_integration",
         "slow",
     ],
@@ -167,7 +166,7 @@ java_test(
 # Test that builds and lints all test projects, without any additional assertions.
 java_test(
     name = "automatic-tests",
-    timeout = "eternal",
+    size = "enormous",
     srcs = glob(["src/test/java/**/CheckAll.java"]),
     data = TEST_DATA,
     jvm_flags = [
@@ -176,7 +175,6 @@ java_test(
     shard_count = 8,  # Keep this in sync with logic in our bazel launcher script and CheckAllRunner.
     tags = [
         "block-network",
-        "cpu:3",
         "gradle_integration",
         "slow",
     ],

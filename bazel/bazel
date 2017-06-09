@@ -57,7 +57,20 @@ def main():
   else: # Linux
     env['CC'] = os.environ.get('GCC', '/usr/bin/gcc')
 
-  if bazel_command(args) == 'info':
+  if bazel_command(args) == 'test':
+    # Keep this logic in sync with integration-test BUILD file and CheckAllRunner.
+    cpus = multiprocessing.cpu_count()
+    if cpus > 20:
+      # Most likely z840. For now limit test jobs to 8, until we experiment
+      # with higher values.
+      test_jobs = 8
+    else:
+      test_jobs = 2
+
+    # Insert the flag right after "test".
+    args.insert(bazel_command_index(args) + 1, '--local_test_jobs=' + str(test_jobs))
+    print('Running with {} local test jobs.'.format(test_jobs))
+  elif bazel_command(args) == 'info':
     print("bazel-cpu-count: " + str(count_bazel_CPUs()))
 
   sys.exit(subprocess.call([bazel] + args, env=env))
