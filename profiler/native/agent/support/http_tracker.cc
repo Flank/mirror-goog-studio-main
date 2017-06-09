@@ -19,6 +19,8 @@
 #include <unistd.h>
 #include <atomic>
 #include <memory>
+#include <sstream>
+#include <unordered_map>
 
 #include "agent/agent.h"
 #include "agent/support/jni_wrappers.h"
@@ -39,6 +41,14 @@ using profiler::proto::JavaThreadRequest;
 
 namespace {
 std::atomic_int id_generator_(1);
+
+// Intermediate buffer that stores all payload chunks not yet sent. That way,
+// if grpc requests start to fall behind, data is batched and flushed all at
+// once at the next opportunity. This can be a major performance boost, as it's
+// faster to send one 10K message than ten 1K messages, which gives the system
+// a chance to catch up.
+std::mutex chunks_mutex_;
+std::unordered_map<uint64_t, std::vector<std::string>> chunks_;
 
 const SteadyClock &GetClock() {
   static SteadyClock clock;
@@ -85,21 +95,23 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_next
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_trackThread(
-    JNIEnv *env, jobject thiz, jlong juid, jstring jthread_name, jlong jthread_id) {
-    JStringWrapper thread_name(env, jthread_name);
-    Agent::Instance().background_queue()->EnqueueTask([juid, thread_name, jthread_id] {
-      auto net_stub = Agent::Instance().network_stub();
+    JNIEnv *env, jobject thiz, jlong juid, jstring jthread_name,
+    jlong jthread_id) {
+  JStringWrapper thread_name(env, jthread_name);
+  Agent::Instance().background_queue()->EnqueueTask(
+      [juid, thread_name, jthread_id] {
+        auto net_stub = Agent::Instance().network_stub();
 
-      ClientContext ctx;
-      EmptyNetworkReply reply;
-      JavaThreadRequest threadRequest;
+        ClientContext ctx;
+        EmptyNetworkReply reply;
+        JavaThreadRequest threadRequest;
 
-      threadRequest.set_conn_id(juid);
-      auto thread = threadRequest.mutable_thread();
-      thread->set_name(thread_name.get());
-      thread->set_id(jthread_id);
-      net_stub.TrackThread(&ctx, threadRequest, &reply);
-    });
+        threadRequest.set_conn_id(juid);
+        auto thread = threadRequest.mutable_thread();
+        thread->set_name(thread_name.get());
+        thread->set_id(jthread_id);
+        net_stub.TrackThread(&ctx, threadRequest, &reply);
+      });
 }
 
 JNIEXPORT void JNICALL
@@ -119,19 +131,40 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024InputStreamTrac
     JNIEnv *env, jobject thiz, jlong juid, jbyteArray jbytes) {
   JByteArrayWrapper bytes(env, jbytes);
 
-  Agent::Instance().background_queue()->EnqueueTask([bytes, juid] {
-    auto net_stub = Agent::Instance().network_stub();
+  {
+    std::lock_guard<std::mutex> guard(chunks_mutex_);
+    const auto &itr = chunks_.find(juid);
+    if (itr != chunks_.end()) {
+      itr->second.push_back(bytes.get());
+    } else {
+      // We're pushing the first chunk onto the buffer, so also spawn a
+      // background thread to consume it. Additional bytes reported before the
+      // background thread finally runs will be sent out at the same time.
+      chunks_[juid].push_back(bytes.get());
+      Agent::Instance().background_queue()->EnqueueTask([juid] {
+        std::ostringstream batched_bytes;
+        {
+          std::lock_guard<std::mutex> guard(chunks_mutex_);
+          for (const std::string &chunk : chunks_[juid]) {
+            batched_bytes << chunk;
+          }
+          chunks_.erase(juid);
+        }
 
-    ClientContext ctx;
-    EmptyNetworkReply reply;
-    ChunkRequest chunk;
+        auto net_stub = Agent::Instance().network_stub();
 
-    chunk.set_conn_id(juid);
-    chunk.set_content(bytes.get());
-    chunk.set_type(ChunkRequest::RESPONSE);
+        ClientContext ctx;
+        EmptyNetworkReply reply;
+        ChunkRequest chunk;
 
-    net_stub.SendChunk(&ctx, chunk, &reply);
-  });
+        chunk.set_conn_id(juid);
+        chunk.set_content(batched_bytes.str());
+        chunk.set_type(ChunkRequest::RESPONSE);
+
+        net_stub.SendChunk(&ctx, chunk, &reply);
+      });
+    }
+  }
 }
 
 JNIEXPORT void JNICALL
