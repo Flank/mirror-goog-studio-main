@@ -23,20 +23,21 @@ import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.roots.OrderEntry;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
-
 import java.io.File;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.function.Function;
+import java.util.*;
 
 /**
  * A collection of modules with cyclic dependencies that form a strongly connected component.
  */
 public class BazelModule {
 
-    private List<Module> modules = new LinkedList<>();
+    private static final Comparator<Module> BY_NAME = Comparator.comparing(Module::getName);
+
+    private static final Comparator<Module> BY_NUM_ORDER_ENTRIES =
+            Comparator.comparingInt(
+                    module -> ModuleRootManager.getInstance(module).getOrderEntries().length);
+
+    private SortedSet<Module> modules = new TreeSet<>(BY_NAME);
 
     public ImlModule rule = null;
 
@@ -46,11 +47,6 @@ public class BazelModule {
     public void add(Module module) {
         modules.add(module);
     }
-
-    private static final Function<Module, Integer> GET_NUM_ORDER_ENTRIES =
-        module -> ModuleRootManager.getInstance(module).getOrderEntries().length;
-    private static final Comparator<Module> BY_NUM_ORDER_ENTRIES =
-        (m1, m2) -> GET_NUM_ORDER_ENTRIES.apply(m1) - GET_NUM_ORDER_ENTRIES.apply(m2);
 
     public String getName() {
         return modules.stream().max(BY_NUM_ORDER_ENTRIES).get().getName()

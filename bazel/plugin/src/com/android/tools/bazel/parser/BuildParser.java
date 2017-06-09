@@ -16,9 +16,9 @@
 
 package com.android.tools.bazel.parser;
 
-import com.android.tools.bazel.parser.ast.Token.Kind;
 import com.android.tools.bazel.parser.ast.*;
-
+import com.android.tools.bazel.parser.ast.Token.Kind;
+import com.intellij.openapi.diagnostic.Logger;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -28,6 +28,7 @@ import java.util.List;
  * The grammar is in the comment of each method.
  */
 public class BuildParser {
+    private static final Logger LOG = Logger.getInstance(BuildParser.class);
 
     private final Tokenizer tokenizer;
 
@@ -162,9 +163,8 @@ public class BuildParser {
                 statement = new Assignment(ident, parseExpression());
                 break;
             default:
-                System.err.println("Unexpected statement token: " + token);
+                LOG.error("Unexpected statement token: " + token);
                 statement = null;
-
         }
         return statement;
     }
@@ -269,7 +269,7 @@ public class BuildParser {
                 expression = parseDict();
                 break;
             default:
-                System.err.println(token.asError());
+                LOG.error(token.asError());
         }
         return expression;
     }
@@ -351,7 +351,7 @@ public class BuildParser {
 
     private TokenizerToken consume(Kind kind) {
         if (token.kind != kind) {
-            System.err.println(token.asError());
+            LOG.error(token.asError());
         }
         return consume();
     }

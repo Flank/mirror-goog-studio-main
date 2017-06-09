@@ -73,19 +73,31 @@ genrule(
         "kotlin-runtime.jar",
         "kotlin-reflect.jar",
         "kotlin-script-runtime.jar",
-        "kotlin-test.jar",
     ],
     cmd = "$(location :unzipper) $< " +
           "Kotlin/kotlinc/lib/kotlin-runtime.jar:$(@D)/kotlin-runtime.jar " +
           "Kotlin/kotlinc/lib/kotlin-reflect.jar:$(@D)/kotlin-reflect.jar " +
-          "Kotlin/kotlinc/lib/kotlin-script-runtime.jar:$(@D)/kotlin-script-runtime.jar " +
-          "Kotlin/kotlinc/lib/kotlin-test.jar:$(@D)/kotlin-test.jar",
+          "Kotlin/kotlinc/lib/kotlin-script-runtime.jar:$(@D)/kotlin-script-runtime.jar",
     tools = [":unzipper"],
 )
 
 java_import(
     name = "kotlin-runtime",
     jars = [":kotlin-runtime.genrule"],
+    visibility = ["//visibility:public"],
+)
+
+genrule(
+    name = "kotlin-test.genrule",
+    srcs = ["//prebuilts/tools/common/kotlin-plugin:kotlin-plugin-1.1.0-release-112.zip"],
+    outs = ["kotlin-test.jar"],
+    cmd = "$(location :unzipper) $< Kotlin/kotlinc/lib/kotlin-test.jar:$(@D)/kotlin-test.jar",
+    tools = [":unzipper"],
+)
+
+java_import(
+    name = "kotlin-test",
+    jars = [":kotlin-test.genrule"],
     visibility = ["//visibility:public"],
 )
 

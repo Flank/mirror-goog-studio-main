@@ -18,7 +18,6 @@ package com.android.tools.bazel.model;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -55,7 +54,6 @@ public class Workspace {
     public Package findPackage(String rel) {
         File pkg = findBuildDirectory(new File(directory, rel));
         if (pkg == null) {
-            System.err.println("Invalid package directory " + rel);
             return null;
         }
         String label = directory.toPath().relativize(pkg.toPath()).normalize().toString();
