@@ -40,7 +40,7 @@ import org.junit.rules.TemporaryFolder;
 /** Tests for the public DSL of the App plugin ("com.android.application") */
 public class AppPluginDslTest {
 
-    @Rule public TemporaryFolder projectDirectory = new TemporaryFolder();
+    @Rule public final TemporaryFolder projectDirectory = new TemporaryFolder();
 
     protected AppPlugin plugin;
     protected AppExtension android;

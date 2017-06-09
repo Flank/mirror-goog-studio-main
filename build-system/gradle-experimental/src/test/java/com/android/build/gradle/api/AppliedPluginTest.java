@@ -37,7 +37,7 @@ import org.junit.runners.Parameterized;
 @RunWith(Parameterized.class)
 public class AppliedPluginTest {
 
-    @Parameterized.Parameters(name = "plugin_{1}")
+    @Parameterized.Parameters(name = "plugin_{0}")
     public static List<Object[]> parameters() {
         return Arrays.asList(
                 new Object[][] {
