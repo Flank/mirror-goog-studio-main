@@ -9,6 +9,7 @@ version = rootProject.ext.baseVersion
 dependencies {
     compile project(':base:sdk-common')
     compile project(':base:builder-model')
+    compile project(':base:intellij-core')
     compile project(':base:uast')
     compile project(':base:manifest-merger')
 
