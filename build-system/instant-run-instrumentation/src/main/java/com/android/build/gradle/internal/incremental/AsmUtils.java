@@ -28,6 +28,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.jar.JarFile;
+import java.util.zip.ZipEntry;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.ClassNode;
@@ -81,6 +83,29 @@ public class AsmUtils {
         }
     }
 
+    public static class JarBasedClassReader implements ClassReaderProvider {
+
+        private final File file;
+
+        public JarBasedClassReader(File file) {
+            this.file = file;
+        }
+
+        @Nullable
+        @Override
+        public ClassReader loadClassBytes(@NonNull String className, @NonNull ILogger logger)
+                throws IOException {
+            try (JarFile jarFile = new JarFile(file)) {
+                ZipEntry entry = jarFile.getEntry(className.replace(".", "/") + ".class");
+                if (entry != null) {
+                    try (InputStream is = jarFile.getInputStream(entry)) {
+                        return new ClassReader(is);
+                    }
+                }
+            }
+            return null;
+        }
+    }
 
     @NonNull
     @VisibleForTesting

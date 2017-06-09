@@ -24,6 +24,7 @@ import com.android.build.OutputFile;
 import com.android.build.gradle.internal.ide.FilterDataImpl;
 import com.android.ide.common.build.ApkInfo;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.SetMultimap;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.TypeAdapter;
@@ -42,6 +43,32 @@ import org.gradle.api.file.FileCollection;
 
 /** Services related to loading and handling {@link BuildOutput} */
 public class BuildOutputs {
+
+    /**
+     * Persists the passed output types and split output to a {@link String} using gson.
+     *
+     * @param outputTypes the output types to persist.
+     * @param splitOutputs the outputs organized per output type
+     * @return a json String.
+     */
+    public static String persist(
+            ImmutableList<VariantScope.OutputType> outputTypes,
+            SetMultimap<VariantScope.OutputType, BuildOutput> splitOutputs) {
+        GsonBuilder gsonBuilder = new GsonBuilder();
+        gsonBuilder.registerTypeAdapter(ApkInfo.class, new BuildOutputs.ApkInfoAdapter());
+        gsonBuilder.registerTypeAdapter(
+                VariantScope.TaskOutputType.class, new BuildOutputs.OutputTypeTypeAdapter());
+        gsonBuilder.registerTypeAdapter(
+                VariantScope.AnchorOutputType.class, new BuildOutputs.OutputTypeTypeAdapter());
+        Gson gson = gsonBuilder.create();
+        List<BuildOutput> buildOutputs =
+                outputTypes
+                        .stream()
+                        .map(splitOutputs::get)
+                        .flatMap(Collection::stream)
+                        .collect(Collectors.toList());
+        return gson.toJson(buildOutputs);
+    }
 
     /**
      * loads persisted build output data from a metadata file located in the passed directory.

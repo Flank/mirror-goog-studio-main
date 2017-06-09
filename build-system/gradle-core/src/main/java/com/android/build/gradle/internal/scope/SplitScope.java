@@ -29,8 +29,6 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -215,24 +213,23 @@ public class SplitScope implements Serializable {
             U parameterTwo) {
         WaitableExecutor executor = WaitableExecutor.useGlobalSharedThreadPool();
         apkDatas.forEach(
-                split -> {
-                    executor.execute(
-                            () -> {
-                                BuildOutput buildOutput = getOutput(inputs, inputType, split);
-                                if (buildOutput != null) {
-                                    addOutputForSplit(
-                                            outputType,
-                                            split,
-                                            action.processSplit(
-                                                    split,
-                                                    buildOutput.getOutputFile(),
-                                                    parameterOne,
-                                                    parameterTwo),
-                                            buildOutput.getProperties());
-                                }
-                                return null;
-                            });
-                });
+                split ->
+                        executor.execute(
+                                () -> {
+                                    BuildOutput buildOutput = getOutput(inputs, inputType, split);
+                                    if (buildOutput != null) {
+                                        addOutputForSplit(
+                                                outputType,
+                                                split,
+                                                action.processSplit(
+                                                        split,
+                                                        buildOutput.getOutputFile(),
+                                                        parameterOne,
+                                                        parameterTwo),
+                                                buildOutput.getProperties());
+                                    }
+                                    return null;
+                                }));
         try {
             List<WaitableExecutor.TaskResult<Void>> taskResults = executor.waitForAllTasks();
             taskResults.forEach(
@@ -277,16 +274,13 @@ public class SplitScope implements Serializable {
 
     public void save(ImmutableList<VariantScope.OutputType> outputTypes, File folder)
             throws IOException {
-        String persistedString = persist(outputTypes);
+        String persistedString = BuildOutputs.persist(outputTypes, splitOutputs);
         if (persistedString.isEmpty()) {
             return;
         }
         FileUtils.mkdirs(folder);
-        Writer writer = new FileWriter(BuildOutputs.getMetadataFile(folder));
-        try {
+        try (Writer writer = new FileWriter(BuildOutputs.getMetadataFile(folder))) {
             writer.append(persistedString);
-        } finally {
-            writer.close();
         }
     }
 
@@ -373,19 +367,6 @@ public class SplitScope implements Serializable {
     }
 
     public String persist(ImmutableList<VariantScope.OutputType> outputTypes) {
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.registerTypeAdapter(ApkInfo.class, new BuildOutputs.ApkInfoAdapter());
-        gsonBuilder.registerTypeAdapter(
-                VariantScope.TaskOutputType.class, new BuildOutputs.OutputTypeTypeAdapter());
-        gsonBuilder.registerTypeAdapter(
-                VariantScope.AnchorOutputType.class, new BuildOutputs.OutputTypeTypeAdapter());
-        Gson gson = gsonBuilder.create();
-        List<BuildOutput> buildOutputs =
-                outputTypes
-                        .stream()
-                        .map(this.splitOutputs::get)
-                        .flatMap(Collection::stream)
-                        .collect(Collectors.toList());
-        return gson.toJson(buildOutputs);
+        return BuildOutputs.persist(outputTypes, splitOutputs);
     }
 }

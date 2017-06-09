@@ -34,23 +34,10 @@ public class AppInfo {
     public static String applicationId = null;
 
     /**
-     * The fully qualified name of the real application to run. This is the user's app,
-     * which has been hidden from the manifest during build time. Can be null if the
-     * app does not have a custom application (in which case a default android.app.Application
-     * is used.)
-     * <p>
-     */
-    @SuppressWarnings({"CanBeFinal", "StaticVariableNamingConvention"})
-    public static String applicationClass = null;
-
-    /**
      * A token assigned to this app at build time. This is used such that the running
      * app socket server can be reasonably sure that it's responding to requests from
      * the IDE.
      */
     @SuppressWarnings("StaticVariableNamingConvention")
     public static long token = 0L;
-
-    /** Set when building on API 23 (or API 22 if multiapk is enabled) */
-    public static boolean usingApkSplits = true;
 }

@@ -28,12 +28,11 @@ import static org.objectweb.asm.Opcodes.RETURN;
 import static org.objectweb.asm.Opcodes.V1_6;
 
 import com.android.annotations.NonNull;
-import com.android.build.VariantOutput;
+import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.build.gradle.internal.scope.InstantRunVariantScope;
-import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TransformVariantScope;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -42,9 +41,10 @@ import com.android.build.gradle.tasks.PackageAndroidArtifact;
 import com.android.utils.XmlUtils;
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Optional;
+import java.util.Collection;
 import java.util.jar.JarOutputStream;
 import java.util.zip.ZipEntry;
 import javax.xml.parsers.ParserConfigurationException;
@@ -70,12 +70,16 @@ public class GenerateInstantRunAppInfoTask extends BaseTask {
 
     private File outputFile;
     private FileCollection mergedManifests;
-    private InstantRunBuildContext buildcontext;
-    private SplitScope splitScope;
+    private InstantRunBuildContext buildContext;
 
     @OutputFile
     public File getOutputFile() {
         return outputFile;
+    }
+
+    @VisibleForTesting
+    void setOutputFile(File outputFile) {
+        this.outputFile = outputFile;
     }
 
     @InputFiles
@@ -83,34 +87,38 @@ public class GenerateInstantRunAppInfoTask extends BaseTask {
         return mergedManifests;
     }
 
+    @VisibleForTesting
+    void setMergedManifests(FileCollection mergedManifests) {
+        this.mergedManifests = mergedManifests;
+    }
+
+    @VisibleForTesting
+    void setBuildContext(InstantRunBuildContext buildContext) {
+        this.buildContext = buildContext;
+    }
+
     @Input
     public long getSecretToken() {
-        return buildcontext.getSecretToken();
+        return buildContext.getSecretToken();
     }
 
     @TaskAction
     public void generateInfoTask() throws IOException {
-        BuildOutputs.load(VariantScope.TaskOutputType.MERGED_MANIFESTS, mergedManifests);
-        Optional<BuildOutput> mainSplitOutput =
-                splitScope
-                        .getOutputs(VariantScope.TaskOutputType.MERGED_MANIFESTS)
-                        .stream()
-                        .filter(
-                                splitOutput ->
-                                        splitOutput.getApkInfo().getType()
-                                                        == VariantOutput.OutputType.FULL_SPLIT
-                                                || splitOutput.getApkInfo().getType()
-                                                        == VariantOutput.OutputType.MAIN)
-                        .findFirst();
+        Collection<BuildOutput> buildOutputs =
+                BuildOutputs.load(
+                        VariantScope.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS,
+                        getMergedManifests());
 
-        if (!mainSplitOutput.isPresent()) {
-            throw new RuntimeException("Cannot find main merged manifest.");
+        if (buildOutputs.isEmpty()) {
+            throw new RuntimeException(
+                    "Cannot find the package-id from the merged manifest, "
+                            + "please file a bug, a clean build should fix the issue.");
         }
 
-        File manifestFile = mainSplitOutput.get().getOutputFile();
+        // obtain the application id from any of the split/main manifest file.
+        BuildOutput buildOutput = buildOutputs.iterator().next();
+        File manifestFile = buildOutput.getOutputFile();
 
-        // In manifest merging we stash away and replace the application id/class, and
-        // here in a packaging task we inject runtime libraries.
         if (manifestFile.exists()) {
             try {
                 // FIX ME : get the package from somewhere else.
@@ -126,6 +134,8 @@ public class GenerateInstantRunAppInfoTask extends BaseTask {
             } catch (ParserConfigurationException | IOException | SAXException e) {
                 throw new BuildException("Failed to inject bootstrapping application", e);
             }
+        } else {
+            throw new FileNotFoundException("Cannot find " + manifestFile.getAbsolutePath());
         }
     }
 
@@ -213,8 +223,7 @@ public class GenerateInstantRunAppInfoTask extends BaseTask {
         @Override
         public void execute(@NonNull GenerateInstantRunAppInfoTask task) {
             task.setVariantName(variantScope.getFullVariantName());
-            task.splitScope = transformVariantScope.getSplitScope();
-            task.buildcontext = variantScope.getInstantRunBuildContext();
+            task.buildContext = variantScope.getInstantRunBuildContext();
             task.outputFile =
                     new File(variantScope.getIncrementalApplicationSupportDir(),
                             PackageAndroidArtifact.INSTANT_RUN_PACKAGES_PREFIX + "-bootstrap.jar");
