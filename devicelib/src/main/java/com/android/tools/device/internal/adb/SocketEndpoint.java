@@ -19,7 +19,8 @@ package com.android.tools.device.internal.adb;
 import com.android.annotations.NonNull;
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.Socket;
+import java.net.StandardSocketOptions;
+import java.nio.channels.SocketChannel;
 
 class SocketEndpoint implements Endpoint {
     private final InetSocketAddress addr;
@@ -31,6 +32,8 @@ class SocketEndpoint implements Endpoint {
     @NonNull
     @Override
     public Connection newConnection() throws IOException {
-        return new SocketConnection(new Socket(addr.getAddress(), addr.getPort()));
+        SocketChannel channel = SocketChannel.open(addr);
+        channel.setOption(StandardSocketOptions.TCP_NODELAY, true);
+        return new SocketConnection(channel);
     }
 }

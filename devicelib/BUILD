@@ -1,4 +1,5 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_test")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 
 iml_module(
@@ -41,9 +42,13 @@ maven_pom(
     source = "//tools/buildSrc/base:base_version",
 )
 
-java_library(
-    name = "tools.testlib",
-    srcs = glob(["src/test/java/**"]),
+kotlin_test(
+    name = "tools.tests",
+    srcs = ["src/test/java"],
+    data = ["//prebuilts/studio/sdk:platform-tools"],
+    jvm_flags = ["-Dtest.suite.jar=tools.tests.jar"],
+    resources = glob(["src/test/resources/**"]),
+    test_class = "com.android.testutils.JarTestSuite",
     deps = [
         ":tools.devicelib",
         "//tools/base/annotations",
@@ -55,13 +60,4 @@ java_library(
         "//tools/base/third_party:nl.jqno.equalsverifier_equalsverifier",
         "//tools/base/third_party:org.mockito_mockito-core",
     ],
-)
-
-java_test(
-    name = "tools.tests",
-    data = ["//prebuilts/studio/sdk:platform-tools"],
-    jvm_flags = ["-Dtest.suite.jar=tools.testlib.jar"],
-    resources = glob(["src/test/resources/**"]),
-    test_class = "com.android.testutils.JarTestSuite",
-    runtime_deps = [":tools.testlib"],
 )

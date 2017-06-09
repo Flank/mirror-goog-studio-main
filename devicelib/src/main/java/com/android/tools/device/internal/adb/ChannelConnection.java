@@ -22,51 +22,50 @@ import com.android.tools.device.internal.adb.commands.CommandBuffer;
 import com.android.tools.device.internal.adb.commands.CommandResult;
 import com.google.common.base.Charsets;
 import com.google.common.primitives.UnsignedInteger;
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
 
-public class StreamConnection implements Connection {
-    private final BufferedInputStream is;
-    private final BufferedOutputStream os;
+public class ChannelConnection implements Connection {
+    private final ReadableByteChannel readChannel;
+    private final WritableByteChannel writeChannel;
 
-    public StreamConnection(@NonNull InputStream is, @NonNull OutputStream os) {
-        this.is = new BufferedInputStream(is);
-        this.os = new BufferedOutputStream(os);
+    public ChannelConnection(
+            @NonNull ReadableByteChannel readChannel, @NonNull WritableByteChannel writeChannel) {
+        this.readChannel = readChannel;
+        this.writeChannel = writeChannel;
     }
 
     @Override
     public void close() throws IOException {
-        is.close();
-        os.close();
+        readChannel.close();
+        writeChannel.close();
     }
 
     @Override
     @NonNull
     public CommandResult executeCommand(@NonNull CommandBuffer buffer) throws IOException {
         issueCommand(buffer);
-        if ("OKAY".equals(readString(4))) {
+        String status = readString(4);
+        if ("OKAY".equals(status)) {
             return CommandResult.OKAY;
-        } else {
+        } else if ("FAIL".equals(status)) {
             return CommandResult.createError(readError());
+        } else {
+            return CommandResult.createError("Protocol Fault: " + status);
         }
     }
 
     @Override
     public void issueCommand(@NonNull CommandBuffer buffer) throws IOException {
         byte[] command = buffer.toByteArray();
-        os.write(String.format("%04X", command.length).getBytes(Charsets.UTF_8));
-        os.write(command);
-        os.flush();
+        writeFully(String.format("%04X", command.length).getBytes(Charsets.UTF_8));
+        writeFully(command);
     }
 
     @Nullable
     private String readError() throws IOException {
-        if (is.available() < 4) {
-            return null;
-        }
         int len = readUnsignedHexInt().intValue();
         return len > 0 ? readString(len) : null;
     }
@@ -85,19 +84,17 @@ public class StreamConnection implements Connection {
         return new String(data, Charsets.UTF_8);
     }
 
-    private int readFully(@NonNull byte[] data) throws IOException {
-        int len = 0;
-
-        while (len < data.length) {
-            int r = is.read(data, len, data.length - len);
-            if (r <= 0) {
-                throw new IOException(
-                        "End of Stream before fully reading " + data.length + " bytes");
-            }
-
-            len += r;
+    private void readFully(@NonNull byte[] data) throws IOException {
+        ByteBuffer buf = ByteBuffer.wrap(data);
+        while (buf.position() != buf.limit()) {
+            readChannel.read(buf);
         }
+    }
 
-        return len;
+    private void writeFully(byte[] data) throws IOException {
+        ByteBuffer buf = ByteBuffer.wrap(data);
+        while (buf.position() != buf.limit()) {
+            writeChannel.write(buf);
+        }
     }
 }
