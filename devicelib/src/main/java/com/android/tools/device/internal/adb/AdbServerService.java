@@ -66,7 +66,7 @@ class AdbServerService extends AbstractService {
 
     @NonNull
     public <T> CompletableFuture<T> execute(@NonNull AdbCommand<T> command) {
-        CompletableFuture<T> cf = new CompletableFuture<T>();
+        CompletableFuture<T> cf = new CompletableFuture<>();
 
         State state = state();
         if (state != State.RUNNING) {
@@ -87,7 +87,13 @@ class AdbServerService extends AbstractService {
                             try {
                                 cf.complete(doExecute(command));
                             } catch (Exception e) {
-                                LOG.fine("Exception while executing " + command);
+                                String msg =
+                                        String.format(
+                                                Locale.US,
+                                                "Exception while executing %1$s: %2$s",
+                                                command.getName(),
+                                                e.toString());
+                                LOG.fine(msg);
                                 cf.completeExceptionally(e);
                             } finally {
                                 LOG.fine("Completed executing " + command.getName());
@@ -108,7 +114,7 @@ class AdbServerService extends AbstractService {
         try {
             TimeUnit unit = TimeUnit.MILLISECONDS;
 
-            LOG.info("Probing for existing adb server");
+            LOG.info("Probing for existing adb server at port " + options.getPort());
             InetSocketAddress address =
                     new InetSocketAddress(
                             InetAddress.getByName(options.getHostName()), options.getPort());
