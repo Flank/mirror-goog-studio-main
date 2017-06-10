@@ -148,12 +148,13 @@ public class LintCliClient extends LintClient {
         assert !flags.getReporters().isEmpty();
         this.registry = registry;
 
-        driver = createDriver(registry);
+        LintRequest lintRequest = createLintRequest(files);
+        driver = createDriver(registry, lintRequest);
 
         addProgressPrinter();
         validateIssueIds();
 
-        driver.analyze(createLintRequest(files));
+        driver.analyze();
 
         Collections.sort(warnings);
 
@@ -243,8 +244,9 @@ public class LintCliClient extends LintClient {
     }
 
     @NonNull
-    protected LintDriver createDriver(@NonNull IssueRegistry registry) {
-        driver = new LintDriver(registry, this);
+    protected LintDriver createDriver(@NonNull IssueRegistry registry,
+            @NonNull LintRequest request) {
+        driver = new LintDriver(registry, this, request);
         driver.setAbbreviating(!flags.isShowEverything());
         driver.setCheckTestSources(flags.isCheckTestSources());
         driver.setCheckGeneratedSources(flags.isCheckGeneratedSources());
@@ -701,7 +703,7 @@ public class LintCliClient extends LintClient {
         if (driver != null && project != null) {
             Location location = LintUtils.guessGradleLocation(this, project.getDir(), id);
             if (!isSuppressed(IssueRegistry.LINT_ERROR)) {
-                report(new Context(driver, project, project, project.getDir()),
+                report(new Context(driver, project, project, project.getDir(), ""),
                         IssueRegistry.LINT_ERROR,
                         project.getConfiguration(driver).getSeverity(IssueRegistry.LINT_ERROR),
                         location, message, TextFormat.RAW, LintFix.create().data(id));
@@ -895,7 +897,7 @@ public class LintCliClient extends LintClient {
     }
 
     @Override
-    public void initializeProjects(@NonNull Collection<Project> knownProjects) {
+    public void initializeProjects(@NonNull Collection<? extends Project> knownProjects) {
         // Initialize the associated idea project to use
 
         LintCoreApplicationEnvironment appEnv = LintCoreApplicationEnvironment.get();
@@ -979,7 +981,7 @@ public class LintCliClient extends LintClient {
     }
 
     @Override
-    public void disposeProjects(@NonNull Collection<Project> knownProjects) {
+    public void disposeProjects(@NonNull Collection<? extends Project> knownProjects) {
         if (projectDisposer != null) {
             Disposer.dispose(projectDisposer);
             LintCoreApplicationEnvironment.clearAccessorCache();
@@ -1029,10 +1031,11 @@ public class LintCliClient extends LintClient {
         errorCount = 0;
         warningCount = 0;
 
-        projectDirs = Sets.newHashSet();
-        dirToProject = null;
+        getProjectDirs().clear();
+        getDirToProject().clear();
     }
 
+    @NonNull
     @Override
     public ClassLoader createUrlClassLoader(@NonNull URL[] urls, @NonNull ClassLoader parent) {
         return UrlClassLoader.build().parent(parent).urls(urls).get();
@@ -1167,7 +1170,7 @@ public class LintCliClient extends LintClient {
         }
 
         @Override
-        public boolean prepare(@NonNull final List<JavaContext> contexts) {
+        public boolean prepare(@NonNull final List<? extends JavaContext> contexts) {
             // If we're using Kotlin, ensure we initialize the bridge
             for (JavaContext context : contexts) {
                 if (context.file.getPath().endsWith(SdkConstants.DOT_KT)) {

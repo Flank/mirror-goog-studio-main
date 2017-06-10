@@ -146,4 +146,8 @@ public class LintClientTest extends TestCase {
         local.setTypeDetails((TypeDetails) addOnDetails);
         return local;
     }
+
+    public void testClient() {
+        assertTrue(!LintClient.isGradle() || !LintClient.isStudio());
+    }
 }

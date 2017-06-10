@@ -39,6 +39,7 @@ public class WarningTest extends AbstractCheckTest {
     }
 
     public void testComparator() throws Exception {
+        //noinspection all // Sample code
         File projectDir = getProjectDir(null, // Rename .txt files to .java
                 java(""
                             + "package my.pgk;\n"
@@ -93,9 +94,12 @@ public class WarningTest extends AbstractCheckTest {
             @Override
             public String analyze(List<File> files) throws Exception {
                 //String analyze = super.analyze(files);
-                driver = new LintDriver(new LintDetectorTest.CustomIssueRegistry(), this);
+                LintRequest lintRequest = new LintRequest(this, files);
+                lintRequest.setScope(getLintScope(files));
+                driver = new LintDriver(new LintDetectorTest.CustomIssueRegistry(), this,
+                        lintRequest);
                 configureDriver(driver);
-                driver.analyze(new LintRequest(this, files).setScope(getLintScope(files)));
+                driver.analyze();
                 warningsHolder.set(warnings);
                 return null;
             }

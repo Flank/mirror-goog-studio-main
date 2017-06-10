@@ -84,7 +84,9 @@ import com.android.tools.lint.checks.infrastructure.TestIssueRegistry;
 import com.android.tools.lint.checks.infrastructure.TestLintClient;
 import com.android.tools.lint.client.api.JavaParser;
 import com.android.tools.lint.client.api.LintDriver;
+import com.android.tools.lint.client.api.LintRequest;
 import com.android.tools.lint.client.api.UastParser;
+import com.android.tools.lint.client.api.XmlParser;
 import com.android.utils.Pair;
 import com.android.utils.XmlUtils;
 import com.google.common.base.Charsets;
@@ -618,15 +620,16 @@ public class LintUtilsTest extends TestCase {
         Project project = createTestProjectForFile(dir, relativePath, xml);
         LintCliClient client = (LintCliClient) project.getClient();
 
+        LintRequest request = new LintRequest(client, Collections.singletonList(fullPath));
         LintDriver driver = new LintDriver(new TestIssueRegistry(),
-                new LintCliClient());
+                new LintCliClient(), request);
         driver.setScope(Scope.JAVA_FILE_SCOPE);
         ResourceFolderType folderType = ResourceFolderType.getFolderType(
                 relativePath.getParentFile().getName());
-        XmlTestContext context = new XmlTestContext(driver, client, project, xml, fullPath,
-                folderType);
-        context.document = context.getParser().parseXml(context);
-        return context;
+
+        XmlParser parser = client.getXmlParser();
+        Document document = parser.parseXml(xml, fullPath);
+        return new XmlTestContext(driver, project, xml, fullPath, folderType, parser, document);
     }
 
     public static Pair<JavaContext,Disposable>  parse(@Language("JAVA") final String javaSource,
@@ -642,9 +645,10 @@ public class LintUtilsTest extends TestCase {
         }
         Project project = createTestProjectForFile(dir, relativePath, javaSource);
         LintCliClient client = (LintCliClient) project.getClient();
+        LintRequest request = new LintRequest(client, Collections.singletonList(fullPath));
 
         LintDriver driver = new LintDriver(new TestIssueRegistry(),
-                new LintCliClient());
+                new LintCliClient(), request);
         driver.setScope(Scope.JAVA_FILE_SCOPE);
         JavaTestContext context = new JavaTestContext(driver, client, project, javaSource, fullPath);
         JavaParser parser = null;
@@ -898,10 +902,11 @@ public class LintUtilsTest extends TestCase {
 
     private static class XmlTestContext extends XmlContext {
         private final String xmlSource;
-        public XmlTestContext(LintDriver driver, LintCliClient client, Project project,
-                String xmlSource, File file, ResourceFolderType type) {
+        public XmlTestContext(LintDriver driver, Project project,
+                String xmlSource, File file, ResourceFolderType type, XmlParser parser,
+                Document document) {
             //noinspection ConstantConditions
-            super(driver, project, null, file, type, client.getXmlParser());
+            super(driver, project, null, file, type, parser, xmlSource, document);
             this.xmlSource = xmlSource;
         }
 

@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.tools.lint.checks.infrastructure.TestIssueRegistry;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.LintDriver;
+import com.android.tools.lint.client.api.LintRequest;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LintFix;
@@ -35,6 +36,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.Writer;
+import java.util.Collections;
 import junit.framework.TestCase;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -71,9 +73,11 @@ public class LintCliXmlParserTest extends TestCase {
         fw.write(xml);
         fw.close();
         LintClient client = new TestClient();
-        LintDriver driver = new LintDriver(new TestIssueRegistry(), client);
+        LintRequest request = new LintRequest(client, Collections.emptyList());
+        LintDriver driver = new LintDriver(new TestIssueRegistry(), client, request);
         Project project = Project.create(client, file.getParentFile(), file.getParentFile());
-        XmlContext context = new XmlContext(driver, project, null, file, null, parser);
+        XmlContext context = new XmlContext(driver, project, null, file, null,
+                parser, xml, parser.parseXml(xml, file));
         Document document = parser.parseXml(context);
         assertNotNull(document);
 
@@ -183,9 +187,11 @@ public class LintCliXmlParserTest extends TestCase {
         fw.write(xml);
         fw.close();
         LintClient client = new TestClient();
-        LintDriver driver = new LintDriver(new TestIssueRegistry(), client);
+        LintRequest request = new LintRequest(client, Collections.emptyList());
+        LintDriver driver = new LintDriver(new TestIssueRegistry(), client, request);
         Project project = Project.create(client, file.getParentFile(), file.getParentFile());
-        XmlContext context = new XmlContext(driver, project, null, file, null, parser);
+        XmlContext context = new XmlContext(driver, project, null, file, null,
+                parser, xml, parser.parseXml(xml, file));
         Document document = parser.parseXml(context);
         assertNotNull(document);
 

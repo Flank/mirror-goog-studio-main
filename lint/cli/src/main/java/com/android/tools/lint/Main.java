@@ -36,6 +36,7 @@ import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.LintDriver;
+import com.android.tools.lint.client.api.LintRequest;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
@@ -142,19 +143,23 @@ public class Main {
         // runner won't know about.
         LintCliClient client = new LintCliClient(flags, LintClient.CLIENT_CLI) {
 
-            Pattern mAndroidAnnotationPattern;
+            private Pattern mAndroidAnnotationPattern;
+            private Project unexpectedGradleProject = null;
 
-            @NonNull
             @Override
-            protected Project createProject(@NonNull File dir, @NonNull File referenceDir) {
-                Project project = super.createProject(dir, referenceDir);
-                if (project.isGradleProject()) {
+            @NonNull
+            protected LintDriver createDriver(@NonNull IssueRegistry registry,
+                    @NonNull LintRequest request) {
+                LintDriver driver = super.createDriver(registry, request);
+
+                if (unexpectedGradleProject != null) {
+                    Project project = unexpectedGradleProject;
                     @SuppressWarnings("SpellCheckingInspection")
                     String message = String.format("\"`%1$s`\" is a Gradle project. To correctly "
-                            + "analyze Gradle projects, you should run \"`gradlew :lint`\" instead.",
-                            project.getName());
+                                    + "analyze Gradle projects, you should run \"`gradlew :lint`\" "
+                                    + "instead.", project.getName());
                     Location location = Location.create(project.getDir());
-                    Context context = new Context(driver, project, project, project.getDir());
+                    Context context = new Context(driver, project, project, project.getDir(), "");
                     if (context.isEnabled(IssueRegistry.LINT_ERROR) &&
                             !getConfiguration(project, null).isIgnored(context,
                                     IssueRegistry.LINT_ERROR, location, message)) {
@@ -165,6 +170,20 @@ public class Main {
                                 TextFormat.RAW, null);
                     }
                 }
+
+                return driver;
+            }
+
+            @NonNull
+            @Override
+            protected Project createProject(@NonNull File dir, @NonNull File referenceDir) {
+                Project project = super.createProject(dir, referenceDir);
+                if (project.isGradleProject()) {
+                    // Can't report error yet; stash it here so we can report it after the
+                    // driver has been created
+                    unexpectedGradleProject = project;
+                }
+
                 return project;
             }
 

@@ -22,6 +22,7 @@ import static com.android.tools.lint.detector.api.TextFormat.HTML_WITH_UNICODE;
 import static com.android.tools.lint.detector.api.TextFormat.RAW;
 import static com.android.tools.lint.detector.api.TextFormat.TEXT;
 
+import com.android.tools.lint.checks.PrivateApiDetector;
 import com.android.tools.lint.checks.infrastructure.TestIssueRegistry;
 import junit.framework.TestCase;
 
@@ -268,6 +269,12 @@ public class TextFormatTest extends TestCase {
                         TEXT));
     }
 
+    public void testEscapedNewlines() throws Exception {
+        assertEquals("Using reflection to access hidden/private Android APIs is not safe; it will often not work on devices from other vendors, and it may suddenly stop working (if the API is removed) or crash spectacularly (if the API behavior changes, since there are no guarantees for compatibility.)", PrivateApiDetector.ISSUE.getExplanation(TextFormat.HTML));
+        // Ignore newlines if they are escaped; used for line wrapping
+        assertEquals("abcd<br/>\nef", RAW.convertTo("ab\\\ncd\nef", HTML));
+    }
+
     public void testConvertFromHtml2() throws Exception {
         assertEquals(""
                 + "Using showAsAction=\"always\" in menu XML, or\n"
@@ -347,6 +354,10 @@ public class TextFormatTest extends TestCase {
             // Make sure there are no exceptions during conversion for any of the builtin strings
             issue.getExplanation(TextFormat.RAW);
             issue.getBriefDescription(TextFormat.RAW);
+            issue.getExplanation(TextFormat.HTML);
+            issue.getBriefDescription(TextFormat.HTML);
+            issue.getExplanation(TextFormat.TEXT);
+            issue.getBriefDescription(TextFormat.TEXT);
         }
     }
 

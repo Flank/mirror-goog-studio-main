@@ -177,7 +177,7 @@ public abstract class JavaParser {
             contents = getFileContents(containingFile);
         }
         return Location.create(file, contents, range.getStartOffset(),
-                               range.getEndOffset()).setSource(element);
+                               range.getEndOffset()).withSource(element);
     }
 
     @Nullable
@@ -199,7 +199,7 @@ public abstract class JavaParser {
         }
         contents = getFileContents(containingFile);
         return Location.create(file, contents, range.getStartOffset(),
-                range.getEndOffset()).setSource(element);
+                range.getEndOffset()).withSource(element);
     }
 
     /**
@@ -251,9 +251,9 @@ public abstract class JavaParser {
         if (end <= start) {
             // Some AST nodes don't have proper bounds, such as empty parameter lists
             return Location.create(context.file, contents, start, fromRange.getEndOffset())
-                    .setSource(from);
+                    .withSource(from);
         }
-        return Location.create(context.file, contents, start, end).setSource(from);
+        return Location.create(context.file, contents, start, end).withSource(from);
     }
 
     /**
@@ -312,7 +312,7 @@ public abstract class JavaParser {
                     int length = node.getClass().getSimpleName().length();
                     return Location.create(location.getFile(), start,
                             new DefaultPosition(start.getLine(), start.getColumn() + length,
-                                    start.getOffset() + length)).setSource(node);
+                                    start.getOffset() + length)).withSource(node);
                 }
             }
         }
@@ -468,7 +468,7 @@ public abstract class JavaParser {
     public abstract static class TypeDescriptor {
         /**
          * Returns the fully qualified name of the type, such as "int" or "android.app.Activity"
-         * */
+         */
         @NonNull public abstract String getName();
 
         /** Returns the simple name of this class */

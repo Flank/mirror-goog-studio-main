@@ -50,6 +50,19 @@ public abstract class XmlParser {
             throws IOException, SAXException, ParserConfigurationException;
 
     /**
+     * Parse the given XML string and return document, or null if any error
+     * occurs (does <b>not</b> throw parsing exceptions). Most clients should
+     * call {@link #parseXml(XmlContext)} instead.
+     *
+     * @param xml  the parsing string
+     * @param file the file corresponding to the XML string, <b>if known</b>.
+     *             May be null.
+     * @return the parsed DOM document, or null if parsing fails
+     */
+    @Nullable
+    public abstract Document parseXml(@NonNull CharSequence xml, @NonNull File file);
+
+    /**
      * Parse the file pointed to by the given context and return as a Document
      *
      * @param context the context pointing to the file to be parsed, typically

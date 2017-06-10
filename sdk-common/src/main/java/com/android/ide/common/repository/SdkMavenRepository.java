@@ -185,7 +185,7 @@ public enum SdkMavenRepository {
     /**
      * Given {@link RepoPackage}-style {@link RepoPackage#getPath() path}, get the
      * {@link GradleCoordinate} for the package (assuming it is a maven-style package).
-
+     *
      * @return The {@link GradleCoordinate}, or null if the package is not a maven-style package.
      */
     @Nullable

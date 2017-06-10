@@ -148,6 +148,7 @@ public class GradleModelMocker {
         return this;
     }
 
+    @NonNull
     public GradleModelMocker withDependencyGraph(@NonNull String graph) {
         parseDependencyGraph(graph, graphs);
         return this;

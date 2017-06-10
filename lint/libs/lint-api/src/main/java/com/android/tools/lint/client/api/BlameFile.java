@@ -38,7 +38,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
-class BlameFile {
+public class BlameFile {
     public static final BlameFile NONE = new BlameFile(Collections.emptyMap(), null);
 
     private final Map<String, BlameNode> nodes;

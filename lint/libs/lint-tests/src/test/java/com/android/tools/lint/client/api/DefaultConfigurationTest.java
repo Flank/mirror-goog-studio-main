@@ -39,6 +39,7 @@ import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
@@ -92,7 +93,8 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
         );
         LintClient client = createClient();
         Project project = Project.create(client, projectDir, projectDir);
-        LintDriver driver = new LintDriver(new TestIssueRegistry(), client);
+        LintRequest request = new LintRequest(client, Collections.emptyList());
+        LintDriver driver = new LintDriver(new TestIssueRegistry(), client, request);
         File plainFile = new File(projectDir,
                 "res" + File.separator + "layout" + File.separator + "onclick.xml");
         assertTrue(plainFile.exists());
@@ -104,9 +106,9 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
         assertTrue(windowsFile.exists());
         File stringsFile = new File(projectDir,
                 "res" + File.separator + "values" + File.separator + "strings.xml");
-        Context plainContext = new Context(driver, project, project, plainFile);
-        Context largeContext = new Context(driver, project, project, largeFile);
-        Context windowsContext = new Context(driver, project, project, windowsFile);
+        Context plainContext = new Context(driver, project, project, plainFile, null);
+        Context largeContext = new Context(driver, project, project, largeFile, null);
+        Context windowsContext = new Context(driver, project, project, windowsFile, null);
         Location plainLocation = Location.create(plainFile);
         Location largeLocation = Location.create(largeFile);
         Location windowsLocation = Location.create(windowsFile);
@@ -160,7 +162,8 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
         );
         LintClient client = createClient();
         Project project = Project.create(client, projectDir, projectDir);
-        LintDriver driver = new LintDriver(new TestIssueRegistry(), client);
+        LintRequest request = new LintRequest(client, Collections.emptyList());
+        LintDriver driver = new LintDriver(new TestIssueRegistry(), client, request);
         File plainFile = new File(projectDir,
                 "res" + File.separator + "layout" + File.separator + "onclick.xml");
         assertTrue(plainFile.exists());
@@ -172,9 +175,9 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
         assertTrue(windowsFile.exists());
         File stringsFile = new File(projectDir,
                 "res" + File.separator + "values" + File.separator + "strings.xml");
-        Context plainContext = new Context(driver, project, project, plainFile);
-        Context largeContext = new Context(driver, project, project, largeFile);
-        Context windowsContext = new Context(driver, project, project, windowsFile);
+        Context plainContext = new Context(driver, project, project, plainFile, null);
+        Context largeContext = new Context(driver, project, project, largeFile, null);
+        Context windowsContext = new Context(driver, project, project, windowsFile, null);
         Location plainLocation = Location.create(plainFile);
         Location largeLocation = Location.create(largeFile);
         Location windowsLocation = Location.create(windowsFile);
@@ -217,7 +220,8 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
         );
         LintClient client = createClient();
         Project project = Project.create(client, projectDir, projectDir);
-        LintDriver driver = new LintDriver(new TestIssueRegistry(), client);
+        LintRequest request = new LintRequest(client, Collections.emptyList());
+        LintDriver driver = new LintDriver(new TestIssueRegistry(), client, request);
         File plainFile = new File(projectDir,
                 "res" + File.separator + "layout" + File.separator + "onclick.xml");
         assertTrue(plainFile.exists());
@@ -227,9 +231,9 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
         File windowsFile = new File(projectDir,
                 "res" + File.separator + "layout-xlarge" + File.separator + "activation.xml");
         assertTrue(windowsFile.exists());
-        Context plainContext = new Context(driver, project, project, plainFile);
-        Context largeContext = new Context(driver, project, project, largeFile);
-        Context windowsContext = new Context(driver, project, project, windowsFile);
+        Context plainContext = new Context(driver, project, project, plainFile, null);
+        Context largeContext = new Context(driver, project, project, largeFile, null);
+        Context windowsContext = new Context(driver, project, project, windowsFile, null);
         Location plainLocation = Location.create(plainFile);
         Location largeLocation = Location.create(largeFile);
         Location windowsLocation = Location.create(windowsFile);
@@ -262,11 +266,12 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
         );
         LintClient client = createClient();
         Project project = Project.create(client, projectDir, projectDir);
-        LintDriver driver = new LintDriver(new TestIssueRegistry(), client);
+        LintRequest request = new LintRequest(client, Collections.emptyList());
+        LintDriver driver = new LintDriver(new TestIssueRegistry(), client, request);
         File file = new File(projectDir,
                 "res" + File.separator + "layout" + File.separator + "onclick.xml");
         assertTrue(file.exists());
-        Context plainContext = new Context(driver, project, project, file);
+        Context plainContext = new Context(driver, project, project, file, null);
         Location location = Location.create(file);
 
         assertEquals(Severity.WARNING, ObsoleteLayoutParamsDetector.ISSUE.getDefaultSeverity());
@@ -409,7 +414,8 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
         };
 
         Project project = Project.create(client, projectDir, projectDir);
-        LintDriver driver = new LintDriver(new TestIssueRegistry(), client);
+        LintRequest request = new LintRequest(client, Collections.emptyList());
+        LintDriver driver = new LintDriver(new TestIssueRegistry(), client, request);
         // Main resource dir => src/main/res
         File resourceDir = new File(projectDir, "src" + File.separator +
                 "main" + File.separator + "res");
@@ -428,10 +434,10 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
         File landscapeFile = new File(resourceDir2, "layout-land" + File.separator + "foo.xml");
         assertTrue(landscapeFile.exists());
 
-        Context plainContext = new Context(driver, project, project, plainFile);
-        Context largeContext = new Context(driver, project, project, largeFile);
-        Context windowsContext = new Context(driver, project, project, windowsFile);
-        Context landscapeContext = new Context(driver, project, project, landscapeFile);
+        Context plainContext = new Context(driver, project, project, plainFile, null);
+        Context largeContext = new Context(driver, project, project, largeFile, null);
+        Context windowsContext = new Context(driver, project, project, windowsFile, null);
+        Context landscapeContext = new Context(driver, project, project, landscapeFile, null);
 
         Location landscapeLocation = Location.create(landscapeFile);
 

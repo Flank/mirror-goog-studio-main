@@ -1,4 +1,14 @@
+buildscript {
+    repositories {
+        maven { url = uri(rootProject.cloneArtifacts.repository) }
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
 apply plugin: 'java'
+apply plugin: 'kotlin'
 apply plugin: 'jacoco-tools-base'
 apply plugin: 'sdk-java-lib'
 
@@ -15,6 +25,8 @@ dependencies {
     compile 'com.android.tools.external.lombok:lombok-ast:0.2.3'
     compile libs.asm
     compile libs.asm_tree
+
+    compile libs.kotlin_stdlib
 }
 
 sourceSets {

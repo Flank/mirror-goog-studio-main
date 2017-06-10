@@ -119,9 +119,10 @@ public class LocaleDetector extends Detector implements UastScanner {
                 UastUtils.getParentOfType(node, UCallExpression.class, true);
         if (parentCall != null) {
             String name = parentCall.getMethodName();
+            //noinspection ConstantConditions
             if (name != null && name.length() == 1) { // "d", "i", "e" etc in Log
                 PsiMethod method = parentCall.resolve();
-                return context.getEvaluator().isMemberInClass(method, LogDetector.LOG_CLS);
+                return context.getEvaluator().isMemberInClass(method, "android.util.Log");
             }
         }
 

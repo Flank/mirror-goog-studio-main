@@ -787,11 +787,11 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         @NonNull
         @Override
         protected Project createProject(@NonNull File dir, @NonNull File referenceDir) {
-            if (projectDirs.contains(dir)) {
+            if (getProjectDirs().contains(dir)) {
                 throw new CircularDependencyException(
                         "Circular library dependencies; check your project.properties files carefully");
             }
-            projectDirs.add(dir);
+            getProjectDirs().add(dir);
             return Project.create(this, dir, referenceDir);
         }
 
@@ -832,7 +832,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         public UastParser getUastParser(@Nullable Project project) {
             return new LintCliUastParser(project) {
                 @Override
-                public boolean prepare(@NonNull List<JavaContext> contexts) {
+                public boolean prepare(@NonNull List<? extends JavaContext> contexts) {
                     boolean ok = super.prepare(contexts);
                     if (forceErrors()) {
                         ok = false;
@@ -1190,18 +1190,18 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
 
         @NonNull
         @Override
-        protected LintDriver createDriver(@NonNull IssueRegistry registry) {
-            LintDriver driver = super.createDriver(registry);
+        protected LintDriver createDriver(@NonNull IssueRegistry registry,
+                @NonNull LintRequest request) {
+            LintDriver driver = super.createDriver(registry, request);
             // 3rd party lint unit tests may need this for a while
             driver.setRunCompatChecks(true, true);
             return driver;
         }
 
         public String analyze(List<File> files) throws Exception {
-            driver = createDriver(new LintDetectorTest.CustomIssueRegistry());
-            configureDriver(driver);
+            LintRequest request = createLintRequest(files);
+            request.setScope(getLintScope(files));
 
-            LintRequest request = new LintRequest(this, files);
             if (incrementalCheck != null) {
                 assertEquals(1, files.size());
                 File projectDir = files.get(0);
@@ -1212,7 +1212,10 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                 request.setProjects(projects);
             }
 
-            driver.analyze(request.setScope(getLintScope(files)));
+            driver = createDriver(new LintDetectorTest.CustomIssueRegistry(), request);
+            configureDriver(driver);
+
+            driver.analyze();
 
             // Check compare contract
             Warning prev = null;

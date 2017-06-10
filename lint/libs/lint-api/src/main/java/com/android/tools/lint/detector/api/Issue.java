@@ -141,7 +141,7 @@ public final class Issue implements Comparable<Issue> {
      */
     @NonNull
     public String getBriefDescription(@NonNull TextFormat format) {
-        return RAW.convertTo(briefDescription, format);
+        return RAW.convertTo(briefDescription.trim(), format);
     }
 
     /**
@@ -155,7 +155,7 @@ public final class Issue implements Comparable<Issue> {
      */
     @NonNull
     public String getExplanation(@NonNull TextFormat format) {
-        return RAW.convertTo(explanation, format);
+        return RAW.convertTo(explanation.trim(), format);
     }
 
     /**

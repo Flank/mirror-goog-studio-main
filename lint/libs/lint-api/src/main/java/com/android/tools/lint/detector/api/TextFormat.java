@@ -418,6 +418,8 @@ public enum TextFormat {
                     flushIndex = end;
                     i = flushIndex - 1; // -1: account for the i++ in the loop
                 }
+            } else if (c == '\n' && escaped) {
+                flushIndex++;
             }
             prev = c;
             escaped = false;
