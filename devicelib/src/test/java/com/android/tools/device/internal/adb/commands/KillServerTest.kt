@@ -16,24 +16,26 @@
 
 package com.android.tools.device.internal.adb.commands
 
-import com.android.tools.device.internal.adb.PipeAdbServer
 import com.android.tools.device.internal.adb.ChannelConnection
+import com.android.tools.device.internal.adb.PipeAdbServer
 import com.google.common.base.Charsets
-import com.google.common.primitives.Bytes
-import com.google.common.truth.Truth.assertThat
-import org.junit.Ignore
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.Timeout
+import java.util.concurrent.TimeUnit
 
 class KillServerTest {
+    @Rule @JvmField
+    val testTimeout = Timeout(3, TimeUnit.SECONDS)
+
     @Test
-    @Ignore // flaky
     fun execute_killCommand() {
         PipeAdbServer().use { server ->
             ChannelConnection(server.responseSource, server.commandSink).use { connection ->
                 server.respondWith("OKAY".toByteArray(Charsets.UTF_8))
                 KillServer().execute(connection)
-                val receivedCommand = Bytes.toArray(server.commandBuffer).toString(Charsets.UTF_8)
-                assertThat(receivedCommand).isEqualTo("0009host:kill")
+                server.waitForCommand("0009host:kill")
+                // test passes as long as the above waitForCommand succeeds within the timeout
             }
         }
     }
