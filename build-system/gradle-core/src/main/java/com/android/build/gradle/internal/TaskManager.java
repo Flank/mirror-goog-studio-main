@@ -376,7 +376,6 @@ public abstract class TaskManager {
 
         AndroidTask<Lint> globalLintTask = androidTasks.create(tasks,
                 new Lint.GlobalConfigAction(globalScope));
-        globalLintTask.dependsOn(tasks, "assemble");
 
         tasks.named(JavaBasePlugin.CHECK_TASK_NAME, it -> it.dependsOn(LINT));
 
