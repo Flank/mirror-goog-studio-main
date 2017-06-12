@@ -725,9 +725,7 @@ public class CleanupDetector extends Detector implements Detector.UastScanner {
                     if ((parentParent instanceof UQualifiedReferenceExpression)) {
                         parent = skipParentheses(parentParent.getUastParent());
                     } else if (parentParent instanceof UVariable
-                            || parentParent instanceof UPolyadicExpression
-                            // Not currently a polyadic expr in UAST
-                            || parentParent instanceof UBinaryExpression) {
+                            || parentParent instanceof UPolyadicExpression) {
                         parent = parentParent;
                         break;
                     } else {

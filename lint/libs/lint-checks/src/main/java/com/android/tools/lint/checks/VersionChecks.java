@@ -323,25 +323,14 @@ public class VersionChecks {
     private static Boolean isVersionCheckConditional(int api,
             @NonNull UElement element, boolean and, @Nullable UElement prev,
             @Nullable ApiLevelLookup apiLookup) {
-        if (element instanceof UBinaryExpression) {
-            Boolean ok = isVersionCheckConditional(api, and, (UBinaryExpression) element,
-                    apiLookup);
-            if (ok != null) {
-                return ok;
-            }
-            UBinaryExpression expression = (UBinaryExpression) element;
-            UastBinaryOperator tokenType = expression.getOperator();
-            if (and && tokenType == UastBinaryOperator.LOGICAL_AND) {
-                if (isAndedWithConditional(element, api, prev)) {
-                    return true;
-                }
-
-            } else if (!and && tokenType == UastBinaryOperator.LOGICAL_OR) {
-                if (isOredWithConditional(element, api, prev)) {
-                    return true;
+        if (element instanceof UPolyadicExpression) {
+            if (element instanceof UBinaryExpression) {
+                UBinaryExpression binary = (UBinaryExpression) element;
+                Boolean ok = isVersionCheckConditional(api, and, binary, apiLookup);
+                if (ok != null) {
+                    return ok;
                 }
             }
-        } else if (element instanceof UPolyadicExpression) {
             UPolyadicExpression expression = (UPolyadicExpression) element;
             UastBinaryOperator tokenType = expression.getOperator();
             if (and && tokenType == UastBinaryOperator.LOGICAL_AND) {
