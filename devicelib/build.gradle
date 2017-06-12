@@ -14,6 +14,7 @@ dependencies {
     compile project(':base:annotations')
     compile project(':base:common')
     compile libs.guava
+    compile libs.kotlin_stdlib
 
     testCompile project(':base:testutils')
     testCompile libs.junit
