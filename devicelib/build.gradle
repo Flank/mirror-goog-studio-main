@@ -14,13 +14,13 @@ dependencies {
     compile project(':base:annotations')
     compile project(':base:common')
     compile libs.guava
-    compile libs.kotlin_stdlib
 
     testCompile project(':base:testutils')
     testCompile libs.junit
     testCompile libs.truth
     testCompile libs.mockito_core
     testCompile libs.equalsverifier
+    testCompile libs.kotlin_stdlib
 }
 
 group = 'com.android.tools'
