@@ -76,15 +76,21 @@ public class TestFileUtils {
     public static void searchAndReplace(
             @NonNull Path file, @NonNull String search, @NonNull String replace)
             throws IOException {
-        // Handle patterns that use unix-style line endings even on Windows where the test
-        // projects are checked out with Windows-style endings.
-        search = StringHelper.toSystemLineSeparator(search);
-        replace = StringHelper.toSystemLineSeparator(replace);
 
         String content = new String(java.nio.file.Files.readAllBytes(file));
+        // Handle patterns that use unix-style line endings even on Windows where the test
+        // projects are sometimes checked out with Windows-style endings depending on the .gitconfig
+        // "autocrlf" property
+        if (content.contains("\r\n")) {
+            search = StringHelper.toSystemLineSeparator(search);
+            replace = StringHelper.toSystemLineSeparator(replace);
+        }
+
         String newContent = content.replaceAll(search, replace);
         assertNotEquals(
-                "No match in file\n - File:   " + file + "\n - Search: " + search + "\n",
+                "No match in file"
+                        + "\n - File:   " + file + "\n - Search: " + search
+                        + "\n - Replace: " + replace + "\n",
                 content,
                 newContent);
 
