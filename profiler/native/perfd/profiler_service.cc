@@ -21,9 +21,9 @@
 #include <unistd.h>
 #include <sstream>
 #include <string>
-#include "perfd/connector.h"
 #include "perfd/generic_component.h"
 #include "utils/android_studio_version.h"
+#include "utils/bash_command.h"
 #include "utils/config.h"
 #include "utils/current_process.h"
 #include "utils/device_info.h"
@@ -100,7 +100,8 @@ void CopyFileToAppFolder(const string& app_name, const string& file_name) {
 // used by connector.
 // By using run-as, connector is under the same user as the agent, and thus it
 // can talk to the agent who is waiting for the client socket.
-void RunConnector(const string& app_name, const string& daemon_address) {
+void RunConnector(int app_pid, const string& app_name,
+                  const string& daemon_address) {
   // Use connect() to create a client socket that can talk to the server.
   int fd;  // The client socket that's connected to daemon.
   if ((fd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
@@ -115,13 +116,17 @@ void RunConnector(const string& app_name, const string& daemon_address) {
     exit(-1);
   }
 
+  // Pass the app's process id so the connector knows which agent socket to
+  // connect to.
+  std::ostringstream connect_arg;
+  connect_arg << kConnectCmdLineArg << "=" << app_pid;
+
   // Pass the fd as command line argument to connector.
-  char buf[32];
-  sprintf(buf, "%d", fd);
-  CopyFileToAppFolder(app_name, kConnectorFileName);
-  int return_value =
-      execl(kRunAsExecutable, kRunAsExecutable, app_name.c_str(),
-            kConnectorRelativePath, kConnectCmdLineArg, buf, (char*)nullptr);
+  std::ostringstream fd_arg;
+  fd_arg << kPerfdConnectRequest << "=" << fd;
+  int return_value = execl(kRunAsExecutable, kRunAsExecutable, app_name.c_str(),
+                           kConnectorRelativePath, connect_arg.str().c_str(),
+                           fd_arg.str().c_str(), (char*)nullptr);
   if (return_value == -1) {
     perror("execl");
     exit(-1);
@@ -230,12 +235,17 @@ Status ProfilerServiceImpl::AttachAgent(
       return Status::OK;
     }
 
-    // Do nothing if daemon knows agent is alive (i.e., heart is beating).
-    if (IsAppProcessAlive(request->process_id())) {
-      Log::V("Agent already running in app %s (PID %d).", app_name.c_str(),
-             request->process_id());
-      response->set_status(profiler::proto::AgentAttachResponse::SUCCESS);
-      return Status::OK;
+    // Copies the connector over to the app's data folder so we can run it
+    // to send messages to perfa's Unix socket server.
+    CopyFileToAppFolder(app_name, kConnectorFileName);
+    if (!IsAppAgentAlive(request->process_id(), app_name.c_str())) {
+      // Only attach agent if one is not detected.
+      if (RunAgent(app_name)) {
+        response->set_status(profiler::proto::AgentAttachResponse::SUCCESS);
+      } else {
+        response->set_status(
+            profiler::proto::AgentAttachResponse::FAILURE_UNKNOWN);
+      }
     }
 
     int fork_pid = fork();
@@ -245,33 +255,25 @@ Status ProfilerServiceImpl::AttachAgent(
                             "Cannot fork a process to run connector");
     } else if (fork_pid == 0) {
       // child process
-      RunConnector(app_name, kDaemonSocketName);
-      // RunConnector calls excl() at the end. It returns only if an error
+      RunConnector(request->process_id(), app_name, kDaemonSocketName);
+      // RunConnector calls execl() at the end. It returns only if an error
       // has occured.
       exit(EXIT_FAILURE);
-    } else {
-      // parent process
-      if (RunAgent(app_name)) {
-        response->set_status(profiler::proto::AgentAttachResponse::SUCCESS);
-      } else {
-        response->set_status(
-            profiler::proto::AgentAttachResponse::FAILURE_UNKNOWN);
-      }
-      return Status::OK;
     }
+
+    return Status::OK;
   }
 }
 
-bool ProfilerServiceImpl::IsAppProcessAlive(int32_t process_id) {
-  auto got = heartbeat_timestamp_map_.find(process_id);
-  if (got != heartbeat_timestamp_map_.end()) {
-    int64_t current_time = clock_.GetCurrentTime();
-    if (GenericComponent::kHeartbeatThresholdNs >
-        (current_time - got->second)) {
-      return true;
-    }
-  }
-  return false;
+// Runs the connector as the application user and tries to send a message
+// (e.g. |kHeartBeatRequest|) to the agent via unix socket. If the agent's
+// unix socket server is up, the send operation should be sucessful, in which
+// case this will return true, false otherwise.
+bool ProfilerServiceImpl::IsAppAgentAlive(int app_pid, const char* app_name) {
+  std::ostringstream args;
+  args << kConnectCmdLineArg << "=" << app_pid << " " << kHeartBeatRequest;
+  BashCommandRunner ping(kConnectorRelativePath);
+  return ping.RunAs(args.str(), app_name, nullptr);
 }
 
 }  // namespace profiler

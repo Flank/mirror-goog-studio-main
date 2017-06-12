@@ -4,7 +4,6 @@ set(AGENT_SOURCE
     support/http_tracker.cc
     support/memory_stats_logger.cc
     agent.cc
-    daemon_socket.cc
     memory_component.cc)
 
 add_library(supportjni SHARED

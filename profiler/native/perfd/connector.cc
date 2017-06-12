@@ -13,57 +13,59 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <stdio.h>
+
 #include <stdlib.h>
 #include <unistd.h>
+#include <cassert>
 #include "utils/clock.h"
 #include "utils/config.h"
-#include "utils/file_descriptor_utils.h"
 #include "utils/socket_utils.h"
 
 namespace {
 
-// Try to connect to agent a few times before giving up.
-// The time when the agent starts creating and listening from the socket
-// |kAgentSocketName| can vary quite a bit. For example, an app can be stuck on
-// waiting for debugger to attach.
-// TODO: Find a fallback solution. Currently the agent blocks until it receives
-// a fd from the connector. We should implement a time-out and retry protocol
-// on the agent-side.
+// In the case where we are sending a connect request to agent, try to
+// connect a few times before giving up. The time when the agent starts
+// creating and listening from the socket |kAgentSocketName| can vary quite a
+// bit. For example, an app can be stuck on waiting for debugger to attach.
 const int kRetryMaxCount = 20;
 // Interval between retry to connect to agent, in microseconds.
-const int kRetryIntervalUs = profiler::Clock::ms_to_us(500);
+const int kTimeoutUs = profiler::Clock::ms_to_us(500);
 
 }  // namespace
 
 namespace profiler {
 
-void SendDaemonSocketFdToAgent(const char *agent_socket_name,
-                               int daemon_socket_fd) {
-  int through_fd;
-  if ((through_fd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
-    perror("[connector] socket error");
-    exit(-1);
+bool ConnectAndSendDataToPerfa(const std::string& connect_arg,
+                               const std::string& control_arg) {
+  // Parses the app's process id from |connect_arg| to construct the target
+  // agent socket we want to connect to.
+  int delimiter_index = connect_arg.find('=');
+  assert(delimiter_index != -1);
+  std::string app_socket(profiler::kAgentSocketName);
+  app_socket.append(connect_arg.substr(delimiter_index + 1));
+
+  std::string control = control_arg.substr(0, 1);
+  int daemon_socket_fd = -1;
+  int retry_count = 0;
+  if (control.compare(profiler::kHeartBeatRequest) == 0) {
+    // Send heartbeat. No additional parsing needed.
+  } else if (control.compare(profiler::kPerfdConnectRequest) == 0) {
+    // Connect request. Parse the file descriptor as well.
+    delimiter_index = control_arg.find('=');
+    assert(delimiter_index != -1);
+    daemon_socket_fd = atoi(control_arg.c_str() + delimiter_index + 1);
+
+    // Make a number of attempts to connect to the agent. The agent may just be
+    // starting up and not ready for receiving the connection yet.
+    retry_count = kRetryMaxCount;
   }
 
-  struct sockaddr_un addr_un;
-  socklen_t addr_len;
-  profiler::SetUnixSocketAddr(agent_socket_name, &addr_un, &addr_len);
-  int result = -1, retry = 0;
-  // Make a number of attempts to connect to the agent. The agent may just be
-  // starting up and not ready for receiving the connection yet.
-  do {
-    result = connect(through_fd, (struct sockaddr *)&addr_un, addr_len);
-    if (result == -1) {
-      perror("[connector] connect error");
-      usleep(kRetryIntervalUs);
-      retry++;
-    }
-  } while (result == -1 && retry <= kRetryMaxCount);
+  int sent_count = profiler::ConnectAndSendDataToSocket(
+      app_socket.c_str(), daemon_socket_fd, control.c_str(), retry_count,
+      kTimeoutUs);
 
-  if (result != -1) {
-    profiler::SendFdThroughFd(daemon_socket_fd, through_fd);
-  }
+  // Sent |control| data is of length 1.
+  return sent_count == 1;
 }
 
 }  // namespace profiler

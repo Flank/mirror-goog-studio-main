@@ -18,18 +18,38 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "utils/config.h"
 #include "utils/log.h"
 #include "utils/thread_name.h"
 
 namespace profiler {
 
-using proto::InternalMemoryService;
-using proto::MemoryControlRequest;
-using proto::RegisterMemoryAgentRequest;
+MemoryComponent::MemoryComponent(BackgroundQueue* background_queue,
+                                 bool can_grpc_target_change)
+    : is_control_stream_started_(false),
+      can_grpc_target_change_(can_grpc_target_change),
+      grpc_target_initialized_(false),
+      background_queue_(background_queue) {}
 
-MemoryComponent::MemoryComponent(std::shared_ptr<grpc::Channel> channel)
-    : is_control_stream_started_(false) {
+void MemoryComponent::Connect(std::shared_ptr<grpc::Channel> channel) {
+  std::lock_guard<std::mutex> guard(connect_mutex_);
+  // TODO: re-establish control stream if it has already started from a previous
+  // connection.
   service_stub_ = InternalMemoryService::NewStub(channel);
+
+  if (!grpc_target_initialized_) {
+    grpc_target_initialized_ = true;
+    connect_cv_.notify_all();
+  }
+}
+
+proto::InternalMemoryService::Stub& MemoryComponent::service_stub() {
+  std::unique_lock<std::mutex> lock(connect_mutex_);
+  while (!grpc_target_initialized_ || service_stub_.get() == nullptr) {
+    connect_cv_.wait(lock);
+  }
+
+  return *(service_stub_.get());
 }
 
 void MemoryComponent::OpenControlStream() {
@@ -39,7 +59,7 @@ void MemoryComponent::OpenControlStream() {
 
   RegisterMemoryAgentRequest memory_agent_request;
   memory_agent_request.set_pid(getpid());
-  memory_control_stream_ = service_stub_->RegisterMemoryAgent(
+  memory_control_stream_ = service_stub().RegisterMemoryAgent(
       &memory_control_context_, memory_agent_request);
   memory_control_thread_ =
       std::thread(&MemoryComponent::RunMemoryControlThread, this);
@@ -51,6 +71,27 @@ void MemoryComponent::OpenControlStream() {
 void MemoryComponent::RegisterMemoryControlHandler(
     MemoryControlHandler handler) {
   memory_control_handlers_.push_back(handler);
+}
+
+void MemoryComponent::SubmitMemoryTasks(
+    const std::vector<MemoryServiceTask>& tasks) {
+  background_queue_->EnqueueTask([this, tasks] {
+    for (auto task : tasks) {
+      if (can_grpc_target_change_) {
+        bool success = false;
+        do {
+          // Each grpc call needs a new ClientContext.
+          grpc::ClientContext ctx;
+          Config::SetClientContextTimeout(&ctx, kGrpcTimeoutSec);
+          Status status = task(service_stub(), ctx);
+          success = status.ok();
+        } while (!success);
+      } else {
+        grpc::ClientContext ctx;
+        task(service_stub(), ctx);
+      }
+    }
+  });
 }
 
 void MemoryComponent::RunMemoryControlThread() {

@@ -24,24 +24,24 @@
 #include "perfd/memory/memory_profiler_component.h"
 #include "perfd/network/network_profiler_component.h"
 #include "utils/config.h"
-#include "utils/current_process.h"
 #include "utils/device_info.h"
-#include "utils/file_cache.h"
-#include "utils/fs/path.h"
 #include "utils/socket_utils.h"
 #include "utils/trace.h"
 
 int main(int argc, char** argv) {
   // If directed by command line argument, establish a communication channel
-  // by sending the file descriptor of an existing socket to the agent
-  // which is running a Unix socket server. When this argument is used, the
-  // program is usually invoked by from GenericComponent's
-  // ProfilerServiceImpl::AttachAgent().
-  if (argc >= 3 && strcmp(argv[1], profiler::kConnectCmdLineArg) == 0) {
-    int daemon_socket_fd = atoi(argv[2]);
-    profiler::SendDaemonSocketFdToAgent(profiler::kAgentSocketName,
-                                        daemon_socket_fd);
-    return 0;
+  // with the agent which is running a Unix socket server and send the arguments
+  // over.  When this argument is used, the program is usually invoked by from
+  // GenericComponent's ProfilerServiceImpl::AttachAgent().
+  if (argc >= 3 &&
+      strncmp(argv[1], profiler::kConnectCmdLineArg,
+              strlen(profiler::kConnectCmdLineArg)) == 0) {
+    if (profiler::ConnectAndSendDataToPerfa(argv[1], argv[2])) {
+      return 0;
+    } else {
+      return -1;
+    }
+
     // Note that in this case we should not initialize various profiler
     // components as the following code does. They create threads but the
     // associated thread objects might be destructed before the threads exit,

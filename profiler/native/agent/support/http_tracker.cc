@@ -27,6 +27,7 @@
 #include "utils/clock.h"
 
 using grpc::ClientContext;
+using grpc::Status;
 using profiler::JByteArrayWrapper;
 using profiler::JStringWrapper;
 using profiler::Agent;
@@ -38,6 +39,7 @@ using profiler::proto::HttpRequestRequest;
 using profiler::proto::HttpResponseRequest;
 using profiler::proto::EmptyNetworkReply;
 using profiler::proto::JavaThreadRequest;
+using profiler::proto::InternalNetworkService;
 
 namespace {
 std::atomic_int id_generator_(1);
@@ -48,32 +50,31 @@ std::atomic_int id_generator_(1);
 // faster to send one 10K message than ten 1K messages, which gives the system
 // a chance to catch up.
 std::mutex chunks_mutex_;
-std::unordered_map<uint64_t, std::vector<std::string>> chunks_;
+std::unordered_map<uint64_t, std::deque<std::string>> chunks_;
 
 const SteadyClock &GetClock() {
   static SteadyClock clock;
   return clock;
 }
 
-void SendHttpEvent(uint64_t uid, int64_t timestamp,
-                   HttpEventRequest::Event event) {
-  auto net_stub = Agent::Instance().network_stub();
-
-  ClientContext ctx;
+Status SendHttpEvent(InternalNetworkService::Stub &stub, ClientContext &ctx,
+                     uint64_t uid, int64_t timestamp,
+                     HttpEventRequest::Event event) {
   HttpEventRequest httpEvent;
-  EmptyNetworkReply reply;
-
   httpEvent.set_conn_id(uid);
   httpEvent.set_timestamp(timestamp);
   httpEvent.set_event(event);
 
-  net_stub.SendHttpEvent(&ctx, httpEvent, &reply);
+  EmptyNetworkReply reply;
+  return stub.SendHttpEvent(&ctx, httpEvent, &reply);
 }
 
 void EnqueueHttpEvent(uint64_t uid, HttpEventRequest::Event event) {
   int64_t timestamp = GetClock().GetCurrentTime();
-  Agent::Instance().background_queue()->EnqueueTask(
-      [uid, event, timestamp] { SendHttpEvent(uid, timestamp, event); });
+  Agent::Instance().SubmitNetworkTasks({[uid, event, timestamp](
+      InternalNetworkService::Stub &stub, ClientContext &ctx) {
+    return SendHttpEvent(stub, ctx, uid, timestamp, event);
+  }});
 }
 
 }  // namespace
@@ -98,20 +99,18 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_trac
     JNIEnv *env, jobject thiz, jlong juid, jstring jthread_name,
     jlong jthread_id) {
   JStringWrapper thread_name(env, jthread_name);
-  Agent::Instance().background_queue()->EnqueueTask(
-      [juid, thread_name, jthread_id] {
-        auto net_stub = Agent::Instance().network_stub();
 
-        ClientContext ctx;
-        EmptyNetworkReply reply;
-        JavaThreadRequest threadRequest;
+  Agent::Instance().SubmitNetworkTasks({[juid, thread_name, jthread_id](
+      InternalNetworkService::Stub &stub, ClientContext &ctx) {
+    JavaThreadRequest threadRequest;
+    threadRequest.set_conn_id(juid);
+    auto thread = threadRequest.mutable_thread();
+    thread->set_name(thread_name.get());
+    thread->set_id(jthread_id);
 
-        threadRequest.set_conn_id(juid);
-        auto thread = threadRequest.mutable_thread();
-        thread->set_name(thread_name.get());
-        thread->set_id(jthread_id);
-        net_stub.TrackThread(&ctx, threadRequest, &reply);
-      });
+    EmptyNetworkReply reply;
+    return stub.TrackThread(&ctx, threadRequest, &reply);
+  }});
 }
 
 JNIEXPORT void JNICALL
@@ -141,28 +140,33 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024InputStreamTrac
       // background thread to consume it. Additional bytes reported before the
       // background thread finally runs will be sent out at the same time.
       chunks_[juid].push_back(bytes.get());
-      Agent::Instance().background_queue()->EnqueueTask([juid] {
-        std::ostringstream batched_bytes;
-        {
-          std::lock_guard<std::mutex> guard(chunks_mutex_);
-          for (const std::string &chunk : chunks_[juid]) {
-            batched_bytes << chunk;
-          }
-          chunks_.erase(juid);
-        }
+      Agent::Instance().SubmitNetworkTasks(
+          {[juid](InternalNetworkService::Stub &stub, ClientContext &ctx) {
+            std::ostringstream batched_bytes;
+            {
+              std::lock_guard<std::mutex> guard(chunks_mutex_);
+              for (const std::string &chunk : chunks_[juid]) {
+                batched_bytes << chunk;
+              }
+              chunks_.erase(juid);
+            }
 
-        auto net_stub = Agent::Instance().network_stub();
+            ChunkRequest chunk;
+            chunk.set_conn_id(juid);
+            chunk.set_content(batched_bytes.str());
+            chunk.set_type(ChunkRequest::RESPONSE);
 
-        ClientContext ctx;
-        EmptyNetworkReply reply;
-        ChunkRequest chunk;
+            EmptyNetworkReply reply;
+            Status result = stub.SendChunk(&ctx, chunk, &reply);
 
-        chunk.set_conn_id(juid);
-        chunk.set_content(batched_bytes.str());
-        chunk.set_type(ChunkRequest::RESPONSE);
+            // Send failed, push the chunks back into front of deque
+            if (!result.ok()) {
+              std::lock_guard<std::mutex> guard(chunks_mutex_);
+              chunks_[juid].push_front(batched_bytes.str());
+            }
 
-        net_stub.SendChunk(&ctx, chunk, &reply);
-      });
+            return result;
+          }});
     }
   }
 }
@@ -185,21 +189,24 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onPr
 
   int64_t timestamp = GetClock().GetCurrentTime();
   int32_t pid = getpid();
-  Agent::Instance().background_queue()->EnqueueTask(
-      [juid, pid, stack, timestamp, url] {
-        auto net_stub = Agent::Instance().network_stub();
-        ClientContext ctx;
-        HttpDataRequest httpData;
-        EmptyNetworkReply reply;
-        httpData.set_conn_id(juid);
-        httpData.set_process_id(pid);
-        httpData.set_url(url.get());
-        httpData.set_trace(stack.get());
-        httpData.set_start_timestamp(timestamp);
-        net_stub.RegisterHttpData(&ctx, httpData, &reply);
+  Agent::Instance().SubmitNetworkTasks(
+      {[juid, pid, stack, timestamp, url](InternalNetworkService::Stub &stub,
+                                          ClientContext &ctx) {
+         HttpDataRequest httpData;
+         httpData.set_conn_id(juid);
+         httpData.set_process_id(pid);
+         httpData.set_url(url.get());
+         httpData.set_trace(stack.get());
+         httpData.set_start_timestamp(timestamp);
 
-        SendHttpEvent(juid, timestamp, HttpEventRequest::CREATED);
-      });
+         EmptyNetworkReply reply;
+         return stub.RegisterHttpData(&ctx, httpData, &reply);
+       },
+       [juid, timestamp](InternalNetworkService::Stub &stub,
+                         ClientContext &ctx) {
+         return SendHttpEvent(stub, ctx, juid, timestamp,
+                              HttpEventRequest::CREATED);
+       }});
 }
 
 JNIEXPORT void JNICALL
@@ -214,17 +221,16 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onRe
   JStringWrapper fields(env, jfields);
   JStringWrapper method(env, jmethod);
 
-  Agent::Instance().background_queue()->EnqueueTask([fields, juid, method] {
-    auto net_stub = Agent::Instance().network_stub();
-    ClientContext ctx;
+  Agent::Instance().SubmitNetworkTasks({[fields, juid, method](
+      InternalNetworkService::Stub &stub, ClientContext &ctx) {
     HttpRequestRequest httpRequest;
-    EmptyNetworkReply reply;
-
     httpRequest.set_conn_id(juid);
     httpRequest.set_fields(fields.get());
     httpRequest.set_method(method.get());
-    net_stub.SendHttpRequest(&ctx, httpRequest, &reply);
-  });
+
+    EmptyNetworkReply reply;
+    return stub.SendHttpRequest(&ctx, httpRequest, &reply);
+  }});
 }
 
 JNIEXPORT void JNICALL
@@ -232,17 +238,15 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024Connection_onRe
     JNIEnv *env, jobject thiz, jlong juid, jstring jresponse, jstring jfields) {
   JStringWrapper fields(env, jfields);
 
-  Agent::Instance().background_queue()->EnqueueTask([fields, juid] {
-    auto net_stub = Agent::Instance().network_stub();
+  Agent::Instance().SubmitNetworkTasks(
+      {[fields, juid](InternalNetworkService::Stub &stub, ClientContext &ctx) {
+        HttpResponseRequest httpResponse;
+        httpResponse.set_conn_id(juid);
+        httpResponse.set_fields(fields.get());
 
-    ClientContext ctx;
-    HttpResponseRequest httpResponse;
-    EmptyNetworkReply reply;
-
-    httpResponse.set_conn_id(juid);
-    httpResponse.set_fields(fields.get());
-    net_stub.SendHttpResponse(&ctx, httpResponse, &reply);
-  });
+        EmptyNetworkReply reply;
+        return stub.SendHttpResponse(&ctx, httpResponse, &reply);
+      }});
 }
 
 JNIEXPORT void JNICALL

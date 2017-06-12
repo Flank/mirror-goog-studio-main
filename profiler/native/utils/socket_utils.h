@@ -41,6 +41,15 @@ int CreateUnixSocket(const char* address);
 // Easy-to-use wrapper of listen().
 int ListenToSocket(int fd);
 
+// Convenient method to connect to a socket at |destination| and send data
+// to it with retries.
+int ConnectAndSendDataToSocket(const char* destination, int send_fd,
+                               const char* data, int retry_count, int to_usec);
+
+// Convenient method to accept connections and receive data from a socket.
+int AcceptAndGetDataFromSocket(int socket_fd, int* receive_fd, char* buffer,
+                               int length, int to_sec, int to_usec);
+
 }  // namespace profiler
 
 #endif  // UTILS_SOCKET_UTILS_H_

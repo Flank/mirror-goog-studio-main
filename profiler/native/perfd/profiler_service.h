@@ -65,7 +65,7 @@ class ProfilerServiceImpl final
       profiler::proto::AgentAttachResponse* response) override;
 
  private:
-  bool IsAppProcessAlive(int32_t process_id);
+  bool IsAppAgentAlive(int app_pid, const char* app_name);
 
   // Clock knows about timestamps.
   const Clock& clock_;

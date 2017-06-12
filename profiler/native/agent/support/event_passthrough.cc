@@ -23,6 +23,7 @@
 #include "utils/clock.h"
 
 using grpc::ClientContext;
+using grpc::Status;
 using profiler::EventManager;
 using profiler::SteadyClock;
 using profiler::Agent;
@@ -30,6 +31,7 @@ using profiler::proto::ActivityData;
 using profiler::proto::ActivityStateData;
 using profiler::proto::SystemData;
 using profiler::proto::FragmentData;
+using profiler::proto::InternalEventService;
 
 using profiler::proto::EmptyEventResponse;
 using profiler::JStringWrapper;
@@ -41,29 +43,29 @@ const SteadyClock& GetClock() {
   return clock;
 }
 
-void SendSystemEvent(SystemData* event, int32_t pid, int64_t timestamp,
-                     long jdownTime) {
+Status SendSystemEvent(InternalEventService::Stub& stub, ClientContext& ctx,
+                       SystemData* event, int32_t pid, int64_t timestamp,
+                       long jdownTime) {
   event->set_start_timestamp(timestamp);
   event->set_end_timestamp(0);
   event->set_process_id(pid);
   event->set_event_id(jdownTime);
 
-  auto event_stub = Agent::Instance().event_stub();
-  ClientContext context;
   EmptyEventResponse response;
-  event_stub.SendSystem(&context, *event, &response);
+  return stub.SendSystem(&ctx, *event, &response);
 }
 
 void SendKeyboardEvent(JStringWrapper& text, int64_t event_down_time) {
   int64_t timestamp = GetClock().GetCurrentTime();
   int32_t pid = getpid();
-  Agent::Instance().background_queue()->EnqueueTask(
-      [pid, text, timestamp, event_down_time]() {
-        SystemData event;
-        event.set_type(SystemData::KEY);
-        event.set_event_data(text.get());
-        SendSystemEvent(&event, pid, timestamp, event_down_time);
-      });
+
+  Agent::Instance().SubmitEventTasks({[pid, text, timestamp, event_down_time](
+      InternalEventService::Stub& stub, ClientContext& ctx) {
+    SystemData event;
+    event.set_type(SystemData::KEY);
+    event.set_event_data(text.get());
+    return SendSystemEvent(stub, ctx, &event, pid, timestamp, event_down_time);
+  }});
 }
 
 void EnqueueActivityDataEvent(JNIEnv* env, const jstring& name,
@@ -116,13 +118,14 @@ Java_com_android_tools_profiler_support_event_WindowProfilerCallback_sendTouchEv
     JNIEnv* env, jobject thiz, jint jstate, jlong jdownTime) {
   int64_t timestamp = GetClock().GetCurrentTime();
   int32_t pid = getpid();
-  Agent::Instance().background_queue()->EnqueueTask(
-      [jdownTime, jstate, pid, timestamp]() {
-        SystemData event;
-        event.set_type(SystemData::TOUCH);
-        event.set_action_id(jstate);
-        SendSystemEvent(&event, pid, timestamp, jdownTime);
-      });
+
+  Agent::Instance().SubmitEventTasks({[jdownTime, jstate, pid, timestamp](
+      InternalEventService::Stub& stub, ClientContext& ctx) {
+    SystemData event;
+    event.set_type(SystemData::TOUCH);
+    event.set_action_id(jstate);
+    return SendSystemEvent(stub, ctx, &event, pid, timestamp, jdownTime);
+  }});
 }
 
 JNIEXPORT void JNICALL
@@ -193,12 +196,14 @@ Java_com_android_tools_profiler_support_profilers_EventProfiler_sendRotationEven
     JNIEnv* env, jobject thiz, jint jstate) {
   int64_t timestamp = GetClock().GetCurrentTime();
   int32_t pid = getpid();
-  Agent::Instance().background_queue()->EnqueueTask([jstate, pid, timestamp]() {
+
+  Agent::Instance().SubmitEventTasks({[jstate, pid, timestamp](
+      InternalEventService::Stub& stub, ClientContext& ctx) {
     SystemData event;
     event.set_type(SystemData::ROTATION);
     event.set_action_id(jstate);
     // Give rotation events a unique id.
-    SendSystemEvent(&event, pid, timestamp, timestamp);
-  });
+    return SendSystemEvent(stub, ctx, &event, pid, timestamp, timestamp);
+  }});
 }
 };

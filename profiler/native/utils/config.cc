@@ -34,4 +34,12 @@ Config::Config(const char* file_path) {
   input.close();
 }
 
+void Config::SetClientContextTimeout(grpc::ClientContext* context,
+                                     int32_t to_sec, int32_t to_msec) {
+  std::chrono::system_clock::time_point deadline =
+      std::chrono::system_clock::now() + std::chrono::seconds(to_sec) +
+      std::chrono::milliseconds(to_msec);
+  context->set_deadline(deadline);
+}
+
 }  // namespace profiler

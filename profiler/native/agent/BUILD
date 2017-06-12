@@ -18,8 +18,6 @@ cc_library(
         "agent.cc",
         "agent.h",
         "agent_component.h",
-        "daemon_socket.cc",
-        "daemon_socket.h",
         "memory_component.cc",
         "memory_component.h",
         "support/event_manager.cc",

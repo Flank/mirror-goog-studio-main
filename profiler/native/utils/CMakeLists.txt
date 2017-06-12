@@ -6,7 +6,6 @@ set(UTILS_SOURCES
     current_process.cc
     device_info.cc
     file_cache.cc
-    file_descriptor_utils.cc
     file_reader.cc
     installer.cc
     package_manager.cc

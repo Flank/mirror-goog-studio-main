@@ -130,10 +130,9 @@ void MemoryTrackingEnv::Initialize() {
   SetEventNotification(jvmti_, JVMTI_ENABLE,
                        JVMTI_EVENT_GARBAGE_COLLECTION_FINISH);
 
-  auto memory_component = Agent::Instance().memory_component();
-  memory_component->RegisterMemoryControlHandler(std::bind(
+  Agent::Instance().memory_component().RegisterMemoryControlHandler(std::bind(
       &MemoryTrackingEnv::HandleControlSignal, this, std::placeholders::_1));
-  memory_component->OpenControlStream();
+  Agent::Instance().memory_component().OpenControlStream();
 
   // Start AllocWorkerThread - this is alive for the duration of the agent, but
   // it only sends data when a tracking session is ongoing.

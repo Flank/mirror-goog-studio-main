@@ -23,9 +23,11 @@ using std::mutex;
 }  // namespace
 
 using grpc::ClientContext;
+using grpc::Status;
 using profiler::Agent;
 using profiler::proto::ActivityData;
 using profiler::proto::ActivityStateData;
+using profiler::proto::InternalEventService;
 using profiler::proto::EmptyEventResponse;
 using profiler::JStringWrapper;
 using std::lock_guard;
@@ -60,12 +62,11 @@ void EventManager::CacheAndEnqueueActivityEvent(
 
 void EventManager::EnqueueActivityEvent(
     const profiler::proto::ActivityData& activity) {
-  Agent::Instance().background_queue()->EnqueueTask([activity]() {
-    auto event_stub = Agent::Instance().event_stub();
-    ClientContext context;
-    EmptyEventResponse response;
-    event_stub.SendActivity(&context, activity, &response);
-  });
+  Agent::Instance().SubmitEventTasks(
+      {[activity](InternalEventService::Stub& stub, ClientContext& ctx) {
+        EmptyEventResponse response;
+        return stub.SendActivity(&ctx, activity, &response);
+      }});
 }
 
 void EventManager::PerfdStateChanged(bool becomes_alive) {

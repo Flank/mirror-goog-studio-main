@@ -16,9 +16,11 @@
 #ifndef AGENT_AGENT_H_
 #define AGENT_AGENT_H_
 
+#include <condition_variable>
 #include <memory>
 #include <mutex>
 #include <thread>
+#include <vector>
 
 #include <grpc++/grpc++.h>
 
@@ -37,6 +39,21 @@ namespace profiler {
 // with the new (current) state of the connection.
 using PerfdStatusChanged = std::function<void(bool)>;
 
+// Function for submitting a network grpc request via |stub| using the given
+// |context|. Returns the status from the grpc call.
+using NetworkServiceTask = std::function<grpc::Status(
+    proto::InternalNetworkService::Stub& stub, grpc::ClientContext& context)>;
+
+// Function for submitting an event grpc request via |stub| using the given
+// |context|. Returns the status from the grpc call.
+using EventServiceTask = std::function<grpc::Status(
+    proto::InternalEventService::Stub& stub, grpc::ClientContext& context)>;
+
+// Function for submitting an agent grpc request via |stub| using the given
+// |context|. Returns the status from the grpc call.
+using AgentServiceTask = std::function<grpc::Status(
+    proto::AgentService::Stub& stub, grpc::ClientContext& context)>;
+
 class Agent {
  public:
   enum class SocketType { kUnspecified, kAbstractSocket };
@@ -53,17 +70,18 @@ class Agent {
   // bytecode on O+ devices.
   static Agent& Instance(SocketType socket_type);
 
-  const proto::InternalEventService::Stub& event_stub() { return *event_stub_; }
+  // In O+, this method will block until the Agent is connected to Perfd for the
+  // very first time (e.g. when Perfd sends the client socket fd for the agent
+  // to connect to). If/when perfd dies, the memory service stub inside can also
+  // point to a previous, stale Perfd. However, when the Agent reconnects to a
+  // new Perfd, the stub will resolve to the correct grpc target.
+  MemoryComponent& memory_component();
 
-  const proto::InternalNetworkService::Stub& network_stub() {
-    return *network_stub_;
-  }
+  void SubmitNetworkTasks(const std::vector<NetworkServiceTask>& tasks);
 
-  MemoryComponent* memory_component() { return memory_component_; }
+  void SubmitEventTasks(const std::vector<EventServiceTask>& tasks);
 
   void AddPerfdStatusChangedCallback(PerfdStatusChanged callback);
-
-  BackgroundQueue* background_queue() { return &background_queue_; }
 
  private:
   static constexpr int64_t kHeartBeatIntervalNs = Clock::ms_to_ns(250);
@@ -72,18 +90,20 @@ class Agent {
   explicit Agent(SocketType socket_type);
   ~Agent() = delete;  // TODO: Support destroying the agent
 
-  std::unique_ptr<proto::AgentService::Stub> service_stub_;
-  std::unique_ptr<proto::InternalEventService::Stub> event_stub_;
-  std::unique_ptr<proto::InternalNetworkService::Stub> network_stub_;
+  // In O+, getting the service stubs below will block until the Agent is
+  // connected to Perfd for the very first time (e.g. when Perfd sends the
+  // client socket fd for the agent to connect to). If/when perfd dies, the
+  // stubs can also point to a previous, stale Perfd. If/when a new Perfd
+  // isntance sends a new client socket fd to the Agent, the stubs will be
+  // resolved to the correct grpc target.
+  proto::AgentService::Stub& agent_stub();
+  proto::InternalEventService::Stub& event_stub();
+  proto::InternalNetworkService::Stub& network_stub();
 
-  std::mutex callback_mutex_;
-  std::list<PerfdStatusChanged> perfd_status_changed_callbacks_;
-
-  MemoryComponent* memory_component_;
-
-  std::thread heartbeat_thread_;
-
-  BackgroundQueue background_queue_;
+  /**
+   * Connects/reconnects to perfd via the provided target.
+   */
+  void ConnectToPerfd(const std::string& target);
 
   /**
    * A thread that is used to continuously ping perfd at regular intervals
@@ -92,6 +112,49 @@ class Agent {
    * should be enabled.
    */
   void RunHeartbeatThread();
+
+  /**
+   * A thread that opens a socket for perfd to communicate to. The address of
+   * the socket is defined as: |kAgentSocketName| + app's process id - this is
+   * to ensure that multiple applcations being profiled each opens a unique
+   * socket. Each connection is meant to be short-lived and sends only one
+   * message at a time after which the socket connection will be closed.
+   */
+  void RunSocketThread();
+
+  // Used for |connect_cv_| and protects |agent_stub_|, |event_stub_|,
+  // |network_stub_| and |memory_component_|
+  std::mutex connect_mutex_;
+  std::condition_variable connect_cv_;
+  std::unique_ptr<proto::AgentService::Stub> agent_stub_;
+  std::unique_ptr<proto::InternalEventService::Stub> event_stub_;
+  std::unique_ptr<proto::InternalNetworkService::Stub> network_stub_;
+  MemoryComponent* memory_component_;
+
+  // Protects |perfd_status_changed_callbacks_|
+  std::mutex callback_mutex_;
+  std::list<PerfdStatusChanged> perfd_status_changed_callbacks_;
+
+  // Used for |RunHeartbeatThread|
+  std::thread heartbeat_thread_;
+  // O+ only - Used for |RunSocketThread|
+  std::thread socket_thread_;
+  BackgroundQueue background_queue_;
+
+  // O+ only. File descriptor (fd) of the client socket we are currently
+  // connected to. We only reinstantiate the service stubs if the fd has
+  // changed, otherwise we can simply reuse the existing stubs.
+  int current_fd_;
+
+  // Whether the agent and its children service stub should anticipate
+  // the underlying channel to perfd changing.
+  // This value should only be true for O+ with JVMTI.
+  bool can_grpc_target_change_;
+
+  // Whether the agent has been connected to a grpc target. Before the
+  // first time the agent connects to a perfd instance, this would be
+  // false and any service stubs are expected to be |nullptr|.
+  bool grpc_target_initialized_;
 };
 
 }  // end of namespace profiler
