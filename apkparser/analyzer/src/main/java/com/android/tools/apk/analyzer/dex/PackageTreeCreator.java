@@ -107,8 +107,7 @@ public class PackageTreeCreator {
         return root;
     }
 
-    @NonNull
-    public DexPackageNode constructPackageTree(
+    public void constructPackageTree(
             @NonNull DexPackageNode root,
             @Nullable Path dexFilePath,
             @NonNull DexBackedDexFile dexFile) {
@@ -136,6 +135,7 @@ public class PackageTreeCreator {
             DexClassNode classNode = root.getOrCreateClass("", className, typeRef);
             classNode.setUserObject(dexFilePath);
             classNode.setDefined(true);
+            classNode.setSize(classNode.getSize() + classDef.getSize());
             addMethods(classNode, classDef.getMethods(), dexFilePath);
             addFields(classNode, classDef.getFields(), dexFilePath);
         }
@@ -187,7 +187,6 @@ public class PackageTreeCreator {
 
         root.update();
         root.sort(Comparator.comparing(DexElementNode::getMethodReferencesCount).reversed());
-        return root;
     }
 
     private void addMethods(
@@ -210,6 +209,10 @@ public class PackageTreeCreator {
             if (methodRef instanceof DexBackedMethod) {
                 methodNode.setDefined(true);
                 methodNode.setUserObject(dexFilePath);
+                methodNode.setSize(methodNode.getSize() + ((DexBackedMethod) methodRef).getSize());
+            } else if (methodRef instanceof DexBackedMethodReference) {
+                methodNode.setSize(
+                        methodNode.getSize() + ((DexBackedMethodReference) methodRef).getSize());
             }
         }
     }
@@ -230,6 +233,10 @@ public class PackageTreeCreator {
             if (fieldRef instanceof DexBackedField) {
                 fieldNode.setDefined(true);
                 fieldNode.setUserObject(dexFilePath);
+                fieldNode.setSize(fieldNode.getSize() + ((DexBackedField) fieldRef).getSize());
+            } else if (fieldRef instanceof DexBackedFieldReference) {
+                fieldNode.setSize(
+                        fieldNode.getSize() + ((DexBackedFieldReference) fieldRef).getSize());
             }
         }
     }

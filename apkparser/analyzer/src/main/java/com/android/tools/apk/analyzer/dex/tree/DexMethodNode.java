@@ -21,11 +21,11 @@ import com.android.tools.apk.analyzer.dex.PackageTreeCreator;
 import com.android.tools.apk.analyzer.internal.SigUtils;
 import com.android.tools.proguard.ProguardMap;
 import com.android.tools.proguard.ProguardSeedsMap;
-import javax.swing.*;
 import org.jf.dexlib2.iface.reference.MethodReference;
 import org.jf.dexlib2.immutable.reference.ImmutableMethodReference;
 
 public class DexMethodNode extends DexElementNode {
+    private long size;
 
     public DexMethodNode(
             @NonNull String displayName, @Nullable ImmutableMethodReference reference) {
@@ -69,4 +69,13 @@ public class DexMethodNode extends DexElementNode {
 
     @Override
     public void update() {}
+
+    public void setSize(long size) {
+        this.size = size;
+    }
+
+    @Override
+    public long getSize() {
+        return size;
+    }
 }
