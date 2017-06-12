@@ -20,11 +20,11 @@ import com.google.auto.value.AutoValue;
 
 /** Describes actions that we should do at bytecode postprocessing time. */
 @AutoValue
-public abstract class PostprocessingActions {
+public abstract class PostprocessingFeatures {
 
-    public static PostprocessingActions create(
+    public static PostprocessingFeatures create(
             boolean removeUnusedCode, boolean obfuscate, boolean optimize) {
-        return new AutoValue_PostprocessingActions(removeUnusedCode, obfuscate, optimize);
+        return new AutoValue_PostprocessingFeatures(removeUnusedCode, obfuscate, optimize);
     }
 
     public abstract boolean isRemoveUnusedCode();

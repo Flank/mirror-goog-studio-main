@@ -19,14 +19,14 @@ package com.android.build.gradle.shrinker;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.android.build.gradle.shrinker.parser.Flags;
 import com.android.build.gradle.shrinker.parser.GrammarActions;
+import com.android.build.gradle.shrinker.parser.ProguardFlags;
 import org.junit.Test;
 
 public class ProguardParserTest {
     @Test
     public void testDontFlags_noneSet() throws Exception {
-        Flags flags = new Flags();
+        ProguardFlags flags = new ProguardFlags();
         GrammarActions.parse("-dontwarn com.**", flags);
         assertFalse(flags.isDontObfuscate());
         assertFalse(flags.isDontShrink());
@@ -35,7 +35,7 @@ public class ProguardParserTest {
 
     @Test
     public void testDontFlags_dontOptimize() throws Exception {
-        Flags flags = new Flags();
+        ProguardFlags flags = new ProguardFlags();
         GrammarActions.parse("-dontwarn com.**\n-dontoptimize", flags);
         assertFalse(flags.isDontObfuscate());
         assertFalse(flags.isDontShrink());
@@ -44,7 +44,7 @@ public class ProguardParserTest {
 
     @Test
     public void testDontFlags_dontObfuscate() throws Exception {
-        Flags flags = new Flags();
+        ProguardFlags flags = new ProguardFlags();
         GrammarActions.parse("-dontwarn com.**\n-dontobfuscate", flags);
         assertTrue(flags.isDontObfuscate());
         assertFalse(flags.isDontShrink());
@@ -53,7 +53,7 @@ public class ProguardParserTest {
 
     @Test
     public void testDontFlags_dontShrink() throws Exception {
-        Flags flags = new Flags();
+        ProguardFlags flags = new ProguardFlags();
         GrammarActions.parse("-dontwarn com.**\n-dontshrink", flags);
         assertFalse(flags.isDontObfuscate());
         assertTrue(flags.isDontShrink());

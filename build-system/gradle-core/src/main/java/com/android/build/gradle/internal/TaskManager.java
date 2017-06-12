@@ -2849,7 +2849,7 @@ public abstract class TaskManager {
 
     private static void applyProguardDefaultsForTest(ProGuardTransform transform) {
         // Don't remove any code in tested app.
-        transform.setActions(PostprocessingActions.create(false, true, false));
+        transform.setActions(PostprocessingFeatures.create(false, true, false));
 
         // We can't call dontobfuscate, since that would make ProGuard ignore the mapping file.
         transform.keep("class * {*;}");
@@ -2904,9 +2904,9 @@ public abstract class TaskManager {
             VariantScope scope) {
         GradleVariantConfiguration variantConfig = scope.getVariantConfiguration();
 
-        PostprocessingActions postprocessingActions = scope.getPostprocessingActions();
-        if (postprocessingActions != null) {
-            transform.setActions(postprocessingActions);
+        PostprocessingFeatures postprocessingFeatures = scope.getPostprocessingFeatures();
+        if (postprocessingFeatures != null) {
+            transform.setActions(postprocessingFeatures);
         }
 
         Supplier<Collection<File>> proguardConfigFiles =

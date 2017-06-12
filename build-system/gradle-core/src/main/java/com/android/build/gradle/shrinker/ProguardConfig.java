@@ -17,15 +17,15 @@
 package com.android.build.gradle.shrinker;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.shrinker.parser.Flags;
 import com.android.build.gradle.shrinker.parser.GrammarActions;
+import com.android.build.gradle.shrinker.parser.ProguardFlags;
 import java.io.File;
 import org.antlr.runtime.RecognitionException;
 
 /** Stub of a real parser. Only checks the most simple rules produced by AAPT. */
 public class ProguardConfig {
 
-    private final Flags mFlags = new Flags();
+    private final ProguardFlags mFlags = new ProguardFlags();
 
     public void parse(@NonNull File configFile) {
         try {
@@ -44,7 +44,7 @@ public class ProguardConfig {
     }
 
     @NonNull
-    public Flags getFlags() {
+    public ProguardFlags getFlags() {
         return mFlags;
     }
 }

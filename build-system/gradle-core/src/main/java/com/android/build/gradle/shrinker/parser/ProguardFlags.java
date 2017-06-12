@@ -27,7 +27,7 @@ import org.objectweb.asm.Opcodes;
  *
  * <p>Mostly copied from Jack.
  */
-public class Flags {
+public class ProguardFlags {
 
     @NonNull private final List<ClassSpecification> keepClassSpecs = Lists.newArrayList();
 

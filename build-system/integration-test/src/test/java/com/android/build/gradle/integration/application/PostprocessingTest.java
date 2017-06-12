@@ -74,7 +74,7 @@ public class PostprocessingTest {
     }
 
     @Test
-    public void actions_oldDsl() throws Exception {
+    public void features_oldDsl() throws Exception {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "android.buildTypes.release {\n"
@@ -98,7 +98,7 @@ public class PostprocessingTest {
     }
 
     @Test
-    public void actions_newDsl() throws Exception {
+    public void features_newDsl() throws Exception {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "android.buildTypes.release.postprocessing {\n"

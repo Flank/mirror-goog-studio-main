@@ -20,7 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.external.gson.NativeBuildConfigValue;
 import com.android.build.gradle.internal.InstantRunTaskManager;
-import com.android.build.gradle.internal.PostprocessingActions;
+import com.android.build.gradle.internal.PostprocessingFeatures;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
@@ -93,7 +93,7 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     List<File> getConsumerProguardFiles();
 
     @Nullable
-    PostprocessingActions getPostprocessingActions();
+    PostprocessingFeatures getPostprocessingFeatures();
 
     boolean useResourceShrinker();
 

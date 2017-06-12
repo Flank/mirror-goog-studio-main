@@ -55,34 +55,35 @@ public class GrammarActions {
         }
     }
 
-    public static void parse(@NonNull File proguardFile, @NonNull Flags flags)
+    public static void parse(@NonNull File proguardFile, @NonNull ProguardFlags flags)
             throws RecognitionException {
         ProguardParser parser = createParserFromFile(proguardFile);
         parser.prog(flags, proguardFile.getParentFile().getPath());
     }
 
-    public static void parse(@NonNull String input, @NonNull Flags flags)
+    public static void parse(@NonNull String input, @NonNull ProguardFlags flags)
             throws RecognitionException {
         ProguardParser parser = createParserFromString(input);
         parser.prog(flags, null);
     }
 
     static void include(
-            @NonNull String fileName, @NonNull String baseDirectory, @NonNull Flags flags)
+            @NonNull String fileName, @NonNull String baseDirectory, @NonNull ProguardFlags flags)
             throws RecognitionException {
         parse(getFileFromBaseDir(baseDirectory, fileName), flags);
     }
 
-    static void dontWarn(@NonNull Flags flags, @NonNull List<FilterSpecification> classSpec) {
+    static void dontWarn(
+            @NonNull ProguardFlags flags, @NonNull List<FilterSpecification> classSpec) {
         flags.dontWarn(classSpec);
     }
 
-    static void ignoreWarnings(@NonNull Flags flags) {
+    static void ignoreWarnings(@NonNull ProguardFlags flags) {
         flags.setIgnoreWarnings(true);
     }
 
     static void addKeepClassMembers(
-            @NonNull Flags flags,
+            @NonNull ProguardFlags flags,
             @NonNull ClassSpecification classSpecification,
             @NonNull KeepModifier keepModifier) {
         classSpecification.setKeepModifier(keepModifier);
@@ -90,7 +91,7 @@ public class GrammarActions {
     }
 
     static void addKeepClassSpecification(
-            @NonNull Flags flags,
+            @NonNull ProguardFlags flags,
             @NonNull ClassSpecification classSpecification,
             @NonNull KeepModifier keepModifier) {
         classSpecification.setKeepModifier(keepModifier);
@@ -98,7 +99,7 @@ public class GrammarActions {
     }
 
     static void addKeepClassesWithMembers(
-            @NonNull Flags flags,
+            @NonNull ProguardFlags flags,
             @NonNull ClassSpecification classSpecification,
             @NonNull KeepModifier keepModifier) {
         classSpecification.setKeepModifier(keepModifier);
@@ -313,23 +314,23 @@ public class GrammarActions {
         }
     }
 
-    static void target(Flags flags, String target) {
+    static void target(ProguardFlags flags, String target) {
         flags.target(target);
     }
 
-    static void whyAreYouKeeping(Flags flags, ClassSpecification classSpecification) {
+    static void whyAreYouKeeping(ProguardFlags flags, ClassSpecification classSpecification) {
         flags.whyAreYouKeeping(classSpecification);
     }
 
-    static void dontOptimize(Flags flags) {
+    static void dontOptimize(ProguardFlags flags) {
         flags.setDontOptimize(true);
     }
 
-    static void dontShrink(Flags flags) {
+    static void dontShrink(ProguardFlags flags) {
         flags.setDontShrink(true);
     }
 
-    static void dontObfuscate(Flags flags) {
+    static void dontObfuscate(ProguardFlags flags) {
         flags.setDontObfuscate(true);
     }
 

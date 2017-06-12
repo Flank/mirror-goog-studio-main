@@ -34,7 +34,7 @@ package com.android.build.gradle.shrinker.parser;
   }
 }
 
-prog [Flags flags, String baseDirectory]
+prog [ProguardFlags flags, String baseDirectory]
   :
   (
     ('-basedirectory' baseDir=NAME {baseDirectory=$baseDir.text;})
