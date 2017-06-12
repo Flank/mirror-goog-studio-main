@@ -73,7 +73,6 @@ public class TransformManager extends FilterableStreamCollection {
     public static final Set<ContentType> CONTENT_CLASS = ImmutableSet.of(CLASSES);
     public static final Set<ContentType> CONTENT_JARS = ImmutableSet.of(CLASSES, RESOURCES);
     public static final Set<ContentType> CONTENT_RESOURCES = ImmutableSet.of(RESOURCES);
-    public static final Set<ContentType> CONTENT_FULL_JAR = ImmutableSet.of(CLASSES, RESOURCES, NATIVE_LIBS);
     public static final Set<ContentType> CONTENT_NATIVE_LIBS =
             ImmutableSet.of(NATIVE_LIBS);
     public static final Set<ContentType> CONTENT_DEX = ImmutableSet.of(ExtendedContentType.DEX);
@@ -85,14 +84,10 @@ public class TransformManager extends FilterableStreamCollection {
                     Scope.PROJECT,
                     Scope.SUB_PROJECTS,
                     Scope.EXTERNAL_LIBRARIES);
-    // this scope is only for dexing where we need to make sure we get every scope, including
-    // the deprecated ones.
     public static final Set<ScopeType> SCOPE_FULL_WITH_IR_FOR_DEXING =
             new ImmutableSet.Builder<ScopeType>()
                     .addAll(SCOPE_FULL_PROJECT)
                     .add(InternalScope.MAIN_SPLIT)
-                    .add(Scope.PROJECT_LOCAL_DEPS)
-                    .add(Scope.SUB_PROJECTS_LOCAL_DEPS)
                     .build();
     public static final Set<ScopeType> SCOPE_FULL_LIBRARY_WITH_LOCAL_JARS =
             ImmutableSet.of(Scope.PROJECT, InternalScope.LOCAL_DEPS);

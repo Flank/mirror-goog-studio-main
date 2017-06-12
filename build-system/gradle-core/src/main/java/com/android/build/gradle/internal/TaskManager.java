@@ -2082,14 +2082,12 @@ public abstract class TaskManager {
             @NonNull TransformManager transformManager) {
         if (variantScope.getJava8LangSupportType() == Java8LangSupport.DESUGAR) {
             FileCache userCache = getUserIntermediatesCache();
-            FileCache projectCache = getProjectIntermediatesCache();
 
             DesugarTransform desugarTransform =
                     new DesugarTransform(
                             () -> androidBuilder.getBootClasspath(true),
                             System.getProperty("sun.boot.class.path"),
                             userCache,
-                            projectCache,
                             minSdk.getFeatureLevel(),
                             androidBuilder.getJavaProcessExecutor(),
                             globalScope.getJava8LangSupportJar(),
@@ -2145,13 +2143,11 @@ public abstract class TaskManager {
 
         boolean minified = runJavaCodeShrinker(variantScope);
         FileCache userLevelCache = getUserDexCache(minified, dexOptions.getPreDexLibraries());
-        FileCache projectLevelCache = getProjectDexCache(minified, dexOptions.getPreDexLibraries());
         DexArchiveBuilderTransform preDexTransform =
                 new DexArchiveBuilderTransform(
                         dexOptions,
                         variantScope.getGlobalScope().getAndroidBuilder().getErrorReporter(),
                         userLevelCache,
-                        projectLevelCache,
                         variantScope.getMinSdkVersion().getFeatureLevel());
         transformManager
                 .addTransform(tasks, variantScope, preDexTransform)
@@ -2190,31 +2186,11 @@ public abstract class TaskManager {
     }
 
     @Nullable
-    private FileCache getProjectDexCache(boolean isMinifiedEnabled, boolean preDexLibraries) {
-        if (!preDexLibraries || isMinifiedEnabled) {
-            return null;
-        }
-
-        return getProjectIntermediatesCache();
-    }
-
-    @Nullable
     private FileCache getUserIntermediatesCache() {
         if (globalScope
                 .getProjectOptions()
                 .get(BooleanOption.ENABLE_INTERMEDIATE_ARTIFACTS_CACHE)) {
             return globalScope.getBuildCache();
-        } else {
-            return null;
-        }
-    }
-
-    @Nullable
-    private FileCache getProjectIntermediatesCache() {
-        if (globalScope
-                .getProjectOptions()
-                .get(BooleanOption.ENABLE_INTERMEDIATE_ARTIFACTS_CACHE)) {
-            return globalScope.getProjectLevelCache();
         } else {
             return null;
         }

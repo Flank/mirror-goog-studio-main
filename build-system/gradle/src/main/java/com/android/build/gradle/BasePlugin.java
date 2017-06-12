@@ -101,7 +101,6 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
-import java.util.function.Supplier;
 import org.gradle.BuildListener;
 import org.gradle.BuildResult;
 import org.gradle.api.Action;
@@ -423,10 +422,6 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
         @Nullable
         FileCache buildCache = BuildCacheUtils.createBuildCacheIfEnabled(project, projectOptions);
 
-        // This needs to be lazy, because rootProject.buildDir may be changed after the plugin is applied.
-        Supplier<FileCache> projectLevelCache =
-                () -> BuildCacheUtils.createProjectLevelCache(project);
-
         GlobalScope globalScope =
                 new GlobalScope(
                         project,
@@ -436,8 +431,7 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
                         sdkHandler,
                         ndkHandler,
                         registry,
-                        buildCache,
-                        projectLevelCache);
+                        buildCache);
 
         variantFactory = createVariantFactory(globalScope, instantiator, androidBuilder, extension);
 

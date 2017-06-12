@@ -30,7 +30,6 @@ import com.android.builder.dexing.DexArchiveEntry;
 import com.android.builder.dexing.DexArchives;
 import com.android.builder.utils.ExceptionRunnable;
 import com.android.builder.utils.FileCache;
-import com.android.builder.utils.PerformanceUtils;
 import com.android.dx.Version;
 import com.android.dx.command.dexer.DxContext;
 import com.android.ide.common.process.ProcessOutput;
@@ -93,7 +92,6 @@ class DexArchiveBuilderTransformCallable implements Callable<Void> {
     @NonNull private final Set<String> hashes;
     @NonNull private final ProcessOutput processOutput;
     @Nullable private final FileCache userLevelCache;
-    @Nullable private final FileCache projectLevelCache;
     @NonNull private final DexOptions dexOptions;
     private final int minSdkVersion;
 
@@ -105,7 +103,6 @@ class DexArchiveBuilderTransformCallable implements Callable<Void> {
             @NonNull Set<String> hashes,
             @NonNull ProcessOutput processOutput,
             @Nullable FileCache userLevelCache,
-            @Nullable FileCache projectLevelCache,
             @NonNull DexOptions dexOptions,
             int minSdkVersion) {
         this.rootPath = rootPath;
@@ -115,7 +112,6 @@ class DexArchiveBuilderTransformCallable implements Callable<Void> {
         this.hashes = hashes;
         this.processOutput = processOutput;
         this.userLevelCache = userLevelCache;
-        this.projectLevelCache = projectLevelCache;
         this.dexOptions = dexOptions;
         this.minSdkVersion = minSdkVersion;
     }
@@ -137,15 +133,9 @@ class DexArchiveBuilderTransformCallable implements Callable<Void> {
 
         ExceptionRunnable cacheMissAction = cacheMissAction();
 
-        FileCache cache = cacheToUse();
-        if (cache != null) {
+        if (userLevelCache != null) {
             FileCache.Inputs buildCacheInputs = getBuildCacheInputs(rootPath.toFile(), dexOptions);
-            String actionableMessage =
-                    userLevelCache == cache
-                            ? BuildCacheUtils.BUILD_CACHE_TROUBLESHOOTING_MESSAGE
-                            : "";
-            getFromCacheAndCreateIfMissing(
-                    cache, buildCacheInputs, cacheMissAction, actionableMessage);
+            getFromCacheAndCreateIfMissing(userLevelCache, buildCacheInputs, cacheMissAction);
         } else {
             cacheMissAction.run();
         }
@@ -163,23 +153,10 @@ class DexArchiveBuilderTransformCallable implements Callable<Void> {
         return null;
     }
 
-    /** Returns cache to be used, or {@code null} if none should be used. */
-    @Nullable
-    private FileCache cacheToUse() {
-        if (userLevelCache != null) {
-            return userLevelCache;
-        } else if (projectLevelCache != null) {
-            return projectLevelCache;
-        } else {
-            return null;
-        }
-    }
-
     private void getFromCacheAndCreateIfMissing(
             @NonNull FileCache cache,
             @NonNull FileCache.Inputs key,
-            @NonNull ExceptionRunnable cacheMissAction,
-            @NonNull String actionableMessage) {
+            @NonNull ExceptionRunnable cacheMissAction) {
         FileCache.QueryResult result;
         try {
             result = cache.createFile(to, key, cacheMissAction);
@@ -200,7 +177,7 @@ class DexArchiveBuilderTransformCallable implements Callable<Void> {
                             rootPath.toString(),
                             to.getAbsolutePath(),
                             cache.getCacheDirectory().getAbsolutePath(),
-                            actionableMessage));
+                            BuildCacheUtils.BUILD_CACHE_TROUBLESHOOTING_MESSAGE));
             throw new RuntimeException(exception);
         }
         if (result.getQueryEvent().equals(FileCache.QueryEvent.CORRUPTED)) {
@@ -212,7 +189,7 @@ class DexArchiveBuilderTransformCallable implements Callable<Void> {
                             + "%3$s",
                     cache.getCacheDirectory().getAbsolutePath(),
                     Throwables.getStackTraceAsString(result.getCauseOfCorruption()),
-                    actionableMessage);
+                    BuildCacheUtils.BUILD_CACHE_TROUBLESHOOTING_MESSAGE);
         }
     }
 

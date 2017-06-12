@@ -17,7 +17,6 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.RunGradleTasks;
@@ -122,7 +121,7 @@ public class BuildCacheTest {
     }
 
     @Test
-    public void testProjectLevelCache() throws Exception {
+    public void testBuildCacheDisabled() throws Exception {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "\nandroid.defaultConfig.minSdkVersion 13\n"
@@ -132,16 +131,11 @@ public class BuildCacheTest {
         File buildCacheDir = new File(project.getTestDir(), "build-cache");
         FileUtils.deletePath(buildCacheDir);
 
-        RunGradleTasks executor =
-                project.executor()
-                        .with(BooleanOption.ENABLE_BUILD_CACHE, false)
-                        .with(StringOption.BUILD_CACHE_DIR, buildCacheDir.getAbsolutePath());
+        project.executor()
+                .with(BooleanOption.ENABLE_BUILD_CACHE, false)
+                .with(StringOption.BUILD_CACHE_DIR, buildCacheDir.getAbsolutePath())
+                .run("clean", "assembleDebug");
 
-        executor.run("clean", "assembleDebug");
-
-        // When improved dependency resolution is enabled, a project local cache is used.
-        File cacheDir = FileUtils.join(project.file("build"), FD_INTERMEDIATES, "project-cache");
-        assertThat(cacheDir).isDirectory();
         assertThat(buildCacheDir).doesNotExist();
     }
 }

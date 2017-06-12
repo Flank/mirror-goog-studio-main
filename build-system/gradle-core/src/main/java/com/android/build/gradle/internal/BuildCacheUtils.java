@@ -16,8 +16,6 @@
 
 package com.android.build.gradle.internal;
 
-import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
-
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
@@ -26,7 +24,6 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
 import com.android.builder.utils.FileCache;
 import com.android.prefs.AndroidLocation;
-import com.android.utils.FileUtils;
 import java.io.File;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -55,13 +52,6 @@ public final class BuildCacheUtils {
     public static FileCache createBuildCacheIfEnabled(
             @NonNull Project project, @NonNull ProjectOptions projectOptions) {
         return createBuildCacheIfEnabled(project.getRootProject()::file, projectOptions);
-    }
-
-    @NonNull
-    public static FileCache createProjectLevelCache(@NonNull Project project) {
-        return FileCache.getInstanceWithSingleProcessLocking(
-                FileUtils.join(
-                        project.getRootProject().getBuildDir(), FD_INTERMEDIATES, "project-cache"));
     }
 
     @Nullable

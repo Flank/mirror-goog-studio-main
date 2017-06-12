@@ -137,7 +137,6 @@ public class DesugarTransform extends Transform {
     @NonNull private final Supplier<List<File>> androidJarClasspath;
     @NonNull private final List<Path> compilationBootclasspath;
     @Nullable private final FileCache userCache;
-    @Nullable private final FileCache projectCache;
     private final int minSdk;
     @NonNull private final JavaProcessExecutor executor;
     @NonNull private FileCollection java8LangSupportJar;
@@ -150,7 +149,6 @@ public class DesugarTransform extends Transform {
             @NonNull Supplier<List<File>> androidJarClasspath,
             @NonNull String compilationBootclasspath,
             @Nullable FileCache userCache,
-            @Nullable FileCache projectCache,
             int minSdk,
             @NonNull JavaProcessExecutor executor,
             @NonNull FileCollection java8LangSupportJar,
@@ -158,7 +156,6 @@ public class DesugarTransform extends Transform {
         this.androidJarClasspath = androidJarClasspath;
         this.compilationBootclasspath = splitBootclasspath(compilationBootclasspath);
         this.userCache = userCache;
-        this.projectCache = projectCache;
         this.minSdk = minSdk;
         this.executor = executor;
         this.java8LangSupportJar = java8LangSupportJar;
@@ -356,15 +353,10 @@ public class DesugarTransform extends Transform {
                     }
 
                     FileCache cacheToUse;
-                    if (Files.isDirectory(input)) {
-                        cacheToUse = null;
-                    } else if (Objects.equals(
-                            scopes, Collections.singleton(Scope.EXTERNAL_LIBRARIES))) {
+                    if (Files.isRegularFile(input)
+                            && Objects.equals(
+                                    scopes, Collections.singleton(Scope.EXTERNAL_LIBRARIES))) {
                         cacheToUse = userCache;
-                    } else if (scopes.equals(Collections.singleton(Scope.PROJECT_LOCAL_DEPS))
-                            || scopes.equals(
-                                    Collections.singleton(Scope.SUB_PROJECTS_LOCAL_DEPS))) {
-                        cacheToUse = projectCache;
                     } else {
                         cacheToUse = null;
                     }

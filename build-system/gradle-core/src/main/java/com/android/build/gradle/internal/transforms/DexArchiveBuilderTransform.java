@@ -79,7 +79,6 @@ public class DexArchiveBuilderTransform extends Transform {
     @NonNull private final DexOptions dexOptions;
     @NonNull private final ErrorReporter errorReporter;
     @Nullable private final FileCache userLevelCache;
-    @Nullable private final FileCache projectLevelCache;
     @NonNull private final WaitableExecutor executor;
     private final int minSdkVersion;
 
@@ -87,12 +86,10 @@ public class DexArchiveBuilderTransform extends Transform {
             @NonNull DexOptions dexOptions,
             @NonNull ErrorReporter errorReporter,
             @Nullable FileCache userLevelCache,
-            @Nullable FileCache projectLevelCache,
             int minSdkVersion) {
         this.dexOptions = dexOptions;
         this.errorReporter = errorReporter;
         this.userLevelCache = userLevelCache;
-        this.projectLevelCache = projectLevelCache;
         this.minSdkVersion = minSdkVersion;
         this.executor = WaitableExecutor.useGlobalSharedThreadPool();
     }
@@ -294,8 +291,6 @@ public class DexArchiveBuilderTransform extends Transform {
         FileCache userCache =
                 PreDexTransform.getBuildCache(
                         input.getFile(), isExternalLib(input), userLevelCache);
-        // use only for jars
-        FileCache projectCache = input.getFile().isFile() ? projectLevelCache : null;
 
         DexArchiveBuilderTransformCallable converter =
                 new DexArchiveBuilderTransformCallable(
@@ -306,7 +301,6 @@ public class DexArchiveBuilderTransform extends Transform {
                         hashes,
                         processOutput,
                         userCache,
-                        projectCache,
                         dexOptions,
                         minSdkVersion);
         executor.execute(converter);

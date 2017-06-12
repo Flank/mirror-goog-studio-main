@@ -28,17 +28,14 @@ import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.options.ProjectOptions;
-import com.android.build.gradle.options.StringOption;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.builder.utils.FileCache;
 import com.android.utils.FileUtils;
 import com.google.common.base.CharMatcher;
-import com.google.common.base.Suppliers;
 import java.io.File;
 import java.util.Set;
-import java.util.function.Supplier;
 import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
@@ -57,7 +54,6 @@ public class GlobalScope extends TaskOutputHolderImpl
     @NonNull private final ToolingModelBuilderRegistry toolingRegistry;
     @NonNull private final Set<OptionalCompilationStep> optionalCompilationSteps;
     @NonNull private final ProjectOptions projectOptions;
-    @NonNull private final Supplier<FileCache> projectLevelCache;
     @Nullable private final FileCache buildCache;
 
     // TODO: Remove mutable state from this class.
@@ -73,8 +69,7 @@ public class GlobalScope extends TaskOutputHolderImpl
             @NonNull SdkHandler sdkHandler,
             @NonNull NdkHandler ndkHandler,
             @NonNull ToolingModelBuilderRegistry toolingRegistry,
-            @Nullable FileCache buildCache,
-            @NonNull Supplier<FileCache> projectLevelCache) {
+            @Nullable FileCache buildCache) {
         // Attention: remember that this code runs early in the build lifecycle, project may not
         // have been fully configured yet (e.g. buildDir can still change).
         this.project = checkNotNull(project);
@@ -86,10 +81,6 @@ public class GlobalScope extends TaskOutputHolderImpl
         this.optionalCompilationSteps = checkNotNull(projectOptions.getOptionalCompilationSteps());
         this.projectOptions = checkNotNull(projectOptions);
         this.buildCache = buildCache;
-
-        // Guava provides thread-safe memoization, but we need to wrap it in java.util.Supplier.
-        // This needs to be lazy, because rootProject.buildDir may be changed after the plugin is applied.
-        this.projectLevelCache = Suppliers.memoize(projectLevelCache::get)::get;
     }
 
     @NonNull
@@ -233,11 +224,6 @@ public class GlobalScope extends TaskOutputHolderImpl
     @Override
     public FileCache getBuildCache() {
         return buildCache;
-    }
-
-    @NonNull
-    public FileCache getProjectLevelCache() {
-        return projectLevelCache.get();
     }
 
     @NonNull

@@ -112,18 +112,17 @@ public class DexArchiveBuilderTransformTest {
     @Test
     public void testCacheUsedForLocalJars() throws Exception {
         File cacheDir = FileUtils.join(tmpDir.getRoot(), "cache");
-        FileCache projectCache = FileCache.getInstanceWithSingleProcessLocking(cacheDir);
+        FileCache cache = FileCache.getInstanceWithSingleProcessLocking(cacheDir);
 
         Path inputJar = tmpDir.getRoot().toPath().resolve("input.jar");
         TestInputsGenerator.jarWithEmptyClasses(inputJar, ImmutableList.of(PACKAGE + "/A"));
         SimpleJarInput jarInput =
                 new SimpleJarInput.Builder(inputJar.toFile())
-                        .setScopes(ImmutableSet.of(QualifiedContent.Scope.PROJECT_LOCAL_DEPS))
+                        .setScopes(ImmutableSet.of(QualifiedContent.Scope.EXTERNAL_LIBRARIES))
                         .create();
         TransformInput input = new SimpleJarTransformInput(jarInput);
 
-        getTransform(null, projectCache)
-                .transform(getInvocation(ImmutableList.of(input), outputProvider));
+        getTransform(cache).transform(getInvocation(ImmutableList.of(input), outputProvider));
 
         assertThat(cacheDir.listFiles(File::isDirectory)).hasLength(1);
     }
@@ -199,14 +198,8 @@ public class DexArchiveBuilderTransformTest {
 
     @NonNull
     private DexArchiveBuilderTransform getTransform(@Nullable FileCache userCache) {
-        return getTransform(userCache, null);
-    }
-
-    @NonNull
-    private DexArchiveBuilderTransform getTransform(
-            @Nullable FileCache userCache, @Nullable FileCache projectCache) {
         return new DexArchiveBuilderTransform(
-                new DefaultDexOptions(), new NoOpErrorReporter(), userCache, projectCache, 1);
+                new DefaultDexOptions(), new NoOpErrorReporter(), userCache, 1);
     }
 
     @NonNull

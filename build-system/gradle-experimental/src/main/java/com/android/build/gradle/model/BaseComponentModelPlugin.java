@@ -88,7 +88,6 @@ import com.android.builder.internal.compiler.PreDexCache;
 import com.android.builder.profile.ThreadRecorder;
 import com.android.builder.sdk.TargetInfo;
 import com.android.builder.signing.DefaultSigningConfig;
-import com.android.builder.utils.FileCache;
 import com.android.ide.common.internal.ExecutorSingleton;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.signing.KeystoreHelper;
@@ -108,7 +107,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import org.gradle.BuildListener;
@@ -371,10 +369,6 @@ public class BaseComponentModelPlugin implements Plugin<Project>, ToolingRegistr
                 SdkHandler sdkHandler,
                 NdkHandler ndkHandler,
                 ToolingModelBuilderRegistry toolingModelBuilderRegistry) {
-            // This needs to be lazy, because rootProject.buildDir may be changed after the plugin is applied.
-            Supplier<FileCache> projectLevelCache =
-                    () -> BuildCacheUtils.createProjectLevelCache(project);
-
             return new GlobalScope(
                     project,
                     projectOptions,
@@ -383,8 +377,7 @@ public class BaseComponentModelPlugin implements Plugin<Project>, ToolingRegistr
                     sdkHandler,
                     ndkHandler,
                     toolingModelBuilderRegistry,
-                    BuildCacheUtils.createBuildCacheIfEnabled(project, projectOptions),
-                    projectLevelCache);
+                    BuildCacheUtils.createBuildCacheIfEnabled(project, projectOptions));
         }
 
         @Mutate
