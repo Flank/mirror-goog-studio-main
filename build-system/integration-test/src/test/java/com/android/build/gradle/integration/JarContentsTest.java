@@ -54,6 +54,8 @@ public class JarContentsTest {
     private static final Set<String> GLOBAL_WHITELIST =
             ImmutableSet.of("NOTICE", "NOTICE.txt", "META-INF/MANIFEST.MF");
 
+    private static final String EXTERNAL_DEPS = "/com/android/tools/external/";
+
     private static final Multimap<String, String> EXPECTED;
 
     static {
@@ -260,7 +262,8 @@ public class JarContentsTest {
 
     private static boolean isIgnored(Path path) {
         String normalizedPath = FileUtils.toSystemIndependentPath(path.toString());
-        return IGNORED_ARTIFACTS
+        return normalizedPath.contains(EXTERNAL_DEPS)
+                || IGNORED_ARTIFACTS
                 .stream()
                 .anyMatch(name -> normalizedPath.contains("/" + name + "/"));
     }
@@ -278,10 +281,8 @@ public class JarContentsTest {
 
     private static void checkJar(Path jar, Path repo) throws Exception {
 
-        Collection<String> expected =
-                EXPECTED.get(
-                        FileUtils.toSystemIndependentPath(
-                                jarRelativePathWithoutVersion(jar, repo)));
+        String key = FileUtils.toSystemIndependentPath(jarRelativePathWithoutVersion(jar, repo));
+        Collection<String> expected = EXPECTED.get(key);
         if (expected == null) {
             expected = Collections.emptySet();
         }
@@ -313,7 +314,8 @@ public class JarContentsTest {
                 actual.add(actualName);
             }
 
-            assertThat(actual).named(jar.toString()).containsExactlyElementsIn(expected);
+            assertThat(actual).named(jar.toString() + " with key " + key)
+                    .containsExactlyElementsIn(expected);
         }
     }
 }
