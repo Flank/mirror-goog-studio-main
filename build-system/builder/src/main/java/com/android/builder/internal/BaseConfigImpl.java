@@ -21,10 +21,12 @@ import com.android.annotations.Nullable;
 import com.android.builder.model.BaseConfig;
 import com.android.builder.model.ClassField;
 import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.io.File;
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -146,6 +148,34 @@ public abstract class BaseConfigImpl implements Serializable, BaseConfig {
         return mResValues;
     }
 
+    private Map<String, String> flavorSelection;
+
+    public void flavorSelection(@NonNull String dimension, @NonNull String value) {
+        if (flavorSelection == null) {
+            flavorSelection = Maps.newHashMap();
+        }
+
+        flavorSelection.put(dimension, value);
+    }
+
+    public void addFlavorSelections(@NonNull Map<String, String> values) {
+        if (flavorSelection == null) {
+            flavorSelection = Maps.newHashMap();
+        }
+
+        flavorSelection.putAll(values);
+    }
+
+    @Override
+    @NonNull
+    public Map<String, String> getFlavorSelections() {
+        if (flavorSelection == null) {
+            return ImmutableMap.of();
+        }
+
+        return ImmutableMap.copyOf(flavorSelection);
+    }
+
     /**
      * Returns ProGuard configuration files to be used.
      *
@@ -225,6 +255,16 @@ public abstract class BaseConfigImpl implements Serializable, BaseConfig {
     protected void _initWith(@NonNull BaseConfig that) {
         setBuildConfigFields(that.getBuildConfigFields());
         setResValues(that.getResValues());
+
+        if (that.getFlavorSelections().isEmpty()) {
+            flavorSelection = null;
+        } else {
+            if (flavorSelection == null) {
+                flavorSelection = new HashMap<>();
+            }
+            flavorSelection.clear();
+            flavorSelection.putAll(that.getFlavorSelections());
+        }
 
         mApplicationIdSuffix = that.getApplicationIdSuffix();
         mVersionNameSuffix = that.getVersionNameSuffix();
