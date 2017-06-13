@@ -20,10 +20,12 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.IntegerOption;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
 /** Check that apps can be built with injected preview SDK. */
+@Ignore
 public class InjectedPreviewSdkTest {
 
     @Rule

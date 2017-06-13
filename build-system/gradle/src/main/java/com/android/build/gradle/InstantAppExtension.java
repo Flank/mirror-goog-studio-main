@@ -63,6 +63,6 @@ class InstantAppExtension extends BaseExtension {
     // FIXME: Remove this dummy when we have simplified the extension.
     @Override
     public String getCompileSdkVersion() {
-        return "android-25";
+        return "android-26";
     }
 }
