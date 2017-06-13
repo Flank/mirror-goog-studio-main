@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
+<#import "root://activities/common/kotlin_macros.ftl" as kt>
 <recipe>
-
+    <@kt.addAllKotlinDependencies />
     <dependency mavenUrl="com.google.android.gms:play-services-wearable:+" />
     <dependency mavenUrl="com.google.android.gms:play-services-maps:+" />
     <dependency mavenUrl="com.google.android.support:wearable:+" />

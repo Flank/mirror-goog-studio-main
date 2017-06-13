@@ -1,4 +1,5 @@
 <?xml version="1.0"?>
+<#import "root://activities/common/kotlin_macros.ftl" as kt>
 <recipe>
    <#if appCompat && !(hasDependency('com.android.support:appcompat-v7'))>
        <dependency mavenUrl="com.android.support:appcompat-v7:${buildApi}.+" />
@@ -23,6 +24,7 @@
                    to="${escapeXmlAttribute(resOut)}/layout/${layoutName}.xml" />
 
 <#if generateKotlin>
+    <@kt.addAllKotlinDependencies />
     <instantiate from="root/src/app_package/LoginActivity.kt.ftl"
                    to="${escapeXmlAttribute(srcOut)}/${activityClass}.kt" />
     <open file="${escapeXmlAttribute(srcOut)}/${activityClass}.kt" />

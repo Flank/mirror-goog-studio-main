@@ -1,10 +1,12 @@
 <?xml version="1.0"?>
+<#import "root://activities/common/kotlin_macros.ftl" as kt>
 <recipe>
 
   <#if requireTheme!false>
   <#include "../common/recipe_theme.xml.ftl" />
   </#if>
 
+  <@kt.addAllKotlinDependencies />
   <merge from="root/AndroidManifest.xml.ftl"
            to="${escapeXmlAttribute(manifestOut)}/AndroidManifest.xml" />
 

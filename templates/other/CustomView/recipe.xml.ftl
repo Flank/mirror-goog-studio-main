@@ -1,5 +1,7 @@
 <?xml version="1.0"?>
+<#import "root://activities/common/kotlin_macros.ftl" as kt>
 <recipe>
+    <@kt.addAllKotlinDependencies />
     <merge from="root/res/values/attrs.xml.ftl"
              to="${escapeXmlAttribute(resOut)}/values/attrs_${view_class}.xml" />
     <instantiate from="root/res/layout/sample.xml.ftl"
