@@ -66,7 +66,6 @@ public class AndroidConfigHelper {
         model.setSplits(instantiator.newInstance(Splits.class, instantiator));
         model.setLibraryRequests(new ArrayList<>());
         model.setBaseFeature(false);
-        model.setFlavorSelection(new HashMap<>());
         model.setBuildToolsRevision(AndroidBuilder.DEFAULT_BUILD_TOOLS_REVISION);
     }
 
