@@ -16,13 +16,21 @@
 
 package com.android.utils;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.google.common.base.Splitter;
+import com.google.common.collect.Lists;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.PathMatcher;
+import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -82,5 +90,34 @@ public final class PathUtils {
                             }
                         });
         return tmp;
+    }
+
+    @NonNull
+    public static List<Path> getClassPathItems(@NonNull String classPath) {
+        Iterable<String> components = Splitter.on(File.pathSeparator).split(classPath);
+
+        List<Path> classPathJars = Lists.newArrayList();
+        PathMatcher zipOrJar =
+                FileSystems.getDefault()
+                        .getPathMatcher(
+                                String.format(
+                                        "glob:**{%s,%s}",
+                                        SdkConstants.EXT_ZIP, SdkConstants.EXT_JAR));
+
+        for (String component : components) {
+            Path componentPath = Paths.get(component);
+            if (Files.isRegularFile(componentPath)) {
+                classPathJars.add(componentPath);
+            } else {
+                // this is a directory containing zips or jars, get them all
+                try {
+                    Files.walk(componentPath).filter(zipOrJar::matches).forEach(classPathJars::add);
+                } catch (IOException ignored) {
+                    // just ignore, users can specify non-existing dirs as class path
+                }
+            }
+        }
+
+        return classPathJars;
     }
 }

@@ -43,13 +43,11 @@ import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.ide.common.process.ProcessException;
 import com.android.utils.PathUtils;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Splitter;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
@@ -59,11 +57,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.PathMatcher;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Collection;
 import java.util.Collections;
@@ -168,7 +163,7 @@ public class DesugarTransform extends Transform {
             boolean verbose,
             boolean enableGradleWorkers) {
         this.androidJarClasspath = androidJarClasspath;
-        this.compilationBootclasspath = splitBootclasspath(compilationBootclasspath);
+        this.compilationBootclasspath = PathUtils.getClassPathItems(compilationBootclasspath);
         this.userCache = userCache;
         this.minSdk = minSdk;
         this.executor = executor;
@@ -524,37 +519,6 @@ public class DesugarTransform extends Transform {
                 .putLong(FileCacheInputParams.MIN_SDK_VERSION.name(), minSdkVersion);
 
         return buildCacheInputs.build();
-    }
-
-    @NonNull
-    private static List<Path> splitBootclasspath(@NonNull String bootClasspath) {
-        Iterable<String> components = Splitter.on(File.pathSeparator).split(bootClasspath);
-
-        List<Path> bootClasspathJars = Lists.newArrayList();
-        PathMatcher zipOrJar =
-                FileSystems.getDefault()
-                        .getPathMatcher(
-                                String.format(
-                                        "glob:**{%s,%s}",
-                                        SdkConstants.EXT_ZIP, SdkConstants.EXT_JAR));
-
-        for (String component : components) {
-            Path componentPath = Paths.get(component);
-            if (Files.isRegularFile(componentPath)) {
-                bootClasspathJars.add(componentPath);
-            } else {
-                // this is a directory containing zips or jars, get them all
-                try {
-                    Files.walk(componentPath)
-                            .filter(zipOrJar::matches)
-                            .forEach(bootClasspathJars::add);
-                } catch (IOException ignored) {
-                    // just ignore, users can specify non-existing dirs as bootclasspath
-                }
-            }
-        }
-
-        return bootClasspathJars;
     }
 
     /** Set this location of extracted desugar jar that is used for processing. */
