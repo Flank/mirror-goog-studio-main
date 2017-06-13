@@ -29,34 +29,21 @@ import java.util.Collection;
 import java.util.Objects;
 import java.util.Set;
 
-/**
- * Implementation of BaseArtifact that is serializable
- */
+/** Implementation of BaseArtifact that is serializable. */
 @Immutable
 abstract class BaseArtifactImpl implements BaseArtifact, Serializable {
 
-    @NonNull
-    protected final Collection<File> generatedSourceFolders;
-
-    private final String name;
-    @NonNull
-    private final String assembleTaskName;
-    @NonNull
-    private final String compileTaskName;
-    @NonNull
-    private final File classesFolder;
-    @NonNull
-    private final File javaResourcesFolder;
-    @NonNull
-    private final Dependencies compileDependencies;
-    @NonNull
-    private final DependencyGraphs dependencyGraphs;
-    @Nullable
-    private final SourceProvider variantSourceProvider;
-    @Nullable
-    private final SourceProvider multiFlavorSourceProviders;
-
+    @NonNull private final Collection<File> generatedSourceFolders;
+    @NonNull private final String name;
+    @NonNull private final String assembleTaskName;
+    @NonNull private final String compileTaskName;
+    @NonNull private final File classesFolder;
+    @NonNull private final File javaResourcesFolder;
+    @NonNull private final Dependencies compileDependencies;
+    @NonNull private final DependencyGraphs dependencyGraphs;
     @NonNull private final Set<File> additionalClassesFolders;
+    @Nullable private final SourceProvider variantSourceProvider;
+    @Nullable private final SourceProvider multiFlavorSourceProviders;
 
     BaseArtifactImpl(
             @NonNull String name,
@@ -149,8 +136,8 @@ abstract class BaseArtifactImpl implements BaseArtifact, Serializable {
         return generatedSourceFolders;
     }
 
-    @Override
     @NonNull
+    @Override
     public Set<File> getAdditionalClassesFolders() {
         return additionalClassesFolders;
     }
