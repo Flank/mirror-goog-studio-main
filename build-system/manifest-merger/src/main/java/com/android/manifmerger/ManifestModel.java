@@ -592,13 +592,20 @@ class ManifestModel {
                         .setMergingPolicy(AttributeModel.OR_MERGING_POLICY)),
 
         /**
-         * Uses-permission (contained in application)
-         * <br>
-         * <b>See also : </b>
-         * {@link <a href=http://developer.android.com/guide/topics/manifest/uses-permission-element.html>
-         *     Uses-permission Xml documentation</a>}
+         * Uses-permission (contained in manifest) <br>
+         * <b>See also : </b> {@link <a
+         * href=http://developer.android.com/guide/topics/manifest/uses-permission-element.html>
+         * Uses-permission Xml documentation</a>}
          */
         USES_PERMISSION(MergeType.MERGE, DEFAULT_NAME_ATTRIBUTE_RESOLVER),
+
+        /**
+         * Uses-permission-sdk-23 (contained in manifest) <br>
+         * <b>See also : </b> {@link <a
+         * href=http://developer.android.com/guide/topics/manifest/uses-permission-sdk-23-element.html>
+         * Uses-permission Xml documentation</a>}
+         */
+        USES_PERMISSION_SDK_23(MergeType.MERGE, DEFAULT_NAME_ATTRIBUTE_RESOLVER),
 
         /**
          * Uses-sdk (contained in manifest)
