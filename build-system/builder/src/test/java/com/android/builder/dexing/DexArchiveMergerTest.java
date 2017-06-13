@@ -33,6 +33,7 @@ import com.google.common.collect.Lists;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import com.google.common.truth.Truth;
+import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -153,7 +154,7 @@ public class DexArchiveMergerTest {
         DexArchiveTestUtil.mergeLegacyDex(
                 ImmutableList.of(fstArchive, sndArchive),
                 output,
-                ImmutableSet.of(PACKAGE + "/A.class"));
+                generateMainDexListFile(ImmutableSet.of(PACKAGE + "/A.class")));
 
         Dex outputDex = new Dex(output.resolve("classes.dex"));
         assertThat(outputDex).containsExactlyClassesIn(DexArchiveTestUtil.getDexClasses("A"));
@@ -175,7 +176,8 @@ public class DexArchiveMergerTest {
         DexArchiveTestUtil.mergeLegacyDex(
                 ImmutableList.of(fstArchive, sndArchive),
                 output,
-                ImmutableSet.of(PACKAGE + "/A.class", PACKAGE + "/B.class"));
+                generateMainDexListFile(
+                        ImmutableSet.of(PACKAGE + "/A.class", PACKAGE + "/B.class")));
 
         Dex outputDex = new Dex(output.resolve("classes.dex"));
         assertThat(outputDex).containsExactlyClassesIn(DexArchiveTestUtil.getDexClasses("A", "B"));
@@ -196,7 +198,7 @@ public class DexArchiveMergerTest {
         DexArchiveTestUtil.mergeLegacyDex(
                 ImmutableList.of(dexArchive, bigDexArchive),
                 outputDex,
-                ImmutableSet.of(PACKAGE + "/A.class"));
+                generateMainDexListFile(ImmutableSet.of(PACKAGE + "/A.class")));
 
         Dex primaryDex = new Dex(outputDex.resolve("classes.dex"));
         assertThat(primaryDex).containsExactlyClassesIn(DexArchiveTestUtil.getDexClasses("A"));
@@ -369,5 +371,10 @@ public class DexArchiveMergerTest {
                             archivePath.resolve("A" + i), "A" + i));
         }
         return archives;
+    }
+
+    @NonNull
+    private Path generateMainDexListFile(@NonNull Set<String> mainDexClasses) throws IOException {
+        return Files.write(temporaryFolder.newFile().toPath(), mainDexClasses);
     }
 }

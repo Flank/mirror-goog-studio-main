@@ -19,18 +19,20 @@ package com.android.builder.dexing;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.apkzlib.zip.ZFile;
+import com.google.common.collect.Lists;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collection;
+import java.util.List;
 import java.util.function.Predicate;
 
 /** Helper methods for the {@link DexArchive}. */
-public class DexArchives {
+public final class DexArchives {
 
     public static final Predicate<Path> DEX_ENTRY_FILTER =
             f -> f.toString().endsWith(SdkConstants.DOT_DEX);
 
     private DexArchives() {
-        // empty
     }
 
     /**
@@ -44,5 +46,23 @@ public class DexArchives {
         } else {
             return new DirDexArchive(path);
         }
+    }
+
+    @NonNull
+    static List<DexArchiveEntry> getEntriesFromSingleArchive(@NonNull Path archivePath)
+            throws IOException {
+        try (DexArchive archive = fromInput(archivePath)) {
+            return archive.getFiles();
+        }
+    }
+
+    @NonNull
+    static List<DexArchiveEntry> getAllEntriesFromArchives(@NonNull Collection<Path> inputs)
+            throws IOException {
+        List<DexArchiveEntry> entries = Lists.newArrayList();
+        for (Path p : inputs) {
+            entries.addAll(getEntriesFromSingleArchive(p));
+        }
+        return entries;
     }
 }

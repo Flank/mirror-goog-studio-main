@@ -28,6 +28,7 @@ import com.android.builder.dexing.DexArchiveBuilder;
 import com.android.builder.dexing.DexArchiveBuilderConfig;
 import com.android.builder.dexing.DexArchiveEntry;
 import com.android.builder.dexing.DexArchives;
+import com.android.builder.dexing.DexerTool;
 import com.android.builder.utils.ExceptionRunnable;
 import com.android.builder.utils.FileCache;
 import com.android.dx.Version;
@@ -79,7 +80,10 @@ class DexArchiveBuilderTransformCallable implements Callable<Void> {
         JUMBO_MODE,
 
         /** Whether optimize is enabled. */
-        OPTIMIZE
+        OPTIMIZE,
+
+        /** Tool used to produce the dex archive. */
+        DEXER_TOOL,
     }
 
     private static final LoggerWrapper logger =
@@ -94,6 +98,7 @@ class DexArchiveBuilderTransformCallable implements Callable<Void> {
     @Nullable private final FileCache userLevelCache;
     @NonNull private final DexOptions dexOptions;
     private final int minSdkVersion;
+    @NonNull private final DexerTool dexerTool;
 
     public DexArchiveBuilderTransformCallable(
             @NonNull Path rootPath,
@@ -104,7 +109,8 @@ class DexArchiveBuilderTransformCallable implements Callable<Void> {
             @NonNull ProcessOutput processOutput,
             @Nullable FileCache userLevelCache,
             @NonNull DexOptions dexOptions,
-            int minSdkVersion) {
+            int minSdkVersion,
+            @NonNull DexerTool dexer) {
         this.rootPath = rootPath;
         this.toProcess = toProcess;
         this.toRemove = toRemove;
@@ -114,6 +120,7 @@ class DexArchiveBuilderTransformCallable implements Callable<Void> {
         this.userLevelCache = userLevelCache;
         this.dexOptions = dexOptions;
         this.minSdkVersion = minSdkVersion;
+        this.dexerTool = dexer;
     }
 
     @Override
@@ -198,19 +205,27 @@ class DexArchiveBuilderTransformCallable implements Callable<Void> {
         return () -> {
             try (ClassFileInput input = ClassFileInputs.fromPath(rootPath, toProcess);
                     DexArchive outputArchive = DexArchives.fromInput(to.toPath())) {
-                boolean optimizedDex =
-                        !dexOptions.getAdditionalParameters().contains("--no-optimize");
-                DxContext dxContext =
-                        new DxContext(
-                                processOutput.getStandardOutput(), processOutput.getErrorOutput());
-                DexArchiveBuilderConfig config =
-                        new DexArchiveBuilderConfig(
-                                dxContext,
-                                optimizedDex,
-                                minSdkVersion);
+                DexArchiveBuilder builder;
+                switch (dexerTool) {
+                    case DX:
+                        {
+                            boolean optimizedDex =
+                                    !dexOptions.getAdditionalParameters().contains("--no-optimize");
+                            DxContext dxContext =
+                                    new DxContext(
+                                            processOutput.getStandardOutput(),
+                                            processOutput.getErrorOutput());
+                            DexArchiveBuilderConfig config =
+                                    new DexArchiveBuilderConfig(
+                                            dxContext, optimizedDex, minSdkVersion, dexerTool);
 
-                DexArchiveBuilder converter = new DexArchiveBuilder(config);
-                converter.convert(input, outputArchive);
+                            builder = DexArchiveBuilder.createDxDexBuilder(config);
+                            break;
+                        }
+                    default:
+                        throw new AssertionError("Unknown dexer tool " + dexerTool.name());
+                }
+                builder.convert(input, outputArchive);
             }
         };
     }
@@ -257,7 +272,8 @@ class DexArchiveBuilderTransformCallable implements Callable<Void> {
                 .putBoolean(FileCacheInputParams.JUMBO_MODE.name(), dexOptions.getJumboMode())
                 .putBoolean(
                         FileCacheInputParams.OPTIMIZE.name(),
-                        !dexOptions.getAdditionalParameters().contains("--no-optimize"));
+                        !dexOptions.getAdditionalParameters().contains("--no-optimize"))
+                .putString(FileCacheInputParams.DEXER_TOOL.name(), dexerTool.name());
 
         return buildCacheInputs.build();
     }

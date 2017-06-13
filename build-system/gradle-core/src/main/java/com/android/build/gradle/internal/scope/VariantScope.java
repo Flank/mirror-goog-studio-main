@@ -44,6 +44,8 @@ import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.build.gradle.tasks.RenderscriptCompile;
+import com.android.builder.dexing.DexMergerTool;
+import com.android.builder.dexing.DexerTool;
 import com.android.builder.dexing.DexingType;
 import com.android.sdklib.AndroidVersion;
 import java.io.File;
@@ -485,6 +487,12 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     @NonNull
     Java8LangSupport getJava8LangSupportType();
+
+    @NonNull
+    DexerTool getDexer();
+
+    @NonNull
+    DexMergerTool getDexMerger();
 
     @NonNull
     ConfigurableFileCollection getTryWithResourceRuntimeSupportJar();

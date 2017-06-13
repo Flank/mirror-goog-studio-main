@@ -16,30 +16,21 @@
 
 package com.android.builder.dexing;
 
-import com.android.annotations.NonNull;
-import com.android.dx.command.dexer.DxContext;
-
 /**
- * Config for dex archive merging. Contains all options necessary to configure {@link
- * DexArchiveMerger} which produces the final DEX file(s).
+ * An exception thrown is dex archive merging fails. It is a wrapper exception, to get the actual
+ * exception, {@link Throwable#getCause()} should always be invoked. It can also contain an error
+ * message that can be retrieved using {@link Throwable#getMessage()}.
  */
-public class DexMergerConfig {
-
-    @NonNull private final DexingType dexingType;
-    @NonNull private final DxContext dxContext;
-
-    public DexMergerConfig(@NonNull DexingType dexingType, @NonNull DxContext dxContext) {
-        this.dexingType = dexingType;
-        this.dxContext = dxContext;
+public class DexArchiveMergerException extends Exception {
+    public DexArchiveMergerException(Throwable cause) {
+        super(cause);
     }
 
-    @NonNull
-    public DexingType getDexingType() {
-        return dexingType;
+    public DexArchiveMergerException(String message) {
+        super(message);
     }
 
-    @NonNull
-    public DxContext getDxContext() {
-        return dxContext;
+    public DexArchiveMergerException(String message, Throwable cause) {
+        super(message, cause);
     }
 }
