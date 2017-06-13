@@ -25,6 +25,6 @@ import org.gradle.api.NamedDomainObjectContainer
  * doesn't need to use "it"
  */
 fun <T> NamedDomainObjectContainer<T>.createAndConfig(name: String, action: T.() -> Unit) {
-    val value = this.maybeCreate(name)
+    val value = this.create(name)
     action.invoke(value)
 }

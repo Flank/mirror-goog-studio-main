@@ -29,6 +29,7 @@ import com.android.build.gradle.internal.LoggingUtil;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.SourceSetSourceProviderWrapper;
 import com.android.build.gradle.internal.coverage.JacocoOptions;
+import com.android.build.gradle.internal.dependency.ProductFlavorAttr;
 import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.dsl.AdbOptions;
 import com.android.build.gradle.internal.dsl.AndroidSourceSetFactory;
@@ -54,12 +55,15 @@ import com.android.builder.testing.api.TestServer;
 import com.android.repository.Revision;
 import com.android.resources.Density;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.gradle.api.Action;
 import org.gradle.api.GradleException;
@@ -67,6 +71,7 @@ import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationContainer;
+import org.gradle.api.attributes.Attribute;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.tasks.SourceSet;
@@ -148,6 +153,7 @@ public abstract class BaseExtension implements AndroidConfig {
     private ExtraModelInfo extraModelInfo;
 
     private String defaultPublishConfig = "release";
+    private Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> flavorSelection;
 
     private Action<VariantFilter> variantFilter;
 
@@ -748,12 +754,24 @@ public abstract class BaseExtension implements AndroidConfig {
         logger.warn("publishNonDefault is deprecated and has no effect anymore. All variants are now published.");
     }
 
-    // FIXME bug #62356943
     public void flavorSelection(String name, String value) {
-        extraModelInfo.handleSyncError(
-                "",
-                SyncIssue.TYPE_GENERIC,
-                "flavorSelection is now replaced with defaultConfig.flavorSelection. It's also available on product flavors, build types and variant.");
+        if (flavorSelection == null) {
+            flavorSelection = Maps.newHashMap();
+        }
+
+        flavorSelection.put(
+                Attribute.of(name, ProductFlavorAttr.class), ProductFlavorAttr.of(value));
+    }
+
+    /** Map of (flavor dimension, flavor value) for flavor matching strategy. */
+    @Override
+    @NonNull
+    public Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> getFlavorSelection() {
+        if (flavorSelection == null) {
+            return ImmutableMap.of();
+        }
+
+        return flavorSelection;
     }
 
     public void variantFilter(Action<VariantFilter> filter) {

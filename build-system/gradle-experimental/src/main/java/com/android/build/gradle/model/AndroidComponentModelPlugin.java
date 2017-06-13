@@ -37,7 +37,6 @@ import com.android.repository.Revision;
 import com.android.utils.StringHelper;
 import com.google.common.primitives.Ints;
 import java.io.File;
-import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -158,12 +157,6 @@ public class AndroidComponentModelPlugin implements Plugin<Project> {
         public void android(AndroidConfig androidModel) {
         }
 
-        @Defaults
-        public static void defaultConfig(
-                @Path("android.defaultConfig") ProductFlavor defaultConfig) {
-            defaultConfig.setFlavorSelections(new HashMap<>());
-        }
-
         @Finalize
         public static void finalizeAndroidModel(AndroidConfig androidModel) {
             if (androidModel.getBuildToolsRevision() == null
@@ -193,21 +186,11 @@ public class AndroidComponentModelPlugin implements Plugin<Project> {
         @Defaults
         public static void createDefaultBuildTypes(
                 @Path("android.buildTypes") ModelMap<BuildType> buildTypes) {
-
-            buildTypes.beforeEach(buildType -> buildType.setFlavorSelections(new HashMap<>()));
-
             buildTypes.create(BuilderConstants.DEBUG, buildType -> {
                 buildType.setDebuggable(true);
                 buildType.setEmbedMicroApp(false);
             });
             buildTypes.create(BuilderConstants.RELEASE);
-        }
-
-        @Defaults
-        public static void productFlavors(
-                @Path("android.productFlavors") ModelMap<ProductFlavor> productFlavors) {
-            productFlavors.beforeEach(
-                    productFlavor -> productFlavor.setFlavorSelections(new HashMap<>()));
         }
 
         @Model

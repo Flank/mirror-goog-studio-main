@@ -85,12 +85,6 @@ public class BaseConfigAdaptor implements BaseConfig {
 
     @NonNull
     @Override
-    public Map<String, String> getFlavorSelections() {
-        return baseConfig.getFlavorSelections();
-    }
-
-    @NonNull
-    @Override
     public Collection<File> getProguardFiles() {
         return ImmutableList.copyOf(baseConfig.getProguardFiles());
     }

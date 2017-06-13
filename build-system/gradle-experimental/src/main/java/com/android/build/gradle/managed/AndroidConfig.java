@@ -168,4 +168,9 @@ public interface AndroidConfig {
     Boolean getBaseFeature();
 
     void setBaseFeature(Boolean baseFeature);
+
+    @Unmanaged
+    Map<String, String> getFlavorSelection();
+
+    void setFlavorSelection(Map<String, String> strategy);
 }

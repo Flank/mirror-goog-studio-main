@@ -35,7 +35,6 @@ import com.android.build.gradle.internal.dependency.AarTransform;
 import com.android.build.gradle.internal.dependency.AndroidTypeAttr;
 import com.android.build.gradle.internal.dependency.ExtractAarTransform;
 import com.android.build.gradle.internal.dependency.JarTransform;
-import com.android.build.gradle.internal.dependency.ProductFlavorAttr;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
@@ -81,7 +80,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import javax.inject.Inject;
 import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
@@ -89,7 +87,6 @@ import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
-import org.gradle.api.attributes.Attribute;
 import org.gradle.api.attributes.AttributeCompatibilityRule;
 import org.gradle.api.attributes.AttributeDisambiguationRule;
 import org.gradle.api.attributes.AttributeMatchingStrategy;
@@ -493,7 +490,7 @@ public class VariantManager implements VariantModel {
                                             testedVariantData.getVariantConfiguration().getType()))
                             .setTestedVariantType(testedVariantType)
                             .addSourceSets(testVariantSourceSets)
-                            .setFlavorSelection(getFlavorSelection(variantConfig))
+                            .setFlavorSelection(extension.getFlavorSelection())
                             .setBaseSplit(
                                     variantType == VariantType.FEATURE
                                             && extension.getBaseFeature());
@@ -521,18 +518,6 @@ public class VariantManager implements VariantModel {
         } else {
             taskManager.createTasksForVariantScope(tasks, variantScope);
         }
-    }
-
-    @NonNull
-    private static Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> getFlavorSelection(
-            @NonNull GradleVariantConfiguration config) {
-        return config.getFlavorSelections()
-                .entrySet()
-                .stream()
-                .collect(
-                        Collectors.toMap(
-                                entry -> Attribute.of(entry.getKey(), ProductFlavorAttr.class),
-                                entry -> ProductFlavorAttr.of(entry.getValue())));
     }
 
     @NonNull
@@ -809,7 +794,7 @@ public class VariantManager implements VariantModel {
                                 getConsumeType(variantData.getVariantConfiguration().getType()))
                         .setPublishType(
                                 getPublishingType(variantData.getVariantConfiguration().getType()))
-                        .setFlavorSelection(getFlavorSelection(variantConfig))
+                        .setFlavorSelection(extension.getFlavorSelection())
                         .addSourceSets(variantSourceSets)
                         .setBaseSplit(
                                 variantType == VariantType.FEATURE && extension.getBaseFeature());

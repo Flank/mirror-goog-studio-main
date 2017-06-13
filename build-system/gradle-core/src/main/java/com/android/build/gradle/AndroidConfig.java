@@ -165,6 +165,9 @@ public interface AndroidConfig {
     /** Whether the feature module is the base feature. */
     Boolean getBaseFeature();
 
+    @NonNull
+    Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> getFlavorSelection();
+
     final class DeprecatedConfigurationAction implements Action<Dependency> {
 
         @NonNull

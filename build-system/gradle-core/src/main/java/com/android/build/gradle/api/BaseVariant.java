@@ -461,17 +461,6 @@ public interface BaseVariant {
     void resValue(@NonNull String type, @NonNull String name, @NonNull String value);
 
     /**
-     * Set up a new flavor selection by providing both a flavor dimension and a flavor name.
-     *
-     * <p>To learn more, read <a href="d.android.com/r/tools/use-flavorSelection.html">Select
-     * default flavors for missing dimensions</a>.
-     *
-     * @param dimension the flavor dimension
-     * @param name the flavor name
-     */
-    void flavorSelection(@NonNull String dimension, @NonNull String name);
-
-    /**
      * If true, variant outputs will be considered signed. Only set if you manually set the outputs
      * to point to signed files built by other tasks.
      */

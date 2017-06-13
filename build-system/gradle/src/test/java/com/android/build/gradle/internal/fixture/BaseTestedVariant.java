@@ -339,11 +339,6 @@ public interface BaseTestedVariant extends BaseVariant, TestedVariant {
         }
 
         @Override
-        public void flavorSelection(@NonNull String dimension, @NonNull String name) {
-            variant.flavorSelection(dimension, name);
-        }
-
-        @Override
         public void setOutputsAreSigned(boolean isSigned) {
             variant.setOutputsAreSigned(isSigned);
         }

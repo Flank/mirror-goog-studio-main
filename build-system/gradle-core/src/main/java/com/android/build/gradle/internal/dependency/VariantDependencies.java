@@ -222,7 +222,7 @@ public class VariantDependencies {
         }
 
         public Builder setFlavorSelection(
-                @NonNull Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> flavorSelection) {
+                @Nullable Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> flavorSelection) {
             this.flavorSelection = flavorSelection;
             return this;
         }

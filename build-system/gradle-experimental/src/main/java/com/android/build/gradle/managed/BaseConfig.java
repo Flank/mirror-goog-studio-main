@@ -21,12 +21,10 @@ import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidArtifact;
 import java.io.File;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import org.gradle.api.Named;
 import org.gradle.model.Managed;
 import org.gradle.model.ModelSet;
-import org.gradle.model.Unmanaged;
 
 /**
  * A Managed BaseConfig.
@@ -69,16 +67,6 @@ public interface BaseConfig extends Named {
      */
     @NonNull
     ModelSet<ClassField> getResValues();
-
-    /**
-     * Map of the manual flavor selection.
-     *
-     * @return a non-null map of (dimension, value)
-     */
-    @Unmanaged
-    Map<String, String> getFlavorSelections();
-
-    void setFlavorSelections(Map<String, String> map);
 
     /**
      * Returns the collection of proguard rule files.
