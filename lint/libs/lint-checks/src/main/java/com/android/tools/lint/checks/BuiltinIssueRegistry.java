@@ -376,7 +376,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
             } else if (scope.contains(Scope.CLASS_FILE)) {
                 initialSize += 16;
             } else if (scope.contains(Scope.MANIFEST)) {
-                initialSize += 48;
+                initialSize += 52;
             } else if (scope.contains(Scope.GRADLE_FILE)) {
                 initialSize += 5;
             }
