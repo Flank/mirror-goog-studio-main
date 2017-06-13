@@ -87,6 +87,7 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.scope.VariantScope.Java8LangSupport;
 import com.android.build.gradle.internal.tasks.AndroidReportTask;
 import com.android.build.gradle.internal.tasks.CheckManifest;
+import com.android.build.gradle.internal.tasks.CheckProguardFiles;
 import com.android.build.gradle.internal.tasks.DependencyReportTask;
 import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
 import com.android.build.gradle.internal.tasks.ExtractJava8LangSupportJar;
@@ -2746,23 +2747,35 @@ public abstract class TaskManager {
             @NonNull final VariantScope variantScope,
             @NonNull CodeShrinker codeShrinker,
             @Nullable FileCollection mappingFileCollection) {
+        Optional<AndroidTask<TransformTask>> transformTask = Optional.empty();
         switch (codeShrinker) {
             case PROGUARD:
-                createProguardTransform(taskFactory, variantScope, mappingFileCollection);
+                transformTask =
+                        createProguardTransform(taskFactory, variantScope, mappingFileCollection);
                 break;
             case ANDROID_GRADLE:
                 // Since the built-in class shrinker does not obfuscate, there's no point running
                 // it on the test FULL_APK (it also doesn't have a -dontshrink mode).
                 if (variantScope.getTestedVariantData() == null) {
-                    createBuiltInShrinkerTransform(variantScope, taskFactory);
+                    transformTask = createBuiltInShrinkerTransform(variantScope, taskFactory);
                 }
                 break;
             default:
                 throw new AssertionError("Unknown value " + codeShrinker);
         }
+
+        if (variantScope.getPostprocessingFeatures() != null && transformTask.isPresent()) {
+            AndroidTask<CheckProguardFiles> checkFilesTask =
+                    androidTasks.create(
+                            taskFactory, new CheckProguardFiles.ConfigAction(variantScope));
+
+            transformTask.get().dependsOn(taskFactory, checkFilesTask);
+        }
     }
 
-    private void createBuiltInShrinkerTransform(VariantScope scope, TaskFactory taskFactory) {
+    @NonNull
+    private Optional<AndroidTask<TransformTask>> createBuiltInShrinkerTransform(
+            VariantScope scope, TaskFactory taskFactory) {
         BuiltInShrinkerTransform transform = new BuiltInShrinkerTransform(scope);
         applyProguardConfig(transform, scope);
 
@@ -2774,10 +2787,11 @@ public abstract class TaskManager {
             transform.keep("class com.android.tools.fd.** {*;}");
         }
 
-        scope.getTransformManager().addTransform(taskFactory, scope, transform);
+        return scope.getTransformManager().addTransform(taskFactory, scope, transform);
     }
 
-    private void createProguardTransform(
+    @NonNull
+    private Optional<AndroidTask<TransformTask>> createProguardTransform(
             @NonNull TaskFactory taskFactory,
             @NonNull VariantScope variantScope,
             @Nullable FileCollection mappingFileCollection) {
@@ -2787,7 +2801,7 @@ public abstract class TaskManager {
                             + "http://d.android.com/r/studio-ui/shrink-code-with-ir.html "
                             + "for details on how to enable a code shrinker that's compatible with Instant Run.",
                     variantScope.getVariantConfiguration().getFullName());
-            return;
+            return Optional.empty();
         }
 
         final BaseVariantData variantData = variantScope.getVariantData();
@@ -2845,6 +2859,8 @@ public abstract class TaskManager {
                         t.dependsOn(taskFactory, testedVariantData.getScope().getAssembleTask());
                     }
                 });
+
+        return task;
     }
 
     private static void applyProguardDefaultsForTest(ProGuardTransform transform) {

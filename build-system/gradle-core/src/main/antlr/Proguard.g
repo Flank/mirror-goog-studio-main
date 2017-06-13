@@ -34,17 +34,15 @@ package com.android.build.gradle.shrinker.parser;
   }
 }
 
-prog [ProguardFlags flags, String baseDirectory]
+prog [ProguardFlags flags, UnsupportedFlagsHandler flagsHandler, String baseDirectory]
   :
   (
     ('-basedirectory' baseDir=NAME {baseDirectory=$baseDir.text;})
-    | ('-include'|'@') proguardFile=NAME {GrammarActions.include($proguardFile.text, baseDirectory, $flags);}
+    | ('-include'|'@') proguardFile=NAME {GrammarActions.include($proguardFile.text, baseDirectory, $flags, $flagsHandler);}
     | ('-keepclassmembers' keepModifier=keepOptionModifier classSpec=classSpecification {GrammarActions.addKeepClassMembers($flags, $classSpec.classSpec, $keepModifier.modifier);})
     | ('-keepclasseswithmembers' keepModifier=keepOptionModifier classSpec=classSpecification {GrammarActions.addKeepClassesWithMembers($flags, $classSpec.classSpec, $keepModifier.modifier);})
     | ('-keep' keepModifier=keepOptionModifier classSpec=classSpecification {GrammarActions.addKeepClassSpecification($flags, $classSpec.classSpec, $keepModifier.modifier);})
-    | (igFlag=ignoredFlag {GrammarActions.ignoredFlag($igFlag.text, true);})
-    | (nopFlag=noOpFlag {GrammarActions.ignoredFlag($nopFlag.text, false);})
-    | (unFlag=unsupportedFlag {GrammarActions.unsupportedFlag($unFlag.text);})
+    | (unFlag=unsupportedFlag {flagsHandler.unsupportedFlag($unFlag.text);})
     | ('-dontwarn' {List<FilterSpecification> class_filter = new ArrayList<FilterSpecification>();} filter[class_filter, FilterSeparator.CLASS] {GrammarActions.dontWarn($flags, class_filter);})
     | ('-ignorewarnings' {GrammarActions.ignoreWarnings($flags);})
     | ('-target' target=NAME {GrammarActions.target(flags, $target.text);})
@@ -59,61 +57,50 @@ prog [ProguardFlags flags, String baseDirectory]
     throw e;
   }
 
-private noOpFlag
-  :
-  (   '-verbose'
-    | ('-dontnote' {List<FilterSpecification> class_filter = new ArrayList<FilterSpecification>();} filter[class_filter, FilterSeparator.CLASS])
-    // These flags are used in the default SDK proguard rules, so there's no point warning about them:
-    | '-dontusemixedcaseclassnames'
-    | '-dontskipnonpubliclibraryclasses'
-    | '-dontskipnonpubliclibraryclassmembers'
-    | '-skipnonpubliclibraryclasses'
-    // Similar flags as above:
-    | '-keepparameternames'
-    | ('-keepnames' classSpec=classSpecification )
-    | ('-keepclassmembernames' classSpec=classSpecification  )
-    | ('-keepclasseswithmembernames' classSpec=classSpecification  )
-    | ('-keepattributes' {List<FilterSpecification> attribute_filter = new ArrayList<FilterSpecification>();} filter[attribute_filter, FilterSeparator.ATTRIBUTE] )
-    | ('-keeppackagenames' {List<FilterSpecification> package_filter = new ArrayList<FilterSpecification>();} filter[package_filter, FilterSeparator.GENERAL] )
-    | ('-dontpreverify'  )
-  )
-  ;
-
-private ignoredFlag
-  :
-  (   ('-optimizations' {List<FilterSpecification> optimization_filter = new ArrayList<FilterSpecification>();} filter[optimization_filter, FilterSeparator.GENERAL])
-    | '-useuniqueclassmembernames'
-    | '-allowaccessmodification'
-    | ('-optimizationpasses' NAME) //n
-    | ('-assumenosideeffects' classSpecification)
-    | '-mergeinterfacesaggressively'
-    | '-overloadaggressively'
-    | ('-renamesourcefileattribute' sourceFile=NAME?)
-    | ('-adaptclassstrings' {List<FilterSpecification> filter = new ArrayList<FilterSpecification>();} filter[filter, FilterSeparator.GENERAL])
-    | ('-applymapping' mapping=NAME )
-    | '-obfuscationdictionary' obfuscationDictionary=NAME
-    | '-classobfuscationdictionary' classObfuscationDictionary=NAME
-    | '-packageobfuscationdictionary' packageObfuscationDictionary=NAME
-    | ('-repackageclasses' ('\'' newPackage=NAME? '\'')? )
-    | ('-flattenpackagehierarchy' ('\'' newPackage=NAME? '\'')? )
-    | ('-adaptresourcefilenames' {List<FilterSpecification> file_filter = new ArrayList<FilterSpecification>();} filter[file_filter, FilterSeparator.FILE] )
-    | ('-adaptresourcefilecontents' {List<FilterSpecification> file_filter = new ArrayList<FilterSpecification>();} filter[file_filter, FilterSeparator.FILE] )
-  )
-  ;
-
 private unsupportedFlag
   :
-  ( '-injars' inJars=classpath
-    | '-outjars' outJars=classpath
-    | '-libraryjars' libraryJars=classpath
+  (
+      '-allowaccessmodification'
+    | '-classobfuscationdictionary' classObfuscationDictionary=NAME
+    | '-dontpreverify'
+    | '-dontskipnonpubliclibraryclasses'
+    | '-dontskipnonpubliclibraryclassmembers'
+    | '-dontusemixedcaseclassnames'
     | '-forceprocessing'
-    | ('-printusage' NAME) //[filename]
+    | '-injars' inJars=classpath
+    | '-keepparameternames'
+    | '-libraryjars' libraryJars=classpath
+    | '-mergeinterfacesaggressively'
     | '-microedition'
-    | ('-printconfiguration' NAME?) //[filename]
-    | ('-dump' NAME?) //[filename]
+    | '-obfuscationdictionary' obfuscationDictionary=NAME
+    | '-outjars' outJars=classpath
+    | '-overloadaggressively'
+    | '-packageobfuscationdictionary' packageObfuscationDictionary=NAME
     | '-printmapping' outputMapping=NAME?
-    | ('-printseeds' seedOutputFile=NAME? )
+    | '-skipnonpubliclibraryclasses'
+    | '-useuniqueclassmembernames'
+    | '-verbose'
+    | ('-adaptclassstrings' {List<FilterSpecification> filter = new ArrayList<FilterSpecification>();} filter[filter, FilterSeparator.GENERAL])
+    | ('-adaptresourcefilecontents' {List<FilterSpecification> file_filter = new ArrayList<FilterSpecification>();} filter[file_filter, FilterSeparator.FILE] )
+    | ('-adaptresourcefilenames' {List<FilterSpecification> file_filter = new ArrayList<FilterSpecification>();} filter[file_filter, FilterSeparator.FILE] )
+    | ('-applymapping' mapping=NAME )
+    | ('-assumenosideeffects' classSpecification)
+    | ('-dontnote' {List<FilterSpecification> class_filter = new ArrayList<FilterSpecification>();} filter[class_filter, FilterSeparator.CLASS])
+    | ('-dump' NAME?) //[filename]
+    | ('-flattenpackagehierarchy' ('\'' newPackage=NAME? '\'')? )
+    | ('-keepattributes' {List<FilterSpecification> attribute_filter = new ArrayList<FilterSpecification>();} filter[attribute_filter, FilterSeparator.ATTRIBUTE] )
+    | ('-keepclasseswithmembernames' classSpec=classSpecification  )
+    | ('-keepclassmembernames' classSpec=classSpecification  )
     | ('-keepdirectories' {List<FilterSpecification> directory_filter = new ArrayList<FilterSpecification>();} filter[directory_filter, FilterSeparator.FILE])
+    | ('-keepnames' classSpec=classSpecification )
+    | ('-keeppackagenames' {List<FilterSpecification> package_filter = new ArrayList<FilterSpecification>();} filter[package_filter, FilterSeparator.GENERAL] )
+    | ('-optimizationpasses' NAME) //n
+    | ('-optimizations' {List<FilterSpecification> optimization_filter = new ArrayList<FilterSpecification>();} filter[optimization_filter, FilterSeparator.GENERAL])
+    | ('-printconfiguration' NAME?) //[filename]
+    | ('-printseeds' seedOutputFile=NAME? )
+    | ('-printusage' NAME) //[filename]
+    | ('-renamesourcefileattribute' sourceFile=NAME?)
+    | ('-repackageclasses' ('\'' newPackage=NAME? '\'')? )
   )
   ;
 

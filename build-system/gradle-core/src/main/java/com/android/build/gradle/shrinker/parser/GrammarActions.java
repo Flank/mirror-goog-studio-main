@@ -55,22 +55,31 @@ public class GrammarActions {
         }
     }
 
-    public static void parse(@NonNull File proguardFile, @NonNull ProguardFlags flags)
+    public static void parse(
+            @NonNull File proguardFile,
+            @NonNull ProguardFlags flags,
+            @NonNull UnsupportedFlagsHandler flagsHandler)
             throws RecognitionException {
         ProguardParser parser = createParserFromFile(proguardFile);
-        parser.prog(flags, proguardFile.getParentFile().getPath());
+        parser.prog(flags, flagsHandler, proguardFile.getParentFile().getPath());
     }
 
-    public static void parse(@NonNull String input, @NonNull ProguardFlags flags)
+    public static void parse(
+            @NonNull String input,
+            @NonNull ProguardFlags flags,
+            @NonNull UnsupportedFlagsHandler flagsHandler)
             throws RecognitionException {
         ProguardParser parser = createParserFromString(input);
-        parser.prog(flags, null);
+        parser.prog(flags, flagsHandler, null);
     }
 
     static void include(
-            @NonNull String fileName, @NonNull String baseDirectory, @NonNull ProguardFlags flags)
+            @NonNull String fileName,
+            @NonNull String baseDirectory,
+            @NonNull ProguardFlags flags,
+            @NonNull UnsupportedFlagsHandler flagsHandler)
             throws RecognitionException {
-        parse(getFileFromBaseDir(baseDirectory, fileName), flags);
+        parse(getFileFromBaseDir(baseDirectory, fileName), flags, flagsHandler);
     }
 
     static void dontWarn(

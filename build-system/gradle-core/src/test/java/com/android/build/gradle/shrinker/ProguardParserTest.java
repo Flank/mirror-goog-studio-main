@@ -21,13 +21,14 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.build.gradle.shrinker.parser.GrammarActions;
 import com.android.build.gradle.shrinker.parser.ProguardFlags;
+import com.android.build.gradle.shrinker.parser.UnsupportedFlagsHandler;
 import org.junit.Test;
 
 public class ProguardParserTest {
     @Test
     public void testDontFlags_noneSet() throws Exception {
         ProguardFlags flags = new ProguardFlags();
-        GrammarActions.parse("-dontwarn com.**", flags);
+        GrammarActions.parse("-dontwarn com.**", flags, UnsupportedFlagsHandler.NO_OP);
         assertFalse(flags.isDontObfuscate());
         assertFalse(flags.isDontShrink());
         assertFalse(flags.isDontOptimize());
@@ -36,7 +37,8 @@ public class ProguardParserTest {
     @Test
     public void testDontFlags_dontOptimize() throws Exception {
         ProguardFlags flags = new ProguardFlags();
-        GrammarActions.parse("-dontwarn com.**\n-dontoptimize", flags);
+        GrammarActions.parse(
+                "-dontwarn com.**\n-dontoptimize", flags, UnsupportedFlagsHandler.NO_OP);
         assertFalse(flags.isDontObfuscate());
         assertFalse(flags.isDontShrink());
         assertTrue(flags.isDontOptimize());
@@ -45,7 +47,8 @@ public class ProguardParserTest {
     @Test
     public void testDontFlags_dontObfuscate() throws Exception {
         ProguardFlags flags = new ProguardFlags();
-        GrammarActions.parse("-dontwarn com.**\n-dontobfuscate", flags);
+        GrammarActions.parse(
+                "-dontwarn com.**\n-dontobfuscate", flags, UnsupportedFlagsHandler.NO_OP);
         assertTrue(flags.isDontObfuscate());
         assertFalse(flags.isDontShrink());
         assertFalse(flags.isDontOptimize());
@@ -54,7 +57,7 @@ public class ProguardParserTest {
     @Test
     public void testDontFlags_dontShrink() throws Exception {
         ProguardFlags flags = new ProguardFlags();
-        GrammarActions.parse("-dontwarn com.**\n-dontshrink", flags);
+        GrammarActions.parse("-dontwarn com.**\n-dontshrink", flags, UnsupportedFlagsHandler.NO_OP);
         assertFalse(flags.isDontObfuscate());
         assertTrue(flags.isDontShrink());
         assertFalse(flags.isDontOptimize());

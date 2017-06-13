@@ -41,6 +41,7 @@ import com.android.build.gradle.shrinker.ProguardConfig;
 import com.android.build.gradle.shrinker.ProguardParserKeepRules;
 import com.android.build.gradle.shrinker.ShrinkerLogger;
 import com.android.build.gradle.shrinker.parser.ProguardFlags;
+import com.android.build.gradle.shrinker.parser.UnsupportedFlagsHandler;
 import com.android.build.gradle.shrinker.tracing.Trace;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.utils.Pair;
@@ -57,6 +58,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.gradle.api.InvalidUserDataException;
 import org.gradle.tooling.BuildException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,8 +69,9 @@ import org.slf4j.LoggerFactory;
  */
 public class BuiltInShrinkerTransform extends ProguardConfigurable {
 
-    private static final Logger logger = LoggerFactory.getLogger(BuiltInShrinkerTransform.class);
     private static final String NAME = "androidGradleClassShrinker";
+    private static final UnsupportedFlagsHandler FLAGS_HANDLER = new ShrinkerFlagsHandler();
+    private static final Logger logger = LoggerFactory.getLogger(BuiltInShrinkerTransform.class);
 
     private final Set<File> platformJars;
     private final File incrementalDir;
@@ -199,19 +202,20 @@ public class BuiltInShrinkerTransform extends ProguardConfigurable {
     }
 
     @NonNull
-    private ProguardConfig getConfig() throws IOException {
+    private ProguardFlags getProguardFlags() throws IOException {
         ProguardConfig config = new ProguardConfig();
 
         for (File configFile : getAllConfigurationFiles()) {
             // the file could not exist if it's published by a library sub-module as the publication
             // happens no matter what the module is doing (in case it's dynamically generated).
             if (configFile.isFile()) {
-                config.parse(configFile);
+                config.parse(configFile, FLAGS_HANDLER);
             }
         }
 
         config.parse(getAdditionalConfigString());
-        return config;
+
+        return config.getFlags();
     }
 
     @NonNull
@@ -266,23 +270,6 @@ public class BuiltInShrinkerTransform extends ProguardConfigurable {
         }
     }
 
-    @NonNull
-    private ProguardFlags getProguardFlags() throws IOException {
-        ProguardConfig config = new ProguardConfig();
-
-        for (File configFile : getAllConfigurationFiles()) {
-            // the file could not exist if it's published by a library sub-module as the publication
-            // happens no matter what the module is doing (in case it's dynamically generated).
-            if (configFile.isFile()) {
-                config.parse(configFile);
-            }
-        }
-
-        config.parse(getAdditionalConfigString());
-
-        return config.getFlags();
-    }
-
     private static boolean isIncrementalRun(
             boolean isIncremental,
             @NonNull Collection<TransformInput> referencedInputs) {
@@ -321,5 +308,52 @@ public class BuiltInShrinkerTransform extends ProguardConfigurable {
     public void setActions(@NonNull PostprocessingFeatures actions) {
         // The built-in shrinker supports only one "action" (shrinking), and the transform should
         // not be created if shrinking is not desired.
+    }
+
+    private static class ShrinkerFlagsHandler implements UnsupportedFlagsHandler {
+
+        private static final ImmutableSet<String> UNSUPPORTED_FLAGS =
+                ImmutableSet.of(
+                        "-dump",
+                        "-forceprocessing",
+                        "-injars",
+                        "-keepdirectories",
+                        "-libraryjars",
+                        "-microedition",
+                        "-outjars",
+                        "-printconfiguration",
+                        "-printmapping",
+                        "-printseeds",
+                        "-printusage");
+
+        private static final ImmutableSet<String> IGNORED_FLAGS =
+                ImmutableSet.of(
+                        "-optimizations",
+                        "-adaptclassstrings",
+                        "-adaptresourcefilecontents",
+                        "-adaptresourcefilenames",
+                        "-allowaccessmodification",
+                        "-applymapping",
+                        "-assumenosideeffects",
+                        "-classobfuscationdictionary",
+                        "-flattenpackagehierarchy",
+                        "-mergeinterfacesaggressively",
+                        "-obfuscationdictionary",
+                        "-optimizationpasses",
+                        "-overloadaggressively",
+                        "-packageobfuscationdictionary",
+                        "-renamesourcefileattribute",
+                        "-repackageclasses",
+                        "-useuniqueclassmembernames");
+
+        @Override
+        public void unsupportedFlag(@NonNull String flagName) {
+            if (UNSUPPORTED_FLAGS.contains(flagName)) {
+                throw new InvalidUserDataException(
+                        flagName + " is not supported by the built-in class shrinker.");
+            } else if (IGNORED_FLAGS.contains(flagName)) {
+                logger.warn(flagName + " is ignored by the built-in class shrinker.");
+            }
+        }
     }
 }

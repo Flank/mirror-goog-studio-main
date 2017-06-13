@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.application;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
@@ -132,5 +133,22 @@ public class PostprocessingTest {
         assertThat(proguardConfiguration).doesNotContain("-dontshrink");
         assertThat(proguardConfiguration).doesNotContain("-dontoptimize");
         assertThat(proguardConfiguration).contains("-dontobfuscate");
+    }
+
+    @Test
+    public void configFilesValidation() throws Exception {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "android.buildTypes.release.postprocessing {\n"
+                        + "removeUnusedCode true\n"
+                        + "proguardFile 'proguard-rules.pro'\n"
+                        + "}\n");
+
+        Files.write("-dontshrink", project.file("proguard-rules.pro"), StandardCharsets.UTF_8);
+
+        GradleBuildResult result = project.executor().expectFailure().run("assembleRelease");
+
+        assertThat(result.getFailureMessage())
+                .contains("postprocessing features are configured in the DSL");
     }
 }
