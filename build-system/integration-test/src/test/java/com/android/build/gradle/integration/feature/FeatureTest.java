@@ -34,9 +34,12 @@ import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitPackageI
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.VariantBuildOutput;
+import com.android.sdklib.AndroidTargetHash;
+import com.android.sdklib.AndroidVersion;
 import com.android.testutils.truth.ZipFileSubject;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
@@ -97,18 +100,24 @@ public class FeatureTest {
                 featureProject.getIntermediateFile(
                         "manifests", "full", "feature", "release", "AndroidManifest.xml");
         assertThat(featureManifest.exists());
+
+        AndroidVersion platformVersion =
+                Preconditions.checkNotNull(
+                        AndroidTargetHash.getPlatformVersion(
+                                GradleTestProject.getCompileSdkHash()));
+        boolean preO = platformVersion.getFeatureLevel() < AndroidVersion.VersionCodes.O;
         assertThat(featureManifest)
                 .containsAllOf(
                         "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"",
                         "package=\"com.example.android.multiproject\"",
-                        "split=\"feature\"",
+                        preO ? "split=\"feature\"" : "featureSplit=\"feature\"",
                         "<meta-data",
                         "android:name=\"feature\"",
                         "android:value=\"84\" />",
                         "<activity",
                         "android:name=\"com.example.android.multiproject.feature.MainActivity\"",
                         "android:label=\"@string/app_name\"",
-                        "split=\"feature\" >");
+                        preO ? "split=\"feature\"" : "splitName=\"feature\"");
         assertThat(featureManifest).doesNotContain("android:name=\"library\"");
         assertThat(featureManifest).doesNotContain("android:value=\"42\"");
 
@@ -167,7 +176,7 @@ public class FeatureTest {
                         "android:value=\"42\" />",
                         "<activity",
                         "android:name=\"com.example.android.multiproject.feature.MainActivity\"",
-                        "split=\"feature\"",
+                        preO ? "split=\"feature\"" : "splitName=\"feature\"",
                         "android:label=\"@string/app_name\" >");
         assertThat(baseFeatureManifest).doesNotContain("featureSplit");
 

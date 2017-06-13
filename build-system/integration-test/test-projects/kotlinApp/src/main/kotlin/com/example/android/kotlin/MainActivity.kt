@@ -12,12 +12,14 @@ class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_layout)
-        text = findViewById(R.id.someText) as TextView
+        val tmpTxt = findViewById(R.id.someText)
+        text = tmpTxt as TextView
         if (text != null) {
             text?.setText("testing kotlin")
             android.util.Log.d("kotlin", text?.getText().toString())
         }
-        val click = findViewById(R.id.click) as Button
+        val tmpClick = findViewById(R.id.click)
+        val click = tmpClick as Button
         click?.setOnClickListener { text?.setText("clicked!") }
     }
 }
