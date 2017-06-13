@@ -928,6 +928,9 @@ public class FileCache {
 
         /** Extract the Desugar jar so it can be used for processing. */
         EXTRACT_DESUGAR_JAR,
+
+        /** Fix stack frames. */
+        FIX_STACK_FRAMES,
     }
 
     /**
