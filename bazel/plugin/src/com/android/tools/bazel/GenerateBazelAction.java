@@ -16,8 +16,14 @@
 
 package com.android.tools.bazel;
 
-import com.android.tools.bazel.model.*;
+import static com.google.common.base.Preconditions.checkNotNull;
+
+import com.android.tools.bazel.model.BazelRule;
+import com.android.tools.bazel.model.ImlModule;
+import com.android.tools.bazel.model.JavaImport;
+import com.android.tools.bazel.model.JavaLibrary;
 import com.android.tools.bazel.model.Package;
+import com.android.tools.bazel.model.Workspace;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
@@ -35,7 +41,13 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.roots.*;
+import com.intellij.openapi.roots.ContentEntry;
+import com.intellij.openapi.roots.DependencyScope;
+import com.intellij.openapi.roots.LibraryOrderEntry;
+import com.intellij.openapi.roots.ModuleOrderEntry;
+import com.intellij.openapi.roots.OrderEntry;
+import com.intellij.openapi.roots.OrderRootType;
+import com.intellij.openapi.roots.SourceFolder;
 import com.intellij.openapi.roots.libraries.Library;
 import com.intellij.openapi.util.AsyncResult;
 import com.intellij.openapi.util.io.FileUtil;
@@ -64,8 +76,7 @@ public class GenerateBazelAction extends AnAction {
     }
 
     public void actionPerformed(AnActionEvent event) {
-        final Project project = event.getData(PlatformDataKeys.PROJECT);
-        assert project != null;
+        final Project project = checkNotNull(event.getData(PlatformDataKeys.PROJECT));
 
         ConsoleDialog dialog = new ConsoleDialog(project, "Generating BUILD files...");
         AsyncResult<Boolean> result = dialog.showAndGetOk();
@@ -112,9 +123,11 @@ public class GenerateBazelAction extends AnAction {
                 for (SourceFolder folder : folders) {
                     VirtualFile root = folder.getFile();
                     if (root != null) {
-                        String sourceLocalPath = PathUtil.getLocalPath(root);
-                        assert sourceLocalPath != null;
-                        File sourceDirectory = new File(sourceLocalPath);
+                        File sourceDirectory =
+                                new File(
+                                        checkNotNull(
+                                                PathUtil.getLocalPath(root),
+                                                "No local path for " + root));
                         String relativePath = FileUtil.getRelativePath(pkg.getPackageDir(), sourceDirectory);
 
                         if (folder.getRootType() instanceof JavaSourceRootType) {
