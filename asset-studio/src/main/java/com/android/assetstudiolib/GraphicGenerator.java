@@ -92,6 +92,8 @@ public abstract class GraphicGenerator {
     public enum IconFolderKind {
         DRAWABLE,
         MIPMAP,
+        // Note: Temporary, see b/62316340
+        MIPMAP_V26,
         DRAWABLE_NO_DPI,
         VALUES,
     }
@@ -241,6 +243,8 @@ public abstract class GraphicGenerator {
                 return getIconFolder(ResourceFolderType.DRAWABLE, options.density);
             case MIPMAP:
                 return getIconFolder(ResourceFolderType.MIPMAP, options.density);
+            case MIPMAP_V26:
+                return getIconFolder(ResourceFolderType.MIPMAP, options.density) + "-v26";
             case DRAWABLE_NO_DPI:
                 return getIconFolder(ResourceFolderType.DRAWABLE, Density.NODPI);
             case VALUES:
