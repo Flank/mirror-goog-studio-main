@@ -6,7 +6,6 @@ import static java.io.File.separatorChar;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.tasks.Lint;
 import com.android.builder.dependency.MavenCoordinatesImpl;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidLibrary;
@@ -23,7 +22,6 @@ import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Project;
-import com.android.utils.Pair;
 import com.android.utils.XmlUtils;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
@@ -130,46 +128,6 @@ public class LintGradleProject extends Project {
         }
     }
 
-    /**
-     * Creates a {@link com.android.build.gradle.internal.LintGradleProject} from
-     * the given {@link com.android.builder.model.AndroidProject} definition for
-     * a given {@link com.android.builder.model.Variant}, and returns it along with
-     * a set of lint custom rule jars applicable for the given model project.
-     *
-     * @param client the client
-     * @param project the model project
-     * @param variant the variant
-     * @param gradleProject the gradle project
-     * @return a pair of new project and list of custom rule jars
-     */
-    @NonNull
-    public static Pair<LintGradleProject, List<File>> create(
-            @NonNull LintGradleClient client,
-            @NonNull AndroidProject project,
-            @NonNull Variant variant,
-            @NonNull org.gradle.api.Project gradleProject) {
-        assert !Lint.MODEL_LIBRARIES;
-
-        File dir = gradleProject.getProjectDir();
-        AppGradleProject lintProject = new AppGradleProject(client, dir,
-                dir, project, variant);
-
-        List<File> customRules = Lists.newArrayList();
-        File appLintJar = new File(gradleProject.getBuildDir(),
-                "lint" + separatorChar + "lint.jar");
-        if (appLintJar.exists()) {
-            customRules.add(appLintJar);
-        }
-
-        Set<AndroidLibrary> libraries = Sets.newHashSet();
-        Dependencies dependencies = variant.getMainArtifact().getDependencies();
-        for (AndroidLibrary library : dependencies.getLibraries()) {
-            lintProject.addDirectLibrary(createLibrary(client, library, libraries, customRules));
-        }
-
-        return Pair.of(lintProject, customRules);
-    }
-
     @Override
     protected void initialize() {
         // Deliberately not calling super; that code is for ADT compatibility
@@ -227,28 +185,6 @@ public class LintGradleProject extends Project {
 
     void addDirectLibrary(@NonNull Project project) {
         directLibraries.add(project);
-    }
-
-    @NonNull
-    private static LibraryProject createLibrary(@NonNull LintGradleClient client,
-            @NonNull AndroidLibrary library,
-            @NonNull Set<AndroidLibrary> seen, List<File> customRules) {
-        seen.add(library);
-        File dir = library.getFolder();
-        LibraryProject project = new LibraryProject(client, dir, dir, library);
-
-        File ruleJar = library.getLintJar();
-        if (ruleJar.exists()) {
-            customRules.add(ruleJar);
-        }
-
-        for (AndroidLibrary dependent : library.getLibraryDependencies()) {
-            if (!seen.contains(dependent)) {
-                project.addDirectLibrary(createLibrary(client, dependent, seen, customRules));
-            }
-        }
-
-        return project;
     }
 
     // TODO: Rename: this isn't really an "App" project (it could be a library) too; it's a "project"
@@ -776,7 +712,6 @@ public class LintGradleProject extends Project {
         private final Set<Object> mSeen = Sets.newHashSet();
 
         public ProjectSearch() {
-            assert Lint.MODEL_LIBRARIES;
         }
 
         @Nullable

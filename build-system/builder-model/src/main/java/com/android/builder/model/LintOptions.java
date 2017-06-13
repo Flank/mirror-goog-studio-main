@@ -91,6 +91,12 @@ import java.util.Set;
  *          checkTestSources true
  *          // Normally lint will skip generated sources, but you can turn it on with this flag
  *          checkGeneratedSources true
+ *          // Normally lint will analyze all dependencies along with each module; this ensures
+ *          // that lint can correctly (for example) determine if a resource declared in a library
+ *          // is unused; checking only the library in isolation would not be able to identify this
+ *          // problem. However, this leads to quite a bit of extra computation; a library is
+ *          // analyzed repeatedly, for each module that it is used in.
+ *          checkDependencies false
  *     }
  * }
  * </pre>
@@ -215,6 +221,12 @@ public interface LintOptions {
      * If issues with severity "fatal" are found, the release build is aborted.
      */
     boolean isCheckReleaseBuilds();
+
+    /**
+     * Returns whether lint should check all dependencies too as part of its analysis. Default is
+     * true.
+     */
+    boolean isCheckDependencies();
 
     /**
      * Returns the baseline file to use, if any. The baseline file is

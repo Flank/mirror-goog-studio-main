@@ -50,6 +50,7 @@ public class LintCliFlags {
     private boolean warnAll;
     private boolean checkTests;
     private boolean checkGenerated;
+    private boolean checkDependencies = true;
     private boolean noWarnings;
     private boolean allErrors;
     private boolean fatalOnly;
@@ -242,6 +243,19 @@ public class LintCliFlags {
     /** Sets whether lint should check generated sources */
     public void setCheckGeneratedSources(boolean checkGenerated) {
         this.checkGenerated = checkGenerated;
+    }
+
+    /**
+     * Returns whether lint should check all dependencies too as part of its analysis. Default is
+     * true.
+     */
+    public boolean isCheckDependencies() {
+        return checkDependencies;
+    }
+
+    /** Sets whether lint should check dependencies too */
+    public void setCheckDependencies(boolean checkDependencies) {
+        this.checkDependencies = checkDependencies;
     }
 
     /**

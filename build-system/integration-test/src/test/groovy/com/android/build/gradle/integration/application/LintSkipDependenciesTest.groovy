@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,13 +28,13 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 /**
  * Assemble tests for lintLibraryModel.
  * <p>
- * To run just this test: ./gradlew :base:integration-test:test -D:base:integration-test:test.single=LintLibraryModelTest
+ * To run just this test: ./gradlew :base:integration-test:test -D:base:integration-test:test.single=LintSkipDependenciesTest
  */
 @CompileStatic
-class LintLibraryModelTest {
+class LintSkipDependenciesTest {
     @ClassRule
     static public GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("lintLibraryModel")
+            .fromTestProject("lintLibrarySkipDeps")
             .create()
 
     @BeforeClass
@@ -48,16 +48,9 @@ class LintLibraryModelTest {
     }
 
     @Test
-    void "check lint library model"() {
-        String expected = """src/main/java/com/android/test/lint/lintmodel/mylibrary/MyLibrary.java:5: Warning: Assertions are unreliable in Dalvik and unimplemented in ART. Use BuildConfig.DEBUG conditional checks instead. [Assert]
-       assert arg > 5;
-       ~~~~~~
-src/main/java/com/android/test/lint/javalib/JavaLib.java:4: Warning: Do not hardcode "/sdcard/"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]
-    public static final String SD_CARD = "/sdcard/something";
-                                         ~~~~~~~~~~~~~~~~~~~
-0 errors, 2 warnings"""
+    void "check lint dependencies skipped"() {
         def file = new File(project.getSubproject('app').getTestDir(), "lint-results.txt")
         assertThat(file).exists()
-        assertThat(file).contentWithUnixLineSeparatorsIsExactly(expected)
+        assertThat(file).contentWithUnixLineSeparatorsIsExactly("No issues found.")
     }
 }
