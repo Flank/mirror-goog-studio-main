@@ -43,7 +43,6 @@ public class AppWithProvidedLocalJarTest {
     public static GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("projectWithLocalDeps")
             .create();
-    static ModelContainer<AndroidProject> model;
 
     @BeforeClass
     public static void setUp() throws Exception {
@@ -61,13 +60,11 @@ public class AppWithProvidedLocalJarTest {
                 "}\n");
 
         project.execute("clean", "assembleDebug");
-        model = project.model().withFeature(BuildModel.Feature.FULL_DEPENDENCIES).getSingle();
     }
 
     @AfterClass
     public static void cleanUp() {
         project = null;
-        model = null;
     }
 
     @Test
@@ -77,13 +74,35 @@ public class AppWithProvidedLocalJarTest {
     }
 
     @Test
-    public void checkProvidedLocalJarIsInTheMainArtifactDependency() throws Exception {
+    public void checkBasicModel() throws Exception {
+        ModelContainer<AndroidProject> model = project.model().getSingle();
         LibraryGraphHelper helper = new LibraryGraphHelper(model);
 
         Variant variant = ModelHelper.getVariant(model.getOnlyModel().getVariants(), "debug");
 
         DependencyGraphs dependencyGraph = variant.getMainArtifact().getDependencyGraphs();
 
+        checkCompileDeps(helper, dependencyGraph);
+    }
+
+    @Test
+    public void checkFullModel() throws Exception {
+        ModelContainer<AndroidProject> model =
+                project.model().withFeature(BuildModel.Feature.FULL_DEPENDENCIES).getSingle();
+        LibraryGraphHelper helper = new LibraryGraphHelper(model);
+
+        Variant variant = ModelHelper.getVariant(model.getOnlyModel().getVariants(), "debug");
+
+        DependencyGraphs dependencyGraph = variant.getMainArtifact().getDependencyGraphs();
+        checkCompileDeps(helper, dependencyGraph);
+
+        // check that the package graph does not contain the item (or anything else)
+        assertThat(dependencyGraph.getPackageDependencies())
+                .named("package dependencies")
+                .isEmpty();
+    }
+
+    private void checkCompileDeps(LibraryGraphHelper helper, DependencyGraphs dependencyGraph) {
         // assert that there is one java library dependency
         assertThat(helper.on(dependencyGraph).withType(JAVA).asList())
                 .named("Java Library dependencies")
@@ -93,11 +112,6 @@ public class AppWithProvidedLocalJarTest {
         assertThat(dependencyGraph.getProvidedLibraries())
                 .named("compile provided list")
                 .containsExactly(javaItem.getArtifactAddress());
-
-        // check that the package graph does not contain the item (or anything else)
-
-        assertThat(dependencyGraph.getPackageDependencies())
-                .named("package dependencies")
-                .isEmpty();
     }
+
 }
