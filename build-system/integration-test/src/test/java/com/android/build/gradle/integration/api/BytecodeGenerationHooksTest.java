@@ -51,7 +51,7 @@ public class BytecodeGenerationHooksTest {
     }
 
     @Test
-    public void buildApp() throws IOException, InterruptedException {
+    public void buildApp() throws Exception {
         GradleBuildResult result = project.executor().run("clean", "app:assembleDebug");
 
         // check that the app's dex file contains the App class.
@@ -77,30 +77,32 @@ public class BytecodeGenerationHooksTest {
 
         File classesJar = new File(intermediateJars, "classes.jar");
         assertThat(classesJar).isFile();
-        Zip classesZip = new Zip(classesJar);
-        assertThat(classesZip).contains("META-INF/lib.kotlin_module");
-        assertThat(classesZip).contains("META-INF/post-lib.kotlin_module");
+        try (Zip classesZip = new Zip(classesJar)) {
+            assertThat(classesZip).contains("META-INF/lib.kotlin_module");
+            assertThat(classesZip).contains("META-INF/post-lib.kotlin_module");
+        }
 
         File resJar = new File(intermediateJars, "res.jar");
         assertThat(resJar).isFile();
-        Zip resZip = new Zip(classesJar);
-        assertThat(resZip).contains("META-INF/lib.kotlin_module");
-        assertThat(resZip).contains("META-INF/post-lib.kotlin_module");
+        try (Zip resZip = new Zip(classesJar)) {
+            assertThat(resZip).contains("META-INF/lib.kotlin_module");
+            assertThat(resZip).contains("META-INF/post-lib.kotlin_module");
 
-        // verify the compile classpath
-        checkDependencies(
-                result,
-                "BytecodeGeneratingTask(:app:generateBytecodeFordebug): ",
-                true,
-                "library/build/intermediates/intermediate-jars/debug/classes.jar",
-                "jar/build/libs/jar.jar");
+            // verify the compile classpath
+            checkDependencies(
+                    result,
+                    "BytecodeGeneratingTask(:app:generateBytecodeFordebug): ",
+                    true,
+                    "library/build/intermediates/intermediate-jars/debug/classes.jar",
+                    "jar/build/libs/jar.jar");
 
-        // verify source folders
-        checkSourceFolders(result, "SourceFoldersApi(:app:debug): ", "app/src/custom/java");
+            // verify source folders
+            checkSourceFolders(result, "SourceFoldersApi(:app:debug): ", "app/src/custom/java");
+        }
     }
 
     @Test
-    public void buildAppTest() throws IOException, InterruptedException {
+    public void buildAppTest() throws Exception {
         GradleBuildResult result = project.executor().run("clean", "app:assembleAndroidTest");
 
         final GradleTestProject appProject = project.getSubproject("app");
@@ -112,19 +114,21 @@ public class BytecodeGenerationHooksTest {
         // also verify that the app's jar used by test compilation contains the kotlin module files
         File classesJar = appProject.getIntermediateFile("classes-jar", "debug", "classes.jar");
         assertThat(classesJar).isFile();
-        Zip classesZip = new Zip(classesJar);
-        assertThat(classesZip).contains("META-INF/app.kotlin_module");
-        assertThat(classesZip).contains("META-INF/post-app.kotlin_module");
+        try (Zip classesZip = new Zip(classesJar)) {
+            assertThat(classesZip).contains("META-INF/app.kotlin_module");
+            assertThat(classesZip).contains("META-INF/post-app.kotlin_module");
 
-        // verify the compile classpath
-        checkDependencies(
-                result,
-                "BytecodeGeneratingTask(:app:generateBytecodeFordebugAndroidTest): ",
-                true,
-                "app/build/intermediates/classes-jar/debug/classes.jar",
-                "library/build/intermediates/intermediate-jars/debug/classes.jar",
-                "jar/build/libs/jar.jar");
+            // verify the compile classpath
+            checkDependencies(
+                    result,
+                    "BytecodeGeneratingTask(:app:generateBytecodeFordebugAndroidTest): ",
+                    true,
+                    "app/build/intermediates/classes-jar/debug/classes.jar",
+                    "library/build/intermediates/intermediate-jars/debug/classes.jar",
+                    "jar/build/libs/jar.jar");
+        }
     }
+
 
     @Test
     public void buildAppUnitTest() throws IOException, InterruptedException {
@@ -141,15 +145,17 @@ public class BytecodeGenerationHooksTest {
     }
 
     @Test
-    public void buildLibrary() throws IOException, InterruptedException {
+    public void buildLibrary() throws Exception {
         project.execute("clean", "lib:assembleDebug");
 
-        Aar aar = project.getSubproject("library").getAar("debug");
-        Zip classes = aar.getEntryAsZip("classes.jar");
-        assertThat(classes).contains("com/example/bytecode/Lib.class");
-        assertThat(classes).contains("com/example/bytecode/PostJavacLib.class");
-        assertThat(classes).contains("META-INF/lib.kotlin_module");
-        assertThat(classes).contains("META-INF/post-lib.kotlin_module");
+        try (Aar aar = project.getSubproject("library").getAar("debug");
+             Zip classes = aar.getEntryAsZip("classes.jar")) {
+            assertThat(classes).contains("com/example/bytecode/Lib.class");
+            assertThat(classes).contains("com/example/bytecode/PostJavacLib.class");
+            assertThat(classes).contains("META-INF/lib.kotlin_module");
+            assertThat(classes).contains("META-INF/post-lib.kotlin_module");
+        }
+
     }
 
     @Test

@@ -64,10 +64,12 @@ public class FeatureSplitDeclaration {
     }
 
     @NonNull
-    public static FeatureSplitDeclaration load(@NonNull File input) throws FileNotFoundException {
+    public static FeatureSplitDeclaration load(@NonNull File input) throws IOException {
         GsonBuilder gsonBuilder = new GsonBuilder();
         Gson gson = gsonBuilder.create();
-        return gson.fromJson(new FileReader(input), FeatureSplitDeclaration.class);
+        try (FileReader fileReader = new FileReader(input)) {
+            return gson.fromJson(fileReader, FeatureSplitDeclaration.class);
+        }
     }
 
     @Nullable

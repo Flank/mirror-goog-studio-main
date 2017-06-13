@@ -85,10 +85,14 @@ class AbiPureSplits {
 
             } else {
                 Zip zip = new Zip(outputFile.getOutputFile());
-                // main file should not have any lib/ entries.
-                assertThat(zip.getEntries(~'/lib/.*')).isEmpty()
-                // assert that our resources got packaged in the main file.
-                assertThat(zip.getEntries(~'/res/.*')).hasSize(5)
+                try {
+                    // main file should not have any lib/ entries.
+                    assertThat(zip.getEntries(~'/lib/.*')).isEmpty()
+                    // assert that our resources got packaged in the main file.
+                    assertThat(zip.getEntries(~'/res/.*')).hasSize(5)
+                } finally {
+                    zip.close();
+                }
             }
         }
 
