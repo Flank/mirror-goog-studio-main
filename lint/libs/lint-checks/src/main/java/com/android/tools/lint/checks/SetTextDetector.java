@@ -142,16 +142,6 @@ public class SetTextDetector extends Detector implements UastScanner {
             for (UExpression operand : expression.getOperands()) {
                 checkNode(context, operand);
             }
-        } else if (node instanceof UBinaryExpression) {
-            // UAST does not currently have UBinaryExpression extend UPolyadicExpression
-            UBinaryExpression expression = (UBinaryExpression) node;
-            if (expression.getOperator() == UastBinaryOperator.PLUS) {
-                context.report(SET_TEXT_I18N, node, context.getLocation(node),
-                        "Do not concatenate text displayed with `setText`. "
-                                + "Use resource string with placeholders.");
-            }
-            checkNode(context, expression.getLeftOperand());
-            checkNode(context, expression.getRightOperand());
         }
     }
 }

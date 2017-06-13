@@ -365,11 +365,7 @@ public class JavaPerformanceDetector extends Detector implements Detector.UastSc
         private static void addReferencedVariables(
                 @NonNull Collection<String> variables,
                 @Nullable UExpression expression) {
-            if (expression instanceof UBinaryExpression) {
-                UBinaryExpression binary = (UBinaryExpression) expression;
-                addReferencedVariables(variables, binary.getLeftOperand());
-                addReferencedVariables(variables, binary.getRightOperand());
-            } else if (expression instanceof UPolyadicExpression) {
+            if (expression instanceof UPolyadicExpression) {
                 UPolyadicExpression polyadicExpression = (UPolyadicExpression) expression;
                 for (UExpression operand : polyadicExpression.getOperands()) {
                     addReferencedVariables(variables, operand);

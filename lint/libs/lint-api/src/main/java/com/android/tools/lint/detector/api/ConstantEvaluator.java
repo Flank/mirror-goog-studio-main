@@ -674,15 +674,6 @@ public class ConstantEvaluator {
             UParenthesizedExpression parenthesizedExpression = (UParenthesizedExpression) node;
             UExpression expression = parenthesizedExpression.getExpression();
             return evaluate(expression);
-        } else if (node instanceof UBinaryExpression) {
-            UBinaryExpression binaryExpression = (UBinaryExpression) node;
-            UastBinaryOperator operator = binaryExpression.getOperator();
-            Object operandLeft = evaluate(binaryExpression.getLeftOperand());
-            Object operandRight = evaluate(binaryExpression.getRightOperand());
-            Object value = evaluateBinary(operator, operandLeft, operandRight);
-            if (value != null) {
-                return value;
-            }
         } else if (node instanceof UPolyadicExpression) {
             UPolyadicExpression polyadicExpression = (UPolyadicExpression) node;
             UastBinaryOperator operator = polyadicExpression.getOperator();

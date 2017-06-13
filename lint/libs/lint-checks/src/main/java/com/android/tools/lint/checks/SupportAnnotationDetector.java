@@ -2191,23 +2191,6 @@ public class SupportAnnotationDetector extends Detector implements UastScanner {
                             "Flag not allowed here");
                 }
             }
-        } else if (argument instanceof UBinaryExpression) {
-            // Not currently a polyadic expression in UAST: repeat check done for polyadic above
-            UBinaryExpression expression = (UBinaryExpression) argument;
-            if (flag) {
-                checkTypeDefConstant(context, annotation, expression.getLeftOperand(), errorNode, true,
-                        allAnnotations);
-                checkTypeDefConstant(context, annotation, expression.getRightOperand(), errorNode, true,
-                        allAnnotations);
-            } else {
-                UastBinaryOperator operator = expression.getOperator();
-                if (operator == UastBinaryOperator.BITWISE_AND
-                        || operator == UastBinaryOperator.BITWISE_OR
-                        || operator == UastBinaryOperator.BITWISE_XOR) {
-                    report(context, TYPE_DEF, expression, context.getLocation(expression),
-                            "Flag not allowed here");
-                }
-            }
         } else if (argument instanceof UReferenceExpression) {
             PsiElement resolved = ((UReferenceExpression) argument).resolve();
             if (resolved instanceof PsiVariable) {
