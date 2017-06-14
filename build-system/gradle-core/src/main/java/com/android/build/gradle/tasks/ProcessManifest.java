@@ -49,6 +49,7 @@ import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
@@ -67,10 +68,10 @@ public class ProcessManifest extends ManifestProcessorTask {
     private SplitScope splitScope;
 
     private File reportFile;
+    private File manifestOutputFile;
 
     @Override
     protected void doFullTaskAction() {
-        File outputManifestFile = getManifestOutputFile();
         File aaptFriendlyManifestOutputFile = getAaptFriendlyManifestOutputFile();
         MergingReport mergingReport =
                 getBuilder()
@@ -84,7 +85,7 @@ public class ProcessManifest extends ManifestProcessorTask {
                                 getMinSdkVersion(),
                                 getTargetSdkVersion(),
                                 getMaxSdkVersion(),
-                                outputManifestFile.getAbsolutePath(),
+                                manifestOutputFile.getAbsolutePath(),
                                 aaptFriendlyManifestOutputFile.getAbsolutePath(),
                                 null /* outInstantRunManifestLocation */,
                                 ManifestMerger2.MergeType.LIBRARY,
@@ -105,7 +106,7 @@ public class ProcessManifest extends ManifestProcessorTask {
         splitScope.addOutputForSplit(
                 TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS,
                 splitScope.getMainSplit(),
-                outputManifestFile,
+                manifestOutputFile,
                 properties);
         splitScope.addOutputForSplit(
                 TaskOutputHolder.TaskOutputType.AAPT_FRIENDLY_MERGED_MANIFESTS,
@@ -121,24 +122,6 @@ public class ProcessManifest extends ManifestProcessorTask {
         } catch (IOException e) {
             throw new BuildException("Exception while saving build metadata : ", e);
         }
-    }
-
-    @NonNull
-    @Override
-    @Internal
-    public File getManifestOutputFile() {
-        Preconditions.checkNotNull(splitScope.getMainSplit());
-        return FileUtils.join(
-                getManifestOutputDirectory(),
-                splitScope.getMainSplit().getDirName(),
-                SdkConstants.ANDROID_MANIFEST_XML);
-    }
-
-    @Nullable
-    @Override
-    @Internal
-    public File getInstantRunManifestOutputFile() {
-        return null;
     }
 
     @Nullable
@@ -232,12 +215,19 @@ public class ProcessManifest extends ManifestProcessorTask {
         return serializeMap(variantConfiguration.getManifestPlaceholders());
     }
 
+    @OutputFile
+    public void setManifestOutputFile(File manifestOutputFile) {
+        this.manifestOutputFile = manifestOutputFile;
+    }
+
     public static class ConfigAction implements TaskConfigAction<ProcessManifest> {
 
-        private VariantScope scope;
+        private final VariantScope scope;
+        private final File libraryProcessedManifest;
 
-        public ConfigAction(VariantScope scope) {
+        public ConfigAction(VariantScope scope, File libraryProcessedManifest) {
             this.scope = scope;
+            this.libraryProcessedManifest = libraryProcessedManifest;
         }
 
         @NonNull
@@ -260,6 +250,7 @@ public class ProcessManifest extends ManifestProcessorTask {
 
             processManifest.setAndroidBuilder(androidBuilder);
             processManifest.setVariantName(config.getFullName());
+            processManifest.setManifestOutputFile(libraryProcessedManifest);
 
             processManifest.variantConfiguration = config;
 

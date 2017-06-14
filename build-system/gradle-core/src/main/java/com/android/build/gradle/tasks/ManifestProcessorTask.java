@@ -15,7 +15,6 @@
  */
 package com.android.build.gradle.tasks;
 
-import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.google.common.base.Joiner;
@@ -37,15 +36,6 @@ public abstract class ManifestProcessorTask extends IncrementalTask {
     private File aaptFriendlyManifestOutputDirectory;
 
     private File instantRunManifestOutputDirectory;
-
-    /** The processed Manifest. */
-    @NonNull
-    @Internal
-    public abstract File getManifestOutputFile();
-
-    @Nullable
-    @Internal
-    public abstract File getInstantRunManifestOutputFile();
 
     /**
      * The aapt friendly processed Manifest. In case we are processing a library manifest, some

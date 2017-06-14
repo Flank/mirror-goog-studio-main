@@ -685,8 +685,13 @@ public abstract class TaskManager {
             @NonNull TaskFactory tasks,
             @NonNull VariantScope scope) {
 
-        AndroidTask<ProcessManifest> processManifest = androidTasks.create(tasks,
-                new ProcessManifest.ConfigAction(scope));
+        // for library, there is only one manifest (no split).
+        File libraryProcessedManifest =
+                new File(scope.getManifestOutputDirectory(), FN_ANDROID_MANIFEST_XML);
+
+        AndroidTask<ProcessManifest> processManifest =
+                androidTasks.create(
+                        tasks, new ProcessManifest.ConfigAction(scope, libraryProcessedManifest));
 
         final String taskName = processManifest.getName();
 
@@ -700,11 +705,9 @@ public abstract class TaskManager {
                 scope.getAaptFriendlyManifestOutputDirectory(),
                 taskName);
 
-        // add an output for the manifest file itself, inside the output folder.
-        // In case of a library there should be only one manifest anyway (no split).
         scope.addTaskOutput(
                 TaskOutputHolder.TaskOutputType.LIBRARY_MANIFEST,
-                new File(scope.getManifestOutputDirectory(), FN_ANDROID_MANIFEST_XML),
+                libraryProcessedManifest,
                 taskName);
 
         processManifest.dependsOn(tasks, scope.getCheckManifestTask());
