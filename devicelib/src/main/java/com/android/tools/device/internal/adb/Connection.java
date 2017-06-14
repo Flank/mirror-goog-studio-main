@@ -17,7 +17,7 @@
 package com.android.tools.device.internal.adb;
 
 import com.android.annotations.NonNull;
-import com.android.tools.device.internal.adb.commands.CommandBuffer;
+import com.android.tools.device.internal.adb.commands.AdbCommand;
 import com.android.tools.device.internal.adb.commands.CommandResult;
 import com.google.common.primitives.UnsignedInteger;
 import java.io.Closeable;
@@ -27,10 +27,10 @@ import java.io.IOException;
 public interface Connection extends Closeable {
     /** Returns the result of issuing the given command to the server endpoint. */
     @NonNull
-    CommandResult executeCommand(@NonNull CommandBuffer buffer) throws IOException;
+    CommandResult executeCommand(@NonNull AdbCommand command) throws IOException;
 
     /** Issues a command that doesn't result in a result. */
-    void issueCommand(@NonNull CommandBuffer buffer) throws IOException;
+    void issueCommand(@NonNull AdbCommand command) throws IOException;
 
     /**
      * Returns an integer formed by reading 4 bytes of data from the response and interpreting it as

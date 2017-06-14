@@ -22,11 +22,24 @@ import com.google.common.primitives.UnsignedInteger;
 import java.io.IOException;
 
 public class ServerVersion implements AdbCommand<UnsignedInteger> {
+    private static final String COMMAND = "version";
+
+    @NonNull
+    @Override
+    public String getName() {
+        return COMMAND;
+    }
+
+    @NonNull
+    @Override
+    public String getQuery() {
+        return HOST_COMMAND_PREFIX + COMMAND;
+    }
+
     @NonNull
     @Override
     public UnsignedInteger execute(@NonNull Connection conn) throws IOException {
-        CommandBuffer buffer = new CommandBuffer().writeHostCommand(HostService.VERSION);
-        CommandResult result = conn.executeCommand(buffer);
+        CommandResult result = conn.executeCommand(this);
 
         if (result.isOk()) {
             UnsignedInteger len = conn.readUnsignedHexInt();
@@ -39,11 +52,5 @@ public class ServerVersion implements AdbCommand<UnsignedInteger> {
             }
             throw new IOException(error);
         }
-    }
-
-    @NonNull
-    @Override
-    public String getName() {
-        return HostService.VERSION.toString();
     }
 }

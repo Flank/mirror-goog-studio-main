@@ -21,7 +21,6 @@ import com.android.tools.device.internal.adb.ChannelConnection
 import com.android.tools.device.internal.adb.DeviceHandle
 import com.android.tools.device.internal.adb.PipeAdbServer
 import com.google.common.base.Charsets
-import com.google.common.primitives.Bytes
 import com.google.common.truth.Truth.assertThat
 import com.google.common.util.concurrent.Uninterruptibles
 import org.junit.After

@@ -31,6 +31,8 @@ import java.util.stream.Collectors;
  * whenever there is output for this command. This command needs to be canceled via {@link #cancel}.
  */
 public class TrackDevices implements AdbCommand<Void> {
+    private static final String COMMAND = "track-devices";
+
     private final DeviceListChangeListener listener;
     private final ExecutorService executor;
 
@@ -45,7 +47,13 @@ public class TrackDevices implements AdbCommand<Void> {
     @NonNull
     @Override
     public String getName() {
-        return HostService.TRACK_DEVICES.toString();
+        return COMMAND;
+    }
+
+    @NonNull
+    @Override
+    public String getQuery() {
+        return HOST_COMMAND_PREFIX + COMMAND;
     }
 
     @NonNull
@@ -53,9 +61,7 @@ public class TrackDevices implements AdbCommand<Void> {
     public Void execute(@NonNull Connection conn) throws IOException {
         connection = conn;
 
-        CommandBuffer buffer = new CommandBuffer().writeHostCommand(HostService.TRACK_DEVICES);
-        CommandResult result = conn.executeCommand(buffer);
-
+        CommandResult result = conn.executeCommand(this);
         if (!result.isOk()) {
             String msg = "Error connecting to adb server to track devices";
             String error = result.getError();

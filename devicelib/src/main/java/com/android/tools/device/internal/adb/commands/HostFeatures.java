@@ -26,19 +26,25 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class HostFeatures implements AdbCommand<Set<AdbFeature>> {
+    private static final String COMMAND = "host-features";
     private static final String FEATURE_DELIMITER = ",";
 
     @NonNull
     @Override
     public String getName() {
-        return HostService.FEATURES.toString();
+        return COMMAND;
+    }
+
+    @NonNull
+    @Override
+    public String getQuery() {
+        return HOST_COMMAND_PREFIX + COMMAND;
     }
 
     @NonNull
     @Override
     public Set<AdbFeature> execute(@NonNull Connection conn) throws IOException {
-        CommandBuffer buffer = new CommandBuffer().writeHostCommand(HostService.FEATURES);
-        CommandResult result = conn.executeCommand(buffer);
+        CommandResult result = conn.executeCommand(this);
 
         if (!result.isOk()) {
             String msg = "Error retrieving feature set";

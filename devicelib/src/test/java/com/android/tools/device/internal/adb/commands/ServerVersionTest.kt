@@ -16,8 +16,8 @@
 
 package com.android.tools.device.internal.adb.commands
 
-import com.android.tools.device.internal.adb.PipeAdbServer
 import com.android.tools.device.internal.adb.ChannelConnection
+import com.android.tools.device.internal.adb.PipeAdbServer
 import com.google.common.base.Charsets
 import com.google.common.primitives.UnsignedInteger
 import com.google.common.truth.Truth.assertThat

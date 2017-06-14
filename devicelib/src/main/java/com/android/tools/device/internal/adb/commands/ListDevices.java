@@ -26,21 +26,28 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * {@link ListDevices} is equivalent to "adb devices -l" command. It issues the "devices -l"
- * command to the adb server and returns the data returned parsed into {@link DeviceHandle}s.
+ * {@link ListDevices} is equivalent to "adb devices -l" command. It issues the "devices -l" command
+ * to the adb server and returns the data returned parsed into {@link DeviceHandle}s.
  */
 public class ListDevices implements AdbCommand<List<DeviceHandle>> {
+    private static final String COMMAND = "devices-l";
+
     @NonNull
     @Override
     public String getName() {
-        return HostService.DEVICES.toString();
+        return COMMAND;
+    }
+
+    @NonNull
+    @Override
+    public String getQuery() {
+        return HOST_COMMAND_PREFIX + COMMAND;
     }
 
     @NonNull
     @Override
     public List<DeviceHandle> execute(@NonNull Connection conn) throws IOException {
-        CommandBuffer buffer = new CommandBuffer().writeHostCommand(HostService.DEVICES);
-        CommandResult result = conn.executeCommand(buffer);
+        CommandResult result = conn.executeCommand(this);
 
         if (!result.isOk()) {
             String msg = "Error retrieving device list";

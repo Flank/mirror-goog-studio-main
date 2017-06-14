@@ -33,8 +33,8 @@ import static org.mockito.Mockito.when;
 
 import com.android.testutils.VirtualTimeScheduler;
 import com.android.tools.device.internal.adb.commands.AdbCommand;
+import com.android.tools.device.internal.adb.commands.KillServer;
 import com.android.tools.device.internal.adb.commands.ServerVersion;
-import com.google.common.base.Charsets;
 import com.google.common.primitives.UnsignedInteger;
 import com.google.common.util.concurrent.Service;
 import java.io.IOException;
@@ -153,12 +153,7 @@ public class AdbServerServiceTest {
 
         // verify interactions during termination
         assertThat(adbService.state()).isEqualTo(Service.State.TERMINATED);
-        verify(connection, times(1))
-                .issueCommand(
-                        argThat(
-                                cb ->
-                                        new String(cb.toByteArray(), Charsets.UTF_8)
-                                                .contains("host:kill")));
+        verify(connection, times(1)).issueCommand(argThat(cmd -> cmd instanceof KillServer));
     }
 
     @Test
