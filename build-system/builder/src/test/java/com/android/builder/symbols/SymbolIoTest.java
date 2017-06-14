@@ -24,8 +24,10 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.io.Files;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.function.Supplier;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -107,16 +109,9 @@ public class SymbolIoTest {
         assertEquals(original, copy);
     }
 
-    private void checkRGeneration(
-            @NonNull String expected,
-            @NonNull Path path,
-            @NonNull SymbolTable table,
-            boolean finalIds)
-            throws Exception {
-        File directory = mTemporaryFolder.newFolder();
-
-        SymbolIo.exportToJava(table, directory, finalIds);
-        File result = directory.toPath().resolve(path).toFile();
+    private static void checkFileGeneration(
+            @NonNull String expected, @NonNull Supplier<File> generator) throws Exception {
+        File result = generator.get();
         assertTrue(result.isFile());
 
         String contents = Joiner.on(" ").join(Files.readLines(result, Charsets.US_ASCII));
@@ -125,6 +120,28 @@ public class SymbolIoTest {
         String contentsNormalized = contents.replaceAll("\\s+", " ");
 
         assertEquals(expectedNormalized, contentsNormalized);
+    }
+
+    private void checkRGeneration(
+            @NonNull String expected,
+            @NonNull Path path,
+            @NonNull SymbolTable table,
+            boolean finalIds)
+            throws Exception {
+        checkFileGeneration(
+                expected,
+                () -> {
+                    File directory;
+                    try {
+                        directory = mTemporaryFolder.newFolder();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        return null;
+                    }
+
+                    SymbolIo.exportToJava(table, directory, finalIds);
+                    return directory.toPath().resolve(path).toFile();
+                });
     }
 
     @Test
@@ -366,5 +383,95 @@ public class SymbolIoTest {
                 Paths.get("test", "pkg", "R.java"),
                 table,
                 true);
+    }
+
+    @Test
+    public void writeRTxtGeneration() throws Exception {
+        SymbolTable table =
+                SymbolTable.builder()
+                        .add(
+                                SymbolTestUtils.createSymbol(
+                                        "styleable",
+                                        "LimitedSizeLinearLayout",
+                                        "int[]",
+                                        "{ 0x7f010000, 0x7f010001 }"))
+                        .add(
+                                SymbolTestUtils.createSymbol(
+                                        "string", "app_name", "int", "0x7f030000"))
+                        .add(SymbolTestUtils.createSymbol("string", "lib1", "int", "0x7f030001"))
+                        .add(
+                                SymbolTestUtils.createSymbol(
+                                        "style", "AppBaseTheme", "int", "0x7f040000"))
+                        .add(SymbolTestUtils.createSymbol("style", "AppTheme", "int", "0x7f040001"))
+                        .add(
+                                SymbolTestUtils.createSymbol(
+                                        "drawable", "foobar", "int", "0x7f020000"))
+                        .add(
+                                SymbolTestUtils.createSymbol(
+                                        "styleable", "TiledView_tileName", "int", "2"))
+                        .add(
+                                SymbolTestUtils.createSymbol(
+                                        "styleable", "TiledView_tilingEnum", "int", "4"))
+                        .add(
+                                SymbolTestUtils.createSymbol(
+                                        "styleable",
+                                        "LimitedSizeLinearLayout_max_height",
+                                        "int",
+                                        "1"))
+                        .add(
+                                SymbolTestUtils.createSymbol(
+                                        "styleable", "TiledView_tilingMode", "int", "3"))
+                        .add(
+                                SymbolTestUtils.createSymbol(
+                                        "styleable", "TiledView_tilingProperty", "int", "0"))
+                        .add(
+                                SymbolTestUtils.createSymbol(
+                                        "styleable", "TiledView_tilingResource", "int", "1"))
+                        .add(
+                                SymbolTestUtils.createSymbol(
+                                        "styleable",
+                                        "TiledView",
+                                        "int[]",
+                                        "{ 0x7f010000, 0x7f010001, 0x7f010002, "
+                                                + "0x7f010003, 0x7f010004 }"))
+                        .add(
+                                SymbolTestUtils.createSymbol(
+                                        "styleable",
+                                        "LimitedSizeLinearLayout_max_width",
+                                        "int",
+                                        "0"))
+                        .add(
+                                SymbolTestUtils.createSymbol(
+                                        "drawable", "ic_launcher", "int", "0x7f020001"))
+                        .build();
+
+        String original =
+                ""
+                        + "int drawable foobar 0x7f020000 "
+                        + "int drawable ic_launcher 0x7f020001 "
+                        + "int string app_name 0x7f030000 "
+                        + "int string lib1 0x7f030001 "
+                        + "int style AppBaseTheme 0x7f040000 "
+                        + "int style AppTheme 0x7f040001 "
+                        + "int[] styleable LimitedSizeLinearLayout { 0x7f010000, 0x7f010001 } "
+                        + "int styleable LimitedSizeLinearLayout_max_height 1 "
+                        + "int styleable LimitedSizeLinearLayout_max_width 0 "
+                        + "int[] styleable TiledView { 0x7f010000, 0x7f010001, 0x7f010002, 0x7f010003, 0x7f010004 } "
+                        + "int styleable TiledView_tileName 2 int styleable TiledView_tilingEnum 4 "
+                        + "int styleable TiledView_tilingMode 3 int styleable TiledView_tilingProperty 0 "
+                        + "int styleable TiledView_tilingResource 1";
+        checkFileGeneration(
+                original,
+                () -> {
+                    File f;
+                    try {
+                        f = mTemporaryFolder.newFile();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        return null;
+                    }
+                    SymbolIo.write(table, f);
+                    return f;
+                });
     }
 }
