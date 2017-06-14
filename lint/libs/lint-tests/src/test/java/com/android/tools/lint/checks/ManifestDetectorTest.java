@@ -196,39 +196,41 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                 + "0 errors, 1 warnings\n";
         //noinspection all // Sample code
         lint().files(
-                manifest(""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                        + "    package=\"test.bytecode\"\n"
-                        + "    android:versionCode=\"1\"\n"
-                        + "    android:versionName=\"1.0\" >\n"
-                        + "\n"
-                        + "    <uses-sdk android:minSdkVersion=\"10\" android:targetSdkVersion=\"14\" />\n"
-                        + "\n"
-                        + "    <application\n"
-                        + "        android:icon=\"@drawable/ic_launcher\"\n"
-                        + "        android:label=\"@string/app_name\" >\n"
-                        + "        <activity\n"
-                        + "            android:name=\".BytecodeTestsActivity\"\n"
-                        + "            android:label=\"@string/app_name\" >\n"
-                        + "            <intent-filter>\n"
-                        + "                <action android:name=\"android.intent.action.MAIN\" />\n"
-                        + "\n"
-                        + "                <category android:name=\"android.intent.category.LAUNCHER\" />\n"
-                        + "            </intent-filter>\n"
-                        + "        </activity>\n"
-                        + "    </application>\n"
-                        + "\n"
-                        + "</manifest>\n"),
-                mStrings)
+                        manifest(
+                                ""
+                                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                        + "    package=\"test.bytecode\"\n"
+                                        + "    android:versionCode=\"1\"\n"
+                                        + "    android:versionName=\"1.0\" >\n"
+                                        + "\n"
+                                        + "    <uses-sdk android:minSdkVersion=\"10\" android:targetSdkVersion=\"14\" />\n"
+                                        + "\n"
+                                        + "    <application\n"
+                                        + "        android:icon=\"@drawable/ic_launcher\"\n"
+                                        + "        android:label=\"@string/app_name\" >\n"
+                                        + "        <activity\n"
+                                        + "            android:name=\".BytecodeTestsActivity\"\n"
+                                        + "            android:label=\"@string/app_name\" >\n"
+                                        + "            <intent-filter>\n"
+                                        + "                <action android:name=\"android.intent.action.MAIN\" />\n"
+                                        + "\n"
+                                        + "                <category android:name=\"android.intent.category.LAUNCHER\" />\n"
+                                        + "            </intent-filter>\n"
+                                        + "        </activity>\n"
+                                        + "    </application>\n"
+                                        + "\n"
+                                        + "</manifest>\n"),
+                        mStrings)
                 .issues(ManifestDetector.TARGET_NEWER)
                 .run()
                 .expect(expected)
-                .expectFixDiffs(""
-                        + "Fix for AndroidManifest.xml line 6: Update targetSdkVersion to 25:\n"
-                        + "@@ -7 +7\n"
-                        + "-     <uses-sdk android:minSdkVersion=\"10\" android:targetSdkVersion=\"14\" />\n"
-                        + "+     <uses-sdk android:minSdkVersion=\"10\" android:targetSdkVersion=\"25\" />\n");
+                .expectFixDiffs(
+                        ""
+                                + "Fix for AndroidManifest.xml line 6: Update targetSdkVersion to 26:\n"
+                                + "@@ -7 +7\n"
+                                + "-     <uses-sdk android:minSdkVersion=\"10\" android:targetSdkVersion=\"14\" />\n"
+                                + "+     <uses-sdk android:minSdkVersion=\"10\" android:targetSdkVersion=\"26\" />\n");
     }
 
     public void testMultipleSdk() throws Exception {
