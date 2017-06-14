@@ -904,7 +904,7 @@ class LintDriver
         currentProject = project
 
         for (check in applicableDetectors) {
-            check.afterCheckProject(projectContext)
+            client.runReadAction(Runnable { check.afterCheckProject(projectContext) })
             if (isCanceled) {
                 return
             }
