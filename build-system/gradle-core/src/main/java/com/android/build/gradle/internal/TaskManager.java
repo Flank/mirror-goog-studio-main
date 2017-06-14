@@ -1068,8 +1068,6 @@ public abstract class TaskManager {
 
         scope.setProcessResourcesTask(processAndroidResources);
 
-        // FIX ME : replace with FileCollection
-        processAndroidResources.dependsOn(tasks, scope.getMergeResourcesTask());
         if (scope.getDataBindingProcessLayoutsTask() != null) {
             processAndroidResources.dependsOn(
                     tasks, scope.getDataBindingProcessLayoutsTask().getName());
