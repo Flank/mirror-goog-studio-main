@@ -16,26 +16,25 @@
 
 package com.android.ide.common.vectordrawable;
 
+import static com.android.ide.common.vectordrawable.Svg2Vector.SVG_FILL_OPACITY;
+import static com.android.ide.common.vectordrawable.Svg2Vector.SVG_OPACITY;
+import static com.android.ide.common.vectordrawable.Svg2Vector.SVG_STROKE_OPACITY;
+
 import com.android.annotations.Nullable;
 import com.google.common.collect.ImmutableMap;
-import org.w3c.dom.Node;
-
 import java.awt.geom.AffineTransform;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.text.DecimalFormat;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import static com.android.ide.common.vectordrawable.Svg2Vector.SVG_FILL_OPACITY;
-import static com.android.ide.common.vectordrawable.Svg2Vector.SVG_OPACITY;
-import static com.android.ide.common.vectordrawable.Svg2Vector.SVG_STROKE_OPACITY;
+import org.w3c.dom.Node;
 
 /**
  * Represent a SVG file's leave element.
  */
 class SvgLeafNode extends SvgNode {
-    private static Logger logger = Logger.getLogger(SvgLeafNode.class.getSimpleName());
+    private static final Logger logger = Logger.getLogger(SvgLeafNode.class.getSimpleName());
 
     private String mPathData;
 
@@ -214,10 +213,14 @@ class SvgLeafNode extends SvgNode {
                 vdValue = vdValue.substring(0, vdValue.length() - 2);
             } else if (vdValue.startsWith("rgb")) {
                 vdValue = vdValue.substring(3, vdValue.length());
+                String vdValueRGB = vdValue;
                 vdValue = convertRGBToHex(vdValue);
                 if (vdValue == null) {
-                    getTree().logErrorLine("Unsupported Color format " + vdValue, getDocumentNode(),
-                                           SvgTree.SvgLogLevel.ERROR);
+                    getTree()
+                            .logErrorLine(
+                                    "Unsupported Color format " + vdValueRGB,
+                                    getDocumentNode(),
+                                    SvgTree.SvgLogLevel.ERROR);
                 }
             } else if (colorMap.containsKey(vdValue.toLowerCase())) {
                 vdValue = colorMap.get(vdValue.toLowerCase());
@@ -271,9 +274,9 @@ class SvgLeafNode extends SvgNode {
     }
 
     /**
-     * SVG allows using rgb(int, int, int) or rgb(float%, float%, float%) to
-     * represent a color, but Android doesn't. Therefore, we need to convert
-     * them into #RRGGBB format.
+     * SVG allows using rgb(int, int, int) or rgb(float%, float%, float%) to represent a color, but
+     * Android doesn't. Therefore, we need to convert them into #RRGGBB format.
+     *
      * @param svgValue in either "(int, int, int)" or "(float%, float%, float%)"
      * @return #RRGGBB in hex format, or null, if an error is found.
      */
@@ -281,7 +284,7 @@ class SvgLeafNode extends SvgNode {
     private String convertRGBToHex(String svgValue) {
         // We don't support color keyword yet.
         // http://www.w3.org/TR/SVG11/types.html#ColorKeywords
-        String result = null;
+        String result;
         String functionValue = svgValue.trim();
         functionValue = svgValue.substring(1, functionValue.length() - 1);
         // After we cut the "(", ")", we can deal with the numbers.
@@ -349,18 +352,18 @@ class SvgLeafNode extends SvgNode {
         float minSize = Math.min(viewportHeight, viewportWidth);
         float exponent = Math.round(Math.log10(minSize));
         int decimalPlace = (int) Math.floor(exponent - 4);
-        String decimalFormatString = "#";
+        StringBuilder decimalFormatStringBuilder = new StringBuilder("#");
         if (decimalPlace < 0) {
             // Build a string with decimal places for "#.##...", and cap on 6 digits.
             if (decimalPlace < -6) {
                 decimalPlace = -6;
             }
-            decimalFormatString += ".";
+            decimalFormatStringBuilder.append('.');
             for (int i = 0 ; i < -decimalPlace; i++) {
-                decimalFormatString += "#";
+                decimalFormatStringBuilder.append('#');
             }
         }
-        return decimalFormatString;
+        return decimalFormatStringBuilder.toString();
     }
 
     @Override
@@ -406,6 +409,13 @@ class SvgLeafNode extends SvgNode {
     }
 
     public void fillPresentationAttributes(String name, String value) {
+        if (name.equals("fill-rule")) {
+            if (value.equals("nonzero")) {
+                value = "nonZero";
+            } else if (value.equals("evenodd")) {
+                value = "evenOdd";
+            }
+        }
         fillPresentationAttributes(name, value, logger);
     }
 }
