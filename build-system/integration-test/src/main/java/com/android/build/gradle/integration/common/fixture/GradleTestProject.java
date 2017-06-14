@@ -33,6 +33,7 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.model.AndroidProject;
 import com.android.io.StreamException;
+import com.android.sdklib.SdkVersionInfo;
 import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.internal.project.ProjectPropertiesWorkingCopy;
 import com.android.testutils.OsType;
@@ -186,7 +187,10 @@ public final class GradleTestProject implements TestRule {
 
             String envCustomCompileSdk =
                     Strings.emptyToNull(System.getenv().get("CUSTOM_COMPILE_SDK"));
-            DEFAULT_COMPILE_SDK_VERSION = MoreObjects.firstNonNull(envCustomCompileSdk, "24");
+            DEFAULT_COMPILE_SDK_VERSION =
+                    MoreObjects.firstNonNull(
+                            envCustomCompileSdk,
+                            Integer.toString(SdkVersionInfo.HIGHEST_KNOWN_STABLE_API));
 
             String envCustomAndroidHome =
                     Strings.emptyToNull(System.getenv().get("CUSTOM_ANDROID_HOME"));
