@@ -150,7 +150,7 @@ filegroup(
 
 filegroup(
     name = "platforms/latest",
-    srcs = [":platforms/android-25"],
+    srcs = [":platforms/android-26"],
     visibility = ["//visibility:public"],
 )
 
@@ -162,7 +162,7 @@ filegroup(
 
 java_import(
     name = "platforms/latest_jar",
-    jars = glob(["*/platforms/android-25/android.jar"]),
+    jars = glob(["*/platforms/android-26/android.jar"]),
     neverlink = 1,
     visibility = [
         "//tools/base/build-system/instant-run-instrumentation:__pkg__",
@@ -177,13 +177,8 @@ filegroup(
 )
 
 # Version-specific rule left private in hopes we can depend on platforms/latest instead.
-# TODO: Migrate the packages below that depend on specific versions.
 platform_filegroup(
     name = "platforms/android-26",
-)
-
-platform_filegroup(
-    name = "platforms/android-25",
 )
 
 platform_filegroup(
