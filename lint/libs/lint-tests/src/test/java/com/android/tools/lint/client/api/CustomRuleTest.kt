@@ -23,12 +23,14 @@ import com.android.tools.lint.checks.infrastructure.TestLintClient
 import com.android.tools.lint.checks.infrastructure.TestLintTask.lint
 import com.android.tools.lint.detector.api.Project
 import org.junit.ClassRule
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
 
 class CustomRuleTest {
 
+    @Ignore("bug: 62636843")
     @Test
     fun testProjectLintJar() {
         val expected = "" +
@@ -65,6 +67,7 @@ class CustomRuleTest {
                 }).customRules(lintJar!!).allowMissingSdk().run().expect(expected)
     }
 
+    @Ignore("bug: 62636843")
     @Test
     fun testGlobalLintJar() {
         val expected = "" +
