@@ -51,8 +51,10 @@ developer believes the text to be functional)""",
                 3,
                 Severity.WARNING,
                 Implementation(
-                        ExtraTextDetector::class.java,
-                        Scope.RESOURCE_FILE_SCOPE)
+                    ExtraTextDetector::class.java,
+                    Scope.MANIFEST_AND_RESOURCE_SCOPE,
+                    Scope.RESOURCE_FILE_SCOPE,
+                    Scope.MANIFEST_SCOPE)
         )
     }
 
