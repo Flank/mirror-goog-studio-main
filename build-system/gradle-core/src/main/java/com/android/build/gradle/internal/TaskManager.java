@@ -2092,7 +2092,10 @@ public abstract class TaskManager {
                             minSdk.getFeatureLevel(),
                             androidBuilder.getJavaProcessExecutor(),
                             globalScope.getJava8LangSupportJar(),
-                            project.getLogger().isEnabled(LogLevel.INFO));
+                            project.getLogger().isEnabled(LogLevel.INFO),
+                            globalScope
+                                    .getProjectOptions()
+                                    .get(BooleanOption.ENABLE_GRADLE_WORKERS));
             transformManager.addTransform(tasks, variantScope, desugarTransform);
 
             if (minSdk.getFeatureLevel()
