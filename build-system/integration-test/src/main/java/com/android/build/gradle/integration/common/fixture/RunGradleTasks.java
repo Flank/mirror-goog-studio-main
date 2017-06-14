@@ -53,6 +53,7 @@ import org.gradle.tooling.events.ProgressListener;
 /** A Gradle tooling api build builder. */
 public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
 
+    public static final int RETRY_COUNT = 5;
     @Nullable private final String buildToolsVersion;
 
     private boolean isExpectingFailure = false;
@@ -147,53 +148,77 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
             args.add("-PCUSTOM_BUILDTOOLS=" + buildToolsVersion);
         }
 
-        ByteArrayOutputStream stdout = new ByteArrayOutputStream();
-        ByteArrayOutputStream stderr = new ByteArrayOutputStream();
-        String message =
-                "[GradleTestProject "
-                        + projectDirectory
-                        + "] Executing tasks: \ngradle "
-                        + Joiner.on(' ').join(args)
-                        + " "
-                        + Joiner.on(' ').join(tasksList)
-                        + "\n\n";
-        stdout.write(message.getBytes());
+        int attempt = 0;
+        while (true) {
+            ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+            ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+            String message =
+                    "[GradleTestProject "
+                            + projectDirectory
+                            + "] Executing tasks: \ngradle "
+                            + Joiner.on(' ').join(args)
+                            + " "
+                            + Joiner.on(' ').join(tasksList)
+                            + "\n\n";
+            stdout.write(message.getBytes());
 
-        BuildLauncher launcher =
-                projectConnection.newBuild().forTasks(Iterables.toArray(tasksList, String.class));
+            BuildLauncher launcher =
+                    projectConnection
+                            .newBuild()
+                            .forTasks(Iterables.toArray(tasksList, String.class));
 
-        setJvmArguments(launcher);
-        setStandardOut(launcher, stdout);
-        setStandardError(launcher, stderr);
+            setJvmArguments(launcher);
+            setStandardOut(launcher, stdout);
+            setStandardError(launcher, stderr);
 
-        CollectingProgressListener progressListener = new CollectingProgressListener();
+            CollectingProgressListener progressListener = new CollectingProgressListener();
 
-        launcher.addProgressListener(progressListener, OperationType.TASK);
+            launcher.addProgressListener(progressListener, OperationType.TASK);
 
-        ProfileCapturer profiler =
-                new ProfileCapturer(benchmarkRecorder, benchmarkMode, profilesDirectory);
-        launcher.withArguments(Iterables.toArray(args, String.class));
-        WaitingResultHandler handler = new WaitingResultHandler();
-        launcher.run(handler);
-        GradleConnectionException failure = handler.waitForResult();
-        GradleBuildResult result =
-                new GradleBuildResult(stdout, stderr, progressListener.getEvents(), failure);
-        lastBuildResultConsumer.accept(result);
-        if (isExpectingFailure && failure == null) {
-            throw new AssertionError("Expecting build to fail");
-        } else if (!isExpectingFailure && failure != null) {
-            throw failure;
+            ProfileCapturer profiler =
+                    new ProfileCapturer(benchmarkRecorder, benchmarkMode, profilesDirectory);
+            launcher.withArguments(Iterables.toArray(args, String.class));
+
+            WaitingResultHandler handler = new WaitingResultHandler();
+            launcher.run(handler);
+            GradleConnectionException failure = handler.waitForResult();
+
+            if (failure != null && !isExpectingFailure) {
+                Throwable cause = failure.getCause();
+                if (cause != null) {
+                    if (cause.getClass()
+                            .getName()
+                            .equals(
+                                    "org.gradle.launcher.daemon.client.DaemonDisappearedException")) {
+                        if (attempt++ < RETRY_COUNT) {
+                            // Start the loop from scratch.
+                            continue;
+                        } else {
+                            throw failure;
+                        }
+                    }
+                }
+            }
+
+            GradleBuildResult result =
+                    new GradleBuildResult(stdout, stderr, progressListener.getEvents(), failure);
+            lastBuildResultConsumer.accept(result);
+            if (isExpectingFailure && failure == null) {
+                throw new AssertionError("Expecting build to fail");
+            } else if (!isExpectingFailure && failure != null) {
+                throw failure;
+            }
+            if (!allowStderr && !result.getStderr().isEmpty()) {
+                throw new AssertionError("Unexpected stderr: " + stderr);
+            }
+            profiler.recordProfile();
+
+            return result;
         }
-        if (!allowStderr && !result.getStderr().isEmpty()) {
-            throw new AssertionError("Unexpected stderr: " + stderr);
-        }
-        profiler.recordProfile();
-
-        return result;
     }
 
     private static class CollectingProgressListener implements ProgressListener {
-        ConcurrentLinkedQueue<ProgressEvent> events;
+        final ConcurrentLinkedQueue<ProgressEvent> events;
 
         private CollectingProgressListener() {
             events = new ConcurrentLinkedQueue<>();
@@ -238,6 +263,7 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
      * {@code true}. To run AAPT2 without new resource processing, after this method also call
      * {@link #withNewResourceProcessing(boolean)} with the {@code false} parameter.
      */
+    @SuppressWarnings("deprecation") // AAPT_V2 should not be used, but if it is, we handle it.
     public RunGradleTasks with(@NonNull AaptGeneration aaptGeneration) {
         switch (aaptGeneration) {
             case AAPT_V1:
