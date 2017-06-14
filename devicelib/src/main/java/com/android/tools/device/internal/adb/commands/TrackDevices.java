@@ -63,7 +63,7 @@ public class TrackDevices implements AdbCommand<Void> {
                 msg += ": " + error;
             }
 
-            Logger.getLogger(TrackDevices.class.getName()).severe(msg);
+            Logger.getLogger(TrackDevices.class.getName()).fine(msg);
             throw new IOException(msg);
         }
 

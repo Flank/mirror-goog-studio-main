@@ -18,6 +18,7 @@ package com.android.tools.device.internal.adb;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.tools.device.internal.OsProcessRunner;
+import com.android.tools.device.internal.adb.commands.HostFeatures;
 import com.android.tools.device.internal.adb.commands.ServerVersion;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.UnsignedInteger;
@@ -26,6 +27,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.ServerSocket;
 import java.util.Locale;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -54,6 +56,7 @@ import org.junit.rules.TemporaryFolder;
 public class AdbServerServiceIntegrationTest {
     private static ConsoleHandler handler;
     private ExecutorService executor;
+    private AdbServerService service;
 
     // When run under a sandboxed environment, $HOME may not exist. adb however relies on $HOME
     // being present and valid. So we explicitly set $HOME to some temporary folder
@@ -107,18 +110,9 @@ public class AdbServerServiceIntegrationTest {
     }
 
     @Before
-    public void setUp() {
+    public void setUp() throws IOException {
         executor = Executors.newCachedThreadPool();
-    }
 
-    @After
-    public void tearDown() {
-        executor.shutdownNow();
-    }
-
-    @Test
-    public void launchServer()
-            throws InterruptedException, ExecutionException, TimeoutException, IOException {
         AdbServerOptions options =
                 new AdbServerOptions(getFreePort(), AdbConstants.DEFAULT_HOST, true);
         Launcher launcher =
@@ -126,15 +120,26 @@ public class AdbServerServiceIntegrationTest {
                         AdbTestUtils.getPathToAdb(),
                         new OsProcessRunner(executor),
                         ImmutableMap.of("HOME", temporaryHome.getRoot().getAbsolutePath()));
-        AdbServerService service =
-                new AdbServerService(options, launcher, new SocketProbe(), executor);
+        service = new AdbServerService(options, launcher, new SocketProbe(), executor);
 
         service.startAsync().awaitRunning();
+    }
 
+    @After
+    public void tearDown() {
+        service.stopAsync().awaitTerminated();
+        executor.shutdownNow();
+    }
+
+    @Test
+    public void launchServer()
+            throws InterruptedException, ExecutionException, TimeoutException, IOException {
         CompletableFuture<UnsignedInteger> future = service.execute(new ServerVersion());
         assertThat(future.get()).isGreaterThan(UnsignedInteger.valueOf(30));
 
-        service.stopAsync().awaitTerminated();
+        CompletableFuture<Set<AdbFeature>> hostFeatures = service.execute(new HostFeatures());
+        assertThat(hostFeatures.get()).isNotEmpty();
+        assertThat(hostFeatures.get()).doesNotContain(AdbFeature.UNKNOWN);
     }
 
     private static int getFreePort() throws IOException {

@@ -29,7 +29,8 @@ public enum HostService {
     VERSION("host:version"),
     KILL("host:kill"),
     DEVICES("host:devices-l"),
-    TRACK_DEVICES("host:track-devices");
+    TRACK_DEVICES("host:track-devices"),
+    FEATURES("host:host-features");
 
     private final String cmd;
 
