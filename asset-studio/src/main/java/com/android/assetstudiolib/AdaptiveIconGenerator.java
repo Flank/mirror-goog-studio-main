@@ -318,6 +318,7 @@ public class AdaptiveIconGenerator extends GraphicGenerator {
         AdaptiveIconOptions xmlOptions = cloneOptions(options);
         xmlOptions.density = Density.ANYDPI;
         xmlOptions.generateWebIcon = false;
+        xmlOptions.iconFolderKind = IconFolderKind.MIPMAP_V26;
 
         tasks.add(
                 () -> {
