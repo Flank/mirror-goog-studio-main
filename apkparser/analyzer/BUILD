@@ -22,5 +22,6 @@ iml_module(
         "//tools/idea/.idea/libraries:truth[test]",
         "//tools/idea/.idea/libraries:jimfs[test]",
         "//tools/base/apkparser:studio.binary-resources[module]",
+        "//tools/base/sdk-common:studio.sdk-common[module]",
     ],
 )
