@@ -43,7 +43,7 @@ iml_module(
 
 filegroup(
     name = "gradle-distrib",
-    srcs = ["//tools/external/gradle:gradle-distrib-nightly"],
+    srcs = ["//tools/external/gradle:gradle-distrib-4.0"],
     visibility = ["//visibility:public"],
 )
 
@@ -56,7 +56,7 @@ java_library(
 
 java_import(
     name = "gradle-api",
-    jars = ["//tools/external/gradle:gradle-api-nightly"],
+    jars = ["//tools/external/gradle:gradle-api-4.0-jar"],
     visibility = ["//visibility:public"],
 )
 
