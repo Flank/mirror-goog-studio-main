@@ -99,6 +99,7 @@ public class LintDriverTest extends AbstractCheckTest {
     }
 
     public void testHasErrors() {
+        //noinspection all // Sample code
         Pair<JavaContext, Disposable> unit = LintUtilsTest
                 .parsePsi("package test.pkg;\nclass Foo {\n}\n");
         LintDriver driver = unit.getFirst().getDriver();

@@ -2778,15 +2778,15 @@ class LintDriver
             val sb = StringBuilder(100)
             sb.append("Unexpected failure during lint analysis of ")
             sb.append(context.file.name)
-            sb.append(" (this is a bug in lint or one of the libraries it depends on)\n")
-
+            sb.append(" (this is a bug in lint or one of the libraries it depends on)\n\n")
+            sb.append("`")
             sb.append(simpleClassName)
             sb.append(':')
             val stackTrace = e.stackTrace
             var count = 0
             for (frame in stackTrace) {
                 if (count > 0) {
-                    sb.append("<-")
+                    sb.append('\u2190') // Left arrow
                 }
 
                 val className = frame.className
@@ -2801,9 +2801,13 @@ class LintDriver
                     break
                 }
             }
-            val throwable: Throwable? = null // NOT "= e": this makes for very noisy logs
+            sb.append("`")
+            sb.append("\n\nYou can set environment variable `LINT_PRINT_STACKTRACE=true` to dump a " +
+                "full stacktrace to stdout.")
 
-            context.log(throwable, sb.toString())
+            val message = sb.toString()
+            context.report(IssueRegistry.LINT_ERROR, Location.create(context.file),
+                message)
 
             if (VALUE_TRUE == System.getenv("LINT_PRINT_STACKTRACE")) {
                 e.printStackTrace()

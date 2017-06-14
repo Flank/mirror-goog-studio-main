@@ -27,6 +27,7 @@ import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.resources.Density;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
 import com.android.tools.lint.client.api.Configuration;
+import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LintUtils;
@@ -647,8 +648,16 @@ public class MaterialHtmlReporter extends Reporter {
                                 && warning.location.getSecondary() == null) {
                             addedImage = addImage(url, warning.file, warning.location);
                         }
+
+                        String rawMessage = warning.message;
+
+                        // Improve formatting of exception stacktraces
+                        if (issue == IssueRegistry.LINT_ERROR && rawMessage.contains("\u2190")) {
+                            rawMessage = rawMessage.replace("\u2190", "\n\u2190");
+                        }
+
                         append("<span class=\"message\">");
-                        append(RAW.convertTo(warning.message, HTML));
+                        append(RAW.convertTo(rawMessage, HTML));
                         append("</span>");
                         if (addedImage) {
                             append("<br clear=\"right\"/>");
