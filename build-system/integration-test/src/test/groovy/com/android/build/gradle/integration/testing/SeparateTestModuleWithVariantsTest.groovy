@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.test
+package com.android.build.gradle.integration.testing
 
 import com.android.build.gradle.integration.common.category.DeviceTests
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.builder.model.TestedTargetVariant
+import com.google.common.collect.Iterables
 import groovy.transform.CompileStatic
 import org.junit.Before
 import org.junit.Rule
@@ -31,7 +32,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
  * Checking the manifest merging for the test modules.
  */
 @CompileStatic
-class SeparateTestModuleTest {
+class SeparateTestModuleWithVariantsTest {
     @Rule
     public GradleTestProject project = GradleTestProject.builder()
             .fromTestProject("separateTestModule")
@@ -96,9 +97,9 @@ android {
                         .get(":test").variants.first().getTestedTargetVariants()
 
         assertThat(toInstall).hasSize(1)
-        assertThat(toInstall.first().getTargetProjectPath()).isEqualTo(":app")
-        // FIXME we can't know the variant yet because it's not passed through the new dependency scheme.
-        //assertThat(toInstall.first().getTargetVariant()).isEqualTo("debug")
+        TestedTargetVariant testedVariant = Iterables.getOnlyElement(toInstall);
+        assertThat(testedVariant.getTargetProjectPath()).isEqualTo(":app")
+        assertThat(testedVariant.getTargetVariant()).isEqualTo("debug")
     }
 
     private void addInstrumentationToManifest(){

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,18 +14,16 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.test
+package com.android.build.gradle.integration.testing
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import groovy.transform.CompileStatic
-import org.gradle.api.tasks.StopExecutionException
 import org.junit.AfterClass
 import org.junit.ClassRule
 import org.junit.Test
 
 import static org.junit.Assert.assertTrue
 import static org.junit.Assert.fail
-
 /**
  * Regression test for a infinite loop error in DependencyManager when importing a project
  * with the same local name as the requester.

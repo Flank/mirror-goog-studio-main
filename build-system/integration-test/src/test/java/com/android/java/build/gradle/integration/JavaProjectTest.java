@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.java.build.gradle.integration;
+package com.android.java.build.gradle.integration;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
