@@ -29,10 +29,10 @@ public class IdProviderTest {
         assertThat(ResourceType.ATTR.ordinal()).isEqualTo(3);
 
         IdProvider provider = IdProvider.sequential();
-        assertThat(provider.next(ResourceType.ANIM)).isEqualTo(0x7f_01_0001);
-        assertThat(provider.next(ResourceType.ANIM)).isEqualTo(0x7f_01_0002);
-        assertThat(provider.next(ResourceType.ATTR)).isEqualTo(0x7f_04_0001);
-        assertThat(provider.next(ResourceType.ANIM)).isEqualTo(0x7f_01_0003);
-        assertThat(provider.next(ResourceType.ATTR)).isEqualTo(0x7f_04_0002);
+        assertThat(provider.next(ResourceType.ANIM)).isEqualTo("0x7f010001");
+        assertThat(provider.next(ResourceType.ANIM)).isEqualTo("0x7f010002");
+        assertThat(provider.next(ResourceType.ATTR)).isEqualTo("0x7f040001");
+        assertThat(provider.next(ResourceType.ANIM)).isEqualTo("0x7f010003");
+        assertThat(provider.next(ResourceType.ATTR)).isEqualTo("0x7f040002");
     }
 }

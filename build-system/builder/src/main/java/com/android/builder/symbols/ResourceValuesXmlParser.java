@@ -118,13 +118,13 @@ import org.w3c.dom.Node;
  * <pre>
  * class R {
  *     class attr {
- *         public static int def = 2;
- *         public static int ghi = 4;
+ *         public static int def = 0x7f040001;
+ *         public static int ghi = 0x7f040002;
  *     }
  *     class styleable {
- *         public static int[] abc = { 1, 3 };
- *         public static int abc_def = 1;
- *         public static int abc_ghi = 3;
+ *         public static int[] abc = { 0x7f040001, 0x7f040002 };
+ *         public static int abc_def = 0;
+ *         public static int abc_ghi = 1;
  *     }
  * }
  * </pre>
@@ -243,7 +243,7 @@ public final class ResourceValuesXmlParser {
                                 resourceType,
                                 name,
                                 SymbolJavaType.INT,
-                                Integer.toString(idProvider.next(resourceType))));
+                                idProvider.next(resourceType)));
                 break;
             case DECLARE_STYLEABLE:
                 // We also need to find all the attributes declared under declare styleable.
@@ -309,7 +309,7 @@ public final class ResourceValuesXmlParser {
 
             parseAttr(attrElement, idProvider, attrName, builder, enumSymbols);
 
-            String attrValue = Integer.toString(idProvider.next(ResourceType.STYLEABLE));
+            String attrValue = idProvider.next(ResourceType.STYLEABLE);
 
             Symbol newStyleable =
                     Symbol.createSymbol(
@@ -373,7 +373,7 @@ public final class ResourceValuesXmlParser {
                             SymbolUtils.canonicalizeValueResourceName(
                                     getMandatoryAttr(enumElement, "name")),
                             SymbolJavaType.INT,
-                            Integer.toString(idProvider.next(ResourceType.ID)));
+                            idProvider.next(ResourceType.ID));
 
             enumSymbols.add(newEnum);
             enumNode = enumNode.getNextSibling();
@@ -384,7 +384,7 @@ public final class ResourceValuesXmlParser {
                         ResourceType.ATTR,
                         name,
                         SymbolJavaType.INT,
-                        Integer.toString(idProvider.next(ResourceType.ATTR)));
+                        idProvider.next(ResourceType.ATTR));
 
         if (!builder.contains(newAttr)) {
             builder.add(newAttr);

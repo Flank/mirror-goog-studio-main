@@ -59,6 +59,6 @@ public final class SymbolTestUtils {
             @NonNull String name,
             @NonNull String javaType,
             int numericValue) {
-        return createSymbol(resourceType, name, javaType, String.valueOf(numericValue));
+        return createSymbol(resourceType, name, javaType, "0x" + Integer.toHexString(numericValue));
     }
 }

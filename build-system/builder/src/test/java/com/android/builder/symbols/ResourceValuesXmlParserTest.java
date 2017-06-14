@@ -136,7 +136,7 @@ public class ResourceValuesXmlParserTest {
                                         "styleable", "oneattr_enums", "int", 0x7f_17_0001))
                         .add(
                                 SymbolTestUtils.createSymbol(
-                                        "styleable", "oneattr", "int[]", "{2132213761}"))
+                                        "styleable", "oneattr", "int[]", "{0x7f170001}"))
                         .add(SymbolTestUtils.createSymbol("attr", "flags", "int", 0x7f_04_0002))
                         .add(
                                 SymbolTestUtils.createSymbol(
@@ -150,7 +150,7 @@ public class ResourceValuesXmlParserTest {
                                         "styleable",
                                         "twoattrs",
                                         "int[]",
-                                        "{2132213762,2132213763}"))
+                                        "{0x7f170002,0x7f170003}"))
                         .build();
 
         assertThat(table).isEqualTo(expected);
@@ -412,7 +412,7 @@ public class ResourceValuesXmlParserTest {
                                         "styleable",
                                         "PieChart",
                                         "int[]",
-                                        "{2132213761,2132213762}"))
+                                        "{0x7f170001,0x7f170002}"))
                         .build();
 
         assertThat(itemTable).isEqualTo(expected);
