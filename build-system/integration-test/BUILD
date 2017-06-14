@@ -376,6 +376,7 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/com/joanzapata/iconify/android-iconify-material/2.1.1:aar",
         "//prebuilts/tools/common/m2/repository/com/joanzapata/iconify/android-iconify/2.1.1:aar",
         "//prebuilts/tools/common/m2/repository/com/koushikdutta/async/androidasync/2.1.3:jar",
+        "//prebuilts/tools/common/m2/repository/com/linkedin/testbutler/test-butler-app/1.3.1:apk",
         "//prebuilts/tools/common/m2/repository/com/lovedise/permissiongen/0.0.6:aar",
         "//prebuilts/tools/common/m2/repository/com/mcxiaoke/volley/library/1.0.10:jar",
         "//prebuilts/tools/common/m2/repository/com/mcxiaoke/volley/library/1.0.18:jar",

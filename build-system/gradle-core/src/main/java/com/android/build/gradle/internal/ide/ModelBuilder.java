@@ -87,6 +87,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -98,6 +99,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.ArtifactCollection;
+import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.FileCollection;
 import org.gradle.tooling.provider.model.ToolingModelBuilder;
@@ -604,6 +606,20 @@ public class ModelBuilder implements ToolingModelBuilder {
         additionalTestClasses.addAll(variantData.getAllPreJavacGeneratedBytecode().getFiles());
         additionalTestClasses.addAll(variantData.getAllPostJavacGeneratedBytecode().getFiles());
 
+        List<File> additionalRuntimeApks = new ArrayList<>();
+        if (variantData.getType().isForTesting()) {
+            Configuration testHelpers =
+                    scope.getGlobalScope()
+                            .getProject()
+                            .getConfigurations()
+                            .findByName(SdkConstants.TEST_HELPERS_CONFIGURATION);
+
+            // This may be the case with the experimental plugin.
+            if (testHelpers != null) {
+                additionalRuntimeApks.addAll(testHelpers.getFiles());
+            }
+        }
+
         return new AndroidArtifactImpl(
                 name,
                 scope.getGlobalScope().getProjectBaseName()
@@ -632,6 +648,7 @@ public class ModelBuilder implements ToolingModelBuilder {
                 scope.getVariantData().getJavaResourcesForUnitTesting(),
                 dependencies.getFirst(),
                 dependencies.getSecond(),
+                additionalRuntimeApks,
                 sourceProviders.variantSourceProvider,
                 sourceProviders.multiFlavorSourceProvider,
                 variantConfiguration.getSupportedAbis(),

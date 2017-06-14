@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,15 +14,13 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.ide;
-
-import nl.jqno.equalsverifier.EqualsVerifier;
-import org.junit.Test;
-
-public class AndroidArtifactImplTest {
-
-    @Test
-    public void testEquals() throws Exception {
-        EqualsVerifier.forClass(AndroidArtifactImpl.class).withRedefinedSuperclass().verify();
-    }
-}
+/**
+ * Integration tests related to testing Android apps:
+ *
+ * <ul>
+ *   <li>unit testing (on the host),
+ *   <li>instrumentation-based testing (on the device),
+ *   <li>test-only modules which only contain test code
+ * </ul>
+ */
+package com.android.build.gradle.integration.testing;

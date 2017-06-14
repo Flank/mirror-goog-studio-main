@@ -55,30 +55,19 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
     private static final long serialVersionUID = 1L;
 
     private final boolean isSigned;
-    @Nullable
-    private final String signingConfigName;
-    @NonNull
-    private final String applicationId;
-    @NonNull
-    private final String sourceGenTaskName;
-
-    @NonNull
-    private final List<File> generatedResourceFolders;
-    @Nullable
-    private final Set<String> abiFilters;
-    @NonNull
-    private final Collection<NativeLibrary> nativeLibraries;
-    @NonNull
-    private final Map<String, ClassField> buildConfigFields;
-    @NonNull
-    private final Map<String, ClassField> resValues;
-    @NonNull
-    private final InstantRun instantRun;
+    @NonNull private final String baseName;
+    @NonNull private final String applicationId;
+    @NonNull private final String sourceGenTaskName;
+    @NonNull private final List<File> generatedResourceFolders;
+    @NonNull private final List<File> additionalRuntimeApks;
+    @NonNull private final Collection<NativeLibrary> nativeLibraries;
+    @NonNull private final Map<String, ClassField> buildConfigFields;
+    @NonNull private final Map<String, ClassField> resValues;
+    @NonNull private final InstantRun instantRun;
     @NonNull private final BuildOutputSupplier<Collection<BuildOutput>> splitOutputsSupplier;
-    @NonNull
-    private final String baseName;
-
     @NonNull private final BuildOutputSupplier<Collection<BuildOutput>> manifestSupplier;
+    @Nullable private final String signingConfigName;
+    @Nullable private final Set<String> abiFilters;
 
     AndroidArtifactImpl(
             @NonNull String name,
@@ -96,6 +85,7 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
             @NonNull File javaResourcesFolder,
             @NonNull Dependencies compileDependencies,
             @NonNull DependencyGraphs dependencyGraphs,
+            @NonNull List<File> additionalRuntimeApks,
             @Nullable SourceProvider variantSourceProvider,
             @Nullable SourceProvider multiFlavorSourceProviders,
             @Nullable Set<String> abiFilters,
@@ -124,6 +114,7 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
         this.applicationId = applicationId;
         this.sourceGenTaskName = sourceGenTaskName;
         this.generatedResourceFolders = generatedResourceFolders;
+        this.additionalRuntimeApks = additionalRuntimeApks;
         this.abiFilters = abiFilters;
         this.nativeLibraries = nativeLibraries;
         this.buildConfigFields = buildConfigFields;
@@ -300,6 +291,12 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
         return instantRun;
     }
 
+    @NonNull
+    @Override
+    public List<File> getAdditionalRuntimeApks() {
+        return additionalRuntimeApks;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -324,6 +321,7 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
                 && Objects.equals(manifestSupplier, that.manifestSupplier)
                 && Objects.equals(splitOutputsSupplier, that.splitOutputsSupplier)
                 && Objects.equals(instantRun, that.instantRun)
+                && Objects.equals(additionalRuntimeApks, that.additionalRuntimeApks)
                 && Objects.equals(baseName, that.baseName);
     }
 
@@ -343,6 +341,7 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
                 buildConfigFields,
                 resValues,
                 instantRun,
+                additionalRuntimeApks,
                 baseName);
     }
 

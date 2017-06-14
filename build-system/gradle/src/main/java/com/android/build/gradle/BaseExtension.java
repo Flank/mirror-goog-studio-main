@@ -336,7 +336,6 @@ public abstract class BaseExtension implements AndroidConfig {
 
         // Create the "special" configuration for test buddy APKs. It will be resolved by the test
         // running task, so that we can install all the found APKs before running tests.
-        // TODO: resolve it in ModelBuilder and put the files in the model.
         createConfiguration(
                 project.getConfigurations(),
                 SdkConstants.TEST_HELPERS_CONFIGURATION,

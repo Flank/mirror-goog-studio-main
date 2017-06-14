@@ -128,4 +128,16 @@ public interface AndroidArtifact extends BaseArtifact {
      */
     @NonNull
     InstantRun getInstantRun();
+
+    /**
+     * Returns a list of additional APKs that need to installed on the device for this artifact to
+     * work correctly.
+     *
+     * <p>For test artifacts, these will be "buddy APKs" from the {@code androidTestUtil}
+     * configuration.
+     *
+     * @since 3.0
+     */
+    @NonNull
+    Collection<File> getAdditionalRuntimeApks();
 }
