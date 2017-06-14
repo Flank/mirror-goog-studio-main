@@ -16,7 +16,9 @@
 package com.android.tools.device.internal.adb
 
 import com.android.tools.device.internal.OsProcessRunner
+import com.android.tools.device.internal.adb.commands.DaemonFeatures
 import com.android.tools.device.internal.adb.commands.HostFeatures
+import com.android.tools.device.internal.adb.commands.ListDevices
 import com.android.tools.device.internal.adb.commands.ServerVersion
 import com.google.common.collect.ImmutableMap
 import com.google.common.primitives.UnsignedInteger
@@ -95,6 +97,8 @@ class AdbServerServiceIntegrationTest {
 
     // When run under the Bazel sandbox, $HOME may not exist. adb however relies on $HOME
     // being present and valid. So we explicitly set $HOME to some temporary folder
+    // Note that this means that adb generates a new key every time, and devices will show the
+    // authorization dialog every time this is used.
     @Rule @JvmField val temporaryHome = TemporaryFolder()
 
     @Test
@@ -116,6 +120,23 @@ class AdbServerServiceIntegrationTest {
             val hostFeatures = service.execute(HostFeatures())
             assertThat(hostFeatures.get()).isNotEmpty()
             assertThat(hostFeatures.get()).doesNotContain(AdbFeature.UNKNOWN)
+
+            val deviceHandles = service.execute(ListDevices()).get()
+            if (deviceHandles.isEmpty()) {
+                logger.info("No devices connected")
+                return
+            }
+
+            deviceHandles.forEach { handle ->
+                logger.info("${handle.serial}: ${handle.connectionState}")
+                if (handle.connectionState != ConnectionState.DEVICE) {
+                    logger.info("Skipping tests on ${handle.serial} since it is not online")
+                    return
+                }
+
+                val features = service.execute(DaemonFeatures(handle)).get()
+                logger.info("${handle.serial} supports the features: $features")
+            }
         } finally {
             service.stopAsync().awaitTerminated()
             executor.shutdownNow()
