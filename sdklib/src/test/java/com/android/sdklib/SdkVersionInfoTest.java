@@ -16,6 +16,7 @@
 package com.android.sdklib;
 
 import static com.android.sdklib.SdkVersionInfo.HIGHEST_KNOWN_API;
+import static com.android.sdklib.SdkVersionInfo.HIGHEST_KNOWN_STABLE_API;
 import static com.android.sdklib.SdkVersionInfo.camelCaseToUnderlines;
 import static com.android.sdklib.SdkVersionInfo.getApiByBuildCode;
 import static com.android.sdklib.SdkVersionInfo.getApiByPreviewName;
@@ -24,6 +25,7 @@ import static com.android.sdklib.SdkVersionInfo.getCodeName;
 import static com.android.sdklib.SdkVersionInfo.getVersion;
 import static com.android.sdklib.SdkVersionInfo.underlinesToCamelCase;
 
+import com.android.testutils.TestUtils;
 import junit.framework.TestCase;
 
 public class SdkVersionInfoTest extends TestCase {
@@ -105,5 +107,9 @@ public class SdkVersionInfoTest extends TestCase {
         assertEquals("IceCreamSandwich", getVersion("IceCreamSandwich", null).getCodename());
         assertEquals(HIGHEST_KNOWN_API, getVersion("BackToTheFuture", null).getApiLevel());
         assertEquals("BackToTheFuture", getVersion("BackToTheFuture", null).getCodename());
+    }
+
+    public void testHighestStableApiInTestUtils() throws Exception {
+        assertEquals("android-" + HIGHEST_KNOWN_STABLE_API, TestUtils.getLatestAndroidPlatform());
     }
 }

@@ -31,8 +31,12 @@ public class SdkVersionInfo {
      */
     public static final int HIGHEST_KNOWN_API = 26;
 
-    /** Like {@link #HIGHEST_KNOWN_API} but does not include preview platforms */
-    public static final int HIGHEST_KNOWN_STABLE_API = 25;
+    /**
+     * Like {@link #HIGHEST_KNOWN_API} but does not include preview platforms.
+     *
+     * <p>Make sure to keep this in sync with the value in TestUtils.
+     */
+    public static final int HIGHEST_KNOWN_STABLE_API = 26;
 
     /**
      * The lowest active API level in the ecosystem. This number will change over time
