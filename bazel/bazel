@@ -57,7 +57,7 @@ def main():
   else: # Linux
     env['CC'] = os.environ.get('GCC', '/usr/bin/gcc')
 
-  if bazel_command(args) == 'info':
+  if bazel_command(args) == 'info' and bazel_command_index(args) == len(args) - 1:
     print("bazel-cpu-count: " + str(count_bazel_CPUs()))
 
   sys.exit(subprocess.call([bazel] + args, env=env))
