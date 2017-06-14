@@ -133,7 +133,9 @@ open class DefaultUastParser(
      */
     override // subclasses may want to override/optimize
     fun getLocation(context: JavaContext, element: PsiElement): Location {
-        if (element is PsiCompiledElement) {
+        val range = element.textRange
+
+        if (element is PsiCompiledElement && (range == null || TextRange.EMPTY_RANGE == range)) {
             val containingFile = element.getContainingFile()
             if (containingFile != null) {
                 val virtualFile = containingFile.virtualFile
@@ -144,11 +146,11 @@ open class DefaultUastParser(
             return Location.create(context.file)
         }
 
-        val range = element.textRange
-        val containingFile = element.containingFile
+        val containingFile = getContainingFile(context, element)
         var file = context.file
         var contents: CharSequence = context.getContents() ?: ""
-        if (containingFile != context.psiFile) {
+
+        if (containingFile != null && containingFile != context.psiFile) {
             // Reporting an error in a different file.
             if (context.driver.scope.size == 1) {
                 // Don't bother with this error if it's in a different file during single-file analysis
@@ -171,6 +173,27 @@ open class DefaultUastParser(
 
         return Location.create(file, contents, range.startOffset, range.endOffset)
                 .setSource(element)
+    }
+
+    /** Returns the containing file for the given element */
+    private fun getContainingFile(context: JavaContext, element: PsiElement): PsiFile? {
+        val containingFile = element.containingFile
+        if (containingFile != context.psiFile) {
+            // In Kotlin files identifiers are sometimes using LightElements that are hosted in
+            // a dummy file, these do not have the right PsiFile as containing elements
+            val cls = containingFile.javaClass
+            val name = cls.name
+            if (name.startsWith("org.jetbrains.kotlin.asJava.classes.KtLightClassForSourceDeclaration")) {
+                try {
+                    val declaredField = cls.superclass.getDeclaredField("ktFile")
+                    declaredField.isAccessible = true
+                    return (declaredField.get(containingFile) as? PsiFile?) ?: containingFile
+                } catch (e: Throwable) {
+                }
+            }
+        }
+
+        return containingFile
     }
 
     override // subclasses may want to override/optimize
