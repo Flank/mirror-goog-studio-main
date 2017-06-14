@@ -197,7 +197,7 @@ public class ResourceDirectoryParser {
                                 resourceType,
                                 symbolName,
                                 SymbolJavaType.INT,
-                                Integer.toString(idProvider.next(resourceType))));
+                                idProvider.next(resourceType)));
 
                 if (FolderTypeRelationship.isIdGeneratingFolderType(folderResourceType)
                         && SdkUtils.endsWithIgnoreCase(fileName, DOT_XML)) {

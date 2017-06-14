@@ -27,7 +27,7 @@ public interface IdProvider {
      *
      * @return an ID that has never been returned from this provider.
      */
-    int next(ResourceType resourceType);
+    String next(ResourceType resourceType);
 
     /**
      * Obtains a new ID provider that provides sequential IDs.
@@ -40,9 +40,13 @@ public interface IdProvider {
             private short[] next = new short[ResourceType.values().length];
 
             @Override
-            public int next(ResourceType resourceType) {
+            public String next(ResourceType resourceType) {
                 int typeIndex = resourceType.ordinal();
-                return (0x7f << 24) | ((typeIndex + 1) << 16) | ++next[typeIndex];
+                String value =
+                        Integer.toHexString(
+                                (0x7f << 24) | ((typeIndex + 1) << 16) | ++next[typeIndex]);
+
+                return "0x" + value;
             }
         };
     }
