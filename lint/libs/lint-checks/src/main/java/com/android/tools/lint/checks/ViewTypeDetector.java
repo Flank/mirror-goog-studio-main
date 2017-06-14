@@ -237,6 +237,7 @@ public class ViewTypeDetector extends ResourceXmlDetector implements UastScanner
             if (parent instanceof UCallExpression) {
                 UCallExpression c = (UCallExpression) parent;
                 checkMissingCast(context, call, c);
+                return;
             }
 
             // Implicit cast?
