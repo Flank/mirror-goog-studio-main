@@ -60,7 +60,7 @@ kotlin_jar = rule(
     implementation = _kotlin_jar_impl,
 )
 
-def kotlin_library(name, srcs, javacopts=None, resources=[], deps=[], pom=None, visibility=None, jar_name=None, **kwargs):
+def kotlin_library(name, srcs, javacopts=None, resources=[], deps=[], bundled_deps=[], pom=None, visibility=None, jar_name=None, **kwargs):
   kotlins = native.glob([src + "/**/*.kt" for src in srcs])
   javas = native.glob([src + "/**/*.java" for src in srcs])
 
@@ -78,7 +78,7 @@ def kotlin_library(name, srcs, javacopts=None, resources=[], deps=[], pom=None, 
         name = kotlin_name,
         srcs = srcs,
         inputs = kotlins + javas,
-        deps = deps,
+        deps = deps + bundled_deps,
         visibility = visibility,
     )
 
@@ -90,7 +90,8 @@ def kotlin_library(name, srcs, javacopts=None, resources=[], deps=[], pom=None, 
         srcs = javas,
         javacopts = javacopts,
         resources = resources,
-        deps = kdeps + deps,
+        deps = kdeps + deps + bundled_deps,
+        resource_jars = bundled_deps,
         visibility = visibility,
         **kwargs
     )
