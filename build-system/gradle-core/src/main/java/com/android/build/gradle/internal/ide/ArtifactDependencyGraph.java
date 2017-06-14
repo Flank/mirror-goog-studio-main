@@ -70,7 +70,6 @@ import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.ResolveException;
@@ -395,25 +394,8 @@ public class ArtifactDependencyGraph {
             sLibraryCache.get(artifact);
         }
 
-        if (!withFullDependency) {
-            // force download the javadoc/source artifacts of the compile classpath only.
-            if (downloadSources) {
-                handleJavadoc(
-                        project,
-                        compileArtifacts
-                                .stream()
-                                .map(artifact -> artifact.getId().getComponentIdentifier())
-                                .collect(Collectors.toSet()));
-            }
-
-            return new SimpleDependencyGraphsImpl(compileItems);
-        }
-
-        // FIXME: when full dependency is enabled, this should return a full graph instead of a
-        // flat list.
-
+        // get the runtime artifacts.
         List<GraphItem> runtimeItems = Lists.newArrayList();
-
         Set<HashableResolvedArtifactResult> runtimeArtifacts =
                 getAllArtifacts(
                         variantScope,
@@ -424,25 +406,39 @@ public class ArtifactDependencyGraph {
             runtimeItems.add(new GraphItemImpl(computeAddress(artifact), ImmutableList.of()));
             sLibraryCache.get(artifact);
         }
+
+        // compute the provided dependency list.
         List<GraphItem> providedItems = Lists.newArrayList(compileItems);
         providedItems.removeAll(runtimeItems);
+        final ImmutableList<String> providedAddresses =
+                providedItems
+                        .stream()
+                        .map(GraphItem::getArtifactAddress)
+                        .collect(ImmutableCollectors.toImmutableList());
 
-        // force download the javadoc/source artifacts of both scopes
+        // force download the javadoc/source artifacts of compile scope only, since the
+        // the runtime-only is never used from the IDE.
         if (downloadSources) {
             handleJavadoc(
                     project,
-                    Stream.concat(compileArtifacts.stream(), runtimeArtifacts.stream())
+                    compileArtifacts
+                            .stream()
                             .map(artifact -> artifact.getId().getComponentIdentifier())
                             .collect(Collectors.toSet()));
         }
 
+
+        if (!withFullDependency) {
+            return new SimpleDependencyGraphsImpl(compileItems, providedAddresses);
+        }
+
+        // FIXME: when full dependency is enabled, this should return a full graph instead of a
+        // flat list.
+
         return new FullDependencyGraphsImpl(
                 compileItems,
                 runtimeItems,
-                providedItems
-                        .stream()
-                        .map(GraphItem::getArtifactAddress)
-                        .collect(ImmutableCollectors.toImmutableList()),
+                providedAddresses,
                 ImmutableList.of()); // FIXME: actually get skip list
     }
 
@@ -463,6 +459,7 @@ public class ArtifactDependencyGraph {
                         RUNTIME_CLASSPATH,
                         AndroidArtifacts.ArtifactScope.ALL,
                         AndroidArtifacts.ArtifactType.JAR);
+
         // build a list of the artifacts
         Set<ComponentIdentifier> runtimeIdentifiers =
                 new HashSet<>(runtimeArtifactCollection.getArtifacts().size());
@@ -629,7 +626,7 @@ public class ArtifactDependencyGraph {
         }
 
         // just need to register the libraries in the global libraries.
-        return new SimpleDependencyGraphsImpl(nodes);
+        return new SimpleDependencyGraphsImpl(nodes, cdg.getProvidedLibraries());
     }
 
     private static void handleJavadoc(

@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.ide.level2;
 import com.android.annotations.NonNull;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.GraphItem;
+import com.google.common.collect.ImmutableList;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
@@ -28,11 +29,13 @@ public class SimpleDependencyGraphsImpl implements DependencyGraphs, Serializabl
 
     @NonNull
     private final List<GraphItem> items;
+    @NonNull private final List<String> providedLibraries;
     private final int hashCode;
 
     public SimpleDependencyGraphsImpl(
-            @NonNull List<GraphItem> items) {
+            @NonNull List<GraphItem> items, @NonNull List<String> providedLibraries) {
         this.items = items;
+        this.providedLibraries = ImmutableList.copyOf(providedLibraries);
         this.hashCode = computeHashCode();
     }
 
@@ -51,7 +54,7 @@ public class SimpleDependencyGraphsImpl implements DependencyGraphs, Serializabl
     @NonNull
     @Override
     public List<String> getProvidedLibraries() {
-        return Collections.emptyList();
+        return providedLibraries;
     }
 
     @NonNull
@@ -71,7 +74,7 @@ public class SimpleDependencyGraphsImpl implements DependencyGraphs, Serializabl
 
         SimpleDependencyGraphsImpl that = (SimpleDependencyGraphsImpl) o;
 
-        return items.equals(that.items);
+        return items.equals(that.items) && providedLibraries.equals(that.providedLibraries);
 
     }
 
@@ -81,6 +84,8 @@ public class SimpleDependencyGraphsImpl implements DependencyGraphs, Serializabl
     }
 
     private int computeHashCode() {
-        return items.hashCode();
+        int result = items.hashCode();
+        result = 31 * result + providedLibraries.hashCode();
+        return result;
     }
 }
