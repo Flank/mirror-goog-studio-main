@@ -18,7 +18,6 @@
             <tr><td>dexOptions</td></tr>
             <tr><td>externalNativeBuild</td></tr>
             <tr><td>flavorDimensionList</td></tr>
-            <tr><td>flavorSelection</td></tr>
             <tr><td>generatePureSplits</td></tr>
             <tr><td>jacoco</td></tr>
             <tr><td>dataBinding</td></tr>

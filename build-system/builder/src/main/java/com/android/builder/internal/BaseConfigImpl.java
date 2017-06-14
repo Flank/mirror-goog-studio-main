@@ -150,6 +150,18 @@ public abstract class BaseConfigImpl implements Serializable, BaseConfig {
 
     private Map<String, String> flavorSelection;
 
+    /**
+     * Selects a flavor value for a given dimension for dependency resolution.
+     *
+     * <p>If the module does not have a flavor dimension of a consumer, it's required to manual
+     * select which value to select during the resolution.
+     *
+     * <p>To learn more, read <a href="d.android.com/r/tools/use-flavorSelection.html">Select
+     * default flavors for missing dimensions</a>.
+     *
+     * @param dimension the name of the dimension
+     * @param value the name of the flavor value
+     */
     public void flavorSelection(@NonNull String dimension, @NonNull String value) {
         if (flavorSelection == null) {
             flavorSelection = Maps.newHashMap();

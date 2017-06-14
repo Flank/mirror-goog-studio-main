@@ -35,6 +35,7 @@
             <thead>
                 <tr><td>Name</td></tr>
             </thead>
+            <tr><td>flavorSelection</td></tr>
         </table>
     </section>
 </section>
