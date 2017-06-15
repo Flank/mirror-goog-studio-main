@@ -766,6 +766,9 @@ public class ApiLookup {
         for (; j < max; i++, j++) {
             byte b = data[i];
             char c = s.charAt(j);
+            if (c == '.') {
+                c = '/';
+            }
             // TODO: Check somewhere that the strings are purely in the ASCII range; if not
             // they're not a match in the database
             byte cb = (byte) c;
@@ -784,11 +787,10 @@ public class ApiLookup {
      * for classes introduced in version 1; internally the database only
      * stores version data for version 2 and up.
      *
-     * @param className the internal name of the class, e.g. its
-     *            fully qualified name (as returned by Class.getName(), but with
-     *            '.' replaced by '/'.
+     * @param className the internal name of the class, e.g. its fully qualified name
+     *                 (as returned by Class.getName())
      * @return the minimum API version the method is supported for, or -1 if
-     *         it's unknown <b>or version 1</b>.
+     *         it's unknown <b>or version 1</b>
      */
     public int getClassVersion(@NonNull String className) {
         //noinspection VariableNotUsedInsideIf
@@ -821,10 +823,10 @@ public class ApiLookup {
      * distinguish between interfaces implemented in the initial version of the class and interfaces
      * not implemented at all.
      *
-     * @param sourceClass      the internal name of the class, e.g. its fully qualified name (as
-     *                         returned by Class.getName(), but with '.' replaced by '/'.
+     * @param sourceClass the internal name of the class, e.g. its fully qualified name
+     *                 (as returned by Class.getName())
      * @param destinationClass the class to cast the sourceClass to
-     * @return the minimum API version the method is supported for, or 1 or -1 if it's unknown.
+     * @return the minimum API version the method is supported for, or 1 or -1 if it's unknown
      */
     public int getValidCastVersion(@NonNull String sourceClass,
             @NonNull String destinationClass) {
@@ -866,11 +868,9 @@ public class ApiLookup {
      * Returns the API version the given class was deprecated in, or -1 if the class is not
      * deprecated.
      *
-     * @param className the internal name of the method's owner class, e.g. its
-     *            fully qualified name (as returned by Class.getName(), but with
-     *            '.' replaced by '/').
-     * @return the API version the API was deprecated in, or -1 if
-     *         it's unknown <b>or version 0</b>.
+     * @param className the internal name of the method's owner class, e.g. its fully qualified name
+     *                 (as returned by Class.getName())
+     * @return the API version the API was deprecated in, or -1 if it's unknown <b>or version 0</b>
      */
     public int getClassDeprecatedIn(@NonNull String className) {
         if (mData != null) {
@@ -898,11 +898,9 @@ public class ApiLookup {
     /**
      * Returns the API version the given class was removed in, or -1 if the class was not removed.
      *
-     * @param className the internal name of the method's owner class, e.g. its
-     *            fully qualified name (as returned by Class.getName(), but with
-     *            '.' replaced by '/').
-     * @return the API version the API was removed in, or -1 if
-     *         it's unknown <b>or version 0</b>.
+     * @param className the internal name of the method's owner class, e.g. its fully qualified name
+     *                 (as returned by Class.getName())
+     * @return the API version the API was removed in, or -1 if it's unknown <b>or version 0</b>
      */
     public int getClassRemovedIn(@NonNull String className) {
         if (mData != null) {
@@ -952,10 +950,10 @@ public class ApiLookup {
      * stores version data for version 2 and up.
      *
      * @param owner the internal name of the field's owner class, e.g. its fully qualified name
-     *              (as returned by Class.getName(), but with '.' replaced by '/').
+     *              (as returned by Class.getName())
      * @param name the method's name
      * @param desc the method's descriptor - see {@link org.objectweb.asm.Type}
-     * @return the minimum API version the method is supported for, or -1 if it's unknown.
+     * @return the minimum API version the method is supported for, or -1 if it's unknown
      */
     public int getCallVersion(@NonNull String owner, @NonNull String name, @NonNull String desc) {
         //noinspection VariableNotUsedInsideIf
@@ -988,7 +986,7 @@ public class ApiLookup {
      * deprecated.
      *
      * @param owner the internal name of the field's owner class, e.g. its fully qualified name
-     *              (as returned by Class.getName(), but with '.' replaced by '/').
+     *              (as returned by Class.getName())
      * @param name the method's name
      * @param desc the method's descriptor - see {@link org.objectweb.asm.Type}
      * @return the API version the API was deprecated in, or -1 if the method is not deprecated
@@ -1018,7 +1016,7 @@ public class ApiLookup {
      * Returns the API version the given call was removed in, or -1 if the method was not removed.
      *
      * @param owner the internal name of the field's owner class, e.g. its fully qualified name
-     *              (as returned by Class.getName(), but with '.' replaced by '/').
+     *              (as returned by Class.getName())
      * @param name the method's name
      * @param desc the method's descriptor - see {@link org.objectweb.asm.Type}
      * @return the API version the API was removed in, or -1 if the method was not removed
@@ -1047,7 +1045,7 @@ public class ApiLookup {
      * Returns all removed fields of the given class and all its super classes and interfaces.
      *
      * @param owner the internal name of the field's owner class, e.g. its fully qualified name
-     *              (as returned by Class.getName(), but with '.' replaced by '/').
+     *              (as returned by Class.getName())
      * @return the removed fields, or null if the owner class was not found
      */
     @Nullable
@@ -1070,7 +1068,7 @@ public class ApiLookup {
      * Returns all removed methods of the given class and all its super classes and interfaces.
      *
      * @param owner the internal name of the field's owner class, e.g. its fully qualified name
-     *              (as returned by Class.getName(), but with '.' replaced by '/').
+     *              (as returned by Class.getName())
      * @return the removed methods, or null if the owner class was not found
      */
     @Nullable
@@ -1163,9 +1161,9 @@ public class ApiLookup {
      * database only stores version data for version 2 and up.
      *
      * @param owner the internal name of the field's owner class, e.g. its fully qualified name
-     *              (as returned by Class.getName(), but with '.' replaced by '/').
+     *              (as returned by Class.getName())
      * @param name the method's name
-     * @return the minimum API version the method is supported for, or 1 or -1 if it's unknown.
+     * @return the minimum API version the method is supported for, or -1 if it's unknown
      */
     public int getFieldVersion(@NonNull String owner, @NonNull String name) {
         //noinspection VariableNotUsedInsideIf
@@ -1197,9 +1195,9 @@ public class ApiLookup {
      * deprecated.
      *
      * @param owner the internal name of the field's owner class, e.g. its fully qualified name
-     *              (as returned by Class.getName(), but with '.' replaced by '/').
+     *              (as returned by Class.getName())
      * @param name the method's name
-     * @return the API version the API was deprecated in, or -1 if the field is not deprecated.
+     * @return the API version the API was deprecated in, or -1 if the field is not deprecated
      */
     public int getFieldDeprecatedIn(@NonNull String owner, @NonNull String name) {
         //noinspection VariableNotUsedInsideIf
@@ -1224,9 +1222,9 @@ public class ApiLookup {
      * Returns the API version the given field was removed in, or -1 if the field was not removed.
      *
      * @param owner the internal name of the field's owner class, e.g. its fully qualified name
-     *              (as returned by Class.getName(), but with '.' replaced by '/').
+     *              (as returned by Class.getName())
      * @param name the method's name
-     * @return the API version the API was removed in, or -1 if the field was not removed.
+     * @return the API version the API was removed in, or -1 if the field was not removed
      */
     public int getFieldRemovedIn(@NonNull String owner, @NonNull String name) {
         //noinspection VariableNotUsedInsideIf
@@ -1294,14 +1292,12 @@ public class ApiLookup {
 
     /** Returns the package index of the given class, or -1 if it is unknown */
     private int findPackage(@NonNull String owner) {
-        assert owner.indexOf('.') == -1 : "Should use / instead of . in owner: " + owner;
-
         // The index array contains class indexes from 0 to classCount and
         // member indices from classCount to mIndices.length.
         int low = 0;
         int high = packageCount;
         // Compare the api info at the given index.
-        int packageNameLength = owner.lastIndexOf('/');
+        int packageNameLength = lastIndexOfDotOrSlash(owner);
         if (packageNameLength < 0) {
             packageNameLength = 0;
         }
@@ -1380,8 +1376,6 @@ public class ApiLookup {
 
     /** Returns the class number of the given class, or -1 if it is unknown */
     private int findClass(@NonNull String owner) {
-        assert owner.indexOf('.') == -1 : "Should use / instead of . in owner: " + owner;
-
         int packageNumber = findPackage(owner);
         if (packageNumber == -1) {
             return -1;
@@ -1401,7 +1395,7 @@ public class ApiLookup {
             return -1;
         }
         int high = low + length;
-        int index = owner.lastIndexOf('/');
+        int index = lastIndexOfDotOrSlash(owner);
         int classNameLength = owner.length();
         while (low < high) {
             int middle = (low + high) >>> 1;
@@ -1429,6 +1423,16 @@ public class ApiLookup {
             }
         }
 
+        return -1;
+    }
+
+    private int lastIndexOfDotOrSlash(@NonNull String name) {
+        for (int i = name.length(); --i >= 0;) {
+            char c = name.charAt(i);
+            if (c == '.' || c == '/') {
+                return i;
+            }
+        }
         return -1;
     }
 

@@ -75,9 +75,12 @@ public class ApiLookupTest extends AbstractCheckTest {
     private final ApiLookup mDb = ApiLookup.get(createClient());
 
     public void test1() {
+        assertEquals(5, mDb.getFieldVersion("android.Manifest$permission", "AUTHENTICATE_ACCOUNTS"));
         assertEquals(5, mDb.getFieldVersion("android/Manifest$permission", "AUTHENTICATE_ACCOUNTS"));
         assertTrue(mDb.getFieldVersion("android/R$attr", "absListViewStyle") <= 1);
         assertEquals(11, mDb.getFieldVersion("android/R$attr", "actionMenuTextAppearance"));
+        assertEquals(5, mDb.getCallVersion("android.graphics.drawable.BitmapDrawable",
+                "<init>", "(Landroid.content.res.Resources;Ljava.lang.String;)V"));
         assertEquals(5, mDb.getCallVersion("android/graphics/drawable/BitmapDrawable",
                 "<init>", "(Landroid/content/res/Resources;Ljava/lang/String;)V"));
         assertEquals(4, mDb.getCallVersion("android/graphics/drawable/BitmapDrawable",
