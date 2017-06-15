@@ -57,6 +57,7 @@ public final class AndroidLocation {
     private enum Global {
         ANDROID_AVD_HOME("ANDROID_AVD_HOME", true,  true),  // both sys prop and env var
         ANDROID_SDK_HOME("ANDROID_SDK_HOME", true,  true),  // both sys prop and env var
+        TEST_TMPDIR     ("TEST_TMPDIR",      false, true),  // Bazel kludge
         USER_HOME       ("user.home",        true,  false), // sys prop only
         HOME            ("HOME",             false, true);  // env var only
 
@@ -109,7 +110,7 @@ public final class AndroidLocation {
                   "It should NOT be set to the same as the root of your SDK.\n" +
                   "Please set it to a different folder or do not set it at all.\n" +
                   "If this is not set we default to: %2$s",
-                  path, findValidPath(USER_HOME, HOME)));
+                  path, findValidPath(TEST_TMPDIR, USER_HOME, HOME)));
             }
             return null;
         }
@@ -207,11 +208,11 @@ public final class AndroidLocation {
     }
 
     public static String getUserHomeFolder() throws AndroidLocationException {
-        return findValidPath(Global.USER_HOME, Global.HOME);
+        return findValidPath(Global.TEST_TMPDIR, Global.USER_HOME, Global.HOME);
     }
 
     private static String findHomeFolder() throws AndroidLocationException {
-        String home = findValidPath(Global.ANDROID_SDK_HOME, Global.USER_HOME, Global.HOME);
+        String home = findValidPath(Global.ANDROID_SDK_HOME, Global.TEST_TMPDIR, Global.USER_HOME, Global.HOME);
 
         // if the above failed, we throw an exception.
         if (home == null) {
