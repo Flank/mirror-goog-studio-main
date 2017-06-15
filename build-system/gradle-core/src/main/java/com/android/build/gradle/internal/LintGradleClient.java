@@ -188,17 +188,10 @@ public class LintGradleClient extends LintCliClient {
     @NonNull
     protected LintRequest createLintRequest(@NonNull List<File> files) {
         LintRequest lintRequest = new LintRequest(this, files);
-        if (Lint.MODEL_LIBRARIES) {
-            LintGradleProject.ProjectSearch search = new LintGradleProject.ProjectSearch();
-            Project project = search.getProject(this, gradleProject, variant.getName());
-            lintRequest.setProjects(Collections.singletonList(project));
-            setCustomRules(search.customViewRuleJars);
-        } else {
-            Pair<LintGradleProject,List<File>> result = LintGradleProject.create(
-                    this, modelProject, variant, gradleProject);
-            lintRequest.setProjects(Collections.singletonList(result.getFirst()));
-            setCustomRules(result.getSecond());
-        }
+        LintGradleProject.ProjectSearch search = new LintGradleProject.ProjectSearch();
+        Project project = search.getProject(this, gradleProject, variant.getName());
+        lintRequest.setProjects(Collections.singletonList(project));
+        setCustomRules(search.customViewRuleJars);
 
         return lintRequest;
     }

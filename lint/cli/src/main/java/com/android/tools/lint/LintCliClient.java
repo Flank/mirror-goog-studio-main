@@ -251,6 +251,7 @@ public class LintCliClient extends LintClient {
         driver.setCheckTestSources(flags.isCheckTestSources());
         driver.setCheckGeneratedSources(flags.isCheckGeneratedSources());
         driver.setFatalOnlyMode(flags.isFatalOnly());
+        driver.setCheckDependencies(flags.isCheckDependencies());
 
         File baselineFile = flags.getBaselineFile();
         if (baselineFile != null) {

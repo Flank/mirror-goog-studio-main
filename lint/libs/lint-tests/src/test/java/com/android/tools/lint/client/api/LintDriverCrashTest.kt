@@ -38,15 +38,17 @@ package test.pkg;
 """))
                 .allowSystemErrors(true)
                 .run()
-                .expect(
-"""src/test/pkg/Foo.java: Error: Unexpected failure during lint analysis of Foo.java (this is a bug in lint or one of the libraries it depends on)
-
-ArithmeticException:LintDriverCrashTest${"$"}CrashingDetector${"$"}createUastHandler$1.visitFile(LintDriverCrashTest.kt:70)←UElementVisitor${"$"}DispatchPsiVisitor.visitFile(UElementVisitor.java:647)←UFile${"$"}DefaultImpls.accept(UFile.kt:84)←JavaUFile.accept(JavaUFile.kt:27)←UElementVisitor.lambda${"$"}visitFile$7(UElementVisitor.java:251)←LintClient.runReadAction(LintClient.kt:1486)←LintDriver${"$"}LintClientWrapper.runReadAction(LintDriver.kt:2099)←UElementVisitor.visitFile(UElementVisitor.java:247)
-
-You can set environment variable LINT_PRINT_STACKTRACE=true to dump a full stacktrace to stdout. [LintError]
-1 errors, 0 warnings
-""")
-        LintDriver.clearCrashCount();
+                // Checking for manual substrings instead of doing an actual equals check
+                // since the stacktrace contains a number of specific line numbers from
+                // the lint implementation, including this test, which keeps shifting every
+                // time there is an edit
+                .check {
+                    it.contains("Foo.java: Error: Unexpected failure during lint analysis of Foo.java (this is a bug in lint or one of the libraries it depends on)")
+                    it.contains("You can set environment variable LINT_PRINT_STACKTRACE=true to dump a full stacktrace to stdout. [LintError]")
+                    it.contains("ArithmeticException:LintDriverCrashTest\$CrashingDetector\$createUastHandler$1.visitFile(LintDriverCrashTest.kt:")
+                    it.contains("1 errors, 0 warnings")
+                }
+        LintDriver.clearCrashCount()
     }
 
     override fun getIssues(): List<Issue> {

@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks.infrastructure;
 
+import static java.util.regex.Pattern.MULTILINE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -355,16 +356,53 @@ public class TestLintResult {
      */
     public TestLintResult expectMatches(@Language("RegExp") @NonNull String regexp) {
         String output = describeOutput();
-        Pattern pattern = Pattern.compile(regexp);
+        Pattern pattern = Pattern.compile(regexp, MULTILINE);
         boolean found = pattern.matcher(output).find();
         if (!found) {
-            fail("Did not find pattern\n  " + regexp + "\n in \n" + output);
+            int reached = computeSubstringMatch(pattern, output);
+            fail("Did not find pattern\n  " + regexp + "\n in \n" + output + "; "
+                    + "the incomplete match was " + output.substring(0, reached));
         }
 
         cleanup();
         return this;
     }
 
+    /**
+     * Checks the output using the given custom checker, which should throw an
+     * {@link AssertionError} if the result is not as expected.
+     *
+     * @param checker the checker to apply, typically a lambda
+     * @return this
+     */
+    public TestLintResult check(@NonNull ResultChecker checker) {
+        checker.check(describeOutput());
+        cleanup();
+        return this;
+    }
+
+    /** Interface implemented by result checkers. */
+    public interface ResultChecker {
+        /**
+         * Checks that the result is as expected; should throw {@link AssertionError} if the output
+         * is not as expected
+         *
+         * @param output the output from lint
+         */
+        void check(@NonNull String output);
+    }
+
+    private static int computeSubstringMatch(@NonNull Pattern pattern, @NonNull String output) {
+        for (int i = output.length() - 1; i > 0; i--) {
+            String partial = output.substring(0, i);
+            Matcher matcher = pattern.matcher(partial);
+            if (!matcher.matches() && matcher.hitEnd()) {
+                return i;
+            }
+        }
+
+        return 0;
+    }
     /**
      * Checks that the actual number of errors in this lint check matches exactly the given
      * count

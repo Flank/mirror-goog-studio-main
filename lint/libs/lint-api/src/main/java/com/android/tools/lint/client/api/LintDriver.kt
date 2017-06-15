@@ -208,7 +208,10 @@ class LintDriver
     var isCheckGeneratedSources: Boolean = false
     /** Whether we're only analyzing fatal-severity issues  */
     var isFatalOnlyMode: Boolean = false
+    /** Baseline to apply to the analysis */
     var baseline: LintBaseline? = null
+    /** Whether dependent projects should be checked */
+    var checkDependencies = true
 
     /** Cancels the current lint run as soon as possible  */
     fun cancel() {
@@ -870,7 +873,7 @@ class LintDriver
         assert(currentProject === project)
         runFileDetectors(project, main)
 
-        if (!Scope.checkSingleFile(scope)) {
+        if (checkDependencies && !Scope.checkSingleFile(scope)) {
             val libraries = project.allLibraries
             for (library in libraries) {
                 val libraryContext = Context(this, library, project, projectDir)

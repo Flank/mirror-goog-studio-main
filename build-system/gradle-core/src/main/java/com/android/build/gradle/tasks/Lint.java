@@ -71,8 +71,6 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 @ParallelizableTask
 public class Lint extends BaseTask {
-    /** Name of property used to enable {@link #MODEL_LIBRARIES} */
-    public static final String MODEL_LIBRARIES_PROPERTY = "lint.new-lib-model"; // for test access
     /**
      * Whether lint should attempt to do deep analysis of libraries. E.g. when
      * building up the project graph, when it encounters an AndroidLibrary or JavaLibrary
@@ -85,8 +83,7 @@ public class Lint extends BaseTask {
      * is a risky fix, we're putting it behind a flag now and as soon as we get some real
      * user testing, we should enable this by default and remove the old code.
      */
-    public static final boolean MODEL_LIBRARIES =
-            !VALUE_FALSE.equals(System.getProperty(MODEL_LIBRARIES_PROPERTY));
+    public static final boolean MODEL_LIBRARIES = true;
 
     private static final Logger LOG = Logging.getLogger(Lint.class);
 
