@@ -109,9 +109,9 @@ public class RGenerationTest {
                 SymbolTable.builder()
                         .tablePackage("a.b")
                         .add(createSymbol("attr", "b", "int", "d"))
-                        .add(createSymbol("string", "f", "int[]", "h"))
+                        .add(createSymbol("string", "f", "int", "h"))
                         .add(createSymbol("integer", "j", "int", "l"))
-                        .add(createSymbol("menu", "n", "int[]", "p"))
+                        .add(createSymbol("menu", "n", "int", "p"))
                         .build();
 
         SymbolTable l0 =
@@ -143,18 +143,17 @@ public class RGenerationTest {
         RGeneration.generateRForLibraries(main, Arrays.asList(l0, l1, l2, l3), out, false);
 
         assertThat(FileUtils.join(out, "a", "c", "R.java")).contains("static int b = d");
-        assertThat(FileUtils.join(out, "a", "c", "R.java")).contains("static int[] f = h");
+        assertThat(FileUtils.join(out, "a", "c", "R.java")).contains("static int f = h");
         assertThat(FileUtils.join(out, "a", "c", "R.java")).doesNotContain("static int j = l");
-        assertThat(FileUtils.join(out, "a", "c", "R.java")).doesNotContain("static int[] n = p");
+        assertThat(FileUtils.join(out, "a", "c", "R.java")).doesNotContain("static int n = p");
         assertThat(FileUtils.join(out, "a", "d", "R.java")).doesNotContain("static int b = d");
         assertThat(FileUtils.join(out, "a", "d", "R.java")).doesNotContain("static int f = h");
         assertThat(FileUtils.join(out, "a", "d", "R.java")).contains("static int j = l");
         assertThat(FileUtils.join(out, "a", "d", "R.java")).doesNotContain("static int n = p");
         assertThat(FileUtils.join(out, "a", "b", "c", "R.java")).doesNotContain("static int b = d");
-        assertThat(FileUtils.join(out, "a", "b", "c", "R.java"))
-                .doesNotContain("static int[] f = h");
+        assertThat(FileUtils.join(out, "a", "b", "c", "R.java")).doesNotContain("static int f = h");
         assertThat(FileUtils.join(out, "a", "b", "c", "R.java")).doesNotContain("static int j = l");
-        assertThat(FileUtils.join(out, "a", "b", "c", "R.java")).contains("static int[] n = p");
+        assertThat(FileUtils.join(out, "a", "b", "c", "R.java")).contains("static int n = p");
     }
 
     @Test

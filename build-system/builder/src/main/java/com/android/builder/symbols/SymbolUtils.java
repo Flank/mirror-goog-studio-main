@@ -237,7 +237,7 @@ public final class SymbolUtils {
                 Iterable<String> oldValues = splitter.split(valueList);
 
                 for (String oldValue : oldValues) {
-                    Symbol oldSymbol = valueToName.get(oldValue);
+                    Symbol oldSymbol = valueToName.get(oldValue.trim());
                     if (oldSymbol != null) {
                         // this shouldn't happen, but if it does, just skip it.
                         arrayToAttrs.put(arrayName, oldSymbol.getName());
@@ -268,20 +268,8 @@ public final class SymbolUtils {
                             ResourceType.STYLEABLE,
                             arrayName,
                             SymbolJavaType.INT_LIST,
-                            "{" + Joiner.on(',').join(attributeValues) + "}"));
-
-            // then create the index symbols
-            int index = 0;
-            for (String attribute : attributes) {
-                String indexName = arrayName + "_" + attribute;
-                newSymbols.put(
-                        SymbolTable.key(ResourceType.STYLEABLE, indexName),
-                        Symbol.createSymbol(
-                                ResourceType.STYLEABLE,
-                                indexName,
-                                SymbolJavaType.INT,
-                                Integer.toString(index++)));
-            }
+                            "{ " + Joiner.on(", ").join(attributeValues) + " }",
+                            attributes));
         }
 
         return SymbolTable.builder()
