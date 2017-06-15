@@ -402,6 +402,54 @@ public class ViewTypeDetectorTest extends AbstractCheckTest {
                         + "+         checkNotNull1((android.view.View)findViewById(R.id.textView)).setAlpha(0.5f); // WARN\n");
     }
 
+    public void test62445968() {
+        // Regression test for https://issuetracker.google.com/62445968
+        //noinspection all // Sample code
+        lint().files(
+                java("" +
+                        "package test.pkg;\n" +
+                        "\n" +
+                        "import android.app.Activity;\n" +
+                        "import android.os.Bundle;\n" +
+                        "import android.view.View;\n" +
+                        "\n" +
+                        "public class FindViewByIdTest extends Activity {\n" +
+                        "    private static void test() {\n" +
+                        //"        View localVar = findViewById(R.id.some_view);\n" +
+                        //"        Integer integer = doSomethingWithView(localVar);\n" +
+                        "\n" +
+                        "        doSomethingWithView(findViewById(R.id.some_view));\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    private static Integer doSomethingWithView(View view) {\n" +
+                        "        return null;\n" +
+                        "    }\n" +
+                        "}\n"),
+                java(""
+                        + "package test.pkg;\n"
+                        + "public final class R {\n"
+                        + "    public static final class id {\n"
+                        + "        public static final int some_view = 0x7f0a0000;\n"
+                        + "    }\n"
+                        + "}\n"),
+                xml("res/layout/test.xml", "" +
+                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                        "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                        "    android:layout_width=\"match_parent\"\n" +
+                        "    android:layout_height=\"match_parent\"\n" +
+                        "    android:orientation=\"vertical\">\n" +
+                        "\n" +
+                        "    <TextView\n" +
+                        "        android:id=\"@+id/some_view\"\n" +
+                        "        android:layout_width=\"wrap_content\"\n" +
+                        "        android:layout_height=\"wrap_content\"\n" +
+                        "        android:text=\"Hello World!\" />\n" +
+                        "\n" +
+                        "</LinearLayout>"))
+                .run()
+                .expectClean();
+    }
+
     @SuppressWarnings("all") // Sample code
     private TestFile casts = xml("res/layout/casts.xml", ""
             + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
