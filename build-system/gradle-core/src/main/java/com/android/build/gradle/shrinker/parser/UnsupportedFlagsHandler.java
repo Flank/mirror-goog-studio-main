@@ -14,22 +14,12 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal;
+package com.android.build.gradle.shrinker.parser;
 
-import com.google.auto.value.AutoValue;
+import com.android.annotations.NonNull;
 
-/** Describes actions that we should do at bytecode postprocessing time. */
-@AutoValue
-public abstract class PostprocessingActions {
+public interface UnsupportedFlagsHandler {
+    void unsupportedFlag(@NonNull String flagName);
 
-    public static PostprocessingActions create(
-            boolean removeUnusedCode, boolean obfuscate, boolean optimize) {
-        return new AutoValue_PostprocessingActions(removeUnusedCode, obfuscate, optimize);
-    }
-
-    public abstract boolean isRemoveUnusedCode();
-
-    public abstract boolean isObfuscate();
-
-    public abstract boolean isOptimize();
+    UnsupportedFlagsHandler NO_OP = flag -> {};
 }

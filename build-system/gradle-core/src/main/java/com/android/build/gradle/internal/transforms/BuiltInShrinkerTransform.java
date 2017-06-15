@@ -29,7 +29,7 @@ import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
-import com.android.build.gradle.internal.PostprocessingActions;
+import com.android.build.gradle.internal.PostprocessingFeatures;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.shrinker.AbstractShrinker.CounterSet;
@@ -40,7 +40,8 @@ import com.android.build.gradle.shrinker.JavaSerializationShrinkerGraph;
 import com.android.build.gradle.shrinker.ProguardConfig;
 import com.android.build.gradle.shrinker.ProguardParserKeepRules;
 import com.android.build.gradle.shrinker.ShrinkerLogger;
-import com.android.build.gradle.shrinker.parser.Flags;
+import com.android.build.gradle.shrinker.parser.ProguardFlags;
+import com.android.build.gradle.shrinker.parser.UnsupportedFlagsHandler;
 import com.android.build.gradle.shrinker.tracing.Trace;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.utils.Pair;
@@ -57,6 +58,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.gradle.api.InvalidUserDataException;
 import org.gradle.tooling.BuildException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,8 +69,9 @@ import org.slf4j.LoggerFactory;
  */
 public class BuiltInShrinkerTransform extends ProguardConfigurable {
 
-    private static final Logger logger = LoggerFactory.getLogger(BuiltInShrinkerTransform.class);
     private static final String NAME = "androidGradleClassShrinker";
+    private static final UnsupportedFlagsHandler FLAGS_HANDLER = new ShrinkerFlagsHandler();
+    private static final Logger logger = LoggerFactory.getLogger(BuiltInShrinkerTransform.class);
 
     private final Set<File> platformJars;
     private final File incrementalDir;
@@ -130,7 +133,7 @@ public class BuiltInShrinkerTransform extends ProguardConfigurable {
             @NonNull Collection<TransformInput> inputs,
             @NonNull Collection<TransformInput> referencedInputs,
             @NonNull TransformOutputProvider output) throws IOException {
-        Flags flags = getConfig().getFlags();
+        ProguardFlags flags = getProguardFlags();
 
         ShrinkerLogger shrinkerLogger = new ShrinkerLogger(flags.getDontWarnSpecs(), logger);
 
@@ -190,7 +193,7 @@ public class BuiltInShrinkerTransform extends ProguardConfigurable {
     }
 
     private static void checkForWarnings(
-            @NonNull Flags flags, @NonNull ShrinkerLogger shrinkerLogger) {
+            @NonNull ProguardFlags flags, @NonNull ShrinkerLogger shrinkerLogger) {
         if (shrinkerLogger.getWarningsCount() > 0 && !flags.isIgnoreWarnings()) {
             throw new BuildException(
                     "Warnings found during shrinking, please use -dontwarn or -ignorewarnings to suppress them.",
@@ -199,19 +202,20 @@ public class BuiltInShrinkerTransform extends ProguardConfigurable {
     }
 
     @NonNull
-    private ProguardConfig getConfig() throws IOException {
+    private ProguardFlags getProguardFlags() throws IOException {
         ProguardConfig config = new ProguardConfig();
 
         for (File configFile : getAllConfigurationFiles()) {
             // the file could not exist if it's published by a library sub-module as the publication
             // happens no matter what the module is doing (in case it's dynamically generated).
             if (configFile.isFile()) {
-                config.parse(configFile);
+                config.parse(configFile, FLAGS_HANDLER);
             }
         }
 
         config.parse(getAdditionalConfigString());
-        return config;
+
+        return config.getFlags();
     }
 
     @NonNull
@@ -238,26 +242,26 @@ public class BuiltInShrinkerTransform extends ProguardConfigurable {
                             this.getClass().getClassLoader());
             logTime("loading state", stopwatch);
 
-            ProguardConfig config = getConfig();
+            ProguardFlags proguardFlags = getProguardFlags();
 
-            if (!config.getFlags().getWhyAreYouKeepingSpecs().isEmpty()) {
+            if (!proguardFlags.getWhyAreYouKeepingSpecs().isEmpty()) {
                 //noinspection SpellCheckingInspection: flag name from ProGuard
                 logger.warn(
                         "-whyareyoukeeping is ignored during incremental runs. Clean the project to use it.");
             }
 
             ShrinkerLogger shrinkerLogger =
-                    new ShrinkerLogger(config.getFlags().getDontWarnSpecs(), logger);
+                    new ShrinkerLogger(proguardFlags.getDontWarnSpecs(), logger);
 
             IncrementalShrinker<String> shrinker =
                     new IncrementalShrinker<>(
                             WaitableExecutor.useGlobalSharedThreadPool(),
                             graph,
                             shrinkerLogger,
-                            config.getFlags().getBytecodeVersion());
+                            proguardFlags.getBytecodeVersion());
 
             shrinker.incrementalRun(inputs, output);
-            checkForWarnings(config.getFlags(), shrinkerLogger);
+            checkForWarnings(proguardFlags, shrinkerLogger);
         } catch (IncrementalShrinker.IncrementalRunImpossibleException e) {
             logger.warn("Incremental shrinker run impossible: " + e.getMessage());
             // Log the full stack trace at INFO level for debugging.
@@ -301,8 +305,55 @@ public class BuiltInShrinkerTransform extends ProguardConfigurable {
     }
 
     @Override
-    public void setActions(@NonNull PostprocessingActions actions) {
+    public void setActions(@NonNull PostprocessingFeatures actions) {
         // The built-in shrinker supports only one "action" (shrinking), and the transform should
         // not be created if shrinking is not desired.
+    }
+
+    private static class ShrinkerFlagsHandler implements UnsupportedFlagsHandler {
+
+        private static final ImmutableSet<String> UNSUPPORTED_FLAGS =
+                ImmutableSet.of(
+                        "-dump",
+                        "-forceprocessing",
+                        "-injars",
+                        "-keepdirectories",
+                        "-libraryjars",
+                        "-microedition",
+                        "-outjars",
+                        "-printconfiguration",
+                        "-printmapping",
+                        "-printseeds",
+                        "-printusage");
+
+        private static final ImmutableSet<String> IGNORED_FLAGS =
+                ImmutableSet.of(
+                        "-optimizations",
+                        "-adaptclassstrings",
+                        "-adaptresourcefilecontents",
+                        "-adaptresourcefilenames",
+                        "-allowaccessmodification",
+                        "-applymapping",
+                        "-assumenosideeffects",
+                        "-classobfuscationdictionary",
+                        "-flattenpackagehierarchy",
+                        "-mergeinterfacesaggressively",
+                        "-obfuscationdictionary",
+                        "-optimizationpasses",
+                        "-overloadaggressively",
+                        "-packageobfuscationdictionary",
+                        "-renamesourcefileattribute",
+                        "-repackageclasses",
+                        "-useuniqueclassmembernames");
+
+        @Override
+        public void unsupportedFlag(@NonNull String flagName) {
+            if (UNSUPPORTED_FLAGS.contains(flagName)) {
+                throw new InvalidUserDataException(
+                        flagName + " is not supported by the built-in class shrinker.");
+            } else if (IGNORED_FLAGS.contains(flagName)) {
+                logger.warn(flagName + " is ignored by the built-in class shrinker.");
+            }
+        }
     }
 }

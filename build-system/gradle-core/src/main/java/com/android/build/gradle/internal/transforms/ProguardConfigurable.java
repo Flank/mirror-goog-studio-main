@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.transforms;
 import com.android.annotations.NonNull;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.Transform;
-import com.android.build.gradle.internal.PostprocessingActions;
+import com.android.build.gradle.internal.PostprocessingFeatures;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.core.VariantType;
@@ -84,5 +84,5 @@ public abstract class ProguardConfigurable extends Transform {
 
     public abstract void dontwarn(@NonNull String dontwarn);
 
-    public abstract void setActions(@NonNull PostprocessingActions actions);
+    public abstract void setActions(@NonNull PostprocessingFeatures actions);
 }

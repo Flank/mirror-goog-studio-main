@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.transforms;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.PostprocessingActions;
+import com.android.build.gradle.internal.PostprocessingFeatures;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
@@ -111,7 +111,7 @@ public abstract class BaseProguardAction extends ProguardConfigurable {
     }
 
     @Override
-    public void setActions(@NonNull PostprocessingActions actions) {
+    public void setActions(@NonNull PostprocessingFeatures actions) {
         configuration.obfuscate = actions.isObfuscate();
         configuration.optimize = actions.isOptimize();
         configuration.shrink = actions.isRemoveUnusedCode();

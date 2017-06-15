@@ -160,7 +160,7 @@ public class AppPluginDslTest {
     }
 
     @Test
-    public void testPostprocessingBlock_noActions() throws Exception {
+    public void testPostprocessingBlock_noFeatures() throws Exception {
         BuildType release = android.getBuildTypes().getByName("release");
         release.getPostprocessing().setCodeShrinker("proguard");
 

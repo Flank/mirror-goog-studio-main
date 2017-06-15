@@ -41,7 +41,7 @@ import com.android.build.gradle.ProguardFiles;
 import com.android.build.gradle.external.gson.NativeBuildConfigValue;
 import com.android.build.gradle.internal.InstantRunTaskManager;
 import com.android.build.gradle.internal.LoggerWrapper;
-import com.android.build.gradle.internal.PostprocessingActions;
+import com.android.build.gradle.internal.PostprocessingFeatures;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
@@ -571,11 +571,11 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @Override
     @Nullable
-    public PostprocessingActions getPostprocessingActions() {
+    public PostprocessingFeatures getPostprocessingFeatures() {
         // If the new DSL block is not used, all these flags need to be in the config files.
         PostprocessingOptions postprocessingOptions = getPostprocessingOptionsIfUsed();
         if (postprocessingOptions != null) {
-            return PostprocessingActions.create(
+            return PostprocessingFeatures.create(
                     postprocessingOptions.isRemoveUnusedCode(),
                     postprocessingOptions.isObfuscate(),
                     postprocessingOptions.isOptimizeCode());

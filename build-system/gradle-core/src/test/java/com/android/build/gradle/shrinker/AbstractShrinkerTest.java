@@ -32,7 +32,7 @@ import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformOutputProvider;
 import com.android.build.gradle.shrinker.parser.BytecodeVersion;
-import com.android.build.gradle.shrinker.parser.Flags;
+import com.android.build.gradle.shrinker.parser.ProguardFlags;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.testutils.TestUtils;
@@ -240,13 +240,13 @@ public abstract class AbstractShrinkerTest {
     }
 
     @NonNull
-    protected static Flags parseKeepRules(String rules) {
+    protected static ProguardFlags parseKeepRules(String rules) {
         ProguardConfig config = new ProguardConfig();
         config.parse(rules);
         return config.getFlags();
     }
 
-    protected FullRunShrinker<String>.Result fullRun(Flags flags) throws IOException {
+    protected FullRunShrinker<String>.Result fullRun(ProguardFlags flags) throws IOException {
         return fullRun(
                 ProguardParserKeepRules.keepRules(flags, mShrinkerLogger),
                 ProguardParserKeepRules.whyAreYouKeepingRules(flags, mShrinkerLogger));

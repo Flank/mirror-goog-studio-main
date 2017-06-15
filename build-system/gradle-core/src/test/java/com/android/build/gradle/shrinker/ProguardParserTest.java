@@ -19,15 +19,16 @@ package com.android.build.gradle.shrinker;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.android.build.gradle.shrinker.parser.Flags;
 import com.android.build.gradle.shrinker.parser.GrammarActions;
+import com.android.build.gradle.shrinker.parser.ProguardFlags;
+import com.android.build.gradle.shrinker.parser.UnsupportedFlagsHandler;
 import org.junit.Test;
 
 public class ProguardParserTest {
     @Test
     public void testDontFlags_noneSet() throws Exception {
-        Flags flags = new Flags();
-        GrammarActions.parse("-dontwarn com.**", flags);
+        ProguardFlags flags = new ProguardFlags();
+        GrammarActions.parse("-dontwarn com.**", flags, UnsupportedFlagsHandler.NO_OP);
         assertFalse(flags.isDontObfuscate());
         assertFalse(flags.isDontShrink());
         assertFalse(flags.isDontOptimize());
@@ -35,8 +36,9 @@ public class ProguardParserTest {
 
     @Test
     public void testDontFlags_dontOptimize() throws Exception {
-        Flags flags = new Flags();
-        GrammarActions.parse("-dontwarn com.**\n-dontoptimize", flags);
+        ProguardFlags flags = new ProguardFlags();
+        GrammarActions.parse(
+                "-dontwarn com.**\n-dontoptimize", flags, UnsupportedFlagsHandler.NO_OP);
         assertFalse(flags.isDontObfuscate());
         assertFalse(flags.isDontShrink());
         assertTrue(flags.isDontOptimize());
@@ -44,8 +46,9 @@ public class ProguardParserTest {
 
     @Test
     public void testDontFlags_dontObfuscate() throws Exception {
-        Flags flags = new Flags();
-        GrammarActions.parse("-dontwarn com.**\n-dontobfuscate", flags);
+        ProguardFlags flags = new ProguardFlags();
+        GrammarActions.parse(
+                "-dontwarn com.**\n-dontobfuscate", flags, UnsupportedFlagsHandler.NO_OP);
         assertTrue(flags.isDontObfuscate());
         assertFalse(flags.isDontShrink());
         assertFalse(flags.isDontOptimize());
@@ -53,8 +56,8 @@ public class ProguardParserTest {
 
     @Test
     public void testDontFlags_dontShrink() throws Exception {
-        Flags flags = new Flags();
-        GrammarActions.parse("-dontwarn com.**\n-dontshrink", flags);
+        ProguardFlags flags = new ProguardFlags();
+        GrammarActions.parse("-dontwarn com.**\n-dontshrink", flags, UnsupportedFlagsHandler.NO_OP);
         assertFalse(flags.isDontObfuscate());
         assertTrue(flags.isDontShrink());
         assertFalse(flags.isDontOptimize());

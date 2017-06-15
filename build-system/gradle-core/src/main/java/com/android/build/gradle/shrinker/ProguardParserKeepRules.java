@@ -21,13 +21,13 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.shrinker.parser.AnnotationSpecification;
 import com.android.build.gradle.shrinker.parser.ClassSpecification;
 import com.android.build.gradle.shrinker.parser.FieldSpecification;
-import com.android.build.gradle.shrinker.parser.Flags;
 import com.android.build.gradle.shrinker.parser.InheritanceSpecification;
 import com.android.build.gradle.shrinker.parser.Matcher;
 import com.android.build.gradle.shrinker.parser.MethodSpecification;
 import com.android.build.gradle.shrinker.parser.ModifierSpecification;
 import com.android.build.gradle.shrinker.parser.ModifierSpecification.ModifierTarget;
 import com.android.build.gradle.shrinker.parser.NameSpecification;
+import com.android.build.gradle.shrinker.parser.ProguardFlags;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -36,8 +36,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Implementation of {@link KeepRules} that uses {@link Flags} obtained from parsing a ProGuard
- * config file.
+ * Implementation of {@link KeepRules} that uses {@link ProguardFlags} obtained from parsing a
+ * ProGuard config file.
  */
 public class ProguardParserKeepRules implements KeepRules {
 
@@ -59,7 +59,7 @@ public class ProguardParserKeepRules implements KeepRules {
 
     @NonNull
     public static ProguardParserKeepRules keepRules(
-            @NonNull Flags flags, @NonNull ShrinkerLogger shrinkerLogger) {
+            @NonNull ProguardFlags flags, @NonNull ShrinkerLogger shrinkerLogger) {
         return new ProguardParserKeepRules(
                 flags.getKeepClassSpecs(),
                 flags.getKeepClassMembersSpecs(),
@@ -69,7 +69,7 @@ public class ProguardParserKeepRules implements KeepRules {
 
     @Nullable
     public static ProguardParserKeepRules whyAreYouKeepingRules(
-            @NonNull Flags flags, @NonNull ShrinkerLogger shrinkerLogger) {
+            @NonNull ProguardFlags flags, @NonNull ShrinkerLogger shrinkerLogger) {
         if (flags.getWhyAreYouKeepingSpecs().isEmpty()) {
             return null;
         } else {
