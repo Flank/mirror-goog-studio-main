@@ -943,24 +943,6 @@ public abstract class BaseExtension implements AndroidConfig {
         this.generatePureSplits = flag;
     }
 
-    private boolean enforceUniquePackageName = true;
-
-    public void enforceUniquePackageName(boolean value) {
-        if (!value) {
-            LoggingUtil.displayDeprecationWarning(logger, project, "Support for libraries with same package name is deprecated and will be removed in a future release.");
-        }
-        enforceUniquePackageName = value;
-    }
-
-    public void setEnforceUniquePackageName(boolean value) {
-        enforceUniquePackageName(value);
-    }
-
-    @Override
-    public boolean getEnforceUniquePackageName() {
-        return enforceUniquePackageName;
-    }
-
     /** {@inheritDoc} */
     @Override
     public ProductFlavor getDefaultConfig() {

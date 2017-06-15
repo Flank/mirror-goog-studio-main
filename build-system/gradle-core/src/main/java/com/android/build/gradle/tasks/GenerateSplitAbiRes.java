@@ -196,10 +196,7 @@ public class GenerateSplitAbiRes extends BaseTask {
                     .setResourceOutputApk(resPackageFile)
                     .setVariantType(variantType);
 
-            getBuilder().processResources(
-                    aapt,
-                    aaptConfig,
-                    false /* enforceUniquePackageName */);
+            getBuilder().processResources(aapt, aaptConfig);
             splitScope.addOutputForSplit(
                     VariantScope.TaskOutputType.ABI_PROCESSED_SPLIT_RES,
                     abiApkData,

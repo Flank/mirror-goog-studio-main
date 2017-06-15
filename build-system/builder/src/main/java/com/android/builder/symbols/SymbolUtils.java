@@ -24,18 +24,29 @@ import com.android.ide.common.xml.AndroidManifestParser;
 import com.android.ide.common.xml.ManifestData;
 import com.android.io.FileWrapper;
 import com.android.io.StreamException;
+import com.android.resources.ResourceType;
 import com.android.xml.AndroidManifest;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.SetMultimap;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -54,7 +65,6 @@ public final class SymbolUtils {
      *
      * @param librarySymbols table with symbols of resources for the library.
      * @param libraries libraries which this library depends on
-     * @param enforceUniquePackageName should the package name be unique in the project
      * @param mainPackageName package name of this library
      * @param manifestFile manifest file
      * @param sourceOut directory to contain R.java
@@ -65,13 +75,13 @@ public final class SymbolUtils {
     public static void processLibraryMainSymbolTable(
             @NonNull final SymbolTable librarySymbols,
             @NonNull List<LibraryInfo> libraries,
-            boolean enforceUniquePackageName,
             @Nullable String mainPackageName,
             @NonNull File manifestFile,
             @NonNull File sourceOut,
             @NonNull File symbolsOut,
             @Nullable File proguardOut,
-            @Nullable File mergedResources)
+            @Nullable File mergedResources,
+            boolean disableMergeInLib)
             throws IOException {
 
         Preconditions.checkNotNull(sourceOut, "Source output directory should not be null");
@@ -93,22 +103,19 @@ public final class SymbolUtils {
         }
 
         // Get symbol tables of the libraries we depend on.
-        Set<SymbolTable> depSymbolTables =
-                loadDependenciesSymbolTables(libraries, enforceUniquePackageName, mainPackageName);
-        // This will produce a symbol table with conflicting IDs but that doesn't matter for
-        // compilation.
-        // Use a map keyed by the symbol name and type to de-duplicate symbols coming from
-        // libraries.
-        HashMap<String, Symbol> symbols = new HashMap<>();
-        symbols.putAll(librarySymbols.getSymbols());
-        for (SymbolTable depSymbolTable : depSymbolTables) {
-            symbols.putAll(depSymbolTable.getSymbols());
+        Set<SymbolTable> depSymbolTables = loadDependenciesSymbolTables(libraries, mainPackageName);
+
+        SymbolTable mainSymbolTable;
+        if (disableMergeInLib) {
+            // Merge all the symbols together.
+            // We have to rewrite the IDs because some published R.txt inside AARs are using the
+            // wrong value for some types, and we need to ensure there is no collision in the
+            // file we are creating.
+            mainSymbolTable =
+                    mergeAndRenumberSymbols(mainPackageName, librarySymbols, depSymbolTables);
+        } else {
+            mainSymbolTable = librarySymbols.rename(mainPackageName);
         }
-        SymbolTable mainSymbolTable =
-                SymbolTable.builder()
-                        .tablePackage(mainPackageName)
-                        .addAll(symbols.values())
-                        .build();
 
         // Generate R.txt file.
         generateRTxt(mainSymbolTable, symbolsOut);
@@ -120,18 +127,181 @@ public final class SymbolUtils {
         RGeneration.generateRForLibraries(mainSymbolTable, depSymbolTables, sourceOut, false);
     }
 
+    @NonNull
+    @VisibleForTesting
+    static SymbolTable mergeAndRenumberSymbols(
+            @NonNull String mainPackageName,
+            @NonNull SymbolTable librarySymbols,
+            Set<SymbolTable> dependencySymbols) {
+        /*
+         For most symbol types, we are simply going to loop on all the symbols, and merge them in
+         the final table while renumbering them.
+         For Styleable arrays we will handle things differently. From each table, we will look
+         at the array values, and build a list of ATTR that this references, and merge the ATTR
+         list from all the table. We will then regenerate a final array with the merged ATTR.
+        */
+
+        // Merge the library symbols into the same collection as the dependencies. There's no
+        // order or preference, and this allows just looping on them all
+        List<SymbolTable> tables = Lists.newArrayListWithCapacity(dependencySymbols.size() + 1);
+        tables.add(librarySymbols);
+        tables.addAll(dependencySymbols);
+
+        // the ID value provider.
+        IdProvider idProvider = IdProvider.sequential();
+
+        // first pass, we use a SetMultimap to reorder the symbols later.
+        SetMultimap<ResourceType, String> newSymbolMap = HashMultimap.create();
+
+        // let's keep a map of the new ATTR names to symbol so that we can find them easily later.
+        Map<String, Symbol> attrToValue = new HashMap<>();
+
+        // also record for each table, a reverse map for the ATTR values, from value to symbol
+        Map<String, Map<String, Symbol>> tableToValueToName = Maps.newHashMap();
+
+        for (SymbolTable table : tables) {
+            Map<String, Symbol> valueToName = Maps.newHashMap();
+            tableToValueToName.put(table.getTablePackage(), valueToName);
+
+            for (Map.Entry<String, Symbol> entry : table.getSymbols().entrySet()) {
+                final Symbol symbol = entry.getValue();
+                final ResourceType resourceType = symbol.getResourceType();
+                final String symbolName = symbol.getName();
+
+                if (resourceType == ResourceType.STYLEABLE) {
+                    continue;
+                }
+
+                // ignore STYLEABLE for now.
+                newSymbolMap.put(resourceType, symbolName);
+
+                // if it's an ATTR, we want to record the old value for later
+                if (resourceType == ResourceType.ATTR) {
+                    valueToName.put(symbol.getValue(), symbol);
+                }
+            }
+        }
+
+        // put the new symbols into the map for the table, sorted.
+        Map<String, Symbol> newSymbols = Maps.newHashMap();
+        for (ResourceType resourceType : newSymbolMap.keySet()) {
+            List<String> symbolNames = Lists.newArrayList(newSymbolMap.get(resourceType));
+            Collections.sort(symbolNames);
+
+            for (String symbolName : symbolNames) {
+                final String value = idProvider.next(resourceType);
+                final Symbol newSymbol =
+                        Symbol.createSymbol(resourceType, symbolName, SymbolJavaType.INT, value);
+                newSymbols.put(SymbolTable.key(resourceType, symbolName), newSymbol);
+
+                if (resourceType == ResourceType.ATTR) {
+                    // store the new ATTR value in the map
+                    attrToValue.put(symbolName, newSymbol);
+                }
+            }
+        }
+
+        /*
+        handle styleable now.
+        Loop on all the symbols from every table, and process styleable arrays:
+        - resolve the array values to ATTR names.
+        - put all names into a multimap from array-name -> list of ATTR names.
+        After this will use the new symbols to generate a new array with all the ATTR, as well
+        as the indices styleable entries.
+        */
+
+        SetMultimap<String, String> arrayToAttrs = HashMultimap.create();
+        final Splitter splitter = Splitter.on(',').omitEmptyStrings();
+
+        for (SymbolTable table : tables) {
+            final ImmutableMap<String, Symbol> symbols = table.getSymbols();
+            // map for value to ATTR name to find array values.
+            Map<String, Symbol> valueToName = tableToValueToName.get(table.getTablePackage());
+
+            for (Map.Entry<String, Symbol> entry : symbols.entrySet()) {
+                final Symbol symbol = entry.getValue();
+                final ResourceType resourceType = symbol.getResourceType();
+
+                if (resourceType != ResourceType.STYLEABLE
+                        || symbol.getJavaType() != SymbolJavaType.INT_LIST) {
+                    continue;
+                }
+
+                String arrayName = symbol.getName();
+
+                String valueList = symbol.getValue().trim();
+                // remove the front and back { }
+                valueList = valueList.substring(1, valueList.length() - 1).trim();
+
+                // split on the comma
+                Iterable<String> oldValues = splitter.split(valueList);
+
+                for (String oldValue : oldValues) {
+                    Symbol oldSymbol = valueToName.get(oldValue);
+                    if (oldSymbol != null) {
+                        // this shouldn't happen, but if it does, just skip it.
+                        arrayToAttrs.put(arrayName, oldSymbol.getName());
+                    }
+                }
+            }
+        }
+
+        // at this point we have gathered all the arrays and all their values. Write them
+        // down as new symbols.
+        for (String arrayName : arrayToAttrs.keySet()) {
+            // get the attributes names as a list, because I'm not sure what stream() does on a set.
+            List<String> attributes = Lists.newArrayList(arrayToAttrs.get(arrayName));
+            Collections.sort(attributes);
+
+            // now get the attributes values using the new symbol map
+            List<String> attributeValues =
+                    attributes
+                            .stream()
+                            .map(attrToValue::get)
+                            .map(Symbol::getValue)
+                            .collect(Collectors.toList());
+
+            // write the array first
+            newSymbols.put(
+                    SymbolTable.key(ResourceType.STYLEABLE, arrayName),
+                    Symbol.createSymbol(
+                            ResourceType.STYLEABLE,
+                            arrayName,
+                            SymbolJavaType.INT_LIST,
+                            "{" + Joiner.on(',').join(attributeValues) + "}"));
+
+            // then create the index symbols
+            int index = 0;
+            for (String attribute : attributes) {
+                String indexName = arrayName + "_" + attribute;
+                newSymbols.put(
+                        SymbolTable.key(ResourceType.STYLEABLE, indexName),
+                        Symbol.createSymbol(
+                                ResourceType.STYLEABLE,
+                                indexName,
+                                SymbolJavaType.INT,
+                                Integer.toString(index++)));
+            }
+        }
+
+        return SymbolTable.builder()
+                .tablePackage(mainPackageName)
+                .addAll(
+                        newSymbols
+                                .values()) // FIXME this does too much validation, when we know it's already fine.
+                .build();
+    }
+
     /**
      * Load symbol tables of each library on which the main library/application depends on.
      *
      * @param libraries libraries which the main library/application depends on
-     * @param enforceUniquePackageName should the package name be unique in the project
      * @param mainPackageName package name of the main library/application
      * @return a set of of symbol table for each library
      */
     @NonNull
     public static Set<SymbolTable> loadDependenciesSymbolTables(
             @NonNull List<LibraryInfo> libraries,
-            boolean enforceUniquePackageName,
             @NonNull String mainPackageName)
             throws IOException {
 
@@ -148,7 +318,7 @@ public final class SymbolUtils {
                         "Failed to read manifest " + depMan.getAbsolutePath(), e);
             }
 
-            if (mainPackageName.equals(depPackageName) && enforceUniquePackageName) {
+            if (mainPackageName.equals(depPackageName)) {
                 throw new RuntimeException(
                         String.format(
                                 "Error: A library uses the same package as this project: %s",

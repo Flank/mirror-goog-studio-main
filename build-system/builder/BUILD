@@ -1,5 +1,6 @@
 load("//tools/base/bazel:bazel.bzl", "fileset")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
 
 fileset(
     name = "resources",
@@ -80,9 +81,9 @@ maven_pom(
     source = "//tools/buildSrc/base:build_version",
 )
 
-java_test(
+kotlin_test(
     name = "tests",
-    srcs = glob(["src/test/java/**"]),
+    srcs = ["src/test/java"],
     data = [
         "//prebuilts/studio/sdk:build-tools/latest",
         "//prebuilts/studio/sdk:platforms/latest",

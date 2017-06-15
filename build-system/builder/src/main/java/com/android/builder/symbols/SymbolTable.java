@@ -17,6 +17,7 @@
 package com.android.builder.symbols;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.resources.ResourceType;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
@@ -83,7 +84,7 @@ public abstract class SymbolTable {
      * @return the unique ID
      */
     @NonNull
-    private static String key(@NonNull ResourceType resourceType, @NonNull String name) {
+    public static String key(@NonNull ResourceType resourceType, @NonNull String name) {
         return resourceType.name() + " " + name;
     }
 
@@ -281,6 +282,17 @@ public abstract class SymbolTable {
          */
         public boolean contains(@NonNull Symbol symbol) {
             return symbols.containsKey(key(symbol));
+        }
+
+        /**
+         * Returns the symbol form the table matching the provided symbol
+         *
+         * @param symbol the symbol
+         * @return
+         */
+        @Nullable
+        public Symbol get(@NonNull Symbol symbol) {
+            return symbols.get(key(symbol));
         }
 
         /**

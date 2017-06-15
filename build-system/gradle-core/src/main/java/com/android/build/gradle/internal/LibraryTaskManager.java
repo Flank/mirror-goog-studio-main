@@ -198,6 +198,8 @@ public class LibraryTaskManager extends TaskManager {
                             // Switch to package where possible so we stop merging resources in
                             // libraries
                             projectOptions.get(BooleanOption.ENABLE_NEW_RESOURCE_PROCESSING)
+                                            && projectOptions.get(
+                                                    BooleanOption.DISABLE_RES_MERGE_IN_LIBRARY)
                                     ? MergeType.PACKAGE
                                     : MergeType.MERGE,
                             globalScope.getProjectBaseName());

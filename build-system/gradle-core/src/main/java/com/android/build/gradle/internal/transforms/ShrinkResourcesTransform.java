@@ -105,7 +105,6 @@ public class ShrinkResourcesTransform extends Transform {
     @NonNull private final AaptOptions aaptOptions;
     @NonNull private final VariantType variantType;
     private final boolean isDebuggableBuildType;
-    private final boolean enforceUniquePackageName;
     @NonNull private final List<AaptPackageConfig.LibraryInfo> libraryInfoList;
     @NonNull private final SplitHandlingPolicy splitHandlingPolicy;
 
@@ -141,7 +140,6 @@ public class ShrinkResourcesTransform extends Transform {
         this.aaptOptions = globalScope.getExtension().getAaptOptions();
         this.variantType = variantData.getType();
         this.isDebuggableBuildType = variantConfig.getBuildType().isDebuggable();
-        this.enforceUniquePackageName = globalScope.getExtension().getEnforceUniquePackageName();
         this.libraryInfoList = ProcessAndroidResources.computeLibraryInfoList(variantScope);
         this.splitHandlingPolicy = variantData.getSplitScope().getSplitHandlingPolicy();
 
@@ -220,7 +218,6 @@ public class ShrinkResourcesTransform extends Transform {
                                 aaptOptions.getCruncherProcesses()));
         params.put("variantType", variantType.name());
         params.put("isDebuggableBuildType", isDebuggableBuildType);
-        params.put("enforceUniquePackageName", enforceUniquePackageName);
         params.put("libraryInfoList", Joiner.on(";").join(libraryInfoList));
         params.put("splitHandlingPolicy", splitHandlingPolicy);
 
@@ -365,7 +362,7 @@ public class ShrinkResourcesTransform extends Transform {
                                         splitList.getFilters(SplitList.RESOURCE_CONFIGS))
                                 .setSplits(SplitList.getSplits(splitList, splitHandlingPolicy));
 
-                androidBuilder.processResources(aapt, aaptPackageConfig, enforceUniquePackageName);
+                androidBuilder.processResources(aapt, aaptPackageConfig);
             } else {
                 // Just rewrite the .ap_ file to strip out the res/ files for unused resources
                 analyzer.rewriteResourceZip(uncompressedResourceFile, compressedResourceFile);
