@@ -27,9 +27,16 @@ import java.io.IOException;
  * that will be invoked while the command is executing.
  */
 public interface AdbCommand<T> {
+    /** Prefix for all queries to the host adb server. */
+    String HOST_COMMAND_PREFIX = "host:";
+
     /** Returns a short name for this command. */
     @NonNull
     String getName();
+
+    /** Returns the adb query string for this command. */
+    @NonNull
+    String getQuery();
 
     /** Executes this command using the given connection to the adb server. */
     @NonNull

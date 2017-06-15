@@ -18,7 +18,7 @@ package com.android.tools.device.internal.adb;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.tools.device.internal.adb.commands.HostService;
+import com.android.tools.device.internal.adb.commands.ServerVersion;
 import com.google.common.base.Charsets;
 import com.google.common.primitives.Ints;
 import java.io.BufferedOutputStream;
@@ -50,7 +50,7 @@ class SocketProbe implements Probe {
                     BufferedReader r =
                             new BufferedReader(
                                     new InputStreamReader(s.getInputStream(), Charsets.UTF_8))) {
-                byte[] cmd = HostService.VERSION.getCommand();
+                byte[] cmd = new ServerVersion().getQuery().getBytes(Charsets.UTF_8);
                 out.write(String.format(Locale.US, "%04X", cmd.length).getBytes(Charsets.UTF_8));
                 out.write(cmd);
                 out.flush();

@@ -16,45 +16,55 @@
 
 package com.android.tools.device.internal.adb.commands
 
+import com.android.tools.device.internal.adb.AdbFeature
 import com.android.tools.device.internal.adb.ChannelConnection
 import com.android.tools.device.internal.adb.PipeAdbServer
 import com.google.common.base.Charsets
-import com.google.common.primitives.UnsignedInteger
-import com.google.common.truth.Truth.assertThat
+import com.google.common.truth.Truth
+import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.Timeout
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 
-class ServerVersionTest {
+class HostFeaturesTest {
     @Rule @JvmField
     val testTimeout = Timeout(5, TimeUnit.SECONDS)
 
-    private val versionCommand: ServerVersion = ServerVersion()
+    private val featuresCommand = HostFeatures()
 
     @Test
-    fun version_nominal() {
+    fun execute_nominal() {
+        val data = mapOf(
+                "OKAY0000" to setOf(),
+                "OKAY000Cshell_v2,cmd" to setOf(AdbFeature.SHELL2, AdbFeature.CMD),
+                "OKAY000Bshell_v2,cm" to setOf(AdbFeature.SHELL2, AdbFeature.UNKNOWN)
+        )
+
         PipeAdbServer().use { server ->
             ChannelConnection(server.responseSource, server.commandSink).use { connection ->
-                server.respondWith("OKAY00040024".toByteArray(Charsets.UTF_8))
-                val expected = UnsignedInteger.valueOf(0x24)
-                assertThat(versionCommand.execute(connection)).isEqualTo(expected)
+                for ((k, v) in data) {
+                    server.respondWith(k.toByteArray(Charsets.UTF_8))
+                    Truth.assertThat(featuresCommand.execute(connection)).isEqualTo(v)
+                }
             }
         }
     }
 
     @Test
-    fun version_failure() {
+    fun execute_error() {
         PipeAdbServer().use { server ->
             ChannelConnection(server.responseSource, server.commandSink).use { connection ->
-                server.respondWith("FAIL0003Err".toByteArray(Charsets.UTF_8))
+                server.respondWith("FAIL0003err".toByteArray(Charsets.UTF_8))
                 try {
-                    versionCommand.execute(connection)
+                    featuresCommand.execute(connection)
+                    Assert.fail("Expected to throw an IOException when server returns a failure message")
                 } catch (e: IOException) {
-                    assertThat(e.message).isEqualTo("Err")
+                    Truth.assertThat(e.message).isEqualTo("Error retrieving feature set: err")
                 }
             }
         }
+
     }
 }

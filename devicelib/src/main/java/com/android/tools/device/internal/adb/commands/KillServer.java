@@ -21,17 +21,24 @@ import com.android.tools.device.internal.adb.Connection;
 import java.io.IOException;
 
 public class KillServer implements AdbCommand<Void> {
-    @NonNull
-    @Override
-    public Void execute(@NonNull Connection conn) throws IOException {
-        CommandBuffer buffer = new CommandBuffer().writeHostCommand(HostService.KILL);
-        conn.issueCommand(buffer);
-        return null;
-    }
+    private static final String COMMAND = "kill";
 
     @NonNull
     @Override
     public String getName() {
-        return HostService.KILL.toString();
+        return COMMAND;
+    }
+
+    @NonNull
+    @Override
+    public String getQuery() {
+        return HOST_COMMAND_PREFIX + COMMAND;
+    }
+
+    @NonNull
+    @Override
+    public Void execute(@NonNull Connection conn) throws IOException {
+        conn.issueCommand(this);
+        return null;
     }
 }

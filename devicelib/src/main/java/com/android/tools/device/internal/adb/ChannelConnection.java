@@ -18,7 +18,7 @@ package com.android.tools.device.internal.adb;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.tools.device.internal.adb.commands.CommandBuffer;
+import com.android.tools.device.internal.adb.commands.AdbCommand;
 import com.android.tools.device.internal.adb.commands.CommandResult;
 import com.google.common.base.Charsets;
 import com.google.common.primitives.UnsignedInteger;
@@ -45,8 +45,8 @@ public class ChannelConnection implements Connection {
 
     @Override
     @NonNull
-    public CommandResult executeCommand(@NonNull CommandBuffer buffer) throws IOException {
-        issueCommand(buffer);
+    public CommandResult executeCommand(@NonNull AdbCommand command) throws IOException {
+        issueCommand(command);
         String status = readString(4);
         if ("OKAY".equals(status)) {
             return CommandResult.OKAY;
@@ -58,10 +58,10 @@ public class ChannelConnection implements Connection {
     }
 
     @Override
-    public void issueCommand(@NonNull CommandBuffer buffer) throws IOException {
-        byte[] command = buffer.toByteArray();
-        writeFully(String.format("%04X", command.length).getBytes(Charsets.UTF_8));
-        writeFully(command);
+    public void issueCommand(@NonNull AdbCommand command) throws IOException {
+        byte[] b = command.getQuery().getBytes(Charsets.UTF_8);
+        writeFully(String.format("%04X", b.length).getBytes(Charsets.UTF_8));
+        writeFully(b);
     }
 
     @Nullable

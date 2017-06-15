@@ -17,20 +17,17 @@
 package com.android.tools.device.internal.adb.commands;
 
 import com.android.annotations.NonNull;
+import com.android.tools.device.internal.adb.AdbFeature;
 import com.android.tools.device.internal.adb.Connection;
-import com.android.tools.device.internal.adb.DeviceHandle;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-/**
- * {@link ListDevices} is equivalent to "adb devices -l" command. It issues the "devices -l" command
- * to the adb server and returns the data returned parsed into {@link DeviceHandle}s.
- */
-public class ListDevices implements AdbCommand<List<DeviceHandle>> {
-    private static final String COMMAND = "devices-l";
+public class HostFeatures implements AdbCommand<Set<AdbFeature>> {
+    private static final String COMMAND = "host-features";
+    private static final String FEATURE_DELIMITER = ",";
 
     @NonNull
     @Override
@@ -46,11 +43,11 @@ public class ListDevices implements AdbCommand<List<DeviceHandle>> {
 
     @NonNull
     @Override
-    public List<DeviceHandle> execute(@NonNull Connection conn) throws IOException {
+    public Set<AdbFeature> execute(@NonNull Connection conn) throws IOException {
         CommandResult result = conn.executeCommand(this);
 
         if (!result.isOk()) {
-            String msg = "Error retrieving device list";
+            String msg = "Error retrieving feature set";
             String error = result.getError();
             if (error != null) {
                 msg += ": " + error;
@@ -60,13 +57,13 @@ public class ListDevices implements AdbCommand<List<DeviceHandle>> {
 
         int len = conn.readUnsignedHexInt().intValue();
         if (len == 0) {
-            return ImmutableList.of();
+            return ImmutableSet.of();
         }
 
         String response = conn.readString(len);
 
-        return Arrays.stream(response.split("\n"))
-                .map(DeviceHandle::create)
-                .collect(Collectors.toList());
+        return Arrays.stream(response.split(FEATURE_DELIMITER))
+                .map(AdbFeature::fromFeatureId)
+                .collect(Collectors.toSet());
     }
 }

@@ -16,15 +16,15 @@
 
 package com.android.tools.device.internal.adb.commands
 
+import com.android.testutils.truth.MoreTruth
+import com.android.tools.device.internal.adb.ChannelConnection
+import com.android.tools.device.internal.adb.PipeAdbServer
+import com.google.common.base.Charsets
 import com.google.common.truth.Truth.assertThat
 import org.junit.Assert.fail
-import com.android.testutils.truth.MoreTruth
-import com.android.tools.device.internal.adb.PipeAdbServer
-import com.android.tools.device.internal.adb.ChannelConnection
-import com.google.common.base.Charsets
+import org.junit.Test
 import java.io.IOException
 import java.util.Locale
-import org.junit.Test
 
 class ListDevicesTest {
     @Test

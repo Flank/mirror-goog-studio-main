@@ -16,9 +16,8 @@
 
 package com.android.tools.device.internal.adb
 
-import com.android.tools.device.internal.adb.commands.CommandBuffer
 import com.android.tools.device.internal.adb.commands.CommandResult
-import com.android.tools.device.internal.adb.commands.HostService
+import com.android.tools.device.internal.adb.commands.ListDevices
 import com.google.common.base.Charsets
 import com.google.common.primitives.UnsignedInteger
 import com.google.common.truth.Truth.assertThat
@@ -44,8 +43,7 @@ class ChannelConnectionTest {
         PipeAdbServer().use { server ->
             ChannelConnection(server.responseSource, server.commandSink).use { connection ->
                 server.respondWith("OKAY".toByteArray(Charsets.UTF_8))
-                val someCommand = CommandBuffer().writeHostCommand(HostService.DEVICES)
-                assertThat(connection.executeCommand(someCommand).isOk).isTrue()
+                assertThat(connection.executeCommand(ListDevices()).isOk).isTrue()
             }
         }
     }
@@ -55,8 +53,7 @@ class ChannelConnectionTest {
         PipeAdbServer().use { server ->
             ChannelConnection(server.responseSource, server.commandSink).use { connection ->
                 server.respondWith("FAIL0000".toByteArray(Charsets.UTF_8))
-                val someCommand = CommandBuffer().writeHostCommand(HostService.DEVICES)
-                val commandResult = connection.executeCommand(someCommand)
+                val commandResult = connection.executeCommand(ListDevices())
                 assertThat(commandResult.isOk).isFalse()
                 assertThat(commandResult.error).isNull()
             }
@@ -71,9 +68,8 @@ class ChannelConnectionTest {
         val future: Future<CommandResult> = PipeAdbServer().use { server ->
             ChannelConnection(server.responseSource, server.commandSink).use { connection ->
                 server.respondWith("OK".toByteArray(Charsets.UTF_8))
-                val someCommand = CommandBuffer().writeHostCommand(HostService.DEVICES)
                 val commandResult = executor.submit(Callable {
-                    connection.executeCommand(someCommand)
+                    connection.executeCommand(ListDevices())
                 })
 
                 try {
