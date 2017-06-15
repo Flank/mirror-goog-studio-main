@@ -26,6 +26,7 @@ import java.util.Map;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
+import org.objectweb.asm.Handle;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
@@ -550,6 +551,122 @@ public class IncrementalChangeVisitor extends IncrementalVisitor {
             if (DEBUG) {
                 System.out.println("Done with generic method dispatch");
             }
+        }
+
+        @Override
+        public void visitInvokeDynamicInsn(
+                String name, String desc, Handle bsm, Object... bsmArgs) {
+            // invokedynamic bytecode will look like :
+            // 23: invokedynamic #16,  0             // InvokeDynamic #2:apply:(I)Ljava/util/function/Function;
+
+            // #16 is the constant pool entry :
+            // #16 = InvokeDynamic      #2:#87        // #2:apply:(I)Ljava/util/function/Function;
+
+            // and #2 here is the pointer to boostrap method entry :
+            // 2: #69 invokestatic java/lang/invoke/LambdaMetafactory.metafactory:
+            //                  (Ljava/lang/invoke/MethodHandles$Lookup;
+            //                   Ljava/lang/String;
+            //                   Ljava/lang/invoke/MethodType;
+            //                   Ljava/lang/invoke/MethodType;
+            //                   Ljava/lang/invoke/MethodHandle;
+            //                   Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;
+            // Method arguments:
+            // #70 (Ljava/lang/Object;)Ljava/lang/Object;
+            // #85 invokestatic com/java8/Java8FeaturesUser.lambda$contextualLambda$1:
+            //                  (ILjava/lang/Integer;)Ljava/lang/Integer;
+            // #86 (Ljava/lang/Integer;)Ljava/lang/Integer;
+
+            // A java8 boostrap methods are defined as follow :
+            //    public static CallSite bootstrap(
+            //              Lookup lookup,
+            //              String name,
+            //              MethodType type) throws Throwable
+
+            // the javac generated bootstrap method (which is not a real method but a few java
+            // bytecodes pointed to by a constant pool entry) is an invocation to the
+            //    java.lang.invoke.LambdaMetafactory.metafactory method
+
+            // the three argument types are as mentioned above :
+            // 1. method type of the functional interface, so any type is permitted.
+            //                Type.getType("(Ljava/lang/Object;)Ljava/lang/Object;"),
+            // 2. the invocation of the lambda function as a static.
+            // 3. the type of the lambda parameters and return type.
+
+            // now remember the boostrap method #2 above, will be translated in ASM to :
+            //
+            // mv.visitInvokeDynamicInsn("apply",
+            //        "(I)Ljava/util/function/Function;",
+            //        new Handle(Opcodes.H_INVOKESTATIC,
+            //                "java/lang/invoke/LambdaMetafactory",
+            //                "metafactory",
+            //                "(Ljava/lang/invoke/MethodHandles$Lookup;
+            //                  Ljava/lang/String;Ljava/lang/invoke/MethodType;
+            //                  Ljava/lang/invoke/MethodType;
+            //                  Ljava/lang/invoke/MethodHandle;
+            //                  Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;"),
+            //        new Object[]{
+            //                Type.getType("(Ljava/lang/Object;)Ljava/lang/Object;"),
+            //                new Handle(Opcodes.H_INVOKESTATIC,
+            //                        "com/java8/Java8FeaturesUser",
+            //                        "lambda$contextualLambda$1",
+            //                        "(ILjava/lang/Integer;)Ljava/lang/Integer;"),
+            //                Type.getType("(Ljava/lang/Integer;)Ljava/lang/Integer;")});
+
+            // In InstantRun the second parameter to the bootstrap method cannot be the original
+            // lambda anymore but should be the updated in the $override class. So basically, we
+            // just need to swap the owner for the lambda invocation to the $override version.
+
+            // when the lambda is capturing "this", it is implemented as an instance function and
+            // and INVOKE_SPECIAL will be used in place of the INVOKE_STATIC. However during
+            // method instrumentation, all lambdas are transformed into static methods, therefore
+            // lambda signature and invocation will need to be adapted.
+
+            Object bsmArg = bsmArgs[1];
+            if (bsmArg instanceof Handle) {
+                bsmArgs[1] = rewriteHandleOwner((Handle) bsmArg);
+            }
+            super.visitInvokeDynamicInsn(name, desc, bsm, bsmArgs);
+        }
+
+        /**
+         * Rewrites a method handle owner to this $override class and optionally change the method
+         * lookup in case the lambda function was an instance method.
+         *
+         * @param handle the method handle to rewrite
+         * @return the new method handle to use.
+         */
+        private Handle rewriteHandleOwner(Handle handle) {
+
+            if (handle.getOwner().equals(visitedClassName)) {
+                // if the target lambda captured "this", it is not a static method,
+                // therefore, we need to change the method signature.
+                MethodNode lambdaMethod =
+                        getMethodByNameInClass(handle.getName(), handle.getDesc(), classNode);
+                if (lambdaMethod == null) {
+                    throw new RuntimeException(
+                            String.format(
+                                    "Internal instant-run error while locating lambda %s"
+                                            + "in class %s, please file a bug",
+                                    handle.getName(), visitedClassName));
+                }
+                // if the original method was not static, it has now been transformed into a
+                // a static method during instrumentation, we should therefore adapt the
+                // lambda signature to include the receiver as the first parameter.
+                String desc =
+                        (lambdaMethod.access & Opcodes.ACC_STATIC) == 0
+                                ? "(L" + visitedClassName + ";" + handle.getDesc().substring(1)
+                                : handle.getDesc();
+
+                return new Handle(
+                        // no matter what the original invoke was, we now always invoke a static
+                        // method.
+                        Opcodes.H_INVOKESTATIC,
+                        visitedClassName + OVERRIDE_SUFFIX,
+                        handle.getName(),
+                        desc,
+                        false);
+            }
+            return handle;
         }
 
         /**

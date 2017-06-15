@@ -58,6 +58,12 @@ compile_and_instrument_patch("lineChangingVerifier", "incremental-change-visitor
 
 compile_and_instrument_patch("verifier", "incremental-change-visitor")
 
+compile_and_instrument_patch("java8", "incremental-change-visitor")
+
+compile_and_instrument_patch("java8PatchOne", "incremental-change-visitor")
+
+compile_and_instrument_patch("java8PatchTwo", "incremental-change-visitor")
+
 java_test(
     name = "instant-run-instrumentation-tests",
     srcs = glob(["src/test/java/**/*.java"]),
@@ -66,6 +72,9 @@ java_test(
         ":instrument-base-classes",
         ":instrument-changeBaseClass-classes",
         ":instrument-changeSubClass-classes",
+        ":instrument-java8-classes",
+        ":instrument-java8PatchOne-classes",
+        ":instrument-java8PatchTwo-classes",
         ":instrument-lineChangingVerifier-classes",
         ":instrument-verifier-classes",
         ":lineChangingVerifier-test-classes",
