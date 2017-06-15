@@ -95,5 +95,11 @@ public class InstantRunFullSplitApkTest {
                                 "build/intermediates/instant-run-support/debug/slice_0"
                                         + "/AndroidManifest.xml"))
                 .contains("android:versionCode=\"2001\"");
+
+        // Run the second time as regression test for bug 62100695
+        mProject.executor()
+                .withInstantRun(new AndroidVersion(24, null), OptionalCompilationStep.FULL_APK)
+                .with(StringOption.IDE_BUILD_TARGET_ABI, "armeabi-v7a")
+                .run("assembleDebug");
     }
 }
