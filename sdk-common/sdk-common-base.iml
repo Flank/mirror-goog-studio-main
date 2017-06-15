@@ -25,5 +25,7 @@
     <orderEntry type="library" name="gson" level="project" />
     <orderEntry type="module" module-name="repository" />
     <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
+    <orderEntry type="library" scope="TEST" name="equalsverifier" level="project" />
+    <orderEntry type="library" name="gradle-api" level="project" />
   </component>
 </module>
