@@ -157,8 +157,7 @@ public class ApiLookupTest extends AbstractCheckTest {
         assertEquals(9, mDb.getClassDeprecatedIn("org/xml/sax/Parser"));
     }
 
-    // FIXME: Disabled since API 26 update. b/62544321
-    public void ignore_testRemovedFields() {
+    public void testRemovedFields() {
         // Not removed
         assertEquals(-1, mDb.getFieldRemovedIn("android/Manifest$permission", "GET_PACKAGE_SIZE"));
         // Field only has since > 1, no removal
@@ -172,8 +171,7 @@ public class ApiLookupTest extends AbstractCheckTest {
                 23, mDb.getFieldRemovedIn("android/Manifest$permission", "AUTHENTICATE_ACCOUNTS"));
     }
 
-    // FIXME: Disabled since API 26 update. b/62544321
-    public void ignore_testRemovedCalls() {
+    public void testRemovedCalls() {
         // Not removed
         assertEquals(-1, mDb.getCallRemovedIn("android/app/Activity", "enterPictureInPictureMode",
                 "(Landroid/app/PictureInPictureArgs;)Z"));
@@ -184,8 +182,7 @@ public class ApiLookupTest extends AbstractCheckTest {
         assertEquals(11, mDb.getCallRemovedIn("android/app/Activity", "setPersistent", "(Z)V"));
     }
 
-    // FIXME: Disabled since API 26 update. b/62544321
-    public void ignore_testGetRemovedFields() {
+    public void testGetRemovedFields() {
         Collection<ApiMember> removedFields = mDb.getRemovedFields("android/Manifest$permission");
         assertTrue(removedFields.contains(new ApiMember("ACCESS_MOCK_LOCATION", 1, 0, 23)));
         assertTrue(removedFields.contains(new ApiMember("FLASHLIGHT", 1, 0, 24)));
@@ -193,8 +190,7 @@ public class ApiLookupTest extends AbstractCheckTest {
         assertTrue(removedFields.stream().noneMatch(member -> member.getSignature().equals("NFC")));
     }
 
-    // FIXME: Disabled since API 26 update. b/62544321
-    public void ignore_testGetRemovedCalls() {
+    public void testGetRemovedCalls() {
         Collection<ApiMember> removedMethods = mDb.getRemovedCalls("android/app/Activity");
         assertTrue(removedMethods.contains(new ApiMember("getInstanceCount()", 1, 0, 11)));
         assertTrue(removedMethods.contains(new ApiMember("setPersistent(Z)", 1, 0, 11)));
@@ -209,8 +205,7 @@ public class ApiLookupTest extends AbstractCheckTest {
                 .noneMatch(member -> member.getSignature().equals("close()")));
     }
 
-    // FIXME: Disabled since API 26 update. b/62544321
-    public void ignore_testRemovedClasses() {
+    public void testRemovedClasses() {
         // Not removed
         assertEquals(-1, mDb.getClassRemovedIn("android/app/Fragment"));
         // Removed
