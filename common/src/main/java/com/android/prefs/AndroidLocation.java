@@ -70,10 +70,6 @@ public final class AndroidLocation {
             mIsEnvVar = isEnvVar;
         }
 
-        public String getName() {
-            return mName;
-        }
-
         @Nullable
         public String validatePath(boolean silent) throws AndroidLocationException {
             String path;

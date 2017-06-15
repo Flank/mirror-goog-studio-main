@@ -24,7 +24,6 @@ import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.build.gradle.options.StringOption;
-import com.android.prefs.AndroidLocation;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
@@ -202,7 +201,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         arguments.add(
                 String.format(
                         "-D%s=%s",
-                        AndroidLocation.EnvVar.ANDROID_SDK_HOME.getName(),
+                        "ANDROID_SDK_HOME",
                         androidSdkHome.toAbsolutePath()));
 
         return arguments;
