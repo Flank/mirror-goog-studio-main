@@ -19,8 +19,6 @@ package com.android.builder.merge;
 import com.android.annotations.NonNull;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Closer;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
@@ -80,17 +78,13 @@ public final class IncrementalFileMergerOutputs {
 
             @Override
             public void create(
-                    @NonNull String path,
-                    @NonNull List<IncrementalFileMergerInput> inputs) {
+                    @NonNull String path, @NonNull List<IncrementalFileMergerInput> inputs) {
                 try (Closer closer = Closer.create()) {
                     List<InputStream> inStreams =
-                            inputs.stream()
-                                    .map(i -> i.openPath(path))
-                                    .peek(closer::register)
-                                    .collect(Collectors.toList());
-                    ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
-                    algorithm.merge(path, ImmutableList.copyOf(inStreams), bytesOut);
-                    writer.create(path, new ByteArrayInputStream(bytesOut.toByteArray()));
+                            inputs.stream().map(i -> i.openPath(path)).collect(Collectors.toList());
+                    InputStream mergedStream =
+                            algorithm.merge(path, ImmutableList.copyOf(inStreams), closer);
+                    writer.create(path, mergedStream);
                 } catch (IOException e) {
                     throw new UncheckedIOException(e);
                 }
@@ -103,13 +97,10 @@ public final class IncrementalFileMergerOutputs {
                     @NonNull List<IncrementalFileMergerInput> inputs) {
                 try (Closer closer = Closer.create()) {
                     List<InputStream> inStreams =
-                            inputs.stream()
-                                    .map(i -> i.openPath(path))
-                                    .peek(closer::register)
-                                    .collect(Collectors.toList());
-                    ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
-                    algorithm.merge(path, ImmutableList.copyOf(inStreams), bytesOut);
-                    writer.replace(path, new ByteArrayInputStream(bytesOut.toByteArray()));
+                            inputs.stream().map(i -> i.openPath(path)).collect(Collectors.toList());
+                    InputStream mergedStream =
+                            algorithm.merge(path, ImmutableList.copyOf(inStreams), closer);
+                    writer.replace(path, mergedStream);
                 } catch (IOException e) {
                     throw new UncheckedIOException(e);
                 }

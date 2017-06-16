@@ -24,6 +24,7 @@ import com.android.annotations.NonNull;
 import com.android.apkzlib.utils.IOExceptionFunction;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
@@ -36,17 +37,17 @@ public class IncrementalFileMergerOutputsTest {
 
     private List<List<byte[]>> algFrom = new ArrayList<>();
 
-    private StreamMergeAlgorithm alg = (path, from, to) -> {
-        try {
-            algFrom.add(
-                    from.stream()
-                            .map(IOExceptionFunction.asFunction(ByteStreams::toByteArray))
-                            .collect(Collectors.toList()));
-            to.write(new byte[] { 4, 5, 6, 3 });
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-    };
+    private StreamMergeAlgorithm alg =
+            (path, from, closer) -> {
+                algFrom.add(
+                        from.stream()
+                                .map(IOExceptionFunction.asFunction(ByteStreams::toByteArray))
+                                .collect(Collectors.toList()));
+                InputStream mergedStream = new ByteArrayInputStream(new byte[] {4, 5, 6, 3});
+                from.forEach(closer::register);
+                closer.register(mergedStream);
+                return mergedStream;
+            };
 
     private List<Void> opens = new ArrayList<>();
 
