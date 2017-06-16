@@ -69,6 +69,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import org.gradle.api.file.FileCollection;
 import org.gradle.workers.WorkerExecutor;
 
@@ -292,6 +293,7 @@ public class DesugarTransform extends Transform {
             index++;
         }
 
+        List<Path> desugarBootclasspath = getBootclasspath();
         for (Integer bucketId : procBuckets.keySet()) {
             Callable<Void> callable =
                     () -> {
@@ -306,7 +308,7 @@ public class DesugarTransform extends Transform {
                                         verbose,
                                         inToOut,
                                         classpath,
-                                        this.compilationBootclasspath,
+                                        desugarBootclasspath,
                                         minSdk);
                         executor.execute(
                                         processBuilder.build(),
@@ -333,7 +335,7 @@ public class DesugarTransform extends Transform {
     private void processNonCachedOnesWithGradleExecutor(
             WorkerExecutor workerExecutor, List<Path> classpath)
             throws IOException, ProcessException, ExecutionException {
-
+        List<Path> desugarBootclasspath = getBootclasspath();
         for (InputEntry pathPathEntry : cacheMisses) {
             DesugarWorkerItem workerItem =
                     new DesugarWorkerItem(
@@ -343,7 +345,7 @@ public class DesugarTransform extends Transform {
                             pathPathEntry.getInputPath(),
                             pathPathEntry.getOutputPath(),
                             classpath,
-                            this.compilationBootclasspath,
+                            desugarBootclasspath,
                             minSdk);
 
             workerExecutor.submit(DesugarWorkerItem.DesugarAction.class, workerItem::configure);
@@ -377,9 +379,16 @@ public class DesugarTransform extends Transform {
                         .map(File::toPath)
                         .iterator());
 
-        classpathEntries.addAll(androidJarClasspath.get().stream().map(File::toPath).iterator());
-
         return classpathEntries.build();
+    }
+
+    @NonNull
+    private List<Path> getBootclasspath() throws IOException {
+        List<Path> desugarBootclasspath =
+                androidJarClasspath.get().stream().map(File::toPath).collect(Collectors.toList());
+        desugarBootclasspath.addAll(compilationBootclasspath);
+
+        return desugarBootclasspath;
     }
 
     private void processSingle(
