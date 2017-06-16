@@ -381,6 +381,33 @@ public class DesugarAppTest {
                                 ":extractTryWithResourcesSupportJarDebug"));
     }
 
+    @Test
+    public void testAndroidMethodInvocationsNotRewritten()
+            throws IOException, InterruptedException, ProcessException {
+        enableDesugar();
+        // using android-26 as ServiceConnection has a default method
+        TestFileUtils.appendToFile(project.getBuildFile(), "\nandroid.compileSdkVersion 26");
+
+        Path newSource = project.getMainSrcDir().toPath().resolve("test").resolve("MyService.java");
+        Files.createDirectories(newSource.getParent());
+        Files.write(
+                newSource,
+                ImmutableList.of(
+                        "package test;",
+                        "import android.content.ServiceConnection;",
+                        "import android.content.ComponentName;",
+                        "import android.os.IBinder;",
+                        "public class MyService implements ServiceConnection {",
+                        "    public void onServiceConnected(ComponentName var1, IBinder var2) {}",
+                        "    public void onServiceDisconnected(ComponentName var1) {}",
+                        "}"));
+        project.executor().run("assembleDebug");
+        assertThatApk(project.getApk(GradleTestProject.ApkType.DEBUG))
+                .hasClass("Ltest/MyService;")
+                .that()
+                .doesNotHaveMethod("onBindingDied");
+    }
+
     @NonNull
     private List<String> createLibToDesugarAndGetClasses() throws IOException {
         class Utility {
