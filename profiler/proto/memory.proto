@@ -347,6 +347,7 @@ message EncodedAllocationStack {
   int64 timestamp = 1;
   int32 stack_id = 2;
   repeated int64 method_ids = 3;
+  repeated int32 line_numbers = 4;
 }
 
 message AllocationSnapshotRequest {
@@ -400,9 +401,13 @@ message AllocationEvent {
     // Note that this is only used for temporary storage in perfa.
     // When the data is sent from perfa->perfd, the list is encoded
     // as |stack_id| above, and the encoded data is stored/sent
-    // separately using EncodedStack.
+    // separately using EncodedAllocationStack.
     // First entry is top of stack.
     repeated int64 method_ids = 6;
+    // Similar to |method_ids| above, this is only for temporary
+    // storage. The actual converted line numbers are stored/sent to
+    // studio via EncodedAllocationStack.
+    repeated int64 location_ids = 7;
   }
 
   message Deallocation {
