@@ -16,7 +16,7 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.detector.api.CharSequences.lastIndexOf;
+import static com.android.utils.CharSequences.lastIndexOf;
 
 import com.android.annotations.NonNull;
 import com.android.resources.ResourceFolderType;

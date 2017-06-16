@@ -16,8 +16,8 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.detector.api.CharSequences.indexOf;
-import static com.android.tools.lint.detector.api.CharSequences.startsWith;
+import static com.android.utils.CharSequences.indexOf;
+import static com.android.utils.CharSequences.startsWith;
 
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;

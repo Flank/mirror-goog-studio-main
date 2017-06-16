@@ -18,7 +18,7 @@ package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.PROGUARD_CONFIG;
 import static com.android.SdkConstants.PROJECT_PROPERTIES;
-import static com.android.tools.lint.detector.api.CharSequences.indexOf;
+import static com.android.utils.CharSequences.indexOf;
 
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;

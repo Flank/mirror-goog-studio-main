@@ -34,7 +34,7 @@ import static com.android.tools.lint.client.api.JavaParser.TYPE_LONG_WRAPPER;
 import static com.android.tools.lint.client.api.JavaParser.TYPE_OBJECT;
 import static com.android.tools.lint.client.api.JavaParser.TYPE_SHORT_WRAPPER;
 import static com.android.tools.lint.client.api.JavaParser.TYPE_STRING;
-import static com.android.tools.lint.detector.api.CharSequences.indexOf;
+import static com.android.utils.CharSequences.indexOf;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;

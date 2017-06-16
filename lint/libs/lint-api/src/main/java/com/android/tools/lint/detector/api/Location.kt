@@ -20,9 +20,9 @@ import com.android.ide.common.blame.SourcePosition
 import com.android.ide.common.res2.ResourceItem
 import com.android.tools.lint.client.api.JavaParser
 import com.android.tools.lint.client.api.LintClient
-import com.android.tools.lint.detector.api.CharSequences.indexOf
-import com.android.tools.lint.detector.api.CharSequences.lastIndexOf
-import com.android.tools.lint.detector.api.CharSequences.startsWith
+import com.android.utils.CharSequences.indexOf
+import com.android.utils.CharSequences.lastIndexOf
+import com.android.utils.CharSequences.startsWith
 import com.google.common.annotations.Beta
 import java.io.File
 

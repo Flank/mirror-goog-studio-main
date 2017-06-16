@@ -19,7 +19,7 @@ package com.android.tools.lint;
 import static com.android.SdkConstants.UTF_8;
 
 import com.android.annotations.NonNull;
-import com.android.tools.lint.detector.api.CharSequences;
+import com.android.utils.CharSequences;
 import java.io.File;
 import org.eclipse.jdt.internal.compiler.batch.CompilationUnit;
 
