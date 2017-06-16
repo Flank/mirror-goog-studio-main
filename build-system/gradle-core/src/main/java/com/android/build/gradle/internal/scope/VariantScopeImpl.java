@@ -422,14 +422,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             return false;
         }
 
-        if (getInstantRunBuildContext().isInInstantRunMode()) {
-            LOGGER.warning(
-                    "Instant Run: Resource shrinker automatically disabled for %s.",
-                    getVariantConfiguration().getFullName());
-
-            return false;
-        }
-
         return true;
     }
 
