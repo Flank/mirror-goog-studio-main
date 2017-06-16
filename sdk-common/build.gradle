@@ -14,14 +14,12 @@ dependencies {
     compile libs.bouncycastle_pkix
     compile libs.bouncycastle_prov
     compile libs.kotlin_stdlib
-    compile gradleApi()
 
     testCompile libs.junit
     testCompile project(':base:testutils')
     testCompile 'org.easymock:easymock:3.3'
     testCompile libs.mockito_core
     testCompile libs.truth
-    testCompile libs.equalsverifier
 }
 
 project.ext.pomName = 'Android Tools sdk-common library'
