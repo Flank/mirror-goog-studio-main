@@ -46,6 +46,8 @@ public class SplitList {
      */
     private ImmutableList<Record> records;
 
+    public static SplitList EMPTY = new SplitList(ImmutableList.of());
+
     private SplitList(List<Record> records) {
         this.records = ImmutableList.copyOf(records);
     }

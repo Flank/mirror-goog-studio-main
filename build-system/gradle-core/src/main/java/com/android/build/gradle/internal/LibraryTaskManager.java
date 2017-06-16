@@ -718,6 +718,11 @@ public class LibraryTaskManager extends TaskManager {
         return TransformManager.PROJECT_ONLY;
     }
 
+    @Override
+    protected boolean isLibrary() {
+        return true;
+    }
+
     private Task getAssembleDefault() {
         if (assembleDefault == null) {
             assembleDefault = project.getTasks().findByName("assembleDefault");

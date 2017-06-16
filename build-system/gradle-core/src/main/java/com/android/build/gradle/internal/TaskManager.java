@@ -1037,6 +1037,10 @@ public abstract class TaskManager {
                 scope.getGlobalScope().getProjectBaseName());
     }
 
+    protected boolean isLibrary() {
+        return false;
+    }
+
     public AndroidTask<ProcessAndroidResources> createProcessResTask(
             @NonNull TaskFactory tasks,
             @NonNull VariantScope scope,
@@ -1051,15 +1055,18 @@ public abstract class TaskManager {
         boolean useAaptToGenerateLegacyMultidexMainDexProguardRules =
                 scope.getDexingType() == DexingType.LEGACY_MULTIDEX;
 
-        // split list calculation and save to this file.
-        File splitListOutputFile = new File(scope.getSplitSupportDirectory(), FN_SPLIT_LIST);
-        AndroidTask<SplitsDiscovery> splitsDiscoveryAndroidTask = androidTasks
-                .create(tasks, new SplitsDiscovery.ConfigAction(scope, splitListOutputFile));
+        if (!isLibrary()) {
+            // split list calculation and save to this file.
+            File splitListOutputFile = new File(scope.getSplitSupportDirectory(), FN_SPLIT_LIST);
+            AndroidTask<SplitsDiscovery> splitsDiscoveryAndroidTask =
+                    androidTasks.create(
+                            tasks, new SplitsDiscovery.ConfigAction(scope, splitListOutputFile));
 
-        scope.addTaskOutput(
-                TaskOutputHolder.TaskOutputType.SPLIT_LIST,
-                splitListOutputFile,
-                splitsDiscoveryAndroidTask.getName());
+            scope.addTaskOutput(
+                    TaskOutputHolder.TaskOutputType.SPLIT_LIST,
+                    splitListOutputFile,
+                    splitsDiscoveryAndroidTask.getName());
+        }
 
         AndroidTask<ProcessAndroidResources> processAndroidResources =
                 androidTasks.create(
@@ -1103,7 +1110,8 @@ public abstract class TaskManager {
                 resPackageOutputFolder,
                 useAaptToGenerateLegacyMultidexMainDexProguardRules,
                 sourceTaskOutputType,
-                baseName);
+                baseName,
+                isLibrary());
     }
 
     /**

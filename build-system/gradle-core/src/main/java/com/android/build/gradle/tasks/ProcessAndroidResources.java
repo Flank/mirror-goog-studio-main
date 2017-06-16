@@ -249,7 +249,7 @@ public class ProcessAndroidResources extends IncrementalTask {
 
         final Set<File> featureResourcePackages = this.featureResourcePackages.getFiles();
 
-        SplitList splitList = SplitList.load(splitListInput);
+        SplitList splitList = isLibrary ? SplitList.EMPTY : SplitList.load(splitListInput);
 
         // do a first pass at the list so we generate the code synchronously since it's required
         // by the full splits asynchronous processing below.
@@ -689,6 +689,7 @@ public class ProcessAndroidResources extends IncrementalTask {
         private final boolean generateLegacyMultidexMainDexProguardRules;
         private final TaskManager.MergeType sourceTaskOutputType;
         private final String baseName;
+        private final boolean isLibrary;
 
         public ConfigAction(
                 @NonNull VariantScope scope,
@@ -696,7 +697,8 @@ public class ProcessAndroidResources extends IncrementalTask {
                 @NonNull File resPackageOutputFolder,
                 boolean generateLegacyMultidexMainDexProguardRules,
                 @NonNull TaskManager.MergeType sourceTaskOutputType,
-                @NonNull String baseName) {
+                @NonNull String baseName,
+                boolean isLibrary) {
             this.variantScope = scope;
             this.symbolLocation = symbolLocation;
             this.resPackageOutputFolder = resPackageOutputFolder;
@@ -704,6 +706,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                     = generateLegacyMultidexMainDexProguardRules;
             this.baseName = baseName;
             this.sourceTaskOutputType = sourceTaskOutputType;
+            this.isLibrary = isLibrary;
         }
 
         @NonNull
@@ -755,8 +758,10 @@ public class ProcessAndroidResources extends IncrementalTask {
             // per exec
             processResources.setIncrementalFolder(variantScope.getIncrementalDir(getName()));
 
-            processResources.splitListInput =
-                    variantScope.getOutput(TaskOutputHolder.TaskOutputType.SPLIT_LIST);
+            if (!isLibrary) {
+                processResources.splitListInput =
+                        variantScope.getOutput(TaskOutputHolder.TaskOutputType.SPLIT_LIST);
+            }
 
             processResources.splitHandlingPolicy =
                     variantData.getSplitScope().getSplitHandlingPolicy();
@@ -845,6 +850,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                             ? projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI)
                             : null;
             processResources.supportedAbis = config.getSupportedAbis();
+            processResources.isLibrary = isLibrary;
         }
     }
 
@@ -863,7 +869,8 @@ public class ProcessAndroidResources extends IncrementalTask {
                     resPackageOutputFolder,
                     generateLegacyMultidexMainDexProguardRules,
                     mergeType,
-                    baseName);
+                    baseName,
+                    false);
         }
 
         @Override
@@ -1064,6 +1071,7 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
+    @Optional
     FileCollection getSplitListInput() {
         return splitListInput;
     }
@@ -1104,5 +1112,12 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     public void setEnableAapt2(boolean enableAapt2) {
         this.enableAapt2 = enableAapt2;
+    }
+
+    boolean isLibrary;
+
+    @Input
+    boolean isLibrary() {
+        return isLibrary;
     }
 }
