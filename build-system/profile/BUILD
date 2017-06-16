@@ -1,15 +1,7 @@
-load("//tools/base/bazel:utils.bzl", "srcjar")
-
-srcjar(
-    name = "srcjar",
-    java_library = ":profile",
-    visibility = ["//tools/base/build-system/builder:__pkg__"],
-)
-
 java_library(
     name = "profile",
     srcs = glob(["src/main/java/**"]),
-    visibility = ["//visibility:private"],  # These sources are compiled into builder.
+    visibility = ["//tools/base/build-system/builder:__pkg__"],
     deps = [
         "//tools/analytics-library/protos:analytics-protos",
         "//tools/analytics-library/protos/src/main/proto",

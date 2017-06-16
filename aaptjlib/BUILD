@@ -5,14 +5,7 @@ exports_files(glob(["src/main/resources/**"]))
 
 licenses(["notice"])  # Apache License 2.0
 
-load("//tools/base/bazel:utils.bzl", "srcjar")
 load("//tools/base/bazel:bazel.bzl", "fileset")
-
-srcjar(
-    name = "srcjar",
-    java_library = ":aaptjlib_src",
-    visibility = ["//tools/base/build-system/builder:__pkg__"],
-)
 
 fileset(
     name = "resources",
@@ -48,6 +41,7 @@ java_library(
         ":auto-value-plugin",
     ],
     resources = [":resources"],
+    visibility = ["//tools/base/build-system/builder:__pkg__"],
     deps = DEPS,
 )
 

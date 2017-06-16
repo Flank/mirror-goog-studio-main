@@ -1,19 +1,11 @@
 licenses(["notice"])  # Apache License 2.0
 
-load("//tools/base/bazel:utils.bzl", "srcjar")
-
-srcjar(
-    name = "srcjar",
-    java_library = ":apkzlib",
-    visibility = ["//tools/base/build-system/builder:__pkg__"],
-)
-
 java_library(
     name = "apkzlib",
     srcs = glob([
         "src/main/java/**/*.java",
     ]),
-    visibility = ["//visibility:private"],  # These sources are compiled into builder.
+    visibility = ["//tools/base/build-system/builder:__pkg__"],
     deps = [
         "//tools/base/build-system:tools.apksig",
         "//tools/base/third_party:com.google.code.findbugs_jsr305",

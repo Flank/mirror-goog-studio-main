@@ -1,4 +1,5 @@
 load("//tools/base/bazel:bazel.bzl", "fileset")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library")
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 
 fileset(
@@ -26,13 +27,14 @@ fileset(
     },
 )
 
-maven_java_library(
+kotlin_library(
     name = "builder",
-    srcs = glob(["src/main/java/**/*.java"]) + [
-        "//tools/base/apkzlib:srcjar",
-        "//tools/base/build-system/profile:srcjar",
-        "//tools/base/aaptjlib:srcjar",
-        "//tools/dx/dalvik/dx:srcjar",
+    srcs = ["src/main/java"],
+    bundled_deps = [
+        "//tools/base/apkzlib",
+        "//tools/base/build-system/profile",
+        "//tools/base/aaptjlib",
+        "//tools/dx/dalvik/dx",
     ],
     javacopts = ["-Xep:MissingCasesInEnumSwitch:WARN"],
     plugins = [
@@ -99,6 +101,7 @@ java_test(
         ":builder",
         "//tools/base/annotations",
         "//tools/base/build-system:tools.builder-test-api",
+        "//tools/base/build-system:tools.manifest-merger",
         "//tools/base/build-system/builder-model",
         "//tools/base/common:tools.common",
         "//tools/base/ddmlib:tools.ddmlib",
