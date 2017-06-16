@@ -35,8 +35,6 @@ iml_module(
         "//tools/idea/.idea/libraries:bouncy-castle",
         "//tools/idea/.idea/libraries:truth[test]",
         "//tools/idea/.idea/libraries:KotlinJavaRuntime",
-        "//tools/idea/.idea/libraries:equalsverifier[test]",
-        "//tools/base/build-system:gradle-api",
     ],
 )
 
@@ -48,7 +46,6 @@ kotlin_library(
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/annotations",
-        "//tools/base/build-system:gradle-api_neverlink",
         "//tools/base/build-system:tools.builder-test-api",
         "//tools/base/build-system/builder-model",
         "//tools/base/common:tools.common",
@@ -84,7 +81,6 @@ kotlin_test(
     deps = [
         ":tools.sdk-common",
         "//tools/base/annotations",
-        "//tools/base/build-system:gradle-api",
         "//tools/base/build-system:tools.builder-test-api",
         "//tools/base/build-system/builder-model",
         "//tools/base/common:tools.common",
@@ -96,6 +92,5 @@ kotlin_test(
         "//tools/base/third_party:com.google.truth_truth",
         "//tools/base/third_party:org.easymock_easymock",
         "//tools/base/third_party:org.mockito_mockito-core",
-        "//tools/idea/.idea/libraries:equalsverifier",
     ],
 )
