@@ -422,7 +422,6 @@ public class InstantRunBuildContext {
     }
 
     public synchronized void addChangedFile(@NonNull FileType fileType, @NonNull File file) {
-
         if (currentBuild.getVerifierStatus() == InstantRunVerifierStatus.NO_CHANGES) {
             currentBuild.verifierStatus = InstantRunVerifierStatus.COMPATIBLE;
         }
@@ -627,8 +626,26 @@ public class InstantRunBuildContext {
                 }
             }
         }
-        if (currentBuild.buildMode == InstantRunBuildMode.FULL) {
-            collapseMainArtifactsIntoCurrentBuild();
+        switch (currentBuild.buildMode) {
+            case HOT_WARM:
+                break;
+            case COLD:
+                // If all the splits are built, report FULL, to support changes that cannot be
+                // partially
+                // installed.
+                // In this case we would have purged all of the intermediate history, so all the
+                // artifacts would be on the current build.
+                if (patchingPolicy == InstantRunPatchingPolicy.MULTI_APK
+                        && previousBuilds.keySet().size() == 2
+                        && previousBuilds.get(initialFullBuild).artifacts.size()
+                                == currentBuild.artifacts.size()) {
+                    currentBuild.buildMode = InstantRunBuildMode.FULL;
+                    collapseMainArtifactsIntoCurrentBuild();
+                }
+                break;
+            case FULL:
+                collapseMainArtifactsIntoCurrentBuild();
+                break;
         }
     }
 
@@ -726,6 +743,7 @@ public class InstantRunBuildContext {
     }
 
     /** {@link #loadFromXmlFile(File)} but using a String */
+    @VisibleForTesting
     public void loadFromXml(@NonNull String persistedState)
             throws IOException, SAXException, ParserConfigurationException {
         loadFromDocument(XmlUtils.parseDocument(persistedState, false));
