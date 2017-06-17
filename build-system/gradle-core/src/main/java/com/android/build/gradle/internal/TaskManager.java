@@ -134,6 +134,7 @@ import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
 import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
 import com.android.build.gradle.tasks.AidlCompile;
@@ -2179,7 +2180,10 @@ public abstract class TaskManager {
                         variantScope.getGlobalScope().getAndroidBuilder().getErrorReporter(),
                         userLevelCache,
                         variantScope.getMinSdkVersion().getFeatureLevel(),
-                        variantScope.getDexer());
+                        variantScope.getDexer(),
+                        projectOptions.get(BooleanOption.ENABLE_GRADLE_WORKERS),
+                        projectOptions.get(IntegerOption.DEXING_READ_BUFFER_SIZE),
+                        projectOptions.get(IntegerOption.DEXING_WRITE_BUFFER_SIZE));
         transformManager
                 .addTransform(tasks, variantScope, preDexTransform)
                 .ifPresent(variantScope::addColdSwapBuildTask);

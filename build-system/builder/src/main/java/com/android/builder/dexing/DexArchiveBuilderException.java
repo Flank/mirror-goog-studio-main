@@ -26,4 +26,11 @@ public class DexArchiveBuilderException extends RuntimeException {
     public DexArchiveBuilderException(Throwable cause) {
         super(cause);
     }
+
+    public static DexArchiveBuilderException wrap(Throwable cause) {
+        if (cause instanceof DexArchiveBuilderException) {
+            return (DexArchiveBuilderException) cause;
+        }
+        return new DexArchiveBuilderException(cause);
+    }
 }

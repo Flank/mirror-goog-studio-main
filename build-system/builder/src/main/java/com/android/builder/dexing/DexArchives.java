@@ -49,6 +49,15 @@ public final class DexArchives {
     }
 
     @NonNull
+    public static DexArchive nonIncrementalArchive(@NonNull Path path) throws IOException {
+        if (ClassFileInputs.jarMatcher.matches(path)) {
+            return new NonIncrementalJarDexArchive(path);
+        } else {
+            return new DirDexArchive(path);
+        }
+    }
+
+    @NonNull
     static List<DexArchiveEntry> getEntriesFromSingleArchive(@NonNull Path archivePath)
             throws IOException {
         try (DexArchive archive = fromInput(archivePath)) {

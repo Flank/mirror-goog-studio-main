@@ -17,6 +17,8 @@
 package com.android.build.gradle.internal.transforms;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -49,10 +51,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import org.gradle.api.Action;
+import org.gradle.workers.WorkerConfiguration;
+import org.gradle.workers.WorkerExecutionException;
+import org.gradle.workers.WorkerExecutor;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
 /** Testing the {@link DexArchiveBuilderTransform} and {@link DexMergerTransform}. */
@@ -65,9 +72,35 @@ public class DexArchiveBuilderTransformTest {
     private Path out;
     @Rule public TemporaryFolder tmpDir = new TemporaryFolder();
 
+    private final WorkerExecutor workerExecutor =
+            new WorkerExecutor() {
+                @Override
+                public void submit(
+                        Class<? extends Runnable> aClass,
+                        Action<? super WorkerConfiguration> action) {
+                    WorkerConfiguration workerConfiguration =
+                            Mockito.mock(WorkerConfiguration.class);
+                    ArgumentCaptor<DexArchiveBuilderTransform.DexConversionParameters> captor =
+                            ArgumentCaptor.forClass(
+                                    DexArchiveBuilderTransform.DexConversionParameters.class);
+                    action.execute(workerConfiguration);
+                    verify(workerConfiguration).setParams(captor.capture());
+                    DexArchiveBuilderTransform.DexConversionWorkAction workAction =
+                            new DexArchiveBuilderTransform.DexConversionWorkAction(
+                                    captor.getValue());
+                    workAction.run();
+                }
+
+                @Override
+                public void await() throws WorkerExecutionException {
+                    // do nothing;
+                }
+            };
+
     @Before
     public void setUp() throws IOException {
         context = Mockito.mock(Context.class);
+        when(context.getWorkerExecutor()).thenReturn(workerExecutor);
 
         out = tmpDir.getRoot().toPath().resolve("out");
         Files.createDirectories(out);
@@ -88,7 +121,7 @@ public class DexArchiveBuilderTransformTest {
 
         assertThat(FileUtils.find(out.toFile(), Pattern.compile(".*\\.dex"))).hasSize(1);
         List<File> jarDexArchives = FileUtils.find(out.toFile(), Pattern.compile(".*\\.jar"));
-        assertThat(jarDexArchives).hasSize(1);
+        assertThat(jarDexArchives).hasSize(DexArchiveBuilderTransform.NUMBER_OF_BUCKETS);
     }
 
     @Test
@@ -104,7 +137,9 @@ public class DexArchiveBuilderTransformTest {
                         getJarInput(
                                 tmpDir.getRoot().toPath().resolve("input.jar"),
                                 ImmutableList.of(PACKAGE + "/B")));
-        getTransform(userCache).transform(getInvocation(ImmutableList.of(input), outputProvider));
+        DexArchiveBuilderTransform transform = getTransform(userCache);
+        transform.transform(getInvocation(ImmutableList.of(input), outputProvider));
+        transform.executor.waitForAllTasks();
 
         //noinspection ConstantConditions
         assertThat(cacheDir.listFiles(File::isDirectory).length).isEqualTo(1);
@@ -123,7 +158,9 @@ public class DexArchiveBuilderTransformTest {
                         .create();
         TransformInput input = new SimpleJarTransformInput(jarInput);
 
-        getTransform(cache).transform(getInvocation(ImmutableList.of(input), outputProvider));
+        DexArchiveBuilderTransform transform = getTransform(cache);
+        transform.transform(getInvocation(ImmutableList.of(input), outputProvider));
+        transform.executor.waitForAllTasks();
 
         assertThat(cacheDir.listFiles(File::isDirectory)).hasLength(1);
     }
@@ -200,7 +237,14 @@ public class DexArchiveBuilderTransformTest {
     @NonNull
     private DexArchiveBuilderTransform getTransform(@Nullable FileCache userCache) {
         return new DexArchiveBuilderTransform(
-                new DefaultDexOptions(), new NoOpErrorReporter(), userCache, 0, DexerTool.DX);
+                new DefaultDexOptions(),
+                new NoOpErrorReporter(),
+                userCache,
+                0,
+                DexerTool.DX,
+                true,
+                10,
+                10);
     }
 
     @NonNull

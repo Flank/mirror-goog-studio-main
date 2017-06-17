@@ -24,6 +24,7 @@ import com.google.common.base.Verify;
 import com.google.common.io.ByteSource;
 import com.google.common.io.ByteStreams;
 import com.google.common.primitives.Ints;
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -343,6 +344,23 @@ public class StoredEntry {
     public byte[] read() throws IOException {
         try (InputStream is = open()) {
             return ByteStreams.toByteArray(is);
+        }
+    }
+
+    /**
+     * Obtains the contents of the file in an existing buffer.
+     *
+     * @param bytes buffer to read the file contents in.
+     * @return the number of bytes read
+     * @throws IOException failed to read the file.
+     */
+    public int read(byte[] bytes) throws IOException {
+        if (bytes.length < getCentralDirectoryHeader().getUncompressedSize()) {
+            throw new RuntimeException(
+                    "Buffer to small while reading {}" + getCentralDirectoryHeader().getName());
+        }
+        try (InputStream is = new BufferedInputStream(open())) {
+            return ByteStreams.read(is, bytes, 0, bytes.length);
         }
     }
 

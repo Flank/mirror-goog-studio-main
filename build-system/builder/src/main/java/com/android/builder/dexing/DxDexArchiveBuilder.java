@@ -17,108 +17,117 @@
 package com.android.builder.dexing;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.dx.cf.direct.DirectClassFile;
 import com.android.dx.cf.direct.StdAttributeFactory;
 import com.android.dx.dex.cf.CfTranslator;
 import com.android.dx.dex.file.ClassDefItem;
 import com.android.dx.dex.file.DexFile;
-import com.android.ide.common.blame.parser.DexParser;
-import com.android.ide.common.internal.WaitableExecutor;
+import com.android.dx.util.ByteArray;
+import com.android.dx.util.ByteArrayAnnotatedOutput;
 import com.android.utils.PathUtils;
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Throwables;
-import com.google.common.collect.Maps;
+import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Stream;
 
-/** Dex archive builder that is using dx to convert class files to dex files. */
-final class DxDexArchiveBuilder extends DexArchiveBuilder {
+public class DxDexArchiveBuilder extends DexArchiveBuilder {
 
-    @NonNull private final DexArchiveBuilderConfig config;
-    @NonNull private final WaitableExecutor executor;
+    private static final Logger LOGGER = Logger.getLogger(DxDexArchiveBuilder.class.getName());
 
-    /**
-     * Creates instance that is configured for processing .class input files, and producing a dex
-     * archive. For configuring it, please take a look at {@link DexArchiveBuilderConfig} which
-     * contains relevant options.
-     *
-     * @param config contains setup for this builder
-     */
-    public DxDexArchiveBuilder(@NonNull DexArchiveBuilderConfig config) {
+    private final DexArchiveBuilderConfig config;
+    @Nullable private byte[] inStorage;
+    @Nullable private DexFile.Storage outStorage;
+
+    public DxDexArchiveBuilder(DexArchiveBuilderConfig config) {
         this.config = config;
-        this.executor = WaitableExecutor.useGlobalSharedThreadPool();
+        outStorage =
+                config.getOutBufferSize() > 0
+                        ? new DexFile.Storage(new byte[config.getOutBufferSize()])
+                        : null;
     }
 
-    @NonNull
     @Override
-    protected List<DexArchiveEntry> convertClassFileInput(@NonNull ClassFileInput input) {
-        Map<Integer, Map<Path, byte[]>> bucketizedJobs = Maps.newHashMap();
-        int i = 0;
-        for (ClassFileEntry classFileEntry : input.allEntries()) {
-            int bucketId = (i++) % executor.getParallelism();
-
-            Map<Path, byte[]> jobs = bucketizedJobs.getOrDefault(bucketId, Maps.newHashMap());
-            jobs.put(classFileEntry.relativePath, classFileEntry.classFileContent);
-            bucketizedJobs.put(bucketId, jobs);
-        }
-
-        for (Map<Path, byte[]> job : bucketizedJobs.values()) {
-            processJobChunk(job);
-        }
+    public void convert(@NonNull Stream<ClassFileEntry> entries, @NonNull DexArchive output)
+            throws DexArchiveBuilderException {
+        inStorage = config.getOutBufferSize() > 0 ? new byte[config.getInBufferSize()] : null;
         try {
-            List<List<DexArchiveEntry>> res = executor.waitForTasksWithQuickFail(true);
-            return res.stream().flatMap(Collection::stream).collect(Collectors.toList());
-        } catch (Exception e) {
-            config.getErrorOut().println(DexParser.DX_UNEXPECTED_EXCEPTION);
-            config.getErrorOut().println(Throwables.getRootCause(e).getMessage());
-            config.getErrorOut().print(Throwables.getStackTraceAsString(e));
-            if (e instanceof InterruptedException) {
-                Thread.currentThread().interrupt();
-            }
-            throw new DexArchiveBuilderException(
-                    "Unable to convert input to dex archive.",
-                    MoreObjects.firstNonNull(e.getCause(), e));
+            entries.forEach(
+                    classFileEntry -> {
+                        try {
+                            ByteArray byteArray;
+                            if (inStorage != null) {
+                                if (classFileEntry.getSize() > inStorage.length) {
+                                    if (LOGGER.isLoggable(Level.FINER)) {
+                                        LOGGER.log(
+                                                Level.FINER,
+                                                "File too big "
+                                                        + classFileEntry.getSize()
+                                                        + " : "
+                                                        + classFileEntry.getRelativePath()
+                                                        + " vs "
+                                                        + inStorage.length);
+                                    }
+                                    inStorage = new byte[(int) classFileEntry.getSize()];
+                                }
+                                int readBytes = classFileEntry.readAllBytes(inStorage);
+                                byteArray = new ByteArray(inStorage, 0, readBytes);
+                            } else {
+                                byteArray = new ByteArray(classFileEntry.readAllBytes());
+                            }
+                            dex(classFileEntry.getRelativePath(), byteArray, output);
+
+                        } catch (Exception e) {
+                            LOGGER.log(
+                                    Level.SEVERE,
+                                    String.format(
+                                            "Error while processing %s",
+                                            classFileEntry.getRelativePath()),
+                                    e);
+                            throw new RuntimeException(e);
+                        }
+                    });
+        } catch (RuntimeException e) {
+            throw DexArchiveBuilderException.wrap(e);
         }
     }
 
-    private void processJobChunk(@NonNull Map<Path, byte[]> pathToContent) {
-        executor.execute(
-                () -> {
-                    List<DexArchiveEntry> res = new ArrayList<>(pathToContent.size());
-                    for (Map.Entry<Path, byte[]> e : pathToContent.entrySet()) {
-                        Path relativePath = e.getKey();
-                        byte[] fileBytes = e.getValue();
-                        // parses the class file
-                        String unixClassFile = PathUtils.toSystemIndependentPath(relativePath);
+    public void dex(Path relativePath, ByteArray classBytes, DexArchive output) throws IOException {
 
-                        // Copied from dx, from com.android.dx.command.dexer.Main
-                        DirectClassFile cf = new DirectClassFile(fileBytes, unixClassFile, true);
-                        cf.setAttributeFactory(StdAttributeFactory.THE_ONE);
-                        cf.getMagic(); // triggers the actual parsing
+        // parses the class file
+        String unixClassFile = PathUtils.toSystemIndependentPath(relativePath);
 
-                        // starts the actual translation and writes the content to the dex file
-                        // specified
-                        DexFile dexFile = new DexFile(config.getDexOptions());
+        // Copied from dx, from com.android.dx.command.dexer.Main
+        DirectClassFile cf = new DirectClassFile(classBytes, unixClassFile, true);
+        cf.setAttributeFactory(StdAttributeFactory.THE_ONE);
+        cf.getMagic(); // triggers the actual parsing
 
-                        // Copied from dx, from com.android.dx.command.dexer.Main
-                        ClassDefItem classDefItem =
-                                CfTranslator.translate(
-                                        config.getDxContext(),
-                                        cf,
-                                        fileBytes,
-                                        config.getCfOptions(),
-                                        config.getDexOptions(),
-                                        dexFile);
-                        dexFile.add(classDefItem);
+        // starts the actual translation and writes the content to the dex file
+        // specified
+        DexFile dexFile = new DexFile(config.getDexOptions());
 
-                        byte[] dexClassContent = dexFile.toDex(null, false);
-                        res.add(new DexArchiveEntry(dexClassContent, relativePath));
-                    }
-                    return res;
-                });
+        // Copied from dx, from com.android.dx.command.dexer.Main
+        ClassDefItem classDefItem =
+                CfTranslator.translate(
+                        config.getDxContext(),
+                        cf,
+                        null,
+                        config.getCfOptions(),
+                        config.getDexOptions(),
+                        dexFile);
+        dexFile.add(classDefItem);
+
+        if (outStorage != null) {
+            ByteArrayAnnotatedOutput byteArrayAnnotatedOutput = dexFile.writeTo(outStorage);
+            output.addFile(
+                    ClassFileEntry.withDexExtension(relativePath),
+                    byteArrayAnnotatedOutput.getArray(),
+                    0,
+                    byteArrayAnnotatedOutput.getCursor());
+        } else {
+            byte[] bytes = dexFile.toDex(null, false);
+            output.addFile(ClassFileEntry.withDexExtension(relativePath), bytes, 0, bytes.length);
+        }
     }
 }
