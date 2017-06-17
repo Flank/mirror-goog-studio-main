@@ -18,7 +18,6 @@ package com.android.ide.common.util;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.reflect.TypeToken;
@@ -27,7 +26,7 @@ import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
-import java.util.Set;
+import java.util.Collection;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
@@ -63,6 +62,7 @@ import javax.management.ReflectionException;
  * loaded by one class loader can be seen from the same class loaded by a different class loader.
  *
  * <p>The usage of this class is as follows. Suppose we previously used a static variable:
+ *
  * <pre>{@code
  * public final class Counter {
  *   public static final AtomicInteger COUNT = new AtomicInteger(0);
@@ -70,11 +70,12 @@ import javax.management.ReflectionException;
  * }</pre>
  *
  * <p>We can then convert the static variable into a JVM-wide variable:
+ *
  * <pre>{@code
  * public final class Counter {
  *    public static final JvmWideVariable<AtomicInteger> COUNT =
  *      new JvmWideVariable<>(
- *        "my.package.Counter", "COUNT", TypeToken.of(AtomicInteger.class), new AtomicInteger(0));
+ *        "my.package.Counter", "COUNT", AtomicInteger.class, new AtomicInteger(0));
  * }
  * }</pre>
  *
@@ -82,12 +83,9 @@ import javax.management.ReflectionException;
  * Counter}, with the previously discussed limitation (not only the {@code Counter} class but even
  * the {@code JvmWideVariable} class itself might be loaded multiple times by different class
  * loaders). What has changed is that {@code Counter.COUNT} is now able to access a JVM-wide
- * variable of type {@code AtomicInteger}.
+ * variable of type {@code AtomicInteger}. (The type of the JVM-variable after the conversion is the
+ * same as the type of the static variable before the conversion.)
  *
- * <p>It may be helpful to think of {@code JvmWideVariable} as an object wrapper/converter: When
- * converting a static variable, whatever type we would use for the variable, we should use the same
- * type again for the JVM-wide variable wrapped by a {@code JvmWideVariable} instance.
-
  * <p>Where the context is clear, it might be easier to refer to variables of type {@code
  * JvmWideVariable} as JVM-wide variables, although strictly speaking they are not, but through them
  * we can access JVM-wide variables.
@@ -104,11 +102,12 @@ import javax.management.ReflectionException;
  * to provide proper synchronization when accessing a JVM-wide variable outside of this class, for
  * example by using thread-safe types such as {@link java.util.concurrent.atomic.AtomicInteger} and
  * {@link java.util.concurrent.ConcurrentMap}, using (implicit or explicit) locks where the locks
- * need to work across class loaders, or using the {@link #doCallableSynchronized(Callable)} method
- * and the like provided by this class.
+ * need to work across class loaders, or using the {@link #executeCallableSynchronously(Callable)}
+ * method and the like provided by this class.
  *
  * <p>For example, suppose we have a static variable of a non-thread-safe type (e.g., {@link
  * Integer}) and we use a synchronized block when modifying the variable:
+ *
  * <pre>{@code
  * public final class Counter {
  *   public static Integer COUNT = 0;
@@ -119,13 +118,14 @@ import javax.management.ReflectionException;
  * }</pre>
  *
  * <p>Then, the converted JVM-wide implementation can be as follows:
+ *
  * <pre>{@code
  * public final class Counter {
  *   public static final JvmWideVariable<Integer> COUNT =
- *     new JvmWideVariable<>("my.package.Counter", "COUNT", TypeToken.of(AtomicInteger.class), 0);
+ *       new JvmWideVariable<>("my.package.Counter", "COUNT", Integer.class, 0);
  *     public static void increaseCounter() {
- *       doRunnableSynchronized(() -> {
- *         COUNT++;
+ *       COUNT.executeRunnableSynchronously(() -> {
+ *         COUNT.set(COUNT.get() + 1);
  *       });
  *     }
  * }
@@ -165,35 +165,35 @@ public final class JvmWideVariable<T> {
      * <p>The type {@code T} of the variable must be loaded by a single class loader. Currently,
      * this method requires the single class loader to be the bootstrap class loader.
      *
-     * <p>Since the generic type {@code T} does not exist at run time, the client needs to
-     * explicitly pass that type via a {@link Class} or a {@link TypeToken} instance. This method
-     * takes a ({@code TypeToken} as it is more general (it supports capturing complex types such as
-     * {@code Map<K, V>}). If the given type is simple (can be represented fully by a {@code Class}
-     * instance), the client can use the {@link #JvmWideVariable(String, String, Class, Object)}
-     * method instead.
+     * <p>The client needs to explicitly pass type {@code T} via a {@link Class} or a {@link
+     * TypeToken} instance. This method takes a ({@code TypeToken} as it is more general (it can
+     * capture complex types such as {@code Map<K, V>}). If the type is simple (can be represented
+     * fully by a {@code Class} instance), the client can use the {@link #JvmWideVariable(String,
+     * String, Class, Object)} method instead.
      *
      * @param group the group of the variable
      * @param name the name of the variable
      * @param typeToken the type of the variable
-     * @param defaultValue the default value of the variable, can be null
+     * @param defaultValueSupplier the supplier that produces the default value of the variable. It
+     *     is called only when the variable is first created. The supplied value can be null.
      */
     public JvmWideVariable(
             @NonNull String group,
             @NonNull String name,
             @NonNull TypeToken<T> typeToken,
-            @Nullable T defaultValue) {
-        // Collect all classes that are involved in defining the JVM-wide variable's type
+            @NonNull Supplier<T> defaultValueSupplier) {
+        // Collect all classes that are involved in defining the JVM-wide variable's type and check
+        // that they are all loaded by the bootstrap class loader
         Type type = typeToken.getType();
-        ImmutableSet.Builder<Class<?>> builder = ImmutableSet.builder();
-        collectComponentClasses(type, builder);
-        Set<Class<?>> classes = builder.build();
-
-        for (Class<?> clazz : classes) {
+        for (Class<?> clazz : collectComponentClasses(type)) {
             Preconditions.checkArgument(
                     clazz.getClassLoader() == null,
-                    "Type %s used to define JVM-wide variable %s:%s must be loaded by the bootstrap"
-                            + " class loader but is loaded by %s",
-                    clazz, group, name, clazz.getClassLoader());
+                    "Type %s used to define JVM-wide variable %s:%s must be loaded"
+                            + " by the bootstrap class loader but is loaded by %s",
+                    clazz,
+                    group,
+                    name,
+                    clazz.getClassLoader());
         }
 
         this.group = group;
@@ -202,10 +202,13 @@ public final class JvmWideVariable<T> {
         try {
             this.objectName =
                     new ObjectName(
-                            ValueWrapper.class.getPackage().getName()
-                                    + ":type=" + ValueWrapper.class.getSimpleName()
-                                    + ",group=" + group
-                                    + ",name=" + name);
+                            JvmWideVariable.class.getSimpleName()
+                                    + ":type="
+                                    + ValueWrapper.class.getSimpleName()
+                                    + ",group="
+                                    + group
+                                    + ",name="
+                                    + name);
         } catch (MalformedObjectNameException e) {
             throw new RuntimeException(e);
         }
@@ -216,18 +219,17 @@ public final class JvmWideVariable<T> {
         // thread-safe individually, we synchronize both of them together so that the if-block can
         // run atomically. Note that several other places in this class also use the shared server
         // variable without being guarded by "synchronized (server)" and can interfere with this
-        // synchronized block. However, as long as the unregister() method is used correctly (called
-        // lastly in a test method; see its javadoc), those places will always run with a registered
-        // variable. Therefore, they can at most run concurrently with the condition check of the if
-        // statement below but can never run concurrently with the then-block of the if statement,
-        // which makes this synchronized block safe.
+        // synchronized block. However, as long as the unregister() and unregisterAll() methods are
+        // used correctly (called lastly in a build or a test method; see its javadoc), those places
+        // will always run with a registered variable. Therefore, they can at most run concurrently
+        // with the condition check of the if statement below but can never run concurrently with
+        // the then-block of the if statement, which makes this synchronized block safe.
         boolean variableExists = true;
         synchronized (server) {
             if (!server.isRegistered(objectName)) {
                 variableExists = false;
-                ValueWrapper objectWrapper = new ValueWrapper();
-                objectWrapper.setValue(defaultValue);
-                objectWrapper.setType(type);
+                ValueWrapper<T> objectWrapper =
+                        new ValueWrapper<>(type, defaultValueSupplier.get());
                 try {
                     server.registerMBean(objectWrapper, objectName);
                 } catch (InstanceAlreadyExistsException | MBeanRegistrationException
@@ -260,48 +262,51 @@ public final class JvmWideVariable<T> {
 
     /**
      * Creates a {@code JvmWideVariable} instance that can access a JVM-wide variable. This method
-     * will call {@link #JvmWideVariable(String, String, TypeToken, Object)}. See the javadoc of
+     * will call {@link #JvmWideVariable(String, String, TypeToken, Supplier)}. See the javadoc of
      * that method for more details.
      *
-     * @see #JvmWideVariable(String, String, TypeToken, Object)
+     * @see #JvmWideVariable(String, String, TypeToken, Supplier)
      */
     public JvmWideVariable(
             @NonNull String group,
             @NonNull String name,
             @NonNull Class<T> type,
             @Nullable T defaultValue) {
-        this(group, name, TypeToken.of(type), defaultValue);
+        this(group, name, TypeToken.of(type), () -> defaultValue);
     }
 
-    /**
-     * Collects all classes that are involved in defining a type.
-     */
-    private void collectComponentClasses(
+    /** Returns all classes that are involved in defining a type. */
+    static Collection<Class<?>> collectComponentClasses(@NonNull Type type) {
+        ImmutableSet.Builder<Class<?>> builder = ImmutableSet.builder();
+        doCollectComponentClasses(type, builder);
+        return builder.build();
+    }
+
+    private static void doCollectComponentClasses(
             @NonNull Type type, @NonNull ImmutableSet.Builder<Class<?>> builder) {
         if (type instanceof Class<?>) {
             builder.add((Class<?>) type);
         } else if (type instanceof ParameterizedType) {
             ParameterizedType parameterizedType = (ParameterizedType) type;
-            collectComponentClasses(parameterizedType.getRawType(), builder);
+            doCollectComponentClasses(parameterizedType.getRawType(), builder);
             if (parameterizedType.getOwnerType() != null) {
-                collectComponentClasses(parameterizedType.getOwnerType(), builder);
+                doCollectComponentClasses(parameterizedType.getOwnerType(), builder);
             }
             for (Type componentType : parameterizedType.getActualTypeArguments()) {
-                collectComponentClasses(componentType, builder);
+                doCollectComponentClasses(componentType, builder);
             }
         } else if (type instanceof GenericArrayType) {
-            collectComponentClasses(((GenericArrayType) type).getGenericComponentType(), builder);
+            doCollectComponentClasses(((GenericArrayType) type).getGenericComponentType(), builder);
         } else if (type instanceof WildcardType) {
             WildcardType wildcardType = (WildcardType) type;
             for (Type componentType : wildcardType.getLowerBounds()) {
-                collectComponentClasses(componentType, builder);
+                doCollectComponentClasses(componentType, builder);
             }
             for (Type componentType : wildcardType.getUpperBounds()) {
-                collectComponentClasses(componentType, builder);
+                doCollectComponentClasses(componentType, builder);
             }
         } else {
-            throw new IllegalArgumentException(
-                    "Type " + type + " is not yet supported by the JvmWideVariable class");
+            throw new IllegalArgumentException("Type " + type + " is not yet supported");
         }
     }
 
@@ -315,10 +320,9 @@ public final class JvmWideVariable<T> {
         return name;
     }
 
-    /**
-     * Returns the current value of this JVM-wide variable.
-     */
+    /** Returns the current value of this JVM-wide variable. */
     @Nullable
+    @SuppressWarnings("unchecked")
     public T get() {
         // We don't need to wrap this code in a synchronized block as server.getAttribute() is
         // thread-safe.
@@ -347,23 +351,6 @@ public final class JvmWideVariable<T> {
     }
 
     /**
-     * Unregisters this JVM-wide variable, as if it was never created. This method should be used
-     * only in tests to reset the MBeanServer's state at the very end of a test method so that the
-     * next test method can run on a fresh state. Using this method outside a test will break the
-     * thread safety of this class.
-     */
-    @VisibleForTesting
-    void unregister() {
-        // We don't need to wrap this code in a synchronized block as server.unregisterMBean()
-        // is thread-safe.
-        try {
-            server.unregisterMBean(objectName);
-        } catch (InstanceNotFoundException | MBeanRegistrationException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    /**
      * Executes the given action, where the execution is synchronized on the JVM-wide variable (an
      * MBean). The MBean is unchanged even when the variable is assigned with a new value.
      *
@@ -373,7 +360,9 @@ public final class JvmWideVariable<T> {
      *
      * @throws ExecutionException if an exception occurred during the execution of the action
      */
-    public <V> V doCallableSynchronized(Callable<V> action) throws ExecutionException {
+    @Nullable
+    public <V> V executeCallableSynchronously(@NonNull Callable<V> action)
+            throws ExecutionException {
         Object mBean;
         try {
             // Get the MBean that represents the JVM-wide variable
@@ -382,6 +371,7 @@ public final class JvmWideVariable<T> {
                 | ReflectionException e) {
             throw new RuntimeException(e);
         }
+        //noinspection SynchronizationOnLocalVariableOrMethodParameter
         synchronized (mBean) {
             try {
                 return action.call();
@@ -394,11 +384,12 @@ public final class JvmWideVariable<T> {
     /**
      * Executes the given action, where the execution is synchronized on the JVM-wide variable.
      *
-     * @see #doCallableSynchronized(Callable)
+     * @see #executeCallableSynchronously(Callable)
      */
-    public <V> V doSupplierSynchronized(Supplier<V> action) {
+    @Nullable
+    public <V> V executeSupplierSynchronously(@NonNull Supplier<V> action) {
         try {
-            return doCallableSynchronized(() -> action.get());
+            return executeCallableSynchronously(action::get);
         } catch (ExecutionException e) {
             throw new RuntimeException(e);
         }
@@ -407,23 +398,75 @@ public final class JvmWideVariable<T> {
     /**
      * Executes the given action, where the execution is synchronized on the JVM-wide variable.
      *
-     * @see #doCallableSynchronized(Callable)
+     * @see #executeCallableSynchronously(Callable)
      */
-    public void doRunnableSynchronized(Runnable action) {
-        doSupplierSynchronized(() -> {
-            action.run();
-            return null;
-        });
+    public void executeRunnableSynchronously(@NonNull Runnable action) {
+        executeSupplierSynchronously(
+                () -> {
+                    action.run();
+                    return null;
+                });
     }
 
     /**
-     * The MBean that represents a JVM-wide variable and contains its value and type.
+     * Unregisters the JVM-wide variable from the JVM.
+     *
+     * <p>IMPORTANT: This method should only be called lastly in a build or a test method, and
+     * called only once from a single thread. Calling this method not at the end of a build or test
+     * method or calling it multiple times or from multiple threads will break the thread safety of
+     * this class. Any reference to this {@code JvmWideVariable} instance needs to be unlinked as
+     * well; otherwise, the next call on this {@code JvmWideVariable} instance will throw an
+     * exception because the JVM-wide variable no longer exists.
      */
+    public void unregister() {
+        try {
+            server.unregisterMBean(objectName);
+        } catch (InstanceNotFoundException | MBeanRegistrationException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Unregisters all JVM-wide variables from the JVM.
+     *
+     * <p>IMPORTANT: This method should only be called lastly in a build or a test method, and
+     * called only once from a single thread. Calling this method not at the end of a build or test
+     * method or calling it multiple times or from multiple threads will break the thread safety of
+     * this class. Any references to {@code JvmWideVariable} instances need to be unlinked as well;
+     * otherwise, the next call on a {@code JvmWideVariable} instance will throw an exception
+     * because the JVM-wide variable no longer exists.
+     */
+    public static void unregisterAll() {
+        try {
+            for (ObjectName objectName :
+                    server.queryNames(
+                            new ObjectName(JvmWideVariable.class.getSimpleName() + ":*"), null)) {
+                server.unregisterMBean(objectName);
+            }
+        } catch (MalformedObjectNameException
+                | InstanceNotFoundException
+                | MBeanRegistrationException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /** The MBean that represents a JVM-wide variable and contains its type and value. */
     private static final class ValueWrapper<T> implements ValueWrapperMBean<T> {
+
+        @NonNull private final Type type;
 
         @Nullable private T value;
 
-        @NonNull private Type type;
+        public ValueWrapper(@NonNull Type type, @Nullable T value) {
+            this.type = type;
+            this.value = value;
+        }
+
+        @NonNull
+        @Override
+        public Type getType() {
+            return this.type;
+        }
 
         @Nullable
         @Override
@@ -438,16 +481,6 @@ public final class JvmWideVariable<T> {
 
         @NonNull
         @Override
-        public Type getType() {
-            return this.type;
-        }
-
-        @Override
-        public void setType(@NonNull Type type) {
-            this.type = type;
-        }
-
-        @Override
         public ValueWrapperMBean<T> getThisInstance() {
             return this;
         }
@@ -459,20 +492,21 @@ public final class JvmWideVariable<T> {
      */
     public interface ValueWrapperMBean<T> {
 
-        String VALUE_PROPERTY = "Value";
-
         String TYPE_PROPERTY = "Type";
 
+        String VALUE_PROPERTY = "Value";
+
         String THIS_INSTANCE_PROPERTY = "ThisInstance";
+
+        @NonNull
+        Type getType();
 
         @Nullable T getValue();
 
         void setValue(@Nullable T value);
 
-        @NonNull Type getType();
-
-        void setType(@NonNull Type type);
-
-        @NonNull ValueWrapperMBean<T> getThisInstance();
+        @SuppressWarnings("unused")
+        @NonNull
+        ValueWrapperMBean<T> getThisInstance();
     }
 }
