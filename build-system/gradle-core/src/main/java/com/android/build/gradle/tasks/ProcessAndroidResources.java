@@ -609,14 +609,7 @@ public class ProcessAndroidResources extends IncrementalTask {
     }
 
     @NonNull
-    public static List<LibraryInfo> computeLibraryInfoList(@NonNull VariantScope variantScope) {
-        return computeLibraryInfoList(
-                variantScope.getArtifactCollection(RUNTIME_CLASSPATH, ALL, SYMBOL_LIST),
-                variantScope.getArtifactCollection(RUNTIME_CLASSPATH, ALL, MANIFEST));
-    }
-
-    @NonNull
-    private static List<LibraryInfo> computeLibraryInfoList(
+    public static List<LibraryInfo> computeLibraryInfoList(
             @NonNull ArtifactCollection symbolFiles, @NonNull ArtifactCollection manifests) {
         // first build a map for the optional symbols.
         Map<ComponentIdentifier, File> symbolMap = new HashMap<>();
