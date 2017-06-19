@@ -64,7 +64,6 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFile;
-import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
@@ -84,7 +83,6 @@ import org.gradle.api.tasks.TaskAction;
  * where ProGuarding is enabled.
  */
 @CacheableTask
-@ParallelizableTask
 public class ExtractAnnotations extends AbstractAndroidCompile {
     private BaseVariantData variant;
 

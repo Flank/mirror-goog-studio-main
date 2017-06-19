@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.tasks;
 
-import static com.android.SdkConstants.VALUE_FALSE;
 import static com.android.SdkConstants.VALUE_TRUE;
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -64,12 +63,10 @@ import org.gradle.api.plugins.ExtraPropertiesExtension;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
-import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.tooling.provider.model.ToolingModelBuilder;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
-@ParallelizableTask
 public class Lint extends BaseTask {
     /**
      * Whether lint should attempt to do deep analysis of libraries. E.g. when

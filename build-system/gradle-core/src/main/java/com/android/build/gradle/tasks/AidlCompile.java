@@ -55,13 +55,11 @@ import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
-import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.util.PatternSet;
 
 /** Task to compile aidl files. Supports incremental update. */
-@ParallelizableTask
 @CacheableTask
 public class AidlCompile extends IncrementalTask {
 
@@ -102,7 +100,9 @@ public class AidlCompile extends IncrementalTask {
         List<DependencyData> dependencyDataList = Lists.newArrayList();
 
         List<DependencyData> getDependencyDataList() {
-            return dependencyDataList;
+            synchronized (this) {
+                return dependencyDataList;
+            }
         }
 
         @Override

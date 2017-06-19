@@ -45,13 +45,11 @@ import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.OutputFile;
-import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.api.tasks.TaskAction;
 
 /**
  * Task to generate micro app data res file.
  */
-@ParallelizableTask
 public class GenerateApkDataTask extends BaseTask {
 
     @Nullable private FileCollection apkDirectoryFileCollection;

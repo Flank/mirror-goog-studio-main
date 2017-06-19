@@ -32,10 +32,8 @@ import java.io.IOException;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Internal;
-import org.gradle.api.tasks.ParallelizableTask;
 
 /** Task to package an Android application (APK). */
-@ParallelizableTask
 @CacheableTask
 public class PackageApplication extends PackageAndroidArtifact {
 

@@ -21,14 +21,12 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.api.tasks.bundling.Jar;
 
 
 /**
  * Decorated {@link Jar} task with android specific behaviors.
  */
-@ParallelizableTask
 public class AndroidJarTask extends Jar implements BinaryFileProviderTask {
 
     @Override

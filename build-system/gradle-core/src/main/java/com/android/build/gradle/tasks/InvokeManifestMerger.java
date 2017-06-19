@@ -30,14 +30,12 @@ import org.apache.tools.ant.BuildException;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputFile;
-import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.api.tasks.TaskAction;
 
 /**
  * Simple task to invoke the new Manifest Merger without any injection, features, system properties
  * or overlay manifests
  */
-@ParallelizableTask
 public class InvokeManifestMerger extends DefaultAndroidTask implements Supplier<File> {
 
     private File mMainManifestFile;

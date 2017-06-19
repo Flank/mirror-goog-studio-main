@@ -33,10 +33,8 @@ import java.util.function.Supplier;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
-import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.api.tasks.TaskAction;
 
-@ParallelizableTask
 public class UninstallTask extends BaseTask {
 
     private BaseVariantData variant;

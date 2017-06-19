@@ -53,11 +53,9 @@ import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
-import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.api.tasks.TaskAction;
 
 /** Package a abi dimension specific split APK */
-@ParallelizableTask
 public class PackageSplitAbi extends BaseTask {
 
     private FileCollection processedAbiResources;

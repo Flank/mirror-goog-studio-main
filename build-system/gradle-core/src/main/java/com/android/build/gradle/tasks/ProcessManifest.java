@@ -50,12 +50,10 @@ import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFile;
-import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 
 /** a Task that only merge a single manifest with its overlays. */
-@ParallelizableTask
 @CacheableTask
 public class ProcessManifest extends ManifestProcessorTask {
 

@@ -80,13 +80,11 @@ import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFile;
-import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier;
 
 /** A task that processes the manifest */
-@ParallelizableTask
 @CacheableTask
 public class MergeManifests extends ManifestProcessorTask {
 

@@ -58,14 +58,12 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.Optional;
-import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.api.tasks.TaskAction;
 
 /**
  * Task installing an app variant. It looks at connected device and install the best matching
  * variant output on each device.
  */
-@ParallelizableTask
 public class InstallVariantTask extends BaseTask {
 
     private Supplier<File> adbExe;

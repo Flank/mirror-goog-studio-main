@@ -26,11 +26,9 @@ import com.android.builder.utils.FileCache;
 import com.google.common.base.Preconditions;
 import java.io.IOException;
 import org.gradle.api.plugins.BasePlugin;
-import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.api.tasks.TaskAction;
 
 /** Task to clean the build cache. */
-@ParallelizableTask
 public class CleanBuildCache extends BaseTask {
 
     @Nullable private FileCache buildCache;

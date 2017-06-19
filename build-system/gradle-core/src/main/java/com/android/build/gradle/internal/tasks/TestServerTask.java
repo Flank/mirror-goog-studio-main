@@ -31,13 +31,11 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
-import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.api.tasks.TaskAction;
 
 /**
  * Task sending APKs out to a {@link TestServer}
  */
-@ParallelizableTask
 public class TestServerTask extends DefaultAndroidTask {
 
     private FileCollection testApks;

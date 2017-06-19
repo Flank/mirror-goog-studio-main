@@ -77,13 +77,11 @@ import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.OutputFile;
-import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.workers.WorkerExecutor;
 
 @CacheableTask
-@ParallelizableTask
 public class MergeResources extends IncrementalTask {
 
     // ----- PUBLIC TASK API -----

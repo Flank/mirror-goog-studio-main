@@ -57,7 +57,6 @@ import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectories;
 import org.gradle.api.tasks.OutputFiles;
-import org.gradle.api.tasks.ParallelizableTask;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
@@ -66,7 +65,6 @@ import org.gradle.internal.impldep.org.jetbrains.annotations.NotNull;
 import org.gradle.workers.WorkerExecutor;
 
 /** A task running a transform. */
-@ParallelizableTask
 @CacheableTask
 public class TransformTask extends StreamBasedTask implements Context {
 
