@@ -412,6 +412,18 @@ public class VectorDrawableGeneratorTest extends TestCase {
         checkSvgConversion("test_move_after_close_transform");
     }
 
+    public void testSvgFillRuleEvenOdd() throws Exception {
+        checkSvgConversion("test_fill_type_evenodd");
+    }
+
+    public void testSvgFillRuleNonzero() throws Exception {
+        checkSvgConversion("test_fill_type_nonzero");
+    }
+
+    public void testSvgFillRuleNoRule() throws Exception {
+        checkSvgConversion("test_fill_type_no_rule");
+    }
+
     // XML files start here.
     public void testXmlIconSizeOpacity() throws Exception {
         checkXmlConversion("ic_size_opacity");
