@@ -19,13 +19,12 @@ package com.android.ide.common.vectordrawable;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.utils.PositionXmlParser;
-import org.w3c.dom.Document;
-import org.xml.sax.SAXException;
-
-import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import javax.xml.parsers.ParserConfigurationException;
+import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
 /**
  * Parse a VectorDrawable's XML file, and generate an internal tree representation,
  * which can be used for drawing / previewing.
@@ -36,7 +35,7 @@ class VdParser {
     public VdTree parse(@NonNull InputStream is, @Nullable StringBuilder vdErrorLog) {
         final VdTree tree = new VdTree();
         try {
-            Document doc = PositionXmlParser.parse(is, false);
+            Document doc = PositionXmlParser.parse(is, true);
             tree.parse(doc);
         }
         catch (ParserConfigurationException | SAXException | IOException e) {

@@ -502,4 +502,13 @@ public class VectorDrawableGeneratorTest extends TestCase {
             Assert.assertEquals("android:pathData", e.getName());
         }
     }
+
+    /**
+     * We aren't really interested in the content of the image produced in this test, we're just
+     * testing that resource references aren't touched when they're in the tools: attribute
+     * namespace.
+     */
+    public void testPathDataInStringToolsResource() throws Exception {
+        checkXmlConversion("test_pathData_in_string_tools_resource");
+    }
 }

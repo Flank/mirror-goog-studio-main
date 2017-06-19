@@ -16,6 +16,7 @@
 
 package com.android.ide.common.vectordrawable;
 
+import com.android.SdkConstants;
 import com.google.common.collect.ImmutableMap;
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -29,6 +30,7 @@ import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.w3c.dom.NamedNodeMap;
@@ -574,10 +576,16 @@ class VdPath extends VdElement{
 
     @Override
     public void parseAttributes(NamedNodeMap attributes) {
-        int len = attributes.getLength();
-        for (int i = 0; i < len; i++) {
-            String name = attributes.item(i).getNodeName();
-            String value = attributes.item(i).getNodeValue();
+        for (int i = 0; i < attributes.getLength(); i++) {
+            org.w3c.dom.Node attribute = attributes.item(i);
+
+            // See https://issuetracker.google.com/62052258 for why this check exists.
+            if (Objects.equals(attribute.getNamespaceURI(), SdkConstants.TOOLS_URI)) {
+                continue;
+            }
+
+            String name = attribute.getNodeName();
+            String value = attribute.getNodeValue();
             setNameValue(name, value);
         }
     }
