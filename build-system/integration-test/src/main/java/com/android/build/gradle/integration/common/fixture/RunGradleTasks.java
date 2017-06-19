@@ -36,6 +36,8 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
@@ -190,6 +192,10 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
                             .getName()
                             .equals(
                                     "org.gradle.launcher.daemon.client.DaemonDisappearedException")) {
+                        System.err.println("Captured DaemonDisappearedException, retrying.");
+                        if (CAPTURE_JVM_LOGS && attempt == 0) {
+                            printJvmLogs();
+                        }
                         if (attempt++ < RETRY_COUNT) {
                             // Start the loop from scratch.
                             continue;
@@ -215,6 +221,20 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
 
             return result;
         }
+    }
+
+    private void printJvmLogs() throws IOException {
+        System.err.println("----------- JVM Log start -----------");
+        for (Path path : Files.list(getJvmLogDir()).collect(Collectors.toList())) {
+            System.err.print("---- Log file: ");
+            System.err.print(path);
+            System.err.println("----");
+            System.err.println();
+            for (String line : Files.readAllLines(path)) {
+                System.err.println(line);
+            }
+        }
+        System.err.println("------------ JVM Log end ------------");
     }
 
     private static class CollectingProgressListener implements ProgressListener {

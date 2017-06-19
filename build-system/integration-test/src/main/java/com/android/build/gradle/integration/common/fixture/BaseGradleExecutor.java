@@ -51,6 +51,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
 
     private static final boolean VERBOSE =
             !Strings.isNullOrEmpty(System.getenv().get("CUSTOM_TEST_VERBOSE"));
+    static final boolean CAPTURE_JVM_LOGS = true;
 
     @NonNull
     final ProjectConnection projectConnection;
@@ -94,6 +95,10 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
     /** Return the default build cache location for a project. */
     public final File getBuildCacheDir() {
         return new File(projectDirectory.toFile(), ".buildCache");
+    }
+
+    final Path getJvmLogDir() {
+        return projectDirectory.resolve("jvmLogs");
     }
 
     /** Upload this builds detailed profile as a benchmark. */
@@ -207,7 +212,8 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         return arguments;
     }
 
-    protected final void setJvmArguments(@NonNull LongRunningOperation launcher) {
+    protected final void setJvmArguments(@NonNull LongRunningOperation launcher)
+            throws IOException {
         List<String> jvmArguments = new ArrayList<>();
 
         if (!Strings.isNullOrEmpty(heapSize)) {
@@ -222,6 +228,15 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
 
         if (JacocoAgent.isJacocoEnabled()) {
             jvmArguments.add(JacocoAgent.getJvmArg());
+        }
+
+        if (CAPTURE_JVM_LOGS) {
+            Files.createDirectories(getJvmLogDir());
+            jvmArguments.add("-XX:+UnlockDiagnosticVMOptions");
+            jvmArguments.add("-XX:+LogVMOutput");
+            jvmArguments.add("-XX:LogFile=" + getJvmLogDir().resolve("java_log.log").toString());
+            jvmArguments.add(
+                    "-XX:ErrorFile=" + getJvmLogDir().resolve("java_error.log").toString());
         }
 
         launcher.setJvmArguments(Iterables.toArray(jvmArguments, String.class));
