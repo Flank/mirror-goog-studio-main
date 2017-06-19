@@ -59,6 +59,9 @@ public final class SymbolTestUtils {
             @NonNull String name,
             @NonNull String javaType,
             int numericValue) {
+        if (numericValue < 0x7f000000) {
+            return createSymbol(resourceType, name, javaType, Integer.toString(numericValue));
+        }
         return createSymbol(resourceType, name, javaType, "0x" + Integer.toHexString(numericValue));
     }
 }

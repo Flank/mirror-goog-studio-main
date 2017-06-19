@@ -95,11 +95,6 @@ public class AndroidConfigAdaptor implements com.android.build.gradle.AndroidCon
     }
 
     @Override
-    public boolean getEnforceUniquePackageName() {
-        return false;
-    }
-
-    @Override
     public CoreProductFlavor getDefaultConfig() {
         return new ProductFlavorAdaptor(model.getDefaultConfig());
     }

@@ -131,26 +131,22 @@ public class ResourceValuesXmlParserTest {
                         .add(SymbolTestUtils.createSymbol("id", "e1", "int", 0x7f_0c_0001))
                         .add(SymbolTestUtils.createSymbol("id", "e2", "int", 0x7f_0c_0002))
                         .add(SymbolTestUtils.createSymbol("attr", "enums", "int", 0x7f_04_0001))
+                        .add(SymbolTestUtils.createSymbol("styleable", "oneattr_enums", "int", 0))
                         .add(
                                 SymbolTestUtils.createSymbol(
-                                        "styleable", "oneattr_enums", "int", 0x7f_17_0001))
-                        .add(
-                                SymbolTestUtils.createSymbol(
-                                        "styleable", "oneattr", "int[]", "{0x7f170001}"))
+                                        "styleable", "oneattr", "int[]", "{0x7f040001}"))
                         .add(SymbolTestUtils.createSymbol("attr", "flags", "int", 0x7f_04_0002))
-                        .add(
-                                SymbolTestUtils.createSymbol(
-                                        "styleable", "twoattrs_flags", "int", 0x7f_17_0002))
+                        .add(SymbolTestUtils.createSymbol("styleable", "twoattrs_flags", "int", 0))
                         .add(SymbolTestUtils.createSymbol("attr", "nothing", "int", 0x7f_04_0003))
                         .add(
                                 SymbolTestUtils.createSymbol(
-                                        "styleable", "twoattrs_nothing", "int", 0x7f_17_0003))
+                                        "styleable", "twoattrs_nothing", "int", 1))
                         .add(
                                 SymbolTestUtils.createSymbol(
                                         "styleable",
                                         "twoattrs",
                                         "int[]",
-                                        "{0x7f170002,0x7f170003}"))
+                                        "{0x7f040002,0x7f040003}"))
                         .build();
 
         assertThat(table).isEqualTo(expected);
@@ -398,7 +394,7 @@ public class ResourceValuesXmlParserTest {
                         .add(SymbolTestUtils.createSymbol("attr", "showText", "int", 0x7f_04_0001))
                         .add(
                                 SymbolTestUtils.createSymbol(
-                                        "styleable", "PieChart_showText", "int", 0x7f_17_0001))
+                                        "styleable", "PieChart_showText", "int", 0))
                         .add(SymbolTestUtils.createSymbol("id", "left", "int", 0x7f_0c_0001))
                         .add(SymbolTestUtils.createSymbol("id", "right", "int", 0x7f_0c_0002))
                         .add(
@@ -406,13 +402,13 @@ public class ResourceValuesXmlParserTest {
                                         "attr", "labelPosition", "int", 0x7f_04_0002))
                         .add(
                                 SymbolTestUtils.createSymbol(
-                                        "styleable", "PieChart_labelPosition", "int", 0x7f_17_0002))
+                                        "styleable", "PieChart_labelPosition", "int", 1))
                         .add(
                                 SymbolTestUtils.createSymbol(
                                         "styleable",
                                         "PieChart",
                                         "int[]",
-                                        "{0x7f170001,0x7f170002}"))
+                                        "{0x7f040001,0x7f040002}"))
                         .build();
 
         assertThat(itemTable).isEqualTo(expected);

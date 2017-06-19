@@ -159,8 +159,8 @@ public class InstantRunSplitApkBuilderTest {
                 ArgumentCaptor.forClass(AaptPackageConfig.Builder.class);
 
         instantRunSliceSplitApkBuilder.generateSplitApk(dexFiles);
-        Mockito.verify(androidBuilder).processResources(
-                any(Aapt.class), aaptConfigCaptor.capture(), eq(false));
+        Mockito.verify(androidBuilder)
+                .processResources(any(Aapt.class), aaptConfigCaptor.capture());
 
         AaptPackageConfig build = aaptConfigCaptor.getValue().build();
         File resourceOutputApk = build.getResourceOutputApk();
@@ -184,8 +184,8 @@ public class InstantRunSplitApkBuilderTest {
                 ArgumentCaptor.forClass(AaptPackageConfig.Builder.class);
 
         instantRunSliceSplitApkBuilder.generateSplitApk(dexFiles);
-        Mockito.verify(androidBuilder).processResources(
-                any(Aapt.class), aaptConfigCaptor.capture(), eq(false));
+        Mockito.verify(androidBuilder)
+                .processResources(any(Aapt.class), aaptConfigCaptor.capture());
 
         AaptPackageConfig build = aaptConfigCaptor.getValue().build();
         File resourceOutputApk = build.getResourceOutputApk();

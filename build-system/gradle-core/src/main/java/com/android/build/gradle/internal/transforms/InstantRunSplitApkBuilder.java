@@ -207,10 +207,7 @@ abstract class InstantRunSplitApkBuilder extends Transform {
                 .setVariantType(VariantType.DEFAULT)
                 .setResourceOutputApk(resFilePackageFile);
 
-        androidBuilder.processResources(
-                getAapt(),
-                aaptConfig,
-                false /* enforceUniquePackageName */);
+        androidBuilder.processResources(getAapt(), aaptConfig);
 
         return resFilePackageFile;
     }

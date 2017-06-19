@@ -5,7 +5,9 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.RunGradleTasks;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.options.BooleanOption;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.nio.file.Files;
@@ -27,12 +29,15 @@ public class UnitTestingAndroidResourcesTest {
     public GradleTestProject project =
             GradleTestProject.builder().fromTestProject("unitTestingAndroidResources").create();
 
-    @Parameterized.Parameters
-    public static Collection<Object> data() {
-        return ImmutableList.of(true, false);
+    @Parameterized.Parameters(name = "lib_{0}, bypass_{1}")
+    public static Collection<Object[]> data() {
+        return ImmutableList.of(
+                new Object[] {true, false}, new Object[] {true, true}, new Object[] {false, false});
     }
 
     @Parameterized.Parameter public boolean testLibrary;
+    @Parameterized.Parameter(value = 1)
+    public boolean bypassAapt;
 
     @Before
     public void changePlugin() throws Exception {
@@ -70,11 +75,16 @@ public class UnitTestingAndroidResourcesTest {
 
     @Test
     public void runUnitTests() throws Exception {
-        project.executor().withEnabledAapt2(false).run("testDebugUnitTest");
+        RunGradleTasks runGradleTasks = project.executor().withEnabledAapt2(false);
+
+        if (bypassAapt) {
+            runGradleTasks = runGradleTasks.with(BooleanOption.DISABLE_RES_MERGE_IN_LIBRARY, true);
+        }
+
+        runGradleTasks.run("testDebugUnitTest");
 
         Files.write(project.file("src/main/assets/foo.txt").toPath(), "CHANGE".getBytes());
-        GradleBuildResult result =
-                project.executor().withEnabledAapt2(false).run("testDebugUnitTest");
+        GradleBuildResult result = runGradleTasks.run("testDebugUnitTest");
 
         assertThat(result.getNotUpToDateTasks()).contains(":testDebugUnitTest");
 

@@ -143,11 +143,9 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     private SplitHandlingPolicy splitHandlingPolicy;
 
-    private boolean enforceUniquePackageName;
-
     private VariantType type;
 
-    @NonNull private AaptGeneration aaptGeneration;
+    private AaptGeneration aaptGeneration;
 
     private boolean debuggable;
 
@@ -209,7 +207,8 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     private SplitFactory splitFactory;
 
-    private boolean enableNewResourceProcessing;
+    private boolean bypassAapt;
+    private boolean disableResMergeInLib;
 
     private boolean enableAapt2;
 
@@ -465,7 +464,7 @@ public class ProcessAndroidResources extends IncrementalTask {
         try {
             // If the new resources flag is enabled and if we are dealing with a library process
             // resources through the new parsers
-            if (enableNewResourceProcessing && this.type.equals(VariantType.LIBRARY)) {
+            if (bypassAapt) {
 
                 // Get symbol table of resources of the library
                 SymbolTable symbolTable =
@@ -475,15 +474,14 @@ public class ProcessAndroidResources extends IncrementalTask {
                 SymbolUtils.processLibraryMainSymbolTable(
                         symbolTable,
                         generateCode ? getLibraryInfoList() : ImmutableList.of(),
-                        generateCode && getEnforceUniquePackageName(),
                         packageForR,
                         manifestFile,
-                        srcOut,
-                        symbolOutputDir,
+                        Preconditions.checkNotNull(srcOut),
+                        Preconditions.checkNotNull(symbolOutputDir),
                         proguardOutputFile,
-                        getInputResourcesDir().getSingleFile());
+                        getInputResourcesDir().getSingleFile(),
+                        disableResMergeInLib);
             } else {
-
                 Aapt aapt =
                         AaptGradleFactory.make(
                                 aaptGeneration,
@@ -517,8 +515,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                                 .setDependentFeatures(featurePackagesBuilder.build())
                                 .setListResourceFiles(aaptGeneration == AaptGeneration.AAPT_V2);
 
-                builder.processResources(aapt, config,
-                        generateCode && getEnforceUniquePackageName());
+                builder.processResources(aapt, config);
                 if (LOG.isInfoEnabled()) {
                     LOG.info("Aapt output file {}", resOutBaseNameFile.getAbsolutePath());
                 }
@@ -731,6 +728,8 @@ public class ProcessAndroidResources extends IncrementalTask {
         public void execute(@NonNull ProcessAndroidResources processResources) {
             final BaseVariantData variantData = variantScope.getVariantData();
 
+            final ProjectOptions projectOptions = variantScope.getGlobalScope().getProjectOptions();
+
             variantData.addTask(TaskContainer.TaskKind.PROCESS_ANDROID_RESOURCES, processResources);
 
             final GradleVariantConfiguration config = variantData.getVariantConfiguration();
@@ -738,20 +737,21 @@ public class ProcessAndroidResources extends IncrementalTask {
             processResources.setAndroidBuilder(variantScope.getGlobalScope().getAndroidBuilder());
             processResources.setVariantName(config.getFullName());
             processResources.resPackageOutputFolder = resPackageOutputFolder;
-            processResources.aaptGeneration =
-                    AaptGeneration.fromProjectOptions(
-                            variantScope.getGlobalScope().getProjectOptions());
+            processResources.aaptGeneration = AaptGeneration.fromProjectOptions(projectOptions);
 
-            processResources.setEnableNewResourceProcessing(
-                    variantScope
-                            .getGlobalScope()
-                            .getProjectOptions()
-                            .get(ENABLE_NEW_RESOURCE_PROCESSING));
-            processResources.setEnableAapt2(
-                    variantScope
-                            .getGlobalScope()
-                            .getProjectOptions()
-                            .get(BooleanOption.ENABLE_AAPT2));
+            if (projectOptions.get(ENABLE_NEW_RESOURCE_PROCESSING)
+                    && variantData.getType() == VariantType.LIBRARY) {
+                processResources.bypassAapt = true;
+                processResources.disableResMergeInLib =
+                        sourceTaskOutputType == TaskManager.MergeType.PACKAGE;
+            } else {
+                Preconditions.checkState(
+                        sourceTaskOutputType == TaskManager.MergeType.MERGE,
+                        "source output type should be MERGE",
+                        sourceTaskOutputType);
+            }
+
+            processResources.setEnableAapt2(projectOptions.get(BooleanOption.ENABLE_AAPT2));
 
             // per exec
             processResources.setIncrementalFolder(variantScope.getIncrementalDir(getName()));
@@ -761,9 +761,6 @@ public class ProcessAndroidResources extends IncrementalTask {
 
             processResources.splitHandlingPolicy =
                     variantData.getSplitScope().getSplitHandlingPolicy();
-
-            processResources.enforceUniquePackageName =
-                    variantScope.getGlobalScope().getExtension().getEnforceUniquePackageName();
 
                 processResources.manifests = variantScope.getArtifactCollection(
                         RUNTIME_CLASSPATH, ALL, MANIFEST);
@@ -815,9 +812,6 @@ public class ProcessAndroidResources extends IncrementalTask {
             processResources.setManifestFiles(
                     variantScope.getOutput(processResources.taskInputType));
 
-            Preconditions.checkState(
-                    sourceTaskOutputType == TaskManager.MergeType.MERGE,
-                    "Support for not merging resources in libraries not implemented yet.");
             processResources.inputResourcesDir =
                     variantScope.getOutput(sourceTaskOutputType.getOutputType());
 
@@ -828,7 +822,6 @@ public class ProcessAndroidResources extends IncrementalTask {
             processResources
                     .setPseudoLocalesEnabled(config.getBuildType().isPseudoLocalesEnabled());
 
-            ProjectOptions projectOptions = variantScope.getGlobalScope().getProjectOptions();
             processResources.buildTargetDensity =
                     projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY);
 
@@ -999,15 +992,6 @@ public class ProcessAndroidResources extends IncrementalTask {
     }
 
     @Input
-    public boolean getEnforceUniquePackageName() {
-        return enforceUniquePackageName;
-    }
-
-    public void setEnforceUniquePackageName(boolean enforceUniquePackageName) {
-        this.enforceUniquePackageName = enforceUniquePackageName;
-    }
-
-    @Input
     public String getTypeAsString() {
         return type.name();
     }
@@ -1098,12 +1082,13 @@ public class ProcessAndroidResources extends IncrementalTask {
     }
 
     @Input
-    public boolean isEnabledNewResourceProcessing() {
-        return enableNewResourceProcessing;
+    public boolean bypassAapt() {
+        return bypassAapt;
     }
 
-    public void setEnableNewResourceProcessing(boolean enableNewResourceProcessing) {
-        this.enableNewResourceProcessing = enableNewResourceProcessing;
+    @Input
+    public boolean isDisableResMergeInLib() {
+        return disableResMergeInLib;
     }
 
     @Input

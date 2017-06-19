@@ -282,6 +282,7 @@ public final class ResourceValuesXmlParser {
         List<String> attrValues = new ArrayList<>();
 
         Node attrNode = declareStyleable.getFirstChild();
+        int index = 0;
         while (attrNode != null) {
             if (attrNode.getNodeType() != Node.ELEMENT_NODE) {
                 attrNode = attrNode.getNextSibling();
@@ -307,16 +308,14 @@ public final class ResourceValuesXmlParser {
                     SymbolUtils.canonicalizeValueResourceName(
                             getMandatoryAttr(attrElement, "name"));
 
-            parseAttr(attrElement, idProvider, attrName, builder, enumSymbols);
-
-            String attrValue = idProvider.next(ResourceType.STYLEABLE);
+            String attrValue = parseAttr(attrElement, idProvider, attrName, builder, enumSymbols);
 
             Symbol newStyleable =
                     Symbol.createSymbol(
                             ResourceType.STYLEABLE,
                             name + "_" + attrName,
                             SymbolJavaType.INT,
-                            attrValue);
+                            Integer.toString(index++));
 
             builder.add(newStyleable);
             attrValues.add(attrValue);
@@ -339,9 +338,10 @@ public final class ResourceValuesXmlParser {
      * @param idProvider the provider for IDs to assign to the resources
      * @param name name of the attr element
      * @param builder the builder for the SymbolTable
+     * @return the symbol value of the parsed attribute
      * @throws ResourceValuesXmlParseException if there is an illegal type under attr
      */
-    private static void parseAttr(
+    private static String parseAttr(
             @NonNull Element attr,
             @NonNull IdProvider idProvider,
             @NonNull String name,
@@ -379,16 +379,16 @@ public final class ResourceValuesXmlParser {
             enumNode = enumNode.getNextSibling();
         }
 
-        Symbol newAttr =
-                Symbol.createSymbol(
-                        ResourceType.ATTR,
-                        name,
-                        SymbolJavaType.INT,
-                        idProvider.next(ResourceType.ATTR));
+        final String value = idProvider.next(ResourceType.ATTR);
+        Symbol newAttr = Symbol.createSymbol(ResourceType.ATTR, name, SymbolJavaType.INT, value);
 
         if (!builder.contains(newAttr)) {
             builder.add(newAttr);
+            return value;
         }
+
+        //noinspection ConstantConditions
+        return builder.get(newAttr).getValue();
     }
 
     /**

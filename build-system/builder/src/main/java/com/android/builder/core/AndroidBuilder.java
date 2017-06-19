@@ -36,7 +36,6 @@ import com.android.builder.files.RelativeFile;
 import com.android.builder.internal.TestManifestGenerator;
 import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptPackageConfig;
-import com.android.builder.internal.aapt.v1.AaptV1;
 import com.android.builder.internal.compiler.AidlProcessor;
 import com.android.builder.internal.compiler.LeafFolderGatherer;
 import com.android.builder.internal.compiler.PreDexCache;
@@ -773,19 +772,15 @@ public class AndroidBuilder {
      * Process the resources and generate R.java and/or the packaged resources.
      *
      * @param aapt the interface to the {@code aapt} tool
-     * @param aaptConfigBuilder aapt command invocation parameters; this will receive some additional
-     * data (build tools, Android target and logger) and will be used to request package invocation
-     * in {@code aapt} (see {@link Aapt#link(AaptPackageConfig)})
-     * @param enforceUniquePackageName if {@code true} method will fail if some libraries share the
-     * same package name
+     * @param aaptConfigBuilder aapt command invocation parameters; this will receive some
+     *     additional data (build tools, Android target and logger) and will be used to request
+     *     package invocation in {@code aapt} (see {@link Aapt#link(AaptPackageConfig)})
      * @throws IOException failed
      * @throws InterruptedException failed
      * @throws ProcessException failed
      */
     public void processResources(
-            @NonNull Aapt aapt,
-            @NonNull AaptPackageConfig.Builder aaptConfigBuilder,
-            boolean enforceUniquePackageName)
+            @NonNull Aapt aapt, @NonNull AaptPackageConfig.Builder aaptConfigBuilder)
             throws IOException, InterruptedException, ProcessException {
 
         checkState(mTargetInfo != null,
@@ -821,7 +816,7 @@ public class AndroidBuilder {
             // For each dependency, load its symbol file.
             Set<SymbolTable> depSymbolTables =
                     SymbolUtils.loadDependenciesSymbolTables(
-                            aaptConfig.getLibraries(), enforceUniquePackageName, mainPackageName);
+                            aaptConfig.getLibraries(), mainPackageName);
 
             boolean finalIds = true;
             if (aaptConfig.getVariantType() == VariantType.LIBRARY) {
