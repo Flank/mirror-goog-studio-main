@@ -20,13 +20,13 @@ dependencies {
     compile project(':analytics-library:tracker')
     compile project(':apksig')
 
+    compile libs.kotlin_stdlib
     compile libs.javawriter
     compile libs.bouncycastle_pkix
     compile libs.bouncycastle_prov
     compile libs.asm
     compile libs.asm_tree
 
-    testCompile libs.kotlin_stdlib
     testCompile libs.junit
     testCompile libs.mockito_core
     testCompile libs.truth

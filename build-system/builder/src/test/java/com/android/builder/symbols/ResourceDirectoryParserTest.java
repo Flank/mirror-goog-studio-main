@@ -78,8 +78,11 @@ public class ResourceDirectoryParserTest {
     public void parseEmptyResourceDirectory() throws Exception {
         File directory = temporaryFolder.newFolder();
 
+        SymbolTable platformTable = SymbolTable.builder().tablePackage("android").build();
+
         SymbolTable parsed =
-                ResourceDirectoryParser.parseDirectory(directory, IdProvider.sequential());
+                ResourceDirectoryParser.parseDirectory(
+                        directory, IdProvider.sequential(), platformTable);
 
         SymbolTable expected = SymbolTable.builder().build();
 
@@ -98,8 +101,11 @@ public class ResourceDirectoryParserTest {
         makeRandom(directory, "raw-en/foo.png");
         makeRandom(directory, "raw-en/bar.png");
 
+        SymbolTable platformTable = SymbolTable.builder().tablePackage("android").build();
+
         SymbolTable parsed =
-                ResourceDirectoryParser.parseDirectory(directory, IdProvider.sequential());
+                ResourceDirectoryParser.parseDirectory(
+                        directory, IdProvider.sequential(), platformTable);
 
         SymbolTable expected =
                 SymbolTable.builder()
@@ -132,8 +138,11 @@ public class ResourceDirectoryParserTest {
         make(values.getBytes(), directory, "values/col.xml");
         make(values_en.getBytes(), directory, "values-en/col.xml");
 
+        SymbolTable platformTable = SymbolTable.builder().tablePackage("android").build();
+
         SymbolTable parsed =
-                ResourceDirectoryParser.parseDirectory(directory, IdProvider.sequential());
+                ResourceDirectoryParser.parseDirectory(
+                        directory, IdProvider.sequential(), platformTable);
 
         SymbolTable expected =
                 SymbolTable.builder()
@@ -159,7 +168,10 @@ public class ResourceDirectoryParserTest {
         make(values.getBytes(), directory, "values/col.xml");
 
         try {
-            ResourceDirectoryParser.parseDirectory(directory, IdProvider.sequential());
+            SymbolTable platformTable = SymbolTable.builder().tablePackage("android").build();
+
+            ResourceDirectoryParser.parseDirectory(
+                    directory, IdProvider.sequential(), platformTable);
             fail();
         } catch (ResourceDirectoryParseException e) {
             assertThat(e.getMessage()).contains(FileUtils.join("values", "col.xml"));

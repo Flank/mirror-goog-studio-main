@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.android.annotations.NonNull;
+import com.android.testutils.TestResources;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -44,7 +45,7 @@ public class SymbolIoTest {
         File file = mTemporaryFolder.newFile();
         Files.write(r, file, Charsets.UTF_8);
 
-        SymbolTable table = SymbolIo.read(file);
+        SymbolTable table = SymbolIo.read(file, null);
 
         SymbolTable expected =
                 SymbolTable.builder()
@@ -52,7 +53,7 @@ public class SymbolIoTest {
                                 SymbolTestUtils.createSymbol(
                                         "xml", "authenticator", "int", "0x7f040000"))
                         .build();
-        assertEquals(table, expected);
+        assertEquals(expected, table);
     }
 
     @Test
@@ -65,7 +66,7 @@ public class SymbolIoTest {
         File file = mTemporaryFolder.newFile();
         Files.write(r, file, Charsets.UTF_8);
 
-        SymbolTable table = SymbolIo.read(file);
+        SymbolTable table = SymbolIo.read(file, null);
 
         SymbolTable expected =
                 SymbolTable.builder()
@@ -74,24 +75,41 @@ public class SymbolIoTest {
                                         "styleable",
                                         "LimitedSizeLinearLayout",
                                         "int[]",
-                                        "{ 0x7f010000, 0x7f010001 }"))
-                        .add(
-                                SymbolTestUtils.createSymbol(
-                                        "styleable",
-                                        "LimitedSizeLinearLayout_max_height",
-                                        "int",
-                                        "1"))
-                        .add(
-                                SymbolTestUtils.createSymbol(
-                                        "styleable",
-                                        "LimitedSizeLinearLayout_max_width",
-                                        "int",
-                                        "0"))
+                                        "{ 0x7f010000, 0x7f010001 }",
+                                        ImmutableList.of("max_height", "max_width")))
                         .add(
                                 SymbolTestUtils.createSymbol(
                                         "xml", "authenticator", "int", "0x7f040000"))
                         .build();
-        assertEquals(table, expected);
+        assertEquals(expected, table);
+    }
+
+    @Test
+    public void testStyleableWithAndroidAttr() throws Exception {
+        String r =
+                "int[] styleable LimitedSizeLinearLayout { 0x7f010000, 0x80010013 }\n"
+                        + "int styleable LimitedSizeLinearLayout_max_height 0\n"
+                        + "int styleable LimitedSizeLinearLayout_android_foo 1\n"
+                        + "int xml authenticator 0x7f040000\n";
+        File file = mTemporaryFolder.newFile();
+        Files.write(r, file, Charsets.UTF_8);
+
+        SymbolTable table = SymbolIo.read(file, null);
+
+        SymbolTable expected =
+                SymbolTable.builder()
+                        .add(
+                                SymbolTestUtils.createSymbol(
+                                        "styleable",
+                                        "LimitedSizeLinearLayout",
+                                        "int[]",
+                                        "{ 0x7f010000, 0x80010013 }",
+                                        ImmutableList.of("max_height", "android:foo")))
+                        .add(
+                                SymbolTestUtils.createSymbol(
+                                        "xml", "authenticator", "int", "0x7f040000"))
+                        .build();
+        assertEquals(expected, table);
     }
 
     @Test
@@ -105,9 +123,16 @@ public class SymbolIoTest {
         File f = mTemporaryFolder.newFile();
 
         SymbolIo.write(original, f);
-        SymbolTable copy = SymbolIo.read(f);
+        SymbolTable copy = SymbolIo.read(f, null);
 
         assertEquals(original, copy);
+    }
+
+    @Test
+    public void writeReadBrokenSymbolFile() throws Exception {
+        File R = TestResources.getFile(SymbolIoTest.class, "/testData/symbolIo/misordered_R.txt");
+
+        SymbolTable brokenR = SymbolIo.read(R, null);
     }
 
     private static void checkFileGeneration(

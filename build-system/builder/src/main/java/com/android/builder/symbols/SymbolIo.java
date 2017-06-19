@@ -18,11 +18,13 @@ package com.android.builder.symbols;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.resources.ResourceType;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
+import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -41,17 +43,21 @@ import java.util.TreeSet;
  */
 public final class SymbolIo {
 
+    public static final String ANDROID_ATTR_PREFIX = "android_";
+
     private SymbolIo() {}
 
     /**
      * Loads a symbol table from a symbol file.
      *
      * @param file the symbol file
+     * @param tablePackage the package name associated with the table
      * @return the table read
      * @throws IOException failed to read the table
      */
     @NonNull
-    public static SymbolTable read(@NonNull File file) throws IOException {
+    public static SymbolTable read(@NonNull File file, @Nullable String tablePackage)
+            throws IOException {
         List<String> lines;
         try {
             lines = Files.readAllLines(file.toPath(), Charsets.UTF_8);
@@ -68,21 +74,57 @@ public final class SymbolIo {
             for (; lineIndex <= count ; lineIndex++) {
                 line = lines.get(lineIndex - 1);
 
-                // format is "<type> <class> <name> <value>"
-                // don't want to split on space as value could contain spaces.
-                int pos = line.indexOf(' ');
-                String typeName = line.substring(0, pos);
-                SymbolJavaType type = SymbolJavaType.getEnum(typeName);
-                int pos2 = line.indexOf(' ', pos + 1);
-                String className = line.substring(pos + 1, pos2);
-                ResourceType resourceType = ResourceType.getEnum(className);
-                if (resourceType == null) {
-                    throw new IOException("Invalid resource type " + className);
+                SymbolData data = readLine(line, null);
+                // because there are some misordered file out there we want to make sure
+                // both the resType is Styleable and the javaType is array.
+                // We skip the non arrays that are out of sort
+                if (data.resourceType == ResourceType.STYLEABLE) {
+                    if (data.javaType == SymbolJavaType.INT_LIST) {
+                        List<String> childrenNames = Lists.newArrayList();
+                        SymbolData subData;
+                        // read the next line
+                        while (lineIndex < count
+                                && (subData =
+                                                readLine(
+                                                        lines.get(lineIndex),
+                                                        (resourceType, javaType) ->
+                                                                resourceType.equals(
+                                                                                ResourceType
+                                                                                        .STYLEABLE
+                                                                                        .getName())
+                                                                        && javaType.equals(
+                                                                                SymbolJavaType.INT
+                                                                                        .getTypeName())))
+                                        != null) {
+                            // line is value, inc the index
+                            lineIndex++;
+
+                            // tweak the name to remove the styleable.
+                            String indexName = subData.name.substring(data.name.length() + 1);
+                            // check if it's a namespace
+                            if (indexName.startsWith(ANDROID_ATTR_PREFIX)) {
+                                indexName =
+                                        SdkConstants.ANDROID_NS_NAME_PREFIX
+                                                + indexName.substring(ANDROID_ATTR_PREFIX.length());
+                            }
+
+                            childrenNames.add(indexName);
+                        }
+
+                        table.add(
+                                Symbol.createSymbol(
+                                        data.resourceType,
+                                        data.name,
+                                        data.javaType,
+                                        data.value,
+                                        childrenNames));
+                    }
+
+                } else {
+                    table.add(
+                            Symbol.createSymbol(
+                                    data.resourceType, data.name, data.javaType, data.value));
                 }
-                int pos3 = line.indexOf(' ', pos2 + 1);
-                String name = line.substring(pos2 + 1, pos3);
-                String value = line.substring(pos3 + 1);
-                table.add(Symbol.createSymbol(resourceType, name, type, value));
             }
         } catch (IndexOutOfBoundsException | IOException e) {
             throw new IOException(
@@ -92,8 +134,64 @@ public final class SymbolIo {
                     e);
         }
 
+        if (tablePackage != null) {
+            table.tablePackage(tablePackage);
+        }
+
         return table.build();
     }
+
+    private static class SymbolData {
+        @NonNull final ResourceType resourceType;
+        @NonNull final String name;
+        @NonNull final SymbolJavaType javaType;
+        @NonNull final String value;
+
+        public SymbolData(
+                @NonNull ResourceType resourceType,
+                @NonNull String name,
+                @NonNull SymbolJavaType javaType,
+                @NonNull String value) {
+            this.resourceType = resourceType;
+            this.name = name;
+            this.javaType = javaType;
+            this.value = value;
+        }
+    }
+
+    @FunctionalInterface
+    private interface SymbolFilter {
+        boolean validate(@NonNull String resourceType, @NonNull String javaType);
+    }
+
+    @Nullable
+    private static SymbolData readLine(@NonNull String line, @Nullable SymbolFilter filter)
+            throws IOException {
+        // format is "<type> <class> <name> <value>"
+        // don't want to split on space as value could contain spaces.
+        int pos = line.indexOf(' ');
+        String typeName = line.substring(0, pos);
+
+        SymbolJavaType type = SymbolJavaType.getEnum(typeName);
+        int pos2 = line.indexOf(' ', pos + 1);
+        String className = line.substring(pos + 1, pos2);
+
+        if (filter != null && !filter.validate(className, typeName)) {
+            return null;
+        }
+
+        ResourceType resourceType = ResourceType.getEnum(className);
+        if (resourceType == null) {
+            throw new IOException("Invalid resource type " + className);
+        }
+        int pos3 = line.indexOf(' ', pos2 + 1);
+        String name = line.substring(pos2 + 1, pos3);
+        String value = line.substring(pos3 + 1);
+
+        return new SymbolData(resourceType, name, type, value);
+    }
+
+
 
     /**
      * Writes a symbol table to a symbol file.
@@ -209,6 +307,8 @@ public final class SymbolIo {
             pw.println();
             pw.println("public final class " + SymbolTable.R_CLASS_NAME + " {");
 
+            final String typeName = SymbolJavaType.INT.getTypeName();
+
             for (ResourceType rt : resourceTypes) {
                 pw.println("    public static final class " + rt + " {");
 
@@ -222,13 +322,14 @@ public final class SymbolIo {
                 });
 
                 for (Symbol s : syms) {
+                    final String name = s.getName();
                     pw.println(
                             "        "
                                     + idModifiers
                                     + " "
                                     + s.getJavaType().getTypeName()
                                     + " "
-                                    + s.getName()
+                                    + name
                                     + " = "
                                     + s.getValue()
                                     + ";");
@@ -247,11 +348,12 @@ public final class SymbolIo {
                                     "        "
                                             + idModifiers
                                             + " "
-                                            + SymbolJavaType.INT.getTypeName()
+                                            + typeName
                                             + " "
-                                            + s.getName()
+                                            + name
                                             + "_"
-                                            + children.get(i)
+                                            + SymbolUtils.canonicalizeValueResourceName(
+                                                    children.get(i))
                                             + " = "
                                             + i
                                             + ";");
