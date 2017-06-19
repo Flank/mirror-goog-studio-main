@@ -84,7 +84,12 @@ class DexArchiveBuilderTransformCallable implements Callable<Void> {
 
         /** Tool used to produce the dex archive. */
         DEXER_TOOL,
+
+        /** Version of the cache key. */
+        CACHE_KEY_VERSION,
     }
+
+    private static final int CACHE_KEY_VERSION = 1;
 
     private static final LoggerWrapper logger =
             LoggerWrapper.getLogger(DexArchiveBuilderTransformCallable.class);
@@ -217,7 +222,11 @@ class DexArchiveBuilderTransformCallable implements Callable<Void> {
                                             processOutput.getErrorOutput());
                             DexArchiveBuilderConfig config =
                                     new DexArchiveBuilderConfig(
-                                            dxContext, optimizedDex, minSdkVersion, dexerTool);
+                                            dxContext,
+                                            optimizedDex,
+                                            minSdkVersion,
+                                            dexerTool,
+                                            isJumboModeEnabledForDx());
 
                             builder = DexArchiveBuilder.createDxDexBuilder(config);
                             break;
@@ -269,11 +278,12 @@ class DexArchiveBuilderTransformCallable implements Callable<Void> {
         buildCacheInputs
                 .putFileHash(FileCacheInputParams.FILE_HASH.name(), inputFile)
                 .putString(FileCacheInputParams.DX_VERSION.name(), Version.VERSION)
-                .putBoolean(FileCacheInputParams.JUMBO_MODE.name(), dexOptions.getJumboMode())
+                .putBoolean(FileCacheInputParams.JUMBO_MODE.name(), isJumboModeEnabledForDx())
                 .putBoolean(
                         FileCacheInputParams.OPTIMIZE.name(),
                         !dexOptions.getAdditionalParameters().contains("--no-optimize"))
-                .putString(FileCacheInputParams.DEXER_TOOL.name(), dexerTool.name());
+                .putString(FileCacheInputParams.DEXER_TOOL.name(), dexerTool.name())
+                .putLong(FileCacheInputParams.CACHE_KEY_VERSION.name(), CACHE_KEY_VERSION);
 
         return buildCacheInputs.build();
     }
@@ -297,5 +307,10 @@ class DexArchiveBuilderTransformCallable implements Callable<Void> {
         }
 
         return hashCode.toString();
+    }
+
+    /** Jumbo mode is always enabled for dex archives - see http://b.android.com/321744 */
+    private static boolean isJumboModeEnabledForDx() {
+        return true;
     }
 }

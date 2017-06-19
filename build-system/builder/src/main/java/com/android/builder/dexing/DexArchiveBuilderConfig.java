@@ -45,18 +45,19 @@ public class DexArchiveBuilderConfig {
      * @param optimized if generated dex should be optimized
      * @param minSdkVersion minimum sdk version used to enable dx features
      * @param tool tool that will be used to create dex archives
+     * @param jumboMode if jumbo mode is enabled for dx
      */
     public DexArchiveBuilderConfig(
             @NonNull DxContext dxContext,
             boolean optimized,
             int minSdkVersion,
-            @NonNull DexerTool tool) {
+            @NonNull DexerTool tool,
+            boolean jumboMode) {
         this.dxContext = dxContext;
         this.tool = tool;
 
         this.dexOptions = new DexOptions();
-        /* jumbo mode always on - see http://b.android.com/321744 */
-        this.dexOptions.forceJumbo = true;
+        this.dexOptions.forceJumbo = jumboMode;
         this.dexOptions.minSdkVersion = minSdkVersion;
 
         this.cfOptions = new CfOptions();
