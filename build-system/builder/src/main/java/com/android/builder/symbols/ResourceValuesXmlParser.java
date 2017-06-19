@@ -17,6 +17,9 @@
 package com.android.builder.symbols;
 
 
+import static com.android.SdkConstants.ANDROID_NS_NAME_PREFIX;
+import static com.android.SdkConstants.ANDROID_NS_NAME_PREFIX_LEN;
+
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.resources.ResourceType;
@@ -143,10 +146,14 @@ public final class ResourceValuesXmlParser {
      *
      * @param xmlDocument the parsed XML document
      * @param idProvider the provider for IDs to assign to the resources
+     * @param platformAttrSymbols the platform attr symbols
      * @return the symbols for all resources in the document
      */
     @NonNull
-    public static SymbolTable parse(@NonNull Document xmlDocument, @NonNull IdProvider idProvider) {
+    public static SymbolTable parse(
+            @NonNull Document xmlDocument,
+            @NonNull IdProvider idProvider,
+            SymbolTable platformAttrSymbols) {
         Element root = xmlDocument.getDocumentElement();
         if (root == null) {
             throw new ResourceValuesXmlParseException("XML document does not have a root element.");
@@ -166,7 +173,8 @@ public final class ResourceValuesXmlParser {
         Node current = root.getFirstChild();
         while (current != null) {
             if (current.getNodeType() == Node.ELEMENT_NODE) {
-                parseChild((Element) current, builder, idProvider, enumSymbols);
+                parseChild(
+                        (Element) current, builder, idProvider, enumSymbols, platformAttrSymbols);
             }
             current = current.getNextSibling();
         }
@@ -185,12 +193,15 @@ public final class ResourceValuesXmlParser {
      * @param child the element to be parsed
      * @param builder the builder for the SymbolTable
      * @param idProvider the provider for IDs to assign to the resources
+     * @param enumSymbols out list of enum symbols discovered in declare-styleable
+     * @param platformAttrSymbols the platform attr symbols
      */
     private static void parseChild(
             @NonNull Element child,
             @NonNull SymbolTable.Builder builder,
             @NonNull IdProvider idProvider,
-            @NonNull List<Symbol> enumSymbols) {
+            @NonNull List<Symbol> enumSymbols,
+            @NonNull SymbolTable platformAttrSymbols) {
 
         String type = child.getTagName();
         if (type.equals(SdkConstants.TAG_ITEM)) {
@@ -247,7 +258,8 @@ public final class ResourceValuesXmlParser {
                 break;
             case DECLARE_STYLEABLE:
                 // We also need to find all the attributes declared under declare styleable.
-                parseDeclareStyleable(child, idProvider, name, builder, enumSymbols);
+                parseDeclareStyleable(
+                        child, idProvider, name, builder, enumSymbols, platformAttrSymbols);
                 break;
             case ATTR:
                 // We also need to find all the enums declared under attr (if there are any).
@@ -271,6 +283,8 @@ public final class ResourceValuesXmlParser {
      * @param idProvider the provider for IDs to assign to the resources
      * @param name name of the declare styleable element
      * @param builder the builder for the SymbolTable
+     * @param enumSymbols out list of enum symbols discovered in declare-styleable
+     * @param platformAttrSymbols the platform attr symbols
      * @throws ResourceValuesXmlParseException if there is an illegal type under declare-styleable
      */
     private static void parseDeclareStyleable(
@@ -278,7 +292,8 @@ public final class ResourceValuesXmlParser {
             @NonNull IdProvider idProvider,
             @NonNull String name,
             @NonNull SymbolTable.Builder builder,
-            @NonNull List<Symbol> enumSymbols) {
+            @NonNull List<Symbol> enumSymbols,
+            @NonNull SymbolTable platformAttrSymbols) {
         List<String> attrValues = new ArrayList<>();
         List<String> attrNames = new ArrayList<>();
 
@@ -305,13 +320,28 @@ public final class ResourceValuesXmlParser {
                                 tagName));
             }
 
-            String attrName =
-                    SymbolUtils.canonicalizeValueResourceName(
-                            getMandatoryAttr(attrElement, "name"));
+            String attrName = getMandatoryAttr(attrElement, "name");
 
-            String attrValue = parseAttr(attrElement, idProvider, attrName, builder, enumSymbols);
+            if (attrName.startsWith(ANDROID_NS_NAME_PREFIX)) {
+                // this is an android attr.
+                String realAttrName = attrName.substring(ANDROID_NS_NAME_PREFIX_LEN);
 
-            attrValues.add(attrValue);
+                final Symbol attrSymbol =
+                        platformAttrSymbols
+                                .getSymbols()
+                                .get(SymbolTable.key(ResourceType.ATTR, realAttrName));
+
+                if (attrSymbol != null) {
+                    attrValues.add(attrSymbol.getValue());
+                } else {
+                    throw new ResourceValuesXmlParseException(
+                            String.format("Unknown android attribute '%s'", name));
+                }
+            } else {
+                attrName = SymbolUtils.canonicalizeValueResourceName(attrName);
+                attrValues.add(parseAttr(attrElement, idProvider, attrName, builder, enumSymbols));
+            }
+
             attrNames.add(attrName);
 
             attrNode = attrNode.getNextSibling();
@@ -342,7 +372,6 @@ public final class ResourceValuesXmlParser {
             @NonNull String name,
             @NonNull SymbolTable.Builder builder,
             @NonNull List<Symbol> enumSymbols) {
-
         Node enumNode = attr.getFirstChild();
         while (enumNode != null) {
             if (enumNode.getNodeType() != Node.ELEMENT_NODE) {
