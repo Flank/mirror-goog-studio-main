@@ -43,7 +43,8 @@ sourceSets {
 }
 
 task copyVersionProperties(type: Copy) {
-    from project.file("$rootDir/buildSrc/base/version.properties")
+    from project.file(project.getRootProject().getProperty("versionProperties"))
+    rename({"version.properties"})
     into project.file("$generated/com/android/builder/model")
 }
 
