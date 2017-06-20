@@ -223,8 +223,8 @@ public abstract class SymbolTable {
         }
 
         /**
-         * Adds a symbol to the table to be built. The table must not contains a symbol with the
-         * same resource type and name.
+         * Adds a symbol to the table to be built. The table must not contain a symbol with the same
+         * resource type and name.
          *
          * @param symbol the symbol to add
          * @return {@code this} for use with fluent-style notation
@@ -288,7 +288,6 @@ public abstract class SymbolTable {
          * Returns the symbol form the table matching the provided symbol
          *
          * @param symbol the symbol
-         * @return
          */
         @Nullable
         public Symbol get(@NonNull Symbol symbol) {

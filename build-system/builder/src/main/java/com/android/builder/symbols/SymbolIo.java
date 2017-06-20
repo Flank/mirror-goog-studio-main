@@ -105,37 +105,36 @@ public final class SymbolIo {
     public static void write(@NonNull SymbolTable table, @NonNull File file) {
         List<String> lines = new ArrayList<>();
 
-        /*
-         * Identify all resource types.
-         */
-        EnumSet<ResourceType> resourceTypes = EnumSet.noneOf(ResourceType.class);
-        table.allSymbols().forEach(s -> resourceTypes.add(s.getResourceType()));
+        for (Symbol s : table.allSymbols()) {
+            lines.add(
+                    s.getJavaType().getTypeName()
+                            + " "
+                            + s.getResourceType().getName()
+                            + " "
+                            + s.getName()
+                            + " "
+                            + s.getValue());
 
-        for (ResourceType rt : resourceTypes) {
-            /*
-             * The order used to generate the symbols is important. Styleable array declarations
-             * need to happen before the styleable element. Using the name always guarantees this
-             * since the array name is always shorter (e.g. "ActionBar" for the styleable vs
-             * "ActionBar_tileName" for the attribute)
-             */
-            SortedSet<Symbol> syms = new TreeSet<>(Comparator.comparing(Symbol::getName));
-            table.allSymbols()
-                    .forEach(
-                            sym -> {
-                                if (sym.getResourceType().equals(rt)) {
-                                    syms.add(sym);
-                                }
-                            });
+            // Declare styleables have the attributes that were defined under their node listed in
+            // the children list.
+            if (s.getJavaType() == SymbolJavaType.INT_LIST) {
+                Preconditions.checkArgument(
+                        s.getResourceType() == ResourceType.STYLEABLE,
+                        "Only resource type 'styleable' is allowed to have java type 'int[]'");
 
-            for (Symbol s : syms) {
-                lines.add(
-                        s.getJavaType().getTypeName()
-                                + " "
-                                + s.getResourceType().getName()
-                                + " "
-                                + s.getName()
-                                + " "
-                                + s.getValue());
+                List<String> children = s.getChildren();
+                for (int i = 0; i < children.size(); ++i) {
+                    lines.add(
+                            SymbolJavaType.INT.getTypeName()
+                                    + " "
+                                    + ResourceType.STYLEABLE.getName()
+                                    + " "
+                                    + s.getName()
+                                    + "_"
+                                    + children.get(i)
+                                    + " "
+                                    + i);
+                }
             }
         }
 
@@ -233,6 +232,31 @@ public final class SymbolIo {
                                     + " = "
                                     + s.getValue()
                                     + ";");
+
+                    // Declare styleables have the attributes that were defined under their node
+                    // listed in the children list.
+                    if (s.getJavaType() == SymbolJavaType.INT_LIST) {
+                        Preconditions.checkArgument(
+                                s.getResourceType() == ResourceType.STYLEABLE,
+                                "Only resource type 'styleable'"
+                                        + " is allowed to have java type 'int[]'");
+
+                        List<String> children = s.getChildren();
+                        for (int i = 0; i < children.size(); ++i) {
+                            pw.println(
+                                    "        "
+                                            + idModifiers
+                                            + " "
+                                            + SymbolJavaType.INT.getTypeName()
+                                            + " "
+                                            + s.getName()
+                                            + "_"
+                                            + children.get(i)
+                                            + " = "
+                                            + i
+                                            + ";");
+                        }
+                    }
                 }
 
                 pw.println("    }");

@@ -137,8 +137,8 @@ public final class ResourceValuesXmlParser {
     /**
      * Constructs a {@link SymbolTable} from the given parsed XML document. The values for the
      * resource are drawn from the given provider. For testing purposes, this method guarantees that
-     * IDs are assigned in the order the resources are provided in the XML document. However,
-     * this guarantee is only to make testing simpler and non-test code should not rely on this
+     * IDs are assigned in the order the resources are provided in the XML document. However, this
+     * guarantee is only to make testing simpler and non-test code should not rely on this
      * assumption as it may change, along with the required refactoring of the test code.
      *
      * @param xmlDocument the parsed XML document
@@ -280,6 +280,7 @@ public final class ResourceValuesXmlParser {
             @NonNull SymbolTable.Builder builder,
             @NonNull List<Symbol> enumSymbols) {
         List<String> attrValues = new ArrayList<>();
+        List<String> attrNames = new ArrayList<>();
 
         Node attrNode = declareStyleable.getFirstChild();
         int index = 0;
@@ -310,15 +311,8 @@ public final class ResourceValuesXmlParser {
 
             String attrValue = parseAttr(attrElement, idProvider, attrName, builder, enumSymbols);
 
-            Symbol newStyleable =
-                    Symbol.createSymbol(
-                            ResourceType.STYLEABLE,
-                            name + "_" + attrName,
-                            SymbolJavaType.INT,
-                            Integer.toString(index++));
-
-            builder.add(newStyleable);
             attrValues.add(attrValue);
+            attrNames.add(attrName);
 
             attrNode = attrNode.getNextSibling();
         }
@@ -327,7 +321,8 @@ public final class ResourceValuesXmlParser {
                         ResourceType.STYLEABLE,
                         name,
                         SymbolJavaType.INT_LIST,
-                        "{" + Joiner.on(',').join(attrValues) + "}"));
+                        "{ " + Joiner.on(", ").join(attrValues) + " }",
+                        attrNames));
     }
 
     /**

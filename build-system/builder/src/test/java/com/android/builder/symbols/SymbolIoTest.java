@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 import com.android.annotations.NonNull;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
@@ -97,7 +98,7 @@ public class SymbolIoTest {
     public void writeReadSymbolFile() throws Exception {
         SymbolTable original =
                 SymbolTable.builder()
-                        .add(SymbolTestUtils.createSymbol("attr", "b", "int[]", "d"))
+                        .add(SymbolTestUtils.createSymbol("attr", "b", "int", "d"))
                         .add(SymbolTestUtils.createSymbol("string", "f", "int", "h"))
                         .build();
 
@@ -394,7 +395,8 @@ public class SymbolIoTest {
                                         "styleable",
                                         "LimitedSizeLinearLayout",
                                         "int[]",
-                                        "{ 0x7f010000, 0x7f010001 }"))
+                                        "{ 0x7f010000, 0x7f010001 }",
+                                        ImmutableList.of("max_width", "max_height")))
                         .add(
                                 SymbolTestUtils.createSymbol(
                                         "string", "app_name", "int", "0x7f030000"))
@@ -408,38 +410,17 @@ public class SymbolIoTest {
                                         "drawable", "foobar", "int", "0x7f020000"))
                         .add(
                                 SymbolTestUtils.createSymbol(
-                                        "styleable", "TiledView_tileName", "int", "2"))
-                        .add(
-                                SymbolTestUtils.createSymbol(
-                                        "styleable", "TiledView_tilingEnum", "int", "4"))
-                        .add(
-                                SymbolTestUtils.createSymbol(
-                                        "styleable",
-                                        "LimitedSizeLinearLayout_max_height",
-                                        "int",
-                                        "1"))
-                        .add(
-                                SymbolTestUtils.createSymbol(
-                                        "styleable", "TiledView_tilingMode", "int", "3"))
-                        .add(
-                                SymbolTestUtils.createSymbol(
-                                        "styleable", "TiledView_tilingProperty", "int", "0"))
-                        .add(
-                                SymbolTestUtils.createSymbol(
-                                        "styleable", "TiledView_tilingResource", "int", "1"))
-                        .add(
-                                SymbolTestUtils.createSymbol(
                                         "styleable",
                                         "TiledView",
                                         "int[]",
                                         "{ 0x7f010000, 0x7f010001, 0x7f010002, "
-                                                + "0x7f010003, 0x7f010004 }"))
-                        .add(
-                                SymbolTestUtils.createSymbol(
-                                        "styleable",
-                                        "LimitedSizeLinearLayout_max_width",
-                                        "int",
-                                        "0"))
+                                                + "0x7f010003, 0x7f010004 }",
+                                        ImmutableList.of(
+                                                "tilingProperty",
+                                                "tilingResource",
+                                                "tileName",
+                                                "tilingMode",
+                                                "tilingEnum")))
                         .add(
                                 SymbolTestUtils.createSymbol(
                                         "drawable", "ic_launcher", "int", "0x7f020001"))
@@ -447,19 +428,21 @@ public class SymbolIoTest {
 
         String original =
                 ""
-                        + "int drawable foobar 0x7f020000 "
-                        + "int drawable ic_launcher 0x7f020001 "
-                        + "int string app_name 0x7f030000 "
-                        + "int string lib1 0x7f030001 "
-                        + "int style AppBaseTheme 0x7f040000 "
-                        + "int style AppTheme 0x7f040001 "
-                        + "int[] styleable LimitedSizeLinearLayout { 0x7f010000, 0x7f010001 } "
-                        + "int styleable LimitedSizeLinearLayout_max_height 1 "
-                        + "int styleable LimitedSizeLinearLayout_max_width 0 "
-                        + "int[] styleable TiledView { 0x7f010000, 0x7f010001, 0x7f010002, 0x7f010003, 0x7f010004 } "
-                        + "int styleable TiledView_tileName 2 int styleable TiledView_tilingEnum 4 "
-                        + "int styleable TiledView_tilingMode 3 int styleable TiledView_tilingProperty 0 "
-                        + "int styleable TiledView_tilingResource 1";
+                        + "int drawable foobar 0x7f020000 \n"
+                        + "int[] styleable LimitedSizeLinearLayout { 0x7f010000, 0x7f010001 } \n"
+                        + "int styleable LimitedSizeLinearLayout_max_width 0 \n"
+                        + "int styleable LimitedSizeLinearLayout_max_height 1 \n"
+                        + "int[] styleable TiledView { 0x7f010000, 0x7f010001, 0x7f010002, 0x7f010003, 0x7f010004 } \n"
+                        + "int styleable TiledView_tilingProperty 0 \n"
+                        + "int styleable TiledView_tilingResource 1 \n"
+                        + "int styleable TiledView_tileName 2 \n"
+                        + "int styleable TiledView_tilingMode 3 \n"
+                        + "int styleable TiledView_tilingEnum 4 \n"
+                        + "int style AppBaseTheme 0x7f040000 \n"
+                        + "int string app_name 0x7f030000 \n"
+                        + "int drawable ic_launcher 0x7f020001 \n"
+                        + "int style AppTheme 0x7f040001 \n"
+                        + "int string lib1 0x7f030001";
         checkFileGeneration(
                 original,
                 () -> {

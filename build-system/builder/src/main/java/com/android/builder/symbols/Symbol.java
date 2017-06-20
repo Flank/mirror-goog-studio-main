@@ -23,6 +23,8 @@ import com.android.ide.common.res2.ValueResourceNameValidator;
 import com.android.resources.ResourceType;
 import com.google.auto.value.AutoValue;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 
 /**
  * A symbol is a 4-tuple containing a resource type, a name, a java type and a value. Symbols are
@@ -57,6 +59,8 @@ import com.google.common.base.Preconditions;
 @AutoValue
 public abstract class Symbol {
 
+    public static final List<String> NO_CHILDREN = ImmutableList.of();
+
     /**
      * Creates a new symbol. The {@code name} of the symbol needs to be a valid sanitized resource
      * name. See {@link SymbolUtils#canonicalizeValueResourceName} method and apply it beforehand
@@ -74,7 +78,28 @@ public abstract class Symbol {
             @NonNull String value) {
 
         validateSymbol(name, resourceType);
-        return new AutoValue_Symbol(resourceType, value, name, javaType);
+        return new AutoValue_Symbol(resourceType, value, name, javaType, NO_CHILDREN);
+    }
+
+    /**
+     * Creates a new symbol. The {@code name} of the symbol needs to be a valid sanitized resource
+     * name. See {@link SymbolUtils#canonicalizeValueResourceName} method and apply it beforehand
+     * when necessary.
+     *
+     * @param resourceType the resource type of the symbol
+     * @param name the sanitized name of the symbol
+     * @param javaType the java type of the symbol
+     * @param value the value of the symbol
+     */
+    public static Symbol createSymbol(
+            @NonNull ResourceType resourceType,
+            @NonNull String name,
+            @NonNull SymbolJavaType javaType,
+            @NonNull String value,
+            @NonNull List<String> children) {
+
+        validateSymbol(name, resourceType);
+        return new AutoValue_Symbol(resourceType, value, name, javaType, children);
     }
 
     /**
@@ -117,4 +142,19 @@ public abstract class Symbol {
      */
     @NonNull
     public abstract SymbolJavaType getJavaType();
+
+    /**
+     * Obtains the list of the symbol's children. If the resource has a java type equal to INT_LIST
+     * (is a declare styleable) the list will contain its' children in order corresponding to their
+     * IDs in the value list. Otherwise, the list is empty.
+     *
+     * <p>For example: <code>
+     * int[] styleable S1 {0x7f040001,0x7f040002}
+     * int styleable S1_attr1 0
+     * int styleable S1_attr2 1
+     * </code> corresponds to a Symbol with value "{0x7f040001,0x7f040002}" and children {"attr1",
+     * "attr2"}.
+     */
+    @NonNull
+    public abstract List<String> getChildren();
 }

@@ -19,6 +19,7 @@ package com.android.builder.symbols;
 import com.android.annotations.NonNull;
 import com.android.resources.ResourceType;
 import com.google.common.base.Preconditions;
+import java.util.List;
 
 public final class SymbolTestUtils {
     private SymbolTestUtils() {}
@@ -34,12 +35,14 @@ public final class SymbolTestUtils {
      * @param name the sanitized name of the symbol
      * @param javaType the java type of the symbol
      * @param value the value of the symbol
+     * @param styleableChildren children of declare styleables, otherwise empty
      */
     public static Symbol createSymbol(
             @NonNull String resourceType,
             @NonNull String name,
             @NonNull String javaType,
-            @NonNull String value) {
+            @NonNull String value,
+            @NonNull List<String> styleableChildren) {
         return Symbol.createSymbol(
                 Preconditions.checkNotNull(
                         ResourceType.getEnum(resourceType),
@@ -50,10 +53,20 @@ public final class SymbolTestUtils {
                         SymbolJavaType.getEnum(javaType),
                         "Invalid resource java type %s",
                         javaType),
-                value);
+                value,
+                styleableChildren);
     }
 
-    /** @see #createSymbol(String, String, String, String) */
+    /** @see #createSymbol(String, String, String, String, List<String>) */
+    public static Symbol createSymbol(
+            @NonNull String resourceType,
+            @NonNull String name,
+            @NonNull String javaType,
+            @NonNull String value) {
+        return createSymbol(resourceType, name, javaType, value, Symbol.NO_CHILDREN);
+    }
+
+    /** @see #createSymbol(String, String, String, String, List<String>) */
     public static Symbol createSymbol(
             @NonNull String resourceType,
             @NonNull String name,

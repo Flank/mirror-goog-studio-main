@@ -16,8 +16,10 @@
 
 package com.android.builder.symbols
 
+import com.google.common.collect.ImmutableList
 import com.google.common.collect.ImmutableSet
 import com.google.common.truth.Truth
+import org.junit.Ignore
 import org.junit.Test
 
 /**
@@ -38,6 +40,13 @@ fun symbol(
         javaType: String,
         value: String) = SymbolTestUtils.createSymbol(resourceType, name, javaType, value)
 
+fun symbol(
+        resourceType: String,
+        name: String,
+        javaType: String,
+        value: String,
+        children: List<String>) =
+                SymbolTestUtils.createSymbol(resourceType, name, javaType, value, children)
 
 /**
  * these are tests for [SymbolUtils.mergeAndRenumberSymbols]
@@ -104,7 +113,7 @@ class SymbolTableMergeTest {
                 .tablePackage("table2")
                 .add(symbol("attr", "a1", "int", 12))
                 .add(symbol("attr", "a2", "int", 42))
-                .add(symbol("styleable", "style1", "int[]", "{12,42}"))
+                .add(symbol("styleable", "style1", "int[]", "{ 12, 42 }"))
                 .add(symbol("styleable", "style1_a1", "int", 55))
                 .add(symbol("styleable", "style1_a2", "int", 89))
                 .build()
@@ -116,9 +125,13 @@ class SymbolTableMergeTest {
                 .add(symbol("dimen", "a", "int", 0x7f_08_0001))
                 .add(symbol("attr", "a1", "int", 0x7f_04_0001))
                 .add(symbol("attr", "a2", "int", 0x7f_04_0002))
-                .add(symbol("styleable", "style1", "int[]", "{0x7f040001,0x7f040002}"))
-                .add(symbol("styleable", "style1_a1", "int", 0))
-                .add(symbol("styleable", "style1_a2", "int", 1))
+                .add(
+                        symbol(
+                                "styleable",
+                                "style1",
+                                "int[]",
+                                "{ 0x7f040001, 0x7f040002 }",
+                                ImmutableList.of("a1", "a2")))
                 .build()
 
         Truth.assertThat(result).isEqualTo(expected)
@@ -137,7 +150,7 @@ class SymbolTableMergeTest {
                 .tablePackage("table2")
                 .add(symbol("attr", "a1", "int", 12))
                 .add(symbol("attr", "a2", "int", 42))
-                .add(symbol("styleable", "style1", "int[]", "{12,42}"))
+                .add(symbol("styleable", "style1", "int[]", "{ 12, 42 }"))
                 .add(symbol("styleable", "style1_a1", "int", 55))
                 .add(symbol("styleable", "style1_a2", "int", 89))
                 .build()
@@ -148,9 +161,13 @@ class SymbolTableMergeTest {
         val expected = SymbolTable.builder()
                 .add(symbol("attr", "a1", "int", 0x7f_04_0001))
                 .add(symbol("attr", "a2", "int", 0x7f_04_0002))
-                .add(symbol("styleable", "style1", "int[]", "{0x7f040001,0x7f040002}"))
-                .add(symbol("styleable", "style1_a1", "int", 0))
-                .add(symbol("styleable", "style1_a2", "int", 1))
+                .add(
+                        symbol(
+                                "styleable",
+                                "style1",
+                                "int[]",
+                                "{ 0x7f040001, 0x7f040002 }",
+                                ImmutableList.of("a1", "a2")))
                 .build()
 
         Truth.assertThat(result).isEqualTo(expected)
@@ -163,7 +180,7 @@ class SymbolTableMergeTest {
                 .tablePackage("table1")
                 .add(symbol("attr", "a1", "int", 27))
                 .add(symbol("attr", "a2", "int", 35))
-                .add(symbol("styleable", "style1", "int[]", "{27,35}"))
+                .add(symbol("styleable", "style1", "int[]", "{ 27, 35 }"))
                 .add(symbol("styleable", "style1_a1", "int", 33))
                 .add(symbol("styleable", "style1_a2", "int", 66))
                 .build()
@@ -172,7 +189,7 @@ class SymbolTableMergeTest {
                 .tablePackage("table2")
                 .add(symbol("attr", "b1", "int", 12))
                 .add(symbol("attr", "b2", "int", 42))
-                .add(symbol("styleable", "style1", "int[]", "{12,42}"))
+                .add(symbol("styleable", "style1", "int[]", "{ 12, 42 }"))
                 .add(symbol("styleable", "style1_b1", "int", 55))
                 .add(symbol("styleable", "style1_b2", "int", 89))
                 .build()
@@ -185,15 +202,97 @@ class SymbolTableMergeTest {
                 .add(symbol("attr", "a2", "int", 0x7f_04_0002))
                 .add(symbol("attr", "b1", "int", 0x7f_04_0003))
                 .add(symbol("attr", "b2", "int", 0x7f_04_0004))
-                .add(symbol("styleable", "style1", "int[]", "{0x7f040001,0x7f040002,0x7f040003,0x7f040004}"))
-                .add(symbol("styleable", "style1_a1", "int", 0))
-                .add(symbol("styleable", "style1_a2", "int", 1))
+                .add(
+                        symbol(
+                                "styleable",
+                                "style1",
+                                "int[]",
+                                "{ 0x7f040001, 0x7f040002, 0x7f040003, 0x7f040004 }",
+                                ImmutableList.of("a1", "a2", "b1", "b2")))
+                .build()
+
+        Truth.assertThat(result).isEqualTo(expected)
+    }
+
+    @Test
+    fun testMergeWithRedefinedStyleableAndNestedChildren() {
+        val table1 = SymbolTable.builder()
+                .tablePackage("table1")
+                .add(symbol("attr", "a1", "int", 27))
+                .add(symbol("attr", "a2", "int", 35))
+                .add(symbol("styleable", "style1", "int[]", "{ 27 }", ImmutableList.of("a1")))
+                .build()
+
+        val table2 = SymbolTable.builder()
+                .tablePackage("table2")
+                .add(symbol("attr", "b1", "int", 12))
+                .add(symbol("attr", "b2", "int", 42))
+                .add(symbol("styleable", "style1", "int[]", "{ 12, 42 }"))
+                .add(symbol("styleable", "style1_b1", "int", 55))
+                .add(symbol("styleable", "style1_b2", "int", 89))
+                .build()
+
+        val result = SymbolUtils.mergeAndRenumberSymbols("",
+                table1, ImmutableSet.of(table2))
+
+        val expected = SymbolTable.builder()
+                .add(symbol("attr", "a1", "int", 0x7f_04_0001))
+                .add(symbol("attr", "a2", "int", 0x7f_04_0002))
+                .add(symbol("attr", "b1", "int", 0x7f_04_0003))
+                .add(symbol("attr", "b2", "int", 0x7f_04_0004))
+                .add(
+                        symbol(
+                                "styleable",
+                                "style1",
+                                "int[]",
+                                "{ 0x7f040001, 0x7f040003, 0x7f040004 }",
+                                ImmutableList.of("a1", "b1", "b2")))
+                .build()
+
+        Truth.assertThat(result).isEqualTo(expected)
+    }
+
+    @Test
+    @Ignore
+    fun testDifferentIdsForAttributesAndStyleables() {
+        // The incorrect IDs actually look like this: the attribute and the styleable have different
+        // values for their IDs, while the declare styleable has the same values as the children
+        // (instead of children having index values).
+        val table1 = SymbolTable.builder()
+                .tablePackage("table1")
+                .add(symbol("attr", "a1", "int", 0))
+                .add(symbol("attr", "a2", "int", 1))
+                .add(symbol("styleable", "style1", "int[]", "{2,3}"))
+                .add(symbol("styleable", "style1_a1", "int", 2))
+                .add(symbol("styleable", "style1_a2", "int", 3))
+                .build()
+
+        val table2 = SymbolTable.builder()
+                .tablePackage("table2")
+                .add(symbol("attr", "b1", "int", 0))
+                .add(symbol("attr", "b2", "int", 1))
+                .add(symbol("styleable", "style1", "int[]", "{2,3}"))
                 .add(symbol("styleable", "style1_b1", "int", 2))
                 .add(symbol("styleable", "style1_b2", "int", 3))
                 .build()
 
+        val result = SymbolUtils.mergeAndRenumberSymbols("",
+                table1, ImmutableSet.of(table2))
+
+        val expected = SymbolTable.builder()
+                .add(symbol("attr", "a1", "int", 0x7f_04_0001))
+                .add(symbol("attr", "a2", "int", 0x7f_04_0002))
+                .add(symbol("attr", "b1", "int", 0x7f_04_0003))
+                .add(symbol("attr", "b2", "int", 0x7f_04_0004))
+                .add(
+                        symbol(
+                                "styleable",
+                                "style1",
+                                "int[]",
+                                "{ 0x7f040001, 0x7f040002, 0x7f040003, 0x7f040004 }",
+                                ImmutableList.of("a1", "a2", "b1", "b2")))
+                .build()
+
         Truth.assertThat(result).isEqualTo(expected)
-
     }
-
 }
