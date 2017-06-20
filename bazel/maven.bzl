@@ -85,6 +85,11 @@ def _maven_pom_impl(ctx):
     args += ["--artifact", ctx.attr.artifact]
   if ctx.attr.version:
     args += ["--version", ctx.attr.version]
+  if ctx.attr.properties:
+    args += ["--properties", ctx.file.properties.path]
+    inputs += [ctx.file.properties]
+  if ctx.attr.version_property:
+    args += ["--version_property", ctx.attr.version_property]
 
   # Exclusions
   for (dependency, exclusions) in ctx.attr.exclusions.items():
@@ -143,6 +148,11 @@ maven_pom = rule(
         allow_files = True,
         single_file = True,
     ),
+    "properties" : attr.label(
+        allow_files = True,
+        single_file = True,
+    ),
+    "version_property" : attr.string(),
     "parent" : attr.label(
         allow_files = True,
         single_file = True,

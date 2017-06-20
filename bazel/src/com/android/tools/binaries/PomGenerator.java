@@ -22,6 +22,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.nio.file.Files;
@@ -30,6 +31,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Properties;
 import java.util.stream.Collectors;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Exclusion;
@@ -83,6 +85,8 @@ public class PomGenerator {
         String group = null;
         String artifact = null;
         String version = null;
+        String version_property = null;
+        File properties = null;
         boolean export = false;
         Iterator<String> it = args.iterator();
         while (it.hasNext()) {
@@ -104,6 +108,10 @@ public class PomGenerator {
                 artifact = it.next();
             } else if (arg.equals("--version") && it.hasNext()) {
                 version = it.next();
+            } else if (arg.equals("--version_property") && it.hasNext()) {
+                version_property = it.next();
+            } else if (arg.equals("--properties") && it.hasNext()) {
+                properties = new File(it.next());
             } else if (arg.equals("--exclusion")) {
                 exclusions.putAll(it.next(), Splitter.on(',').split(it.next()));
             } else if (arg.equals("-x")) {
@@ -113,6 +121,21 @@ public class PomGenerator {
         if (out == null) {
             System.err.println("Output file must be specified.");
             return;
+        }
+        if (version != null && version_property != null) {
+            System.err.println("version and version_property should not both be set.");
+            return;
+        }
+        if (version_property != null) {
+            if (properties == null) {
+                System.err.println("version_property needs a properties file.");
+                return;
+            }
+            try (FileInputStream fis = new FileInputStream(properties)) {
+                Properties p = new Properties();
+                p.load(fis);
+                version = p.getProperty(version_property);
+            }
         }
         generatePom(in, out, deps, group, artifact, version, export);
     }
