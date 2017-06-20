@@ -1,15 +1,9 @@
 load("//tools/base/bazel:utils.bzl", "srcjar")
 
-srcjar(
-    name = "srcjar",
-    java_library = ":instant-run-instrumentation",
-    visibility = ["//tools/base/build-system/gradle-core:__pkg__"],
-)
-
 java_library(
     name = "instant-run-instrumentation",
     srcs = glob(["src/main/java/**/*.java"]),
-    visibility = ["//visibility:private"],  # These sources are compiled into gradle-core
+    visibility = ["//tools/base/build-system/gradle-core:__pkg__"],
     deps = [
         "//tools/base/annotations",
         "//tools/base/build-system/builder-model",

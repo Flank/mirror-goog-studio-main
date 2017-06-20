@@ -60,9 +60,21 @@ kotlin_jar = rule(
     implementation = _kotlin_jar_impl,
 )
 
-def kotlin_library(name, srcs, javacopts=None, resources=[], deps=[], bundled_deps=[], pom=None, visibility=None, jar_name=None, **kwargs):
+def kotlin_library(
+    name,
+    srcs,
+    java_srcs=[],
+    javacopts=None,
+    resources=[],
+    deps=[],
+    bundled_deps=[],
+    pom=None,
+    exclusions=None,
+    visibility=None,
+    jar_name=None,
+    **kwargs):
   kotlins = native.glob([src + "/**/*.kt" for src in srcs])
-  javas = native.glob([src + "/**/*.java" for src in srcs])
+  javas = native.glob([src + "/**/*.java" for src in srcs]) + java_srcs
 
   if not kotlins and not javas:
     print("No sources found for kotlin_library " + name)
@@ -108,11 +120,11 @@ def kotlin_library(name, srcs, javacopts=None, resources=[], deps=[], bundled_de
     maven_pom(
       name = name + "_maven",
       deps = [explicit_target(dep) + "_maven" for dep in deps if not dep.endswith("_neverlink")],
+      exclusions = exclusions,
       library = name,
       visibility = visibility,
       source = pom,
     )
-
 
 def kotlin_test(name, srcs, deps=[], runtime_deps=[], visibility=None, **kwargs):
   kotlin_library(
