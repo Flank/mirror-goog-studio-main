@@ -359,7 +359,7 @@ jint MemoryTrackingEnv::HeapIterationCallback(jlong class_tag, jlong size,
     return JVMTI_VISIT_OBJECTS;
   }
 
-  int64_t tag = g_env->GetNextObjectTag();
+  int32_t tag = g_env->GetNextObjectTag();
   *tag_ptr = tag;
 
   AllocationEvent* event = sample->add_events();
@@ -413,7 +413,7 @@ void MemoryTrackingEnv::ObjectAllocCallback(jvmtiEnv* jvmti, JNIEnv* jni,
     return;
   }
 
-  int64_t tag = g_env->GetNextObjectTag();
+  int32_t tag = g_env->GetNextObjectTag();
   error = jvmti->SetTag(object, tag);
   CheckJvmtiError(jvmti, error);
 

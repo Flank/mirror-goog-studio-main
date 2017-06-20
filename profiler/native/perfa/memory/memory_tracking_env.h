@@ -80,8 +80,8 @@ class MemoryTrackingEnv {
   void LogGcStart();
   void LogGcFinish();
 
-  int32_t GetNextClassTag() { return current_class_tag_++; }
-  int64_t GetNextObjectTag() { return current_object_tag_++; }
+  inline int32_t GetNextClassTag() { return current_class_tag_++; }
+  inline int32_t GetNextObjectTag() { return current_object_tag_++; }
 
   void HandleControlSignal(const MemoryControlRequest* request);
 
@@ -128,10 +128,10 @@ class MemoryTrackingEnv {
   int64_t current_capture_time_ns_;
   int64_t last_gc_start_ns_;
   std::mutex tracking_mutex_;
-  std::atomic<int64_t> total_live_count_;
-  std::atomic<int64_t> total_free_count_;
+  std::atomic<int32_t> total_live_count_;
+  std::atomic<int32_t> total_free_count_;
   std::atomic<int32_t> current_class_tag_;
-  std::atomic<int64_t> current_object_tag_;
+  std::atomic<int32_t> current_object_tag_;
 
   std::mutex class_data_mutex_;
   ProducerConsumerQueue<AllocationEvent> event_queue_;
