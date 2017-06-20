@@ -53,6 +53,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -181,7 +182,7 @@ public abstract class ExternalNativeJsonGenerator {
         try {
             diagnostic("building json with force flag %s", forceJsonGeneration);
             buildAndPropagateException(forceJsonGeneration);
-        } catch (@NonNull IOException | GradleException e ) {
+        } catch (@NonNull IOException | GradleException e) {
             androidBuilder.getErrorReporter().handleSyncError(
                     variantName,
                     SyncIssue.TYPE_EXTERNAL_NATIVE_BUILD_CONFIGURATION,
@@ -392,7 +393,7 @@ public abstract class ExternalNativeJsonGenerator {
         diagnostic("reading %s JSON files", files.size());
         List<NativeBuildConfigValue> result = Lists.newArrayList();
         List<File> existing = Lists.newArrayList();
-        for(File file : files) {
+        for (File file : files) {
             if (file.exists()) {
                 diagnostic("reading JSON file %s", file.getAbsolutePath());
                 existing.add(file);
@@ -526,7 +527,7 @@ public abstract class ExternalNativeJsonGenerator {
     private static Set<String> getExternalNativeBuildAbiFilters(
             @NonNull NativeBuildSystem buildSystem,
             @NonNull GradleVariantConfiguration variantConfig) {
-        switch(buildSystem) {
+        switch (buildSystem) {
             case NDK_BUILD: {
                 CoreExternalNativeNdkBuildOptions options =
                         variantConfig.getExternalNativeBuildOptions()
@@ -554,18 +555,20 @@ public abstract class ExternalNativeJsonGenerator {
     @NonNull
     public static ExternalNativeJsonGenerator create(
             @NonNull File projectDir,
+            @NonNull File buildDir,
+            @Nullable File externalNativeBuildDir,
             @NonNull NativeBuildSystem buildSystem,
             @NonNull File makefile,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull SdkHandler sdkHandler,
             @NonNull VariantScope scope) {
         checkNotNull(sdkHandler.getSdkFolder(), "No Android SDK folder found");
-        File ndkFolder =  sdkHandler.getNdkFolder();
+        File ndkFolder = sdkHandler.getNdkFolder();
         if (ndkFolder == null || !ndkFolder.isDirectory()) {
-            throw new InvalidUserDataException(String.format(
-                    "NDK not configured. %s\n" +
-                            "Download it with SDK manager.",
-                    ndkFolder== null ? "" : ndkFolder));
+            throw new InvalidUserDataException(
+                    String.format(
+                            "NDK not configured. %s\n" + "Download it with SDK manager.",
+                            ndkFolder == null ? "" : ndkFolder));
         }
         final BaseVariantData variantData = scope.getVariantData();
         final GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
@@ -575,10 +578,14 @@ public abstract class ExternalNativeJsonGenerator {
                 variantData.getVariantConfiguration().getDirName());
 
         File soFolder = new File(intermediates, "lib");
-        File externalNativeBuildFolder = FileUtils.join(projectDir,
-                ".externalNativeBuild",
-                buildSystem.getName(),
-                variantData.getName());
+        File externalNativeBuildFolder =
+                findExternalNativeBuildFolder(
+                        androidBuilder,
+                        projectDir,
+                        buildSystem,
+                        variantData,
+                        buildDir,
+                        externalNativeBuildDir);
         File objFolder = new File(intermediates, "obj");
 
         // Get the highest platform version below compileSdkVersion
@@ -617,7 +624,7 @@ public abstract class ExternalNativeJsonGenerator {
                                         .collect(Collectors.toList())
                                 : userRequestedAbis);
 
-        switch(buildSystem) {
+        switch (buildSystem) {
             case NDK_BUILD: {
                 CoreExternalNativeNdkBuildOptions options =
                         variantConfig.getExternalNativeBuildOptions()
@@ -677,6 +684,52 @@ public abstract class ExternalNativeJsonGenerator {
             default:
                 throw new IllegalArgumentException("Unknown ExternalNativeJsonGenerator type");
         }
+    }
+
+    private static File findExternalNativeBuildFolder(
+            @NonNull AndroidBuilder androidBuilder,
+            @NonNull File projectDir,
+            @NonNull NativeBuildSystem buildSystem,
+            @NonNull BaseVariantData variantData,
+            @NonNull File buildDir,
+            @Nullable File externalNativeBuildDir) {
+        File externalNativeBuildPath;
+        if (externalNativeBuildDir == null) {
+            return FileUtils.join(
+                    projectDir,
+                    ".externalNativeBuild",
+                    buildSystem.getName(),
+                    variantData.getName());
+        }
+
+        externalNativeBuildPath =
+                FileUtils.join(
+                        externalNativeBuildDir, buildSystem.getName(), variantData.getName());
+
+        if (FileUtils.isFileInDirectory(externalNativeBuildPath, buildDir)) {
+            File invalidPath = externalNativeBuildPath;
+            externalNativeBuildPath =
+                    FileUtils.join(
+                            projectDir,
+                            ".externalNativeBuild",
+                            buildSystem.getName(),
+                            variantData.getName());
+            androidBuilder
+                    .getErrorReporter()
+                    .handleSyncError(
+                            "",
+                            SyncIssue.TYPE_EXTERNAL_NATIVE_BUILD_CONFIGURATION,
+                            String.format(
+                                    Locale.getDefault(),
+                                    "The selected native metadata output directory '%s'"
+                                            + " is a subdirectory of the build directory of the build directory '%s'. "
+                                            + "Defaulting to '%s' instead.",
+                                    invalidPath.getAbsolutePath(),
+                                    buildDir.getAbsolutePath(),
+                                    externalNativeBuildPath.getAbsolutePath()));
+        }
+
+        return externalNativeBuildPath;
     }
 
     @NonNull

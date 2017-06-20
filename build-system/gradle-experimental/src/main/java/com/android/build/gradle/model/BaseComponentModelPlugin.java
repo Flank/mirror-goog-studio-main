@@ -709,6 +709,8 @@ public class BaseComponentModelPlugin implements Plugin<Project>, ToolingRegistr
                 ExternalNativeJsonGenerator generator =
                         ExternalNativeJsonGenerator.create(
                                 project.getProjectDir(),
+                                project.getBuildDir(),
+                                pathResolution.externalNativeBuildDir,
                                 pathResolution.buildSystem,
                                 pathResolution.makeFile,
                                 androidBuilder,
