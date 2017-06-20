@@ -34,7 +34,8 @@ jar.manifest.attributes("Inception-Date": DateTimeFormatter.ISO_LOCAL_DATE.forma
 def generated = new File("${project.buildDir}/generated/resources")
 sourceSets.main.resources.srcDir generated
 task copyVersionProperties(type: Copy) {
-    from project.file("$rootDir/buildSrc/base/version.properties")
+    from project.file(project.getRootProject().getProperty("versionProperties"))
+    rename({"version.properties"})
     into project.file("$generated/com/android/build/gradle/model")
 }
 
