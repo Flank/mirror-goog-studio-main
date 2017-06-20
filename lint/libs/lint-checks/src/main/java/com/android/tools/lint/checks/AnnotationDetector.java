@@ -76,6 +76,7 @@ import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiArrayType;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiClassType;
+import com.intellij.psi.PsiCompiledElement;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiField;
@@ -636,7 +637,8 @@ public class AnnotationDetector extends Detector implements UastScanner {
             for (UExpression constant : constants) {
                 if (constant instanceof UReferenceExpression) {
                     PsiElement resolved = ((UReferenceExpression) constant).resolve();
-                    if (resolved instanceof PsiField) {
+                    // Don't try to check complied code.
+                    if (!(resolved instanceof PsiCompiledElement) && resolved instanceof PsiField) {
                         PsiExpression initializer = ((PsiField) resolved).getInitializer();
                         if (initializer instanceof PsiLiteral) {
                             PsiLiteral literal = (PsiLiteral) initializer;
