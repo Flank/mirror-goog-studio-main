@@ -24,7 +24,8 @@ import com.android.tools.lint.client.api.Configuration
 import com.android.tools.lint.client.api.LintClient
 import com.android.tools.lint.client.api.LintDriver
 import com.android.tools.lint.client.api.SdkInfo
-import com.android.tools.lint.detector.api.CharSequences.indexOf
+import com.android.utils.CharSequences
+import com.android.utils.CharSequences.indexOf
 import com.google.common.annotations.Beta
 import com.intellij.psi.PsiElement
 import org.jetbrains.uast.UElement

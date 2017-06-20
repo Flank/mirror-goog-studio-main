@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-package com.android.tools.lint.detector.api;
+package com.android.utils;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.utils.XmlUtils;
 import com.google.common.base.Charsets;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -275,18 +274,18 @@ public class CharSequences {
 
     @NonNull
     public static CharSequence createSequence(@NonNull char[] data) {
-        return new LintCharSequence(data);
+        return new ArrayBackedCharSequence(data);
     }
 
     @NonNull
     public static CharSequence createSequence(@NonNull char[] data, int offset, int length) {
-        return new LintCharSequence(data, offset, length);
+        return new ArrayBackedCharSequence(data, offset, length);
     }
 
     @NonNull
     public static char[] getCharArray(@NonNull CharSequence sequence) {
-        if (sequence instanceof LintCharSequence) {
-            return ((LintCharSequence)sequence).getCharArray();
+        if (sequence instanceof ArrayBackedCharSequence) {
+            return ((ArrayBackedCharSequence)sequence).getCharArray();
         }
 
         return sequence.toString().toCharArray();
@@ -336,16 +335,16 @@ public class CharSequences {
      * of Strings, and the String class always insists on having its own
      * private copy of the char array.
      */
-    private static class LintCharSequence implements CharSequence {
+    private static class ArrayBackedCharSequence implements CharSequence {
         public final char[] data;
         private final int offset;
         private final int length;
 
-        public LintCharSequence(@NonNull char[] data) {
+        public ArrayBackedCharSequence(@NonNull char[] data) {
             this(data, 0, data.length);
         }
 
-        public LintCharSequence(@NonNull char[] data, int offset, int length) {
+        public ArrayBackedCharSequence(@NonNull char[] data, int offset, int length) {
             this.data = data;
             this.offset = offset;
             this.length = length;
@@ -372,7 +371,7 @@ public class CharSequences {
 
         @Override
         public CharSequence subSequence(int start, int end) {
-            return new LintCharSequence(data, offset + start, end - start);
+            return new ArrayBackedCharSequence(data, offset + start, end - start);
         }
 
         @NonNull

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package com.android.tools.lint.detector.api;
+package com.android.utils;
 
-import static com.android.tools.lint.detector.api.CharSequences.endsWith;
-import static com.android.tools.lint.detector.api.CharSequences.indexOf;
-import static com.android.tools.lint.detector.api.CharSequences.lastIndexOf;
-import static com.android.tools.lint.detector.api.CharSequences.regionMatches;
-import static com.android.tools.lint.detector.api.CharSequences.startsWith;
+import static com.android.utils.CharSequences.endsWith;
+import static com.android.utils.CharSequences.indexOf;
+import static com.android.utils.CharSequences.lastIndexOf;
+import static com.android.utils.CharSequences.regionMatches;
+import static com.android.utils.CharSequences.startsWith;
 import static org.junit.Assert.assertArrayEquals;
 
 import java.io.IOException;
