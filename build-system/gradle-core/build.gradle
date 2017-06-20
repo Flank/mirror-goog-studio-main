@@ -1,4 +1,5 @@
 apply plugin: 'java'
+apply plugin: 'kotlin'
 apply plugin: 'jacoco-tools-base'
 apply plugin: 'clone-artifacts'
 apply plugin: 'antlr'
@@ -46,7 +47,6 @@ dependencies {
     compile libs.asm_analysis
     compile libs.asm_commons
     compile libs.asm_util
-    compile libs.proguard
     compile libs.jacoco_core, {
       exclude group: 'org.ow2.asm', module: 'asm-debug-all'
     }
@@ -54,7 +54,10 @@ dependencies {
       exclude group: 'org.ow2.asm', module: 'asm-debug-all'
     }
     compile libs.jopt
+    compile libs.kotlin_stdlib
+    compile libs.proguard
     compile libs.protobuf
+
     testCompile project(':base:instant-run:instant-run-annotations')
     testCompile project(':base:instant-run:instant-run-runtime')
 

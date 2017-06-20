@@ -1,7 +1,6 @@
 load("//tools/base/bazel:bazel.bzl", "fileset")
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library")
-load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
+load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 
 fileset(
     name = "resources",

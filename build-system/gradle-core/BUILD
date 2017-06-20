@@ -1,6 +1,7 @@
 load("//tools/base/bazel:antlr.bzl", "antlr_sources")
 load("//tools/base/bazel:bazel.bzl", "fileset")
-load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
+load("//tools/base/bazel:maven.bzl", "maven_pom")
 
 antlr_sources(
     name = "proguard-parser",
@@ -23,21 +24,21 @@ fileset(
     },
 )
 
-maven_java_library(
+kotlin_library(
     name = "gradle-core",
-    srcs = glob([
-        "src/main/java/**/*.java",
-        "src/main/generated/**/*.java",
-        "src/fromGradle/java/**/*.java",
-    ]) + [
-        ":proguard-parser",
-        "//tools/base/build-system/gradle-core/src/main/proto:proto_srcs",
-        "//tools/base/build-system/instant-run-instrumentation:srcjar",
+    srcs = [
+        "src/fromGradle/java",
+        "src/main/java",
+    ],
+    bundled_deps = [
+        "//tools/base/build-system/gradle-core/src/main/proto",
+        "//tools/base/build-system/instant-run-instrumentation",
     ],
     exclusions = {
         "org.jacoco:org.jacoco.core": ["org.ow2.asm:asm-debug-all"],
         "org.jacoco:org.jacoco.report": ["org.ow2.asm:asm-debug-all"],
     },
+    java_srcs = [":proguard-parser"],
     plugins = [
         "//tools/base/build-system:auto-value-plugin",
     ],
@@ -78,6 +79,8 @@ maven_java_library(
         "//tools/base/third_party:org.eclipse.jdt.core.compiler_ecj",
         "//tools/base/third_party:org.jacoco_org.jacoco.core",
         "//tools/base/third_party:org.jacoco_org.jacoco.report",
+        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-runtime",
+        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
         "//tools/base/third_party:org.ow2.asm_asm",
         "//tools/base/third_party:org.ow2.asm_asm-analysis",
         "//tools/base/third_party:org.ow2.asm_asm-commons",
@@ -93,9 +96,9 @@ maven_pom(
     source = "//tools/buildSrc/base:build_version",
 )
 
-java_test(
+kotlin_test(
     name = "tests",
-    srcs = glob(["src/test/java/**/*.java"]),
+    srcs = ["src/test/java"],
     data = [
         "//prebuilts/studio/sdk:build-tools/latest",
         "//prebuilts/studio/sdk:platforms/latest",
@@ -131,6 +134,8 @@ java_test(
         "//tools/base/third_party:nl.jqno.equalsverifier_equalsverifier",
         "//tools/base/third_party:org.codehaus.groovy_groovy-all",
         "//tools/base/third_party:org.eclipse.jdt.core.compiler_ecj",
+        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-runtime",
+        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
         "//tools/base/third_party:org.jsoup_jsoup",
         "//tools/base/third_party:org.mockito_mockito-core",
         "//tools/base/third_party:org.ow2.asm_asm",
