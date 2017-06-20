@@ -61,6 +61,9 @@ public interface ISystemImage extends Comparable<ISystemImage> {
         IN_SYSTEM_IMAGE,
     }
 
+    /** A Wear-for-China image must reside in a directory that includes this string in its path. */
+    String WEAR_CN_DIRECTORY = "android-wear-cn";
+
     /** Returns the actual location of an installed system image. */
     @NonNull
     File getLocation();

@@ -41,6 +41,9 @@ public class AvdManagerTest extends TestCase {
     private SystemImage mSystemImageAosp;
     private SystemImage mSystemImageGoogle;
     private SystemImage mSystemImagePlay;
+    private SystemImage mSystemImageWear24;
+    private SystemImage mSystemImageWear25;
+    private SystemImage mSystemImageWearChina;
     private MockFileOp mFileOp = new MockFileOp();
 
     @Override
@@ -51,6 +54,9 @@ public class AvdManagerTest extends TestCase {
         recordGoogleApisSysImg23(mFileOp);
         recordPlayStoreSysImg24(mFileOp);
         recordSysImg23(mFileOp);
+        recordWearSysImg24(mFileOp);
+        recordWearSysImg25(mFileOp);
+        recordWearSysImgChina(mFileOp);
         mAndroidSdkHandler =
                 new AndroidSdkHandler(new File("/sdk"), ANDROID_HOME,  mFileOp);
         mAvdManager =
@@ -69,6 +75,14 @@ public class AvdManagerTest extends TestCase {
                 mSystemImageGoogle = si;
             } else if ("google_apis_playstore".equals(tagId)) {
                 mSystemImagePlay = si;
+            } else if ("android-wear".equals(tagId)) {
+                if (si.getTag().getDisplay().contains("China")) {
+                    mSystemImageWearChina = si;
+                } else if (si.getAndroidVersion().getApiLevel() == 25) {
+                    mSystemImageWear25 = si;
+                } else {
+                    mSystemImageWear24 = si;
+                }
             } else {
                 assertTrue("Created unexpected system image: " + tagId, false);
             }
@@ -76,6 +90,9 @@ public class AvdManagerTest extends TestCase {
         assertNotNull(mSystemImageAosp);
         assertNotNull(mSystemImageGoogle);
         assertNotNull(mSystemImagePlay);
+        assertNotNull(mSystemImageWear24);
+        assertNotNull(mSystemImageWear25);
+        assertNotNull(mSystemImageWearChina);
     }
 
     public void testCreateAvdWithoutSnapshot() throws Exception {
@@ -378,6 +395,64 @@ public class AvdManagerTest extends TestCase {
         baseProperties = AvdManager.parseIniFile(
                 new FileOpFileWrapper(configIniFile, mFileOp, false), null);
         assertEquals("false", baseProperties.get("PlayStore.enabled"));
+
+        // Wear image API 24 (no Play Store)
+        mAvdManager.createAvd(
+          mAvdFolder,
+          this.getName(),
+          mSystemImageWear24,
+          null,
+          null,
+          null,
+          null,
+          expected,
+          true, // deviceHasPlayStore
+          false,
+          true,
+          false,
+          log);
+        baseProperties = AvdManager.parseIniFile(
+          new FileOpFileWrapper(configIniFile, mFileOp, false), null);
+        assertEquals("false", baseProperties.get("PlayStore.enabled"));
+
+        // Wear image API 25 (with Play Store)
+        // (All Wear devices have Play Store)
+        mAvdManager.createAvd(
+          mAvdFolder,
+          this.getName(),
+          mSystemImageWear25,
+          null,
+          null,
+          null,
+          null,
+          expected,
+          true, // deviceHasPlayStore
+          false,
+          true,
+          false,
+          log);
+        baseProperties = AvdManager.parseIniFile(
+          new FileOpFileWrapper(configIniFile, mFileOp, false), null);
+        assertEquals("true", baseProperties.get("PlayStore.enabled"));
+
+        // Wear image for China (no Play Store)
+        mAvdManager.createAvd(
+          mAvdFolder,
+          this.getName(),
+          mSystemImageWearChina,
+          null,
+          null,
+          null,
+          null,
+          expected,
+          true, // deviceHasPlayStore
+          false,
+          true,
+          false,
+          log);
+        baseProperties = AvdManager.parseIniFile(
+          new FileOpFileWrapper(configIniFile, mFileOp, false), null);
+        assertEquals("false", baseProperties.get("PlayStore.enabled"));
     }
 
 
@@ -456,6 +531,81 @@ public class AvdManagerTest extends TestCase {
                                + "<vendor><id>google</id><display>Google Inc.</display></vendor>"
                                + "<abi>x86_64</abi></type-details><revision><major>9</major></revision>"
                                + "<display-name>Google APIs with Playstore Intel x86 Atom System Image</display-name>"
+                               + "<uses-license ref=\"license-9A5C00D5\"/></localPackage>"
+                               + "</ns3:sdk-sys-img>\n");
+    }
+
+    private static void recordWearSysImg24(MockFileOp fop) {
+        fop.recordExistingFile("/sdk/system-images/android-24/android-wear/x86/system.img");
+        fop.recordExistingFile("/sdk/system-images/android-24/android-wear/x86/"
+                               + AvdManager.USERDATA_IMG);
+
+        fop.recordExistingFile("/sdk/system-images/android-24/android-wear/x86/package.xml",
+                               "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
+                               + "<ns3:sdk-sys-img "
+                               + "xmlns:ns2=\"http://schemas.android.com/sdk/android/repo/repository2/01\" "
+                               + "xmlns:ns3=\"http://schemas.android.com/sdk/android/repo/sys-img2/01\" "
+                               + "xmlns:ns4=\"http://schemas.android.com/repository/android/common/01\" "
+                               + "xmlns:ns5=\"http://schemas.android.com/sdk/android/repo/addon2/01\">"
+                               + "<license id=\"license-9A5C00D5\" type=\"text\">Terms and Conditions\n"
+                               + "</license><localPackage "
+                               + "path=\"system-images;android-24;android-wear;x86\" "
+                               + "obsolete=\"false\"><type-details "
+                               + "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
+                               + "xsi:type=\"ns3:sysImgDetailsType\"><api-level>24</api-level>"
+                               + "<tag><id>android-wear</id><display>Android Wear</display></tag>"
+                               + "<abi>x86</abi></type-details><revision><major>2</major></revision>"
+                               + "<display-name>Android Wear Intel x86 Atom System Image</display-name>"
+                               + "<uses-license ref=\"license-9A5C00D5\"/></localPackage>"
+                               + "</ns3:sdk-sys-img>\n");
+    }
+
+    private static void recordWearSysImg25(MockFileOp fop) {
+        fop.recordExistingFile("/sdk/system-images/android-25/android-wear/x86/system.img");
+        fop.recordExistingFile("/sdk/system-images/android-25/android-wear/x86/"
+                               + AvdManager.USERDATA_IMG);
+
+        fop.recordExistingFile("/sdk/system-images/android-25/android-wear/x86/package.xml",
+                               "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
+                               + "<ns3:sdk-sys-img "
+                               + "xmlns:ns2=\"http://schemas.android.com/sdk/android/repo/repository2/01\" "
+                               + "xmlns:ns3=\"http://schemas.android.com/sdk/android/repo/sys-img2/01\" "
+                               + "xmlns:ns4=\"http://schemas.android.com/repository/android/common/01\" "
+                               + "xmlns:ns5=\"http://schemas.android.com/sdk/android/repo/addon2/01\">"
+                               + "<license id=\"license-9A5C00D5\" type=\"text\">Terms and Conditions\n"
+                               + "</license><localPackage "
+                               + "path=\"system-images;android-25;android-wear;x86\" "
+                               + "obsolete=\"false\"><type-details "
+                               + "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
+                               + "xsi:type=\"ns3:sysImgDetailsType\"><api-level>25</api-level>"
+                               + "<tag><id>android-wear</id><display>Android Wear</display></tag>"
+                               + "<abi>x86</abi></type-details><revision><major>2</major></revision>"
+                               + "<display-name>Android Wear Intel x86 Atom System Image</display-name>"
+                               + "<uses-license ref=\"license-9A5C00D5\"/></localPackage>"
+                               + "</ns3:sdk-sys-img>\n");
+    }
+
+    private static void recordWearSysImgChina(MockFileOp fop) {
+        fop.recordExistingFile("/sdk/system-images/android-25/android-wear-cn/x86/system.img");
+        fop.recordExistingFile("/sdk/system-images/android-25/android-wear-cn/x86/"
+                               + AvdManager.USERDATA_IMG);
+
+        fop.recordExistingFile("/sdk/system-images/android-25/android-wear-cn/x86/package.xml",
+                               "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
+                               + "<ns3:sdk-sys-img "
+                               + "xmlns:ns2=\"http://schemas.android.com/sdk/android/repo/repository2/01\" "
+                               + "xmlns:ns3=\"http://schemas.android.com/sdk/android/repo/sys-img2/01\" "
+                               + "xmlns:ns4=\"http://schemas.android.com/repository/android/common/01\" "
+                               + "xmlns:ns5=\"http://schemas.android.com/sdk/android/repo/addon2/01\">"
+                               + "<license id=\"license-9A5C00D5\" type=\"text\">Terms and Conditions\n"
+                               + "</license><localPackage "
+                               + "path=\"system-images;android-25;android-wear-cn;x86\" "
+                               + "obsolete=\"false\"><type-details "
+                               + "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
+                               + "xsi:type=\"ns3:sysImgDetailsType\"><api-level>25</api-level>"
+                               + "<tag><id>android-wear</id><display>Android Wear for China</display></tag>"
+                               + "<abi>x86</abi></type-details><revision><major>2</major></revision>"
+                               + "<display-name>Android Wear Intel x86 Atom System Image</display-name>"
                                + "<uses-license ref=\"license-9A5C00D5\"/></localPackage>"
                                + "</ns3:sdk-sys-img>\n");
     }
