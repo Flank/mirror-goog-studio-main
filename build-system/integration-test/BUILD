@@ -351,6 +351,7 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/com/google/dexmaker/dexmaker/1.0:jar",
         "//prebuilts/tools/common/m2/repository/com/google/dexmaker/dexmaker/1.2:jar",
         "//prebuilts/tools/common/m2/repository/com/google/guava/guava/18.0:jar",
+        "//prebuilts/tools/common/m2/repository/com/google/guava/guava/19.0:jar",
         "//prebuilts/tools/common/m2/repository/com/google/guava/guava/20.0:jar",
         "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/2.6.1:jar",
         "//prebuilts/tools/common/m2/repository/com/googlecode/jarjar/jarjar/1.3:jar",

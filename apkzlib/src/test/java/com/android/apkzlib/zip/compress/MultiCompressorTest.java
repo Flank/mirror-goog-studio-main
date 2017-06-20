@@ -106,8 +106,9 @@ public class MultiCompressorTest {
         File resultFile = new File(mTemporaryFolder.getRoot(), "result.zip");
 
         ZFileOptions resultOptions = new ZFileOptions();
-        resultOptions.setCompressor(new BestAndDefaultDeflateExecutorCompressor(
-                MoreExecutors.sameThreadExecutor(), resultOptions.getTracker(), ratio + 0.001));
+        resultOptions.setCompressor(
+                new BestAndDefaultDeflateExecutorCompressor(
+                        MoreExecutors.directExecutor(), resultOptions.getTracker(), ratio + 0.001));
 
         try (
                 ZFile defaultZFile = new ZFile(defaultFile);
@@ -135,8 +136,9 @@ public class MultiCompressorTest {
         File resultFile = new File(mTemporaryFolder.getRoot(), "result.zip");
 
         ZFileOptions resultOptions = new ZFileOptions();
-        resultOptions.setCompressor(new BestAndDefaultDeflateExecutorCompressor(
-                MoreExecutors.sameThreadExecutor(), resultOptions.getTracker(), ratio - 0.001));
+        resultOptions.setCompressor(
+                new BestAndDefaultDeflateExecutorCompressor(
+                        MoreExecutors.directExecutor(), resultOptions.getTracker(), ratio - 0.001));
 
         try (
                 ZFile defaultZFile = new ZFile(defaultFile);

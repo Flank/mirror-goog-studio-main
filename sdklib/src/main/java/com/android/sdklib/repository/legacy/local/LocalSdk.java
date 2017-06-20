@@ -32,18 +32,17 @@ import com.android.sdklib.AndroidVersion.AndroidVersionException;
 import com.android.sdklib.AndroidVersionHelper;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
+import com.android.sdklib.repository.AndroidSdkHandler;
+import com.android.sdklib.repository.IdDisplay;
 import com.android.sdklib.repository.PackageParserUtils;
 import com.android.sdklib.repository.PkgProps;
 import com.android.sdklib.repository.legacy.descriptors.IPkgDesc;
 import com.android.sdklib.repository.legacy.descriptors.PkgDescExtra;
 import com.android.sdklib.repository.legacy.descriptors.PkgType;
-import com.android.sdklib.repository.AndroidSdkHandler;
-import com.android.sdklib.repository.IdDisplay;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.TreeMultimap;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -414,15 +413,15 @@ public class LocalSdk {
     }
 
     /**
-     * For unique local packages.
-     * Returns the cached LocalPkgInfo for the requested type.
-     * Loads it from disk if not cached.
+     * For unique local packages. Returns the cached LocalPkgInfo for the requested type. Loads it
+     * from disk if not cached.
      *
-     * @param filter {@link PkgType#PKG_TOOLS} or {@link PkgType#PKG_PLATFORM_TOOLS}
-     *               or {@link PkgType#PKG_DOC}.
+     * @param filter {@link PkgType#PKG_TOOLS} or {@link PkgType#PKG_PLATFORM_TOOLS} or {@link
+     *     PkgType#PKG_DOC}.
      * @return null if the package is not installed.
      */
     @Nullable
+    @SuppressWarnings("IncompatibleArgumentType") // LocalDirInfo has an ugly equals method.
     public LocalPkgInfo getPkgInfo(@NonNull PkgType filter) {
         if (filter != PkgType.PKG_TOOLS &&
                 filter != PkgType.PKG_PLATFORM_TOOLS &&
@@ -495,24 +494,24 @@ public class LocalSdk {
     }
 
     /**
-     * Retrieve all the info about the requested package types.
-     * This is used for the package types that have one or more instances, each with different
-     * versions.
-     * The resulting array is sorted according to the PkgInfo's sort order.
-     * <p>
-     * To force the LocalSdk parser to load <b>everything</b>, simply call this method
-     * with the {@link PkgType#PKG_ALL} argument to load all the known package types.
-     * <p>
-     * Note: you can use this with {@link PkgType#PKG_TOOLS}, {@link PkgType#PKG_PLATFORM_TOOLS} and
-     * {@link PkgType#PKG_DOC} but since there can only be one package of these types, it is
+     * Retrieve all the info about the requested package types. This is used for the package types
+     * that have one or more instances, each with different versions. The resulting array is sorted
+     * according to the PkgInfo's sort order.
+     *
+     * <p>To force the LocalSdk parser to load <b>everything</b>, simply call this method with the
+     * {@link PkgType#PKG_ALL} argument to load all the known package types.
+     *
+     * <p>Note: you can use this with {@link PkgType#PKG_TOOLS}, {@link PkgType#PKG_PLATFORM_TOOLS}
+     * and {@link PkgType#PKG_DOC} but since there can only be one package of these types, it is
      * more efficient to use {@link #getPkgInfo(PkgType)} to query them.
      *
-     * @param filters One or more of {@link PkgType#PKG_ADDON}, {@link PkgType#PKG_PLATFORM},
-     *                               {@link PkgType#PKG_BUILD_TOOLS}, {@link PkgType#PKG_EXTRA},
-     *                               {@link PkgType#PKG_SOURCE}, {@link PkgType#PKG_SYS_IMAGE}
+     * @param filters One or more of {@link PkgType#PKG_ADDON}, {@link PkgType#PKG_PLATFORM}, {@link
+     *     PkgType#PKG_BUILD_TOOLS}, {@link PkgType#PKG_EXTRA}, {@link PkgType#PKG_SOURCE}, {@link
+     *     PkgType#PKG_SYS_IMAGE}
      * @return A list (possibly empty) of matching installed packages. Never returns null.
      */
     @NonNull
+    @SuppressWarnings("IncompatibleArgumentType") // LocalDirInfo has an ugly equals method.
     public LocalPkgInfo[] getPkgsInfos(@NonNull EnumSet<PkgType> filters) {
         List<LocalPkgInfo> list = Lists.newArrayList();
 
@@ -856,16 +855,16 @@ public class LocalSdk {
     }
 
     /**
-     * Helper used by scanXyz methods below to check whether a directory should be visited.
-     * It can be skipped if it's not a directory or if it's already marked as visited in
-     * mVisitedDirs for the given package type -- in which case the directory is added to
-     * the visited map.
+     * Helper used by scanXyz methods below to check whether a directory should be visited. It can
+     * be skipped if it's not a directory or if it's already marked as visited in mVisitedDirs for
+     * the given package type -- in which case the directory is added to the visited map.
      *
      * @param pkgType The package type being scanned.
      * @param directory The file or directory to check.
-     * @return False if directory can/should be skipped.
-     *         True if directory should be visited, in which case it's registered in mVisitedDirs.
+     * @return False if directory can/should be skipped. True if directory should be visited, in
+     *     which case it's registered in mVisitedDirs.
      */
+    @SuppressWarnings("IncompatibleArgumentType") // LocalDirInfo has an ugly equals method.
     private boolean shouldVisitDir(@NonNull PkgType pkgType, @NonNull File directory) {
         if (!mFileOp.isDirectory(directory)) {
             return false;

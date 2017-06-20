@@ -108,7 +108,6 @@ import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.android.utils.StringHelper;
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -1063,7 +1062,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     @NonNull
     public File getFinalResourcesDir() {
-        return Objects.firstNonNull(resourceOutputDir, getDefaultMergeResourcesOutputDir());
+        return MoreObjects.firstNonNull(resourceOutputDir, getDefaultMergeResourcesOutputDir());
     }
 
     @Override

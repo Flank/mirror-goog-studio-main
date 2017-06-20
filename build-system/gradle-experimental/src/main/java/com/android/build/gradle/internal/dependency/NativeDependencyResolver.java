@@ -22,7 +22,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.NativeDependencyLinkage;
 import com.android.utils.StringHelper;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import java.util.ArrayList;
@@ -86,7 +86,8 @@ public class NativeDependencyResolver {
             NativeDependencyResolveResult result,
             AndroidNativeDependencySpec dependency) {
         NativeDependencyLinkage linkage =
-                Objects.firstNonNull(dependency.getLinkage(), defaultDependencySpec.getLinkage());
+                MoreObjects.firstNonNull(
+                        dependency.getLinkage(), defaultDependencySpec.getLinkage());
         for (NativeLibraryBinary binary : getBinaries(dependency.getLibraryPath())) {
             if (linkage.equals(NativeDependencyLinkage.STATIC)) {
                 if (binary instanceof StaticLibraryBinary
