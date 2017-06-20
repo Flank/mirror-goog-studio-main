@@ -47,11 +47,11 @@ filegroup(
     visibility = ["//visibility:public"],
 )
 
-java_library(
+java_import(
     name = "gradle-api_neverlink",
+    jars = ["//tools/external/gradle:gradle-api-4.0-jar"],
     neverlink = 1,
     visibility = ["//visibility:public"],
-    exports = [":gradle-api"],
 )
 
 java_import(
