@@ -156,7 +156,11 @@ public final class FakeAdbServer implements AutoCloseable {
                     } catch (IOException ignored) {
                     }
 
-                    mThreadPoolExecutor.shutdown();
+                    // Note: Use "shutdownNow()" to ensure threads of long running tasks are interrupted, as opposed
+                    // to merely waiting for the tasks to finish. This is because mThreadPoolExecutor is used to
+                    // run CommandHandler implementations, and some of them (e.g. TrackJdwpCommandHandler) wait
+                    // indefinitely on queues and expect to be interrupted as a signal to terminate.
+                    mThreadPoolExecutor.shutdownNow();
                     mMainServerThreadExecutor.shutdown();
                 });
     }
