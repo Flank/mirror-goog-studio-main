@@ -87,7 +87,9 @@ public class ResourceDirectoryParser {
      */
     @NonNull
     public static SymbolTable parseDirectory(
-            @NonNull File directory, @NonNull IdProvider idProvider)
+            @NonNull File directory,
+            @NonNull IdProvider idProvider,
+            @NonNull SymbolTable platformAttrSymbols)
             throws ResourceDirectoryParseException {
         Preconditions.checkArgument(directory.isDirectory(), "!directory.isDirectory()");
 
@@ -114,7 +116,8 @@ public class ResourceDirectoryParser {
                                 + "' is not a directory");
             }
 
-            parseResourceDirectory(resourceDirectory, builder, idProvider, documentBuilder);
+            parseResourceDirectory(
+                    resourceDirectory, builder, idProvider, documentBuilder, platformAttrSymbols);
         }
 
         return builder.build();
@@ -126,13 +129,15 @@ public class ResourceDirectoryParser {
      * @param resourceDirectory the resource directory to parse
      * @param builder the builder to add symbols to
      * @param idProvider the ID provider to get IDs from
+     * @param platformAttrSymbols platform attr values
      * @throws ResourceDirectoryParseException failed to parse the resource directory
      */
     private static void parseResourceDirectory(
             @NonNull File resourceDirectory,
             @NonNull SymbolTable.Builder builder,
             @NonNull IdProvider idProvider,
-            @NonNull DocumentBuilder documentBuilder)
+            @NonNull DocumentBuilder documentBuilder,
+            @NonNull SymbolTable platformAttrSymbols)
             throws ResourceDirectoryParseException {
         assert resourceDirectory.isDirectory();
 
@@ -164,7 +169,8 @@ public class ResourceDirectoryParser {
                 Document domTree;
                 try {
                     domTree = documentBuilder.parse(maybeResourceFile);
-                    SymbolTable parsedXml = ResourceValuesXmlParser.parse(domTree, idProvider);
+                    SymbolTable parsedXml =
+                            ResourceValuesXmlParser.parse(domTree, idProvider, platformAttrSymbols);
 
                     parsedXml.allSymbols().forEach(s -> addIfNotExisting(builder, s));
                 } catch (SAXException | IOException | IllegalArgumentException e) {

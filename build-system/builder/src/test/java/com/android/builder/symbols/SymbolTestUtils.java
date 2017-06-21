@@ -57,7 +57,7 @@ public final class SymbolTestUtils {
                 styleableChildren);
     }
 
-    /** @see #createSymbol(String, String, String, String, List<String>) */
+    /** @see #createSymbol(String, String, String, String, List) */
     public static Symbol createSymbol(
             @NonNull String resourceType,
             @NonNull String name,
@@ -66,13 +66,13 @@ public final class SymbolTestUtils {
         return createSymbol(resourceType, name, javaType, value, Symbol.NO_CHILDREN);
     }
 
-    /** @see #createSymbol(String, String, String, String, List<String>) */
+    /** @see #createSymbol(String, String, String, String, List) */
     public static Symbol createSymbol(
             @NonNull String resourceType,
             @NonNull String name,
             @NonNull String javaType,
             int numericValue) {
-        if (numericValue < 0x7f000000) {
+        if ("styleable".equals(resourceType) && "int".equals(javaType)) {
             return createSymbol(resourceType, name, javaType, Integer.toString(numericValue));
         }
         return createSymbol(resourceType, name, javaType, "0x" + Integer.toHexString(numericValue));

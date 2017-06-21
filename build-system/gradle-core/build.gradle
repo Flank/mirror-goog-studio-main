@@ -42,6 +42,8 @@ dependencies {
     compile project(':base:uast')
     compile project(':base:gradle-api')
     compile project(':dataBinding:compilerCommon')
+
+    compile libs.kotlin_stdlib
     compile libs.transform_api_deprecated
     compile libs.asm
     compile libs.asm_analysis
