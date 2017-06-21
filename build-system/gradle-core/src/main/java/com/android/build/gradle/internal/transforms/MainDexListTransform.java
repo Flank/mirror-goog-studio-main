@@ -189,6 +189,7 @@ public class MainDexListTransform extends BaseProguardAction {
             throws IOException, ParseException {
         configuration.obfuscate = false;
         configuration.optimize = false;
+        configuration.preverify = false;
         dontwarn();
         dontnote();
         forceprocessing();

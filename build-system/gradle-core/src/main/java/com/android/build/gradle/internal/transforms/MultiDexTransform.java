@@ -201,6 +201,7 @@ public class MultiDexTransform extends BaseProguardAction {
     private void shrinkWithProguard(@NonNull File input) throws IOException, ParseException {
         configuration.obfuscate = false;
         configuration.optimize = false;
+        configuration.preverify = false;
         dontwarn();
         dontnote();
         forceprocessing();
