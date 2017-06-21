@@ -21,15 +21,10 @@
 
 namespace profiler {
 
-Config& Config::Instance() {
-  static Config* instance = new Config(kConfigFilePath);
-  return *instance;
-}
-
-Config::Config(const char* file_path) {
+Config::Config(const std::string& file_path) : config_file_path_(file_path) {
   std::fstream input(file_path, std::ios::in | std::ios::binary);
   if (!agent_config_.ParseFromIstream(&input)) {
-    Log::V("Failed to parse config from %s", file_path);
+    Log::V("Failed to parse config from %s", file_path.c_str());
   }
   input.close();
 }

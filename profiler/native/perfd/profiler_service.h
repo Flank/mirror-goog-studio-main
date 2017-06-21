@@ -34,6 +34,7 @@ class ProfilerServiceImpl final
       Daemon::Utilities* utilities,
       std::unordered_map<int32_t, int64_t>* heartbeat_timestamp_map)
       : clock_(utilities->clock()),
+        config_(utilities->config()),
         file_cache_(*utilities->file_cache()),
         heartbeat_timestamp_map_(*heartbeat_timestamp_map) {}
 
@@ -69,6 +70,7 @@ class ProfilerServiceImpl final
 
   // Clock knows about timestamps.
   const Clock& clock_;
+  const Config& config_;
   FileCache& file_cache_;
   std::unordered_map<int32_t, int64_t>& heartbeat_timestamp_map_;
 };
