@@ -32,7 +32,12 @@ const char* const kAgentSocketName = "@AndroidStudioProfilerAgent";
 // Address used for legacy devices (Nougat or older).
 const char* const kServerAddress = "127.0.0.1:12389";
 
-const char* const kConfigFilePath = "/data/local/tmp/perfd/agent.config";
+// Command line argument to be used when looking for the config file path.
+const char* const kConfigFileArg = "-config_file";
+
+// Default config file path if none are found on the command line. The path
+// points to a profiler::proto::AgentConfig file.
+const char* const kConfigFileDefaultPath = "/data/local/tmp/perfd/agent.config";
 
 // The command line argument indicating that perfd is establishing communication
 // channel with the agent through Unix abstract socket.
@@ -51,19 +56,22 @@ const int32_t kGrpcTimeoutSec = 1;
 
 class Config {
  public:
-  static Config& Instance();
+  // File path is a string that points to a file that can be parsed by
+  // profiler::proto::AgentConfig. The config will be loaded in the
+  // constructor.
+  explicit Config(const std::string& file_path);
 
   const proto::AgentConfig& GetAgentConfig() const { return agent_config_; }
+
+  const std::string& GetConfigFilePath() const { return config_file_path_; }
 
   // A helper method to set timeout relative to system_clock::now() on |context|
   static void SetClientContextTimeout(grpc::ClientContext* context,
                                       int32_t to_sec = 0, int32_t to_msec = 0);
 
  private:
-  explicit Config(const char* file_path);
-  ~Config() = delete;
-
   proto::AgentConfig agent_config_;
+  const std::string& config_file_path_;
 };
 
 }  // namespace profiler

@@ -23,6 +23,7 @@
 
 #include "perfd/profiler_component.h"
 #include "utils/clock.h"
+#include "utils/config.h"
 #include "utils/file_cache.h"
 
 namespace profiler {
@@ -35,6 +36,10 @@ class Daemon {
  public:
   class Utilities {
    public:
+    // config path is a string that points to a file that can be parsed by
+    // profiler::proto::AgentConfig.
+    Utilities(const std::string& config_path) : config_(config_path) {}
+
     // Returns a const reference to the daemon's clock, which is used to produce
     // all timestamps in the deamon.
     const Clock& clock() const { return clock_; }
@@ -46,12 +51,20 @@ class Daemon {
     //    instead of the full byte string.
     FileCache* file_cache() { return &file_cache_; }
 
+    // Returns a const reference to the config object to access all
+    // configuration parameters.
+    const Config& config() { return config_; }
+
    private:
     // Clock that timestamps profiling data.
     SteadyClock clock_;
     // A shared cache for all profiler services
     FileCache file_cache_;
+    // Config object for profiling settings
+    Config config_;
   };
+
+  Daemon(const std::string& config_path) : utilities_(config_path) {}
 
   // Registers profiler |component| to the daemon, in particular, the
   // component's public and internal services to daemon's server |builder|.
@@ -74,7 +87,6 @@ class Daemon {
   grpc::ServerBuilder builder_;
   // Profiler components that have been registered.
   std::vector<ProfilerComponent*> components_{};
-
   // Utility classes that should be shared across all profiler services.
   Utilities utilities_;
 };
