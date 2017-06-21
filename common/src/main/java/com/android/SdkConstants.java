@@ -812,6 +812,17 @@ public final class SdkConstants {
             FLEXBOX_LAYOUT_LIB_GROUP_ID + ":" + FLEXBOX_LAYOUT_LIB_ARTIFACT_ID;
     public static final String LATEST_FLEXBOX_LAYOUT_VERSION = "0.2.3";
 
+    public static final String CLASS_SIMPLE_EXO_PLAYER_VIEW =
+            "com.google.android.exoplayer2.ui.SimpleExoPlayerView";
+    public static final String CLASS_EXO_PLAYBACK_CONTROL_VIEW =
+            "com.google.android.exoplayer2.ui.PlaybackControlView";
+    public static final String SIMPLE_EXO_PLAYER_VIEW = CLASS_SIMPLE_EXO_PLAYER_VIEW;
+    public static final String EXO_PLAYBACK_CONTROL_VIEW = CLASS_EXO_PLAYBACK_CONTROL_VIEW;
+    public static final String EXO_PLAYER_GROUP_ID = "com.google.android.exoplayer";
+    public static final String EXO_PLAYER_ARTIFACT_ID = "exoplayer";
+    public static final String EXO_PLAYER_ARTIFACT =
+            EXO_PLAYER_GROUP_ID + ":" + EXO_PLAYER_ARTIFACT_ID;
+
     /**
      * Returns the appropriate name for the 'mksdcard' command, which is 'mksdcard.exe' for Windows
      * and 'mksdcard' for all other platforms.
@@ -1432,6 +1443,11 @@ public final class SdkConstants {
     public static final String LAYOUT_CONSTRAINT_DEPRECATED_GUIDE_PERCENT =
             "layout_constraintGuide_Percent"; //$NON-NLS-1$
     public static final String ATTR_LOCKED = "locked"; //$NON-NLS-1$
+
+    // SimpleExoPlayerView
+    public static final String ATTR_RESIZE_MODE = "resize_mode";
+    public static final String ATTR_FAST_FORWARD_INCREMENT = "fastforward_increment";
+    public static final String ATTR_REWIND_INCREMENT = "rewind_increment";
 
     // FlexboxLayout params
     public static final String ATTR_FLEX_DIRECTION = "flexDirection";
