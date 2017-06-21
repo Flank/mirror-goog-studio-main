@@ -20,7 +20,8 @@ import com.android.builder.core.AndroidBuilder;
 
 public final class TestConstants {
     public static final int COMPILE_SDK_VERSION = 24;
-    public static final String BUILD_TOOL_VERSION = AndroidBuilder.MIN_BUILD_TOOLS_REV.toString();
+    public static final String BUILD_TOOL_VERSION =
+            AndroidBuilder.DEFAULT_BUILD_TOOLS_REVISION.toString();
 
     private TestConstants() {}
 }

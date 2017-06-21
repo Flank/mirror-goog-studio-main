@@ -38,7 +38,7 @@ import java.util.Set;
  */
 public class DexProcessBuilder extends ProcessEnvBuilder<DexProcessBuilder> {
 
-    static final String DX_OUT_OF_PROCESS_MIN_SDK_SUPPORT = "26.0.0-rc2";
+    static final Revision DX_OUT_OF_PROCESS_MIN_SDK_SUPPORT = new Revision(26, 0, 0, 2);
 
     @NonNull private final File outputFile;
     private boolean verbose = false;
@@ -49,8 +49,7 @@ public class DexProcessBuilder extends ProcessEnvBuilder<DexProcessBuilder> {
 
     /** Returns if specifying min sdk version is supported by dx in the build tools. */
     public static boolean isMinSdkVersionSupported(@NonNull BuildToolInfo buildToolInfo) {
-        return buildToolInfo.getRevision().compareTo(
-                Revision.parseRevision(DX_OUT_OF_PROCESS_MIN_SDK_SUPPORT)) >= 0;
+        return buildToolInfo.getRevision().compareTo(DX_OUT_OF_PROCESS_MIN_SDK_SUPPORT) >= 0;
     }
 
     public DexProcessBuilder(@NonNull File outputFile) {

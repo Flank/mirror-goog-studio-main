@@ -216,7 +216,7 @@ public class DexByteCodeConverter {
                                 + "methods (requiring minimum sdk version 26) are used.\n"
                                 + "Please switch to dexing in process or update the build tools to "
                                 + "%s.",
-                        DexProcessBuilder.DX_OUT_OF_PROCESS_MIN_SDK_SUPPORT);
+                        AndroidBuilder.DEFAULT_BUILD_TOOLS_REVISION.toString());
             }
             throw new ProcessException(e);
         }

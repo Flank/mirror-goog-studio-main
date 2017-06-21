@@ -29,6 +29,7 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.instant.InstantRunTestUtils;
 import com.android.build.gradle.options.BooleanOption;
+import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
@@ -356,6 +357,12 @@ public class DesugarAppTest {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "\n"
+                        + "android {\n"
+                        + "    buildToolsVersion \""
+                        + AndroidBuilder.MIN_BUILD_TOOLS_REV.toString()
+                        + "\"\n"
+                        + "}\n"
+                        + "\n"
                         + "android.dexOptions.dexInProcess false\n"
                         + "android.defaultConfig.minSdkVersion 24");
         GradleBuildResult result =

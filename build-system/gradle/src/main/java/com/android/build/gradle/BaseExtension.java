@@ -492,6 +492,7 @@ public abstract class BaseExtension implements AndroidConfig {
      *     <tr><td>2.2.x</td><td>23.0.2</td><td>-</td></tr>
      *     <tr><td>2.3.x</td><td>23.0.2</td><td>-</td></tr>
      *     <tr><td>2.4.x</td><td>25.0.0</td><td>25.0.2</td></tr>
+     *     <tr><td>3.0.x</td><td>25.0.0</td><td>26.0.0</td></tr>
      * </table>
      *
      * <p>The value assigned to this property is parsed and stored in a normalized form, so reading

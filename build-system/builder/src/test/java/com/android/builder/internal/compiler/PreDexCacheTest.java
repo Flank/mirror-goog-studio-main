@@ -43,7 +43,6 @@ import com.android.ide.common.process.ProcessInfo;
 import com.android.ide.common.process.ProcessOutput;
 import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.ide.common.process.ProcessResult;
-import com.android.repository.Revision;
 import com.android.sdklib.BuildToolInfo;
 import com.android.utils.NullLogger;
 import com.google.common.base.Charsets;
@@ -545,7 +544,7 @@ public class PreDexCacheTest {
         Files.write("dx!", dx, Charsets.UTF_8);
 
         return BuildToolInfo.modifiedLayout(
-                new Revision(25, 0, 0),
+                AndroidBuilder.DEFAULT_BUILD_TOOLS_REVISION,
                 toolDir,
                 new File(toolDir, FN_AAPT),
                 new File(toolDir, FN_AIDL),

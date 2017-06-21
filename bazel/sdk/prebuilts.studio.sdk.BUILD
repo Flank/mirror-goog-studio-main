@@ -10,13 +10,13 @@ filegroup(
 
 filegroup(
     name = "build-tools/latest-preview",
-    srcs = [":build-tools/26.0.0-rc1"],
+    srcs = [":build-tools/26.0.0"],
     visibility = ["//visibility:public"],
 )
 
 java_import(
     name = "dxlib-preview",
-    jars = glob(["*/build-tools/26.0.0-rc1/lib/dx.jar"]),
+    jars = glob(["*/build-tools/26.0.0/lib/dx.jar"]),
 )
 
 java_binary(
@@ -28,7 +28,7 @@ java_binary(
 
 filegroup(
     name = "build-tools/latest",
-    srcs = [":build-tools/25.0.2"],
+    srcs = [":build-tools/26.0.0"],
     visibility = ["//visibility:public"],
 )
 
@@ -39,10 +39,13 @@ filegroup(
 )
 
 filegroup(
-    name = "build-tools/26.0.0-rc1",
+    name = "build-tools/26.0.0",
     srcs = glob(
-        include = ["*/build-tools/26.0.0-rc1/**"],
+        include = ["*/build-tools/26.0.0/**"],
     ),
+    visibility = [
+        "//tools/base/build-system/gradle:__pkg__",
+    ],
 )
 
 filegroup(

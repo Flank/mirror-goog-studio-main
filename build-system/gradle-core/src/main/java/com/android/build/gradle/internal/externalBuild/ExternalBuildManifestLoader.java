@@ -25,7 +25,6 @@ import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.sdk.TargetInfo;
-import com.android.repository.Revision;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 import com.google.common.collect.ImmutableMap;
@@ -95,17 +94,18 @@ public class ExternalBuildManifestLoader {
                 SdkConstants.FN_ZIPALIGN)
             : getAbsoluteFile(executionRoot, sdk.getZipalign());
 
-        BuildToolInfo buildToolInfo = BuildToolInfo.partial(
-                new Revision(25, 0, 0),
-                project.getProjectDir(),
-                ImmutableMap.of(
-                        // TODO: Put dx.jar in the proto
-                        BuildToolInfo.PathId.DX_JAR,
-                        getAbsoluteFile(executionRoot, sdk.getDx()),
-                        BuildToolInfo.PathId.ZIP_ALIGN,
-                        zipAlign,
-                        BuildToolInfo.PathId.AAPT,
-                        getAbsoluteFile(executionRoot, sdk.getAapt())));
+        BuildToolInfo buildToolInfo =
+                BuildToolInfo.partial(
+                        AndroidBuilder.DEFAULT_BUILD_TOOLS_REVISION,
+                        project.getProjectDir(),
+                        ImmutableMap.of(
+                                // TODO: Put dx.jar in the proto
+                                BuildToolInfo.PathId.DX_JAR,
+                                getAbsoluteFile(executionRoot, sdk.getDx()),
+                                BuildToolInfo.PathId.ZIP_ALIGN,
+                                zipAlign,
+                                BuildToolInfo.PathId.AAPT,
+                                getAbsoluteFile(executionRoot, sdk.getAapt())));
 
         IAndroidTarget androidTarget =
                 new ExternalBuildAndroidTarget(
