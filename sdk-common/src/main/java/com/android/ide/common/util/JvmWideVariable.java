@@ -137,9 +137,9 @@ import javax.management.ReflectionException;
  * }</pre>
  *
  * <p>At the end of a build, JVM-wide variables usually need to be released (by un-registering the
- * variables from the JVM via {@link #unregister()} or {@link #unregisterAll()}, and also un-linking
- * all references to them) since every build should be independent and the user may also change the
- * plugin version in between builds.
+ * variables from the JVM via the {@link #unregister()} method, and also un-linking all references
+ * to them) since every build should be independent and the user may also change the plugin version
+ * in between builds.
  *
  * <p>This class is thread-safe.
  *
@@ -228,11 +228,11 @@ public final class JvmWideVariable<T> {
         // thread-safe individually, we synchronize both of them together so that the if-block can
         // run atomically. Note that several other places in this class also use the shared server
         // variable without being guarded by "synchronized (server)" and can interfere with this
-        // synchronized block. However, as long as the unregister() and unregisterAll() methods are
-        // used correctly (called lastly in a build or a test method; see its javadoc), those places
-        // will always run with a registered variable. Therefore, they can at most run concurrently
-        // with the condition check of the if statement below but can never run concurrently with
-        // the then-block of the if statement, which makes this synchronized block safe.
+        // synchronized block. However, as long as the unregister() method is used correctly (called
+        // lastly in a build or a test method; see its javadoc), those places will always run with a
+        // registered variable. Therefore, they can at most run concurrently with the condition
+        // check of the if statement below but can never run concurrently with the then-block of the
+        // if statement, which makes this synchronized block safe.
         boolean variableExists = true;
         synchronized (server) {
             if (!server.isRegistered(objectName)) {
@@ -431,30 +431,6 @@ public final class JvmWideVariable<T> {
         try {
             server.unregisterMBean(objectName);
         } catch (InstanceNotFoundException | MBeanRegistrationException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    /**
-     * Unregisters all JVM-wide variables from the JVM.
-     *
-     * <p>IMPORTANT: This method should only be called lastly in a build or a test method, and
-     * called only once from a single thread. Calling this method not at the end of a build or test
-     * method or calling it multiple times or from multiple threads will break the thread safety of
-     * this class. Any references to {@code JvmWideVariable} instances need to be unlinked as well;
-     * otherwise, the next call on a {@code JvmWideVariable} instance will throw an exception
-     * because the JVM-wide variable no longer exists.
-     */
-    public static void unregisterAll() {
-        try {
-            for (ObjectName objectName :
-                    server.queryNames(
-                            new ObjectName(JvmWideVariable.class.getSimpleName() + ":*"), null)) {
-                server.unregisterMBean(objectName);
-            }
-        } catch (MalformedObjectNameException
-                | InstanceNotFoundException
-                | MBeanRegistrationException e) {
             throw new RuntimeException(e);
         }
     }

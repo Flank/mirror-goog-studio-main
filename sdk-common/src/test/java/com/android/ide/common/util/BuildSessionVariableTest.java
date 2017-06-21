@@ -29,40 +29,33 @@ import java.lang.reflect.Method;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /** Test cases for {@link BuildSessionVariable}. */
 @SuppressWarnings("ResultOfObjectAllocationIgnored")
 public class BuildSessionVariableTest {
 
-    @Before
-    public void setUp() {
-        BuildSessionVariable.buildStarted();
-    }
-
-    @After
-    public void tearDown() {
-        BuildSessionVariable.buildFinished();
-        BuildSessionVariable.clearBuildSessionVariableSet();
-    }
-
     @Test
     public void testRead() {
         BuildSessionVariable<String> variable =
                 new BuildSessionVariable<>("group", "name", String.class, "Some text");
         assertThat(variable.get()).isEqualTo("Some text");
+        variable.unregister();
     }
 
     @Test
     public void testInitializeTwiceThenRead() {
-        new BuildSessionVariable<>("group", "name", String.class, "Some text");
         BuildSessionVariable<String> variable =
+                new BuildSessionVariable<>("group", "name", String.class, "Some text");
+        BuildSessionVariable<String> variable2 =
                 new BuildSessionVariable<>("group", "name", String.class, "Some other text");
 
         // Expect that the second default value is ignored
-        assertThat(variable.get()).isEqualTo("Some text");
+        assertThat(variable2.get()).isEqualTo("Some text");
+
+        variable.unregister();
+        variable2.unregister();
     }
 
     @Test
@@ -72,6 +65,8 @@ public class BuildSessionVariableTest {
         variable.set("Some other text");
 
         assertThat(variable.get()).isEqualTo("Some other text");
+
+        variable.unregister();
     }
 
     @Test
@@ -84,6 +79,8 @@ public class BuildSessionVariableTest {
 
         variable.set("Yet some other text");
         assertThat(variable.get()).isEqualTo("Yet some other text");
+
+        variable.unregister();
     }
 
     @Test
@@ -98,6 +95,9 @@ public class BuildSessionVariableTest {
         variable2.set("Other text");
         assertThat(variable.get()).isEqualTo("Other text");
         assertThat(variable2.get()).isEqualTo("Other text");
+
+        variable.unregister();
+        variable2.unregister();
     }
 
     @Test
@@ -112,12 +112,15 @@ public class BuildSessionVariableTest {
         variable2.set("Other text");
         assertThat(variable.get()).isEqualTo("This text");
         assertThat(variable2.get()).isEqualTo("Other text");
+
+        variable.unregister();
+        variable2.unregister();
     }
 
     @Test
     public void testNullValues() {
         BuildSessionVariable<String> variable =
-                new BuildSessionVariable<>("group", "name2", String.class, null);
+                new BuildSessionVariable<>("group", "name", String.class, null);
         assertThat(variable.get()).isNull();
 
         variable.set("Some text");
@@ -125,20 +128,24 @@ public class BuildSessionVariableTest {
 
         variable.set(null);
         assertThat(variable.get()).isNull();
+
+        variable.unregister();
     }
 
     @Test
     public void testDefaultValueSupplier() {
-        new BuildSessionVariable<>("group", "name", String.class, "Some text");
+        BuildSessionVariable<String> variable =
+                new BuildSessionVariable<>("group", "name", String.class, "Some text");
 
-        new BuildSessionVariable<>(
-                "group",
-                "name",
-                TypeToken.of(String.class),
-                () -> {
-                    fail("This should not be executed");
-                    return null;
-                });
+        BuildSessionVariable<String> sameVariable =
+                new BuildSessionVariable<>(
+                        "group",
+                        "name",
+                        TypeToken.of(String.class),
+                        () -> {
+                            fail("This should not be executed");
+                            return null;
+                        });
 
         BuildSessionVariable<String> variable2 =
                 new BuildSessionVariable<>(
@@ -147,49 +154,61 @@ public class BuildSessionVariableTest {
                         TypeToken.of(String.class),
                         () -> "This should be executed");
         assertThat(variable2.get()).isEqualTo("This should be executed");
+
+        variable.unregister();
+        sameVariable.unregister();
+        variable2.unregister();
     }
 
     @Test
     public void testVariables_WithSameGroupSameName_DifferentSimpleTypes() throws Exception {
-        new BuildSessionVariable<>("group", "name", String.class, "Some text");
+        BuildSessionVariable<String> variable =
+                new BuildSessionVariable<>("group", "name", String.class, "Some text");
 
         // Create another build session variable with the same group, same name, but different type,
         // expect failure (currently we fail when the variable is accessed, not when it is created)
-        BuildSessionVariable<Integer> variable =
+        BuildSessionVariable<Integer> variable2 =
                 new BuildSessionVariable<>("group", "name", Integer.class, 1);
         try {
             @SuppressWarnings("unused")
-            Integer value = variable.get();
+            Integer value = variable2.get();
             fail("Expected ClassCastException");
         } catch (ClassCastException e) {
             assertThat(e.getMessage())
                     .isEqualTo("java.lang.String cannot be cast to java.lang.Integer");
         }
+
+        variable.unregister();
+        variable2.unregister();
     }
 
     @Test
     public void testVariables_WithSameGroupSameName_DifferentComplexTypes() throws Exception {
         // Create a build session variable with a ParameterizedType
-        new BuildSessionVariable<>(
-                "group",
-                "name",
-                new TypeToken<List<String>>() {},
-                () -> ImmutableList.of("Some text"));
+        BuildSessionVariable<List<String>> variable =
+                new BuildSessionVariable<>(
+                        "group",
+                        "name",
+                        new TypeToken<List<String>>() {},
+                        () -> ImmutableList.of("Some text"));
 
         // Create another build session variable with the same group, same name, but a different
         // ParameterizedType, expect failure (currently we fail when the variable is accessed, not
         // when it is created)
-        BuildSessionVariable<List<Integer>> variable =
+        BuildSessionVariable<List<Integer>> variable2 =
                 new BuildSessionVariable<>(
                         "group", "name", new TypeToken<List<Integer>>() {}, () -> null);
         try {
             @SuppressWarnings({"unused", "ConstantConditions"})
-            Integer value = variable.get().get(0);
+            Integer value = variable2.get().get(0);
             fail("Expected ClassCastException");
         } catch (ClassCastException e) {
             assertThat(e.getMessage())
                     .isEqualTo("java.lang.String cannot be cast to java.lang.Integer");
         }
+
+        variable.unregister();
+        variable2.unregister();
     }
 
     @Test
@@ -197,7 +216,8 @@ public class BuildSessionVariableTest {
             throws Exception {
         // Create a build session variable whose type is loaded by the bootstrap class loader,
         // expect success
-        new BuildSessionVariable<>("group", "foo", String.class, null);
+        BuildSessionVariable<String> variable =
+                new BuildSessionVariable<>("group", "foo", String.class, null);
 
         // Create a build session variable whose type is loaded by the application (non-bootstrap)
         // class loader, expect failure
@@ -230,6 +250,8 @@ public class BuildSessionVariableTest {
                                             + " the bootstrap class loader but is loaded by %s",
                                     clazz, "group", "fooCounter", clazz.getClassLoader()));
         }
+
+        variable.unregister();
     }
 
     @Test
@@ -237,7 +259,9 @@ public class BuildSessionVariableTest {
             throws Exception {
         // Create a build session variable whose type is a ParameterizeType, and its argument's type
         // is loaded by the bootstrap class loader, expect success
-        new BuildSessionVariable<>("group", "foo", new TypeToken<List<String>>() {}, () -> null);
+        BuildSessionVariable<List<String>> variable =
+                new BuildSessionVariable<>(
+                        "group", "foo", new TypeToken<List<String>>() {}, () -> null);
 
         // Create a build session variable whose type is a ParameterizeType, and its argument's type
         // is loaded by the application (non-bootstrap) class loader, expect failure
@@ -259,6 +283,8 @@ public class BuildSessionVariableTest {
                                     "fooCounter",
                                     BuildSessionVariableTest.FooCounter.class.getClassLoader()));
         }
+
+        variable.unregister();
     }
 
     @Test
@@ -266,7 +292,10 @@ public class BuildSessionVariableTest {
         BuildSessionVariable<String> variable =
                 new BuildSessionVariable<>("group", "name", String.class, "Some text");
         Integer result = variable.executeCallableSynchronously(() -> 1);
+
         assertThat(result).isEqualTo(1);
+
+        variable.unregister();
     }
 
     @Test
@@ -283,6 +312,7 @@ public class BuildSessionVariableTest {
             assertThat(Throwables.getRootCause(e)).isInstanceOf(IllegalStateException.class);
             assertThat(Throwables.getRootCause(e)).hasMessage("Some exception");
         }
+        variable.unregister();
     }
 
     @Test
@@ -323,6 +353,7 @@ public class BuildSessionVariableTest {
      */
 
     @Test
+    @Ignore("issuetracker.google.com/issues/62878541")
     public void testLifeTime() {
         // Count the number of times the variable is initialized
         AtomicInteger count = new AtomicInteger(0);
@@ -367,6 +398,7 @@ public class BuildSessionVariableTest {
     }
 
     @Test
+    @Ignore("issuetracker.google.com/issues/62878541")
     public void testLifeTime_DifferentClassLoaders() throws Exception {
         // Create a build session variable when the BuildSessionVariable class is loaded by the
         // default class loader. Also count the number of times the variable is initialized.

@@ -22,30 +22,23 @@ import static org.junit.Assert.fail;
 import com.android.testutils.classloader.SingleClassLoader;
 import com.google.common.base.Throwables;
 import com.google.common.reflect.TypeToken;
-import java.lang.management.ManagementFactory;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import javax.management.InstanceNotFoundException;
-import javax.management.ObjectName;
-import org.junit.After;
 import org.junit.Test;
 
 /** Test cases for {@link JvmWideVariable}. */
 @SuppressWarnings("ResultOfObjectAllocationIgnored")
 public class JvmWideVariableTest {
 
-    @After
-    public void tearDown() {
-        JvmWideVariable.unregisterAll();
-    }
-
     @Test
     public void testRead() {
         JvmWideVariable<String> variable =
                 new JvmWideVariable<>("group", "name", String.class, "Some text");
         assertThat(variable.get()).isEqualTo("Some text");
+        variable.unregister();
     }
 
     @Test
@@ -56,6 +49,8 @@ public class JvmWideVariableTest {
 
         // Expect that the second default value is ignored
         assertThat(variable.get()).isEqualTo("Some text");
+
+        variable.unregister();
     }
 
     @Test
@@ -65,6 +60,8 @@ public class JvmWideVariableTest {
         variable.set("Some other text");
 
         assertThat(variable.get()).isEqualTo("Some other text");
+
+        variable.unregister();
     }
 
     @Test
@@ -77,6 +74,8 @@ public class JvmWideVariableTest {
 
         variable.set("Yet some other text");
         assertThat(variable.get()).isEqualTo("Yet some other text");
+
+        variable.unregister();
     }
 
     @Test
@@ -91,6 +90,8 @@ public class JvmWideVariableTest {
         variable2.set("Other text");
         assertThat(variable.get()).isEqualTo("Other text");
         assertThat(variable2.get()).isEqualTo("Other text");
+
+        variable.unregister();
     }
 
     @Test
@@ -105,12 +106,15 @@ public class JvmWideVariableTest {
         variable2.set("Other text");
         assertThat(variable.get()).isEqualTo("This text");
         assertThat(variable2.get()).isEqualTo("Other text");
+
+        variable.unregister();
+        variable2.unregister();
     }
 
     @Test
     public void testNullValues() {
         JvmWideVariable<String> variable =
-                new JvmWideVariable<>("group", "name2", String.class, null);
+                new JvmWideVariable<>("group", "name", String.class, null);
         assertThat(variable.get()).isNull();
 
         variable.set("Some text");
@@ -118,11 +122,14 @@ public class JvmWideVariableTest {
 
         variable.set(null);
         assertThat(variable.get()).isNull();
+
+        variable.unregister();
     }
 
     @Test
     public void testDefaultValueSupplier() {
-        new JvmWideVariable<>("group", "name", String.class, "Some text");
+        JvmWideVariable<String> variable =
+                new JvmWideVariable<>("group", "name", String.class, "Some text");
 
         new JvmWideVariable<>(
                 "group",
@@ -140,6 +147,9 @@ public class JvmWideVariableTest {
                         TypeToken.of(String.class),
                         () -> "This should be executed");
         assertThat(variable2.get()).isEqualTo("This should be executed");
+
+        variable.unregister();
+        variable2.unregister();
     }
 
     @Test
@@ -182,7 +192,8 @@ public class JvmWideVariableTest {
 
     @Test
     public void testVariables_WithSameGroupSameName_DifferentSimpleTypes() throws Exception {
-        new JvmWideVariable<>("group", "name", String.class, "Some text");
+        JvmWideVariable<String> variable =
+                new JvmWideVariable<>("group", "name", String.class, "Some text");
 
         // Create another JVM-wide variable with the same group, same name, but different type,
         // expect failure
@@ -197,12 +208,16 @@ public class JvmWideVariableTest {
                                             + " for JVM-wide variable %s:%s",
                                     String.class, Integer.class, "group", "name"));
         }
+
+        variable.unregister();
     }
 
     @Test
     public void testVariables_WithSameGroupSameName_DifferentComplexTypes() throws Exception {
         // Create a JVM-wide variable with a ParameterizedType
-        new JvmWideVariable<>("group", "name", new TypeToken<List<String>>() {}, () -> null);
+        JvmWideVariable<List<String>> variable =
+                new JvmWideVariable<>(
+                        "group", "name", new TypeToken<List<String>>() {}, () -> null);
 
         // Create another JVM-wide variable with the same group, same name, but a different
         // ParameterizedType, expect failure
@@ -220,6 +235,8 @@ public class JvmWideVariableTest {
                                     "group",
                                     "name"));
         }
+
+        variable.unregister();
     }
 
     @Test
@@ -227,7 +244,8 @@ public class JvmWideVariableTest {
             throws Exception {
         // Create a JVM-wide variable whose type is loaded by the bootstrap class loader, expect
         // success
-        new JvmWideVariable<>("group", "foo", String.class, null);
+        JvmWideVariable<String> variable =
+                new JvmWideVariable<>("group", "foo", String.class, null);
 
         // Create a JVM-wide variable whose type is loaded by the application (non-bootstrap) class
         // loader, expect failure
@@ -261,6 +279,8 @@ public class JvmWideVariableTest {
                             "fooCounter",
                             clazz.getClassLoader()));
         }
+
+        variable.unregister();
     }
 
     @Test
@@ -268,7 +288,8 @@ public class JvmWideVariableTest {
             throws Exception {
         // Create a JVM-wide variable whose type is a ParameterizeType, and its argument's type is
         // loaded by the bootstrap class loader, expect success
-        new JvmWideVariable<>("group", "foo", new TypeToken<List<String>>() {}, () -> null);
+        JvmWideVariable<List<String>> variable =
+                new JvmWideVariable<>("group", "foo", new TypeToken<List<String>>() {}, () -> null);
 
         // Create a JVM-wide variable whose type is a ParameterizeType, and its argument's type is
         // loaded by the application (non-bootstrap) class loader, expect failure
@@ -286,6 +307,8 @@ public class JvmWideVariableTest {
                             "fooCounter",
                             FooCounter.class.getClassLoader()));
         }
+
+        variable.unregister();
     }
 
     @Test
@@ -293,7 +316,10 @@ public class JvmWideVariableTest {
         JvmWideVariable<String> variable =
                 new JvmWideVariable<>("group", "name", String.class, "Some text");
         Integer result = variable.executeCallableSynchronously(() -> 1);
+
         assertThat(result).isEqualTo(1);
+
+        variable.unregister();
     }
 
     @Test
@@ -310,6 +336,7 @@ public class JvmWideVariableTest {
             assertThat(Throwables.getRootCause(e)).isInstanceOf(IllegalStateException.class);
             assertThat(Throwables.getRootCause(e)).hasMessage("Some exception");
         }
+        variable.unregister();
     }
 
     @Test
@@ -363,40 +390,8 @@ public class JvmWideVariableTest {
             assertThat(e.getCause()).isInstanceOf(InstanceNotFoundException.class);
         }
         assertThat(variable2.get()).isEqualTo("Some other text");
-    }
 
-    @Test
-    public void testUnregisterAll() throws Exception {
-        JvmWideVariable<String> variable =
-                new JvmWideVariable<>("group", "name", String.class, "Some text");
-        JvmWideVariable<String> variable2 =
-                new JvmWideVariable<>("group", "name2", String.class, "Some other text");
-
-        // Unregister all JVM-wide variables, expect that access to them afterwards will fail
-        JvmWideVariable.unregisterAll();
-        try {
-            variable.get();
-        } catch (RuntimeException e) {
-            assertThat(e.getCause()).isInstanceOf(InstanceNotFoundException.class);
-        }
-        try {
-            variable2.get();
-        } catch (RuntimeException e) {
-            assertThat(e.getCause()).isInstanceOf(InstanceNotFoundException.class);
-        }
-
-        // Register a dummy object that is not a JVM-wide variable with the MBean server
-        ObjectName dummyObjectName =
-                new ObjectName(
-                        JvmWideVariableTest.class.getSimpleName()
-                                + ":type=dummy,group=dummy,name=dummy");
-        Object dummy = new Dummy();
-        ManagementFactory.getPlatformMBeanServer().registerMBean(dummy, dummyObjectName);
-
-        // Unregister all JVM-wide variables, expect that the dummy object is still registered
-        JvmWideVariable.unregisterAll();
-        assertThat(ManagementFactory.getPlatformMBeanServer().queryNames(dummyObjectName, null))
-                .contains(dummyObjectName);
+        variable2.unregister();
     }
 
     /** Dummy class used by testUnregisterAll() test. */

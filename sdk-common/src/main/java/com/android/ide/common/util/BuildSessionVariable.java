@@ -356,12 +356,25 @@ public final class BuildSessionVariable<T> {
     }
 
     /**
-     * Clears the set of all build session variables.
+     * Unregisters this {@code BuildSessionVariable} instance.
      *
      * <p>WARNING: This method must be used only by tests.
      */
     @VisibleForTesting
-    static synchronized void clearBuildSessionVariableSet() {
-        buildSessionVariableSet = Sets.newConcurrentHashSet();
+    void unregister() {
+        Preconditions.checkNotNull(jvmWideVariableTable);
+        ConcurrentMap<String, AtomicReference<Object>> variableTable = jvmWideVariableTable.get();
+        Preconditions.checkNotNull(variableTable);
+        // The actual build session variable may have already been unregistered via another
+        // BuildSessionVariable instance
+        if (variableTable.containsKey(fullName)) {
+            variableTable.remove(fullName);
+        }
+
+        Preconditions.checkNotNull(variable);
+        variable = null;
+
+        Preconditions.checkState(buildSessionVariableSet.contains(this));
+        buildSessionVariableSet.remove(this);
     }
 }
