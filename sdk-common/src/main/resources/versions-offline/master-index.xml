@@ -21,4 +21,5 @@
   <com.android.tools.analytics-library/>
   <com.android.tools.internal.build.test/>
   <com.android.tools.lint/>
+  <com.android.tools.external.org-jetbrains/>
 </metadata>

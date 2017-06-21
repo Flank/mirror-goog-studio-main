@@ -1,5 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <com.android.tools.external.com-intellij>
   <uast versions="171.4249.33,171.4249.33"/>
+  <intellij-core versions="26.0.0-alpha4"/>
 </com.android.tools.external.com-intellij>
 

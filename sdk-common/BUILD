@@ -60,6 +60,12 @@ kotlin_library(
     ],
 )
 
+java_binary(
+    name = "update_google_maven_repository_cache",
+    main_class = "com.android.ide.common.repository.UpdateGoogleMavenRepositoryCache",
+    runtime_deps = [":tools.sdk-common"],
+)
+
 maven_pom(
     name = "pom",
     artifact = "sdk-common",

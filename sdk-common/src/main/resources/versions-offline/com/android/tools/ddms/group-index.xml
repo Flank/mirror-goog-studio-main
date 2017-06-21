@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <com.android.tools.ddms>
-  <ddmlib versions="26.0.0-alpha1"/>
+  <ddmlib versions="26.0.0-alpha4"/>
 </com.android.tools.ddms>
 

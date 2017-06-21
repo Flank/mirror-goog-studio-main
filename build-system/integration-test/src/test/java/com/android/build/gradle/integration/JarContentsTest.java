@@ -60,9 +60,7 @@ public class JarContentsTest {
 
     static {
         // Useful command for getting these lists:
-        // unzip -l path/to.jar | grep -v class | grep -v "/$" | tail -n +2 | awk '{print "\"" $4 "\","}'
-
-        // Feel free to change these to be a regexp pattern if it becomes too tedious to maintain.
+        // unzip -l path/to.jar | grep -v class | grep -v "/$" | tail -n +2 | awk '{print "\"" $4 "\","}' | sort
 
         ImmutableSetMultimap.Builder<String, String> expected = ImmutableSetMultimap.builder();
         expected.putAll(
@@ -179,13 +177,15 @@ public class JarContentsTest {
                 "versions-offline/com/android/tools/build/group-index.xml",
                 "versions-offline/com/android/tools/ddms/group-index.xml",
                 "versions-offline/com/android/tools/external/com-intellij/group-index.xml",
+                "versions-offline/com/android/tools/external/org-jetbrains/group-index.xml",
                 "versions-offline/com/android/tools/group-index.xml",
                 "versions-offline/com/android/tools/internal/build/test/group-index.xml",
                 "versions-offline/com/android/tools/layoutlib/group-index.xml",
                 "versions-offline/com/android/tools/lint/group-index.xml",
                 "versions-offline/com/google/android/instantapps/group-index.xml",
                 "versions-offline/com/google/android/instantapps/thirdpartycompat/group-index.xml",
-                "versions-offline/master-index.xml");
+                "versions-offline/master-index.xml",
+                "README.md");
         expected.putAll(
                 "com/android/tools/lint/lint",
                 "com/android/tools/lint/lint-warning.png",
