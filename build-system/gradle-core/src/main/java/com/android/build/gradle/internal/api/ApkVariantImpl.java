@@ -22,6 +22,7 @@ import com.android.build.gradle.api.ApkVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.builder.core.AndroidBuilder;
 import org.gradle.api.NamedDomainObjectContainer;
+import org.gradle.api.model.ObjectFactory;
 
 /**
  * Implementation of the apk-generating variant.
@@ -32,10 +33,11 @@ import org.gradle.api.NamedDomainObjectContainer;
 public abstract class ApkVariantImpl extends InstallableVariantImpl implements ApkVariant {
 
     protected ApkVariantImpl(
+            @NonNull ObjectFactory objectFactory,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull ReadOnlyObjectProvider immutableObjectProvider,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> outputs) {
-        super(androidBuilder, immutableObjectProvider, outputs);
+        super(objectFactory, androidBuilder, immutableObjectProvider, outputs);
     }
 
     @Nullable

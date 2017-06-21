@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.builder.core.AndroidBuilder;
 import org.gradle.api.NamedDomainObjectContainer;
+import org.gradle.api.model.ObjectFactory;
 
 /**
  * External API wrapper around the {@link TestVariantData}, for unit testing variants.
@@ -37,10 +38,11 @@ public class UnitTestVariantImpl extends BaseVariantImpl implements UnitTestVari
     public UnitTestVariantImpl(
             @NonNull TestVariantData variantData,
             @NonNull TestedVariant testedVariant,
+            @NonNull ObjectFactory objectFactory,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull ReadOnlyObjectProvider readOnlyObjectProvider,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> outputs) {
-        super(androidBuilder, readOnlyObjectProvider, outputs);
+        super(objectFactory, androidBuilder, readOnlyObjectProvider, outputs);
 
         this.variantData = variantData;
         this.testedVariant = testedVariant;

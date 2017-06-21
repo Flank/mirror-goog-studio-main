@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.internal.variant.ApplicationVariantData;
 import com.android.builder.core.AndroidBuilder;
 import org.gradle.api.NamedDomainObjectContainer;
+import org.gradle.api.model.ObjectFactory;
 
 /**
  * implementation of the {@link ApplicationVariant} interface around an
@@ -47,10 +48,11 @@ public class ApplicationVariantImpl extends ApkVariantImpl implements Applicatio
 
     public ApplicationVariantImpl(
             @NonNull ApplicationVariantData variantData,
+            @NonNull ObjectFactory objectFactory,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull ReadOnlyObjectProvider readOnlyObjectProvider,
             @NonNull NamedDomainObjectContainer<BaseVariantOutput> outputs) {
-        super(androidBuilder, readOnlyObjectProvider, outputs);
+        super(objectFactory, androidBuilder, readOnlyObjectProvider, outputs);
         this.variantData = variantData;
     }
 
