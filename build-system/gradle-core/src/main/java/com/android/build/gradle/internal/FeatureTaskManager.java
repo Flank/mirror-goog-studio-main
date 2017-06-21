@@ -39,7 +39,6 @@ import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.FeatureVariantData;
 import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
 import com.android.build.gradle.options.ProjectOptions;
-import com.android.build.gradle.tasks.AndroidJarTask;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.MergeManifests;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
@@ -458,7 +457,6 @@ public class FeatureTaskManager extends TaskManager {
 
         addJavacClassesStream(variantScope);
         setJavaCompilerTask(javacTask, tasks, variantScope);
-        getAndroidTasks().create(tasks, new AndroidJarTask.JarClassesConfigAction(variantScope));
         createPostCompilationTasks(tasks, variantScope);
     }
 

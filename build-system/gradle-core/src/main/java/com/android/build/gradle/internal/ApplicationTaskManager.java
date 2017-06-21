@@ -47,10 +47,8 @@ import com.android.build.gradle.internal.transforms.InstantRunSliceSplitApkBuild
 import com.android.build.gradle.internal.variant.ApplicationVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
-import com.android.build.gradle.tasks.AndroidJarTask;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.profile.Recorder;
@@ -306,7 +304,6 @@ public class ApplicationTaskManager extends TaskManager {
 
         addJavacClassesStream(variantScope);
         setJavaCompilerTask(javacTask, tasks, variantScope);
-        getAndroidTasks().create(tasks, new AndroidJarTask.JarClassesConfigAction(variantScope));
         createPostCompilationTasks(tasks, variantScope);
     }
 

@@ -112,15 +112,4 @@ class MinifyTest {
                 jarFile, "com/android/tests/basic/MainTest.class", "stringProvider");
         assert Type.getType(stringProviderField.desc).className == "com.android.tests.basic.a"
     }
-
-    @Test
-    void 'Test classes.jar is present for non Jack enabled variants'() throws Exception {
-        project.execute("jarDebugClasses")
-
-        ZipFileSubject classes = assertThatZip(project.file(
-                "build/$AndroidProject.FD_INTERMEDIATES/packaged/debug/classes.jar"))
-
-        classes.contains("com/android/tests/basic/Main.class")
-        classes.doesNotContain("com/android/tests/basic/MainTest.class")
-    }
 }
