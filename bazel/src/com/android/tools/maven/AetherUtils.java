@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.List;
+import org.apache.maven.repository.internal.ArtifactDescriptorReaderDelegate;
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
@@ -72,6 +73,10 @@ public class AetherUtils {
                         session, new LocalRepository(localRepo.toFile())));
 
         session.setRepositoryListener(new ResolutionErrorRepositoryListener());
+
+        session.setConfigProperty(
+                ArtifactDescriptorReaderDelegate.class.getName(),
+                new HandleAarDescriptorReaderDelegate());
 
         return session;
     }

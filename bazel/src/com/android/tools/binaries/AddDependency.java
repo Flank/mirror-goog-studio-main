@@ -20,7 +20,6 @@ import com.android.tools.maven.AetherUtils;
 import com.android.tools.maven.MavenCoordinates;
 import com.android.tools.maven.MavenRepository;
 import com.android.tools.utils.WorkspaceUtils;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -31,7 +30,6 @@ import java.util.stream.Collectors;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.graph.Dependency;
-import org.eclipse.aether.graph.Exclusion;
 import org.eclipse.aether.resolution.ArtifactResult;
 import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.resolution.DependencyResolutionException;
@@ -45,14 +43,6 @@ import org.eclipse.aether.util.artifact.JavaScopes;
  * <p>It also creates {@code java_import} Bazel rules for newly created jars.
  */
 public class AddDependency {
-
-    /** Packages that are distributed with the SDK, we won't be able to find them in JCenter. */
-    static final ImmutableList<Exclusion> EXCLUSIONS =
-            ImmutableList.of(
-                    new Exclusion("com.android.support", "*", "*", "*"),
-                    new Exclusion("com.android.support.constraint", "*", "*", "*"),
-                    new Exclusion("com.android.support.test", "*", "*", "*"),
-                    new Exclusion("com.google.android.gms", "*", "*", "*"));
 
     public static void main(String[] argsArray) throws Exception {
         List<String> args = Lists.newArrayList(argsArray);
@@ -89,9 +79,6 @@ public class AddDependency {
                         .map(artifact -> new Dependency(artifact, JavaScopes.COMPILE))
                         .collect(Collectors.toList()));
         request.setRepositories(AetherUtils.REPOSITORIES);
-
-        mRepo.getRepositorySystemSession()
-                .setDependencySelector(AetherUtils.buildDependencySelector(EXCLUSIONS));
 
         DependencyResult result = mRepo.resolveDependencies(new DependencyRequest(request, null));
 
