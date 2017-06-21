@@ -2,6 +2,9 @@
 # This file is copied to //tools/bazel.rc from
 # //tools/base/bazel/toplevel.bazel.rc by repo init.
 
+# Required for remote caching using hazelcast REST protocol.
+startup --host_jvm_args=-Dbazel.DigestFunction=SHA1
+
 # Enforces UTF-8 encoding in bazel tests.
 test --test_env='LC_ALL=en_US.UTF-8'
 test --jvmopt='-Dsun.jnu.encoding=UTF-8'
