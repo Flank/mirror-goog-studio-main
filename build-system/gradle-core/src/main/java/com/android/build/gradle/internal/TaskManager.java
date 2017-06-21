@@ -36,7 +36,6 @@ import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutpu
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.JAVAC;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.MERGED_ASSETS;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.MOCKABLE_JAR;
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.PLATFORM_R_TXT;
 import static com.android.builder.core.BuilderConstants.CONNECTED;
 import static com.android.builder.core.BuilderConstants.DEVICE;
 import static com.android.builder.core.VariantType.ANDROID_TEST;
@@ -98,7 +97,6 @@ import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
 import com.android.build.gradle.internal.tasks.InstallVariantTask;
 import com.android.build.gradle.internal.tasks.LintCompile;
 import com.android.build.gradle.internal.tasks.MockableAndroidJarTask;
-import com.android.build.gradle.internal.tasks.PlatformAttrExtractorTask;
 import com.android.build.gradle.internal.tasks.SigningReportTask;
 import com.android.build.gradle.internal.tasks.SourceSetsTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
@@ -468,23 +466,12 @@ public abstract class TaskManager {
         }
     }
 
-    public void createMockableJarTask(@NonNull TaskFactory tasks) {
+    public void createMockableJarTask(TaskFactory tasks) {
         File mockableJar = globalScope.getMockableAndroidJarFile();
         createMockableJar = androidTasks
                 .create(tasks, new MockableAndroidJarTask.ConfigAction(globalScope, mockableJar));
 
         globalScope.addTaskOutput(MOCKABLE_JAR, mockableJar, createMockableJar.getName());
-    }
-
-    public void createAttrFromAndroidJarTask(@NonNull TaskFactory tasks) {
-        File platformRtxt = FileUtils.join(globalScope.getIntermediatesDir(), "attr", "R.txt");
-
-        AndroidTask<PlatformAttrExtractorTask> task =
-                androidTasks.create(
-                        tasks,
-                        new PlatformAttrExtractorTask.ConfigAction(globalScope, platformRtxt));
-
-        globalScope.addTaskOutput(PLATFORM_R_TXT, platformRtxt, task.getName());
     }
 
     protected void createDependencyStreams(
@@ -1767,7 +1754,6 @@ public abstract class TaskManager {
 
     public void createTopLevelTestTasks(final TaskFactory tasks, boolean hasFlavors) {
         createMockableJarTask(tasks);
-        createAttrFromAndroidJarTask(tasks);
 
         final List<String> reportTasks = Lists.newArrayListWithExpectedSize(2);
 

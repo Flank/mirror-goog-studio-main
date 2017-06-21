@@ -21,23 +21,9 @@ import static org.junit.Assert.fail;
 
 import com.android.utils.XmlUtils;
 import com.google.common.collect.ImmutableList;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 public class ResourceValuesXmlParserTest {
-
-    private SymbolTable platformAttrSymbols;
-
-    @Before
-    public void setup() {
-        platformAttrSymbols = SymbolTable.builder().tablePackage("android").build();
-    }
-
-    @After
-    public void tearDown() {
-        platformAttrSymbols = null;
-    }
 
     @Test
     public void parseAttr() throws Exception {
@@ -56,9 +42,7 @@ public class ResourceValuesXmlParserTest {
                         + "</resources>";
         SymbolTable table =
                 ResourceValuesXmlParser.parse(
-                        XmlUtils.parseDocument(xml, false),
-                        IdProvider.sequential(),
-                        platformAttrSymbols);
+                        XmlUtils.parseDocument(xml, false), IdProvider.sequential());
 
         // We should ignore all elements declared under "attr", except for "enum" which is turned
         // into an "id" Symbol.
@@ -84,9 +68,7 @@ public class ResourceValuesXmlParserTest {
                         + "</resources>";
         SymbolTable table =
                 ResourceValuesXmlParser.parse(
-                        XmlUtils.parseDocument(xml, false),
-                        IdProvider.sequential(),
-                        platformAttrSymbols);
+                        XmlUtils.parseDocument(xml, false), IdProvider.sequential());
 
         SymbolTable expected =
                 SymbolTable.builder()
@@ -107,9 +89,7 @@ public class ResourceValuesXmlParserTest {
                         + "</resources>";
         SymbolTable table =
                 ResourceValuesXmlParser.parse(
-                        XmlUtils.parseDocument(xml, false),
-                        IdProvider.sequential(),
-                        platformAttrSymbols);
+                        XmlUtils.parseDocument(xml, false), IdProvider.sequential());
 
         SymbolTable expected =
                 SymbolTable.builder()
@@ -142,9 +122,7 @@ public class ResourceValuesXmlParserTest {
                         + "</resources>";
         SymbolTable table =
                 ResourceValuesXmlParser.parse(
-                        XmlUtils.parseDocument(xml, false),
-                        IdProvider.sequential(),
-                        platformAttrSymbols);
+                        XmlUtils.parseDocument(xml, false), IdProvider.sequential());
 
         SymbolTable expected =
                 SymbolTable.builder()
@@ -174,42 +152,6 @@ public class ResourceValuesXmlParserTest {
     }
 
     @Test
-    public void parseStyleableWithAndroidAttr() throws Exception {
-        SymbolTable androidSymbols =
-                SymbolTable.builder()
-                        .add(SymbolTestUtils.createSymbol("attr", "foo", "int", 0x10_04_0001))
-                        .tablePackage("android")
-                        .build();
-
-        String xml =
-                ""
-                        + "<resources>"
-                        + "<declare-styleable name=\"oneattr\">"
-                        + "  <attr name=\"android:foo\" />"
-                        + "</declare-styleable>"
-                        + "</resources>";
-        SymbolTable table =
-                ResourceValuesXmlParser.parse(
-                        XmlUtils.parseDocument(xml, false),
-                        IdProvider.sequential(),
-                        androidSymbols);
-
-        SymbolTable expected =
-                SymbolTable.builder()
-                        .add(
-                                SymbolTestUtils.createSymbol(
-                                        "styleable",
-                                        "oneattr",
-                                        "int[]",
-                                        "{ 0x10040001 }",
-                                        ImmutableList.of("android:foo")))
-                        .build();
-
-        assertThat(table).isEqualTo(expected);
-    }
-
-
-    @Test
     public void parseDimen() throws Exception {
         String xml =
                 ""
@@ -220,9 +162,7 @@ public class ResourceValuesXmlParserTest {
                         + "</resources>";
         SymbolTable table =
                 ResourceValuesXmlParser.parse(
-                        XmlUtils.parseDocument(xml, false),
-                        IdProvider.sequential(),
-                        platformAttrSymbols);
+                        XmlUtils.parseDocument(xml, false), IdProvider.sequential());
 
         SymbolTable expected =
                 SymbolTable.builder()
@@ -239,9 +179,7 @@ public class ResourceValuesXmlParserTest {
         String xml = "<resources>" + "<drawable name=\"foo\">#0cffffff</drawable>" + "</resources>";
         SymbolTable table =
                 ResourceValuesXmlParser.parse(
-                        XmlUtils.parseDocument(xml, false),
-                        IdProvider.sequential(),
-                        platformAttrSymbols);
+                        XmlUtils.parseDocument(xml, false), IdProvider.sequential());
 
         SymbolTable expected =
                 SymbolTable.builder()
@@ -256,9 +194,7 @@ public class ResourceValuesXmlParserTest {
         String xml = "<resources>" + "<item name=\"foo\" type=\"id\"/>" + "</resources>";
         SymbolTable table =
                 ResourceValuesXmlParser.parse(
-                        XmlUtils.parseDocument(xml, false),
-                        IdProvider.sequential(),
-                        platformAttrSymbols);
+                        XmlUtils.parseDocument(xml, false), IdProvider.sequential());
 
         SymbolTable expected =
                 SymbolTable.builder()
@@ -273,9 +209,7 @@ public class ResourceValuesXmlParserTest {
         String xml = "<resources>" + "<integer name=\"a\">10</integer>" + "</resources>";
         SymbolTable table =
                 ResourceValuesXmlParser.parse(
-                        XmlUtils.parseDocument(xml, false),
-                        IdProvider.sequential(),
-                        platformAttrSymbols);
+                        XmlUtils.parseDocument(xml, false), IdProvider.sequential());
 
         SymbolTable expected =
                 SymbolTable.builder()
@@ -297,9 +231,7 @@ public class ResourceValuesXmlParserTest {
                         + "</resources>";
         SymbolTable table =
                 ResourceValuesXmlParser.parse(
-                        XmlUtils.parseDocument(xml, false),
-                        IdProvider.sequential(),
-                        platformAttrSymbols);
+                        XmlUtils.parseDocument(xml, false), IdProvider.sequential());
 
         SymbolTable expected =
                 SymbolTable.builder()
@@ -322,9 +254,7 @@ public class ResourceValuesXmlParserTest {
                         + "</resources>";
         SymbolTable table =
                 ResourceValuesXmlParser.parse(
-                        XmlUtils.parseDocument(xml, false),
-                        IdProvider.sequential(),
-                        platformAttrSymbols);
+                        XmlUtils.parseDocument(xml, false), IdProvider.sequential());
 
         SymbolTable expected =
                 SymbolTable.builder()
@@ -339,9 +269,7 @@ public class ResourceValuesXmlParserTest {
         String xml = "<resources>" + "<string name=\"a\">b</string>" + "</resources>";
         SymbolTable table =
                 ResourceValuesXmlParser.parse(
-                        XmlUtils.parseDocument(xml, false),
-                        IdProvider.sequential(),
-                        platformAttrSymbols);
+                        XmlUtils.parseDocument(xml, false), IdProvider.sequential());
 
         SymbolTable expected =
                 SymbolTable.builder()
@@ -363,9 +291,7 @@ public class ResourceValuesXmlParserTest {
                         + "</resources>";
         SymbolTable table =
                 ResourceValuesXmlParser.parse(
-                        XmlUtils.parseDocument(xml, false),
-                        IdProvider.sequential(),
-                        platformAttrSymbols);
+                        XmlUtils.parseDocument(xml, false), IdProvider.sequential());
 
         SymbolTable expected =
                 SymbolTable.builder()
@@ -387,9 +313,7 @@ public class ResourceValuesXmlParserTest {
                         + "</resources>";
         SymbolTable table =
                 ResourceValuesXmlParser.parse(
-                        XmlUtils.parseDocument(xml, false),
-                        IdProvider.sequential(),
-                        platformAttrSymbols);
+                        XmlUtils.parseDocument(xml, false), IdProvider.sequential());
 
         SymbolTable expected =
                 SymbolTable.builder()
@@ -418,9 +342,7 @@ public class ResourceValuesXmlParserTest {
                         + "</resources>";
         SymbolTable table =
                 ResourceValuesXmlParser.parse(
-                        XmlUtils.parseDocument(xml, false),
-                        IdProvider.sequential(),
-                        platformAttrSymbols);
+                        XmlUtils.parseDocument(xml, false), IdProvider.sequential());
 
         SymbolTable expected =
                 SymbolTable.builder()
@@ -461,14 +383,10 @@ public class ResourceValuesXmlParserTest {
 
         SymbolTable itemTable =
                 ResourceValuesXmlParser.parse(
-                        XmlUtils.parseDocument(itemXml, false),
-                        IdProvider.sequential(),
-                        platformAttrSymbols);
+                        XmlUtils.parseDocument(itemXml, false), IdProvider.sequential());
         SymbolTable noItemTable =
                 ResourceValuesXmlParser.parse(
-                        XmlUtils.parseDocument(noItemXml, false),
-                        IdProvider.sequential(),
-                        platformAttrSymbols);
+                        XmlUtils.parseDocument(noItemXml, false), IdProvider.sequential());
 
         SymbolTable expected =
                 SymbolTable.builder()
@@ -505,9 +423,7 @@ public class ResourceValuesXmlParserTest {
 
         try {
             ResourceValuesXmlParser.parse(
-                    XmlUtils.parseDocument(xml, false),
-                    IdProvider.sequential(),
-                    platformAttrSymbols);
+                    XmlUtils.parseDocument(xml, false), IdProvider.sequential());
             fail();
         } catch (ResourceValuesXmlParseException e) {
             // expected
@@ -524,9 +440,7 @@ public class ResourceValuesXmlParserTest {
 
         try {
             ResourceValuesXmlParser.parse(
-                    XmlUtils.parseDocument(xml, false),
-                    IdProvider.sequential(),
-                    platformAttrSymbols);
+                    XmlUtils.parseDocument(xml, false), IdProvider.sequential());
             fail();
         } catch (ResourceValuesXmlParseException e) {
             // expected
@@ -560,9 +474,7 @@ public class ResourceValuesXmlParserTest {
 
         SymbolTable actual =
                 ResourceValuesXmlParser.parse(
-                        XmlUtils.parseDocument(xml, false),
-                        IdProvider.sequential(),
-                        platformAttrSymbols);
+                        XmlUtils.parseDocument(xml, false), IdProvider.sequential());
 
         SymbolTable expected =
                 SymbolTable.builder()
@@ -623,9 +535,7 @@ public class ResourceValuesXmlParserTest {
                         + "</resources>";
         SymbolTable table =
                 ResourceValuesXmlParser.parse(
-                        XmlUtils.parseDocument(xml, false),
-                        IdProvider.sequential(),
-                        platformAttrSymbols);
+                        XmlUtils.parseDocument(xml, false), IdProvider.sequential());
 
         // We should ignore all elements declared under "attr", except for "enum" which is turned
         // into an "id" Symbol.

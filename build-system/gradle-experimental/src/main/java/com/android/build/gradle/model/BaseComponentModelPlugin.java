@@ -759,8 +759,10 @@ public class BaseComponentModelPlugin implements Plugin<Project>, ToolingRegistr
             });
         }
 
-        /** Create tasks that must be created after other tasks for variants are created. */
-        @Defaults
+        /**
+         * Create tasks that must be created after other tasks for variants are created.
+         */
+        @Mutate
         public static void createRemainingTasks(
                 ModelMap<Task> tasks,
                 TaskManager taskManager,

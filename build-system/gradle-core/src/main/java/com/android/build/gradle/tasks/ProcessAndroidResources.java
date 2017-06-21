@@ -63,7 +63,6 @@ import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.builder.internal.aapt.AaptPackageConfig.LibraryInfo;
 import com.android.builder.symbols.IdProvider;
 import com.android.builder.symbols.ResourceDirectoryParser;
-import com.android.builder.symbols.SymbolIo;
 import com.android.builder.symbols.SymbolTable;
 import com.android.builder.symbols.SymbolUtils;
 import com.android.ide.common.blame.MergingLog;
@@ -208,8 +207,6 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     private boolean bypassAapt;
     private boolean disableResMergeInLib;
-
-    private FileCollection platformAttrRTxt;
 
     private boolean enableAapt2;
 
@@ -466,20 +463,11 @@ public class ProcessAndroidResources extends IncrementalTask {
             // If the new resources flag is enabled and if we are dealing with a library process
             // resources through the new parsers
             if (bypassAapt) {
-                // Load the platform attr symbols
-                File androidJar = platformAttrRTxt.getSingleFile();
-                SymbolTable androidAttrSymbol =
-                        (androidJar != null && androidJar.exists())
-                                ? SymbolIo.read(androidJar, "android")
-                                : SymbolTable.builder().tablePackage("android").build();
 
                 // Get symbol table of resources of the library
-                // FIXME: move to the package res task.
                 SymbolTable symbolTable =
                         ResourceDirectoryParser.parseDirectory(
-                                getInputResourcesDir().getSingleFile(),
-                                IdProvider.sequential(),
-                                androidAttrSymbol);
+                                getInputResourcesDir().getSingleFile(), IdProvider.sequential());
 
                 SymbolUtils.processLibraryMainSymbolTable(
                         symbolTable,
@@ -490,7 +478,6 @@ public class ProcessAndroidResources extends IncrementalTask {
                         Preconditions.checkNotNull(symbolOutputDir),
                         proguardOutputFile,
                         getInputResourcesDir().getSingleFile(),
-                        androidAttrSymbol,
                         disableResMergeInLib);
             } else {
                 Aapt aapt =
@@ -748,10 +735,6 @@ public class ProcessAndroidResources extends IncrementalTask {
                 processResources.bypassAapt = true;
                 processResources.disableResMergeInLib =
                         sourceTaskOutputType == TaskManager.MergeType.PACKAGE;
-                processResources.platformAttrRTxt =
-                        variantScope
-                                .getGlobalScope()
-                                .getOutput(TaskOutputHolder.TaskOutputType.PLATFORM_R_TXT);
             } else {
                 Preconditions.checkState(
                         sourceTaskOutputType == TaskManager.MergeType.MERGE,
@@ -1097,13 +1080,6 @@ public class ProcessAndroidResources extends IncrementalTask {
     @Input
     public boolean isDisableResMergeInLib() {
         return disableResMergeInLib;
-    }
-
-    @InputFiles
-    @PathSensitive(PathSensitivity.NAME_ONLY)
-    @Optional
-    FileCollection getPlatformAttrRTxt() {
-        return platformAttrRTxt;
     }
 
     @Input

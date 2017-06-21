@@ -54,8 +54,6 @@ public interface TaskOutputHolder {
         FULL_JAR,
 
         // --- android res ---
-        // R.TXT with platform attr values
-        PLATFORM_R_TXT,
         // output of the resource merger ready for aapt.
         MERGED_RES,
         // compiled resources (output of aapt)
