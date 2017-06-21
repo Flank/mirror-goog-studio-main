@@ -16,6 +16,8 @@
 
 package com.android.ide.common.rendering.api;
 
+import com.google.common.base.MoreObjects;
+
 /**
  * Scene result class. This is an immutable class.
  * <p>
@@ -185,5 +187,15 @@ public class Result {
      */
     public Object getData() {
         return mData;
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("status", mStatus)
+                .add("errorMessage", mErrorMessage)
+                .add("throwable", mThrowable)
+                .add("data", mData)
+                .toString();
     }
 }
