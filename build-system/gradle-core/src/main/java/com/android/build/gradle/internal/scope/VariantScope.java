@@ -349,7 +349,7 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     File getBaseBundleDir();
 
     @NonNull
-    File getOutputBundleFile();
+    File getAarLocation();
 
     @NonNull
     File getAnnotationProcessorOutputDir();

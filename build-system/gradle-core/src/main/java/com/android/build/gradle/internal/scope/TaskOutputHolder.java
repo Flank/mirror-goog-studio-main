@@ -177,14 +177,15 @@ public interface TaskOutputHolder {
      * be called outside of {@link TaskConfigAction}
      *
      * @param outputType the type of the output
-     * @param file the output file
+     * @param file the output file, accepts any type accepted by {@link
+     *     org.gradle.api.Project#files}
      * @param taskName the name of the task that generates the output file.
      * @return the {@link ConfigurableFileCollection} that contains both the file and the task
      *     dependency.
      * @throws TaskOutputAlreadyRegisteredException if the type was already registered.
      */
     ConfigurableFileCollection addTaskOutput(
-            @NonNull TaskOutputType outputType, @NonNull File file, @Nullable String taskName)
+            @NonNull TaskOutputType outputType, @NonNull Object file, @Nullable String taskName)
             throws TaskOutputAlreadyRegisteredException;
 
     /**

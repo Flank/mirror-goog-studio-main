@@ -54,7 +54,7 @@ public abstract class TaskOutputHolderImpl implements TaskOutputHolder {
 
     @Override
     public ConfigurableFileCollection addTaskOutput(
-            @NonNull TaskOutputType outputType, @NonNull File file, @Nullable String taskName)
+            @NonNull TaskOutputType outputType, @NonNull Object file, @Nullable String taskName)
             throws TaskOutputAlreadyRegisteredException {
         if (outputMap.containsKey(outputType)) {
             throw new TaskOutputAlreadyRegisteredException(outputType);
@@ -109,7 +109,7 @@ public abstract class TaskOutputHolderImpl implements TaskOutputHolder {
 
     @NonNull
     protected ConfigurableFileCollection createCollection(
-            @NonNull File file, @Nullable String taskName) {
+            @NonNull Object file, @Nullable String taskName) {
         final ConfigurableFileCollection collection = getProject().files(file);
         if (taskName != null) {
             collection.builtBy(taskName);

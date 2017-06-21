@@ -35,18 +35,8 @@ import org.gradle.api.Task;
  */
 public class ApkVariantOutputImpl extends BaseVariantOutputImpl implements ApkVariantOutput {
 
-    private final ApkData apkData;
-
     public ApkVariantOutputImpl(@NonNull ApkData apkData, @NonNull TaskContainer taskContainer) {
-
-        super(taskContainer);
-        this.apkData = apkData;
-    }
-
-    @Override
-    @NonNull
-    protected ApkData getApkData() {
-        return apkData;
+        super(apkData, taskContainer);
     }
 
     @Nullable
@@ -101,16 +91,6 @@ public class ApkVariantOutputImpl extends BaseVariantOutputImpl implements ApkVa
     @Override
     public String getFilter(VariantOutput.FilterType filterType) {
         return apkData.getFilter(filterType);
-    }
-
-    @Override
-    public String getOutputFileName() {
-        return apkData.getOutputFileName();
-    }
-
-    @Override
-    public void setOutputFileName(String outputFileName) {
-        apkData.setOutputFileName(outputFileName);
     }
 
     @Override

@@ -40,8 +40,11 @@ import org.gradle.api.Task;
 public abstract class BaseVariantOutputImpl implements BaseVariantOutput {
 
     @NonNull protected final TaskContainer taskContainer;
+    protected final ApkData apkData;
 
-    protected BaseVariantOutputImpl(@NonNull TaskContainer taskContainer) {
+    protected BaseVariantOutputImpl(
+            @NonNull ApkData apkData, @NonNull TaskContainer taskContainer) {
+        this.apkData = apkData;
         this.taskContainer = taskContainer;
     }
 
@@ -52,7 +55,9 @@ public abstract class BaseVariantOutputImpl implements BaseVariantOutput {
     }
 
     @NonNull
-    protected abstract ApkData getApkData();
+    protected ApkData getApkData() {
+        return apkData;
+    }
 
     @NonNull
     @Override
@@ -123,5 +128,13 @@ public abstract class BaseVariantOutputImpl implements BaseVariantOutput {
     @Nullable
     public String getFilter(String filterType) {
         return getApkData().getFilter(filterType);
+    }
+
+    public String getOutputFileName() {
+        return apkData.getOutputFileName();
+    }
+
+    public void setOutputFileName(String outputFileName) {
+        apkData.setOutputFileName(outputFileName);
     }
 }
