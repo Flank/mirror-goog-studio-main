@@ -24,11 +24,14 @@ import static com.android.SdkConstants.CLASS_VIEW;
 import static com.android.SdkConstants.INT_DEF_ANNOTATION;
 import static com.android.SdkConstants.STRING_DEF_ANNOTATION;
 import static com.android.SdkConstants.SUPPORT_ANNOTATIONS_PREFIX;
+import static com.android.SdkConstants.TAG_APPLICATION;
 import static com.android.SdkConstants.TAG_PERMISSION;
+import static com.android.SdkConstants.TAG_USES_LIBRARY;
 import static com.android.SdkConstants.TAG_USES_PERMISSION;
 import static com.android.SdkConstants.TAG_USES_PERMISSION_SDK_23;
 import static com.android.SdkConstants.TAG_USES_PERMISSION_SDK_M;
 import static com.android.SdkConstants.TYPE_DEF_FLAG_ATTRIBUTE;
+import static com.android.SdkConstants.VALUE_FALSE;
 import static com.android.resources.ResourceType.COLOR;
 import static com.android.resources.ResourceType.DIMEN;
 import static com.android.resources.ResourceType.DRAWABLE;
@@ -85,6 +88,7 @@ import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.UElementHandler;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ConstantEvaluator;
+import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.ExternalReferenceExpression;
@@ -98,7 +102,9 @@ import com.android.tools.lint.detector.api.ResourceEvaluator;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.UastLintUtils;
+import com.android.utils.XmlUtils;
 import com.android.utils.CharSequences;
+import com.android.xml.AndroidManifest;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -368,6 +374,8 @@ public class SupportAnnotationDetector extends Detector implements UastScanner {
     public static final String ATTR_OTHERWISE = "otherwise";
 
     public static final String SECURITY_EXCEPTION = "java.lang.SecurityException";
+
+    private static final String THINGS_LIBRARY = "com.google.android.things";
 
     /**
      * Constructs a new {@link SupportAnnotationDetector} check
@@ -707,9 +715,10 @@ public class SupportAnnotationDetector extends Detector implements UastScanner {
                         fix().data(requirement.getMissingPermissions(permissions),
                                 requirement.getLastApplicableApi()));
             }
-        } else if (requirement.isRevocable(permissions) &&
-                context.getMainProject().getTargetSdkVersion().getFeatureLevel() >= 23 &&
-                requirement.getLastApplicableApi() >= 23) {
+        } else if (requirement.isRevocable(permissions)
+                && context.getMainProject().getTargetSdkVersion().getFeatureLevel() >= 23
+                && requirement.getLastApplicableApi() >= 23
+                && !isAndroidThingsProject(context)) {
 
             boolean handlesMissingPermission = handlesSecurityException(node);
 
@@ -2560,6 +2569,47 @@ public class SupportAnnotationDetector extends Detector implements UastScanner {
 
         return result != null
                 ? result.toArray(PsiAnnotation.EMPTY_ARRAY) : PsiAnnotation.EMPTY_ARRAY;
+    }
+
+    private Boolean mIsAndroidThingsProject;
+
+    private boolean isAndroidThingsProject(@NonNull Context context) {
+        if (mIsAndroidThingsProject == null) {
+            Project project = context.getMainProject();
+            Document mergedManifest = project.getMergedManifest();
+            if (mergedManifest == null) {
+                return false;
+            }
+            Element manifest = mergedManifest.getDocumentElement();
+            if (manifest == null) {
+                return false;
+            }
+
+            Element application = XmlUtils.getFirstSubTagTagByName(manifest, TAG_APPLICATION);
+            if (application == null) {
+                return false;
+            }
+            Element usesLibrary = XmlUtils.getFirstSubTagTagByName(application, TAG_USES_LIBRARY);
+
+            while (usesLibrary != null && mIsAndroidThingsProject == null) {
+                String name = usesLibrary.getAttributeNS(ANDROID_URI, ATTR_NAME);
+                boolean isThingsLibraryRequired = true;
+                String required = usesLibrary.getAttributeNS(ANDROID_URI, AndroidManifest.ATTRIBUTE_REQUIRED);
+                if (VALUE_FALSE.equals(required)) {
+                    isThingsLibraryRequired = false;
+                }
+
+                if (THINGS_LIBRARY.equals(name) && isThingsLibraryRequired) {
+                    mIsAndroidThingsProject = true;
+                }
+
+                usesLibrary = XmlUtils.getNextTagByName(usesLibrary, TAG_USES_LIBRARY);
+            }
+            if (mIsAndroidThingsProject == null) {
+                mIsAndroidThingsProject = false;
+            }
+        }
+        return mIsAndroidThingsProject;
     }
 
     // ---- Implements UastScanner ----

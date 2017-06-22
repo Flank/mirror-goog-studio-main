@@ -22,6 +22,7 @@ import static com.android.SdkConstants.TAG_USES_PERMISSION_SDK_M;
 import static com.android.tools.lint.checks.AnnotationDetectorTest.SUPPORT_ANNOTATIONS_JAR_BASE64_GZIP;
 import static com.android.tools.lint.checks.SupportAnnotationDetector.PERMISSION_ANNOTATION;
 
+import com.android.annotations.Nullable;
 import com.android.tools.lint.ExternalAnnotationRepository;
 import com.android.tools.lint.ExternalAnnotationRepositoryTest;
 import com.android.tools.lint.checks.infrastructure.ProjectDescription;
@@ -1153,7 +1154,31 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
         return getManifestWithPermissions(1, targetSdk, permissions);
     }
 
+    private TestFile getThingsManifestWithPermissions(int targetSdk, @Nullable Boolean isRequired, String... permissions) {
+        StringBuilder applicationBlock = new StringBuilder();
+        applicationBlock.append("<uses-library android:name=\"com.google.android.things\"");
+        if (isRequired != null) {
+            applicationBlock.append(" android:required=");
+            if (isRequired) {
+                applicationBlock.append("\"true\"");
+            } else {
+                applicationBlock.append("\"false\"");
+            }
+        }
+        applicationBlock.append("/>\n");
+        return getManifestWithPermissions(
+                applicationBlock.toString(),
+                1,
+                targetSdk,
+                permissions);
+    }
+
     private TestFile getManifestWithPermissions(int minSdk, int targetSdk, String... permissions) {
+        return getManifestWithPermissions(null, minSdk, targetSdk, permissions);
+    }
+
+    private TestFile getManifestWithPermissions(
+            @Nullable String applicationBlock, int minSdk, int targetSdk, String... permissions) {
         StringBuilder permissionBlock = new StringBuilder();
         for (String permission : permissions) {
             permissionBlock.append("    <uses-permission android:name=\"").append(permission)
@@ -1174,6 +1199,7 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                 + "    <application\n"
                 + "        android:icon=\"@drawable/ic_launcher\"\n"
                 + "        android:label=\"@string/app_name\" >\n"
+                + (applicationBlock != null ? applicationBlock : "")
                 + "    </application>\n"
                 + "\n"
                 + "</manifest>");
@@ -1460,6 +1486,48 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                         mSupportClasspath,
                         mSupportJar
                 ));
+    }
+
+    public void testMissingManifestLevelPermissionsWithAndroidThings() throws Exception {
+        assertEquals(
+                ""
+                        + "src/test/pkg/PermissionTest.java:7: Error: Missing permissions required by LocationManager.myMethod: android.permission.ACCESS_FINE_LOCATION or android.permission.ACCESS_COARSE_LOCATION [MissingPermission]\n"
+                        + "        LocationManager.Location location = locationManager.myMethod(provider);\n"
+                        + "                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "1 errors, 0 warnings\n",
+                lintProject(
+                        getThingsManifestWithPermissions(24, null),
+                        mPermissionTest,
+                        mLocationManagerStub,
+                        mSupportClasspath,
+                        mSupportJar));
+    }
+
+    public void testHasManifestLevelPermissionsWithAndroidThings() throws Exception {
+        assertEquals(
+                "No warnings.",
+                lintProject(
+                        getThingsManifestWithPermissions(
+                                24, null, "android.permission.ACCESS_FINE_LOCATION"),
+                        mPermissionTest,
+                        mLocationManagerStub,
+                        mSupportClasspath,
+                        mSupportJar));
+    }
+
+    public void testMissingRuntimePermissionsWithOptionalAndroidThings() throws Exception {
+        assertEquals(
+                ""
+                        + "src/test/pkg/PermissionTest.java:7: Error: Call requires permission which may be rejected by user: code should explicitly check to see if permission is available (with checkPermission) or explicitly handle a potential SecurityException [MissingPermission]\n"
+                        + "        LocationManager.Location location = locationManager.myMethod(provider);\n"
+                        + "                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                        + "1 errors, 0 warnings\n",
+                lintProject(
+                        getThingsManifestWithPermissions(24, false, "android.permission.ACCESS_FINE_LOCATION"),
+                        mPermissionTest,
+                        mLocationManagerStub,
+                        mSupportClasspath,
+                        mSupportJar));
     }
 
     public void testThreading() throws Exception {
