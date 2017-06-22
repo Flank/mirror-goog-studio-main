@@ -28,6 +28,7 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -107,6 +108,7 @@ public class InjectedAbiAndDensitySplitTest {
 
     /** All splits are built if only density is present. */
     @Test
+    @Ignore("b/62895971")
     public void checkOnlyDensity() throws Exception {
         sProject.executor()
                 .with(StringOption.IDE_BUILD_TARGET_DENSITY, "ldpi")
