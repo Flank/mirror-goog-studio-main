@@ -1,3 +1,5 @@
+load("//tools/base/bazel:android.bzl", "ANDROID_COPTS")
+
 package(default_visibility = ["//visibility:public"])
 
 cc_library(
@@ -17,7 +19,7 @@ cc_library(
         "memory_profiler_component.h",
         "memory_service.h",
     ],
-    copts = [
+    copts = ANDROID_COPTS + [
         "-Itools/base/profiler/native",
         "-I$(GENDIR)/tools/base/profiler",
     ],

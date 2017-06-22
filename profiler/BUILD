@@ -1,4 +1,5 @@
 load("//tools/base/bazel:bazel.bzl", "java_jarjar")
+load("//tools/base/bazel:android.bzl", "multi_cpu_zip")
 
 # Studio cannot handle proto3, so we jarjar our proto library together with grpc
 # on a renamed namespace.
@@ -38,5 +39,13 @@ java_library(
         "//prebuilts/tools/common/m2/repository/io/netty/netty-handler/4.1.6.Final:jar",
         "//prebuilts/tools/common/m2/repository/io/netty/netty-resolver/4.1.6.Final:jar",
         "//prebuilts/tools/common/m2/repository/io/netty/netty-transport/4.1.6.Final:jar",
+    ],
+)
+
+multi_cpu_zip(
+    name = "multi",
+    deps = [
+        "//tools/base/profiler/native/perfa:libperfa.so",
+        "//tools/base/profiler/native/perfd",
     ],
 )

@@ -102,3 +102,7 @@ bind(
     name = "grpc++_unsecure",
     actual = "@grpc_repo//:grpc++_unsecure",
 )
+
+android_ndk_repository(
+    name = "androidndk",
+)

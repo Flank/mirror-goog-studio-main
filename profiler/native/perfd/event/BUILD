@@ -1,3 +1,5 @@
+load("//tools/base/bazel:android.bzl", "ANDROID_COPTS")
+
 package(default_visibility = ["//visibility:public"])
 
 cc_library(
@@ -13,7 +15,7 @@ cc_library(
         "event_service.h",
         "internal_event_service.h",
     ],
-    copts = [
+    copts = ANDROID_COPTS + [
         "-Itools/base/profiler/native",
         "-Itools/base/profiler/native/perfd",
         "-I$(GENDIR)/tools/base/profiler",

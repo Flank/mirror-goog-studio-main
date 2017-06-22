@@ -1,3 +1,5 @@
+load("//tools/base/bazel:android.bzl", "ANDROID_COPTS", "ANDROID_LINKOPTS")
+
 cc_binary(
     name = "libperfa.so",
     srcs = [
@@ -9,10 +11,11 @@ cc_binary(
         "perfa.cc",
         "scoped_local_ref.h",
     ],
-    copts = [
+    copts = ANDROID_COPTS + [
         "-Itools/base/profiler/native",
         "-I$(GENDIR)/tools/base/profiler",
     ],
+    linkopts = ANDROID_LINKOPTS,
     linkshared = 1,
     visibility = ["//visibility:public"],
     deps = [

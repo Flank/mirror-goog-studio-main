@@ -278,9 +278,31 @@ java_binary(
 
 config_setting(
     name = "darwin",
-    values = {
-        "cpu": "darwin",
-    },
+    values = {"cpu": "darwin"},
+    visibility = ["//visibility:public"],
+)
+
+config_setting(
+    name = "android_cpu_x86",
+    values = {"android_cpu": "x86"},
+    visibility = ["//visibility:public"],
+)
+
+config_setting(
+    name = "android_cpu_x86_64",
+    values = {"android_cpu": "x86_64"},
+    visibility = ["//visibility:public"],
+)
+
+config_setting(
+    name = "android_cpu_arm",
+    values = {"android_cpu": "armeabi-v7a"},
+    visibility = ["//visibility:public"],
+)
+
+config_setting(
+    name = "android_cpu_arm_64",
+    values = {"android_cpu": "arm64-v8a"},
     visibility = ["//visibility:public"],
 )
 

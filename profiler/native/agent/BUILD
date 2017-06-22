@@ -1,3 +1,5 @@
+load("//tools/base/bazel:android.bzl", "ANDROID_COPTS")
+
 cc_binary(
     name = "libsupportjni.so",
     linkshared = 1,
@@ -25,7 +27,7 @@ cc_library(
         "support/memory_stats_logger.cc",
         "support/memory_stats_logger.h",
     ],
-    copts = [
+    copts = ANDROID_COPTS + [
         "-Itools/base/profiler/native",
         "-I$(GENDIR)/tools/base/profiler",
     ],
