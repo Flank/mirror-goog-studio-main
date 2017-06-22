@@ -30,6 +30,12 @@ public interface AdbCommand<T> {
     /** Prefix for all queries to the host adb server. */
     String HOST_COMMAND_PREFIX = "host:";
 
+    /** Prefix for all queries to a particular device. */
+    String DEVICE_COMMAND_PREFIX = "host-serial:";
+
+    /** Delimiter used between various sections of a command to adb server. */
+    String ADB_COMMAND_DELIMITER = ":";
+
     /** Returns a short name for this command. */
     @NonNull
     String getName();
