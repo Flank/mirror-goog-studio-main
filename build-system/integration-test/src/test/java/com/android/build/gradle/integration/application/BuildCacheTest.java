@@ -72,6 +72,7 @@ public class BuildCacheTest {
         List<File> cachedEntryDirs =
                 Arrays.stream(buildCacheDir.listFiles())
                         .filter(File::isDirectory) // Remove the lock files
+                        .filter(f -> !containsAapt(f)) // Remove aapt2 cache
                         .collect(Collectors.toList());
 
         assertThat(preDexContent).hasSize(2);
@@ -104,6 +105,7 @@ public class BuildCacheTest {
         cachedEntryDirs =
                 Arrays.stream(buildCacheDir.listFiles())
                         .filter(File::isDirectory) // Remove the lock files
+                        .filter(f -> !containsAapt(f)) // Remove aapt2 cache
                         .collect(Collectors.toList());
         assertThat(cachedEntryDirs).hasSize(1);
 
@@ -137,5 +139,12 @@ public class BuildCacheTest {
                 .run("clean", "assembleDebug");
 
         assertThat(buildCacheDir).doesNotExist();
+    }
+
+    private boolean containsAapt(File dir) {
+        if (dir.isFile()) {
+            return dir.getName().contains("libaapt2_jni");
+        }
+        return Arrays.stream(dir.listFiles()).anyMatch(f -> containsAapt(f));
     }
 }
