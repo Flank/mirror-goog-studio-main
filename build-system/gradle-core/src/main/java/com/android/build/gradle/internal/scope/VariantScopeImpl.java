@@ -198,6 +198,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     private final List<NativeBuildConfigValue> externalNativeBuildConfigValues =
             Lists.newArrayList();
 
+    @Nullable private CodeShrinker defaultCodeShrinker;
+
     /**
      * This is an instance of {@link JacocoReportTask} in android test variants, an umbrella
      * {@link Task} in app and lib variants and null in unit test variants.
@@ -210,6 +212,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     private ConfigurableFileCollection desugarTryWithResourcesRuntimeJar;
     private AndroidTask<DataBindingExportBuildInfoTask> dataBindingExportBuildInfoTask;
+
 
     public VariantScopeImpl(
             @NonNull GlobalScope globalScope,
@@ -484,9 +487,10 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
             }
         } else {
-            CodeShrinker chosenShrinker =
-                    MoreObjects.firstNonNull(
-                            postprocessingOptions.getCodeShrinkerEnum(), getDefaultCodeShrinker());
+            CodeShrinker chosenShrinker = postprocessingOptions.getCodeShrinkerEnum();
+            if (chosenShrinker == null) {
+                chosenShrinker = getDefaultCodeShrinker();
+            }
 
             switch (chosenShrinker) {
                 case PROGUARD:
@@ -577,7 +581,22 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @NonNull
     private CodeShrinker getDefaultCodeShrinker() {
-        return getInstantRunBuildContext().isInInstantRunMode() ? ANDROID_GRADLE : PROGUARD;
+        if (defaultCodeShrinker == null) {
+            if (getInstantRunBuildContext().isInInstantRunMode()) {
+                String message = "Using the built-in class shrinker for an Instant Run build.";
+                PostprocessingFeatures postprocessingFeatures = getPostprocessingFeatures();
+                if (postprocessingFeatures == null || postprocessingFeatures.isObfuscate()) {
+                    message += " Build won't be obfuscated.";
+                }
+                LOGGER.warning(message);
+
+                defaultCodeShrinker = ANDROID_GRADLE;
+            } else {
+                defaultCodeShrinker = PROGUARD;
+            }
+        }
+
+        return defaultCodeShrinker;
     }
 
     /**
