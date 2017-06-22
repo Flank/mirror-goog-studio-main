@@ -16,6 +16,7 @@
 
 package com.android.tools.profiler.support.network.okhttp.reflection.okhttp3;
 
+import com.android.tools.profiler.support.network.okhttp.OkHttp3ClassLoader;
 import java.lang.reflect.InvocationTargetException;
 
 public class Request$ {
@@ -26,7 +27,7 @@ public class Request$ {
     }
 
     public static Class getTargetClass() throws ClassNotFoundException {
-        return Thread.currentThread().getContextClassLoader().loadClass("okhttp3.Request");
+        return OkHttp3ClassLoader.loadClass("okhttp3.Request");
     }
 
     public HttpUrl$ url()

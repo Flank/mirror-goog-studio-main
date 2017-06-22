@@ -16,6 +16,7 @@
 
 package com.android.tools.profiler.support.network.okhttp.reflection.okhttp2;
 
+import com.android.tools.profiler.support.network.okhttp.OkHttp2ClassLoader;
 import com.android.tools.profiler.support.network.okhttp.reflection.okio.BufferedSource$;
 import java.lang.reflect.InvocationTargetException;
 
@@ -27,9 +28,7 @@ public class ResponseBody$ {
     }
 
     public static Class getTargetClass() throws ClassNotFoundException {
-        return Thread.currentThread()
-                .getContextClassLoader()
-                .loadClass("com.squareup.okhttp.ResponseBody");
+        return OkHttp2ClassLoader.loadClass("com.squareup.okhttp.ResponseBody");
     }
 
     public static ResponseBody$ create(

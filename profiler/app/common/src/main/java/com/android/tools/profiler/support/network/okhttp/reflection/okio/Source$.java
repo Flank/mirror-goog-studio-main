@@ -16,6 +16,8 @@
 
 package com.android.tools.profiler.support.network.okhttp.reflection.okio;
 
+import com.android.tools.profiler.support.network.okhttp.OkioClassLoader;
+
 public class Source$ {
     public final Object obj;
 
@@ -24,6 +26,6 @@ public class Source$ {
     }
 
     public static Class getTargetClass() throws ClassNotFoundException {
-        return Thread.currentThread().getContextClassLoader().loadClass("okio.Source");
+        return OkioClassLoader.loadClass("okio.Source");
     }
 }

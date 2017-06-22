@@ -16,6 +16,7 @@
 
 package com.android.tools.profiler.support.network.okhttp.reflection.okhttp2;
 
+import com.android.tools.profiler.support.network.okhttp.OkHttp2ClassLoader;
 import java.lang.reflect.InvocationTargetException;
 
 public class Request$ {
@@ -26,9 +27,7 @@ public class Request$ {
     }
 
     public static Class getTargetClass() throws ClassNotFoundException {
-        return Thread.currentThread()
-                .getContextClassLoader()
-                .loadClass("com.squareup.okhttp.Request");
+        return OkHttp2ClassLoader.loadClass("com.squareup.okhttp.Request");
     }
 
     public String urlString()

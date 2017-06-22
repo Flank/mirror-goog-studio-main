@@ -16,6 +16,7 @@
 
 package com.android.tools.profiler.support.network.okhttp.reflection.okio;
 
+import com.android.tools.profiler.support.network.okhttp.OkioClassLoader;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 
@@ -27,7 +28,7 @@ public class BufferedSource$ {
     }
 
     public static Class getTargetClass() throws ClassNotFoundException {
-        return Thread.currentThread().getContextClassLoader().loadClass("okio.BufferedSource");
+        return OkioClassLoader.loadClass("okio.BufferedSource");
     }
 
     public InputStream inputStream()

@@ -36,11 +36,7 @@ public final class OkHttp2Interceptor implements InvocationHandler {
     private static final String OKHTTP2_PACKAGE = "com.squareup.okhttp.";
 
     public static Interceptor$ create() throws ClassNotFoundException {
-        Class<?> interceptorClass =
-                Class.forName(
-                        OKHTTP2_PACKAGE + "Interceptor",
-                        false,
-                        Thread.currentThread().getContextClassLoader());
+        Class<?> interceptorClass = OkHttp2ClassLoader.loadClass(OKHTTP2_PACKAGE + "Interceptor");
         return new Interceptor$(
                 Proxy.newProxyInstance(
                         interceptorClass.getClassLoader(),

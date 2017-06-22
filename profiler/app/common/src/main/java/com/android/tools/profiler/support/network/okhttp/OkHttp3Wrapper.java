@@ -31,6 +31,7 @@ public final class OkHttp3Wrapper {
      */
     public static void addInterceptorToBuilder(Object builder) {
         try {
+            OkHttp3ClassLoader.setClassLoader(builder.getClass().getClassLoader());
             new OkHttpClient$.Builder$(builder).addNetworkInterceptor(OkHttp3Interceptor.create());
         } catch (Exception ex) {
             StudioLog.e(
@@ -49,6 +50,7 @@ public final class OkHttp3Wrapper {
     public static List insertInterceptor(List interceptors) {
         ArrayList list = new ArrayList(interceptors);
         try {
+            // TODO: Find a way to solidate okhttp class loader.
             list.add(0, OkHttp3Interceptor.create().obj);
         } catch (ClassNotFoundException ex) {
             StudioLog.e("Could not insert an OkHttp3 profiler interceptor", ex);

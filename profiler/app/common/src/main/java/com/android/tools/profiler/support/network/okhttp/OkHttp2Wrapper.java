@@ -31,6 +31,7 @@ public final class OkHttp2Wrapper {
     @SuppressWarnings("unchecked")
     public static void addInterceptorToClient(Object client) {
         try {
+            OkHttp2ClassLoader.setClassLoader(client.getClass().getClassLoader());
             new OkHttpClient$(client).networkInterceptors().add(OkHttp2Interceptor.create().obj);
         } catch (Exception ex) {
             StudioLog.e(
@@ -49,6 +50,7 @@ public final class OkHttp2Wrapper {
     public static List insertInterceptor(List interceptors) {
         ArrayList list = new ArrayList(interceptors);
         try {
+            // TODO: Find a way to solidate okhttp class loader.
             list.add(0, OkHttp2Interceptor.create().obj);
         } catch (ClassNotFoundException ex) {
             StudioLog.e("Could not insert an OkHttp2 profiler interceptor", ex);

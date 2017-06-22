@@ -36,11 +36,7 @@ public final class OkHttp3Interceptor implements InvocationHandler {
     private static final String OKHTTP3_PACKAGE = "okhttp3.";
 
     public static Interceptor$ create() throws ClassNotFoundException {
-        Class<?> interceptorClass =
-                Class.forName(
-                        OKHTTP3_PACKAGE + "Interceptor",
-                        false,
-                        Thread.currentThread().getContextClassLoader());
+        Class<?> interceptorClass = OkHttp3ClassLoader.loadClass(OKHTTP3_PACKAGE + "Interceptor");
         return new Interceptor$(
                 Proxy.newProxyInstance(
                         interceptorClass.getClassLoader(),

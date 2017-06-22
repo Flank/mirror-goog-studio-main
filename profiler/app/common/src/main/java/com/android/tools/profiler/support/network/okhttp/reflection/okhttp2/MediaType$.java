@@ -16,6 +16,8 @@
 
 package com.android.tools.profiler.support.network.okhttp.reflection.okhttp2;
 
+import com.android.tools.profiler.support.network.okhttp.OkHttp2ClassLoader;
+
 public class MediaType$ {
     public final Object obj;
 
@@ -24,8 +26,6 @@ public class MediaType$ {
     }
 
     public static Class getTargetClass() throws ClassNotFoundException {
-        return Thread.currentThread()
-                .getContextClassLoader()
-                .loadClass("com.squareup.okhttp.MediaType");
+        return OkHttp2ClassLoader.loadClass("com.squareup.okhttp.MediaType");
     }
 }

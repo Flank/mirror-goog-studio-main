@@ -14,18 +14,13 @@
  * limitations under the License.
  */
 
-package com.android.tools.profiler.support.network.okhttp.reflection.okhttp3;
+package com.android.tools.profiler.support.network.okhttp;
 
-import com.android.tools.profiler.support.network.okhttp.OkHttp3ClassLoader;
+/** Singleton used to load all Okio classes. */
+public class OkioClassLoader {
+    private static ClassLoader myClassLoader = Thread.currentThread().getContextClassLoader();
 
-public class MediaType$ {
-    public final Object obj;
-
-    public MediaType$(Object mediaType) {
-        this.obj = mediaType;
-    }
-
-    public static Class getTargetClass() throws ClassNotFoundException {
-        return OkHttp3ClassLoader.loadClass("okhttp3.MediaType");
+    public static Class<?> loadClass(String className) throws ClassNotFoundException {
+        return myClassLoader.loadClass(className);
     }
 }

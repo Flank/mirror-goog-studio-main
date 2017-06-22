@@ -16,6 +16,7 @@
 
 package com.android.tools.profiler.support.network.okhttp.reflection.okhttp3;
 
+import com.android.tools.profiler.support.network.okhttp.OkHttp3ClassLoader;
 import com.android.tools.profiler.support.network.okhttp.reflection.okio.BufferedSource$;
 import java.lang.reflect.InvocationTargetException;
 
@@ -27,7 +28,7 @@ public class ResponseBody$ {
     }
 
     public static Class getTargetClass() throws ClassNotFoundException {
-        return Thread.currentThread().getContextClassLoader().loadClass("okhttp3.ResponseBody");
+        return OkHttp3ClassLoader.loadClass("okhttp3.ResponseBody");
     }
 
     public static ResponseBody$ create(

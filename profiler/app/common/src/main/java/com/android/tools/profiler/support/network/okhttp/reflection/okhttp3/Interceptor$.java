@@ -16,6 +16,7 @@
 
 package com.android.tools.profiler.support.network.okhttp.reflection.okhttp3;
 
+import com.android.tools.profiler.support.network.okhttp.OkHttp3ClassLoader;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
@@ -27,7 +28,7 @@ public final class Interceptor$ {
     }
 
     public static Class getTargetClass() throws ClassNotFoundException {
-        return Thread.currentThread().getContextClassLoader().loadClass("okhttp3.Interceptor");
+        return OkHttp3ClassLoader.loadClass("okhttp3.Interceptor");
     }
 
     public static final class Chain$ {
