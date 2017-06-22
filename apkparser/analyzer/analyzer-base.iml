@@ -46,6 +46,8 @@
     <orderEntry type="library" scope="TEST" name="truth" level="project" />
     <orderEntry type="library" scope="TEST" name="jimfs" level="project" />
     <orderEntry type="module" module-name="binary-resources" />
-    <orderEntry type="module" module-name="sdk-common" />
+    <orderEntry type="module" module-name="sdk-common-base" />
+    <orderEntry type="module" module-name="sdklib-base" />
+    <orderEntry type="module" module-name="repository" />
   </component>
 </module>
