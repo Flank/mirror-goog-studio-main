@@ -51,7 +51,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
 
     private static final boolean VERBOSE =
             !Strings.isNullOrEmpty(System.getenv().get("CUSTOM_TEST_VERBOSE"));
-    static final boolean CAPTURE_JVM_LOGS = true;
+    static final boolean CAPTURE_JVM_LOGS = false;
 
     @NonNull
     final ProjectConnection projectConnection;
