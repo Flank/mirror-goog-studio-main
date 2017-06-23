@@ -111,23 +111,6 @@ public class PluginDslTest {
         checker.checkNonTestedVariant("release", variants);
     }
 
-    /** Same as Basic but with a slightly different DSL. */
-    @Test
-    public void testBasic2() {
-        plugin.createAndroidTasks(false);
-        VariantCheckers.checkDefaultVariants(plugin.getVariantManager().getVariantScopes());
-
-        // we can now call this since the variants/tasks have been created
-        Set<BaseTestedVariant> variants = checker.getVariants();
-        assertEquals(2, variants.size());
-
-        Set<TestVariant> testVariants = checker.getTestVariants();
-        assertEquals(1, testVariants.size());
-
-        checker.checkTestedVariant("debug", "debugAndroidTest", variants, testVariants);
-        checker.checkNonTestedVariant("release", variants);
-    }
-
     @Test
     public void testBasicWithStringTarget() {
         Eval.me(
