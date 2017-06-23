@@ -387,7 +387,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
     public File splitFullAction(@NonNull ApkData apkData, @Nullable File processedResources)
             throws IOException {
 
-        File incrementalDirForSplit = new File(getIncrementalFolder(), apkData.getDirName());
+        File incrementalDirForSplit = new File(getIncrementalFolder(), apkData.getFullName());
 
         /*
          * Clear the intermediate build directory. We don't know if anything is in there and
@@ -663,7 +663,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
             androidResources.add(resourceFile);
         }
 
-        File incrementalDirForSplit = new File(getIncrementalFolder(), apkData.getDirName());
+        File incrementalDirForSplit = new File(getIncrementalFolder(), apkData.getFullName());
 
         File cacheByPathDir = new File(incrementalDirForSplit, ZIP_DIFF_CACHE_DIR);
         if (!cacheByPathDir.exists()) {
