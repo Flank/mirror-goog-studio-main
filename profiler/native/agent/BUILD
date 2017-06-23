@@ -1,7 +1,10 @@
-load("//tools/base/bazel:android.bzl", "ANDROID_COPTS")
+load("//tools/base/bazel:android.bzl", "ANDROID_COPTS", "ANDROID_LINKOPTS")
+load("//tools/base/bazel:android.bzl", "multi_cpu_zip")
 
 cc_binary(
     name = "libsupportjni.so",
+    copts = ANDROID_COPTS,
+    linkopts = ANDROID_LINKOPTS,
     linkshared = 1,
     visibility = ["//visibility:public"],
     deps = [
@@ -37,4 +40,9 @@ cc_library(
         "//tools/base/profiler/native/utils:profiler_utils",
         "//tools/base/profiler/proto:profiler_cc_proto",
     ],
+)
+
+multi_cpu_zip(
+    name = "supportjni",
+    deps = [":libsupportjni.so"],
 )

@@ -43,7 +43,7 @@ java_library(
 )
 
 multi_cpu_zip(
-    name = "multi",
+    name = "studio_artifacts",
     deps = [
         "//tools/base/profiler/native/perfa:libperfa.so",
         "//tools/base/profiler/native/perfd",

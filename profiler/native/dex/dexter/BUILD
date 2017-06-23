@@ -1,3 +1,5 @@
+load("//tools/base/bazel:android.bzl", "ANDROID_COPTS", "ANDROID_LINKOPTS")
+
 cc_binary(
     name = "dexter",
     srcs = [
@@ -9,9 +11,11 @@ cc_binary(
         "experimental.h",
         "main.cc",
     ],
-    copts = [
+    copts = ANDROID_COPTS + [
         "-Itools/base/profiler/native/dex",
     ],
+    linkopts = ANDROID_LINKOPTS,
+    visibility = ["//visibility:public"],
     deps = [
         "//tools/base/profiler/native/dex/slicer",
         "@zlib_repo//:zlib",
