@@ -99,7 +99,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.ArtifactCollection;
-import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.FileCollection;
 import org.gradle.tooling.provider.model.ToolingModelBuilder;
@@ -607,18 +606,18 @@ public class ModelBuilder implements ToolingModelBuilder {
         additionalTestClasses.addAll(variantData.getAllPostJavacGeneratedBytecode().getFiles());
 
         List<File> additionalRuntimeApks = new ArrayList<>();
-        if (variantData.getType().isForTesting()) {
-            Configuration testHelpers =
-                    scope.getGlobalScope()
-                            .getProject()
-                            .getConfigurations()
-                            .findByName(SdkConstants.TEST_HELPERS_CONFIGURATION);
-
-            // This may be the case with the experimental plugin.
-            if (testHelpers != null) {
-                additionalRuntimeApks.addAll(testHelpers.getFiles());
-            }
-        }
+        //if (variantData.getType().isForTesting()) {
+        //    Configuration testHelpers =
+        //            scope.getGlobalScope()
+        //                    .getProject()
+        //                    .getConfigurations()
+        //                    .findByName(SdkConstants.TEST_HELPERS_CONFIGURATION);
+        //
+        //    // This may be the case with the experimental plugin.
+        //    if (testHelpers != null) {
+        //        additionalRuntimeApks.addAll(testHelpers.getFiles());
+        //    }
+        //}
 
         return new AndroidArtifactImpl(
                 name,

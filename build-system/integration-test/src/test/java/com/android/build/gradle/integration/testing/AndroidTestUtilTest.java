@@ -27,10 +27,13 @@ import com.android.builder.model.AndroidProject;
 import com.google.common.collect.Iterables;
 import java.io.File;
 import java.util.Collection;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
+@Ignore
 public class AndroidTestUtilTest {
+
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder()
