@@ -64,6 +64,12 @@ public class HardwareProperties {
     /** AVD/config.ini key for LCD density. */
     public static final String HW_LCD_DENSITY = "hw.lcd.density";
 
+    /** AVD/config.ini key for LCD width. */
+    public static final String HW_LCD_WIDTH = "hw.lcd.width";
+
+    /** AVD/config.ini key for LCD height. */
+    public static final String HW_LCD_HEIGHT = "hw.lcd.height";
+
     /** AVD/config.ini key indicating whether proximity sensor present. */
     public static final String HW_PROXIMITY_SENSOR = "hw.sensors.proximity";
 

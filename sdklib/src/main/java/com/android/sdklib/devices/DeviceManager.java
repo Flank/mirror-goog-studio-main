@@ -552,6 +552,10 @@ public class DeviceManager {
         props.put(HardwareProperties.HW_SDCARD, getBooleanVal(!hw.getRemovableStorage().isEmpty()));
         props.put(HardwareProperties.HW_LCD_DENSITY,
                 Integer.toString(hw.getScreen().getPixelDensity().getDpiValue()));
+        props.put(HardwareProperties.HW_LCD_WIDTH,
+                Integer.toString(hw.getScreen().getXDimension()));
+        props.put(HardwareProperties.HW_LCD_HEIGHT,
+                Integer.toString(hw.getScreen().getYDimension()));
         props.put(HardwareProperties.HW_PROXIMITY_SENSOR,
                 getBooleanVal(sensors.contains(Sensor.PROXIMITY_SENSOR)));
         return props;
