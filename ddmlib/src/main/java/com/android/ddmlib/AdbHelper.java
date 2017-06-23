@@ -19,7 +19,6 @@ package com.android.ddmlib;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ddmlib.log.LogReceiver;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -378,7 +377,6 @@ final class AdbHelper {
     static void executeRemoteCommand(InetSocketAddress adbSockAddr,
             String command, IDevice device, IShellOutputReceiver rcvr, long maxTimeToOutputResponse, TimeUnit maxTimeUnits)
             throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException, IOException {
-
         executeRemoteCommand(adbSockAddr, AdbService.SHELL, command, device, rcvr, maxTimeToOutputResponse,
                 maxTimeUnits, null /* inputStream */);
     }
@@ -443,6 +441,7 @@ final class AdbHelper {
 
         SocketChannel adbChan = null;
         try {
+            long startTime = System.currentTimeMillis();
             adbChan = SocketChannel.open(adbSockAddr);
             adbChan.configureBlocking(false);
 
@@ -519,6 +518,14 @@ final class AdbHelper {
                         rcvr.addOutput(buf.array(), buf.arrayOffset(), buf.position());
                     }
                     buf.rewind();
+                }
+                // if the overall timeout exists and is exceeded, we throw timeout exception.
+                if (maxTimeToOutputMs > 0
+                        && System.currentTimeMillis() - startTime > maxTimeToOutputMs) {
+                    throw new TimeoutException(
+                            String.format(
+                                    "executeRemoteCommand timed out after %sms",
+                                    maxTimeToOutputMs));
                 }
             }
         } finally {

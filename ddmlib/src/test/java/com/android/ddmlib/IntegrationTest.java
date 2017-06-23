@@ -18,9 +18,7 @@ package com.android.ddmlib;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.TruthJUnit.assume;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -186,6 +184,64 @@ public class IntegrationTest {
             assertEquals(echo.getMessage(), ADDITIONAL_TEST_MESSAGE);
 
             logCatReceiverTask.stop();
+        } finally {
+            AndroidDebugBridge.terminate();
+        }
+    }
+
+    /**
+     * Test that when a command timeout is exceeded, a {@link TimeoutException} is thrown in order
+     * to show the correct state of the requests.
+     */
+    @Test
+    public void testAdbCommandTimeout() throws Exception {
+        // Setup the server to default configuration.
+        FakeAdbServer.Builder builder = new FakeAdbServer.Builder();
+        builder.installDefaultCommandHandlers();
+
+        try (FakeAdbServer server = builder.build()) {
+            // Pre-connect a device before server startup.
+            DeviceState device =
+                    server.connectDevice(
+                                    SERIAL,
+                                    MANUFACTURER,
+                                    MODEL,
+                                    RELEASE,
+                                    SDK,
+                                    DeviceState.HostConnectionType.USB)
+                            .get();
+            device.setDeviceStatus(DeviceState.DeviceStatus.ONLINE);
+
+            server.start();
+
+            // Start up ADB.
+            AndroidDebugBridge.enableFakeAdbServerMode(server.getPort());
+            AndroidDebugBridge.initIfNeeded(false);
+            AndroidDebugBridge bridge =
+                    AndroidDebugBridge.createBridge(getPathToAdb().toString(), false);
+            assertNotNull("Debug bridge", bridge);
+
+            // Wait for the device to get recognized by ddmlib.
+            CustomDeviceListener deviceListener = new CustomDeviceListener();
+            AndroidDebugBridge.addDeviceChangeListener(deviceListener);
+            assertTrue(
+                    deviceListener.waitForDeviceConnection(REASONABLE_TIMEOUT_S, TimeUnit.SECONDS));
+
+            IDevice[] iDevices = bridge.getDevices();
+            assertEquals(iDevices.length, 1);
+            IDevice iDevice = iDevices[0];
+            assertEquals(iDevice.getSerialNumber(), SERIAL);
+
+            CollectingOutputReceiver receiver = new CollectingOutputReceiver();
+            try {
+                // Use a long enough timeout to ensure we receive at least one message from the
+                // command to verify it executed.
+                iDevice.executeShellCommand("write-no-stop", receiver, 500, TimeUnit.MILLISECONDS);
+                fail("Should have thrown an exception.");
+            } catch (TimeoutException expected) {
+                assertEquals("executeRemoteCommand timed out after 500ms", expected.getMessage());
+                assertTrue(receiver.getOutput().contains("write-no-stop test in progress"));
+            }
         } finally {
             AndroidDebugBridge.terminate();
         }
