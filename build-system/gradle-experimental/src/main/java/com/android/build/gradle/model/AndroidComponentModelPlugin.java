@@ -19,6 +19,7 @@ package com.android.build.gradle.model;
 import static com.android.builder.core.VariantType.ANDROID_TEST;
 import static com.android.builder.core.VariantType.UNIT_TEST;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.api.AndroidBasePlugin;
 import com.android.build.gradle.internal.ProductFlavorCombo;
@@ -74,7 +75,7 @@ public class AndroidComponentModelPlugin implements Plugin<Project> {
      */
     public static final String COMPONENT_NAME = "android";
 
-    public static final String GRADLE_ACCEPTABLE_VERSION = "4.0";
+    public static final String GRADLE_ACCEPTABLE_VERSION = SdkConstants.GRADLE_MINIMUM_VERSION;
 
     private static final String GRADLE_VERSION_CHECK_OVERRIDE_PROPERTY =
             "com.android.build.gradle.overrideVersionCheck";
