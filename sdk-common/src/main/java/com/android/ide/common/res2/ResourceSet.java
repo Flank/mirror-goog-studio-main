@@ -207,7 +207,8 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
             }
 
             if (getValidateEnabled()) {
-                FileResourceNameValidator.validate(file, type);
+                FileResourceNameValidator.validate(
+                        file, ResourceFolderType.getFolderType(file.getParentFile().getName()));
             }
             ResourceItem item = new ResourceItem(nameAttr, mNamespace, type, null, mLibraryName);
             return new ResourceFile(file, item, qualifier, folderConfiguration);
@@ -437,10 +438,11 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
 
     private ResourceFile createResourceFile(@NonNull File file,
             @NonNull FolderData folderData, @NonNull ILogger logger) throws MergingException {
+        if (getValidateEnabled()) {
+            FileResourceNameValidator.validate(file, folderData.folderType);
+        }
+
         if (folderData.type != null) {
-            if (getValidateEnabled()) {
-                FileResourceNameValidator.validate(file, folderData.type);
-            }
 
             if (needsPreprocessing(file)) {
                 return ResourceFile.generatedFiles(
@@ -494,8 +496,7 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
     }
 
     @NonNull
-    private List<ResourceItem> getResourceItemsForGeneratedFiles(
-            @NonNull File file)
+    private List<ResourceItem> getResourceItemsForGeneratedFiles(@NonNull File file)
             throws MergingException {
         List<ResourceItem> resourceItems = new ArrayList<ResourceItem>();
 
@@ -589,7 +590,7 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
         }
 
         if (fd.folderType != null && fd.folderType != ResourceFolderType.VALUES) {
-            fd.type = FolderTypeRelationship.getRelatedResourceTypes(fd.folderType).get(0);
+            fd.type = FolderTypeRelationship.getNonIdRelatedResourceType(fd.folderType);
             fd.isIdGenerating = FolderTypeRelationship.isIdGeneratingFolderType(fd.folderType);
         }
         return fd;

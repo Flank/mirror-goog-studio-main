@@ -21,7 +21,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import com.android.annotations.Nullable;
-import com.android.resources.ResourceType;
+import com.android.resources.ResourceFolderType;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
@@ -44,44 +44,48 @@ public class FileResourceNameValidatorTest {
         return Arrays.asList(
                 new Object[][] {
                     //{ resourceName, resourceType, sourceFile, expectedException }
-                    {"", ResourceType.ANIMATOR, "Resource must have a name"},
-                    {"foo.xml", ResourceType.DRAWABLE, null},
-                    {"foo.XML", ResourceType.DRAWABLE, null},
-                    {"foo.xML", ResourceType.DRAWABLE, null},
-                    {"foo.png", ResourceType.DRAWABLE, null},
-                    {"foo.9.png", ResourceType.DRAWABLE, null},
-                    {"foo.gif", ResourceType.DRAWABLE, null},
-                    {"foo.jpg", ResourceType.DRAWABLE, null},
-                    {"foo.jpeg", ResourceType.DRAWABLE, null},
-                    {"foo.bmp", ResourceType.DRAWABLE, null},
-                    {"foo.webp", ResourceType.DRAWABLE, null},
-                    {"foo.other.png", ResourceType.DRAWABLE, "'.'" + IS_NOT_A_VALID_ETC},
-                    {"foo.xml", ResourceType.XML, null},
-                    {"foo.xsd", ResourceType.XML, null},
-                    {"foo.xml", ResourceType.FONT, null},
-                    {"foo.ttf", ResourceType.FONT, null},
-                    {"foo.ttc", ResourceType.FONT, null},
-                    {"foo.otf", ResourceType.FONT, null},
-                    {"foo.png", ResourceType.FONT, THE_FILE_NAME_MUST_END_WITH_XML_OR_TTF},
-                    {"_foo.png", ResourceType.DRAWABLE, null},
-                    {"foo.png", ResourceType.XML, "The file name must end with .xml"},
-                    {"foo.8.xml", ResourceType.DRAWABLE, "'.'" + IS_NOT_A_VALID_ETC},
-                    {"foo", ResourceType.DRAWABLE, THE_FILE_NAME_MUST_END_WITH_XML_OR_PNG},
-                    {"foo.txt", ResourceType.RAW, null},
-                    {"foo", ResourceType.RAW, null},
-                    {"foo", ResourceType.RAW, null},
-                    {"foo.txt", ResourceType.DRAWABLE, THE_FILE_NAME_MUST_END_WITH_XML_OR_PNG},
+                    {"", ResourceFolderType.ANIMATOR, "Resource must have a name"},
+                    {"foo.xml", ResourceFolderType.DRAWABLE, null},
+                    {"foo.XML", ResourceFolderType.DRAWABLE, null},
+                    {"foo.xML", ResourceFolderType.DRAWABLE, null},
+                    {"foo.png", ResourceFolderType.DRAWABLE, null},
+                    {"foo.9.png", ResourceFolderType.DRAWABLE, null},
+                    {"foo.gif", ResourceFolderType.DRAWABLE, null},
+                    {"foo.jpg", ResourceFolderType.DRAWABLE, null},
+                    {"foo.jpeg", ResourceFolderType.DRAWABLE, null},
+                    {"foo.bmp", ResourceFolderType.DRAWABLE, null},
+                    {"foo.webp", ResourceFolderType.DRAWABLE, null},
+                    {"foo.other.png", ResourceFolderType.DRAWABLE, "'.'" + IS_NOT_A_VALID_ETC},
+                    {"foo.xml", ResourceFolderType.XML, null},
+                    {"foo.xsd", ResourceFolderType.XML, null},
+                    {"foo.xml", ResourceFolderType.FONT, null},
+                    {"foo.ttf", ResourceFolderType.FONT, null},
+                    {"foo.ttc", ResourceFolderType.FONT, null},
+                    {"foo.otf", ResourceFolderType.FONT, null},
+                    {"foo.png", ResourceFolderType.FONT, THE_FILE_NAME_MUST_END_WITH_XML_OR_TTF},
+                    {"_foo.png", ResourceFolderType.DRAWABLE, null},
+                    {"foo.png", ResourceFolderType.XML, "The file name must end with .xml"},
+                    {"foo.8.xml", ResourceFolderType.DRAWABLE, "'.'" + IS_NOT_A_VALID_ETC},
+                    {"foo", ResourceFolderType.DRAWABLE, THE_FILE_NAME_MUST_END_WITH_XML_OR_PNG},
+                    {"foo.txt", ResourceFolderType.RAW, null},
+                    {"foo", ResourceFolderType.RAW, null},
+                    {"foo", ResourceFolderType.RAW, null},
+                    {
+                        "foo.txt",
+                        ResourceFolderType.DRAWABLE,
+                        THE_FILE_NAME_MUST_END_WITH_XML_OR_PNG
+                    },
                     {
                         "1foo.png",
-                        ResourceType.DRAWABLE,
+                        ResourceFolderType.DRAWABLE,
                         "The resource name must start with a letter"
                     },
-                    {"Foo.png", ResourceType.DRAWABLE, "'F'" + IS_NOT_A_VALID_ETC},
-                    {"foo$.png", ResourceType.DRAWABLE, "'$'" + IS_NOT_A_VALID_ETC},
-                    {"bAr.png", ResourceType.DRAWABLE, "'A'" + IS_NOT_A_VALID_ETC},
+                    {"Foo.png", ResourceFolderType.DRAWABLE, "'F'" + IS_NOT_A_VALID_ETC},
+                    {"foo$.png", ResourceFolderType.DRAWABLE, "'$'" + IS_NOT_A_VALID_ETC},
+                    {"bAr.png", ResourceFolderType.DRAWABLE, "'A'" + IS_NOT_A_VALID_ETC},
                     {
                         "enum.png",
-                        ResourceType.DRAWABLE,
+                        ResourceFolderType.DRAWABLE,
                         "enum is not a valid resource name (reserved Java keyword)"
                     },
                 });
@@ -91,7 +95,7 @@ public class FileResourceNameValidatorTest {
     public String mSourceFileName;
 
     @Parameterized.Parameter(value = 1)
-    public ResourceType mResourceType;
+    public ResourceFolderType mResourceFolderType;
 
     @Parameterized.Parameter(value = 2)
     public String mExpectedErrorMessage;
@@ -102,33 +106,12 @@ public class FileResourceNameValidatorTest {
         String errorMessage = null;
         File file = new File(mSourceFileName);
         try {
-            FileResourceNameValidator.validate(file, mResourceType);
+            FileResourceNameValidator.validate(file, mResourceFolderType);
         } catch (MergingException e) {
             errorMessage = e.getMessage();
         }
         assertErrorMessageCorrect(mExpectedErrorMessage, errorMessage, file);
     }
-
-    @Test
-    public void validatePartial() {
-        if (mExpectedErrorMessage == null) {
-            for (int i = 1; i <= mSourceFileName.length(); i++) {
-                String partialName = mSourceFileName.substring(0, i);
-                String actual = FileResourceNameValidator.getErrorTextForPartialName(
-                        partialName, mResourceType);
-                assertNull("Was not expecting error for " + partialName, actual);
-            }
-        } else {
-            // A partial error message may or may not validate, but the full result should either
-            // be the same or there should be no error (i.e. if ther error is a missing filename);
-            String actual = FileResourceNameValidator.getErrorTextForPartialName(
-                    mSourceFileName, mResourceType);
-            if (!mExpectedErrorMessage.startsWith("The file name must end with")) {
-                assertEquals(mExpectedErrorMessage, actual);
-            }
-        }
-    }
-
 
     static void assertErrorMessageCorrect(
             @Nullable String expected, @Nullable String actual, @Nullable File file) {

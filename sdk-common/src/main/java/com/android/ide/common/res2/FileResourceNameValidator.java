@@ -25,7 +25,7 @@ import static com.android.SdkConstants.DOT_XSD;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.resources.ResourceType;
+import com.android.resources.ResourceFolderType;
 import com.android.utils.SdkUtils;
 import java.io.File;
 import java.util.List;
@@ -40,10 +40,10 @@ public final class FileResourceNameValidator {
      * Validate a single-file resource name.
      *
      * @param file the file resource to validate.
-     * @param resourceType the resource type.
+     * @param resourceType the resource folder type.
      * @throws MergingException is the resource name is not valid.
      */
-    public static void validate(@NonNull File file, @NonNull ResourceType resourceType)
+    public static void validate(@NonNull File file, @NonNull ResourceFolderType resourceType)
             throws MergingException {
         String error = getErrorTextForFileResource(file.getName(), resourceType);
         if (error != null) {
@@ -55,44 +55,24 @@ public final class FileResourceNameValidator {
      * Validate a single-file resource name.
      *
      * @param fileNameWithExt the resource file name to validate.
-     * @param resourceType the resource type.
+     * @param resourceFolderType the resource folder type.
      * @return null if no error, otherwise a string describing the error.
      */
     @Nullable
-    public static String getErrorTextForFileResource(@NonNull final String fileNameWithExt,
-            @NonNull final ResourceType resourceType) {
-        return getErrorTextForFileResource(fileNameWithExt, resourceType, false);
-    }
-
-    /**
-     * Validate a file-based resource name as it is being typed in a text field.
-     *
-     * Partial or no extensions are allowed, so the user does not see errors while typing.
-     *
-     * @param partialFileNameWithExt the resource file name or prefix of file name to validate.
-     * @param resourceType the resource type.
-     * @return null if no error, otherwise a string describing the error.
-     */
-    @Nullable
-    public static String getErrorTextForPartialName(
-            @NonNull final String partialFileNameWithExt,
-            @NonNull final ResourceType resourceType) {
-        return getErrorTextForFileResource(partialFileNameWithExt, resourceType, true);
-    }
-
-    @Nullable
-    private static String getErrorTextForFileResource(@NonNull final String fileNameWithExt,
-            @NonNull final ResourceType resourceType, boolean allowPartialOrMissingExtension) {
+    public static String getErrorTextForFileResource(
+            @NonNull final String fileNameWithExt,
+            @NonNull final ResourceFolderType resourceFolderType) {
         if (fileNameWithExt.trim().isEmpty()) {
             return "Resource must have a name";
         }
 
         final String fileName;
 
-        if (resourceType == ResourceType.RAW) {
+        if (resourceFolderType == ResourceFolderType.RAW) {
             // Allow any single file extension.
             fileName = removeSingleExtension(fileNameWithExt);
-        } else if (resourceType == ResourceType.DRAWABLE | resourceType == ResourceType.MIPMAP) {
+        } else if (resourceFolderType == ResourceFolderType.DRAWABLE
+                || resourceFolderType == ResourceFolderType.MIPMAP) {
             // Require either an image or xml file extension
             if (SdkUtils.endsWithIgnoreCase(fileNameWithExt, DOT_XML)) {
                 fileName = fileNameWithExt
@@ -105,59 +85,24 @@ public final class FileResourceNameValidator {
                     fileName = fileNameWithExt.substring(0, fileNameWithExt.lastIndexOf('.'));
                 }
             } else {
-                if (!allowPartialOrMissingExtension) {
-                    return "The file name must end with .xml or .png";
-                } else {
-                    String possibleFileName = removeSingleExtension(fileNameWithExt);
-                    if (possibleFileName.endsWith(".9")) {
-                        fileName = removeSingleExtension(possibleFileName);
-                    } else {
-                        fileName = possibleFileName;
-                    }
-                    String ext = fileNameWithExt.substring(fileName.length());
-                    if (!SdkUtils.startsWithIgnoreCase(DOT_XML, ext) &&
-                            !oneOfStartsWithIgnoreCase(SdkUtils.IMAGE_EXTENSIONS, ext)) {
-                        return "The file name must end with .xml or .png";
-                    }
-                }
+                return "The file name must end with .xml or .png";
             }
-        } else if (resourceType == ResourceType.XML) {
+        } else if (resourceFolderType == ResourceFolderType.XML) {
             // Also allow xsd as they are xml files.
             if (SdkUtils.endsWithIgnoreCase(fileNameWithExt, DOT_XML) ||
                     SdkUtils.endsWithIgnoreCase(fileNameWithExt, DOT_XSD)) {
                 fileName = removeSingleExtension(fileNameWithExt);
             } else {
-                if (!allowPartialOrMissingExtension) {
-                    return "The file name must end with .xml";
-                } else {
-                    fileName = removeSingleExtension(fileNameWithExt);
-                    String ext = fileNameWithExt.substring(fileName.length());
-                    if (!SdkUtils.startsWithIgnoreCase(DOT_XML, ext) &&
-                            !SdkUtils.startsWithIgnoreCase(DOT_XSD, ext)) {
-                        return "The file name must end with .xml";
-                    }
-                }
+                return "The file name must end with .xml";
             }
-        } else if (resourceType == ResourceType.FONT) {
-            // Also allow xsd as they are xml files.
+        } else if (resourceFolderType == ResourceFolderType.FONT) {
             if (SdkUtils.endsWithIgnoreCase(fileNameWithExt, DOT_XML) ||
                     SdkUtils.endsWithIgnoreCase(fileNameWithExt, DOT_TTF) ||
                     SdkUtils.endsWithIgnoreCase(fileNameWithExt, DOT_OTF) ||
                     SdkUtils.endsWithIgnoreCase(fileNameWithExt, DOT_TTC)) {
                 fileName = removeSingleExtension(fileNameWithExt);
             } else {
-                if (!allowPartialOrMissingExtension) {
-                    return "The file name must end with .xml, .ttf, .ttc or .otf";
-                } else {
-                    fileName = removeSingleExtension(fileNameWithExt);
-                    String ext = fileNameWithExt.substring(fileName.length());
-                    if (!SdkUtils.startsWithIgnoreCase(DOT_XML, ext) &&
-                            !SdkUtils.startsWithIgnoreCase(DOT_TTF, ext) &&
-                            !SdkUtils.startsWithIgnoreCase(DOT_OTF, ext) &&
-                            !SdkUtils.startsWithIgnoreCase(DOT_TTC, ext)) {
-                        return "The file name must end with .xml, .ttf, .ttc or .otf";
-                    }
-                }
+                return "The file name must end with .xml, .ttf, .ttc or .otf";
             }
         } else {
             // Require xml extension
@@ -165,18 +110,11 @@ public final class FileResourceNameValidator {
                 fileName = fileNameWithExt
                         .substring(0, fileNameWithExt.length() - DOT_XML.length());
             } else {
-                if (!allowPartialOrMissingExtension) {
-                    return "The file name must end with .xml";
-                } else {
-                    fileName = removeSingleExtension(fileNameWithExt);
-                    String ext = fileNameWithExt.substring(fileName.length());
-                    if (!SdkUtils.startsWithIgnoreCase(DOT_XML, ext)) {
-                        return "The file name must end with .xml";
-                    }
-                }
+                return "The file name must end with .xml";
             }
         }
-        return getErrorTextForNameWithoutExtension(fileName);
+
+        return getErrorTextForNameWithoutExtension(fileName, resourceFolderType);
     }
 
     /**
@@ -187,7 +125,13 @@ public final class FileResourceNameValidator {
      */
     @Nullable
     public static String getErrorTextForNameWithoutExtension(
-            @NonNull final String fileNameWithoutExt) {
+            @NonNull String fileNameWithoutExt, @NonNull ResourceFolderType resourceFolderType) {
+        if (resourceFolderType == ResourceFolderType.VALUES) {
+            // There don't seem to be any restrictions for this case, as there is no trace of this
+            // string in aapt output.
+            return null;
+        }
+
         char first = fileNameWithoutExt.charAt(0);
         if (!Character.isJavaIdentifierStart(first)) {
             return "The resource name must start with a letter";
@@ -203,14 +147,15 @@ public final class FileResourceNameValidator {
                         + " or underscore", c);
             }
         }
+
         if (SourceVersion.isKeyword(fileNameWithoutExt)) {
-            return String.format("%1$s is not a valid resource name (reserved Java keyword)",
+            return String.format(
+                    "%1$s is not a valid resource name (reserved Java keyword)",
                     fileNameWithoutExt);
         }
 
         // Success!
         return null;
-
     }
 
     private static String removeSingleExtension(String fileNameWithExt) {

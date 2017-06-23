@@ -19,9 +19,7 @@ package com.android.ide.common.res2;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.resources.ResourceType;
-
 import java.io.File;
-
 import javax.lang.model.SourceVersion;
 
 public final class ValueResourceNameValidator {
@@ -67,7 +65,7 @@ public final class ValueResourceNameValidator {
                 fullResourceName = fullResourceName.substring(8);
             }
         }
-        final String resourceName = fullResourceName.replace('.', '_');
+        final String resourceName = normalizeName(fullResourceName);
 
         // Resource names must be valid Java identifiers, since they will
         // be represented as Java identifiers in the R file:
@@ -94,5 +92,10 @@ public final class ValueResourceNameValidator {
 
         // Success.
         return null;
+    }
+
+    @NonNull
+    public static String normalizeName(@NonNull String fullResourceName) {
+        return fullResourceName.replace('.', '_');
     }
 }

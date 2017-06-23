@@ -183,11 +183,8 @@ public class ResourceDirectoryParser {
                 // We do not need to validate the filenames of files inside the {@code values}
                 // directory as they do not get parsed into Symbols; but we need to validate the
                 // filenames of files inside non-values directories.
-                ResourceType resourceType;
                 try {
-                    resourceType =
-                            FolderTypeRelationship.getNonIdRelatedResourceType(folderResourceType);
-                    FileResourceNameValidator.validate(maybeResourceFile, resourceType);
+                    FileResourceNameValidator.validate(maybeResourceFile, folderResourceType);
                 } catch (MergingException e) {
                     throw new ResourceDirectoryParseException("Failed file name validation", e);
                 }
@@ -197,6 +194,8 @@ public class ResourceDirectoryParser {
                 // Get name without extension.
                 String symbolName = getNameWithoutExtensions(fileName);
 
+                ResourceType resourceType =
+                        FolderTypeRelationship.getNonIdRelatedResourceType(folderResourceType);
                 addIfNotExisting(
                         builder,
                         Symbol.createSymbol(

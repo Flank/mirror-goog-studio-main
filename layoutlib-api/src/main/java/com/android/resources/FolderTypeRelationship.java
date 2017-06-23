@@ -16,6 +16,7 @@
 
 package com.android.resources;
 
+import com.android.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -76,20 +77,28 @@ public final class FolderTypeRelationship {
         makeSafe();
     }
 
-    // The ID-providing relationship is also encoded in the above maps by having a folder
-    // map to two ResourceTypes, with the second ResourceType being ID.
-    private static final EnumSet<ResourceFolderType> ID_PROVIDING_RESOURCE_TYPES = EnumSet.of(
-            ResourceFolderType.LAYOUT, ResourceFolderType.MENU, ResourceFolderType.DRAWABLE,
-            ResourceFolderType.XML, ResourceFolderType.TRANSITION
-    );
+    /**
+     * The ID-providing relationship is also encoded in the above maps by having a folder map to two
+     * ResourceTypes, with the second ResourceType being ID.
+     */
+    private static final EnumSet<ResourceFolderType> ID_PROVIDING_RESOURCE_TYPES =
+            EnumSet.of(
+                    ResourceFolderType.LAYOUT,
+                    ResourceFolderType.MENU,
+                    ResourceFolderType.DRAWABLE,
+                    ResourceFolderType.XML,
+                    ResourceFolderType.TRANSITION);
 
     /**
-     * Returns a list of {@link ResourceType}s that can be generated from files inside a folder
-     * of the specified type.
+     * Returns a list of {@link ResourceType}s that can be generated from files inside a folder of
+     * the specified type.
+     *
      * @param folderType The folder type.
      * @return a list of {@link ResourceType}, possibly empty but never null.
      */
-    public static List<ResourceType> getRelatedResourceTypes(ResourceFolderType folderType) {
+    @NonNull
+    public static List<ResourceType> getRelatedResourceTypes(
+            @NonNull ResourceFolderType folderType) {
         List<ResourceType> list = mFolderToTypeMap.get(folderType);
         if (list != null) {
             return list;
@@ -105,7 +114,8 @@ public final class FolderTypeRelationship {
      * @param folderType The folder type.
      * @return a single non-ID {@link ResourceType}.
      */
-    public static ResourceType getNonIdRelatedResourceType(ResourceFolderType folderType) {
+    @NonNull
+    public static ResourceType getNonIdRelatedResourceType(@NonNull ResourceFolderType folderType) {
         List<ResourceType> resourceTypes = getRelatedResourceTypes(folderType);
         if (resourceTypes.isEmpty()) {
             throw new IllegalArgumentException(
