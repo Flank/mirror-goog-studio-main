@@ -20,7 +20,9 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.api.LibraryVariantOutput;
 import com.android.build.gradle.internal.variant.TaskContainer;
+import com.android.build.gradle.tasks.AndroidZip;
 import com.android.ide.common.build.ApkData;
+import java.io.File;
 import org.gradle.api.tasks.bundling.Zip;
 
 /**
@@ -31,14 +33,12 @@ import org.gradle.api.tasks.bundling.Zip;
  */
 public class LibraryVariantOutputImpl extends BaseVariantOutputImpl implements LibraryVariantOutput {
 
-    private final ApkData apkData;
-
     public LibraryVariantOutputImpl(
-            @NonNull TaskContainer taskContainer, @NonNull ApkData apkData) {
-        super(taskContainer);
-        this.apkData = apkData;
+            @NonNull ApkData apkData, @NonNull TaskContainer taskContainer) {
+        super(apkData, taskContainer);
     }
 
+    @Override
     @NonNull
     protected ApkData getApkData() {
         return apkData;
@@ -47,8 +47,18 @@ public class LibraryVariantOutputImpl extends BaseVariantOutputImpl implements L
     @Nullable
     @Override
     public Zip getPackageLibrary() {
-        throw new RuntimeException(
-                "packageLibrary is now available directly on the variant since there is always a single output for libraries");
+        return taskContainer.getTaskByType(AndroidZip.class);
+    }
+
+    @NonNull
+    @Override
+    public File getOutputFile() {
+        Zip packageTask = getPackageLibrary();
+        if (packageTask != null) {
+            return new File(packageTask.getDestinationDir(), apkData.getOutputFileName());
+        } else {
+            return super.getOutputFile();
+        }
     }
 
     @Override

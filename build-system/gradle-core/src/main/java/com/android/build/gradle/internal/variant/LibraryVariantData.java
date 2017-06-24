@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.tasks.ExtractAnnotations;
+import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.ErrorReporter;
 import com.android.builder.core.VariantType;
 import com.android.builder.profile.Recorder;
@@ -53,7 +54,13 @@ public class LibraryVariantData extends BaseVariantData implements TestedVariant
         testVariants = Maps.newEnumMap(VariantType.class);
 
         // create default output
-        getSplitFactory().addMainApk();
+        getSplitFactory()
+                .addMainOutput(
+                        globalScope.getProjectBaseName()
+                                + "-"
+                                + getVariantConfiguration().getBaseName()
+                                + "."
+                                + BuilderConstants.EXT_LIB_ARCHIVE);
     }
 
     @Override

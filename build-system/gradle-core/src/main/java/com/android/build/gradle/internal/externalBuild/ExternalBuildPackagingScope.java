@@ -248,7 +248,7 @@ public class ExternalBuildPackagingScope implements PackagingScope {
 
     @Override
     public ConfigurableFileCollection addTaskOutput(
-            @NonNull TaskOutputType outputType, @NonNull File file, @NonNull String taskName) {
+            @NonNull TaskOutputType outputType, @NonNull Object file, @Nullable String taskName) {
         return mVariantScope.addTaskOutput(outputType, file, taskName);
     }
 

@@ -268,7 +268,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @Override
     public ConfigurableFileCollection addTaskOutput(
-            @NonNull TaskOutputType outputType, @NonNull File file, @Nullable String taskName) {
+            @NonNull TaskOutputType outputType, @NonNull Object file, @Nullable String taskName) {
         ConfigurableFileCollection fileCollection;
         try {
             fileCollection = super.addTaskOutput(outputType, file, taskName);
@@ -304,7 +304,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     }
 
     private void publishIntermediateArtifact(
-            @NonNull File file,
+            @NonNull Object file,
             @NonNull String builtBy,
             @NonNull ArtifactType artifactType,
             @NonNull Collection<PublishedConfigType> configTypes) {
@@ -334,7 +334,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     private void publishArtifactToConfiguration(
             @NonNull Configuration configuration,
-            @NonNull File file,
+            @NonNull Object file,
             @NonNull String builtBy,
             @NonNull ArtifactType artifactType) {
         final Project project = getGlobalScope().getProject();
@@ -1503,15 +1503,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @NonNull
     @Override
-    public File getOutputBundleFile() {
-        return FileUtils.join(
-                globalScope.getOutputsDir(),
-                BuilderConstants.EXT_LIB_ARCHIVE,
-                globalScope.getProjectBaseName()
-                        + "-"
-                        + getVariantConfiguration().getBaseName()
-                        + "."
-                        + BuilderConstants.EXT_LIB_ARCHIVE);
+    public File getAarLocation() {
+        return FileUtils.join(globalScope.getOutputsDir(), BuilderConstants.EXT_LIB_ARCHIVE);
     }
 
     @NonNull

@@ -42,6 +42,7 @@ import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TaskContainer;
@@ -682,7 +683,10 @@ public class ModelBuilder implements ToolingModelBuilder {
                                 new BuildOutput(
                                         VariantScope.TaskOutputType.AAR,
                                         mainApkInfo,
-                                        variantData.getScope().getOutputBundleFile())));
+                                        variantData
+                                                .getScope()
+                                                .getOutput(TaskOutputHolder.TaskOutputType.AAR)
+                                                .getSingleFile())));
             case ANDROID_TEST:
                 return new BuildOutputsSupplier(
                         ImmutableList.of(VariantScope.TaskOutputType.APK),

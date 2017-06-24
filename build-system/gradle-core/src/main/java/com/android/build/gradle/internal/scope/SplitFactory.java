@@ -60,23 +60,23 @@ public class SplitFactory {
         return projectBaseName + "-" + baseName + suffix;
     }
 
-    public ApkData addMainApk() {
+    public ApkData addMainOutput(String defaultFilename) {
         String baseName = variantConfiguration.getBaseName();
-        ApkData mainApk =
+        ApkData mainOutput =
                 // the main output basename comes from the variant configuration.
                 // the main output should not have a dirName set as all the getXXXOutputDirectory
                 // in variant scope already include the variant name.
                 // TODO : we probably should clean this up, having the getXXXOutputDirectory APIs
                 // return the top level folder and have all users use the getDirName() as part of
                 // the task output folder configuration.
-                new Main(
-                        baseName,
-                        variantConfiguration.getFullName(),
-                        "",
-                        getOutputFileName(baseName));
-        checkNoDuplicate(mainApk);
-        splitScope.addSplit(mainApk);
-        return mainApk;
+                new Main(baseName, variantConfiguration.getFullName(), "", defaultFilename);
+        checkNoDuplicate(mainOutput);
+        splitScope.addSplit(mainOutput);
+        return mainOutput;
+    }
+
+    public ApkData addMainApk() {
+        return addMainOutput(getOutputFileName(variantConfiguration.getBaseName()));
     }
 
     public ApkData addUniversalApk() {

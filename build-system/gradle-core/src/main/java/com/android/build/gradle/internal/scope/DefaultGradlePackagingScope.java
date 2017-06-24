@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.scope;
 
-import static com.android.SdkConstants.DOT_ANDROID_PACKAGE;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -24,7 +23,6 @@ import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.pipeline.StreamFilter;
-import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
 import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.builder.core.AndroidBuilder;
@@ -228,7 +226,7 @@ public class DefaultGradlePackagingScope implements PackagingScope {
 
     @Override
     public ConfigurableFileCollection addTaskOutput(
-            @NonNull TaskOutputType outputType, @NonNull File file, @NonNull String taskName) {
+            @NonNull TaskOutputType outputType, @NonNull Object file, @Nullable String taskName) {
         return mVariantScope.addTaskOutput(outputType, file, taskName);
     }
 
