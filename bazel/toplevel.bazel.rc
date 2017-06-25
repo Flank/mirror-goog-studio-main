@@ -31,3 +31,4 @@ build:release -c opt
 
 # cpp sandbox is very slow on mac and linux
 build --strategy=CppCompile=standalone
+build --strategy=CppLink=standalone
