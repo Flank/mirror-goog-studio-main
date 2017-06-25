@@ -59,6 +59,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -80,8 +81,7 @@ public class MergeJavaResourcesTransform extends Transform {
     private static final Pattern JAR_ABI_PATTERN = Pattern.compile("lib/([^/]+)/[^/]+");
     private static final Pattern ABI_FILENAME_PATTERN = Pattern.compile(".*\\.so");
 
-    @NonNull
-    private final ParsedPackagingOptions packagingOptions;
+    @NonNull private final PackagingOptions packagingOptions;
 
     @NonNull
     private final String name;
@@ -93,10 +93,8 @@ public class MergeJavaResourcesTransform extends Transform {
     @NonNull
     private final File intermediateDir;
 
-    @NonNull
-    private final FileCacheByPath zipCache;
-
     private final Predicate<String> acceptedPathsPredicate;
+    @NonNull private final File cacheDir;
 
     public MergeJavaResourcesTransform(
             @NonNull PackagingOptions packagingOptions,
@@ -104,16 +102,14 @@ public class MergeJavaResourcesTransform extends Transform {
             @NonNull ContentType mergedType,
             @NonNull String name,
             @NonNull VariantScope variantScope) {
-        this.packagingOptions = new ParsedPackagingOptions(packagingOptions);
+        this.packagingOptions = packagingOptions;
         this.name = name;
         this.mergeScopes = ImmutableSet.copyOf(mergeScopes);
         this.mergedType = ImmutableSet.of(mergedType);
         this.intermediateDir = variantScope.getIncrementalDir(
                 variantScope.getFullVariantName() + "-" + name);
 
-        File cacheDir = new File(intermediateDir, "zip-cache");
-        FileUtils.mkdirs(cacheDir);
-        this.zipCache = new FileCacheByPath(cacheDir);
+        cacheDir = new File(intermediateDir, "zip-cache");
 
         if (mergedType == QualifiedContent.DefaultContentType.RESOURCES) {
             acceptedPathsPredicate =
@@ -162,11 +158,17 @@ public class MergeJavaResourcesTransform extends Transform {
 
     @NonNull
     @Override
+    public Collection<File> getSecondaryDirectoryOutputs() {
+        return ImmutableList.of(cacheDir);
+    }
+
+    @NonNull
+    @Override
     public Map<String, Object> getParameterInputs() {
         return ImmutableMap.of(
-                "exclude", packagingOptions.getExcludePatterns(),
-                "pickFirst", packagingOptions.getPickFirstPatterns(),
-                "merge", packagingOptions.getMergePatterns());
+                "exclude", packagingOptions.getExcludes(),
+                "pickFirst", packagingOptions.getPickFirsts(),
+                "merge", packagingOptions.getMerges());
     }
 
     @Override
@@ -222,9 +224,13 @@ public class MergeJavaResourcesTransform extends Transform {
     @Override
     public void transform(@NonNull TransformInvocation invocation)
             throws IOException, TransformException {
+        FileUtils.mkdirs(cacheDir);
+        FileCacheByPath zipCache = new FileCacheByPath(cacheDir);
 
         TransformOutputProvider outputProvider = invocation.getOutputProvider();
         checkNotNull(outputProvider, "Missing output object for transform " + getName());
+
+        ParsedPackagingOptions packagingOptions = new ParsedPackagingOptions(this.packagingOptions);
 
         boolean full = false;
         IncrementalFileMergerState state = loadMergeState();

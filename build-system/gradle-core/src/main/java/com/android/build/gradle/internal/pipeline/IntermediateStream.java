@@ -40,7 +40,6 @@ import org.gradle.api.file.FileCollection;
 /**
  * Version of TransformStream handling outputs of transforms.
  */
-@Immutable
 class IntermediateStream extends TransformStream {
 
     static Builder builder(@NonNull Project project, @NonNull String name) {

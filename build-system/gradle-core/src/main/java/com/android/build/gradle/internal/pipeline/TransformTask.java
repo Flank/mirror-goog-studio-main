@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.pipeline;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.transform.Context;
+import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.SecondaryFile;
 import com.android.build.api.transform.SecondaryInput;
 import com.android.build.api.transform.Status;
@@ -370,6 +371,10 @@ public class TransformTask extends StreamBasedTask implements Context {
 
         Splitter splitter = Splitter.on(File.separatorChar);
 
+        final Sets.SetView<? super QualifiedContent.Scope> scopes =
+                Sets.union(transform.getScopes(), transform.getReferencedScopes());
+        final Set<QualifiedContent.ContentType> inputTypes = transform.getInputTypes();
+
         // start with the removed files as they carry the risk of removing incremental mode.
         // If we detect such a case, we stop immediately.
         for (File removedFile : removedFiles) {
@@ -382,16 +387,9 @@ public class TransformTask extends StreamBasedTask implements Context {
             boolean found = false;
             while (iterator.hasNext()) {
                 IncrementalTransformInput next = iterator.next();
-                if (next.checkRemovedJarFile(
-                        Sets.union(transform.getScopes(), transform.getReferencedScopes()),
-                        transform.getInputTypes(),
-                        removedFile,
-                        removedFileSegments)
+                if (next.checkRemovedJarFile(scopes, inputTypes, removedFile, removedFileSegments)
                         || next.checkRemovedFolderFile(
-                                Sets.union(transform.getScopes(), transform.getReferencedScopes()),
-                                transform.getInputTypes(),
-                                removedFile,
-                                removedFileSegments)) {
+                                scopes, inputTypes, removedFile, removedFileSegments)) {
                     found = true;
                     break;
                 }
