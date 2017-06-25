@@ -1,3 +1,5 @@
+load("//tools/base/bazel:android.bzl", "ANDROID_COPTS")
+
 cc_library(
     name = "profiler_cpu",
     srcs = [
@@ -20,7 +22,7 @@ cc_library(
         "thread_monitor.h",
         "threads_sample.h",
     ],
-    copts = [
+    copts = ANDROID_COPTS + [
         "-Itools/base/profiler/native",
         "-I$(GENDIR)/tools/base/profiler",
     ],

@@ -1,3 +1,5 @@
+load("//tools/base/bazel:android.bzl", "ANDROID_COPTS")
+
 package(default_visibility = ["//visibility:public"])
 
 cc_library(
@@ -11,7 +13,7 @@ cc_library(
         "graphics_profiler_component.h",
         "graphics_service.h",
     ],
-    copts = [
+    copts = ANDROID_COPTS + [
         "-Itools/base/profiler/native",
         "-I$(GENDIR)/tools/base/profiler",
     ],

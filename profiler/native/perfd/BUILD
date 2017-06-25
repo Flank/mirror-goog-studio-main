@@ -1,3 +1,5 @@
+load("//tools/base/bazel:android.bzl", "ANDROID_COPTS", "ANDROID_LINKOPTS")
+
 cc_library(
     name = "perfd_internal_headers",
     hdrs = [
@@ -28,10 +30,11 @@ cc_binary(
         "profiler_service.cc",
         "profiler_service.h",
     ],
-    copts = [
+    copts = ANDROID_COPTS + [
         "-Itools/base/profiler/native",
         "-I$(GENDIR)/tools/base/profiler",
     ],
+    linkopts = ANDROID_LINKOPTS,
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/profiler/native/perfd/cpu:profiler_cpu",
