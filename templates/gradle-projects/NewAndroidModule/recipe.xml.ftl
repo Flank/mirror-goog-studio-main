@@ -94,12 +94,12 @@
 <#macro copyIconCommands destination>
     <#if buildApi gte 26 && targetApi gte 26>
         <#-- Copy adaptive-icons -->
-        <copy from="root/res/mipmap-anydpi/ic_launcher.xml"
-                to="${destination}/mipmap-anydpi/ic_launcher.xml" />
+        <copy from="root/res/mipmap-anydpi-v26/ic_launcher.xml"
+                to="${destination}/mipmap-anydpi-v26/ic_launcher.xml" />
         <copy from="root/res/drawable/ic_launcher_background.xml"
                 to="${destination}/drawable/ic_launcher_background.xml" />
-        <copy from="root/res/mipmap-anydpi/ic_launcher_round.xml"
-                to="${destination}/mipmap-anydpi/ic_launcher_round.xml" />
+        <copy from="root/res/mipmap-anydpi-v26/ic_launcher_round.xml"
+                to="${destination}/mipmap-anydpi-v26/ic_launcher_round.xml" />
         <@copyMipmap destination=escapeXmlAttribute(destination)
                             icon="ic_launcher_foreground.png" />
     </#if>
