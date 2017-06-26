@@ -305,8 +305,12 @@ public class PerformanceTestProjects {
                 project.file("WordPress/build.gradle"),
                 "\ndependencies \\{\n",
                 "dependencies {\n"
-                        + "    compile 'org.jetbrains.kotlin:kotlin-stdlib:1.0.5'\n"
-                        + "    compile 'com.android.support:support-v4:" + GradleTestProject.SUPPORT_LIB_VERSION + "'\n");
+                        + "    compile 'org.jetbrains.kotlin:kotlin-stdlib:"
+                        + GradleTestProject.DEFAULT_KOTLIN_PLUGIN_VERSION
+                        + "'\n"
+                        + "    compile 'com.android.support:support-v4:"
+                        + GradleTestProject.SUPPORT_LIB_VERSION
+                        + "'\n");
 
         TestFileUtils.searchAndReplace(
                 project.file("WordPress/build.gradle"),
