@@ -201,7 +201,7 @@ task initSdkForConnectedTests(type: JavaExec) {
             'add-ons;addon-google_apis-google-24',
             'extras;google;m2repository',
             'extras;android;m2repository',
-            'cmake;3.6.3155560',
+            'cmake;3.6.4111459',
             'ndk-bundle',
     ]
 }
