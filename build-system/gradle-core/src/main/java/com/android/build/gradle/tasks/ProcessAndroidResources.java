@@ -224,19 +224,6 @@ public class ProcessAndroidResources extends IncrementalTask {
 
         WaitableExecutor executor = WaitableExecutor.useGlobalSharedThreadPool();
 
-        if (buildTargetAbi != null
-                && supportedAbis != null
-                && !supportedAbis.isEmpty()
-                && !supportedAbis.contains(buildTargetAbi)) {
-            getLogger()
-                    .debug(
-                            "Cannot build for "
-                                    + buildTargetAbi
-                                    + " when supportedAbis are "
-                                    + Joiner.on(",").join(supportedAbis));
-            return;
-        }
-
         List<ApkData> splitsToGenerate =
                 getSplitsToGenerate(splitScope, supportedAbis, buildTargetAbi, buildTargetDensity);
 
@@ -654,17 +641,6 @@ public class ProcessAndroidResources extends IncrementalTask {
             @Nullable Set<String> supportedAbis,
             @Nullable String buildTargetAbi,
             @Nullable String buildTargetDensity) {
-        if (buildTargetAbi != null
-                && supportedAbis != null
-                && !supportedAbis.isEmpty()
-                && !supportedAbis.contains(buildTargetAbi)) {
-            throw new IllegalArgumentException(
-                    "Cannot build for "
-                            + buildTargetAbi
-                            + " when supportedAbis are "
-                            + Joiner.on(",").join(supportedAbis));
-        }
-
         // FIX ME : the code below should move to the SplitsDiscoveryTask that should persist
         // the list of splits and their enabled/disabled state.
 
@@ -681,18 +657,26 @@ public class ProcessAndroidResources extends IncrementalTask {
                                 Arrays.asList(Strings.nullToEmpty(buildTargetAbi).split(",")));
 
         if (splitsToGenerate.isEmpty()) {
+            Preconditions.checkNotNull(
+                    buildTargetAbi,
+                    "buildTargetAbi should not be null when no splits are computed");
+            Preconditions.checkNotNull(
+                    supportedAbis, "supportedAbis should not be null when no splits are computed");
+            List<String> splits =
+                    splitScope
+                            .getApkDatas()
+                            .stream()
+                            .map(ApkData::getFilterName)
+                            .collect(Collectors.toList());
             throw new RuntimeException(
-                    "Cannot build for ABI \'"
-                            + buildTargetAbi
-                            + "\'"
-                            + ", no suitable splits configured : "
-                            + Joiner.on(", ")
-                                    .join(
-                                            splitScope
-                                                    .getApkDatas()
-                                                    .stream()
-                                                    .map(ApkData::getFilterName)
-                                                    .collect(Collectors.toList())));
+                    String.format(
+                            "Cannot build for ABI: %1$s; no suitable splits configured: %2$s;"
+                                    + " supported ABIs are: %3$s",
+                            buildTargetAbi,
+                            splits.isEmpty() ? "none" : Joiner.on(", ").join(splits),
+                            supportedAbis.isEmpty()
+                                    ? "none"
+                                    : Joiner.on(", ").join(supportedAbis)));
         }
 
         return splitsToGenerate;

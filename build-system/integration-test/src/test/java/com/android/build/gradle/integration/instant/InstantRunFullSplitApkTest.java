@@ -58,6 +58,11 @@ public class InstantRunFullSplitApkTest {
                         + "            universalApk false\n"
                         + "        }\n"
                         + "    }\n"
+                        + "    defaultConfig{\n"
+                        + "        ndk {\n"
+                        + "            abiFilters 'x86', 'armeabi', 'armeabi-v7a', 'arm64-v8a'\n"
+                        + "        }\n"
+                        + "    }\n"
                         + "}\n"
                         + "ext.abiCodes = ['x86':1, 'armeabi-v7a':2]\n"
                         + "android.applicationVariants.all { variant ->\n"
@@ -100,6 +105,12 @@ public class InstantRunFullSplitApkTest {
         mProject.executor()
                 .withInstantRun(new AndroidVersion(24, null), OptionalCompilationStep.FULL_APK)
                 .with(StringOption.IDE_BUILD_TARGET_ABI, "armeabi-v7a")
+                .run("assembleDebug");
+
+        // Run with several ABIs as regression test for bug 62909130
+        mProject.executor()
+                .withInstantRun(new AndroidVersion(24, null), OptionalCompilationStep.FULL_APK)
+                .with(StringOption.IDE_BUILD_TARGET_ABI, "arm64-v8a,armeabi-v7a,armeabi")
                 .run("assembleDebug");
     }
 }
