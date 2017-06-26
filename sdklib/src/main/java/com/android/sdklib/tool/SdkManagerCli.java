@@ -273,12 +273,16 @@ public class SdkManagerCli {
             @NonNull Collection<RemotePackage> remoteObsoletes,
             @NonNull Set<UpdatablePackage> updates) {
         TableFormatter<LocalPackage> localTable = new TableFormatter<>();
-        localTable.addColumn("Path", RepoPackage::getPath, 15, 15);
+        localTable.addColumn("Path", RepoPackage::getPath, 9999, 0);
         localTable.addColumn("Version", p -> p.getVersion().toString(), 100, 0);
-        localTable.addColumn("Description", RepoPackage::getDisplayName, 30, 0);
-        localTable.addColumn("Location",
-                p -> FileUtils.relativePossiblyNonExistingPath(
-                        p.getLocation(), mRepoManager.getLocalPath()), 15, 15);
+        localTable.addColumn("Description", RepoPackage::getDisplayName, 100, 0);
+        localTable.addColumn(
+                "Location",
+                p ->
+                        FileUtils.relativePossiblyNonExistingPath(
+                                p.getLocation(), mRepoManager.getLocalPath()),
+                9999,
+                0);
 
         if (!locals.isEmpty()) {
             mOut.println("Installed packages:");
@@ -292,9 +296,9 @@ public class SdkManagerCli {
         }
 
         TableFormatter<RemotePackage> remoteTable = new TableFormatter<>();
-        remoteTable.addColumn("Path", RepoPackage::getPath, 15, 15);
+        remoteTable.addColumn("Path", RepoPackage::getPath, 9999, 0);
         remoteTable.addColumn("Version", p -> p.getVersion().toString(), 100, 0);
-        remoteTable.addColumn("Description", RepoPackage::getDisplayName, 30, 0);
+        remoteTable.addColumn("Description", RepoPackage::getDisplayName, 100, 0);
 
         if (!remotes.isEmpty()) {
             mOut.println();
@@ -311,7 +315,7 @@ public class SdkManagerCli {
             mOut.println();
             mOut.println("Available Updates:");
             TableFormatter<UpdatablePackage> updateTable = new TableFormatter<>();
-            updateTable.addColumn("ID", UpdatablePackage::getPath, 30, 30);
+            updateTable.addColumn("ID", UpdatablePackage::getPath, 9999, 0);
             updateTable.addColumn("Installed", p -> p.getLocal().getVersion().toString(), 20, 0);
             updateTable.addColumn("Available", p -> p.getRemote().getVersion().toString(), 20, 0);
             if (!mSettings.includeObsolete()) {

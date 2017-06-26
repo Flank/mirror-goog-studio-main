@@ -211,6 +211,58 @@ public class SdkManagerCliTest {
         assertEquals(expected, out.toString().replaceAll("\\r\\n", "\n"));
     }
 
+    /** Verify that long names print correctly */
+    @Test
+    public void listWithLongName() throws Exception {
+        FakeRemotePackage installed =
+                new FakeRemotePackage(
+                        "test;p2;which;has;a;really;long;name;which;should;still;be;displayed");
+        installed.setDisplayName(
+                "package 2 has a long display name that should still be displayed");
+        Path p2Path =
+                mFileSystem
+                        .getPath(SDK_LOCATION)
+                        .resolve("test/p2/is-also/installed-in-a/path-with-a-long-name/");
+        Files.createDirectories(p2Path);
+        ProgressIndicator progress = new FakeProgressIndicator();
+        InstallerUtil.writePackageXml(
+                installed,
+                new File(p2Path.toString()),
+                mSdkHandler.getSdkManager(progress),
+                mFileOp,
+                progress);
+
+        SdkManagerCli.Settings settings =
+                SdkManagerCli.Settings.createSettings(
+                        ImmutableList.of("--list", "--sdk_root=/sdk"), mFileOp.getFileSystem());
+        assertNotNull("Arguments should be valid", settings);
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        SdkManagerCli downloader =
+                new SdkManagerCli(settings, new PrintStream(out), null, mDownloader, mSdkHandler);
+        downloader.run();
+        String expected =
+                "Installed packages:\n"
+                        + "  Path                                                                 | Version | Description                                                      | Location                                            \n"
+                        + "  -------                                                              | ------- | -------                                                          | -------                                             \n"
+                        + "  test;p1                                                              | 1       | package 1                                                        | test/p1                                             \n"
+                        + "  test;p2;which;has;a;really;long;name;which;should;still;be;displayed | 1       | package 2 has a long display name that should still be displayed | test/p2/is-also/installed-in-a/path-with-a-long-name\n"
+                        + "  upgrade                                                              | 1       | upgrade v1                                                       | upgrade                                             \n"
+                        + "\n"
+                        + "Available Packages:\n"
+                        + "  Path         | Version | Description \n"
+                        + "  -------      | ------- | -------     \n"
+                        + "  depended_on  | 1       | fake package\n"
+                        + "  depends_on   | 1       | fake package\n"
+                        + "  test;remote1 | 1       | fake package\n"
+                        + "  upgrade      | 2       | upgrade v2  \n"
+                        + "\n"
+                        + "Available Updates:\n"
+                        + "  ID      | Installed | Available\n"
+                        + "  ------- | -------   | -------  \n"
+                        + "  upgrade | 1         | 2        \n";
+        assertEquals(expected, out.toString().replaceAll("\\r\\n", "\n"));
+    }
+
     /**
      * Verbosely list the packages we have installed and available.
      */
