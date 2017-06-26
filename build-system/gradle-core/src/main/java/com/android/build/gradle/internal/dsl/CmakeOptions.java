@@ -33,7 +33,7 @@ public class CmakeOptions implements CoreCmakeOptions {
     @Nullable
     private File path;
 
-    @Nullable private File metadataOutputDirectory;
+    @Nullable private File buildStagingDirectory;
 
     public CmakeOptions(@NonNull Project project) {
         this.project = project;
@@ -72,16 +72,16 @@ public class CmakeOptions implements CoreCmakeOptions {
      */
     @Nullable
     @Override
-    public File getMetadataOutputDirectory() {
-        return metadataOutputDirectory;
+    public File getBuildStagingDirectory() {
+        return buildStagingDirectory;
     }
 
     @Override
-    public void setMetadataOutputDirectory(@NonNull File metadataOutputDirectory) {
-        this.metadataOutputDirectory = project.file(metadataOutputDirectory);
+    public void setBuildStagingDirectory(@NonNull File buildStagingDirectory) {
+        this.buildStagingDirectory = project.file(buildStagingDirectory);
     }
 
-    public void setMetadataOutputDirectory(@Nullable Object metadataOutputDirectory) {
-        this.metadataOutputDirectory = project.file(metadataOutputDirectory);
+    public void setBuildStagingDirectory(@Nullable Object buildStagingDirectory) {
+        this.buildStagingDirectory = project.file(buildStagingDirectory);
     }
 }

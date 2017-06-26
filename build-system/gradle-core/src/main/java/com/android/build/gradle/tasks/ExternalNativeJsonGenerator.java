@@ -721,7 +721,7 @@ public abstract class ExternalNativeJsonGenerator {
                             SyncIssue.TYPE_EXTERNAL_NATIVE_BUILD_CONFIGURATION,
                             String.format(
                                     Locale.getDefault(),
-                                    "The selected native metadata output directory '%s'"
+                                    "The selected build staging directory '%s'"
                                             + " is a subdirectory of the build directory of the build directory '%s'. "
                                             + "Defaulting to '%s' instead.",
                                     invalidPath.getAbsolutePath(),

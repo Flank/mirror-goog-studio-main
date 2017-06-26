@@ -22,7 +22,7 @@
                 <tr><td>Name</td></tr>
             </thead>
             <tr><td>path</td></tr>
-            <tr><td>metadataOutputDirectory</td></tr>
+            <tr><td>buildStagingDirectory</td></tr>
         </table>
     </section>
     <section>

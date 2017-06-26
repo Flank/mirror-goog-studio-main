@@ -31,7 +31,7 @@ public interface CoreNdkBuildOptions {
     void setPath(@NonNull File path);
 
     @Nullable
-    File getMetadataOutputDirectory();
+    File getBuildStagingDirectory();
 
-    void setMetadataOutputDirectory(@NonNull File metadataOutputDirectory);
+    void setBuildStagingDirectory(@NonNull File buildStagingDirectory);
 }
