@@ -33,6 +33,7 @@ import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptOptions;
 import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.builder.packaging.PackagerException;
+import com.android.builder.utils.FileCache;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.resources.configuration.VersionQualifier;
 import com.android.ide.common.signing.KeytoolException;
@@ -45,6 +46,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import org.gradle.api.Project;
 import org.gradle.api.logging.Logger;
 
@@ -59,6 +61,7 @@ abstract class InstantRunSplitApkBuilder extends Transform {
     protected final Project project;
     @NonNull
     private final AndroidBuilder androidBuilder;
+    @Nullable private final FileCache fileCache;
     @NonNull private final AaptGeneration aaptGeneration;
     @NonNull private final InstantRunBuildContext buildContext;
     @NonNull
@@ -77,6 +80,7 @@ abstract class InstantRunSplitApkBuilder extends Transform {
             @NonNull Project project,
             @NonNull InstantRunBuildContext buildContext,
             @NonNull AndroidBuilder androidBuilder,
+            @Nullable FileCache fileCache,
             @NonNull PackagingScope packagingScope,
             @Nullable CoreSigningConfig signingConf,
             @NonNull AaptGeneration aaptGeneration,
@@ -87,6 +91,7 @@ abstract class InstantRunSplitApkBuilder extends Transform {
         this.project = project;
         this.buildContext = buildContext;
         this.androidBuilder = androidBuilder;
+        this.fileCache = fileCache;
         this.packagingScope = packagingScope;
         this.signingConf = signingConf;
         this.aaptGeneration = aaptGeneration;
@@ -133,8 +138,8 @@ abstract class InstantRunSplitApkBuilder extends Transform {
 
     @NonNull
     protected File generateSplitApk(@NonNull DexFiles dexFiles)
-            throws IOException, KeytoolException, PackagerException,
-            InterruptedException, ProcessException, TransformException {
+            throws IOException, KeytoolException, PackagerException, InterruptedException,
+                    ProcessException, TransformException, ExecutionException {
 
         String uniqueName = dexFiles.encodeName();
         final File alignedOutput = new File(outputDirectory, uniqueName + ".apk");
@@ -212,18 +217,12 @@ abstract class InstantRunSplitApkBuilder extends Transform {
         return resFilePackageFile;
     }
 
-    protected Aapt getAapt() {
-        return makeAapt(aaptGeneration, androidBuilder, packagingScope);
-    }
-
-    @NonNull
-    public static Aapt makeAapt(
-            @NonNull AaptGeneration aaptGeneration,
-            @NonNull AndroidBuilder androidBuilder,
-            @NonNull PackagingScope packagingScope) {
+    protected Aapt getAapt() throws IOException {
         return AaptGradleFactory.make(
                 aaptGeneration,
                 androidBuilder,
+                null,
+                fileCache,
                 true,
                 FileUtils.mkdirs(
                         new File(
@@ -232,4 +231,5 @@ abstract class InstantRunSplitApkBuilder extends Transform {
                                 "aapt-temp")),
                 0);
     }
+
 }

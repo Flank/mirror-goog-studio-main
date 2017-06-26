@@ -8,10 +8,13 @@ sourceSets.main.resources {
 dependencies {
     compileOnly libs.auto_value
     compile project(':base:annotations')
+    compile project(':base:common')
     compile libs.guava
     compile 'com.google.code.findbugs:jsr305:1.3.9'
 
+    testCompile libs.jimfs
     testCompile libs.junit
+    testCompile libs.truth
 }
 
 configurations {

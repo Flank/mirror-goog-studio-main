@@ -22,7 +22,6 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 import android.databinding.tool.store.LayoutFileParser;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.aapt.AaptGradleFactory;
@@ -32,10 +31,19 @@ import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.options.BooleanOption;
+import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
+import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.model.VectorDrawablesOptions;
 import com.android.builder.png.VectorDrawableRenderer;
+import com.android.builder.utils.FileCache;
 import com.android.ide.common.blame.MergingLog;
+import com.android.ide.common.blame.MergingLogRewriter;
+import com.android.ide.common.blame.ParsingProcessOutputHandler;
+import com.android.ide.common.blame.parser.ToolOutputParser;
+import com.android.ide.common.blame.parser.aapt.Aapt2OutputParser;
+import com.android.ide.common.blame.parser.aapt.AaptOutputParser;
+import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.ide.common.res2.FileStatus;
 import com.android.ide.common.res2.FileValidity;
 import com.android.ide.common.res2.GeneratedResourceSet;
@@ -63,6 +71,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -108,6 +117,8 @@ public class MergeResources extends IncrementalTask {
 
     private File blameLogFolder;
 
+    @Nullable private FileCache fileCache;
+
     // actual inputs
     private Supplier<List<ResourceSet>> sourceFolderInputs;
     private List<ResourceSet> processedInputs;
@@ -139,6 +150,35 @@ public class MergeResources extends IncrementalTask {
 
     private boolean pseudoLocalesEnabled;
 
+    @NonNull
+    private static Aapt makeAapt(
+            @NonNull AaptGeneration aaptGeneration,
+            @NonNull AndroidBuilder builder,
+            @Nullable FileCache fileCache,
+            boolean crunchPng,
+            @NonNull VariantScope scope,
+            @NonNull File intermediateDir,
+            @Nullable MergingLog blameLog)
+            throws IOException {
+        return AaptGradleFactory.make(
+                aaptGeneration,
+                builder,
+                blameLog != null
+                        ? new ParsingProcessOutputHandler(
+                                new ToolOutputParser(
+                                        aaptGeneration == AaptGeneration.AAPT_V1
+                                                ? new AaptOutputParser()
+                                                : new Aapt2OutputParser(),
+                                        builder.getLogger()),
+                                new MergingLogRewriter(blameLog::find, builder.getErrorReporter()))
+                        : new LoggedProcessOutputHandler(
+                                new AaptGradleFactory.FilteringLogger(builder.getLogger())),
+                fileCache,
+                crunchPng,
+                intermediateDir,
+                scope.getGlobalScope().getExtension().getAaptOptions().getCruncherProcesses());
+    }
+
     @Input
     public String getBuildToolsVersion() {
         return getBuildTools().getRevision().toString();
@@ -159,7 +199,7 @@ public class MergeResources extends IncrementalTask {
     }
 
     @Override
-    protected void doFullTaskAction() throws IOException {
+    protected void doFullTaskAction() throws IOException, ExecutionException {
         ResourcePreprocessor preprocessor = getPreprocessor();
 
         // this is full run, clean the previous output
@@ -184,9 +224,10 @@ public class MergeResources extends IncrementalTask {
 
             if (processResources) {
                 resourceCompiler =
-                        AaptGradleFactory.make(
+                        makeAapt(
                                 aaptGeneration,
                                 getBuilder(),
+                                fileCache,
                                 crunchPng,
                                 variantScope,
                                 getAaptTempDir(),
@@ -226,7 +267,8 @@ public class MergeResources extends IncrementalTask {
     }
 
     @Override
-    protected void doIncrementalTaskAction(Map<File, FileStatus> changedInputs) throws IOException {
+    protected void doIncrementalTaskAction(Map<File, FileStatus> changedInputs)
+            throws IOException, ExecutionException {
         ResourcePreprocessor preprocessor = getPreprocessor();
 
         // create a merger and load the known state.
@@ -282,9 +324,10 @@ public class MergeResources extends IncrementalTask {
 
             if (processResources) {
                 resourceCompiler =
-                        AaptGradleFactory.make(
+                        makeAapt(
                                 aaptGeneration,
                                 getBuilder(),
+                                fileCache,
                                 crunchPng,
                                 variantScope,
                                 getAaptTempDir(),
@@ -730,7 +773,6 @@ public class MergeResources extends IncrementalTask {
         @Override
         public void execute(@NonNull MergeResources mergeResourcesTask) {
             final BaseVariantData variantData = scope.getVariantData();
-            final AndroidConfig extension = scope.getGlobalScope().getExtension();
             final Project project = scope.getGlobalScope().getProject();
 
             mergeResourcesTask.setMinSdk(
@@ -739,6 +781,7 @@ public class MergeResources extends IncrementalTask {
             mergeResourcesTask.aaptGeneration =
                     AaptGeneration.fromProjectOptions(scope.getGlobalScope().getProjectOptions());
             mergeResourcesTask.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
+            mergeResourcesTask.fileCache = scope.getGlobalScope().getBuildCache();
             mergeResourcesTask.setVariantName(scope.getVariantConfiguration().getFullName());
             mergeResourcesTask.setIncrementalFolder(scope.getIncrementalDir(getName()));
             mergeResourcesTask.variantScope = scope;

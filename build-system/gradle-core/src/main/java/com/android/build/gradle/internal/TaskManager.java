@@ -2907,6 +2907,7 @@ public abstract class TaskManager {
                         scope.getOutput(TaskOutputHolder.TaskOutputType.PROCESSED_RES),
                         scope.getShrunkProcessedResourcesOutputDirectory(),
                         androidBuilder,
+                        globalScope.getBuildCache(),
                         AaptGeneration.fromProjectOptions(projectOptions),
                         scope.getOutput(TaskOutputHolder.TaskOutputType.SPLIT_LIST),
                         logger);

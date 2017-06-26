@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.scope.PackagingScope;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.internal.aapt.AaptOptions;
+import com.android.builder.utils.FileCache;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.io.File;
@@ -55,6 +56,7 @@ public class InstantRunDependenciesApkBuilder extends InstantRunSplitApkBuilder 
             @NonNull Project project,
             @NonNull InstantRunBuildContext buildContext,
             @NonNull AndroidBuilder androidBuilder,
+            @Nullable FileCache fileCache,
             @NonNull PackagingScope packagingScope,
             @Nullable CoreSigningConfig signingConf,
             @NonNull AaptGeneration aaptGeneration,
@@ -66,6 +68,7 @@ public class InstantRunDependenciesApkBuilder extends InstantRunSplitApkBuilder 
                 project,
                 buildContext,
                 androidBuilder,
+                fileCache,
                 packagingScope,
                 signingConf,
                 aaptGeneration,

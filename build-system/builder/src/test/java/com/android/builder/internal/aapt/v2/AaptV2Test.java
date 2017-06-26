@@ -24,6 +24,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptTestUtils;
+import com.android.builder.utils.FileCache;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.ide.common.process.DefaultProcessExecutor;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
@@ -102,7 +103,9 @@ public class AaptV2Test {
                 return new AaptV2Jni(
                         mTemporaryFolder.newFolder(),
                         WaitableExecutor.useDirectExecutor(),
-                        new LoggedProcessOutputHandler(logger));
+                        new LoggedProcessOutputHandler(logger),
+                        FileCache.getInstanceWithSingleProcessLocking(
+                                mTemporaryFolder.newFolder()));
             default:
                 throw new IllegalArgumentException();
         }

@@ -42,6 +42,7 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.internal.aapt.AaptOptions;
 import com.android.builder.packaging.PackagerException;
 import com.android.builder.sdk.TargetInfo;
+import com.android.builder.utils.FileCache;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.signing.KeytoolException;
 import com.android.sdklib.BuildToolInfo;
@@ -85,7 +86,7 @@ public class InstantRunDependenciesApkBuilderTest {
     @Rule public TemporaryFolder outputDirectory = new TemporaryFolder();
     @Rule public TemporaryFolder supportDirectory = new TemporaryFolder();
     @Rule public TemporaryFolder dexFileFolder = new TemporaryFolder();
-
+    @Rule public TemporaryFolder fileCacheDirectory = new TemporaryFolder();
 
     InstantRunDependenciesApkBuilder instantRunSliceSplitApkBuilder;
     final List<InstantRunSplitApkBuilder.DexFiles> dexFilesList =
@@ -110,6 +111,7 @@ public class InstantRunDependenciesApkBuilderTest {
                         project,
                         buildContext,
                         androidBuilder,
+                        FileCache.getInstanceWithSingleProcessLocking(fileCacheDirectory.getRoot()),
                         packagingScope,
                         coreSigningConfig,
                         AaptGeneration.AAPT_V2_JNI,

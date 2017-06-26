@@ -22,7 +22,6 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
 import com.android.apkzlib.zfile.ApkCreatorFactory;
-import com.android.build.api.transform.TransformException;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.incremental.FileType;
@@ -33,16 +32,13 @@ import com.android.builder.core.VariantType;
 import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptOptions;
 import com.android.builder.internal.aapt.AaptPackageConfig;
-import com.android.builder.packaging.PackagerException;
 import com.android.builder.sdk.TargetInfo;
-import com.android.ide.common.process.ProcessException;
-import com.android.ide.common.signing.KeytoolException;
+import com.android.builder.utils.FileCache;
 import com.android.sdklib.BuildToolInfo;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 import java.io.File;
-import java.io.IOException;
 import java.util.Map;
 import org.gradle.api.Project;
 import org.gradle.api.logging.Logger;
@@ -73,7 +69,9 @@ public class InstantRunSplitApkBuilderTest {
 
     @Rule public TemporaryFolder outputDirectory = new TemporaryFolder();
     @Rule public TemporaryFolder supportDirectory = new TemporaryFolder();
+    @Rule public TemporaryFolder fileCacheDirectory = new TemporaryFolder();
 
+    FileCache fileCache;
     InstantRunSliceSplitApkBuilder instantRunSliceSplitApkBuilder;
 
     @Before
@@ -88,19 +86,21 @@ public class InstantRunSplitApkBuilderTest {
 
     @Before
     public void setup() {
+        fileCache = FileCache.getInstanceWithSingleProcessLocking(fileCacheDirectory.getRoot());
         instantRunSliceSplitApkBuilder =
                 new InstantRunSliceSplitApkBuilder(
                         logger,
                         project,
                         buildContext,
                         androidBuilder,
+                        fileCache,
                         packagingScope,
                         coreSigningConfig,
                         AaptGeneration.AAPT_V2_JNI,
                         new AaptOptions(null, false, null),
                         outputDirectory.getRoot(),
-                        supportDirectory.getRoot(),
-                        false /* runAapt2Serially */) {
+                        supportDirectory.getRoot(), /* runAapt2Serially */
+                        false) {
                     @Override
                     protected Aapt getAapt() {
                         return aapt;
@@ -119,9 +119,7 @@ public class InstantRunSplitApkBuilderTest {
     }
 
     @Test
-    public void testGeneratedManifest()
-            throws InterruptedException, KeytoolException, IOException, ProcessException,
-            PackagerException, TransformException {
+    public void testGeneratedManifest() throws Exception {
 
         ImmutableSet<File> files = ImmutableSet.of(
                 new File("/tmp", "dexFile1"), new File("/tmp", "dexFile2"));
@@ -144,9 +142,7 @@ public class InstantRunSplitApkBuilderTest {
     }
 
     @Test
-    public void testApFileGeneration()
-            throws InterruptedException, KeytoolException, IOException, ProcessException,
-            PackagerException, TransformException {
+    public void testApFileGeneration() throws Exception {
 
         ImmutableSet<File> files = ImmutableSet.of(
                 new File("/tmp", "dexFile1"), new File("/tmp", "dexFile2"));
@@ -169,9 +165,7 @@ public class InstantRunSplitApkBuilderTest {
     }
 
     @Test
-    public void testGenerateSplitApk()
-            throws InterruptedException, KeytoolException, IOException, ProcessException,
-            PackagerException, TransformException {
+    public void testGenerateSplitApk() throws Exception {
 
         ImmutableSet<File> files = ImmutableSet.of(
                 new File("/tmp", "dexFile1"), new File("/tmp", "dexFile2"));
@@ -203,9 +197,7 @@ public class InstantRunSplitApkBuilderTest {
     }
 
     @Test
-    public void testNoVersionGeneration()
-            throws InterruptedException, KeytoolException, IOException, ProcessException,
-            PackagerException, TransformException {
+    public void testNoVersionGeneration() throws Exception {
         when(packagingScope.getVersionName()).thenReturn("-1");
         when(packagingScope.getVersionCode()).thenReturn(-1);
 
@@ -215,13 +207,14 @@ public class InstantRunSplitApkBuilderTest {
                         project,
                         buildContext,
                         androidBuilder,
+                        fileCache,
                         packagingScope,
                         coreSigningConfig,
                         AaptGeneration.AAPT_V2_JNI,
                         new AaptOptions(null, false, null),
                         outputDirectory.getRoot(),
-                        supportDirectory.getRoot(),
-                        false /* runAapt2Serially */) {
+                        supportDirectory.getRoot(), /* runAapt2Serially */
+                        false) {
                     @Override
                     protected Aapt getAapt() {
                         return aapt;

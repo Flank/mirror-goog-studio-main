@@ -30,6 +30,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import org.junit.BeforeClass;
@@ -41,16 +42,17 @@ public class LinkTest {
 
     @ClassRule public static TemporaryFolder temporaryFolder = new TemporaryFolder();
 
+    private static Aapt2Jni aapt;
     private static Path compiledLenaPng, compiledStringsXml, manifest;
 
     @BeforeClass
-    public static void compilePng() throws IOException {
+    public static void compilePng() throws Exception {
         Path drawable = temporaryFolder.newFolder("drawable").toPath();
         Path lena = drawable.resolve("lena.png");
         Aapt2TestFiles.writeLenaPng(lena);
         Path compileOut = temporaryFolder.newFolder().toPath();
         Aapt2Result result =
-                Aapt2Jni.compile(Arrays.asList("-o", compileOut.toString(), lena.toString()));
+                getAapt().compile(Arrays.asList("-o", compileOut.toString(), lena.toString()));
         assertEquals(0, result.getReturnCode());
         assertTrue(result.getMessages().isEmpty());
         compiledLenaPng =
@@ -59,13 +61,13 @@ public class LinkTest {
     }
 
     @BeforeClass
-    public static void compileXml() throws IOException {
+    public static void compileXml() throws Exception {
         Path values = temporaryFolder.newFolder("values").toPath();
         Path strings = values.resolve("strings.xml");
         Aapt2TestFiles.writeStringsXml(strings);
         Path compileOut = temporaryFolder.newFolder().toPath();
         Aapt2Result result =
-                Aapt2Jni.compile(Arrays.asList("-o", compileOut.toString(), strings.toString()));
+                getAapt().compile(Arrays.asList("-o", compileOut.toString(), strings.toString()));
         assertEquals(0, result.getReturnCode());
         assertTrue(result.getMessages().isEmpty());
         compiledStringsXml =
@@ -84,21 +86,22 @@ public class LinkTest {
     }
 
     @Test
-    public void link() throws IOException {
+    public void link() throws Exception {
         Path resourceDotApUnderscore = temporaryFolder.newFile("resources.ap_").toPath();
 
         Aapt2Result result =
-                Aapt2Jni.link(
-                        Arrays.asList(
-                                "-o",
-                                resourceDotApUnderscore.toString(),
-                                "--manifest",
-                                manifest.toString(),
-                                "--auto-add-overlay",
-                                "-R",
-                                compiledLenaPng.toString(),
-                                "-R",
-                                compiledStringsXml.toString()));
+                getAapt()
+                        .link(
+                                Arrays.asList(
+                                        "-o",
+                                        resourceDotApUnderscore.toString(),
+                                        "--manifest",
+                                        manifest.toString(),
+                                        "--auto-add-overlay",
+                                        "-R",
+                                        compiledLenaPng.toString(),
+                                        "-R",
+                                        compiledStringsXml.toString()));
 
         assertEquals(0, result.getReturnCode());
         assertTrue(result.getMessages().isEmpty());
@@ -121,18 +124,19 @@ public class LinkTest {
     }
 
     @Test
-    public void linkFailure() throws IOException {
+    public void linkFailure() throws Exception {
         Path resourceDotApUnderscore = temporaryFolder.newFile("resources2.ap_").toPath();
 
         Aapt2Result result =
-                Aapt2Jni.link(
-                        Arrays.asList(
-                                "-o",
-                                resourceDotApUnderscore.toString(),
-                                "--manifest",
-                                manifest.toString(),
-                                "-R",
-                                compiledStringsXml.toString()));
+                getAapt()
+                        .link(
+                                Arrays.asList(
+                                        "-o",
+                                        resourceDotApUnderscore.toString(),
+                                        "--manifest",
+                                        manifest.toString(),
+                                        "-R",
+                                        compiledStringsXml.toString()));
 
         assertEquals(1, result.getReturnCode());
         assertEquals(3, result.getMessages().size());
@@ -152,11 +156,18 @@ public class LinkTest {
     }
 
     @Test
-    public void invalidOption() throws IOException {
+    public void invalidOption() throws Exception {
         Aapt2Result result =
-                Aapt2Jni.link(Collections.singletonList("--link-test----invalid-option"));
+                getAapt().link(Collections.singletonList("--link-test----invalid-option"));
         assertEquals(1, result.getReturnCode());
         // NB: Argument parse failures are output directly to stderr.
         assertEquals(0, result.getMessages().size());
+    }
+
+    private static Aapt2Jni getAapt() throws IOException, ExecutionException {
+        if (aapt == null) {
+            aapt = Aapt2TestFactory.get(temporaryFolder);
+        }
+        return aapt;
     }
 }
