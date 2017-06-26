@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.android.build.api.transform.Transform;
 import com.google.common.base.Charsets;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
@@ -28,9 +29,11 @@ import com.google.common.reflect.ClassPath;
 import com.google.common.reflect.Invokable;
 import com.google.common.reflect.Parameter;
 import com.google.common.reflect.TypeToken;
+import com.google.common.truth.Truth;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.net.URL;
+import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -51,19 +54,19 @@ public class StableApiTest {
                 ClassPath.from(Transform.class.getClassLoader())
                         .getTopLevelClassesRecursive("com.android.build.api");
 
-        String apiElements =
+        List<String> apiElements =
                 allClasses
                         .stream()
                         .filter(classInfo -> !classInfo.getSimpleName().endsWith("Test"))
                         .flatMap(classInfo -> getApiElements(classInfo.load()))
-                        .sorted()
-                        .collect(Collectors.joining("\n"));
+                        .collect(Collectors.toList());
 
         // Compare the two as strings, to get a nice diff UI in the IDE.
-        String expectedApiElements =
-                Resources.toString(API_LIST_URL, Charsets.UTF_8)
-                        .replace(System.lineSeparator(), "\n");
-        assertEquals(expectedApiElements, apiElements);
+        Iterable<String> expectedApiElements =
+                Splitter.on(System.lineSeparator())
+                        .split(Resources.toString(API_LIST_URL, Charsets.UTF_8));
+
+        Truth.assertThat(apiElements).containsExactlyElementsIn(expectedApiElements);
     }
 
     @Test
@@ -71,7 +74,7 @@ public class StableApiTest {
         // ATTENTION REVIEWER: if this needs to be changed, please make sure changes to api-list.txt
         // are backwards compatible.
         assertEquals(
-                "c9ea8fef2e431fddb775f63724e2c2a652414efd",
+                "35d3d7ab0c05df4aa0bbecacd9c117e09248369b",
                 Hashing.sha1()
                         .hashString(
                                 Resources.toString(API_LIST_URL, Charsets.UTF_8)

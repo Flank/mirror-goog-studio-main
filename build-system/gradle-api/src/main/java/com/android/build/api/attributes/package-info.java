@@ -14,12 +14,5 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.dependency;
-
-import org.gradle.api.attributes.Attribute;
-
-/** Type for Build Type attributes in Gradle's configuration objects. */
-public interface BuildTypeAttr extends org.gradle.api.Named {
-
-    Attribute<BuildTypeAttr> ATTRIBUTE = Attribute.of(BuildTypeAttr.class);
-}
+/** Attributes used in the variant aware dependency management of Gradle. */
+package com.android.build.api.attributes;

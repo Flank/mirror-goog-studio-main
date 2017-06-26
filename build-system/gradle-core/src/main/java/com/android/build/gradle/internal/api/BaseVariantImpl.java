@@ -18,11 +18,11 @@ package com.android.build.gradle.internal.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.attributes.ProductFlavorAttr;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.JavaCompileOptions;
 import com.android.build.gradle.api.SourceKind;
-import com.android.build.gradle.internal.dependency.ProductFlavorAttr;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;

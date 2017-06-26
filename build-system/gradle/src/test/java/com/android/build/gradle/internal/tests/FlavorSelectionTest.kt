@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.tests
 
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.AppPlugin
-import com.android.build.gradle.internal.dependency.ProductFlavorAttr
+import com.android.build.api.attributes.ProductFlavorAttr
 import com.android.build.gradle.internal.fixture.TestConstants
 import com.android.build.gradle.internal.fixture.TestProjects
 import com.android.build.gradle.internal.fixture.createAndConfig

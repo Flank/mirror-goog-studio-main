@@ -24,6 +24,7 @@ import static org.gradle.api.internal.artifacts.ArtifactAttributes.ARTIFACT_FORM
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.attributes.ProductFlavorAttr;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.TestedAndroidConfig;
 import com.android.build.gradle.api.AndroidSourceSet;
@@ -35,7 +36,6 @@ import com.android.build.gradle.internal.dependency.AarTransform;
 import com.android.build.gradle.internal.dependency.AndroidTypeAttr;
 import com.android.build.gradle.internal.dependency.ExtractAarTransform;
 import com.android.build.gradle.internal.dependency.JarTransform;
-import com.android.build.gradle.internal.dependency.ProductFlavorAttr;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;

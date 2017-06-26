@@ -14,9 +14,17 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.dependency;
+package com.android.build.api.attributes;
 
-import org.gradle.api.Named;
+import org.gradle.api.attributes.Attribute;
 
-/** Type for Product Flavors attributes in Gradle's configuration objects. */
-public interface ProductFlavorAttr extends Named {}
+/**
+ * Type for the attribute holding BuildType information.
+ *
+ * <p>There should only be one build type attribute associated to each {@link
+ * org.gradle.api.artifacts.Configuration} object. The key should be {@link #ATTRIBUTE}.
+ */
+public interface BuildTypeAttr extends org.gradle.api.Named {
+
+    Attribute<BuildTypeAttr> ATTRIBUTE = Attribute.of(BuildTypeAttr.class);
+}
