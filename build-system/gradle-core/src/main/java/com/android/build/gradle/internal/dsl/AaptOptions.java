@@ -27,10 +27,8 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 
-/**
- * DSL object for configuring aapt options.
- */
-public class AaptOptions implements com.android.builder.model.AaptOptions {
+/** DSL object for configuring aapt options. */
+public class AaptOptions {
 
     @Nullable
     private String ignoreAssetsPattern;
@@ -60,7 +58,6 @@ public class AaptOptions implements com.android.builder.model.AaptOptions {
      *
      * <p>See <code>aapt --help</code>
      */
-    @Override
     @Optional
     @Input
     public String getIgnoreAssets() {
@@ -100,7 +97,6 @@ public class AaptOptions implements com.android.builder.model.AaptOptions {
      *
      * <p>Equivalent of the -0 flag. See <code>aapt --help</code>
      */
-    @Override
     @Optional
     @Input
     public Collection<String> getNoCompress() {
@@ -167,7 +163,6 @@ public class AaptOptions implements com.android.builder.model.AaptOptions {
      *
      * <p>See <code>aapt --help</code>
      */
-    @Override
     @Input
     public boolean getFailOnMissingConfigEntry() {
         return failOnMissingConfigEntry;
@@ -215,7 +210,6 @@ public class AaptOptions implements com.android.builder.model.AaptOptions {
      * Returns the list of additional parameters to pass to {@code appt}.
      */
     @Nullable
-    @Override
     @Optional
     @Input
     public List<String> getAdditionalParameters() {

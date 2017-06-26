@@ -32,6 +32,7 @@ import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.scope.PackagingScope;
 import com.android.builder.core.AndroidBuilder;
+import com.android.builder.internal.aapt.AaptOptions;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableSet;
@@ -61,7 +62,7 @@ public class InstantRunSliceSplitApkBuilder extends InstantRunSplitApkBuilder {
             @NonNull PackagingScope packagingScope,
             @Nullable CoreSigningConfig signingConf,
             @NonNull AaptGeneration aaptGeneration,
-            @NonNull com.android.builder.model.AaptOptions aaptOptions,
+            @NonNull AaptOptions aaptOptions,
             @NonNull File outputDirectory,
             @NonNull File supportDirectory,
             @Nullable Boolean runAapt2Serially) {

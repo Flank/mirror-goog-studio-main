@@ -19,7 +19,6 @@ package com.android.builder.internal.aapt;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.core.VariantType;
-import com.android.builder.model.AaptOptions;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 import com.android.utils.ILogger;

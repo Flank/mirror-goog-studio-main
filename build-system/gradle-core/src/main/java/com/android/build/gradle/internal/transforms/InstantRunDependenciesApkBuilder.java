@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.transforms;
 
-
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.transform.DirectoryInput;
@@ -31,7 +30,7 @@ import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.scope.PackagingScope;
 import com.android.builder.core.AndroidBuilder;
-import com.android.builder.model.AaptOptions;
+import com.android.builder.internal.aapt.AaptOptions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.io.File;

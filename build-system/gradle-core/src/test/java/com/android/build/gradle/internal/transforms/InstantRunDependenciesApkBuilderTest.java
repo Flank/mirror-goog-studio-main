@@ -34,12 +34,12 @@ import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
-import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.scope.PackagingScope;
 import com.android.builder.core.AndroidBuilder;
+import com.android.builder.internal.aapt.AaptOptions;
 import com.android.builder.packaging.PackagerException;
 import com.android.builder.sdk.TargetInfo;
 import com.android.ide.common.process.ProcessException;
@@ -77,7 +77,6 @@ public class InstantRunDependenciesApkBuilderTest {
     @Mock InstantRunBuildContext buildContext;
     @Mock AndroidBuilder androidBuilder;
     @Mock CoreSigningConfig coreSigningConfig;
-    @Mock AaptOptions aaptOptions;
     @Mock PackagingScope packagingScope;
 
     @Mock TargetInfo targetInfo;
@@ -114,7 +113,7 @@ public class InstantRunDependenciesApkBuilderTest {
                         packagingScope,
                         coreSigningConfig,
                         AaptGeneration.AAPT_V2_JNI,
-                        aaptOptions,
+                        new AaptOptions(null, false, null),
                         outputDirectory.getRoot(),
                         supportDirectory.getRoot()) {
                     @NonNull

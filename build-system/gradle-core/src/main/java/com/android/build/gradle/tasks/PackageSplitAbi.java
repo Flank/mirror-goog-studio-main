@@ -29,7 +29,6 @@ import com.android.builder.core.VariantConfiguration;
 import com.android.builder.files.IncrementalRelativeFileSets;
 import com.android.builder.files.RelativeFile;
 import com.android.builder.internal.packaging.IncrementalPackager;
-import com.android.builder.model.AaptOptions;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.packaging.PackagerException;
 import com.android.builder.packaging.SigningException;
@@ -38,7 +37,6 @@ import com.android.ide.common.res2.FileStatus;
 import com.android.ide.common.signing.KeytoolException;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.FileUtils;
-import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
@@ -72,7 +70,7 @@ public class PackageSplitAbi extends BaseTask {
 
     private File incrementalDir;
 
-    private AaptOptions aaptOptions;
+    private Collection<String> aaptOptionsNoCompress;
     private SplitScope splitScope;
 
     @InputFiles
@@ -117,8 +115,7 @@ public class PackageSplitAbi extends BaseTask {
 
     @Input
     public Collection<String> getNoCompressExtensions() {
-        return MoreObjects.<Collection<String>>firstNonNull(
-                aaptOptions.getNoCompress(), Collections.emptyList());
+        return aaptOptionsNoCompress != null ? aaptOptionsNoCompress : Collections.emptyList();
     }
 
     @TaskAction
@@ -143,8 +140,8 @@ public class PackageSplitAbi extends BaseTask {
                                     .withSigning(signingConfig)
                                     .withCreatedBy(getBuilder().getCreatedBy())
                                     .withMinSdk(getMinSdkVersion())
-                                    //.withManifest(manifest)
-                                    .withAaptOptions(aaptOptions)
+                                    // .withManifest(manifest)
+                                    .withAaptOptionsNoCompress(aaptOptionsNoCompress)
                                     .withIntermediateDir(incrementalDir)
                                     .withProject(getProject())
                                     .withDebuggableBuild(isJniDebuggable())
@@ -212,8 +209,8 @@ public class PackageSplitAbi extends BaseTask {
             packageSplitAbiTask.incrementalDir =
                     scope.getIncrementalDir(packageSplitAbiTask.getName());
 
-            packageSplitAbiTask.aaptOptions =
-                    scope.getGlobalScope().getExtension().getAaptOptions();
+            packageSplitAbiTask.aaptOptionsNoCompress =
+                    scope.getGlobalScope().getExtension().getAaptOptions().getNoCompress();
             packageSplitAbiTask.jniDebuggable = config.getBuildType().isJniDebuggable();
 
             packageSplitAbiTask.jniFolders =

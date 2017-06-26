@@ -16,14 +16,13 @@
 
 package com.android.builder.packaging;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.apkzlib.zfile.NativeLibrariesPackagingMode;
 import com.android.builder.core.DefaultManifestParser;
-import com.android.builder.model.AaptOptions;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -34,6 +33,7 @@ import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Predicate;
 
@@ -176,16 +176,14 @@ public class PackagingUtils {
 
     @NonNull
     public static Predicate<String> getNoCompressPredicate(
-            @NonNull AaptOptions aaptOptions,
-            @NonNull File manifest) {
-        checkNotNull(aaptOptions);
+            @Nullable Collection<String> aaptOptionsNoCompress, @NonNull File manifest) {
         checkState(manifest.exists());
 
         NativeLibrariesPackagingMode packagingMode =
                 getNativeLibrariesLibrariesPackagingMode(manifest);
 
         return getNoCompressPredicateForExtensions(
-                getAllNoCompressExtensions(aaptOptions, packagingMode));
+                getAllNoCompressExtensions(aaptOptionsNoCompress, packagingMode));
     }
 
     @NonNull
@@ -221,7 +219,7 @@ public class PackagingUtils {
 
     @NonNull
     private static List<String> getAllNoCompressExtensions(
-            @NonNull AaptOptions aaptOptions,
+            @Nullable Collection<String> aaptOptionsNoCompress,
             @NonNull NativeLibrariesPackagingMode nativeLibrariesPackagingMode) {
         List<String> result = Lists.newArrayList(DEFAULT_DONT_COMPRESS_EXTENSIONS);
 
@@ -229,8 +227,8 @@ public class PackagingUtils {
             result.add(SdkConstants.DOT_NATIVE_LIBS);
         }
 
-        if (aaptOptions.getNoCompress() != null) {
-            result.addAll(aaptOptions.getNoCompress());
+        if (aaptOptionsNoCompress != null) {
+            result.addAll(aaptOptionsNoCompress);
         }
         return result;
     }

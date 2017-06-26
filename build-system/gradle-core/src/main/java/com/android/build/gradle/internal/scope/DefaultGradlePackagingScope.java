@@ -16,17 +16,17 @@
 
 package com.android.build.gradle.internal.scope;
 
-
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
+import com.android.build.gradle.internal.dsl.DslAdaptersKt;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.pipeline.StreamFilter;
 import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
 import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.builder.core.AndroidBuilder;
-import com.android.builder.model.AaptOptions;
+import com.android.builder.internal.aapt.AaptOptions;
 import com.android.ide.common.build.ApkData;
 import com.android.sdklib.AndroidVersion;
 import java.io.File;
@@ -203,7 +203,7 @@ public class DefaultGradlePackagingScope implements PackagingScope {
     @NonNull
     @Override
     public AaptOptions getAaptOptions() {
-        return mGlobalScope.getExtension().getAaptOptions();
+        return DslAdaptersKt.convert(mGlobalScope.getExtension().getAaptOptions());
     }
 
     @Override

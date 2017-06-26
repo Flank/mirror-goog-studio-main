@@ -22,16 +22,15 @@ import static com.google.common.truth.Truth.assertThat;
 import static java.nio.file.Files.readAllBytes;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.builder.core.VariantType;
 import com.android.builder.internal.aapt.Aapt;
+import com.android.builder.internal.aapt.AaptOptions;
 import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.builder.internal.aapt.AaptTestUtils;
-import com.android.builder.model.AaptOptions;
 import com.android.ide.common.process.DefaultProcessExecutor;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.ide.common.res2.CompileResourceRequest;
@@ -48,18 +47,13 @@ import com.android.utils.ILogger;
 import com.android.utils.StdLogger;
 import com.google.common.base.Charsets;
 import com.google.common.base.Verify;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Range;
 import com.google.common.io.Files;
 import java.io.File;
 import java.time.Duration;
-import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Future;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -111,33 +105,6 @@ public class AaptV1Test {
                                     mProgressIndicator),
                             "Build tools above %s not found",
                             AaptV1.VERSION_FOR_SERVER_AAPT.toShortString()));
-
-    /**
-     * Dummy aapt options.
-     */
-    @NonNull
-    private final AaptOptions mDummyOptions = new AaptOptions() {
-        @Override
-        public String getIgnoreAssets() {
-            return null;
-        }
-
-        @Override
-        public Collection<String> getNoCompress() {
-            return null;
-        }
-
-        @Override
-        public boolean getFailOnMissingConfigEntry() {
-            return false;
-        }
-
-        @Override
-        public List<String> getAdditionalParameters() {
-            return null;
-        }
-    };
-
 
 
     /**
@@ -358,16 +325,17 @@ public class AaptV1Test {
 
         File sourceOutput = mTemporaryFolder.newFolder("source-output");
 
-        AaptPackageConfig config = new AaptPackageConfig.Builder()
-                .setAndroidTarget(target23)
-                .setBuildToolInfo(buildToolInfo)
-                .setLogger(mLogger)
-                .setManifestFile(manifestFile)
-                .setOptions(mDummyOptions)
-                .setSourceOutputDir(sourceOutput)
-                .setVariantType(VariantType.DEFAULT)
-                .setResourceDir(outputDir)
-                .build();
+        AaptPackageConfig config =
+                new AaptPackageConfig.Builder()
+                        .setAndroidTarget(target23)
+                        .setBuildToolInfo(buildToolInfo)
+                        .setLogger(mLogger)
+                        .setManifestFile(manifestFile)
+                        .setOptions(new AaptOptions(null, false, null))
+                        .setSourceOutputDir(sourceOutput)
+                        .setVariantType(VariantType.DEFAULT)
+                        .setResourceDir(outputDir)
+                        .build();
         aapt.link(config).get();
 
         File rJava = FileUtils.join(sourceOutput, "com", "example", "aapt", "R.java");
@@ -412,16 +380,17 @@ public class AaptV1Test {
 
         File sourceOutput = mTemporaryFolder.newFolder("source-output");
 
-        AaptPackageConfig config = new AaptPackageConfig.Builder()
-                .setAndroidTarget(target23)
-                .setBuildToolInfo(buildToolInfo)
-                .setLogger(mLogger)
-                .setManifestFile(manifestFile)
-                .setOptions(mDummyOptions)
-                .setSourceOutputDir(sourceOutput)
-                .setVariantType(VariantType.LIBRARY)
-                .setResourceDir(outputDir)
-                .build();
+        AaptPackageConfig config =
+                new AaptPackageConfig.Builder()
+                        .setAndroidTarget(target23)
+                        .setBuildToolInfo(buildToolInfo)
+                        .setLogger(mLogger)
+                        .setManifestFile(manifestFile)
+                        .setOptions(new AaptOptions(null, false, null))
+                        .setSourceOutputDir(sourceOutput)
+                        .setVariantType(VariantType.LIBRARY)
+                        .setResourceDir(outputDir)
+                        .build();
         aapt.link(config).get();
 
         File rJava = FileUtils.join(sourceOutput, "com", "example", "aapt", "R.java");

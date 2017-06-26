@@ -30,7 +30,7 @@ import com.android.build.gradle.options.DeploymentDevice;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
 import com.android.builder.core.ManifestAttributeSupplier;
-import com.android.builder.model.AaptOptions;
+import com.android.builder.internal.aapt.AaptOptions;
 import com.android.ide.common.build.ApkData;
 import com.android.sdklib.IAndroidTarget;
 import com.android.utils.FileUtils;

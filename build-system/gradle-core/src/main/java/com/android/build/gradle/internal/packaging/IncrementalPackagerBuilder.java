@@ -21,7 +21,6 @@ import com.android.annotations.Nullable;
 import com.android.apkzlib.zfile.ApkCreatorFactory;
 import com.android.apkzlib.zfile.NativeLibrariesPackagingMode;
 import com.android.builder.internal.packaging.IncrementalPackager;
-import com.android.builder.model.AaptOptions;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.packaging.PackagerException;
 import com.android.builder.packaging.PackagingUtils;
@@ -35,6 +34,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -137,11 +137,8 @@ public class IncrementalPackagerBuilder {
     @Nullable
     private File manifest;
 
-    /**
-     * aapt options.
-     */
-    @Nullable
-    private AaptOptions aaptOptions;
+    /** aapt options no compress config. */
+    @Nullable private Collection<String> aaptOptionsNoCompress;
 
     /**
      * Creates a new builder.
@@ -243,16 +240,15 @@ public class IncrementalPackagerBuilder {
     }
 
     /**
-     * Sets the {@code aapt} options. The options themselves are not used for packaging. However,
-     * the no-compress predicate can be inferred if this and the manifest
-     * (see {@link #withManifest(File)}) are both defined.
+     * Sets the {@code aapt} options no compress predicate.
      *
-     * @param options the aapt options
-     * @return {@code this} for use with fluent-style notation
+     * <p>The no-compress predicate can be computed if this and the manifest (see {@link
+     * #withManifest(File)}) are both defined.
      */
     @NonNull
-    public IncrementalPackagerBuilder withAaptOptions(@NonNull AaptOptions options) {
-        aaptOptions = options;
+    public IncrementalPackagerBuilder withAaptOptionsNoCompress(
+            @Nullable Collection<String> aaptOptionsNoCompress) {
+        this.aaptOptionsNoCompress = aaptOptionsNoCompress;
         return this;
     }
 
@@ -346,8 +342,9 @@ public class IncrementalPackagerBuilder {
         Preconditions.checkState(intermediateDir != null, "intermediateDir == null");
 
         if (noCompressPredicate == null) {
-            if (manifest != null && aaptOptions != null) {
-                noCompressPredicate = PackagingUtils.getNoCompressPredicate(aaptOptions, manifest);
+            if (manifest != null) {
+                noCompressPredicate =
+                        PackagingUtils.getNoCompressPredicate(aaptOptionsNoCompress, manifest);
             } else {
                 noCompressPredicate = path -> false;
             }

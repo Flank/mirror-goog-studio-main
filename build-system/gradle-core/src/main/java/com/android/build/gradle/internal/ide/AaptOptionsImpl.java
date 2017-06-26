@@ -28,6 +28,8 @@ import java.util.Objects;
 
 /**
  * Implementation of AaptOptions that is Serializable.
+ *
+ * <p>Should only be used for the model.
  */
 @Immutable
 public final class AaptOptionsImpl implements AaptOptions, Serializable {
@@ -44,8 +46,8 @@ public final class AaptOptionsImpl implements AaptOptions, Serializable {
     @NonNull
     private final List<String> additionalParameters;
 
-
-    static AaptOptions create(@NonNull AaptOptions aaptOptions) {
+    public static AaptOptions create(
+            @NonNull com.android.build.gradle.internal.dsl.AaptOptions aaptOptions) {
         return new AaptOptionsImpl(
                 aaptOptions.getIgnoreAssets(),
                 aaptOptions.getNoCompress(),

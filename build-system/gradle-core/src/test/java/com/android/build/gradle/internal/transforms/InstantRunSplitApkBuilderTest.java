@@ -24,7 +24,6 @@ import static org.mockito.Mockito.when;
 import com.android.apkzlib.zfile.ApkCreatorFactory;
 import com.android.build.api.transform.TransformException;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
-import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
@@ -32,6 +31,7 @@ import com.android.build.gradle.internal.scope.PackagingScope;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.internal.aapt.Aapt;
+import com.android.builder.internal.aapt.AaptOptions;
 import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.builder.packaging.PackagerException;
 import com.android.builder.sdk.TargetInfo;
@@ -67,7 +67,6 @@ public class InstantRunSplitApkBuilderTest {
     @Mock Aapt aapt;
     @Mock PackagingScope packagingScope;
     @Mock CoreSigningConfig coreSigningConfig;
-    @Mock AaptOptions aaptOptions;
 
     @Mock TargetInfo targetInfo;
     @Mock BuildToolInfo buildTools;
@@ -98,7 +97,7 @@ public class InstantRunSplitApkBuilderTest {
                         packagingScope,
                         coreSigningConfig,
                         AaptGeneration.AAPT_V2_JNI,
-                        aaptOptions,
+                        new AaptOptions(null, false, null),
                         outputDirectory.getRoot(),
                         supportDirectory.getRoot(),
                         false /* runAapt2Serially */) {
@@ -219,7 +218,7 @@ public class InstantRunSplitApkBuilderTest {
                         packagingScope,
                         coreSigningConfig,
                         AaptGeneration.AAPT_V2_JNI,
-                        aaptOptions,
+                        new AaptOptions(null, false, null),
                         outputDirectory.getRoot(),
                         supportDirectory.getRoot(),
                         false /* runAapt2Serially */) {
