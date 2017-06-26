@@ -17,7 +17,11 @@ import ${applicationPackage}.R
 
 import kotlinx.android.synthetic.main.${layoutName}.*
 <#if includeCppSupport!false>
+<#if useFragment!false>
+import kotlinx.android.synthetic.main.${fragmentLayoutName}.*
+<#else>
 import kotlinx.android.synthetic.main.${simpleLayoutName}.*
+</#if>
 </#if>
 class ${activityClass} : ${superClass}() {
 
