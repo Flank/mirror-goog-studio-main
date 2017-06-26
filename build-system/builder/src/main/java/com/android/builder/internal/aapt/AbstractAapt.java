@@ -146,12 +146,6 @@ public abstract class AbstractAapt implements Aapt {
             throw new AaptException("Variant type not set.");
         }
 
-        if (packageConfig.getSourceOutputDir() == null
-                && packageConfig.getResourceOutputApk() == null) {
-            throw new AaptException("Neither source output dir nor resource output dir were "
-                    + "set, but at least one must be.");
-        }
-
         if ((packageConfig.getSymbolOutputDir() != null
                 || packageConfig.getSourceOutputDir() != null)
                 && packageConfig.getLibraries().isEmpty()) {
