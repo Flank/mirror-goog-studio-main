@@ -104,8 +104,8 @@ public final class AndroidDebugBridge {
             Sets.newCopyOnWriteArraySet();
 
     /**
-     * Classes which implement this interface provide a method that deals
-     * with {@link AndroidDebugBridge} changes.
+     * Classes which implement this interface provide a method that deals with {@link
+     * AndroidDebugBridge} changes (including restarts).
      */
     public interface IDebugBridgeChangeListener {
         /**
@@ -116,6 +116,22 @@ public final class AndroidDebugBridge {
          *               initializing the bridge
          */
         void bridgeChanged(@Nullable AndroidDebugBridge bridge);
+
+        /**
+         * Sent before trigger a restart.
+         *
+         * <p>Note: Callback is inside a synchronized block so handler should be fast.
+         */
+        default void restartInitiated() {}
+
+        /**
+         * Sent when a restarted is finished.
+         *
+         * <p>Note: Callback is inside a synchronized block so handler should be fast.
+         *
+         * @param isSuccessful if the bridge is successfully restarted.
+         */
+        default void restartCompleted(boolean isSuccessful) {};
     }
 
     /**
@@ -726,18 +742,31 @@ public final class AndroidDebugBridge {
                     "Attempting to restart adb, but version check failed!"); //$NON-NLS-1$
             return false;
         }
+
+        synchronized (sLock) {
+            for (IDebugBridgeChangeListener listener : sBridgeListeners) {
+                listener.restartInitiated();
+            }
+        }
+        boolean restart;
         synchronized (this) {
             stopAdb();
 
-            boolean restart = startAdb();
+            restart = startAdb();
 
             if (restart && mDeviceMonitor == null) {
                 mDeviceMonitor = new DeviceMonitor(this);
                 mDeviceMonitor.start();
             }
-
-            return restart;
         }
+
+        synchronized (sLock) {
+            for (IDebugBridgeChangeListener listener : sBridgeListeners) {
+                listener.restartCompleted(restart);
+            }
+        }
+
+        return restart;
     }
 
     /**
@@ -1154,5 +1183,4 @@ public final class AndroidDebugBridge {
             throw new IllegalArgumentException("Not a valid port number");
         }
     }
-
 }
