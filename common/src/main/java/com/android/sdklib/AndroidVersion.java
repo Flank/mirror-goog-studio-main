@@ -94,6 +94,10 @@ public final class AndroidVersion implements Comparable<AndroidVersion> {
     /** First version to have multi-user support (JB-MR2, API 17) */
     public static final AndroidVersion SUPPORTS_MULTI_USER = new AndroidVersion(17, null);
 
+    /** Minimum API versions that are recommended for use in testing apps */
+    public static final int MIN_RECOMMENDED_API = 22;
+    public static final int MIN_RECOMMENDED_WEAR_API = 25;
+
     /**
      * Thrown when an {@link AndroidVersion} object could not be created.
      */

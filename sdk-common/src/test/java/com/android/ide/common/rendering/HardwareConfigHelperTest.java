@@ -14,8 +14,6 @@ import static com.android.ide.common.rendering.HardwareConfigHelper.sortNexusLis
 import com.android.repository.testframework.MockFileOp;
 import com.android.sdklib.devices.Device;
 import com.android.sdklib.devices.DeviceManager;
-import com.android.sdklib.devices.Software;
-import com.android.sdklib.devices.State;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.utils.StdLogger;
 import com.google.common.collect.Lists;
@@ -128,21 +126,6 @@ public class HardwareConfigHelperTest extends TestCase {
         assertTrue(isTv(tv720p));
         assertFalse(isMobile(tv720p));
         assertFalse(tv720p.isScreenRound());
-    }
-
-    public void testWearCn() {
-        Device.Builder builder = new Device.Builder();
-        builder.setTagId("android-wear-cn");
-        // some other minimal state to make the builder happy
-        builder.setName("wear");
-        builder.setManufacturer("google");
-        builder.addSoftware(new Software());
-        State state = new State();
-        state.setDefaultState(true);
-        builder.addState(state);
-        Device device = builder.build();
-        assertTrue(HardwareConfigHelper.isWear(device));
-        assertFalse(HardwareConfigHelper.isTv(device));
     }
 
     public void testNexusRank() {

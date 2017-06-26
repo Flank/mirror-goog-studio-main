@@ -19,9 +19,9 @@ package com.android.sdklib.devices;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.dvlib.DeviceSchema;
-import com.android.ide.common.rendering.api.HardwareConfig;
 import com.android.resources.ScreenOrientation;
 import com.android.resources.ScreenRound;
+import com.android.sdklib.repository.targets.SystemImage;
 
 import java.awt.Dimension;
 import java.util.ArrayList;
@@ -333,6 +333,10 @@ public final class Device {
 
         public void setTagId(@Nullable String tagId) {
             mTagId = tagId;
+            if (SystemImage.WEAR_TAG.getId().equals(mTagId)) {
+                // All Wear devices are compatible with Play Store
+                mHasPlayStore = true;
+            }
         }
 
         public void addBootProp(@NonNull String propName, @NonNull String propValue) {
@@ -345,6 +349,10 @@ public final class Device {
 
         public void setPlayStore(boolean hasPlayStore) {
             mHasPlayStore = hasPlayStore;
+            if (SystemImage.WEAR_TAG.getId().equals(mTagId)) {
+                // All Wear devices are compatible with Play Store
+                mHasPlayStore = true;
+            }
         }
 
         public void addSoftware(@NonNull Software sw) {

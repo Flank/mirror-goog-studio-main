@@ -168,7 +168,17 @@ public class SystemImage implements ISystemImage {
 
     @Override
     public boolean hasPlayStore() {
-        return (PLAY_STORE_TAG.equals(getTag()));
+        if (PLAY_STORE_TAG.equals(getTag())) {
+            return true;
+        }
+        // A Wear system image has Play Store if it is
+        // a recent API version and is NOT Wear-for-China.
+        if (WEAR_TAG.equals(getTag()) &&
+            mAndroidVersion.getApiLevel() >= AndroidVersion.MIN_RECOMMENDED_WEAR_API &&
+            !getLocation().getAbsolutePath().contains(WEAR_CN_DIRECTORY)) {
+            return true;
+        }
+        return false;
     }
 
     @Override
