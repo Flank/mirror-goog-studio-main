@@ -25,7 +25,6 @@ import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.CompileOptions;
 import com.android.build.gradle.internal.ExtraModelInfo;
-import com.android.build.gradle.internal.LoggingUtil;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.SourceSetSourceProviderWrapper;
 import com.android.build.gradle.internal.coverage.JacocoOptions;
@@ -55,12 +54,15 @@ import com.android.repository.Revision;
 import com.android.resources.Density;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import org.gradle.api.Action;
 import org.gradle.api.GradleException;
 import org.gradle.api.NamedDomainObjectContainer;
@@ -158,6 +160,9 @@ public abstract class BaseExtension implements AndroidConfig {
     protected Project project;
 
     private final ProjectOptions projectOptions;
+
+    private Map<String, Map<String, List<String>>> flavorAttrMap = Maps.newHashMap();
+    private Map<String, List<String>> buildTypeAttrMap = Maps.newHashMap();
 
     BaseExtension(
             @NonNull final Project project,
@@ -753,6 +758,52 @@ public abstract class BaseExtension implements AndroidConfig {
                 "",
                 SyncIssue.TYPE_GENERIC,
                 "flavorSelection is now replaced with defaultConfig.flavorSelection. It's also available on product flavors, build types and variant.");
+    }
+
+    public void buildTypeMatching(@NonNull String consumer, @NonNull String... alternates) {
+        if (buildTypeAttrMap.containsKey(consumer)) {
+            throw new RuntimeException(
+                    String.format("Alternate for build type '%s' already set", consumer));
+        }
+
+        buildTypeAttrMap.put(consumer, Arrays.asList(alternates));
+    }
+
+    @Override
+    @NonNull
+    public Map<String, Map<String, List<String>>> getFlavorAttrMap() {
+        return flavorAttrMap;
+    }
+
+    @Override
+    @NonNull
+    public Map<String, List<String>> getBuildTypeAttrMap() {
+        return buildTypeAttrMap;
+    }
+
+    public void productFlavorMatching(
+            @NonNull String consumerDimension,
+            @NonNull String consumer,
+            @NonNull String... alternates) {
+        // can't use a lambda because of the DSL doc parser.
+        Map<String, List<String>> flavorMap =
+                flavorAttrMap.computeIfAbsent(
+                        consumerDimension,
+                        new Function<String, Map<String, List<String>>>() {
+                            @Override
+                            public Map<String, List<String>> apply(String s) {
+                                return Maps.newHashMap();
+                            }
+                        });
+
+        if (flavorMap.containsKey(consumer)) {
+            throw new RuntimeException(
+                    String.format(
+                            "Alternate for productflavor '%s-%s' already set",
+                            consumerDimension, consumer));
+        }
+
+        flavorMap.put(consumer, Arrays.asList(alternates));
     }
 
     public void variantFilter(Action<VariantFilter> filter) {
