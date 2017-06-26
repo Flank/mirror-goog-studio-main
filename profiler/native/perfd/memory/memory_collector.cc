@@ -16,9 +16,11 @@
 #include "memory_collector.h"
 
 #include <unistd.h>
+#include <fstream>
 #include <sstream>
 
 #include "utils/activity_manager.h"
+#include "utils/device_info.h"
 #include "utils/filesystem_notifier.h"
 #include "utils/log.h"
 #include "utils/stopwatch.h"
@@ -28,6 +30,66 @@
 using ::profiler::proto::DumpDataResponse;
 using ::profiler::proto::TrackAllocationsResponse;
 using ::profiler::proto::TriggerHeapDumpResponse;
+
+namespace {
+// ID of the last segment in an hprof file.
+const char kHprofDumpEndTag = 0x2C;
+// The length of the last segment in an hprof file.
+// This consists of the tag |kHprofDumpEndTag|(1) + timestamp(4) + length(4)
+// for the data porition of the segment, which should always be zero.
+const int32_t kHprofEndTagLength = 9;
+// By checking file size changing and the last piece of data in the dump file,
+// we have no reliable way to distinguish between a heap dump failing vs user
+// pausing in the debugger for a long time, or other potential failure cases.
+// Stop trying if the file size has not changed for too long (5sec) and we don't
+// see the end tag.
+const int32_t kHprofReadRetryCount = 20;
+const int64_t kHprofReadRetryIntervalUs = profiler::Clock::ms_to_us(250);
+
+// In O, there is a bug in ActivityManagerService where the file descriptor
+// associated with the dump file does not get closed until the next GC.
+// This means we cannot use the inotify API to reliably detect when the dump
+// event finishes. As a workaround, we wait for the file size to stablize
+// AND check the last 9 bytes of the dump file to validate the  file ends
+// with a HEAP DUMP END segment.
+bool WaitForHeapDumpFinishInO(std::string file_path) {
+  bool result = false;
+  std::ifstream stream(file_path, std::ifstream::binary | std::ifstream::ate);
+  if (stream.fail()) {
+    profiler::Log::V("Failed to open hprof file stream.");
+  } else {
+    int retry = 0;
+    int prev_size = -1;
+    int curr_size = 0;
+    do {
+      usleep(static_cast<uint64_t>(kHprofReadRetryIntervalUs));
+      prev_size = curr_size;
+      stream.seekg(0, stream.end);
+      curr_size = stream.tellg();
+      result = prev_size == curr_size && curr_size > kHprofEndTagLength;
+      if (curr_size != prev_size) {
+        // Reset read retry count since file size is still changing.
+        retry = 0;
+      }
+
+      // File size matched, check bytes
+      if (result) {
+        char buf[kHprofEndTagLength];
+        stream.seekg(-kHprofEndTagLength, stream.end);
+        stream.read(buf, kHprofEndTagLength);
+        // First byte should be the tag, and the length as indicated by
+        // an integer starting at bytes[5] should be zero. Endian-ness
+        // does not matter in this case as we are reading a 0-value.
+        int length = (buf[5] << 24) + (buf[6] << 16) + (buf[7] << 8) + buf[8];
+        result = buf[0] == kHprofDumpEndTag && length == 0;
+      }
+    } while (!result && retry++ < kHprofReadRetryCount);
+  }
+  stream.close();
+
+  return result;
+}
+}
 
 namespace profiler {
 
@@ -109,11 +171,17 @@ void MemoryCollector::HeapDumpMain(std::shared_ptr<File> file) {
 
   bool result = am->TriggerHeapDump(pid_, file->path(), &unusedOutput);
 
-  // Monitoring the file to catch close event when the heap dump is complete
-  FileSystemNotifier notifier(file->path(), FileSystemNotifier::CLOSE);
-  if (!notifier.IsReadyToNotify() || !notifier.WaitUntilEventOccurs()) {
-    Log::V("Unable to monitor heap dump file for completion");
-    result = false;
+  if (result) {
+    if (profiler::DeviceInfo::feature_level() == 26) {
+      result = WaitForHeapDumpFinishInO(file->path());
+    } else {
+      // Monitoring the file to catch close event when the heap dump is complete
+      FileSystemNotifier notifier(file->path(), FileSystemNotifier::CLOSE);
+      if (!notifier.IsReadyToNotify() || !notifier.WaitUntilEventOccurs(-1)) {
+        Log::V("Unable to monitor heap dump file for completion");
+        result = false;
+      }
+    }
   }
 
   if (!memory_cache_.EndHeapDump(clock_.GetCurrentTime(), result)) {
