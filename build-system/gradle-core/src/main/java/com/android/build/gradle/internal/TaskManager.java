@@ -1480,14 +1480,16 @@ public abstract class TaskManager {
             return;
         }
 
-        scope.setExternalNativeJsonGenerator(ExternalNativeJsonGenerator.create(
-                project.getProjectDir(),
-                pathResolution.buildSystem,
-                pathResolution.makeFile,
-                androidBuilder,
-                sdkHandler,
-                scope
-        ));
+        scope.setExternalNativeJsonGenerator(
+                ExternalNativeJsonGenerator.create(
+                        project.getProjectDir(),
+                        project.getBuildDir(),
+                        pathResolution.externalNativeBuildDir,
+                        pathResolution.buildSystem,
+                        pathResolution.makeFile,
+                        androidBuilder,
+                        sdkHandler,
+                        scope));
     }
 
     public void createExternalNativeBuildTasks(TaskFactory tasks, @NonNull VariantScope scope) {

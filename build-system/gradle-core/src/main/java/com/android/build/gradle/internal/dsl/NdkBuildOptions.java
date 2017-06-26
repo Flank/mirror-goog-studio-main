@@ -23,8 +23,8 @@ import java.io.File;
 import org.gradle.api.Project;
 
 /**
- * DSL object for per-module ndk-build configurations, such as the path to your
- * <code>Android.mk</code> build script.
+ * DSL object for per-module ndk-build configurations, such as the path to your <code>Android.mk
+ * </code> build script and external native build output directory.
  */
 public class NdkBuildOptions implements CoreNdkBuildOptions {
     @NonNull
@@ -32,6 +32,8 @@ public class NdkBuildOptions implements CoreNdkBuildOptions {
 
     @Nullable
     private File path;
+
+    @Nullable private File metadataOutputDirectory;
 
     public NdkBuildOptions(@NonNull Project project) {
         this.project = project;
@@ -61,5 +63,27 @@ public class NdkBuildOptions implements CoreNdkBuildOptions {
     @Override
     public void setPath(@NonNull File path) {
         this.path = path;
+    }
+
+    /**
+     * The path to use for the external native build output directory. If the path does not exist,
+     * the plugin creates it for you. Relative paths are relative to the <code>build.gradle</code>
+     * file. If you do not specify this property, or you specify a path that is a subdirectory of
+     * your project's <code>build</code> directory, the plugin uses the <code>
+     * &lt;project_dir&gt;/app/.externalNativeBuild</code> directory as the default.
+     */
+    @Nullable
+    @Override
+    public File getMetadataOutputDirectory() {
+        return metadataOutputDirectory;
+    }
+
+    @Override
+    public void setMetadataOutputDirectory(@NonNull File metadataOutputDirectory) {
+        this.metadataOutputDirectory = project.file(metadataOutputDirectory);
+    }
+
+    public void setMetadataOutputDirectory(@Nullable Object metadataOutputDirectory) {
+        this.metadataOutputDirectory = project.file(metadataOutputDirectory);
     }
 }

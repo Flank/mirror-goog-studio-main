@@ -41,6 +41,7 @@ import groovy.transform.CompileStatic
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 
@@ -75,6 +76,7 @@ class NativeModelTest {
                 externalNativeBuild {
                     ndkBuild {
                         path "src/main/cpp/Android.mk"
+                        metadataOutputDirectory "relative/path"
                     }
                 }
                 defaultConfig {
@@ -88,7 +90,7 @@ class NativeModelTest {
                 }
             }
             """, [androidMkC("src/main/cpp")], false, 1, 2, 7, Compiler.CLANG,
-                NativeBuildSystem.NDK_BUILD, 14),
+                NativeBuildSystem.NDK_BUILD, 14, "relative/path"),
         NDK_BUILD_JOBS_FLAG("""
             apply plugin: 'com.android.application'
 
@@ -98,6 +100,7 @@ class NativeModelTest {
                 externalNativeBuild {
                     ndkBuild {
                         path "src/main/cpp/Android.mk"
+                        metadataOutputDirectory "ABSOLUTE_PATH"
                     }
                 }
                 defaultConfig {
@@ -115,7 +118,7 @@ class NativeModelTest {
                 }
             }
             """, [androidMkC("src/main/cpp")], false, 1, 2, 7, Compiler.CLANG,
-                NativeBuildSystem.NDK_BUILD, 14),
+                NativeBuildSystem.NDK_BUILD, 14, "ABSOLUTE_PATH"),
         ANDROID_MK_FILE_CPP_CLANG("""
             apply plugin: 'com.android.application'
 
@@ -139,7 +142,7 @@ class NativeModelTest {
             }
             """,
                 [androidMkCpp("src/main/cpp")],
-                true, 1, 2, 7, Compiler.CLANG, NativeBuildSystem.NDK_BUILD, 14),
+                true, 1, 2, 7, Compiler.CLANG, NativeBuildSystem.NDK_BUILD, 14, ".externalNativeBuild"),
         ANDROID_MK_GOOGLE_TEST("""
             apply plugin: 'com.android.application'
 
@@ -170,7 +173,7 @@ class NativeModelTest {
                               EXPECT_EQ(1, 1);
                             }
                             """)],
-                true, 4, 2, 7, Compiler.IRRELEVANT, NativeBuildSystem.NDK_BUILD, 0),
+                true, 4, 2, 7, Compiler.IRRELEVANT, NativeBuildSystem.NDK_BUILD, 0, ".externalNativeBuild"),
         ANDROID_MK_FILE_CPP_GCC("""
             apply plugin: 'com.android.application'
 
@@ -193,7 +196,7 @@ class NativeModelTest {
                 }
             }
             """, [androidMkCpp("src/main/cpp")], true, 1, 2, 7, Compiler.GCC,
-                NativeBuildSystem.NDK_BUILD, 14),
+                NativeBuildSystem.NDK_BUILD, 14, ".externalNativeBuild"),
         ANDROID_MK_FILE_CPP_GCC_VIA_APPLICATION_MK("""
             apply plugin: 'com.android.application'
 
@@ -215,7 +218,7 @@ class NativeModelTest {
                 }
             }
             """, [androidMkCpp("src/main/cpp"), applicationMk("src/main/cpp")],
-                true, 1, 2, 7, Compiler.GCC, NativeBuildSystem.NDK_BUILD, 14),
+                true, 1, 2, 7, Compiler.GCC, NativeBuildSystem.NDK_BUILD, 14, ".externalNativeBuild"),
         ANDROID_MK_CUSTOM_BUILD_TYPE("""
             apply plugin: 'com.android.application'
 
@@ -246,7 +249,7 @@ class NativeModelTest {
                 }
             }
             """, [androidMkCpp("src/main/cpp")], true, 1, 3, 7, Compiler.IRRELEVANT,
-                NativeBuildSystem.NDK_BUILD, 21),
+                NativeBuildSystem.NDK_BUILD, 21, ".externalNativeBuild"),
         CMAKELISTS_FILE_CPP("""
             apply plugin: 'com.android.application'
 
@@ -256,6 +259,7 @@ class NativeModelTest {
                 externalNativeBuild {
                     cmake {
                         path "CMakeLists.txt"
+                        metadataOutputDirectory "ABSOLUTE_PATH"
                     }
                 }
                 defaultConfig {
@@ -268,7 +272,7 @@ class NativeModelTest {
                 }
             }
             """, [cmakeLists(".")], true, 1, 2, 7, Compiler.IRRELEVANT,
-                NativeBuildSystem.CMAKE, 14),
+                NativeBuildSystem.CMAKE, 14, "ABSOLUTE_PATH"),
         CMAKELISTS_ARGUMENTS("""
             apply plugin: 'com.android.application'
 
@@ -278,6 +282,7 @@ class NativeModelTest {
                 externalNativeBuild {
                     cmake {
                         path "CMakeLists.txt"
+                        metadataOutputDirectory "relative/path"
                     }
                 }
                 defaultConfig {
@@ -290,7 +295,8 @@ class NativeModelTest {
                     }
                 }
             }
-            """, [cmakeLists(".")], true, 1, 2, 2, Compiler.IRRELEVANT, NativeBuildSystem.CMAKE, 4),
+            """, [cmakeLists(".")], true, 1, 2, 2, Compiler.IRRELEVANT, NativeBuildSystem.CMAKE,
+            4, "relative/path"),
         CMAKELISTS_FILE_C("""
             apply plugin: 'com.android.application'
 
@@ -312,9 +318,9 @@ class NativeModelTest {
                 }
             }
             """, [cmakeLists(".")], false, 1, 2, 7, Compiler.IRRELEVANT,
-                NativeBuildSystem.CMAKE, 14);
+                NativeBuildSystem.CMAKE, 14, ".externalNativeBuild");
 
-        public final String buildGradle;
+        public String buildGradle;
         private final List<TestSourceFile> extraFiles;
         public final boolean isCpp;
         public final int targetCount;
@@ -323,10 +329,11 @@ class NativeModelTest {
         public final Compiler compiler;
         public final NativeBuildSystem buildSystem;
         public final int expectedBuildOutputs;
+        public String nativeBuildOutputPath;
 
         Config(String buildGradle, List<TestSourceFile> extraFiles, boolean isCpp, int targetCount,
                 int variantCount, int abiCount, Compiler compiler,
-                NativeBuildSystem buildSystem, int expectedBuildOutputs) {
+                NativeBuildSystem buildSystem, int expectedBuildOutputs, String nativeBuildOutputPath) {
             this.buildGradle = buildGradle;
             this.extraFiles = extraFiles;
             this.isCpp = isCpp;
@@ -336,6 +343,7 @@ class NativeModelTest {
             this.compiler = compiler;
             this.buildSystem = buildSystem;
             this.expectedBuildOutputs = expectedBuildOutputs;
+            this.nativeBuildOutputPath = nativeBuildOutputPath;
         }
 
         public GradleTestProject create() {
@@ -353,6 +361,9 @@ class NativeModelTest {
 
     @Rule
     public GradleTestProject project = config.create();
+
+    @Rule
+    public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @Parameterized.Parameters(name = "model = {0}")
     public static Collection<Object[]> data() {
@@ -373,12 +384,20 @@ class NativeModelTest {
 
     private Config config;
 
+    private File tempOutputDirectory;
+
     NativeModelTest(Config config) {
         this.config = config;
     }
 
     @Before
     public void setup() {
+        if (config.nativeBuildOutputPath.equals("ABSOLUTE_PATH")) {
+            tempOutputDirectory = temporaryFolder.newFolder("absolute_path");
+            config.buildGradle = config.buildGradle.replace("ABSOLUTE_PATH", tempOutputDirectory.absolutePath);
+            config.nativeBuildOutputPath = tempOutputDirectory.getAbsolutePath();
+        }
+
         project.buildFile << config.buildGradle;
     }
 
@@ -431,6 +450,7 @@ class NativeModelTest {
             checkClang(model);
         }
         checkProblematicCompilerFlags(model);
+        checkNativeBuildOutputPath(config, project);
     }
 
     @Test
@@ -597,7 +617,7 @@ class NativeModelTest {
 
     private File getJsonFile(String variantName, String abi) {
         return ExternalNativeBuildTaskUtils.getOutputJson(FileUtils.join(
-                getExternalNativeBuildRootOutputFolder(),
+                buildNativeBuildOutputPath(config, project),
                 config.buildSystem.name,
                 variantName),
                 abi);
@@ -684,5 +704,36 @@ class NativeModelTest {
             assertThat(settings).doesNotContainCompilerFlag("-DTEST_CPP_FLAG");
             assertThat(settings).containsCompilerFlag("-DTEST_CHANGED_CPP_FLAG");
         }
+    }
+
+    private static void checkNativeBuildOutputPath(Config config, GradleTestProject project) {
+        NativeBuildSystem buildSystem = config.buildSystem;
+        File outputDir = buildNativeBuildOutputPath(config, project);
+
+        switch (buildSystem) {
+            case NativeBuildSystem.CMAKE:
+                outputDir = FileUtils.join(outputDir, "cmake");
+                break;
+            case NativeBuildSystem.NDK_BUILD:
+                outputDir = FileUtils.join(outputDir, "ndkBuild");
+                break;
+            default:
+                return;
+        }
+
+        assertThat(outputDir).exists();
+        assertThat(outputDir).isDirectory();
+    }
+
+    private static File buildNativeBuildOutputPath(Config config, GradleTestProject project) {
+        String nativeBuildOutputPath = config.nativeBuildOutputPath;
+        File projectDir = project.testDir;
+
+        File outputDir = new File(nativeBuildOutputPath);
+        if (!outputDir.isAbsolute()) {
+            outputDir = FileUtils.join(projectDir, nativeBuildOutputPath);
+        }
+
+        return outputDir;
     }
 }

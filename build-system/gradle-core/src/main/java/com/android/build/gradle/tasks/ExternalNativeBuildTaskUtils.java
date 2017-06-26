@@ -142,10 +142,12 @@ public class ExternalNativeBuildTaskUtils {
         public final NativeBuildSystem buildSystem;
         @Nullable
         public final File makeFile;
+        @Nullable public final File externalNativeBuildDir;
 
         private ExternalNativeBuildProjectPathResolution(
                 @Nullable NativeBuildSystem buildSystem,
                 @Nullable File makeFile,
+                @Nullable File externalNativeBuildDir,
                 @Nullable String errorText) {
             checkArgument(makeFile == null || buildSystem != null,
                     "Expected path and buildSystem together, no taskClass");
@@ -155,6 +157,7 @@ public class ExternalNativeBuildTaskUtils {
                     "Expected path or error but both existed");
             this.buildSystem = buildSystem;
             this.makeFile = makeFile;
+            this.externalNativeBuildDir = externalNativeBuildDir;
             this.errorText = errorText;
         }
     }
@@ -175,17 +178,19 @@ public class ExternalNativeBuildTaskUtils {
         Map<NativeBuildSystem, File> externalProjectPaths = getExternalBuildExplicitPaths(config);
         if (externalProjectPaths.size() > 1) {
             return new ExternalNativeBuildProjectPathResolution(
-                    null, null, "More than one externalNativeBuild path specified");
+                    null, null, null, "More than one externalNativeBuild path specified");
         }
 
         if (externalProjectPaths.isEmpty()) {
             // No external projects present.
-            return new ExternalNativeBuildProjectPathResolution(null, null, null);
+            return new ExternalNativeBuildProjectPathResolution(null, null, null, null);
         }
 
+        NativeBuildSystem buildSystem = externalProjectPaths.keySet().iterator().next();
         return new ExternalNativeBuildProjectPathResolution(
-                externalProjectPaths.keySet().iterator().next(),
-                externalProjectPaths.values().iterator().next(),
+                buildSystem,
+                externalProjectPaths.get(buildSystem),
+                getExternalNativeBuildPath(config).get(buildSystem),
                 null);
     }
 
@@ -206,6 +211,22 @@ public class ExternalNativeBuildTaskUtils {
         if (ndkBuild != null) {
             map.put(NativeBuildSystem.NDK_BUILD, ndkBuild);
         }
+        return map;
+    }
+
+    @NonNull
+    private static Map<NativeBuildSystem, File> getExternalNativeBuildPath(
+            @NonNull CoreExternalNativeBuild config) {
+        Map<NativeBuildSystem, File> map = new EnumMap<>(NativeBuildSystem.class);
+        File cmake = config.getCmake().getMetadataOutputDirectory();
+        File ndkBuild = config.getNdkBuild().getMetadataOutputDirectory();
+        if (cmake != null) {
+            map.put(NativeBuildSystem.CMAKE, cmake);
+        }
+        if (ndkBuild != null) {
+            map.put(NativeBuildSystem.NDK_BUILD, ndkBuild);
+        }
+
         return map;
     }
 
