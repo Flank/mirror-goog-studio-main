@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.aapt.AaptGradleFactory;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.AaptOptions;
+import com.android.build.gradle.internal.dsl.DslAdaptersKt;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
@@ -224,7 +225,7 @@ public class VerifyLibraryResourcesTask extends IncrementalTask {
                         .setManifestFile(manifestFile)
                         .setResourceDir(resDir)
                         .setLibraries(ImmutableList.of())
-                        .setOptions(new AaptOptions())
+                        .setOptions(DslAdaptersKt.convert(new AaptOptions()))
                         .setVariantType(VariantType.LIBRARY);
 
         builder.processResources(aapt, config);
