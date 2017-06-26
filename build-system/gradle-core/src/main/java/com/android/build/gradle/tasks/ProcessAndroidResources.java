@@ -38,6 +38,7 @@ import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.aapt.AaptGradleFactory;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.AaptOptions;
+import com.android.build.gradle.internal.dsl.DslAdaptersKt;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.BuildOutputs;
@@ -505,7 +506,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                 AaptPackageConfig.Builder config =
                         new AaptPackageConfig.Builder()
                                 .setManifestFile(manifestFile)
-                                .setOptions(getAaptOptions())
+                                .setOptions(DslAdaptersKt.convert(aaptOptions))
                                 .setResourceDir(getInputResourcesDir().getSingleFile())
                                 .setLibraries(
                                         generateCode ? getLibraryInfoList() : ImmutableList.of())

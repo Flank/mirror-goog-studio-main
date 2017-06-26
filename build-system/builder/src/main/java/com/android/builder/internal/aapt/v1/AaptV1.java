@@ -22,10 +22,10 @@ import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.builder.core.VariantType;
 import com.android.builder.internal.aapt.AaptException;
+import com.android.builder.internal.aapt.AaptOptions;
 import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.builder.internal.aapt.AaptUtils;
 import com.android.builder.internal.aapt.AbstractProcessExecutionAapt;
-import com.android.builder.model.AaptOptions;
 import com.android.builder.png.QueuedCruncher;
 import com.android.ide.common.internal.PngException;
 import com.android.ide.common.process.ProcessExecutor;
@@ -256,13 +256,8 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
             builder.addArgs("--non-constant-id");
         }
 
-        // AAPT options
         AaptOptions options = config.getOptions();
         Preconditions.checkNotNull(options);
-        String ignoreAssets = options.getIgnoreAssets();
-        if (ignoreAssets != null) {
-            builder.addArgs("--ignore-assets", ignoreAssets);
-        }
 
         if (config.getOptions().getFailOnMissingConfigEntry()) {
             builder.addArgs("--error-on-missing-config-entry");

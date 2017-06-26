@@ -22,6 +22,7 @@ import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.aapt.AaptGradleFactory;
 import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.dsl.AbiSplitOptions;
+import com.android.build.gradle.internal.dsl.DslAdaptersKt;
 import com.android.build.gradle.internal.scope.SplitFactory;
 import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
@@ -189,7 +190,7 @@ public class GenerateSplitAbiRes extends BaseTask {
             AaptPackageConfig.Builder aaptConfig = new AaptPackageConfig.Builder();
             aaptConfig
                     .setManifestFile(tmpFile)
-                    .setOptions(aaptOptions)
+                    .setOptions(DslAdaptersKt.convert(aaptOptions))
                     .setDebuggable(debuggable)
                     .setResourceOutputApk(resPackageFile)
                     .setVariantType(variantType);

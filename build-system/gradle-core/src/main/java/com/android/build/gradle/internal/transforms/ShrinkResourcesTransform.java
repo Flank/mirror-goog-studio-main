@@ -36,6 +36,7 @@ import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.aapt.AaptGradleFactory;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.AaptOptions;
+import com.android.build.gradle.internal.dsl.DslAdaptersKt;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.BuildOutputs;
@@ -365,11 +366,11 @@ public class ShrinkResourcesTransform extends Transform {
                 AaptPackageConfig.Builder aaptPackageConfig =
                         new AaptPackageConfig.Builder()
                                 .setManifestFile(mergedManifest.getOutputFile())
-                                .setOptions(aaptOptions)
+                                .setOptions(DslAdaptersKt.convert(aaptOptions))
                                 .setResourceOutputApk(destination)
                                 .setLibraries(Verify.verifyNotNull(libraryInfoList))
                                 // FIX ME : this does not seem to have ever worked.
-                                //.setCustomPackageForR(processResourcesTask.getPackageForR())
+                                // .setCustomPackageForR(processResourcesTask.getPackageForR())
                                 .setSourceOutputDir(
                                         sourceOutputPath != null
                                                 ? new File(sourceOutputPath)

@@ -27,7 +27,6 @@ import com.android.build.gradle.internal.TaskContainerAdaptor;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.dsl.DexOptions;
 import com.android.build.gradle.internal.dsl.SigningConfig;
-import com.android.build.gradle.internal.ide.AaptOptionsImpl;
 import com.android.build.gradle.internal.incremental.BuildInfoLoaderTask;
 import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
 import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
@@ -54,6 +53,7 @@ import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.DefaultDexOptions;
 import com.android.builder.core.DefaultManifestParser;
 import com.android.builder.dexing.DexingType;
+import com.android.builder.internal.aapt.AaptOptions;
 import com.android.builder.profile.Recorder;
 import com.android.builder.signing.DefaultSigningConfig;
 import com.android.ide.common.build.ApkData;
@@ -169,7 +169,7 @@ class ExternalBuildTaskManager {
                         globalScope,
                         project.getBuildDir(),
                         externalBuildContext,
-                        new AaptOptionsImpl(null, null, false, null),
+                        new AaptOptions(null, false, null),
                         new DefaultManifestParser(androidManifestFile),
                         ImmutableList.of(mainApkData));
 

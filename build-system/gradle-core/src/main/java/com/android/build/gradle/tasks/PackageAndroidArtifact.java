@@ -47,14 +47,12 @@ import com.android.builder.files.FileCacheByPath;
 import com.android.builder.files.IncrementalRelativeFileSets;
 import com.android.builder.files.RelativeFile;
 import com.android.builder.internal.packaging.IncrementalPackager;
-import com.android.builder.model.AaptOptions;
 import com.android.builder.packaging.PackagingUtils;
 import com.android.ide.common.build.ApkData;
 import com.android.ide.common.res2.FileStatus;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.FileUtils;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.MoreObjects;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -184,7 +182,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
     protected FileCollection manifests;
 
-    protected AaptOptions aaptOptions;
+    @Nullable protected Collection<String> aaptOptionsNoCompress;
 
     protected FileType instantRunFileType;
 
@@ -282,10 +280,10 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         return listBuilder.build();
     }
 
+    @NonNull
     @Input
     public Collection<String> getNoCompressExtensions() {
-        return MoreObjects.<Collection<String>>firstNonNull(
-                aaptOptions.getNoCompress(), Collections.emptyList());
+        return aaptOptionsNoCompress != null ? aaptOptionsNoCompress : Collections.emptyList();
     }
 
     VariantScope.TaskOutputType taskInputType;
@@ -584,14 +582,15 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                         .withSigning(signingConfig)
                         .withCreatedBy(getBuilder().getCreatedBy())
                         .withMinSdk(getMinSdkVersion())
-                        // TODO: allow extra metadata to be saved in the split scope to avoid reparsing
+                        // TODO: allow extra metadata to be saved in the split scope to avoid
+                        // reparsing
                         // these manifest files.
                         .withNativeLibraryPackagingMode(
                                 PackagingUtils.getNativeLibrariesLibrariesPackagingMode(
                                         manifestForSplit.getOutputFile()))
                         .withNoCompressPredicate(
                                 PackagingUtils.getNoCompressPredicate(
-                                        aaptOptions, manifestForSplit.getOutputFile()))
+                                        aaptOptionsNoCompress, manifestForSplit.getOutputFile()))
                         .withIntermediateDir(incrementalDirForSplit)
                         .withProject(getProject())
                         .withDebuggableBuild(getDebugBuild())
@@ -841,7 +840,8 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                     packagingScope.getIncrementalDir(packageAndroidArtifact.getName()));
             packageAndroidArtifact.splitScope = splitScope;
 
-            packageAndroidArtifact.aaptOptions = packagingScope.getAaptOptions();
+            packageAndroidArtifact.aaptOptionsNoCompress =
+                    packagingScope.getAaptOptions().getNoCompress();
 
             packageAndroidArtifact.manifests = manifests;
 
