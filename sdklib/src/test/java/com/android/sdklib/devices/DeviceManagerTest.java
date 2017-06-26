@@ -35,6 +35,7 @@ import java.io.File;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import com.android.testutils.NoErrorsOrWarningsLogger;
 import org.junit.Before;
@@ -262,28 +263,37 @@ public class DeviceManagerTest {
     }
 
     @Test
+    public final void testGetHardwareProperties() {
+        final Device pixelDevice = dm.getDevice("pixel", "Google");
+
+        Map<String, String> devProperties = DeviceManager.getHardwareProperties(pixelDevice);
+        assertThat(devProperties.get("hw.lcd.density")).isEqualTo("480");
+        assertThat(devProperties.get("hw.lcd.width")).isEqualTo("1080");
+    }
+
+    @Test
     public final void testHasHardwarePropHashChanged_Generic() {
         final Device d1 = dm.getDevice("7in WSVGA (Tablet)", "Generic");
 
         assertThat(DeviceManager.hasHardwarePropHashChanged(d1, "invalid"))
-                .isEqualTo("MD5:750a657019b49e621c42ce9a20c2cc30");
+                .isEqualTo("MD5:095e8492bca4b3f74c19c6f059edb832");
 
         assertThat(DeviceManager.hasHardwarePropHashChanged(
-                d1, "MD5:750a657019b49e621c42ce9a20c2cc30"))
+                d1, "MD5:095e8492bca4b3f74c19c6f059edb832"))
                 .isNull();
 
         // change the device hardware props, this should change the hash
         d1.getDefaultHardware().setNav(Navigation.TRACKBALL);
 
         assertThat(DeviceManager.hasHardwarePropHashChanged(
-                d1, "MD5:750a657019b49e621c42ce9a20c2cc30"))
-                .isEqualTo("MD5:9c4dd5018987da51f7166f139f4361a2");
+                d1, "MD5:095e8492bca4b3f74c19c6f059edb832"))
+                .isEqualTo("MD5:21bfb21436b619f8f6e26549232daf81");
 
         // change the property back, should revert its hash to the previous one
         d1.getDefaultHardware().setNav(Navigation.NONAV);
 
         assertThat(DeviceManager.hasHardwarePropHashChanged(
-                d1, "MD5:750a657019b49e621c42ce9a20c2cc30"))
+                d1, "MD5:095e8492bca4b3f74c19c6f059edb832"))
                 .isNull();
     }
 
@@ -292,24 +302,24 @@ public class DeviceManagerTest {
         final Device d2 = dm.getDevice("Nexus One", "Google");
 
         assertThat(DeviceManager.hasHardwarePropHashChanged(d2, "invalid"))
-                .isEqualTo("MD5:36362a51e6c830c2ab515a312c9ecbff");
+                .isEqualTo("MD5:232bca3edff4358e225a613eb45138d5");
 
         assertThat(DeviceManager.hasHardwarePropHashChanged(
-                d2, "MD5:36362a51e6c830c2ab515a312c9ecbff"))
+                d2, "MD5:232bca3edff4358e225a613eb45138d5"))
                 .isNull();
 
         // change the device hardware props, this should change the hash
         d2.getDefaultHardware().setKeyboard(Keyboard.QWERTY);
 
         assertThat(DeviceManager.hasHardwarePropHashChanged(
-                d2, "MD5:36362a51e6c830c2ab515a312c9ecbff"))
-                .isEqualTo("MD5:f8f4b390755f2f58dfeb7d3020cd87db");
+                d2, "MD5:232bca3edff4358e225a613eb45138d5"))
+                .isEqualTo("MD5:5f654e815ea032b7cc77b580907df53b");
 
         // change the property back, should revert its hash to the previous one
         d2.getDefaultHardware().setKeyboard(Keyboard.NOKEY);
 
         assertThat(DeviceManager.hasHardwarePropHashChanged(
-                d2, "MD5:36362a51e6c830c2ab515a312c9ecbff"))
+                d2, "MD5:232bca3edff4358e225a613eb45138d5"))
                 .isNull();
     }
 
