@@ -16,6 +16,7 @@
 
 package com.android.builder.model;
 
+import com.android.annotations.NonNull;
 import java.util.Collection;
 import java.util.List;
 
@@ -60,4 +61,8 @@ public interface AaptOptions {
      * Returns the list of additional parameters to pass.
      */
     List<String> getAdditionalParameters();
+
+    /** Returns the resource namespacing strategy for this sub-project */
+    @NonNull
+    Namespacing getNamespacing();
 }

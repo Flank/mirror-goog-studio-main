@@ -30,6 +30,8 @@ import org.gradle.api.tasks.Optional;
 /** DSL object for configuring aapt options. */
 public class AaptOptions {
 
+    @Nullable private Boolean namespaced;
+
     @Nullable
     private String ignoreAssetsPattern;
 
@@ -229,5 +231,24 @@ public class AaptOptions {
     @Internal
     public int getCruncherProcesses() {
         return cruncherProcesses;
+    }
+
+    /**
+     * Returns true if the resources in this sub-project are fully namespaced.
+     *
+     * <p>This property is incubating and may change in a future release.
+     */
+    @Internal
+    @Nullable
+    public Boolean getNamespaced() {
+        return namespaced;
+    }
+
+    public void setNamespaced(@Nullable Boolean namespaced) {
+        this.namespaced = namespaced;
+    }
+
+    public void namespaced(@Nullable Boolean namespaced) {
+        this.namespaced = namespaced;
     }
 }

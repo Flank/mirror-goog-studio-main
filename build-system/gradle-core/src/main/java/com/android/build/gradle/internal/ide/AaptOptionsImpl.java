@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.AaptOptions;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import java.io.Serializable;
 import java.util.Collection;
@@ -46,26 +47,33 @@ public final class AaptOptionsImpl implements AaptOptions, Serializable {
     @NonNull
     private final List<String> additionalParameters;
 
+    @NonNull private final AaptOptions.Namespacing namespacing;
+
     public static AaptOptions create(
             @NonNull com.android.build.gradle.internal.dsl.AaptOptions aaptOptions) {
         return new AaptOptionsImpl(
                 aaptOptions.getIgnoreAssets(),
                 aaptOptions.getNoCompress(),
                 aaptOptions.getFailOnMissingConfigEntry(),
-                aaptOptions.getAdditionalParameters());
+                aaptOptions.getAdditionalParameters(),
+                Boolean.TRUE.equals(aaptOptions.getNamespaced())
+                        ? Namespacing.REQUIRED
+                        : Namespacing.DISABLED);
     }
 
     public AaptOptionsImpl(
             @Nullable String ignoreAssets,
             @Nullable Collection<String> noCompress,
             boolean failOnMissingConfigEntry,
-            @Nullable List<String> additionalParameters) {
+            @Nullable List<String> additionalParameters,
+            @NonNull Namespacing namespacing) {
         this.ignoreAssets = ignoreAssets;
         this.failOnMissingConfigEntry = failOnMissingConfigEntry;
         this.noCompress =
                 noCompress == null ? null : ImmutableList.copyOf(noCompress);
         this.additionalParameters =
                 additionalParameters == null ? ImmutableList.of() : additionalParameters;
+        this.namespacing = namespacing;
     }
 
     @Nullable
@@ -91,14 +99,20 @@ public final class AaptOptionsImpl implements AaptOptions, Serializable {
         return additionalParameters;
     }
 
+    @NonNull
+    @Override
+    public Namespacing getNamespacing() {
+        return namespacing;
+    }
 
     public String toString() {
-        return "AaptOptions{" +
-                ", ignoreAssets=" + ignoreAssets +
-                ", noCompress=" + noCompress +
-                ", failOnMissingConfigEntry=" + failOnMissingConfigEntry +
-                ", additionalParameters=" + additionalParameters +
-                "}";
+        return MoreObjects.toStringHelper(this)
+                .add("ignoreAssets", ignoreAssets)
+                .add("noCompress", noCompress)
+                .add("failOnMissingConfigEntry", failOnMissingConfigEntry)
+                .add("additionalParameters", additionalParameters)
+                .add("namespacing", namespacing)
+                .toString();
     }
 
     @Override
@@ -106,19 +120,24 @@ public final class AaptOptionsImpl implements AaptOptions, Serializable {
         if (this == o) {
             return true;
         }
-        if (o == null || getClass() != o.getClass()) {
+        if (!(o instanceof AaptOptionsImpl)) {
             return false;
         }
         AaptOptionsImpl that = (AaptOptionsImpl) o;
-        return failOnMissingConfigEntry == that.failOnMissingConfigEntry &&
-                Objects.equals(ignoreAssets, that.ignoreAssets) &&
-                Objects.equals(noCompress, that.noCompress) &&
-                Objects.equals(additionalParameters, that.additionalParameters);
+        return failOnMissingConfigEntry == that.failOnMissingConfigEntry
+                && Objects.equals(ignoreAssets, that.ignoreAssets)
+                && Objects.equals(noCompress, that.noCompress)
+                && Objects.equals(additionalParameters, that.additionalParameters)
+                && namespacing == that.namespacing;
     }
 
     @Override
     public int hashCode() {
-        return Objects
-                .hash(ignoreAssets, noCompress, failOnMissingConfigEntry, additionalParameters);
+        return Objects.hash(
+                ignoreAssets,
+                noCompress,
+                failOnMissingConfigEntry,
+                additionalParameters,
+                namespacing);
     }
 }
