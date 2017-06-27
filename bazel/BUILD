@@ -283,6 +283,12 @@ config_setting(
 )
 
 config_setting(
+    name = "windows",
+    values = {"cpu": "x64_windows"},
+    visibility = ["//visibility:public"],
+)
+
+config_setting(
     name = "android_cpu_x86",
     values = {"android_cpu": "x86"},
     visibility = ["//visibility:public"],

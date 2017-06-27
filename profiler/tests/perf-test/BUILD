@@ -22,7 +22,11 @@ java_library(
 java_test(
     name = "AllTest",
     size = "large",
-    srcs = glob(["**/*Test.java"]),
+    srcs = select({
+        "//tools/base/bazel:darwin": ["testSrcs/com/android/tools/profiler/NoOpTest.java"],
+        "//tools/base/bazel:windows": ["testSrcs/com/android/tools/profiler/NoOpTest.java"],
+        "//conditions:default": glob(["testSrcs/**/*Test.java"]),
+    }),
     jvm_flags = [
         "-Dtest.suite.jar=AllTest.jar",
         "-Dperfd.location=$(location //tools/base/profiler/native/perfd)",
