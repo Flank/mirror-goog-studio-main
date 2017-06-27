@@ -45,7 +45,7 @@ class GoogleMavenRepositoryTest : BaseTestCase() {
         val repo = TestGoogleMavenRepository() // no cache dir set: will only read built-in index
         val version = repo.findVersion("com.android.support", "appcompat-v7", allowPreview = true)
         assertNotNull(version)
-        assertEquals("26.0.0-beta2", version.toString())
+        assertEquals("26.0.0-beta1", version.toString())
     }
 
     @Test
