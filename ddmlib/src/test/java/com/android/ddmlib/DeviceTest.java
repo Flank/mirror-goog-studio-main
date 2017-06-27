@@ -17,9 +17,7 @@
 package com.android.ddmlib;
 
 import com.android.annotations.NonNull;
-
 import junit.framework.TestCase;
-
 import org.easymock.EasyMock;
 import org.easymock.IAnswer;
 
@@ -66,7 +64,7 @@ public class DeviceTest extends TestCase {
     }
 
     /** Helper method that sets the mock device to throw the given exception on a shell command */
-    static void injectShellExceptionResponse(@NonNull IDevice mockDevice, @NonNull Exception e)
+    static void injectShellExceptionResponse(@NonNull IDevice mockDevice, @NonNull Throwable e)
             throws Exception {
         mockDevice.executeShellCommand(EasyMock.<String>anyObject(),
                 EasyMock.<IShellOutputReceiver>anyObject(),
