@@ -59,10 +59,6 @@ vector<CpuProfilerData> CpuCache::Retrieve(int32_t app_id, int64_t from,
     vector<CpuProfilerData> empty;
     return empty;
   }
-  // This function returns (from, to], but the underlying buffer library
-  // (TimeValueBuffer) returns [from, to), and thus some adjust is needed.
-  if (from != INT64_MAX) from++;
-  if (to != INT64_MAX) to++;
   return found->usage_cache.GetValues(from, to);
 }
 
@@ -82,9 +78,6 @@ CpuCache::ThreadSampleResponse CpuCache::GetThreads(int32_t app_id,
   if (found == nullptr) {
     return response;
   }
-  // This function returns (from, to], but the underlying buffer library
-  // (TimeValueBuffer) returns [from, to), and thus some adjust is needed.
-  if (to != INT64_MAX) to++;
   auto threads_cache_content = found->threads_cache.GetValues(INT64_MIN, to);
 
   // TODO: optimize it to binary search the initial point. That will also make
