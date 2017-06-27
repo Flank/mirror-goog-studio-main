@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal;
 
 import static com.android.SdkConstants.FD_AIDL;
-import static com.android.SdkConstants.FD_APK_NATIVE_LIBS;
 import static com.android.SdkConstants.FD_JNI;
 import static com.android.SdkConstants.FD_RES;
 import static com.android.SdkConstants.FN_ANNOTATIONS_ZIP;
@@ -467,14 +466,13 @@ public class LibraryTaskManager extends TaskManager {
 
                         // now add a transform that will take all the native libs and package
                         // them into an intermediary folder. This processes only the PROJECT
-                        // scope
-                        // we publish this folder but the content is written in $ROOT/lib/...
+                        // scope.
                         final File intermediateJniLibsFolder = new File(jarOutputFolder, FD_JNI);
 
                         LibraryJniLibsTransform intermediateJniTransform =
                                 new LibraryJniLibsTransform(
                                         "intermediateJniLibs",
-                                        new File(intermediateJniLibsFolder, FD_APK_NATIVE_LIBS),
+                                        intermediateJniLibsFolder,
                                         TransformManager.PROJECT_ONLY);
                         Optional<AndroidTask<TransformTask>> task =
                                 transformManager.addTransform(
