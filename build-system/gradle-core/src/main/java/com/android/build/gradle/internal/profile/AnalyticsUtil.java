@@ -19,11 +19,17 @@ package com.android.build.gradle.internal.profile;
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.api.transform.Transform;
+import com.android.build.gradle.internal.core.Abi;
+import com.android.build.gradle.internal.dsl.Splits;
+import com.android.resources.Density;
 import com.android.sdklib.AndroidVersion;
 import com.android.tools.build.gradle.internal.profile.GradleTaskExecutionType;
 import com.android.tools.build.gradle.internal.profile.GradleTransformExecutionType;
 import com.google.common.base.CaseFormat;
 import com.google.wireless.android.sdk.stats.ApiVersion;
+import com.google.wireless.android.sdk.stats.DeviceInfo;
+import com.google.wireless.android.sdk.stats.GradleBuildSplits;
+import java.util.Locale;
 
 /**
  * Utilities to map internal representations of types to analytics.
@@ -88,6 +94,82 @@ public class AnalyticsUtil {
             builder.setCodename(apiVersion.getCodename());
         }
         return builder.build();
+    }
+
+    @NonNull
+    public static GradleBuildSplits convert(@NonNull Splits splits) {
+        GradleBuildSplits.Builder builder = GradleBuildSplits.newBuilder();
+        if (splits.getDensity().isEnable()) {
+            builder.setDensityEnabled(true);
+            builder.setDensityAuto(splits.getDensity().isAuto());
+
+            for (String compatibleScreen : splits.getDensity().getCompatibleScreens()) {
+                builder.addDensityCompatibleScreens(getCompatibleScreen(compatibleScreen));
+            }
+
+            for (String filter : splits.getDensity().getApplicableFilters()) {
+                Density density = Density.getEnum(filter);
+                builder.addDensityValues(density == null ? -1 : density.getDpiValue());
+            }
+        }
+
+        if (splits.getLanguage().isEnable()) {
+            builder.setLanguageEnabled(true);
+            builder.setLanguageAuto(splits.getLanguage().isAuto());
+            builder.addAllLanguageIncludes(splits.getLanguage().getInclude());
+        }
+
+        if (splits.getAbi().isEnable()) {
+            builder.setAbiEnabled(true);
+            builder.setAbiEnableUniversalApk(splits.getAbi().isUniversalApk());
+            for (String filter : splits.getAbi().getApplicableFilters()) {
+                builder.addAbiFilters(getAbi(filter));
+            }
+        }
+        return builder.build();
+    }
+
+    @NonNull
+    private static DeviceInfo.ApplicationBinaryInterface getAbi(@NonNull String name) {
+        Abi abi = Abi.getByName(name);
+        if (abi == null) {
+            return DeviceInfo.ApplicationBinaryInterface.UNKNOWN_ABI;
+        }
+        switch (abi) {
+            case ARMEABI:
+                return DeviceInfo.ApplicationBinaryInterface.ARME_ABI;
+            case ARMEABI_V7A:
+                return DeviceInfo.ApplicationBinaryInterface.ARME_ABI_V7A;
+            case ARM64_V8A:
+                return DeviceInfo.ApplicationBinaryInterface.ARM64_V8A_ABI;
+            case X86:
+                return DeviceInfo.ApplicationBinaryInterface.X86_ABI;
+            case X86_64:
+                return DeviceInfo.ApplicationBinaryInterface.X86_64_ABI;
+            case MIPS:
+                return DeviceInfo.ApplicationBinaryInterface.MIPS_ABI;
+            case MIPS64:
+                return DeviceInfo.ApplicationBinaryInterface.MIPS_R2_ABI;
+        }
+        // Shouldn't happen
+        return DeviceInfo.ApplicationBinaryInterface.UNKNOWN_ABI;
+    }
+
+    @NonNull
+    private static GradleBuildSplits.CompatibleScreenSize getCompatibleScreen(
+            @NonNull String compatibleScreen) {
+        switch (compatibleScreen.toLowerCase(Locale.US)) {
+            case "small":
+                return GradleBuildSplits.CompatibleScreenSize.SMALL;
+            case "normal":
+                return GradleBuildSplits.CompatibleScreenSize.NORMAL;
+            case "large":
+                return GradleBuildSplits.CompatibleScreenSize.LARGE;
+            case "xlarge":
+                return GradleBuildSplits.CompatibleScreenSize.XLARGE;
+            default:
+                return GradleBuildSplits.CompatibleScreenSize.UNKNOWN_SCREEN_SIZE;
+        }
     }
 
 }

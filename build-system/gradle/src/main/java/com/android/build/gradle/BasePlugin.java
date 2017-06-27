@@ -54,6 +54,7 @@ import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.process.GradleJavaProcessExecutor;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
+import com.android.build.gradle.internal.profile.AnalyticsUtil;
 import com.android.build.gradle.internal.profile.ProfilerInitializer;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -599,7 +600,8 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
 
         ProcessProfileWriter.getProject(project.getPath())
                 .setCompileSdk(extension.getCompileSdkVersion())
-                .setBuildToolsVersion(extension.getBuildToolsRevision().toString());
+                .setBuildToolsVersion(extension.getBuildToolsRevision().toString())
+                .setSplits(AnalyticsUtil.convert(extension.getSplits()));
 
         // setup SDK repositories.
         sdkHandler.addLocalRepositories(project);

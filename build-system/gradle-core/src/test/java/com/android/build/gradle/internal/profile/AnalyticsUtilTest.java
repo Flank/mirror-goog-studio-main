@@ -16,13 +16,18 @@
 
 package com.android.build.gradle.internal.profile;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.android.annotations.NonNull;
 import com.android.build.api.transform.Transform;
+import com.android.build.gradle.internal.dsl.Splits;
 import com.google.common.collect.Sets;
 import com.google.common.reflect.ClassPath;
 import com.google.common.reflect.TypeToken;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.ProtocolMessageEnum;
+import com.google.wireless.android.sdk.stats.DeviceInfo;
+import com.google.wireless.android.sdk.stats.GradleBuildSplits;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.util.List;
@@ -30,6 +35,8 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.gradle.api.Task;
+import org.gradle.internal.reflect.Instantiator;
+import org.gradle.internal.reflect.ObjectInstantiationException;
 import org.junit.Test;
 
 public class AnalyticsUtilTest {
@@ -55,6 +62,85 @@ public class AnalyticsUtilTest {
                 "com.android.build.gradle.internal.transforms.LibraryAarJarsTransform",
                 "com.android.build.gradle.internal.pipeline.TestTransform",
                 "com.android.build.gradle.internal.tasks.AppPreBuildTask");
+    }
+
+    @Test
+    public void splitConverterTest() throws IOException {
+        Splits splits =
+                new Splits(
+                        new Instantiator() {
+                            @Override
+                            public <T> T newInstance(Class<? extends T> aClass, Object... objects)
+                                    throws ObjectInstantiationException {
+                                try {
+                                    return aClass.getConstructor().newInstance();
+                                } catch (Exception e) {
+                                    throw new ObjectInstantiationException(aClass, e);
+                                }
+                            }
+                        });
+        // Defaults
+        {
+            GradleBuildSplits proto = AnalyticsUtil.convert(splits);
+            assertThat(proto.getAbiEnabled()).isFalse();
+            assertThat(proto.getAbiEnableUniversalApk()).isFalse();
+            assertThat(proto.getAbiFiltersList()).isEmpty();
+            assertThat(proto.getDensityEnabled()).isFalse();
+            assertThat(proto.getLanguageEnabled()).isFalse();
+        }
+
+        splits.abi(
+                it -> {
+                    it.setEnable(true);
+                    it.setUniversalApk(true);
+                    it.reset();
+                    it.include("x86", "armeabi");
+                });
+        {
+            GradleBuildSplits proto = AnalyticsUtil.convert(splits);
+            assertThat(proto.getAbiEnabled()).isTrue();
+            assertThat(proto.getAbiEnableUniversalApk()).isTrue();
+            assertThat(proto.getAbiFiltersList())
+                    .containsExactly(
+                            DeviceInfo.ApplicationBinaryInterface.ARME_ABI,
+                            DeviceInfo.ApplicationBinaryInterface.X86_ABI);
+        }
+
+        splits.density(
+                it -> {
+                    it.setEnable(true);
+                    it.setAuto(true);
+                    it.reset();
+                    it.include("xxxhdpi", "xxhdpi");
+                });
+        {
+            GradleBuildSplits proto = AnalyticsUtil.convert(splits);
+            assertThat(proto.getDensityEnabled()).isTrue();
+            assertThat(proto.getDensityAuto()).isTrue();
+            assertThat(proto.getDensityValuesList()).containsExactly(640, 480);
+        }
+
+        splits.language(
+                it -> {
+                    it.setEnable(true);
+                    it.setAuto(true);
+                    it.include("en");
+                });
+        {
+            GradleBuildSplits proto = AnalyticsUtil.convert(splits);
+            assertThat(proto.getLanguageEnabled()).isTrue();
+            assertThat(proto.getLanguageAuto()).isTrue();
+            assertThat(proto.getLanguageIncludesList()).containsExactly("en");
+        }
+
+        // Check other field population is based on enable flag.
+        splits.language(it -> it.setEnable(false));
+        {
+            GradleBuildSplits proto = AnalyticsUtil.convert(splits);
+            assertThat(proto.getLanguageEnabled()).isFalse();
+            assertThat(proto.getLanguageAuto()).isFalse();
+            assertThat(proto.getLanguageIncludesList()).isEmpty();
+        }
     }
 
     private <T, U extends ProtocolMessageEnum> void checkHaveAllEnumValues(
