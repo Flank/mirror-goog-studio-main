@@ -28,20 +28,17 @@ import java.util.regex.Pattern;
  * Fetches battery level from device.
  */
 class BatteryFetcher {
-
     private static final String LOG_TAG = "BatteryFetcher";
 
-    /** the amount of time to wait between unsuccessful battery fetch attempts */
-    private static final long FETCH_BACKOFF_MS = 5 * 1000; // 5 seconds
-    private static final long BATTERY_TIMEOUT = 2 * 1000; // 2 seconds
+    /** The amount of time to wait between unsuccessful battery fetch attempts. */
+    private static final long BATTERY_TIMEOUT_MS = 2 * 1000; // 2 seconds
 
     /**
      * Output receiver for "cat /sys/class/power_supply/.../capacity" command line.
      */
     static final class SysFsBatteryLevelReceiver extends MultiLineReceiver {
-
         private static final Pattern BATTERY_LEVEL = Pattern.compile("^(\\d+)[.\\s]*");
-        private Integer mBatteryLevel = null;
+        private Integer mBatteryLevel;
 
         /**
          * Get the parsed battery level.
@@ -86,14 +83,13 @@ class BatteryFetcher {
         private static final Pattern BATTERY_LEVEL = Pattern.compile("\\s*level: (\\d+)");
         private static final Pattern SCALE = Pattern.compile("\\s*scale: (\\d+)");
 
-        private Integer mBatteryLevel = null;
-        private Integer mBatteryScale = null;
+        private Integer mBatteryLevel;
+        private Integer mBatteryScale;
 
         /**
-         * Get the parsed percent battery level.
-         * @return
+         * Returns the parsed percent battery level, or null if not available.
          */
-        public Integer getBatteryLevel() {
+        public @Nullable Integer getBatteryLevel() {
             if (mBatteryLevel != null && mBatteryScale != null) {
                 return (mBatteryLevel * 100) / mBatteryScale;
             }
@@ -130,10 +126,10 @@ class BatteryFetcher {
         }
     }
 
-    private Integer mBatteryLevel = null;
+    private Integer mBatteryLevel;
     private final IDevice mDevice;
-    private long mLastSuccessTime = 0;
-    private SettableFuture<Integer> mPendingRequest = null;
+    private long mLastSuccessTime;
+    private SettableFuture<Integer> mPendingRequest;
 
     public BatteryFetcher(IDevice device) {
         mDevice = device;
@@ -176,16 +172,16 @@ class BatteryFetcher {
         Thread fetchThread = new Thread(threadName) {
             @Override
             public void run() {
-                Exception exception = null;
+                Throwable exception;
                 try {
                     // first try to get it from sysfs
                     SysFsBatteryLevelReceiver sysBattReceiver = new SysFsBatteryLevelReceiver();
                     mDevice.executeShellCommand("cat /sys/class/power_supply/*/capacity",
-                            sysBattReceiver, BATTERY_TIMEOUT, TimeUnit.MILLISECONDS);
+                            sysBattReceiver, BATTERY_TIMEOUT_MS, TimeUnit.MILLISECONDS);
                     if (!setBatteryLevel(sysBattReceiver.getBatteryLevel())) {
                         // failed! try dumpsys
                         BatteryReceiver receiver = new BatteryReceiver();
-                        mDevice.executeShellCommand("dumpsys battery", receiver, BATTERY_TIMEOUT,
+                        mDevice.executeShellCommand("dumpsys battery", receiver, BATTERY_TIMEOUT_MS,
                                 TimeUnit.MILLISECONDS);
                         if (setBatteryLevel(receiver.getBatteryLevel())) {
                             return;
@@ -194,13 +190,7 @@ class BatteryFetcher {
                         return;
                     }
                     exception = new IOException("Unrecognized response to battery level queries");
-                } catch (TimeoutException e) {
-                    exception = e;
-                } catch (AdbCommandRejectedException e) {
-                    exception = e;
-                } catch (ShellCommandUnresponsiveException e) {
-                    exception = e;
-                } catch (IOException e) {
+                } catch (Throwable e) {
                     exception = e;
                 }
                 handleBatteryLevelFailure(exception);
@@ -223,7 +213,7 @@ class BatteryFetcher {
         return true;
     }
 
-    private synchronized void handleBatteryLevelFailure(Exception e) {
+    private synchronized void handleBatteryLevelFailure(Throwable e) {
         Log.w(LOG_TAG, String.format(
                 "%s getting battery level for device %s: %s",
                 e.getClass().getSimpleName(), mDevice.getSerialNumber(), e.getMessage()));

@@ -87,4 +87,25 @@ public class BatteryFetcherTest extends TestCase {
             assertTrue(e.getCause() instanceof ShellCommandUnresponsiveException);
         }
     }
+
+    /**
+     * Checks that getBattery propagates a thrown Error.
+     */
+    public void testGetBattery_AssertionError() throws Exception {
+        IDevice mockDevice = DeviceTest.createMockDevice();
+        mockDevice.executeShellCommand(EasyMock.<String>anyObject(),
+                EasyMock.<IShellOutputReceiver>anyObject(),
+                EasyMock.anyLong(), EasyMock.<TimeUnit>anyObject());
+        EasyMock.expectLastCall().andThrow(new AssertionError());
+        EasyMock.replay(mockDevice);
+
+        BatteryFetcher fetcher = new BatteryFetcher(mockDevice);
+        try {
+            fetcher.getBattery(0, TimeUnit.MILLISECONDS).get();
+            fail("ExecutionException not thrown");
+        } catch (ExecutionException e) {
+            // expected
+            assertTrue(e.getCause() instanceof AssertionError);
+        }
+    }
 }
