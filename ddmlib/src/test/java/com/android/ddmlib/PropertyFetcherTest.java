@@ -16,9 +16,7 @@
 package com.android.ddmlib;
 
 import com.android.ddmlib.PropertyFetcher.GetPropReceiver;
-
 import junit.framework.TestCase;
-
 import org.easymock.EasyMock;
 
 import java.util.concurrent.ExecutionException;
@@ -159,5 +157,23 @@ public class PropertyFetcherTest extends TestCase {
         PropertyFetcher fetcher = new PropertyFetcher(mockDevice);
         assertNull(fetcher.getProperty("ro.sf.lcd_density").get(2, TimeUnit.SECONDS));
         assertEquals("480", fetcher.getProperty("ro.sf.lcd_density").get(2, TimeUnit.SECONDS));
+    }
+
+    /**
+     * Checks that getProperty propagates a thrown Error.
+     */
+    public void testGetProperty_AssertionError() throws Exception {
+        IDevice mockDevice = DeviceTest.createMockDevice();
+        DeviceTest.injectShellExceptionResponse(mockDevice, new AssertionError());
+        EasyMock.replay(mockDevice);
+
+        PropertyFetcher fetcher = new PropertyFetcher(mockDevice);
+        try {
+            fetcher.getProperty("dev.bootcomplete").get();
+            fail("ExecutionException not thrown");
+        } catch (ExecutionException e) {
+            // expected
+            assertTrue(e.getCause() instanceof AssertionError);
+        }
     }
 }

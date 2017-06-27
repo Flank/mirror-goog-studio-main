@@ -144,7 +144,7 @@ class PropertyFetcher {
                     mDevice.executeShellCommand(GETPROP_COMMAND, propReceiver, GETPROP_TIMEOUT_SEC,
                             TimeUnit.SECONDS);
                     populateCache(propReceiver.getCollectedProperties());
-                } catch (Exception e) {
+                } catch (Throwable e) {
                     handleException(e);
                 }
             }
@@ -164,7 +164,7 @@ class PropertyFetcher {
         mPendingRequests.clear();
     }
 
-    private synchronized void handleException(Exception e) {
+    private synchronized void handleException(Throwable e) {
         mCacheState = CacheState.UNPOPULATED;
         Log.w("PropertyFetcher",
                 String.format("%s getting properties for device %s: %s",
