@@ -131,8 +131,7 @@ public class SymbolIoTest {
     @Test
     public void writeReadBrokenSymbolFile() throws Exception {
         File R = TestResources.getFile(SymbolIoTest.class, "/testData/symbolIo/misordered_R.txt");
-
-        SymbolTable brokenR = SymbolIo.read(R, null);
+        SymbolIo.read(R, null);
     }
 
     private static void checkFileGeneration(

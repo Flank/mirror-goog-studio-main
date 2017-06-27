@@ -1552,3 +1552,5 @@ int style TextAppearance_Widget_AppCompat_Toolbar_Subtitle 1715
 int attr actionOverflowMenuStyle 783
 int style Base_Theme_AppCompat_Light_Dialog_MinWidth 1557
 int style Base_V26_Theme_AppCompat 3632
+int[] styleable LongStyleableNameXXXXX {1128,1130}
+int styleable ShortName_a 1226

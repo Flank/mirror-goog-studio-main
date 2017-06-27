@@ -81,6 +81,7 @@ public final class SymbolIo {
                 if (data.resourceType == ResourceType.STYLEABLE) {
                     if (data.javaType == SymbolJavaType.INT_LIST) {
                         List<String> childrenNames = Lists.newArrayList();
+                        final String data_name = data.name + "_";
                         SymbolData subData;
                         // read the next line
                         while (lineIndex < count
@@ -99,16 +100,24 @@ public final class SymbolIo {
                             // line is value, inc the index
                             lineIndex++;
 
-                            // tweak the name to remove the styleable.
-                            String indexName = subData.name.substring(data.name.length() + 1);
-                            // check if it's a namespace
-                            if (indexName.startsWith(ANDROID_ATTR_PREFIX)) {
-                                indexName =
-                                        SdkConstants.ANDROID_NS_NAME_PREFIX
-                                                + indexName.substring(ANDROID_ATTR_PREFIX.length());
-                            }
+                            // check if the sub item actually belongs to this declare-styleable,
+                            // because of broken R.txt files.
+                            // We could have a int/styleable that follows a int[]/styleable but
+                            // is an index for a different declare-stylealbe.
+                            if (subData.name.startsWith(data_name)) {
+                                // tweak the name to remove the styleable.
+                                String indexName = subData.name.substring(data_name.length());
+                                // check if it's a namespace, in which case replace android_name
+                                // with android:name
+                                if (indexName.startsWith(ANDROID_ATTR_PREFIX)) {
+                                    indexName =
+                                            SdkConstants.ANDROID_NS_NAME_PREFIX
+                                                    + indexName.substring(
+                                                            ANDROID_ATTR_PREFIX.length());
+                                }
 
-                            childrenNames.add(indexName);
+                                childrenNames.add(indexName);
+                            }
                         }
 
                         table.add(
