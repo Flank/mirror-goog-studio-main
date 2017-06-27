@@ -18,6 +18,7 @@ package com.android.builder.internal.aapt.v2;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.builder.Version;
 import com.android.builder.internal.aapt.AaptException;
 import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.builder.internal.aapt.AbstractAapt;
@@ -44,6 +45,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -198,9 +202,22 @@ public class AaptV2Jni extends AbstractAapt {
         @Override
         public Path getCachedDirectory(
                 @NonNull HashCode hashCode, @NonNull Aapt2Jni.Creator creator) throws IOException {
+
+            String pluginVersion = Version.ANDROID_GRADLE_PLUGIN_VERSION;
+            // Development plugins may be reloaded in the same daemon.
+            // As a new classloader is used, the same library cannot be copied to the same location.
+            // Copy the library to a new location each time.
+            if (pluginVersion.endsWith("-dev")) {
+                pluginVersion +=
+                        "-"
+                                + LocalDateTime.now(ZoneOffset.ofHours(0))
+                                        .format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+            }
+
             FileCache.Inputs inputs =
                     new FileCache.Inputs.Builder(FileCache.Command.EXTRACT_AAPT2_JNI)
                             .putString("hashcode", hashCode.toString())
+                            .putString("pluginVersion", pluginVersion)
                             .build();
             FileCache.QueryResult result;
             try {
