@@ -26,6 +26,10 @@ dependencies {
     compile libs.bouncycastle_prov
     compile libs.asm
     compile libs.asm_tree
+    // R8 deps
+    compile libs.asm_commons
+    compile libs.asm_util
+    compile libs.fastutil
 
     testCompile libs.junit
     testCompile libs.mockito_core
@@ -119,10 +123,13 @@ dependencies {
         transitive = false
     }
 
-    sourcesProvided(project(path:':dx', configuration:'sourcesOnly')) {
+    provided(project(path: ':external:r8')) {
         transitive = false
     }
 
+    sourcesProvided(project(path:':dx', configuration:'sourcesOnly')) {
+        transitive = false
+    }
 
     resourcesRuntime(project(path: ':external:desugar', configuration: 'fatJar')) {
         transitive = false

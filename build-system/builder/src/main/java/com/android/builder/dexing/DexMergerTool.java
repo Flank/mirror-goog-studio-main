@@ -19,4 +19,5 @@ package com.android.builder.dexing;
 /** Tool used to merge dex files. */
 public enum DexMergerTool {
     DX,
+    D8,
 }

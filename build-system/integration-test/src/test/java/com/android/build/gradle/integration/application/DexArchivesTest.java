@@ -24,8 +24,12 @@ import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.TransformOutputContent;
+import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.pipeline.SubStream;
+import com.android.build.gradle.options.BooleanOption;
+import com.android.builder.dexing.DexMergerTool;
+import com.android.builder.dexing.DexerTool;
 import com.android.testutils.TestUtils;
 import com.android.testutils.apk.Dex;
 import com.android.testutils.truth.MoreTruth;
@@ -42,10 +46,26 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 /** Tests for incremental dexing using dex archives. */
+@RunWith(FilterableParameterized.class)
 @SuppressWarnings("OptionalGetWithoutIsPresent")
 public class DexArchivesTest {
+
+    @Parameterized.Parameter(0)
+    public DexerTool dexerTool;
+
+    @Parameterized.Parameter(1)
+    public DexMergerTool mergerTool;
+
+    @Parameterized.Parameters(name = "{0}_{1}")
+    public static Iterable<Object[]> getSetups() {
+        return ImmutableList.of(
+                new Object[] {DexerTool.DX, DexMergerTool.DX},
+                new Object[] {DexerTool.D8, DexMergerTool.D8});
+    }
 
     @Rule
     public GradleTestProject project =
@@ -55,7 +75,7 @@ public class DexArchivesTest {
 
     @Test
     public void testInitialBuild() throws Exception {
-        assembleDebug();
+        runTask("assembleDebug");
 
         checkIntermediaryDexArchives(getInitialDexEntries());
 
@@ -67,7 +87,7 @@ public class DexArchivesTest {
 
     @Test
     public void testChangingExistingFile() throws Exception {
-        assembleDebug();
+        runTask("assembleDebug");
 
         long created = FileUtils.find(builderDir(), "BuildConfig.dex").get().lastModified();
         TestFileUtils.addMethod(
@@ -75,7 +95,7 @@ public class DexArchivesTest {
                 "\npublic void addedMethod() {}");
         TestUtils.waitForFileSystemTick();
 
-        assembleDebug();
+        runTask("assembleDebug");
         assertThat(FileUtils.find(builderDir(), "BuildConfig.dex").get()).wasModifiedAt(created);
         assertThat(FileUtils.find(builderDir(), "HelloWorld.dex").get().lastModified())
                 .isGreaterThan(created);
@@ -90,7 +110,7 @@ public class DexArchivesTest {
 
     @Test
     public void testAddingFile() throws IOException, InterruptedException {
-        assembleDebug();
+        runTask("assembleDebug");
         long created = FileUtils.find(builderDir(), "BuildConfig.dex").get().lastModified();
 
         String newClass = "package com.example.helloworld;\n" + "public class NewClass {}";
@@ -99,7 +119,7 @@ public class DexArchivesTest {
                 newClass.getBytes(Charsets.UTF_8));
 
         TestUtils.waitForFileSystemTick();
-        assembleDebug();
+        runTask("assembleDebug");
         assertThat(FileUtils.find(builderDir(), "BuildConfig.dex").get()).wasModifiedAt(created);
 
         List<String> dexEntries = Lists.newArrayList("NewClass.dex");
@@ -118,12 +138,12 @@ public class DexArchivesTest {
         File srcToRemove =
                 FileUtils.join(project.getMainSrcDir(), "com/example/helloworld/ToRemove.java");
         Files.write(srcToRemove.toPath(), newClass.getBytes(Charsets.UTF_8));
-        assembleDebug();
+        runTask("assembleDebug");
 
         assertThat(FileUtils.find(builderDir(), "ToRemove.dex").get()).exists();
 
         srcToRemove.delete();
-        assembleDebug();
+        runTask("assembleDebug");
 
         checkIntermediaryDexArchives(getInitialDexEntries());
         MoreTruth.assertThat(project.getApk("debug").getMainDexFile().get())
@@ -133,7 +153,7 @@ public class DexArchivesTest {
     @Test
     public void testForReleaseVariants() throws IOException, InterruptedException {
         TestFileUtils.appendToFile(project.getBuildFile(), "android.dexOptions.dexInProcess false");
-        GradleBuildResult result = project.executor().run("assembleRelease");
+        GradleBuildResult result = runTask("assembleRelease");
         assertThat(result.getNotUpToDateTasks()).contains(":transformClassesWithPreDexForRelease");
         assertThat(result.getNotUpToDateTasks()).contains(":transformDexWithDexForRelease");
     }
@@ -192,8 +212,14 @@ public class DexArchivesTest {
                 "Lcom/example/helloworld/R$string;");
     }
 
-    private void assembleDebug() throws IOException, InterruptedException {
-        project.executor().withUseDexArchive(true).withEnabledAapt2(true).run("assembleDebug");
+    private GradleBuildResult runTask(@NonNull String taskName)
+            throws IOException, InterruptedException {
+        return project.executor()
+                .withUseDexArchive(true)
+                .withEnabledAapt2(true)
+                .with(BooleanOption.ENABLE_D8_DEXER, dexerTool == DexerTool.D8)
+                .with(BooleanOption.ENABLE_D8_MERGER, mergerTool == DexMergerTool.D8)
+                .run(taskName);
     }
 
     @NonNull

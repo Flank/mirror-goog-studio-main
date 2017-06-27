@@ -42,10 +42,11 @@ import java.util.List;
 import java.util.Set;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 
@@ -53,7 +54,21 @@ import org.objectweb.asm.Opcodes;
  * Testing the dex archive merger. It takes one or more dex archives as input, and outputs one or
  * more DEX files.
  */
+@RunWith(Parameterized.class)
 public class DexArchiveMergerTest {
+
+    @Parameterized.Parameters(name = "{0}_{1}")
+    public static Iterable<Object[]> setup() {
+        return ImmutableList.of(
+                new Object[] {DexerTool.DX, DexMergerTool.DX},
+                new Object[] {DexerTool.D8, DexMergerTool.D8});
+    }
+
+    @Parameterized.Parameter(0)
+    public DexerTool dexerTool;
+
+    @Parameterized.Parameter(1)
+    public DexMergerTool dexMerger;
 
     @ClassRule public static TemporaryFolder allTestsTemporaryFolder = new TemporaryFolder();
 
@@ -68,11 +83,10 @@ public class DexArchiveMergerTest {
         DexArchiveTestUtil.createClassWithMethodDescriptors(inputRoot, BIG_CLASS, 65524);
 
         bigDexArchive = allTestsTemporaryFolder.getRoot().toPath().resolve("big_dex_archive");
-        DexArchiveTestUtil.convertClassesToDexArchive(inputRoot, bigDexArchive);
+        DexArchiveTestUtil.convertClassesToDexArchive(inputRoot, bigDexArchive, DexerTool.D8);
     }
 
     @Test
-    @Ignore("http://b/37655702")
     public void test_monoDex_twoDexMerging() throws Exception {
         Path fstArchive =
                 DexArchiveTestUtil.createClassesAndConvertToDexArchive(
@@ -82,7 +96,8 @@ public class DexArchiveMergerTest {
                         temporaryFolder.getRoot().toPath().resolve("snd"), "B");
 
         Path output = temporaryFolder.getRoot().toPath().resolve("output");
-        DexArchiveTestUtil.mergeMonoDex(ImmutableList.of(fstArchive, sndArchive), output);
+        DexArchiveTestUtil.mergeMonoDex(
+                ImmutableList.of(fstArchive, sndArchive), output, dexMerger);
 
         Dex outputDex = new Dex(output.resolve("classes.dex"));
 
@@ -101,7 +116,7 @@ public class DexArchiveMergerTest {
         }
 
         Path output = temporaryFolder.getRoot().toPath().resolve("output");
-        DexArchiveTestUtil.mergeMonoDex(archives, output);
+        DexArchiveTestUtil.mergeMonoDex(archives, output, dexMerger);
 
         Dex outputDex = new Dex(output.resolve("classes.dex"));
         assertThat(outputDex)
@@ -114,10 +129,11 @@ public class DexArchiveMergerTest {
         DexArchiveTestUtil.createClassWithMethodDescriptors(inputRoot, "A", 9);
 
         Path dexArchive = temporaryFolder.getRoot().toPath().resolve("output");
-        DexArchiveTestUtil.convertClassesToDexArchive(inputRoot, dexArchive);
+        DexArchiveTestUtil.convertClassesToDexArchive(inputRoot, dexArchive, dexerTool);
 
         Path outputDex = temporaryFolder.getRoot().toPath().resolve("output_dex");
-        DexArchiveTestUtil.mergeMonoDex(ImmutableList.of(dexArchive, bigDexArchive), outputDex);
+        DexArchiveTestUtil.mergeMonoDex(
+                ImmutableList.of(dexArchive, bigDexArchive), outputDex, dexMerger);
 
         Dex finalDex = new Dex(outputDex.resolve("classes.dex"));
         assertThat(finalDex)
@@ -130,14 +146,21 @@ public class DexArchiveMergerTest {
         DexArchiveTestUtil.createClassWithMethodDescriptors(inputRoot, "B", 10);
 
         Path dexArchive = temporaryFolder.getRoot().toPath().resolve("output");
-        DexArchiveTestUtil.convertClassesToDexArchive(inputRoot, dexArchive);
+        DexArchiveTestUtil.convertClassesToDexArchive(inputRoot, dexArchive, dexerTool);
 
         Path outputDex = temporaryFolder.getRoot().toPath().resolve("output_dex");
         try {
-            DexArchiveTestUtil.mergeMonoDex(ImmutableList.of(dexArchive, bigDexArchive), outputDex);
+            DexArchiveTestUtil.mergeMonoDex(
+                    ImmutableList.of(dexArchive, bigDexArchive), outputDex, dexMerger);
             fail("Too many methods for mono-dex. Merging should fail.");
         } catch (Exception e) {
-            Truth.assertThat(Throwables.getStackTraceAsString(e)).contains("method ID not in");
+            String exepectedMessage;
+            if (dexMerger == DexMergerTool.DX) {
+                exepectedMessage = "method ID not in";
+            } else {
+                exepectedMessage = "Cannot fit all classes in a single dex file";
+            }
+            Truth.assertThat(Throwables.getStackTraceAsString(e)).contains(exepectedMessage);
         }
     }
 
@@ -154,13 +177,23 @@ public class DexArchiveMergerTest {
         DexArchiveTestUtil.mergeLegacyDex(
                 ImmutableList.of(fstArchive, sndArchive),
                 output,
-                generateMainDexListFile(ImmutableSet.of(PACKAGE + "/A.class")));
+                generateMainDexListFile(ImmutableSet.of(PACKAGE + "/A.class")),
+                dexMerger);
 
         Dex outputDex = new Dex(output.resolve("classes.dex"));
-        assertThat(outputDex).containsExactlyClassesIn(DexArchiveTestUtil.getDexClasses("A"));
 
-        Dex secondaryDex = new Dex(output.resolve("classes2.dex"));
-        assertThat(secondaryDex).containsExactlyClassesIn(DexArchiveTestUtil.getDexClasses("B"));
+        if (dexMerger == DexMergerTool.DX) {
+            assertThat(outputDex).containsExactlyClassesIn(DexArchiveTestUtil.getDexClasses("A"));
+
+            Dex secondaryDex = new Dex(output.resolve("classes2.dex"));
+            assertThat(secondaryDex)
+                    .containsExactlyClassesIn(DexArchiveTestUtil.getDexClasses("B"));
+        } else {
+            // D8 does not support minimal main dex
+            assertThat(outputDex)
+                    .containsExactlyClassesIn(DexArchiveTestUtil.getDexClasses("A", "B"));
+            assertThat(output.resolve("classes2.dex")).doesNotExist();
+        }
     }
 
     @Test
@@ -177,7 +210,8 @@ public class DexArchiveMergerTest {
                 ImmutableList.of(fstArchive, sndArchive),
                 output,
                 generateMainDexListFile(
-                        ImmutableSet.of(PACKAGE + "/A.class", PACKAGE + "/B.class")));
+                        ImmutableSet.of(PACKAGE + "/A.class", PACKAGE + "/B.class")),
+                dexMerger);
 
         Dex outputDex = new Dex(output.resolve("classes.dex"));
         assertThat(outputDex).containsExactlyClassesIn(DexArchiveTestUtil.getDexClasses("A", "B"));
@@ -192,13 +226,14 @@ public class DexArchiveMergerTest {
         DexArchiveTestUtil.createClassWithMethodDescriptors(inputRoot, "B", 10);
 
         Path dexArchive = temporaryFolder.getRoot().toPath().resolve("output");
-        DexArchiveTestUtil.convertClassesToDexArchive(inputRoot, dexArchive);
+        DexArchiveTestUtil.convertClassesToDexArchive(inputRoot, dexArchive, dexerTool);
 
         Path outputDex = temporaryFolder.getRoot().toPath().resolve("output_dex");
         DexArchiveTestUtil.mergeLegacyDex(
                 ImmutableList.of(dexArchive, bigDexArchive),
                 outputDex,
-                generateMainDexListFile(ImmutableSet.of(PACKAGE + "/A.class")));
+                generateMainDexListFile(ImmutableSet.of(PACKAGE + "/A.class")),
+                dexMerger);
 
         Dex primaryDex = new Dex(outputDex.resolve("classes.dex"));
         assertThat(primaryDex).containsExactlyClassesIn(DexArchiveTestUtil.getDexClasses("A"));
@@ -218,7 +253,8 @@ public class DexArchiveMergerTest {
                         temporaryFolder.getRoot().toPath().resolve("snd"), "B");
 
         Path output = temporaryFolder.getRoot().toPath().resolve("output");
-        DexArchiveTestUtil.mergeNativeDex(ImmutableList.of(fstArchive, sndArchive), output);
+        DexArchiveTestUtil.mergeNativeDex(
+                ImmutableList.of(fstArchive, sndArchive), output, dexMerger);
 
         Dex outputDex = new Dex(output.resolve("classes.dex"));
         assertThat(outputDex).containsExactlyClassesIn(DexArchiveTestUtil.getDexClasses("A", "B"));
@@ -230,10 +266,11 @@ public class DexArchiveMergerTest {
         DexArchiveTestUtil.createClassWithMethodDescriptors(inputRoot, "A", 10);
 
         Path dexArchive = temporaryFolder.getRoot().toPath().resolve("output");
-        DexArchiveTestUtil.convertClassesToDexArchive(inputRoot, dexArchive);
+        DexArchiveTestUtil.convertClassesToDexArchive(inputRoot, dexArchive, dexerTool);
 
         Path outputDex = temporaryFolder.getRoot().toPath().resolve("output_dex");
-        DexArchiveTestUtil.mergeNativeDex(ImmutableList.of(dexArchive, bigDexArchive), outputDex);
+        DexArchiveTestUtil.mergeNativeDex(
+                ImmutableList.of(dexArchive, bigDexArchive), outputDex, dexMerger);
 
         assertThat(outputDex.resolve("classes.dex")).exists();
         assertThat(outputDex.resolve("classes2.dex")).exists();
@@ -263,10 +300,10 @@ public class DexArchiveMergerTest {
         }
 
         Path dexArchive = temporaryFolder.getRoot().toPath().resolve("output");
-        DexArchiveTestUtil.convertClassesToDexArchive(inputRoot, dexArchive);
+        DexArchiveTestUtil.convertClassesToDexArchive(inputRoot, dexArchive, dexerTool);
 
         Path outputDex = temporaryFolder.getRoot().toPath().resolve("output_dex");
-        DexArchiveTestUtil.mergeNativeDex(ImmutableList.of(dexArchive), outputDex);
+        DexArchiveTestUtil.mergeNativeDex(ImmutableList.of(dexArchive), outputDex, dexMerger);
 
         com.android.dex.Dex dexFile =
                 new com.android.dex.Dex(outputDex.resolve("classes.dex").toFile());
@@ -287,13 +324,13 @@ public class DexArchiveMergerTest {
         archives.add(bigArchive);
 
         Path output = temporaryFolder.getRoot().toPath().resolve("output");
-        DexArchiveTestUtil.mergeNativeDex(archives, output);
+        DexArchiveTestUtil.mergeNativeDex(archives, output, dexMerger);
         byte[] classesDex = Files.readAllBytes(output.resolve("classes.dex"));
         byte[] classes2Dex = Files.readAllBytes(output.resolve("classes2.dex"));
 
         for (int i = 0; i < 5; i++) {
             Path newOutput = temporaryFolder.getRoot().toPath().resolve("output" + i);
-            DexArchiveTestUtil.mergeNativeDex(archives, newOutput);
+            DexArchiveTestUtil.mergeNativeDex(archives, newOutput, dexMerger);
 
             Truth.assertThat(classesDex)
                     .isEqualTo(Files.readAllBytes(output.resolve("classes.dex")));
@@ -309,12 +346,12 @@ public class DexArchiveMergerTest {
         List<Path> archives = createArchives(temporaryFolder.getRoot().toPath(), 10);
 
         Path output = temporaryFolder.getRoot().toPath().resolve("output");
-        DexArchiveTestUtil.mergeMonoDex(archives, output);
+        DexArchiveTestUtil.mergeMonoDex(archives, output, dexMerger);
         byte[] classesDex = Files.readAllBytes(output.resolve("classes.dex"));
 
         for (int i = 0; i < 5; i++) {
             Path newOutput = temporaryFolder.getRoot().toPath().resolve("output" + i);
-            DexArchiveTestUtil.mergeMonoDex(archives, newOutput);
+            DexArchiveTestUtil.mergeMonoDex(archives, newOutput, dexMerger);
             Truth.assertThat(classesDex)
                     .isEqualTo(Files.readAllBytes(output.resolve("classes.dex")));
 
@@ -330,10 +367,10 @@ public class DexArchiveMergerTest {
         Path classesInput = fs.getPath("tmp\\input_classes");
         DexArchiveTestUtil.createClasses(classesInput, classNames);
         Path dexArchive = fs.getPath("tmp\\dex_archive");
-        DexArchiveTestUtil.convertClassesToDexArchive(classesInput, dexArchive);
+        DexArchiveTestUtil.convertClassesToDexArchive(classesInput, dexArchive, dexerTool);
 
         Path output = fs.getPath("tmp\\out");
-        DexArchiveTestUtil.mergeMonoDex(ImmutableList.of(dexArchive), output);
+        DexArchiveTestUtil.mergeMonoDex(ImmutableList.of(dexArchive), output, dexMerger);
 
         Dex outputDex = new Dex(output.resolve("classes.dex"));
 
@@ -356,10 +393,10 @@ public class DexArchiveMergerTest {
         }
 
         Path dexArchive = temporaryFolder.getRoot().toPath().resolve("output");
-        DexArchiveTestUtil.convertClassesToDexArchive(inputRoot, dexArchive);
+        DexArchiveTestUtil.convertClassesToDexArchive(inputRoot, dexArchive, dexerTool);
 
         Path outputDex = temporaryFolder.getRoot().toPath().resolve("output_dex");
-        DexArchiveTestUtil.mergeNativeDex(ImmutableList.of(dexArchive), outputDex);
+        DexArchiveTestUtil.mergeNativeDex(ImmutableList.of(dexArchive), outputDex, dexMerger);
     }
 
     @NonNull

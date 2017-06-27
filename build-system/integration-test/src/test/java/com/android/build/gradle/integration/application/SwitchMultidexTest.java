@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.testutils.apk.Apk;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
@@ -91,6 +92,8 @@ public class SwitchMultidexTest {
                 .withEnabledAapt2(true)
                 .withProperty("inject.minsdk", "19")
                 .withProperty("inject.multidex", "true")
+                .with(BooleanOption.ENABLE_D8_DEXER, false)
+                .with(BooleanOption.ENABLE_D8_MERGER, false)
                 .run("assembleDebug");
         Apk debug = project.getApk("debug");
         assertTrue(debug.getMainDexFile().isPresent());

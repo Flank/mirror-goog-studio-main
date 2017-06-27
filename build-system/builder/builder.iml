@@ -43,5 +43,6 @@
     <orderEntry type="module" module-name="aaptjlib" />
     <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
     <orderEntry type="library" name="gradle-api" level="project" />
+    <orderEntry type="module" module-name="r8" />
   </component>
 </module>

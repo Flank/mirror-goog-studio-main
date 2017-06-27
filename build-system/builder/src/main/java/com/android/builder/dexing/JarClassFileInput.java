@@ -80,7 +80,7 @@ final class JarClassFileInput implements ClassFileInput {
     }
 
     @NonNull
-    public static ClassFileEntry createEntryFromEntry(@NonNull StoredEntry storedEntry) {
+    private static ClassFileEntry createEntryFromEntry(@NonNull StoredEntry storedEntry) {
         return new NoCacheJarClassFileEntry(storedEntry);
     }
 }

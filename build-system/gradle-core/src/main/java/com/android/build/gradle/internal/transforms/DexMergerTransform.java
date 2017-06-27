@@ -98,6 +98,8 @@ public class DexMergerTransform extends Transform {
     @NonNull private final DexingType dexingType;
     @Nullable private final FileCollection mainDexListFile;
     @NonNull private final DexMergerTool dexMerger;
+    private final int minSdkVersion;
+    private final boolean debuggable;
     @NonNull private final ErrorReporter errorReporter;
     @NonNull private final ForkJoinPool forkJoinPool = ForkJoinPool.commonPool();
 
@@ -105,10 +107,14 @@ public class DexMergerTransform extends Transform {
             @NonNull DexingType dexingType,
             @Nullable FileCollection mainDexListFile,
             @NonNull ErrorReporter errorReporter,
-            @NonNull DexMergerTool dexMerger) {
+            @NonNull DexMergerTool dexMerger,
+            int minSdkVersion,
+            boolean debuggable) {
         this.dexingType = dexingType;
         this.mainDexListFile = mainDexListFile;
         this.dexMerger = dexMerger;
+        this.minSdkVersion = minSdkVersion;
+        this.debuggable = debuggable;
         Preconditions.checkState(
                 (dexingType == DexingType.LEGACY_MULTIDEX) == (mainDexListFile != null),
                 "Main dex list must only be set when in legacy multidex");
@@ -395,7 +401,9 @@ public class DexMergerTransform extends Transform {
                         dexArchives,
                         mainDexList,
                         forkJoinPool,
-                        dexMerger);
+                        dexMerger,
+                        minSdkVersion,
+                        debuggable);
         return forkJoinPool.submit(callable);
     }
 

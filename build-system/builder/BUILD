@@ -35,6 +35,7 @@ kotlin_library(
         "//tools/base/build-system/profile",
         "//tools/base/aaptjlib",
         "//tools/dx/dalvik/dx",
+        "//tools/external/r8",
     ],
     javacopts = ["-Xep:MissingCasesInEnumSwitch:WARN"],
     plugins = [
@@ -68,10 +69,14 @@ kotlin_library(
         "//tools/base/third_party:com.google.protobuf_protobuf-java",
         "//tools/base/third_party:com.squareup_javawriter",
         "//tools/base/third_party:commons-codec_commons-codec",
+        "//tools/base/third_party:it.unimi.dsi_fastutil",
+        "//tools/base/third_party:net.sf.jopt-simple_jopt-simple",
         "//tools/base/third_party:org.bouncycastle_bcpkix-jdk15on",
         "//tools/base/third_party:org.bouncycastle_bcprov-jdk15on",
         "//tools/base/third_party:org.ow2.asm_asm",
+        "//tools/base/third_party:org.ow2.asm_asm-commons",
         "//tools/base/third_party:org.ow2.asm_asm-tree",
+        "//tools/base/third_party:org.ow2.asm_asm-util",
     ],
 )
 

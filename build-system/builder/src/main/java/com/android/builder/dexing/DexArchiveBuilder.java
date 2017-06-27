@@ -17,7 +17,7 @@
 package com.android.builder.dexing;
 
 import com.android.annotations.NonNull;
-import java.io.IOException;
+import java.nio.file.Path;
 import java.util.stream.Stream;
 
 /**
@@ -25,7 +25,7 @@ import java.util.stream.Stream;
  * dex archive. This class contains the logic for reading the class files from the input, {@link
  * ClassFileInput}, and writing the output to a {@link DexArchive}. Implementation of conversion
  * from the class files to dex files is left to the sub-classes. To trigger the conversion, create
- * an instance of this class, and invoke {@link #convert(ClassFileInput, DexArchive)}.
+ * an instance of this class, and invoke {@link #convert(Stream, Path, boolean)}.
  */
 public abstract class DexArchiveBuilder {
 
@@ -35,22 +35,17 @@ public abstract class DexArchiveBuilder {
         return new DxDexArchiveBuilder(config);
     }
 
+    /** Creates an instance that is using d8 to convert class files to dex files. */
+    @NonNull
+    public static DexArchiveBuilder createD8DexBuilder(int minSdkVersion, boolean isDebug) {
+        return new D8DexArchiveBuilder(minSdkVersion, isDebug);
+    }
+
     /**
      * Converts the specified input, and writes it to the output dex archive. If dex archive does
      * not exist, it will be created. If it exists, entries will be added or replaced.
      */
     public abstract void convert(
-            @NonNull Stream<ClassFileEntry> entries, @NonNull DexArchive output)
+            @NonNull Stream<ClassFileEntry> input, @NonNull Path output, boolean isIncremental)
             throws DexArchiveBuilderException;
-
-    /**
-     * Converts the specified input, and writes it to the output dex archive. If dex archive does
-     * not exist, it will be created. If it exists, entries will be added or replaced.
-     */
-    public void convert(@NonNull ClassFileInput input, @NonNull DexArchive output)
-            throws DexArchiveBuilderException, IOException {
-
-        // convert ALL entries.
-        convert(input.entries(path -> true), output);
-    }
 }

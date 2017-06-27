@@ -41,6 +41,8 @@ class DexMergerTransformCallable implements Callable<Void> {
     @NonNull private final ForkJoinPool forkJoinPool;
     @Nullable private final Path mainDexList;
     @NonNull private final DexMergerTool dexMerger;
+    private final int minSdkVersion;
+    private final boolean isDebuggable;
 
     public DexMergerTransformCallable(
             @NonNull DexingType dexingType,
@@ -49,7 +51,9 @@ class DexMergerTransformCallable implements Callable<Void> {
             @NonNull Iterable<Path> dexArchives,
             @Nullable Path mainDexList,
             @NonNull ForkJoinPool forkJoinPool,
-            @NonNull DexMergerTool dexMerger) {
+            @NonNull DexMergerTool dexMerger,
+            int minSdkVersion,
+            boolean isDebuggable) {
         this.dexingType = dexingType;
         this.processOutput = processOutput;
         this.dexOutputDir = dexOutputDir;
@@ -57,6 +61,8 @@ class DexMergerTransformCallable implements Callable<Void> {
         this.mainDexList = mainDexList;
         this.forkJoinPool = forkJoinPool;
         this.dexMerger = dexMerger;
+        this.minSdkVersion = minSdkVersion;
+        this.isDebuggable = isDebuggable;
     }
 
     @Override
@@ -64,14 +70,23 @@ class DexMergerTransformCallable implements Callable<Void> {
         DexArchiveMerger merger;
         switch (dexMerger) {
             case DX:
-                {
-                    DxContext dxContext =
-                            new DxContext(
-                                    processOutput.getStandardOutput(),
-                                    processOutput.getErrorOutput());
-                    merger = DexArchiveMerger.createDxDexMerger(dxContext, forkJoinPool);
-                    break;
+                DxContext dxContext =
+                        new DxContext(
+                                processOutput.getStandardOutput(), processOutput.getErrorOutput());
+                merger = DexArchiveMerger.createDxDexMerger(dxContext, forkJoinPool);
+                break;
+            case D8:
+                int d8MinSdkVersion = minSdkVersion;
+                if (dexingType == DexingType.NATIVE_MULTIDEX) {
+                    // D8 has baked-in logic that does not allow multiple dex files without
+                    // main dex list if min sdk < 21. Becuase we are only merging dex files here,
+                    // it is safe to specify 21 as min sdk version.
+                    d8MinSdkVersion = 21;
                 }
+                merger =
+                        DexArchiveMerger.createD8DexMerger(
+                                processOutput.getErrorOutput(), d8MinSdkVersion, isDebuggable);
+                break;
             default:
                 throw new AssertionError("Unknown dex merger " + dexMerger.name());
         }

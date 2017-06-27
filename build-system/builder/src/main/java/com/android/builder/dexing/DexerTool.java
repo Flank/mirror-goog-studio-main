@@ -19,4 +19,5 @@ package com.android.builder.dexing;
 /** Tool used to dex the inputs. */
 public enum DexerTool {
     DX,
+    D8,
 }

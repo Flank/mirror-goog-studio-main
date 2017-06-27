@@ -46,7 +46,6 @@ import com.android.builder.dexing.DexArchiveBuilder;
 import com.android.builder.dexing.DexArchiveBuilderConfig;
 import com.android.builder.dexing.DexArchives;
 import com.android.builder.dexing.DexerTool;
-import com.android.builder.dexing.DxDexArchiveBuilder;
 import com.android.builder.utils.FileCache;
 import com.android.dx.command.dexer.DxContext;
 import com.android.ide.common.blame.Message;
@@ -72,6 +71,7 @@ import java.io.Serializable;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Map;
@@ -338,6 +338,8 @@ public class DexArchiveBuilderTransform extends Transform {
         private final List<String> dexAdditionalParameters;
         private final int inBufferSize;
         private final int outBufferSize;
+        private final DexerTool dexer;
+        private final boolean isDebuggable;
 
         public DexConversionParameters(
                 QualifiedContent input,
@@ -347,7 +349,9 @@ public class DexArchiveBuilderTransform extends Transform {
                 int minSdkVersion,
                 List<String> dexAdditionalParameters,
                 int inBufferSize,
-                int outBufferSize) {
+                int outBufferSize,
+                DexerTool dexer,
+                boolean isDebuggable) {
             this.input = input;
             this.numberOfBuckets = numberOfBuckets;
             this.buckedId = buckedId;
@@ -356,6 +360,8 @@ public class DexArchiveBuilderTransform extends Transform {
             this.dexAdditionalParameters = dexAdditionalParameters;
             this.inBufferSize = inBufferSize;
             this.outBufferSize = outBufferSize;
+            this.dexer = dexer;
+            this.isDebuggable = isDebuggable;
         }
 
         public boolean belongsToThisBucket(Path path) {
@@ -384,7 +390,9 @@ public class DexArchiveBuilderTransform extends Transform {
                                 dexConversionParameters.minSdkVersion,
                                 dexConversionParameters.dexAdditionalParameters,
                                 dexConversionParameters.inBufferSize,
-                                dexConversionParameters.outBufferSize);
+                                dexConversionParameters.outBufferSize,
+                                dexConversionParameters.dexer,
+                                dexConversionParameters.isDebuggable);
 
                 Path rootFolder = dexConversionParameters.input.getFile().toPath();
                 Predicate<Path> bucketFilter = dexConversionParameters::belongsToThisBucket;
@@ -407,14 +415,12 @@ public class DexArchiveBuilderTransform extends Transform {
 
                 bucketFilter = bucketFilter.and(toProcess);
 
-                // take bucketId'th entries from the input.
-                File outputFile = new File(new URI(dexConversionParameters.output));
-                try (ClassFileInput input = ClassFileInputs.fromPath(rootFolder);
-                        DexArchive outputArchive = DexArchives.fromInput(outputFile.toPath())) {
-
-                    dexArchiveBuilder.convert(input.entries(bucketFilter), outputArchive);
+                try (ClassFileInput input = ClassFileInputs.fromPath(rootFolder)) {
+                    dexArchiveBuilder.convert(
+                            input.entries(bucketFilter),
+                            Paths.get(new URI(dexConversionParameters.output)),
+                            dexConversionParameters.isDirectoryBased());
                 }
-
             } catch (Exception e) {
                 throw new BuildException(e.getMessage(), e);
             }
@@ -425,22 +431,36 @@ public class DexArchiveBuilderTransform extends Transform {
             int minSdkVersion,
             List<String> dexAdditionalParameters,
             int inBufferSize,
-            int outBufferSize)
+            int outBufferSize,
+            DexerTool dexer,
+            boolean isDebuggable)
             throws IOException {
 
-        boolean optimizedDex = !dexAdditionalParameters.contains("--no-optimize");
-        DxContext dxContext = new DxContext(System.out, System.err);
-        DexArchiveBuilderConfig config =
-                new DexArchiveBuilderConfig(
-                        dxContext,
-                        optimizedDex,
-                        inBufferSize,
-                        minSdkVersion,
-                        DexerTool.DX,
-                        outBufferSize,
-                        DexArchiveBuilderCacheHandler.isJumboModeEnabledForDx());
+        DexArchiveBuilder dexArchiveBuilder;
+        switch (dexer) {
+            case DX:
+                boolean optimizedDex = !dexAdditionalParameters.contains("--no-optimize");
+                DxContext dxContext = new DxContext(System.out, System.err);
+                DexArchiveBuilderConfig config =
+                        new DexArchiveBuilderConfig(
+                                dxContext,
+                                optimizedDex,
+                                inBufferSize,
+                                minSdkVersion,
+                                DexerTool.DX,
+                                outBufferSize,
+                                DexArchiveBuilderCacheHandler.isJumboModeEnabledForDx());
 
-        return new DxDexArchiveBuilder(config);
+                dexArchiveBuilder = DexArchiveBuilder.createDxDexBuilder(config);
+                break;
+            case D8:
+                dexArchiveBuilder =
+                        DexArchiveBuilder.createD8DexBuilder(minSdkVersion, isDebuggable);
+                break;
+            default:
+                throw new AssertionError("Unknown dexer type: " + dexer.name());
+        }
+        return dexArchiveBuilder;
     }
 
     private List<File> convertToDexArchive(
@@ -476,7 +496,9 @@ public class DexArchiveBuilderTransform extends Transform {
                             minSdkVersion,
                             dexOptions.getAdditionalParameters(),
                             inBufferSize,
-                            outBufferSize);
+                            outBufferSize,
+                            dexer,
+                            true);
 
             if (useGradleWorkers) {
                 context.getWorkerExecutor()

@@ -2248,7 +2248,9 @@ public abstract class TaskManager {
                                 ? project.files(variantScope.getMainDexListFile())
                                 : null,
                         variantScope.getGlobalScope().getAndroidBuilder().getErrorReporter(),
-                        variantScope.getDexMerger());
+                        variantScope.getDexMerger(),
+                        variantScope.getMinSdkVersion().getFeatureLevel(),
+                        variantScope.getVariantConfiguration().getBuildType().isDebuggable());
         Optional<AndroidTask<TransformTask>> dexTask =
                 transformManager.addTransform(tasks, variantScope, dexTransform);
         // need to manually make dex task depend on MultiDexTransform since there's no stream

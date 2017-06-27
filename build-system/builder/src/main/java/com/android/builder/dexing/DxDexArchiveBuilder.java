@@ -28,11 +28,12 @@ import com.android.dx.util.ByteArrayAnnotatedOutput;
 import com.android.utils.PathUtils;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
-public class DxDexArchiveBuilder extends DexArchiveBuilder {
+class DxDexArchiveBuilder extends DexArchiveBuilder {
 
     private static final Logger LOGGER = Logger.getLogger(DxDexArchiveBuilder.class.getName());
 
@@ -42,53 +43,55 @@ public class DxDexArchiveBuilder extends DexArchiveBuilder {
 
     public DxDexArchiveBuilder(DexArchiveBuilderConfig config) {
         this.config = config;
+    }
+
+    @Override
+    public void convert(
+            @NonNull Stream<ClassFileEntry> input, @NonNull Path output, boolean isIncremental)
+            throws DexArchiveBuilderException {
+        Iterator<ClassFileEntry> iterator = input.iterator();
+        if (!iterator.hasNext()) {
+            return;
+        }
         outStorage =
                 config.getOutBufferSize() > 0
                         ? new DexFile.Storage(new byte[config.getOutBufferSize()])
                         : null;
-    }
-
-    @Override
-    public void convert(@NonNull Stream<ClassFileEntry> entries, @NonNull DexArchive output)
-            throws DexArchiveBuilderException {
         inStorage = config.getInBufferSize() > 0 ? new byte[config.getInBufferSize()] : null;
-        try {
-            entries.forEach(
-                    classFileEntry -> {
-                        try {
-                            ByteArray byteArray;
-                            if (inStorage != null) {
-                                if (classFileEntry.getSize() > inStorage.length) {
-                                    if (LOGGER.isLoggable(Level.FINER)) {
-                                        LOGGER.log(
-                                                Level.FINER,
-                                                "File too big "
-                                                        + classFileEntry.getSize()
-                                                        + " : "
-                                                        + classFileEntry.getRelativePath()
-                                                        + " vs "
-                                                        + inStorage.length);
-                                    }
-                                    inStorage = new byte[(int) classFileEntry.getSize()];
-                                }
-                                int readBytes = classFileEntry.readAllBytes(inStorage);
-                                byteArray = new ByteArray(inStorage, 0, readBytes);
-                            } else {
-                                byteArray = new ByteArray(classFileEntry.readAllBytes());
-                            }
-                            dex(classFileEntry.getRelativePath(), byteArray, output);
-
-                        } catch (Exception e) {
+        ClassFileEntry classFileEntry = null;
+        try (DexArchive outputDexArchive = DexArchives.fromInput(output)) {
+            while (iterator.hasNext()) {
+                classFileEntry = iterator.next();
+                ByteArray byteArray;
+                if (inStorage == null) {
+                    byteArray = new ByteArray(classFileEntry.readAllBytes());
+                } else {
+                    if (classFileEntry.getSize() > inStorage.length) {
+                        if (LOGGER.isLoggable(Level.FINER)) {
                             LOGGER.log(
-                                    Level.SEVERE,
-                                    String.format(
-                                            "Error while processing %s",
-                                            classFileEntry.getRelativePath()),
-                                    e);
-                            throw new RuntimeException(e);
+                                    Level.FINER,
+                                    "File too big "
+                                            + classFileEntry.getSize()
+                                            + " : "
+                                            + classFileEntry.getRelativePath()
+                                            + " vs "
+                                            + inStorage.length);
                         }
-                    });
-        } catch (RuntimeException e) {
+                        inStorage = new byte[(int) classFileEntry.getSize()];
+                    }
+                    int readBytes = classFileEntry.readAllBytes(inStorage);
+                    byteArray = new ByteArray(inStorage, 0, readBytes);
+                }
+                dex(classFileEntry.getRelativePath(), byteArray, outputDexArchive);
+            }
+        } catch (RuntimeException | IOException e) {
+            if (classFileEntry != null) {
+                LOGGER.log(
+                        Level.SEVERE,
+                        String.format(
+                                "Error while processing %s", classFileEntry.getRelativePath()),
+                        e);
+            }
             throw DexArchiveBuilderException.wrap(e);
         }
     }

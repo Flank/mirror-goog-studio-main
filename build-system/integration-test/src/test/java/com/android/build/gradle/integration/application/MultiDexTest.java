@@ -25,9 +25,11 @@ import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType;
+import com.android.build.gradle.integration.common.fixture.RunGradleTasks;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.DexInProcessHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
 import com.google.common.base.Charsets;
@@ -206,7 +208,13 @@ public class MultiDexTest {
                 project.getBuildFile(),
                 "\nandroid.dexOptions.additionalParameters = ['--minimal-main-dex']\n");
 
-        project.execute("assembleIcsDebug", "assembleIcsDebugAndroidTest");
+        // D8 does not support minimal main dex
+        RunGradleTasks executor =
+                project.executor()
+                        .with(BooleanOption.ENABLE_D8_DEXER, false)
+                        .with(BooleanOption.ENABLE_D8_MERGER, false);
+
+        executor.run("assembleIcsDebug", "assembleIcsDebugAndroidTest");
 
         assertThat(
                 project.getApk(ApkType.DEBUG, "ics")
@@ -224,7 +232,7 @@ public class MultiDexTest {
 
         // dexing with dex archives does not support additional parameters
         GradleBuildResult result =
-                project.executor().expectFailure().withUseDexArchive(false).run("assembleIcsDebug");
+                executor.expectFailure().withUseDexArchive(false).run("assembleIcsDebug");
 
         assertThat(result.getStderr()).contains("main dex capacity exceeded");
     }

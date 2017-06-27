@@ -121,7 +121,7 @@ public class DexArchiveBuilderTransformTest {
 
         assertThat(FileUtils.find(out.toFile(), Pattern.compile(".*\\.dex"))).hasSize(1);
         List<File> jarDexArchives = FileUtils.find(out.toFile(), Pattern.compile(".*\\.jar"));
-        assertThat(jarDexArchives).hasSize(DexArchiveBuilderTransform.NUMBER_OF_BUCKETS);
+        assertThat(jarDexArchives).hasSize(1);
     }
 
     @Test

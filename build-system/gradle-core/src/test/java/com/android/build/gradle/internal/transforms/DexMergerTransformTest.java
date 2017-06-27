@@ -30,10 +30,8 @@ import com.android.build.api.transform.TransformOutputProvider;
 import com.android.build.gradle.internal.pipeline.TransformInvocationBuilder;
 import com.android.builder.dexing.ClassFileInput;
 import com.android.builder.dexing.ClassFileInputs;
-import com.android.builder.dexing.DexArchive;
 import com.android.builder.dexing.DexArchiveBuilder;
 import com.android.builder.dexing.DexArchiveBuilderConfig;
-import com.android.builder.dexing.DexArchives;
 import com.android.builder.dexing.DexMergerTool;
 import com.android.builder.dexing.DexerTool;
 import com.android.builder.dexing.DexingType;
@@ -275,7 +273,7 @@ public class DexMergerTransformTest {
             collection = null;
         }
         return new DexMergerTransform(
-                dexingType, collection, new NoOpErrorReporter(), DexMergerTool.DX);
+                dexingType, collection, new NoOpErrorReporter(), DexMergerTool.DX, 1, true);
     }
 
     @NonNull
@@ -334,9 +332,8 @@ public class DexMergerTransformTest {
                                 10,
                                 true));
 
-        try (ClassFileInput input = ClassFileInputs.fromPath(classesInput);
-                DexArchive dexArchive = DexArchives.fromInput(dexArchivePath)) {
-            builder.convert(input, dexArchive);
+        try (ClassFileInput input = ClassFileInputs.fromPath(classesInput)) {
+            builder.convert(input.entries(p -> true), dexArchivePath, false);
         }
     }
 }

@@ -16,15 +16,14 @@
 
 package com.android.build.gradle.internal.transforms;
 
-import static com.google.common.truth.Truth.assertThat;
-import static org.mockito.Mockito.verify;
 
 import com.android.builder.dexing.ClassFileEntry;
-import com.android.builder.dexing.DexArchive;
+import com.android.builder.dexing.DexArchiveBuilder;
 import com.android.builder.dexing.DexArchiveBuilderConfig;
 import com.android.builder.dexing.DexerTool;
-import com.android.builder.dexing.DxDexArchiveBuilder;
 import com.android.dx.command.dexer.DxContext;
+import com.android.testutils.apk.Dex;
+import com.android.testutils.truth.MoreTruth;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
 import java.io.IOException;
@@ -33,27 +32,21 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Stream;
-import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
-/** Tests for {@link DxDexArchiveBuilder} class */
+/** Tests for the dx {@link DexArchiveBuilder} class. */
 @RunWith(Parameterized.class)
 public class DxDexArchiveBuilderTest {
 
-    @Mock DexArchive output;
-    @Captor ArgumentCaptor<byte[]> outputArrayCaptor;
-    @Captor ArgumentCaptor<Integer> outputOffsetCaptor;
-    @Captor ArgumentCaptor<Integer> outputLengthCaptor;
-    @Captor ArgumentCaptor<Path> outputPathCaptor;
-    DxContext dxContext;
+    DxContext dxContext = new DxContext(System.out, System.err);
 
     private final int bufferSize;
+
+    @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     public DxDexArchiveBuilderTest(int bufferSize) {
         this.bufferSize = bufferSize;
@@ -64,37 +57,23 @@ public class DxDexArchiveBuilderTest {
         return ImmutableList.of(0, 10 * 1024);
     }
 
-    @Before
-    public void setUp() {
-        MockitoAnnotations.initMocks(this);
-        dxContext = new DxContext(System.out, System.err);
-    }
-
     @Test
     public void withBufferTest() throws IOException {
         DexArchiveBuilderConfig config =
                 new DexArchiveBuilderConfig(
                         dxContext, true, bufferSize, 21, DexerTool.DX, bufferSize, false);
+        Path outputArchive = temporaryFolder.newFolder().toPath();
 
-        DxDexArchiveBuilder archiveBuilder = new DxDexArchiveBuilder(config);
+        DexArchiveBuilder archiveBuilder = DexArchiveBuilder.createDxDexBuilder(config);
         String name = TestClassFileEntry.class.getName().replace('.', '/') + ".class";
         try (InputStream is = this.getClass().getClassLoader().getResourceAsStream(name)) {
-
             Stream<ClassFileEntry> stream =
                     ImmutableList.<ClassFileEntry>of(new TestClassFileEntry(name, is)).stream();
-            archiveBuilder.convert(stream, output);
+            archiveBuilder.convert(stream, outputArchive, true);
         }
-        verify(output)
-                .addFile(
-                        outputPathCaptor.capture(),
-                        outputArrayCaptor.capture(),
-                        outputOffsetCaptor.capture(),
-                        outputLengthCaptor.capture());
-
-        assertThat(outputArrayCaptor.getValue()).isNotEmpty();
-        assertThat(outputLengthCaptor.getValue()).isGreaterThan(0);
-        assertThat(outputPathCaptor.getValue().toString())
-                .isEqualTo(name.replace(".class", ".dex"));
+        String descriptor = name.substring(0, name.length() - ".class".length());
+        Path dexedClass = outputArchive.resolve(descriptor + ".dex");
+        MoreTruth.assertThat(new Dex(dexedClass)).containsClass("L" + descriptor + ";");
     }
 
     private static class TestClassFileEntry implements ClassFileEntry {

@@ -46,6 +46,8 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -127,17 +129,26 @@ class DexArchiveBuilderCacheHandler {
         try (JarOutputStream jarOutputStream =
                 new JarOutputStream(new BufferedOutputStream(new FileOutputStream(out)))) {
 
+            Set<String> usedNames = new HashSet<>();
             for (File dexArchive : dexArchives) {
-                try (JarFile jarFile = new JarFile(dexArchive)) {
-                    Enumeration<JarEntry> entries = jarFile.entries();
-                    while (entries.hasMoreElements()) {
-                        JarEntry jarEntry = entries.nextElement();
-                        jarOutputStream.putNextEntry(new JarEntry(jarEntry.getName()));
-                        try (InputStream inputStream =
-                                new BufferedInputStream(jarFile.getInputStream(jarEntry))) {
-                            ByteStreams.copy(inputStream, jarOutputStream);
+                if (dexArchive.exists()) {
+                    try (JarFile jarFile = new JarFile(dexArchive)) {
+                        Enumeration<JarEntry> entries = jarFile.entries();
+                        while (entries.hasMoreElements()) {
+                            JarEntry jarEntry = entries.nextElement();
+                            // Get unique name as jars might have multiple classes.dex, as for D8
+                            // we do not want to output single dex per class for performance reasons
+                            String entryName = jarEntry.getName();
+                            while (!usedNames.add(entryName)) {
+                                entryName = "_" + entryName;
+                            }
+                            jarOutputStream.putNextEntry(new JarEntry(entryName));
+                            try (InputStream inputStream =
+                                    new BufferedInputStream(jarFile.getInputStream(jarEntry))) {
+                                ByteStreams.copy(inputStream, jarOutputStream);
+                            }
+                            jarOutputStream.closeEntry();
                         }
-                        jarOutputStream.closeEntry();
                     }
                 }
             }

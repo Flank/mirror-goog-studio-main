@@ -52,8 +52,8 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 /**
- * Tests for the {@link DxDexArchiveBuilder} that processes the class files and outputs dex
- * archives. It tests all possible combinations of class input formats and dex output formats.
+ * Tests for the {@link DexArchiveBuilder} that processes the class files and outputs dex archives.
+ * It tests all possible combinations of class input formats and dex output formats.
  */
 @RunWith(Parameterized.class)
 public class DexArchiveBuilderTest {
@@ -81,22 +81,30 @@ public class DexArchiveBuilderTest {
 
     @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
-    @Parameterized.Parameters(name = "input_{0}_output_{1}")
+    @Parameterized.Parameters(name = "{0}_{1}_{2}")
     public static Collection<Object[]> setups() {
         return ImmutableList.of(
-                new Object[] {ClassesInputFormat.DIR, DexArchiveFormat.DIR},
-                new Object[] {ClassesInputFormat.DIR, DexArchiveFormat.JAR},
-                new Object[] {ClassesInputFormat.JAR, DexArchiveFormat.DIR},
-                new Object[] {ClassesInputFormat.JAR, DexArchiveFormat.JAR});
+                new Object[] {ClassesInputFormat.DIR, DexArchiveFormat.DIR, DexerTool.D8},
+                new Object[] {ClassesInputFormat.DIR, DexArchiveFormat.JAR, DexerTool.D8},
+                new Object[] {ClassesInputFormat.JAR, DexArchiveFormat.DIR, DexerTool.D8},
+                new Object[] {ClassesInputFormat.JAR, DexArchiveFormat.JAR, DexerTool.D8},
+                new Object[] {ClassesInputFormat.DIR, DexArchiveFormat.DIR, DexerTool.DX},
+                new Object[] {ClassesInputFormat.DIR, DexArchiveFormat.JAR, DexerTool.DX},
+                new Object[] {ClassesInputFormat.JAR, DexArchiveFormat.DIR, DexerTool.DX},
+                new Object[] {ClassesInputFormat.JAR, DexArchiveFormat.JAR, DexerTool.DX});
     }
 
     @NonNull private final ClassesInputFormat inputFormat;
     @NonNull private final DexArchiveFormat outputFormat;
+    @NonNull private final DexerTool dexerTool;
 
     public DexArchiveBuilderTest(
-            @NonNull ClassesInputFormat inputFormat, @NonNull DexArchiveFormat outputFormat) {
+            @NonNull ClassesInputFormat inputFormat,
+            @NonNull DexArchiveFormat outputFormat,
+            @NonNull DexerTool dexerTool) {
         this.inputFormat = inputFormat;
         this.outputFormat = outputFormat;
+        this.dexerTool = dexerTool;
     }
 
     @Test
@@ -104,7 +112,7 @@ public class DexArchiveBuilderTest {
         Collection<String> classesInInput = ImmutableList.of("A", "B", "C");
         Path input = writeToInput(classesInInput);
         Path output = createOutput();
-        DexArchiveTestUtil.convertClassesToDexArchive(input, output);
+        DexArchiveTestUtil.convertClassesToDexArchive(input, output, dexerTool);
 
         try (DexArchive dexArchive = DexArchives.fromInput(output)) {
             assertArchiveIsValid(dexArchive, classesInInput);
@@ -115,22 +123,12 @@ public class DexArchiveBuilderTest {
     public void checkEmptyInput() throws Exception {
         Path emptyInput = writeToInput(ImmutableList.of());
         Path output = createOutput();
-        DexArchiveTestUtil.convertClassesToDexArchive(emptyInput, output);
+        DexArchiveTestUtil.convertClassesToDexArchive(emptyInput, output, dexerTool);
 
-        try (DexArchive dexArchive = DexArchives.fromInput(output)) {
-            assertArchiveIsValid(dexArchive, ImmutableList.of());
-        }
-    }
-
-    @Test
-    public void checkInputClassesMoreThanThreads() throws Exception {
-        Collection<String> classesInInput = ImmutableList.of("A", "B", "C", "D", "E", "F");
-        Path input = writeToInput(classesInInput);
-        Path output = createOutput();
-        DexArchiveTestUtil.convertClassesToDexArchive(input, output);
-
-        try (DexArchive dexArchive = DexArchives.fromInput(output)) {
-            assertArchiveIsValid(dexArchive, classesInInput);
+        if (outputFormat == DexArchiveFormat.JAR) {
+            assertThat(output).doesNotExist();
+        } else {
+            Truth.assertThat(Files.list(output).count()).isEqualTo(0);
         }
     }
 
@@ -140,13 +138,13 @@ public class DexArchiveBuilderTest {
         Collection<String> classesInInput = ImmutableList.of("A", "B", "C");
         Path input = writeToInput(classesInInput);
         Path output = createOutput();
-        DexArchiveTestUtil.convertClassesToDexArchive(input, output);
+        DexArchiveTestUtil.convertClassesToDexArchive(input, output, dexerTool);
 
         // add new file
         writeToInput(ImmutableList.of("D"));
 
         // trigger conversion again
-        DexArchiveTestUtil.convertClassesToDexArchive(input, output);
+        DexArchiveTestUtil.convertClassesToDexArchive(input, output, dexerTool);
         try (DexArchive dexArchive = DexArchives.fromInput(output)) {
             assertArchiveIsValid(dexArchive, ImmutableList.of("A", "B", "C", "D"));
         }
@@ -155,7 +153,7 @@ public class DexArchiveBuilderTest {
         writeToInput(ImmutableList.of("F"));
 
         // trigger conversion again
-        DexArchiveTestUtil.convertClassesToDexArchive(input, output);
+        DexArchiveTestUtil.convertClassesToDexArchive(input, output, dexerTool);
         try (DexArchive dexArchive = DexArchives.fromInput(output)) {
             assertArchiveIsValid(dexArchive, ImmutableList.of("A", "B", "C", "D", "F"));
         }
@@ -167,7 +165,7 @@ public class DexArchiveBuilderTest {
         Collection<String> classesInInput = ImmutableList.of("A", "B", "C");
         Path input = writeToInput(classesInInput);
         Path output = createOutput();
-        DexArchiveTestUtil.convertClassesToDexArchive(input, output);
+        DexArchiveTestUtil.convertClassesToDexArchive(input, output, dexerTool);
 
         // remove the file, we close it to make sure it is written to disk
         try (DexArchive dexArchive = DexArchives.fromInput(output)) {
@@ -185,7 +183,7 @@ public class DexArchiveBuilderTest {
         Collection<String> classesInInput = ImmutableList.of("A", "B", "C");
         Path input = writeToInput(classesInInput);
         Path output = createOutput();
-        DexArchiveTestUtil.convertClassesToDexArchive(input, output);
+        DexArchiveTestUtil.convertClassesToDexArchive(input, output, dexerTool);
 
         // remove the file, we close it to make sure it is written to disk
         try (DexArchive dexArchive = DexArchives.fromInput(output)) {
@@ -207,24 +205,10 @@ public class DexArchiveBuilderTest {
         }
         Path input = writeToInput(classesInInput);
         Path output = createOutput();
-        DexArchiveTestUtil.convertClassesToDexArchive(input, output);
+        DexArchiveTestUtil.convertClassesToDexArchive(input, output, dexerTool);
 
         try (DexArchive dexArchive = DexArchives.fromInput(output)) {
             assertArchiveIsValid(dexArchive, classesInInput);
-        }
-    }
-
-    @Test
-    public void checkInvalidOutput() throws Exception {
-        Collection<String> classesInInput = ImmutableList.of("A");
-        Path input = writeToInput(classesInInput);
-        Path output = createOutput();
-        Files.write(output, Lists.newArrayList("invalid output"));
-        try {
-            DexArchiveTestUtil.convertClassesToDexArchive(input, output);
-            fail();
-        } catch (DexArchiveBuilderException | IOException e) {
-            // it should fail
         }
     }
 
@@ -247,6 +231,7 @@ public class DexArchiveBuilderTest {
 
         try {
             DexArchiveEntry.withClassExtension(Paths.get("Failure.txt"));
+            fail();
         } catch (IllegalStateException e) {
             // should throw
         }
@@ -263,7 +248,7 @@ public class DexArchiveBuilderTest {
 
         Path output = fs.getPath("tmp\\output");
         Files.createDirectories(output);
-        DexArchiveTestUtil.convertClassesToDexArchive(input, output);
+        DexArchiveTestUtil.convertClassesToDexArchive(input, output, dexerTool);
     }
 
     @Test
@@ -293,7 +278,7 @@ public class DexArchiveBuilderTest {
         }
 
         Path output = createOutput();
-        DexArchiveTestUtil.convertClassesToDexArchive(classesDir, output);
+        DexArchiveTestUtil.convertClassesToDexArchive(classesDir, output, dexerTool);
 
         Path dexFile =
                 Iterators.getOnlyElement(
@@ -328,7 +313,7 @@ public class DexArchiveBuilderTest {
         }
 
         Path output = createOutput();
-        DexArchiveTestUtil.convertClassesToDexArchive(classesDir, output, 24);
+        DexArchiveTestUtil.convertClassesToDexArchive(classesDir, output, 24, dexerTool);
 
         Path dexFile =
                 Iterators.getOnlyElement(
@@ -338,13 +323,14 @@ public class DexArchiveBuilderTest {
         assertThat(dex).containsClass(dexClassName);
 
         try {
-            DexArchiveTestUtil.convertClassesToDexArchive(classesDir, output, 0);
+            DexArchiveTestUtil.convertClassesToDexArchive(classesDir, output, dexerTool);
             fail("Default and static interface method should require min sdk 24.");
         } catch (DexArchiveBuilderException ignored) {
-            Truth.assertThat(Throwables.getStackTraceAsString(ignored))
-                    .contains(
-                            "default or static interface method used without "
-                                    + "--min-sdk-version >= 24");
+            String expectedMessage =
+                    dexerTool == DexerTool.DX
+                            ? "default or static interface method used without --min-sdk-version"
+                            : "Static interface methods are only supported";
+            Truth.assertThat(Throwables.getStackTraceAsString(ignored)).contains(expectedMessage);
         }
     }
 
@@ -360,7 +346,7 @@ public class DexArchiveBuilderTest {
         return input;
     }
 
-    private Path createOutput() {
+    private Path createOutput() throws IOException {
         if (outputFormat == DexArchiveFormat.DIR) {
             return temporaryFolder.getRoot().toPath().resolve("output");
         } else {

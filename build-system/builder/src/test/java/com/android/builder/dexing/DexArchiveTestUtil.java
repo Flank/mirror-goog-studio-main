@@ -41,24 +41,43 @@ public final class DexArchiveTestUtil {
 
     private static DxContext dxContext = new DxContext(System.out, System.err);
 
-    /** Converts all class files in the input path the to the dex archive. */
+    /** Converts all class files in the input path the to the dex archive using dx. */
     public static void convertClassesToDexArchive(
             @NonNull Path classesInput, @NonNull Path dexArchiveOutput) throws IOException {
-        convertClassesToDexArchive(classesInput, dexArchiveOutput, 0);
+        convertClassesToDexArchive(classesInput, dexArchiveOutput, 1, DexerTool.DX);
     }
 
     /** Converts all class files in the input path the to the dex archive. */
     public static void convertClassesToDexArchive(
-            @NonNull Path classesInput, @NonNull Path dexArchiveOutput, int minSdkVersion)
+            @NonNull Path classesInput,
+            @NonNull Path dexArchiveOutput,
+            @NonNull DexerTool dexerTool)
             throws IOException {
-        try (DexArchive dexArchive = DexArchives.fromInput(dexArchiveOutput)) {
-            ClassFileInput inputs = ClassFileInputs.fromPath(classesInput);
-            DexArchiveBuilderConfig config =
-                    new DexArchiveBuilderConfig(
-                            dxContext, true, 10, minSdkVersion, DexerTool.DX, 10, true);
+        convertClassesToDexArchive(classesInput, dexArchiveOutput, 1, dexerTool);
+    }
 
-            DexArchiveBuilder dexArchiveBuilder = new DxDexArchiveBuilder(config);
-            dexArchiveBuilder.convert(inputs, dexArchive);
+    /** Converts all class files in the input path the to the dex archive. */
+    public static void convertClassesToDexArchive(
+            @NonNull Path classesInput,
+            @NonNull Path dexArchiveOutput,
+            int minSdkVersion,
+            @NonNull DexerTool dexerTool)
+            throws IOException {
+        try (ClassFileInput inputs = ClassFileInputs.fromPath(classesInput)) {
+            DexArchiveBuilder dexArchiveBuilder;
+            if (!ClassFileInputs.jarMatcher.matches(dexArchiveOutput)) {
+                Files.createDirectories(dexArchiveOutput);
+            }
+            if (dexerTool == DexerTool.DX) {
+                DexArchiveBuilderConfig config =
+                        new DexArchiveBuilderConfig(
+                                dxContext, true, 10, minSdkVersion, DexerTool.DX, 10, true);
+                dexArchiveBuilder = DexArchiveBuilder.createDxDexBuilder(config);
+            } else {
+                dexArchiveBuilder = DexArchiveBuilder.createD8DexBuilder(minSdkVersion, true);
+            }
+
+            dexArchiveBuilder.convert(inputs.entries(p -> true), dexArchiveOutput, true);
         }
     }
 
@@ -73,27 +92,34 @@ public final class DexArchiveTestUtil {
         Path classesInput = emptyDir.resolve("input");
         createClasses(classesInput, Sets.newHashSet(classes));
         Path dexArchive = emptyDir.resolve("dex_archive.jar");
-        convertClassesToDexArchive(classesInput, dexArchive);
+        convertClassesToDexArchive(classesInput, dexArchive, DexerTool.DX);
         return dexArchive;
     }
 
-    public static void mergeMonoDex(@NonNull Collection<Path> dexArchives, @NonNull Path outputDir)
+    public static void mergeMonoDex(
+            @NonNull Collection<Path> dexArchives,
+            @NonNull Path outputDir,
+            @NonNull DexMergerTool dexMergerTool)
             throws IOException, InterruptedException, DexArchiveMergerException {
-        implMergeDexes(dexArchives, outputDir, DexingType.MONO_DEX, null);
+        implMergeDexes(dexArchives, outputDir, DexingType.MONO_DEX, null, dexMergerTool);
     }
 
     public static void mergeLegacyDex(
             @NonNull Collection<Path> dexArchives,
             @NonNull Path outputDir,
-            @NonNull Path mainDexList)
+            @NonNull Path mainDexList,
+            @NonNull DexMergerTool dexMergerTool)
             throws IOException, InterruptedException, DexArchiveMergerException {
-        implMergeDexes(dexArchives, outputDir, DexingType.LEGACY_MULTIDEX, mainDexList);
+        implMergeDexes(
+                dexArchives, outputDir, DexingType.LEGACY_MULTIDEX, mainDexList, dexMergerTool);
     }
 
     public static void mergeNativeDex(
-            @NonNull Collection<Path> dexArchives, @NonNull Path outputDir)
+            @NonNull Collection<Path> dexArchives,
+            @NonNull Path outputDir,
+            @NonNull DexMergerTool dexMergerTool)
             throws IOException, InterruptedException, DexArchiveMergerException {
-        implMergeDexes(dexArchives, outputDir, DexingType.NATIVE_MULTIDEX, null);
+        implMergeDexes(dexArchives, outputDir, DexingType.NATIVE_MULTIDEX, null, dexMergerTool);
     }
 
     /** Gets a DEX-style class names from the specified class names without the package. */
@@ -129,8 +155,8 @@ public final class DexArchiveTestUtil {
         Files.write(classFile, bigClass);
     }
 
-    /** Writes empty classes to the specified output. */
-    public static void createClasses(
+    /** Writes empty classes to the specified output, and returns the list of descriptors. */
+    public static List<String> createClasses(
             @NonNull Path classesOutput, @NonNull Collection<String> classNames) throws Exception {
         List<String> classWithPackage =
                 classNames.stream().map(e -> PACKAGE + "/" + e).collect(Collectors.toList());
@@ -139,6 +165,7 @@ public final class DexArchiveTestUtil {
         } else {
             TestInputsGenerator.dirWithEmptyClasses(classesOutput, classWithPackage);
         }
+        return classWithPackage;
     }
 
     /**
@@ -151,14 +178,28 @@ public final class DexArchiveTestUtil {
             @NonNull Collection<Path> inputs,
             @NonNull Path outputDir,
             @NonNull DexingType dexingType,
-            @Nullable Path mainDexList)
+            @Nullable Path mainDexList,
+            @NonNull DexMergerTool dexMergerTool)
             throws IOException, InterruptedException, DexArchiveMergerException {
         Preconditions.checkState(
                 (dexingType == DexingType.LEGACY_MULTIDEX) == (mainDexList != null),
                 "Main Dex list must be set if and only if legacy multidex is enabled.");
 
-        DexArchiveMerger merger =
-                DexArchiveMerger.createDxDexMerger(dxContext, ForkJoinPool.commonPool());
+        DexArchiveMerger merger;
+        switch (dexMergerTool) {
+            case DX:
+                merger = DexArchiveMerger.createDxDexMerger(dxContext, ForkJoinPool.commonPool());
+                break;
+            case D8:
+                merger =
+                        DexArchiveMerger.createD8DexMerger(
+                                System.err,
+                                dexingType == DexingType.NATIVE_MULTIDEX ? 21 : 1,
+                                true);
+                break;
+            default:
+                throw new AssertionError();
+        }
         Files.createDirectory(outputDir);
         merger.mergeDexArchives(inputs, outputDir, mainDexList, dexingType);
     }
