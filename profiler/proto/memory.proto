@@ -283,14 +283,14 @@ message LegacyAllocationEvent {
   int64 timestamp = 2;
   int32 size = 3;
   int32 thread_id = 4;
-  int64 class_id = 5;
+  int32 class_id = 5;
   int32 stack_id = 6;
 }
 
 message LegacyAllocationContextsRequest {
   int32 process_id = 1;
   Session session = 2;
-  repeated int64 class_ids = 3;
+  repeated int32 class_ids = 3;
   repeated int32 stack_ids = 4;
 }
 
@@ -307,11 +307,14 @@ message AllocationContextsResponse {
   int64 timestamp = 1;
   repeated AllocatedClass allocated_classes = 2;
   repeated AllocationStack allocation_stacks = 3;
+  // O+ only. All seen thread Ids -> Strings mapping
+  repeated ThreadInfo allocation_threads = 4;
 }
 
 message AllocatedClass {
-  int64 class_id = 1;
+  int32 class_id = 1;
   string class_name = 2;
+  int32 class_loader_id = 3;
 }
 
 // Proto format for handling stack data for both pre-O and O+.
@@ -350,6 +353,18 @@ message EncodedAllocationStack {
   repeated int32 line_numbers = 4;
 }
 
+// Proto format for storing and transmitting O+ thread data.
+// JVMTI provides an API to get a thread's name but not id. To avoid
+// sending too much duplicated string datas, we encode thread names to
+// id manually and resolve them on Studio-side.
+message ThreadInfo {
+  // The time when this thread was first seen. It should match the first
+  // AllocationEvent::Allocation that generated the stack.
+  int64 timestamp = 1;
+  int32 thread_id = 2;
+  string thread_name = 3;
+}
+
 message AllocationSnapshotRequest {
   int32 process_id = 1;
   Session session = 2;
@@ -377,25 +392,30 @@ message BatchAllocationSample {
   int64 timestamp = 2;
   repeated AllocationEvent events = 3;
 
-  // The following two fields are used for transfering stack info
+  // The following fields are used for transfering stack info
   // from device to studio only. Within studio, stack info are
   // retrieved via GetAllocationContexts.
   repeated AllocationStack.StackFrame methods = 4;
   repeated EncodedAllocationStack stacks = 5;
+  repeated ThreadInfo thread_infos = 6;
 }
 
 // Proto format for handling O+ allocation data.
 message AllocationEvent {
   message Allocation {
-    int64 tag = 1;
-    int64 class_tag = 2;
+    int32 tag = 1;
+    int32 class_tag = 2;
     int64 size = 3;
     // Length for array objects. For non-arrays, set to -1.
     int32 length = 4;
-    // TODO - thread, stack frame location
 
-    // Id representing the allocation stack.
-    int32 stack_id = 5;
+    // Profiler-generated Id representing a thread.
+    // Valid id starts at 1 as 0 is used as a default no-value.
+    int32 thread_id = 5;
+
+    // Profiler-Id representing the allocation stack.
+    // Valid id starts at 1 as 0 is used as a default no-value.
+    int32 stack_id = 6;
 
     // Entire list of methods corresponding to the allocation stack.
     // Note that this is only used for temporary storage in perfa.
@@ -403,26 +423,31 @@ message AllocationEvent {
     // as |stack_id| above, and the encoded data is stored/sent
     // separately using EncodedAllocationStack.
     // First entry is top of stack.
-    repeated int64 method_ids = 6;
+    repeated int64 method_ids = 7;
     // Similar to |method_ids| above, this is only for temporary
     // storage. The actual converted line numbers are stored/sent to
     // studio via EncodedAllocationStack.
-    repeated int64 location_ids = 7;
+    repeated int64 location_ids = 8;
+    // Temporary storage in perfa only. The thread info will be
+    // encoded into |thread_id| before transfer from perfa->perfd.
+    // The thread id -> name mapping is sent separately via ThreadInfo
+    // messages.
+    string thread_name = 9;
   }
 
   message Deallocation {
-    int64 tag = 1;
+    int32 tag = 1;
     // The following are host/client-side only (e.g. Studio-only).
-    int64 class_tag = 2;
+    int32 class_tag = 2;
     int64 alloc_time = 3;
     int64 size = 4;
     // Length for array objects. For non-arrays, set to -1.
     int32 length = 5;
-    int32 stack_id = 6;
-  }
 
-  // associates an event with a particular tracking session.
-  int64 capture_time = 1;
+    // Thread + Stack Id of the allocation of the same object.
+    int32 thread_id = 6;
+    int32 stack_id = 7;
+  }
 
   // If it is an allocation event, this marks the exact time
   // when the alloc happens. If it is a deallocation event, this

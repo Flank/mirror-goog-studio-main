@@ -105,6 +105,21 @@ jthread AllocateJavaThread(jvmtiEnv* jvmti, JNIEnv* jni) {
   return result;
 }
 
+int32_t GetClassLoaderId(jvmtiEnv* jvmti, JNIEnv* jni, jclass klass) {
+  jint klass_loader_id = -1;
+  jobject klass_loader;
+  jvmtiError error = jvmti->GetClassLoader(klass, &klass_loader);
+  CheckJvmtiError(jvmti, error);
+  if (klass_loader != nullptr) {
+    ScopedLocalRef<jobject> scoped_klass_loader(jni, klass_loader);
+    error =
+        jvmti->GetObjectHashCode(scoped_klass_loader.get(), &klass_loader_id);
+    CheckJvmtiError(jvmti, error);
+  }
+
+  return klass_loader_id;
+}
+
 void* Allocate(jvmtiEnv* jvmti, jlong size) {
   unsigned char* alloc = nullptr;
   jvmtiError err = jvmti->Allocate(size, &alloc);

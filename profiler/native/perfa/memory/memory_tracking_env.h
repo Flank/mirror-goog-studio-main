@@ -41,16 +41,35 @@ using profiler::proto::MemoryControlRequest;
 
 namespace profiler {
 
+// Data structure for a loaded class
+struct ClassInfo {
+  std::string class_name;
+  int32_t class_loader_id;
+  bool operator==(const ClassInfo& other) const {
+    return class_name.compare(other.class_name) == 0 &&
+           class_loader_id == other.class_loader_id;
+  }
+};
+
+struct ClassInfoHash {
+  std::size_t operator()(const ClassInfo& key) const {
+    return std::hash<std::string>()(key.class_name) ^ key.class_loader_id;
+  }
+};
+
 #ifndef NDEBUG
-using ClassTagMap = tracking::unordered_map<std::string, int32_t, kClassTagMap>;
+using ClassTagMap =
+    tracking::unordered_map<ClassInfo, int32_t, kClassTagMap, ClassInfoHash>;
 using ClassGlobalRefs = tracking::vector<jobject, kClassGlobalRefs>;
 using ClassData = tracking::vector<AllocatedClass, kClassData>;
 using MethodIdSet = tracking::unordered_set<int64_t, kMethodIds>;
+using ThreadIdMap = tracking::unordered_map<std::string, int32_t, kThreadIdMap>;
 #else
-using ClassTagMap = std::unordered_map<std::string, int32_t>;
+using ClassTagMap = std::unordered_map<ClassInfo, int32_t, ClassInfoHash>;
 using ClassGlobalRefs = std::vector<jobject>;
 using ClassData = std::vector<AllocatedClass>;
 using MethodIdSet = std::unordered_set<int64_t>;
+using ThreadIdMap = std::unordered_map<std::string, int32_t>;
 #endif
 
 class MemoryTrackingEnv {
@@ -76,7 +95,8 @@ class MemoryTrackingEnv {
   void Initialize();
   void StartLiveTracking(int64_t timestamp);
   void StopLiveTracking(int64_t timestamp);
-  void RegisterNewClass(JNIEnv* jni, jclass klass);
+  const AllocatedClass& RegisterNewClass(jvmtiEnv* jvmti, JNIEnv* jni,
+                                         jclass klass);
   void LogGcStart();
   void LogGcFinish();
 
@@ -117,6 +137,17 @@ class MemoryTrackingEnv {
   static int32_t FindLineNumber(MemoryTrackingEnv* env, jvmtiEnv* jvmti,
                                 int64_t method_id, int64_t location_id);
 
+  // Helper method for gathering thread-related info (e.g. name, callstack)
+  // and populate them into |alloc_data|.
+  static void FillAllocEventThreadData(MemoryTrackingEnv* env, jvmtiEnv* jvmti,
+                                       JNIEnv* jni, jthread thead,
+                                       AllocationEvent::Allocation* alloc_data);
+
+  // For a particular class object, populate |klass_info| with the corresponding
+  // values.
+  static void GetClassInfo(MemoryTrackingEnv* env, jvmtiEnv* jvmti, JNIEnv* jni,
+                           jclass klass, ClassInfo* klass_info);
+
   SteadyClock clock_;
   TimingStats timing_stats_;
 
@@ -125,6 +156,7 @@ class MemoryTrackingEnv {
   bool is_first_tracking_;
   bool is_live_tracking_;
   int32_t app_id_;
+  int32_t class_class_tag_;
   int64_t current_capture_time_ns_;
   int64_t last_gc_start_ns_;
   std::mutex tracking_mutex_;
@@ -140,6 +172,7 @@ class MemoryTrackingEnv {
   ClassGlobalRefs class_global_refs_;
   ClassData class_data_;
   MethodIdSet known_method_ids_;
+  ThreadIdMap thread_id_map_;
 };
 
 }  // namespace profiler

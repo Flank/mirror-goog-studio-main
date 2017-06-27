@@ -32,11 +32,12 @@ enum MemTag {
   kClassGlobalRefs,
   kClassData,
   kMethodIds,
+  kThreadIdMap,
   kMemTagCount,
 };
 
-extern std::atomic<int64_t> g_max_used[kMemTagCount];
-extern std::atomic<int64_t> g_total_used[kMemTagCount];
+extern std::atomic<long> g_max_used[kMemTagCount];
+extern std::atomic<long> g_total_used[kMemTagCount];
 
 template <class T>
 void atomic_update_max(std::atomic<T>* max, T value) {
@@ -89,11 +90,13 @@ struct TrackingAllocator {
 class TimingStats {
  public:
   enum TimingTag {
-    kAllocate,
+    kAllocate,  // Time from SetTag + kThreadInfo + kGetCallstack
     kFree,
-    kCallstack,
-    kBulkCallstack,
-    kLineNumber,
+    kClassInfo,          // Time to resolve class name + class loader
+    kThreadInfo,         // Time to resolve thread id/name
+    kGetCallstack,       // Time to retrieve callstack's method+frame ids
+    kResolveCallstack,   // Method ids -> Method nmaes
+    kResolveLineNumber,  // Frame ids -> Line numbers
     kTimingTagCount,
   };
 
@@ -111,9 +114,12 @@ class TimingStats {
   }
 
   void Print(TimingTag tag) {
+    int count = count_[tag].load();
+    if (count == 0) {
+      return;
+    }
     long total = time_[tag].load();
     long max = max_[tag].load();
-    int count = count_[tag].load();
     Log::V(">> %s: Total=%ld, Count=%d, Max=%ld, Average=%ld", ToString(tag),
            total, count, max, total / count);
   }
@@ -125,12 +131,16 @@ class TimingStats {
         return "Allocate";
       case kFree:
         return "Free";
-      case kCallstack:
-        return "Callstack";
-      case kBulkCallstack:
-        return "BulkCallstack";
-      case kLineNumber:
-        return "LineNumber";
+      case kClassInfo:
+        return "ClassInfo";
+      case kThreadInfo:
+        return "ThreadInfo";
+      case kGetCallstack:
+        return "GetCallstack";
+      case kResolveCallstack:
+        return "ResolveCallstack";
+      case kResolveLineNumber:
+        return "ResolveLineNumber";
       default:
         return "Unknown";
     }

@@ -71,6 +71,11 @@ JNIEnv* GetThreadLocalJNI(JavaVM* vm);
 jthread AllocateJavaThread(jvmtiEnv* jvmti, JNIEnv* jni);
 
 /**
+ * Returns an identifier for the class loader associated with a class.
+ */
+int32_t GetClassLoaderId(jvmtiEnv* jvmti, JNIEnv* jni, jclass klass);
+
+/**
  * Given a class signature and method name (in mutf8), returns the corresponding
  * mangled native method name according to the JNI spec.
  *

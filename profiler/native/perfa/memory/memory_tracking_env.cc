@@ -62,8 +62,8 @@ using proto::BatchAllocationSample;
 using proto::EncodedAllocationStack;
 
 // STL container memory tracking for Debug only.
-std::atomic<int64_t> g_max_used[kMemTagCount];
-std::atomic<int64_t> g_total_used[kMemTagCount];
+std::atomic<long> g_max_used[kMemTagCount];
+std::atomic<long> g_total_used[kMemTagCount];
 const char* MemTagToString(MemTag tag) {
   switch (tag) {
     case kClassTagMap:
@@ -74,6 +74,8 @@ const char* MemTagToString(MemTag tag) {
       return "ClassData";
     case kMethodIds:
       return "MethodIds";
+    case kThreadIdMap:
+      return "ThreadIdMap";
     default:
       return "Unknown";
   }
@@ -99,6 +101,7 @@ MemoryTrackingEnv::MemoryTrackingEnv(jvmtiEnv* jvmti, bool log_live_alloc_count)
       is_first_tracking_(true),
       is_live_tracking_(false),
       app_id_(getpid()),
+      class_class_tag_(-1),
       current_capture_time_ns_(-1),
       last_gc_start_ns_(-1),
       total_live_count_(0),
@@ -178,10 +181,6 @@ void MemoryTrackingEnv::StartLiveTracking(int64_t timestamp) {
 
       // Enable ClassPrepare beforehand which allows us to capture any
       // subsequent class loads not returned from GetLoadedClasses.
-      // TODO: this can potentially load a class before GetLoadedClasses
-      // is called. At the moment we ignore duplicated classes, but we should
-      // handle the cases of 1) actual duplicated classes vs 2) same class
-      // loaded by multiple class loaders properly in RegisterNewClass.
       SetEventNotification(jvmti_, JVMTI_ENABLE, JVMTI_EVENT_CLASS_PREPARE);
 
       jint class_count = 0;
@@ -190,20 +189,24 @@ void MemoryTrackingEnv::StartLiveTracking(int64_t timestamp) {
       CheckJvmtiError(jvmti_, error);
       for (int i = 0; i < class_count; ++i) {
         ScopedLocalRef<jclass> klass(jni, classes[i]);
-        RegisterNewClass(jni, klass.get());
+        RegisterNewClass(jvmti_, jni, klass.get());
       }
       Log::V("Loaded classes: %d", class_count);
       Deallocate(jvmti_, classes);
+
+      // Should have found java/lang/Class at this point.
+      assert(class_class_tag_ != -1);
     }
 
     // Send back class data at the beginning of each session. De-duping needs to
     // be done by the caller as class tags remain unique throughout the app.
     // TODO: Only send back new classes since the last tracking session.
+    // Note: The Allocation event associated with each class is sent during the
+    // initial heap walk.
     BatchAllocationSample class_sample;
     for (const AllocatedClass& klass : class_data_) {
       AllocationEvent* event = class_sample.add_events();
       event->mutable_class_data()->CopyFrom(klass);
-      event->set_capture_time(current_capture_time_ns_);
       event->set_timestamp(current_capture_time_ns_);
       if (class_sample.events_size() >= kDataBatchSize) {
         profiler::EnqueueAllocationEvents(class_sample);
@@ -214,15 +217,6 @@ void MemoryTrackingEnv::StartLiveTracking(int64_t timestamp) {
       profiler::EnqueueAllocationEvents(class_sample);
     }
   }
-
-  // Trigger a GC - this is necessary to clean up any Class objects
-  // that are still left behind from the ClassLoad stage, which
-  // we would not get from the GetLoadedClasses, and we want to
-  // ensure they don't stay on the heap during IterateThroughHeap.
-  error = jvmti_->ForceGarbageCollection();
-  // x2 to be double sure. GC itself can cause class loads...
-  error = jvmti_->ForceGarbageCollection();
-  CheckJvmtiError(jvmti_, error);
 
   // Tag all objects already allocated on the heap.
   BatchAllocationSample snapshot_sample;
@@ -258,43 +252,48 @@ void MemoryTrackingEnv::StopLiveTracking(int64_t timestamp) {
   event_queue_.Reset();
 }
 
-void MemoryTrackingEnv::RegisterNewClass(JNIEnv* jni, jclass klass) {
+const AllocatedClass& MemoryTrackingEnv::RegisterNewClass(jvmtiEnv* jvmti,
+                                                          JNIEnv* jni,
+                                                          jclass klass) {
   jvmtiError error;
 
-  char* sig_mutf8;
-  error = jvmti_->GetClassSignature(klass, &sig_mutf8, nullptr);
-  CheckJvmtiError(jvmti_, error);
-  // TODO this is wrong. We need to parse mutf-8.
-  std::string klass_name = sig_mutf8;
-  Deallocate(jvmti_, sig_mutf8);
+  ClassInfo klass_info;
+  GetClassInfo(g_env, jvmti, jni, klass, &klass_info);
+  auto itr = class_tag_map_.find(klass_info);
 
-  int32_t tag = 0;
-  AllocatedClass klass_data;
-  auto itr = class_tag_map_.find(klass_name);
-  if (itr != class_tag_map_.end()) {
-    // We have a class from multiple class loaders.
-    // TODO treat them as separate classes.
-    // For now, let them share the same tag.
-    tag = itr->second;
+  // It is possible to see the same class from same class loader. This can
+  // happen during the tracking intiailization process, where there can be a
+  // race between GetLoadedClasses and the ClassPrepare callback, and the same
+  // class object calls into this method from both places.
+  bool new_klass = itr == class_tag_map_.end();
+  int32_t tag = new_klass ? GetNextClassTag() : itr->second;
+  if (new_klass) {
+    AllocatedClass klass_data;
     klass_data.set_class_id(tag);
-    klass_data.set_class_name(klass_name);
-
-  } else {
-    tag = GetNextClassTag();
-    klass_data.set_class_id(tag);
-    klass_data.set_class_name(klass_name);
-    class_tag_map_.emplace(std::make_pair(klass_name, tag));
+    klass_data.set_class_name(klass_info.class_name);
+    klass_data.set_class_loader_id(klass_info.class_loader_id);
+    class_tag_map_.emplace(std::make_pair(klass_info, tag));
     class_data_.push_back(klass_data);
     assert(class_data_.size() == tag);
-  }
-  error = jvmti_->SetTag(klass, tag);
-  CheckJvmtiError(jvmti_, error);
 
-  // Cache the jclasses so that they will never be gc.
-  // This ensures that any jmethodID/jfieldID will never become invalid.
-  // TODO: Investigate any memory implications - presumably the number of
-  // classes won't be enormous. (e.g. < (1<<16))
-  class_global_refs_.push_back(jni->NewGlobalRef(klass));
+    error = jvmti->SetTag(klass, tag);
+    CheckJvmtiError(jvmti, error);
+
+    // Cache the class object so that they will never be gc.
+    // This ensures that any jmethodID/jfieldID will never become invalid.
+    // TODO: Investigate any memory implications - presumably the number of
+    // classes won't be enormous. (e.g. < (1<<16))
+    class_global_refs_.push_back(jni->NewGlobalRef(klass));
+  }
+
+  if (klass_info.class_name.compare(kClassClass) == 0) {
+    // Should only see java/lang/Class once.
+    assert(class_class_tag_ == -1);
+    class_class_tag_ = tag;
+  }
+
+  // Valid class tags start at 1, so -1 to get the valid index.
+  return class_data_.at(tag - 1);
 }
 
 void MemoryTrackingEnv::LogGcStart() {
@@ -344,29 +343,27 @@ jint MemoryTrackingEnv::HeapIterationCallback(jlong class_tag, jlong size,
 
   BatchAllocationSample* sample = (BatchAllocationSample*)user_data;
 
-  assert(user_data != nullptr);
+  assert(sample != nullptr);
   assert(class_tag != 0);  // All classes should be tagged by this point.
   assert(g_env->class_data_.size() >= class_tag);
-
-  // Class tag starts at 1, thus the offset in its vector position.
-  const auto class_data = g_env->class_data_[class_tag - 1];
-  if (class_data.class_name().compare(kClassClass) == 0) {
-    // Skip Class objects as they should already be tagged.
-    // TODO account for their sizes in Ljava/lang/Class;
-    // Alternatively, perform the bookkeeping on Studio side.
-    assert(*tag_ptr != 0);
-    return JVMTI_VISIT_OBJECTS;
+  if (class_tag == g_env->class_class_tag_) {
+    // Do not retag Class objects as they should already be tagged.
+    // Note - we can have remnant Class objects from the ClassLoad phase, which
+    // we would't see from GetLoadedClasses and would not be tagged. We don't
+    // want to send AllocationEvent for them so simply ignore.
+    if (*tag_ptr == 0) {
+      return JVMTI_VISIT_OBJECTS;
+    }
+  } else {
+    int32_t tag = g_env->GetNextObjectTag();
+    *tag_ptr = tag;
   }
 
-  int32_t tag = g_env->GetNextObjectTag();
-  *tag_ptr = tag;
-
   AllocationEvent* event = sample->add_events();
-  event->set_capture_time(g_env->current_capture_time_ns_);
   event->set_timestamp(g_env->current_capture_time_ns_);
 
   AllocationEvent::Allocation* alloc = event->mutable_alloc_data();
-  alloc->set_tag(tag);
+  alloc->set_tag(*tag_ptr);
   alloc->set_class_tag(class_tag);
   alloc->set_size(size);
   alloc->set_length(length);
@@ -382,12 +379,30 @@ jint MemoryTrackingEnv::HeapIterationCallback(jlong class_tag, jlong size,
 void MemoryTrackingEnv::ClassPrepareCallback(jvmtiEnv* jvmti, JNIEnv* jni,
                                              jthread thread, jclass klass) {
   std::lock_guard<std::mutex> lock(g_env->class_data_mutex_);
-  g_env->RegisterNewClass(jni, klass);
-  AllocationEvent event;
-  event.mutable_class_data()->CopyFrom(g_env->class_data_.back());
-  event.set_capture_time(g_env->current_capture_time_ns_);
-  event.set_timestamp(g_env->clock_.GetCurrentTime());
-  g_env->event_queue_.Push(event);
+  AllocationEvent klass_event;
+  auto klass_data = g_env->RegisterNewClass(jvmti, jni, klass);
+  klass_event.mutable_class_data()->CopyFrom(klass_data);
+  klass_event.set_timestamp(g_env->clock_.GetCurrentTime());
+  // Note, the same class could have been pushed during the GetLoadedClasses
+  // logic already so this could be a duplicate. De-dup is done on Studio-side
+  // database logic based on tag uniqueness.
+  g_env->event_queue_.Push(klass_event);
+
+  // Create and send a matching Allocation event for the class object.
+  AllocationEvent alloc_event;
+  AllocationEvent::Allocation* alloc_data = alloc_event.mutable_alloc_data();
+  alloc_data->set_tag(klass_data.class_id());
+  alloc_data->set_class_tag(g_env->class_class_tag_);
+  // Need to get size manually as well...
+  jlong size;
+  jvmtiError error = jvmti->GetObjectSize(klass, &size);
+  CheckJvmtiError(jvmti, error);
+  alloc_data->set_size(size);
+  // Fill thread + stack info.
+  FillAllocEventThreadData(g_env, jvmti, jni, thread, alloc_data);
+  alloc_event.set_timestamp(g_env->clock_.GetCurrentTime());
+  // This can be duplicated as well and de-dup is done on Studio-side.
+  g_env->event_queue_.Push(alloc_event);
 }
 
 void MemoryTrackingEnv::ObjectAllocCallback(jvmtiEnv* jvmti, JNIEnv* jni,
@@ -397,14 +412,9 @@ void MemoryTrackingEnv::ObjectAllocCallback(jvmtiEnv* jvmti, JNIEnv* jni,
 
   jvmtiError error;
 
-  char* sig_mutf8;
-  error = jvmti->GetClassSignature(klass, &sig_mutf8, nullptr);
-  CheckJvmtiError(jvmti, error);
-  // TODO this is wrong. We need to parse mutf-8.
-  std::string klass_name = sig_mutf8;
-  Deallocate(jvmti, sig_mutf8);
-
-  if (klass_name.compare(kClassClass) == 0) {
+  ClassInfo klass_info;
+  GetClassInfo(g_env, jvmti, jni, klass, &klass_info);
+  if (klass_info.class_name.compare(kClassClass) == 0) {
     // Special case, we can potentially get two allocation events
     // when a class is loaded: One for ClassLoad and another for
     // ClassPrepare. We don't know which one it is here, so opting
@@ -412,33 +422,20 @@ void MemoryTrackingEnv::ObjectAllocCallback(jvmtiEnv* jvmti, JNIEnv* jni,
     return;
   }
 
-  int32_t tag = g_env->GetNextObjectTag();
-  error = jvmti->SetTag(object, tag);
-  CheckJvmtiError(jvmti, error);
-
-  auto itr = g_env->class_tag_map_.find(klass_name);
-  assert(itr != g_env->class_tag_map_.end());
   Stopwatch sw;
   {
+    int32_t tag = g_env->GetNextObjectTag();
+    error = jvmti->SetTag(object, tag);
+    CheckJvmtiError(jvmti, error);
+
+    auto itr = g_env->class_tag_map_.find(klass_info);
+    assert(itr != g_env->class_tag_map_.end());
     AllocationEvent event;
     AllocationEvent::Allocation* alloc_data = event.mutable_alloc_data();
     alloc_data->set_tag(tag);
     alloc_data->set_size(size);
     alloc_data->set_class_tag(itr->second);
-    // Collect stack frames
-    jvmtiFrameInfo frames[kMaxStackDepth];
-    jint count = 0;
-    error = jvmti->GetStackTrace(thread, 0, kMaxStackDepth, frames, &count);
-    CheckJvmtiError(jvmti, error);
-    for (int i = 0; i < count; i++) {
-      int64_t method_id = reinterpret_cast<int64_t>(frames[i].method);
-      // jlocation is just a jlong.
-      int64_t location_id = reinterpret_cast<jlong>(frames[i].location);
-      alloc_data->add_method_ids(method_id);
-      alloc_data->add_location_ids(location_id);
-    }
-
-    event.set_capture_time(g_env->current_capture_time_ns_);
+    FillAllocEventThreadData(g_env, jvmti, jni, thread, alloc_data);
     event.set_timestamp(g_env->clock_.GetCurrentTime());
     g_env->event_queue_.Push(event);
   }
@@ -453,7 +450,6 @@ void MemoryTrackingEnv::ObjectFreeCallback(jvmtiEnv* jvmti, jlong tag) {
     AllocationEvent event;
     AllocationEvent::Deallocation* free_data = event.mutable_free_data();
     free_data->set_tag(tag);
-    event.set_capture_time(g_env->current_capture_time_ns_);
     // Associate the free event with the last gc that occurred.
     event.set_timestamp(g_env->last_gc_start_ns_);
     g_env->event_queue_.Push(event);
@@ -497,6 +493,21 @@ void MemoryTrackingEnv::AllocDataWorker(jvmtiEnv* jvmti, JNIEnv* jni,
                   event->mutable_alloc_data();
               int stack_size = alloc_data->method_ids_size();
               assert(stack_size == alloc_data->location_ids_size());
+
+              auto thread_itr =
+                  env->thread_id_map_.find(alloc_data->thread_name());
+              if (thread_itr == env->thread_id_map_.end()) {
+                // New thread. Encode and sends the mapping along the sample.
+                auto result = env->thread_id_map_.insert(std::make_pair(
+                    alloc_data->thread_name(), env->thread_id_map_.size() + 1));
+                thread_itr = result.first;
+                proto::ThreadInfo* ti = sample.add_thread_infos();
+                ti->set_timestamp(event->timestamp());
+                ti->set_thread_id(thread_itr->second);
+                ti->set_thread_name(thread_itr->first);
+              }
+              alloc_data->set_thread_id(thread_itr->second);
+              alloc_data->clear_thread_name();
 
               // Store and encode the stack into trie.
               // TODO - consider moving trie storage to perfd?
@@ -576,39 +587,35 @@ void MemoryTrackingEnv::SetSampleMethods(
     MemoryTrackingEnv* env, jvmtiEnv* jvmti, JNIEnv* jni,
     BatchAllocationSample& sample, const std::vector<int64_t>& method_ids) {
   jvmtiError error;
-  Stopwatch sw;
-  {
-    for (auto id : method_ids) {
-      Stopwatch sw2;
-      {
-        jmethodID method_id = reinterpret_cast<jmethodID>(id);
+  for (auto id : method_ids) {
+    Stopwatch sw;
+    {
+      jmethodID method_id = reinterpret_cast<jmethodID>(id);
 
-        char* method_name;
-        error = jvmti->GetMethodName(method_id, &method_name, nullptr, nullptr);
-        CheckJvmtiError(jvmti, error);
+      char* method_name;
+      error = jvmti->GetMethodName(method_id, &method_name, nullptr, nullptr);
+      CheckJvmtiError(jvmti, error);
 
-        jclass klass;
-        error = jvmti->GetMethodDeclaringClass(method_id, &klass);
-        CheckJvmtiError(jvmti, error);
-        assert(klass != nullptr);
+      jclass klass;
+      error = jvmti->GetMethodDeclaringClass(method_id, &klass);
+      CheckJvmtiError(jvmti, error);
+      assert(klass != nullptr);
 
-        ScopedLocalRef<jclass> scoped_klass(jni, klass);
-        char* klass_name;
-        error =
-            jvmti->GetClassSignature(scoped_klass.get(), &klass_name, nullptr);
+      ScopedLocalRef<jclass> scoped_klass(jni, klass);
+      char* klass_name;
+      error =
+          jvmti->GetClassSignature(scoped_klass.get(), &klass_name, nullptr);
 
-        AllocationStack::StackFrame* method = sample.add_methods();
-        method->set_method_id(id);
-        method->set_method_name(method_name);
-        method->set_class_name(klass_name);
+      AllocationStack::StackFrame* method = sample.add_methods();
+      method->set_method_id(id);
+      method->set_method_name(method_name);
+      method->set_class_name(klass_name);
 
-        Deallocate(jvmti, method_name);
-        Deallocate(jvmti, klass_name);
-      }
-      env->timing_stats_.Track(TimingStats::kCallstack, sw2.GetElapsed());
+      Deallocate(jvmti, method_name);
+      Deallocate(jvmti, klass_name);
     }
+    env->timing_stats_.Track(TimingStats::kResolveCallstack, sw.GetElapsed());
   }
-  env->timing_stats_.Track(TimingStats::kBulkCallstack, sw.GetElapsed());
 }
 
 int32_t MemoryTrackingEnv::FindLineNumber(MemoryTrackingEnv* env,
@@ -637,10 +644,65 @@ int32_t MemoryTrackingEnv::FindLineNumber(MemoryTrackingEnv* env,
     }
 
     Deallocate(jvmti, line_number_entry);
-    env->timing_stats_.Track(TimingStats::kLineNumber, sw.GetElapsed());
+    env->timing_stats_.Track(TimingStats::kResolveLineNumber, sw.GetElapsed());
   }
 
   return line_number;
 }
 
+void MemoryTrackingEnv::FillAllocEventThreadData(
+    MemoryTrackingEnv* env, jvmtiEnv* jvmti, JNIEnv* jni, jthread thread,
+    AllocationEvent::Allocation* alloc_data) {
+  jvmtiError error;
+  Stopwatch sw;
+  {
+    // Collect thread info
+    jvmtiThreadInfo ti;
+    error = jvmti->GetThreadInfo(thread, &ti);
+    CheckJvmtiError(jvmti, error);
+    ScopedLocalRef<jobject> scoped_thread_group(jni, ti.thread_group);
+    ScopedLocalRef<jobject> scoped_class_loader(jni, ti.context_class_loader);
+    alloc_data->set_thread_name(ti.name);
+    Deallocate(jvmti, ti.name);
+  }
+  env->timing_stats_.Track(TimingStats::kThreadInfo, sw.GetElapsed());
+
+  sw.Start();
+  {
+    // Collect stack frames
+    jvmtiFrameInfo frames[kMaxStackDepth];
+    jint count = 0;
+    error = jvmti->GetStackTrace(thread, 0, kMaxStackDepth, frames, &count);
+    CheckJvmtiError(jvmti, error);
+    for (int i = 0; i < count; i++) {
+      int64_t method_id = reinterpret_cast<int64_t>(frames[i].method);
+      // jlocation is just a jlong.
+      int64_t location_id = reinterpret_cast<jlong>(frames[i].location);
+      alloc_data->add_method_ids(method_id);
+      alloc_data->add_location_ids(location_id);
+    }
+  }
+  env->timing_stats_.Track(TimingStats::kGetCallstack, sw.GetElapsed());
+}
+
+void MemoryTrackingEnv::GetClassInfo(MemoryTrackingEnv* env, jvmtiEnv* jvmti,
+                                     JNIEnv* jni, jclass klass,
+                                     ClassInfo* klass_info) {
+  jvmtiError error;
+  Stopwatch sw;
+  {
+    // Get class loader id.
+    klass_info->class_loader_id = GetClassLoaderId(jvmti, jni, klass);
+
+    // Get class name.
+    char* sig_mutf8;
+    error = jvmti->GetClassSignature(klass, &sig_mutf8, nullptr);
+    CheckJvmtiError(jvmti, error);
+
+    // TODO this is wrong. We need to parse mutf-8.
+    klass_info->class_name = sig_mutf8;
+    Deallocate(jvmti, sig_mutf8);
+  }
+  env->timing_stats_.Track(TimingStats::kClassInfo, sw.GetElapsed());
+}
 }  // namespace profiler
