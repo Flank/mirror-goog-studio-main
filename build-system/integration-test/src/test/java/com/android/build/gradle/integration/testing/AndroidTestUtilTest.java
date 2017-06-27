@@ -27,12 +27,14 @@ import com.android.builder.model.AndroidProject;
 import com.google.common.collect.Iterables;
 import java.io.File;
 import java.util.Collection;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 
-@Ignore
 public class AndroidTestUtilTest {
+
+    /** This test caused timeouts in the past. */
+    @Rule public Timeout timeout = Timeout.seconds(60);
 
     @Rule
     public GradleTestProject project =
@@ -45,7 +47,7 @@ public class AndroidTestUtilTest {
         //noinspection SpellCheckingInspection
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
-                "dependencies { androidTestUtil 'com.linkedin.testbutler:test-butler-app:1.3.1' }\n");
+                "dependencies { androidTestUtil 'com.linkedin.testbutler:test-butler-app:1.3.1@apk' }\n");
 
         AndroidProject model = project.model().getSingle().getOnlyModel();
         Collection<File> additionalRuntimeApks =
