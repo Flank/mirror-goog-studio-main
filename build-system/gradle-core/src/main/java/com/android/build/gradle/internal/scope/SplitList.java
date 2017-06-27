@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.scope;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.OutputFile;
 import com.android.build.gradle.internal.variant.MultiOutputPolicy;
 import com.google.common.collect.ImmutableList;
@@ -46,17 +47,26 @@ public class SplitList {
      */
     private ImmutableList<Record> records;
 
-    public static SplitList EMPTY = new SplitList(ImmutableList.of());
+    public static final SplitList EMPTY = new SplitList(ImmutableList.of());
 
     private SplitList(List<Record> records) {
         this.records = ImmutableList.copyOf(records);
     }
 
-    public static SplitList load(FileCollection persistedList) throws IOException {
+    @NonNull
+    public static SplitList load(@NonNull FileCollection persistedList) throws IOException {
         String persistedData = FileUtils.readFileToString(persistedList.getSingleFile());
         Gson gson = new Gson();
         Type collectionType = new TypeToken<ArrayList<Record>>() {}.getType();
         return new SplitList(gson.fromJson(persistedData, collectionType));
+    }
+
+    @NonNull
+    public static SplitList maybeLoad(@Nullable FileCollection persistedList) throws IOException {
+        if (persistedList == null) {
+            return EMPTY;
+        }
+        return load(persistedList);
     }
 
     public Set<String> getFilters(OutputFile.FilterType splitType) throws IOException {

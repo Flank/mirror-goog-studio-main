@@ -28,7 +28,9 @@ import static com.android.SdkConstants.FN_CLASSES_JAR;
 import static com.android.SdkConstants.FN_LINT_JAR;
 import static com.android.SdkConstants.FN_PROGUARD_TXT;
 import static com.android.SdkConstants.FN_PUBLIC_TXT;
+import static com.android.SdkConstants.FN_RESOURCE_STATIC_LIBRARY;
 import static com.android.SdkConstants.FN_RESOURCE_TEXT;
+import static com.android.SdkConstants.FN_R_CLASS_JAR;
 import static com.android.SdkConstants.LIBS_FOLDER;
 
 import android.databinding.tool.DataBindingBuilder;
@@ -71,6 +73,8 @@ public class AarTransform extends ArtifactTransform {
             ArtifactType.PUBLIC_RES,
             ArtifactType.SYMBOL_LIST,
             ArtifactType.DATA_BINDING_ARTIFACT,
+            ArtifactType.COMPILE_ONLY_R_CLASS_JAR,
+            ArtifactType.RES_STATIC_LIBRARY,
         };
     }
 
@@ -119,6 +123,12 @@ public class AarTransform extends ArtifactTransform {
                 break;
             case SYMBOL_LIST:
                 file = new File(input, FN_RESOURCE_TEXT);
+                break;
+            case RES_STATIC_LIBRARY:
+                file = new File(input, FN_RESOURCE_STATIC_LIBRARY);
+                break;
+            case COMPILE_ONLY_R_CLASS_JAR:
+                file = new File(input, FN_R_CLASS_JAR);
                 break;
             case DATA_BINDING_ARTIFACT:
                 file = new File(input, DataBindingBuilder.DATA_BINDING_ROOT_FOLDER_IN_AAR);

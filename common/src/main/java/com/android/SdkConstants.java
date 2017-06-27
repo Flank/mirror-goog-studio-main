@@ -1756,6 +1756,10 @@ public final class SdkConstants {
     public static final String FN_RESOURCE_TEXT = FN_RESOURCE_BASE + DOT_TXT;
     /** Filename for public resources in AAR archives */
     public static final String FN_PUBLIC_TXT = "public.txt";
+    /** Resource static library */
+    public static final String FN_RESOURCE_STATIC_LIBRARY = "res.apk";
+    /** R class jar, used for resource static library */
+    public static final String FN_R_CLASS_JAR = "R.jar";
     /** Generated manifest class name */
     public static final String FN_MANIFEST_BASE = "Manifest"; //$NON-NLS-1$
     /** Generated BuildConfig class name */

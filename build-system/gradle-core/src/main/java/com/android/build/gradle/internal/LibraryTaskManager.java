@@ -193,6 +193,7 @@ public class LibraryTaskManager extends TaskManager {
                             variantScope,
                             () -> variantBundleDir,
                             variantScope.getProcessResourcePackageOutputDirectory(),
+                            null,
                             // Switch to package where possible so we stop merging resources in
                             // libraries
                             projectOptions.get(BooleanOption.ENABLE_NEW_RESOURCE_PROCESSING)
@@ -202,8 +203,14 @@ public class LibraryTaskManager extends TaskManager {
                                     : MergeType.MERGE,
                             globalScope.getProjectBaseName());
 
-                    // Only verify resources if in Release.
-                    if (!variantScope.getVariantConfiguration().getBuildType().isDebuggable()) {
+                    // Only verify resources if in Release and not namespaced.
+                    if (!variantScope.getVariantConfiguration().getBuildType().isDebuggable()
+                            && !Boolean.TRUE.equals(
+                                    variantScope
+                                            .getGlobalScope()
+                                            .getExtension()
+                                            .getAaptOptions()
+                                            .getNamespaced())) {
                         createVerifyLibraryResTask(tasks, variantScope, MergeType.MERGE);
                     }
 
@@ -553,6 +560,12 @@ public class LibraryTaskManager extends TaskManager {
                 () -> variantScope.getOutputScope().getMainSplit().getOutputFileName());
         bundle.setExtension(BuilderConstants.EXT_LIB_ARCHIVE);
         bundle.from(variantScope.getOutput(TaskOutputType.LIBRARY_MANIFEST));
+        if (variantScope.hasOutput(TaskOutputType.COMPILE_ONLY_R_CLASS_JAR)) {
+            bundle.from(variantScope.getOutput(TaskOutputType.COMPILE_ONLY_R_CLASS_JAR));
+        }
+        if (variantScope.hasOutput(TaskOutputType.RES_STATIC_LIBRARY)) {
+            bundle.from(variantScope.getOutput(TaskOutputType.RES_STATIC_LIBRARY));
+        }
         bundle.from(variantBundleDir);
         bundle.from(
                 FileUtils.join(
@@ -650,8 +663,10 @@ public class LibraryTaskManager extends TaskManager {
             @NonNull TaskFactory tasks,
             @NonNull VariantScope variantScope,
             @NonNull File variantBundleDir) {
+
         // Create a merge task to only merge the resources from this library and not
         // the dependencies. This is what gets packaged in the aar.
+        // TODO: strip namespaces for this packaging.
         File resFolder = FileUtils.join(variantBundleDir, FD_RES);
         AndroidTask<MergeResources> mergeResourceTask =
                 basicCreateMergeResourcesTask(

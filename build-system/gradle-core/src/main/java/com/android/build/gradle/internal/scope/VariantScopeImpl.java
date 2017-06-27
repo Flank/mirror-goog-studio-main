@@ -25,6 +25,7 @@ import static com.android.build.gradle.internal.dsl.BuildType.PostprocessingConf
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.COMPILE_ONLY_R_CLASS_JAR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.API_ELEMENTS;
@@ -300,8 +301,10 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         } catch (MissingTaskOutputException e) {
             throw new RuntimeException(
                     String.format(
-                            "Variant '%s' has no output with type '%s'",
-                            this.getFullVariantName(), e.getOutputType()),
+                            "Variant '%1$s' in project '%2$s' has no output with type '%3$s'",
+                            this.getFullVariantName(),
+                            this.getProject().getPath(),
+                            e.getOutputType()),
                     e);
         }
     }
@@ -821,7 +824,28 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             @Nullable Object generatedBytecodeKey) {
         FileCollection mainCollection = getArtifactFileCollection(configType, ALL, classesType);
 
-        return mainCollection.plus(getVariantData().getGeneratedBytecode(generatedBytecodeKey));
+        mainCollection =
+                mainCollection.plus(getVariantData().getGeneratedBytecode(generatedBytecodeKey));
+
+        if (Boolean.TRUE.equals(globalScope.getExtension().getAaptOptions().getNamespaced())) {
+            mainCollection =
+                    mainCollection.plus(
+                            getOutput(VariantScope.TaskOutputType.COMPILE_ONLY_R_CLASS_JAR));
+            mainCollection =
+                    mainCollection.plus(
+                            getArtifactFileCollection(configType, ALL, COMPILE_ONLY_R_CLASS_JAR));
+            BaseVariantData tested = getTestedVariantData();
+            if (tested != null) {
+                mainCollection =
+                        mainCollection.plus(
+                                tested.getScope()
+                                        .getOutput(
+                                                VariantScope.TaskOutputType
+                                                        .COMPILE_ONLY_R_CLASS_JAR));
+            }
+        }
+
+        return mainCollection;
     }
 
     @NonNull

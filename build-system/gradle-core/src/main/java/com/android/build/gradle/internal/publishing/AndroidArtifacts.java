@@ -42,6 +42,8 @@ public class AndroidArtifacts {
     private static final String TYPE_MANIFEST = "android-manifest";
     private static final String TYPE_MANIFEST_METADATA = "android-manifest-metadata";
     private static final String TYPE_ANDROID_RES = "android-res";
+    private static final String TYPE_ANDROID_R_CLASS_JAR = "android-res-r-class-jar";
+    private static final String TYPE_ANDROID_RES_STATIC_LIBRARY = "android-res-static-library";
     private static final String TYPE_ASSETS = "android-assets";
     private static final String TYPE_JNI = "android-jni";
     private static final String TYPE_AIDL = "android-aidl";
@@ -124,10 +126,15 @@ public class AndroidArtifacts {
         MANIFEST(TYPE_MANIFEST),
         MANIFEST_METADATA(TYPE_MANIFEST_METADATA),
 
+        // Resources static library are API (where only explicit dependencies are included) and
+        // runtime
+        RES_STATIC_LIBRARY(TYPE_ANDROID_RES_STATIC_LIBRARY),
+
         // API only elements.
         AIDL(TYPE_AIDL),
         RENDERSCRIPT(TYPE_RENDERSCRIPT),
         DATA_BINDING_ARTIFACT(TYPE_DATA_BINDING_ARTIFACT),
+        COMPILE_ONLY_R_CLASS_JAR(TYPE_ANDROID_R_CLASS_JAR),
 
         // runtime only elements
         JAVA_RES(TYPE_JAVA_RES),

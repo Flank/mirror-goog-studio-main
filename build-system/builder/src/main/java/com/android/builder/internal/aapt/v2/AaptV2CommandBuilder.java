@@ -279,6 +279,22 @@ public final class AaptV2CommandBuilder {
 
         builder.add("--no-version-vectors");
 
-        return builder.build();
+        if (config.isStaticLibrary()) {
+            builder.add("--static-lib");
+            if (!config.getStaticLibraryDependencies().isEmpty()) {
+                throw new AaptException(
+                        "Static libraries to link against should be passed as imports");
+            }
+        } else {
+            for (File file : config.getStaticLibraryDependencies()) {
+                builder.add(file.getAbsolutePath());
+            }
+        }
+
+        ImmutableList<String> arguments = builder.build();
+
+        config.getLogger().info("aapt2 %s", Joiner.on(' ').join(arguments));
+
+        return arguments;
     }
 }

@@ -21,13 +21,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.android.annotations.NonNull;
 import com.google.common.base.Joiner;
 import com.google.common.io.Files;
+import com.google.common.primitives.Bytes;
 import java.io.File;
 import java.io.IOException;
 
-/**
- * Describes a source file for integration test.
- */
-public class TestSourceFile {
+/** Describes a source file for integration test. */
+public final class TestSourceFile {
     private final String parent;
     private final String name;
     private final byte[] content;
@@ -73,6 +72,14 @@ public class TestSourceFile {
             Files.createParentDirs(file);
         }
         Files.write(content, file);
+    }
+
+    public TestSourceFile appendContent(@NonNull byte[] additionalContent) {
+        return new TestSourceFile(parent, name, Bytes.concat(content, additionalContent));
+    }
+
+    public TestSourceFile appendContent(@NonNull String additionalContent) {
+        return appendContent(additionalContent.getBytes());
     }
 }
 

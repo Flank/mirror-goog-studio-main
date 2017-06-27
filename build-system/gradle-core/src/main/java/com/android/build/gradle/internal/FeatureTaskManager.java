@@ -16,15 +16,14 @@
 
 package com.android.build.gradle.internal;
 
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.JAVAC;
 import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
+import com.android.build.gradle.internal.feature.BundleFeatureClasses;
 import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.AndroidTask;
@@ -61,7 +60,6 @@ import java.util.Set;
 import java.util.function.Supplier;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
-import org.gradle.api.tasks.bundling.Jar;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
@@ -205,28 +203,21 @@ public class FeatureTaskManager extends TaskManager {
                 project.getPath(),
                 variantScope.getFullVariantName(),
                 () -> {
-                    // Add a task to process the Android Resources and generate source files
-                    // AndroidTask<ProcessAndroidResources> processAndroidResourcesTask =
-                    AndroidTask<ProcessAndroidResources> processAndroidResourcesTask =
-                            createProcessResTask(
-                                    tasks,
-                                    variantScope,
-                                    () ->
-                                            FileUtils.join(
-                                                    globalScope.getIntermediatesDir(),
-                                                    "symbols",
-                                                    variantScope
-                                                            .getVariantData()
-                                                            .getVariantConfiguration()
-                                                            .getDirName()),
-                                    variantScope.getProcessResourcePackageOutputDirectory(),
-                                    MergeType.MERGE,
-                                    variantScope.getGlobalScope().getProjectBaseName());
-
-                    variantScope.addTaskOutput(
-                            TaskOutputHolder.TaskOutputType.FEATURE_RESOURCE_PKG,
+                    createProcessResTask(
+                            tasks,
+                            variantScope,
+                            () ->
+                                    FileUtils.join(
+                                            globalScope.getIntermediatesDir(),
+                                            "symbols",
+                                            variantScope
+                                                    .getVariantData()
+                                                    .getVariantConfiguration()
+                                                    .getDirName()),
                             variantScope.getProcessResourcePackageOutputDirectory(),
-                            processAndroidResourcesTask.getName());
+                            TaskOutputHolder.TaskOutputType.FEATURE_RESOURCE_PKG,
+                            MergeType.MERGE,
+                            variantScope.getGlobalScope().getProjectBaseName());
 
                     // Add a task to process the java resources
                     createProcessJavaResTask(tasks, variantScope);
@@ -508,45 +499,21 @@ public class FeatureTaskManager extends TaskManager {
     protected void postJavacCreation(
             @NonNull final TaskFactory tasks, @NonNull VariantScope scope) {
         // Create the classes artifact for use by dependent features.
-        File dest =
+        File classesJar =
                 new File(
                         globalScope.getBuildDir(),
                         FileUtils.join(
                                 FD_INTERMEDIATES,
                                 "classes-jar",
-                                scope.getVariantConfiguration().getDirName()));
+                                scope.getVariantConfiguration().getDirName(),
+                                "classes.jar"));
 
-        AndroidTask<Jar> task =
+        AndroidTask<BundleFeatureClasses> task =
                 androidTasks.create(
-                        tasks,
-                        new TaskConfigAction<Jar>() {
-                            @NonNull
-                            @Override
-                            public String getName() {
-                                return scope.getTaskName("bundle", "Classes");
-                            }
-
-                            @NonNull
-                            @Override
-                            public Class<Jar> getType() {
-                                return Jar.class;
-                            }
-
-                            @Override
-                            public void execute(@NonNull Jar task) {
-                                task.from(scope.getOutput(JAVAC));
-                                task.from(scope.getVariantData().getAllPreJavacGeneratedBytecode());
-                                task.from(
-                                        scope.getVariantData().getAllPostJavacGeneratedBytecode());
-                                task.setDestinationDir(dest);
-                                task.setArchiveName("classes.jar");
-                            }
-                        });
+                        tasks, new BundleFeatureClasses.ConfigAction(scope, classesJar));
 
         scope.addTaskOutput(
-                TaskOutputHolder.TaskOutputType.FEATURE_CLASSES,
-                new File(dest, "classes.jar"),
-                task.getName());
+                TaskOutputHolder.TaskOutputType.FEATURE_CLASSES, classesJar, task.getName());
     }
 
     @NonNull
@@ -557,10 +524,10 @@ public class FeatureTaskManager extends TaskManager {
     }
 
     @Override
-    protected ProcessAndroidResources.ConfigAction createProcessAndroidResourcesConfigAction(
+    protected TaskConfigAction<ProcessAndroidResources> createProcessAndroidResourcesConfigAction(
             @NonNull VariantScope scope,
             @NonNull Supplier<File> symbolLocation,
-            @Nullable File symbolsWithPackageName,
+            @NonNull File symbolsWithPackageName,
             @NonNull File resPackageOutputFolder,
             boolean useAaptToGenerateLegacyMultidexMainDexProguardRules,
             @NonNull MergeType sourceTaskOutputType,
@@ -585,4 +552,5 @@ public class FeatureTaskManager extends TaskManager {
                     baseName);
         }
     }
+
 }

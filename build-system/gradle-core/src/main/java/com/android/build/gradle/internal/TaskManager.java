@@ -79,6 +79,7 @@ import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.VariantPublishingSpec;
+import com.android.build.gradle.internal.res.namespaced.NamespacedResourcesTaskManager;
 import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.AndroidTaskRegistry;
 import com.android.build.gradle.internal.scope.BuildOutputs;
@@ -872,7 +873,8 @@ public abstract class TaskManager {
                                 mergedOutputDir,
                                 mergedNotCompiledDir,
                                 includeDependencies,
-                                processResources));
+                                processResources,
+                                true));
 
         scope.addTaskOutput(
                 mergeType.getOutputType(), mergedOutputDir, mergeResourcesTask.getName());
@@ -1072,6 +1074,7 @@ public abstract class TaskManager {
                                                 .getVariantConfiguration()
                                                 .getDirName()),
                 scope.getProcessResourcePackageOutputDirectory(),
+                null,
                 MergeType.MERGE,
                 scope.getGlobalScope().getProjectBaseName());
     }
@@ -1080,11 +1083,12 @@ public abstract class TaskManager {
         return false;
     }
 
-    public AndroidTask<ProcessAndroidResources> createProcessResTask(
+    public void createProcessResTask(
             @NonNull TaskFactory tasks,
             @NonNull VariantScope scope,
             @NonNull Supplier<File> symbolLocation,
             @NonNull File resPackageOutputFolder,
+            @Nullable TaskOutputHolder.TaskOutputType packageOutputType,
             @NonNull MergeType mergeType,
             @NonNull String baseName) {
         BaseVariantData variantData = scope.getVariantData();
@@ -1107,6 +1111,36 @@ public abstract class TaskManager {
                     splitsDiscoveryAndroidTask.getName());
         }
 
+        if (Boolean.TRUE.equals(
+                scope.getGlobalScope().getExtension().getAaptOptions().getNamespaced())) {
+            new NamespacedResourcesTaskManager(globalScope, androidTasks, tasks, scope)
+                    .createNamespacedResourceTasks(
+                            resPackageOutputFolder,
+                            packageOutputType,
+                            baseName,
+                            useAaptToGenerateLegacyMultidexMainDexProguardRules);
+            return;
+        }
+        createNonNamespacedResourceTasks(
+                tasks,
+                scope,
+                symbolLocation,
+                resPackageOutputFolder,
+                packageOutputType,
+                mergeType,
+                baseName,
+                useAaptToGenerateLegacyMultidexMainDexProguardRules);
+    }
+
+    private void createNonNamespacedResourceTasks(
+            @NonNull TaskFactory tasks,
+            @NonNull VariantScope scope,
+            @NonNull Supplier<File> symbolLocation,
+            @NonNull File resPackageOutputFolder,
+            TaskOutputHolder.TaskOutputType packageOutputType,
+            @NonNull MergeType mergeType,
+            @NonNull String baseName,
+            boolean useAaptToGenerateLegacyMultidexMainDexProguardRules) {
         File symbolTableWithPackageName =
                 FileUtils.join(
                         globalScope.getIntermediatesDir(),
@@ -1142,15 +1176,19 @@ public abstract class TaskManager {
                 symbolTableWithPackageName,
                 taskName);
 
+        if (packageOutputType != null) {
+            scope.addTaskOutput(
+                    packageOutputType, resPackageOutputFolder, processAndroidResources.getName());
+        }
+
         scope.setProcessResourcesTask(processAndroidResources);
         scope.getSourceGenTask().optionalDependsOn(tasks, processAndroidResources);
-        return processAndroidResources;
     }
 
-    protected ProcessAndroidResources.ConfigAction createProcessAndroidResourcesConfigAction(
+    protected TaskConfigAction<ProcessAndroidResources> createProcessAndroidResourcesConfigAction(
             @NonNull VariantScope scope,
             @NonNull Supplier<File> symbolLocation,
-            @Nullable File symbolWithPackageName,
+            @NonNull File symbolWithPackageName,
             @NonNull File resPackageOutputFolder,
             boolean useAaptToGenerateLegacyMultidexMainDexProguardRules,
             @NonNull MergeType sourceTaskOutputType,
@@ -1487,6 +1525,21 @@ public abstract class TaskManager {
                                 .setFileCollection(
                                         scope.getVariantData().getAllPostJavacGeneratedBytecode())
                                 .build());
+
+        if (scope.hasOutput(TaskOutputHolder.TaskOutputType.RUNTIME_R_CLASS_CLASSES)) {
+            scope.getTransformManager()
+                    .addStream(
+                            OriginalStream.builder(project, "final-r-classes")
+                                    .addContentTypes(
+                                            DefaultContentType.CLASSES,
+                                            DefaultContentType.RESOURCES)
+                                    .addScope(Scope.PROJECT)
+                                    .setFileCollection(
+                                            scope.getOutput(
+                                                    TaskOutputHolder.TaskOutputType
+                                                            .RUNTIME_R_CLASS_CLASSES))
+                                    .build());
+        }
     }
 
     private static void setupCompileTaskDependencies(
@@ -1639,12 +1692,9 @@ public abstract class TaskManager {
                         scope.getVariantConfiguration().getType() == VariantType.LIBRARY));
     }
 
-    /**
-     * Creates the tasks to build unit tests.
-     */
+    /** Creates the tasks to build unit tests. */
     public void createUnitTestVariantTasks(
-            @NonNull TaskFactory tasks,
-            @NonNull TestVariantData variantData) {
+            @NonNull TaskFactory tasks, @NonNull TestVariantData variantData) {
         VariantScope variantScope = variantData.getScope();
         BaseVariantData testedVariantData =
                 checkNotNull(variantScope.getTestedVariantData(), "Not a unit test variant");
@@ -1686,6 +1736,10 @@ public abstract class TaskManager {
             compileTask.dependsOn(tasks, testedVariantScope.getMergeAssetsTask());
             compileTask.dependsOn(tasks, testedVariantScope.getManifestProcessorTask());
         }
+
+        // Empty R class jar. TODO: Resources support for unit tests?
+        variantScope.addTaskOutput(
+                TaskOutputHolder.TaskOutputType.COMPILE_ONLY_R_CLASS_JAR, project.files(), null);
 
         AndroidTask<? extends JavaCompile> javacTask = createJavacTask(tasks, variantScope);
         addJavacClassesStream(variantScope);
@@ -2764,7 +2818,7 @@ public abstract class TaskManager {
         Consumer<AndroidTask<? extends Task>> configureResourcesAndAssetsDependencies =
                 task -> {
                     task.dependsOn(tasks, variantScope.getMergeAssetsTask());
-                    task.dependsOn(tasks, variantScope.getProcessResourcesTask());
+                    task.optionalDependsOn(tasks, variantScope.getProcessResourcesTask());
                 };
 
         configureResourcesAndAssetsDependencies.accept(packageApp);

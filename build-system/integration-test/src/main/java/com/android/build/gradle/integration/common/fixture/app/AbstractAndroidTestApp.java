@@ -73,6 +73,14 @@ public abstract class AbstractAndroidTestApp implements AndroidTestApp {
     }
 
     @Override
+    public void replaceFile(TestSourceFile file) {
+        if (!removeFile(getFile(file.getName(), file.getParent()))) {
+            throw new IllegalArgumentException("No file to replace");
+        }
+        addFile(file);
+    }
+
+    @Override
     public Collection<TestSourceFile> getAllSourceFiles() {
         return sourceFiles.values();
     }

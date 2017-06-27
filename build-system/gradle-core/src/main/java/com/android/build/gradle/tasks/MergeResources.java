@@ -732,6 +732,7 @@ public class MergeResources extends IncrementalTask {
         @Nullable private final File mergedNotCompiledOutputDirectory;
         private final boolean includeDependencies;
         private final boolean processResources;
+        private final boolean processVectorDrawables;
 
         public ConfigAction(
                 @NonNull VariantScope scope,
@@ -739,13 +740,15 @@ public class MergeResources extends IncrementalTask {
                 @Nullable File outputLocation,
                 @Nullable File mergedNotCompiledOutputDirectory,
                 boolean includeDependencies,
-                boolean processResources) {
+                boolean processResources,
+                boolean processVectorDrawables) {
             this.scope = scope;
             this.taskNamePrefix = taskNamePrefix;
             this.outputLocation = outputLocation;
             this.mergedNotCompiledOutputDirectory = mergedNotCompiledOutputDirectory;
             this.includeDependencies = includeDependencies;
             this.processResources = processResources;
+            this.processVectorDrawables = processVectorDrawables;
         }
 
         @NonNull
@@ -796,7 +799,8 @@ public class MergeResources extends IncrementalTask {
                     MoreObjects.firstNonNull(generatedDensities, Collections.<String>emptySet()));
 
             mergeResourcesTask.setDisableVectorDrawables(
-                    (vectorDrawablesOptions.getUseSupportLibrary() != null
+                    !processVectorDrawables
+                            || (vectorDrawablesOptions.getUseSupportLibrary() != null
                                     && vectorDrawablesOptions.getUseSupportLibrary())
                             || mergeResourcesTask.getGeneratedDensities().isEmpty());
 

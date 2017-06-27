@@ -1,6 +1,6 @@
 load("//tools/base/bazel:maven.bzl", "maven_repo")
 load("//tools/base/bazel:groovy.bzl", "groovy_jar")
-load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test", "kotlin_jar")
 
 java_library(
     name = "protos",
@@ -118,7 +118,6 @@ TEST_DATA = [
     "//tools/base/build-system:gradle-distrib",
 ]
 
-# TODO: Compile Groovy test as well (or just move all of them to Java).
 java_library(
     name = "java_tests",
     srcs = glob(
@@ -132,6 +131,13 @@ java_library(
         ],
     ),
     resources = glob(["src/test/resources/**"]),
+    deps = TEST_DEPS,
+)
+
+kotlin_jar(
+    name = "kotlin_tests",
+    srcs = ["src/test/java"],
+    inputs = glob(["src/test/java/**/*.kt"]),
     deps = TEST_DEPS,
 )
 
@@ -159,6 +165,7 @@ java_test(
         # old JUnit classes. See https://github.com/bazelbuild/bazel/issues/2146.
         "//tools/base/third_party:junit_junit",
         ":java_tests",
+        ":libkotlin_tests.jar",
     ],
 )
 

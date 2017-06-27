@@ -47,7 +47,8 @@ public abstract class AbstractAndroidSubject<
     public final void containsClass(@NonNull String className)
             throws IOException, ProcessException {
         if (!getSubject().containsClass(className)) {
-            failWithRawMessage("'%s' does not contain class '%s'", getDisplaySubject(), className);
+            failWithRawMessage(
+                    "'%s' does not contain class '%s'.\n", getDisplaySubject(), className);
         }
     }
 

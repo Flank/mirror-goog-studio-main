@@ -336,6 +336,10 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
         // intentionally, for the support library to consume. Leave them alone.
         builder.addArgs("--no-version-vectors");
 
+        if (config.isStaticLibrary() || !config.getStaticLibraryDependencies().isEmpty()) {
+            throw new AaptException("Static libraries are not supported in AAPT1");
+        }
+
         return builder;
     }
 

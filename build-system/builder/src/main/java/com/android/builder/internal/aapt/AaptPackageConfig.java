@@ -29,6 +29,7 @@ import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -165,6 +166,12 @@ public class AaptPackageConfig implements Cloneable {
     /** Whether we should list resource files into one file. */
     private boolean mListResourceFiles;
 
+    /** Whether a static library is being compiled. */
+    private boolean isStaticLibrary;
+
+    /** The dependent APKs to link against */
+    private ImmutableList<File> staticLibraryDependencies;
+
     /** Creates a new instance of the the package configuration with default values. */
     private AaptPackageConfig() {
         librarySymbolTableFiles = ImmutableSet.of();
@@ -172,6 +179,7 @@ public class AaptPackageConfig implements Cloneable {
         mResourceConfigs = ImmutableSet.of();
         mDependentFeatures = ImmutableSet.of();
         mImports = ImmutableList.of();
+        staticLibraryDependencies = ImmutableList.of();
     }
 
     @Override
@@ -419,6 +427,15 @@ public class AaptPackageConfig implements Cloneable {
         return mListResourceFiles;
     }
 
+    public boolean isStaticLibrary() {
+        return isStaticLibrary;
+    }
+
+    @NonNull
+    public List<File> getStaticLibraryDependencies() {
+        return staticLibraryDependencies;
+    }
+
     /** Builder used to create a {@link AaptPackageConfig}. */
     public static class Builder {
 
@@ -455,8 +472,10 @@ public class AaptPackageConfig implements Cloneable {
         @NonNull
         public Builder setManifestFile(@NonNull File manifestFile) {
             if (!manifestFile.isFile()) {
-                throw new IllegalArgumentException("Manifest file '{0}' is not a readable file."
-                        + manifestFile.getAbsolutePath());
+                throw new IllegalArgumentException(
+                        "Manifest file '"
+                                + manifestFile.getAbsolutePath()
+                                + "' is not a readable file. ");
             }
 
             mConfig.mManifestFile = manifestFile;
@@ -775,6 +794,18 @@ public class AaptPackageConfig implements Cloneable {
         @NonNull
         public Builder setListResourceFiles(boolean listResourceFiles) {
             mConfig.mListResourceFiles = listResourceFiles;
+            return this;
+        }
+
+        @NonNull
+        public Builder setIsStaticLibrary(boolean isStaticLibrary) {
+            mConfig.isStaticLibrary = isStaticLibrary;
+            return this;
+        }
+
+        @NonNull
+        public Builder setStaticLibraryDependencies(@NonNull ImmutableList<File> libraries) {
+            mConfig.staticLibraryDependencies = libraries;
             return this;
         }
     }

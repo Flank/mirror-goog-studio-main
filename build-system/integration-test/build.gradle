@@ -1,5 +1,6 @@
 import com.android.tools.internal.testing.DevicePool;
 
+apply plugin: 'java'
 apply plugin: 'kotlin'
 apply plugin: 'jacoco-tools-base'
 apply plugin: 'com.google.protobuf'

@@ -158,6 +158,12 @@ public class JarMerger implements Closeable {
         }
     }
 
+    public void addFile(@NonNull String entryPath, @NonNull Path file) throws IOException {
+        try (InputStream is = new BufferedInputStream(Files.newInputStream(file))) {
+            write(new JarEntry(entryPath), is);
+        }
+    }
+
     @Override
     public void close() throws IOException {
         jarOutputStream.close();

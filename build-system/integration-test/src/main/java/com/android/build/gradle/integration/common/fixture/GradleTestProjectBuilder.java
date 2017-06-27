@@ -46,6 +46,7 @@ public final class GradleTestProjectBuilder {
     private boolean withDependencyChecker = true;
 
     /** Create a GradleTestProject. */
+    @NonNull
     public GradleTestProject create() {
         if (targetGradleVersion == null) {
             targetGradleVersion = GradleTestProject.GRADLE_TEST_VERSION;
