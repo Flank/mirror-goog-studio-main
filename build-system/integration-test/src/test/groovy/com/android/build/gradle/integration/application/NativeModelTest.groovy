@@ -76,7 +76,7 @@ class NativeModelTest {
                 externalNativeBuild {
                     ndkBuild {
                         path "src/main/cpp/Android.mk"
-                        metadataOutputDirectory "relative/path"
+                        buildStagingDirectory "relative/path"
                     }
                 }
                 defaultConfig {
@@ -100,7 +100,7 @@ class NativeModelTest {
                 externalNativeBuild {
                     ndkBuild {
                         path "src/main/cpp/Android.mk"
-                        metadataOutputDirectory "ABSOLUTE_PATH"
+                        buildStagingDirectory "ABSOLUTE_PATH"
                     }
                 }
                 defaultConfig {
@@ -259,7 +259,7 @@ class NativeModelTest {
                 externalNativeBuild {
                     cmake {
                         path "CMakeLists.txt"
-                        metadataOutputDirectory "ABSOLUTE_PATH"
+                        buildStagingDirectory "ABSOLUTE_PATH"
                     }
                 }
                 defaultConfig {
@@ -282,7 +282,7 @@ class NativeModelTest {
                 externalNativeBuild {
                     cmake {
                         path "CMakeLists.txt"
-                        metadataOutputDirectory "relative/path"
+                        buildStagingDirectory "relative/path"
                     }
                 }
                 defaultConfig {

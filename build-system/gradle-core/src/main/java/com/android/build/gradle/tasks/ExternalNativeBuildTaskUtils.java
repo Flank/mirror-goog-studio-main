@@ -218,8 +218,8 @@ public class ExternalNativeBuildTaskUtils {
     private static Map<NativeBuildSystem, File> getExternalNativeBuildPath(
             @NonNull CoreExternalNativeBuild config) {
         Map<NativeBuildSystem, File> map = new EnumMap<>(NativeBuildSystem.class);
-        File cmake = config.getCmake().getMetadataOutputDirectory();
-        File ndkBuild = config.getNdkBuild().getMetadataOutputDirectory();
+        File cmake = config.getCmake().getBuildStagingDirectory();
+        File ndkBuild = config.getNdkBuild().getBuildStagingDirectory();
         if (cmake != null) {
             map.put(NativeBuildSystem.CMAKE, cmake);
         }
