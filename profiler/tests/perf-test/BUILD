@@ -13,6 +13,7 @@ sh_binary(
             "//prebuilts/tools/linux-x86_64/art:dex2oat",
             "//tools/base/profiler/app:perfa",
             "//tools/base/profiler/app:perfa_java",
+            "//tools/base/profiler/app:perfa_okhttp",
             "//tools/base/profiler/native/perfa:libperfa.so",
             "//tools/base/profiler/tests/android-mock:android-mock-dex",
             "//tools/base/profiler/tests/app-launcher:app-launcher-dex",

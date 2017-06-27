@@ -142,6 +142,10 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
     auto dex_ir = reader.GetIr();
 
     slicer::MethodInstrumenter mi(dex_ir);
+    // Add Entry hook method with this argument passed as type Object.
+    mi.AddTransformation<slicer::EntryHook>(ir::MethodId(
+        "Lcom/android/tools/profiler/support/network/okhttp/OkHttp3Wrapper;",
+        "setOkHttpClassLoader"), true);
     mi.AddTransformation<slicer::ExitHook>(ir::MethodId(
         "Lcom/android/tools/profiler/support/network/okhttp/OkHttp3Wrapper;",
         "insertInterceptor"));
@@ -172,6 +176,10 @@ void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
     auto dex_ir = reader.GetIr();
 
     slicer::MethodInstrumenter mi(dex_ir);
+    // Add Entry hook method with this argument passed as type Object.
+    mi.AddTransformation<slicer::EntryHook>(ir::MethodId(
+        "Lcom/android/tools/profiler/support/network/okhttp/OkHttp2Wrapper;",
+        "setOkHttpClassLoader"), true);
     mi.AddTransformation<slicer::ExitHook>(ir::MethodId(
         "Lcom/android/tools/profiler/support/network/okhttp/OkHttp2Wrapper;",
         "insertInterceptor"));

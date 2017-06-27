@@ -25,5 +25,6 @@ archive(
     name = "dependencies",
     deps = {
         "//tools/base/profiler/app:studio-profiler": "dependencies",
+        "//tools/base/profiler/app:perfa_okhttp_java": "dependencies",
     },
 )

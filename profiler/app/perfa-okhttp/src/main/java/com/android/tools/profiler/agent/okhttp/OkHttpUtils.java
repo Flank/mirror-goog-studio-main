@@ -13,11 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.tools.profiler.agent.okhttp;
 
-package com.android.tools.profiler.support.network.okhttp;
-
-final class OkHttpUtils {
-    static StackTraceElement[] getCallstack(String okHttpPackage) {
+/**
+ * Util methods to share among okhttp interceptors. Methods need be public, otherwise, invoking by
+ * Java reflection does not have legal access.
+ */
+public final class OkHttpUtils {
+    public static StackTraceElement[] getCallstack(String okHttpPackage) {
         StackTraceElement[] callstack = new Throwable().getStackTrace();
         int okHttpCallstackStart = -1;
         int okHttpCallstackEnd = 0;

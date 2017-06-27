@@ -37,12 +37,9 @@ import org.junit.runners.Parameterized;
 @RunWith(Parameterized.class)
 public class OkHttpTest {
 
-    // TODO: Add true for post-O after class loading is fixed, because test Activity class
-    // are not in root dex path, but app-launcher.dex is root. We start activity using
-    // reflection so OkHttp library is not in class loader of perfa.
     @Parameterized.Parameters
     public static Collection<Boolean> data() {
-        return Arrays.asList(new Boolean[] {false});
+        return Arrays.asList(new Boolean[] {false, true});
     }
 
     private static final String ACTIVITY_CLASS = "com.activity.network.OkHttpActivity";

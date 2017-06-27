@@ -96,11 +96,15 @@ def select_android(android, default):
         "//conditions:default": default,
         })
 
-def dex_library(name, jars=[], visibility=[]):
+def dex_library(name, jars=[], output=None, visibility=[]):
+  if output == None:
+    outs = [name + ".jar"]
+  else:
+    outs = [output]
   native.genrule(
     name = name,
     srcs = jars,
-    outs = [name + ".jar"],
+    outs = outs,
     cmd = "$(location //prebuilts/studio/sdk:dx-preview) --dex --output=./$@ ./$<",
     tools = ["//prebuilts/studio/sdk:dx-preview"],
   )
