@@ -1,5 +1,5 @@
 load("//tools/base/bazel:android.bzl", "ANDROID_COPTS", "ANDROID_LINKOPTS")
-load("//tools/base/bazel:android.bzl", "multi_cpu_zip")
+load("//tools/base/bazel:android.bzl", "jni_library")
 
 cc_binary(
     name = "libsupportjni.so",
@@ -42,7 +42,8 @@ cc_library(
     ],
 )
 
-multi_cpu_zip(
+jni_library(
     name = "supportjni",
-    deps = [":libsupportjni.so"],
+    visibility = ["//visibility:public"],
+    deps = [":libsupportjni.so.stripped"],
 )

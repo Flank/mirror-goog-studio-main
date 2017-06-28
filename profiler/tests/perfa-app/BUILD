@@ -14,6 +14,6 @@ java_binary(
     srcs = glob(["**/*.java"]),
     main_class = "com.android.tools.profiler.Main",
     deps = [
-        "//tools/base/profiler/app:profiler-supportlib",
+        "//tools/base/profiler/app:studio-profiler",
     ],
 )

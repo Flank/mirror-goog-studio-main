@@ -1,1 +1,2 @@
 rule com.google.protobuf.** com.google.protobuf3jarjar.@1
+rule io.netty.** io.nettyjarjar.@1

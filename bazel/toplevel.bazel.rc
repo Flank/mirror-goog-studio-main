@@ -22,13 +22,21 @@ build --sandbox_tmpfs_path=/tmp
 build --javacopt="-g:source,lines,vars"  # Keep debug info
 build --javacopt=-Xep:FallThrough:OFF  # enforcing Google style, essentially
 build --cxxopt=-std=c++11
+build --copt=-fvisibility=hidden
 
-build:release --cxxopt=-fdata-sections
 build:release --copt=-fdata-sections
+build:release --cxxopt=-fdata-sections
 build:release --copt=-fno-exceptions
 build:release --cxxopt=-fno-exceptions
+build:release --copt=-ffunction-sections
+build:release --cxxopt=-ffunction-sections
 build:release -c opt
 
 # cpp sandbox is very slow on mac and linux
 build --strategy=CppCompile=standalone
 build --strategy=CppLink=standalone
+build --strategy=CcStrip=standalone
+build --stripopt=--strip-unneeded
+
+# default android native abis
+build --fat_apk_cpu=x86,armeabi-v7a,arm64-v8a

@@ -111,6 +111,7 @@ cc_test(
     data = [
         "//tools/base/profiler/native/testdata:utils",
     ],
+    linkstatic = 1,
     deps = [
         ":profiler_utils",
         "//external:gmock_main",

@@ -46,6 +46,7 @@ cc_test(
     data = [
         "//tools/base/profiler/native/testdata:perfd/cpu",
     ],
+    linkstatic = 1,
     deps = [
         ":profiler_cpu",
         "//external:gmock_main",

@@ -60,6 +60,7 @@ cc_test(
     data = [
         "//tools/base/profiler/native/testdata:perfd/network",
     ],
+    linkstatic = 1,
     deps = [
         ":profiler_network",
         "//external:gmock_main",

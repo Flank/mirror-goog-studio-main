@@ -1,4 +1,4 @@
-load("//tools/base/bazel:android.bzl", "ANDROID_COPTS", "ANDROID_LINKOPTS")
+load("//tools/base/bazel:android.bzl", "ANDROID_COPTS", "ANDROID_LINKOPTS", "android_cc_binary")
 
 cc_binary(
     name = "libperfa.so",
@@ -25,4 +25,16 @@ cc_binary(
         "//tools/base/profiler/native/utils:profiler_utils",
         "//tools/base/profiler/proto:profiler_cc_proto",
     ],
+)
+
+android_cc_binary(
+    name = "android",
+    abis = [
+        "x86",
+        "armeabi-v7a",
+        "arm64-v8a",
+    ],
+    binary = ":libperfa.so.stripped",
+    filename = "libperfa.so",
+    visibility = ["//visibility:public"],
 )

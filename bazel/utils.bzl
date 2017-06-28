@@ -153,3 +153,34 @@ def srcjar(name, java_library, visibility=None):
       visibility = visibility,
       cmd = "cp $(location " + implicit_jar + ") $@"
   )
+
+def _archive_impl(ctx):
+  inputs = []
+  zipper_args = ["c", ctx.outputs.out.path]
+  for dep, target in ctx.attr.deps.items():
+    file = dep.files.to_list()[0]
+    name = "%s/%s=%s" % (target, file.basename, file.path)
+    zipper_args.append(name)
+    inputs += [file]
+
+  ctx.action(
+    inputs=inputs,
+    outputs=[ctx.outputs.out],
+    executable=ctx.executable._zipper,
+    arguments=zipper_args,
+    progress_message="Creating archive...",
+    mnemonic="archiver",
+  )
+
+archive = rule(
+  implementation = _archive_impl,
+  attrs = {
+    "deps": attr.label_keyed_string_dict(
+        non_empty = True,
+        allow_files = True,
+    ),
+    "$zipper": attr.label(default = Label("@bazel_tools//tools/zip:zipper"), cfg = "host", executable=True),
+  },
+  outputs = {"out": "%{name}.jar"},
+)
+

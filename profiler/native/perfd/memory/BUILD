@@ -43,6 +43,7 @@ cc_test(
     data = [
         "//tools/base/profiler/native/testdata:perfd/memory",
     ],
+    linkstatic = 1,
     deps = [
         ":profiler_memory",
         "//external:gmock_main",

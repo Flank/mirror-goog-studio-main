@@ -1,5 +1,4 @@
 load("//tools/base/bazel:bazel.bzl", "java_jarjar")
-load("//tools/base/bazel:android.bzl", "multi_cpu_zip")
 
 # Studio cannot handle proto3, so we jarjar our proto library together with grpc
 # on a renamed namespace.
@@ -19,6 +18,16 @@ java_jarjar(
         "//prebuilts/tools/common/m2/repository/io/grpc/grpc-protobuf-nano/1.0.3:jar",
         "//prebuilts/tools/common/m2/repository/io/grpc/grpc-protobuf/1.0.3:jar",
         "//prebuilts/tools/common/m2/repository/io/grpc/grpc-stub/1.0.3:jar",
+        "//prebuilts/tools/common/m2/repository/io/netty/netty-buffer/4.1.6.Final:jar",
+        "//prebuilts/tools/common/m2/repository/io/netty/netty-codec-http/4.1.6.Final:jar",
+        "//prebuilts/tools/common/m2/repository/io/netty/netty-codec-http2/4.1.6.Final:jar",
+        "//prebuilts/tools/common/m2/repository/io/netty/netty-codec-socks/4.1.6.Final:jar",
+        "//prebuilts/tools/common/m2/repository/io/netty/netty-codec/4.1.6.Final:jar",
+        "//prebuilts/tools/common/m2/repository/io/netty/netty-common/4.1.6.Final:jar",
+        "//prebuilts/tools/common/m2/repository/io/netty/netty-handler-proxy/4.1.6.Final:jar",
+        "//prebuilts/tools/common/m2/repository/io/netty/netty-handler/4.1.6.Final:jar",
+        "//prebuilts/tools/common/m2/repository/io/netty/netty-resolver/4.1.6.Final:jar",
+        "//prebuilts/tools/common/m2/repository/io/netty/netty-transport/4.1.6.Final:jar",
         "//tools/base/profiler/proto:libprofiler_java_proto.jar",
     ],
     rules = "jarjar_rules.txt",
@@ -39,13 +48,5 @@ java_library(
         "//prebuilts/tools/common/m2/repository/io/netty/netty-handler/4.1.6.Final:jar",
         "//prebuilts/tools/common/m2/repository/io/netty/netty-resolver/4.1.6.Final:jar",
         "//prebuilts/tools/common/m2/repository/io/netty/netty-transport/4.1.6.Final:jar",
-    ],
-)
-
-multi_cpu_zip(
-    name = "studio_artifacts",
-    deps = [
-        "//tools/base/profiler/native/perfa:libperfa.so",
-        "//tools/base/profiler/native/perfd",
     ],
 )

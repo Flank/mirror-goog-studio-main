@@ -1,4 +1,4 @@
-load("//tools/base/bazel:android.bzl", "ANDROID_COPTS", "ANDROID_LINKOPTS")
+load("//tools/base/bazel:android.bzl", "ANDROID_COPTS", "ANDROID_LINKOPTS", "android_cc_binary")
 
 cc_library(
     name = "perfd_internal_headers",
@@ -44,4 +44,16 @@ cc_binary(
         "//tools/base/profiler/native/perfd/network:profiler_network",
         "//tools/base/profiler/proto:profiler_cc_proto",
     ],
+)
+
+android_cc_binary(
+    name = "android",
+    abis = [
+        "x86",
+        "armeabi-v7a",
+        "arm64-v8a",
+    ],
+    binary = ":perfd.stripped",
+    filename = "perfd",
+    visibility = ["//visibility:public"],
 )
