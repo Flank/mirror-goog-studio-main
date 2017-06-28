@@ -2788,18 +2788,14 @@ public abstract class TaskManager {
             @NonNull final VariantScope variantScope,
             @NonNull CodeShrinker codeShrinker,
             @Nullable FileCollection mappingFileCollection) {
-        Optional<AndroidTask<TransformTask>> transformTask = Optional.empty();
+        Optional<AndroidTask<TransformTask>> transformTask;
         switch (codeShrinker) {
             case PROGUARD:
                 transformTask =
                         createProguardTransform(taskFactory, variantScope, mappingFileCollection);
                 break;
             case ANDROID_GRADLE:
-                // Since the built-in class shrinker does not obfuscate, there's no point running
-                // it on the test FULL_APK (it also doesn't have a -dontshrink mode).
-                if (variantScope.getTestedVariantData() == null) {
-                    transformTask = createBuiltInShrinkerTransform(variantScope, taskFactory);
-                }
+                transformTask = createBuiltInShrinkerTransform(variantScope, taskFactory);
                 break;
             default:
                 throw new AssertionError("Unknown value " + codeShrinker);
@@ -2845,34 +2841,38 @@ public abstract class TaskManager {
             return Optional.empty();
         }
 
-        final BaseVariantData variantData = variantScope.getVariantData();
-        final GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
         final BaseVariantData testedVariantData = variantScope.getTestedVariantData();
 
         ProGuardTransform transform = new ProGuardTransform(variantScope);
 
         if (testedVariantData != null) {
+            // This is an androidTest variant inside an app/library.
             applyProguardDefaultsForTest(transform);
+
             // All -dontwarn rules for test dependencies should go in here:
             transform.setConfigurationFiles(
                     project.files(
                             TaskInputHelper.bypassFileCallable(
                                     testedVariantData.getScope()::getTestProguardFiles)));
 
-            // register the mapping file which may or may not exists (only exist if obfuscation)
+            // Register the mapping file which may or may not exists (only exist if obfuscation)
             // is enabled.
             final VariantScope testedScope = testedVariantData.getScope();
             transform.applyTestedMapping(
                     testedScope.hasOutput(APK_MAPPING) ? testedScope.getOutput(APK_MAPPING) : null);
         } else if (isTestedAppObfuscated(variantScope)) {
+            // This is a test-only module and the app being tested was obfuscated with ProGuard.
             applyProguardDefaultsForTest(transform);
+
             // All -dontwarn rules for test dependencies should go in here:
             transform.setConfigurationFiles(
                     project.files(
                             TaskInputHelper.bypassFileCallable(
                                     variantScope::getTestProguardFiles)));
+
             transform.applyTestedMapping(mappingFileCollection);
         } else {
+            // This is a "normal" variant in an app/library.
             applyProguardConfig(transform, variantScope);
 
             if (mappingFileCollection != null) {

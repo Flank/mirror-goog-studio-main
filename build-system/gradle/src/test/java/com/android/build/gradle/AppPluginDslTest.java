@@ -40,6 +40,18 @@ import org.junit.rules.TemporaryFolder;
 /** Tests for the public DSL of the App plugin ("com.android.application") */
 public class AppPluginDslTest {
 
+    public static final String PROGUARD_DEBUG = "transformClassesAndResourcesWithProguardForDebug";
+    public static final String SHRINKER_DEBUG =
+            "transformClassesWithAndroidGradleClassShrinkerForDebug";
+    public static final String PROGUARD_DEBUG_ANDROID_TEST =
+            "transformClassesAndResourcesWithProguardForDebugAndroidTest";
+    public static final String SHRINKER_DEBUG_ANDROID_TEST =
+            "transformClassesWithAndroidGradleClassShrinkerForDebugAndroidTest";
+    public static final String SHRINKER_RELEASE =
+            "transformClassesWithAndroidGradleClassShrinkerForRelease";
+    public static final String PROGUARD_RELEASE =
+            "transformClassesAndResourcesWithProguardForRelease";
+
     @Rule public final TemporaryFolder projectDirectory = new TemporaryFolder();
 
     protected AppPlugin plugin;
@@ -166,8 +178,7 @@ public class AppPluginDslTest {
 
         plugin.createAndroidTasks(false);
 
-        assertThat(project.getTasks().getNames())
-                .doesNotContain("transformClassesAndResourcesWithProguardForRelease");
+        assertThat(project.getTasks().getNames()).doesNotContain(PROGUARD_RELEASE);
     }
 
     @Test
@@ -177,8 +188,7 @@ public class AppPluginDslTest {
 
         plugin.createAndroidTasks(false);
 
-        assertThat(project.getTasks().getNames())
-                .contains("transformClassesAndResourcesWithProguardForRelease");
+        assertThat(project.getTasks().getNames()).contains(PROGUARD_RELEASE);
     }
 
     @Test
@@ -188,8 +198,7 @@ public class AppPluginDslTest {
 
         plugin.createAndroidTasks(false);
 
-        assertThat(project.getTasks().getNames())
-                .contains("transformClassesAndResourcesWithProguardForRelease");
+        assertThat(project.getTasks().getNames()).contains(PROGUARD_RELEASE);
     }
 
     @Test
@@ -203,8 +212,7 @@ public class AppPluginDslTest {
 
         plugin.createAndroidTasks(false);
 
-        assertThat(project.getTasks().getNames())
-                .contains("transformClassesWithAndroidGradleClassShrinkerForRelease");
+        assertThat(project.getTasks().getNames()).contains(SHRINKER_RELEASE);
     }
 
     @Test
@@ -216,8 +224,7 @@ public class AppPluginDslTest {
 
         plugin.createAndroidTasks(false);
 
-        assertThat(project.getTasks().getNames())
-                .doesNotContain("transformClassesWithAndroidGradleClassShrinkerForRelease");
+        assertThat(project.getTasks().getNames()).doesNotContain(SHRINKER_RELEASE);
     }
 
     @Test
@@ -289,9 +296,7 @@ public class AppPluginDslTest {
         plugin.createAndroidTasks(false);
 
         assertThat(project.getTasks().getNames())
-                .containsAllOf(
-                        "transformClassesWithAndroidGradleClassShrinkerForRelease",
-                        "transformClassesWithShrinkResForRelease");
+                .containsAllOf(SHRINKER_RELEASE, "transformClassesWithShrinkResForRelease");
     }
 
     @Test
@@ -351,11 +356,9 @@ public class AppPluginDslTest {
 
         plugin.createAndroidTasks(false);
 
-        assertThat(project.getTasks().getNames())
-                .doesNotContain("transformClassesAndResourcesWithProguardForDebug");
+        assertThat(project.getTasks().getNames()).doesNotContain(PROGUARD_DEBUG);
 
-        assertThat(project.getTasks().getNames())
-                .contains("transformClassesWithAndroidGradleClassShrinkerForDebug");
+        assertThat(project.getTasks().getNames()).contains(SHRINKER_DEBUG);
     }
 
     @Test
@@ -376,11 +379,9 @@ public class AppPluginDslTest {
         plugin.createAndroidTasks(false);
 
         // If the user insists on ProGuard, they get a warning a no shrinking at all.
-        assertThat(project.getTasks().getNames())
-                .doesNotContain("transformClassesAndResourcesWithProguardForDebug");
+        assertThat(project.getTasks().getNames()).doesNotContain(PROGUARD_DEBUG);
 
-        assertThat(project.getTasks().getNames())
-                .doesNotContain("transformClassesWithAndroidGradleClassShrinkerForDebug");
+        assertThat(project.getTasks().getNames()).doesNotContain(SHRINKER_DEBUG);
     }
 
     @Test
@@ -389,11 +390,9 @@ public class AppPluginDslTest {
 
         plugin.createAndroidTasks(false);
 
-        assertThat(project.getTasks().getNames())
-                .contains("transformClassesAndResourcesWithProguardForDebug");
+        assertThat(project.getTasks().getNames()).contains(PROGUARD_DEBUG);
 
-        assertThat(project.getTasks().getNames())
-                .doesNotContain("transformClassesWithAndroidGradleClassShrinkerForDebug");
+        assertThat(project.getTasks().getNames()).doesNotContain(SHRINKER_DEBUG);
     }
 
     @Test
@@ -411,11 +410,9 @@ public class AppPluginDslTest {
 
         plugin.createAndroidTasks(false);
 
-        assertThat(project.getTasks().getNames())
-                .doesNotContain("transformClassesAndResourcesWithProguardForDebug");
+        assertThat(project.getTasks().getNames()).doesNotContain(PROGUARD_DEBUG);
 
-        assertThat(project.getTasks().getNames())
-                .contains("transformClassesWithAndroidGradleClassShrinkerForDebug");
+        assertThat(project.getTasks().getNames()).contains(SHRINKER_DEBUG);
     }
 
     @Test
@@ -437,11 +434,9 @@ public class AppPluginDslTest {
         plugin.createAndroidTasks(false);
 
         // If the user insists on ProGuard, they get a warning a no shrinking at all.
-        assertThat(project.getTasks().getNames())
-                .doesNotContain("transformClassesAndResourcesWithProguardForDebug");
+        assertThat(project.getTasks().getNames()).doesNotContain(PROGUARD_DEBUG);
 
-        assertThat(project.getTasks().getNames())
-                .doesNotContain("transformClassesWithAndroidGradleClassShrinkerForDebug");
+        assertThat(project.getTasks().getNames()).doesNotContain(SHRINKER_DEBUG);
     }
 
     @Test
@@ -450,11 +445,69 @@ public class AppPluginDslTest {
 
         plugin.createAndroidTasks(false);
 
-        assertThat(project.getTasks().getNames())
-                .contains("transformClassesAndResourcesWithProguardForDebug");
+        assertThat(project.getTasks().getNames()).contains(PROGUARD_DEBUG);
 
-        assertThat(project.getTasks().getNames())
-                .doesNotContain("transformClassesWithAndroidGradleClassShrinkerForDebug");
+        assertThat(project.getTasks().getNames()).doesNotContain(SHRINKER_DEBUG);
+    }
+
+    @Test
+    public void testApkShrinker_oldDsl_proguard() throws Exception {
+        android.getBuildTypes().getByName("debug").setMinifyEnabled(true);
+
+        plugin.createAndroidTasks(false);
+
+        assertThat(project.getTasks().getNames()).contains(PROGUARD_DEBUG);
+        assertThat(project.getTasks().getNames()).contains(PROGUARD_DEBUG_ANDROID_TEST);
+    }
+
+    @Test
+    public void testApkShrinker_oldDsl_builtInShrinker() throws Exception {
+        BuildType debug = android.getBuildTypes().getByName("debug");
+        debug.setMinifyEnabled(true);
+        debug.setUseProguard(false);
+
+        plugin.createAndroidTasks(false);
+
+        assertThat(project.getTasks().getNames()).contains(SHRINKER_DEBUG);
+        assertThat(project.getTasks().getNames()).doesNotContain(SHRINKER_DEBUG_ANDROID_TEST);
+    }
+
+    @Test
+    public void testApkShrinker_newDsl_builtInShrinker() throws Exception {
+        PostprocessingOptions postprocessing =
+                android.getBuildTypes().getByName("debug").getPostprocessing();
+        postprocessing.setRemoveUnusedCode(true);
+        postprocessing.setCodeShrinker("android_gradle");
+
+        plugin.createAndroidTasks(false);
+
+        assertThat(project.getTasks().getNames()).contains(SHRINKER_DEBUG);
+        assertThat(project.getTasks().getNames()).doesNotContain(SHRINKER_DEBUG_ANDROID_TEST);
+    }
+
+    @Test
+    public void testApkShrinker_newDsl_proguard_noObfuscation() throws Exception {
+        PostprocessingOptions postprocessing =
+                android.getBuildTypes().getByName("debug").getPostprocessing();
+        postprocessing.setRemoveUnusedCode(true);
+
+        plugin.createAndroidTasks(false);
+
+        assertThat(project.getTasks().getNames()).contains(PROGUARD_DEBUG);
+        assertThat(project.getTasks().getNames()).doesNotContain(PROGUARD_DEBUG_ANDROID_TEST);
+    }
+
+    @Test
+    public void testApkShrinker_newDsl_proguard_obfuscation() throws Exception {
+        PostprocessingOptions postprocessing =
+                android.getBuildTypes().getByName("debug").getPostprocessing();
+        postprocessing.setRemoveUnusedCode(true);
+        postprocessing.setObfuscate(true);
+
+        plugin.createAndroidTasks(false);
+
+        assertThat(project.getTasks().getNames()).contains(PROGUARD_DEBUG);
+        assertThat(project.getTasks().getNames()).contains(PROGUARD_DEBUG_ANDROID_TEST);
     }
 
     private void checkGeneratedDensities(String taskName, String... densities) {
