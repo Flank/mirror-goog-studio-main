@@ -555,7 +555,7 @@ public class SdkManagerCli {
     private static void usage(@NonNull PrintStream out) {
         out.println("Usage: ");
         out.println("  sdkmanager [--uninstall] [<common args>] "
-                + "[--package_file <file>] [<packages>...]");
+                + "[--package_file=<file>] [<packages>...]");
         out.println("  sdkmanager --update [<common args>]");
         out.println("  sdkmanager --list [<common args>]");
         out.println("  sdkmanager --licenses [<common args>]");
