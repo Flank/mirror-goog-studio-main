@@ -208,7 +208,7 @@ public class VirtualTimeScheduler implements ScheduledExecutorService {
                         try {
                             output.set(task.call());
                             return;
-                        } catch (Exception e) {
+                        } catch (Throwable e) {
                             if (index == tasks.size() - 1) {
                                 output.setException(e);
                             }

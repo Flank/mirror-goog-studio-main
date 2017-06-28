@@ -56,7 +56,7 @@ public class GradleProcessExecutor implements ProcessExecutor {
                 try {
                     ProcessResult result = execute(processInfo, processOutputHandler);
                     res.set(result);
-                } catch (Exception e) {
+                } catch (Throwable e) {
                     res.setException(e);
                 }
             }

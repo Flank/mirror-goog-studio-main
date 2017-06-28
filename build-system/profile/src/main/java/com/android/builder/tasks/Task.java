@@ -43,5 +43,5 @@ public interface Task<T> {
      * Notification of an exception while executing the task
      * @param e the exception raised by the task execution.
      */
-    void error(Exception e);
+    void error(Throwable e);
 }

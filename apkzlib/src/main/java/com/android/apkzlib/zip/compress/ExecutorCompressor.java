@@ -52,7 +52,7 @@ public abstract class ExecutorCompressor implements Compressor {
         executor.execute(() -> {
             try {
                 future.set(immediateCompress(source));
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 future.setException(e);
             }
         });

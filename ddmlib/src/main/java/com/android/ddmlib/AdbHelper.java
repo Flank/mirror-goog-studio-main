@@ -214,7 +214,6 @@ final class AdbHelper {
      */
     static AdbResponse readAdbResponse(SocketChannel chan, boolean readDiagString)
             throws TimeoutException, IOException {
-
         AdbResponse resp = new AdbResponse();
 
         byte[] reply = new byte[4];

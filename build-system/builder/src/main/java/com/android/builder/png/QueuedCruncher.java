@@ -265,7 +265,7 @@ public class QueuedCruncher implements PngCruncher {
                                 }
 
                                 @Override
-                                public void error(Exception e) {
+                                public void error(Throwable e) {
                                     result.setException(e);
                                 }
 

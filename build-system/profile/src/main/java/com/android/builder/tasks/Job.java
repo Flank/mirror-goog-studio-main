@@ -51,7 +51,7 @@ public class Job<T> {
         task.finished();
     }
 
-    public void error(@Nullable Exception e) {
+    public void error(@Nullable Throwable e) {
         task.error(e);
     }
 

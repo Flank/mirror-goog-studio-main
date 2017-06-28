@@ -222,7 +222,7 @@ public class WorkQueue<T> implements Runnable {
 
                 try {
                     mQueueThreadContext.runTask(job);
-                } catch (Exception e) {
+                } catch (Throwable e) {
                     mLogger.warning("Exception while processing task %1$s", e);
                     job.error(e);
                     return;

@@ -128,7 +128,7 @@ public class DefaultProcessExecutor implements ProcessExecutor {
     private static ListenableFuture<Integer> grabProcessOutput(@NonNull final Process process,
             @NonNull final ProcessOutput output) {
         final SettableFuture<Integer> result = SettableFuture.create();
-        final AtomicReference<Exception> exceptionHolder = new AtomicReference<Exception>();
+        final AtomicReference<Throwable> exceptionHolder = new AtomicReference<>();
 
         /*
          * It looks like on windows process#waitFor() can return before the thread have filled the
@@ -166,7 +166,7 @@ public class DefaultProcessExecutor implements ProcessExecutor {
                 try {
                     ByteStreams.copy(stdout, stream);
                     stream.flush();
-                } catch (Exception e) {
+                } catch (Throwable e) {
                     exceptionHolder.compareAndSet(null, e);
                 }
 
@@ -179,7 +179,7 @@ public class DefaultProcessExecutor implements ProcessExecutor {
 
                     result.set(processResult);
                     output.close();
-                } catch (Exception e) {
+                } catch (Throwable e) {
                     result.setException(e);
                 }
             }

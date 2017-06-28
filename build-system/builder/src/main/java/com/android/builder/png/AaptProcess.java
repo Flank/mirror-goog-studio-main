@@ -69,7 +69,7 @@ public class AaptProcess {
      * Notifies the slave process of a new crunching request, do not block on completion, the
      * notification will be issued through the job parameter's
      * {@link com.android.builder.tasks.Job#finished()} or
-     * {@link com.android.builder.tasks.Job#error(Exception)} ()}
+     * {@link Job#error(Throwable)} ()}
      * functions.
      *
      * @param in the source file to crunch

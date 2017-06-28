@@ -174,7 +174,7 @@ public class ProGuardTransform extends BaseProguardAction {
                     }
 
                     @Override
-                    public void error(Exception e) {
+                    public void error(Throwable e) {
                         resultFuture.setException(e);
                     }
                 }, resultFuture);
