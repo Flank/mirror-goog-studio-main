@@ -3,7 +3,7 @@ apply plugin: 'org.anarres.jarjar'
 
 group = 'com.android.tools'
 
-archivesBaseName = 'profilers-transform'
+archivesBaseName = 'profilers-transform-base'
 
 buildscript {
     dependencies {
@@ -17,22 +17,22 @@ configurations {
 }
 
 jarjar.repackage('asm') {
-    destinationName = "profler-asm.jar"
+    destinationName = "profilers-transform.jar"
     from configurations.repackage
+    from jar.outputs.files
     classRename 'org.objectweb.asm.**', 'com.android.tools.profiler.asm.@1'
 }
+build.dependsOn asm
 
 dependencies {
     repackage('org.ow2.asm:asm:5.0.4') { transitive = false }
 
     support project(":supportlib")
-
-    compile files(asm.outputs)
+    compile 'org.ow2.asm:asm:5.0.4'
 }
 
 
 jar {
-    from asm.outputs.files.collect { zipTree(it) }
     from(configurations.support) {
         into 'dependencies'
     }

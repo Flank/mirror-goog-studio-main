@@ -16,9 +16,6 @@
 
 package com.android.tools.profiler;
 
-import com.android.tools.profiler.asm.ClassReader;
-import com.android.tools.profiler.asm.ClassVisitor;
-import com.android.tools.profiler.asm.ClassWriter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -28,6 +25,9 @@ import java.io.UncheckedIOException;
 import java.util.Properties;
 import java.util.function.BiConsumer;
 import java.util.logging.Logger;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.ClassWriter;
 
 /**
  * The profiler transform added by Studio. This transform can read input configuration arguments

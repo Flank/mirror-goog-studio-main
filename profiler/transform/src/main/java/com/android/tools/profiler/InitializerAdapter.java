@@ -16,9 +16,9 @@
 
 package com.android.tools.profiler;
 
-import com.android.tools.profiler.asm.ClassVisitor;
-import com.android.tools.profiler.asm.MethodVisitor;
-import com.android.tools.profiler.asm.Opcodes;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
 
 /**
  * Adds initialization hooks to initialize the ProfilerService as soon as possible.
