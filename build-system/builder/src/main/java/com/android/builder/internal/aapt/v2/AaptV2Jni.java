@@ -74,11 +74,7 @@ public class AaptV2Jni extends AbstractAapt {
         this.executor = executor;
         this.processOutputHandler = processOutputHandler;
 
-        if (fileCache != null) {
-            this.aapt2Jni = new Aapt2Jni(new FileCacheAapt2JniCache(fileCache));
-        } else {
-            this.aapt2Jni = new Aapt2Jni(new TempDirCache());
-        }
+        this.aapt2Jni = new Aapt2Jni(new TempDirCache());
     }
 
     @NonNull
