@@ -1070,7 +1070,7 @@ public class VariantManager implements VariantModel {
                                         project.getPath(), variantData.getName())
                                 .setIsDebug(variantConfig.getBuildType().isDebuggable())
                                 .setMinSdkVersion(
-                                        AnalyticsUtil.convert(variantConfig.getMinSdkVersion()))
+                                        AnalyticsUtil.toProto(variantConfig.getMinSdkVersion()))
                                 .setMinifyEnabled(variantScope.getCodeShrinker() != null)
                                 .setUseMultidex(variantConfig.isMultiDexEnabled())
                                 .setUseLegacyMultidex(variantConfig.isLegacyMultiDexMode())
@@ -1078,7 +1078,7 @@ public class VariantManager implements VariantModel {
 
                 if (variantConfig.getTargetSdkVersion().getApiLevel() > 0) {
                     profileBuilder.setTargetSdkVersion(
-                            AnalyticsUtil.convert(variantConfig.getTargetSdkVersion()));
+                            AnalyticsUtil.toProto(variantConfig.getTargetSdkVersion()));
                 }
                 if (variantConfig.getMergedFlavor().getMaxSdkVersion() != null) {
                     profileBuilder.setMaxSdkVersion(

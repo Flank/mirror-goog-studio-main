@@ -601,7 +601,7 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
         ProcessProfileWriter.getProject(project.getPath())
                 .setCompileSdk(extension.getCompileSdkVersion())
                 .setBuildToolsVersion(extension.getBuildToolsRevision().toString())
-                .setSplits(AnalyticsUtil.convert(extension.getSplits()));
+                .setSplits(AnalyticsUtil.toProto(extension.getSplits()));
 
         // setup SDK repositories.
         sdkHandler.addLocalRepositories(project);

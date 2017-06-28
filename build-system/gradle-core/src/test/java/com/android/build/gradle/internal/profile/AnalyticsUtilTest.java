@@ -81,7 +81,7 @@ public class AnalyticsUtilTest {
                         });
         // Defaults
         {
-            GradleBuildSplits proto = AnalyticsUtil.convert(splits);
+            GradleBuildSplits proto = AnalyticsUtil.toProto(splits);
             assertThat(proto.getAbiEnabled()).isFalse();
             assertThat(proto.getAbiEnableUniversalApk()).isFalse();
             assertThat(proto.getAbiFiltersList()).isEmpty();
@@ -97,7 +97,7 @@ public class AnalyticsUtilTest {
                     it.include("x86", "armeabi");
                 });
         {
-            GradleBuildSplits proto = AnalyticsUtil.convert(splits);
+            GradleBuildSplits proto = AnalyticsUtil.toProto(splits);
             assertThat(proto.getAbiEnabled()).isTrue();
             assertThat(proto.getAbiEnableUniversalApk()).isTrue();
             assertThat(proto.getAbiFiltersList())
@@ -114,7 +114,7 @@ public class AnalyticsUtilTest {
                     it.include("xxxhdpi", "xxhdpi");
                 });
         {
-            GradleBuildSplits proto = AnalyticsUtil.convert(splits);
+            GradleBuildSplits proto = AnalyticsUtil.toProto(splits);
             assertThat(proto.getDensityEnabled()).isTrue();
             assertThat(proto.getDensityAuto()).isTrue();
             assertThat(proto.getDensityValuesList()).containsExactly(640, 480);
@@ -127,7 +127,7 @@ public class AnalyticsUtilTest {
                     it.include("en");
                 });
         {
-            GradleBuildSplits proto = AnalyticsUtil.convert(splits);
+            GradleBuildSplits proto = AnalyticsUtil.toProto(splits);
             assertThat(proto.getLanguageEnabled()).isTrue();
             assertThat(proto.getLanguageAuto()).isTrue();
             assertThat(proto.getLanguageIncludesList()).containsExactly("en");
@@ -136,7 +136,7 @@ public class AnalyticsUtilTest {
         // Check other field population is based on enable flag.
         splits.language(it -> it.setEnable(false));
         {
-            GradleBuildSplits proto = AnalyticsUtil.convert(splits);
+            GradleBuildSplits proto = AnalyticsUtil.toProto(splits);
             assertThat(proto.getLanguageEnabled()).isFalse();
             assertThat(proto.getLanguageAuto()).isFalse();
             assertThat(proto.getLanguageIncludesList()).isEmpty();

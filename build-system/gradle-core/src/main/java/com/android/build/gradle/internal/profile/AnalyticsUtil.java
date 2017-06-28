@@ -79,7 +79,7 @@ public class AnalyticsUtil {
     }
 
     @NonNull
-    public static ApiVersion convert(@NonNull AndroidVersion apiVersion) {
+    public static ApiVersion toProto(@NonNull AndroidVersion apiVersion) {
         ApiVersion.Builder builder = ApiVersion.newBuilder().setApiLevel(apiVersion.getApiLevel());
         if (apiVersion.getCodename() != null) {
             builder.setCodename(apiVersion.getCodename());
@@ -88,7 +88,7 @@ public class AnalyticsUtil {
     }
 
     @NonNull
-    public static ApiVersion convert(@NonNull com.android.builder.model.ApiVersion apiVersion) {
+    public static ApiVersion toProto(@NonNull com.android.builder.model.ApiVersion apiVersion) {
         ApiVersion.Builder builder = ApiVersion.newBuilder().setApiLevel(apiVersion.getApiLevel());
         if (apiVersion.getCodename() != null) {
             builder.setCodename(apiVersion.getCodename());
@@ -97,7 +97,7 @@ public class AnalyticsUtil {
     }
 
     @NonNull
-    public static GradleBuildSplits convert(@NonNull Splits splits) {
+    public static GradleBuildSplits toProto(@NonNull Splits splits) {
         GradleBuildSplits.Builder builder = GradleBuildSplits.newBuilder();
         if (splits.getDensity().isEnable()) {
             builder.setDensityEnabled(true);
