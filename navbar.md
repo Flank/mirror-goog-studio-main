@@ -3,6 +3,7 @@
 [logo]: https://developer.android.com/studio/images/studio-icon.png
 
 * [Home](/README.md)
+* [Building](/building.md)
 * [Build System](/build-system/README.md)
 * [Instant run](/instant-run/README.md)
 * [APK parser](/apkparser/binary-resources/README.md)
