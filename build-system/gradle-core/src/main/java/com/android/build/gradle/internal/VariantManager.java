@@ -33,12 +33,7 @@ import com.android.build.gradle.internal.api.ReadOnlyObjectProvider;
 import com.android.build.gradle.internal.api.VariantFilter;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dependency.AarTransform;
-import com.android.build.gradle.internal.dependency.AlternateCompatibilityRule;
-import com.android.build.gradle.internal.dependency.AlternateDisambiguationRule;
 import com.android.build.gradle.internal.dependency.AndroidTypeAttr;
-import com.android.build.gradle.internal.dependency.AndroidTypeAttrCompatRule;
-import com.android.build.gradle.internal.dependency.AndroidTypeAttrDisambRule;
-import com.android.build.gradle.internal.dependency.BuildTypeAttr;
 import com.android.build.gradle.internal.dependency.ExtractAarTransform;
 import com.android.build.gradle.internal.dependency.JarTransform;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
@@ -74,6 +69,7 @@ import com.android.builder.profile.Recorder;
 import com.android.utils.StringHelper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -85,16 +81,23 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
+import javax.inject.Inject;
 import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
+import org.gradle.api.Named;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
 import org.gradle.api.attributes.Attribute;
+import org.gradle.api.attributes.AttributeCompatibilityRule;
+import org.gradle.api.attributes.AttributeDisambiguationRule;
 import org.gradle.api.attributes.AttributeMatchingStrategy;
 import org.gradle.api.attributes.AttributesSchema;
+import org.gradle.api.attributes.CompatibilityCheckDetails;
+import org.gradle.api.attributes.MultipleCandidatesDetails;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.model.ObjectFactory;
 
@@ -609,47 +612,62 @@ public class VariantManager implements VariantModel {
         }
 
         AttributesSchema schema = dependencies.getAttributesSchema();
-
-        // custom strategy for AndroidTypeAttr
-        AttributeMatchingStrategy<AndroidTypeAttr> androidTypeAttrStrategy =
+        // type for aar vs split.
+        final AttributeMatchingStrategy<AndroidTypeAttr> androidTypeAttrStrategy =
                 schema.attribute(AndroidTypeAttr.ATTRIBUTE);
         androidTypeAttrStrategy.getCompatibilityRules().add(AndroidTypeAttrCompatRule.class);
         androidTypeAttrStrategy.getDisambiguationRules().add(AndroidTypeAttrDisambRule.class);
+    }
 
-        // custom strategy for build-type and product-flavor.
-        Map<String, List<String>> buildTypeAttrMap = extension.getBuildTypeAttrMap();
-        if (!buildTypeAttrMap.isEmpty()) {
-            AttributeMatchingStrategy<BuildTypeAttr> buildTypeStrategy =
-                    schema.attribute(BuildTypeAttr.ATTRIBUTE);
-            buildTypeStrategy
-                    .getCompatibilityRules()
-                    .add(
-                            AlternateCompatibilityRule.BuildTypeRule.class,
-                            config -> config.setParams(buildTypeAttrMap));
-            buildTypeStrategy
-                    .getDisambiguationRules()
-                    .add(
-                            AlternateDisambiguationRule.BuildTypeRule.class,
-                            config -> config.setParams(buildTypeAttrMap));
+    private static final class AndroidTypeAttrCompatRule
+            implements AttributeCompatibilityRule<AndroidTypeAttr> {
+
+        private static final Set<String> FEATURE_OR_APK =
+                ImmutableSet.of(AndroidTypeAttr.FEATURE, AndroidTypeAttr.APK);
+
+        @Inject
+        public AndroidTypeAttrCompatRule() {}
+
+        @Override
+        public void execute(CompatibilityCheckDetails<AndroidTypeAttr> details) {
+            final AndroidTypeAttr producerValue = details.getProducerValue();
+            final AndroidTypeAttr consumerValue = details.getConsumerValue();
+            if (producerValue.equals(consumerValue)) {
+                details.compatible();
+            } else {
+                // 1. Feature and aar are compatible for features that depend on an AAR only.
+                // 2. APK and aar are compatible for test-app that consumes APK. They need access to the aar dependencies of the tested app.
+                if (AndroidTypeAttr.AAR.equals(producerValue.getName())
+                        && FEATURE_OR_APK.contains(consumerValue.getName())) {
+                    details.compatible();
+                }
+            }
         }
+    }
 
-        Map<String, Map<String, List<String>>> flavorAttrMap = extension.getFlavorAttrMap();
-        for (String dimension : flavorAttrMap.keySet()) {
-            Attribute<ProductFlavorAttr> attr = Attribute.of(dimension, ProductFlavorAttr.class);
-            AttributeMatchingStrategy<ProductFlavorAttr> flavorStrategy = schema.attribute(attr);
+    private static final class AndroidTypeAttrDisambRule
+            implements AttributeDisambiguationRule<AndroidTypeAttr> {
 
-            Map<String, List<String>> map = flavorAttrMap.get(dimension);
+        public static final Set<String> FEATURE_AND_AAR =
+                ImmutableSet.of(AndroidTypeAttr.FEATURE, AndroidTypeAttr.AAR);
 
-            flavorStrategy
-                    .getCompatibilityRules()
-                    .add(
-                            AlternateCompatibilityRule.ProductFlavorRule.class,
-                            config -> config.setParams(map));
-            flavorStrategy
-                    .getDisambiguationRules()
-                    .add(
-                            AlternateDisambiguationRule.ProductFlavorRule.class,
-                            config -> config.setParams(map));
+        @Inject
+        public AndroidTypeAttrDisambRule() {}
+
+        @Override
+        public void execute(MultipleCandidatesDetails<AndroidTypeAttr> details) {
+            // we should only get here, with both feature and aar.
+            Set<AndroidTypeAttr> values = details.getCandidateValues();
+
+            if (values.size() == 2) {
+                // get the 2 names and make sure these are the names we want:
+                Map<String, AndroidTypeAttr> valueMap =
+                        values.stream().collect(Collectors.toMap(Named::getName, value -> value));
+
+                if (valueMap.keySet().equals(FEATURE_AND_AAR)) {
+                    details.closestMatch(valueMap.get(AndroidTypeAttr.FEATURE));
+                }
+            }
         }
     }
 
