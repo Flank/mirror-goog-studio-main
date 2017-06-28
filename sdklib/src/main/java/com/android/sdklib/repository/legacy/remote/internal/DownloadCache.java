@@ -315,9 +315,9 @@ public class DownloadCache {
      * <p>The resulting input stream may not support mark/reset.
      *
      * @param urlString the URL string to be opened.
-     * @return Returns a pair with a {@link InputStream} and an HTTP status code. The pair is never
+     * @return Returns a pair with a {@link InputStream} and a URLConnection. The pair is never
      *     null. The input stream can be null in case of error, although in general the method will
-     *     probably throw an exception instead. The caller should look at the response code's status
+     *     probably throw an exception instead. The caller should look at the connection's status
      *     and only accept the input stream if it's the desired code (e.g. 200 or 206).
      * @throws IOException Exception thrown when there are problems retrieving the URL or its
      *     content.

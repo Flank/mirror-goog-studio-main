@@ -17,7 +17,7 @@
 package com.android.tools.utils;
 
 import com.android.repository.impl.meta.Archive;
-import com.android.sdklib.tool.SdkManagerCli;
+import com.android.sdklib.tool.sdkmanager.SdkManagerCli;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
