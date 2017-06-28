@@ -1682,6 +1682,8 @@ public final class SdkConstants {
 
     public static final String EXT_JSON = "json";
 
+    public static final String EXT_CSV = "csv";
+
     private static final String DOT = "."; //$NON-NLS-1$
 
     /** Dot-Extension of the Application package Files, i.e. ".apk". */
