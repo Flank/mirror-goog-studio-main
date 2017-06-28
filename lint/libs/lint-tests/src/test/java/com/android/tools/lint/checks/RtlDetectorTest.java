@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 The Android Open Source Project
+ * Copyright (C) 2012, 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -501,6 +501,70 @@ public class RtlDetectorTest extends AbstractCheckTest {
                 ));
     }
 
+    public void testRtlQuickFixBelow17() throws Exception {
+        //noinspection all // Sample code
+        lint().files(
+                projectProperties().compileSdk(17),
+                manifest().minSdk(16).targetSdk(17),
+                mRtlQuickFixed)
+                .issues(RtlDetector.USE_START)
+                .run()
+                .verifyFixes().window(1).expectFixDiffs("Fix for res/layout/rtl_quick_fixed.xml line 9: Add android:layout_marginStart=\"35dip\":\n"
+                + "@@ -12 +12\n"
+                + "          android:layout_marginRight=\"40dip\"\n"
+                + "+         android:layout_marginStart=\"35dip\"\n"
+                + "          android:gravity=\"center\"\n"
+                + "Fix for res/layout/rtl_quick_fixed.xml line 10: Add android:layout_marginEnd=\"40dip\":\n"
+                + "@@ -10 +10\n"
+                + "          android:layout_height=\"match_parent\"\n"
+                + "+         android:layout_marginEnd=\"40dip\"\n"
+                + "          android:layout_marginLeft=\"35dip\"\n"
+                + "Fix for res/layout/rtl_quick_fixed.xml line 11: Add android:paddingStart=\"25dip\":\n"
+                + "@@ -15 +15\n"
+                + "          android:paddingRight=\"20dip\"\n"
+                + "+         android:paddingStart=\"25dip\"\n"
+                + "          android:text=\"@string/creating_instant_mix\"\n"
+                + "Fix for res/layout/rtl_quick_fixed.xml line 12: Add android:paddingEnd=\"20dip\":\n"
+                + "@@ -13 +13\n"
+                + "          android:gravity=\"center\"\n"
+                + "+         android:paddingEnd=\"20dip\"\n"
+                + "          android:paddingLeft=\"25dip\"\n");
+    }
+
+    public void testRtlQuickFix17() throws Exception {
+        //noinspection all // Sample code
+        lint().files(
+                projectProperties().compileSdk(17),
+                manifest().minSdk(17).targetSdk(17),
+                mRtlQuickFixed)
+                .issues(RtlDetector.USE_START)
+                .run()
+                .verifyFixes().window(1).expectFixDiffs("Fix for res/layout/rtl_quick_fixed.xml line 9: Replace with android:layout_marginStart=\"35dip\":\n"
+                + "@@ -10 +10\n"
+                + "          android:layout_height=\"match_parent\"\n"
+                + "-         android:layout_marginLeft=\"35dip\"\n"
+                + "+         android:layout_marginStart=\"35dip\"\n"
+                + "          android:layout_marginRight=\"40dip\"\n"
+                + "Fix for res/layout/rtl_quick_fixed.xml line 10: Replace with android:layout_marginEnd=\"40dip\":\n"
+                + "@@ -11 +11\n"
+                + "          android:layout_marginLeft=\"35dip\"\n"
+                + "-         android:layout_marginRight=\"40dip\"\n"
+                + "+         android:layout_marginEnd=\"40dip\"\n"
+                + "          android:paddingLeft=\"25dip\"\n"
+                + "Fix for res/layout/rtl_quick_fixed.xml line 11: Replace with android:paddingStart=\"25dip\":\n"
+                + "@@ -12 +12\n"
+                + "          android:layout_marginRight=\"40dip\"\n"
+                + "-         android:paddingLeft=\"25dip\"\n"
+                + "+         android:paddingStart=\"25dip\"\n"
+                + "          android:paddingRight=\"20dip\"\n"
+                + "Fix for res/layout/rtl_quick_fixed.xml line 12: Replace with android:paddingEnd=\"20dip\":\n"
+                + "@@ -13 +13\n"
+                + "          android:paddingLeft=\"25dip\"\n"
+                + "-         android:paddingRight=\"20dip\"\n"
+                + "+         android:paddingEnd=\"20dip\"\n"
+                + "          android:text=\"@string/creating_instant_mix\"\n");
+    }
+
     public void testJava() throws Exception {
         mEnabled = ALL;
         //noinspection all // Sample code
@@ -913,6 +977,25 @@ public class RtlDetectorTest extends AbstractCheckTest {
             + "            android:text=\"@string/cancel\" />\n"
             + "\n"
             + "</RelativeLayout>\n");
+
+    @SuppressWarnings("all") // Sample code
+    private TestFile mRtlQuickFixed = xml("res/layout/rtl_quick_fixed.xml", ""
+            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+            + "<FrameLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+            + "    android:layout_width=\"match_parent\"\n"
+            + "    android:layout_height=\"match_parent\" >\n"
+            + "    <TextView\n"
+            + "        android:id=\"@+id/text\"\n"
+            + "        android:gravity=\"center\"\n"
+            + "        android:layout_width=\"match_parent\"\n"
+            + "        android:layout_height=\"match_parent\"\n"
+            + "        android:layout_marginLeft=\"35dip\"\n"
+            + "        android:layout_marginRight=\"40dip\"\n"
+            + "        android:paddingLeft=\"25dip\"\n"
+            + "        android:paddingRight=\"20dip\"\n"
+            + "        android:text=\"@string/creating_instant_mix\"\n"
+            + "        android:textAppearance=\"?android:attr/textAppearanceMedium\" />\n"
+            + "</FrameLayout>\n");
 
     @SuppressWarnings("all") // Sample code
     private TestFile mRtl = xml("res/layout/rtl.xml", ""

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 The Android Open Source Project
+ * Copyright (C) 2012, 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -505,19 +505,31 @@ public class RtlDetector extends LayoutDetector implements UastScanner {
                 }
             } else {
                 String message;
+                LintFix lintFix;
                 if (project.getMinSdk() >= RTL_API || context.getFolderVersion() >= RTL_API) {
                     message = String.format(
                             "Consider replacing `%1$s` with `%2$s:%3$s=\"%4$s\"` to better support "
                                     + "right-to-left layouts",
                             attribute.getName(), attribute.getPrefix(), rtl, value);
+
+                    lintFix = fix().replace()
+                            .name(String.format("Replace with %1$s:%2$s=\"%3$s\"",
+                                    attribute.getPrefix(), rtl, value))
+                            .text(name).with(rtl)
+                            .build();
                 } else {
                     message = String.format(
                             "Consider adding `%1$s:%2$s=\"%3$s\"` to better support "
                                     + "right-to-left layouts",
                             attribute.getPrefix(), rtl, value);
+                    lintFix = fix()
+                            .name(String.format("Add %1$s:%2$s=\"%3$s\"",
+                                    attribute.getPrefix(), rtl, value))
+                            .set(attribute.getNamespaceURI(), rtl, attribute.getValue())
+                            .build();
                 }
                 context.report(USE_START, attribute,
-                        context.getNameLocation(attribute), message);
+                        context.getNameLocation(attribute), message, lintFix);
             }
         } else {
             if (project.getMinSdk() >= RTL_API || !context.isEnabled(COMPAT)) {
