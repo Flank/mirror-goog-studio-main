@@ -23,6 +23,7 @@
 #include <string>
 
 namespace profiler {
+static const std::string kEmpty = std::string();
 
 /**
  * Returns a jvmtiEnv pointer. Note that it is the responsibility of the caller
@@ -35,7 +36,8 @@ jvmtiEnv* CreateJvmtiEnv(JavaVM* vm);
  * Checks against the err_num.
  * Returns true if there is an error, false otherwise.
  */
-bool CheckJvmtiError(jvmtiEnv* jvmti, jvmtiError err_num);
+bool CheckJvmtiError(jvmtiEnv* jvmti, jvmtiError err_num,
+                     const std::string &message = kEmpty);
 
 /**
  * Sets all available capabilities on the given JVMTI environment.

@@ -624,7 +624,7 @@ int32_t MemoryTrackingEnv::FindLineNumber(MemoryTrackingEnv* env,
     // TODO: Cache known line number tables?
     jvmtiError error =
         jvmti->GetLineNumberTable(method, &entry_count, &line_number_entry);
-    if (CheckJvmtiError(jvmti, error)) {
+    if (CheckJvmtiError(jvmti, error, "Cannot get line number")) {
       return line_number;
     }
 

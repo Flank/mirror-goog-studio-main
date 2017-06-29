@@ -35,14 +35,16 @@ jvmtiEnv* CreateJvmtiEnv(JavaVM* vm) {
   return jvmti_env;
 }
 
-bool CheckJvmtiError(jvmtiEnv* jvmti, jvmtiError err_num) {
+bool CheckJvmtiError(jvmtiEnv* jvmti, jvmtiError err_num,
+                     const std::string &message) {
   if (err_num == JVMTI_ERROR_NONE) {
     return false;
   }
 
   char* error = nullptr;
   jvmti->GetErrorName(err_num, &error);
-  Log::E("JVMTI error: %d(%s)", err_num, error == nullptr ? "Unknown" : error);
+  Log::E("JVMTI error: %d(%s) %s",
+         err_num, error == nullptr ? "Unknown" : error, message.c_str());
   Deallocate(jvmti, error);
   return true;
 }
