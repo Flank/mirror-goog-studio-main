@@ -62,7 +62,7 @@ import java.util.List;
  * </ul>
  *
  */
-public class ${mediaBrowserServiceName} extends MediaBrowserService {
+public class ${mediaBrowserServiceName} extends MediaBrowserServiceCompat {
 
     private MediaSessionCompat mSession;
 
