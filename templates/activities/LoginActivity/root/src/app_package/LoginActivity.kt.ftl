@@ -48,7 +48,7 @@ class ${activityClass} : ${superClass}(), LoaderCallbacks<Cursor> {
         // Set up the login form.
         populateAutoComplete()
         password.setOnEditorActionListener(TextView.OnEditorActionListener { _, id, _ ->
-            if (id == R.id.login || id == EditorInfo.IME_NULL) {
+            if (id == EditorInfo.IME_ACTION_DONE || id == EditorInfo.IME_NULL) {
                 attemptLogin()
                 return@OnEditorActionListener true
             }
