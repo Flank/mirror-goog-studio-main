@@ -145,6 +145,12 @@ public class InstantAppTests {
         }
 
         @NonNull
+        public DeviceGenerator setIsEmulator(boolean isEmulator) {
+            when(myDevice.isEmulator()).thenReturn(isEmulator);
+            return this;
+        }
+
+        @NonNull
         public IDevice getDevice() throws Throwable {
             return setDefaultEmptyShellResponse().myDevice;
         }

@@ -197,6 +197,7 @@ public class ProvisionRunner {
                 overrideGServices(device, provisionState.deviceInfo, provisionState);
                 myListener.logMessage("GServices overrides complete", null);
             } else {
+                checkInGooglePlay(device);
                 myListener.logMessage("Device is release-keys", null);
             }
             provisionState.lastSucceeded = ProvisionState.Step.GSERVICES;
@@ -303,6 +304,10 @@ public class ProvisionRunner {
         ProvisionApksInstaller apksInstaller =
                 new ProvisionApksInstaller(myMetadata.getApks(arch, apiLevel));
         apksInstaller.installAll(device, provisionState, myListener);
+    }
+
+    private void checkInGooglePlay(@NonNull IDevice device) throws ProvisionException {
+        executeShellCommand(device, "am broadcast -a android.server.checkin.CHECKIN", false);
     }
 
     private void overrideGServices(

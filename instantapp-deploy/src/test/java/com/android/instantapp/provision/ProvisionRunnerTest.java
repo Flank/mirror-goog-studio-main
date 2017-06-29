@@ -23,6 +23,8 @@ import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import com.android.annotations.NonNull;
 import com.android.ddmlib.IDevice;
@@ -138,6 +140,27 @@ public class ProvisionRunnerTest {
                         .setGoogleAccountLogged()
                         .getDevice();
         myProvisionRunner.runProvision(device);
+        assertEquals(
+                ProvisionRunner.ProvisionState.Step.FINISHED,
+                myProvisionRunner.getCache().get(device).lastSucceeded);
+    }
+
+    @Test
+    public void testPlayStoreEmulatorsCheckIn() throws Throwable {
+        IDevice device =
+                new InstantAppTests.DeviceGenerator()
+                        .setApiLevel(24, null)
+                        .setArchitectures("x86")
+                        .setHardware("ranchu")
+                        .setOsBuildType("release-keys")
+                        .setIsEmulator(true)
+                        .setGoogleAccountLogged()
+                        .getDevice();
+        myProvisionRunner.runProvision(device);
+
+        verify(device, times(1))
+                .executeShellCommand(eq("am broadcast -a android.server.checkin.CHECKIN"), any());
+
         assertEquals(
                 ProvisionRunner.ProvisionState.Step.FINISHED,
                 myProvisionRunner.getCache().get(device).lastSucceeded);
