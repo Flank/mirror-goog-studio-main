@@ -41,7 +41,6 @@ import com.android.builder.testing.api.TestServer;
 import com.android.repository.Revision;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import org.gradle.api.Action;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
@@ -159,12 +158,6 @@ public interface AndroidConfig {
 
     /** Whether the feature module is the base feature. */
     Boolean getBaseFeature();
-
-    @NonNull
-    Map<String, Map<String, List<String>>> getFlavorAttrMap();
-
-    @NonNull
-    Map<String, List<String>> getBuildTypeAttrMap();
 
     final class DeprecatedConfigurationAction implements Action<Dependency> {
 
