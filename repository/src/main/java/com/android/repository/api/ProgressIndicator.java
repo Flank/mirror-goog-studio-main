@@ -115,7 +115,7 @@ public interface ProgressIndicator {
         // Check that we're at least close to being a valid value. If we're equal to or less than 0
         // we'll treat it as 0 (that is, sets do nothing and gets just return the 0).
         if (subRange < -0.0001 || subRange > 1.0001) {
-            logError("Progress subrange out of bounds: " + subRange);
+            logWarning("Progress subrange out of bounds: " + subRange);  // happens sometimes; see b/63121883
         }
 
         return new DelegatingProgressIndicator(ProgressIndicator.this) {
