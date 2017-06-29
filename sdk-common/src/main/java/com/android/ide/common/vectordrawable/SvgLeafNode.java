@@ -194,6 +194,15 @@ class SvgLeafNode extends SvgNode {
         super(svgTree, node, nodeName);
     }
 
+    @Override
+    SvgLeafNode deepCopy() {
+        SvgLeafNode newInstance = new SvgLeafNode(getTree(), getDocumentNode(), getName());
+        newInstance.setPathData(getPathData());
+        newInstance.fillEmptyAttributes(mVdAttributesMap);
+        newInstance.mLocalTransform = mLocalTransform;
+        return newInstance;
+    }
+
     private String getAttributeValues(ImmutableMap<String, String> presentationMap) {
         // There could be some redundant opacity information in the attributes' map,
         // like opacity Vs fill-opacity / stroke-opacity.
@@ -324,6 +333,10 @@ class SvgLeafNode extends SvgNode {
         mPathData = pathData;
     }
 
+    public String getPathData() {
+        return mPathData;
+    }
+
     @Override
     public boolean isGroupNode() {
         return false;
@@ -367,7 +380,7 @@ class SvgLeafNode extends SvgNode {
     }
 
     @Override
-    public void flattern(AffineTransform transform) {
+    public void flatten(AffineTransform transform) {
         mStackedTransform.setTransform(transform);
         mStackedTransform.concatenate(mLocalTransform);
 
@@ -408,14 +421,4 @@ class SvgLeafNode extends SvgNode {
         writer.write(getAttributeValues(Svg2Vector.presentationMap));
     }
 
-    public void fillPresentationAttributes(String name, String value) {
-        if (name.equals("fill-rule")) {
-            if (value.equals("nonzero")) {
-                value = "nonZero";
-            } else if (value.equals("evenodd")) {
-                value = "evenOdd";
-            }
-        }
-        fillPresentationAttributes(name, value, logger);
-    }
 }

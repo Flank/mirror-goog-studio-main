@@ -21,23 +21,21 @@ import com.android.annotations.Nullable;
 import com.android.ide.common.blame.SourcePosition;
 import com.android.utils.PositionXmlParser;
 import com.google.common.base.Strings;
-import org.w3c.dom.Document;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
-
 import java.awt.geom.AffineTransform;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
 
 /**
  * Represent the SVG file in an internal data structure as a tree.
  */
 class SvgTree {
-    private static Logger logger = Logger.getLogger(SvgTree.class.getSimpleName());
+    private static final Logger logger = Logger.getLogger(SvgTree.class.getSimpleName());
 
     public static final String SVG_WIDTH = "width";
     public static final String SVG_HEIGHT = "height";
@@ -45,7 +43,7 @@ class SvgTree {
 
     private float w = -1;
     private float h = -1;
-    private AffineTransform mRootTransform = new AffineTransform();
+    private final AffineTransform mRootTransform = new AffineTransform();
     private float[] viewBox;
     private float mScaleFactor = 1;
 
@@ -66,12 +64,9 @@ class SvgTree {
 
     public float[] getViewBox() { return viewBox; }
 
-    /**
-     * From the root, top down, pass the transformation (TODO: attributes)
-     * down the children.
-     */
-    public void flattern() {
-        mRoot.flattern(new AffineTransform());
+    /** From the root, top down, pass the transformation (TODO: attributes) down the children. */
+    public void flatten() {
+        mRoot.flatten(new AffineTransform());
     }
 
     public enum SvgLogLevel {
@@ -145,7 +140,7 @@ class SvgTree {
         return mHasLeafNode;
     }
 
-    private SourcePosition getPosition(Node node) {
+    private static SourcePosition getPosition(Node node) {
         return PositionXmlParser.getPosition(node);
     }
 
@@ -157,7 +152,7 @@ class SvgTree {
 
     private enum SizeType {
         PIXEL,
-        PERCENTAGE;
+        PERCENTAGE
     }
 
     public void parseDimension(Node nNode) {

@@ -19,14 +19,15 @@ package com.android.ide.common.vectordrawable;
 import com.android.annotations.NonNull;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
+import java.awt.geom.AffineTransform;
 import java.io.*;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
-
 import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -113,6 +114,8 @@ public class Svg2Vector {
         // Uncategorized elements
         "clipPath", "color-profile", "cursor", "filter", "foreignObject", "script", "view");
 
+    private static HashMap<String, SvgNode> defsIdMap = new HashMap<>();
+
     @NonNull
     private static SvgTree parse(File f) throws Exception {
         SvgTree svgTree = new SvgTree();
@@ -144,7 +147,7 @@ public class Svg2Vector {
 
         // Parse all the group and path node recursively.
         traverseSVGAndExtract(svgTree, root, rootNode);
-        svgTree.flattern();
+        svgTree.flatten();
         svgTree.dump(root);
 
         return svgTree;
@@ -160,10 +163,12 @@ public class Svg2Vector {
         for (int i = 0; i < allChildren.getLength(); i++) {
             Node currentNode = allChildren.item(i);
             String nodeName = currentNode.getNodeName();
+
             if (!currentNode.hasChildNodes() && !currentNode.hasAttributes()) {
                 // If there is nothing in this node, just ignore it.
                 continue;
             }
+
             if (SVG_PATH.equals(nodeName) ||
                 SVG_RECT.equals(nodeName) ||
                 SVG_CIRCLE.equals(nodeName) ||
@@ -173,6 +178,11 @@ public class Svg2Vector {
                 SVG_LINE.equals(nodeName)) {
                 SvgLeafNode child = new SvgLeafNode(svgTree, currentNode, nodeName + i);
 
+                String idName = getIdName(currentNode);
+                if (!idName.isEmpty()) {
+                    defsIdMap.put(idName, child);
+                }
+
                 extractAllItemsAs(svgTree, child, currentNode);
 
                 currentGroup.addChild(child);
@@ -180,7 +190,18 @@ public class Svg2Vector {
             } else if (SVG_GROUP.equals(nodeName)) {
                 SvgGroupNode childGroup = new SvgGroupNode(svgTree, currentNode, "child" + i);
                 currentGroup.addChild(childGroup);
+                String idName = getIdName(currentNode);
+                if (!idName.isEmpty()) {
+                    defsIdMap.put(idName, childGroup);
+                }
                 traverseSVGAndExtract(svgTree, childGroup, currentNode);
+            } else if ("defs".equals(nodeName)) {
+                SvgGroupNode childGroup = new SvgGroupNode(svgTree, currentNode, "child" + i);
+                traverseSVGAndExtract(svgTree, childGroup, currentNode);
+            } else if ("use".equals(nodeName)) {
+                SvgGroupNode childGroup = new SvgGroupNode(svgTree, currentNode, "child" + i);
+                currentGroup.addChild(childGroup);
+                extractUseNode(childGroup, currentNode);
             } else {
                 // For other fancy tags, like <switch>, they can contain children too.
                 // Report the unsupported nodes.
@@ -196,6 +217,57 @@ public class Svg2Vector {
             }
         }
 
+    }
+
+    /** Returns the id of a Node if exists, otherwise returns empty string. */
+    private static String getIdName(Node item) {
+        NamedNodeMap a = item.getAttributes();
+        int len = a.getLength();
+        String idName = "";
+        for (int j = 0; j < len; j++) {
+            Node n = a.item(j);
+            String name = n.getNodeName();
+            if (name.equals("id")) {
+                idName = n.getNodeValue();
+            }
+        }
+        return idName;
+    }
+
+    /**
+     * Reads the contents of the currentNode and fills them into useGroupNode. Propagates any
+     * attributes of the useGroupNode to its children.
+     */
+    private static void extractUseNode(SvgGroupNode useGroupNode, Node currentNode) {
+        NamedNodeMap a = currentNode.getAttributes();
+        int len = a.getLength();
+        float x = 0;
+        float y = 0;
+        String id = "";
+        for (int j = 0; j < len; j++) {
+            Node n = a.item(j);
+            String name = n.getNodeName();
+            String value = n.getNodeValue();
+            if (name.equals("xlink:href")) {
+                id = value.substring(1);
+            } else if (name.equals("x")) {
+                x = Float.parseFloat(value);
+            } else if (name.equals("y")) {
+                y = Float.parseFloat(value);
+            } else if (presentationMap.containsKey(name)) {
+                useGroupNode.fillPresentationAttributes(name, value);
+            }
+        }
+        AffineTransform useTransform = new AffineTransform(1, 0, 0, 1, x, y);
+        SvgNode definedNode = defsIdMap.get(id);
+        SvgNode copiedNode = definedNode.deepCopy();
+        useGroupNode.addChild(copiedNode);
+        for (Map.Entry<String, String> entry : useGroupNode.mVdAttributesMap.entrySet()) {
+            String key = entry.getKey();
+            copiedNode.fillPresentationAttributes(key, entry.getValue());
+        }
+        useGroupNode.fillEmptyAttributes(useGroupNode.mVdAttributesMap);
+        useGroupNode.transformIfNeeded(useTransform);
     }
 
     // Read the content from currentItem, and fill into "child"
@@ -674,10 +746,10 @@ public class Svg2Vector {
      * Convert a SVG file into VectorDrawable's XML content, if no error is found.
      *
      * @param inputSVG the input SVG file
-     * @param outStream the converted VectorDrawable's content. This can be
-     *                  empty if there is any error found during parsing
-     * @return the error messages, which contain things like all the tags
-     *         VectorDrawble don't support or exception message.
+     * @param outStream the converted VectorDrawable's content. This can be empty if there is any
+     *     error found during parsing
+     * @return the error messages, which contain things like all the tags VectorDrawable don't
+     *     support or exception message.
      */
     public static String parseSvgToXml(File inputSVG, OutputStream outStream) {
         // Write all the error message during parsing into SvgTree. and return here as getErrorLog().

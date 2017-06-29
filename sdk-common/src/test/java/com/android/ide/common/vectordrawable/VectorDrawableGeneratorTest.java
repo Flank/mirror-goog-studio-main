@@ -424,6 +424,42 @@ public class VectorDrawableGeneratorTest extends TestCase {
         checkSvgConversion("test_fill_type_no_rule");
     }
 
+    public void testSvgDefsUseTransform() throws Exception {
+        checkSvgConversion("test_defs_use_shape2");
+    }
+
+    public void testSvgDefsUseColors() throws Exception {
+        checkSvgConversion("test_defs_use_colors");
+    }
+
+    public void testSvgDefsUseNoGroup() throws Exception {
+        checkSvgConversion("test_defs_use_no_group");
+    }
+
+    public void testSvgDefsUseNestedGroups() throws Exception {
+        checkSvgConversion("test_defs_use_nested_groups");
+    }
+
+    public void testSvgDefsUseNestedGroups2() throws Exception {
+        checkSvgConversion("test_defs_use_nested_groups2");
+    }
+
+    public void testSvgUseWithoutDefs() throws Exception {
+        checkSvgConversion("test_use_no_defs");
+    }
+
+    public void testSvgDefsUseMultiAttrib() throws Exception {
+        checkSvgConversion("test_defs_use_multi_attr");
+    }
+
+    public void testSvgDefsUseTransformRotate() throws Exception {
+        checkSvgConversion("test_defs_use_transform");
+    }
+
+    public void testSvgDefsUseTransformInDefs() throws Exception {
+        checkSvgConversion("test_defs_use_transform2");
+    }
+
     // XML files start here.
     public void testXmlIconSizeOpacity() throws Exception {
         checkXmlConversion("ic_size_opacity");

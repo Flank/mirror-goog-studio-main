@@ -17,9 +17,6 @@
 package com.android.ide.common.vectordrawable;
 
 import com.android.annotations.NonNull;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
-
 import java.awt.geom.AffineTransform;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -27,12 +24,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
 
 /**
  * Parent class for a SVG file's node, can be either group or leave element.
  */
 abstract class SvgNode {
-    private static Logger logger = Logger.getLogger(SvgNode.class.getSimpleName());
+    private static final Logger logger = Logger.getLogger(SvgNode.class.getSimpleName());
 
     private static final String TRANSFORM_TAG = "transform";
 
@@ -50,11 +49,11 @@ abstract class SvgNode {
     private Node mDocumentNode;
 
     // Key is the attributes for vector drawable, and the value is the converted from SVG.
-    protected Map<String, String> mVdAttributesMap = new HashMap<String, String>();
+    protected final Map<String, String> mVdAttributesMap = new HashMap<>();
     // If mLocalTransform is identity, it is the same as not having any transformation.
     protected AffineTransform mLocalTransform = new AffineTransform();
 
-    // During the flattern() operatation, we need to merge the transformation from top down.
+    // During the flatten() operation, we need to merge the transformation from top down.
     // This is the stacked transformation. And this will be used for the path data transform().
     protected AffineTransform mStackedTransform = new AffineTransform();
 
@@ -103,50 +102,51 @@ abstract class SvgNode {
     private AffineTransform parseOneTransform(String type, String data) {
         float[] numbers = getNumbers(data);
         int numLength = numbers.length;
-        AffineTransform parsedTranform = new AffineTransform();
+        AffineTransform parsedTransform = new AffineTransform();
 
         if (MATRIX_ATTRIBUTE.equalsIgnoreCase(type)) {
             if (numLength != 6) {
                 return null;
             }
-            parsedTranform.setTransform(numbers[0], numbers[1], numbers[2],
-                                        numbers[3], numbers[4], numbers[5]);
+            parsedTransform.setTransform(
+                    numbers[0], numbers[1], numbers[2], numbers[3], numbers[4], numbers[5]);
         } else if (TRANSLATE_ATTRIBUTE.equalsIgnoreCase(type)) {
             if (numLength != 1 && numLength != 2) {
                 return null;
             }
             // Default translateY is 0
-            parsedTranform.translate(numbers[0], numLength == 2 ? numbers[1] : 0);
+            parsedTransform.translate(numbers[0], numLength == 2 ? numbers[1] : 0);
         } else if (SCALE_ATTRIBUTE.equalsIgnoreCase(type)) {
             if (numLength != 1 && numLength != 2) {
                 return null;
             }
             // Default scaleY == scaleX
-            parsedTranform.scale(numbers[0], numLength == 2 ? numbers[1] : numbers[0]);
+            parsedTransform.scale(numbers[0], numbers[numLength == 2 ? 1 : 0]);
         } else if (ROTATE_ATTRIBUTE.equalsIgnoreCase(type)) {
             if (numLength != 1 && numLength != 3) {
                 return null;
             }
-            parsedTranform.rotate(Math.toRadians(numbers[0]),
-                                  numLength == 3 ? numbers[1] : 0,
-                                  numLength == 3 ? numbers[2] : 0);
+            parsedTransform.rotate(
+                    Math.toRadians(numbers[0]),
+                    numLength == 3 ? numbers[1] : 0,
+                    numLength == 3 ? numbers[2] : 0);
         } else if (SKEWX_ATTRIBUTE.equalsIgnoreCase(type)) {
             if (numLength != 1) {
                 return null;
             }
             // Note that Swing is pass the shear value directly to the matrix as m01 or m10,
             // while SVG is using tan(a) in the matrix and a is in radians.
-            parsedTranform.shear(Math.tan(Math.toRadians(numbers[0])), 0);
+            parsedTransform.shear(Math.tan(Math.toRadians(numbers[0])), 0);
         } else if (SKEWY_ATTRIBUTE.equalsIgnoreCase(type)) {
             if (numLength != 1) {
                 return null;
             }
-            parsedTranform.shear(0, Math.tan(Math.toRadians(numbers[0])));
+            parsedTransform.shear(0, Math.tan(Math.toRadians(numbers[0])));
         }
-        return parsedTranform;
+        return parsedTransform;
     }
 
-    private float[] getNumbers(String data) {
+    private static float[] getNumbers(String data) {
         String[] numbers = data.split("\\s+");
         int len = numbers.length;
         if (len == 0) {
@@ -193,6 +193,13 @@ abstract class SvgNode {
     public abstract void transformIfNeeded(AffineTransform finalTransform);
 
     protected void fillPresentationAttributes(String name, String value, Logger logger) {
+        if (name.equals("fill-rule")) {
+            if (value.equals("nonzero")) {
+                value = "nonZero";
+            } else if (value.equals("evenodd")) {
+                value = "evenOdd";
+            }
+        }
         logger.log(Level.FINE, ">>>> PROP " + name + " = " + value);
         if (value.startsWith("url("))  {
             getTree().logErrorLine("Unsupported URL value: " + value, getDocumentNode(),
@@ -200,6 +207,10 @@ abstract class SvgNode {
             return;
         }
         mVdAttributesMap.put(name, value);
+    }
+
+    protected void fillPresentationAttributes(String name, String value) {
+        fillPresentationAttributes(name, value, logger);
     }
 
     public void fillEmptyAttributes(Map<String, String> parentAttributesMap) {
@@ -212,5 +223,7 @@ abstract class SvgNode {
         }
     }
 
-    public abstract void flattern(AffineTransform transform);
+    public abstract void flatten(AffineTransform transform);
+
+    abstract SvgNode deepCopy();
 }

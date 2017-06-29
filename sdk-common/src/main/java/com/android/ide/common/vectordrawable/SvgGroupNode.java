@@ -16,14 +16,13 @@
 
 package com.android.ide.common.vectordrawable;
 
-import org.w3c.dom.Node;
-
 import java.awt.geom.AffineTransform;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.w3c.dom.Node;
 
 /**
  * Represent a SVG file's group element.
@@ -36,6 +35,16 @@ class SvgGroupNode extends SvgNode {
 
     public SvgGroupNode(SvgTree svgTree, Node docNode, String name) {
         super(svgTree, docNode, name);
+    }
+
+    @Override
+    SvgGroupNode deepCopy() {
+        SvgGroupNode newInstance = new SvgGroupNode(getTree(), getDocumentNode(), getName());
+        for (SvgNode n : mChildren) {
+            SvgNode m = n.deepCopy();
+            newInstance.addChild(m);
+        }
+        return newInstance;
     }
 
     public void addChild(SvgNode child) {
@@ -70,11 +79,11 @@ class SvgGroupNode extends SvgNode {
     }
 
     @Override
-    public void flattern(AffineTransform transform) {
+    public void flatten(AffineTransform transform) {
         for (SvgNode n : mChildren) {
             mStackedTransform.setTransform(transform);
             mStackedTransform.concatenate(mLocalTransform);
-            n.flattern(mStackedTransform);
+            n.flatten(mStackedTransform);
         }
     }
 
@@ -82,6 +91,13 @@ class SvgGroupNode extends SvgNode {
     public void writeXML(OutputStreamWriter writer) throws IOException {
         for (SvgNode node : mChildren) {
             node.writeXML(writer);
+        }
+    }
+
+    @Override
+    public void fillPresentationAttributes(String name, String value) {
+        for (SvgNode n : mChildren) {
+            n.fillPresentationAttributes(name, value);
         }
     }
 }
