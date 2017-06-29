@@ -111,11 +111,17 @@ public interface ProgressIndicator {
      */
     default ProgressIndicator createSubProgress(double max) {
         double start = getFraction();
+        // Unfortunately some dummy indicators always report their fraction as 1. In that case just
+        // return the indicator itself.
+        if (start == 1) {
+            return this;
+        }
+
         double subRange = max - start;
         // Check that we're at least close to being a valid value. If we're equal to or less than 0
         // we'll treat it as 0 (that is, sets do nothing and gets just return the 0).
         if (subRange < -0.0001 || subRange > 1.0001) {
-            logWarning("Progress subrange out of bounds: " + subRange);  // happens sometimes; see b/63121883
+            logError("Progress subrange out of bounds: " + subRange);
         }
 
         return new DelegatingProgressIndicator(ProgressIndicator.this) {
