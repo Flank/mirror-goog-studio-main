@@ -103,6 +103,7 @@ public class CheckAll {
 
                     // feature support is not totally there.
                     "projectWithFeatures",
+                    "projectWithFeaturesAndSplitABIs",
                     "singleFeature",
 
                     // These are all right:
