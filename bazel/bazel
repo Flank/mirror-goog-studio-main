@@ -40,10 +40,11 @@ def main():
     env['CC'] = os.environ.get('GCC', '/usr/bin/gcc')
   elif sys.platform == 'win32':
     define_env(env, 'BAZEL_SH', 'C:\\tools\\msys64\\usr\\bin\\bash.exe',
-        'NOTE: Bazel for Windows currently hardcodes "C:\\tools\\msys64", but we\n' +
+        '***NOTE***: Bazel for Windows currently hardcodes "C:\\tools\\msys64", but we\n' +
         'could not find an installation of msys at this path on your machine.\n' +
-        'Consider moving your installation if you already have it or\n' +
-        'install it there from http://www.msys.org.\n' +
+        'Move your installation there if you already have it or\n' +
+        'install it there from http://www.msys2.org.\n' +
+        'Make sure to change the path to C:\\tools\\msys64\n' +
         '\n' +
         'See also: https://github.com/bazelbuild/bazel/issues/2447')
     define_env(env, 'BAZEL_VS', 'C:\\Program Files (x86)\\Microsoft Visual Studio 14.0',
