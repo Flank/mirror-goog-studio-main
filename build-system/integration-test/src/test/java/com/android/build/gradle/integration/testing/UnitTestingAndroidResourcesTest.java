@@ -12,8 +12,6 @@ import com.android.build.gradle.options.BooleanOption;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.Collection;
 import org.junit.Assert;
 import org.junit.AssumptionViolatedException;
 import org.junit.Before;
@@ -43,16 +41,15 @@ public class UnitTestingAndroidResourcesTest {
             GradleTestProject.builder().fromTestProject("unitTestingAndroidResources").create();
 
     @Parameterized.Parameters(name = "plugin={0}  librarySetup={1}  aaptGeneration={2}")
-    public static Collection<Object[]> data() {
-        return Arrays.asList(
-                new Object[][] {
-                    {Plugin.APPLICATION, null, AaptGeneration.AAPT_V1},
-                    {Plugin.APPLICATION, null, AaptGeneration.AAPT_V2_JNI},
-                    {Plugin.LIBRARY, LibrarySetup.BYPASS_MERGE, AaptGeneration.AAPT_V1},
-                    {Plugin.LIBRARY, LibrarySetup.MERGE, AaptGeneration.AAPT_V1},
-                    {Plugin.LIBRARY, LibrarySetup.BYPASS_MERGE, AaptGeneration.AAPT_V2_JNI},
-                    {Plugin.LIBRARY, LibrarySetup.MERGE, AaptGeneration.AAPT_V2_JNI},
-                });
+    public static Object[][] data() {
+        return new Object[][] {
+            {Plugin.APPLICATION, null, AaptGeneration.AAPT_V1},
+            {Plugin.APPLICATION, null, AaptGeneration.AAPT_V2_JNI},
+            {Plugin.LIBRARY, LibrarySetup.BYPASS_MERGE, AaptGeneration.AAPT_V1},
+            {Plugin.LIBRARY, LibrarySetup.MERGE, AaptGeneration.AAPT_V1},
+            {Plugin.LIBRARY, LibrarySetup.BYPASS_MERGE, AaptGeneration.AAPT_V2_JNI},
+            {Plugin.LIBRARY, LibrarySetup.MERGE, AaptGeneration.AAPT_V2_JNI},
+        };
     }
 
     @Parameterized.Parameter public Plugin plugin;
