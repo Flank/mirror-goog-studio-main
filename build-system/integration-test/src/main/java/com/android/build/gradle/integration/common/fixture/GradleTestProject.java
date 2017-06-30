@@ -104,8 +104,6 @@ public final class GradleTestProject implements TestRule {
     public static final String UPCOMING_BUILD_TOOL_VERSION = "25.0.0";
     public static final String REMOTE_TEST_PROVIDER = System.getenv().get("REMOTE_TEST_PROVIDER");
 
-    public static final String DEFAULT_KOTLIN_PLUGIN_VERSION = "1.1.2-4";
-
     public static final String DEVICE_PROVIDER_NAME =
             REMOTE_TEST_PROVIDER != null ? REMOTE_TEST_PROVIDER : BuilderConstants.CONNECTED;
 
@@ -522,7 +520,7 @@ public final class GradleTestProject implements TestRule {
                         DEFAULT_BUILD_TOOL_VERSION,
                         DEFAULT_COMPILE_SDK_VERSION,
                         false,
-                        DEFAULT_KOTLIN_PLUGIN_VERSION);
+                        SdkConstants.KOTLIN_LATEST_VERSION);
 
         if (withDependencyChecker) {
             result =
