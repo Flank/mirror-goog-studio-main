@@ -179,7 +179,12 @@ class PreOSideLoader implements InstantAppSideLoader.Installer {
                     throw new InstantAppRunException(
                             InstantAppRunException.ErrorType.READ_IAPK_FAILED, error.get());
                 }
-            } else {
+            } else if (device.getVersion().getApiLevel() == 24 || device.getVersion().getApiLevel() == 25) {
+                // Bug tracking this hack: http://b/38200028
+                // Delete this hack once http://b/63163062 is fixed
+                myListener.logMessage("Ignoring timeout for N", null);
+            }
+            else {
                 throw new InstantAppRunException(
                         InstantAppRunException.ErrorType.READ_IAPK_TIMEOUT);
             }

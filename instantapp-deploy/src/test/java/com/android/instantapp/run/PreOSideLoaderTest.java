@@ -27,6 +27,7 @@ import com.android.instantapp.utils.InstantAppTests;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.util.UUID;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /** Unit tests for {@link PreOSideLoader}. */
@@ -73,8 +74,9 @@ public class PreOSideLoaderTest {
         }
     }
 
+    @Ignore("http://b/38200028")
     @Test
-    public void testReadIapkTimesOutWhenNoMessage() throws Throwable {
+    public void ignore_testReadIapkTimesOutWhenNoMessage() throws Throwable {
         UUID installToken = UUID.randomUUID();
         File zip = new File("zip");
         IDevice device =
