@@ -796,6 +796,14 @@ public class ProcessAndroidResources extends IncrementalTask {
             }
 
             processResources.setEnableAapt2(projectOptions.get(BooleanOption.ENABLE_AAPT2));
+
+            if (processResources.enableAapt2 && variantData.getType() == VariantType.LIBRARY) {
+                Preconditions.checkState(
+                        projectOptions.get(ENABLE_NEW_RESOURCE_PROCESSING),
+                        "New resource processing needs to be enabled to use AAPT2. "
+                                + "Either disable AAPT2 or re-enable new resource processing.");
+            }
+
             processResources.versionCode = config.getVersionCode();
             processResources.applicationId = config.getApplicationId();
             processResources.versionName = config.getVersionName();
