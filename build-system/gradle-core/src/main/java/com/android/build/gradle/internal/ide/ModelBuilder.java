@@ -457,7 +457,9 @@ public class ModelBuilder implements ToolingModelBuilder {
 
         final VariantScope scope = variantData.getScope();
 
-        Pair<Dependencies, DependencyGraphs> result = getDependencies(scope);
+        Pair<Dependencies, DependencyGraphs> result =
+                getDependencies(
+                        scope, extraModelInfo, syncIssues, modelLevel, modelWithFullDependency);
 
         Set<File> additionalTestClasses = new HashSet<>();
         additionalTestClasses.addAll(variantData.getAllPreJavacGeneratedBytecode().getFiles());
@@ -483,17 +485,22 @@ public class ModelBuilder implements ToolingModelBuilder {
                 sourceProviders.multiFlavorSourceProvider);
     }
 
+    /** Gather the dependency graph for the specified <code>variantScope</code>. */
     @NonNull
-    private Pair<Dependencies, DependencyGraphs> getDependencies(@NonNull VariantScope scope) {
+    public static Pair<Dependencies, DependencyGraphs> getDependencies(
+            @NonNull VariantScope variantScope,
+            @NonNull ExtraModelInfo extraModelInfo,
+            @NonNull Set<SyncIssue> syncIssues,
+            int modelLevel,
+            boolean modelWithFullDependency) {
         Pair<Dependencies, DependencyGraphs> result;
 
         // If there is a missing flavor dimension then we don't even try to resolve dependencies
         // as it may fail due to improperly setup configuration attributes.
         if (extraModelInfo.hasSyncIssue(SyncIssue.TYPE_UNNAMED_FLAVOR_DIMENSION)) {
             result = Pair.of(EMPTY_DEPENDENCIES_IMPL, EMPTY_DEPENDENCY_GRAPH);
-
         } else {
-            final Project project = globalScope.getProject();
+            final Project project = variantScope.getGlobalScope().getProject();
             ArtifactDependencyGraph graph = new ArtifactDependencyGraph();
             // can't use ProjectOptions as this is likely to change from the initialization of
             // ProjectOptions due to how lint dynamically add/remove this property.
@@ -510,32 +517,25 @@ public class ModelBuilder implements ToolingModelBuilder {
                         Pair.of(
                                 EMPTY_DEPENDENCIES_IMPL,
                                 graph.createLevel2DependencyGraph(
-                                        scope, modelWithFullDependency, downloadSources));
+                                        variantScope, modelWithFullDependency, downloadSources));
             } else {
                 result =
                         Pair.of(
-                                graph.createDependencies(scope, downloadSources),
+                                graph.createDependencies(variantScope, downloadSources),
                                 EMPTY_DEPENDENCY_GRAPH);
             }
 
-            List<String> failures = graph.collectFailures();
-            if (!failures.isEmpty()) {
-                handleUnresolvedDependencies(failures);
+            for (String failure : graph.collectFailures()) {
+                syncIssues.add(
+                        new SyncIssueImpl(
+                                SyncIssue.TYPE_UNRESOLVED_DEPENDENCY,
+                                SyncIssue.SEVERITY_ERROR,
+                                failure,
+                                String.format("Unable to resolve dependency '%s'", failure)));
             }
         }
 
         return result;
-    }
-
-    private void handleUnresolvedDependencies(@NonNull List<String> failures) {
-        for (String failure : failures) {
-            syncIssues.add(
-                    new SyncIssueImpl(
-                            SyncIssue.TYPE_UNRESOLVED_DEPENDENCY,
-                            SyncIssue.SEVERITY_ERROR,
-                            failure,
-                            String.format("Unable to resolve dependency '%s'", failure)));
-        }
     }
 
     /**
@@ -603,7 +603,9 @@ public class ModelBuilder implements ToolingModelBuilder {
                 BuildInfoWriterTask.ConfigAction.getBuildInfoFile(scope),
                 variantConfiguration.getInstantRunSupportStatus());
 
-        Pair<Dependencies, DependencyGraphs> dependencies = getDependencies(scope);
+        Pair<Dependencies, DependencyGraphs> dependencies =
+                getDependencies(
+                        scope, extraModelInfo, syncIssues, modelLevel, modelWithFullDependency);
 
         Set<File> additionalTestClasses = new HashSet<>();
         additionalTestClasses.addAll(variantData.getAllPreJavacGeneratedBytecode().getFiles());
@@ -693,10 +695,6 @@ public class ModelBuilder implements ToolingModelBuilder {
                                 VariantScope.TaskOutputType.ABI_PACKAGED_SPLIT,
                                 VariantScope.TaskOutputType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT),
                         ImmutableList.of(variantData.getScope().getApkLocation()));
-            case INSTANTAPP:
-                return new BuildOutputsSupplier(
-                        ImmutableList.of(VariantScope.TaskOutputType.INSTANTAPP_BUNDLE),
-                        ImmutableList.of(variantData.getScope().getApkLocation()));
             case LIBRARY:
                 ApkInfo mainApkInfo =
                         ApkInfo.of(VariantOutput.OutputType.MAIN, ImmutableList.of(), 0);
@@ -726,6 +724,7 @@ public class ModelBuilder implements ToolingModelBuilder {
                                                                 .getVariantConfiguration()
                                                                 .getVersionCode()),
                                                 variantData.getScope().getJavaOutputDir()));
+            case INSTANTAPP:
             default:
                 throw new RuntimeException("Unhandled build type " + variantData.getType());
         }
@@ -753,7 +752,6 @@ public class ModelBuilder implements ToolingModelBuilder {
                                                 variantData.getScope().getManifestOutputDirectory(),
                                                 SdkConstants.ANDROID_MANIFEST_XML))));
             case INSTANTAPP:
-                return new BuildOutputsSupplier(ImmutableList.of(), ImmutableList.of());
             default:
                 throw new RuntimeException("Unhandled build type " + variantData.getType());
         }

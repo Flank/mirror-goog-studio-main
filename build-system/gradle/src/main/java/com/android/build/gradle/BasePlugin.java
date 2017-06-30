@@ -463,24 +463,7 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
                         taskManager,
                         threadRecorder);
 
-        // Register a builder for the custom tooling model
-        ModelBuilder modelBuilder =
-                new ModelBuilder(
-                        globalScope,
-                        androidBuilder,
-                        variantManager,
-                        taskManager,
-                        extension,
-                        extraModelInfo,
-                        ndkHandler,
-                        new NativeLibraryFactoryImpl(ndkHandler),
-                        getProjectType(),
-                        AndroidProject.GENERATION_ORIGINAL);
-        registry.register(modelBuilder);
-
-        // Register a builder for the native tooling model
-        NativeModelBuilder nativeModelBuilder = new NativeModelBuilder(variantManager);
-        registry.register(nativeModelBuilder);
+        registerModels(registry, globalScope, variantManager, extension, extraModelInfo);
 
         // map the whenObjectAdded callbacks on the containers.
         signingConfigContainer.whenObjectAdded(variantManager::addSigningConfig);
@@ -506,6 +489,32 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
         // create default Objects, signingConfig first as its used by the BuildTypes.
         variantFactory.createDefaultComponents(
                 buildTypeContainer, productFlavorContainer, signingConfigContainer);
+    }
+
+    protected void registerModels(
+            @NonNull ToolingModelBuilderRegistry registry,
+            @NonNull GlobalScope globalScope,
+            @NonNull VariantManager variantManager,
+            @NonNull AndroidConfig config,
+            @NonNull ExtraModelInfo extraModelInfo) {
+        // Register a builder for the custom tooling model
+        ModelBuilder modelBuilder =
+                new ModelBuilder(
+                        globalScope,
+                        androidBuilder,
+                        variantManager,
+                        taskManager,
+                        config,
+                        extraModelInfo,
+                        ndkHandler,
+                        new NativeLibraryFactoryImpl(ndkHandler),
+                        getProjectType(),
+                        AndroidProject.GENERATION_ORIGINAL);
+        registry.register(modelBuilder);
+
+        // Register a builder for the native tooling model
+        NativeModelBuilder nativeModelBuilder = new NativeModelBuilder(variantManager);
+        registry.register(nativeModelBuilder);
     }
 
     private static class UnsupportedAction implements Action<Object> {

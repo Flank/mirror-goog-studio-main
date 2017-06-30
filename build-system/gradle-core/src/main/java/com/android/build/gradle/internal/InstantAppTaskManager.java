@@ -84,9 +84,8 @@ public class InstantAppTaskManager extends TaskManager {
                             bundleTask.getName());
                 });
 
-        // FIXME: Stop creating dummy tasks just to make the IDE sync shut up.
-        tasks.create(variantScope.getTaskName("generate", "Sources"));
-        tasks.create(variantScope.getTaskName("compile", "Sources"));
+        // FIXME: Stop creating a dummy task just to make the IDE sync shut up.
+        tasks.create(variantScope.getTaskName("dummy"));
     }
 
     @NonNull

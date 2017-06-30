@@ -18,19 +18,16 @@ package com.android.build.gradle.integration.feature;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
-import com.android.SdkConstants;
-import com.android.build.OutputFile;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.ApkSubject;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
-import com.android.builder.model.ProjectBuildOutput;
-import com.android.builder.model.VariantBuildOutput;
+import com.android.builder.model.AndroidProject;
+import com.android.builder.model.InstantAppProjectBuildOutput;
+import com.android.builder.model.InstantAppVariantBuildOutput;
+import com.android.builder.model.Variant;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -54,24 +51,42 @@ public class FeatureAndAbiPureSplitsTest {
     }
 
     @Test
-    public void build() throws Exception {
+    public void buildAndCheckModel() throws Exception {
         // Build all the things.
         sProject.executor().with(AaptGeneration.AAPT_V2_JNI).run("clean", "assembleDebug");
 
-        Map<String, ProjectBuildOutput> multi = sProject.model().getMulti(ProjectBuildOutput.class);
-        ProjectBuildOutput featureModule = multi.get(":feature_a");
-        assertThat(featureModule.getVariantsBuildOutput()).hasSize(4);
-        VariantBuildOutput debug = getDebugVariant(featureModule.getVariantsBuildOutput());
-        assertThat(debug.getOutputs()).hasSize(1);
-        OutputFile aarFile = Iterables.getOnlyElement(debug.getOutputs());
+        Map<String, AndroidProject> projectModels = sProject.model().getMulti().getModelMap();
+        AndroidProject instantAppProject = projectModels.get(":bundle");
+        assertThat(instantAppProject).isNotNull();
+        assertThat(instantAppProject.getVariants()).hasSize(2);
+        Variant debugVariant =
+                instantAppProject
+                        .getVariants()
+                        .stream()
+                        .filter(output -> output.getName().equals("debug"))
+                        .findFirst()
+                        .get();
+        assertThat(debugVariant.getMainArtifact().getOutputs()).hasSize(1);
+        debugVariant
+                .getMainArtifact()
+                .getOutputs()
+                .forEach(
+                        androidArtifactOutput ->
+                                assertThat(androidArtifactOutput.getOutputFile().getName())
+                                        .isEqualTo("bundle-debug.zip"));
 
-        // TODO : replace all the code below once the InstantApps model is ready.
-        File apkFolder =
-                new File(
-                        aarFile.getOutputFile().getParentFile().getParentFile(),
-                        "apk/feature/debug");
-        assertThat(apkFolder).exists();
-        File[] apkFiles = apkFolder.listFiles();
+        Map<String, InstantAppProjectBuildOutput> models =
+                sProject.model().getMulti(InstantAppProjectBuildOutput.class);
+        assertThat(models).hasSize(1);
+
+        InstantAppProjectBuildOutput instantAppModule = models.get(":bundle");
+        assertThat(instantAppModule).isNotNull();
+        assertThat(instantAppModule.getInstantAppVariantsBuildOutput()).hasSize(1);
+        InstantAppVariantBuildOutput debug =
+                getDebugVariant(instantAppModule.getInstantAppVariantsBuildOutput());
+        assertThat(debug.getApplicationId()).isEqualTo("com.example.android.multiproject");
+        assertThat(debug.getOutput().getOutputFile().getName()).isEqualTo("bundle-debug.zip");
+        assertThat(debug.getFeatureOutputs()).hasSize(5);
 
         List<String> expectedSplitNames =
                 ImmutableList.of(
@@ -79,12 +94,12 @@ public class FeatureAndAbiPureSplitsTest {
                         "featurea.config.armeabi_v7a",
                         "featurea.config.hdpi");
         List<String> foundSplitNames = new ArrayList<>();
-        Arrays.stream(apkFiles)
-                .filter(apk -> apk.getName().endsWith(SdkConstants.DOT_ANDROID_PACKAGE))
+        debug.getFeatureOutputs()
                 .forEach(
-                        apk -> {
+                        outputFile -> {
                             List<String> manifestContent =
-                                    ApkSubject.getManifestContent(apk.toPath());
+                                    ApkSubject.getManifestContent(
+                                            outputFile.getOutputFile().toPath());
                             String configForSplit = "";
                             String targetABI = "";
                             String split = "";
@@ -113,12 +128,13 @@ public class FeatureAndAbiPureSplitsTest {
         assertThat(foundSplitNames).containsExactlyElementsIn(expectedSplitNames);
     }
 
-    private String getQuotedValue(String line) {
+    private static String getQuotedValue(String line) {
         int afterQuote = line.indexOf('"') + 1;
         return line.substring(afterQuote, line.indexOf('"', afterQuote));
     }
 
-    private VariantBuildOutput getDebugVariant(Collection<VariantBuildOutput> outputs) {
+    private static InstantAppVariantBuildOutput getDebugVariant(
+            Collection<InstantAppVariantBuildOutput> outputs) {
         return outputs.stream()
                 .filter(output -> output.getName().equals("debug"))
                 .findFirst()
