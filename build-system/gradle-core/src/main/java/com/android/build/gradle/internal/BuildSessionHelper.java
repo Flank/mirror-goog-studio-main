@@ -21,7 +21,6 @@ import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.concurrency.Immutable;
 import com.android.builder.Version;
-import com.android.ide.common.util.BuildSessionVariable;
 import com.android.ide.common.util.JvmWideVariable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -92,8 +91,9 @@ public final class BuildSessionHelper {
             // loader)
             JvmWideVariable<Object> jvmWideSingleton =
                     new JvmWideVariable<>(
-                            BuildSessionSingleton.class.getPackage().getName(),
+                            BuildSessionHelper.class.getName(),
                             BuildSessionSingleton.class.getSimpleName(),
+                            Version.ANDROID_GRADLE_PLUGIN_VERSION,
                             TypeToken.of(Object.class),
                             () -> {
                                 buildFirstStarted.set(true);
@@ -126,13 +126,8 @@ public final class BuildSessionHelper {
                     });
         }
 
-        // Invoke (or register) event handlers on the BuildSessionVariable class every time the
-        // plugin is applied, as required by that class
-        BuildSessionVariable.buildStarted();
-        executeLastWhenBuildFinished(BuildSessionVariable::buildFinished);
-
-        // Also un-register the JVM-wide variables that keep track of plugin versions at the end of
-        // a build (we allow different plugin versions to be used across different builds). We don't
+        // Un-register the JVM-wide variables that keep track of plugin versions at the end of a
+        // build (we allow different plugin versions to be used across different builds). We don't
         // need to un-link the references to them since there are none.
         if (buildFirstStarted.get()) {
             executeLastWhenBuildFinished(
@@ -168,7 +163,7 @@ public final class BuildSessionHelper {
             @NonNull File projectDir, @NonNull String pluginName, @NonNull String pluginVersion) {
         JvmWideVariable<ConcurrentMap<String, String>> jvmWideMap =
                 new JvmWideVariable<>(
-                        "PLUGIN_VERSION",
+                        BuildSessionHelper.class,
                         pluginName.replace(' ', '_'),
                         new TypeToken<ConcurrentMap<String, String>>() {},
                         ConcurrentHashMap::new);

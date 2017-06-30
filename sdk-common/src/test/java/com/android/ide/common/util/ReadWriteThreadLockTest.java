@@ -46,7 +46,7 @@ public class ReadWriteThreadLockTest {
         ConcurrencyTester<Void, Void> tester = new ConcurrencyTester<>();
 
         prepareConcurrencyTest(
-                new Integer[] {new Integer(1), new Integer(1), new Integer(1)},
+                new Integer[] {1, 1, 1},
                 new LockType[] {LockType.READ, LockType.WRITE, LockType.WRITE},
                 tester);
 
@@ -59,7 +59,7 @@ public class ReadWriteThreadLockTest {
         ConcurrencyTester<Void, Void> tester = new ConcurrencyTester<>();
 
         prepareConcurrencyTest(
-                new Integer[] {new Integer(1), new Integer(1), new Integer(1)},
+                new Integer[] {1, 1, 1},
                 new LockType[] {LockType.READ, LockType.READ, LockType.READ},
                 tester);
 
@@ -72,7 +72,7 @@ public class ReadWriteThreadLockTest {
         ConcurrencyTester<Void, Void> tester = new ConcurrencyTester<>();
 
         prepareConcurrencyTest(
-                new Integer[] {new Integer(1), new Integer(2), new Integer(3)},
+                new Integer[] {1, 2, 3},
                 new LockType[] {LockType.READ, LockType.WRITE, LockType.WRITE},
                 tester);
 
@@ -81,7 +81,7 @@ public class ReadWriteThreadLockTest {
     }
 
     /** Performs a few steps common to the concurrency tests. */
-    private void prepareConcurrencyTest(
+    private static void prepareConcurrencyTest(
             @NonNull Object[] lockObjects,
             @NonNull LockType[] lockTypes,
             @NonNull ConcurrencyTester<Void, Void> concurrencyTester) {
@@ -128,7 +128,7 @@ public class ReadWriteThreadLockTest {
 
     @Test
     public void testReentrantProperty() {
-        ReadWriteThreadLock readWriteThreadLock = new ReadWriteThreadLock(new Integer(1));
+        ReadWriteThreadLock readWriteThreadLock = new ReadWriteThreadLock(1);
         ReadWriteThreadLock.Lock readLock = readWriteThreadLock.readLock();
         ReadWriteThreadLock.Lock writeLock = readWriteThreadLock.writeLock();
         writeLock.lock();
@@ -154,13 +154,14 @@ public class ReadWriteThreadLockTest {
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void testDifferentClassLoaders() throws Exception {
-        ReadWriteThreadLock originalLock = new ReadWriteThreadLock(new Integer(1));
+        ReadWriteThreadLock originalLock = new ReadWriteThreadLock(1);
         originalLock.writeLock().lock();
 
         // If another thread attempts to acquire the same write lock, it must not succeed
-        ReadWriteThreadLock lockWithSameClassLoader = new ReadWriteThreadLock(new Integer(1));
+        ReadWriteThreadLock lockWithSameClassLoader = new ReadWriteThreadLock(1);
         Thread thread1 = new Thread(() -> {
             lockWithSameClassLoader.writeLock().lock();
             lockWithSameClassLoader.writeLock().unlock();
@@ -182,7 +183,7 @@ public class ReadWriteThreadLockTest {
         Class clazz = classLoader.load();
         Constructor constructor = clazz.getConstructor(Object.class);
         constructor.setAccessible(true);
-        Object lockWithDifferentClassLoader = constructor.newInstance(new Integer(1));
+        Object lockWithDifferentClassLoader = constructor.newInstance(1);
         Method writeLockMethod = clazz.getMethod("writeLock");
         Object lock = writeLockMethod.invoke(lockWithDifferentClassLoader);
         Method lockMethod = lock.getClass().getMethod("lock");

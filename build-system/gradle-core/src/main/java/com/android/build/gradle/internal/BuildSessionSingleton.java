@@ -128,7 +128,6 @@ public final class BuildSessionSingleton implements BuildSessionInterface {
      *   <li>The contract that this singleton's lifetime is limited to a build is broken.
      *   <li>The JVM-wide variables that keep track of plugin versions are not unset at the end of a
      *       build, possibly resulting in false alarms.
-     *   <li>The contract that build session variables' life time is limited to a build is broken.
      *   <li>Actions registered using the {@link BuildSessionHelper} API to be executed at the end
      *       of the build are not guaranteed to be executed or completed successfully.
      *   <li>Actions registered directly using the Gradle API to be executed at the end of the build
