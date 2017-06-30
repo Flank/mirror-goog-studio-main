@@ -418,6 +418,7 @@ message AllocationEvent {
     int64 size = 4;
     // Length for array objects. For non-arrays, set to -1.
     int32 length = 5;
+    int32 stack_id = 6;
   }
 
   // associates an event with a particular tracking session.
