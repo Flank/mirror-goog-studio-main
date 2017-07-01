@@ -36,7 +36,9 @@ public final class Dex {
     @NonNull private final String name;
 
     // Lazily initialized properties
-    @Nullable private ImmutableMap<String, DexBackedClassDef> classes;
+    @SuppressWarnings("NonFinalFieldInImmutable")
+    @Nullable
+    private ImmutableMap<String, DexBackedClassDef> classes;
 
     public Dex(@NonNull Path path) {
         this(path, path.toString());

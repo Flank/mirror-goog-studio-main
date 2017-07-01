@@ -40,7 +40,9 @@ public final class SplitApks implements AutoCloseable {
 
     @NonNull private final List<Apk> apks;
     // Cached state
-    @Nullable private ImmutableMap<String, DexBackedClassDef> allClasses = null;
+    @SuppressWarnings("NonFinalFieldInImmutable")
+    @Nullable
+    private ImmutableMap<String, DexBackedClassDef> allClasses = null;
 
     public SplitApks(@NonNull List<Apk> apks) {
         this.apks = ImmutableList.copyOf(apks);

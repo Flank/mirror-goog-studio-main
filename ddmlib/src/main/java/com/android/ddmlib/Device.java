@@ -27,7 +27,6 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.Atomics;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.channels.SocketChannel;
@@ -710,7 +709,9 @@ final class Device implements IDevice {
     }
 
     List<Client> getClientList() {
-        return mClients;
+        synchronized (mClients) {
+            return mClients;
+        }
     }
 
     void clearClientList() {

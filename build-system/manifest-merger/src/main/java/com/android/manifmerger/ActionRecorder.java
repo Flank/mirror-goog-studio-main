@@ -181,9 +181,9 @@ public class ActionRecorder {
         nodeDecisionTree.addNodeRecord(nodeRecord);
     }
 
-    /** This method must be called from a synchronized block. */
     @NonNull
-    private Actions.DecisionTreeRecord getDecisionTreeRecord(@NonNull XmlElement xmlElement) {
+    private synchronized Actions.DecisionTreeRecord getDecisionTreeRecord(
+            @NonNull XmlElement xmlElement) {
         return mRecords.computeIfAbsent(
                 xmlElement.getOriginalId(), k -> new Actions.DecisionTreeRecord());
     }
