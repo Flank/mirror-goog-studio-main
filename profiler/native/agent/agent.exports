@@ -1,6 +1,0 @@
-{
-  global:
-    Java_com_android_tools_profiler_support_*;
-  local:
-    *;
-};
