@@ -876,8 +876,8 @@ public class ClientData {
      */
     @NonNull
     public String getPackageName() {
-      // Check for multi-process app name that might have a following format - "$applicationId:$processName"
-      int colonPos = mClientDescription.indexOf(":");
+        // Check for multi-process app name that might have a following format - "$applicationId:$processName"
+        int colonPos = mClientDescription.indexOf(':');
       return (colonPos == -1) ? mClientDescription : mClientDescription.substring(0, colonPos);
     }
 

@@ -44,7 +44,7 @@ public class DexPackageNode extends DexElementNode {
             @NonNull String parentPackage,
             @NonNull String qualifiedClassName,
             @Nullable TypeReference typeReference) {
-        int i = qualifiedClassName.indexOf(".");
+        int i = qualifiedClassName.indexOf('.');
         if (i < 0) {
             DexClassNode node = getChildByType(qualifiedClassName, DexClassNode.class);
             if (node == null) {

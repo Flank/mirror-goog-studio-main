@@ -45,7 +45,7 @@ public class AndroidApplicationInfo {
                 // e.g: A: android:versionCode(0x0101021b)=(type 0x10)0x2079
                 int eqIndex = line.indexOf("=(type 0x10)");
                 if (eqIndex > 0) {
-                    int endParenthesis = line.indexOf(")", eqIndex + 2);
+                    int endParenthesis = line.indexOf(')', eqIndex + 2);
                     if (endParenthesis > 0) {
                         String versionCodeStr = line.substring(endParenthesis + 1);
                         versionCode = Long.decode(versionCodeStr);
@@ -53,18 +53,18 @@ public class AndroidApplicationInfo {
                 }
             } else if (line.startsWith("A: android:versionName")) {
                 // e.g: A: android:versionName(0x0101021c)="51.0.2704.10" (Raw: "51.0.2704.10")
-                int eqIndex = line.indexOf("=");
+                int eqIndex = line.indexOf('=');
                 if (eqIndex > 0) {
-                    int endQuote = line.indexOf("\"", eqIndex + 2);
+                    int endQuote = line.indexOf('\"', eqIndex + 2);
                     if (endQuote > 0) {
                         versionName = line.substring(eqIndex + 2, endQuote);
                     }
                 }
             } else if (line.startsWith("A: package=")) {
                 // e.g: A: package="com.android.chrome" (Raw: "com.android.chrome")
-                int eqIndex = line.indexOf("=");
+                int eqIndex = line.indexOf('=');
                 if (eqIndex > 0) {
-                    int endQuote = line.indexOf("\"", eqIndex + 2);
+                    int endQuote = line.indexOf('\"', eqIndex + 2);
                     if (endQuote > 0) {
                         packageId = line.substring(eqIndex + 2, endQuote);
                     }
