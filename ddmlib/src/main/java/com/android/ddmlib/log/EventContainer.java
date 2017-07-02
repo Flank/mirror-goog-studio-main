@@ -17,7 +17,6 @@
 package com.android.ddmlib.log;
 
 import com.android.ddmlib.log.LogReceiver.LogEntry;
-
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -333,7 +332,7 @@ public class EventContainer {
             data = ((Object[])mData)[index];
         }
 
-        if (!data.getClass().equals(data.getClass())) {
+        if (!data.getClass().equals(value.getClass())) {
             throw new InvalidTypeException();
         }
 
