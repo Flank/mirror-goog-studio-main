@@ -2,7 +2,6 @@ package com.android.tools.perflib.heap.memoryanalyzer;
 
 import com.android.tools.perflib.analyzer.AnalysisResultEntry;
 import com.android.tools.perflib.heap.Instance;
-
 import java.util.List;
 
 /**
@@ -30,7 +29,7 @@ public final class TopMemoryOffendersReport implements Report {
 
         printer.startTable("Total Retained Size", "Instance");
         for (AnalysisResultEntry<?> entry : mResults) {
-            if (entry.getOffender().getOffenders().size() > 0) {
+            if (!entry.getOffender().getOffenders().isEmpty()) {
                 Instance instance = (Instance) entry.getOffender().getOffenders().get(0);
                 String totalRetainedSize = Long.toString(instance.getTotalRetainedSize());
                 String instanceString = printer.formatInstance(instance);

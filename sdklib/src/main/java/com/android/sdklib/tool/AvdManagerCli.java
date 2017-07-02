@@ -291,7 +291,7 @@ class AvdManagerCli extends CommandLineParser {
             if (toolsDirProp != null) {
                 // got back a level for the SDK folder
                 File tools;
-                if (toolsDirProp.length() > 0) {
+                if (!toolsDirProp.isEmpty()) {
                     try {
                         tools = new File(toolsDirProp).getCanonicalFile();
                         mOsSdkFolder = tools.getParent();
@@ -754,7 +754,7 @@ class AvdManagerCli extends CommandLineParser {
             }
 
             // if no tag was specified, "default" is implied
-            if (cmdTag == null || cmdTag.length() == 0) {
+            if (cmdTag == null || cmdTag.isEmpty()) {
                 cmdTag = tag.getId();
             }
 
@@ -772,7 +772,7 @@ class AvdManagerCli extends CommandLineParser {
 
             SystemImage img = null;
 
-            if (abiType == null || abiType.length() == 0) {
+            if (abiType == null || abiType.isEmpty()) {
                 if (sysImgs.size() == 1) {
                     // Auto-select the single ABI available
                     abiType = sysImgs.iterator().next().getAbiType();
@@ -1006,7 +1006,7 @@ class AvdManagerCli extends CommandLineParser {
 
         result = readLine(readLineBuffer).trim();
         // handle default:
-        if (result.length() == 0) {
+        if (result.isEmpty()) {
             result = defaultAnswer;
         }
 
@@ -1057,7 +1057,7 @@ class AvdManagerCli extends CommandLineParser {
             }
 
             result = readLine(readLineBuffer);
-            if (result.length() == 0) {
+            if (result.isEmpty()) {
                 if (defaultValue != null) {
                     mSdkLog.info("\n"); // empty line
                     i++; // go to the next property if we have a valid default value.

@@ -26,12 +26,10 @@ import com.android.sdklib.repository.legacy.local.LocalExtraPkgInfo;
 import com.android.sdklib.repository.legacy.remote.RemotePkgInfo;
 import com.android.sdklib.repository.legacy.remote.internal.sources.RepoConstants;
 import com.android.sdklib.repository.legacy.remote.internal.sources.SdkSource;
-
-import org.w3c.dom.Node;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
+import org.w3c.dom.Node;
 
 /**
  * Represents a extra XML node in an SDK repository.
@@ -104,7 +102,7 @@ public class RemoteExtraPkgInfo extends RemotePkgInfo
         String vid = RemotePackageParserUtils
                 .getXmlString(packageNode, RepoConstants.NODE_VENDOR_ID);
 
-        if (vid.length() == 0) {
+        if (vid.isEmpty()) {
             // If vid is missing, use the old <vendor> attribute.
             // Note that in a valid XML, vendor-id cannot be an empty string.
             // The only reason vid can be empty is when <vendor-id> is missing, which
@@ -112,17 +110,17 @@ public class RemoteExtraPkgInfo extends RemotePkgInfo
             String vendor = RemotePackageParserUtils
                     .getXmlString(packageNode, RepoConstants.NODE_VENDOR);
             vid = sanitizeLegacyVendor(vendor);
-            if (vname.length() == 0) {
+            if (vname.isEmpty()) {
                 vname = vendor;
             }
         }
-        if (vname.length() == 0) {
+        if (vname.isEmpty()) {
             // The vendor-display name can be empty, in which case we use the vendor-id.
             vname = vid;
         }
         IdDisplay vendor = IdDisplay.create(vid.trim(), vname.trim());
 
-        if (name.length() == 0) {
+        if (name.isEmpty()) {
             // If name is missing, use the <path> attribute as done in an addon-3 schema.
             name = LocalExtraPkgInfo.getPrettyName(vendor, mPath);
         }
@@ -165,7 +163,7 @@ public class RemoteExtraPkgInfo extends RemotePkgInfo
                     String path = child.getTextContent();
                     if (path != null) {
                         path = path.trim();
-                        if (path.length() > 0) {
+                        if (!path.isEmpty()) {
                             paths.add(path);
                         }
                     }
@@ -220,7 +218,7 @@ public class RemoteExtraPkgInfo extends RemotePkgInfo
 
         // Sanitize the path
         String path = mPath.replaceAll("[^a-zA-Z0-9-]+", "_");      //$NON-NLS-1$
-        if (path.length() == 0 || path.equals("_")) {               //$NON-NLS-1$
+        if (path.isEmpty() || path.equals("_")) { //$NON-NLS-1$
             int h = path.hashCode();
             path = String.format("extra%08x", h);                   //$NON-NLS-1$
         }
@@ -240,7 +238,7 @@ public class RemoteExtraPkgInfo extends RemotePkgInfo
         // and cannot be empty. Let's be defensive and enforce that anyway since things
         // like "____" are still valid values that we don't want to allow.
 
-        if (vendorDisplay != null && vendorDisplay.length() > 0) {
+        if (vendorDisplay != null && !vendorDisplay.isEmpty()) {
             String vendor = vendorDisplay.trim();
             // Sanitize the vendor
             vendor = vendor.replaceAll("[^a-zA-Z0-9-]+", "_");      //$NON-NLS-1$

@@ -390,7 +390,7 @@ final class TextEngine {
                         int valueLength = pos - start;
 
                         switch (data[start]) {
-                            // The property is an array (single or multi line)
+                                // The property is an array (single or multi line)
                             case TOKEN_ARRAY_START:
                                 stack.offerFirst(new ListProperty());
                                 // Single-line array
@@ -400,7 +400,7 @@ final class TextEngine {
                                     value = new String(data, start + 1, valueLength - 2);
                                     // Elements are space delimited
                                     for (String element : value.trim().split("\\s+")) {
-                                        if (element.length() > 0) parseNumber(element);
+                                        if (!element.isEmpty()) parseNumber(element);
                                     }
                                     addProperty(stack.pollFirst());
                                 }

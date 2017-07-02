@@ -20,7 +20,6 @@ import com.android.tools.chunkio.Chunk;
 import com.android.tools.chunkio.Chunked;
 import com.android.tools.pixelprobe.ColorMode;
 import com.android.tools.pixelprobe.util.Strings;
-
 import java.util.List;
 import java.util.Map;
 
@@ -1231,7 +1230,7 @@ final class PsdFile {
         @Override
         public String toString() {
             if (value == null) return null;
-            if (value.length() == 0) return "";
+            if (value.isEmpty()) return "";
             int lastChar = value.length() - 1;
             if (value.charAt(lastChar) == '\0') {
                 return value.substring(0, lastChar);

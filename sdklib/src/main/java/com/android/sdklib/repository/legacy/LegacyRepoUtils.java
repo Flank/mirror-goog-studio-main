@@ -23,7 +23,6 @@ import com.android.repository.api.FallbackRemoteRepoLoader;
 import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.RepoManager;
 import com.android.repository.api.RepoPackage;
-import com.android.repository.api.SchemaModule;
 import com.android.repository.impl.meta.GenericFactory;
 import com.android.repository.impl.meta.TypeDetails;
 import com.android.repository.io.FileOp;
@@ -32,10 +31,10 @@ import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget.OptionalLibrary;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.sdklib.internal.project.ProjectProperties;
-import com.android.sdklib.repository.legacy.descriptors.IPkgDesc;
-import com.android.sdklib.repository.legacy.descriptors.PkgType;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.IdDisplay;
+import com.android.sdklib.repository.legacy.descriptors.IPkgDesc;
+import com.android.sdklib.repository.legacy.descriptors.PkgType;
 import com.android.sdklib.repository.meta.AddonFactory;
 import com.android.sdklib.repository.meta.DetailsTypes;
 import com.android.sdklib.repository.meta.Library;
@@ -45,9 +44,7 @@ import com.android.sdklib.repository.meta.SysImgFactory;
 import com.android.sdklib.repository.targets.SystemImage;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
@@ -336,12 +333,12 @@ public class LegacyRepoUtils {
                 String path = SdkConstants.FD_EXTRAS;
 
                 String vendor = desc.getVendor().getId();
-                if (vendor != null && vendor.length() > 0) {
+                if (vendor != null && !vendor.isEmpty()) {
                     path += RepoPackage.PATH_SEPARATOR + vendor;
                 }
 
                 String name = desc.getPath();
-                if (name != null && name.length() > 0) {
+                if (name != null && !name.isEmpty()) {
                     path += RepoPackage.PATH_SEPARATOR + name;
                 }
 

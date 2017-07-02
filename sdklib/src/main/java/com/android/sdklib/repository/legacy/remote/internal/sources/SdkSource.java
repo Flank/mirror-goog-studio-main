@@ -288,7 +288,7 @@ public abstract class SdkSource implements Comparable<SdkSource> {
 
     @NonNull
     public String getShortDescription() {
-        if (mUiName != null && mUiName.length() > 0) {
+        if (mUiName != null && !mUiName.isEmpty()) {
 
             String host = "malformed URL";
 

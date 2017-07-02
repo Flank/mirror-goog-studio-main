@@ -20,7 +20,12 @@ import com.android.annotations.Nullable;
 import com.android.repository.api.RepoManager;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.legacy.remote.internal.packages.RemotePackageParserUtils;
-
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.regex.Pattern;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.stream.StreamSource;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -28,14 +33,6 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.Text;
 import org.xml.sax.ErrorHandler;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.regex.Pattern;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.transform.stream.StreamSource;
 
 
 /**
@@ -255,7 +252,7 @@ public class SdkRepoSource extends SdkSource {
         }
 
         // we must have found the root node, and it must have an XML namespace prefix.
-        if (oldRoot == null || prefix == null || prefix.length() == 0) {
+        if (oldRoot == null || prefix == null || prefix.isEmpty()) {
             return null;
         }
 
@@ -352,7 +349,7 @@ public class SdkRepoSource extends SdkSource {
 
                             Node node = findChild(archive, null, prefix, RepoConstants.NODE_URL);
                             String url = node == null ? null : node.getTextContent().trim();
-                            if (url == null || url.length() == 0) {
+                            if (url == null || url.isEmpty()) {
                                 continue;
                             }
 

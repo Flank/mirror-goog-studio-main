@@ -24,10 +24,8 @@ import com.android.sdklib.repository.legacy.descriptors.PkgDesc;
 import com.android.sdklib.repository.legacy.remote.RemotePkgInfo;
 import com.android.sdklib.repository.legacy.remote.internal.sources.SdkRepoConstants;
 import com.android.sdklib.repository.legacy.remote.internal.sources.SdkSource;
-
-import org.w3c.dom.Node;
-
 import java.util.Map;
+import org.w3c.dom.Node;
 
 /**
  * Represents a doc XML node in an SDK repository.
@@ -56,7 +54,7 @@ public class RemoteDocPkgInfo extends RemotePkgInfo {
                 .getXmlInt(packageNode, SdkRepoConstants.NODE_API_LEVEL, 0);
         String codeName = RemotePackageParserUtils
                 .getXmlString(packageNode, SdkRepoConstants.NODE_CODENAME);
-        if (codeName.length() == 0) {
+        if (codeName.isEmpty()) {
             codeName = null;
         }
         AndroidVersion version = new AndroidVersion(apiLevel, codeName);

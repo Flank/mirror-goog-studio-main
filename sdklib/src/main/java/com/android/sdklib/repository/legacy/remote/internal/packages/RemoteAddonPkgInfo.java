@@ -28,12 +28,10 @@ import com.android.sdklib.repository.legacy.remote.RemotePkgInfo;
 import com.android.sdklib.repository.legacy.remote.internal.sources.SdkAddonConstants;
 import com.android.sdklib.repository.legacy.remote.internal.sources.SdkRepoConstants;
 import com.android.sdklib.repository.legacy.remote.internal.sources.SdkSource;
-
-import org.w3c.dom.Node;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
+import org.w3c.dom.Node;
 
 /**
  * Represents an add-on XML node in an SDK repository.
@@ -139,17 +137,17 @@ public class RemoteAddonPkgInfo extends RemotePkgInfo {
                 .trim();
 
         // The old <name> is equivalent to the new <name-display>
-        if (nameDisp.length() == 0) {
+        if (nameDisp.isEmpty()) {
             nameDisp = name;
         }
 
         // For a missing id, we simply use a sanitized version of the display name
-        if (nameId.length() == 0) {
-            nameId = LocalAddonPkgInfo.sanitizeDisplayToNameId(name.length() > 0 ? name : nameDisp);
+        if (nameId.isEmpty()) {
+            nameId = LocalAddonPkgInfo.sanitizeDisplayToNameId(!name.isEmpty() ? name : nameDisp);
         }
 
-        assert nameId.length() > 0;
-        assert nameDisp.length() > 0;
+        assert !nameId.isEmpty();
+        assert !nameDisp.isEmpty();
 
         // --- vendor id/display ---
         // Same processing for vendor id vs display
@@ -162,18 +160,18 @@ public class RemoteAddonPkgInfo extends RemotePkgInfo {
                 .getXmlString(packageNode, SdkAddonConstants.NODE_VENDOR).trim();
 
         // The old <vendor> is equivalent to the new <vendor-display>
-        if (vendorDisp.length() == 0) {
+        if (vendorDisp.isEmpty()) {
             vendorDisp = vendor;
         }
 
         // For a missing id, we simply use a sanitized version of the display vendor
-        if (vendorId.length() == 0) {
-            boolean hasVendor = vendor.length() > 0;
+        if (vendorId.isEmpty()) {
+            boolean hasVendor = !vendor.isEmpty();
             vendorId = LocalAddonPkgInfo.sanitizeDisplayToNameId(hasVendor ? vendor : vendorDisp);
         }
 
-        assert vendorId.length() > 0;
-        assert vendorDisp.length() > 0;
+        assert !vendorId.isEmpty();
+        assert !vendorDisp.isEmpty();
 
         // --- other attributes
 

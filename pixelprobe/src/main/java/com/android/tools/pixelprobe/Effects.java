@@ -18,7 +18,6 @@ package com.android.tools.pixelprobe;
 
 import com.android.tools.pixelprobe.effect.Shadow;
 import com.android.tools.pixelprobe.util.Lists;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -58,7 +57,7 @@ public final class Effects {
         public Builder addShadow(Shadow shadow) {
             boolean isInner = shadow.getType() == Shadow.Type.INNER;
             List<Shadow> list = isInner ? innerShadows : outerShadows;
-            if (list.size() == 0) {
+            if (list.isEmpty()) {
                 list = new ArrayList<>();
                 if (isInner) {
                     innerShadows = list;

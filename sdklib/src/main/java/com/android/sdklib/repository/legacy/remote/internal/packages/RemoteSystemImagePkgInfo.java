@@ -27,10 +27,8 @@ import com.android.sdklib.repository.legacy.remote.internal.sources.RepoConstant
 import com.android.sdklib.repository.legacy.remote.internal.sources.SdkSource;
 import com.android.sdklib.repository.legacy.remote.internal.sources.SdkSysImgConstants;
 import com.android.sdklib.repository.targets.SystemImage;
-
-import org.w3c.dom.Node;
-
 import java.util.Map;
+import org.w3c.dom.Node;
 
 /**
  * Represents a system-image XML node in an SDK repository.
@@ -59,7 +57,7 @@ public class RemoteSystemImagePkgInfo extends RemotePkgInfo {
                 .getXmlInt(packageNode, RepoConstants.NODE_API_LEVEL, 0);
         String codeName = RemotePackageParserUtils
                 .getXmlString(packageNode, RepoConstants.NODE_CODENAME);
-        if (codeName.length() == 0) {
+        if (codeName.isEmpty()) {
             codeName = null;
         }
         AndroidVersion version = new AndroidVersion(apiLevel, codeName);
@@ -94,8 +92,8 @@ public class RemoteSystemImagePkgInfo extends RemotePkgInfo {
             String vendorDisp = RemotePackageParserUtils
                     .getXmlString(addonNode, RepoConstants.NODE_VENDOR_DISPLAY, vendorId);
 
-            assert vendorId.length() > 0;
-            assert vendorDisp.length() > 0;
+            assert !vendorId.isEmpty();
+            assert !vendorDisp.isEmpty();
 
             vendor = IdDisplay.create(vendorId, vendorDisp);
 
