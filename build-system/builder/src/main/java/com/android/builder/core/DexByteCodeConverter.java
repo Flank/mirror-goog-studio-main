@@ -27,7 +27,6 @@ import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.concurrency.GuardedBy;
 import com.android.builder.internal.compiler.DexWrapper;
-import com.android.builder.model.SyncIssue;
 import com.android.builder.sdk.TargetInfo;
 import com.android.builder.utils.PerformanceUtils;
 import com.android.ide.common.process.JavaProcessExecutor;
@@ -162,13 +161,19 @@ public class DexByteCodeConverter {
         final String submission = Joiner.on(',').join(builder.getInputs());
         mLogger.verbose("Dexing in-process : %1$s", submission);
         try {
-            sDexExecutorService.submit(() -> {
-                Stopwatch stopwatch = Stopwatch.createStarted();
-                ProcessResult result = DexWrapper.run(builder, dexOptions, outputHandler);
-                result.assertNormalExitValue();
-                mLogger.verbose("Dexing %1$s took %2$s.", submission, stopwatch.toString());
-                return null;
-            }).get();
+            //noinspection FieldAccessNotGuarded
+            sDexExecutorService
+                    .submit(
+                            () -> {
+                                Stopwatch stopwatch = Stopwatch.createStarted();
+                                ProcessResult result =
+                                        DexWrapper.run(builder, dexOptions, outputHandler);
+                                result.assertNormalExitValue();
+                                mLogger.verbose(
+                                        "Dexing %1$s took %2$s.", submission, stopwatch.toString());
+                                return null;
+                            })
+                    .get();
         } catch (Exception e) {
             throw new ProcessException(e);
         }
@@ -197,6 +202,7 @@ public class DexByteCodeConverter {
             if (submission.contains("dependencies.jar")) {
                 task.call();
             } else {
+                //noinspection FieldAccessNotGuarded
                 sDexExecutorService.submit(task).get();
             }
             mLogger.verbose("Dexing %1$s took %2$s.", submission, stopwatch.toString());
