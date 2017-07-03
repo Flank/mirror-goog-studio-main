@@ -520,7 +520,7 @@ public final class GradleTestProject implements TestRule {
                         DEFAULT_BUILD_TOOL_VERSION,
                         DEFAULT_COMPILE_SDK_VERSION,
                         false,
-                        SdkConstants.KOTLIN_LATEST_VERSION);
+                        TestUtils.KOTLIN_VERSION_FOR_TESTS);
 
         if (withDependencyChecker) {
             result =

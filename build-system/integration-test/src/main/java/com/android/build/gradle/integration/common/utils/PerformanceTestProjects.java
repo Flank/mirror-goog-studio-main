@@ -24,6 +24,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
+import com.android.testutils.TestUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
@@ -306,7 +307,7 @@ public class PerformanceTestProjects {
                 "\ndependencies \\{\n",
                 "dependencies {\n"
                         + "    compile 'org.jetbrains.kotlin:kotlin-stdlib:"
-                        + SdkConstants.KOTLIN_LATEST_VERSION
+                        + TestUtils.KOTLIN_VERSION_FOR_TESTS
                         + "'\n"
                         + "    compile 'com.android.support:support-v4:"
                         + GradleTestProject.SUPPORT_LIB_VERSION

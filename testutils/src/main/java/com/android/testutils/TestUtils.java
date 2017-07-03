@@ -32,6 +32,23 @@ import junit.framework.TestCase;
  * Utility methods to deal with loading the test data.
  */
 public class TestUtils {
+
+    /**
+     * Kotlin version that is used in new project templates and integration tests.
+     *
+     * <p>This version needs to be present in prebuilts for tests to pass.
+     *
+     * <p>This version should be in sync with the one in:
+     *
+     * <ul>
+     *   <li>buildSrc/base/dependencies.properties
+     *   <li>buildSrc/base/build.gradle
+     *   <li>tools/base/build-system/integration-test/BUILD
+     *   <li>tools/adt/idea/android/BUILD
+     * </ul>
+     */
+    public static final String KOTLIN_VERSION_FOR_TESTS = "1.1.2-4";
+
     /**
      * Default timeout for the {@link #eventually(Runnable)} check.
      */
