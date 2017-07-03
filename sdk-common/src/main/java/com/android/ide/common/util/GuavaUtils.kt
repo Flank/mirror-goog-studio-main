@@ -13,34 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@file:JvmName("GuavaUtils")
 
-package com.android.build.gradle.internal
+package com.android.ide.common.util
 
-import com.google.common.collect.ArrayListMultimap
-import com.google.common.collect.ListMultimap
+import com.google.common.collect.ImmutableListMultimap
 
-/**
- * Creates a multimap for the given value pairs.
- */
-fun multimapOf(vararg pairs: Pair<String, String>): ListMultimap<String, String> {
-    val map = ArrayListMultimap.create<String, String>()
-    for (pair in pairs) {
-        map.put(pair.first, pair.second)
-    }
-
-    return map
-}
+/** Creates a multimap for the given value pairs. */
+fun <K, V> multimapOf(vararg pairs: Pair<K, V>): ImmutableListMultimap<K, V> =
+    ImmutableListMultimap.builder<K, V>()
+            .apply { pairs.forEach { (k, v) -> put(k, v) } }
+            .build()
 
 /**
  * Creates a multimap for the given value.
  *
  * The first value is the key, and all subsequent values are values associated with the key.
  */
-fun multimapWithSingleKeyOf(
-        key: String, vararg values: String): ListMultimap<String, String> {
-    val map = ArrayListMultimap.create<String, String>()
-    for (value in values) {
-        map.put(key, value)
-    }
-    return map
-}
+fun <K, V> multimapWithSingleKeyOf(key: K, vararg values: V): ImmutableListMultimap<K, V> =
+        ImmutableListMultimap.builder<K, V>()
+                .apply { putAll(key, values.asIterable()) }
+                .build()
