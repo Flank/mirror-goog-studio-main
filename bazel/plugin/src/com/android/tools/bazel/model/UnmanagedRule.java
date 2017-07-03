@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,16 +14,18 @@
  * limitations under the License.
  */
 
-package com.android.tools.bazel;
+package com.android.tools.bazel.model;
 
-import com.android.tools.bazel.model.BazelRule;
-import java.util.List;
+import java.io.IOException;
 
-interface Configuration {
-    String nameRule(String pkg, String rel, String name);
+/** Rule that we don't know anything about, apart from its (assumed) existence. */
+public class UnmanagedRule extends BazelRule {
+    public UnmanagedRule(Package pkg, String name) {
+        super(pkg, name);
+    }
 
-    List<String> getAdditionalImports();
-
-    boolean shouldSuppress(BazelRule rule);
+    @Override
+    public void update() throws IOException {
+        // Nothing to do, we don't manage unmanaged rules.
+    }
 }
-

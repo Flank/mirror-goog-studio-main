@@ -17,10 +17,8 @@ package com.android.tools.bazel;
 
 import com.android.tools.bazel.model.BazelRule;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 import java.util.List;
-import java.util.Map;
 
 public class StudioConfiguration implements Configuration {
 
@@ -37,16 +35,6 @@ public class StudioConfiguration implements Configuration {
         }
 
         return prefix + name;
-    }
-
-    @Override
-    public String mapImportJar(String jar) {
-        switch (jar) {
-            case "out/studio/grpc-java/jarjar/studio-profiler-grpc-1.0-jarjar.jar":
-                return "//tools/base/profiler:studio-profiler-grpc-1.0-jarjar";
-            default:
-                return null;
-        }
     }
 
     @Override

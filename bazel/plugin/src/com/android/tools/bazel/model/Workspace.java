@@ -51,6 +51,10 @@ public class Workspace {
     }
 
     public Package findPackage(String rel) {
+        if (rel.startsWith("bazel-genfiles")) {
+            rel = rel.substring("bazel-genfiles".length() + 1);
+        }
+
         File pkg = findBuildDirectory(new File(directory, rel));
         if (pkg == null) {
             return null;

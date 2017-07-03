@@ -23,6 +23,7 @@ import com.android.tools.bazel.model.ImlModule;
 import com.android.tools.bazel.model.JavaImport;
 import com.android.tools.bazel.model.JavaLibrary;
 import com.android.tools.bazel.model.Package;
+import com.android.tools.bazel.model.UnmanagedRule;
 import com.android.tools.bazel.model.Workspace;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -100,7 +101,8 @@ public class GenerateBazelAction extends AnAction {
         final ExcludesConfiguration excludesConfiguration = CompilerConfiguration.getInstance(project).getExcludedEntriesConfiguration();
         ExcludeEntryDescription[] excludeEntries = excludesConfiguration.getExcludeEntryDescriptions();
 
-        Map<String, JavaImport> imports = Maps.newHashMap();
+        // Map from file path to the bazel rule that provides it. Usually java_imports.
+        Map<String, BazelRule> jarRules = Maps.newHashMap();
         Map<String, JavaLibrary> libraries = Maps.newHashMap();
 
         progress.append("Processing modules...").append("\n");
@@ -197,64 +199,73 @@ public class GenerateBazelAction extends AnAction {
                     }
 
                     Library library = libraryEntry.getLibrary();
-                    if (library != null) {
-                        VirtualFile[] files = library.getFiles(OrderRootType.CLASSES);
-                        for (VirtualFile libFile : files) {
-                            if (libFile.getFileType() instanceof ArchiveFileType) {
-                                File jarFile = VfsUtil.virtualToIoFile(libFile);
-                                if (Files.getFileExtension(jarFile.getName()).equals("jar")) {
-                                    if (jarFile.getName().endsWith("-sources.jar")) {
-                                        continue;
-                                    }
+                    if (library == null) {
+                        LOG.error("No library for entry " + libraryEntry);
+                        continue;
+                    }
 
-                                    String relJar = FileUtil.getRelativePath(workspace, jarFile);
-                                    assert relJar != null;
-                                    JavaImport imp = imports.get(relJar);
-                                    if (imp == null) {
-                                        String label = config.mapImportJar(relJar);
-                                        Package jarPkg = bazel.findPackage(relJar);
-                                        if (label != null) {
-                                            Label pkgAndTarget = new Label(label);
-                                            jarPkg = new Package(null, pkgAndTarget.pkg);
-                                            imp = new JavaImport(jarPkg, pkgAndTarget.target);
-                                            imports.put(relJar, imp);
-                                        } else if (jarPkg != null) {
-                                            String packageRelative =
-                                                    FileUtil.getRelativePath(
-                                                            jarPkg.getPackageDir(), jarFile);
-                                            assert packageRelative != null;
+                    VirtualFile[] files = library.getFiles(OrderRootType.CLASSES);
+                    for (VirtualFile libFile : files) {
+                        if (!(libFile.getFileType() instanceof ArchiveFileType)) {
+                            continue;
+                        }
+                        File jarFile = VfsUtil.virtualToIoFile(libFile);
+                        if (Files.getFileExtension(jarFile.getName()).equals("jar")) {
+                            if (jarFile.getName().endsWith("-sources.jar")) {
+                                continue;
+                            }
 
-                                            // TODO: Fix all these dependencies correctly
-                                            String target;
-                                            if (relJar.startsWith("prebuilts/tools/common/m2")) {
-                                                target = "jar";
-                                            } else {
-                                                target = packageRelative.replaceAll("\\.jar$", "");
-                                            }
-                                            imp = new JavaImport(jarPkg, target);
-                                            imp.addJar(packageRelative);
-                                            imports.put(relJar, imp);
-                                        } else if (!isKotlinRelated(library)) {
-                                            LOG.error("Cannot find package for:" + relJar);
-                                        }
-                                    }
-                                    if (imp != null) {
-                                        if (namedLib != null) {
-                                            namedLib.addDependency(imp, true);
+                            String relJar = FileUtil.getRelativePath(workspace, jarFile);
+                            assert relJar != null;
+                            BazelRule jarRule = jarRules.get(relJar);
+                            if (jarRule == null) {
+                                if (isGenFile(relJar)) {
+                                    // Assume the rule is the same as the file name. This seems like a reasonable
+                                    // assumption and is good enough to handle the profilers jarjar case.
+                                    jarRule =
+                                            new UnmanagedRule(
+                                                    bazel.findPackage(relJar),
+                                                    Files.getNameWithoutExtension(relJar));
+                                } else {
+                                    Package jarPkg = bazel.findPackage(relJar);
+                                    if (jarPkg != null) {
+                                        String packageRelative =
+                                                FileUtil.getRelativePath(
+                                                        jarPkg.getPackageDir(), jarFile);
+                                        assert packageRelative != null;
+
+                                        // TODO: Fix all these dependencies correctly
+                                        String target;
+                                        if (relJar.startsWith("prebuilts/tools/common/m2")) {
+                                            target = "jar";
                                         } else {
-                                            module.rule.addDependency(imp, libraryEntry.isExported(), scopes);
+                                            target = packageRelative.replaceAll("\\.jar$", "");
                                         }
+                                        JavaImport javaImport = new JavaImport(jarPkg, target);
+                                        javaImport.addJar(packageRelative);
+                                        jarRule = javaImport;
+                                    } else if (!isKotlinRelated(library)) {
+                                        LOG.error("Cannot find package for:" + relJar);
                                     }
-                                } else if (!isKotlinRelated(library)) {
-                                    LOG.error("Cannot find file for: " + libFile);
                                 }
                             }
+
+                            if (jarRule != null) {
+                                jarRules.put(relJar, jarRule);
+
+                                if (namedLib != null) {
+                                    namedLib.addDependency(jarRule, true);
+                                } else {
+                                    module.rule.addDependency(
+                                            jarRule, libraryEntry.isExported(), scopes);
+                                }
+                            }
+                        } else if (!isKotlinRelated(library)) {
+                            LOG.error("Cannot find file for: " + libFile);
                         }
-                        if (namedLib != null && !namedLib.isEmpty()) {
-                            module.rule.addDependency(namedLib, libraryEntry.isExported(), scopes);
-                        }
-                    } else {
-                        LOG.error("No library for entry " + libraryEntry);
+                    }
+                    if (namedLib != null && !namedLib.isEmpty()) {
+                        module.rule.addDependency(namedLib, libraryEntry.isExported(), scopes);
                     }
                 } else if (orderEntry instanceof ModuleOrderEntry) {
                     // A dependency to another module
@@ -301,6 +312,10 @@ public class GenerateBazelAction extends AnAction {
             progress.println(
                     String.format("ATTENTION: %d files updated.", listener.getUpdatedPackages()));
         }
+    }
+
+    private boolean isGenFile(String relJar) {
+        return relJar.startsWith("bazel-genfiles");
     }
 
     /**
