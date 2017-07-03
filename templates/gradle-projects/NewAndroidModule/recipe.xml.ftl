@@ -80,6 +80,9 @@
     <mkdir at="${baseFeatureOut}" />
     <instantiate from="root/baseFeature-AndroidManifest.xml.ftl"
                    to="${baseFeatureOut}/src/main/AndroidManifest.xml" />
+    <merge from="root/baseFeature-ApplicationManifest.xml.ftl"
+             to="${baseFeatureOut}/src/main/AndroidManifest.xml" />
+
     <instantiate from="root/baseFeature-build.gradle.ftl"
                    to="${baseFeatureOut}/build.gradle" />
     <#if makeIgnore>
