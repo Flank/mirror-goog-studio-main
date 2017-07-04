@@ -16,10 +16,12 @@
 
 package com.android.builder.symbols;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.android.annotations.NonNull;
+import com.android.resources.ResourceType;
 import com.android.testutils.TestResources;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
@@ -27,6 +29,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.function.Supplier;
@@ -480,5 +483,27 @@ public class SymbolIoTest {
                     SymbolIo.write(table, f);
                     return f;
                 });
+    }
+
+    @Test
+    public void checkReadWithCrLf() throws IOException {
+        File txt = mTemporaryFolder.newFile();
+        String content =
+                "int drawable foobar 0x7f02000 \r\n"
+                        + "int[] styleable LimitedSizeLinearLayout { 0x7f010000, 0x7f010001 } \r\n"
+                        + "int styleable LimitedSizeLinearLayout_max_width 0 \r\n"
+                        + "int styleable LimitedSizeLinearLayout_max_height 1 \r\n";
+        java.nio.file.Files.write(txt.toPath(), content.getBytes(StandardCharsets.UTF_8));
+        SymbolTable table = SymbolIo.read(txt, "com.example.app");
+        assertThat(table.allSymbols())
+                .containsExactly(
+                        Symbol.createSymbol(
+                                ResourceType.DRAWABLE, "foobar", SymbolJavaType.INT, "0x7f02000 "),
+                        Symbol.createSymbol(
+                                ResourceType.STYLEABLE,
+                                "LimitedSizeLinearLayout",
+                                SymbolJavaType.INT_LIST,
+                                "{ 0x7f010000, 0x7f010001 } ",
+                                ImmutableList.of("max_width", "max_height")));
     }
 }

@@ -25,6 +25,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -245,10 +246,12 @@ public final class SymbolIo {
             }
         }
 
-        try (
-                FileOutputStream fos = new FileOutputStream(file);
-                PrintWriter pw = new PrintWriter(fos)) {
-            lines.forEach(pw::println);
+        try (BufferedOutputStream os =
+                new BufferedOutputStream(Files.newOutputStream(file.toPath()))) {
+            for (String line : lines) {
+                os.write(line.getBytes(Charsets.UTF_8));
+                os.write('\n');
+            }
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
