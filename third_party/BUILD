@@ -793,23 +793,26 @@ maven_java_library(
 
 maven_java_library(
     name = "org.jetbrains.kotlin_kotlin-stdlib",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib/1.1.2-4:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib/1.1.3:jar",
     visibility = ["//visibility:public"],
     exports = [":org.jetbrains_annotations"],
 )
 
 maven_java_library(
     name = "org.jetbrains.kotlin_kotlin-stdlib-jre7",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jre7/1.1.2-4:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jre7/1.1.3:jar",
     visibility = ["//visibility:public"],
     exports = [":org.jetbrains.kotlin_kotlin-stdlib"],
 )
 
 maven_java_library(
     name = "org.jetbrains.kotlin_kotlin-stdlib-jre8",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jre8/1.1.2-4:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jre8/1.1.3:jar",
     visibility = ["//visibility:public"],
-    exports = [":org.jetbrains.kotlin_kotlin-stdlib-jre7"],
+    exports = [
+        ":org.jetbrains.kotlin_kotlin-stdlib",
+        ":org.jetbrains.kotlin_kotlin-stdlib-jre7",
+    ],
 )
 
 maven_java_library(

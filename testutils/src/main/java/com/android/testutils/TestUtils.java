@@ -38,16 +38,18 @@ public class TestUtils {
      *
      * <p>This version needs to be present in prebuilts for tests to pass.
      *
-     * <p>This version should be in sync with the one in:
+     * <p>This version should be checked into prebuilts (see tools/base/bazel/README.md) and in sync
+     * with the version in:
      *
      * <ul>
-     *   <li>buildSrc/base/dependencies.properties
      *   <li>buildSrc/base/build.gradle
+     *   <li>buildSrc/base/dependencies.properties
+     *   <li>tools/base/third_party/BUILD (this is generated from dependencies.properties)
      *   <li>tools/base/build-system/integration-test/BUILD
      *   <li>tools/adt/idea/android/BUILD
      * </ul>
      */
-    public static final String KOTLIN_VERSION_FOR_TESTS = "1.1.2-4";
+    public static final String KOTLIN_VERSION_FOR_TESTS = "1.1.3";
 
     /**
      * Default timeout for the {@link #eventually(Runnable)} check.
