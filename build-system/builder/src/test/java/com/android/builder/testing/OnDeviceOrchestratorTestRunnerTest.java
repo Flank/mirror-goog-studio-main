@@ -41,7 +41,7 @@ public class OnDeviceOrchestratorTestRunnerTest {
 
         Truth.assertThat(normalizedCommand)
                 .isEqualTo(
-                        "CLASSPATH=$(pm path com.google.android.apps.common.testing.services) "
+                        "CLASSPATH=$(pm path android.support.test.services) "
                                 + "app_process / android.support.test.services.shellexecutor.ShellMain "
                                 + "am instrument -r -w "
                                 + "-e targetInstrumentation com.example.app/android.support.test.runner.AndroidJUnitRunner "

@@ -53,7 +53,7 @@ public class OnDeviceOrchestratorTestRunner extends SimpleTestRunner {
         public String getAmInstrumentCommand() {
             List<String> adbArgs = Lists.newArrayList();
 
-            adbArgs.add("CLASSPATH=$(pm path com.google.android.apps.common.testing.services)");
+            adbArgs.add("CLASSPATH=$(pm path android.support.test.services)");
             adbArgs.add("app_process / android.support.test.services.shellexecutor.ShellMain");
 
             adbArgs.add("am");
