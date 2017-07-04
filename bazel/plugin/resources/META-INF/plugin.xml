@@ -1,7 +1,7 @@
 <idea-plugin version="2">
   <id>com.android.tools.imltobazel</id>
   <name>Bazel BUILD files generator</name>
-  <version>1.0.1</version>
+  <version>1.1.0</version>
 
   <description><![CDATA[
       Exports .iml build definitions as Bazel build rules.
