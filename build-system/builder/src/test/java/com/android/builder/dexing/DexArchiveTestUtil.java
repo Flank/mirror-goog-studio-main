@@ -52,12 +52,11 @@ public final class DexArchiveTestUtil {
             @NonNull Path classesInput, @NonNull Path dexArchiveOutput, int minSdkVersion)
             throws IOException {
         try (DexArchive dexArchive = DexArchives.fromInput(dexArchiveOutput)) {
-            ClassFileInput inputs = ClassFileInputs.fromPath(classesInput);
+            ClassFileInput inputs = ClassFileInputs.fromPath(classesInput, e -> true);
             DexArchiveBuilderConfig config =
-                    new DexArchiveBuilderConfig(
-                            dxContext, true, 10, minSdkVersion, DexerTool.DX, 10, true);
+                    new DexArchiveBuilderConfig(dxContext, true, minSdkVersion, DexerTool.DX, true);
 
-            DexArchiveBuilder dexArchiveBuilder = new DxDexArchiveBuilder(config);
+            DxDexArchiveBuilder dexArchiveBuilder = new DxDexArchiveBuilder(config);
             dexArchiveBuilder.convert(inputs, dexArchive);
         }
     }

@@ -22,12 +22,13 @@ import com.android.build.api.transform.QualifiedContent;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
-import java.io.Serializable;
 import java.util.Set;
 
-/** Basic implementation of {@link QualifiedContent}. */
+/**
+ * Basic implementation of {@link QualifiedContent}.
+ */
 @Immutable
-class QualifiedContentImpl implements QualifiedContent, Serializable {
+class QualifiedContentImpl implements QualifiedContent {
 
     @NonNull
     private final String name;

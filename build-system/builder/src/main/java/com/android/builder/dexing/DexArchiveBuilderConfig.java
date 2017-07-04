@@ -38,32 +38,23 @@ public class DexArchiveBuilderConfig {
     @NonNull private final DexOptions dexOptions;
     @NonNull private final CfOptions cfOptions;
 
-    private final int inBufferSize;
-    private final int outBufferSize;
-
     /**
      * Creates a configuration object used to set up the dex archive conversion.
      *
      * @param dxContext used when invoking dx, mainly for getting the standard and error output
      * @param optimized if generated dex should be optimized
-     * @param inBufferSize size of the buffer to read .class files, 0 to not reuse buffers.
      * @param minSdkVersion minimum sdk version used to enable dx features
      * @param tool tool that will be used to create dex archives
-     * @param outBufferSize size of the buffer to store .dex files from translation.
      * @param jumboMode if jumbo mode is enabled for dx
      */
     public DexArchiveBuilderConfig(
             @NonNull DxContext dxContext,
             boolean optimized,
-            int inBufferSize,
             int minSdkVersion,
             @NonNull DexerTool tool,
-            int outBufferSize,
             boolean jumboMode) {
         this.dxContext = dxContext;
-        this.inBufferSize = inBufferSize;
         this.tool = tool;
-        this.outBufferSize = outBufferSize;
 
         this.dexOptions = new DexOptions();
         this.dexOptions.forceJumbo = jumboMode;
@@ -102,13 +93,5 @@ public class DexArchiveBuilderConfig {
     @NonNull
     public PrintStream getErrorOut() {
         return dxContext.err;
-    }
-
-    public int getInBufferSize() {
-        return inBufferSize;
-    }
-
-    public int getOutBufferSize() {
-        return outBufferSize;
     }
 }

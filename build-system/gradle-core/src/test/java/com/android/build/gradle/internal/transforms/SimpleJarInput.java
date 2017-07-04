@@ -22,11 +22,10 @@ import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.Status;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import java.io.File;
-import java.io.Serializable;
 import java.util.Set;
 
 /** A simple jar input for the transforms pipeline. */
-public class SimpleJarInput implements JarInput, Serializable {
+public class SimpleJarInput implements JarInput {
 
     @NonNull private final File file;
     @NonNull private final Status status;

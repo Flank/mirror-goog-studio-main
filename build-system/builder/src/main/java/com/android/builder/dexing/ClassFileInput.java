@@ -16,15 +16,10 @@
 
 package com.android.builder.dexing;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import java.io.Closeable;
-import java.io.IOException;
-import java.nio.file.FileSystems;
 import java.nio.file.Path;
-import java.nio.file.PathMatcher;
-import java.util.function.Predicate;
-import java.util.stream.Stream;
+import java.util.List;
 
 /**
  * This represents input containing .class files. It is used as an input for the dexing phase.All
@@ -34,19 +29,12 @@ import java.util.stream.Stream;
  * <p>When using instances of {@link ClassFileInput} make sure that you invoke {@link #close()}
  * after you are done using it.
  */
-public interface ClassFileInput extends Closeable {
-
-    PathMatcher classMatcher =
-            FileSystems.getDefault().getPathMatcher("glob:**" + SdkConstants.DOT_CLASS);
+public interface ClassFileInput extends Closeable, Iterable<ClassFileEntry> {
 
     /** Base path of this input. It can be a directory, or a path to a jar file. */
     @NonNull
     Path getRootPath();
 
-    /**
-     * @param filterPaths filter specify which files should be part of the class input
-     * @return a {@link Stream} for all the entries that satisfies the passed filter.
-     * @throws IOException if the jar/directory cannot be read correctly.
-     */
-    Stream<ClassFileEntry> entries(Predicate<Path> filter) throws IOException;
+    @NonNull
+    List<ClassFileEntry> allEntries();
 }

@@ -19,10 +19,8 @@ package com.android.builder.dexing;
 import com.android.annotations.NonNull;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
-import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -53,17 +51,6 @@ final class DirDexArchive implements DexArchive {
         Path finalPath = rootDir.resolve(relativePath);
         Files.createDirectories(finalPath.getParent());
         Files.copy(inputStream, finalPath, StandardCopyOption.REPLACE_EXISTING);
-    }
-
-    @Override
-    public void addFile(@NonNull Path relativePath, byte[] bytes, int offset, int end)
-            throws IOException {
-        Path finalPath = rootDir.resolve(relativePath);
-        Files.createDirectories(finalPath.getParent());
-        try (OutputStream os = new BufferedOutputStream(Files.newOutputStream(finalPath))) {
-            os.write(bytes, offset, end);
-            os.flush();
-        }
     }
 
     @Override

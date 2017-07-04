@@ -47,13 +47,7 @@ public enum IntegerOption implements Option<Integer> {
     IDE_TARGET_DEVICE_API(AndroidProject.PROPERTY_BUILD_API),
 
     IDE_VERSION_CODE_OVERRIDE(AndroidProject.PROPERTY_VERSION_CODE),
-
-    /**
-     * Size of the buffers in kilobytes used to read .class files and storage for writing .dex files
-     * translations into.
-     */
-    DEXING_READ_BUFFER_SIZE("android.dexingReadBuffer.size"),
-    DEXING_WRITE_BUFFER_SIZE("android.dexingWriteBuffer.size");
+    ;
 
     @NonNull private final String propertyName;
 

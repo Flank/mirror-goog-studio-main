@@ -18,8 +18,6 @@ package com.android.build.gradle.internal.transforms;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.annotations.VisibleForTesting;
-import com.android.build.api.transform.Context;
 import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.Format;
 import com.android.build.api.transform.JarInput;
@@ -34,21 +32,13 @@ import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
+import com.android.build.gradle.internal.pipeline.OriginalStream;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.builder.core.DefaultDexOptions;
 import com.android.builder.core.DexOptions;
 import com.android.builder.core.ErrorReporter;
-import com.android.builder.dexing.ClassFileEntry;
-import com.android.builder.dexing.ClassFileInput;
-import com.android.builder.dexing.ClassFileInputs;
-import com.android.builder.dexing.DexArchive;
-import com.android.builder.dexing.DexArchiveBuilder;
-import com.android.builder.dexing.DexArchiveBuilderConfig;
-import com.android.builder.dexing.DexArchives;
 import com.android.builder.dexing.DexerTool;
-import com.android.builder.dexing.DxDexArchiveBuilder;
 import com.android.builder.utils.FileCache;
-import com.android.dx.command.dexer.DxContext;
 import com.android.ide.common.blame.Message;
 import com.android.ide.common.blame.ParsingProcessOutputHandler;
 import com.android.ide.common.blame.parser.DexParser;
@@ -59,27 +49,18 @@ import com.android.ide.common.process.ProcessOutput;
 import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.utils.FileUtils;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
-import java.io.Serializable;
-import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.util.List;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
-import javax.inject.Inject;
-import org.gradle.tooling.BuildException;
-import org.gradle.workers.IsolationMode;
 
 /**
  * Transform that converts CLASS files to dex archives, {@link
@@ -95,42 +76,25 @@ public class DexArchiveBuilderTransform extends Transform {
     private static final LoggerWrapper logger =
             LoggerWrapper.getLogger(DexArchiveBuilderTransform.class);
 
-    public static final int DEFAULT_BUFFER_SIZE_IN_KB = 100;
-
-    public static final int NUMBER_OF_BUCKETS = 5;
-
     @NonNull private final DexOptions dexOptions;
     @NonNull private final ErrorReporter errorReporter;
     @Nullable private final FileCache userLevelCache;
-    @VisibleForTesting @NonNull final WaitableExecutor executor;
+    @NonNull private final WaitableExecutor executor;
     private final int minSdkVersion;
     @NonNull private final DexerTool dexer;
-    @NonNull private final DexArchiveBuilderCacheHandler cacheHandler;
-    private final boolean useGradleWorkers;
-    private final int inBufferSize;
-    private final int outBufferSize;
 
     public DexArchiveBuilderTransform(
             @NonNull DexOptions dexOptions,
             @NonNull ErrorReporter errorReporter,
             @Nullable FileCache userLevelCache,
             int minSdkVersion,
-            @NonNull DexerTool dexer,
-            boolean useGradleWorkers,
-            @Nullable Integer inBufferSize,
-            @Nullable Integer outBufferSize) {
+            @NonNull DexerTool dexer) {
         this.dexOptions = dexOptions;
         this.errorReporter = errorReporter;
         this.userLevelCache = userLevelCache;
         this.minSdkVersion = minSdkVersion;
         this.dexer = dexer;
         this.executor = WaitableExecutor.useGlobalSharedThreadPool();
-        this.cacheHandler = new DexArchiveBuilderCacheHandler(userLevelCache, dexOptions);
-        this.useGradleWorkers = useGradleWorkers;
-        this.inBufferSize =
-                (inBufferSize == null ? DEFAULT_BUFFER_SIZE_IN_KB : inBufferSize) * 1024;
-        this.outBufferSize =
-                (outBufferSize == null ? DEFAULT_BUFFER_SIZE_IN_KB : outBufferSize) * 1024;
     }
 
     @NonNull
@@ -201,7 +165,6 @@ public class DexArchiveBuilderTransform extends Transform {
         }
 
         ProcessOutput processOutput = null;
-        Multimap<QualifiedContent, File> cacheableItems = HashMultimap.create();
         try (Closeable ignored = processOutput = outputHandler.createOutput()) {
             // hash to detect duplicate inputs (due to issue with library and tests)
             final Set<String> hashes = Sets.newHashSet();
@@ -209,61 +172,28 @@ public class DexArchiveBuilderTransform extends Transform {
             for (TransformInput input : transformInvocation.getInputs()) {
                 for (DirectoryInput dirInput : input.getDirectoryInputs()) {
                     logger.verbose("Dir input %s", dirInput.getFile().toString());
-                    convertToDexArchive(
-                            transformInvocation.getContext(),
-                            transformInvocation.isIncremental(),
+                    File preDexOutputFile = getPreDexFile(outputProvider, dirInput);
+                    processDirectoryInput(
+                            preDexOutputFile,
+                            processOutput,
                             hashes,
                             dirInput,
-                            outputProvider);
+                            transformInvocation.isIncremental());
                 }
 
                 for (JarInput jarInput : input.getJarInputs()) {
                     logger.verbose("Jar input %s", jarInput.getFile().toString());
-                    List<File> dexArchives =
-                            processJarInput(
-                                    transformInvocation.getContext(),
-                                    transformInvocation.isIncremental(),
-                                    hashes,
-                                    jarInput,
-                                    outputProvider);
-                    cacheableItems.putAll(jarInput, dexArchives);
+                    File preDexFile = getPreDexFile(outputProvider, jarInput);
+                    processJarInput(
+                            preDexFile,
+                            processOutput,
+                            hashes,
+                            jarInput,
+                            transformInvocation.isIncremental());
                 }
             }
 
-            // all work items have been submitted, now wait for completion.
-            if (useGradleWorkers) {
-                transformInvocation.getContext().getWorkerExecutor().await();
-            } else {
-                executor.waitForAllTasks();
-            }
-
-            // if we are in incremental mode, delete all removed files.
-            if (transformInvocation.isIncremental()) {
-                for (TransformInput transformInput : transformInvocation.getInputs()) {
-                    for (DirectoryInput directoryInput : transformInput.getDirectoryInputs()) {
-                        File outputFile = getPreDexFolder(outputProvider, directoryInput);
-                        try (DexArchive output = DexArchives.fromInput(outputFile.toPath())) {
-                            for (Map.Entry<File, Status> fileStatusEntry :
-                                    directoryInput.getChangedFiles().entrySet()) {
-                                if (fileStatusEntry.getValue() == Status.REMOVED) {
-                                    Path relativePath =
-                                            directoryInput
-                                                    .getFile()
-                                                    .toPath()
-                                                    .relativize(fileStatusEntry.getKey().toPath());
-                                    output.removeFile(
-                                            ClassFileEntry.withDexExtension(relativePath));
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // and finally populate the caches.
-            if (!cacheableItems.isEmpty()) {
-                cacheHandler.populateCache(cacheableItems);
-            }
+            executor.waitForTasksWithQuickFail(true);
 
             logger.verbose("Done with all dex archive conversions");
         } catch (InterruptedException e) {
@@ -282,268 +212,134 @@ public class DexArchiveBuilderTransform extends Transform {
         }
     }
 
-    private List<File> processJarInput(
-            @NonNull Context context,
-            boolean isIncremental,
+    private void processJarInput(
+            @NonNull File preDexFile,
+            @NonNull ProcessOutput processOutput,
             @NonNull Set<String> hashes,
             @NonNull JarInput jarInput,
-            TransformOutputProvider transformOutputProvider)
+            boolean isIncremental)
             throws Exception {
         if (!isIncremental) {
             if (jarInput.getFile().exists()) {
-                return convertJarToDexArchive(
-                        context, false, hashes, jarInput, transformOutputProvider);
+                convertToDexArchive(
+                        jarInput, p -> true, p -> false, preDexFile, hashes, processOutput);
             } else {
-                FileUtils.deleteIfExists(jarInput.getFile());
+                deleteDexArchive(jarInput.getFile());
             }
         } else {
             if (jarInput.getStatus() == Status.REMOVED) {
-                for (int bucketId = 0; bucketId < NUMBER_OF_BUCKETS; bucketId++) {
-                    FileUtils.deleteIfExists(
-                            getPreDexJar(transformOutputProvider, jarInput, bucketId));
-                }
+                deleteDexArchive(preDexFile);
             } else if (jarInput.getStatus() == Status.ADDED
                     || jarInput.getStatus() == Status.CHANGED) {
-                return convertJarToDexArchive(
-                        context, true, hashes, jarInput, transformOutputProvider);
+                convertToDexArchive(
+                        jarInput, p -> true, p -> false, preDexFile, hashes, processOutput);
             }
         }
-        return ImmutableList.of();
     }
 
-    private List<File> convertJarToDexArchive(
-            @NonNull Context context,
-            boolean isIncremental,
-            @NonNull Set<String> hashes,
-            @NonNull JarInput toConvert,
-            @NonNull TransformOutputProvider transformOutputProvider)
-            throws Exception {
+    /** Returns if the qualified content is an external jar. */
+    private static boolean isExternalLib(@NonNull QualifiedContent content) {
+        return content.getFile().isFile()
+                && content.getScopes().equals(Collections.singleton(Scope.EXTERNAL_LIBRARIES))
+                && content.getContentTypes()
+                        .equals(Collections.singleton(QualifiedContent.DefaultContentType.CLASSES))
+                && !content.getName().startsWith(OriginalStream.LOCAL_JAR_GROUPID);
+    }
 
-        File cachedVersion = cacheHandler.getCachedVersionIfPresent(toConvert);
-        if (cachedVersion == null) {
-            return convertToDexArchive(
-                    context, isIncremental, hashes, toConvert, transformOutputProvider);
+    private void processDirectoryInput(
+            @NonNull File preDexFile,
+            @NonNull ProcessOutput processOutput,
+            @NonNull Set<String> hashes,
+            @NonNull DirectoryInput directoryInput,
+            boolean isIncremental)
+            throws Exception {
+        Path rootFolder = directoryInput.getFile().toPath();
+        // The incremental mode only detect file level changes.
+        // It does not handle removed root folders. However the transform
+        // task will add the TransformInput right after it's removed so that it
+        // can be detected by the transform.
+        if (!Files.isDirectory(rootFolder)) {
+            deleteDexArchive(preDexFile);
+        } else if (!isIncremental) {
+            // non-incremental; just re-run
+            convertToDexArchive(
+                    directoryInput, p -> true, p -> false, preDexFile, hashes, processOutput);
         } else {
-            File outputFile = getPreDexJar(transformOutputProvider, toConvert, null);
-            Files.copy(
-                    cachedVersion.toPath(),
-                    outputFile.toPath(),
-                    StandardCopyOption.REPLACE_EXISTING);
-            // no need to try to cache an already cached version.
-            return ImmutableList.of();
+            Predicate<Path> toRemove =
+                    path -> {
+                        File resolved = rootFolder.resolve(path).toFile();
+                        return directoryInput.getChangedFiles().get(resolved) == Status.REMOVED;
+                    };
+            Predicate<Path> toProcess =
+                    path -> {
+                        File resolved = rootFolder.resolve(path).toFile();
+                        Status status = directoryInput.getChangedFiles().get(resolved);
+                        return status == Status.ADDED || status == Status.CHANGED;
+                    };
+
+            convertToDexArchive(
+                    directoryInput, toProcess, toRemove, preDexFile, hashes, processOutput);
         }
     }
 
-    public static class DexConversionParameters implements Serializable {
-        private final QualifiedContent input;
-        private final String output;
-        private final boolean isIncremental;
-        private final int numberOfBuckets;
-        private final int buckedId;
-        private final int minSdkVersion;
-        private final List<String> dexAdditionalParameters;
-        private final int inBufferSize;
-        private final int outBufferSize;
-
-        public DexConversionParameters(
-                QualifiedContent input,
-                File output,
-                boolean isIncremental,
-                int numberOfBuckets,
-                int buckedId,
-                int minSdkVersion,
-                List<String> dexAdditionalParameters,
-                int inBufferSize,
-                int outBufferSize) {
-            this.input = input;
-            this.isIncremental = isIncremental;
-            this.numberOfBuckets = numberOfBuckets;
-            this.buckedId = buckedId;
-            this.output = output.toURI().toString();
-            this.minSdkVersion = minSdkVersion;
-            this.dexAdditionalParameters = dexAdditionalParameters;
-            this.inBufferSize = inBufferSize;
-            this.outBufferSize = outBufferSize;
-        }
-
-        public boolean belongsToThisBucket(Path path) {
-            return (Math.abs(path.toString().hashCode()) % numberOfBuckets) == buckedId;
-        }
-
-        public boolean isDirectoryBased() {
-            return input instanceof DirectoryInput;
-        }
-    }
-
-    public static class DexConversionWorkAction implements Runnable {
-
-        private final DexConversionParameters dexConversionParameters;
-
-        @Inject
-        public DexConversionWorkAction(DexConversionParameters dexConversionParameters) {
-            this.dexConversionParameters = dexConversionParameters;
-        }
-
-        @Override
-        public void run() {
-            try {
-                DexArchiveBuilder dexArchiveBuilder =
-                        getDexArchiveBuilder(
-                                dexConversionParameters.minSdkVersion,
-                                dexConversionParameters.dexAdditionalParameters,
-                                dexConversionParameters.inBufferSize,
-                                dexConversionParameters.outBufferSize);
-
-                Path rootFolder = dexConversionParameters.input.getFile().toPath();
-                Predicate<Path> bucketFilter = dexConversionParameters::belongsToThisBucket;
-
-                Predicate<Path> toProcess =
-                        dexConversionParameters.isIncremental
-                                        && dexConversionParameters.isDirectoryBased()
-                                ? path -> {
-                                    File resolved = rootFolder.resolve(path).toFile();
-                                    Status status =
-                                            ((DirectoryInput) dexConversionParameters.input)
-                                                    .getChangedFiles()
-                                                    .get(resolved);
-                                    return status == Status.ADDED || status == Status.CHANGED;
-                                }
-                                : path -> true;
-
-                bucketFilter = bucketFilter.and(toProcess);
-
-                // take bucketId'th entries from the input.
-                File outputFile = new File(new URI(dexConversionParameters.output));
-                try (ClassFileInput input = ClassFileInputs.fromPath(rootFolder);
-                        DexArchive outputArchive =
-                                dexConversionParameters.isIncremental
-                                        ? DexArchives.fromInput(outputFile.toPath())
-                                        : DexArchives.nonIncrementalArchive(outputFile.toPath())) {
-
-                    dexArchiveBuilder.convert(input.entries(bucketFilter), outputArchive);
-                }
-
-            } catch (Exception e) {
-                throw new BuildException(e.getMessage(), e);
-            }
-        }
-    }
-
-    private static DexArchiveBuilder getDexArchiveBuilder(
-            int minSdkVersion,
-            List<String> dexAdditionalParameters,
-            int inBufferSize,
-            int outBufferSize)
-            throws IOException {
-
-        boolean optimizedDex = !dexAdditionalParameters.contains("--no-optimize");
-        DxContext dxContext = new DxContext(System.out, System.err);
-        DexArchiveBuilderConfig config =
-                new DexArchiveBuilderConfig(
-                        dxContext,
-                        optimizedDex,
-                        inBufferSize,
-                        minSdkVersion,
-                        DexerTool.DX,
-                        outBufferSize,
-                        DexArchiveBuilderCacheHandler.isJumboModeEnabledForDx());
-
-        return new DxDexArchiveBuilder(config);
-    }
-
-    private List<File> convertToDexArchive(
-            @NonNull Context context,
-            boolean isIncremental,
-            @NonNull Set<String> hashes,
+    private void convertToDexArchive(
             @NonNull QualifiedContent input,
-            @NonNull TransformOutputProvider outputProvider)
+            @NonNull Predicate<Path> toProcess,
+            @NonNull Predicate<Path> toRemove,
+            @NonNull File preDexFile,
+            @NonNull Set<String> hashes,
+            @NonNull ProcessOutput processOutput)
             throws Exception {
+        // use only for external libs
+        FileCache userCache =
+                PreDexTransform.getBuildCache(
+                        input.getFile(), isExternalLib(input), userLevelCache);
 
-        logger.verbose("Dexing {}", input.getFile().getAbsolutePath());
-        String hash = DexArchiveBuilderCacheHandler.getFileHash(input.getFile());
+        DexArchiveBuilderTransformCallable converter =
+                new DexArchiveBuilderTransformCallable(
+                        input.getFile().toPath(),
+                        toProcess,
+                        toRemove,
+                        preDexFile,
+                        hashes,
+                        processOutput,
+                        userCache,
+                        dexOptions,
+                        minSdkVersion,
+                        dexer);
+        executor.execute(converter);
+    }
 
-        synchronized (hashes) {
-            if (hashes.contains(hash)) {
-                logger.verbose("Input with the same hash exists. Pre-dexing skipped.");
-                return ImmutableList.of();
-            }
-
-            hashes.add(hash);
-        }
-
-        ImmutableList.Builder<File> dexArchives = ImmutableList.builder();
-        for (int bucketId = 0; bucketId < NUMBER_OF_BUCKETS; bucketId++) {
-
-            File preDexOutputFile = getPreDexFile(outputProvider, input, bucketId);
-            dexArchives.add(preDexOutputFile);
-            DexConversionParameters parameters =
-                    new DexConversionParameters(
-                            input,
-                            preDexOutputFile,
-                            isIncremental,
-                            NUMBER_OF_BUCKETS,
-                            bucketId,
-                            minSdkVersion,
-                            dexOptions.getAdditionalParameters(),
-                            inBufferSize,
-                            outBufferSize);
-
-            if (useGradleWorkers) {
-                context.getWorkerExecutor()
-                        .submit(
-                                DexConversionWorkAction.class,
-                                configuration -> {
-                                    configuration.setIsolationMode(IsolationMode.NONE);
-                                    configuration.setParams(parameters);
-                                });
-            } else {
-                executor.execute(
-                        () -> {
-                            new DexConversionWorkAction(parameters).run();
-                            return null;
-                        });
-            }
-        }
-        return dexArchives.build();
+    private void deleteDexArchive(@NonNull File toDelete) throws IOException {
+        executor.execute(
+                () -> {
+                    FileUtils.deleteIfExists(toDelete);
+                    return null;
+                });
     }
 
     @NonNull
-    private static File getPreDexFile(
-            @NonNull TransformOutputProvider output,
-            @NonNull QualifiedContent qualifiedContent,
-            int bucketId) {
-
-        return qualifiedContent.getFile().isDirectory()
-                ? getPreDexFolder(output, (DirectoryInput) qualifiedContent)
-                : getPreDexJar(output, (JarInput) qualifiedContent, bucketId);
-    }
-
-    @NonNull
-    private static File getPreDexJar(
-            @NonNull TransformOutputProvider output,
-            @NonNull JarInput qualifiedContent,
-            @Nullable Integer bucketId) {
+    private File getPreDexFile(
+            @NonNull TransformOutputProvider output, @NonNull QualifiedContent qualifiedContent) {
+        Format outputFormat;
+        if (qualifiedContent.getFile().isDirectory()) {
+            outputFormat = Format.DIRECTORY;
+        } else {
+            outputFormat = Format.JAR;
+        }
 
         File contentLocation =
                 output.getContentLocation(
-                        qualifiedContent.getName() + (bucketId == null ? "" : ("-" + bucketId)),
+                        qualifiedContent.getName(),
                         ImmutableSet.of(ExtendedContentType.DEX_ARCHIVE),
                         qualifiedContent.getScopes(),
-                        Format.JAR);
+                        outputFormat);
 
-        FileUtils.mkdirs(contentLocation.getParentFile());
+        if (outputFormat == Format.DIRECTORY) {
+            FileUtils.mkdirs(contentLocation);
+        } else {
+            FileUtils.mkdirs(contentLocation.getParentFile());
+        }
         return contentLocation;
-    }
-
-    @NonNull
-    private static File getPreDexFolder(
-            @NonNull TransformOutputProvider output, @NonNull DirectoryInput directoryInput) {
-
-        return FileUtils.mkdirs(
-                output.getContentLocation(
-                        directoryInput.getName(),
-                        ImmutableSet.of(ExtendedContentType.DEX_ARCHIVE),
-                        directoryInput.getScopes(),
-                        Format.DIRECTORY));
     }
 }

@@ -20,47 +20,27 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
-import java.io.IOException;
 import java.nio.file.Path;
 
 /**
- * A single .class file abstraction. Relative path matches the package directory structure, and
- * convenience methods to obtain the content.
+ * A single .class file. Relative path matches the package directory structure, and the content is
+ * the actual content of the file.
  */
-public interface ClassFileEntry {
+public final class ClassFileEntry {
+    @NonNull final Path relativePath;
+    @NonNull final byte[] classFileContent;
 
-    /** Returns the entry name. */
-    String name();
-
-    /** Returns the entry size in bytes. */
-    long getSize() throws IOException;
-
-    /** Return the relative path from the root of the archive/folder abstraction. */
-    Path getRelativePath();
-
-    /**
-     * Read the content into a newly allocated byte[].
-     *
-     * @return file content as a byte[]
-     * @throws IOException failed to read the file.
-     */
-    byte[] readAllBytes() throws IOException;
-
-    /**
-     * Read the content of the file into an existing byte[]
-     *
-     * @param bytes the bytes to read the content of the file into.
-     * @return the number of bytes read.
-     * @throws IOException failed to read the file or the buffer was too small.
-     */
-    int readAllBytes(byte[] bytes) throws IOException;
+    public ClassFileEntry(@NonNull Path relativePath, @NonNull byte[] classFileContent) {
+        this.relativePath = relativePath;
+        this.classFileContent = classFileContent;
+    }
 
     /**
      * Takes the specified .class file, and changes its extension to .dex. It fails if invoked with
      * a file name that does not end in .class.
      */
     @NonNull
-    static Path withDexExtension(@NonNull Path classFilePath) {
+    public static Path withDexExtension(@NonNull Path classFilePath) {
         String fileName = classFilePath.getFileName().toString();
         Preconditions.checkState(
                 fileName.endsWith(SdkConstants.DOT_CLASS),

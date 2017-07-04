@@ -55,19 +55,6 @@ public interface DexArchive extends Closeable {
     void addFile(@NonNull Path relativePath, @NonNull InputStream inputStream) throws IOException;
 
     /**
-     * Adds a DEX file to this dex archive from a byte[]. Adding is performed relative to the {@link
-     * #getRootPath()}. In case file with the same relative path already exists, implementations of
-     * this method should overwrite it with the new version of the file.
-     *
-     * @param relativePath file to be added to this archive
-     * @param bytes the buffer to get the dex file content from
-     * @param offset the offset for the buffer window.
-     * @param end the end of the buffer window.
-     * @throws IOException if the dex file cannot be written.
-     */
-    void addFile(@NonNull Path relativePath, byte[] bytes, int offset, int end) throws IOException;
-
-    /**
      * Removes the specified DEX file from the dex archive. In case the file does not exist, nothing
      * is done.
      *

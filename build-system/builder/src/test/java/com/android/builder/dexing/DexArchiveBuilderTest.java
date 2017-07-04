@@ -369,11 +369,6 @@ public class DexArchiveBuilderTest {
             @NonNull DexArchive dexArchive, @NonNull Collection<String> classNames)
             throws IOException {
         Set<String> classesInArchive;
-        File output = new File(dexArchive.getRootPath().toString());
-        if (!output.exists()) {
-            Truth.assertThat(classNames).isEmpty();
-            return;
-        }
         if (outputFormat == DexArchiveFormat.JAR) {
             try (ZFile jarFile = new ZFile(dexArchive.getRootPath().toFile())) {
                 classesInArchive =

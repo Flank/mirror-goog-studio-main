@@ -21,12 +21,15 @@ import com.android.annotations.NonNull;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
+import java.util.function.Predicate;
 
 /** Helper methods for creating {@link ClassFileInput} instances. */
 public class ClassFileInputs {
 
     static final PathMatcher jarMatcher =
             FileSystems.getDefault().getPathMatcher("glob:**" + SdkConstants.DOT_JAR);
+    static final PathMatcher classMatcher =
+            FileSystems.getDefault().getPathMatcher("glob:**" + SdkConstants.DOT_CLASS);
 
     private ClassFileInputs() {
         // empty
@@ -44,14 +47,16 @@ public class ClassFileInputs {
      * be processed.
      *
      * @param rootPath root path to analyze, jar or a directory
+     * @param filterPaths filter specify which files should be part of the class input
      * @return input {@link ClassFileInput} that provides a list of .class files to process
      */
     @NonNull
-    public static ClassFileInput fromPath(@NonNull Path rootPath) {
+    public static ClassFileInput fromPath(
+            @NonNull Path rootPath, @NonNull Predicate<Path> filterPaths) {
         if (jarMatcher.matches(rootPath)) {
-            return new JarClassFileInput(rootPath);
+            return new JarClassFileInputs(rootPath, filterPaths.and(classMatcher::matches));
         } else {
-            return new DirectoryBasedClassFileInput(rootPath);
+            return new DirClassFileInputs(rootPath, filterPaths.and(classMatcher::matches));
         }
     }
 }

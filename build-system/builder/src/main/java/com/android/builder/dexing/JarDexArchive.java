@@ -20,12 +20,10 @@ import com.android.annotations.NonNull;
 import com.android.apkzlib.zip.StoredEntry;
 import com.android.apkzlib.zip.ZFile;
 import com.google.common.collect.ImmutableList;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -50,12 +48,6 @@ final class JarDexArchive implements DexArchive {
     public void addFile(@NonNull Path relativePath, @NonNull InputStream inputStream)
             throws IOException {
         zFile.add(relativePath.toString(), inputStream);
-    }
-
-    @Override
-    public void addFile(@NonNull Path relativePath, byte[] bytes, int offset, int end)
-            throws IOException {
-        zFile.add(relativePath.toString(), new ByteArrayInputStream(Arrays.copyOf(bytes, end)));
     }
 
     @Override

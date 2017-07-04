@@ -17,8 +17,12 @@
 package com.android.builder.dexing;
 
 import com.android.annotations.NonNull;
+import com.google.common.base.Verify;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.util.stream.Stream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
 
 /**
  * An abstract dex archive builder that converts input class files to dex files that are written to
@@ -39,18 +43,42 @@ public abstract class DexArchiveBuilder {
      * Converts the specified input, and writes it to the output dex archive. If dex archive does
      * not exist, it will be created. If it exists, entries will be added or replaced.
      */
-    public abstract void convert(
-            @NonNull Stream<ClassFileEntry> entries, @NonNull DexArchive output)
-            throws DexArchiveBuilderException;
-
-    /**
-     * Converts the specified input, and writes it to the output dex archive. If dex archive does
-     * not exist, it will be created. If it exists, entries will be added or replaced.
-     */
     public void convert(@NonNull ClassFileInput input, @NonNull DexArchive output)
-            throws DexArchiveBuilderException, IOException {
+            throws DexArchiveBuilderException {
+        try {
+            ensureOutputArchiveExists(output);
+            List<DexArchiveEntry> convertedEntries = convertClassFileInput(input);
+            writeToArchive(convertedEntries, output);
+        } catch (IOException e) {
+            throw new DexArchiveBuilderException(e);
+        }
+    }
 
-        // convert ALL entries.
-        convert(input.entries(path -> true), output);
+    @NonNull
+    protected abstract List<DexArchiveEntry> convertClassFileInput(@NonNull ClassFileInput input);
+
+    private static void writeToArchive(
+            @NonNull List<DexArchiveEntry> entries, @NonNull DexArchive output) throws IOException {
+        for (DexArchiveEntry dexEntry : entries) {
+            Verify.verifyNotNull(dexEntry);
+            try (ByteArrayInputStream dexContent =
+                    new ByteArrayInputStream(dexEntry.getDexFileContent())) {
+                Path dexFilePath =
+                        ClassFileEntry.withDexExtension(dexEntry.getRelativePathInArchive());
+                output.addFile(dexFilePath, dexContent);
+            }
+        }
+    }
+
+    private static void ensureOutputArchiveExists(@NonNull DexArchive dexArchive)
+            throws IOException {
+        if (Files.notExists(dexArchive.getRootPath())) {
+            if (ClassFileInputs.jarMatcher.matches(dexArchive.getRootPath())) {
+                Files.createDirectories(dexArchive.getRootPath().getParent());
+                Files.createFile(dexArchive.getRootPath());
+            } else {
+                Files.createDirectories(dexArchive.getRootPath());
+            }
+        }
     }
 }
