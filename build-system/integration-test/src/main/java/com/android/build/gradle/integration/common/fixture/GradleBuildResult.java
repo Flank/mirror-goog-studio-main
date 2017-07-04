@@ -166,6 +166,10 @@ public class GradleBuildResult {
         return initTaskStates().getNotUpToDateTasks();
     }
 
+    public List<String> getTasks() {
+        return initTaskStates().getAllTasks();
+    }
+
     private TaskStateList initTaskStates() {
         if (taskStateList == null) {
             taskStateList = new TaskStateList(taskEvents, stdout);

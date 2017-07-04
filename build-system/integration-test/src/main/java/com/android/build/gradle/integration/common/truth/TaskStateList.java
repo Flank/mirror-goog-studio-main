@@ -221,6 +221,11 @@ public class TaskStateList {
         return notUpToDateTasks;
     }
 
+    @NonNull
+    public List<String> getAllTasks() {
+        return orderedTasks;
+    }
+
     int getTaskIndex(String taskName) {
         Preconditions.checkArgument(allTasks.contains(taskName), "Task %s not run", taskName);
         return orderedTasks.indexOf(taskName);
